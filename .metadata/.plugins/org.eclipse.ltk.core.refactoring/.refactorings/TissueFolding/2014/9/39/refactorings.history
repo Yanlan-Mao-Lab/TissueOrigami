@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename resource &apos;TissueFolding/SourceCode/PrismLateral&apos; to &apos;PrismLateral.h&apos;" description="Rename resource &apos;PrismLateral&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="SourceCode/PrismLateral" name="PrismLateral.h" stamp="1411480683392" updateReferences="true"/>
+</session>

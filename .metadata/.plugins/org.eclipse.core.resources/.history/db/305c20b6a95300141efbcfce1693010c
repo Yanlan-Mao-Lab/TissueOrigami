@@ -1,0 +1,39 @@
+#ifndef PrismLateral_H
+#define PrismLateral_H
+
+
+#include "Prism.h"
+#include <string>
+#include <stdio.h>
+#include <iostream>
+#include <vector>
+#include <boost/numeric/ublas/matrix.hpp>
+#include <boost/numeric/ublas/io.hpp>
+#include <boost/numeric/ublas/operation.hpp>
+
+class PrismLateral : public Prism{
+
+private:
+	void calculateCurrk(boost::numeric::ublas::matrix<double> &currk, boost::numeric::ublas::matrix<double> &currB, boost::numeric::ublas::matrix<double>& currBE, double eta, double zeta, double nu);
+	void calculateNormals();
+	void calculateNormalToBasalSide();
+	void calculateReferenceNormalToBasalSide();
+	void calculateNormalToApicalSide();
+	void calculateReferenceNormalToApicalSide();
+	void getCurrentAlignmentSides(double*, double*);
+	void getCurrentAlignmentFaces(double* RefSide, double* ShapeSide, double* RefFace, double* ShapeFace);
+	void updateAlignmentTurn();
+	void updateReferenceShapeBaseFromBuffer();
+	void resetBuffersAfterGrowth();
+	void calculateZVecForTissueCoordAlignment(double* u);
+	void calculateXVecForTissueCoordAlignment(double* u);
+public:
+	PrismLateral(int* NodeIds,vector<Node*>& Nodes, int CurrId);
+	~PrismLateral();
+	void  setElasticProperties(double E,double v);
+	void  setViscosity(double ApicalVisc,double BasalVisc, vector <Node*>& Nodes);
+	void  calculateForces(int RKid, double** SystemForces);
+
+};
+
+#endif

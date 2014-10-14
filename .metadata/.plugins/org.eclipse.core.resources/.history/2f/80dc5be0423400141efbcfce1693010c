@@ -1,0 +1,829 @@
+#include "ShapeBase.h"
+#include "Node.h"
+#include <sstream>
+
+void 	ShapeBase::ParentErrorMessage(){
+	cerr<<"You are calling the function from a parent here, check declaration is via pointers"<<endl;
+}
+
+void	ShapeBase::setShapeType(string TypeName){
+	if (TypeName == "Prism"){
+		this->ShapeType = 1;
+	}
+	else{
+		this->ShapeType= -100;
+	};
+}
+
+void	ShapeBase::setIdentificationColour(){
+	IdentifierColour[2] = Id % 255;
+	int a = (Id - IdentifierColour[2]) / 255;
+	IdentifierColour[1] = ( a ) % 255;
+	if (a>255){
+		IdentifierColour[0] = (a - IdentifierColour[1]) / 255;
+	}
+	else{
+		IdentifierColour[0] = 0;
+	}
+	//cout<<"IdentifierColour: "<<IdentifierColour[0]<<" "<<IdentifierColour[1]<<" "<<IdentifierColour[2]<<endl;
+}
+
+int		ShapeBase::getShapeType(){
+	return ShapeType;
+}
+
+int 	ShapeBase::getId(){
+	return Id;
+}
+
+int 	ShapeBase::getNodeNumber(){
+	return nNodes;
+}
+
+int* 	ShapeBase::getNodeIds(){
+	return NodeIds;
+}
+
+int 	ShapeBase::getDim(){
+	return nDim;
+}
+
+string 	ShapeBase::getName(){
+	string name;
+	if (ShapeType == 1){
+		name = "Prism";
+	}
+	else{
+		name = "Unknown";
+	}
+	stringstream inter;
+	inter.fill('0');
+	inter.width(4);
+	inter<<Id;
+	name = name + inter.str();
+	return name;
+}
+
+double** ShapeBase::getReferencePos(){
+	return ReferenceShape->Positions;
+}
+
+double*	 ShapeBase::getReferenceNormal(){
+	return ReferenceShape->CurrentNormal;
+}
+
+double 	ShapeBase::getYoungModulus(){
+	return E;
+}
+
+double 	ShapeBase::getPoissonRatio(){
+	return v;
+}
+
+double* ShapeBase::getGrowthRate(){
+	return GrowthRate;
+}
+
+double* ShapeBase::getShapeChangeRate(){
+	return ShapeChangeRate;
+}
+
+double* ShapeBase::getCentre(){
+	double* d = new double[3];
+	d[0]= 0.0; d[1]= 0.0; d[2]=0.0;
+	for (int i = 0; i<nNodes; ++i ){
+		for (int j = 0; j< nDim; ++j){
+			d[j] += Positions[i][j];
+		}
+	}
+	d[0] /= nNodes; d[1] /= nNodes; d[2] /= nNodes;
+	return d;
+}
+
+void 	ShapeBase::readNodeIds(int* inpNodeIds){
+	for (int i=0; i<nNodes; ++i){
+		this->NodeIds[i] = inpNodeIds[i];
+	}
+}
+
+void 	ShapeBase::displayName(){
+	cout<<"Type: "<<this->ShapeType<<" Id: "<<this->Id<<endl;
+}
+
+void 	ShapeBase::setPositionMatrix(vector<Node*>& Nodes){
+	const int n = nNodes;
+	const int dim = nDim;
+	Positions = new double*[n];
+	for (int i = 0; i<nNodes; ++i){
+		Positions[i] = new double[dim];
+		for (int j = 0; j<dim; ++j){
+			Positions[i][j] = Nodes[NodeIds[i]]->Position[j];
+		}
+	}
+}
+
+void 	ShapeBase::setReferencePositionMatrix(){
+	const int n = nNodes;
+	const int dim = nDim;
+	ReferenceShape -> Positions = new double*[n];
+	for (int i = 0; i<nNodes; ++i){
+		ReferenceShape -> Positions[i] = new double[dim];
+		for (int j = 0; j<dim; ++j){
+			ReferenceShape -> Positions[i][j] = Positions[i][j];
+		}
+	}
+}
+
+void 	ShapeBase::updateShapeFromSave(ifstream& file){
+	updateNodeIdsFromSave(file);
+	updateReferencePositionMatrixFromSave(file);
+}
+
+void 	ShapeBase::updateNodeIdsFromSave(ifstream& file){
+	for (int i = 0; i<nNodes; ++i){
+		int savedId;
+		file >> savedId;
+		NodeIds[i] = savedId;
+	}
+}
+
+void 	ShapeBase::updateReferencePositionMatrixFromSave(ifstream& file){
+	for (int i = 0; i<nNodes; ++i){
+		for (int j = 0; j<nDim; ++j){
+			double savedPos;
+			file >> savedPos;
+			ReferenceShape -> Positions[i][j] = savedPos;
+		}
+	}
+}
+
+void 	ShapeBase::displayPositions(){
+	for (int i=0; i<nNodes;++i){
+		for (int j =0; j<nDim; ++j){
+			cout<<Positions[i][j]<<"  ";
+		}
+		cout<<endl;
+	}
+}
+
+int*	ShapeBase::getIdentifierColour(){
+	return IdentifierColour;
+}
+
+void 	ShapeBase::getStrainColour(int type, float* StrainColour){
+	//We will scale the strain from -5 to +5 in 0 to 1 colour channel blue:
+	//We will scale the strain from -5 to +5 in 1 to 0 colour channel red:
+
+	float minStrain = -1.0;
+	float maxStrain = 1.0;
+	float SumStrain = 0.0;
+	float rb = StrainColour[0];
+	float gb = StrainColour[1];
+	float bb = StrainColour[2];
+	if (type == 0){
+		for (int i=0; i<3; ++i){
+			SumStrain += Strain(i);
+		}
+	}
+	else if (type == 1){
+		SumStrain = Strain(0);
+	}
+	else if (type == 2){
+		SumStrain = Strain(1);
+	}
+	else if (type == 3){
+		SumStrain = Strain(2);
+	}
+	else{
+		return;
+	}
+	if (SumStrain<0){
+		StrainColour[0] = 1.0 - (SumStrain - minStrain)/(0.0 -minStrain) * (1-rb);
+		minStrain = minStrain/2.0;
+		StrainColour[1] = (SumStrain - minStrain)/(0.0 - minStrain) * (gb);
+		StrainColour[2] = (SumStrain - minStrain)/(0.0 - minStrain) * (bb);
+	}
+	else{
+		StrainColour[0] = rb - SumStrain/maxStrain*rb;
+		StrainColour[1] = gb - (SumStrain - 0.0)/(maxStrain - 0.0) * (gb);
+		StrainColour[2] = bb + (SumStrain - 0.0)/(maxStrain - 0.0) * (1-bb);
+	}
+	//cout<<"Strain: "<<Strain(0)<<" "<<Strain(1)<<" "<<Strain(2)<<" colour: "<< StrainColour[0]<<" "<<StrainColour[1]<<" "<<StrainColour[2]<<endl;
+}
+
+void 	ShapeBase::getStrain(int type, float &StrainMag){
+	StrainMag = 0.0;
+	if (type == 0){
+		for (int i=0; i<3; ++i){
+			StrainMag += ( Strain(i) - GrowthStrain(i) - ShapeChangeStrain(i) ) ;
+		}
+	}
+	else if (type == 1){
+		StrainMag = ( Strain(0) - GrowthStrain(0) - ShapeChangeStrain(0) );
+	}
+	else if (type == 2){
+		StrainMag = ( Strain(1) - GrowthStrain(1) - ShapeChangeStrain(1) );
+	}
+	else if (type == 3){
+		StrainMag = ( Strain(2) - GrowthStrain(2) - ShapeChangeStrain(2) );
+	}
+	else{
+		return;
+	}
+}
+void 	ShapeBase::getGrowthStrain(int type, float &StrainMag){
+	StrainMag = 0.0;
+	if (type == 0){
+		for (int i=0; i<3; ++i){
+			StrainMag += GrowthStrain(i);
+		}
+	}
+	else if (type == 1){
+		StrainMag = GrowthStrain(0);
+	}
+	else if (type == 2){
+		StrainMag = GrowthStrain(1);
+	}
+	else if (type == 3){
+		StrainMag = GrowthStrain(2);
+	}
+	else{
+		return;
+	}
+}
+
+void 	ShapeBase::getNodeBasedPysProp(int type, int NodeNo, vector<Node*>& Nodes, float& PysPropMag){
+	PysPropMag = 0.0;
+	if (type == 0){
+		PysPropMag = Nodes[NodeIds[NodeNo]] -> Viscosity;
+	}
+}
+
+void 	ShapeBase::getPysProp(int type, float &PysPropMag){
+	PysPropMag = 0.0;
+	if (type ==1){
+		PysPropMag = getYoungModulus();
+	}
+	else if (type == 2 ){
+		PysPropMag = getPoissonRatio();
+	}
+	else if (type ==3){
+		double* growth;
+		growth = getGrowthRate();
+		for (int i =0 ; i< nDim ; ++i){
+			PysPropMag += growth[i];
+		}
+		PysPropMag /= nDim;
+	}
+	else if (type ==4){
+		double* shapechange;
+		shapechange = getShapeChangeRate();
+		PysPropMag = shapechange[2];
+	}
+}
+
+void 	ShapeBase::displayIdentifierColour(){
+	cout <<" IdentifierColour:  "<<IdentifierColour[0]<<" "<<IdentifierColour[1]<<" "<<IdentifierColour[2]<<endl;
+}
+
+void 	ShapeBase::growShape(double* growthscale){
+	//The growth scale is the growth of this element should feel,
+	//on the coordinates or Dorsal-Ventral, Anterior-Posterior, and Apical-Basal axes.
+	// I need to get the orientation of this growth coordinate system first.
+	calculateGrowthCoordinateSystem();
+	//Now I have the growth coordinate system, I need to
+	double *rotMat;
+	rotMat = new double[9]; //matrix is written in one row
+	calculateGrowthRotationMatrixToReference(rotMat);
+
+
+	//Growth is accumulative, 10% growth of current size:
+	GrowthStrain(0) = ( (1.0 + GrowthStrain(0)) * ( 1.0 + growthscale[0])) - 1.0;
+	GrowthStrain(1) = ( (1.0 + GrowthStrain(1)) * ( 1.0 + growthscale[1])) - 1.0;
+	GrowthStrain(2) = ( (1.0 + GrowthStrain(2)) * ( 1.0 + growthscale[2])) - 1.0;
+	//displayMatrix(GrowthStrain,"GrowthStrain");
+}
+
+
+void ShapeBase::calculateGrowthCoordinateSystem(){
+	//I assume the orientation of the tissue stays as the dorsal-ventral axis is aligned with x = {1,0,0} and
+	//anterior-posterior axis is aligned with y = {0,1,0}. I need to a coordinate system,
+	//to align the z axis with the current apicobasal axis.
+	//The current apical-basal axis is the z axis of the reference element.
+	double* v = new double[3];
+	calculateZVecForGrowhtAlignment(v);
+	double* u = new double[3];
+	u[0]=0.0;
+	u[1]=0.0;
+	u[2]=1.0;
+
+	double c, s;
+	calculateRotationAngleSinCos(u,v,c,s);
+	double *rotAx;
+	rotAx = new double[3];
+	double *rotMat;
+	rotMat = new double[9]; //matrix is written in one row
+	calculateRotationAxis(u,v,rotAx);
+	constructRotationMatrix(c,s,rotAx,rotMat);
+	rotateWorldsCoordinatesByRotationMatrix(GrowthCoordinateSystem,rotMat);
+	cout<<"GrowthCoordinateSystem:"<<endl;
+	cout<<GrowthCoordinateSystem[0]<<" 	"<<GrowthCoordinateSystem[1]<<" 	"<<GrowthCoordinateSystem[2]<<endl;
+	cout<<GrowthCoordinateSystem[3]<<" 	"<<GrowthCoordinateSystem[4]<<" 	"<<GrowthCoordinateSystem[5]<<endl;
+	cout<<GrowthCoordinateSystem[6]<<" 	"<<GrowthCoordinateSystem[7]<<" 	"<<GrowthCoordinateSystem[8]<<endl;
+}
+
+void ShapeBase::calculateGrowthRotationMatrixToReference(double* rotMat){
+	//Now I need the rotation matrix to rotate the strains on growth coordinate system,
+	//to strains in reference shape coordinate system;
+	//The z axes are already aligned.
+	//I will define the reference shape coordinate system as x-axis as the axis from node 0 to 1 for a prism
+	//This selection is arbitrary, as long as it is consistent, I will be fine.
+	double* v = new double[3];
+	calculateXVecForGrowhtAlignment(v);
+	double* u = new double[3];
+	u[0]=GrowthCoordinateSystem[0];
+	u[1]=GrowthCoordinateSystem[1];
+	u[2]=GrowthCoordinateSystem[2];
+	double c, s;
+	calculateRotationAngleSinCos(u,v,c,s);
+	double *rotAx;
+	rotAx = new double[3];
+	calculateRotationAxis(u,v,rotAx);
+	constructRotationMatrix(c,s,rotAx,rotMat);
+	//ReferenceShape->CurrAlignmentSide;
+}
+
+void ShapeBase::rotateWorldsCoordinatesByRotationMatrix(double* NewCoordinates, double *rotMat){
+	double* u;
+	u = new double[3];
+	u[0]=1.0;
+	u[1]=0.0;
+	u[2]=0.0;
+	rotateVectorByRotationMatrix(u,rotMat);
+	NewCoordinates[0] = u[0];
+	NewCoordinates[1] = u[1];
+	NewCoordinates[2] = u[2];
+	u[0]=0.0;
+	u[1]=1.0;
+	u[2]=0.0;
+	rotateVectorByRotationMatrix(u,rotMat);
+	NewCoordinates[3] = u[0];
+	NewCoordinates[4] = u[1];
+	NewCoordinates[5] = u[2];
+	u[0]=0.0;
+	u[1]=0.0;
+	u[2]=1.0;
+	rotateVectorByRotationMatrix(u,rotMat);
+	NewCoordinates[6] = u[0];
+	NewCoordinates[7] = u[1];
+	NewCoordinates[8] = u[2];
+	delete[] u;
+}
+
+void 	ShapeBase::growShapeOLD(double* growthscale){
+	//Growth rate is constant, wrt the initial size, 10% growth of the initial size, regardless of current size
+	//GrowthStrain(0) +=growthscale[0];
+	//GrowthStrain(1) +=growthscale[1];
+	//GrowthStrain(2) +=growthscale[2];
+	//Growth is accumulative, 10% growth of current size:
+	GrowthStrain(0) = ( (1.0 + GrowthStrain(0)) * ( 1.0 + growthscale[0])) - 1.0;
+	GrowthStrain(1) = ( (1.0 + GrowthStrain(1)) * ( 1.0 + growthscale[1])) - 1.0;
+	GrowthStrain(2) = ( (1.0 + GrowthStrain(2)) * ( 1.0 + growthscale[2])) - 1.0;
+	//displayMatrix(GrowthStrain,"GrowthStrain");
+}
+
+void 	ShapeBase::changeShape(double shapechangescale, int axis){
+	int compansatingaxes[2];
+	if (axis == 0){
+		compansatingaxes[0] = 1;
+		compansatingaxes[1] = 2;
+	}
+	else if (axis == 1){
+		compansatingaxes[0] = 0;
+		compansatingaxes[1] = 2;
+	}
+	else if (axis == 2){
+		compansatingaxes[0] = 0;
+		compansatingaxes[1] = 1;
+	}
+	//currently this is not a volume conserving model, it is, in essence, same as growth
+	float effect = ( 1.0 + ShapeChangeStrain(axis) ) * shapechangescale;
+	float compansation = -0.5 * effect;
+	ShapeChangeStrain(axis) += effect;
+	ShapeChangeStrain(compansatingaxes[0]) += compansation;
+	ShapeChangeStrain(compansatingaxes[1]) += compansation;
+
+	//ShapeChangeStrain(axis) = ( (1.0 + ShapeChangeStrain(axis)) * ( 1.0 + shapechangescale)) - 1.0;
+	//ShapeChangeStrain(compansatingaxes[0]) = ( (1.0 + ShapeChangeStrain(compansatingaxes[0])) * ( 1.0 + shapechangescale[1])) - 1.0;
+	//ShapeChangeStrain(compansatingaxes[1]) = ( (1.0 + ShapeChangeStrain(compansatingaxes[1])) * ( 1.0 + shapechangescale[2])) - 1.0;
+	//cout<<"updated the shape change strain, with factors: "<<shapechangescale[0]<<" "<<shapechangescale[1]<<" "<<shapechangescale[2]<<endl;
+	//displayMatrix(ShapeChangeStrain,"ShapeChangeStrain");
+}
+
+void 	ShapeBase::alignReference(){
+	//cout<<"aligning reference:"<<endl;
+
+	updateAlignmentTurn();
+	updateReferenceShapeBaseFromBuffer();
+	calculateNormals();
+	double *v,*u;
+	v = new double[3];
+	u = new double[3];
+	for (int i=0;i<nDim; ++i){
+		v[i] = CurrentNormal[i];
+		u[i] = ReferenceShape->CurrentNormal[i];
+	}
+	double c, s;
+	calculateRotationAngleSinCos(u,v,c,s);
+	double *rotAx;
+	rotAx = new double[3];
+	double *rotMat;
+	rotMat = new double[9]; //matrix is written in one row
+	if (c<0.9998){ //only rotate if the vectors are more than 1 degree apart
+		updatedReference = true;
+		//cout<<"Aligning the plane, angle big enough - cos: "<<c<<" sin: "<<s<<endl;
+		calculateRotationAxis(u,v,rotAx);
+		constructRotationMatrix(c,s,rotAx,rotMat);
+		//double centre[3];
+		for (int i=0; i<nNodes; ++i){
+			u[0] = ReferenceShape->Positions[i][0];
+			u[1] = ReferenceShape->Positions[i][1];
+			u[2] = ReferenceShape->Positions[i][2];
+			rotateVectorByRotationMatrix(u,rotMat);
+			ReferenceShape->Positions[i][0] = u[0];
+			ReferenceShape->Positions[i][1] = u[1];
+			ReferenceShape->Positions[i][2] = u[2];
+		}
+		//Aligned the planes, now align the sides:
+	}
+	//else{ cout<<"skipping plane alignment, degree is too small: cosine: "<<c<<" sine: "<<s<<endl;}
+	double* RefSide = new double[3];
+	double* ShapeSide;
+	ShapeSide = new double[3];
+
+	getCurrentAlignmentSides(RefSide, ShapeSide);
+	calculateRotationAngleSinCos(RefSide,ShapeSide,c,s);
+	if (c<0.9998){  //only rotate if the vectors are more than 1 degree apart
+		updatedReference = true;
+		//cout<<"Aligning the side, angle big enough - cos: "<<c<<" sin: "<<s<<endl;
+		calculateRotationAxis(RefSide,ShapeSide,rotAx);
+		constructRotationMatrix(c,s,rotAx,rotMat);
+		for (int i=0; i<nNodes; ++i){
+			u[0] = ReferenceShape->Positions[i][0];
+			u[1] = ReferenceShape->Positions[i][1];
+			u[2] = ReferenceShape->Positions[i][2];
+			rotateVectorByRotationMatrix(u,rotMat);
+			ReferenceShape->Positions[i][0] = u[0];
+			ReferenceShape->Positions[i][1] = u[1];
+			ReferenceShape->Positions[i][2] = u[2];
+		}
+		//Now they are aligned, but I do not know if they face the same direction, so I need to check that:
+		/*
+		bool facecorrection = areSidesFacingSameDirection(RefSide, ShapeSide);
+		if (!facecorrection){
+			//face is in the wrong direction, I need to rotate the element a further 180 degrees
+			constructRotationMatrix(-1.0,0.0,rotAx,rotMat);
+			for (int i=0; i<nNodes; ++i){
+				u[0] = ReferenceShape->Positions[i][0];
+				u[1] = ReferenceShape->Positions[i][1];
+				u[2] = ReferenceShape->Positions[i][2];
+				rotateVectorByRotationMatrix(u,rotMat);
+				ReferenceShape->Positions[i][0] = u[0];
+				ReferenceShape->Positions[i][1] = u[1];
+				ReferenceShape->Positions[i][2] = u[2];
+			}
+			cout<<"Reference positions after face correction: "<<endl;
+			for (int i = 0; i<nNodes; ++i){
+				for (int j = 0; j<nDim; ++j){
+					cout<<ReferenceShape->Positions[i][j]<<" ";
+				}
+				cout<<endl;
+			}
+			cout<<endl;
+
+		}
+		*/
+	}
+	//else{ cout<<"skipping side alignment, degree is too small: cosine: "<<c<<" sine: "<<s<<endl;}
+	//aligning the position to the curr shape centre:
+	double translocation[3] = {0.0,0.0,0.0};
+	for (int i = 0; i<nNodes; ++i){
+		for (int j = 0; j<nDim; ++j){
+			translocation[j] +=  Positions[i][j] - ReferenceShape ->Positions[i][j];
+		}
+	}
+	for (int j = 0; j<nDim; ++j){
+		translocation[j] /= nNodes;
+	}
+	//translocation[0] -= 5.0;
+	for (int i = 0; i<nNodes; ++i){
+			for (int j = 0; j<nDim; ++j){
+				ReferenceShape->Positions[i][j] +=translocation[j];
+			}
+	}
+	delete[] u;
+	delete[] v;
+	delete[] rotAx;
+	delete[] rotMat;
+	delete[] RefSide;
+	delete[] ShapeSide;
+	//cout<<"finalised aligning reference, update reference? "<<updatedReference<<endl;
+}
+
+bool	ShapeBase::areSidesFacingSameDirection(double* RefSide, double* ShapeSide){
+	double* RefFace;
+	RefFace = new double[3];
+	double* ShapeFace;
+	ShapeFace = new double[3];
+	getCurrentAlignmentFaces(RefSide, ShapeSide, RefFace, ShapeFace);
+	double dotp = dotProduct3D(RefFace,ShapeFace);
+	if ( dotp < 0){
+		return false;
+	}
+	else{
+		return true;
+	}
+	delete[] RefFace;
+	delete[] ShapeFace;
+}
+
+void	ShapeBase::calculateRotationAngleSinCos(double* u, double* v, double& c, double& s){
+	//aligning u onto v:
+	c = dotProduct3D(u,v);
+	if (c > 1.0){
+		c = 1.0;
+		s = 0.0;
+	}
+	else if( c<-1.0){
+		c = -1.0;
+		s = 0.0;
+	}
+	else{
+		double tet = acos(c);
+		s = sin(tet);
+	}
+}
+
+void	ShapeBase::calculateRotationAxis(double* u, double* v,double* rotAx){
+	//aligning u onto v:
+	crossProduct3D(u,v,rotAx);
+	normaliseVector3D(rotAx);
+}
+
+void	ShapeBase::constructRotationMatrix(double c, double s, double* rotAx, double* rotMat){
+	//cout<<" Rotation axis: "<<rotAx[0]<<" "<<rotAx[1]<<" "<<rotAx[2]<<endl;
+
+	rotMat[0] = c + rotAx[0]*rotAx[0]*(1 - c);
+	rotMat[1] = rotAx[0]*rotAx[1]*(1 - c) - rotAx[2]*s;
+	rotMat[2] = rotAx[0]*rotAx[2]*(1 - c) + rotAx[1]*s;
+
+	rotMat[3] = rotAx[1]*rotAx[0]*(1 - c) + rotAx[2]*s;
+	rotMat[4] = c + rotAx[1]*rotAx[1]*(1 - c);
+	rotMat[5] = rotAx[1]*rotAx[2]*(1 - c) - rotAx[0]*s;
+
+	rotMat[6] = rotAx[2]*rotAx[0]*(1 - c) - rotAx[1]*s;
+	rotMat[7] = rotAx[2]*rotAx[1]*(1 - c) + rotAx[0]*s;
+	rotMat[8] = c + rotAx[2]*rotAx[2]*(1 - c);
+
+	/*cout<<"Rotation Matrix: "<<endl;
+	cout<<rotMat[0]<<" "<<rotMat[1]<<" "<<rotMat[2]<<endl;
+	cout<<rotMat[3]<<" "<<rotMat[4]<<" "<<rotMat[5]<<endl;
+	cout<<rotMat[6]<<" "<<rotMat[7]<<" "<<rotMat[8]<<endl;*/
+}
+
+void	ShapeBase::rotateVectorByRotationMatrix(double* u,double* rotMat){
+	double x = rotMat[0]*u[0]+rotMat[1]*u[1]+rotMat[2]*u[2];
+	double y = rotMat[3]*u[0]+rotMat[4]*u[1]+rotMat[5]*u[2];
+	double z = rotMat[6]*u[0]+rotMat[7]*u[1]+rotMat[8]*u[2];
+	//cout<<"before rotation: "<<u[0]<<" "<<u[1]<<" "<<u[2]<<endl;
+	u[0] = x;
+	u[1] = y;
+	u[2] = z;
+	//cout<<"after rotation: "<<u[0]<<" "<<u[1]<<" "<<u[2]<<endl;
+}
+
+void	ShapeBase::calculateForces(int RKid, double **SystemForces, vector <Node*>& Nodes){
+	//cout<<"calculating forces"<<endl;
+	const int nMult = nNodes*nDim;
+
+	using namespace boost::numeric::ublas;
+	boost::numeric::ublas::vector<double> displacement(nMult);
+	int counter = 0;
+	for (int i = 0; i<nNodes; ++i){
+		for (int j = 0; j<nDim; ++j){
+			displacement(counter) = Positions[i][j]-ReferenceShape->Positions[i][j];
+			counter++;
+		}
+	}
+
+	Forces = zero_vector<double>(nMult);
+	boost::numeric::ublas::vector<double> PlasticStrainForces = zero_vector<double>(nMult);
+	//displayMatrix(BE,"BE");
+
+	//cout<<"multiplying to get forces"<<endl;
+	boost::numeric::ublas::axpy_prod(k,displacement,Forces);
+	//cout<<"multiplying to get strain"<<endl;
+	boost::numeric::ublas::axpy_prod(B,displacement,Strain);
+	//cout<<"multiplying to get th contribution of the forces"<<endl;
+	boost::numeric::ublas::vector<double> PlasticStrain = zero_vector<double>(6);
+	PlasticStrain = GrowthStrain+ShapeChangeStrain;
+	//displayMatrix(GrowthStrain,"GrowthStrain");
+	//displayMatrix(ShapeChangeStrain,"ShapeChangeStrain");
+	//displayMatrix(PlasticStrain,"PlasticStrain");
+	boost::numeric::ublas::axpy_prod(BE,PlasticStrain,PlasticStrainForces);
+	//cout<<"getting the net forces"<<endl;
+	Forces = Forces - PlasticStrainForces;
+	//displayMatrix(Forces,"Forces");
+	//displayMatrix(GrowthForces,"GrowthForces");
+	counter = 0;
+	for (int i = 0; i<nNodes; ++i){
+		for (int j = 0; j<nDim; ++j){
+			if (!Nodes[NodeIds[i]]->FixedPos[j]){
+				SystemForces[NodeIds[i]][j] = SystemForces[NodeIds[i]][j] - Forces(counter);
+			}
+			counter++;
+		}
+	}
+	/*
+	cout<<"Element: "<<Id<<endl;
+	cout<<"positions: "<<endl;
+	for (int i = 0; i<nNodes; ++i){
+		for (int j = 0; j<nDim; ++j){
+			cout<<Positions[i][j]<<" ";
+		}
+		cout<<endl;
+	}
+	cout<<"Reference positions: "<<endl;
+	for (int i = 0; i<nNodes; ++i){
+		for (int j = 0; j<nDim; ++j){
+			cout<<ReferenceShape->Positions[i][j]<<" ";
+		}
+		cout<<endl;
+	}
+	displayMatrix(displacement,"displacement");
+	displayMatrix(Forces,"Forces");
+	cout<<"SystemForces:"<<endl;
+	int nSysNodes = Nodes.size();
+	for (int i=0;i<nSysNodes;++i){
+		for (int j=0;j<3;++j){
+			cout<<SystemForces[i][j]<<" ";
+		}
+		cout<<endl;
+	}
+	cout<<endl;*/
+	//cout<<"finalised calculating forces"<<endl;
+}
+
+void	ShapeBase::updatePositions(vector<Node*>& Nodes){
+	for (int i = 0; i<nNodes; ++i){
+		for (int j = 0; j<nDim; ++j){
+				Positions[i][j] = Nodes[NodeIds[i]]->Position[j];
+		}
+	}
+}
+
+void 	ShapeBase::setGrowthRate(double x, double y, double z){
+	GrowthRate[0] = x;
+	GrowthRate[1] = y;
+	GrowthRate[2] = z;
+}
+
+void 	ShapeBase::setShapeChangeRate(double x, double y, double z){
+	ShapeChangeRate[0] = x;
+	ShapeChangeRate[1] = y;
+	ShapeChangeRate[2] = z;
+}
+
+void 	ShapeBase::updateGrowthRate(double scalex, double scaley, double scalez){
+	//This value is stored as per hour:
+	GrowthRate[0] += scalex;
+	GrowthRate[1] += scaley;
+	GrowthRate[2] += scalez;
+}
+
+void 	ShapeBase::updateShapeChangeRate(double scale, int axis){
+	int compansatingaxes[2];
+	if (axis == 0){
+		compansatingaxes[0] = 1;
+		compansatingaxes[1] = 2;
+	}
+	else if (axis == 1){
+		compansatingaxes[0] = 0;
+		compansatingaxes[1] = 2;
+	}
+	else if (axis == 2){
+		compansatingaxes[0] = 0;
+		compansatingaxes[1] = 1;
+	}
+	float effect = ( 1.0 + ShapeChangeRate[axis] ) * scale;
+	float compansation = -0.5 * effect;
+	ShapeChangeRate[axis] += effect;
+	ShapeChangeRate[compansatingaxes[0]] += compansation;
+	ShapeChangeRate[compansatingaxes[2]] += compansation;
+}
+
+bool 	ShapeBase::InvertMatrix(boost::numeric::ublas::matrix<double>& input, boost::numeric::ublas::matrix<double>& inverse, double& det){
+	//Matrix inversion routine.
+	//Uses lu_factorize and lu_substitute in uBLAS to invert a matrix
+	using namespace boost::numeric::ublas;
+	typedef permutation_matrix<std::size_t> pmatrix;
+
+	// create a working copy of the input
+	matrix<double> A(input);
+
+	// create a permutation matrix for the LU-factorization
+	pmatrix pm(A.size1());
+
+	// perform LU-factorization
+	int res = lu_factorize(A, pm);
+	if (res != 0)
+		return false;
+
+	det = 1.0;
+	for(int i = 0; i < A.size1(); i++) {
+		det *= A(i,i); // multiply by elements on diagonal
+	    det = det * determinant_sign( pm );
+	}
+	// create identity matrix of "inverse"
+	inverse.assign(identity_matrix<double> (A.size1()));
+
+	// backsubstitute to get the inverse
+	lu_substitute(A, pm, inverse);
+
+	return true;
+}
+
+int 	ShapeBase::determinant_sign(boost::numeric::ublas::permutation_matrix<std::size_t>& pm)
+{
+    int pm_sign=1;
+    std::size_t size = pm.size();
+    for (std::size_t i = 0; i < size; ++i)
+        if (i != pm(i))
+            pm_sign *= -1.0; // swap_rows would swap a pair of rows here, so we change sign
+    return pm_sign;
+}
+
+void	ShapeBase::crossProduct3D(double* u, double* v, double* cross){
+	cross[0] = u[1]*v[2] - u[2]*v[1];
+	cross[1] = u[2]*v[0] - u[0]*v[2];
+	cross[2] = u[0]*v[1] - u[1]*v[0];
+}
+
+void	ShapeBase::normaliseVector3D(double* v){
+	double mag2 = v[0]*v[0]+v[1]*v[1]+v[2]*v[2];
+	if (fabs(mag2) > 1E-14 && fabs(mag2 - 1.0f) > 1E-14) {
+		double mag = pow(mag2,0.5);
+		v[0] /= mag;
+		v[1] /= mag;
+		v[2] /= mag;
+	}
+}
+
+double 	ShapeBase::dotProduct3D(double* u, double* v){
+	double dot = 0;
+	dot = u[0]*v[0]+u[1]*v[1]+u[2]*v[2];
+	return dot;
+}
+
+void 	ShapeBase::displayMatrix(boost::numeric::ublas::matrix<double>& mat, string matname){
+	int m = mat.size1();
+	int n = mat.size2();
+	cout<<matname<<": "<<endl;
+
+	for (int i =0; i<m; i++){
+		for (int j =0; j<n; j++){
+			cout.precision(4);
+			cout.width(6);
+			cout<<mat(i,j)<<" ";
+		}
+		cout<<endl;
+	}
+	cout<<endl;
+}
+
+void 	ShapeBase::displayMatrix(boost::numeric::ublas::matrix<int>& mat, string matname){
+	int m = mat.size1();
+	int n = mat.size2();
+	cout<<matname<<": "<<endl;
+
+	for (int i =0; i<m; i++){
+		for (int j =0; j<n; j++){
+			cout.precision(4);
+			cout.width(6);
+			cout<<mat(i,j)<<" ";
+		}
+		cout<<endl;
+	}
+	cout<<endl;
+}
+
+void	ShapeBase::displayMatrix(boost::numeric::ublas::vector<double>& vec, string matname){
+	int m = vec.size();
+	cout<<matname<<": "<<endl;
+	for (int i =0; i<m; i++){
+		cout.precision(4);
+		cout.width(6);
+		cout<<vec(i)<<" ";
+	}
+	cout<<endl;
+}

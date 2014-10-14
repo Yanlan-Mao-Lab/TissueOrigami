@@ -1,0 +1,386 @@
+#include "ShapeBase.h"
+#include "Node.h"
+#include <sstream>
+
+void 	ShapeBase::ParentErrorMessage(){
+	cerr<<"You are calling the function from a parent here, check declaration is via pointers"<<endl;
+}
+
+void	ShapeBase::setShapeType(string TypeName){
+	if (TypeName == "Prism"){
+		this->ShapeType = 1;
+	}
+	else{
+		this->ShapeType= -100;
+	};
+}
+
+void	ShapeBase::setIdentificationColour(){
+	IdentifierColour[2] = Id % 255;
+	int a = (Id - IdentifierColour[2]) / 255;
+	IdentifierColour[1] = ( a ) % 255;
+	if (a>255){
+		IdentifierColour[0] = (a - IdentifierColour[1]) / 255;
+	}
+	else{
+		IdentifierColour[0] = 0;
+	}
+	//cout<<"IdentifierColour: "<<IdentifierColour[0]<<" "<<IdentifierColour[1]<<" "<<IdentifierColour[2]<<endl;
+}
+
+int		ShapeBase::getShapeType(){
+	return ShapeType;
+}
+
+int 	ShapeBase::getId(){
+	return Id;
+}
+
+int 	ShapeBase::getNodeNumber(){
+	return nNodes;
+}
+
+int 	ShapeBase::getDim(){
+	return nDim;
+}
+
+string 	ShapeBase::getName(){
+	string name;
+	if (ShapeType == 1){
+		name = "Prism";
+	}
+	else{
+		name = "Unknown";
+	}
+	stringstream inter;
+	inter.fill('0');
+	inter.width(4);
+	inter<<Id;
+	name = name + inter.str();
+	return name;
+}
+
+double** ShapeBase::getReferencePos(){
+	return ReferenceShape->Positions;
+}
+
+double ShapeBase::getYoungModulus(){
+	return E;
+}
+
+double ShapeBase::getPoissonRatio(){
+	return v;
+}
+
+double* ShapeBase::getGrowthRate(){
+	return GrowthRate;
+}
+
+void 	ShapeBase::readNodeIds(int* inpNodeIds){
+	for (int i=0; i<nNodes; ++i){
+		this->NodeIds[i] = inpNodeIds[i];
+	}
+}
+
+void 	ShapeBase::displayName(){
+	cout<<"Type: "<<this->ShapeType<<" Id: "<<this->Id<<endl;
+}
+
+void 	ShapeBase::setPositionMatrix(vector<Node*>& Nodes){
+	const int n = nNodes;
+	const int dim = nDim;
+	Positions = new double*[n];
+	for (int i = 0; i<nNodes; ++i){
+		Positions[i] = new double[dim];
+		for (int j = 0; j<dim; ++j){
+			Positions[i][j] = Nodes[NodeIds[i]]->Position[j];
+		}
+	}
+}
+
+void 	ShapeBase::setReferencePositionMatrix(){
+	const int n = nNodes;
+	const int dim = nDim;
+	ReferenceShape -> Positions = new double*[n];
+	for (int i = 0; i<nNodes; ++i){
+		ReferenceShape -> Positions[i] = new double[dim];
+		for (int j = 0; j<dim; ++j){
+			ReferenceShape -> Positions[i][j] = Positions[i][j];
+		}
+	}
+}
+
+void 	ShapeBase::displayPositions(){
+	for (int i=0; i<nNodes;++i){
+		for (int j =0; j<nDim; ++j){
+			cout<<Positions[i][j]<<"  ";
+		}
+		cout<<endl;
+	}
+}
+
+int*	ShapeBase::getIdentifierColour(){
+	return IdentifierColour;
+}
+
+void 	ShapeBase::getStrainColour(int type, float* StrainColour){
+	//We will scale the strain from -5 to +5 in 0 to 1 colour channel blue:
+	//We will scale the strain from -5 to +5 in 1 to 0 colour channel red:
+
+	float minStrain = -1.0;
+	float maxStrain = 1.0;
+	float SumStrain = 0.0;
+	float rb = StrainColour[0];
+	float gb = StrainColour[1];
+	float bb = StrainColour[2];
+	if (type == 0){
+		for (int i=0; i<3; ++i){
+			SumStrain += Strain(i);
+		}
+	}
+	else if (type == 1){
+		SumStrain = Strain(0);
+	}
+	else if (type == 2){
+		SumStrain = Strain(1);
+	}
+	else if (type == 3){
+		SumStrain = Strain(2);
+	}
+	else{
+		return;
+	}
+	if (SumStrain<0){
+		StrainColour[0] = 1.0 - (SumStrain - minStrain)/(0.0 -minStrain) * (1-rb);
+		minStrain = minStrain/2.0;
+		StrainColour[1] = (SumStrain - minStrain)/(0.0 - minStrain) * (gb);
+		StrainColour[2] = (SumStrain - minStrain)/(0.0 - minStrain) * (bb);
+	}
+	else{
+		StrainColour[0] = rb - SumStrain/maxStrain*rb;
+		StrainColour[1] = gb - (SumStrain - 0.0)/(maxStrain - 0.0) * (gb);
+		StrainColour[2] = bb + (SumStrain - 0.0)/(maxStrain - 0.0) * (1-bb);
+	}
+	//cout<<"Strain: "<<Strain(0)<<" "<<Strain(1)<<" "<<Strain(2)<<" colour: "<< StrainColour[0]<<" "<<StrainColour[1]<<" "<<StrainColour[2]<<endl;
+}
+
+void 	ShapeBase::getStrain(int type, float &StrainMag){
+	StrainMag = 0.0;
+	if (type == 0){
+		for (int i=0; i<3; ++i){
+			StrainMag += Strain(i);
+		}
+	}
+	else if (type == 1){
+		StrainMag = Strain(0);
+	}
+	else if (type == 2){
+		StrainMag = Strain(1);
+	}
+	else if (type == 3){
+	}
+	else{
+		return;
+	}
+}
+
+void 	ShapeBase::getNodeBasedPysProp(int type, int NodeNo, vector<Node*>& Nodes, float& PysPropMag){
+	PysPropMag = 0.0;
+	if (type == 0){
+		PysPropMag = Nodes[NodeIds[NodeNo]] -> Viscosity;
+	}
+}
+
+void 	ShapeBase::getPysProp(int type, float &PysPropMag){
+	PysPropMag = 0.0;
+	if (type ==1){
+		PysPropMag = getYoungModulus();
+	}
+	else if (type == 2 ){
+		PysPropMag = getPoissonRatio();
+	}
+	else if (type ==3){
+		double* growth;
+		growth = new double[3];
+		growth = getGrowthRate();
+		for (int i =0 ; i< nDim ; ++i){
+			PysPropMag += growth[i];
+		}
+	}
+}
+
+void 	ShapeBase::displayIdentifierColour(){
+	cout <<" IdentifierColour:  "<<IdentifierColour[0]<<" "<<IdentifierColour[1]<<" "<<IdentifierColour[2]<<endl;
+}
+
+void 	ShapeBase::alignReference(){
+	double translation[3] = {0.0,0.0,0.0};
+	for (int i = 0; i<nNodes; ++i){
+		for (int j = 0; j<nDim; ++j){
+				translation[j] += ReferenceShape -> Positions[i][j] - Positions[i][j];
+		}
+	}
+	for (int j = 0; j<nDim; ++j){
+		translation[j] = translation[j]/nNodes;
+	}
+	for (int i = 0; i<nNodes; ++i){
+		for (int j = 0; j<nDim; ++j){
+			ReferenceShape -> Positions[i][j] -= translation[j];
+		}
+	}
+}
+
+void	ShapeBase::calculateForces(int RKid, double **SystemForces, vector <Node*>& Nodes){
+	const int nMult = nNodes*nDim;
+
+	using namespace boost::numeric::ublas;
+	boost::numeric::ublas::vector<double> displacement(nMult);
+	int counter = 0;
+	for (int i = 0; i<nNodes; ++i){
+		for (int j = 0; j<nDim; ++j){
+			displacement(counter) = Positions[i][j]-ReferenceShape->Positions[i][j];
+			counter++;
+		}
+	}
+
+	Forces = zero_vector<double>(nMult);
+	boost::numeric::ublas::axpy_prod(k,displacement,Forces);
+	boost::numeric::ublas::axpy_prod(B,displacement,Strain);
+	counter = 0;
+	for (int i = 0; i<nNodes; ++i){
+		for (int j = 0; j<nDim; ++j){
+			if (!Nodes[NodeIds[i]]->FixedPos[j]){
+				SystemForces[NodeIds[i]][j] = SystemForces[NodeIds[i]][j] - Forces(counter);
+			}
+			counter++;
+		}
+	}
+	/*
+	cout<<"Element: "<<Id<<endl;
+	cout<<"positions: "<<endl;
+	for (int i = 0; i<nNodes; ++i){
+		for (int j = 0; j<nDim; ++j){
+			cout<<Positions[i][j]<<" ";
+		}
+		cout<<endl;
+	}
+	cout<<"Reference positions: "<<endl;
+	for (int i = 0; i<nNodes; ++i){
+		for (int j = 0; j<nDim; ++j){
+			cout<<ReferenceShape->Positions[i][j]<<" ";
+		}
+		cout<<endl;
+	}
+	displayMatrix(displacement,"displacement");
+	displayMatrix(Forces,"Forces");
+	cout<<"SystemForces:"<<endl;
+	for (int i=0;i<8;++i){
+		for (int j=0;j<3;++j){
+			cout<<SystemForces[i][j]<<" ";
+		}
+		cout<<endl;
+	}
+	cout<<endl;*/
+}
+
+void	ShapeBase::updatePositions(vector<Node*>& Nodes){
+	for (int i = 0; i<nNodes; ++i){
+		for (int j = 0; j<nDim; ++j){
+				Positions[i][j] = Nodes[NodeIds[i]]->Position[j];
+		}
+	}
+}
+
+void 	ShapeBase::growShape(float scale){
+	//cout<<"growing shape: "<<Id<<endl;
+	//Growing the shape in x nad y only:
+	for (int i = 0; i<nNodes; ++i){
+		for (int j = 0; j<nDim-1; ++j){
+			ReferenceShape -> Positions[i][j] = ReferenceShape -> Positions[i][j] * scale;
+		}
+	}
+}
+
+bool 	ShapeBase::InvertMatrix(boost::numeric::ublas::matrix<double>& input, boost::numeric::ublas::matrix<double>& inverse, double& det){
+	//Matrix inversion routine.
+	//Uses lu_factorize and lu_substitute in uBLAS to invert a matrix
+	using namespace boost::numeric::ublas;
+	typedef permutation_matrix<std::size_t> pmatrix;
+
+	// create a working copy of the input
+	matrix<double> A(input);
+
+	// create a permutation matrix for the LU-factorization
+	pmatrix pm(A.size1());
+
+	// perform LU-factorization
+	int res = lu_factorize(A, pm);
+	if (res != 0)
+		return false;
+
+	det = 1.0;
+	for(int i = 0; i < A.size1(); i++) {
+		det *= A(i,i); // multiply by elements on diagonal
+	    det = det * determinant_sign( pm );
+	}
+	// create identity matrix of "inverse"
+	inverse.assign(identity_matrix<double> (A.size1()));
+
+	// backsubstitute to get the inverse
+	lu_substitute(A, pm, inverse);
+
+	return true;
+}
+
+int 	ShapeBase::determinant_sign(boost::numeric::ublas::permutation_matrix<std::size_t>& pm)
+{
+    int pm_sign=1;
+    std::size_t size = pm.size();
+    for (std::size_t i = 0; i < size; ++i)
+        if (i != pm(i))
+            pm_sign *= -1.0; // swap_rows would swap a pair of rows here, so we change sign
+    return pm_sign;
+}
+
+void 	ShapeBase::displayMatrix(boost::numeric::ublas::matrix<double>& mat, string matname){
+	int m = mat.size1();
+	int n = mat.size2();
+	cout<<matname<<": "<<endl;
+
+	for (int i =0; i<m; i++){
+		for (int j =0; j<n; j++){
+			cout.precision(4);
+			cout.width(6);
+			cout<<mat(i,j)<<" ";
+		}
+		cout<<endl;
+	}
+	cout<<endl;
+}
+
+void 	ShapeBase::displayMatrix(boost::numeric::ublas::matrix<int>& mat, string matname){
+	int m = mat.size1();
+	int n = mat.size2();
+	cout<<matname<<": "<<endl;
+
+	for (int i =0; i<m; i++){
+		for (int j =0; j<n; j++){
+			cout.precision(4);
+			cout.width(6);
+			cout<<mat(i,j)<<" ";
+		}
+		cout<<endl;
+	}
+	cout<<endl;
+}
+
+void	ShapeBase::displayMatrix(boost::numeric::ublas::vector<double>& vec, string matname){
+	int m = vec.size();
+	cout<<matname<<": "<<endl;
+	for (int i =0; i<m; i++){
+		cout.precision(4);
+		cout.width(6);
+		cout<<vec(i)<<" ";
+	}
+	cout<<endl;
+}
