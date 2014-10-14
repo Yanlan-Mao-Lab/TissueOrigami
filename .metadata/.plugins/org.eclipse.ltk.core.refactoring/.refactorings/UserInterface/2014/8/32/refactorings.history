@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<session version="1.0">
-<refactoring comment="Rename resource &apos;UserInterface/ClickableNode.pro&apos; to &apos;TissueFoldingUI.pro&apos;" description="Rename resource &apos;ClickableNode.pro&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="ClickableNode.pro" name="TissueFoldingUI.pro" stamp="1407319580770" updateReferences="true"/>
-</session>
