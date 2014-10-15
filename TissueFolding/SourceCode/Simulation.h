@@ -33,8 +33,7 @@ private:
 	bool VelocitiesSaved;
 	vector <int> LateralNodeList;
 	int	 nLateralNodes;
-	vector <int> PeripodiumAnchorNodeList;
-	double ReferencePeripodiumArea;
+
 
 	bool readModeOfSim(int& i, int argc, char **argv);
 	bool readParameters(int& i, int argc, char **argv);
@@ -66,7 +65,8 @@ private:
 	void initiateSinglePrismNodes();
 	void initiateSinglePrismElement();
 	void initiateNodesByRowAndColumn(int Row, int Column,  float SideLength, float zHeight);
-	void FixApicalBasalNodes(vector<int> &NodesToFix);
+	void fixApicalBasalNodes(vector<int> &NodesToFix);
+	void fixLateralNodes();
 	void GenerateLateralNodeList(vector<int> &NodesToFix, int nLastRow);
 	void GenerateLateralNodes();
 	void initiateElementsByRowAndColumn(int Row, int Column);
@@ -121,6 +121,10 @@ public:
 	float zHeight;
 	bool ApicalNodeFix[2];
 	bool BasalNodeFix[2];
+	bool LateralNodeFix[2];
+	vector <int> PeripodiumAnchorNodeList;
+	double ReferencePeripodiumArea;
+	double PeripodiumElasticity;
 	int nGrowthFunctions;
 	vector <int> GrowthFunctionTypes;
 	vector <float> GrowthParameters;

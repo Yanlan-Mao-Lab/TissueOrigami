@@ -50,6 +50,9 @@ bool ModelInputObject::readParameters(){
 			if(currParameterHeader == "InputMeshParameters:"){
 				Success  = readMeshParameters(parametersFile);
 			}
+			else if(currParameterHeader == "PeripodiumParameters:"){
+				Success  = readPeripodiumParameters(parametersFile);
+			}
 			else if(currParameterHeader == "TimeParameters:"){
 				Success  = readTimeParameters(parametersFile);
 			}
@@ -336,6 +339,30 @@ bool ModelInputObject::readMeshType2(ifstream& file){
 		cerr<<"Error in reading nodes to fix, curr string: "<<currHeader<<", should have been: BasalCircumferenceFixXY:" <<endl;
 		return false;
 	}
+	file >> currHeader;
+	if(currHeader == "AddLateralNodes:"){
+			file >> Sim->AddLateralNodes;
+	}
+	else{
+		cerr<<"Error in reading nodes to fix, curr string: "<<currHeader<<", should have been: AddLateralNodes:" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "LateralFixZ:"){
+			file >> Sim->LateralNodeFix[0];
+	}
+	else{
+		cerr<<"Error in reading nodes to fix, curr string: "<<currHeader<<", should have been: LateralFixZ:" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "LateralFixXY:"){
+			file >> Sim->LateralNodeFix[1];
+	}
+	else{
+		cerr<<"Error in reading nodes to fix, curr string: "<<currHeader<<", should have been: LateralFixXY:" <<endl;
+		return false;
+	}
 	//checking consistency:
 	if (Sim->Column>Sim->Row-2){
 		Sim->Column = Sim->Row-2;
@@ -345,6 +372,27 @@ bool ModelInputObject::readMeshType2(ifstream& file){
 	float aspectratio = Sim->zHeight/Sim->SideLength;
 	if ( aspectratio > 10 || aspectratio < 0.01 ){
 		Sim->outputFile<<"Warning: The aspect ratio of the shapes are too high or low (aspectratio (z/side): "<<aspectratio<<endl;
+	}
+	return true;
+}
+
+bool ModelInputObject::readPeripodiumParameters(ifstream& file){
+	string currHeader;
+	file >> currHeader;
+	if(currHeader == "AddPeripodium:"){
+		file >>Sim->AddPeripodialArea;
+	}
+	else{
+		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: AddPeripodium:" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "PeripodiumYoungsModulus:"){
+		file >>Sim->PeripodiumElasticity;
+	}
+	else{
+		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: PeripodiumYoungsModulus:" <<endl;
+		return false;
 	}
 	return true;
 }

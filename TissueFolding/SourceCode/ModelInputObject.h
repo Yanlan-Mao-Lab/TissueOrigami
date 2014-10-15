@@ -20,8 +20,9 @@ private:
 	bool checkFileStatus(ifstream &file, string fileName);
 	bool readPysicalProperties(ifstream &file);
 	bool readSaveOptions(ifstream &file);
-	bool readTimeParameters(ifstream &file);
 	bool readMeshParameters(ifstream& file);
+	bool readPeripodiumParameters(ifstream& file);
+	bool readTimeParameters(ifstream &file);
 	bool readMeshType2(ifstream& file);
 	bool readGrowthOptions(ifstream& file);
 	bool readGrowthType1(ifstream& file);

@@ -14,8 +14,8 @@ Simulation::Simulation(){
 	ReferencePeripodiumArea = 0.0;
 	PeripodiumStrain = 0.0;
 	reachedEndOfSaveFile = false;
-	AddLateralNodes = true;
-	AddPeripodialArea = true;
+	AddLateralNodes = false;
+	AddPeripodialArea = false;
 	setDefaultParameters();
 };
 
@@ -69,12 +69,16 @@ void Simulation::setDefaultParameters(){
 	ApicalNodeFix[1]= true;
 	BasalNodeFix[0]= true;
 	BasalNodeFix[1]= true;
+	LateralNodeFix[0]= false;
+	LateralNodeFix[1]= false;
 	nGrowthFunctions = 0;
 	nShapeChangeFunctions = 0;
 	TensionCompressionSaved = true;
 	ForcesSaved = true;
 	VelocitiesSaved = true;
 	nLateralNodes = 0;
+	AddPeripodialArea = false;
+	PeripodiumElasticity = 0.0;
 }
 
 bool Simulation::readExecutableInputs(int argc, char **argv){
@@ -193,6 +197,22 @@ bool Simulation::checkInputConsistency(){
 	if(!BasalNodeFix[0] && BasalNodeFix[1]){
 		cerr <<"Basal nodes: There is no option to fix x and y movement while keeping z free for pinned nodes, correct mesh options"<<endl;
 		BasalNodeFix[0] = true;
+		return false;
+	}
+	if(AddLateralNodes == false && AddPeripodialArea){
+		cerr <<"You need to add lateral nodes to have peripodium effects, correct mesh options"<<endl;
+		AddPeripodialArea=false;
+		return false;
+	}
+	if(AddLateralNodes == false && (LateralNodeFix[0] || LateralNodeFix[1] )){
+		cerr <<"You need to add lateral nodes to be able to fix them in any coordinate, correct mesh options"<<endl;
+		LateralNodeFix[0]=false;
+		LateralNodeFix[1]=false;
+		return false;
+	}
+	if(!LateralNodeFix[0] && LateralNodeFix[1]){
+		cerr <<"Lateral nodes: There is no option to fix x and y movement while keeping z free for pinned nodes, correct mesh options"<<endl;
+		LateralNodeFix[0]=true;
 		return false;
 	}
 	return true;
@@ -912,12 +932,15 @@ void Simulation::initiateNodesByRowAndColumn(int Row, int Column, float SideLeng
 	}
 
 	if (BasalNodeFix[0] || BasalNodeFix[1] || ApicalNodeFix[0] || ApicalNodeFix[1] ){
-		FixApicalBasalNodes(NodesToFix);
+		fixApicalBasalNodes(NodesToFix);
 	}
 	if (AddLateralNodes){
 		cout<<"generating lateral node list"<<endl;
         GenerateLateralNodeList(NodesToFix,toprowcounter);
         GenerateLateralNodes();
+	}
+	if (LateralNodeFix[0] || LateralNodeFix[1]){
+		fixLateralNodes();
 	}
 	if (AddPeripodialArea){
 		ReferencePeripodiumArea = calculatePeripodiumArea();
@@ -925,7 +948,7 @@ void Simulation::initiateNodesByRowAndColumn(int Row, int Column, float SideLeng
 	delete[] pos;
 }
 
-void Simulation::FixApicalBasalNodes(vector<int> &NodesToFix){
+void Simulation::fixApicalBasalNodes(vector<int> &NodesToFix){
 	int nNodesToFix = NodesToFix.size();
 	int n = Nodes.size()/2;
 	for (int i=0; i<nNodesToFix; ++i){
@@ -952,6 +975,20 @@ void Simulation::FixApicalBasalNodes(vector<int> &NodesToFix){
 	}
 }
 
+void Simulation::fixLateralNodes(){
+	for (int i=0; i<nLateralNodes; ++i){
+		if(LateralNodeFix[0]){
+			//The nodes on the circumference on the basal side (bottom)
+			//have their z position fixed.
+			fixZ(PeripodiumAnchorNodeList[i]);
+		}
+		if(LateralNodeFix[1]){
+			//The nodes on the circumference on the basal side (bottom)
+			//have their x & y positions fixed.
+			fixAllD(PeripodiumAnchorNodeList[i]);
+		}
+	}
+}
 void Simulation::GenerateLateralNodeList(vector<int> &NodesToFix, int nLastRow){
 	//Now I have a list of nodes to fix, written in a specific order.
 	//I would like reorder these, to generate a continuous strip around the tissue
@@ -1570,7 +1607,6 @@ double Simulation::calculatePeripodiumArea(){
 
 double Simulation::calculatePeripodiumResistanceForce(){
 	double CurrentPeripodiumArea = calculatePeripodiumArea();
-	double PeripodiumElasticity = 10;
 	PeripodiumStrain = (CurrentPeripodiumArea - ReferencePeripodiumArea) / ReferencePeripodiumArea;
 	double ForceMagnitude = PeripodiumStrain * PeripodiumElasticity;
 	//cout<<"referenceperipodium: "<<ReferencePeripodiumArea<<" Current Area: "<< CurrentPeripodiumArea<<" PeripodiumStrain: "<< PeripodiumStrain<<" ForceMagnitude: "<<ForceMagnitude<<endl;
