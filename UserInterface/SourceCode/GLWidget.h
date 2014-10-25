@@ -59,18 +59,20 @@ using namespace std;
      void ObjectSelection(QPoint LastPos);
      void resetItemSelectionInfo();
      void findElement();
-     void GetColourOfPoint(QPoint LastPos);
-     void DrawForPicking ();
+     void getColourOfPoint(QPoint LastPos);
+     void drawForPicking ();
      void generate3DObject();
 
      //Element drawing functions
      void drawElement(int i, bool picking);
+     void highlightElement(int i);
      void drawReferenceElement(int i);
      void drawPrism(int i);
      void drawPrismLateral(int i);
      void drawPrismForPicking(int i);
      void drawReferencePrism(int i);
      void drawReferencePrismLateral(int i);
+     void highlightPrism(int i);
      void fillItemSelectionInfo(int i);
 
 

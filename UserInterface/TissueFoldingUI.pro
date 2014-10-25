@@ -1,7 +1,7 @@
 #Use the command line:
 #qmake -o Makefile TissueFoldingUI.pro
 #To generate the Makefile. Then you can build the project either with eclipse, or with
-#the commands on hte header of the Makefile
+#the commands on the header of the Makefile
 
 CurrPath = /home/melda/Documents/TissueFolding/UserInterface/
 
@@ -27,6 +27,8 @@ SOURCES += $$CurrPath/SourceCode/main.cpp \
         $$CurrPath/../TissueFolding/SourceCode/Simulation.cpp \
         $$CurrPath/../TissueFolding/SourceCode/Node.cpp \
         $$CurrPath/../TissueFolding/SourceCode/ModelInputObject.cpp \
+
+LIBS += -L/usr/include -lgsl -lgslcblas
 
 # install
 target.path   =  $$CurrPath/

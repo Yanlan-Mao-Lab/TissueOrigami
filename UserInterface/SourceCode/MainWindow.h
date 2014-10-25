@@ -34,24 +34,24 @@ class MainWindow : public QMainWindow
 public slots:
     void SelectedItemChange();
     void timerSimulationStep();
-    void UpdateStrain(int);
-    void UpdateStrainCheckBox(int);
-    void UpdateStrainSpinBoxes(double);
-    void UpdatePysProp(int s);
-    void UpdatePysCheckBox(int);
-    void UpdatePysPropSpinBoxes(double d);
-    void UpdateNormalCheckBox(int);
-    void UpdateNetForceCheckBox(int);
-    void UpdateVelocityCheckBox(int);
+    void updateStrain(int);
+    void updateStrainCheckBox(int);
+    void updateStrainSpinBoxes(double);
+    void updatePysProp(int s);
+    void updatePysCheckBox(int);
+    void updatePysPropSpinBoxes(double d);
+    void updateNormalCheckBox(int);
+    void updateNetForceCheckBox(int);
+    void updateVelocityCheckBox(int);
 //signals:
  //   void StrainComboBoxCanged();
  private:
-    void SetViewBackgroundColour();
-    void GenerateControlPanel();
-    void SetUpView();
-    void SetUpGLWidget();
-    void SetUpCentralWidget();
-    void SetUpSelectionDisplayGrid(QGridLayout *SelectionDisplayGrid);
+    void setViewBackgroundColour();
+    void generateControlPanel();
+    void setUpView();
+    void setUpGLWidget();
+    void setUpCentralWidget();
+    void setUpSelectionDisplayGrid(QGridLayout *SelectionDisplayGrid);
     void setCoordBoxes(QFont font, QFont boldFont, QGridLayout *SelectionDisplayGrid);
     void setItemSelectionTitles(QFont font, QFont boldFont, QGridLayout *SelectionDisplayGrid);
     void setStrainDisplayMenu(QGridLayout *DisplayOptionsGrid);

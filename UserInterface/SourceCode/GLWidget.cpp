@@ -59,7 +59,7 @@ using namespace std;
   	 drawNormals = false;
      drawNetForces = false;
      drawVelocities = false;
-
+     cout<<"gl initiated"<<endl;
  }
 
  GLWidget::~GLWidget()
@@ -113,7 +113,11 @@ using namespace std;
 	 glMultMatrixf(MatRot);
 	 glTranslatef( -Sim01->SystemCentre[0], -Sim01->SystemCentre[1], Sim01->SystemCentre[2]);
 
-
+	 if (ItemSelected){
+		 //cout<<"item is selected calling reference shape drawing!"<<endl;
+		 drawReferenceElement(SelectedItemIndex);
+		 highlightElement(SelectedItemIndex);
+	 }
 	 for (int i =0; i<Sim01->Elements.size();i++){
 		 drawElement(i,false);
 	 }
@@ -121,10 +125,7 @@ using namespace std;
 	 drawForces();
 	 drawNodeVelocities();
 
-	 if (ItemSelected){
-		 //cout<<"item is selected calling reference shape drawing!"<<endl;
-		 drawReferenceElement(SelectedItemIndex);
-	 }
+
 	 DisplayFixedNodes= true;
 	 if (DisplayFixedNodes){
 		 drawFixedNodes();
@@ -150,6 +151,15 @@ using namespace std;
 			 drawPrismLateral(i);
 		 }
 	 }
+ }
+
+
+ void GLWidget::highlightElement(int i){
+	int ShapeType = Sim01->Elements[i]->getShapeType();
+	if (ShapeType == 1 ||  ShapeType == 2){
+		highlightPrism(i); //lateral and normal prisms are the same in terms of highlighting
+	}
+
  }
 
  void GLWidget::drawReferenceElement(int i){
@@ -252,7 +262,7 @@ using namespace std;
 	glEnd();
 
 	glDisable(GL_POLYGON_OFFSET_FILL);
-	bool drawTissueCoordinatesystem = false;
+	bool drawTissueCoordinatesystem = true;
 	if (drawTissueCoordinatesystem){
 		drawTissueCoordSystemPrism(i);
 	}
@@ -554,6 +564,42 @@ using namespace std;
 	 OutputColour[2] = b;
  }
 
+ void GLWidget::highlightPrism(int i){
+	const int nTriangle = 8; //top + bottom + 2 for each side.
+	int TriangleConnectivity[nTriangle][3] = {{0,1,2},{3,4,5},{0,2,3},{2,3,5},{0,1,3},{1,3,4},{1,2,5},{1,5,4}};
+	const int nLineStrip = 12;
+	int BorderConnectivity[nLineStrip] = {0,2,5,3,0,1,4,3,5,4,1,2};
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	glEnable(GL_POLYGON_OFFSET_FILL); // Avoid Stitching!
+	glPolygonOffset(1.0, 1.0); 	//These are necessary so the depth test can keep the lines above surfaces
+	glBegin(GL_TRIANGLES);
+		for (int j =0; j<nTriangle;++j){
+			for (int k =0; k<3; ++k){
+				int pointId = TriangleConnectivity[j][k];
+				glColor3f(0.30,0.30,0.30);
+				float x = Sim01->Elements[i]->Positions[pointId][0];
+				float y = Sim01->Elements[i]->Positions[pointId][1];
+				float z = Sim01->Elements[i]->Positions[pointId][2];
+				glVertex3f( x, y, z);
+			}
+		}
+	glEnd();
+	glDisable(GL_POLYGON_OFFSET_FILL);
+	glLineWidth(2*MainShapeLineThickness);
+	//Drawing the borders
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glColor3f(0,1.0,0);
+	glBegin(GL_LINE_STRIP);
+		for (int j =0; j<nLineStrip;++j){
+			int pointId = BorderConnectivity[j];
+			float x = Sim01->Elements[i]->Positions[pointId][0];
+			float y = Sim01->Elements[i]->Positions[pointId][1];
+			float z = Sim01->Elements[i]->Positions[pointId][2];
+			glVertex3f( x, y, z);
+		}
+	glEnd();
+ }
+
  void GLWidget::drawReferencePrism(int i){
 	const int nLineStrip = 12;
  	int BorderConnectivity[nLineStrip] = {0,2,5,3,0,1,4,3,5,4,1,2};
@@ -596,6 +642,31 @@ using namespace std;
  			float x = pos[pointId][0];
  			float y = pos[pointId][1];
  			float z = pos[pointId][2] + 10.0;
+ 			//cout<<"x,y,z: "<<x<<" "<<y<<" "<<z<<endl;
+ 			glVertex3f( x, y, z);
+ 		}
+ 	glEnd();
+
+
+ 	glColor3f(0,1,0);
+ 	glBegin(GL_LINE_STRIP);
+ 		for (int j =0; j<nLineStrip;++j){
+ 			int pointId = BorderConnectivity[j];
+ 			//cout<<j<<" point id: "<<pointId<<endl;
+ 			float x = Sim01->Elements[i]->PositionsAlignedToReference[pointId][0];
+ 			float y = Sim01->Elements[i]->PositionsAlignedToReference[pointId][1];
+ 			float z = Sim01->Elements[i]->PositionsAlignedToReference[pointId][2];
+ 			//cout<<"x,y,z: "<<x<<" "<<y<<" "<<z<<endl;
+ 			glVertex3f( x, y, z);
+ 		}
+ 	glEnd();
+ 	glBegin(GL_LINE_STRIP);
+ 		for (int j =0; j<nLineStrip;++j){
+ 			int pointId = BorderConnectivity[j];
+ 			//cout<<j<<" point id: "<<pointId<<endl;
+ 			float x = Sim01->Elements[i]->PositionsAlignedToReference[pointId][0];
+ 			float y = Sim01->Elements[i]->PositionsAlignedToReference[pointId][1];
+ 			float z = Sim01->Elements[i]->PositionsAlignedToReference[pointId][2]+10;
  			//cout<<"x,y,z: "<<x<<" "<<y<<" "<<z<<endl;
  			glVertex3f( x, y, z);
  		}
@@ -651,6 +722,7 @@ using namespace std;
   			glVertex3f( x, y, z);
   		}
   	glEnd();
+
   	if (drawNormals){
   		drawNormalToReferencePrismLateral(i);
  	}
@@ -854,8 +926,8 @@ using namespace std;
   }
 
  void GLWidget::ObjectSelection(QPoint LastPos){
-	 DrawForPicking();
-	 GetColourOfPoint(LastPos);
+	 drawForPicking();
+	 getColourOfPoint(LastPos);
 	 resetItemSelectionInfo();
 	 findElement();
 	 emit SelectedItemChanged();
@@ -870,7 +942,7 @@ using namespace std;
  	 }
  }
 
- void GLWidget::GetColourOfPoint(QPoint LastPos){
+ void GLWidget::getColourOfPoint(QPoint LastPos){
 	 QSize viewport_size = size();
 	 unsigned char pixels[4];
 	 glReadPixels(LastPos.x(), viewport_size.height() - LastPos.y(), 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixels);
@@ -1042,7 +1114,7 @@ using namespace std;
 
  }
 
- void GLWidget::DrawForPicking(){
+ void GLWidget::drawForPicking(){
 	 for (int i =0; i<Sim01->Elements.size();i++){
 		drawElement(i,true);
 	 }

@@ -33,7 +33,7 @@ private:
 	bool VelocitiesSaved;
 	vector <int> LateralNodeList;
 	int	 nLateralNodes;
-
+	int DVRight,DVLeft;
 
 	bool readModeOfSim(int& i, int argc, char **argv);
 	bool readParameters(int& i, int argc, char **argv);
@@ -71,7 +71,7 @@ private:
 	void GenerateLateralNodes();
 	void initiateElementsByRowAndColumn(int Row, int Column);
 	void assignPhysicalParameters();
-	void CalculateStiffnessMatrices();
+	void calculateStiffnessMatrices();
 	void fixAllD(int i);
 	void fixZ(int i);
 	void zeroForcesOnNode(int i);
@@ -85,11 +85,11 @@ private:
 	void writePeripodiumTensionCompression();
 	void writeForces();
 	void writeVelocities();
-	void growSystem();
+	void calculateGrowth();
 	void cleanUpGrowthRates();
 	void cleanUpShapeChangeRates();
-	void growSystemUniform(int currIndexForParameters);
-	void growSystemRing(int currIndexForParameters);
+	void calculateGrowthUniform(int currIndexForParameters);
+	void calculateGrowthRing(int currIndexForParameters);
 	void changeCellShapesInSystem();
 	void changeCellShapeRing(int currIndexForParameters);
 	void cleanreferenceupdates();
@@ -149,6 +149,7 @@ public:
 	void runOneStep();
 	bool initiateSavedSystem();
 	void updateOneStepFromSave();
+	void alignTissueDVToXPositive();
 
 
 };

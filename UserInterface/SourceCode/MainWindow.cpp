@@ -30,10 +30,10 @@ MainWindow::MainWindow(Simulation* Sim01)
     nCoordBox = 6;
 
     setWindowTitle(tr("Tissue Origami"));
-    GenerateControlPanel();
-    SetUpGLWidget();
-    SetUpCentralWidget();
-    SetViewBackgroundColour();
+    generateControlPanel();
+    setUpGLWidget();
+    setUpCentralWidget();
+    setViewBackgroundColour();
 
 
     //QLabel *SimTime = new QLabel("SimTime");
@@ -43,8 +43,9 @@ MainWindow::MainWindow(Simulation* Sim01)
 
     timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(timerSimulationStep()));
-
+    cout<<"starting timer"<<endl;
 	timer->start(0);
+	cout<<"finalised mainwindow initiation"<<endl;
  };
 
 MainWindow::~MainWindow(){
@@ -55,16 +56,16 @@ MainWindow::~MainWindow(){
 	delete MainScene;
 };
 
-void MainWindow::SetViewBackgroundColour(){
+void MainWindow::setViewBackgroundColour(){
 }
 
-void MainWindow::GenerateControlPanel(){
+void MainWindow::generateControlPanel(){
 	ControlPanelMainHBox = new QVBoxLayout();
 	ControlPanelMainHBox->setSpacing(2);
 
 	//Generating Selection Display Panel:
 	QGridLayout *SelectionDisplayGrid = new QGridLayout;
-	SetUpSelectionDisplayGrid(SelectionDisplayGrid);
+	setUpSelectionDisplayGrid(SelectionDisplayGrid);
 	ControlPanelMainHBox->addLayout(SelectionDisplayGrid,Qt::AlignTop);
 
 	//Generating the quit button:
@@ -79,7 +80,7 @@ void MainWindow::GenerateControlPanel(){
 	MainGrid->setColumnStretch(1,-2);
 }
 
-void MainWindow::SetUpGLWidget(){
+void MainWindow::setUpGLWidget(){
 	MainGLWidget = new GLWidget();
 	MainGLWidget->Sim01 = Sim01;
 	MainGLWidget->DisplayStrainRange[0] = StrainSpinBoxes[0]->value();
@@ -94,7 +95,7 @@ void MainWindow::SetUpGLWidget(){
 	MainGrid->setColumnStretch(0,10);
 }
 
-void MainWindow::SetUpCentralWidget(){
+void MainWindow::setUpCentralWidget(){
     setCentralWidget(CentralWidget);
     CentralWidget->setParent(this);
     //CentralWidget->setStyleSheet("QWidget { background-color: LightGrey; }");
@@ -103,7 +104,7 @@ void MainWindow::SetUpCentralWidget(){
     connect(MainGLWidget, SIGNAL(SelectedItemChanged()), this, SLOT(SelectedItemChange()));
 }
 
-void MainWindow::SetUpSelectionDisplayGrid(QGridLayout *SelectionDisplayGrid){
+void MainWindow::setUpSelectionDisplayGrid(QGridLayout *SelectionDisplayGrid){
 	QFont boldFont("SansSerif", 10, QFont::Bold,true);
 	QFont font("SansSerif", 10);
 
@@ -125,7 +126,7 @@ void MainWindow::setStrainDisplayMenu(QGridLayout *SelectionDisplayGrid){
 
 	DisplayCheckBoxes[0] = new QCheckBox("Strain");
 	DisplayCheckBoxes[0]->setChecked(false);
-	connect(DisplayCheckBoxes[0] , SIGNAL(stateChanged(int)),this,SLOT(UpdateStrainCheckBox(int)));
+	connect(DisplayCheckBoxes[0] , SIGNAL(stateChanged(int)),this,SLOT(updateStrainCheckBox(int)));
 
 	StrainComboBox = new QComboBox();
 	StrainComboBox->addItem("Average(DV-AP-AB) Strain");
@@ -134,7 +135,7 @@ void MainWindow::setStrainDisplayMenu(QGridLayout *SelectionDisplayGrid){
 	StrainComboBox->addItem("Strain in AB");
 	StrainComboBox->addItem("Strain in Peripodium");
 	StrainComboBox->setEnabled(false);
-	connect(StrainComboBox , SIGNAL(currentIndexChanged(int)),this,SLOT(UpdateStrain(int)));
+	connect(StrainComboBox , SIGNAL(currentIndexChanged(int)),this,SLOT(updateStrain(int)));
 
     StrainSpinBoxes[0] = new  QDoubleSpinBox();
     StrainSpinBoxes[1] = new  QDoubleSpinBox();
@@ -146,8 +147,8 @@ void MainWindow::setStrainDisplayMenu(QGridLayout *SelectionDisplayGrid){
     StrainSpinBoxes[1]->setSingleStep( 0.1 );
     StrainSpinBoxes[1]->setValue( 2.0 );
     StrainSpinBoxes[1]->setEnabled(false);
-    connect(StrainSpinBoxes[0], SIGNAL(valueChanged (double)), this, SLOT(UpdateStrainSpinBoxes(double)));
-    connect(StrainSpinBoxes[1], SIGNAL(valueChanged (double)), this, SLOT(UpdateStrainSpinBoxes(double)));
+    connect(StrainSpinBoxes[0], SIGNAL(valueChanged (double)), this, SLOT(updateStrainSpinBoxes(double)));
+    connect(StrainSpinBoxes[1], SIGNAL(valueChanged (double)), this, SLOT(updateStrainSpinBoxes(double)));
 
 	SelectionDisplayGrid->addWidget(DisplayCheckBoxes[0],4+nCoordBox,0,1,2,Qt::AlignLeft);
 	SelectionDisplayGrid->addWidget(StrainComboBox,5+nCoordBox,0,1,2,Qt::AlignLeft);
@@ -159,7 +160,7 @@ void MainWindow::setPysPropDisplayMenu(QGridLayout *SelectionDisplayGrid){
 
 	DisplayCheckBoxes[1] = new QCheckBox("Physical Properties");
 	DisplayCheckBoxes[1]->setChecked(false);
-	connect(DisplayCheckBoxes[1] , SIGNAL(stateChanged(int)),this,SLOT(UpdatePysCheckBox(int)));
+	connect(DisplayCheckBoxes[1] , SIGNAL(stateChanged(int)),this,SLOT(updatePysCheckBox(int)));
 
 	PysPropComboBox = new QComboBox();
 	PysPropComboBox->addItem("Viscosity");
@@ -168,7 +169,7 @@ void MainWindow::setPysPropDisplayMenu(QGridLayout *SelectionDisplayGrid){
 	PysPropComboBox->addItem("GrowthRate");
 	PysPropComboBox->addItem("ShapeChangeRate_z");
 	PysPropComboBox->setEnabled(false);
-	connect(PysPropComboBox , SIGNAL(currentIndexChanged(int)),this,SLOT(UpdatePysProp(int)));
+	connect(PysPropComboBox , SIGNAL(currentIndexChanged(int)),this,SLOT(updatePysProp(int)));
 
 	PysPropSpinBoxes[0] = new  QDoubleSpinBox();
 	PysPropSpinBoxes[1] = new  QDoubleSpinBox();
@@ -180,8 +181,8 @@ void MainWindow::setPysPropDisplayMenu(QGridLayout *SelectionDisplayGrid){
 	PysPropSpinBoxes[1]->setSingleStep( 0.1 );
 	PysPropSpinBoxes[1]->setValue( 5.0 );
 	PysPropSpinBoxes[1]->setEnabled(false);
-    connect(PysPropSpinBoxes[0], SIGNAL(valueChanged (double)), this, SLOT(UpdatePysPropSpinBoxes(double)));
-    connect(PysPropSpinBoxes[1], SIGNAL(valueChanged (double)), this, SLOT(UpdatePysPropSpinBoxes(double)));
+    connect(PysPropSpinBoxes[0], SIGNAL(valueChanged (double)), this, SLOT(updatePysPropSpinBoxes(double)));
+    connect(PysPropSpinBoxes[1], SIGNAL(valueChanged (double)), this, SLOT(updatePysPropSpinBoxes(double)));
 
 	SelectionDisplayGrid->addWidget(DisplayCheckBoxes[1],4+nCoordBox,2,1,2,Qt::AlignLeft);
 	SelectionDisplayGrid->addWidget(PysPropComboBox,5+nCoordBox,2,1,2,Qt::AlignLeft);
@@ -253,35 +254,35 @@ void MainWindow::setDisplayPreferences(QGridLayout *SelectionDisplayGrid){
 	//draw normals CheckBox
 	DisplayPreferencesCheckBoxes[0] = new QCheckBox("Normals");
 	DisplayPreferencesCheckBoxes[0]->setChecked(false);
-	connect(DisplayPreferencesCheckBoxes[0] , SIGNAL(stateChanged(int)),this,SLOT(UpdateNormalCheckBox(int)));
+	connect(DisplayPreferencesCheckBoxes[0] , SIGNAL(stateChanged(int)),this,SLOT(updateNormalCheckBox(int)));
 	//draw net forces checkbox
 	DisplayPreferencesCheckBoxes[1] = new QCheckBox("Net Forces");
 	DisplayPreferencesCheckBoxes[1]->setChecked(false);
-	connect(DisplayPreferencesCheckBoxes[1] , SIGNAL(stateChanged(int)),this,SLOT(UpdateNetForceCheckBox(int)));
+	connect(DisplayPreferencesCheckBoxes[1] , SIGNAL(stateChanged(int)),this,SLOT(updateNetForceCheckBox(int)));
 	//draw velocities checkbox
 	DisplayPreferencesCheckBoxes[2] = new QCheckBox("Velocities");
 	DisplayPreferencesCheckBoxes[2]->setChecked(false);
-	connect(DisplayPreferencesCheckBoxes[2] , SIGNAL(stateChanged(int)),this,SLOT(UpdateVelocityCheckBox(int)));
+	connect(DisplayPreferencesCheckBoxes[2] , SIGNAL(stateChanged(int)),this,SLOT(updateVelocityCheckBox(int)));
 	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[0],7+nCoordBox,0,1,1,Qt::AlignLeft);
 	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[1],8+nCoordBox,0,1,1,Qt::AlignLeft);
 	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[2],9+nCoordBox,0,1,1,Qt::AlignLeft);
 }
 
-void  MainWindow::UpdateNormalCheckBox(int s){
+void  MainWindow::updateNormalCheckBox(int s){
 	if ( s == 2 )
 		MainGLWidget->drawNormals = true;
 	else
 		MainGLWidget->drawNormals = false;
 }
 
-void  MainWindow::UpdateNetForceCheckBox(int s){
+void  MainWindow::updateNetForceCheckBox(int s){
 	if ( s == 2 )
 		MainGLWidget->drawNetForces = true;
 	else
 		MainGLWidget->drawNetForces = false;
 }
 
-void  MainWindow::UpdateVelocityCheckBox(int s){
+void  MainWindow::updateVelocityCheckBox(int s){
 	cout<<" s: "<<s<<endl;
 	if ( s == 2 )
 		MainGLWidget->drawVelocities = true;
@@ -289,13 +290,13 @@ void  MainWindow::UpdateVelocityCheckBox(int s){
 		MainGLWidget->drawVelocities = false;
 }
 
-void MainWindow::UpdateStrain(int s){
+void MainWindow::updateStrain(int s){
 	MainGLWidget->StrainToDisplay = s;
 	MainGLWidget->update();
 	//cout<<"Strain to display: "<<MainGLWidget->StrainToDisplay <<endl;
 }
 
-void MainWindow::UpdatePysProp(int s){
+void MainWindow::updatePysProp(int s){
 	MainGLWidget->PysPropToDisplay = s;
 	float low = MainGLWidget->DisplayPysPropRange[MainGLWidget->PysPropToDisplay][0];
 	float high = MainGLWidget->DisplayPysPropRange[MainGLWidget->PysPropToDisplay][1];
@@ -311,7 +312,7 @@ void MainWindow::UpdatePysProp(int s){
 
 }
 
-void MainWindow::UpdateStrainCheckBox(int s){
+void MainWindow::updateStrainCheckBox(int s){
 	if (s == 0){
 		MainGLWidget->StrainToDisplay = -1;
 		StrainComboBox->setEnabled(false);
@@ -330,7 +331,7 @@ void MainWindow::UpdateStrainCheckBox(int s){
 	//MainGLWidget->update();
 }
 
-void MainWindow::UpdatePysCheckBox(int s){
+void MainWindow::updatePysCheckBox(int s){
 	if (s == 0){
 		//cout<<"updating phys prop checkbox, signal is false"<<endl;
 		MainGLWidget->PysPropToDisplay = -1;
@@ -359,13 +360,13 @@ void MainWindow::UpdatePysCheckBox(int s){
 	//MainGLWidget->update();
 }
 
-void MainWindow::UpdateStrainSpinBoxes(double d){
+void MainWindow::updateStrainSpinBoxes(double d){
 	MainGLWidget->DisplayStrainRange[0] = StrainSpinBoxes[0]->value();
 	MainGLWidget->DisplayStrainRange[1] = StrainSpinBoxes[1]->value();
 	//MainGLWidget->update();
 }
 
-void MainWindow::UpdatePysPropSpinBoxes(double d){
+void MainWindow::updatePysPropSpinBoxes(double d){
 	MainGLWidget->DisplayPysPropRange[MainGLWidget->PysPropToDisplay][0] = PysPropSpinBoxes[0]->value();
 	MainGLWidget->DisplayPysPropRange[MainGLWidget->PysPropToDisplay][1] = PysPropSpinBoxes[1]->value();
 	//MainGLWidget->update();
@@ -395,7 +396,6 @@ void MainWindow::SelectedItemChange(){
 
 void MainWindow::timerSimulationStep(){
 	//cout<<"Called the function via timer"<<endl;
-
 	if (Sim01->DisplaySave){
 		if(!Sim01->reachedEndOfSaveFile){
 			Sim01->updateOneStepFromSave();
@@ -410,11 +410,8 @@ void MainWindow::timerSimulationStep(){
 		}
 	}
 	else{
-		//cout<<"Element16, node 0 position: "<<endl;
-		//cout<<Sim01->Nodes[Sim01->Elements[16]->NodeIds[0]]->Position[0]<<" "<<Sim01->Nodes[Sim01->Elements[16]->NodeIds[0]]->Position[1]<<" "<<Sim01->Nodes[Sim01->Elements[16]->NodeIds[0]]->Position[2]<<endl;
-		double** pos = Sim01->Elements[16]->getReferencePos();
-		//cout<<pos[0][0]<<" "<<pos[0][1]<<" "<<pos[0][2]<<endl;
 		if (Sim01->timestep < Sim01->SimLength){
+			//cout<<"calling runonestep"<<endl;
 			Sim01->runOneStep();
 			bool slowsteps = false;
 			if (slowsteps){

@@ -79,6 +79,8 @@ void Simulation::setDefaultParameters(){
 	nLateralNodes = 0;
 	AddPeripodialArea = false;
 	PeripodiumElasticity = 0.0;
+	DVRight = 0;
+	DVLeft = 1;
 }
 
 bool Simulation::readExecutableInputs(int argc, char **argv){
@@ -233,7 +235,7 @@ bool Simulation::initiateSystem(){
 	initiateSystemForces();
 	calculateSystemCentre();
 	assignPhysicalParameters();
-	CalculateStiffnessMatrices();
+	calculateStiffnessMatrices();
 	if (saveData){
 		cout<<"writing the summary current simulation parameters"<<endl;
 		writeSimulationSummary();
@@ -399,7 +401,14 @@ bool Simulation::initiateSavedSystem(){
 	}
 	//skipping the footer:
 	getline(saveFileToDisplayMesh,currline);
-	getline(saveFileToDisplayMesh,currline);
+	while (currline.empty() && !saveFileToDisplayMesh.eof()){
+		//skipping empty line
+		getline(saveFileToDisplayMesh,currline);
+	}
+	if(saveFileToDisplayMesh.eof()){
+		reachedEndOfSaveFile = true;
+		return true;
+	}
 	cout<<"skipped footer: "<<currline<<endl;
 	return true;
 }
@@ -599,12 +608,21 @@ void Simulation::updateOneStepFromSave(){
 	}
 
 	//skipping the footer:
-	getline(saveFileToDisplayMesh,currline);
-	getline(saveFileToDisplayMesh,currline);
+	string currline2;
+	getline(saveFileToDisplayMesh,currline2);
+	cout<<"currline 1st reading: "<<currline2<<endl;
+	getline(saveFileToDisplayMesh,currline2);
+	cout<<"currline 2nd reading: "<<currline2<<endl;
+	while (currline.empty() && !saveFileToDisplayMesh.eof()){
+		//skipping empty line
+		cout<<"skipping empty line"<<endl;
+		getline(saveFileToDisplayMesh,currline2);
+	}
 	if(saveFileToDisplayMesh.eof()){
 		reachedEndOfSaveFile = true;
 		return;
 	}
+	cout<<"in step update, skipped footer: "<<currline2<<endl;
 	timestep = timestep + dataSaveInterval;
 }
 
@@ -660,7 +678,8 @@ void  Simulation::updateElementStatesFromSave(){
 		int shapeType;
 		saveFileToDisplayMesh >> shapeType;
 		int currShapeType = Elements[i]->getShapeType();
-		if (shapeType == currShapeType){
+		cout<<"shapeType: "<<shapeType<<" currShapeType: "<<currShapeType<<endl;
+		if (shapeType == currShapeType || shapeType == 2){
 			//cout<<"shape type is correct, moving on to update"<<endl;
 			//The current shape on the list, and the shape I am reading are of same type, I can read it:
 			Elements[i]->updateShapeFromSave(saveFileToDisplayMesh);
@@ -789,7 +808,7 @@ void Simulation::initiateMesh(int MeshType, string inputtype ){
 	}
 }
 
-void Simulation::CalculateStiffnessMatrices(){
+void Simulation::calculateStiffnessMatrices(){
 	int n = Elements.size();
 	for (int i=0; i<n; ++i){
 		cout<<" setting up element :  "<<i<<" of "<<n<<endl;
@@ -878,6 +897,8 @@ void Simulation::initiateSinglePrismElement(){
 }
 
 void Simulation::initiateNodesByRowAndColumn(int Row, int Column, float SideLength, float zHeight){
+	DVRight = Row;
+	DVLeft = 0;
 	//The height of the equilateral triangle with side length: SideLength
 	double sqrt3 = 1.7321;
 	float h = sqrt3/2*SideLength;
@@ -1228,13 +1249,14 @@ void Simulation::assignPhysicalParameters(){
 }
 
 void Simulation::runOneStep(){
+	//cout<<"inside runonestep"<<endl;
 	int displayfreq = 60/dt;
-	/*if(timestep==0){
-		for(int i=0;i<Nodes.size();++i){
-			Nodes[i]->Position[0] *=2.0;
-			Nodes[i]->Position[1] *=2.0;
-			Nodes[i]->Position[2] *=2.0;
-		}
+	if(timestep==0){
+		//for(int i=0;i<Nodes.size();++i){
+		//	Nodes[i]->Position[0] *=4.0;
+		//	Nodes[i]->Position[1] *=2.0;
+		//	Nodes[i]->Position[2] *=2.0;
+		//}
 		double R[3][3];
 		double Rx[3][3] = {{1,0,0},{0,0,-1},{0,1,0}};
 		double Ry[3][3] = {{0,0,1},{0,1,0},{-1,0,0}};
@@ -1255,42 +1277,44 @@ void Simulation::runOneStep(){
 		for(int i=0;i<Elements.size();++i){
 			Elements[i]->updatePositions(Nodes);
 		}
-	}*/
+	}
 	if (timestep%displayfreq == 0){
 		cout<<"time : "<<timestep * dt<<endl;
-		float dx = Nodes[Elements[0]->NodeIds[0]]->Position[0] - Nodes[Elements[4]->NodeIds[1]]->Position[0];
-		float dy = Nodes[Elements[0]->NodeIds[0]]->Position[1] - Nodes[Elements[4]->NodeIds[1]]->Position[1];
-		float dz = Nodes[Elements[0]->NodeIds[0]]->Position[2] - Nodes[Elements[4]->NodeIds[1]]->Position[2];
-		double d2 = dx*dx + dy*dy + dz*dz;
-		float d = pow(d2,0.5);
-		cout<<"distance: "<<d<<endl;
 	}
-	cleanreferenceupdates();
+	//cleanreferenceupdates();
 	cleanGrowthData();
 	resetForces();
-
+//	alignTissueDVToXPositive();
 	int nElement = Elements.size();
+	if(nGrowthFunctions>0){
+		calculateGrowth();
+	}
+	//if(nShapeChangeFunctions>0){
+	//	changeCellShapesInSystem();
+	//}
 	for (int i=0; i<nElement; ++i){
-		//aligning the centres:
-		Elements[i]->alignReference();
-		if (Elements[i]->updatedReference){
-			Elements[i]->calculateReferenceStiffnessMatrix();
+		Elements[i]->alignElementOnReference();
+		if (Elements[i]->IsGrowing){
+			Elements[i]->growShape();
 		}
 	}
-	if(nGrowthFunctions>0){
-		growSystem();
-	}
-	if(nShapeChangeFunctions>0){
-		changeCellShapesInSystem();
-	}
+
+
+	/*int *nodeIds = Elements[0]->getNodeIds();
+	cout<<"Before loop Node 0 positions: "<<endl;
+	for (int i=0;i<6;++i){cout<<Nodes[nodeIds[i]]->Position[0]<<" "<<Nodes[nodeIds[i]]->Position[1]<<" "<<Nodes[nodeIds[i]]->Position[2]<<endl;}
+	cout<<"Node 0 PositionsAlignedToReference: "<<endl;
+	for (int i=0;i<6;++i){cout<<Elements[0]->PositionsAlignedToReference[i][0]<<" "<<Elements[0]->PositionsAlignedToReference[i][1]<<" "<<Elements[0]->PositionsAlignedToReference[i][2]<<endl;}
+	double **pos = Elements[0]->getReferencePos();
+	cout<<"Node 0 PositionsofReference: "<<endl;
+	for (int i=0;i<6;++i){cout<<pos[i][0]<<" "<<pos[i][1]<<" "<<pos[i][2]<<endl;}*/
 	for (int i=0; i<nElement; ++i){
 		//cout<<"calculating element: "<<i<<endl;
 		//updating the plastic strains with the calculations on growth and shape change:
-		Elements[i]->calculatePlasticStrain();
+		//Elements[i]->calculatePlasticStrain();
 		//calculating the forces:
 		Elements[i]->calculateForces(1,SystemForces, Nodes);
 	}
-
 	if(AddPeripodialArea){
 		addPeripodiumResistance();
 	}
@@ -1304,15 +1328,53 @@ void Simulation::runOneStep(){
 			Nodes[i]->Velocity[j] = SystemForces[i][j]/Nodes[i]->Viscosity;
 			Nodes[i]->Position[j] += Nodes[i]->Velocity[j]*dt;
 		}
+		//if (i<10){
+			//cout<<"Forces on Node "<<i<<": "<<SystemForces[i][0]<<" "<<SystemForces[i][1]<<" "<<SystemForces[i][2]<<endl;
+			//cout<<"Velocity  of Node "<<i<<": "<<Nodes[i]->Velocity[0]<<" "<<Nodes[i]->Velocity[1]<<" "<<Nodes[i]->Velocity[2]<<endl;
+		//}
 	}
-	for (int i=0;i<Elements.size();++i){
+	for (int i=0;i<Elements.size(); ++i ){
 		Elements[i]->updatePositions(Nodes);
 	}
 	if (saveData && timestep % dataSaveInterval == 0){
 		saveStep();
 	}
 	timestep++;
-
+	//cout<<"finished runonestep"<<endl;
+}
+void Simulation::alignTissueDVToXPositive(){
+	double* u = new double[3];
+	double* v = new double[3];
+	for (int i=0;i<3;++i){
+		u[i] = Nodes[DVRight]->Position[i] - Nodes[DVLeft]->Position[i];
+	}
+	Elements[0]->normaliseVector3D(u);
+	v[0]=1;v[1]=0;v[2]=0;
+	double c, s;
+	Elements[0]->calculateRotationAngleSinCos(u,v,c,s);
+	double *rotAx;
+	rotAx = new double[3];
+	double *rotMat;
+	rotMat = new double[9]; //matrix is written in one row
+	Elements[0]->calculateRotationAxis(u,v,rotAx);	//calculating the rotation axis that is perpendicular to both u and v
+	Elements[0]->constructRotationMatrix(c,s,rotAx,rotMat);
+	int n = Nodes.size();
+	for(int i=0;i<n;++i){
+		for(int j = 0; j< Nodes[i]->nDim; ++j){
+			u[j] = Nodes[i]->Position[j];
+		}
+		Elements[0]->rotateVectorByRotationMatrix(u,rotMat);
+		for(int j = 0; j< Nodes[i]->nDim; ++j){
+			Nodes[i]->Position[j] = u[j];
+		}
+	}
+	for(int i=0;i<Elements.size();++i){
+		Elements[i]->updatePositions(Nodes);
+	}
+	delete[] rotAx;
+	delete[] rotMat;
+	delete[] u;
+	delete[] v;
 }
 
 void Simulation::cleanGrowthData(){
@@ -1443,16 +1505,16 @@ void Simulation::writeVelocities(){
 	}
 }
 
-void Simulation::growSystem(){
+void Simulation::calculateGrowth(){
 	int currIndexForParameters = 0;
 	cleanUpGrowthRates();
 	for (int i=0; i<nGrowthFunctions; ++i){
 		if (GrowthFunctionTypes[i] == 1){
-			growSystemUniform(currIndexForParameters);
+			calculateGrowthUniform(currIndexForParameters);
 			currIndexForParameters += 5;
 		}
 		else if(GrowthFunctionTypes[i] == 2){
-			growSystemRing(currIndexForParameters);
+			calculateGrowthRing(currIndexForParameters);
 			currIndexForParameters += 9;
 		}
 	}
@@ -1491,7 +1553,7 @@ void Simulation::cleanUpShapeChangeRates(){
 	}
 }
 
-void Simulation::growSystemUniform(int currIndex){
+void Simulation::calculateGrowthUniform(int currIndex){
 	float initTime = GrowthParameters[currIndex];
 	float endTime = GrowthParameters[currIndex+1];
 	float simTime = dt*timestep;
@@ -1507,7 +1569,7 @@ void Simulation::growSystemUniform(int currIndex){
 	}
 }
 
-void Simulation::growSystemRing(int currIndex){
+void Simulation::calculateGrowthRing(int currIndex){
 	float initTime = GrowthParameters[currIndex];
 	float endTime = GrowthParameters[currIndex+1];
 	float simTime = dt*timestep;

@@ -12,79 +12,13 @@
 using namespace std;
 
 PrismLateral::PrismLateral(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId): Prism(tmpNodeIds, Nodes, CurrId){
-	cout<<"constructed lateral prism"<<endl;
+	//cout<<"constructed lateral prism"<<endl;
 }
-/*	nNodes = 6;
-	nDim = 3;
-	Id = CurrId;
-	NodeIds = new int[6];
-	IdentifierColour = new int[3];
-	E = 10.0;
-	v = 0.3;
-	GrowthRate = new double[3];
-	ShapeChangeRate  = new double[3];
-	CurrGrowthStrainAddition = new double[3];
-	for (int i=0; i<3; ++i){
-		CurrGrowthStrainAddition[i] = 0;
-		GrowthRate[i] = 0;
-		ShapeChangeRate[i] =0;
-	}
-	updatedReference = false;
-	TissueCoordinateSystemUpToDate = false;
-	CurrShapeChangeStrainsUpToDate = false;
-	CurrGrowthStrainsUpToDate = false;
-	IsGrowing = false;
-	IsChangingShape = false;
-	GrewInThePast = false;
-	ChangedShapeInThePast = false;
-
-	setIdentificationColour();
-	setShapeType("PrismLateral");
-	ReferenceShape = new ReferenceShapeBase("PrismLateral");
-	readNodeIds(tmpNodeIds);
-	setPositionMatrix(Nodes);
-	setReferencePositionMatrix();
-	setCoeffMat();
-	alingmentTurn=0;
-	setNormals();
-	setRefShapePosBuffers();
-
-
-	Strain = boost::numeric::ublas::zero_vector<double>(6);
-	StrainTissueMat = boost::numeric::ublas::zero_matrix<double>(3,3);
-	PlasticStrain = boost::numeric::ublas::zero_vector<double>(6);
-	LocalGrowthStrainsMat = boost::numeric::ublas::zero_matrix<double>(3,3);
-	LocalShapeChangeStrainsMat = boost::numeric::ublas::zero_matrix<double>(3,3);
-	LocalPlasticStrainsMat = boost::numeric::ublas::zero_matrix<double>(3,3);
-	CurrGrowthStrainsInTissueCoordsMat= boost::numeric::ublas::zero_matrix<double>(3,3);
-	CurrShapeChangeStrainsInTissueCoordsMat= boost::numeric::ublas::zero_matrix<double>(3,3);
-	CurrPlasticStrainsInTissueCoordsMat= boost::numeric::ublas::zero_matrix<double>(3,3);
-
-	CurrShapeChangeToAdd[0] = 0;
-	CurrShapeChangeToAdd[1] = 0;
-	CurrShapeChangeToAdd[2] = 0;
-	TissueCoordinateSystem = new double[9];
-	TissueCoordinateSystem[0]=1.0;
-	TissueCoordinateSystem[1]=0.0;
-	TissueCoordinateSystem[2]=0.0;
-	TissueCoordinateSystem[3]=0.0;
-	TissueCoordinateSystem[4]=1.0;
-	TissueCoordinateSystem[5]=0.0;
-	TissueCoordinateSystem[6]=0.0;
-	TissueCoordinateSystem[7]=0.0;
-	TissueCoordinateSystem[8]=1.0;
-	RefToTissueRotMat = boost::numeric::ublas::zero_matrix<double>(3,3);
-	RefToTissueRotMatT = boost::numeric::ublas::zero_matrix<double>(3,3);
-	TissueToWorldRotMat = boost::numeric::ublas::zero_matrix<double>(3,3);
-	setTissueCoordsRotationsBuffers();
-}
-*/
 
 PrismLateral::~PrismLateral(){
 	//cout<<"called the destructor for prism class"<<endl;
 	//Only delete what you have constructed in the child element's constructor
 }
-
 
 
 void  PrismLateral::setElasticProperties(double E, double v){
@@ -132,16 +66,16 @@ void PrismLateral::calculateNormalToBasalSide(){
 	//vector from point 0 to point 1:
 	double* vec1;
 	vec1 = new double[3];
-	vec1[0] = Positions[3][0] - Positions[0][0];
-	vec1[1] = Positions[3][1] - Positions[0][1];
-	vec1[2] = Positions[3][2] - Positions[0][2];
+	vec1[0] = PositionsAlignedToReference[3][0] - PositionsAlignedToReference[0][0];
+	vec1[1] = PositionsAlignedToReference[3][1] - PositionsAlignedToReference[0][1];
+	vec1[2] = PositionsAlignedToReference[3][2] - PositionsAlignedToReference[0][2];
 
 	//vector from point 0 to point 2:
 	double* vec2;
 	vec2 = new double[3];
-	vec2[0] = Positions[5][0] - Positions[0][0];
-	vec2[1] = Positions[5][1] - Positions[0][1];
-	vec2[2] = Positions[5][2] - Positions[0][2];
+	vec2[0] = PositionsAlignedToReference[5][0] - PositionsAlignedToReference[0][0];
+	vec2[1] = PositionsAlignedToReference[5][1] - PositionsAlignedToReference[0][1];
+	vec2[2] = PositionsAlignedToReference[5][2] - PositionsAlignedToReference[0][2];
 
 	//normal vector to the triangle
 	crossProduct3D(vec1,vec2,CurrentNormal);
@@ -150,9 +84,9 @@ void PrismLateral::calculateNormalToBasalSide(){
 	//with the vector towards the top. lets say from node 0 to 3:
 	double* vec3;
 	vec3 = new double[3];
-	vec3[0] = Positions[1][0] - Positions[0][0];
-	vec3[1] = Positions[1][1] - Positions[0][1];
-	vec3[2] = Positions[1][2] - Positions[0][2];
+	vec3[0] = PositionsAlignedToReference[1][0] - PositionsAlignedToReference[0][0];
+	vec3[1] = PositionsAlignedToReference[1][1] - PositionsAlignedToReference[0][1];
+	vec3[2] = PositionsAlignedToReference[1][2] - PositionsAlignedToReference[0][2];
 	double dotp = dotProduct3D(vec3, CurrentNormal);
 	if(dotp < 0){
 		CurrentNormal[0] *= (-1.0);
@@ -199,24 +133,24 @@ void PrismLateral::calculateNormalToApicalSide(){
 	//vector from point 0 to point 1:
 	double* vec1;
 	vec1 = new double[3];
-	vec1[0] = Positions[4][0] - Positions[1][0];
-	vec1[1] = Positions[4][1] - Positions[1][1];
-	vec1[2] = Positions[4][2] - Positions[1][2];
+	vec1[0] = PositionsAlignedToReference[4][0] - PositionsAlignedToReference[1][0];
+	vec1[1] = PositionsAlignedToReference[4][1] - PositionsAlignedToReference[1][1];
+	vec1[2] = PositionsAlignedToReference[4][2] - PositionsAlignedToReference[1][2];
 
 	//vector from point 0 to point 2:
 	double* vec2;
 	vec2 = new double[3];
-	vec2[0] = Positions[5][0] - Positions[1][0];
-	vec2[1] = Positions[5][1] - Positions[1][1];
-	vec2[2] = Positions[5][2] - Positions[1][2];
+	vec2[0] = PositionsAlignedToReference[5][0] - PositionsAlignedToReference[1][0];
+	vec2[1] = PositionsAlignedToReference[5][1] - PositionsAlignedToReference[1][1];
+	vec2[2] = PositionsAlignedToReference[5][2] - PositionsAlignedToReference[1][2];
 
 	//normal vector to the triangle
 	crossProduct3D(vec1,vec2,CurrentNormal);
 	double* vec3;
 	vec3 = new double[3];
-	vec3[0] = Positions[0][0] - Positions[1][0];
-	vec3[1] = Positions[0][1] - Positions[1][1];
-	vec3[2] = Positions[0][2] - Positions[1][2];
+	vec3[0] = PositionsAlignedToReference[0][0] - PositionsAlignedToReference[1][0];
+	vec3[1] = PositionsAlignedToReference[0][1] - PositionsAlignedToReference[1][1];
+	vec3[2] = PositionsAlignedToReference[0][2] - PositionsAlignedToReference[1][2];
 	double dotp = dotProduct3D(vec3, CurrentNormal);
 	if(dotp < 0 ){
 		CurrentNormal[0] *= (-1.0);
@@ -259,17 +193,17 @@ void PrismLateral::calculateReferenceNormalToApicalSide(){
 void PrismLateral::getCurrentAlignmentSides(double* RefSide, double* ShapeSide){
 	//side vector for alignment:
 	if (alingmentTurn == 0){
-		ShapeSide[0] = Positions[3][0] - Positions[0][0];
-		ShapeSide[1] = Positions[3][1] - Positions[0][1];
-		ShapeSide[2] = Positions[3][2] - Positions[0][2];
+		ShapeSide[0] = PositionsAlignedToReference[3][0] - PositionsAlignedToReference[0][0];
+		ShapeSide[1] = PositionsAlignedToReference[3][1] - PositionsAlignedToReference[0][1];
+		ShapeSide[2] = PositionsAlignedToReference[3][2] - PositionsAlignedToReference[0][2];
 		RefSide[0] = ReferenceShape->Positions[3][0] - ReferenceShape->Positions[0][0];
 		RefSide[1] = ReferenceShape->Positions[3][1] - ReferenceShape->Positions[0][1];
 		RefSide[2] = ReferenceShape->Positions[3][2] - ReferenceShape->Positions[0][2];
 	}
 	else{
-		ShapeSide[0] = Positions[4][0] - Positions[1][0];
-		ShapeSide[1] = Positions[4][1] - Positions[1][1];
-		ShapeSide[2] = Positions[4][2] - Positions[1][2];
+		ShapeSide[0] = PositionsAlignedToReference[4][0] - PositionsAlignedToReference[1][0];
+		ShapeSide[1] = PositionsAlignedToReference[4][1] - PositionsAlignedToReference[1][1];
+		ShapeSide[2] = PositionsAlignedToReference[4][2] - PositionsAlignedToReference[1][2];
 		RefSide[0] = ReferenceShape->Positions[4][0] - ReferenceShape->Positions[1][0];
 		RefSide[1] = ReferenceShape->Positions[4][1] - ReferenceShape->Positions[1][1];
 		RefSide[2] = ReferenceShape->Positions[4][2] - ReferenceShape->Positions[1][2];
@@ -285,17 +219,17 @@ void PrismLateral::getCurrentAlignmentFaces(double* RefSide, double* ShapeSide, 
 	Shape2ndSide = new double[3];
 	//side vector for alignment:
 	if (alingmentTurn == 0){
-		Shape2ndSide[0] = Positions[5][0] - Positions[0][0];
-		Shape2ndSide[1] = Positions[5][1] - Positions[0][1];
-		Shape2ndSide[2] = Positions[5][2] - Positions[0][2];
+		Shape2ndSide[0] = PositionsAlignedToReference[5][0] - PositionsAlignedToReference[0][0];
+		Shape2ndSide[1] = PositionsAlignedToReference[5][1] - PositionsAlignedToReference[0][1];
+		Shape2ndSide[2] = PositionsAlignedToReference[5][2] - PositionsAlignedToReference[0][2];
 		Ref2ndSide[0] = ReferenceShape->Positions[5][0] - ReferenceShape->Positions[0][0];
 		Ref2ndSide[1] = ReferenceShape->Positions[5][1] - ReferenceShape->Positions[0][1];
 		Ref2ndSide[2] = ReferenceShape->Positions[5][2] - ReferenceShape->Positions[0][2];
 	}
 	else{
-		Shape2ndSide[0] = Positions[5][0] - Positions[1][0];
-		Shape2ndSide[1] = Positions[5][1] - Positions[1][1];
-		Shape2ndSide[2] = Positions[5][2] - Positions[1][2];
+		Shape2ndSide[0] = PositionsAlignedToReference[5][0] - PositionsAlignedToReference[1][0];
+		Shape2ndSide[1] = PositionsAlignedToReference[5][1] - PositionsAlignedToReference[1][1];
+		Shape2ndSide[2] = PositionsAlignedToReference[5][2] - PositionsAlignedToReference[1][2];
 		Ref2ndSide[0] = ReferenceShape->Positions[5][0] - ReferenceShape->Positions[1][0];
 		Ref2ndSide[1] = ReferenceShape->Positions[5][1] - ReferenceShape->Positions[1][1];
 		Ref2ndSide[2] = ReferenceShape->Positions[5][2] - ReferenceShape->Positions[1][2];
@@ -306,13 +240,6 @@ void PrismLateral::getCurrentAlignmentFaces(double* RefSide, double* ShapeSide, 
 	cout<<"Ref2ndSide: "<<Ref2ndSide[0]<<" "<<Ref2ndSide[1]<<" "<<Ref2ndSide[2]<<endl;
 	cout<<"ShapeFace: "<<ShapeFace[0]<<" "<<ShapeFace[1]<<" "<<ShapeFace[2]<<endl;
 	cout<<"RefFace: "<<RefFace[0]<<" "<<RefFace[1]<<" "<<RefFace[2]<<endl;
-}
-
-void PrismLateral::calculateZVecForTissueCoordAlignment(double* u){
-	u[0] = ReferenceShape->Positions[1][0] - ReferenceShape->Positions[0][0];
-	u[1] = ReferenceShape->Positions[1][1] - ReferenceShape->Positions[0][1];
-	u[2] = ReferenceShape->Positions[1][2] - ReferenceShape->Positions[0][2];
-	normaliseVector3D(u);
 }
 
 void PrismLateral::calculateXVecForTissueCoordAlignment(double* u ){

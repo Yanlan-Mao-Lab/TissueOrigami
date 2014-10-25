@@ -21,7 +21,6 @@ private:
 	void calculateReferenceNormalToApicalSide();
 	void getCurrentAlignmentSides(double*, double*);
 	void getCurrentAlignmentFaces(double* RefSide, double* ShapeSide, double* RefFace, double* ShapeFace);
-	void calculateZVecForTissueCoordAlignment(double* u);
 	void calculateXVecForTissueCoordAlignment(double* u);
 public:
 	PrismLateral(int* NodeIds,vector<Node*>& Nodes, int CurrId);
