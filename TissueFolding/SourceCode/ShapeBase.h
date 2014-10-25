@@ -167,12 +167,13 @@ public:
 	void 	displayMatrix(boost::numeric::ublas::matrix<int>& mat, string matname);
 	void 	displayMatrix(boost::numeric::ublas::vector<double>& vec, string matname);
 	void	normaliseVector3D(double* v);
-
+	double 	determinant3by3Matrix(double* rotMat);
 
 	void	calculateRotationAngleSinCos(double* u, double* v, double& c, double& s);
 	void	calculateRotationAxis(double* u, double* v,double* rotAx);
 	void	constructRotationMatrix(double c, double s, double* rotAx, double* rotMat);
 	void	rotateVectorByRotationMatrix(double* u,double* rotMat);
+
 
 	void calculateWorldToTissueRotationMatrix();
 	void updatePositionsAlignedToReferenceWithBuffers();

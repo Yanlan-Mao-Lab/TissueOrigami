@@ -1251,7 +1251,7 @@ void Simulation::assignPhysicalParameters(){
 void Simulation::runOneStep(){
 	//cout<<"inside runonestep"<<endl;
 	int displayfreq = 60/dt;
-	if(timestep==0){
+	/*if(timestep==0){
 		//for(int i=0;i<Nodes.size();++i){
 		//	Nodes[i]->Position[0] *=4.0;
 		//	Nodes[i]->Position[1] *=2.0;
@@ -1277,7 +1277,7 @@ void Simulation::runOneStep(){
 		for(int i=0;i<Elements.size();++i){
 			Elements[i]->updatePositions(Nodes);
 		}
-	}
+	}*/
 	if (timestep%displayfreq == 0){
 		cout<<"time : "<<timestep * dt<<endl;
 	}
@@ -1680,25 +1680,23 @@ void Simulation::addPeripodiumResistance(){
 	if (ForceMagnitude <1E-6 &&  ForceMagnitude>-1E-6){
 		return;
 	}
+	double ForcePerEdge = ForceMagnitude / (nLateralNodes-1);
+	calculateSystemCentre();
 	ForceMagnitude /= nLateralNodes;
 	calculateSystemCentre();
 	for (int i=0; i< nLateralNodes; ++i){
 		double x = Nodes[PeripodiumAnchorNodeList[i]]->Position[0];
 		double y = Nodes[PeripodiumAnchorNodeList[i]]->Position[1];
-		double z = Nodes[PeripodiumAnchorNodeList[i]]->Position[2];
 		x = SystemCentre[0]-x;
 		y = SystemCentre[1]-y;
-		z = SystemCentre[2]-z;
-		double mag = x*x +y*y+z*z;
+		double mag = x*x +y*y;//+z*z;
 		if (mag > 1E-6){
 			mag = pow(mag,0.5);
 			x /= mag;
 			y /= mag;
-			z /= mag;
 		}
-		SystemForces[i][0] += x * ForceMagnitude;
-		SystemForces[i][1] += y * ForceMagnitude;
-		SystemForces[i][2] += z * ForceMagnitude;
+		SystemForces[PeripodiumAnchorNodeList[i]][0] += x * ForceMagnitude;
+		SystemForces[PeripodiumAnchorNodeList[i]][1] += y * ForceMagnitude;
 		//cout<<"i: "<<i<<" (x,y,z): "<<x<<" , "<<y<<" , "<<z<<", ForceMag(x,y,z): "<<x * ForceMagnitude<<" , "<<y * ForceMagnitude<<" , "<<z * ForceMagnitude<<endl;
 	}
 }

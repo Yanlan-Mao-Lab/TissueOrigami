@@ -546,9 +546,9 @@ void 	ShapeBase::calculateGrowthInLocalCoordinates(double * strainsToAdd){
 		WorldToTissueRotMat(2,0)=rotMat[6];
 		WorldToTissueRotMat(2,1)=rotMat[7];
 		WorldToTissueRotMat(2,2)=rotMat[8];
-		if(Id == 0){
-			displayMatrix(WorldToTissueRotMat,"WorldToTissueRotMat");
-		}
+		//if(Id == 0){
+		//	displayMatrix(WorldToTissueRotMat,"WorldToTissueRotMat");
+		//}
 		//rotate the (+)ve x &y of the reference aligned to current, with the rotation matrix R world to tissue
 		axpy_prod(WorldToTissueRotMat,tmpMat1,ReferenceCoordSystem);
 	}
@@ -895,7 +895,6 @@ bool 	ShapeBase::calculateAlignmentScore(double** RefNormalised){
 
 bool 	ShapeBase::calculateAlignmentRotationMatrix(double** RefNormalised, double* rotMat){
 	//Calculating the covarience matrix:
-	//cout<<"Calculating rotation matrix, Id: "<<Id<<endl;
 	boost::numeric::ublas::matrix<double>S(3,3);
 	boost::numeric::ublas::matrix<double>X(nDim,nNodes);
 	boost::numeric::ublas::matrix<double>YT(nNodes,nDim);
@@ -906,11 +905,7 @@ bool 	ShapeBase::calculateAlignmentRotationMatrix(double** RefNormalised, double
 		}
 	}
 	boost::numeric::ublas::axpy_prod(X,YT,S);
-	//displayMatrix(X,"X");
-	//displayMatrix(YT,"YT");
-	//displayMatrix(S,"S");
 	gsl_matrix * Sgsl = gsl_matrix_alloc (3, 3);
-	//gsl_matrix * UT = gsl_matrix_alloc (3, 3);
 	gsl_matrix * V = gsl_matrix_alloc (3, 3);
 	gsl_matrix * R = gsl_matrix_alloc (3, 3);
 	gsl_vector * Sig = gsl_vector_alloc (3);
@@ -920,11 +915,8 @@ bool 	ShapeBase::calculateAlignmentRotationMatrix(double** RefNormalised, double
 	    	gsl_matrix_set (Sgsl, i, j, S(i,j));
 	    }
 	}
-	//gsl_matrix_get (m, i, j);
 	//Singular Value Decomposition of covariance matrix S
 	int a  =  gsl_linalg_SV_decomp (Sgsl, V, Sig, workspace);
-	//gsl_matrix_transpose_memcpy(UT,Sgsl);
-	//R = V*UT;
 	boost::numeric::ublas::matrix<double>Vublas(3,3);
 	boost::numeric::ublas::matrix<double>UT(3,3);
 	boost::numeric::ublas::matrix<double>CurrentRotMat(3,3);
@@ -942,16 +934,39 @@ bool 	ShapeBase::calculateAlignmentRotationMatrix(double** RefNormalised, double
 			counter++;
 		}
 	}
-	//displayMatrix(CurrentRotMat,"CurrentRotMat");
+	double det = determinant3by3Matrix(rotMat);
+	if (det<0){
+		cout<<"Error! Flipped element, Id: "<<Id<<endl;
+		//writing a matrix that is identity, except for the last diagonal element, which is det
+		boost::numeric::ublas::matrix<double> weights(3,3);
+		weights = boost::numeric::ublas::identity_matrix<double>(3,3);
+		boost::numeric::ublas::matrix<double> tempMat(3,3);
+		S(2,2)=det;
+		//calculating the new rotation matrix, doing my best to recover flipped elements
+		boost::numeric::ublas::axpy_prod(Vublas,S, tempMat);
+		boost::numeric::ublas::axpy_prod(tempMat,UT, CurrentRotMat);
+		int counter =0;
+		for (int i=0; i<3; ++i){
+			for (int j=0; j<3; ++j){
+				rotMat[counter] = CurrentRotMat(i,j);
+				counter++;
+			}
+		}
+	}
 	gsl_matrix_free (Sgsl);
 	gsl_matrix_free (V);
 	gsl_matrix_free (R);
 	gsl_vector_free (Sig);
 	gsl_vector_free (workspace);
-	//double gsl_linalg_LU_det (gsl_matrix * LU, int signum)
-	//R = V [1,1,1 det(VUT)]UT
 }
 
+double 	ShapeBase::determinant3by3Matrix(double* rotMat){
+	double det =0.0;
+	det =  rotMat[0]*(rotMat[4]*rotMat[8]-rotMat[5]*rotMat[7]);
+	det -= rotMat[1]*(rotMat[3]*rotMat[8]-rotMat[5]*rotMat[6]);
+	det += rotMat[2]*(rotMat[3]*rotMat[7]-rotMat[4]*rotMat[6]);
+	return det;
+}
 
 void 	ShapeBase::alignElementOnReference(){
 	updatePositionsAlignedToReferenceWithBuffers();
@@ -968,15 +983,6 @@ void 	ShapeBase::alignElementOnReference(){
 	rotMat = new double[9];
 	if (needAlignment){
 		calculateAlignmentRotationMatrix(RefNormalised, rotMat);
-		int counter = 0;
-		boost::numeric::ublas::matrix<double>CurrentRotMat(3,3);
-		for (int i=0; i<3; ++i){
-			for (int j=0; j<3; ++j){
-				//WorldToReferenceNormalRotMat(i,j) =  rotMat[counter];
-				CurrentRotMat(i,j) = rotMat[counter];
-				counter++;
-			}
-		}
 		double u[3];
 		for (int i=0; i<nNodes; ++i){
 			u[0] = PositionsAlignedToReference[i][0];
@@ -987,60 +993,6 @@ void 	ShapeBase::alignElementOnReference(){
 			PositionsAlignedToReference[i][1] = u[1] + refCentre[1];
 			PositionsAlignedToReference[i][2] = u[2] + refCentre[2];
 		}
-		boost::numeric::ublas::matrix<double>tmpMat(3,3);
-		boost::numeric::ublas::axpy_prod(CurrentRotMat,WorldToReferenceRotMat, tmpMat);
-		WorldToReferenceRotMat = tmpMat;
-	}
-
-	delete[] RefNormalised;
-	delete[] rotMat;
-	delete 	 refCentre;
-	/*
-
-	updatePositionsAlignedToReferenceWithBuffers();
-	updateAlignmentTurn();
-	calculateNormals();
-	//cout<<"updated alignment turn and calculated normals"<<endl;
-	double *v,*u;
-	v = new double[3];
-	u = new double[3];
-	for (int i=0;i<nDim; ++i){
-		v[i] = CurrentNormal[i];
-		u[i] = ReferenceShape->CurrentNormal[i];
-	}
-	//cout<<"set vectors"<<endl;
-	double c, s;
-	//cout<<"Id: "<<Id<<"Calculating the angles for z alignment"<<endl;
-	calculateRotationAngleSinCos(v,u,c,s);
-	//cout<<"calculated rotation angle"<<endl;
-	double *rotAx;
-	rotAx = new double[3];
-	double* rotMat;
-	rotMat = new double[9];
-	//double *rotMat;
-	// = new double[9]; //matrix is written in one row
-	if (c<0.9998){ //only rotate if the vectors are more than 1 degree apart
-		//cout<<"need rotation"<<endl;
-		RotatedElement = true;
-		TissueCoordinateSystemUpToDate = false;
-		CurrShapeChangeStrainsUpToDate = false;
-		CurrGrowthStrainsUpToDate = false;
-		//cout<<"Aligning the plane, angle big enough - cos: "<<c<<" sin: "<<s<<endl;
-		calculateRotationAxis(v,u,rotAx);
-		constructRotationMatrix(c,s,rotAx,rotMat);
-		//double centre[3];
-		for (int i=0; i<nNodes; ++i){
-			//u[0] = Positions[i][0];
-			//u[1] = Positions[i][1];
-			//u[2] = Positions[i][2];
-			u[0] = PositionsAlignedToReference[i][0];
-			u[1] = PositionsAlignedToReference[i][1];
-			u[2] = PositionsAlignedToReference[i][2];
-			rotateVectorByRotationMatrix(u,rotMat);
-			PositionsAlignedToReference[i][0] = u[0];
-			PositionsAlignedToReference[i][1] = u[1];
-			PositionsAlignedToReference[i][2] = u[2];
-		}
 		int counter = 0;
 		boost::numeric::ublas::matrix<double>CurrentRotMat(3,3);
 		for (int i=0; i<3; ++i){
@@ -1053,84 +1005,11 @@ void 	ShapeBase::alignElementOnReference(){
 		boost::numeric::ublas::matrix<double>tmpMat(3,3);
 		boost::numeric::ublas::axpy_prod(CurrentRotMat,WorldToReferenceRotMat, tmpMat);
 		WorldToReferenceRotMat = tmpMat;
-		if(Id == 1){
-			displayMatrix(CurrentRotMat,"CurrentRotMat");
-			displayMatrix(WorldToReferenceRotMat,"WorldToReferenceRotMat");
-		}
+
 	}
-	//Aligned the planes, now align the sides:
-	//else{ cout<<"skipping plane alignment, degree is too small: cosine: "<<c<<" sine: "<<s<<endl;}
-	double* RefSide = new double[3];
-	double* ShapeSide;
-	ShapeSide = new double[3];
-	getCurrentAlignmentSides(RefSide, ShapeSide);
-	//cout<<"Id: "<<Id<<"Calculating the angles for side  alignment"<<endl;
-	calculateRotationAngleSinCos(ShapeSide,RefSide,c,s);
-	if(Id < 2){
-		cout<<"Id: "<<Id<<" sin: "<<s<<" cos: "<<c<<endl;
-	}
-	if (c<0.9998){  //only rotate if the vectors are more than 1 degree apart
-		RotatedElement = true;
-		TissueCoordinateSystemUpToDate = false;
-		CurrShapeChangeStrainsUpToDate = false;
-		CurrGrowthStrainsUpToDate = false;
-		//cout<<"Aligning the side, angle big enough - cos: "<<c<<" sin: "<<s<<endl;
-		calculateRotationAxis(ShapeSide,RefSide,rotAx);
-		constructRotationMatrix(c,s,rotAx,rotMat);
-		for (int i=0; i<nNodes; ++i){
-			u[0] = PositionsAlignedToReference[i][0];
-			u[1] = PositionsAlignedToReference[i][1];
-			u[2] = PositionsAlignedToReference[i][2];
-			rotateVectorByRotationMatrix(u,rotMat);
-			PositionsAlignedToReference[i][0] = u[0];
-			PositionsAlignedToReference[i][1] = u[1];
-			PositionsAlignedToReference[i][2] = u[2];
-		}
-		int counter = 0;
-		boost::numeric::ublas::matrix<double>CurrentRotMat(3,3);
-		for (int i=0; i<3; ++i){
-			for (int j=0; j<3; ++j){
-				//WorldToReferenceSideRotMat(i,j) =  rotMat[counter];
-				CurrentRotMat(i,j) =  rotMat[counter];
-				counter++;
-			}
-		}
-		boost::numeric::ublas::matrix<double>tmpMat(3,3);
-		boost::numeric::ublas::axpy_prod(CurrentRotMat,WorldToReferenceRotMat, tmpMat);
-		WorldToReferenceRotMat = tmpMat;
-		if(Id == 1){
-			cout<<"RotAx: "<<endl;
-			cout<<rotAx[0]<<" "<<rotAx[1]<<" "<<rotAx[2]<<endl;
-			cout<<"sin: "<<s<<" cos: "<<c<<endl;
-			displayMatrix(CurrentRotMat,"CurrentRotMat");
-			displayMatrix(WorldToReferenceRotMat,"WorldToReferenceRotMat");
-		}
-	}
-	//else{ cout<<"skipping side alignment, degree is too small: cosine: "<<c<<" sine: "<<s<<endl;}
-	//aligning the position to the curr shape centre:
-	double translocation[3] = {0.0,0.0,0.0};
-	for (int i = 0; i<nNodes; ++i){
-		for (int j = 0; j<nDim; ++j){
-			translocation[j] +=  ReferenceShape ->Positions[i][j] - PositionsAlignedToReference[i][j];
-		}
-	}
-	for (int j = 0; j<nDim; ++j){
-		translocation[j] /= nNodes;
-	}
-	//translocation[0] -= 5.0;
-	for (int i = 0; i<nNodes; ++i){
-		for (int j = 0; j<nDim; ++j){
-			PositionsAlignedToReference[i][j] +=translocation[j];
-		}
-	}
-	delete[] u;
-	delete[] v;
-	delete[] rotAx;
+	delete[] RefNormalised;
 	delete[] rotMat;
-	delete[] RefSide;
-	delete[] ShapeSide;
-	*/
-	//cout<<"finalised aligning reference, update reference? "<<updatedReference<<endl;
+	delete 	 refCentre;
 }
 
 void 	ShapeBase::alignReference(){
@@ -1372,6 +1251,16 @@ void	ShapeBase::calculateForces(int RKid, double **SystemForces, vector <Node*>&
 	//displayMatrix(Forces,"Forces");
 	Forces = Forces - PlasticStrainForces;
 	//cout<<"forces after balancing growth contribution: "<<endl;
+	for (int i=2; i<18; i=i+3){
+		if(Forces(i)>1E-6 || Forces(i)<-1E-6){
+			cout<<"Element Id: "<<Id<<"nforce indice: "<<i<<" forces(i): "<<Forces(i)<<endl;
+			displayMatrix(displacement,"displacement");
+			displayMatrix(Strain,"Strain");
+			displayMatrix(Forces,"Forces");
+			displayMatrix(PlasticStrainForces,"PlasticStrainForces");
+			break;
+		}
+	}
 	/*if(Id < 2){
 		//displayMatrix(PlasticStrain,"PlasticStrain");
 		displayMatrix(displacement,"displacement");

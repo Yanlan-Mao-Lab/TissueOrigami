@@ -145,7 +145,7 @@ void  Prism::setElasticProperties(double E, double v){
 	D(5,5)= multiplier*(1-2*v)/2;
 
 	//making it more resistive in Ez
-	D(2,2) *= 3.0;
+	//D(2,2) *= 3.0;
 }
 
 void Prism::setViscosity(double ApicalVisc,double BasalVisc, vector <Node*>& Nodes){
