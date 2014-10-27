@@ -1,9 +1,9 @@
 InputMeshParameters:
   MeshInputMode(int-seeDocumentation): 2
-  MeshRow(int): 10
-  MeshColumn(int): 5
-  SideLength: 0.5
-  zHeight: 1.0
+  MeshRow(int): 40
+  MeshColumn(int): 12
+  SideLength: 1.0
+  zHeight: 2.0
   ApicalCircumferenceFixZ: 0
   ApicalCircumferenceFixXY: 0
   BasalCircumferenceFixZ: 0
@@ -17,12 +17,12 @@ PeripodiumParameters:
   PeripodiumYoungsModulus: 10.0
 
 TimeParameters:
-  TimeStep(sec): 0.1
-  SimulationLength(sec): 600
+  TimeStep(sec): 0.25
+  SimulationLength(sec): 6000
 
 PysicalProperties:
   YoungsModulus: 10.0		Noise(%-int): 0
-  PoissonsRatio: 0.0		Noise(%-int): 0
+  PoissonsRatio: 0.3		Noise(%-int): 0
   ApicalViscosity: 10.0 	Noise(%-int): 0
   BasalViscosity: 10.0		
 
@@ -36,24 +36,24 @@ GrowthOptions:
   NumberofGrowthFunctions(int): 3
   GrowthFunctionType(int-seeDocumentation): 1
   InitialTime(sec): 0
-  FinalTime(sec):  60
-  MaxValue(fractionPerHour-DV,AP,AB):  80.8 80.8  0.0
-
-  GrowthFunctionType(int-seeDocumentation): 2
-  InitialTime(sec): 10000
-  FinalTime(sec):  4200
-  Centre:  10.5 0.0
-  InnerRadius: 0.0
-  OuterRadius:  3.0
-  MaxValue(fractionPerHour-DV,AP,AB):  0.75 0.75 0.0
+  FinalTime(sec):  240
+  MaxValue(fractionPerHour-DV,AP,AB):  20.0 20.0  0.0
 
   GrowthFunctionType(int-seeDocumentation): 2
   InitialTime(sec): 100000
-  FinalTime(sec):  5400
+  FinalTime(sec):  240
+  Centre:  28 0.0
+  InnerRadius: 0.0
+  OuterRadius:  9.0
+  MaxValue(fractionPerHour-DV,AP,AB):  20.0 20.0 0.0
+
+  GrowthFunctionType(int-seeDocumentation): 2
+  InitialTime(sec): 100000
+  FinalTime(sec):  3600
   Centre:  12.0 0.0
   InnerRadius:  2.5
   OuterRadius:  7.0
-  MaxValue(fractionPerHour-DV,AP,AB):  1.5 1.5 0.0
+  MaxValue(fractionPerHour-DV,AP,AB):  1.0 1.0 0.0
 
 ShapeChangeOptions:
   NumberofShapeChangeFunctions(int): 2

@@ -958,6 +958,19 @@ bool 	ShapeBase::calculateAlignmentRotationMatrix(double** RefNormalised, double
 	gsl_matrix_free (R);
 	gsl_vector_free (Sig);
 	gsl_vector_free (workspace);
+	//Now I need to check if there sis only numerical error accumulationg on rotMat, or there is an actual rotation (above 1 degrees):
+	double threshold = 0.002; //this is sine 1 degrees
+	for (int i=0;i<3;++i){
+		for (int j=0;j<3;++j){
+			if(i != j){
+				if (CurrentRotMat(i,j)>threshold || CurrentRotMat(i,j)< (-1.0*threshold)) {
+					return true;
+				}
+			}
+		}
+	}
+	return false; //none of the off - diagonal terms of the matrix are above the threshold, the current rotation is only niumerical error.
+
 }
 
 double 	ShapeBase::determinant3by3Matrix(double* rotMat){
@@ -982,30 +995,31 @@ void 	ShapeBase::alignElementOnReference(){
 	double* rotMat;
 	rotMat = new double[9];
 	if (needAlignment){
-		calculateAlignmentRotationMatrix(RefNormalised, rotMat);
-		double u[3];
-		for (int i=0; i<nNodes; ++i){
-			u[0] = PositionsAlignedToReference[i][0];
-			u[1] = PositionsAlignedToReference[i][1];
-			u[2] = PositionsAlignedToReference[i][2];
-			rotateVectorByRotationMatrix(u,rotMat);
-			PositionsAlignedToReference[i][0] = u[0] + refCentre[0];
-			PositionsAlignedToReference[i][1] = u[1] + refCentre[1];
-			PositionsAlignedToReference[i][2] = u[2] + refCentre[2];
-		}
-		int counter = 0;
-		boost::numeric::ublas::matrix<double>CurrentRotMat(3,3);
-		for (int i=0; i<3; ++i){
-			for (int j=0; j<3; ++j){
-				//WorldToReferenceNormalRotMat(i,j) =  rotMat[counter];
-				CurrentRotMat(i,j) = rotMat[counter];
-				counter++;
+		bool calculateRotation = calculateAlignmentRotationMatrix(RefNormalised, rotMat);
+		if (calculateRotation){
+			double u[3];
+			for (int i=0; i<nNodes; ++i){
+				u[0] = PositionsAlignedToReference[i][0];
+				u[1] = PositionsAlignedToReference[i][1];
+				u[2] = PositionsAlignedToReference[i][2];
+				rotateVectorByRotationMatrix(u,rotMat);
+				PositionsAlignedToReference[i][0] = u[0] + refCentre[0];
+				PositionsAlignedToReference[i][1] = u[1] + refCentre[1];
+				PositionsAlignedToReference[i][2] = u[2] + refCentre[2];
 			}
+			int counter = 0;
+			boost::numeric::ublas::matrix<double>CurrentRotMat(3,3);
+			for (int i=0; i<3; ++i){
+				for (int j=0; j<3; ++j){
+					//WorldToReferenceNormalRotMat(i,j) =  rotMat[counter];
+					CurrentRotMat(i,j) = rotMat[counter];
+					counter++;
+				}
+			}
+			boost::numeric::ublas::matrix<double>tmpMat(3,3);
+			boost::numeric::ublas::axpy_prod(CurrentRotMat,WorldToReferenceRotMat, tmpMat);
+			WorldToReferenceRotMat = tmpMat;
 		}
-		boost::numeric::ublas::matrix<double>tmpMat(3,3);
-		boost::numeric::ublas::axpy_prod(CurrentRotMat,WorldToReferenceRotMat, tmpMat);
-		WorldToReferenceRotMat = tmpMat;
-
 	}
 	delete[] RefNormalised;
 	delete[] rotMat;
@@ -1251,16 +1265,6 @@ void	ShapeBase::calculateForces(int RKid, double **SystemForces, vector <Node*>&
 	//displayMatrix(Forces,"Forces");
 	Forces = Forces - PlasticStrainForces;
 	//cout<<"forces after balancing growth contribution: "<<endl;
-	for (int i=2; i<18; i=i+3){
-		if(Forces(i)>1E-6 || Forces(i)<-1E-6){
-			cout<<"Element Id: "<<Id<<"nforce indice: "<<i<<" forces(i): "<<Forces(i)<<endl;
-			displayMatrix(displacement,"displacement");
-			displayMatrix(Strain,"Strain");
-			displayMatrix(Forces,"Forces");
-			displayMatrix(PlasticStrainForces,"PlasticStrainForces");
-			break;
-		}
-	}
 	/*if(Id < 2){
 		//displayMatrix(PlasticStrain,"PlasticStrain");
 		displayMatrix(displacement,"displacement");

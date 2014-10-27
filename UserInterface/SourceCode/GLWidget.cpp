@@ -262,7 +262,7 @@ using namespace std;
 	glEnd();
 
 	glDisable(GL_POLYGON_OFFSET_FILL);
-	bool drawTissueCoordinatesystem = true;
+	bool drawTissueCoordinatesystem = false;
 	if (drawTissueCoordinatesystem){
 		drawTissueCoordSystemPrism(i);
 	}
