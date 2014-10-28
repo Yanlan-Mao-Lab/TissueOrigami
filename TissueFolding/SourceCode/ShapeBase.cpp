@@ -506,13 +506,60 @@ void 	ShapeBase::updatePlasticStainInWorldCoords(){
 }
 
 void 	ShapeBase::calculateGrowthInLocalCoordinates(double * strainsToAdd){
-	//get the (+)ve x of the reference aligned onto current coordinate system (use transpose of rotation matrix you already have for alignment)
+	/*boost::numeric::ublas::matrix<double> testRy(3,3);
+	boost::numeric::ublas::matrix<double> testRz(3,3);
+	double testc = pow(3,0.5)/2.0;
+	double tests = -0.5;
+	testRy(0,0) = testc;  testRy(0,1) = 0.0;  testRy(0,2) = tests;
+	testRy(1,0) = 0.0;  testRy(1,1) = 1.0;  testRy(1,2) = 0.0;
+	testRy(2,0) = -tests;  testRy(2,1) = 0.0;  testRy(2,2) = testc;
+	boost::numeric::ublas::matrix<double>  ReferenceCoordSystem;
+	ReferenceCoordSystem = boost::numeric::ublas::identity_matrix<double>(3,3);
+	axpy_prod(testRy,ReferenceCoordSystem,WorldToReferenceRotMat);
+	double* testzAx;
+	testzAx = new double[3];
+	testzAx[0] = WorldToReferenceRotMat(0,2);  testzAx[1]= WorldToReferenceRotMat(1,2);  testzAx[2] = WorldToReferenceRotMat(2,2);
+	cout<<"testzAx: "<<testzAx[0]<<" "<<testzAx[1]<<" "<<testzAx[2]<<endl;
+	//now I rotated the system on Ry, and I have a current z axis, I will rotate over this new z-axis, with -30 degrees:
+	double* testrotMat;
+	testrotMat = new double[9];
+	constructRotationMatrix(testc,tests,testzAx,testrotMat);
+	testRz(0,0)=testrotMat[0];
+	testRz(0,1)=testrotMat[1];
+	testRz(0,2)=testrotMat[2];
+	testRz(1,0)=testrotMat[3];
+	testRz(1,1)=testrotMat[4];
+	testRz(1,2)=testrotMat[5];
+	testRz(2,0)=testrotMat[6];
+	testRz(2,1)=testrotMat[7];
+	testRz(2,2)=testrotMat[8];
+	axpy_prod(testRz,testRy,WorldToReferenceRotMat);
+	WorldToReferenceRotMat = trans(WorldToReferenceRotMat);
+
+	boost::numeric::ublas::matrix<double>  tmpMat1;
+	tmpMat1 = boost::numeric::ublas::zero_matrix<double>(3,3);
+	ReferenceCoordSystem = boost::numeric::ublas::identity_matrix<double>(3,3);
+	axpy_prod(testRy,ReferenceCoordSystem,tmpMat1);
+	displayMatrix(tmpMat1,"tmpMat1AfterRy");
+	axpy_prod(testRz,tmpMat1,ReferenceCoordSystem);
+	tmpMat1 = ReferenceCoordSystem;
+	displayMatrix(tmpMat1,"tmpMat1AfterRyRz");
+
+	testRz(0,0) = testc;  testRz(0,1) = -tests;  testRz(0,2) = 0;
+	testRz(1,0) = tests;  testRz(1,1) = testc;  testRz(1,2) = 0.0;
+	testRz(2,0) = 0.0;  testRz(2,1) = 0.0;  testRz(2,2) = 1.0;
+	axpy_prod(WorldToReferenceRotMat,tmpMat1,ReferenceCoordSystem);
+	tmpMat1 = ReferenceCoordSystem;
+	displayMatrix(tmpMat1,"ThisShouldBeIdentity");
+*/
+	//get the (+)ve z of the reference aligned onto current coordinate system (use transpose of rotation matrix you already have for alignment)
 	boost::numeric::ublas::matrix<double>  ReferenceCoordSystem;
 	boost::numeric::ublas::matrix<double>  tmpMat1;
 	ReferenceCoordSystem = boost::numeric::ublas::identity_matrix<double>(3,3);
 	tmpMat1 = boost::numeric::ublas::zero_matrix<double>(3,3);
 	//tmp1 will be reference coordinate system on current shape
 	axpy_prod(trans(WorldToReferenceRotMat),ReferenceCoordSystem,tmpMat1);
+	//displayMatrix(tmpMat1,"tmpMat1");
 	//if(Id == 0){
 	//	displayMatrix(tmpMat1,"ReferenceCoordSystem - on current shape");
 	//}
@@ -528,7 +575,7 @@ void 	ShapeBase::calculateGrowthInLocalCoordinates(double * strainsToAdd){
 	v[2]=tmpMat1(2,2);
 	//get the rotation matrix to align current normal onto (+) ve z (R world to tissue)
 	double c, s;
-	calculateRotationAngleSinCos(u,v,c,s);
+	calculateRotationAngleSinCos(u,v,c,s); //align u onto v
 	WorldToTissueRotMat = boost::numeric::ublas::identity_matrix<double>(3,3);
 	if (c<0.9998){
 		double *rotAx;
@@ -546,11 +593,15 @@ void 	ShapeBase::calculateGrowthInLocalCoordinates(double * strainsToAdd){
 		WorldToTissueRotMat(2,0)=rotMat[6];
 		WorldToTissueRotMat(2,1)=rotMat[7];
 		WorldToTissueRotMat(2,2)=rotMat[8];
+		//cout<<"testc: "<<testc<<" tests: "<<tests<<" v: "<<v[0]<<" "<<v[1]<<" "<<v[2]<<" rotax: "<<rotAx[0]<<" "<<rotAx[1]<<" "<<rotAx[2]<<endl;
+		//displayMatrix(testRy,"Ry");
+		//displayMatrix(WorldToTissueRotMat,"WorldToTissueRotMat");
 		//if(Id == 0){
 		//	displayMatrix(WorldToTissueRotMat,"WorldToTissueRotMat");
 		//}
 		//rotate the (+)ve x &y of the reference aligned to current, with the rotation matrix R world to tissue
-		axpy_prod(WorldToTissueRotMat,tmpMat1,ReferenceCoordSystem);
+		axpy_prod(trans(WorldToTissueRotMat),tmpMat1,ReferenceCoordSystem);
+		//displayMatrix(ReferenceCoordSystem,"ReferenceCoordSystem");
 	}
 	else{
 		ReferenceCoordSystem = tmpMat1;
@@ -573,13 +624,13 @@ void 	ShapeBase::calculateGrowthInLocalCoordinates(double * strainsToAdd){
 	//	displayMatrix(ReferenceCoordSystem,"ReferenceCoordSystem - on tissue coordinates");
 	//}
 	//Now this rotated vectors x, y, and (+)ve z defines the coordinate system you want the growth strains in. Get the rotation matrix, and calculate strains.
-	v[0] = 1;
-	v[1] = 0;
-	v[2] = 0;
-	u[0]=ReferenceCoordSystem(0,0);
-	u[1]=ReferenceCoordSystem(1,0);
-	u[2]=ReferenceCoordSystem(2,0);
-	calculateRotationAngleSinCos(u,v,c,s);
+	u[0] = 1;
+	u[1] = 0;
+	u[2] = 0;
+	v[0]=ReferenceCoordSystem(0,0);
+	v[1]=ReferenceCoordSystem(1,0);
+	v[2]=ReferenceCoordSystem(2,0);
+	calculateRotationAngleSinCos(u,v,c,s);  //align u to v: align the growth in tissue to growth in local
 	boost::numeric::ublas::matrix<double>  CurrLocalGrowthToAdd;
 	CurrLocalGrowthToAdd= boost::numeric::ublas::zero_matrix<double>(3,3);
 	if (c<0.9998){
@@ -600,7 +651,8 @@ void 	ShapeBase::calculateGrowthInLocalCoordinates(double * strainsToAdd){
 		GrowthStrainsRotMat(2,0)=rotMat[6];
 		GrowthStrainsRotMat(2,1)=rotMat[7];
 		GrowthStrainsRotMat(2,2)=rotMat[8];
-
+		//displayMatrix(testRz,"Rz");
+		//displayMatrix(GrowthStrainsRotMat,"GrowthStrainsRotMat");
 		boost::numeric::ublas::matrix<double>  CurrGrowthToAddTissue;
 		CurrGrowthToAddTissue = boost::numeric::ublas::zero_matrix<double>(3,3);
 		tmpMat1 =  boost::numeric::ublas::zero_matrix<double>(3,3);
@@ -626,30 +678,6 @@ void 	ShapeBase::calculateGrowthInLocalCoordinates(double * strainsToAdd){
 	//	displayMatrix(LocalGrowthStrainsMat,"LocalGrowthStrainsMat");
 	//}
 
-
-	/*boost::numeric::ublas::matrix<double>  CurrGrowthToAddTissue;
-	boost::numeric::ublas::matrix<double>  CurrLocalGrowthToAdd;
-	boost::numeric::ublas::matrix<double>  tmpMat1;
-	boost::numeric::ublas::matrix<double>  R;
-	CurrGrowthToAddTissue = boost::numeric::ublas::zero_matrix<double>(3,3);
-	CurrLocalGrowthToAdd= boost::numeric::ublas::zero_matrix<double>(3,3);
-	tmpMat1 =  boost::numeric::ublas::zero_matrix<double>(3,3);
-	R =  boost::numeric::ublas::zero_matrix<double>(3,3);
-	cout<<"constructing CurrGrowthToAddTissue"<<endl;
-	CurrGrowthToAddTissue(0,0)= strainsToAdd[0];
-	CurrGrowthToAddTissue(1,1)= strainsToAdd[1];
-	CurrGrowthToAddTissue(2,2)= strainsToAdd[2];
-
-	boost::numeric::ublas::axpy_prod(trans(WorldToReferenceNormalRotMat),trans(WorldToReferenceXaxisRotMat),tmpMat1);
-	boost::numeric::ublas::axpy_prod(tmpMat1,WorldToReferenceNormalRotMat,R);
-
-	boost::numeric::ublas::axpy_prod(R,CurrGrowthToAddTissue,tmpMat1);
-	boost::numeric::ublas::axpy_prod(tmpMat1,R,CurrLocalGrowthToAdd);
-	LocalGrowthStrainsMat(0,0) = ( (1.0 + LocalGrowthStrainsMat(0,0)) * (1.0 + CurrLocalGrowthToAdd(0,0)) ) - 1.0;
-	LocalGrowthStrainsMat(1,1) = ( (1.0 + LocalGrowthStrainsMat(1,1)) * (1.0 + CurrLocalGrowthToAdd(1,1)) ) - 1.0;
-	LocalGrowthStrainsMat(2,2) = ( (1.0 + LocalGrowthStrainsMat(2,2)) * (1.0 + CurrLocalGrowthToAdd(2,2)) ) - 1.0;
-	displayMatrix(LocalGrowthStrainsMat,"LocalGrowthStrainsMat");
-	displayMatrix(CurrGrowthToAddTissue,"CurrGrowthToAddTissue");*/
 }
 
 void 	ShapeBase::calculateTissueCoordinateSystem(){
