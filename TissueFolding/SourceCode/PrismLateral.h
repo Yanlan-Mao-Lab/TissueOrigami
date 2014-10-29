@@ -14,14 +14,7 @@
 class PrismLateral : public Prism{
 
 private:
-	void calculateNormals();
-	void calculateNormalToBasalSide();
-	void calculateReferenceNormalToBasalSide();
-	void calculateNormalToApicalSide();
-	void calculateReferenceNormalToApicalSide();
-	void getCurrentAlignmentSides(double*, double*);
-	void getCurrentAlignmentFaces(double* RefSide, double* ShapeSide, double* RefFace, double* ShapeFace);
-	void calculateXVecForTissueCoordAlignment(double* u);
+
 public:
 	PrismLateral(int* NodeIds,vector<Node*>& Nodes, int CurrId);
 	~PrismLateral();

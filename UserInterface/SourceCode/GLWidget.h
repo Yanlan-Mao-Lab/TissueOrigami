@@ -40,7 +40,7 @@ using namespace std;
      float DisplayPysPropRange[5][2];	//current range
      float DisplayPysPropBounds[5][4];  //the minimum and maximum they can get
      vector <QString> SelectedPos;
-     bool drawNormals;
+     bool drawTissueCoordinates;
      bool drawNetForces;
      bool drawVelocities;
 
@@ -100,11 +100,7 @@ using namespace std;
      void 		drawColourbar();
      void 		drawFixedNodes();
      void		drawAxesArrows();
-     void 		drawNormalToPrism(int i);
-     void 		drawNormalToReferencePrism(int i);
      void 		drawTissueCoordSystemPrism(int i);
-     void 		drawNormalToPrismLateral(int i);
-     void 		drawNormalToReferencePrismLateral(int i);
      void 		drawForces();
      void 		drawNodeVelocities();
      void 		drawArrow3D(double* pos, double* endPoint, double r, double g, double b);

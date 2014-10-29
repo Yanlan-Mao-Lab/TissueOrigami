@@ -92,7 +92,6 @@ private:
 	void calculateGrowthRing(int currIndexForParameters);
 	void changeCellShapesInSystem();
 	void changeCellShapeRing(int currIndexForParameters);
-	void cleanreferenceupdates();
 	double calculatePeripodiumArea();
 	double calculatePeripodiumResistance();
 	double calculatePeripodiumResistanceForce();

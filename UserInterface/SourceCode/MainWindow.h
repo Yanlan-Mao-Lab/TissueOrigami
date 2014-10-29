@@ -40,7 +40,7 @@ public slots:
     void updatePysProp(int s);
     void updatePysCheckBox(int);
     void updatePysPropSpinBoxes(double d);
-    void updateNormalCheckBox(int);
+    void updateTissueCoordCheckBox(int);
     void updateNetForceCheckBox(int);
     void updateVelocityCheckBox(int);
 //signals:

@@ -21,7 +21,6 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
 		GrowthRate[i] = 0;
 		ShapeChangeRate[i] =0;
 	}
-	updatedReference = false;
 	TissueCoordinateSystemUpToDate = false;
 	CurrShapeChangeStrainsUpToDate = false;
 	CurrGrowthStrainsUpToDate = false;
@@ -37,22 +36,14 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
 	setPositionMatrix(Nodes);
 	setReferencePositionMatrix();
 	setCoeffMat();
-	alingmentTurn=1;
-	setNormals();
-	setRefShapePosBuffers();
-
 
 	Strain = boost::numeric::ublas::zero_vector<double>(6);
 	StrainTissueMat = boost::numeric::ublas::zero_matrix<double>(3,3);
 	PlasticStrain = boost::numeric::ublas::zero_vector<double>(6);
+	CurrPlasticStrainsInTissueCoordsMat = boost::numeric::ublas::zero_matrix<double>(3,3);
 	LocalGrowthStrainsMat = boost::numeric::ublas::zero_matrix<double>(3,3);
-	LocalShapeChangeStrainsMat = boost::numeric::ublas::zero_matrix<double>(3,3);
-	LocalPlasticStrainsMat = boost::numeric::ublas::zero_matrix<double>(3,3);
-	CurrGrowthStrainsInTissueCoordsMat= boost::numeric::ublas::zero_matrix<double>(3,3);
-	CurrShapeChangeStrainsInTissueCoordsMat= boost::numeric::ublas::zero_matrix<double>(3,3);
-	CurrPlasticStrainsInTissueCoordsMat= boost::numeric::ublas::zero_matrix<double>(3,3);
 
-	WorldToTissueRotMat= boost::numeric::ublas::zero_matrix<double>(3,3);
+	//WorldToTissueRotMat= boost::numeric::ublas::zero_matrix<double>(3,3);
 	RotatedElement = false;
 	WorldToReferenceRotMat = boost::numeric::ublas::zero_matrix<double>(3,3);
 	//setting rotation matrices to identity;
@@ -82,10 +73,10 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
 	TissueCoordinateSystem[6]=0.0;
 	TissueCoordinateSystem[7]=0.0;
 	TissueCoordinateSystem[8]=1.0;
-	RefToTissueRotMat = boost::numeric::ublas::zero_matrix<double>(3,3);
-	RefToTissueRotMatT = boost::numeric::ublas::zero_matrix<double>(3,3);
-	TissueToWorldRotMat = boost::numeric::ublas::zero_matrix<double>(3,3);
-	setTissueCoordsRotationsBuffers();
+	//RefToTissueRotMat = boost::numeric::ublas::zero_matrix<double>(3,3);
+	//RefToTissueRotMatT = boost::numeric::ublas::zero_matrix<double>(3,3);
+	//TissueToWorldRotMat = boost::numeric::ublas::zero_matrix<double>(3,3);
+	//setTissueCoordsRotationsBuffers();
 }
 
 Prism::~Prism(){
@@ -95,27 +86,17 @@ Prism::~Prism(){
 	}
 	delete[] Positions;
 	delete[] PositionsAlignedToReference;
-	delete[] PositionsInTissueCoord;
+	//delete[] PositionsInTissueCoord;
 	delete[] NodeIds;
 	delete[] IdentifierColour;
 	delete[] GrowthRate;
 	delete[] ShapeChangeRate;
-	delete[] RefShapePosBottomAlignedBuffer;
-	delete[] RefShapePosTopAlignedBuffer;
-	delete[] TissueCoordinateSystemTopAlignedBuffer;
-	delete[] TissueCoordinateSystemBottomAlignedBuffer;
+	//delete[] RefShapePosBottomAlignedBuffer;
+	//delete[] RefShapePosTopAlignedBuffer;
+	//delete[] TissueCoordinateSystemTopAlignedBuffer;
+	//delete[] TissueCoordinateSystemBottomAlignedBuffer;
 	delete ReferenceShape;
     //cout<<"finalised the destructor for prism class"<<endl;
-}
-
-void Prism::setNormals(){
-	const int Dim = nDim;
-	CurrentNormal = new double[Dim];
-	ReferenceShape->CurrentNormal = new double[Dim];
-	for (int i=0; i<Dim; ++i){
-		CurrentNormal[i]=0.0;
-		ReferenceShape->CurrentNormal[i]=0.0;
-	}
 }
 
 void Prism::setCoeffMat(){
@@ -155,56 +136,6 @@ void Prism::setViscosity(double ApicalVisc,double BasalVisc, vector <Node*>& Nod
 	for (int i=3; i<6; ++i){
 		Nodes[NodeIds[i]]->Viscosity = ApicalVisc;
 	}
-}
-
-void Prism::setRefShapePosBuffers(){
-	const int n = nNodes;
-	const int dim = nDim;
-	RefShapePosBottomAlignedBuffer = new double*[n];
-	RefShapePosTopAlignedBuffer = new double*[n];
-	for (int i = 0; i<nNodes; ++i){
-		RefShapePosBottomAlignedBuffer[i] = new double[dim];
-		RefShapePosTopAlignedBuffer[i] = new double[dim];
-		for (int j = 0; j<dim; ++j){
-			RefShapePosBottomAlignedBuffer[i][j] = Positions[i][j];
-			RefShapePosTopAlignedBuffer[i][j] = Positions[i][j];
-		}
-	}
-
-}
-
-void Prism::setStiffnessMatrixBuffers(){
-	//cout<<"assigning stiffness matrix buffers"<<endl;
-	kTopAlignedBuffer = k;
-	kBottomAlignedBuffer = k;
-	BTopAlignedBuffer = B;
-	BBottomAlignedBuffer = B;
-	BETopAlignedBuffer = BE;
-	BEBottomAlignedBuffer = BE;
-}
-
-void Prism::setTissueCoordsRotationsBuffers(){
-	calculateTissueCoordinateSystem();
-	TissueCoordinateSystemTopAlignedBuffer = new double[9];
-	TissueCoordinateSystemBottomAlignedBuffer = new double[9];
-	for (int i=0;i<9;++i){
-		TissueCoordinateSystemTopAlignedBuffer[i] = TissueCoordinateSystem[i];
-		TissueCoordinateSystemBottomAlignedBuffer[i] = TissueCoordinateSystem[i];
-	}
-	TissueToWorldRotMatTopAlignedBuffer = boost::numeric::ublas::zero_matrix<double>(3,3);
-	TissueToWorldRotMatBottomAlignedBuffer = boost::numeric::ublas::zero_matrix<double>(3,3);
-	TissueToWorldRotMatTopAlignedBuffer = TissueToWorldRotMat;
-	TissueToWorldRotMatBottomAlignedBuffer = TissueToWorldRotMat;
-
-	calculateRotationMatrixReferenceToTissue();
-	RefToTissueRotMatTopAlignedBuffer = boost::numeric::ublas::zero_matrix<double>(3,3);
-	RefToTissueRotMatBottomAlignedBuffer = boost::numeric::ublas::zero_matrix<double>(3,3);
-	RefToTissueRotMatTTopAlignedBuffer = boost::numeric::ublas::zero_matrix<double>(3,3);
-	RefToTissueRotMatTBottomAlignedBuffer = boost::numeric::ublas::zero_matrix<double>(3,3);
-	RefToTissueRotMatTopAlignedBuffer = RefToTissueRotMat;
-	RefToTissueRotMatBottomAlignedBuffer = RefToTissueRotMat;
-	RefToTissueRotMatTTopAlignedBuffer = RefToTissueRotMatT;
-	RefToTissueRotMatTBottomAlignedBuffer = RefToTissueRotMatT;
 }
 
 void Prism::getCurrRelaxedShape(boost::numeric::ublas::matrix<double> & CurrRelaxedShape){
@@ -352,314 +283,4 @@ void Prism::calculateCurrk(boost::numeric::ublas::matrix<double>& currk, boost::
 
 	boost::numeric::ublas::axpy_prod(currBT,detJ*D,currBE);
 	boost::numeric::ublas::axpy_prod(currBE,currB,currk);
-
-	//display the matrices:
-	//displayMatrix(ShapeFuncDer,"ShapeFuncDerStack");
-	//displayMatrix(ShapeFuncDerStack,"ShapeFuncDerStack");
-	//displayMatrix(Jacobian,"Jacobian");
-	//displayMatrix(InvJacobian,"InvJacobian");
-	//displayMatrix(InvJacobianStack,"InvJacobianStack");
-	//displayMatrix(currB,"currB");
-	//displayMatrix(currk,"currk");
-}
-
-void Prism::calculateNormals(){
-	if (alingmentTurn == 0){
-		calculateNormalToBottom();
-		calculateReferenceNormalToBottom();
-	}
-	else{
-		calculateNormalToTop();
-		calculateReferenceNormalToTop();
-	}
-}
-
-void Prism::updateAlignmentTurn(){
-	if (alingmentTurn == 0){
-		alingmentTurn = 1;
-	}
-	else{
-		alingmentTurn = 0;
-	}
-}
-
-void Prism::updateReferenceShapeBaseFromBuffer(){
-	//cout<<"updating from buffer"<<endl;
-	if (alingmentTurn == 0){
-		//the alignment is to the bottom of the prism
-		//I will take the reference shape and the k & B from buffer
-		//maybe I would not need to do the update:
-		for (int i = 0 ; i < nNodes; ++i ){
-			for (int j=0; j < nDim; ++j){
-				RefShapePosTopAlignedBuffer[i][j] = ReferenceShape->Positions[i][j];
-				ReferenceShape->Positions[i][j] = RefShapePosBottomAlignedBuffer[i][j];
-			}
-		}
-		kTopAlignedBuffer = k;
-		BTopAlignedBuffer = B;
-		BETopAlignedBuffer = BE;
-		k = kBottomAlignedBuffer;
-		B = BBottomAlignedBuffer;
-		BE = BEBottomAlignedBuffer;
-
-		TissueToWorldRotMatTopAlignedBuffer = TissueToWorldRotMat;
-		RefToTissueRotMatTopAlignedBuffer = RefToTissueRotMat;
-		RefToTissueRotMatTTopAlignedBuffer = RefToTissueRotMatT;
-		for (int i=0; i<9;++i){
-			TissueCoordinateSystemTopAlignedBuffer[i] = TissueCoordinateSystem[i];
-		}
-		CurrShapeChangeStrainsUpToDate = false;
-		CurrGrowthStrainsUpToDate = false;
-
-		TissueToWorldRotMat = TissueToWorldRotMatBottomAlignedBuffer;
-		RefToTissueRotMat = RefToTissueRotMatBottomAlignedBuffer;
-		RefToTissueRotMatT = RefToTissueRotMatTBottomAlignedBuffer;
-		for (int i=0; i<9;++i){
-			TissueCoordinateSystem[i] = TissueCoordinateSystemBottomAlignedBuffer[i];
-		}
-	}
-	else {
-		for (int i = 0 ; i < nNodes; ++i ){
-			for (int j=0; j < nDim; ++j){
-				RefShapePosBottomAlignedBuffer[i][j] = ReferenceShape->Positions[i][j];
-				ReferenceShape->Positions[i][j] = RefShapePosTopAlignedBuffer[i][j];
-			}
-		}
-		kBottomAlignedBuffer = k;
-		BBottomAlignedBuffer = B;
-		BEBottomAlignedBuffer = BE;
-		k = kTopAlignedBuffer;
-		B = BTopAlignedBuffer;
-		BE = BETopAlignedBuffer;
-
-		TissueToWorldRotMatBottomAlignedBuffer = TissueToWorldRotMat;
-		RefToTissueRotMatBottomAlignedBuffer = RefToTissueRotMat;
-		RefToTissueRotMatTBottomAlignedBuffer = RefToTissueRotMatT;
-		for (int i=0; i<9;++i){
-			TissueCoordinateSystemBottomAlignedBuffer[i] = TissueCoordinateSystem[i];
-		}
-		CurrShapeChangeStrainsUpToDate = false;
-		CurrGrowthStrainsUpToDate = false;
-
-		TissueToWorldRotMat = TissueToWorldRotMatTopAlignedBuffer;
-		RefToTissueRotMat = RefToTissueRotMatTopAlignedBuffer;
-		RefToTissueRotMatT = RefToTissueRotMatTTopAlignedBuffer;
-		for (int i=0; i<9;++i){
-			TissueCoordinateSystem[i] = TissueCoordinateSystemTopAlignedBuffer[i];
-		};
-	}
-	//cout<<"finalised updating from buffer"<<endl;
-}
-
-void Prism::resetBuffersAfterGrowth(){
-	for (int i = 0 ; i < nNodes; ++i ){
-		for (int j=0; j < nDim; ++j){
-			RefShapePosBottomAlignedBuffer[i][j] = ReferenceShape->Positions[i][j];
-			RefShapePosTopAlignedBuffer[i][j] =ReferenceShape->Positions[i][j];
-		}
-	}
-}
-
-void Prism::calculateNormalToBottom(){
-	//vector from point 0 to point 1:
-	double* vec1;
-	vec1 = new double[3];
-	vec1[0] = PositionsAlignedToReference[1][0] - PositionsAlignedToReference[0][0];
-	vec1[1] = PositionsAlignedToReference[1][1] - PositionsAlignedToReference[0][1];
-	vec1[2] = PositionsAlignedToReference[1][2] - PositionsAlignedToReference[0][2];
-
-	//vector from point 0 to point 2:
-	double* vec2;
-	vec2 = new double[3];
-	vec2[0] = PositionsAlignedToReference[2][0] - PositionsAlignedToReference[0][0];
-	vec2[1] = PositionsAlignedToReference[2][1] - PositionsAlignedToReference[0][1];
-	vec2[2] = PositionsAlignedToReference[2][2] - PositionsAlignedToReference[0][2];
-
-	//normal vector to the triangle
-	crossProduct3D(vec1,vec2,CurrentNormal);
-	//now I have the normal, but the normal must look into the prism
-	//For the bottom case, the vector should have a less than 90 degree angle
-	//with the vector towards the top. lets say from node 0 to 3:
-	double* vec3;
-	vec3 = new double[3];
-	vec3[0] = PositionsAlignedToReference[3][0] - PositionsAlignedToReference[0][0];
-	vec3[1] = PositionsAlignedToReference[3][1] - PositionsAlignedToReference[0][1];
-	vec3[2] = PositionsAlignedToReference[3][2] - PositionsAlignedToReference[0][2];
-	double dotp = dotProduct3D(vec3, CurrentNormal);
-	if(dotp < 0){
-		CurrentNormal[0] *= (-1.0);
-		CurrentNormal[1] *= (-1.0);
-		CurrentNormal[2] *= (-1.0);
-	}
-	normaliseVector3D(CurrentNormal);
-	//cout<<"Normal calculated: "<<CurrentNormal[0]<<" "<<CurrentNormal[1]<<" "<<CurrentNormal[2]<<endl;
-}
-
-void Prism::calculateReferenceNormalToBottom(){
-	//vector from point 0 to point 1:
-	double* vec1;
-	vec1 = new double[3];
-	vec1[0] = ReferenceShape->Positions[1][0] - ReferenceShape->Positions[0][0];
-	vec1[1] = ReferenceShape->Positions[1][1] - ReferenceShape->Positions[0][1];
-	vec1[2] = ReferenceShape->Positions[1][2] - ReferenceShape->Positions[0][2];
-	//vector from point 0 to point 2:
-	double* vec2;
-	vec2 = new double[3];
-	vec2[0] = ReferenceShape->Positions[2][0] - ReferenceShape->Positions[0][0];
-	vec2[1] = ReferenceShape->Positions[2][1] - ReferenceShape->Positions[0][1];
-	vec2[2] = ReferenceShape->Positions[2][2] - ReferenceShape->Positions[0][2];
-
-	crossProduct3D(vec1,vec2,ReferenceShape->CurrentNormal);
-	//now I have the normal, but the normal must look into the prism
-	//For the bottom case, the vector should have a less than 90 degree angle
-	//with the vector towards the top. lets say from node 0 to 3:
-	double* vec3;
-	vec3 = new double[3];
-	vec3[0] = ReferenceShape->Positions[3][0] - ReferenceShape->Positions[0][0];
-	vec3[1] = ReferenceShape->Positions[3][1] - ReferenceShape->Positions[0][1];
-	vec3[2] = ReferenceShape->Positions[3][2] - ReferenceShape->Positions[0][2];
-	double dotp = dotProduct3D(vec3, ReferenceShape->CurrentNormal);
-	if(dotp < 0 ){
-		ReferenceShape->CurrentNormal[0] *= (-1.0);
-		ReferenceShape->CurrentNormal[1] *= (-1.0);
-		ReferenceShape->CurrentNormal[2] *= (-1.0);
-	}
-	normaliseVector3D(ReferenceShape->CurrentNormal);
-}
-
-void Prism::calculateNormalToTop(){
-	//vector from point 0 to point 1:
-	double* vec1;
-	vec1 = new double[3];
-	vec1[0] = PositionsAlignedToReference[4][0] - PositionsAlignedToReference[3][0];
-	vec1[1] = PositionsAlignedToReference[4][1] - PositionsAlignedToReference[3][1];
-	vec1[2] = PositionsAlignedToReference[4][2] - PositionsAlignedToReference[3][2];
-
-	//vector from point 0 to point 2:
-	double* vec2;
-	vec2 = new double[3];
-	vec2[0] = PositionsAlignedToReference[5][0] - PositionsAlignedToReference[3][0];
-	vec2[1] = PositionsAlignedToReference[5][1] - PositionsAlignedToReference[3][1];
-	vec2[2] = PositionsAlignedToReference[5][2] - PositionsAlignedToReference[3][2];
-
-	//normal vector to the triangle
-	crossProduct3D(vec1,vec2,CurrentNormal);
-	double* vec3;
-	vec3 = new double[3];
-	vec3[0] = PositionsAlignedToReference[0][0] - PositionsAlignedToReference[3][0];
-	vec3[1] = PositionsAlignedToReference[0][1] - PositionsAlignedToReference[3][1];
-	vec3[2] = PositionsAlignedToReference[0][2] - PositionsAlignedToReference[3][2];
-	double dotp = dotProduct3D(vec3, CurrentNormal);
-	if(dotp < 0 ){
-		CurrentNormal[0] *= (-1.0);
-		CurrentNormal[1] *= (-1.0);
-		CurrentNormal[2] *= (-1.0);
-	}
-	normaliseVector3D(CurrentNormal);
-	//cout<<"Normal calculated: "<<CurrentNormal[0]<<" "<<CurrentNormal[1]<<" "<<CurrentNormal[2]<<endl;
-}
-
-void Prism::calculateReferenceNormalToTop(){
-	//vector from point 0 to point 1:
-	double* vec1;
-	vec1 = new double[3];
-	vec1[0] = ReferenceShape->Positions[4][0] - ReferenceShape->Positions[3][0];
-	vec1[1] = ReferenceShape->Positions[4][1] - ReferenceShape->Positions[3][1];
-	vec1[2] = ReferenceShape->Positions[4][2] - ReferenceShape->Positions[3][2];
-	//vector from point 0 to point 2:
-	double* vec2;
-	vec2 = new double[3];
-	vec2[0] = ReferenceShape->Positions[5][0] - ReferenceShape->Positions[4][0];
-	vec2[1] = ReferenceShape->Positions[5][1] - ReferenceShape->Positions[4][1];
-	vec2[2] = ReferenceShape->Positions[5][2] - ReferenceShape->Positions[4][2];
-
-	crossProduct3D(vec1,vec2,ReferenceShape->CurrentNormal);
-	double* vec3;
-	vec3 = new double[3];
-	vec3[0] = ReferenceShape->Positions[0][0] - ReferenceShape->Positions[3][0];
-	vec3[1] = ReferenceShape->Positions[0][1] - ReferenceShape->Positions[3][1];
-	vec3[2] = ReferenceShape->Positions[0][2] - ReferenceShape->Positions[3][2];
-	double dotp = dotProduct3D(vec3, ReferenceShape->CurrentNormal);
-	if(dotp < 0 ){
-		ReferenceShape->CurrentNormal[0] *= (-1.0);
-		ReferenceShape->CurrentNormal[1] *= (-1.0);
-		ReferenceShape->CurrentNormal[2] *= (-1.0);
-	}
-	normaliseVector3D(ReferenceShape->CurrentNormal);
-}
-
-void Prism::getCurrentAlignmentSides(double* RefSide, double* ShapeSide){
-	//side vector for alignment:
-	if (alingmentTurn == 0){
-		ShapeSide[0] = PositionsAlignedToReference[1][0] - PositionsAlignedToReference[0][0];
-		ShapeSide[1] = PositionsAlignedToReference[1][1] - PositionsAlignedToReference[0][1];
-		ShapeSide[2] = PositionsAlignedToReference[1][2] - PositionsAlignedToReference[0][2];
-
-		RefSide[0] = ReferenceShape->Positions[1][0] - ReferenceShape->Positions[0][0];
-		RefSide[1] = ReferenceShape->Positions[1][1] - ReferenceShape->Positions[0][1];
-		RefSide[2] = ReferenceShape->Positions[1][2] - ReferenceShape->Positions[0][2];
-	}
-	else{
-		ShapeSide[0] = PositionsAlignedToReference[4][0] - PositionsAlignedToReference[3][0];
-		ShapeSide[1] = PositionsAlignedToReference[4][1] - PositionsAlignedToReference[3][1];
-		ShapeSide[2] = PositionsAlignedToReference[4][2] - PositionsAlignedToReference[3][2];
-		RefSide[0] = ReferenceShape->Positions[4][0] - ReferenceShape->Positions[3][0];
-		RefSide[1] = ReferenceShape->Positions[4][1] - ReferenceShape->Positions[3][1];
-		RefSide[2] = ReferenceShape->Positions[4][2] - ReferenceShape->Positions[3][2];
-	}
-	normaliseVector3D(RefSide);
-	normaliseVector3D(ShapeSide);
-}
-
-void Prism::getCurrentAlignmentFaces(double* RefSide, double* ShapeSide, double* RefFace, double* ShapeFace){
-	double* Ref2ndSide;
-	Ref2ndSide = new double[3];
-	double* Shape2ndSide;
-	Shape2ndSide = new double[3];
-	//side vector for alignment:
-	if (alingmentTurn == 0){
-		Shape2ndSide[0] = PositionsAlignedToReference[2][0] - PositionsAlignedToReference[0][0];
-		Shape2ndSide[1] = PositionsAlignedToReference[2][1] - PositionsAlignedToReference[0][1];
-		Shape2ndSide[2] = PositionsAlignedToReference[2][2] - PositionsAlignedToReference[0][2];
-		Ref2ndSide[0] = ReferenceShape->Positions[2][0] - ReferenceShape->Positions[0][0];
-		Ref2ndSide[1] = ReferenceShape->Positions[2][1] - ReferenceShape->Positions[0][1];
-		Ref2ndSide[2] = ReferenceShape->Positions[2][2] - ReferenceShape->Positions[0][2];
-	}
-	else{
-		Shape2ndSide[0] = PositionsAlignedToReference[5][0] - PositionsAlignedToReference[3][0];
-		Shape2ndSide[1] = PositionsAlignedToReference[5][1] - PositionsAlignedToReference[3][1];
-		Shape2ndSide[2] = PositionsAlignedToReference[5][2] - PositionsAlignedToReference[3][2];
-		Ref2ndSide[0] = ReferenceShape->Positions[5][0] - ReferenceShape->Positions[3][0];
-		Ref2ndSide[1] = ReferenceShape->Positions[5][1] - ReferenceShape->Positions[3][1];
-		Ref2ndSide[2] = ReferenceShape->Positions[5][2] - ReferenceShape->Positions[3][2];
-	}
-	crossProduct3D(ShapeSide,Shape2ndSide,ShapeFace);
-	crossProduct3D(RefSide,Ref2ndSide,RefFace);
-	cout<<"Shape2ndSide: "<<Shape2ndSide[0]<<" "<<Shape2ndSide[1]<<" "<<Shape2ndSide[2]<<endl;
-	cout<<"Ref2ndSide: "<<Ref2ndSide[0]<<" "<<Ref2ndSide[1]<<" "<<Ref2ndSide[2]<<endl;
-	cout<<"ShapeFace: "<<ShapeFace[0]<<" "<<ShapeFace[1]<<" "<<ShapeFace[2]<<endl;
-	cout<<"RefFace: "<<RefFace[0]<<" "<<RefFace[1]<<" "<<RefFace[2]<<endl;
-}
-
-void Prism::calculateZVecForTissueCoordAlignment(double* u){
-	/*
-	//The (+) z direction in the initial reference definition is the z-axis in terms of the tissue,
-	//therefore, the reference elements need to be oriented wisely at the beginning of the simulation.
-	boost::numeric::ublas::vector<double>zaxisReference(3,0);
-	boost::numeric::ublas::vector<double>zaxisWorld(3,0);
-	zaxisReference(0)=0;
-	zaxisReference(1)=0;
-	zaxisReference(2)=1;
-	boost::numeric::ublas::axpy_prod(trans(WorldToReferenceNormalRotMat),zaxisReference,zaxisWorld);
-	u[0] = zaxisWorld(0);
-	u[1] = zaxisWorld(1);
-	u[2] = zaxisWorld(2);
-	normaliseVector3D(u);*/
-}
-
-void Prism::calculateXVecForTissueCoordAlignment(double* u ){
-	u[0] = ReferenceShape->Positions[1][0] - ReferenceShape->Positions[0][0];
-	u[1] = ReferenceShape->Positions[1][1] - ReferenceShape->Positions[0][1];
-	u[2] = ReferenceShape->Positions[1][2] - ReferenceShape->Positions[0][2];
-	normaliseVector3D(u);
 }

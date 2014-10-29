@@ -813,7 +813,6 @@ void Simulation::calculateStiffnessMatrices(){
 	for (int i=0; i<n; ++i){
 		cout<<" setting up element :  "<<i<<" of "<<n<<endl;
 		Elements[i]->calculateReferenceStiffnessMatrix();
-		Elements[i]->setStiffnessMatrixBuffers();
 	}
 }
 
@@ -1381,7 +1380,7 @@ void Simulation::cleanGrowthData(){
 	int nElement = Elements.size();
 	for (int i=0; i<nElement; ++i){
 		Elements[i]->resetCurrStepGrowthData();
-		Elements[i]->resetCurrStepShapeChangeData();
+		//Elements[i]->resetCurrStepShapeChangeData();
 	}
 }
 
@@ -1519,7 +1518,7 @@ void Simulation::calculateGrowth(){
 		}
 	}
 }
-
+/*
 void Simulation::changeCellShapesInSystem(){
 	int currIndexForParameters = 0;
 	cleanUpShapeChangeRates();
@@ -1530,14 +1529,7 @@ void Simulation::changeCellShapesInSystem(){
 		}
 	}
 }
-
-
-void Simulation::cleanreferenceupdates(){
-	int nElement = Elements.size();
-	for (int i=0; i<nElement; ++i){
-		Elements[i]->updatedReference = false;
-	}
-}
+*/
 
 void Simulation::cleanUpGrowthRates(){
 	int  n = Elements.size();
@@ -1606,7 +1598,7 @@ void Simulation::calculateGrowthRing(int currIndex){
 	}
 }
 
-
+/*
 void Simulation::changeCellShapeRing(int currIndex){
 	//cout<<"entered shape change with ring function"<<endl;
 	float initTime = ShapeChangeParameters[currIndex];
@@ -1638,7 +1630,7 @@ void Simulation::changeCellShapeRing(int currIndex){
 		}
 	}
 }
-
+*/
 double Simulation::calculatePeripodiumArea(){
 	//approximating the area of peripodial membrane from lateral nodes
 	double sum =0;

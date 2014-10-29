@@ -47,39 +47,18 @@ protected:
 	void 	readNodeIds(int* tmpNodeIds);
 	void 	setPositionMatrix(vector<Node*>& Nodes);
 	void 	setReferencePositionMatrix();
-	virtual void setRefShapePosBuffers(){ParentErrorMessage();};
 	void 	setIdentificationColour();
 	bool 	InvertMatrix(boost::numeric::ublas::matrix<double>& input, boost::numeric::ublas::matrix<double>& inverse, double& det);
 	int 	determinant_sign(boost::numeric::ublas::permutation_matrix<std::size_t>& pm);
 	void	crossProduct3D(double* u, double* v, double* cross);
 	double  dotProduct3D(double* u, double* v);
-
-	virtual void calculateNormals(){ParentErrorMessage();};
-	virtual void setNormals(){ParentErrorMessage();};
-	virtual void getCurrentAlignmentSides(double*, double*){ParentErrorMessage();};
-	virtual void updateAlignmentTurn(){ParentErrorMessage();};
-	virtual void updateReferenceShapeBaseFromBuffer(){ParentErrorMessage();};
-	virtual void resetBuffersAfterGrowth(){ParentErrorMessage();};
 	void 	updateNodeIdsFromSave(ifstream& file);
 	void 	updateReferencePositionMatrixFromSave(ifstream& file);
-	virtual void getCurrentAlignmentFaces(double* RefSide, double* ShapeSide, double* RefFace, double* ShapeFace){ParentErrorMessage();};
-	void 	rotateWorldsCoordinatesByRotationMatrix(double* NewCoordinates, double *rotMat);
-	bool	areSidesFacingSameDirection(double* RefSide, double* ShapeSide);
-	virtual void calculateZVecForTissueCoordAlignment(double* u){ParentErrorMessage();};
-	virtual void calculateXVecForTissueCoordAlignment(double* u){ParentErrorMessage();};
-	void 	calculateTissueCoordinateSystem();
-	void 	updateRotationMatrixTissueToWorld(double* rotMat);
-	void 	calculateRotationMatrixReferenceToTissue();
-	void 	calculateCurrGrowthStrainsInTissueCoords();
-	void 	calculateCurrShapeChangeStrainsInTissueCoords();
-	void 	updateLocalGrowthStrain(double* strainsToAdd);
-	void 	updateLocalPlasticStrains();
-	void 	updatePlasticStrainInTissueCoords();
-	void 	updateGrowthStrainInTissueCoords(double* strainsToAdd);
-	void 	updatePlasticStainInWorldCoords();
-	void	updateShapeChangeStrainInTissueCoords();
-	void 	updatePlasticStrainInLocalAxes();
+	//bool	areSidesFacingSameDirection(double* RefSide, double* ShapeSide);
 	void 	updateTissueCoordStrain();
+	void 	updateTissueCoordPlasticStrain();
+	void updatePositionsAlignedToReferenceWithBuffers();
+	void calculateGrowthInLocalCoordinates(double* strainsToAdd);
 
 	boost::numeric::ublas::matrix<double> D;
 	boost::numeric::ublas::matrix<int> CoeffMat;
@@ -87,15 +66,7 @@ protected:
 	boost::numeric::ublas::matrix<double> B;
 	boost::numeric::ublas::matrix<double> BE;
 	boost::numeric::ublas::vector<double> Forces;
-	boost::numeric::ublas::matrix<double> TissueToWorldRotMat;
-	boost::numeric::ublas::matrix<double> RefToTissueRotMat;
-	boost::numeric::ublas::matrix<double> RefToTissueRotMatT;
-	boost::numeric::ublas::matrix<double> LocalPlasticStrainsMat;
-	boost::numeric::ublas::matrix<double> LocalShapeChangeStrainsMat;
 	boost::numeric::ublas::matrix<double> LocalGrowthStrainsMat;
-	boost::numeric::ublas::matrix<double> CurrGrowthStrainsInTissueCoordsMat;
-	boost::numeric::ublas::matrix<double> CurrShapeChangeStrainsInTissueCoordsMat;
-
 	double E, v;
 
 
@@ -115,9 +86,9 @@ public:
 	bool 	IsChangingShape;
 
 	double CurrShapeChangeToAdd[3];
-	int alingmentTurn;
-	double* CurrentNormal;
-	bool updatedReference;
+	//int alingmentTurn;
+	//double* CurrentNormal;
+	//bool updatedReference;
 	double* TissueCoordinateSystem;
 
 	int 	getId();
@@ -144,24 +115,17 @@ public:
 	virtual void setViscosity(double ApicalVisc,double BasalVisc, vector <Node*>& Nodes){ParentErrorMessage();};
 	virtual void setElasticProperties(double E,double v){ParentErrorMessage();};
 	void 	updateGrowthRate(double scalex, double scaley, double scalez);
-	void 	updateShapeChangeRate(double scale, int axis);
 	virtual void calculateReferenceStiffnessMatrix(){ParentErrorMessage();};
-	virtual void setStiffnessMatrixBuffers(){ParentErrorMessage();};
-	void 	alignReference();
 	void 	calculateForces(int RKid, double **SystemForces, vector <Node*>& Nodes);
 	void 	updatePositions(vector<Node*>& Nodes);
 	void 	setGrowthRate(double x, double y, double z);
 	void 	setShapeChangeRate(double x, double y, double z);
 	void 	updateGrowthToAdd(double* growthscale);
 
-	void 	calculatePositionsOnTissueCoordinateSystem();
-	void	alignElementOnReference();
-
-
 	void 	resetCurrStepGrowthData();
 	void 	resetCurrStepShapeChangeData();
-	void 	calculatePlasticStrain();
-	void 	changeShape(double shapechangescale, int axis);
+	//void 	calculatePlasticStrain();
+	//void 	changeShape(double shapechangescale, int axis);
 	void 	updateShapeFromSave(ifstream& file);
 	void 	displayMatrix(boost::numeric::ublas::matrix<double>& mat, string matname);
 	void 	displayMatrix(boost::numeric::ublas::matrix<int>& mat, string matname);
@@ -175,20 +139,16 @@ public:
 	void	rotateVectorByRotationMatrix(double* u,double* rotMat);
 
 
-	void calculateWorldToTissueRotationMatrix();
-	void updatePositionsAlignedToReferenceWithBuffers();
-	void calculateGrowthInLocalCoordinates(double* strainsToAdd);
+	void alignElementOnReference();
 	void growShape();
 	bool RotatedElement;
-	boost::numeric::ublas::matrix<double> WorldToTissueRotMat;
+	//boost::numeric::ublas::matrix<double> WorldToTissueRotMat;
 	double **PositionsInTissueCoord;
 	double **PositionsAlignedToReference;
 	boost::numeric::ublas::matrix<double>WorldToReferenceRotMat;
 	bool 	calculateAlignmentRotationMatrix(double** RefNormalised, double* rotMat);
 	bool 	calculateAlignmentScore(double** RefNormalised);
-	void 	normaliseShapePositions(double** RefNormalised, double* refCentre);
-
-
+	void 	bringShapePositionsToOrigin(double** RefNormalised, double* refCentre);
 };
 
 #endif

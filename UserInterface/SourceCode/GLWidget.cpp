@@ -56,8 +56,8 @@ using namespace std;
      DisplayPysPropBounds[4][2] = 0.0; DisplayPysPropBounds[4][3] = 6.0;
 
   	 setSizePolicy(QSizePolicy ::Expanding , QSizePolicy ::Expanding );
-  	 drawNormals = false;
-     drawNetForces = false;
+  	 drawTissueCoordinates = false;
+  	 drawNetForces = false;
      drawVelocities = false;
      cout<<"gl initiated"<<endl;
  }
@@ -262,31 +262,14 @@ using namespace std;
 	glEnd();
 
 	glDisable(GL_POLYGON_OFFSET_FILL);
-	bool drawTissueCoordinatesystem = false;
-	if (drawTissueCoordinatesystem){
+	if (drawTissueCoordinates){
 		drawTissueCoordSystemPrism(i);
 	}
-	if (drawNormals){
-		//highlighting the reference side used for alignment:
-		glLineWidth(ReferenceLineThickness);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		//drawing the nodes 0,1 in green
-		glColor3f(0,1,0);
-		glBegin(GL_LINES);
-			for (int j =0; j<2; ++j){
-				if (j>0){glColor3f(1,0,0);}
-				float x = Sim01->Elements[i]->Positions[j][0];
-				float y = Sim01->Elements[i]->Positions[j][1];
-				float z = Sim01->Elements[i]->Positions[j][2];
-				glVertex3f( x, y, z);
-			}
-		 glEnd();
-	}
+
 	glLineWidth(MainShapeLineThickness);
 	//Drawing the borders
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glColor3f(0,0,0);
-
 	glBegin(GL_LINE_STRIP);
 		for (int j =0; j<nLineStrip;++j){
 			int pointId = BorderConnectivity[j];
@@ -296,9 +279,6 @@ using namespace std;
 			glVertex3f( x, y, z);
 		}
 	glEnd();
-	if (drawNormals){
-		drawNormalToPrism(i);
-	}
  }
 
  void GLWidget::drawPrismLateral(int i){
@@ -327,25 +307,8 @@ using namespace std;
 	glEnd();
 
 	glDisable(GL_POLYGON_OFFSET_FILL);
-	bool drawTissueCoordinatesystem = false;
-	if (drawTissueCoordinatesystem){
+	if (drawTissueCoordinates){
 		drawTissueCoordSystemPrism(i);
-	}
-	if (drawNormals){
-		//highlighting the reference side used for alignment:
-		glLineWidth(ReferenceLineThickness);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		//drawing the nodes 0,1 in green
-		glColor3f(0,1,0);
-		glBegin(GL_LINES);
-			for (int j =0; j<2; ++j){
-				if (j>0){glColor3f(1,0,0);}
-				float x = Sim01->Elements[i]->Positions[j][0];
-				float y = Sim01->Elements[i]->Positions[j][1];
-				float z = Sim01->Elements[i]->Positions[j][2];
-				glVertex3f( x, y, z);
-			}
-		 glEnd();
 	}
 	glLineWidth(MainShapeLineThickness);
 	//Drawing the borders
@@ -361,9 +324,6 @@ using namespace std;
 			glVertex3f( x, y, z);
 		}
 	glEnd();
-	if (drawNormals){
-		drawNormalToPrismLateral(i);
-	}
  }
 
  void GLWidget::drawTissueCoordSystemPrism(int i){
@@ -377,133 +337,30 @@ using namespace std;
 		centre[j] /= 6.0;
 	}
 	double tip[3];
+	double scale = 1.5;
 	glBegin(GL_LINES);
 		glColor3f(1,0,0);
-		tip[0] = centre[0] + Sim01->Elements[i]->TissueCoordinateSystem[0];
-		tip[1] = centre[1] + Sim01->Elements[i]->TissueCoordinateSystem[1];
-		tip[2] = centre[2] + Sim01->Elements[i]->TissueCoordinateSystem[2];
+		tip[0] = centre[0] + scale*Sim01->Elements[i]->TissueCoordinateSystem[0];
+		tip[1] = centre[1] + scale*Sim01->Elements[i]->TissueCoordinateSystem[1];
+		tip[2] = centre[2] + scale*Sim01->Elements[i]->TissueCoordinateSystem[2];
 
 		glVertex3f( centre[0], centre[1], centre[2]);
 		glVertex3f( tip[0] , tip[1], tip[2]);
 		glColor3f(0,1,0);
-		tip[0] = centre[0] + Sim01->Elements[i]->TissueCoordinateSystem[3];
-		tip[1] = centre[1] + Sim01->Elements[i]->TissueCoordinateSystem[4];
-		tip[2] = centre[2] + Sim01->Elements[i]->TissueCoordinateSystem[5];
+		tip[0] = centre[0] + scale*Sim01->Elements[i]->TissueCoordinateSystem[3];
+		tip[1] = centre[1] + scale*Sim01->Elements[i]->TissueCoordinateSystem[4];
+		tip[2] = centre[2] + scale*Sim01->Elements[i]->TissueCoordinateSystem[5];
 
 		glVertex3f( centre[0], centre[1], centre[2]);
 		glVertex3f( tip[0] , tip[1], tip[2]);
 		glColor3f(0,0,1);
-		tip[0] = centre[0] + Sim01->Elements[i]->TissueCoordinateSystem[6];
-		tip[1] = centre[1] + Sim01->Elements[i]->TissueCoordinateSystem[7];
-		tip[2] = centre[2] + Sim01->Elements[i]->TissueCoordinateSystem[8];
+		tip[0] = centre[0] + scale*Sim01->Elements[i]->TissueCoordinateSystem[6];
+		tip[1] = centre[1] + scale*Sim01->Elements[i]->TissueCoordinateSystem[7];
+		tip[2] = centre[2] + scale*Sim01->Elements[i]->TissueCoordinateSystem[8];
 		glVertex3f( centre[0], centre[1], centre[2]);
 		glVertex3f( tip[0] , tip[1], tip[2]);
 	glEnd();
  }
-
- void GLWidget::drawNormalToPrism(int i){
- 	 int PlaneNodes[3];
-	 if (Sim01->Elements[i]->alingmentTurn ==0){
- 		 PlaneNodes[0]=0;PlaneNodes[1]=1;PlaneNodes[2]=2;
- 	 }
- 	 else{
- 		 PlaneNodes[0]=3;PlaneNodes[1]=4;PlaneNodes[2]=5;
- 	 }
-	 float centre[3] = {0.0,0.0,0.0}, normalTip[3];
-	 for (int j=0; j<3; ++j){
-		 for (int k=0; k<3; ++k){
-			 centre[j] += Sim01->Elements[i]->Positions[PlaneNodes[k]][j];
-		 }
-		 centre[j] /= 3.0;
-		 normalTip[j] = centre[j] + Sim01->Elements[i]->CurrentNormal[j];
-	 }
- 	 glLineWidth(ReferenceLineThickness);
- 	 glColor3f(0.5,0.5,0.5);
- 	 glBegin(GL_LINES);
- 	 	glVertex3f(centre[0], centre[1], centre[2]);
- 	 	glVertex3f(normalTip[0], normalTip[1], normalTip[2]);
- 	 glEnd();
-
-  }
-
- void GLWidget::drawNormalToPrismLateral(int i){
- 	 int PlaneNodes[3];
-	 if (Sim01->Elements[i]->alingmentTurn ==0){
- 		 PlaneNodes[0]=0;PlaneNodes[1]=3;PlaneNodes[2]=5;
- 	 }
- 	 else{
- 		 PlaneNodes[0]=1;PlaneNodes[1]=4;PlaneNodes[2]=5;
- 	 }
-	 float centre[3] = {0.0,0.0,0.0}, normalTip[3];
-	 for (int j=0; j<3; ++j){
-		 for (int k=0; k<3; ++k){
-			 centre[j] += Sim01->Elements[i]->Positions[PlaneNodes[k]][j];
-		 }
-		 centre[j] /= 3.0;
-		 normalTip[j] = centre[j] + Sim01->Elements[i]->CurrentNormal[j];
-	 }
- 	 glLineWidth(ReferenceLineThickness);
- 	 glColor3f(0.5,0.5,0.5);
- 	 glBegin(GL_LINES);
- 	 	glVertex3f(centre[0], centre[1], centre[2]);
- 	 	glVertex3f(normalTip[0], normalTip[1], normalTip[2]);
- 	 glEnd();
-
-  }
-
- void GLWidget::drawNormalToReferencePrism(int i){
- 	 int PlaneNodes[3];
-	 if (Sim01->Elements[i]->alingmentTurn ==0){
- 		 PlaneNodes[0]=0;PlaneNodes[1]=1;PlaneNodes[2]=2;
- 	 }
- 	 else{
- 		 PlaneNodes[0]=3;PlaneNodes[1]=4;PlaneNodes[2]=5;
- 	 }
-	 double** pos = Sim01->Elements[i]->getReferencePos();
-	 double* nor = Sim01->Elements[i]->getReferenceNormal();
-	 float centre[3] = {0.0,0.0,0.0}, normalTip[3];
-	 for (int j=0; j<3; ++j){
-		 for (int k=0; k<3; ++k){
-			 centre[j] +=  pos[PlaneNodes[k]][j];
-		 }
-		 centre[j] /= 3.0;
-		 normalTip[j] = centre[j] + nor[j];
-	 }
- 	 glLineWidth(ReferenceLineThickness);
- 	 glColor3f(0.5,0.1,0.1);
- 	 glBegin(GL_LINES);
- 	 	glVertex3f(centre[0], centre[1], centre[2]);
- 	 	glVertex3f(normalTip[0], normalTip[1], normalTip[2]);
- 	 glEnd();
-
-  }
-
- void GLWidget::drawNormalToReferencePrismLateral(int i){
- 	 int PlaneNodes[3];
-	 if (Sim01->Elements[i]->alingmentTurn ==0){
- 		 PlaneNodes[0]=0;PlaneNodes[1]=3;PlaneNodes[2]=5;
- 	 }
- 	 else{
- 		 PlaneNodes[0]=1;PlaneNodes[1]=4;PlaneNodes[2]=5;
- 	 }
-	 double** pos = Sim01->Elements[i]->getReferencePos();
-	 double* nor = Sim01->Elements[i]->getReferenceNormal();
-	 float centre[3] = {0.0,0.0,0.0}, normalTip[3];
-	 for (int j=0; j<3; ++j){
-		 for (int k=0; k<3; ++k){
-			 centre[j] +=  pos[PlaneNodes[k]][j];
-		 }
-		 centre[j] /= 3.0;
-		 normalTip[j] = centre[j] + nor[j];
-	 }
- 	 glLineWidth(ReferenceLineThickness);
- 	 glColor3f(0.5,0.1,0.1);
- 	 glBegin(GL_LINES);
- 	 	glVertex3f(centre[0], centre[1], centre[2]);
- 	 	glVertex3f(normalTip[0], normalTip[1], normalTip[2]);
- 	 glEnd();
-
-  }
 
  void GLWidget::getDisplayColour(float* OutputColour, float Data){
 	 float DataMin=0, DataMax=0;
@@ -608,20 +465,6 @@ using namespace std;
  	//Drawing the borders
  	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
  	double** pos = Sim01->Elements[i]->getReferencePos();
- 	//drawing the nodes 0,1,2, in green
-
- 	if (drawNormals){
- 		//highlighting the reference side used for alignment:glColor3f(0,1,0);
-		glBegin(GL_LINE_STRIP);
-			for (int i =0; i<2; ++i){
-				if (i>0){glColor3f(1,0,0);}
-				float x = pos[i][0];
-				float y = pos[i][1];
-				float z = pos[i][2];
-				glVertex3f( x, y, z);
-			}
-		glEnd();
- 	}
  	glColor3f(1,0,0);
  	glBegin(GL_LINE_STRIP);
  		for (int j =0; j<nLineStrip;++j){
@@ -671,9 +514,6 @@ using namespace std;
  			glVertex3f( x, y, z);
  		}
  	glEnd();
- 	if (drawNormals){
- 		drawNormalToReferencePrism(i);
-	}
   }
 
  void GLWidget::drawReferencePrismLateral(int i){
@@ -684,20 +524,6 @@ using namespace std;
   	//Drawing the borders
   	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   	double** pos = Sim01->Elements[i]->getReferencePos();
-  	//drawing the nodes 0,1,2, in green
-
-  	if (drawNormals){
-  		//highlighting the reference side used for alignment:glColor3f(0,1,0);
- 		glBegin(GL_LINE_STRIP);
- 			for (int i =0; i<2; ++i){
- 				if (i>0){glColor3f(1,0,0);}
- 				float x = pos[i][0];
- 				float y = pos[i][1];
- 				float z = pos[i][2];
- 				glVertex3f( x, y, z);
- 			}
- 		glEnd();
-  	}
   	glColor3f(1,0,0);
   	glBegin(GL_LINE_STRIP);
   		for (int j =0; j<nLineStrip;++j){
@@ -722,10 +548,6 @@ using namespace std;
   			glVertex3f( x, y, z);
   		}
   	glEnd();
-
-  	if (drawNormals){
-  		drawNormalToReferencePrismLateral(i);
- 	}
 }
 
  void GLWidget::resizeGL(int width, int height)

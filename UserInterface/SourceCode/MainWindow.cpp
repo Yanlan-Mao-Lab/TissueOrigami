@@ -251,10 +251,10 @@ void MainWindow::setCoordBoxes(QFont font, QFont boldFont, QGridLayout *Selectio
 }
 
 void MainWindow::setDisplayPreferences(QGridLayout *SelectionDisplayGrid){
-	//draw normals CheckBox
-	DisplayPreferencesCheckBoxes[0] = new QCheckBox("Normals");
+	//draw tissue coordinate system CheckBox
+	DisplayPreferencesCheckBoxes[0] = new QCheckBox("Tissue Coordinates");
 	DisplayPreferencesCheckBoxes[0]->setChecked(false);
-	connect(DisplayPreferencesCheckBoxes[0] , SIGNAL(stateChanged(int)),this,SLOT(updateNormalCheckBox(int)));
+	connect(DisplayPreferencesCheckBoxes[0] , SIGNAL(stateChanged(int)),this,SLOT(updateTissueCoordCheckBox(int)));
 	//draw net forces checkbox
 	DisplayPreferencesCheckBoxes[1] = new QCheckBox("Net Forces");
 	DisplayPreferencesCheckBoxes[1]->setChecked(false);
@@ -268,11 +268,11 @@ void MainWindow::setDisplayPreferences(QGridLayout *SelectionDisplayGrid){
 	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[2],9+nCoordBox,0,1,1,Qt::AlignLeft);
 }
 
-void  MainWindow::updateNormalCheckBox(int s){
+void  MainWindow::updateTissueCoordCheckBox(int s){
 	if ( s == 2 )
-		MainGLWidget->drawNormals = true;
+		MainGLWidget->drawTissueCoordinates = true;
 	else
-		MainGLWidget->drawNormals = false;
+		MainGLWidget->drawTissueCoordinates = false;
 }
 
 void  MainWindow::updateNetForceCheckBox(int s){
