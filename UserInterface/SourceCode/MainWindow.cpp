@@ -263,9 +263,14 @@ void MainWindow::setDisplayPreferences(QGridLayout *SelectionDisplayGrid){
 	DisplayPreferencesCheckBoxes[2] = new QCheckBox("Velocities");
 	DisplayPreferencesCheckBoxes[2]->setChecked(false);
 	connect(DisplayPreferencesCheckBoxes[2] , SIGNAL(stateChanged(int)),this,SLOT(updateVelocityCheckBox(int)));
+	DisplayPreferencesCheckBoxes[3] = new QCheckBox("ScaleBar");
+	DisplayPreferencesCheckBoxes[3]->setChecked(false);
+	connect(DisplayPreferencesCheckBoxes[3] , SIGNAL(stateChanged(int)),this,SLOT(updateScaleBarCheckBox(int)));
+
 	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[0],7+nCoordBox,0,1,1,Qt::AlignLeft);
 	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[1],8+nCoordBox,0,1,1,Qt::AlignLeft);
 	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[2],9+nCoordBox,0,1,1,Qt::AlignLeft);
+	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[3],10+nCoordBox,0,1,1,Qt::AlignLeft);
 }
 
 void  MainWindow::updateTissueCoordCheckBox(int s){
@@ -283,12 +288,19 @@ void  MainWindow::updateNetForceCheckBox(int s){
 }
 
 void  MainWindow::updateVelocityCheckBox(int s){
-	cout<<" s: "<<s<<endl;
 	if ( s == 2 )
 		MainGLWidget->drawVelocities = true;
 	else
 		MainGLWidget->drawVelocities = false;
 }
+
+void  MainWindow::updateScaleBarCheckBox(int s){
+	if ( s == 2 )
+		MainGLWidget->drawTissueScaleBar = true;
+	else
+		MainGLWidget->drawTissueScaleBar = false;
+}
+
 
 void MainWindow::updateStrain(int s){
 	MainGLWidget->StrainToDisplay = s;

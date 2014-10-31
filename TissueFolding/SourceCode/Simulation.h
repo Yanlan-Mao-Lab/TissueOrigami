@@ -144,11 +144,13 @@ public:
 	bool initiateSystem();
 	void calculateSystemCentre();
 	void cleanGrowthData();
+	void cleanMatrixUpdateData();
 	void resetForces();
 	void runOneStep();
 	bool initiateSavedSystem();
 	void updateOneStepFromSave();
 	void alignTissueDVToXPositive();
+	void calculateDVDistance();
 
 
 };

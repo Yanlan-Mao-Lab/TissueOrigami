@@ -678,7 +678,6 @@ void  Simulation::updateElementStatesFromSave(){
 		int shapeType;
 		saveFileToDisplayMesh >> shapeType;
 		int currShapeType = Elements[i]->getShapeType();
-		cout<<"shapeType: "<<shapeType<<" currShapeType: "<<currShapeType<<endl;
 		if (shapeType == currShapeType || shapeType == 2){
 			//cout<<"shape type is correct, moving on to update"<<endl;
 			//The current shape on the list, and the shape I am reading are of same type, I can read it:
@@ -1281,9 +1280,13 @@ void Simulation::runOneStep(){
 		cout<<"time : "<<timestep * dt<<endl;
 	}
 	//cleanreferenceupdates();
+	cleanMatrixUpdateData();
 	cleanGrowthData();
 	resetForces();
-//	alignTissueDVToXPositive();
+	//alignTissueDVToXPositive();
+	if (timestep%40 == 0){
+		calculateDVDistance();
+	}
 	int nElement = Elements.size();
 	if(nGrowthFunctions>0){
 		calculateGrowth();
@@ -1376,10 +1379,31 @@ void Simulation::alignTissueDVToXPositive(){
 	delete[] v;
 }
 
+void Simulation::calculateDVDistance(){
+	double d[3];
+	for (int i=0;i<3;++i){
+		d[i] = Nodes[DVRight]->Position[i] - Nodes[DVLeft]->Position[i];
+		d[i] *=d[i];
+
+	}
+	double dmag = d[0]+d[1]+d[2];
+	dmag = pow(dmag,0.5);
+	cout<<"time: "<<timestep * dt<<" DV distance is: "<<dmag<<endl;
+}
+
 void Simulation::cleanGrowthData(){
 	int nElement = Elements.size();
 	for (int i=0; i<nElement; ++i){
 		Elements[i]->resetCurrStepGrowthData();
+		//Elements[i]->resetCurrStepShapeChangeData();
+	}
+}
+//cleanreferenceupdates();
+void Simulation::cleanMatrixUpdateData(){
+	int nElement = Elements.size();
+	for (int i=0; i<nElement; ++i){
+		Elements[i]->WorldToTissueRotMatUpToDate=false;
+		Elements[i]->GrowthStrainsRotMatUpToDate= false;
 		//Elements[i]->resetCurrStepShapeChangeData();
 	}
 }

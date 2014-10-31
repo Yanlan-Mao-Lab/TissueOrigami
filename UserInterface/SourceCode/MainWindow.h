@@ -43,6 +43,7 @@ public slots:
     void updateTissueCoordCheckBox(int);
     void updateNetForceCheckBox(int);
     void updateVelocityCheckBox(int);
+    void  updateScaleBarCheckBox(int);
 //signals:
  //   void StrainComboBoxCanged();
  private:
@@ -72,7 +73,7 @@ public slots:
     QComboBox   	*PysPropComboBox;
     QDoubleSpinBox 	*PysPropSpinBoxes[2];
     QGroupBox   	*ColourCodingBox;
-    QCheckBox		*DisplayPreferencesCheckBoxes[3];
+    QCheckBox		*DisplayPreferencesCheckBoxes[4];
     QLabel			*SimTime;
  };
 

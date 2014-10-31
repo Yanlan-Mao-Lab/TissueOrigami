@@ -21,9 +21,10 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
 		GrowthRate[i] = 0;
 		ShapeChangeRate[i] =0;
 	}
-	TissueCoordinateSystemUpToDate = false;
 	CurrShapeChangeStrainsUpToDate = false;
 	CurrGrowthStrainsUpToDate = false;
+	WorldToTissueRotMatUpToDate= false;
+	GrowthStrainsRotMatUpToDate= false;
 	IsGrowing = false;
 	IsChangingShape = false;
 	GrewInThePast = false;
@@ -43,9 +44,10 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
 	CurrPlasticStrainsInTissueCoordsMat = boost::numeric::ublas::zero_matrix<double>(3,3);
 	LocalGrowthStrainsMat = boost::numeric::ublas::zero_matrix<double>(3,3);
 
-	//WorldToTissueRotMat= boost::numeric::ublas::zero_matrix<double>(3,3);
+	WorldToTissueRotMat= boost::numeric::ublas::identity_matrix<double>(3,3);
+	GrowthStrainsRotMat = boost::numeric::ublas::identity_matrix<double>(3,3);
 	RotatedElement = false;
-	WorldToReferenceRotMat = boost::numeric::ublas::zero_matrix<double>(3,3);
+	WorldToReferenceRotMat = boost::numeric::ublas::identity_matrix<double>(3,3);
 	//setting rotation matrices to identity;
 	for (int i=0; i<3; ++i){
 		for (int j=0; j<3; ++j){
@@ -91,10 +93,6 @@ Prism::~Prism(){
 	delete[] IdentifierColour;
 	delete[] GrowthRate;
 	delete[] ShapeChangeRate;
-	//delete[] RefShapePosBottomAlignedBuffer;
-	//delete[] RefShapePosTopAlignedBuffer;
-	//delete[] TissueCoordinateSystemTopAlignedBuffer;
-	//delete[] TissueCoordinateSystemBottomAlignedBuffer;
 	delete ReferenceShape;
     //cout<<"finalised the destructor for prism class"<<endl;
 }
@@ -113,6 +111,7 @@ void Prism::setCoeffMat(){
 void  Prism::setElasticProperties(double E, double v){
 	this -> E = E;
 	this -> v = v; //poisson ratio
+
 	if (v>0.5){v = 0.5;}
 	else if (v<0.0){v = 0.0;}
 	using namespace boost::numeric::ublas;
@@ -200,6 +199,8 @@ void Prism::calculateReferenceStiffnessMatrix(){
 	k  = zero_matrix<double>(dim*n, dim*n);
 	B  = zero_matrix<double>(6, dim*n);
 	BE = zero_matrix<double>(dim*n,6);
+	Bo = zero_matrix<double>(dim*dim,dim*n);
+
 	for (int etaiter = 0; etaiter<4; ++etaiter){
 		float EtaLimits[2] = {0,1.0};
 		eta = GaussPoints[etaiter];
@@ -208,6 +209,7 @@ void Prism::calculateReferenceStiffnessMatrix(){
 		matrix<double> kSumNu  = zero_matrix<double>(dim*n, dim*n);
 		matrix<double> BSumNu  = zero_matrix<double>(6, dim*n);
 		matrix<double> BESumNu = zero_matrix<double>(dim*n, 6);
+		matrix<double> BoSumNu = zero_matrix<double>(dim*dim, dim*n);
 		for(int nuiter = 0; nuiter<4; ++nuiter){
 			float NuLimits[2] = {0, 1-eta};
 			nu = GaussPoints[nuiter];
@@ -216,30 +218,39 @@ void Prism::calculateReferenceStiffnessMatrix(){
 			matrix<double> kSumZeta  = zero_matrix<double>(dim*n, dim*n);
 			matrix<double> BSumZeta  = zero_matrix<double>(6, dim*n);
 			matrix<double> BESumZeta = zero_matrix<double>(dim*n, 6);
+			matrix<double> BoSumZeta = zero_matrix<double>(dim*dim, dim*n);
 			for (int zetaiter = 0; zetaiter<4; ++zetaiter){
 				zeta = GaussPoints[zetaiter];
 				matrix<double> currk  (dim*n, dim*n);
 				matrix<double> currB  (6, dim*n);
 				matrix<double> currBE (dim*n, 6);
-				calculateCurrk(currk, currB, currBE, eta,zeta,nu);
+				matrix<double> currBo (dim*dim, dim*n);
+				calculateCurrk(currk, currB, currBE, currBo, eta,zeta,nu);
 				kSumZeta  = kSumZeta + GaussCoeff[zetaiter]   * currk;
 				BSumZeta  = BSumZeta + GaussCoeff[zetaiter] * currB;
 				BESumZeta = BESumZeta + GaussCoeff[zetaiter]  * currBE;
+				BoSumZeta = BoSumZeta + GaussCoeff[zetaiter]  * currBo;
 			}
 			kSumNu  = kSumNu  + nuMultiplier * kSumZeta;
 			BSumNu  = BSumNu  + nuMultiplier * BSumZeta;
 			BESumNu = BESumNu + nuMultiplier * BESumZeta;
+			BoSumNu = BoSumNu + nuMultiplier * BoSumZeta;
 		}
 		k  = k  + etaMultiplier * kSumNu;
 		B  = B  + etaMultiplier * BSumNu;
 		BE = BE + etaMultiplier * BESumNu;
+		Bo = Bo + etaMultiplier * BoSumNu;
 	}
 	//displayMatrix(k,"k");
 }
 
-void Prism::calculateCurrk(boost::numeric::ublas::matrix<double>& currk, boost::numeric::ublas::matrix<double>& currB, boost::numeric::ublas::matrix<double>& currBE, double eta, double zeta, double nu){
+void Prism::calculateCurrk(boost::numeric::ublas::matrix<double>& currk, boost::numeric::ublas::matrix<double>& currB, boost::numeric::ublas::matrix<double>& currBE, boost::numeric::ublas::matrix<double>& currBo, double eta, double zeta, double nu){
 	const int n = nNodes;
 	const int dim = nDim;
+
+	currB  = boost::numeric::ublas::zero_matrix<double>(6, dim*n);
+	currBE = boost::numeric::ublas::zero_matrix<double>(dim*n, 6);
+	currk = boost::numeric::ublas::zero_matrix<double>(dim*n, dim*n);
 
 	using namespace boost::numeric::ublas;
 	//Setting up the current reference shape position matrix:
@@ -274,13 +285,14 @@ void Prism::calculateCurrk(boost::numeric::ublas::matrix<double>& currk, boost::
 
 	//Generating currB:
 	matrix<double> tmpMat1(6, dim2);
-
 	boost::numeric::ublas::axpy_prod(CoeffMat,InvJacobianStack,tmpMat1);
 	boost::numeric::ublas::axpy_prod(tmpMat1,ShapeFuncDerStack,currB);
+	currBo = ShapeFuncDerStack;
 
 	//Generating currk:
 	matrix<double> currBT = trans(currB);
-
 	boost::numeric::ublas::axpy_prod(currBT,detJ*D,currBE);
 	boost::numeric::ublas::axpy_prod(currBE,currB,currk);
+	//currB = currB*detJ;
+	//cout<<"Id: "<<Id<<" detJ: "<<detJ<<endl;
 }

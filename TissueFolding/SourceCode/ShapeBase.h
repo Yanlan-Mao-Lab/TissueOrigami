@@ -37,7 +37,6 @@ protected:
 	double* GrowthRate;
 	double* ShapeChangeRate;
 	double* CurrGrowthStrainAddition;
-	bool 	TissueCoordinateSystemUpToDate;
 	bool 	CurrShapeChangeStrainsUpToDate;
 	bool 	CurrGrowthStrainsUpToDate;
 	bool 	GrewInThePast;
@@ -57,14 +56,19 @@ protected:
 	//bool	areSidesFacingSameDirection(double* RefSide, double* ShapeSide);
 	void 	updateTissueCoordStrain();
 	void 	updateTissueCoordPlasticStrain();
-	void updatePositionsAlignedToReferenceWithBuffers();
-	void calculateGrowthInLocalCoordinates(double* strainsToAdd);
-
+	void 	updateTissueCoordinateSystem();
+	void 	updatePositionsAlignedToReferenceWithBuffers();
+	void 	calculateGrowthInLocalCoordinates(double* strainsToAdd);
+	void 	calculateReferenceCoordSysAlignedToTissue(double* RefCoords);
+	bool 	calculateWorldToTissueRotMat(double* v);
+	bool 	calculateGrowthStrainsRotMat(double* v);
+	void 	updateTissueCoordinateSystem(double* TissueCoords);
 	boost::numeric::ublas::matrix<double> D;
 	boost::numeric::ublas::matrix<int> CoeffMat;
 	boost::numeric::ublas::matrix<double> k;
 	boost::numeric::ublas::matrix<double> B;
 	boost::numeric::ublas::matrix<double> BE;
+	boost::numeric::ublas::matrix<double> Bo;
 	boost::numeric::ublas::vector<double> Forces;
 	boost::numeric::ublas::matrix<double> LocalGrowthStrainsMat;
 	double E, v;
@@ -84,6 +88,8 @@ public:
 	boost::numeric::ublas::matrix<double> CurrPlasticStrainsInTissueCoordsMat;
 	bool 	IsGrowing;
 	bool 	IsChangingShape;
+	bool 	WorldToTissueRotMatUpToDate;
+	bool 	GrowthStrainsRotMatUpToDate;
 
 	double CurrShapeChangeToAdd[3];
 	//int alingmentTurn;
@@ -101,6 +107,7 @@ public:
 	double* getCentre();
 	void 	getStrain(int type, float &StrainMag);
 	void 	getPlasticStrain(int type, float &StrainMag);
+	void	getTissueCoordinaSystem(double* TissueCoords);
 	void 	getNodeBasedPysProp(int type, int NodeNo, vector<Node*>& Nodes, float& PysPropMag);
 	void 	getPysProp(int type, float &PysPropMag);
 	double 	getYoungModulus();
@@ -142,13 +149,16 @@ public:
 	void alignElementOnReference();
 	void growShape();
 	bool RotatedElement;
-	//boost::numeric::ublas::matrix<double> WorldToTissueRotMat;
+	boost::numeric::ublas::matrix<double> WorldToTissueRotMat;
 	double **PositionsInTissueCoord;
 	double **PositionsAlignedToReference;
 	boost::numeric::ublas::matrix<double>WorldToReferenceRotMat;
+	boost::numeric::ublas::matrix<double> GrowthStrainsRotMat;
+
 	bool 	calculateAlignmentRotationMatrix(double** RefNormalised, double* rotMat);
 	bool 	calculateAlignmentScore(double** RefNormalised);
 	void 	bringShapePositionsToOrigin(double** RefNormalised, double* refCentre);
+	bool	calculateDisplacementGradientRotationMatrix(double** RefNormalised, double* rotMat);
 };
 
 #endif

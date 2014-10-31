@@ -43,6 +43,7 @@ using namespace std;
      bool drawTissueCoordinates;
      bool drawNetForces;
      bool drawVelocities;
+     bool drawTissueScaleBar;
 
 
  signals:
@@ -100,6 +101,7 @@ using namespace std;
      void 		drawColourbar();
      void 		drawFixedNodes();
      void		drawAxesArrows();
+     void 		drawScaleBar();
      void 		drawTissueCoordSystemPrism(int i);
      void 		drawForces();
      void 		drawNodeVelocities();

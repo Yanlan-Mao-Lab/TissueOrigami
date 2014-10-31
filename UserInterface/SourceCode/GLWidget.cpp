@@ -97,7 +97,7 @@ using namespace std;
 
 	 glMatrixMode(GL_PROJECTION);
 	 glLoadIdentity();
-	 glFrustum(-1*aspectratio, 1*aspectratio, -1, 1, 1, 500); // near and far match your triangle Z distance
+	 glFrustum(-1*aspectratio, 1*aspectratio, -1, 1, 1, 1000); // near and far match your triangle Z distance
 
 	 glMatrixMode(GL_MODELVIEW);
 
@@ -106,7 +106,9 @@ using namespace std;
 
 	 drawColourbar();
 	 drawAxesArrows();
-
+	 if (drawTissueScaleBar){
+		 drawScaleBar();
+	 }
 	 glTranslatef( obj_pos[0], obj_pos[1], -obj_pos[2] );
 
 	 glTranslatef( Sim01->SystemCentre[0], Sim01->SystemCentre[1], -Sim01->SystemCentre[2]);
@@ -338,28 +340,32 @@ using namespace std;
 	}
 	double tip[3];
 	double scale = 1.5;
+	double* TissueCoords;
+	TissueCoords = new double[9];
+	Sim01->Elements[i]->getTissueCoordinaSystem(TissueCoords);
 	glBegin(GL_LINES);
 		glColor3f(1,0,0);
-		tip[0] = centre[0] + scale*Sim01->Elements[i]->TissueCoordinateSystem[0];
-		tip[1] = centre[1] + scale*Sim01->Elements[i]->TissueCoordinateSystem[1];
-		tip[2] = centre[2] + scale*Sim01->Elements[i]->TissueCoordinateSystem[2];
+		tip[0] = centre[0] + scale*TissueCoords[0];
+		tip[1] = centre[1] + scale*TissueCoords[1];
+		tip[2] = centre[2] + scale*TissueCoords[2];
 
 		glVertex3f( centre[0], centre[1], centre[2]);
 		glVertex3f( tip[0] , tip[1], tip[2]);
 		glColor3f(0,1,0);
-		tip[0] = centre[0] + scale*Sim01->Elements[i]->TissueCoordinateSystem[3];
-		tip[1] = centre[1] + scale*Sim01->Elements[i]->TissueCoordinateSystem[4];
-		tip[2] = centre[2] + scale*Sim01->Elements[i]->TissueCoordinateSystem[5];
+		tip[0] = centre[0] + scale*TissueCoords[3];
+		tip[1] = centre[1] + scale*TissueCoords[4];
+		tip[2] = centre[2] + scale*TissueCoords[5];
 
 		glVertex3f( centre[0], centre[1], centre[2]);
 		glVertex3f( tip[0] , tip[1], tip[2]);
 		glColor3f(0,0,1);
-		tip[0] = centre[0] + scale*Sim01->Elements[i]->TissueCoordinateSystem[6];
-		tip[1] = centre[1] + scale*Sim01->Elements[i]->TissueCoordinateSystem[7];
-		tip[2] = centre[2] + scale*Sim01->Elements[i]->TissueCoordinateSystem[8];
+		tip[0] = centre[0] + scale*TissueCoords[6];
+		tip[1] = centre[1] + scale*TissueCoords[7];
+		tip[2] = centre[2] + scale*TissueCoords[8];
 		glVertex3f( centre[0], centre[1], centre[2]);
 		glVertex3f( tip[0] , tip[1], tip[2]);
 	glEnd();
+	delete[] TissueCoords;
  }
 
  void GLWidget::getDisplayColour(float* OutputColour, float Data){
@@ -465,11 +471,13 @@ using namespace std;
  	//Drawing the borders
  	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
  	double** pos = Sim01->Elements[i]->getReferencePos();
+	//drawing the posiions of reference elementin red
  	glColor3f(1,0,0);
  	glBegin(GL_LINE_STRIP);
  		for (int j =0; j<nLineStrip;++j){
  			int pointId = BorderConnectivity[j];
  			//cout<<j<<" point id: "<<pointId<<endl;
+ 			if(j==0){glColor3f(0,0,1);}else{glColor3f(1,0,0);}
  			float x = pos[pointId][0];
  			float y = pos[pointId][1];
  			float z = pos[pointId][2];
@@ -477,11 +485,13 @@ using namespace std;
  			glVertex3f( x, y, z);
  		}
  	glEnd();
+	//drawing them again in blue, at z+10 for easy visualisation
  	glColor3f(0,0,1);
  	glBegin(GL_LINE_STRIP);
  		for (int j =0; j<nLineStrip;++j){
  			int pointId = BorderConnectivity[j];
  			//cout<<j<<" point id: "<<pointId<<endl;
+ 			if(j==0){glColor3f(1,0,0);}else{glColor3f(0,0,1);}
  			float x = pos[pointId][0];
  			float y = pos[pointId][1];
  			float z = pos[pointId][2] + 10.0;
@@ -491,11 +501,13 @@ using namespace std;
  	glEnd();
 
 
+ 	//drawing the positions of element aligned to reference in green
  	glColor3f(0,1,0);
  	glBegin(GL_LINE_STRIP);
  		for (int j =0; j<nLineStrip;++j){
  			int pointId = BorderConnectivity[j];
  			//cout<<j<<" point id: "<<pointId<<endl;
+ 			if(j==0){glColor3f(1,0,0);}else{glColor3f(0,1,0);}
  			float x = Sim01->Elements[i]->PositionsAlignedToReference[pointId][0];
  			float y = Sim01->Elements[i]->PositionsAlignedToReference[pointId][1];
  			float z = Sim01->Elements[i]->PositionsAlignedToReference[pointId][2];
@@ -503,10 +515,12 @@ using namespace std;
  			glVertex3f( x, y, z);
  		}
  	glEnd();
+	//drawing them again at z+10 position for easy visualisation (green)
  	glBegin(GL_LINE_STRIP);
  		for (int j =0; j<nLineStrip;++j){
  			int pointId = BorderConnectivity[j];
  			//cout<<j<<" point id: "<<pointId<<endl;
+ 			if(j==0){glColor3f(1,0,0);}else{glColor3f(0,1,0);}
  			float x = Sim01->Elements[i]->PositionsAlignedToReference[pointId][0];
  			float y = Sim01->Elements[i]->PositionsAlignedToReference[pointId][1];
  			float z = Sim01->Elements[i]->PositionsAlignedToReference[pointId][2]+10;
@@ -906,6 +920,48 @@ using namespace std;
  		}
  	}
   }
+
+ void GLWidget::drawScaleBar(){
+	glPushMatrix();
+		//glTranslatef( -15.0f, +15.0f, -obj_pos[2]);
+		glTranslatef( 0.0f, 0.0f, -obj_pos[2]);
+		glMultMatrixf(MatRot);
+		float size = 5.0; //one side of the cube is 5 microns
+		float Points[8][3]={{0,0,0},{size,0,0},{size,size,0},{0,size,0},{0,0,size},{size,0,size},{size,size,size},{0,size,size}};
+		int FaceConnectivity[12][3] = {{0,1,2},{0,2,3},{1,2,6},{1,6,5},{4,5,6},{4,6,7},{4,7,3},{0,3,4},{0,1,4},{1,4,5},{2,3,7},{2,7,6}};
+		int BorderConnectivity[16] = {0,1,2,3,0,4,5,1,2,6,5,4,7,3,7,6};
+		glColor3f(0,0,0);
+		glDisable(GL_DITHER);
+		glEnable(GL_DEPTH_TEST);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		glBegin(GL_TRIANGLES);
+			for (int j =0; j<12;++j){
+				for (int k =0; k<3; ++k){
+					int pointId = FaceConnectivity[j][k];
+					float x = Points[pointId][0];
+					float y = Points[pointId][1];
+					float z = Points[pointId][2];
+					glVertex3f( x, y, z);
+				}
+			}
+		glEnd();
+		glDisable(GL_POLYGON_OFFSET_FILL);
+
+		glColor3f(0.4,0.4,0.4);
+		glLineWidth(ReferenceLineThickness);
+		//Drawing the borders
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		glBegin(GL_LINE_STRIP);
+			for (int j =0; j<16;++j){
+				int pointId = BorderConnectivity[j];
+				float x = Points[pointId][0];
+				float y = Points[pointId][1];
+				float z = Points[pointId][2];
+				glVertex3f( x, y, z);
+			}
+		glEnd();
+	glPopMatrix();
+ }
 
  void GLWidget::drawAxesArrows(){
 	glPushMatrix();

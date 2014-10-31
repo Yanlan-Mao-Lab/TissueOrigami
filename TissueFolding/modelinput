@@ -1,7 +1,7 @@
 InputMeshParameters:
   MeshInputMode(int-seeDocumentation): 2
-  MeshRow(int): 10
-  MeshColumn(int): 1
+  MeshRow(int): 20
+  MeshColumn(int): 6
   SideLength: 1.0
   zHeight: 2.0
   ApicalCircumferenceFixZ: 0
@@ -13,16 +13,16 @@ InputMeshParameters:
   LateralFixXY: 0
 
 PeripodiumParameters:
-  AddPeripodium: 1
+  AddPeripodium: 0
   PeripodiumYoungsModulus: 10.0
 
 TimeParameters:
   TimeStep(sec): 0.25
-  SimulationLength(sec): 6000
+  SimulationLength(sec): 600
 
 PysicalProperties:
   YoungsModulus: 10.0		Noise(%-int): 0
-  PoissonsRatio: 0.3		Noise(%-int): 0
+  PoissonsRatio: 0.0		Noise(%-int): 0
   ApicalViscosity: 10.0 	Noise(%-int): 0
   BasalViscosity: 30.0		
 
@@ -36,11 +36,11 @@ GrowthOptions:
   NumberofGrowthFunctions(int): 4
   GrowthFunctionType(int-seeDocumentation): 1
   InitialTime(sec): 0
-  FinalTime(sec):  600
-  MaxValue(fractionPerHour-DV,AP,AB):  4.0 0.0  0.0
+  FinalTime(sec):  244
+  MaxValue(fractionPerHour-DV,AP,AB):  10.4025 0.0  0.0
   
 GrowthFunctionType(int-seeDocumentation): 2
-  InitialTime(sec): 0
+  InitialTime(sec): 200000
   FinalTime(sec):  300
   Centre:  0.0 0.0
   InnerRadius: 0.0
