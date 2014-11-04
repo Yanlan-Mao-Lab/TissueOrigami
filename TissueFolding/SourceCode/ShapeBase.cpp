@@ -302,6 +302,8 @@ void 	ShapeBase::growShape(){
 void 	ShapeBase::updateTissueCoordStrain(){
 	boost::numeric::ublas::matrix<double> tmpMat1(3,3);
 	boost::numeric::ublas::matrix<double> StrainMat(3,3);
+	tmpMat1 = boost::numeric::ublas::zero_matrix<double> (3,3);
+	StrainMat = boost::numeric::ublas::zero_matrix<double> (3,3);
 	StrainMat(0,0) = Strain(0);
 	StrainMat(1,1) = Strain(1);
 	StrainMat(2,2) = Strain(2);
@@ -332,6 +334,8 @@ void 	ShapeBase::updateTissueCoordStrain(){
 void 	ShapeBase::updateTissueCoordPlasticStrain(){
 	boost::numeric::ublas::matrix<double> tmpMat1(3,3);
 	boost::numeric::ublas::matrix<double> StrainMat(3,3);
+	tmpMat1 = boost::numeric::ublas::zero_matrix<double> (3,3);
+	StrainMat = boost::numeric::ublas::zero_matrix<double> (3,3);
 	StrainMat(0,0) = PlasticStrain(0);
 	StrainMat(1,1) = PlasticStrain(1);
 	StrainMat(2,2) = PlasticStrain(2);
@@ -567,6 +571,7 @@ void 	ShapeBase::updatePositionsAlignedToReferenceWithBuffers(){
 	boost::numeric::ublas::matrix<double> PositionsMat(nDim,nNodes);
 	boost::numeric::ublas::matrix<double> tmpMat1(nDim,nNodes);
 	boost::numeric::ublas::matrix<double> PositionsOnReferenceMat(nDim,nNodes);
+	PositionsOnReferenceMat = boost::numeric::ublas::zero_matrix<double> (nDim,nNodes);
 	for (int i=0;i<nNodes; ++i){
 		for (int j=0;j<nDim; ++j){
 			PositionsMat(j,i)=Positions[i][j];
@@ -578,6 +583,29 @@ void 	ShapeBase::updatePositionsAlignedToReferenceWithBuffers(){
 			PositionsAlignedToReference[i][j] = PositionsOnReferenceMat(j,i);
 		}
 	}
+}
+
+void 	ShapeBase::bringPositionAlignedToReferenceToOrigin(double* refCentre){
+	double centre[3] = {0.0,0.0,0.0};
+	refCentre[0]=0.0;
+	refCentre[1]=0.0;
+	refCentre[2]=0.0;
+	for (int i = 0; i<nNodes; ++i){
+		for (int j = 0; j<nDim; ++j){
+			centre[j] +=  PositionsAlignedToReference[i][j];
+			refCentre[j] +=  ReferenceShape ->Positions[i][j];
+		}
+	}
+	for (int j = 0; j<nDim; ++j){
+		centre[j] /= nNodes;
+		refCentre[j] /= nNodes;
+	}
+	for (int i = 0; i<nNodes; ++i){
+		for (int j = 0; j<nDim; ++j){
+			 PositionsAlignedToReference[i][j] -= centre[j];
+		}
+	}
+
 }
 
 void 	ShapeBase::bringShapePositionsToOrigin(double** RefNormalised, double* refCentre){
@@ -641,6 +669,10 @@ bool	ShapeBase::calculateDisplacementGradientRotationMatrix(double** RefNormalis
 	boost::numeric::ublas::matrix<double>P(nDim,nDim);
 	boost::numeric::ublas::vector<double>dude(nDim*nDim);
 	boost::numeric::ublas::vector<double>dXde(nDim*nDim);
+	P = boost::numeric::ublas::zero_matrix<double>(nDim,nDim);
+	S = boost::numeric::ublas::zero_matrix<double>(nDim,nDim);
+	dXde = boost::numeric::ublas::zero_vector<double>(nDim*nDim);
+	dude = boost::numeric::ublas::zero_vector<double>(nDim*nDim);
 	//Bo is the shape functions derivative stack integrated over volume.
 	//The deformation gradient matrix is
 	boost::numeric::ublas::axpy_prod(Bo,displacement,dude);
@@ -655,9 +687,11 @@ bool	ShapeBase::calculateDisplacementGradientRotationMatrix(double** RefNormalis
 	P(1,0) = dXde(3); P(1,1) = dXde(4); P(1,2) = dXde(5);
 	P(2,0) = dXde(6); P(2,1) = dXde(7); P(2,2) = dXde(8);
 	boost::numeric::ublas::matrix<double>InvP(nDim,nDim);
-	double detP;
+	InvP = boost::numeric::ublas::zero_matrix<double>(nDim,nDim);
+	double detP = 0.0;
 	bool inverted = InvertMatrix(P, InvP, detP);
 	boost::numeric::ublas::matrix<double>F(nDim,nDim);
+	F = boost::numeric::ublas::zero_matrix<double>(nDim,nDim);
 	boost::numeric::ublas::axpy_prod(S,InvP,F);
 	boost::numeric::ublas::matrix<double>FIdentity(nDim,nDim);
 	FIdentity = boost::numeric::ublas::identity_matrix<double>(nDim,nDim);
@@ -677,6 +711,7 @@ bool	ShapeBase::calculateDisplacementGradientRotationMatrix(double** RefNormalis
 	boost::numeric::ublas::matrix<double>Vublas(3,3);
 	boost::numeric::ublas::matrix<double>UT(3,3);
 	boost::numeric::ublas::matrix<double>CurrentRotMat(3,3);
+	CurrentRotMat = boost::numeric::ublas::zero_matrix<double>(3,3);
 	for (int i=0; i<3; ++i){
 		for (int j=0; j<3; ++j){
 			UT(i,j) =  gsl_matrix_get(Sgsl,j,i);
@@ -689,6 +724,27 @@ bool	ShapeBase::calculateDisplacementGradientRotationMatrix(double** RefNormalis
 		for (int j=0; j<3; ++j){
 			rotMat[counter] = CurrentRotMat(i,j);
 			counter++;
+		}
+	}
+
+	double det = determinant3by3Matrix(rotMat);
+	if (det<0){
+		cout<<"Error! Flipped element, Id: "<<Id<<endl;
+		//writing a matrix that is identity, except for the last diagonal element, which is det
+		boost::numeric::ublas::matrix<double> weights(3,3);
+		weights = boost::numeric::ublas::identity_matrix<double>(3,3);
+		boost::numeric::ublas::matrix<double> tempMat(3,3);
+		tempMat = boost::numeric::ublas::zero_matrix<double>(3,3);
+		S(2,2)=det;
+		//calculating the new rotation matrix, doing my best to recover flipped elements
+		boost::numeric::ublas::axpy_prod(Vublas,S, tempMat);
+		boost::numeric::ublas::axpy_prod(tempMat,UT, CurrentRotMat);
+		int counter =0;
+		for (int i=0; i<3; ++i){
+			for (int j=0; j<3; ++j){
+				rotMat[counter] = CurrentRotMat(i,j);
+				counter++;
+			}
 		}
 	}
 	gsl_matrix_free (Sgsl);
@@ -714,6 +770,7 @@ bool	ShapeBase::calculateDisplacementGradientRotationMatrix(double** RefNormalis
 bool 	ShapeBase::calculateAlignmentRotationMatrix(double** RefNormalised, double* rotMat){
 	//Calculating the covarience matrix:
 	boost::numeric::ublas::matrix<double>S(3,3);
+	S = boost::numeric::ublas::zero_matrix<double>(3,3);
 	boost::numeric::ublas::matrix<double>X(nDim,nNodes);
 	boost::numeric::ublas::matrix<double>YT(nNodes,nDim);
 	for (int i = 0; i<nNodes; ++i){
@@ -738,6 +795,7 @@ bool 	ShapeBase::calculateAlignmentRotationMatrix(double** RefNormalised, double
 	boost::numeric::ublas::matrix<double>Vublas(3,3);
 	boost::numeric::ublas::matrix<double>UT(3,3);
 	boost::numeric::ublas::matrix<double>CurrentRotMat(3,3);
+	CurrentRotMat = boost::numeric::ublas::zero_matrix<double>(3,3);
 	for (int i=0; i<3; ++i){
 		for (int j=0; j<3; ++j){
 			UT(i,j) =  gsl_matrix_get(Sgsl,j,i);
@@ -759,6 +817,7 @@ bool 	ShapeBase::calculateAlignmentRotationMatrix(double** RefNormalised, double
 		boost::numeric::ublas::matrix<double> weights(3,3);
 		weights = boost::numeric::ublas::identity_matrix<double>(3,3);
 		boost::numeric::ublas::matrix<double> tempMat(3,3);
+		tempMat = boost::numeric::ublas::zero_matrix<double>(3,3);
 		S(2,2)=det;
 		//calculating the new rotation matrix, doing my best to recover flipped elements
 		boost::numeric::ublas::axpy_prod(Vublas,S, tempMat);
@@ -799,6 +858,18 @@ double 	ShapeBase::determinant3by3Matrix(double* rotMat){
 	return det;
 }
 
+void 	ShapeBase::updatePositionsAlignedToReferenceForRK(){
+	updatePositionsAlignedToReferenceWithBuffers();
+	const int dim = nDim;
+	double* refCentre = new double[dim];
+	bringPositionAlignedToReferenceToOrigin(refCentre);
+	for (int i=0; i<nNodes; ++i){
+		PositionsAlignedToReference[i][0] += refCentre[0];
+		PositionsAlignedToReference[i][1] += refCentre[1];
+		PositionsAlignedToReference[i][2] += refCentre[2];
+	}
+}
+
 void 	ShapeBase::alignElementOnReference(){
 	updatePositionsAlignedToReferenceWithBuffers();
 	const int n = nNodes;
@@ -822,13 +893,13 @@ void 	ShapeBase::alignElementOnReference(){
 			cout<<endl;
 		}*/
 		bool calculateRotation = calculateDisplacementGradientRotationMatrix(RefNormalised, rotMat);
-		if (Id == 12 &&  calculateRotation ) {
+		/*if (Id == 12 &&  calculateRotation ) {
 			cout<<"rotMat from strain decomposition: "<<endl;
 			for (int i=0; i<9 ;++i){
 				cout<<rotMat[i]<<" ";
 			}
 			cout<<endl;
-		}
+		}*/
 		if (calculateRotation){
 			double u[3];
 			for (int i=0; i<nNodes; ++i){
@@ -850,6 +921,7 @@ void 	ShapeBase::alignElementOnReference(){
 				}
 			}
 			boost::numeric::ublas::matrix<double>tmpMat(3,3);
+			tmpMat = boost::numeric::ublas::zero_matrix<double>(3,3);
 			boost::numeric::ublas::axpy_prod(CurrentRotMat,WorldToReferenceRotMat, tmpMat);
 			WorldToReferenceRotMat = tmpMat;
 		}
@@ -939,30 +1011,35 @@ void	ShapeBase::rotateVectorByRotationMatrix(double* u,double* rotMat){
 	u[2] = z;
 }
 
-void	ShapeBase::calculateForces(int RKid, double **SystemForces, vector <Node*>& Nodes){
+void	ShapeBase::calculateForces(int RKId, double ***SystemForces, vector <Node*>& Nodes){
 	//cout<<"calculating forces"<<endl;
 	const int nMult = nNodes*nDim;
 	using namespace boost::numeric::ublas;
 	boost::numeric::ublas::vector<double> displacement(nMult);
 	int counter = 0;
+	if (RKId != 0 ){
+		//If we are at the first RK step, the positions aligned to reference
+		//will be up to date from alignment calculation.
+		//In any other RK step (inside this if clause), the positions are updated.
+		//I do not need to re-calculate alignment, the change will be negligable, but I still need to update the positions
+		//using the same rotation matrices.
+		updatePositionsAlignedToReferenceForRK();
+	}
 	for (int i = 0; i<nNodes; ++i){
 		for (int j = 0; j<nDim; ++j){
 			displacement(counter) = PositionsAlignedToReference[i][j]-ReferenceShape->Positions[i][j];
 			counter++;
 		}
 	}
-
-	Forces = zero_vector<double>(nMult);
 	Strain = zero_vector<double>(6);
-	boost::numeric::ublas::vector<double> PlasticStrainForces = zero_vector<double>(nMult);
-
-	//cout<<"multiplying to get forces"<<endl;
-	boost::numeric::ublas::axpy_prod(k,displacement,Forces);
-	if (Id == 12112){
-		displayMatrix(Forces,"ForcesFromOnlyk");
-	}
-	//cout<<"multiplying to get strain"<<endl;
 	boost::numeric::ublas::axpy_prod(B,displacement,Strain);
+	if (RKId == 0){
+		//I need to keep record of this for saving and displaying purposes. This is the strain at the beginning of the time step.
+		//This strain should be recorded as the strain of the current step.
+		//Otherwise, the recorded strains will belong to artificial setup of RK step 4.
+		//Necessary updates are done when saving or displaying is applicable
+		RK1Strain = Strain;
+	}
 	//reading from the upper triangular:
 	PlasticStrain(0)= LocalGrowthStrainsMat(0,0);
 	PlasticStrain(1)= LocalGrowthStrainsMat(1,1);
@@ -970,45 +1047,15 @@ void	ShapeBase::calculateForces(int RKid, double **SystemForces, vector <Node*>&
 	PlasticStrain(3)= LocalGrowthStrainsMat(0,1);
 	PlasticStrain(4)= LocalGrowthStrainsMat(0,2);
 	PlasticStrain(5)= LocalGrowthStrainsMat(1,2);
-	boost::numeric::ublas::axpy_prod(BE,PlasticStrain,PlasticStrainForces);
-	Forces = Forces - PlasticStrainForces;
-
-
-	//boost::numeric::ublas::matrix<double> kTemp;
-	//kTemp  = zero_matrix<double>(nDim*nNodes, nDim*nNodes);
-	//boost::numeric::ublas::axpy_prod(BE,B,kTemp);
-	//kTemp = k - kTemp;
-	//displayMatrix(kTemp,"kDifference");
-	//displayMatrix(Forces,"ForcesFromNormalMethod");
-	//boost::numeric::ublas::axpy_prod(BE,Strain,Forces);
-	//displayMatrix(Forces,"ForcesFromOnlyStrains");
-
-	if (Id == 12112){
-		displayMatrix(Strain,"Strain");
-		displayMatrix(PlasticStrain,"PlasticStrain");
-		displayMatrix(PlasticStrainForces,"PlasticStrainForces");
-		displayMatrix(Forces,"Forces");
-		updateTissueCoordStrain();
-		updateTissueCoordPlasticStrain();
-		displayMatrix(StrainTissueMat,"StrainsInWorld");
-		displayMatrix(CurrPlasticStrainsInTissueCoordsMat,"PlasticStrainsInWorld");
-		displayMatrix(WorldToReferenceRotMat,"WorldToReferenceRotMat");
-	}
-
-	//Forces = zero_vector<double>(nMult);
-	Strain = Strain - PlasticStrain;
-	boost::numeric::ublas::axpy_prod(BE,Strain,Forces);
-	//if (Id < 3){
-	//	displayMatrix(Strain,"difference");
-	//}
-	//displayMatrix(Forces,"ForcesFromStrainSubstraction");
-
-	//repeat to bring calculation back:
-	//boost::numeric::ublas::axpy_prod(k,displacement,Forces);
-	//Forces = Forces - PlasticStrainForces;
-
+	//if (Id == 0 ){displayMatrix(PlasticStrain,"PlasticStrain");};
+	boost::numeric::ublas::vector<double> NetStrain;
+	NetStrain= zero_vector<double>(6);
+	NetStrain = Strain - PlasticStrain;
+	Forces = zero_vector<double>(nMult);
+	boost::numeric::ublas::axpy_prod(BE,NetStrain,Forces);
 	//Now I have the forces in tissue coordinate system, I need the forces in world coordinates:
 	boost::numeric::ublas::matrix<double>forcesInReferenceCoordsMat(nDim,nNodes);
+	forcesInReferenceCoordsMat = zero_matrix<double>(nDim,nNodes);
 	counter = 0;
 	for (int i = 0; i<nNodes; ++i){
 		for (int j = 0; j<nDim; ++j){
@@ -1017,6 +1064,7 @@ void	ShapeBase::calculateForces(int RKid, double **SystemForces, vector <Node*>&
 		}
 	}
 	boost::numeric::ublas::matrix<double>forcesInWorldT(nDim,nNodes);
+	forcesInWorldT = zero_matrix<double>(nDim,nNodes);
 	boost::numeric::ublas::axpy_prod(trans(WorldToReferenceRotMat),forcesInReferenceCoordsMat,forcesInWorldT);
 	counter = 0;
 	for (int i = 0; i<nNodes; ++i){
@@ -1025,22 +1073,31 @@ void	ShapeBase::calculateForces(int RKid, double **SystemForces, vector <Node*>&
 			counter++;
 		}
 	}
-	//Now put the forces in world coordinates into system forces
+	//Now put the forces in world coordinates into system forces, in forces per volume format
 	counter = 0;
 	for (int i = 0; i<nNodes; ++i){
 		for (int j = 0; j<nDim; ++j){
 			if (!Nodes[NodeIds[i]]->FixedPos[j]){
-				SystemForces[NodeIds[i]][j] = SystemForces[NodeIds[i]][j] - Forces(counter);
+				SystemForces[RKId][NodeIds[i]][j] = SystemForces[RKId][NodeIds[i]][j] - (Forces(counter) / ReferenceShape->Volume);
 			}
 			counter++;
 		}
 	}
 }
 
-void	ShapeBase::updatePositions(vector<Node*>& Nodes){
-	for (int i = 0; i<nNodes; ++i){
-		for (int j = 0; j<nDim; ++j){
+void	ShapeBase::updatePositions(int RKId, vector<Node*>& Nodes){
+	if (RKId < 3){
+		for (int i = 0; i<nNodes; ++i){
+			for (int j = 0; j<nDim; ++j){
+				Positions[i][j] = Nodes[NodeIds[i]]->RKPosition[j];
+			}
+		}
+	}
+	else{
+		for (int i = 0; i<nNodes; ++i){
+			for (int j = 0; j<nDim; ++j){
 				Positions[i][j] = Nodes[NodeIds[i]]->Position[j];
+			}
 		}
 	}
 }

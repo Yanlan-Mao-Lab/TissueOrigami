@@ -23,6 +23,7 @@ int main(int argc, char **argv)
 {
 	bool Success = false;
 	Sim01 = new Simulation();
+	Sim01->displayIsOn = true;
 	if (argc<2){
 		Sim01->DisplaySave = false;
 		cerr<<"Using default settings"<<endl;
@@ -46,7 +47,8 @@ int main(int argc, char **argv)
 		Success = Sim01->initiateSystem();
 		cout<<"system initiated"<<endl;
 		for (int i=0; i<Sim01->Elements.size(); ++i){
-			Sim01->Elements[i]->updatePositions(Sim01->Nodes);
+			//This is the initial setup, the elements should take the actual positions of the nodes, this corresponds to RK step 4, RKId= 3
+			Sim01->Elements[i]->updatePositions(3,Sim01->Nodes);
 		}
 	}
 

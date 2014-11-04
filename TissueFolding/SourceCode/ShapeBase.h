@@ -70,19 +70,21 @@ protected:
 	boost::numeric::ublas::matrix<double> BE;
 	boost::numeric::ublas::matrix<double> Bo;
 	boost::numeric::ublas::vector<double> Forces;
-	boost::numeric::ublas::matrix<double> LocalGrowthStrainsMat;
+
 	double E, v;
 
 
 
 
 public:
+	boost::numeric::ublas::matrix<double> LocalGrowthStrainsMat;
 	int* 	NodeIds;
 	virtual ~ShapeBase(){
 			//while deleting a ShapeBase* that happens to point a child, this destructor will be called after the child destructor
 			};
 	double** Positions;
 	boost::numeric::ublas::vector<double> Strain;
+	boost::numeric::ublas::vector<double> RK1Strain;
 	boost::numeric::ublas::matrix<double> StrainTissueMat;
 	boost::numeric::ublas::vector<double> PlasticStrain;
 	boost::numeric::ublas::matrix<double> CurrPlasticStrainsInTissueCoordsMat;
@@ -123,8 +125,8 @@ public:
 	virtual void setElasticProperties(double E,double v){ParentErrorMessage();};
 	void 	updateGrowthRate(double scalex, double scaley, double scalez);
 	virtual void calculateReferenceStiffnessMatrix(){ParentErrorMessage();};
-	void 	calculateForces(int RKid, double **SystemForces, vector <Node*>& Nodes);
-	void 	updatePositions(vector<Node*>& Nodes);
+	void 	calculateForces(int RKId, double ***SystemForces, vector <Node*>& Nodes);
+	void 	updatePositions(int RKId, vector<Node*>& Nodes);
 	void 	setGrowthRate(double x, double y, double z);
 	void 	setShapeChangeRate(double x, double y, double z);
 	void 	updateGrowthToAdd(double* growthscale);
@@ -147,17 +149,19 @@ public:
 
 
 	void alignElementOnReference();
+	void updatePositionsAlignedToReferenceForRK();
 	void growShape();
 	bool RotatedElement;
 	boost::numeric::ublas::matrix<double> WorldToTissueRotMat;
 	double **PositionsInTissueCoord;
 	double **PositionsAlignedToReference;
-	boost::numeric::ublas::matrix<double>WorldToReferenceRotMat;
+	boost::numeric::ublas::matrix<double> WorldToReferenceRotMat;
 	boost::numeric::ublas::matrix<double> GrowthStrainsRotMat;
 
 	bool 	calculateAlignmentRotationMatrix(double** RefNormalised, double* rotMat);
 	bool 	calculateAlignmentScore(double** RefNormalised);
 	void 	bringShapePositionsToOrigin(double** RefNormalised, double* refCentre);
+	void 	bringPositionAlignedToReferenceToOrigin(double* refCentre);
 	bool	calculateDisplacementGradientRotationMatrix(double** RefNormalised, double* rotMat);
 };
 

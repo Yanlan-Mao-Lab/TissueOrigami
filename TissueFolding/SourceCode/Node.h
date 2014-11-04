@@ -14,7 +14,8 @@ public:
 	int Id;
 	int nDim;
 	double *Position;
-	double *Velocity;
+	double *RKPosition;
+	double **Velocity;
 	double Viscosity;
 
 };

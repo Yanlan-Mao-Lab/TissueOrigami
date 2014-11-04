@@ -74,7 +74,8 @@ private:
 	void calculateStiffnessMatrices();
 	void fixAllD(int i);
 	void fixZ(int i);
-	void zeroForcesOnNode(int i);
+	void zeroForcesOnNode(int RKId, int i);
+	void updateDisplaySaveValuesFromRK();
 	void saveStep();
 	void writeSimulationSummary();
 	void writeSaveFileStepHeader();
@@ -92,12 +93,13 @@ private:
 	void calculateGrowthRing(int currIndexForParameters);
 	void changeCellShapesInSystem();
 	void changeCellShapeRing(int currIndexForParameters);
-	double calculatePeripodiumArea();
-	double calculatePeripodiumResistance();
-	double calculatePeripodiumResistanceForce();
-	void addPeripodiumResistance();
+	double calculatePeripodiumArea(int RKId);
+	double calculatePeripodiumResistance(int RKId);
+	double calculatePeripodiumResistanceForce(int RKId);
+	void addPeripodiumResistance(int RKId);
 public:
 	ofstream outputFile;
+	bool displayIsOn;
 	bool DisplaySave;
 	bool reachedEndOfSaveFile;
 	float dt;
@@ -133,9 +135,10 @@ public:
 	vector <float> ShapeChangeParameters;
 	vector <Node*> Nodes;
 	vector <ShapeBase*> Elements;
-	double** SystemForces;
+	double*** SystemForces;
 	double SystemCentre[3];
 	double PeripodiumStrain;
+	double RK1PeripodiumStrain;
 	bool AddLateralNodes;
 	bool AddPeripodialArea;
 	Simulation();
@@ -147,6 +150,8 @@ public:
 	void cleanMatrixUpdateData();
 	void resetForces();
 	void runOneStep();
+	void updateNodePositions(int RKId);
+	void updateElementPositions(int RKId);
 	bool initiateSavedSystem();
 	void updateOneStepFromSave();
 	void alignTissueDVToXPositive();

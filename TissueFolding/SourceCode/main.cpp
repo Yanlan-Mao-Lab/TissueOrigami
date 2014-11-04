@@ -6,6 +6,7 @@ using namespace std;
 int main(int argc, char * argv[])
 {
 	Simulation* Sim01 = new Simulation();
+	Sim01->displayIsOn = false;
 	if (argc<2){
 		Sim01->DisplaySave = false;
 		cerr<<"Using default settings"<<endl;

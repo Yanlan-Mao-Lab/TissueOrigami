@@ -31,6 +31,7 @@ protected:
 	void resetBuffersAfterGrowth();
 	void calculateZVecForTissueCoordAlignment(double* u);
 	void calculateXVecForTissueCoordAlignment(double* u);
+	void calculateReferenceVolume();
 public:
 	Prism(int* NodeIds,vector<Node*>& Nodes, int CurrId);
 	~Prism();

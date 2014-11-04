@@ -37,8 +37,10 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
 	setPositionMatrix(Nodes);
 	setReferencePositionMatrix();
 	setCoeffMat();
+	calculateReferenceVolume();
 
 	Strain = boost::numeric::ublas::zero_vector<double>(6);
+	RK1Strain = boost::numeric::ublas::zero_vector<double>(6);
 	StrainTissueMat = boost::numeric::ublas::zero_matrix<double>(3,3);
 	PlasticStrain = boost::numeric::ublas::zero_vector<double>(6);
 	CurrPlasticStrainsInTissueCoordsMat = boost::numeric::ublas::zero_matrix<double>(3,3);
@@ -111,7 +113,6 @@ void Prism::setCoeffMat(){
 void  Prism::setElasticProperties(double E, double v){
 	this -> E = E;
 	this -> v = v; //poisson ratio
-
 	if (v>0.5){v = 0.5;}
 	else if (v<0.0){v = 0.0;}
 	using namespace boost::numeric::ublas;
@@ -251,7 +252,7 @@ void Prism::calculateCurrk(boost::numeric::ublas::matrix<double>& currk, boost::
 	currB  = boost::numeric::ublas::zero_matrix<double>(6, dim*n);
 	currBE = boost::numeric::ublas::zero_matrix<double>(dim*n, 6);
 	currk = boost::numeric::ublas::zero_matrix<double>(dim*n, dim*n);
-
+	currBo  = boost::numeric::ublas::zero_matrix<double>(dim*dim, dim*n);
 	using namespace boost::numeric::ublas;
 	//Setting up the current reference shape position matrix:
 	matrix<double> CurrRelaxedShape (n, dim);
@@ -266,6 +267,7 @@ void Prism::calculateCurrk(boost::numeric::ublas::matrix<double>& currk, boost::
 	setShapeFunctionDerivativeStack(ShapeFuncDer,ShapeFuncDerStack);
 
 	matrix<double> Jacobian (dim, dim);
+	Jacobian  = zero_matrix<double> (dim,dim);
 	//Jacobian =  ShapeFuncDer*CurrRelaxedShape
 	boost::numeric::ublas::axpy_prod(ShapeFuncDer,CurrRelaxedShape,Jacobian);
 
@@ -285,6 +287,7 @@ void Prism::calculateCurrk(boost::numeric::ublas::matrix<double>& currk, boost::
 
 	//Generating currB:
 	matrix<double> tmpMat1(6, dim2);
+	tmpMat1 = zero_matrix<double>(6, dim2);
 	boost::numeric::ublas::axpy_prod(CoeffMat,InvJacobianStack,tmpMat1);
 	boost::numeric::ublas::axpy_prod(tmpMat1,ShapeFuncDerStack,currB);
 	currBo = ShapeFuncDerStack;
@@ -295,4 +298,35 @@ void Prism::calculateCurrk(boost::numeric::ublas::matrix<double>& currk, boost::
 	boost::numeric::ublas::axpy_prod(currBE,currB,currk);
 	//currB = currB*detJ;
 	//cout<<"Id: "<<Id<<" detJ: "<<detJ<<endl;
+}
+
+void Prism::calculateReferenceVolume(){
+	double height = 0.0;
+	for (int i = 0; i<3; ++i){
+		double d = ReferenceShape-> Positions[0][i] - ReferenceShape-> Positions[3][i];
+		d *= d;
+		height +=d;
+	}
+	height = pow(height,0.5);
+
+	double basesideVec1[3];
+	double basesideVec2[3];
+	double baseSide1 = 0.0;
+	double baseSide2 = 0.0;
+	double costet =0.0;
+	for (int i = 0; i<3; ++i){
+		basesideVec1[i]= ReferenceShape-> Positions[1][i] - ReferenceShape-> Positions[0][i];
+		basesideVec2[i]= ReferenceShape-> Positions[2][i] - ReferenceShape-> Positions[0][i];
+		costet += basesideVec1[i]*basesideVec2[i];
+		baseSide1 += basesideVec1[i] * basesideVec1[i];
+		baseSide2 += basesideVec2[i] * basesideVec2[i];
+	}
+	baseSide1 = pow(baseSide1,0.5);
+	baseSide2 = pow(baseSide2,0.5);
+	costet /= (baseSide1*baseSide2);
+	double sintet = pow((1-costet*costet),0.5);
+	double baseArea = baseSide1* baseSide2 * sintet / 2.0;
+	ReferenceShape->Volume = height * baseArea;
+	//cout<<"baseSide1: "<<baseSide1<<" baseSide2: "<<baseSide2<<" costet: "<<costet<<" sintet: "<<sintet<<endl;
+	//cout<<"basearea: "<<baseArea<<" heignt: "<<	height<<" Volume: "<<ReferenceShape->Volume<<endl;
 }

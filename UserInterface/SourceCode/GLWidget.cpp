@@ -1041,9 +1041,9 @@ using namespace std;
 		 for (int i =0; i<n; ++i){
 			 double* F;
 			 F = new double[3];
-			 F[0] = Sim01->SystemForces[i][0];
-			 F[1] = Sim01->SystemForces[i][1];
-			 F[2] = Sim01->SystemForces[i][2];
+			 F[0] = Sim01->SystemForces[0][i][0];
+			 F[1] = Sim01->SystemForces[0][i][1];
+			 F[2] = Sim01->SystemForces[0][i][2];
 			 //cout<<"Force: "<<F[0]<<" "<<F[1]<<" "<<F[2]<<endl;
 			 //check if the force is large enough to display:
 			 double mag2 = F[0]* F[0] + F[1]*F[1] + F[2]* F[2];
@@ -1079,9 +1079,9 @@ using namespace std;
 		 for (int i =0; i<n; ++i){
 			 double* v;
 			 v = new double[3];
-			 v[0] = Sim01->Nodes[i]->Velocity[0];
-			 v[1] = Sim01->Nodes[i]->Velocity[1];
-			 v[2] = Sim01->Nodes[i]->Velocity[2];
+			 v[0] = Sim01->Nodes[i]->Velocity[0][0];
+			 v[1] = Sim01->Nodes[i]->Velocity[0][1];
+			 v[2] = Sim01->Nodes[i]->Velocity[0][2];
 			 //check if the force is large enough to display:
 			 double mag2 = v[0]* v[0] + v[1]*v[1] + v[2]* v[2];
 			 if (mag2 > threshold2){

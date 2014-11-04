@@ -19,6 +19,7 @@ protected:
 public:
 	double** 	Positions;
 	double* 	CurrentNormal;
+	double		Volume;
 
 	ReferenceShapeBase(string SyapeType);
 	~ReferenceShapeBase();
