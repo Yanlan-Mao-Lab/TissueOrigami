@@ -657,6 +657,30 @@ bool	ShapeBase::calculateDisplacementGradientRotationMatrix(double** RefNormalis
 	using namespace boost::numeric::ublas;
 	boost::numeric::ublas::vector<double> displacement(nMult);
 	boost::numeric::ublas::vector<double> refpos(nMult);
+
+	/*PositionsAlignedToReference[0][0] = -2.26;  PositionsAlignedToReference[0][1] = -3.67; PositionsAlignedToReference[0][2] = 1.64;
+	PositionsAlignedToReference[1][0] = 2.2;  PositionsAlignedToReference[1][1] = -5.7; PositionsAlignedToReference[1][2] = 2.16;
+	PositionsAlignedToReference[2][0] = -0.26;  PositionsAlignedToReference[2][1] = -3.82; PositionsAlignedToReference[2][2] = 2.38;
+	PositionsAlignedToReference[3][0] = -2.95;  PositionsAlignedToReference[3][1] = -6.76; PositionsAlignedToReference[3][2] = 2.59;
+	PositionsAlignedToReference[4][0] = 3.02;  PositionsAlignedToReference[4][1] = -4.51; PositionsAlignedToReference[4][2] = 1.8;
+	PositionsAlignedToReference[5][0] = 0.03;  PositionsAlignedToReference[5][1] = -3.47; PositionsAlignedToReference[5][2] = 3.98;
+
+	for (int i = 0; i<nNodes; ++i){
+		for (int j = 0; j<nDim; ++j){
+			PositionsAlignedToReference[i][j] = RefNormalised[i][j];
+		}
+	}
+	checkHealth();
+	PositionsAlignedToReference[1][0] = PositionsAlignedToReference[1][0] - 2* (PositionsAlignedToReference[1][0] - PositionsAlignedToReference[0][0]);
+	cout<<"PositionsAlignedToReference for Id: "<<Id<<endl;
+	for (int i = 0; i<nNodes; ++i){
+		for (int j = 0; j<nDim; ++j){
+			cout<<PositionsAlignedToReference[i][j]<<" ";
+		}
+		cout<<endl;
+	}
+	checkHealth();
+*/
 	int counter = 0;
 	for (int i = 0; i<nNodes; ++i){
 		for (int j = 0; j<nDim; ++j){
@@ -728,6 +752,8 @@ bool	ShapeBase::calculateDisplacementGradientRotationMatrix(double** RefNormalis
 	}
 
 	double det = determinant3by3Matrix(rotMat);
+	//cout<<"det: "<<det<<endl;
+	//displayMatrix(CurrentRotMat,"CurrentRotMat");
 	if (det<0){
 		cout<<"Error! Flipped element, Id: "<<Id<<endl;
 		//writing a matrix that is identity, except for the last diagonal element, which is det

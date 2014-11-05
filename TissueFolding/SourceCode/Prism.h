@@ -32,6 +32,9 @@ protected:
 	void calculateZVecForTissueCoordAlignment(double* u);
 	void calculateXVecForTissueCoordAlignment(double* u);
 	void calculateReferenceVolume();
+	void calculatePlaneNormals(double** normals);
+	void assignNodalVector(double* vec, int id0, int id1);
+	bool checkNodePlaneConsistency(double** normals);
 public:
 	Prism(int* NodeIds,vector<Node*>& Nodes, int CurrId);
 	~Prism();
@@ -39,6 +42,8 @@ public:
 	void  setViscosity(double ApicalVisc,double BasalVisc, vector <Node*>& Nodes);
 	void  calculateReferenceStiffnessMatrix();
 	void  calculateForces(int RKid, double** SystemForces);
+	void  checkHealth();
+
 
 };
 

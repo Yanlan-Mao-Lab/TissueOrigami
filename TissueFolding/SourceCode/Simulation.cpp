@@ -1315,6 +1315,10 @@ void Simulation::runOneStep(){
 	int freq = 10.0/dt + 1 ;
 	if (timestep% freq  == 0){
 		calculateDVDistance();
+		int nElement = Elements.size();
+		for (int i=0; i<nElement; ++i){
+			Elements[i]->checkHealth();
+		}
 	}
 	int nElement = Elements.size();
 	if(nGrowthFunctions>0){

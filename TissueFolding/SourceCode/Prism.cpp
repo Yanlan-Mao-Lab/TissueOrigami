@@ -330,3 +330,116 @@ void Prism::calculateReferenceVolume(){
 	//cout<<"baseSide1: "<<baseSide1<<" baseSide2: "<<baseSide2<<" costet: "<<costet<<" sintet: "<<sintet<<endl;
 	//cout<<"basearea: "<<baseArea<<" heignt: "<<	height<<" Volume: "<<ReferenceShape->Volume<<endl;
 }
+
+void Prism::checkHealth(){
+	double** normals;
+	normals =new double*[8];
+	for (int i =0;i<8; ++i){
+		normals[i] = new double[3];
+		normals[i][0] = 0.0;
+		normals[i][1] = 0.0;
+		normals[i][2] = 0.0;
+	}
+	calculatePlaneNormals(normals);
+	bool elementsAreHealthy = checkNodePlaneConsistency(normals);
+	for (int i=0; i<8;++i){
+		delete[] normals[i];
+	}
+	delete[] normals;
+}
+
+void Prism::calculatePlaneNormals(double** normals){
+	//Calculating plane normals:
+	//plane 0 -> normal 0 - > normal for nodes 0  1  2
+	//plane 1 -> normal 1 - > normal for nodes 0  1  3
+	//plane 2 -> normal 2 - > normal for nodes 0  2  3
+	//plane 3 -> normal 3 - > normal for nodes 3  4  5
+	//plane 4 -> normal 4 - > normal for nodes 3  1  4
+	//plane 5 -> normal 5 - > normal for nodes 3  2  5
+	//plane 6 -> normal 6 - > normal for nodes 1  2  4
+	//plane 7 -> normal 7 - > normal for nodes 2  4  5
+	int List[8][3]={{0,1,2},{0,3,1},{0,2,3},{3,5,4},{3,4,1},{3,2,5},{1,4,2},{2,4,5}};
+	double *u,*v;
+	u = new double[3];
+	v = new double[3];
+	for (int i=0; i<8; ++i){
+		assignNodalVector(u,List[i][0],List[i][1]);
+		assignNodalVector(v,List[i][0],List[i][2]);
+		crossProduct3D(u,v,normals[i]);
+		//cout<<"u "<<u[0]<<" "<<u[1]<<" "<<u[2]<<endl;
+		//cout<<"v "<<v[0]<<" "<<v[1]<<" "<<v[2]<<endl;
+		//cout<<"normals["<<i<<"] "<<normals[i][0]<<" "<<normals[i][1]<<" "<<normals[i][2]<<endl;
+	}
+	delete[] u;
+	delete[] v;
+}
+
+void Prism::assignNodalVector(double* vec, int id0, int id1){
+	//vector from NodeId id0 to NodeId id1
+	if (id0 <0 || id1 <0 || id0>=nNodes || id1>= nNodes){
+		cerr<<"Error in node input in nodal vector assignment!"<<endl;
+	}
+	for (int i=0; i<nDim; ++i){
+		vec[i] = PositionsAlignedToReference[id1][i] - PositionsAlignedToReference[id0][i];
+	}
+}
+
+bool Prism::checkNodePlaneConsistency(double** normals){
+	//cout<<"inside check consistency, Id: "<<Id<<endl;
+	//List of constricting planes for each node:
+	//format is for each node (0->5): [plane1, plane2, plane3, node id for plane1, node id  for plane2&3]
+	int List[6][5] = {{3,6,7,3,2},{3,2,5,4,2},{3,1,4,5,1},{0,6,7,0,2},{0,2,5,1,2},{0,1,4,2,1}};
+	//int ListOfBorder[6][3] = {{4,1,5},{3,0,5},{3,0,4},{4,1,5},{3,0,5},{3,0,4}};
+	double *u;
+	u = new double[3];
+	int i=0;
+	for (int i =0; i<nNodes; ++i){
+		assignNodalVector(u,List[i][3],i);
+		double dotp[3];
+		dotp[0] = dotProduct3D(u,normals[List[i][0]]);
+		if (dotp[0]<0){
+			cerr <<"The element is not consistent! - top/bottom plane, Id: "<<Id<<endl;
+			return false;
+		}
+		assignNodalVector(u,List[i][4],i);
+		dotp[1] = dotProduct3D(u,normals[List[i][1]]);
+		dotp[2] = dotProduct3D(u,normals[List[i][2]]);
+		if(dotp[1]<0 ||  dotp[2]<0){
+			cerr <<"The element is not consistent! side planes, Id: "<<Id<<endl;
+				return false;
+			}
+		}
+		/*if(dotp[1]<0 && dotp[2]<0){
+			cerr <<"The element is not consistent!";
+			return false;
+		}
+		else if(dotp[1]<0){
+			//of the two planes making up the side, the node is passing one but not the other
+			//I need the vecotr pointing from intersection corner, projected on the plane.
+
+			assignNodalVector(u,ListOfBorder[i][0],i);
+			double *v,*p;
+			v = new double[3];
+			p = new double[3];
+			assignNodalVector(v,ListOfBorder[i][0],ListOfBorder[i][1]); //vector between two corners - one side of the triangle forming current plane
+			assignNodalVector(p,ListOfBorder[i][0],List[i][3]); // vector between two corners - border between two planes
+			double* cross1;
+			cross1 = new double[3];
+			double* cross2;
+			cross2 = new double[3];
+			crossProduct3D(p,v,cross1);
+			crossProduct3D(p,u,cross1);
+			//if the vecors are looking at the same direction, then the
+
+			delete[] v;
+			delete[] p;
+			delete[] cross1;
+			delete[] cross2;
+		}
+		else if(dotp[2]<0){
+			//of the two planes making up the side, the node is passing one but not the other
+		}
+	}*/
+	delete[] u;
+	return true;
+}

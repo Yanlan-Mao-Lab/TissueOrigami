@@ -131,6 +131,8 @@ public:
 	void 	setShapeChangeRate(double x, double y, double z);
 	void 	updateGrowthToAdd(double* growthscale);
 
+
+	virtual void  checkHealth(){ParentErrorMessage();};
 	void 	resetCurrStepGrowthData();
 	void 	resetCurrStepShapeChangeData();
 	//void 	calculatePlasticStrain();
