@@ -39,7 +39,6 @@ public:
 	Prism(int* NodeIds,vector<Node*>& Nodes, int CurrId);
 	~Prism();
 	void  setElasticProperties(double E,double v);
-	void  setViscosity(double ApicalVisc,double BasalVisc, vector <Node*>& Nodes);
 	void  calculateReferenceStiffnessMatrix();
 	void  calculateForces(int RKid, double** SystemForces);
 	void  checkHealth();

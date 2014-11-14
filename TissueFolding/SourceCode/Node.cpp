@@ -2,7 +2,7 @@
 
 using namespace std;
 
-Node::Node(int id, int dim, double* pos){
+Node::Node(int id, int dim, double* pos, int tissuePos){
 	Id = id;
 	nDim = dim;
 	const int n = nDim;
@@ -19,13 +19,14 @@ Node::Node(int id, int dim, double* pos){
 	RKPosition = new double[n];
 	for (int i=0; i<n; ++i){
 		Position[i] = pos[i];
-		RKPosition[i] = 0.0;
+		RKPosition[i] = pos[i];
 	}
 	FixedPos = new bool[3];
 	for (int i=0; i<3; ++i){
 		FixedPos[i] = false;
 	}
 	Viscosity = -10.0;
+	tissuePlacement = tissuePos;
 }
 
 Node::~Node(){
@@ -38,4 +39,18 @@ Node::~Node(){
 	delete[] Velocity;
 	delete[] FixedPos;
 	//cout<<"finalised the destructor for node class"<<endl;
+}
+
+
+void Node::setViscosity(double ApicalVisc,double BasalVisc){
+	if (tissuePlacement ==0){
+		Viscosity = BasalVisc;
+	}
+	else if (tissuePlacement ==1){
+		Viscosity = ApicalVisc;
+	}
+	else if (tissuePlacement == 2 || tissuePlacement == 3){
+		//middle or lateral node
+		Viscosity = (ApicalVisc + BasalVisc) /2.0;
+	}
 }

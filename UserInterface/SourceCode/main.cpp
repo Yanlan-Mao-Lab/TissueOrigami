@@ -21,6 +21,7 @@ class GLWidget;
 Simulation* Sim01;
 int main(int argc, char **argv)
 {
+
 	bool Success = false;
 	Sim01 = new Simulation();
 	Sim01->displayIsOn = true;

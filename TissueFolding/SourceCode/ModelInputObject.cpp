@@ -269,8 +269,31 @@ bool ModelInputObject::readMeshParameters(ifstream& file){
 			return false;
 		}
 	}
+	else if ( Sim->MeshType == 4){
+		bool Success  = readMeshType4(file);
+			if (!Success){
+			return false;
+		}
+	}
 	return true;
 }
+
+
+
+bool ModelInputObject::readMeshType4(ifstream& file){
+	string currHeader;
+	file >> currHeader;
+	if(currHeader == "MeshFile(full-path):"){
+		file >> Sim->inputMeshFileName;
+	}
+	else{
+		cerr<<"Error in reading mesh row number, curr string: "<<currHeader<<", should have been: MeshFile(full-path):" <<endl;
+		return false;
+	}
+	//checking consistency:
+	return true;
+}
+
 
 bool ModelInputObject::readMeshType2(ifstream& file){
 	string currHeader;

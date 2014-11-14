@@ -72,10 +72,10 @@ void Simulation::setDefaultParameters(){
 	Column = Row-2;
 	SideLength=1.0;
 	zHeight = 2.0;
-	ApicalNodeFix[0]= true;
-	ApicalNodeFix[1]= true;
-	BasalNodeFix[0]= true;
-	BasalNodeFix[1]= true;
+	ApicalNodeFix[0]= false;
+	ApicalNodeFix[1]= false;
+	BasalNodeFix[0]= false;
+	BasalNodeFix[1]= false;
 	LateralNodeFix[0]= false;
 	LateralNodeFix[1]= false;
 	nGrowthFunctions = 0;
@@ -234,10 +234,13 @@ bool Simulation::initiateSystem(){
 	}
 
 	if (MeshType == 1){
-		initiateMesh(MeshType);
+		initiateMesh(MeshType, zHeight); //zHeight
 	}
 	else if (MeshType == 2){
 		initiateMesh(MeshType, Row, Column,  SideLength,  zHeight);
+	}
+	else if(MeshType == 4){
+		initiateMesh(MeshType);
 	}
 	initiateSystemForces();
 	calculateSystemCentre();
@@ -416,7 +419,7 @@ bool Simulation::initiateSavedSystem(){
 		reachedEndOfSaveFile = true;
 		return true;
 	}
-	cout<<"skipped footer: "<<currline<<endl;
+	//cout<<"skipped footer: "<<currline<<endl;
 	return true;
 }
 
@@ -458,9 +461,44 @@ void Simulation::initiateNodesFromSave(){
 		saveFileToDisplayMesh >> pos[0];
 		saveFileToDisplayMesh >> pos[1];
 		saveFileToDisplayMesh >> pos[2];
-		tmp_nd = new Node(i, 3, pos);
+		tmp_nd = new Node(i, 3, pos,-1);
 		Nodes.push_back(tmp_nd);
 		delete[] pos;
+	}
+}
+
+void Simulation::initiateNodesFromMeshInput(){
+	int n;
+	saveFileToDisplayMesh >> n;
+	Node* tmp_nd;
+	for (int i=0; i<n; ++i){
+		double* pos = new double[3];
+		int tissuePos = -2;
+		saveFileToDisplayMesh >> pos[0];
+		saveFileToDisplayMesh >> pos[1];
+		saveFileToDisplayMesh >> pos[2];
+		saveFileToDisplayMesh >> tissuePos;
+		tmp_nd = new Node(i, 3, pos,tissuePos);
+		Nodes.push_back(tmp_nd);
+		delete[] pos;
+	}
+}
+
+void Simulation::initiateElementsFromMeshInput(){
+	int n;
+	saveFileToDisplayMesh >> n;
+	for (int i=0; i<n; ++i){
+		int shapeType;
+		saveFileToDisplayMesh >> shapeType;
+		if (shapeType == 1){
+			initiatePrismFromMeshInput();
+		}
+		else if (shapeType == 2){
+			initiateLateralPrismFromMeshInput();
+		}
+		else{
+			cerr<<"Error in shape type, corrupt save file! - currShapeType: "<<shapeType<<endl;
+		}
 	}
 }
 
@@ -498,6 +536,24 @@ void Simulation::initiatePrismFromSave(){
 	Elements.push_back(PrismPnt01);
 	currElementId++;
 	delete[] NodeIds;
+	//Elements[Elements.size()-1]->displayReferencePositions();
+}
+
+void Simulation::initiatePrismFromMeshInput(){
+	int* NodeIds;
+	NodeIds = new int[6];
+	for (int i =0 ;i<6; ++i){
+		int savedId;
+		saveFileToDisplayMesh >> savedId;
+		NodeIds[i] = savedId;
+	}
+	Prism* PrismPnt01;
+	PrismPnt01 = new Prism(NodeIds, Nodes, currElementId);
+	PrismPnt01->updateReferencePositionMatrixFromMeshInput(saveFileToDisplayMesh);
+	Elements.push_back(PrismPnt01);
+	currElementId++;
+	delete[] NodeIds;
+	//Elements[Elements.size()-1]->displayReferencePositions();
 }
 
 void Simulation::initiateLateralPrismFromSave(){
@@ -513,6 +569,26 @@ void Simulation::initiateLateralPrismFromSave(){
 	PrismLateral* PrismPnt01;
 	PrismPnt01 = new PrismLateral(NodeIds, Nodes, currElementId);
 	PrismPnt01->updateShapeFromSave(saveFileToDisplayMesh);
+	Elements.push_back(PrismPnt01);
+	currElementId++;
+	delete[] NodeIds;
+}
+
+
+void Simulation::initiateLateralPrismFromMeshInput(){
+	//inserts a new prism at order k into elements vector
+	//the node ids and reference shape positions
+	//will be updated in function: updateShapeFromSave
+	int* NodeIds;
+	NodeIds = new int[6];
+	for (int i =0 ;i<6; ++i){
+		int savedId;
+		saveFileToDisplayMesh >> savedId;
+		NodeIds[i] = savedId;
+	}
+	PrismLateral* PrismPnt01;
+	PrismPnt01 = new PrismLateral(NodeIds, Nodes, currElementId);
+	PrismPnt01->updateReferencePositionMatrixFromMeshInput(saveFileToDisplayMesh);
 	Elements.push_back(PrismPnt01);
 	currElementId++;
 	delete[] NodeIds;
@@ -597,7 +673,7 @@ void Simulation::initiatePrismFromSaveForUpdate(int k){
 }
 
 void Simulation::updateOneStepFromSave(){
-	cout<<"Updating step from save:"<<endl;
+	//cout<<"Updating step from save:"<<endl;
 	string currline;
 	//skipping the header:
 	getline(saveFileToDisplayMesh,currline);
@@ -605,7 +681,7 @@ void Simulation::updateOneStepFromSave(){
 		reachedEndOfSaveFile = true;
 		return;
 	}
-	cout<<"skipped header: "<<currline<<endl;
+	//cout<<"skipped header: "<<currline<<endl;
 	updateNodeNumberFromSave();
 	updateNodePositionsFromSave();
 	updateElementStatesFromSave();
@@ -627,19 +703,19 @@ void Simulation::updateOneStepFromSave(){
 	//skipping the footer:
 	string currline2;
 	getline(saveFileToDisplayMesh,currline2);
-	cout<<"currline 1st reading: "<<currline2<<endl;
+	//cout<<"currline 1st reading: "<<currline2<<endl;
 	getline(saveFileToDisplayMesh,currline2);
-	cout<<"currline 2nd reading: "<<currline2<<endl;
+	//cout<<"currline 2nd reading: "<<currline2<<endl;
 	while (currline.empty() && !saveFileToDisplayMesh.eof()){
 		//skipping empty line
-		cout<<"skipping empty line"<<endl;
+		//cout<<"skipping empty line"<<endl;
 		getline(saveFileToDisplayMesh,currline2);
 	}
 	if(saveFileToDisplayMesh.eof()){
 		reachedEndOfSaveFile = true;
 		return;
 	}
-	cout<<"in step update, skipped footer: "<<currline2<<endl;
+	//cout<<"in step update, skipped footer: "<<currline2<<endl;
 	timestep = timestep + dataSaveInterval;
 }
 
@@ -658,7 +734,7 @@ void  Simulation::updateNodeNumberFromSave(){
 			pos[1]=0.0;
 			pos[2]=0.0;
 			//the positions will be read and updated in function updateNodePositionsFromSave
-			tmp_nd = new Node(i, 3, pos);
+			tmp_nd = new Node(i, 3, pos,-1);
 			Nodes.push_back(tmp_nd);
 			delete[] pos;
 		}
@@ -748,9 +824,9 @@ void Simulation::updateNodePositionsFromSave(){
 	}
 }
 
-void Simulation::initiateMesh(int MeshType){
+void Simulation::initiateMesh(int MeshType, float zHeight){
 	if (MeshType == 1 ){
-		initiateSinglePrismNodes();
+		initiateSinglePrismNodes(zHeight);
 		initiateSinglePrismElement();
 	}
 	else if (MeshType == 2){
@@ -769,11 +845,25 @@ void Simulation::initiateMesh(int MeshType, int Row, int Column, float SideLengt
 		cerr<<"Error: Too many arguments for a single element system"<<endl;
 	}
 	if ( MeshType == 2){
+		//The necessary parameters:
+		//InputMeshParameters:
+		//  MeshInputMode(int-seeDocumentation): 2
+		//  MeshRow(int): 3
+		//  MeshColumn(int): 1
+		//  SideLength: 1.0
+		//  zHeight: 1.0
+		//  ApicalCircumferenceFixZ: 0
+		//  ApicalCircumferenceFixXY: 0
+		//  BasalCircumferenceFixZ: 0
+		//  BasalCircumferenceFixXY: 0
+		//  AddLateralNodes: 1
+		//  LateralFixZ: 0
+		//  LateralFixXY: 0
 		initiateNodesByRowAndColumn(Row,Column,SideLength,zHeight);
 		initiateElementsByRowAndColumn(Row,Column);
 	}
 	else if ( MeshType == 3 ){
-		cerr<<"Error: Wrong set of arguments  for mesh triangulation"<<endl;
+		cerr<<"Error: Wrong set of arguments for mesh triangulation"<<endl;
 	}
 	else if ( MeshType ==4 ){
 			cerr<<"Error: Too many arguments for reading the mesh from file"<<endl;
@@ -804,7 +894,7 @@ void Simulation::initiateMesh(int MeshType, string inputtype, float SideLength, 
 	}
 }
 
-void Simulation::initiateMesh(int MeshType, string inputtype ){
+void Simulation::initiateMesh(int MeshType){
 	if ( MeshType == 1 ){
 		cerr<<"Error: Too many arguments for a single element system"<<endl;
 	}
@@ -815,9 +905,15 @@ void Simulation::initiateMesh(int MeshType, string inputtype ){
 		cerr<<"Error: Wrong set of arguments  for mesh triangulation"<<endl;
 	}
 	else if ( MeshType ==4 ){
-		cerr<<"Error: Too many arguments for reading the mesh from file"<<endl;
 		//this will be reading full mesh data
 		//read mesh data from file
+		const char* name_inputMeshFile = inputMeshFileName.c_str();;
+		saveFileToDisplayMesh.open(name_inputMeshFile, ifstream::in);
+		if (!(saveFileToDisplayMesh.good() && saveFileToDisplayMesh.is_open())){
+			cerr<<"Cannot open the save file to display: "<<name_inputMeshFile<<endl;
+		}
+		initiateNodesFromMeshInput();
+		initiateElementsFromMeshInput();
 	}
 	else {
 		cerr<<"Error: Mesh Type not recognised"<<endl;
@@ -880,26 +976,26 @@ void Simulation::initiateSystemForces(){
 
 }
 
-void Simulation::initiateSinglePrismNodes(){
+void Simulation::initiateSinglePrismNodes(float zHeight){
 	double *pos = new double[3];
 	Node* tmp_nd;
 	pos[0]=0;pos[1]=1;pos[2]=0;
-	tmp_nd = new Node(0, 3, pos);
+	tmp_nd = new Node(0, 3, pos,0);
 	Nodes.push_back(tmp_nd);
 	pos[0]=1;pos[1]=0;pos[2]=0;
-	tmp_nd = new Node(1, 3, pos);
+	tmp_nd = new Node(1, 3, pos,0);
 	Nodes.push_back(tmp_nd);
 	pos[0]=0;pos[1]=0;pos[2]=0;
-	tmp_nd = new Node(2, 3, pos);
+	tmp_nd = new Node(2, 3, pos,0);
 	Nodes.push_back(tmp_nd);
-	pos[0]=0;pos[1]=1;pos[2]=1;
-	tmp_nd = new Node(3, 3, pos);
+	pos[0]=0;pos[1]=1;pos[2]=zHeight;
+	tmp_nd = new Node(3, 3, pos,1);
 	Nodes.push_back(tmp_nd);
-	pos[0]=1;pos[1]=0;pos[2]=1;
-	tmp_nd = new Node(4, 3, pos);
+	pos[0]=1;pos[1]=0;pos[2]=zHeight;
+	tmp_nd = new Node(4, 3, pos,1);
 	Nodes.push_back(tmp_nd);
-	pos[0]=0;pos[1]=0;pos[2]=1;
-	tmp_nd = new Node(5, 3, pos);
+	pos[0]=0;pos[1]=0;pos[2]=zHeight;
+	tmp_nd = new Node(5, 3, pos,1);
 	Nodes.push_back(tmp_nd);
 	delete[] pos;
 }
@@ -918,6 +1014,7 @@ void Simulation::initiateSinglePrismElement(){
 	fixZ(1);
 	fixZ(2);
 }
+
 
 void Simulation::initiateNodesByRowAndColumn(int Row, int Column, float SideLength, float zHeight){
 	DVRight = Row;
@@ -958,20 +1055,20 @@ void Simulation::initiateNodesByRowAndColumn(int Row, int Column, float SideLeng
 	int n =  xPos.size();
 	Node* tmp_nd;
 	double* pos = new double[3];
-	//Adding the lower level of nodes:
+	//Adding the basal level of nodes:
 	for (int i =0; i< n; ++i){
 		pos[0] = xPos[i];
 		pos[1] = yPos[i];
 		pos[2] = 0.0;
-		tmp_nd = new Node(i, 3, pos);
+		tmp_nd = new Node(i, 3, pos,0);
 		Nodes.push_back(tmp_nd);
 	}
-	//Adding the upper level:
+	//Adding the apical level:
 	for (int i =0; i< n; ++i){
 		pos[0] = xPos[i];
 		pos[1] = yPos[i];
 		pos[2] = zHeight;
-		tmp_nd = new Node(n+i, 3, pos);
+		tmp_nd = new Node(n+i, 3, pos,1);
 		Nodes.push_back(tmp_nd);
 	}
 
@@ -1143,7 +1240,7 @@ void Simulation::GenerateLateralNodes(){
 		dir[2] = dir[2]*h + Nodes[index0]->Position[2] + zHeight/2.0;
 		Node* tmp_nd;
 		int nNodes = Nodes.size();
-		tmp_nd = new Node(nNodes, 3, dir);
+		tmp_nd = new Node(nNodes, 3, dir, 3);
 		Nodes.push_back(tmp_nd);
 		PeripodiumAnchorNodeList.push_back(nNodes);
 		//fixZ(nNodes);
@@ -1265,11 +1362,18 @@ void Simulation::assignPhysicalParameters(){
 		r = r - 1.0;
 		float noise2 = r*noiseOnPysProp[1];
 		Elements[i]->setElasticProperties(E*(1 + noise1/100.0),poisson*(1 + noise2/100));
-		r = (rand() % 200) / 100.0;
+		//r = (rand() % 200) / 100.0;
+		//r = r - 1.0;
+		//float noise3 = r*noiseOnPysProp[1];
+		//noise3 = (1 + noise3/100.0);
+		//Elements[i]->setViscosity(ApicalVisc*noise3, BasalVisc*noise3, Nodes);
+	}
+	for (int i=0; i<Nodes.size(); ++i){
+		double r = (rand() % 200) / 100.0;
 		r = r - 1.0;
 		float noise3 = r*noiseOnPysProp[1];
 		noise3 = (1 + noise3/100.0);
-		Elements[i]->setViscosity(ApicalVisc*noise3, BasalVisc*noise3, Nodes);
+		Nodes[i]->setViscosity(ApicalVisc*noise3, BasalVisc*noise3);
 	}
 }
 
@@ -1324,6 +1428,7 @@ void Simulation::runOneStep(){
 	if(nGrowthFunctions>0){
 		calculateGrowth();
 	}
+	//cout<<"calculated growth"<<endl;
 	//if(nShapeChangeFunctions>0){
 	//	changeCellShapesInSystem();
 	//}
@@ -1333,16 +1438,33 @@ void Simulation::runOneStep(){
 			Elements[i]->growShape();
 		}
 	}
+	//cout<<"calculated alignment"<<endl;
 	for (int RKId = 0; RKId<4; ++RKId){
+		//cout<<"started RK: "<<RKId<<endl;
 		for (int i=0; i<nElement; ++i){
 			Elements[i]->calculateForces(RKId, SystemForces, Nodes);
+		}
+		//cout<<"     calculated forces"<<endl;
+		if(AddPeripodialArea){
+			addPeripodiumResistance(RKId);
+		}
+		//cout<<"     checked peripodium"<<endl;
+		updateNodePositions(RKId);
+		//cout<<"     updated node pos"<<endl;
+		updateElementPositions(RKId);
+		//cout<<"     updated element pos"<<endl;
+	}
+	/*for (int RKId = 0; RKId<4; ++RKId){
+		for (int i=0; i<nElement; ++i){
+			Elements[i]->calculateForces(RKId, SystemForces, Nodes);
+			Elements[i]->updateElementsNodePositions(RKId, SystemForces, Nodes, dt);
+			updateElementPositions(RKId);
+
 		}
 		if(AddPeripodialArea){
 			addPeripodiumResistance(RKId);
 		}
-		updateNodePositions(RKId);
-		updateElementPositions(RKId);
-	}
+	}*/
 	/*cout<<"Forces on node 0: "<<endl;
 	for (int i=0;i<4;++i){
 		cout<<" RK: "<<i<<" ";
@@ -1372,10 +1494,17 @@ void Simulation::updateNodePositions(int RKId){
 	int n = Nodes.size();
 	if (RKId < 3){
 		//the first 3 RK steps, the velocity will be calculated, and the positions will be updated from normal positions to RKPositions, with half dt:
+		double multiplier=0.0;
+		if (RKId<2){
+			multiplier =0.5;
+		}
+		else{
+			multiplier =1.0;
+		}
 		for (int i=0;i<n;++i){
 			for (int j=0; j<Nodes[i]->nDim; ++j){
 				Nodes[i]->Velocity[RKId][j] = SystemForces[RKId][i][j]/ Nodes[i]->Viscosity ;
-				Nodes[i]->RKPosition[j] = Nodes[i]->Position[j] + Nodes[i]->Velocity[RKId][j]*0.5*dt;
+				Nodes[i]->RKPosition[j] = Nodes[i]->Position[j] + Nodes[i]->Velocity[RKId][j]*multiplier*dt;
 			}
 		}
 	}
@@ -1401,6 +1530,10 @@ void Simulation::updateElementPositions(int RKId){
 	for (int i=0;i<Elements.size(); ++i ){
 		Elements[i]->updatePositions(RKId, Nodes);
 	}
+}
+
+void Simulation::updateElementPositionsSingle(int RKId, int i ){
+	Elements[i]->updatePositions(RKId, Nodes);
 }
 
 void Simulation::alignTissueDVToXPositive(){
@@ -1812,4 +1945,121 @@ void Simulation::addPeripodiumResistance(int RKId){
 		SystemForces[RKId][PeripodiumAnchorNodeList[i]][1] += y * ForceMagnitude;
 		//cout<<"i: "<<i<<" (x,y,z): "<<x<<" , "<<y<<" , "<<z<<", ForceMag(x,y,z): "<<x * ForceMagnitude<<" , "<<y * ForceMagnitude<<" , "<<z * ForceMagnitude<<endl;
 	}
+}
+
+void Simulation::CoordinateDisplay(){
+	for (int i=0;i<Elements.size();++i){
+		int type =Elements[i]-> getShapeType();
+		if(type ==1){
+			for(int j=0;j<3;++j){
+				cout<<Nodes[Elements[i]->NodeIds[j]]->Position[0]<<" ";
+				cout<<Nodes[Elements[i]->NodeIds[j]]->Position[1]<<" ";
+				cout<<Nodes[Elements[i]->NodeIds[j]]->Position[2]<<" ";
+			}
+		}
+	}
+	cout<<endl;
+	for (int i=0;i<Elements.size();++i){
+		int type =Elements[i]-> getShapeType();
+		if(type ==1){
+			for(int j=3;j<6;++j){
+				cout<<Nodes[Elements[i]->NodeIds[j]]->Position[0]<<" ";
+				cout<<Nodes[Elements[i]->NodeIds[j]]->Position[1]<<" ";
+				cout<<Nodes[Elements[i]->NodeIds[j]]->Position[2]<<" ";
+			}
+		}
+	}
+	cout<<endl;
+}
+
+bool Simulation::readPLYMesh(string inputMeshFile, string inputMeshNodes){
+	DVRight = 0;
+	DVLeft = 1;
+	//string  PLYMeshFileName= inputMeshFile;
+	const char* name_PLYMeshFileName = inputMeshFile.c_str();;
+	ifstream PLYMeshFile;
+	PLYMeshFile.open(name_PLYMeshFileName, ifstream::in);
+	if (!(PLYMeshFile.good() && PLYMeshFile.is_open())){
+		cerr<<"Cannot open the save file to display: "<<name_PLYMeshFileName<<endl;
+		return false;
+	}
+	const char* name_PLYNodeFileName =  inputMeshNodes.c_str();
+	ifstream PLYNodeFile;
+	PLYNodeFile.open(name_PLYNodeFileName, ifstream::in);
+	if (!(PLYNodeFile.good() && PLYNodeFile.is_open())){
+			cerr<<"Cannot open the save file to display: "<<name_PLYNodeFileName<<endl;
+			return false;
+		}
+	//readHeader:
+	string currline;
+	//skipping the header:
+	getline(PLYMeshFile,currline);
+	while(currline[0] == '#'){
+		getline(PLYMeshFile,currline);
+	}
+	//Now I hold the first vertex line:
+	istringstream currSStrem(currline);
+	string InpType;		//is the input a vertex or a face
+	currSStrem >> InpType;
+	Node* tmp_nd;
+	int tmp_int;
+	while(InpType == "Vertex" && !PLYMeshFile.eof()){
+		istringstream currSStrem(currline);
+		currSStrem >> InpType;
+		currSStrem >> tmp_int;
+		double* pos = new double[3];
+		currSStrem  >> tmp_int;
+		currSStrem  >> pos[0];
+		currSStrem  >> pos[1];
+		currSStrem  >> pos[2];
+		tmp_nd = new Node (tmp_int-1, 3, pos, 0);
+		tmp_nd->tissuePlacement =1; //apical;
+		Nodes.push_back(tmp_nd);
+		getline(PLYMeshFile,currline);
+		istringstream currSStrem2(currline);
+		currSStrem2 >> InpType;
+	}
+	//Now generating the nodes of the apical layer:
+	int n = Nodes.size();
+	for (int i=0;i<n;++i){
+		double dx = 0.0, dy = 0.0, dz= 0.0;
+		double* pos = new double[3];
+		PLYNodeFile>> pos[0];
+		PLYNodeFile>> pos[1];
+		PLYNodeFile>> pos[2];
+		PLYNodeFile>> dx;
+		PLYNodeFile>> dy;
+		PLYNodeFile>> dz;
+		pos[0] += dx;
+		pos[1] += dy;
+		pos[2] += dz;
+		tmp_nd = new Node (n+i, 3, pos,1);
+		tmp_nd->tissuePlacement =2; //basal;
+		Nodes.push_back(tmp_nd);
+	}
+	//now the InpType is not Vertex, and I have the first line to read the first face from:
+	while(InpType == "Face" && !PLYMeshFile.eof()){
+		istringstream currSStrem(currline);
+		currSStrem >> InpType;
+		currSStrem >> tmp_int;
+		cout<<"tmp_int: "<<tmp_int<<endl;
+		int* NodeIds = new int[6];
+		for (int i=0;i<3;++i){
+			currSStrem  >> NodeIds[i];
+			//indexing in file starts from 1, but my indexing will start from 0
+			NodeIds[i] -= 1;
+		}
+		for (int i=3;i<6;++i){
+			NodeIds[i] = NodeIds[i-3]+n;
+		}
+		Prism* PrismPnt01;
+		PrismPnt01 = new Prism(NodeIds, Nodes, currElementId);
+		Elements.push_back(PrismPnt01);
+		currElementId++;
+		getline(PLYMeshFile,currline);
+		istringstream currSStrem2(currline);
+		currSStrem2 >> InpType;
+	}
+	//readNodes:
+	return true;
 }

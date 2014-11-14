@@ -40,13 +40,3 @@ void  PrismLateral::setElasticProperties(double E, double v){
 	D(1,1) *= 3.0;
 	D(2,2) *= 3.0;
 }
-
-void PrismLateral::setViscosity(double ApicalVisc,double BasalVisc, vector <Node*>& Nodes){
-	Nodes[NodeIds[0]]->Viscosity = BasalVisc;
-	Nodes[NodeIds[3]]->Viscosity = BasalVisc;
-	Nodes[NodeIds[1]]->Viscosity = ApicalVisc;
-	Nodes[NodeIds[4]]->Viscosity = ApicalVisc;
-	double avrVisc = (ApicalVisc + BasalVisc)/2.0;
-	Nodes[NodeIds[2]]->Viscosity = avrVisc;
-	Nodes[NodeIds[5]]->Viscosity = avrVisc;
-}

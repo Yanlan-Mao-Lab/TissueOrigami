@@ -419,6 +419,8 @@ void MainWindow::timerSimulationStep(){
 			if (Sim01->saveImages){
 				takeScreenshot();
 			}
+			//spitting coordinates:
+			Sim01->CoordinateDisplay();
 		}
 	}
 	else{

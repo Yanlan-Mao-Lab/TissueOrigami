@@ -19,7 +19,6 @@ public:
 	PrismLateral(int* NodeIds,vector<Node*>& Nodes, int CurrId);
 	~PrismLateral();
 	void  setElasticProperties(double E,double v);
-	void  setViscosity(double ApicalVisc,double BasalVisc, vector <Node*>& Nodes);
 };
 
 #endif

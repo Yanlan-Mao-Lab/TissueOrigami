@@ -151,7 +151,23 @@ void 	ShapeBase::updateShapeFromSave(ifstream& file){
 	updateNodeIdsFromSave(file);
 	updateReferencePositionMatrixFromSave(file);
 }
+/*
+void 	ShapeBase::updateShapeFromSave(ifstream& file, vector <Node*> Nodes){
+	updateNodeIdsFromSave(file, Nodes);
+	updateReferencePositionMatrixFromSave(file);
+}
 
+void 	ShapeBase::updateNodeIdsFromSave(ifstream& file, vector <Node*> Nodes){
+	for (int i = 0; i<nNodes; ++i){
+		int savedId;
+		file >> savedId;
+		NodeIds[i] = savedId;
+		for (int j=0; j<nDim; ++j){
+			Positions[i][j] = Nodes[NodeIds[i]]->Position[j];
+		}
+	}
+}
+*/
 void 	ShapeBase::updateNodeIdsFromSave(ifstream& file){
 	for (int i = 0; i<nNodes; ++i){
 		int savedId;
@@ -171,10 +187,23 @@ void 	ShapeBase::updateReferencePositionMatrixFromSave(ifstream& file){
 	}
 }
 
+void 	ShapeBase::updateReferencePositionMatrixFromMeshInput(ifstream& file){
+	updateReferencePositionMatrixFromSave(file);
+}
+
 void 	ShapeBase::displayPositions(){
 	for (int i=0; i<nNodes;++i){
 		for (int j =0; j<nDim; ++j){
 			cout<<Positions[i][j]<<"  ";
+		}
+		cout<<endl;
+	}
+}
+
+void 	ShapeBase::displayReferencePositions(){
+	for (int i=0; i<nNodes;++i){
+		for (int j =0; j<nDim; ++j){
+			cout<<ReferenceShape ->Positions[i][j]<<"  ";
 		}
 		cout<<endl;
 	}
@@ -885,6 +914,7 @@ double 	ShapeBase::determinant3by3Matrix(double* rotMat){
 }
 
 void 	ShapeBase::updatePositionsAlignedToReferenceForRK(){
+	//cout<<"Id: "<<Id<<" updating positions aligned to reference"<<endl;
 	updatePositionsAlignedToReferenceWithBuffers();
 	const int dim = nDim;
 	double* refCentre = new double[dim];
@@ -894,6 +924,7 @@ void 	ShapeBase::updatePositionsAlignedToReferenceForRK(){
 		PositionsAlignedToReference[i][1] += refCentre[1];
 		PositionsAlignedToReference[i][2] += refCentre[2];
 	}
+	//cout<<"finalised update"<<endl;
 }
 
 void 	ShapeBase::alignElementOnReference(){
@@ -1042,7 +1073,6 @@ void	ShapeBase::calculateForces(int RKId, double ***SystemForces, vector <Node*>
 	const int nMult = nNodes*nDim;
 	using namespace boost::numeric::ublas;
 	boost::numeric::ublas::vector<double> displacement(nMult);
-	int counter = 0;
 	if (RKId != 0 ){
 		//If we are at the first RK step, the positions aligned to reference
 		//will be up to date from alignment calculation.
@@ -1051,6 +1081,7 @@ void	ShapeBase::calculateForces(int RKId, double ***SystemForces, vector <Node*>
 		//using the same rotation matrices.
 		updatePositionsAlignedToReferenceForRK();
 	}
+	int counter = 0;
 	for (int i = 0; i<nNodes; ++i){
 		for (int j = 0; j<nDim; ++j){
 			displacement(counter) = PositionsAlignedToReference[i][j]-ReferenceShape->Positions[i][j];
@@ -1099,6 +1130,7 @@ void	ShapeBase::calculateForces(int RKId, double ***SystemForces, vector <Node*>
 			counter++;
 		}
 	}
+	//cout<<"Element Id: "<<Id<<"Forces on node 351: "<<SystemForces[RKId][351][0]<<" "<<SystemForces[RKId][351][1]<<" "<<SystemForces[RKId][351][2]<<endl;
 	//Now put the forces in world coordinates into system forces, in forces per volume format
 	counter = 0;
 	for (int i = 0; i<nNodes; ++i){
@@ -1106,6 +1138,12 @@ void	ShapeBase::calculateForces(int RKId, double ***SystemForces, vector <Node*>
 			if (!Nodes[NodeIds[i]]->FixedPos[j]){
 				SystemForces[RKId][NodeIds[i]][j] = SystemForces[RKId][NodeIds[i]][j] - (Forces(counter) / ReferenceShape->Volume);
 			}
+			/*else{
+				SystemForces[RKId][NodeIds[0]][j] = SystemForces[RKId][NodeIds[0]][j] + (Forces(counter) / ReferenceShape->Volume)/4;
+				SystemForces[RKId][NodeIds[1]][j] = SystemForces[RKId][NodeIds[1]][j] + (Forces(counter) / ReferenceShape->Volume)/4;
+				SystemForces[RKId][NodeIds[3]][j] = SystemForces[RKId][NodeIds[3]][j] + (Forces(counter) / ReferenceShape->Volume)/4;
+				SystemForces[RKId][NodeIds[4]][j] = SystemForces[RKId][NodeIds[4]][j] + (Forces(counter) / ReferenceShape->Volume)/4;
+			}*/
 			counter++;
 		}
 	}
@@ -1273,3 +1311,47 @@ void	ShapeBase::displayMatrix(boost::numeric::ublas::vector<double>& vec, string
 	}
 	cout<<endl;
 }
+/*
+void ShapeBase::updateElementsNodePositions(int RKId, double ***SystemForces, vector <Node*>& Nodes, double dt){
+	//Update Node positions:
+	int n = nNodes;
+	if (RKId < 3){
+		//the first 3 RK steps, the velocity will be calculated, and the positions will be updated from normal positions to RKPositions, with half dt:
+		double multiplier=0.0;
+		if (RKId<2){
+			multiplier =0.5;
+		}
+		else{
+			multiplier =1.0;
+		}
+		for (int i=0;i<n;++i){
+			for (int j=0; j<Nodes[NodeIds[i]]->nDim; ++j){
+				Nodes[NodeIds[i]]->Velocity[RKId][j] = SystemForces[RKId][NodeIds[i]][j]/ Nodes[NodeIds[i]]->Viscosity ;
+				Nodes[NodeIds[i]]->RKPosition[j] = Nodes[NodeIds[i]]->Position[j] + Nodes[NodeIds[i]]->Velocity[RKId][j]*multiplier*dt;
+			}
+		}
+	}
+	else{
+		//this is the last RK step, I need to update the velocity only with RK, then I need to calculate the final positions
+		//from 4 RK velocities:
+		for (int i=0;i<n;++i){
+		//	cout<<"Nodes "<<i<<" velocity: ";
+			for (int j=0; j<Nodes[i]->nDim; ++j){
+				Nodes[NodeIds[i]]->Velocity[RKId][j] = SystemForces[RKId][NodeIds[i]][j]/Nodes[NodeIds[i]]->Viscosity;
+				//now I have 4 velocity data (corresponding to Runge-Kutta  k1, k2, k3, and k4)
+				//writing  the velocity into v[0]
+				//cout<<Nodes[i]->Velocity[0][j]<<" "<<Nodes[i]->Velocity[1][j]<<" "<<Nodes[i]->Velocity[2][j]<<" "<<Nodes[i]->Velocity[3][j]<<" ";
+				Nodes[NodeIds[i]]->Velocity[0][j] = 1.0/6.0 * (Nodes[NodeIds[i]]->Velocity[0][j] + 2.0 * (Nodes[NodeIds[i]]->Velocity[1][j] + Nodes[NodeIds[i]]->Velocity[2][j]) + Nodes[NodeIds[i]]->Velocity[3][j]);
+				Nodes[NodeIds[i]]->Position[j] += Nodes[NodeIds[i]]->Velocity[0][j]*dt;
+			}
+		//	cout<<endl;
+		}
+	}
+	//Now I need to clear these forces, as they are already applied, no cumulative effect!
+	for (int i=0;i<n;++i){
+		for (int j=0; j<Nodes[i]->nDim; ++j){
+			SystemForces[RKId][NodeIds[i]][j]=0.0;
+		}
+	}
+};*/
+

@@ -24,6 +24,7 @@ private:
 	bool readPeripodiumParameters(ifstream& file);
 	bool readTimeParameters(ifstream &file);
 	bool readMeshType2(ifstream& file);
+	bool readMeshType4(ifstream& file);
 	bool readGrowthOptions(ifstream& file);
 	bool readGrowthType1(ifstream& file);
 	bool readGrowthType2(ifstream& file);

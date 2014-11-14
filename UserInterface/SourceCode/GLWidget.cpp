@@ -115,6 +115,7 @@ using namespace std;
 	 glMultMatrixf(MatRot);
 	 glTranslatef( -Sim01->SystemCentre[0], -Sim01->SystemCentre[1], Sim01->SystemCentre[2]);
 
+
 	 if (ItemSelected){
 		 //cout<<"item is selected calling reference shape drawing!"<<endl;
 		 drawReferenceElement(SelectedItemIndex);
@@ -123,10 +124,30 @@ using namespace std;
 	 for (int i =0; i<Sim01->Elements.size();i++){
 		 drawElement(i,false);
 	 }
-
 	 drawForces();
 	 drawNodeVelocities();
 
+
+/*
+	glColor3f(0.8,0,0);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	glEnable(GL_POLYGON_OFFSET_FILL); // Avoid Stitching!
+	glPolygonOffset(1.0, 1.0); 	//These are necessary so the depth test can keep the lines above surfaces
+
+	cout<<"Drawing triangles now: "<<endl;
+	for (int i =0; i<Sim01->TrianglesToDraw.size();i++){
+		glBegin(GL_TRIANGLES);
+		for (int k=0;k<3;++k){
+			float x = Sim01->NodesToDraw [Sim01->TrianglesToDraw[i][k]][0];
+			float y = Sim01->NodesToDraw [Sim01->TrianglesToDraw[i][k]][1];
+			float z = Sim01->NodesToDraw [Sim01->TrianglesToDraw[i][k]][2];
+			cout<<Sim01->TrianglesToDraw[i][k]<<" ";
+			glVertex3f( x, y, z);
+		}
+		cout<<endl;
+		glEnd();
+	}
+*/
 
 	 DisplayFixedNodes= true;
 	 if (DisplayFixedNodes){

@@ -129,14 +129,6 @@ void  Prism::setElasticProperties(double E, double v){
 	//D(2,2) *= 3.0;
 }
 
-void Prism::setViscosity(double ApicalVisc,double BasalVisc, vector <Node*>& Nodes){
-	for (int i=0; i<3; ++i){
-		Nodes[NodeIds[i]]->Viscosity = BasalVisc;
-	}
-	for (int i=3; i<6; ++i){
-		Nodes[NodeIds[i]]->Viscosity = ApicalVisc;
-	}
-}
 
 void Prism::getCurrRelaxedShape(boost::numeric::ublas::matrix<double> & CurrRelaxedShape){
 	using namespace boost::numeric::ublas;

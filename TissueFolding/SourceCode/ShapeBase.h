@@ -120,8 +120,8 @@ public:
 	double*	 getReferenceNormal();
 	void 	displayName();
 	void 	displayPositions();
+	void 	displayReferencePositions();
 	void 	displayIdentifierColour();
-	virtual void setViscosity(double ApicalVisc,double BasalVisc, vector <Node*>& Nodes){ParentErrorMessage();};
 	virtual void setElasticProperties(double E,double v){ParentErrorMessage();};
 	void 	updateGrowthRate(double scalex, double scaley, double scalez);
 	virtual void calculateReferenceStiffnessMatrix(){ParentErrorMessage();};
@@ -165,6 +165,8 @@ public:
 	void 	bringShapePositionsToOrigin(double** RefNormalised, double* refCentre);
 	void 	bringPositionAlignedToReferenceToOrigin(double* refCentre);
 	bool	calculateDisplacementGradientRotationMatrix(double** RefNormalised, double* rotMat);
+	void 	updateElementsNodePositions(int RKId, double ***SystemForces, vector <Node*>& Nodes, double dt);
+	void 	updateReferencePositionMatrixFromMeshInput(ifstream& file);
 };
 
 #endif

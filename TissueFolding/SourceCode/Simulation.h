@@ -42,9 +42,14 @@ private:
 	bool openFilesToDisplay();
 	bool readSystemSummaryFromSave();
 	void initiateNodesFromSave();
+	void initiateNodesFromMeshInput();
 	void initiateElementsFromSave();
+	void initiateElementsFromMeshInput();
+	void initiateElementsFromMEshInput();
 	void initiatePrismFromSave();
+	void initiatePrismFromMeshInput();
 	void initiateLateralPrismFromSave();
+	void initiateLateralPrismFromMeshInput();
 	void initiatePrismFromSaveForUpdate(int k);
 	void removeElementFromEndOfList();
 	void updateNodeNumberFromSave();
@@ -58,11 +63,11 @@ private:
 	void setDefaultParameters();
 	bool openFiles();
 	void initiateSystemForces();
-	void initiateMesh(int MeshType);
+	void initiateMesh(int MeshType,float zHeight);
 	void initiateMesh(int MeshType, int Row, int Column, float SideLength, float zHeight);
 	void initiateMesh(int MeshType, string inputtype, float SideLength, float zHeight );
-	void initiateMesh(int MeshType, string inputtype );
-	void initiateSinglePrismNodes();
+	void initiateMesh(int MeshType);
+	void initiateSinglePrismNodes(float zHeight);
 	void initiateSinglePrismElement();
 	void initiateNodesByRowAndColumn(int Row, int Column,  float SideLength, float zHeight);
 	void fixApicalBasalNodes(vector<int> &NodesToFix);
@@ -97,7 +102,9 @@ private:
 	double calculatePeripodiumResistance(int RKId);
 	double calculatePeripodiumResistanceForce(int RKId);
 	void addPeripodiumResistance(int RKId);
+	bool readPLYMesh(string inputMeshFile, string inputMeshNodes);
 public:
+
 	ofstream outputFile;
 	bool displayIsOn;
 	bool DisplaySave;
@@ -107,6 +114,7 @@ public:
 	int SimLength;	//in time steps
 	string saveDirectory;
 	string saveDirectoryToDisplayString;
+	string inputMeshFileName;
 	bool saveImages;
 	bool saveData;
 	string name_saveFile;
@@ -141,6 +149,10 @@ public:
 	double RK1PeripodiumStrain;
 	bool AddLateralNodes;
 	bool AddPeripodialArea;
+
+	vector <int*> TrianglesToDraw;
+	vector <double*> NodesToDraw;
+
 	Simulation();
 	~Simulation();
 	bool readExecutableInputs(int argc, char **argv);
@@ -152,11 +164,12 @@ public:
 	void runOneStep();
 	void updateNodePositions(int RKId);
 	void updateElementPositions(int RKId);
+	void updateElementPositionsSingle(int RKId, int i );
 	bool initiateSavedSystem();
 	void updateOneStepFromSave();
 	void alignTissueDVToXPositive();
 	void calculateDVDistance();
-
+	void CoordinateDisplay();
 
 };
 
