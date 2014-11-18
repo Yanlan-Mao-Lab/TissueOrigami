@@ -125,7 +125,7 @@ public:
 	virtual void setElasticProperties(double E,double v){ParentErrorMessage();};
 	void 	updateGrowthRate(double scalex, double scaley, double scalez);
 	virtual void calculateReferenceStiffnessMatrix(){ParentErrorMessage();};
-	void 	calculateForces(int RKId, double ***SystemForces, vector <Node*>& Nodes);
+	void 	calculateForces(int RKId, double ***SystemForces, vector <Node*>& Nodes, ofstream& outputFile);
 	void 	updatePositions(int RKId, vector<Node*>& Nodes);
 	void 	setGrowthRate(double x, double y, double z);
 	void 	setShapeChangeRate(double x, double y, double z);
@@ -153,6 +153,7 @@ public:
 	void alignElementOnReference();
 	void updatePositionsAlignedToReferenceForRK();
 	void growShape();
+	void assignVolumesToNodes(vector <Node*>& Nodes);
 	bool RotatedElement;
 	boost::numeric::ublas::matrix<double> WorldToTissueRotMat;
 	double **PositionsInTissueCoord;

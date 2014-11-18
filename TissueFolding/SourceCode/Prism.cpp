@@ -111,6 +111,10 @@ void Prism::setCoeffMat(){
 }
 
 void  Prism::setElasticProperties(double E, double v){
+	//if (!(Id == 197 || Id == 105)){
+	//	E =0.0; v=0.0;
+	//}
+
 	this -> E = E;
 	this -> v = v; //poisson ratio
 	if (v>0.5){v = 0.5;}

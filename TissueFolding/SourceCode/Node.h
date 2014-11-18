@@ -18,6 +18,7 @@ public:
 	double **Velocity;
 	double Viscosity;
 	int tissuePlacement; //1 -> apical, 0 -> basal, 2->middle, 3 -> lateral
+	double mass;
 	void setViscosity(double ApicalVisc,double BasalVisc);
 };
 #endif

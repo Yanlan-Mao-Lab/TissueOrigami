@@ -1,20 +1,20 @@
 InputMeshParameters:
   MeshInputMode(int-seeDocumentation): 4
-  MeshFile(full-path):   /home/melda/Desktop/MeshGenerate/EllipseLayout/MeshFile.out
+  MeshFile(full-path):   /home/melda/Desktop/MeshGenerate/EllipseLayout/Mesh1.mesh
 
 PeripodiumParameters:
   AddPeripodium: 0
   PeripodiumYoungsModulus: 20.0
 
 TimeParameters:
-  TimeStep(sec): 0.1
-  SimulationLength(sec): 5400
+  TimeStep(sec): 0.25
+  SimulationLength(sec): 500
 
 PysicalProperties:
   YoungsModulus: 20.0		Noise(%-int): 0
-  PoissonsRatio: 0.3		Noise(%-int): 0
+  PoissonsRatio: 0.0		Noise(%-int): 0
   ApicalViscosity: 50.0 	Noise(%-int): 0
-  BasalViscosity: 100.0		
+  BasalViscosity: 75.0		
 
 SaveOptions:
   SaveImages(bool): 0
@@ -26,16 +26,16 @@ GrowthOptions:
   NumberofGrowthFunctions(int): 4
   GrowthFunctionType(int-seeDocumentation): 1
   InitialTime(sec): 0
-  FinalTime(sec):  3600
-  MaxValue(fractionPerHour-DV,AP,AB):  0.30 0.0 0.0
+  FinalTime(sec):  60
+  MaxValue(fractionPerHour-DV,AP,AB):  40.0 0.0 0.0
   
 GrowthFunctionType(int-seeDocumentation): 2
-  InitialTime(sec): 0
-  FinalTime(sec):  3600
+  InitialTime(sec): 1000000
+  FinalTime(sec):  60
   Centre:  9.0 0.0
   InnerRadius: 0.0
   OuterRadius:  5.0
-  MaxValue(fractionPerHour-DV,AP,AB):  0.45 0.15 0.0
+  MaxValue(fractionPerHour-DV,AP,AB):  15 60 0.0
 
   GrowthFunctionType(int-seeDocumentation): 2
   InitialTime(sec): 100000

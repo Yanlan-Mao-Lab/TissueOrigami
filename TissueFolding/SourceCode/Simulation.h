@@ -62,6 +62,7 @@ private:
 	bool checkInputConsistency();
 	void setDefaultParameters();
 	bool openFiles();
+	bool reOpenOutputFile();
 	void initiateSystemForces();
 	void initiateMesh(int MeshType,float zHeight);
 	void initiateMesh(int MeshType, int Row, int Column, float SideLength, float zHeight);
@@ -77,6 +78,7 @@ private:
 	void initiateElementsByRowAndColumn(int Row, int Column);
 	void assignPhysicalParameters();
 	void calculateStiffnessMatrices();
+	void assignNodeMasses();
 	void fixAllD(int i);
 	void fixZ(int i);
 	void zeroForcesOnNode(int RKId, int i);
@@ -115,6 +117,7 @@ public:
 	string saveDirectory;
 	string saveDirectoryToDisplayString;
 	string inputMeshFileName;
+	string outputFileString;
 	bool saveImages;
 	bool saveData;
 	string name_saveFile;

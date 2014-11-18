@@ -420,7 +420,7 @@ void MainWindow::timerSimulationStep(){
 				takeScreenshot();
 			}
 			//spitting coordinates:
-			Sim01->CoordinateDisplay();
+			//Sim01->CoordinateDisplay();
 		}
 	}
 	else{

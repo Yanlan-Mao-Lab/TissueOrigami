@@ -1068,7 +1068,7 @@ void	ShapeBase::rotateVectorByRotationMatrix(double* u,double* rotMat){
 	u[2] = z;
 }
 
-void	ShapeBase::calculateForces(int RKId, double ***SystemForces, vector <Node*>& Nodes){
+void	ShapeBase::calculateForces(int RKId, double ***SystemForces, vector <Node*>& Nodes, ofstream& outputFile){
 	//cout<<"calculating forces"<<endl;
 	const int nMult = nNodes*nDim;
 	using namespace boost::numeric::ublas;
@@ -1079,6 +1079,7 @@ void	ShapeBase::calculateForces(int RKId, double ***SystemForces, vector <Node*>
 		//In any other RK step (inside this if clause), the positions are updated.
 		//I do not need to re-calculate alignment, the change will be negligable, but I still need to update the positions
 		//using the same rotation matrices.
+		outputFile<<"  id: "<<Id<<" Updating positions aligned to reference"<<endl;
 		updatePositionsAlignedToReferenceForRK();
 	}
 	int counter = 0;
@@ -1088,6 +1089,7 @@ void	ShapeBase::calculateForces(int RKId, double ***SystemForces, vector <Node*>
 			counter++;
 		}
 	}
+	outputFile<<"  id: "<<Id<<"   calculating strain"<<endl;
 	Strain = zero_vector<double>(6);
 	boost::numeric::ublas::axpy_prod(B,displacement,Strain);
 	if (RKId == 0){
@@ -1104,11 +1106,11 @@ void	ShapeBase::calculateForces(int RKId, double ***SystemForces, vector <Node*>
 	PlasticStrain(3)= LocalGrowthStrainsMat(0,1);
 	PlasticStrain(4)= LocalGrowthStrainsMat(0,2);
 	PlasticStrain(5)= LocalGrowthStrainsMat(1,2);
-	//if (Id == 0 ){displayMatrix(PlasticStrain,"PlasticStrain");};
 	boost::numeric::ublas::vector<double> NetStrain;
 	NetStrain= zero_vector<double>(6);
 	NetStrain = Strain - PlasticStrain;
 	Forces = zero_vector<double>(nMult);
+	outputFile<<"  id: "<<Id<<"   calculating forces"<<endl;
 	boost::numeric::ublas::axpy_prod(BE,NetStrain,Forces);
 	//Now I have the forces in tissue coordinate system, I need the forces in world coordinates:
 	boost::numeric::ublas::matrix<double>forcesInReferenceCoordsMat(nDim,nNodes);
@@ -1136,7 +1138,8 @@ void	ShapeBase::calculateForces(int RKId, double ***SystemForces, vector <Node*>
 	for (int i = 0; i<nNodes; ++i){
 		for (int j = 0; j<nDim; ++j){
 			if (!Nodes[NodeIds[i]]->FixedPos[j]){
-				SystemForces[RKId][NodeIds[i]][j] = SystemForces[RKId][NodeIds[i]][j] - (Forces(counter) / ReferenceShape->Volume);
+				//SystemForces[RKId][NodeIds[i]][j] = SystemForces[RKId][NodeIds[i]][j] - (Forces(counter) / ReferenceShape->Volume);
+				SystemForces[RKId][NodeIds[i]][j] = SystemForces[RKId][NodeIds[i]][j] - Forces(counter);
 			}
 			/*else{
 				SystemForces[RKId][NodeIds[0]][j] = SystemForces[RKId][NodeIds[0]][j] + (Forces(counter) / ReferenceShape->Volume)/4;
@@ -1310,6 +1313,12 @@ void	ShapeBase::displayMatrix(boost::numeric::ublas::vector<double>& vec, string
 		cout<<vec(i)<<" ";
 	}
 	cout<<endl;
+}
+
+void 	ShapeBase::assignVolumesToNodes(vector <Node*>& Nodes){
+	for (int i=0; i<nNodes; i++){
+		Nodes[NodeIds[i]]->mass +=ReferenceShape->Volume/nNodes;
+	}
 }
 /*
 void ShapeBase::updateElementsNodePositions(int RKId, double ***SystemForces, vector <Node*>& Nodes, double dt){

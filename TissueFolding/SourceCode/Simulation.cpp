@@ -246,12 +246,20 @@ bool Simulation::initiateSystem(){
 	calculateSystemCentre();
 	assignPhysicalParameters();
 	calculateStiffnessMatrices();
+	assignNodeMasses();
 	if (saveData){
 		cout<<"writing the summary current simulation parameters"<<endl;
 		writeSimulationSummary();
 	}
 
 	return Success;
+}
+
+void Simulation::assignNodeMasses(){
+	int n= Elements.size();
+	for (int i=0; i<n; ++i){
+		Elements[i]->assignVolumesToNodes(Nodes);
+	}
 }
 
 bool Simulation::openFiles(){
@@ -314,7 +322,6 @@ bool Simulation::openFiles(){
 			Success = false;
 		}
 	}
-	string outputFileString;
 	if (saveDirectory == "Not-Set"){
 		cerr<<"Output directory is not set, outputting on Out file in current directory"<<endl;
 		outputFileString = "./Out";
@@ -332,6 +339,15 @@ bool Simulation::openFiles(){
 		Success = false;
 	}
 	return Success;
+}
+
+bool Simulation::reOpenOutputFile(){
+	outputFile.close();
+	const char* name_outputFile = outputFileString.c_str();
+	outputFile.open(name_outputFile, ofstream::out);
+	if (!(outputFile.good() && outputFile.is_open())){
+		cerr<<"at step: "<<timestep<<" could not open file: "<<name_outputFile<<endl;
+	}
 }
 
 void Simulation::writeSimulationSummary(){
@@ -1379,7 +1395,6 @@ void Simulation::assignPhysicalParameters(){
 
 void Simulation::runOneStep(){
 	//cout<<"inside runonestep"<<endl;
-	int displayfreq = 60/dt;
 	/*if(timestep==0){
 		//for(int i=0;i<Nodes.size();++i){
 		//	Nodes[i]->Position[0] *=4.0;
@@ -1407,8 +1422,10 @@ void Simulation::runOneStep(){
 			Elements[i]->updatePositions(Nodes);
 		}
 	}*/
+	int displayfreq = 60/dt;
 	if (timestep%displayfreq == 0){
-		cout<<"time : "<<timestep * dt<<endl;
+		reOpenOutputFile();
+		outputFile<<"time : "<<timestep * dt<<endl;
 	}
 	//if(timestep==0){Elements[0]->LocalGrowthStrainsMat(0,0) = 1.0;}
 	//cleanreferenceupdates();
@@ -1419,6 +1436,7 @@ void Simulation::runOneStep(){
 	int freq = 10.0/dt + 1 ;
 	if (timestep% freq  == 0){
 		calculateDVDistance();
+		outputFile<<"calculating element health"<<endl;
 		int nElement = Elements.size();
 		for (int i=0; i<nElement; ++i){
 			Elements[i]->checkHealth();
@@ -1426,12 +1444,14 @@ void Simulation::runOneStep(){
 	}
 	int nElement = Elements.size();
 	if(nGrowthFunctions>0){
+		outputFile<<"calculating growth"<<endl;
 		calculateGrowth();
 	}
 	//cout<<"calculated growth"<<endl;
 	//if(nShapeChangeFunctions>0){
 	//	changeCellShapesInSystem();
 	//}
+	outputFile<<"calculating alignment of reference"<<endl;
 	for (int i=0; i<nElement; ++i){
 		Elements[i]->alignElementOnReference();
 		if (Elements[i]->IsGrowing){
@@ -1440,19 +1460,19 @@ void Simulation::runOneStep(){
 	}
 	//cout<<"calculated alignment"<<endl;
 	for (int RKId = 0; RKId<4; ++RKId){
-		//cout<<"started RK: "<<RKId<<endl;
+		outputFile<<"started RK: "<<RKId<<endl;
 		for (int i=0; i<nElement; ++i){
-			Elements[i]->calculateForces(RKId, SystemForces, Nodes);
+			Elements[i]->calculateForces(RKId, SystemForces, Nodes, outputFile);
 		}
-		//cout<<"     calculated forces"<<endl;
+		outputFile<<"     calculated forces"<<endl;
 		if(AddPeripodialArea){
 			addPeripodiumResistance(RKId);
 		}
-		//cout<<"     checked peripodium"<<endl;
+		outputFile<<"     checked peripodium"<<endl;
 		updateNodePositions(RKId);
-		//cout<<"     updated node pos"<<endl;
+		outputFile<<"     updated node pos"<<endl;
 		updateElementPositions(RKId);
-		//cout<<"     updated element pos"<<endl;
+		outputFile<<"     updated element pos"<<endl;
 	}
 	/*for (int RKId = 0; RKId<4; ++RKId){
 		for (int i=0; i<nElement; ++i){
@@ -1486,7 +1506,7 @@ void Simulation::runOneStep(){
 		saveStep();
 	}
 	timestep++;
-	//cout<<"finished runonestep"<<endl;
+	//outputFile<<"finished runonestep"<<endl;
 }
 
 void Simulation::updateNodePositions(int RKId){
@@ -1503,7 +1523,7 @@ void Simulation::updateNodePositions(int RKId){
 		}
 		for (int i=0;i<n;++i){
 			for (int j=0; j<Nodes[i]->nDim; ++j){
-				Nodes[i]->Velocity[RKId][j] = SystemForces[RKId][i][j]/ Nodes[i]->Viscosity ;
+				Nodes[i]->Velocity[RKId][j] = SystemForces[RKId][i][j]/ (Nodes[i]->Viscosity*Nodes[i]->mass) ;
 				Nodes[i]->RKPosition[j] = Nodes[i]->Position[j] + Nodes[i]->Velocity[RKId][j]*multiplier*dt;
 			}
 		}
@@ -1514,7 +1534,7 @@ void Simulation::updateNodePositions(int RKId){
 		for (int i=0;i<n;++i){
 		//	cout<<"Nodes "<<i<<" velocity: ";
 			for (int j=0; j<Nodes[i]->nDim; ++j){
-				Nodes[i]->Velocity[RKId][j] = SystemForces[RKId][i][j]/Nodes[i]->Viscosity;
+				Nodes[i]->Velocity[RKId][j] = SystemForces[RKId][i][j]/(Nodes[i]->Viscosity*Nodes[i]->mass);
 				//now I have 4 velocity data (corresponding to Runge-Kutta  k1, k2, k3, and k4)
 				//writing  the velocity into v[0]
 				//cout<<Nodes[i]->Velocity[0][j]<<" "<<Nodes[i]->Velocity[1][j]<<" "<<Nodes[i]->Velocity[2][j]<<" "<<Nodes[i]->Velocity[3][j]<<" ";
@@ -1581,7 +1601,7 @@ void Simulation::calculateDVDistance(){
 	}
 	double dmag = d[0]+d[1]+d[2];
 	dmag = pow(dmag,0.5);
-	cout<<"time: "<<timestep * dt<<" DV distance is: "<<dmag<<endl;
+	outputFile<<"time: "<<timestep * dt<<" DV distance is: "<<dmag<<endl;
 }
 
 void Simulation::cleanGrowthData(){
@@ -2042,7 +2062,7 @@ bool Simulation::readPLYMesh(string inputMeshFile, string inputMeshNodes){
 		istringstream currSStrem(currline);
 		currSStrem >> InpType;
 		currSStrem >> tmp_int;
-		cout<<"tmp_int: "<<tmp_int<<endl;
+		//cout<<"tmp_int: "<<tmp_int<<endl;
 		int* NodeIds = new int[6];
 		for (int i=0;i<3;++i){
 			currSStrem  >> NodeIds[i];

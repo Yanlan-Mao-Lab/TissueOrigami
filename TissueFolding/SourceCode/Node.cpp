@@ -27,6 +27,7 @@ Node::Node(int id, int dim, double* pos, int tissuePos){
 	}
 	Viscosity = -10.0;
 	tissuePlacement = tissuePos;
+	mass =0.0;
 }
 
 Node::~Node(){
