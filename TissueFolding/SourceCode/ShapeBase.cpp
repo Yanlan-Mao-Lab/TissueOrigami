@@ -1079,7 +1079,7 @@ void	ShapeBase::calculateForces(int RKId, double ***SystemForces, vector <Node*>
 		//In any other RK step (inside this if clause), the positions are updated.
 		//I do not need to re-calculate alignment, the change will be negligable, but I still need to update the positions
 		//using the same rotation matrices.
-		outputFile<<"  id: "<<Id<<" Updating positions aligned to reference"<<endl;
+		//outputFile<<"  id: "<<Id<<" Updating positions aligned to reference"<<endl;
 		updatePositionsAlignedToReferenceForRK();
 	}
 	int counter = 0;
@@ -1089,7 +1089,7 @@ void	ShapeBase::calculateForces(int RKId, double ***SystemForces, vector <Node*>
 			counter++;
 		}
 	}
-	outputFile<<"  id: "<<Id<<"   calculating strain"<<endl;
+	//outputFile<<"  id: "<<Id<<"   calculating strain"<<endl;
 	Strain = zero_vector<double>(6);
 	boost::numeric::ublas::axpy_prod(B,displacement,Strain);
 	if (RKId == 0){
@@ -1110,7 +1110,7 @@ void	ShapeBase::calculateForces(int RKId, double ***SystemForces, vector <Node*>
 	NetStrain= zero_vector<double>(6);
 	NetStrain = Strain - PlasticStrain;
 	Forces = zero_vector<double>(nMult);
-	outputFile<<"  id: "<<Id<<"   calculating forces"<<endl;
+	//outputFile<<"  id: "<<Id<<"   calculating forces"<<endl;
 	boost::numeric::ublas::axpy_prod(BE,NetStrain,Forces);
 	//Now I have the forces in tissue coordinate system, I need the forces in world coordinates:
 	boost::numeric::ublas::matrix<double>forcesInReferenceCoordsMat(nDim,nNodes);

@@ -1,23 +1,23 @@
 InputMeshParameters:
   MeshInputMode(int-seeDocumentation): 4
-  MeshFile(full-path):   /home/melda/Desktop/MeshGenerate/EllipseLayout/Mesh1.mesh
+  MeshFile(full-path):   /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/RicMesh2.mesh
 
 PeripodiumParameters:
   AddPeripodium: 0
   PeripodiumYoungsModulus: 20.0
 
 TimeParameters:
-  TimeStep(sec): 0.25
-  SimulationLength(sec): 500
+  TimeStep(sec): 0.05
+  SimulationLength(sec): 5401
 
 PysicalProperties:
   YoungsModulus: 20.0		Noise(%-int): 0
-  PoissonsRatio: 0.0		Noise(%-int): 0
+  PoissonsRatio: 0.3		Noise(%-int): 0
   ApicalViscosity: 50.0 	Noise(%-int): 0
   BasalViscosity: 75.0		
 
 SaveOptions:
-  SaveImages(bool): 0
+  SaveImages(bool): 1
   SaveData(bool):   1
   ImageSaveInterval(sec): 60
   DataSaveInterval(sec):  60
@@ -26,16 +26,16 @@ GrowthOptions:
   NumberofGrowthFunctions(int): 4
   GrowthFunctionType(int-seeDocumentation): 1
   InitialTime(sec): 0
-  FinalTime(sec):  60
-  MaxValue(fractionPerHour-DV,AP,AB):  40.0 0.0 0.0
+  FinalTime(sec):  3600
+  MaxValue(fractionPerHour-DV,AP,AB):  0.30 0.0 0.0
   
 GrowthFunctionType(int-seeDocumentation): 2
-  InitialTime(sec): 1000000
-  FinalTime(sec):  60
+  InitialTime(sec): 0
+  FinalTime(sec):  3600
   Centre:  9.0 0.0
   InnerRadius: 0.0
   OuterRadius:  5.0
-  MaxValue(fractionPerHour-DV,AP,AB):  15 60 0.0
+  MaxValue(fractionPerHour-DV,AP,AB):  10.15 0.45 0.0
 
   GrowthFunctionType(int-seeDocumentation): 2
   InitialTime(sec): 100000
@@ -43,7 +43,7 @@ GrowthFunctionType(int-seeDocumentation): 2
   Centre:  14 0.0
   InnerRadius: 0.0
   OuterRadius:  5.0
-  MaxValue(fractionPerHour-DV,AP,AB):  20.0 20.0 0.0
+  MaxValue(fractionPerHour-DV,AP,AB):  120.0 120.0 0.0
 
   GrowthFunctionType(int-seeDocumentation): 2
   InitialTime(sec): 100000
@@ -72,4 +72,5 @@ ShapeChangeOptions:
   OuterRadius:  39.0
   AxisOfEffect(DV,AP,AB,DVAP,DVAB,APAB):  AB 
   MaxValue(fractionPerHour): -1.0
+
 

@@ -247,6 +247,7 @@ bool Simulation::initiateSystem(){
 	assignPhysicalParameters();
 	calculateStiffnessMatrices();
 	assignNodeMasses();
+	addStretch(-16,16,0.1,240.0);
 	if (saveData){
 		cout<<"writing the summary current simulation parameters"<<endl;
 		writeSimulationSummary();
@@ -1424,8 +1425,18 @@ void Simulation::runOneStep(){
 	}*/
 	int displayfreq = 60/dt;
 	if (timestep%displayfreq == 0){
-		reOpenOutputFile();
+		//reOpenOutputFile();
 		outputFile<<"time : "<<timestep * dt<<endl;
+	}
+	int perturbstep = 1200/dt;
+	//cout<<"perturbstep: "<<perturbstep<<endl;
+	if (timestep == perturbstep ){
+		cerr<<"Perturbing the system, pushing middle nodes down by 0.5 units"<<endl;
+		for(int i=0;i<Nodes.size();++i){
+			if (Nodes[i]->Position[0]<20 && Nodes[i]->Position[0]>-20 && Nodes[i]->Position[1]>-10 && Nodes[i]->Position[1]<-5 ){
+				Nodes[i]->Position[2] += -1.0;
+			}
+		}
 	}
 	//if(timestep==0){Elements[0]->LocalGrowthStrainsMat(0,0) = 1.0;}
 	//cleanreferenceupdates();
@@ -1436,7 +1447,7 @@ void Simulation::runOneStep(){
 	int freq = 10.0/dt + 1 ;
 	if (timestep% freq  == 0){
 		calculateDVDistance();
-		outputFile<<"calculating element health"<<endl;
+		//outputFile<<"calculating element health"<<endl;
 		int nElement = Elements.size();
 		for (int i=0; i<nElement; ++i){
 			Elements[i]->checkHealth();
@@ -1444,14 +1455,14 @@ void Simulation::runOneStep(){
 	}
 	int nElement = Elements.size();
 	if(nGrowthFunctions>0){
-		outputFile<<"calculating growth"<<endl;
+		//outputFile<<"calculating growth"<<endl;
 		calculateGrowth();
 	}
 	//cout<<"calculated growth"<<endl;
 	//if(nShapeChangeFunctions>0){
 	//	changeCellShapesInSystem();
 	//}
-	outputFile<<"calculating alignment of reference"<<endl;
+	//outputFile<<"calculating alignment of reference"<<endl;
 	for (int i=0; i<nElement; ++i){
 		Elements[i]->alignElementOnReference();
 		if (Elements[i]->IsGrowing){
@@ -1460,19 +1471,22 @@ void Simulation::runOneStep(){
 	}
 	//cout<<"calculated alignment"<<endl;
 	for (int RKId = 0; RKId<4; ++RKId){
-		outputFile<<"started RK: "<<RKId<<endl;
+		//outputFile<<"started RK: "<<RKId<<endl;
 		for (int i=0; i<nElement; ++i){
 			Elements[i]->calculateForces(RKId, SystemForces, Nodes, outputFile);
 		}
-		outputFile<<"     calculated forces"<<endl;
+		//outputFile<<"     calculated forces"<<endl;
 		if(AddPeripodialArea){
 			addPeripodiumResistance(RKId);
 		}
-		outputFile<<"     checked peripodium"<<endl;
+		if (timestep<stretchTimeSteps){
+			addStretchForces(RKId,-16,16);
+		}
+		//outputFile<<"     checked peripodium"<<endl;
 		updateNodePositions(RKId);
-		outputFile<<"     updated node pos"<<endl;
+		//outputFile<<"     updated node pos"<<endl;
 		updateElementPositions(RKId);
-		outputFile<<"     updated element pos"<<endl;
+		//outputFile<<"     updated element pos"<<endl;
 	}
 	/*for (int RKId = 0; RKId<4; ++RKId){
 		for (int i=0; i<nElement; ++i){
@@ -1601,7 +1615,7 @@ void Simulation::calculateDVDistance(){
 	}
 	double dmag = d[0]+d[1]+d[2];
 	dmag = pow(dmag,0.5);
-	outputFile<<"time: "<<timestep * dt<<" DV distance is: "<<dmag<<endl;
+	//outputFile<<"time: "<<timestep * dt<<" DV distance is: "<<dmag<<endl;
 }
 
 void Simulation::cleanGrowthData(){
@@ -2082,4 +2096,52 @@ bool Simulation::readPLYMesh(string inputMeshFile, string inputMeshNodes){
 	}
 	//readNodes:
 	return true;
+}
+
+
+
+void Simulation::addStretch(double xMin, double xMax, double stretchStrain, double stretchTime){
+	double DVmin = 1000.0;
+	double DVmax = -1000.0;
+	int n = Nodes.size();
+	for (int i=0; i<n; ++i){
+		if (Nodes[i]->Position[0]> xMax || Nodes[i]->Position[0] < xMin){
+			Nodes[i]->FixedPos[0]=1;
+			Nodes[i]->FixedPos[1]=1;
+			Nodes[i]->FixedPos[2]=1;
+			if (Nodes[i]->Position[0]<DVmin){
+				DVmin = Nodes[i]->Position[0];
+			}
+			if (Nodes[i]->Position[0]>DVmax){
+				DVmax = Nodes[i]->Position[0];
+			}
+		}
+	}
+	double distance = DVmax - DVmin;
+	cerr<<"Total DV distance: "<<distance<<" ";
+	//the distance that is to be moved:
+	distance *= stretchStrain;
+	cerr<<"the distance that is to be moved: "<<distance<<" ";
+	//the time steps that the stretch operation should take place in:
+	stretchTimeSteps = stretchTime/dt;
+	cerr<<"stretchTimeSteps: "<<stretchTimeSteps<<" ";
+	stretchVelocity = distance / ((double) stretchTimeSteps);
+	cerr<<"stretchVelocity: "<<stretchVelocity<<endl;
+
+}
+
+void Simulation::addStretchForces(int RKId, double xMin, double xMax){
+	int n = Nodes.size();
+	for (int i=0; i<n; ++i){
+		if (Nodes[i]->Position[0]> xMax){
+			SystemForces[RKId][i][0]=stretchVelocity*Nodes[i]->Viscosity*Nodes[i]->mass/dt;
+			SystemForces[RKId][i][1]=0.0;
+			SystemForces[RKId][i][2]=0.0;
+		}
+		else if( Nodes[i]->Position[0] < xMin ){
+			SystemForces[RKId][i][0]=(-1.0)*stretchVelocity*Nodes[i]->Viscosity*Nodes[i]->mass/dt;
+			SystemForces[RKId][i][1]=0.0;
+			SystemForces[RKId][i][2]=0.0;
+		}
+	}
 }

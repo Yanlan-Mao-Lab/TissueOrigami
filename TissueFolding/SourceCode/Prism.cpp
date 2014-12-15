@@ -129,6 +129,11 @@ void  Prism::setElasticProperties(double E, double v){
 	D(4,4)= multiplier*(1-2*v)/2;
 	D(5,5)= multiplier*(1-2*v)/2;
 
+	//make it behave like a sheet only: (remove all z-response)
+	//D(2,0)= 0.0;
+	//D(2,1)= 0.0;
+	//D(0,2)= 0.0;
+	//D(1,2)= 0.0;
 	//making it more resistive in Ez
 	//D(2,2) *= 3.0;
 }

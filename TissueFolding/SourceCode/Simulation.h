@@ -34,6 +34,8 @@ private:
 	vector <int> LateralNodeList;
 	int	 nLateralNodes;
 	int DVRight,DVLeft;
+	int stretchTimeSteps;
+	double stretchVelocity;
 
 	bool readModeOfSim(int& i, int argc, char **argv);
 	bool readParameters(int& i, int argc, char **argv);
@@ -105,6 +107,8 @@ private:
 	double calculatePeripodiumResistanceForce(int RKId);
 	void addPeripodiumResistance(int RKId);
 	bool readPLYMesh(string inputMeshFile, string inputMeshNodes);
+	void addStretch(double xMin, double xMax, double stretchStrain, double stretchTime);
+	void addStretchForces(int RKId, double xMin, double xMax);
 public:
 
 	ofstream outputFile;

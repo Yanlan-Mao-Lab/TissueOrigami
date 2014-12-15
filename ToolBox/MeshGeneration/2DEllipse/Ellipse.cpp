@@ -48,6 +48,7 @@ public:
 	void writeMeshFileForSimulation(double zHeight, int zLayers);
 	void addEquidistantRing();
 	void addEquidistantRingMin();
+	void addRectangle();
 	void calculateAverageSideLength();
 };
 
@@ -142,7 +143,13 @@ void EllipseLayoutGenerator::addEquidistantRingMin(){
 			dsq = CurrPosX[i]*CurrPosX[i] + CurrPosY[i]*CurrPosY[i];
 			dmag = pow(dsq,0.5);
 			double ellipseSum = (CurrPosX[i]/r1) * (CurrPosX[i]/r1) +  (CurrPosY[i]/r2) * (CurrPosY[i]/r2);
-			F = (1 - ellipseSum)*ksp;
+			if (ellipseSum > 1){
+				ellipseSum = (-1.0)*pow(( ellipseSum-1),0.5);		
+			}
+			else{
+				ellipseSum = pow(( 1.0 - ellipseSum),0.5);	
+			}
+			F = ellipseSum*ksp;
 			v[0] += F*CurrPosX[i]/dmag;
 			v[1] += F*CurrPosY[i]/dmag;
 			//cerr<<"vel of node : "<<i<<" "<<v[0]<<" "<<v[1]<<endl;	
@@ -205,7 +212,8 @@ void EllipseLayoutGenerator::addEquidistantRingMin(){
 			}		
 		}
 		i++;	
-	}		
+	}
+		
 	//now rotating to add the remaining points:
 	n = CurrPosX.size();
 	for (int i = n-2; i>-1; --i){
@@ -226,7 +234,57 @@ void EllipseLayoutGenerator::addEquidistantRingMin(){
 	//	cout<<" point: "<<i<<" "<<posx[i]<<" "<<posy[i]<<endl;
 	//}
 
+
 }
+
+void EllipseLayoutGenerator::addRectangle(){	
+	int n = r2 / sideLen;
+	double d = r2 / n;
+	dForNodeGeneration  = d;
+	double x0 = r1;
+	double y0 = 0;
+	vector <double> CurrPosX, CurrPosY;
+	CurrPosX.push_back(x0);
+	CurrPosY.push_back(y0);
+	tetha = dtet;
+	for (int i= 0; i<n-1; ++i){
+		double x = r1;
+		double y = (i+1)*d;
+		CurrPosX.push_back(x);
+		CurrPosY.push_back(y);
+	}
+	CurrPosX.push_back(r1);
+	CurrPosY.push_back(r2);
+	n = r1 / sideLen;
+	d = r1 / n;
+	for (int i= 0; i<n-1; ++i){
+		double x = r1 - (i+1)*d;
+		double y = r2;
+		CurrPosX.push_back(x);
+		CurrPosY.push_back(y);
+	}
+	CurrPosX.push_back(0);
+	CurrPosY.push_back(r2);
+	
+	//now rotating to add the remaining points:
+	n = CurrPosX.size();
+	for (int i = n-2; i>-1; --i){
+		CurrPosX.push_back((-1.0)*CurrPosX[i]);
+		CurrPosY.push_back(CurrPosY[i]);	
+	}
+	n = CurrPosX.size();
+	for (int i = n-2; i>0; --i){
+		CurrPosX.push_back(CurrPosX[i]);
+		CurrPosY.push_back((-1.0)*CurrPosY[i]);		
+	}
+	n = CurrPosX.size();
+	for (int i = 0; i<n; ++i){
+		posx.push_back(CurrPosX[i]);
+		posy.push_back(CurrPosY[i]);
+	}
+}
+
+
 
 void EllipseLayoutGenerator::addRing(){
 	double initialY = r2*sin(tetha);
@@ -413,7 +471,7 @@ void EllipseLayoutGenerator::Tesselate2D(){
 	ostringstream Convert;
 	Convert << maxArea; // Use some manipulators
 	string maxAreaStr = Convert.str(); // Give the result to the string
-	string sysCommand = "../triangle/triangle -q33a"+maxAreaStr+" ./Points.node  ";
+	string sysCommand = "/home/melda/Desktop/MeshGenerate/triangle/triangle -q33a"+maxAreaStr+" ./Points.node  ";
 	cerr<<"Running triangulation with: "<<sysCommand<<endl;
 	system(sysCommand.c_str());
 }
@@ -600,6 +658,9 @@ void EllipseLayoutGenerator::minimisewitSpringMovement(int n_iter){
 	vectorsForGnuplot.open("./Vectors2.out",ofstream::trunc);
 	writeVectors2D(vectorsForGnuplot);	
 }
+
+
+
 void EllipseLayoutGenerator::calculateAverageSideLength(){
 	int nTri = triangles.size();
 	double SumSide =0.0;	
@@ -678,11 +739,11 @@ void EllipseLayoutGenerator::writeMeshFileForSimulation(double zHeight, int zLay
 
 int main(int argc, char **argv)
 {	
-	double DVRadius = 20.0;
-	double APRadius = 9.0;
+	double DVRadius = 40.0;
+	double APRadius = 24.0;
 	double ABHeight = 2.0;
-	double sideLength = 0.7;
-	int    ABLayers =3;
+	double sideLength = 2.0;
+	int    ABLayers =2;
 	EllipseLayoutGenerator Lay01(DVRadius,APRadius,sideLength,0.9);
 	bool calculateNextRing = true;
 	int counter =0;
@@ -691,16 +752,15 @@ int main(int argc, char **argv)
 		Lay01.calculateCircumference();
 		Lay01.calculateCurrentBorderNumber();
 		Lay01.calculatedtet();
-		//Lay01.initiateTetha();
-		//Lay01.addRing();
-		Lay01.addEquidistantRingMin();		
+		Lay01.addEquidistantRingMin();	
+		//Lay01.addRectangle();
 		//counter++;
 		//if (counter > 500|| Lay01.r1/Lay01.r2 <0.33 || Lay01.r1/Lay01.r2 >3){		
 		//	calculateNextRing = false;
-	//	}
-	//	else{
+		//}
+		//else{
 			calculateNextRing = Lay01.updateRadia();
-	//	}
+		//}
 	}
 	//outside the ring calculation, now I will add points in the middle, in horizontal or vertical,
 	//depending on which axis failed first, r1 or r2:

@@ -17,7 +17,7 @@ using namespace std;
 	 cout<<"initiating gl widget"<<endl;
 	 obj_pos[0] = -10.0f;
 	 obj_pos[1] =  4.0f;
-	 obj_pos[2] =  10.0f;
+	 obj_pos[2] =  50.0f;
 	 MatRot[0]  = 1.0; MatRot[1]  = 0.0; MatRot[2]  = 0.0; MatRot[3]  = 0.0;
 	 MatRot[4]  = 0.0; MatRot[5]  = 1.0; MatRot[6]  = 0.0; MatRot[7]  = 0.0;
 	 MatRot[8]  = 0.0; MatRot[9]  = 0.0; MatRot[10] = 1.0; MatRot[11] = 0.0;
