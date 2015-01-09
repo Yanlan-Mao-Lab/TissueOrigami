@@ -68,6 +68,9 @@ bool ModelInputObject::readParameters(){
 			else if(currParameterHeader == "ShapeChangeOptions:"){
 				Success  = readShapeChangeOptions(parametersFile);
 			}
+			else if(currParameterHeader == "Stretcher:"){
+				Success  = readStretcherSetup(parametersFile);
+			}
 			else {
 				cerr<<"Unidentified parameter input line: "<<endl;
 				cerr<<"		"<<currParameterHeader<<endl;
@@ -453,11 +456,27 @@ bool ModelInputObject::readPysicalProperties(ifstream& file){
 	string currHeader;
 
 	file >> currHeader;
-	if(currHeader == "YoungsModulus:"){
-		file >> Sim->E;
+	if(currHeader == "YoungsModulusApical:"){
+		file >> Sim->EApical;
 	}
 	else{
-		cerr<<"Error in reading Young's modulus, curr string: "<<currHeader<<" should have been: YoungsModulus:" <<endl;
+		cerr<<"Error in reading Young's modulus, curr string: "<<currHeader<<" should have been: YoungsModulusApical:" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "YoungsModulusBasal:"){
+		file >> Sim->EBasal;
+	}
+	else{
+		cerr<<"Error in reading Young's modulus, curr string: "<<currHeader<<" should have been: YoungsModulusBasal:" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "YoungsModulusMid:"){
+		file >> Sim->EMid;
+	}
+	else{
+		cerr<<"Error in reading Young's modulus, curr string: "<<currHeader<<" should have been: YoungsModulusMid:" <<endl;
 		return false;
 	}
 	file >> currHeader;
@@ -701,5 +720,73 @@ bool ModelInputObject::readShapeChangeType1(ifstream& file){
 		cerr<<"Error in reading shape change options, curr string: "<<currHeader<<", should have been: MaxValue(fractionPerHour-xyz):" <<endl;
 		return false;
 	}
+	return true;
+}
+
+bool ModelInputObject::readStretcherSetup(ifstream& file){
+	cout<<"reading stretcher options"<<endl;
+	string currHeader;
+	file >> currHeader;
+	if(currHeader == "StretcherAttached(bool):"){
+		bool stretcherAttached;
+		file >> stretcherAttached;
+		cerr<<"stretcherAttached "<<stretcherAttached<<endl;
+		Sim->stretcherAttached = stretcherAttached;
+	}
+	else{
+		cerr<<"Error in reading stretcher setup: "<<currHeader<<", should have been: StretcherAttached(bool):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "InitialTime(sec):"){
+		double inittime;
+		file >> inittime;
+		Sim->StretchInitialStep = inittime/Sim->dt;
+	}
+	else{
+		cerr<<"Error in reading stretcher setup: "<<currHeader<<", should have been: InitialTime(sec):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "FinalTime(sec):"){
+		double endtime;
+		file >> endtime;
+		Sim->StretchEndStep = endtime/Sim->dt;
+	}
+	else{
+		cerr<<"Error in reading stretcher setup: "<<currHeader<<", should have been: FinalTime(sec):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "DVClampMin:"){
+		double ClampPos;
+		file >> ClampPos;
+		Sim->StretchMin = ClampPos;
+	}
+	else{
+		cerr<<"Error in reading stretcher setup: "<<currHeader<<", should have been: DVClampMin:" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "DVClampMax:"){
+		double ClampPos;
+		file >> ClampPos;
+		Sim->StretchMax = ClampPos;
+	}
+	else{
+		cerr<<"Error in reading stretcher setup: "<<currHeader<<", should have been: DVClampMax:" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "MaxStrain:"){
+		double MaxStrain;
+		file >> MaxStrain;
+		Sim->StretchStrain = MaxStrain;
+	}
+	else{
+		cerr<<"Error in reading stretcher setup: "<<currHeader<<", should have been: DVClampMax:" <<endl;
+		return false;
+	}
+	cout<<"StretcherAttached "<<Sim->stretcherAttached<<"InitialStep "<<Sim->StretchInitialStep<<" EndStep: "<<Sim->StretchEndStep<<" ClapmPos: "<<Sim->StretchMin<<" "<<Sim->StretchMax<<" strain: "<<Sim->StretchStrain<<endl;
 	return true;
 }

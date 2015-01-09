@@ -1,6 +1,12 @@
-#ifndef Prism_H
-#define Prism_H
+/*
+ * Tetrahedron.h
+ *
+ *  Created on: 19 Dec 2014
+ *      Author: melda
+ */
 
+#ifndef TETRAHEDRON_H
+#define TETRAHEDRON_H
 
 #include "ShapeBase.h"
 #include <string>
@@ -11,7 +17,7 @@
 #include <boost/numeric/ublas/io.hpp>
 #include <boost/numeric/ublas/operation.hpp>
 
-class Prism : public ShapeBase{
+class Tetrahedron : public ShapeBase{
 
 protected:
 	void setTissueCoordsRotationsBuffers();
@@ -27,26 +33,21 @@ protected:
 	void getCurrentAlignmentSides(double*, double*);
 	void getCurrentAlignmentFaces(double* RefSide, double* ShapeSide, double* RefFace, double* ShapeFace);
 	void updateAlignmentTurn();
-	//void updateReferenceShapeBaseFromBuffer();
-	//void resetBuffersAfterGrowth();
-	//void calculateZVecForTissueCoordAlignment(double* u);
-	//void calculateXVecForTissueCoordAlignment(double* u);
+	void updateReferenceShapeBaseFromBuffer();
+	void resetBuffersAfterGrowth();
+	void calculateZVecForTissueCoordAlignment(double* u);
+	void calculateXVecForTissueCoordAlignment(double* u);
 	void calculateReferenceVolume();
-	void calculatePlaneNormals(double** normals);
-	void assignNodalVector(double* vec, int id0, int id1);
-	bool checkNodePlaneConsistency(double** normals);
 
 public:
-	Prism(int* NodeIds,vector<Node*>& Nodes, int CurrId);
-	~Prism();
+	Tetrahedron(int* NodeIds,vector<Node*>& Nodes, int CurrId);
+	~Tetrahedron();
 	void  setElasticProperties(double EApical, double EBasal, double EMid,double v);
-	void  calculateBasalNormal(double * normal);
-	void  AlignReferenceBaseNormalToZ();
+	//void  calculateBasalNormal(double * normal);
+	//void  AlignReferenceBaseNormalToZ();
 	void  calculateReferenceStiffnessMatrix();
-	//void  calculateForces(int RKid, double** SystemForces);
+	void  calculateForces(int RKid, double** SystemForces);
 	void  checkHealth();
-
-
 };
 
-#endif
+#endif /* TETRAHEDRON_H */

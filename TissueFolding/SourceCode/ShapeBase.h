@@ -27,12 +27,12 @@ class ShapeBase{
 private:
 	void ParentErrorMessage();
 protected:
+	int 	tissuePlacement; //1 -> apical, 0 -> basal, 2->middle, 3 -> lateral
 	int 	ShapeType;
 	int 	Id;
 	int 	nNodes;
 
 	int 	nDim;
-	ReferenceShapeBase* ReferenceShape;
 	int* 	IdentifierColour;
 	double* GrowthRate;
 	double* ShapeChangeRate;
@@ -45,9 +45,12 @@ protected:
 	void 	setShapeType(string TypeName);
 	void 	readNodeIds(int* tmpNodeIds);
 	void 	setPositionMatrix(vector<Node*>& Nodes);
+	void 	setTissuePlacement(vector<Node*>& Nodes);
+	void 	setTissueType(vector<Node*>& Nodes);
 	void 	setReferencePositionMatrix();
 	void 	setIdentificationColour();
-	bool 	InvertMatrix(boost::numeric::ublas::matrix<double>& input, boost::numeric::ublas::matrix<double>& inverse, double& det);
+	void 	rotateReferenceElementByRotationMatrix(double* rotMat);
+	bool 	InvertMatrix(boost::numeric::ublas::matrix<double>& input, boost::numeric::ublas::matrix<double>& inverse);
 	int 	determinant_sign(boost::numeric::ublas::permutation_matrix<std::size_t>& pm);
 	void	crossProduct3D(double* u, double* v, double* cross);
 	double  dotProduct3D(double* u, double* v);
@@ -63,6 +66,12 @@ protected:
 	bool 	calculateWorldToTissueRotMat(double* v);
 	bool 	calculateGrowthStrainsRotMat(double* v);
 	void 	updateTissueCoordinateSystem(double* TissueCoords);
+	void	calculateForces2D(int RKId, double ***SystemForces, vector <Node*>& Nodes, ofstream& outputFile);
+	void	calculateForces3D(int RKId, double ***SystemForces, vector <Node*>& Nodes, ofstream& outputFile);
+	void 	calculatedudEdXde(double** RefNormalised, boost::numeric::ublas::vector<double>& dude, boost::numeric::ublas::vector<double>& dXde);
+	void 	dudEdXde3D(double** RefNormalised, boost::numeric::ublas::vector<double>& dude, boost::numeric::ublas::vector<double>& dXde);
+	void 	dudEdXde2D(double** RefNormalised, boost::numeric::ublas::vector<double>& dude, boost::numeric::ublas::vector<double>& dXde);
+
 	boost::numeric::ublas::matrix<double> D;
 	boost::numeric::ublas::matrix<int> CoeffMat;
 	boost::numeric::ublas::matrix<double> k;
@@ -83,6 +92,7 @@ public:
 			//while deleting a ShapeBase* that happens to point a child, this destructor will be called after the child destructor
 			};
 	double** Positions;
+	ReferenceShapeBase* ReferenceShape;
 	boost::numeric::ublas::vector<double> Strain;
 	boost::numeric::ublas::vector<double> RK1Strain;
 	boost::numeric::ublas::matrix<double> StrainTissueMat;
@@ -92,8 +102,8 @@ public:
 	bool 	IsChangingShape;
 	bool 	WorldToTissueRotMatUpToDate;
 	bool 	GrowthStrainsRotMatUpToDate;
-
-	double CurrShapeChangeToAdd[3];
+	int 	tissueType;
+	double 	CurrShapeChangeToAdd[3];
 	//int alingmentTurn;
 	//double* CurrentNormal;
 	//bool updatedReference;
@@ -122,7 +132,9 @@ public:
 	void 	displayPositions();
 	void 	displayReferencePositions();
 	void 	displayIdentifierColour();
-	virtual void setElasticProperties(double E,double v){ParentErrorMessage();};
+	virtual void setElasticProperties(double EApical,double EBasal, double EMid,double v){ParentErrorMessage();};
+	virtual void calculateBasalNormal(double * normal){ParentErrorMessage();};
+	virtual void AlignReferenceBaseNormalToZ(){ParentErrorMessage();};
 	void 	updateGrowthRate(double scalex, double scaley, double scalez);
 	virtual void calculateReferenceStiffnessMatrix(){ParentErrorMessage();};
 	void 	calculateForces(int RKId, double ***SystemForces, vector <Node*>& Nodes, ofstream& outputFile);
@@ -143,7 +155,8 @@ public:
 	void 	displayMatrix(boost::numeric::ublas::vector<double>& vec, string matname);
 	void	normaliseVector3D(double* v);
 	double 	determinant3by3Matrix(double* rotMat);
-
+	double 	determinant3by3Matrix(boost::numeric::ublas::matrix<double>& Mat);
+	double 	determinant2by2Matrix(boost::numeric::ublas::matrix<double>& Mat);
 	void	calculateRotationAngleSinCos(double* u, double* v, double& c, double& s);
 	void	calculateRotationAxis(double* u, double* v,double* rotAx);
 	void	constructRotationMatrix(double c, double s, double* rotAx, double* rotMat);
@@ -151,6 +164,7 @@ public:
 
 
 	void alignElementOnReference();
+	virtual void correctFor2DAlignment(){ParentErrorMessage();};
 	void updatePositionsAlignedToReferenceForRK();
 	void growShape();
 	void assignVolumesToNodes(vector <Node*>& Nodes);
@@ -161,7 +175,7 @@ public:
 	boost::numeric::ublas::matrix<double> WorldToReferenceRotMat;
 	boost::numeric::ublas::matrix<double> GrowthStrainsRotMat;
 
-	bool 	calculateAlignmentRotationMatrix(double** RefNormalised, double* rotMat);
+	//bool 	calculateAlignmentRotationMatrix(double** RefNormalised, double* rotMat);
 	bool 	calculateAlignmentScore(double** RefNormalised);
 	void 	bringShapePositionsToOrigin(double** RefNormalised, double* refCentre);
 	void 	bringPositionAlignedToReferenceToOrigin(double* refCentre);

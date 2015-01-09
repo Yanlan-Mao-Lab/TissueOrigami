@@ -17,7 +17,13 @@ public:
 	double r2Init;
 	double condensation;
 	double sideLen;
-	vector <double> posx,posy;
+	double sideLenInit; 
+	double curvedEndQuarterCircum;
+	vector <double> posx,posy,posz;
+	vector <double> InvardNormalsX, InvardNormalsY;
+	vector <double> zVec0,zVec1,zVec2;
+	vector <int> tissueType; //0: columnar layer, 1: transition layer, 2: peripodium
+	vector <int> atBorder;	//1 id the node is at the circumference of the setup, 0 otherwise
 	double tetha;
 	double dtet;
 	double Circumference;
@@ -46,10 +52,16 @@ public:
 	void writeVectors2D(ofstream &vectorsForGnuplot);
 	void writeNodes2D(ofstream &nodesForGnuplot);
 	void writeMeshFileForSimulation(double zHeight, int zLayers);
+	void writeTriangleMeshFileForSimulation(double zHeight);
 	void addEquidistantRing();
 	void addEquidistantRingMin();
 	void addRectangle();
 	void calculateAverageSideLength();
+	void addZVecs(double curvedEndRadia, int nCurveLayers);
+	void addInitialPosZ(double curvedEndRadia, int nCurveLayers);
+	int calculateLargeRadiaAndLayers(double curvedEndRadia);
+	void addZPosToCurve(int nLast, int counter, double dZ);
+	void correctNormalsForAddedPoints();
 };
 
 EllipseLayoutGenerator::EllipseLayoutGenerator(double r1, double r2, double sideLen, double condensation){
@@ -60,8 +72,10 @@ EllipseLayoutGenerator::EllipseLayoutGenerator(double r1, double r2, double side
 	this->r2Init = r2;
 	this->condensation = condensation;
 	this->sideLen = sideLen*condensation;
+	this->sideLenInit =this->sideLen;
 	tethaAtZero=true;
 	r1failed = false;
+	curvedEndQuarterCircum = 0.0;
 }
 void EllipseLayoutGenerator::calculateCircumference(){
 	double h = ((r1-r2)*(r1-r2))/((r1+r2)*(r1+r2));
@@ -226,15 +240,33 @@ void EllipseLayoutGenerator::addEquidistantRingMin(){
 		CurrPosY.push_back((-1.0)*CurrPosY[i]);		
 	}
 	n = CurrPosX.size();
+	//calculating the normals pointing towards the inside of ellipse
+	for (int i = 0; i<n; ++i){
+		int index0 = i-1;
+		int index1 = i+1;
+		if (index0 == -1) { index0=n-1; }
+		if (index1 ==  n) { index1 =0; }
+		double vec1[2] = {CurrPosX[index0] - CurrPosX[i], CurrPosY[index0] - CurrPosY[i] };
+		double vec2[2] = {CurrPosX[index1] - CurrPosX[i], CurrPosY[index1] - CurrPosY[i] };
+		double mag = vec1[0] *vec1[0] + vec1[1]*vec1[1];
+		if (mag> 1E-14){mag = pow(mag,0.5); vec1[0] /= mag; vec1[1] /= mag;}
+		mag = vec2[0] *vec2[0] + vec2[1]*vec2[1];
+		if (mag> 1E-14){mag = pow(mag,0.5); vec2[0] /= mag; vec2[1] /= mag;}
+		vec1[0] += vec2[0]; vec1[1] += vec2[1];
+		mag = vec1[0]*vec1[0] + vec1[1]*vec1[1];
+		if (mag> 1E-14){mag = pow(mag,0.5); vec1[0] /= mag; vec1[1] /= mag;}
+		InvardNormalsX.push_back(vec1[0]);
+		InvardNormalsY.push_back(vec1[1]);
+		//cout<<" point: "<<InvardNormalsX.size()-1<<" position: "<<CurrPosX[i]<<" "<<CurrPosY[i]<<"neigs: "<<CurrPosX[index0]<<" "<<CurrPosY[index0]<<"  "<<CurrPosX[index1]<<" "<<CurrPosY[index1]<<" normal: "<<InvardNormalsX[i]<<" "<<InvardNormalsY[i]<<endl;
+	}
+	n = CurrPosX.size();
 	for (int i = 0; i<n; ++i){
 		posx.push_back(CurrPosX[i]);
 		posy.push_back(CurrPosY[i]);
 	}
 	//for (int i = 0; i<posx.size(); ++i){
-	//	cout<<" point: "<<i<<" "<<posx[i]<<" "<<posy[i]<<endl;
+	//	cout<<" point: "<<i<<" position: "<<posx[i]<<" "<<posy[i]<<" normal: "<<InvardNormalsX[i]<<" "<<InvardNormalsY[i]<<endl;
 	//}
-
-
 }
 
 void EllipseLayoutGenerator::addRectangle(){	
@@ -376,6 +408,8 @@ void EllipseLayoutGenerator::addMidLine(){
 	for (int i=0;i<n; ++i){
 		posx.push_back(CurrPosX[i]);
 		posy.push_back(CurrPosY[i]);
+		InvardNormalsX.push_back(0.0);
+		InvardNormalsY.push_back(0.0);
 	}
 
 
@@ -459,7 +493,7 @@ void EllipseLayoutGenerator::Tesselate2D(){
 	writeNodes2D(nodesForGnuplot);
 	ofstream pointsForTesselation;
 	pointsForTesselation.open("./Points.node",ofstream::trunc);
-	pointsForTesselation<<posx.size()<<" 2 0 0"<<endl;
+	pointsForTesselation<<posx.size()<<" 2 0 1"<<endl; //dim, attribute number , border markers on or of
 	for (int i =0; i< posx.size(); ++i){
 		pointsForTesselation<<i<<" "<<posx[i]<<" "<<posy[i]<<endl;
 	}
@@ -505,10 +539,11 @@ void EllipseLayoutGenerator::readInTesselation2D(){
 	ifstream NodeFile;	
 	NodeFile.open("./Points.1.node", ifstream::in);
 	int nNode;
+	int bordersMarked;
 	NodeFile>>nNode;
 	NodeFile>>nodesPerTri;	//dimensions
-	NodeFile>>nodesPerTri;	//attribute number
-	NodeFile>>nodesPerTri;	//border markers on or off
+	NodeFile>>nAttributes;	//attribute number
+	NodeFile>>bordersMarked;	//border markers on or off
 	for (int i=0; i<nNode; ++i){
 		int nodeId;
 		NodeFile>>nodeId;
@@ -517,8 +552,10 @@ void EllipseLayoutGenerator::readInTesselation2D(){
 		for (int j=0;j<2;++j){
 			NodeFile >> pnts[j];	
 		}
-		NodeFile>>nodesPerTri;
-		//cerr<<"		read pos: "<< pnts[0]<<" "<<pnts[1]<<endl;
+		//reading the flag for border nodes, and generating the vector for it
+		NodeFile>>bordersMarked;
+		atBorder.push_back(bordersMarked);
+		//cerr<<"		read pos: "<< pnts[0]<<" "<<pnts[1]<<" borders? "<<bordersMarked<<endl;
 		if (nodeId<posx.size()){
 			//cerr<<"		overwriting existing placement on vector"<<endl;
 			posx[nodeId]=pnts[0];	
@@ -527,7 +564,10 @@ void EllipseLayoutGenerator::readInTesselation2D(){
 		else{
 			//cerr<<"		adding points to system"<<endl;
 			posx.push_back(pnts[0]);	
-			posy.push_back(pnts[1]);		
+			posy.push_back(pnts[1]);
+			//will correct these normals later on
+			InvardNormalsX.push_back(-100.0);
+			InvardNormalsY.push_back(-100.0);		
 		}
 	}
 	NodeFile.close();
@@ -537,6 +577,7 @@ void EllipseLayoutGenerator::readInTesselation2D(){
 	nodesForGnuplot.open("./Nodes2.out",ofstream::trunc);
 	writeVectors2D(vectorsForGnuplot);	
 	writeNodes2D(nodesForGnuplot);
+	//cout<<"wrote nodes for gnuplot"<<endl;
 }
 
 void EllipseLayoutGenerator::writeVectors2D(ofstream &vectorsForGnuplot){
@@ -659,8 +700,6 @@ void EllipseLayoutGenerator::minimisewitSpringMovement(int n_iter){
 	writeVectors2D(vectorsForGnuplot);	
 }
 
-
-
 void EllipseLayoutGenerator::calculateAverageSideLength(){
 	int nTri = triangles.size();
 	double SumSide =0.0;	
@@ -684,7 +723,7 @@ void EllipseLayoutGenerator::calculateAverageSideLength(){
 	cerr<<"Average side length of a triangle: "<<SumSide<<" -- desired length was: "<<sideLen/condensation<<endl;
 }
 
-void EllipseLayoutGenerator::writeMeshFileForSimulation(double zHeight, int zLayers){
+/*void EllipseLayoutGenerator::writeMeshFileForSimulation(double zHeight, int zLayers){
 	ofstream MeshFile;
 	MeshFile.open("./MeshFile.out",ofstream::trunc);	
 	MeshFile<<posx.size()*(zLayers+1)<<endl;
@@ -735,50 +774,285 @@ void EllipseLayoutGenerator::writeMeshFileForSimulation(double zHeight, int zLay
 		}
 		currOffset += n;
 	}
+}*/
+
+void EllipseLayoutGenerator::writeMeshFileForSimulation(double zHeight, int zLayers){
+	ofstream MeshFile;
+	MeshFile.open("./MeshFile.out",ofstream::trunc);	
+	MeshFile<<posx.size()*(zLayers+1)<<endl;
+	cerr<<"posx.size(): "<<posx.size()<<" "<<posx.size()*(zLayers+1)<<endl;
+	int n = posx.size();
+	for (int i=0;i<n;++i){
+		MeshFile<<posx[i]<<"	"<<posy[i]<<"	"<<posz[i]<<"    0	"<<tissueType[i]<<"	"<<atBorder[i]<<endl;	//x-coord   y-coord   z-coord   basal-node identifier(0) tissueType(columnar-0, transition-1,peripodium-2) flag for border nodes
+		
+	}
+	double dzHeight = zHeight/zLayers;
+	double currzHeight = dzHeight;
+	for (int layers=0; layers<zLayers; ++layers){
+		int nodePositionIdentifier = 2; //0=basal. 1=apical, 2=midline
+		if (layers == zLayers-1){nodePositionIdentifier=1;}
+		for (int i=0;i<n;++i){
+			MeshFile<<posx[i]+zVec0[i]*currzHeight<<"	"<<posy[i]+zVec1[i]*currzHeight<<"	"<<posz[i]+zVec2[i]*currzHeight<<"    "<<nodePositionIdentifier<<"	"<<tissueType[i]<<"	"<<atBorder[i]<<endl;	
+		}
+		currzHeight += dzHeight;
+	}
+	int nTri = triangles.size();
+	MeshFile<<nTri*zLayers<<endl;
+	int currOffset =0;
+	for (int layers=0; layers<zLayers; ++layers){
+		for (int i =0; i<nTri; ++i){
+			double refpos[6][3];
+			int nodes[6];
+			for (int j=0;j<3;++j){			
+				nodes[j]=triangles[i][j]+currOffset;
+			}
+			for (int j=3;j<6;++j){			
+				nodes[j]=triangles[i][j-3]+currOffset+n;
+			}	
+			//writing Shapetype
+			MeshFile<<"1	";
+			//writing nodes of prism
+			for (int j=0;j<6;++j){
+				MeshFile<<nodes[j]<<"     ";
+			}
+			//writing positions for reference prism:
+			//basal nodes:
+			double currzHeight = dzHeight*layers;
+			for (int j=0;j<3;++j){
+				MeshFile<<posx[triangles[i][j]]+zVec0[triangles[i][j]]*currzHeight<<"   "<<posy[triangles[i][j]]+zVec1[triangles[i][j]]*currzHeight<<"   "<<posz[triangles[i][j]]+zVec2[triangles[i][j]]*currzHeight<<"    ";		
+			}
+			currzHeight = dzHeight*(layers+1);
+			//apical nodes:
+			for (int j=0;j<3;++j){
+				MeshFile<<posx[triangles[i][j]]+zVec0[triangles[i][j]]*currzHeight<<"   "<<posy[triangles[i][j]]+zVec1[triangles[i][j]]*currzHeight<<"   "<<posz[triangles[i][j]]+zVec2[triangles[i][j]]*currzHeight<<"   ";		
+			}
+			MeshFile<<endl;
+		}
+		currOffset += n;
+	}
+}
+
+void EllipseLayoutGenerator::writeTriangleMeshFileForSimulation(double zHeight){
+	ofstream MeshFile;
+	MeshFile.open("./TriangleFile.out",ofstream::trunc);	
+	MeshFile<<posx.size()<<endl;
+	int n = posx.size();
+	for (int i=0;i<n;++i){
+		MeshFile<<posx[i]<<"	"<<posy[i]<<"	0	    2	"<<tissueType[i]<<"	"<<atBorder[i]<<endl;	//x-coord   y-coord   z-coord   mid-node identifier(0) tissueType(columnar-0, transition-1,peripodium-2) flag for border nodes
+		
+	}
+	int nTri = triangles.size();
+	MeshFile<<nTri<<endl;
+	for (int i =0; i<nTri; ++i){
+		double refpos[3][3];
+		int nodes[3];
+		for (int j=0;j<3;++j){			
+			nodes[j]=triangles[i][j];
+		}
+			
+		//writing Shapetype as truiangle (4)
+		MeshFile<<"4	";
+		//writing nodes of triangle
+		for (int j=0;j<3;++j){
+			MeshFile<<nodes[j]<<"     ";
+		}
+		//writing the slab height for the triangle
+		MeshFile<<zHeight<<"     ";
+		//writing positions for reference triangle:
+		for (int j=0;j<3;++j){
+			MeshFile<<posx[triangles[i][j]]<<"   "<<posy[triangles[i][j]]<<"   "<<posz[triangles[i][j]]<<"    ";		
+		}
+		MeshFile<<endl;		
+	}
+}
+
+void EllipseLayoutGenerator::addInitialPosZ(double curvedEndRadia, int nCurveLayers){
+	int n = posx.size();
+	for (int i=0; i<n; ++i){
+		cout<<"node "<<i<<" "<<posx[i]<<" "<<posy[i]<<endl;	
+	}
+	double r12 = (r1Init + sideLen*0.5) * (r1Init + sideLen*0.5);
+	double r22 = (r2Init + sideLen*0.5) * (r2Init + sideLen*0.5);
+	double dZ =0;
+	if (nCurveLayers>0){
+		dZ = curvedEndRadia / ((double)  nCurveLayers);
+	}
+	for (int i=0;i<n;++i){
+		//cout<<" assigning node: "<<i<<endl;		
+		double distance = posx[i]*posx[i]/r12 + posy[i]*posy[i]/r22;
+		if (distance<1){
+			//cout<<"distance id: "<<distance<<"size of tissueType: "<<tissueType.size()<<endl;
+			tissueType.push_back(0); //0: columnar layer; 1: transition layer; 2: peripodium
+			posz.push_back(0.0);
+			if (InvardNormalsX[i] == -100) {
+				//this is a newly added point, and it does require setting the normals 
+				//but it also is inside the columnar layer, where the normals will not be used
+				//just as in the midline, I am setting the nomral to 0, and will not bother with it later on;
+				InvardNormalsX[i]=0.0;
+				InvardNormalsY[i]=0.0;
+				
+			}
+		}
+		else {
+			//cout<<"Node is outside columnar layer:" <<i<<" pos: "<<posx[i]<<" "<<posy[i]<<endl;			
+			tissueType.push_back(1); //0: columnar layer; 1: transition layer; 2: peripodium			
+			bool foundlayer = false;
+			int counter = 0;
+			double tet = pi/2.0/nCurveLayers;
+
+			while (!foundlayer && counter <nCurveLayers ){
+				double temR1 = r1Init + (counter+1)*1.2*sideLen;
+				double temR2 = r2Init + (counter+1)*1.2*sideLen;
+				double d = posx[i]*posx[i]/temR1/temR1 + posy[i]*posy[i]/temR2/temR2;				
+				//cout<<" layer: "<<counter+1<<" tempRs: "<<temR1<<" "<<temR2<<" calculated d: "<<d<<endl;
+				if(d < 1){
+					foundlayer = true;
+					//posz.push_back((counter+1)*dZ);
+					double currZ = curvedEndRadia* (1.0 - cos(tet*(counter+1)));
+					//cout<<"Layer : "<<counter+1<<" Z: "<<currZ<<" tempR1&R2: "<<temR1<<" "<<temR2<<endl; 
+					posz.push_back( currZ );			
+				}
+				counter++;			
+			}
+			if(!foundlayer){
+				cerr<<"ERROR!! - Node is not in the calculated layers, z-height will not be assigned"<<endl;			
+			}
+		}	
+	}
+	cout<<"finished funciton"<<endl;
+}
+
+void EllipseLayoutGenerator::correctNormalsForAddedPoints(){
+	int n = posx.size();
+	double threshold = sideLen*1.25;	
+	double t2 = threshold*threshold;
+	for (int i=0; i<n; ++i){
+		double summation = 0.0, sumX=0.0, sumY = 0.0;
+		int counter = 0;
+		if (InvardNormalsX[i] == -100) {
+			for (int j=0; j<n; ++j){
+				double dx = posx[i] - posx[j];
+				double dy = posy[i] - posy[j];	
+				double dz = posy[i] - posz[j];	
+				double d2 = dx*dx + dy*dy + dz*dz;
+				if (d2<t2 && InvardNormalsX[j] !=-100 && InvardNormalsY[j]!=-100 && !(InvardNormalsX[j]==0 && InvardNormalsY[j]==0)){
+					//the node is in the viicinity, and it has a normal set, I will use it in interpolation
+					d2 = pow(d2,0.5);
+					summation += d2;
+					sumX += d2*InvardNormalsX[j];
+					sumY += d2*InvardNormalsY[j];
+				}
+			}
+			InvardNormalsX[i] = sumX/summation;
+			InvardNormalsY[i] = sumY/summation;
+		}
+	}
+}
+
+void EllipseLayoutGenerator::addZVecs(double curvedEndRadia, int nCurveLayers){
+	//adding the zVectors of the columnar layer, 
+	//the vectors are going from basal to apical layer (0,0,1);	
+	int n = posx.size();
+	double r12 = (r1Init + sideLen*0.5) * (r1Init + sideLen*0.5);
+	double r22 = (r2Init + sideLen*0.5) * (r2Init + sideLen*0.5);
+	double dZ =0;	
+	if (nCurveLayers>0){
+		dZ = curvedEndRadia / ((double)  nCurveLayers);
+	}
+	for (int i=0;i<n;++i){
+		//cout<<"i: "<<i<<"n: "<<n<<" Xsize: "<<posx.size()<<" Ysize: "<<posy.size()<<" Zsize: "<<posz.size()<<" Xnorm: "<<InvardNormalsX.size()<<" Ynorm: "<<InvardNormalsY.size()<<endl;	
+		double distance = posx[i]*posx[i]/r12 + posy[i]*posy[i]/r22;
+		if (distance<1){		
+			zVec0.push_back(0.0);
+			zVec1.push_back(0.0);
+			zVec2.push_back(1.0);
+		}
+		else{
+			double rotAx [2] = {InvardNormalsY[i], -InvardNormalsX[i]}; //cross product of normal with (0,0,1);
+			double sintet = (curvedEndRadia-posz[i])/curvedEndRadia;
+			double costet = pow((2.0*curvedEndRadia-posz[i])*posz[i],0.5)/curvedEndRadia;
+			double rotMat[3][3];
+			rotMat[0][0] = costet + rotAx[0]*rotAx[0]*(1.0 - costet);
+			rotMat[0][1] = rotAx[0]*rotAx[1]*(1.0 - costet);
+			rotMat[0][2] = rotAx[1]*sintet;
+			rotMat[1][0] = rotAx[0]*rotAx[1]*(1.0 - costet);
+			rotMat[1][1] = costet + rotAx[1]*rotAx[1]*(1.0 - costet);
+			rotMat[1][2] = (-1.0)*rotAx[0]*sintet;
+			rotMat[2][0] = (-1.0)*rotAx[1]*sintet;
+			rotMat[2][1] = rotAx[0]*sintet;
+			rotMat[2][2] = costet;
+			zVec0.push_back(rotMat[0][0]*InvardNormalsX[i] + rotMat[0][1]*InvardNormalsY[i]);
+			zVec1.push_back(rotMat[1][0]*InvardNormalsX[i] + rotMat[1][1]*InvardNormalsY[i]);
+			zVec2.push_back(rotMat[2][0]*InvardNormalsX[i] + rotMat[2][1]*InvardNormalsY[i]);
+			//cout<<"node: "<<i<<" pos: "<<posx[i]<<" "<<posy[i]<<" "<<posz[i]<<" normal: "<<InvardNormalsX[i]<<" "<<InvardNormalsY[i]<<" zvec: "<<zVec0[i]<<" "<<zVec1[i]<<" "<<zVec2[i]<<endl;		
+		}
+	}
+
+}
+
+int EllipseLayoutGenerator::calculateLargeRadiaAndLayers(double curvedEndRadia){
+	double QuarterCircumference = pi*curvedEndRadia/2.0;
+	r1 = r1Init +  QuarterCircumference;
+	r2 = r2Init +  QuarterCircumference;
+	double tempNLayers = QuarterCircumference/sideLen;
+	int NLayers = floor(tempNLayers);
+	sideLen = QuarterCircumference/((double) NLayers);
+	//cout<<"curvedEndRadia: "<<curvedEndRadia<<" r1: "<<r1<<" r2: "<<r2<<"  tempNLayers: "<<tempNLayers<< "NLayers: "<<NLayers<<" sideLen: "<<sideLen<<endl;
+	return NLayers;
 }
 
 int main(int argc, char **argv)
 {	
-	double DVRadius = 40.0;
-	double APRadius = 24.0;
-	double ABHeight = 2.0;
-	double sideLength = 2.0;
-	int    ABLayers =2;
+	double 	DVRadius = 20.0;
+	double 	APRadius = 10.0;
+	double 	ABHeight = 5.0;
+	double 	sideLength = 5.0;
+	int    	ABLayers =1;
+	bool 	addCurvedEnd = false;
+	double	curvedEndRadia = ABHeight*1.5; // starting from the basal side
+
+
 	EllipseLayoutGenerator Lay01(DVRadius,APRadius,sideLength,0.9);
 	bool calculateNextRing = true;
 	int counter =0;
 	while (calculateNextRing) {
-		cerr<<" current point size: "<<Lay01.posx.size()<<endl;
 		Lay01.calculateCircumference();
 		Lay01.calculateCurrentBorderNumber();
 		Lay01.calculatedtet();
 		Lay01.addEquidistantRingMin();	
 		//Lay01.addRectangle();
-		//counter++;
-		//if (counter > 500|| Lay01.r1/Lay01.r2 <0.33 || Lay01.r1/Lay01.r2 >3){		
-		//	calculateNextRing = false;
-		//}
-		//else{
-			calculateNextRing = Lay01.updateRadia();
-		//}
+		calculateNextRing = Lay01.updateRadia();
 	}
 	//outside the ring calculation, now I will add points in the middle, in horizontal or vertical,
 	//depending on which axis failed first, r1 or r2:
 	Lay01.addMidLine();
+	int nCurveLayers = 0;
+	if(addCurvedEnd){
+		nCurveLayers = Lay01.calculateLargeRadiaAndLayers(curvedEndRadia);
+		int counter = 0;
+		while (counter<nCurveLayers){
+			int nLast = Lay01.posx.size();
+			Lay01.calculateCircumference();
+			Lay01.calculateCurrentBorderNumber();
+			Lay01.calculatedtet();
+			Lay01.addEquidistantRingMin();
+			Lay01.updateRadia();
+			counter++;
+		}
+	}
+	//cout<<"before Tesselate2D, n =  "<<	Lay01.posx.size()<<endl;
 	Lay01.Tesselate2D();
 	Lay01.readInTesselation2D();
 	Lay01.calculateAverageSideLength();
+	Lay01.addInitialPosZ(curvedEndRadia, nCurveLayers);
+	Lay01.correctNormalsForAddedPoints();
+	Lay01.addZVecs(curvedEndRadia, nCurveLayers);
 	Lay01.writeMeshFileForSimulation(ABHeight,ABLayers);	
+	Lay01.writeTriangleMeshFileForSimulation(ABHeight);
 	//output the points for plotting:
 	int n=Lay01.posx.size();	
 	cerr<<"r1: "<<Lay01.r1<<" r2: "<<Lay01.r2<<endl;
 	Lay01.calculateAverageSideLength();
-	for (int i=0;i<n;++i){
-		//int x = 1000*Lay01.posx[i];
-		//int y = 1000*Lay01.posy[i];
-		//cout<<x<<" "<<y<<endl;
-		cout<<i<<" "<<Lay01.posx[i]<<"   "<<Lay01.posy[i]<<endl;	
-	}
 }
 
 

@@ -20,9 +20,15 @@ PrismLateral::~PrismLateral(){
 	//Only delete what you have constructed in the child element's constructor
 }
 
+void  PrismLateral::calculateBasalNormal(double * normal){
+	for (int i=0; i<nDim; ++i){
+		normal[i] = ReferenceShape->Positions[3][i] - ReferenceShape->Positions[0][i];
+	}
+	normaliseVector3D(normal);
+}
 
-void  PrismLateral::setElasticProperties(double E, double v){
-	this -> E = E;
+void  PrismLateral::setElasticProperties(double EApical, double EBasal, double EMid, double v){
+	this -> E = EMid;
 	this -> v = v; //poisson ratio
 	if (v>0.5){v = 0.5;}
 	else if (v<0.0){v = 0.0;}

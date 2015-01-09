@@ -38,6 +38,8 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
 	setReferencePositionMatrix();
 	setCoeffMat();
 	calculateReferenceVolume();
+	setTissuePlacement(Nodes);
+	setTissueType(Nodes);
 
 	Strain = boost::numeric::ublas::zero_vector<double>(6);
 	RK1Strain = boost::numeric::ublas::zero_vector<double>(6);
@@ -110,12 +112,73 @@ void Prism::setCoeffMat(){
 	CoeffMat(5,2)=1;CoeffMat(5,6)=1;
 }
 
-void  Prism::setElasticProperties(double E, double v){
-	//if (!(Id == 197 || Id == 105)){
-	//	E =0.0; v=0.0;
-	//}
+void  Prism::calculateBasalNormal(double * normal){
+	double * u;
+	u = new double[3];
+	double * v;
+	v = new double[3];
+	for (int i=0; i<nDim; ++i){
+		u[i] = ReferenceShape->Positions[1][i] - ReferenceShape->Positions[0][i];
+		v[i] = ReferenceShape->Positions[2][i] - ReferenceShape->Positions[0][i];
+		normal[i] = 0.0;
+	}
+	cerr<<"		u: "<<u[0]<<" "<<u[1]<<" "<<u[2]<<" v: "<<v[0]<<" "<<v[1]<<" "<<v[2]<<endl;
+	crossProduct3D(u,v,normal);
+	cerr<<"		normal before normalisation: "<<normal[0]<<" "<<normal[1]<<" "<<normal[2]<<endl;
+	normaliseVector3D(normal);
+	cerr<<"		normal after normalisation: "<<normal[0]<<" "<<normal[1]<<" "<<normal[2]<<endl;
+	for (int i=0; i<nDim; ++i){
+		u[i] = ReferenceShape->Positions[3][i] - ReferenceShape->Positions[0][i];
+	}
+	cerr<<"		vector to apical: "<<u[0]<<" "<<u[1]<<" "<<u[2]<<endl;
+	double  dot = dotProduct3D(u,normal);
+	cerr<<"		dot product: "<<dot<<endl;
+	if (dot<0){
+		for (int i=0; i<nDim; ++i){
+			normal[i] *=(-1.0);
+		}
+	}
+	cerr<<"		normal after direction correction: "<<normal[0]<<" "<<normal[1]<<" "<<normal[2]<<endl;
+	delete[] v;
+	delete[] u;
+}
 
-	this -> E = E;
+void  Prism::AlignReferenceBaseNormalToZ(){
+	//getting the normal of the reference element basal surface
+	double * normal;
+	normal = new double[3];
+	cerr<<"Element: "<<Id<<endl;
+	calculateBasalNormal(normal);
+	//Now I have the normal pointing towards the apical surface, I need to align it with (+ve)z vector
+	double* z = new double[3];
+	z[0] = 0;
+	z[1] = 0;
+	z[2] = 1;
+	double c, s;
+	calculateRotationAngleSinCos(normal,z,c,s); //align normal onto z
+	if (c<0.9998){
+		double *rotAx;
+		rotAx = new double[3];
+		double *rotMat;
+		rotMat = new double[9]; //matrix is written in one row
+		calculateRotationAxis(normal,z,rotAx);	//calculating the rotation axis that is perpendicular to both u and v
+		constructRotationMatrix(c,s,rotAx,rotMat);
+		rotateReferenceElementByRotationMatrix(rotMat);
+		delete[] rotAx;
+		delete[] rotMat;
+	}
+	delete[] normal;
+	delete[] z;
+}
+
+void  Prism::setElasticProperties(double EApical, double EBasal, double EMid, double v){
+	this -> E = EMid;
+	if (tissuePlacement == 0 ){
+		this -> E = EBasal;
+	}
+	else if(tissuePlacement == 1 ){
+		this -> E = EApical;
+	}
 	this -> v = v; //poisson ratio
 	if (v>0.5){v = 0.5;}
 	else if (v<0.0){v = 0.0;}
@@ -271,11 +334,10 @@ void Prism::calculateCurrk(boost::numeric::ublas::matrix<double>& currk, boost::
 	Jacobian  = zero_matrix<double> (dim,dim);
 	//Jacobian =  ShapeFuncDer*CurrRelaxedShape
 	boost::numeric::ublas::axpy_prod(ShapeFuncDer,CurrRelaxedShape,Jacobian);
-
+	double detJ = determinant3by3Matrix(Jacobian);
 	//Getting the inverse of Jacobian:
 	matrix<double> InvJacobian (dim, dim);
-	double detJ;
-	bool inverted = InvertMatrix(Jacobian, InvJacobian, detJ);
+	bool inverted = InvertMatrix(Jacobian, InvJacobian);
 	if (!inverted){
 		cerr<<"Jacobian not inverted!!"<<endl;
 	}
@@ -292,7 +354,6 @@ void Prism::calculateCurrk(boost::numeric::ublas::matrix<double>& currk, boost::
 	boost::numeric::ublas::axpy_prod(CoeffMat,InvJacobianStack,tmpMat1);
 	boost::numeric::ublas::axpy_prod(tmpMat1,ShapeFuncDerStack,currB);
 	currBo = ShapeFuncDerStack;
-
 	//Generating currk:
 	matrix<double> currBT = trans(currB);
 	boost::numeric::ublas::axpy_prod(currBT,detJ*D,currBE);

@@ -39,15 +39,15 @@ using namespace std;
      DisplayPysProp = false;
      //current ranges:
      DisplayPysPropRange[0][0] = 1.0; DisplayPysPropRange[0][1] = 250.0;
-     DisplayPysPropRange[1][0] = 1.0; DisplayPysPropRange[1][1] = 30.0;
+     DisplayPysPropRange[1][0] = 1.0; DisplayPysPropRange[1][1] = 50.0;
      DisplayPysPropRange[2][0] = 0.0; DisplayPysPropRange[2][1] = 0.5;
      DisplayPysPropRange[3][0] = -1.0; DisplayPysPropRange[3][1] = 4.0;
      DisplayPysPropRange[4][0] = -6.0; DisplayPysPropRange[3][1] = 6.0;
      //the minimum and maximum they can get:
      DisplayPysPropBounds[0][0] = 0.0; DisplayPysPropBounds[0][1] = 50.0;
      DisplayPysPropBounds[0][2] = 51.0; DisplayPysPropBounds[0][3] = 400.0;
-     DisplayPysPropBounds[1][0] = 1.0; DisplayPysPropBounds[1][1] = 10.0;
-     DisplayPysPropBounds[1][2] = 11.0; DisplayPysPropBounds[1][3] = 50.0;
+     DisplayPysPropBounds[1][0] = 1.0; DisplayPysPropBounds[1][1] = 50.0;
+     DisplayPysPropBounds[1][2] = 51.0; DisplayPysPropBounds[1][3] = 100.0;
      DisplayPysPropBounds[2][0] = 0.0; DisplayPysPropBounds[2][1] = 0.1;
      DisplayPysPropBounds[2][2] = 0.11; DisplayPysPropBounds[2][3] = 0.5;
      DisplayPysPropBounds[3][0] = -4.0; DisplayPysPropBounds[3][1] = 0.0;
@@ -59,6 +59,8 @@ using namespace std;
   	 drawTissueCoordinates = false;
   	 drawNetForces = false;
      drawVelocities = false;
+     drawPeripodium = false;
+     drawTransitionLayer = false;
      cout<<"gl initiated"<<endl;
  }
 
@@ -156,22 +158,63 @@ using namespace std;
 	 swapBuffers();
  }
 
- void GLWidget::drawElement(int i, bool picking){
-	 int ShapeType = Sim01->Elements[i]->getShapeType();
-	 if (ShapeType == 1 ){
-		 if (picking){
-			drawPrismForPicking(i);
-		 }
-		 else{
-			 drawPrism(i);
-		 }
+ bool GLWidget::checkIfDrawingElement(int i){
+	 bool drawthisElement = true;
+	 if (!drawTransitionLayer && Sim01->Elements[i]->tissueType == 1){
+		 drawthisElement = false;
 	 }
-	 else if (ShapeType == 2 ){
-		 if (picking){
-			drawPrismForPicking(i);
+	 if (!drawPeripodium && Sim01->Elements[i]->tissueType == 2){
+	 	 drawthisElement = false;
+	 }
+	 return drawthisElement;
+ }
+
+ bool GLWidget::checkIfDrawingNode(int i){
+ 	 bool drawthisNode = true;
+ 	 if (!drawTransitionLayer && Sim01->Nodes[i]->tissueType == 1){
+ 		 drawthisNode = false;
+ 	 }
+ 	 if (!drawPeripodium && Sim01->Nodes[i]->tissueType == 2){
+ 	 	 drawthisNode = false;
+ 	 }
+ 	 return drawthisNode;
+ }
+
+ void GLWidget::drawElement(int i, bool picking){
+	 bool drawCurrentElement = checkIfDrawingElement(i);
+	 if (drawCurrentElement){
+		 int ShapeType = Sim01->Elements[i]->getShapeType();
+		 if (ShapeType == 1 ){
+			 if (picking){
+				drawPrismForPicking(i);
+			 }
+			 else{
+				 drawPrism(i);
+			 }
 		 }
-		 else{
-			 drawPrismLateral(i);
+		 else if (ShapeType == 2 ){
+			 if (picking){
+				drawPrismForPicking(i);
+			 }
+			 else{
+				 drawPrismLateral(i);
+			 }
+		 }
+		 else if (ShapeType == 3 ){
+			 if (picking){
+				drawTetrahedronForPicking(i);
+			 }
+			 else{
+				 drawTetrahedron(i);
+			 }
+		 }
+		 else if (ShapeType == 4 ){
+			 if (picking){
+				drawTriangleForPicking(i);
+			 }
+			 else{
+				drawTriangle(i);
+			 }
 		 }
 	 }
  }
@@ -182,7 +225,12 @@ using namespace std;
 	if (ShapeType == 1 ||  ShapeType == 2){
 		highlightPrism(i); //lateral and normal prisms are the same in terms of highlighting
 	}
-
+	else if (ShapeType == 3){
+		highlightTetrahedron(i);
+	}
+	else if (ShapeType == 4){
+		highlightTriangle(i);
+	}
  }
 
  void GLWidget::drawReferenceElement(int i){
@@ -194,6 +242,12 @@ using namespace std;
 		 }
 		 else if (ShapeType == 2 ){
 			 drawReferencePrismLateral(i);
+		 }
+		 else if (ShapeType == 3 ){
+			 drawReferenceTetrahedron(i);
+		 }
+		 else if (ShapeType == 4 ){
+			 drawReferenceTriangle(i);
 		 }
 	// glPopMatrix();
  }
@@ -304,6 +358,96 @@ using namespace std;
 	glEnd();
  }
 
+ void GLWidget::drawTetrahedron(int i){
+	//Drawing the surfaces
+	const int nTriangle = 4; //top + bottom + 2 for each side.
+	int TriangleConnectivity[nTriangle][3] = {{0,1,2},{1,2,3},{0,2,3},{0,1,3}};
+	const int nLineStrip = 8;
+	int BorderConnectivity[nLineStrip] = {0,1,2,0,3,2,1,3};
+	float** NodeColourList;
+	NodeColourList = getElementColourList(i);
+
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	glEnable(GL_POLYGON_OFFSET_FILL); // Avoid Stitching!
+	glPolygonOffset(1.0, 1.0); 	//These are necessary so the depth test can keep the lines above surfaces
+	glBegin(GL_TRIANGLES);
+		for (int j =0; j<nTriangle;++j){
+			for (int k =0; k<3; ++k){
+				int pointId = TriangleConnectivity[j][k];
+				glColor3f(NodeColourList[pointId][0],NodeColourList[pointId][1],NodeColourList[pointId][2]);
+				float x = Sim01->Elements[i]->Positions[pointId][0];
+				float y = Sim01->Elements[i]->Positions[pointId][1];
+				float z = Sim01->Elements[i]->Positions[pointId][2];
+				glVertex3f( x, y, z);
+			}
+		}
+	glEnd();
+
+	glDisable(GL_POLYGON_OFFSET_FILL);
+	if (drawTissueCoordinates){
+		drawTissueCoordSystemTetrahedron(i);
+	}
+
+	glLineWidth(MainShapeLineThickness);
+	//Drawing the borders
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glColor3f(0,0,0);
+	glBegin(GL_LINE_STRIP);
+		for (int j =0; j<nLineStrip;++j){
+			int pointId = BorderConnectivity[j];
+			float x = Sim01->Elements[i]->Positions[pointId][0];
+			float y = Sim01->Elements[i]->Positions[pointId][1];
+			float z = Sim01->Elements[i]->Positions[pointId][2];
+			glVertex3f( x, y, z);
+		}
+	glEnd();
+ }
+
+ void GLWidget::drawTriangle(int i){
+ 	//Drawing the surfaces
+ 	const int nTriangle = 1; //a triangle with 3 points needs 1 actual triangle to draw
+ 	int TriangleConnectivity[nTriangle][3] = {{0,1,2}};
+ 	const int nLineStrip = 4;
+ 	int BorderConnectivity[nLineStrip] = {0,1,2,0};
+ 	float** NodeColourList;
+ 	NodeColourList = getElementColourList(i);
+
+ 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+ 	glEnable(GL_POLYGON_OFFSET_FILL); // Avoid Stitching!
+ 	glPolygonOffset(1.0, 1.0); 	//These are necessary so the depth test can keep the lines above surfaces
+ 	glBegin(GL_TRIANGLES);
+ 		for (int j =0; j<nTriangle;++j){
+ 			for (int k =0; k<3; ++k){
+ 				int pointId = TriangleConnectivity[j][k];
+ 				glColor3f(NodeColourList[pointId][0],NodeColourList[pointId][1],NodeColourList[pointId][2]);
+ 				float x = Sim01->Elements[i]->Positions[pointId][0];
+ 				float y = Sim01->Elements[i]->Positions[pointId][1];
+ 				float z = Sim01->Elements[i]->Positions[pointId][2];
+ 				glVertex3f( x, y, z);
+ 			}
+ 		}
+ 	glEnd();
+
+ 	glDisable(GL_POLYGON_OFFSET_FILL);
+ 	if (drawTissueCoordinates){
+ 		drawTissueCoordSystemTriangle(i);
+ 	}
+
+ 	glLineWidth(MainShapeLineThickness);
+ 	//Drawing the borders
+ 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+ 	glColor3f(0,0,0);
+ 	glBegin(GL_LINE_STRIP);
+ 		for (int j =0; j<nLineStrip;++j){
+ 			int pointId = BorderConnectivity[j];
+ 			float x = Sim01->Elements[i]->Positions[pointId][0];
+ 			float y = Sim01->Elements[i]->Positions[pointId][1];
+ 			float z = Sim01->Elements[i]->Positions[pointId][2];
+ 			glVertex3f( x, y, z);
+ 		}
+ 	glEnd();
+  }
+
  void GLWidget::drawPrismLateral(int i){
 	//Drawing the surfaces
 	const int nTriangle = 8; //top + bottom + 2 for each side.
@@ -389,6 +533,85 @@ using namespace std;
 	delete[] TissueCoords;
  }
 
+ void GLWidget::drawTissueCoordSystemTetrahedron(int i){
+	glLineWidth(ReferenceLineThickness);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	float centre[3] = {0.0,0.0,0.0};
+	for (int j=0; j<3; ++j){
+		for (int k=0; k<4; ++k){
+			centre[j] += Sim01->Elements[i]->Positions[k][j];
+		}
+		centre[j] /= 4.0;
+	}
+	double tip[3];
+	double scale = 1.5;
+	double* TissueCoords;
+	TissueCoords = new double[9];
+	Sim01->Elements[i]->getTissueCoordinaSystem(TissueCoords);
+	glBegin(GL_LINES);
+		glColor3f(1,0,0);
+		tip[0] = centre[0] + scale*TissueCoords[0];
+		tip[1] = centre[1] + scale*TissueCoords[1];
+		tip[2] = centre[2] + scale*TissueCoords[2];
+
+		glVertex3f( centre[0], centre[1], centre[2]);
+		glVertex3f( tip[0] , tip[1], tip[2]);
+		glColor3f(0,1,0);
+		tip[0] = centre[0] + scale*TissueCoords[3];
+		tip[1] = centre[1] + scale*TissueCoords[4];
+		tip[2] = centre[2] + scale*TissueCoords[5];
+
+		glVertex3f( centre[0], centre[1], centre[2]);
+		glVertex3f( tip[0] , tip[1], tip[2]);
+		glColor3f(0,0,1);
+		tip[0] = centre[0] + scale*TissueCoords[6];
+		tip[1] = centre[1] + scale*TissueCoords[7];
+		tip[2] = centre[2] + scale*TissueCoords[8];
+		glVertex3f( centre[0], centre[1], centre[2]);
+		glVertex3f( tip[0] , tip[1], tip[2]);
+	glEnd();
+	delete[] TissueCoords;
+ }
+
+ void GLWidget::drawTissueCoordSystemTriangle(int i){
+	glLineWidth(ReferenceLineThickness);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	float centre[3] = {0.0,0.0,0.0};
+	for (int j=0; j<3; ++j){
+		for (int k=0; k<3; ++k){
+			centre[j] += Sim01->Elements[i]->Positions[k][j];
+		}
+		centre[j] /= 3.0;
+	}
+	double tip[3];
+	double scale = 1.5;
+	double* TissueCoords;
+	TissueCoords = new double[9];
+	Sim01->Elements[i]->getTissueCoordinaSystem(TissueCoords);
+	glBegin(GL_LINES);
+		glColor3f(1,0,0);
+		tip[0] = centre[0] + scale*TissueCoords[0];
+		tip[1] = centre[1] + scale*TissueCoords[1];
+		tip[2] = centre[2] + scale*TissueCoords[2];
+
+		glVertex3f( centre[0], centre[1], centre[2]);
+		glVertex3f( tip[0] , tip[1], tip[2]);
+		glColor3f(0,1,0);
+		tip[0] = centre[0] + scale*TissueCoords[3];
+		tip[1] = centre[1] + scale*TissueCoords[4];
+		tip[2] = centre[2] + scale*TissueCoords[5];
+
+		glVertex3f( centre[0], centre[1], centre[2]);
+		glVertex3f( tip[0] , tip[1], tip[2]);
+		glColor3f(0,0,1);
+		tip[0] = centre[0] + scale*TissueCoords[6];
+		tip[1] = centre[1] + scale*TissueCoords[7];
+		tip[2] = centre[2] + scale*TissueCoords[8];
+		glVertex3f( centre[0], centre[1], centre[2]);
+		glVertex3f( tip[0] , tip[1], tip[2]);
+	glEnd();
+	delete[] TissueCoords;
+ }
  void GLWidget::getDisplayColour(float* OutputColour, float Data){
 	 float DataMin=0, DataMax=0;
 	 if(DisplayStrains){
@@ -484,6 +707,81 @@ using namespace std;
 	glEnd();
  }
 
+
+ void GLWidget::highlightTetrahedron(int i){
+	const int nTriangle = 4; //top + bottom + 2 for each side.
+	int TriangleConnectivity[nTriangle][3] = {{0,1,2},{1,2,3},{0,2,3},{0,1,3}};
+	const int nLineStrip = 8;
+	int BorderConnectivity[nLineStrip] = {0,1,2,0,3,2,1,3};
+
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	glEnable(GL_POLYGON_OFFSET_FILL); // Avoid Stitching!
+	glPolygonOffset(1.0, 1.0); 	//These are necessary so the depth test can keep the lines above surfaces
+	glBegin(GL_TRIANGLES);
+		for (int j =0; j<nTriangle;++j){
+			for (int k =0; k<3; ++k){
+				int pointId = TriangleConnectivity[j][k];
+				glColor3f(0.30,0.30,0.30);
+				float x = Sim01->Elements[i]->Positions[pointId][0];
+				float y = Sim01->Elements[i]->Positions[pointId][1];
+				float z = Sim01->Elements[i]->Positions[pointId][2];
+				glVertex3f( x, y, z);
+			}
+		}
+	glEnd();
+	glDisable(GL_POLYGON_OFFSET_FILL);
+	glLineWidth(2*MainShapeLineThickness);
+	//Drawing the borders
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glColor3f(0,1.0,0);
+	glBegin(GL_LINE_STRIP);
+		for (int j =0; j<nLineStrip;++j){
+			int pointId = BorderConnectivity[j];
+			float x = Sim01->Elements[i]->Positions[pointId][0];
+			float y = Sim01->Elements[i]->Positions[pointId][1];
+			float z = Sim01->Elements[i]->Positions[pointId][2];
+			glVertex3f( x, y, z);
+		}
+	glEnd();
+ }
+
+ void GLWidget::highlightTriangle(int i){
+	const int nTriangle = 1; //a triangle with 3 points needs 1 actual triangle to draw
+	int TriangleConnectivity[nTriangle][3] = {{0,1,2}};
+	const int nLineStrip = 4;
+	int BorderConnectivity[nLineStrip] = {0,1,2,0};
+
+ 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+ 	glEnable(GL_POLYGON_OFFSET_FILL); // Avoid Stitching!
+ 	glPolygonOffset(1.0, 1.0); 	//These are necessary so the depth test can keep the lines above surfaces
+ 	glBegin(GL_TRIANGLES);
+ 		for (int j =0; j<nTriangle;++j){
+ 			for (int k =0; k<3; ++k){
+ 				int pointId = TriangleConnectivity[j][k];
+ 				glColor3f(0.30,0.30,0.30);
+ 				float x = Sim01->Elements[i]->Positions[pointId][0];
+ 				float y = Sim01->Elements[i]->Positions[pointId][1];
+ 				float z = Sim01->Elements[i]->Positions[pointId][2];
+ 				glVertex3f( x, y, z);
+ 			}
+ 		}
+ 	glEnd();
+ 	glDisable(GL_POLYGON_OFFSET_FILL);
+ 	glLineWidth(2*MainShapeLineThickness);
+ 	//Drawing the borders
+ 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+ 	glColor3f(0,1.0,0);
+ 	glBegin(GL_LINE_STRIP);
+ 		for (int j =0; j<nLineStrip;++j){
+ 			int pointId = BorderConnectivity[j];
+ 			float x = Sim01->Elements[i]->Positions[pointId][0];
+ 			float y = Sim01->Elements[i]->Positions[pointId][1];
+ 			float z = Sim01->Elements[i]->Positions[pointId][2];
+ 			glVertex3f( x, y, z);
+ 		}
+ 	glEnd();
+  }
+
  void GLWidget::drawReferencePrism(int i){
 	const int nLineStrip = 12;
  	int BorderConnectivity[nLineStrip] = {0,2,5,3,0,1,4,3,5,4,1,2};
@@ -550,6 +848,142 @@ using namespace std;
  		}
  	glEnd();
   }
+
+ void GLWidget::drawReferenceTetrahedron(int i){
+	const int nLineStrip = 8;
+	int BorderConnectivity[nLineStrip] = {0,1,2,0,3,2,1,3};
+
+ 	glLineWidth(ReferenceLineThickness);
+ 	//Drawing the borders
+ 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+ 	double** pos = Sim01->Elements[i]->getReferencePos();
+	//drawing the posiions of reference elementin red
+ 	glColor3f(1,0,0);
+ 	glBegin(GL_LINE_STRIP);
+ 		for (int j =0; j<nLineStrip;++j){
+ 			int pointId = BorderConnectivity[j];
+ 			//cout<<j<<" point id: "<<pointId<<endl;
+ 			if(j==0){glColor3f(0,0,1);}else{glColor3f(1,0,0);}
+ 			float x = pos[pointId][0];
+ 			float y = pos[pointId][1];
+ 			float z = pos[pointId][2];
+ 			//cout<<"x,y,z: "<<x<<" "<<y<<" "<<z<<endl;
+ 			glVertex3f( x, y, z);
+ 		}
+ 	glEnd();
+	//drawing them again in blue, at z+10 for easy visualisation
+ 	glColor3f(0,0,1);
+ 	glBegin(GL_LINE_STRIP);
+ 		for (int j =0; j<nLineStrip;++j){
+ 			int pointId = BorderConnectivity[j];
+ 			//cout<<j<<" point id: "<<pointId<<endl;
+ 			if(j==0){glColor3f(1,0,0);}else{glColor3f(0,0,1);}
+ 			float x = pos[pointId][0];
+ 			float y = pos[pointId][1];
+ 			float z = pos[pointId][2] + 10.0;
+ 			//cout<<"x,y,z: "<<x<<" "<<y<<" "<<z<<endl;
+ 			glVertex3f( x, y, z);
+ 		}
+ 	glEnd();
+
+
+ 	//drawing the positions of element aligned to reference in green
+ 	glColor3f(0,1,0);
+ 	glBegin(GL_LINE_STRIP);
+ 		for (int j =0; j<nLineStrip;++j){
+ 			int pointId = BorderConnectivity[j];
+ 			//cout<<j<<" point id: "<<pointId<<endl;
+ 			if(j==0){glColor3f(1,0,0);}else{glColor3f(0,1,0);}
+ 			float x = Sim01->Elements[i]->PositionsAlignedToReference[pointId][0];
+ 			float y = Sim01->Elements[i]->PositionsAlignedToReference[pointId][1];
+ 			float z = Sim01->Elements[i]->PositionsAlignedToReference[pointId][2];
+ 			//cout<<"x,y,z: "<<x<<" "<<y<<" "<<z<<endl;
+ 			glVertex3f( x, y, z);
+ 		}
+ 	glEnd();
+	//drawing them again at z+10 position for easy visualisation (green)
+ 	glBegin(GL_LINE_STRIP);
+ 		for (int j =0; j<nLineStrip;++j){
+ 			int pointId = BorderConnectivity[j];
+ 			//cout<<j<<" point id: "<<pointId<<endl;
+ 			if(j==0){glColor3f(1,0,0);}else{glColor3f(0,1,0);}
+ 			float x = Sim01->Elements[i]->PositionsAlignedToReference[pointId][0];
+ 			float y = Sim01->Elements[i]->PositionsAlignedToReference[pointId][1];
+ 			float z = Sim01->Elements[i]->PositionsAlignedToReference[pointId][2]+10;
+ 			//cout<<"x,y,z: "<<x<<" "<<y<<" "<<z<<endl;
+ 			glVertex3f( x, y, z);
+ 		}
+ 	glEnd();
+  }
+
+ void GLWidget::drawReferenceTriangle(int i){
+	const int nLineStrip = 4;
+	int BorderConnectivity[nLineStrip] = {0,1,2,0};
+
+ 	glLineWidth(ReferenceLineThickness);
+ 	//Drawing the borders
+ 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+ 	double** pos = Sim01->Elements[i]->getReferencePos();
+	//drawing the posiions of reference elementin red
+ 	glColor3f(1,0,0);
+ 	glBegin(GL_LINE_STRIP);
+ 		for (int j =0; j<nLineStrip;++j){
+ 			int pointId = BorderConnectivity[j];
+ 			//cout<<j<<" point id: "<<pointId<<endl;
+ 			if(j==0){glColor3f(0,0,1);}else{glColor3f(1,0,0);}
+ 			float x = pos[pointId][0];
+ 			float y = pos[pointId][1];
+ 			float z = pos[pointId][2];
+ 			//cout<<"x,y,z: "<<x<<" "<<y<<" "<<z<<endl;
+ 			glVertex3f( x, y, z);
+ 		}
+ 	glEnd();
+	//drawing them again in blue, at z+10 for easy visualisation
+ 	glColor3f(0,0,1);
+ 	glBegin(GL_LINE_STRIP);
+ 		for (int j =0; j<nLineStrip;++j){
+ 			int pointId = BorderConnectivity[j];
+ 			//cout<<j<<" point id: "<<pointId<<endl;
+ 			if(j==0){glColor3f(1,0,0);}else{glColor3f(0,0,1);}
+ 			float x = pos[pointId][0];
+ 			float y = pos[pointId][1];
+ 			float z = pos[pointId][2] + 10.0;
+ 			//cout<<"x,y,z: "<<x<<" "<<y<<" "<<z<<endl;
+ 			glVertex3f( x, y, z);
+ 		}
+ 	glEnd();
+
+
+ 	//drawing the positions of element aligned to reference in green
+ 	glColor3f(0,1,0);
+ 	glBegin(GL_LINE_STRIP);
+ 		for (int j =0; j<nLineStrip;++j){
+ 			int pointId = BorderConnectivity[j];
+ 			//cout<<j<<" point id: "<<pointId<<endl;
+ 			if(j==0){glColor3f(1,0,0);}else{glColor3f(0,1,0);}
+ 			float x = Sim01->Elements[i]->PositionsAlignedToReference[pointId][0];
+ 			float y = Sim01->Elements[i]->PositionsAlignedToReference[pointId][1];
+ 			float z = Sim01->Elements[i]->PositionsAlignedToReference[pointId][2];
+ 			//cout<<"x,y,z: "<<x<<" "<<y<<" "<<z<<endl;
+ 			glVertex3f( x, y, z);
+ 		}
+ 	glEnd();
+	//drawing them again at z+10 position for easy visualisation (green)
+ 	glBegin(GL_LINE_STRIP);
+ 		for (int j =0; j<nLineStrip;++j){
+ 			int pointId = BorderConnectivity[j];
+ 			//cout<<j<<" point id: "<<pointId<<endl;
+ 			if(j==0){glColor3f(1,0,0);}else{glColor3f(0,1,0);}
+ 			float x = Sim01->Elements[i]->PositionsAlignedToReference[pointId][0];
+ 			float y = Sim01->Elements[i]->PositionsAlignedToReference[pointId][1];
+ 			float z = Sim01->Elements[i]->PositionsAlignedToReference[pointId][2]+10;
+ 			//cout<<"x,y,z: "<<x<<" "<<y<<" "<<z<<endl;
+ 			glVertex3f( x, y, z);
+ 		}
+ 	glEnd();
+  }
+
+
 
  void GLWidget::drawReferencePrismLateral(int i){
  	const int nLineStrip = 12;
@@ -1049,8 +1483,64 @@ using namespace std;
 		}
 	}
 	glEnd();
-  }
+ }
 
+ void GLWidget::drawTetrahedronForPicking(int i){
+  	//Drawing the surfaces
+  	const int nTriangle = 4; //top + bottom + 2 for each side.
+  	int TriangleConnectivity[nTriangle][3] = {{0,1,2},{1,2,3},{0,2,3},{0,1,3}};
+
+  	int* ElementColour;
+  	ElementColour = Sim01->Elements[i]->getIdentifierColour();
+  	//cout<<"Element "<<i<<" Color: "<<ElementColour[0]<<" "<<ElementColour[1]<<" "<<ElementColour[2]<<endl;
+ 	glDisable(GL_DITHER);
+ 	glEnable(GL_DEPTH_TEST);
+ 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);glBegin(GL_TRIANGLES);
+
+ 	float r = ElementColour[0];
+ 	float g = ElementColour[1];
+ 	float b = ElementColour[2];
+ 	glColor3f(r/255,g/255,b/255);
+
+ 	for (int j =0; j<nTriangle;++j){
+ 		for (int k =0; k<3; ++k){
+ 			int pointId = TriangleConnectivity[j][k];
+ 			float x = Sim01->Elements[i]->Positions[pointId][0];
+ 			float y = Sim01->Elements[i]->Positions[pointId][1];
+ 			float z = Sim01->Elements[i]->Positions[pointId][2];
+ 			glVertex3f( x, y, z);
+ 		}
+ 	}
+ 	glEnd();
+ }
+ void GLWidget::drawTriangleForPicking(int i){
+   	//Drawing the surfaces
+	const int nTriangle = 1; //a triangle with 3 points needs 1 actual triangle to draw
+	int TriangleConnectivity[nTriangle][3] = {{0,1,2}};
+
+   	int* ElementColour;
+   	ElementColour = Sim01->Elements[i]->getIdentifierColour();
+   	//cout<<"Element "<<i<<" Color: "<<ElementColour[0]<<" "<<ElementColour[1]<<" "<<ElementColour[2]<<endl;
+  	glDisable(GL_DITHER);
+  	glEnable(GL_DEPTH_TEST);
+  	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);glBegin(GL_TRIANGLES);
+
+  	float r = ElementColour[0];
+  	float g = ElementColour[1];
+  	float b = ElementColour[2];
+  	glColor3f(r/255,g/255,b/255);
+
+  	for (int j =0; j<nTriangle;++j){
+  		for (int k =0; k<3; ++k){
+  			int pointId = TriangleConnectivity[j][k];
+  			float x = Sim01->Elements[i]->Positions[pointId][0];
+  			float y = Sim01->Elements[i]->Positions[pointId][1];
+  			float z = Sim01->Elements[i]->Positions[pointId][2];
+  			glVertex3f( x, y, z);
+  		}
+  	}
+  	glEnd();
+  }
  void GLWidget::drawForces(){
 	 if (drawNetForces){
 		 double threshold2 = 1E-16;
@@ -1060,30 +1550,33 @@ using namespace std;
 		 double scalesq = scale*scale;
 		 int n = Sim01->Nodes.size();
 		 for (int i =0; i<n; ++i){
-			 double* F;
-			 F = new double[3];
-			 F[0] = Sim01->SystemForces[0][i][0];
-			 F[1] = Sim01->SystemForces[0][i][1];
-			 F[2] = Sim01->SystemForces[0][i][2];
-			 //cout<<"Force: "<<F[0]<<" "<<F[1]<<" "<<F[2]<<endl;
-			 //check if the force is large enough to display:
-			 double mag2 = F[0]* F[0] + F[1]*F[1] + F[2]* F[2];
-			 if (mag2 > threshold2){
-				 double mag = pow(mag2,0.5);
-				 double r = (mag- scale2[0])/(scale2[1]-scale2[0]);
-				 double a = mag2/scalesq;
-				 if (a < minlength2 ){
-					 scale = mag/minlength;
+			 bool drawCurrentNode = checkIfDrawingNode(i);
+			 if (drawCurrentNode){
+				 double* F;
+				 F = new double[3];
+				 F[0] = Sim01->SystemForces[0][i][0];
+				 F[1] = Sim01->SystemForces[0][i][1];
+				 F[2] = Sim01->SystemForces[0][i][2];
+				 //cout<<"Force: "<<F[0]<<" "<<F[1]<<" "<<F[2]<<endl;
+				 //check if the force is large enough to display:
+				 double mag2 = F[0]* F[0] + F[1]*F[1] + F[2]* F[2];
+				 if (mag2 > threshold2){
+					 double mag = pow(mag2,0.5);
+					 double r = (mag- scale2[0])/(scale2[1]-scale2[0]);
+					 double a = mag2/scalesq;
+					 if (a < minlength2 ){
+						 scale = mag/minlength;
+					 }
+					 else if ( a > maxlength2){
+						 scale = mag/maxlength;
+					 }
+					 F[0] =  F[0]/scale + Sim01->Nodes[i]->Position[0];
+					 F[1] =  F[1]/scale + Sim01->Nodes[i]->Position[1];
+					 F[2] =  F[2]/scale + Sim01->Nodes[i]->Position[2];
+					 drawArrow3D(Sim01->Nodes[i]->Position, F, r, 0.0, 0.0);
 				 }
-			 	 else if ( a > maxlength2){
-					 scale = mag/maxlength;
-				 }
-				 F[0] =  F[0]/scale + Sim01->Nodes[i]->Position[0];
-				 F[1] =  F[1]/scale + Sim01->Nodes[i]->Position[1];
-				 F[2] =  F[2]/scale + Sim01->Nodes[i]->Position[2];
-				 drawArrow3D(Sim01->Nodes[i]->Position, F, r, 0.0, 0.0);
+				 delete[] F;
 			 }
-			 delete[] F;
 		 }
 	 }
 
@@ -1098,30 +1591,33 @@ using namespace std;
 		 double scalesq = scale*scale;
 		 int n = Sim01->Nodes.size();
 		 for (int i =0; i<n; ++i){
-			 double* v;
-			 v = new double[3];
-			 v[0] = Sim01->Nodes[i]->Velocity[0][0];
-			 v[1] = Sim01->Nodes[i]->Velocity[0][1];
-			 v[2] = Sim01->Nodes[i]->Velocity[0][2];
-			 //check if the force is large enough to display:
-			 double mag2 = v[0]* v[0] + v[1]*v[1] + v[2]* v[2];
-			 if (mag2 > threshold2){
-				 double mag = pow(mag2,0.5);
-				 double a = mag2/scalesq;
-				 if (a < minlength2 ){
-					 scale = mag /minlength;
-			 	 }
-			 	 else if ( a > maxlength2){
-					 scale = mag /maxlength;
+			 bool drawCurrentNode = checkIfDrawingNode(i);
+			 if (drawCurrentNode){
+				 double* v;
+				 v = new double[3];
+				 v[0] = Sim01->Nodes[i]->Velocity[0][0];
+				 v[1] = Sim01->Nodes[i]->Velocity[0][1];
+				 v[2] = Sim01->Nodes[i]->Velocity[0][2];
+				 //check if the force is large enough to display:
+				 double mag2 = v[0]* v[0] + v[1]*v[1] + v[2]* v[2];
+				 if (mag2 > threshold2){
+					 double mag = pow(mag2,0.5);
+					 double a = mag2/scalesq;
+					 if (a < minlength2 ){
+						 scale = mag /minlength;
+					 }
+					 else if ( a > maxlength2){
+						 scale = mag /maxlength;
+					 }
+					 double b = (mag- scale2[0])/(scale2[1]-scale2[0]);
+					 //cout<<"Colour coding: "<<b<<endl;
+					 v[0] = v[0]/scale + Sim01->Nodes[i]->Position[0];
+					 v[1] = v[1]/scale + Sim01->Nodes[i]->Position[1];
+					 v[2] = v[2]/scale + Sim01->Nodes[i]->Position[2];
+					 drawArrow3D(Sim01->Nodes[i]->Position, v, 0.0, 0.0, b);
 				 }
-				 double b = (mag- scale2[0])/(scale2[1]-scale2[0]);
-				 //cout<<"Colour coding: "<<b<<endl;
-				 v[0] = v[0]/scale + Sim01->Nodes[i]->Position[0];
-				 v[1] = v[1]/scale + Sim01->Nodes[i]->Position[1];
-				 v[2] = v[2]/scale + Sim01->Nodes[i]->Position[2];
-				 drawArrow3D(Sim01->Nodes[i]->Position, v, 0.0, 0.0, b);
+				 delete[] v;
 			 }
-			 delete[] v;
 		 }
 	 }
  }

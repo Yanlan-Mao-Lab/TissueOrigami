@@ -8,15 +8,24 @@ void 	ShapeBase::ParentErrorMessage(){
 }
 
 void	ShapeBase::setShapeType(string TypeName){
+	cout<<"inside set shape type"<<endl;
 	if (TypeName == "Prism"){
 		this->ShapeType = 1;
 	}
 	else if (TypeName == "PrismLateral"){
 		this->ShapeType = 2;
 	}
+	else if (TypeName == "Tetrahedron"){
+		this->ShapeType = 3;
+	}
+	else if (TypeName == "Triangle"){
+		cout<<"set shape type to triangle"<<endl;
+		this->ShapeType = 4;
+	}
 	else{
 		this->ShapeType= -100;
 	};
+	cout<<"finalised set shape type"<<endl;
 }
 
 void	ShapeBase::setIdentificationColour(){
@@ -59,6 +68,12 @@ string 	ShapeBase::getName(){
 	}
 	else if (ShapeType == 2){
 		name = "PrismLateral";
+	}
+	else if (ShapeType == 3){
+		name = "Tetrahedron";
+	}
+	else if (ShapeType == 4){
+		name = "Triangle";
 	}
 	else{
 		name = "Unknown";
@@ -135,6 +150,80 @@ void 	ShapeBase::setPositionMatrix(vector<Node*>& Nodes){
 
 }
 
+void 	ShapeBase::setTissuePlacement(vector<Node*>& Nodes){
+	bool hasApicalNode = false;
+	bool hasBasalNode = false;
+	bool hasLateralNode = false;
+	for (int i = 0; i<nNodes; ++i){
+		if (Nodes[NodeIds[i]]->tissuePlacement == 1){
+			hasApicalNode = true;
+		}
+		else if (Nodes[NodeIds[i]]->tissuePlacement == 0){
+			hasBasalNode = true;
+		}
+		else if (Nodes[NodeIds[i]]->tissuePlacement == 3){
+			hasLateralNode = true;
+		}
+	}
+	if (hasLateralNode){
+		tissuePlacement = 3;
+	}
+	else{
+		if (hasApicalNode){
+			if (hasBasalNode){
+				//the element spans through the whole tissue, the mid-line value should be used
+				tissuePlacement = 2;
+			}
+			else{
+				//the element has only apical and midline nodes, it is apical
+				tissuePlacement = 1;
+			}
+		}
+		else if (hasBasalNode){
+			//the element only has basal and mid-line nodes, it is basal
+			tissuePlacement = 0;
+		}
+		else{
+			//the element has only mid-line nodes, it is mid-line
+			tissuePlacement = 2;
+		}
+	}
+}
+
+
+void 	ShapeBase::setTissueType(vector<Node*>& Nodes){
+	bool hasColumnarNode = false;
+	bool hasTransitionNode = false;
+	bool hasPeripodiumNode = false;
+	for (int i = 0; i<nNodes; ++i){
+		if (Nodes[NodeIds[i]]->tissueType == 0){
+			hasColumnarNode = true;
+		}
+		else if (Nodes[NodeIds[i]]->tissueType == 1){
+			hasTransitionNode = true;
+		}
+		else if (Nodes[NodeIds[i]]->tissueType == 2){
+			hasPeripodiumNode = true;
+		}
+	}
+	if (hasTransitionNode){
+		tissueType = 1;
+	}
+	else{
+		if (hasPeripodiumNode){
+			tissueType = 2;
+		}
+		else if (hasColumnarNode){
+			//ASK PERIPODIUM FIRST, SOME PERIPODIUM ELEMENTS DO HAVE COLUMNAR NODES, NO COLUMNAR ELEMENT SHOULD HAVE A PERIPODIUM NODE
+			tissueType = 0;
+		}
+
+		else {
+			cerr<<"Element is not placed into tissue correctly, Id: "<<Id<<endl;
+		}
+	}
+}
+
 void 	ShapeBase::setReferencePositionMatrix(){
 	const int n = nNodes;
 	const int dim = nDim;
@@ -151,23 +240,7 @@ void 	ShapeBase::updateShapeFromSave(ifstream& file){
 	updateNodeIdsFromSave(file);
 	updateReferencePositionMatrixFromSave(file);
 }
-/*
-void 	ShapeBase::updateShapeFromSave(ifstream& file, vector <Node*> Nodes){
-	updateNodeIdsFromSave(file, Nodes);
-	updateReferencePositionMatrixFromSave(file);
-}
 
-void 	ShapeBase::updateNodeIdsFromSave(ifstream& file, vector <Node*> Nodes){
-	for (int i = 0; i<nNodes; ++i){
-		int savedId;
-		file >> savedId;
-		NodeIds[i] = savedId;
-		for (int j=0; j<nDim; ++j){
-			Positions[i][j] = Nodes[NodeIds[i]]->Position[j];
-		}
-	}
-}
-*/
 void 	ShapeBase::updateNodeIdsFromSave(ifstream& file){
 	for (int i = 0; i<nNodes; ++i){
 		int savedId;
@@ -314,7 +387,7 @@ void 	ShapeBase::updateGrowthToAdd(double* growthscale){
 	IsGrowing = true;
 	GrewInThePast = true;
 	for (int i=0;i<3;++i){
-			CurrGrowthStrainAddition[i]  = CurrGrowthStrainAddition[i] + growthscale[i];
+			CurrGrowthStrainAddition[i]  += growthscale[i];
 	}
 }
 
@@ -682,34 +755,11 @@ bool 	ShapeBase::calculateAlignmentScore(double** RefNormalised){
 }
 
 bool	ShapeBase::calculateDisplacementGradientRotationMatrix(double** RefNormalised, double* rotMat){
-	const int nMult = nNodes*nDim;
 	using namespace boost::numeric::ublas;
+	/*const int nMult = nNodes*nDim;
 	boost::numeric::ublas::vector<double> displacement(nMult);
 	boost::numeric::ublas::vector<double> refpos(nMult);
 
-	/*PositionsAlignedToReference[0][0] = -2.26;  PositionsAlignedToReference[0][1] = -3.67; PositionsAlignedToReference[0][2] = 1.64;
-	PositionsAlignedToReference[1][0] = 2.2;  PositionsAlignedToReference[1][1] = -5.7; PositionsAlignedToReference[1][2] = 2.16;
-	PositionsAlignedToReference[2][0] = -0.26;  PositionsAlignedToReference[2][1] = -3.82; PositionsAlignedToReference[2][2] = 2.38;
-	PositionsAlignedToReference[3][0] = -2.95;  PositionsAlignedToReference[3][1] = -6.76; PositionsAlignedToReference[3][2] = 2.59;
-	PositionsAlignedToReference[4][0] = 3.02;  PositionsAlignedToReference[4][1] = -4.51; PositionsAlignedToReference[4][2] = 1.8;
-	PositionsAlignedToReference[5][0] = 0.03;  PositionsAlignedToReference[5][1] = -3.47; PositionsAlignedToReference[5][2] = 3.98;
-
-	for (int i = 0; i<nNodes; ++i){
-		for (int j = 0; j<nDim; ++j){
-			PositionsAlignedToReference[i][j] = RefNormalised[i][j];
-		}
-	}
-	checkHealth();
-	PositionsAlignedToReference[1][0] = PositionsAlignedToReference[1][0] - 2* (PositionsAlignedToReference[1][0] - PositionsAlignedToReference[0][0]);
-	cout<<"PositionsAlignedToReference for Id: "<<Id<<endl;
-	for (int i = 0; i<nNodes; ++i){
-		for (int j = 0; j<nDim; ++j){
-			cout<<PositionsAlignedToReference[i][j]<<" ";
-		}
-		cout<<endl;
-	}
-	checkHealth();
-*/
 	int counter = 0;
 	for (int i = 0; i<nNodes; ++i){
 		for (int j = 0; j<nDim; ++j){
@@ -717,7 +767,7 @@ bool	ShapeBase::calculateDisplacementGradientRotationMatrix(double** RefNormalis
 			refpos(counter) =  RefNormalised[i][j];
 			counter++;
 		}
-	}
+	}*/
 	boost::numeric::ublas::matrix<double>S(nDim,nDim);
 	boost::numeric::ublas::matrix<double>P(nDim,nDim);
 	boost::numeric::ublas::vector<double>dude(nDim*nDim);
@@ -728,8 +778,7 @@ bool	ShapeBase::calculateDisplacementGradientRotationMatrix(double** RefNormalis
 	dude = boost::numeric::ublas::zero_vector<double>(nDim*nDim);
 	//Bo is the shape functions derivative stack integrated over volume.
 	//The deformation gradient matrix is
-	boost::numeric::ublas::axpy_prod(Bo,displacement,dude);
-	boost::numeric::ublas::axpy_prod(Bo,refpos,dXde);
+	calculatedudEdXde(RefNormalised, dude, dXde);
 	//S(0,0) = e(0); S(1,1) = e(1); S(2,2) = e(2);
 	//S(1,0) = e(3); S(2,0) = e(5); S(2,1) = e(4);
 	//S(0,1) = e(3); S(0,2) = e(5); S(1,2) = e(4);
@@ -741,8 +790,8 @@ bool	ShapeBase::calculateDisplacementGradientRotationMatrix(double** RefNormalis
 	P(2,0) = dXde(6); P(2,1) = dXde(7); P(2,2) = dXde(8);
 	boost::numeric::ublas::matrix<double>InvP(nDim,nDim);
 	InvP = boost::numeric::ublas::zero_matrix<double>(nDim,nDim);
-	double detP = 0.0;
-	bool inverted = InvertMatrix(P, InvP, detP);
+	//double detP = 0.0;
+	bool inverted = InvertMatrix(P, InvP);
 	boost::numeric::ublas::matrix<double>F(nDim,nDim);
 	F = boost::numeric::ublas::zero_matrix<double>(nDim,nDim);
 	boost::numeric::ublas::axpy_prod(S,InvP,F);
@@ -772,7 +821,7 @@ bool	ShapeBase::calculateDisplacementGradientRotationMatrix(double** RefNormalis
 		}
 	}
 	boost::numeric::ublas::axpy_prod(Vublas,UT, CurrentRotMat);
-	counter =0;
+	int counter =0;
 	for (int i=0; i<3; ++i){
 		for (int j=0; j<3; ++j){
 			rotMat[counter] = CurrentRotMat(i,j);
@@ -820,8 +869,65 @@ bool	ShapeBase::calculateDisplacementGradientRotationMatrix(double** RefNormalis
 	}
 	return false; //none of the off - diagonal terms of the matrix are above the threshold, the current rotation is only niumerical error.
 }
+void 	ShapeBase::calculatedudEdXde(double** RefNormalised, boost::numeric::ublas::vector<double>& dude, boost::numeric::ublas::vector<double>& dXde){
+	if (ShapeType == 1 || ShapeType == 2 || ShapeType == 3){
+		dudEdXde3D(RefNormalised, dude,dXde);
+	}
+	else if (ShapeType == 4){
+		dudEdXde2D(RefNormalised, dude,dXde);
+	}
+}
 
+void 	ShapeBase::dudEdXde3D(double** RefNormalised, boost::numeric::ublas::vector<double>& dude, boost::numeric::ublas::vector<double>& dXde){
+	const int nMult = nNodes*nDim;
+	boost::numeric::ublas::vector<double> displacement(nMult);
+	boost::numeric::ublas::vector<double> refpos(nMult);
 
+	int counter = 0;
+	for (int i = 0; i<nNodes; ++i){
+		for (int j = 0; j<nDim; ++j){
+			displacement(counter) = PositionsAlignedToReference[i][j]- RefNormalised[i][j];
+			refpos(counter) =  RefNormalised[i][j];
+			counter++;
+		}
+	}
+	boost::numeric::ublas::axpy_prod(Bo,displacement,dude);
+	boost::numeric::ublas::axpy_prod(Bo,refpos,dXde);
+}
+
+void 	ShapeBase::dudEdXde2D(double** RefNormalised, boost::numeric::ublas::vector<double>& dude, boost::numeric::ublas::vector<double>& dXde){
+	int dim =nDim-1; //calculating  for 2D
+	const int nMult = nNodes*dim;
+	boost::numeric::ublas::vector<double> displacement(nMult);
+	boost::numeric::ublas::vector<double> refpos(nMult);
+
+	int counter = 0;
+	for (int i = 0; i<nNodes; ++i){
+		for (int j = 0; j<dim; ++j){
+			displacement(counter) = PositionsAlignedToReference[i][j]- RefNormalised[i][j];
+			refpos(counter) =  RefNormalised[i][j];
+			counter++;
+		}
+	}
+	boost::numeric::ublas::vector<double>dude2D(dim*dim);
+	boost::numeric::ublas::vector<double>dXde2D(dim*dim);
+	dXde2D = boost::numeric::ublas::zero_vector<double>(dim*dim);
+	dude2D = boost::numeric::ublas::zero_vector<double>(dim*dim);
+	//displayMatrix(Bo,"Bo");
+	//displayMatrix(displacement,"displacement");
+	//displayMatrix(refpos,"refpos");
+	boost::numeric::ublas::axpy_prod(Bo,displacement,dude2D);
+	boost::numeric::ublas::axpy_prod(Bo,refpos,dXde2D);
+	//displayMatrix(dXde2D,"dXde2D");
+	//now transferring the information on 2D to a 3D matrix
+	dude(0) = dude2D(0); dude(1) = dude2D(1);
+	dude(3) = dude2D(2); dude(4) = dude2D(3);
+	dude(8) = 1.0;
+	dXde(0) = dXde2D(0); dXde(1) = dXde2D(1);
+	dXde(3) = dXde2D(2); dXde(4) = dXde2D(3);
+	dXde(8) = 1.0;
+}
+/*
 bool 	ShapeBase::calculateAlignmentRotationMatrix(double** RefNormalised, double* rotMat){
 	//Calculating the covarience matrix:
 	boost::numeric::ublas::matrix<double>S(3,3);
@@ -904,12 +1010,24 @@ bool 	ShapeBase::calculateAlignmentRotationMatrix(double** RefNormalised, double
 	return false; //none of the off - diagonal terms of the matrix are above the threshold, the current rotation is only niumerical error.
 
 }
+*/
 
 double 	ShapeBase::determinant3by3Matrix(double* rotMat){
 	double det =0.0;
 	det  =  rotMat[0]*(rotMat[4]*rotMat[8]-rotMat[5]*rotMat[7]);
 	det -= rotMat[1]*(rotMat[3]*rotMat[8]-rotMat[5]*rotMat[6]);
 	det += rotMat[2]*(rotMat[3]*rotMat[7]-rotMat[4]*rotMat[6]);
+	return det;
+}
+double 	ShapeBase::determinant3by3Matrix(boost::numeric::ublas::matrix<double>& Mat){
+	double det =0.0;
+	det  =  Mat(0,0)*(Mat(1,1)*Mat(2,2)-Mat(1,2)*Mat(2,1));
+	det -= Mat(0,1)*(Mat(1,0)*Mat(2,2)-Mat(1,2)*Mat(2,0));
+	det += Mat(0,2)*(Mat(1,0)*Mat(2,1)-Mat(1,1)*Mat(2,0));
+	return det;
+}
+double 	ShapeBase::determinant2by2Matrix(boost::numeric::ublas::matrix<double>& Mat){
+	double det = Mat(0,0) * Mat(1,1) - Mat(0,1) * Mat(1,0);
 	return det;
 }
 
@@ -949,6 +1067,13 @@ void 	ShapeBase::alignElementOnReference(){
 			}
 			cout<<endl;
 		}*/
+		//SV decomposition alignment will work nicely on 3D elements, BUT
+		//a 2D element will not be able correct for rotations in z plane.
+		//Now I will manually correct for alignment in z plane for 2D elements, then move on the SV decomposition:
+		if (ShapeType == 4){
+			correctFor2DAlignment();
+		}
+		//Now continuing on SV decomposition
 		bool calculateRotation = calculateDisplacementGradientRotationMatrix(RefNormalised, rotMat);
 		/*if (Id == 12 &&  calculateRotation ) {
 			cout<<"rotMat from strain decomposition: "<<endl;
@@ -1003,6 +1128,8 @@ void 	ShapeBase::alignElementOnReference(){
 	delete[] rotMat;
 	delete 	 refCentre;
 }
+
+
 /*
 bool	ShapeBase::areSidesFacingSameDirection(double* RefSide, double* ShapeSide){
 	double* RefFace;
@@ -1068,7 +1195,31 @@ void	ShapeBase::rotateVectorByRotationMatrix(double* u,double* rotMat){
 	u[2] = z;
 }
 
+void  ShapeBase::rotateReferenceElementByRotationMatrix(double* rotMat){
+
+	for (int i=0; i<nNodes; ++i){
+		double * u;
+		u = new double[3];
+		for (int j=0; j<nDim; ++j){
+			u[j] = ReferenceShape->Positions[i][j];
+		}
+		rotateVectorByRotationMatrix(u,rotMat);
+		for (int j=0; j<nDim; ++j){
+			ReferenceShape->Positions[i][j] = u[j];
+		}
+	}
+}
+
 void	ShapeBase::calculateForces(int RKId, double ***SystemForces, vector <Node*>& Nodes, ofstream& outputFile){
+	if (ShapeType == 1 || ShapeType == 2 || ShapeType == 3){
+		calculateForces3D(RKId, SystemForces, Nodes, outputFile);
+	}
+	else if (ShapeType == 4){
+		calculateForces2D(RKId, SystemForces, Nodes, outputFile);
+	}
+}
+
+void	ShapeBase::calculateForces3D(int RKId, double ***SystemForces, vector <Node*>& Nodes, ofstream& outputFile){
 	//cout<<"calculating forces"<<endl;
 	const int nMult = nNodes*nDim;
 	using namespace boost::numeric::ublas;
@@ -1152,6 +1303,115 @@ void	ShapeBase::calculateForces(int RKId, double ***SystemForces, vector <Node*>
 	}
 }
 
+void	ShapeBase::calculateForces2D(int RKId, double ***SystemForces, vector <Node*>& Nodes, ofstream& outputFile){
+	//cout<<"calculating forces"<<endl;
+	int dim = nDim-1;	//calculating forces and strains for 2D
+	const int nMult = nNodes*dim;
+	using namespace boost::numeric::ublas;
+	boost::numeric::ublas::vector<double> displacement(nMult);
+	if (RKId != 0 ){
+		//If we are at the first RK step, the positions aligned to reference
+		//will be up to date from alignment calculation.
+		//In any other RK step (inside this if clause), the positions are updated.
+		//I do not need to re-calculate alignment, the change will be negligable, but I still need to update the positions
+		//using the same rotation matrices.
+		//outputFile<<"  id: "<<Id<<" Updating positions aligned to reference"<<endl;
+		updatePositionsAlignedToReferenceForRK();
+	}
+	int counter = 0;
+	for (int i = 0; i<nNodes; ++i){
+		for (int j = 0; j<dim; ++j){
+			displacement(counter) = PositionsAlignedToReference[i][j]-ReferenceShape->Positions[i][j];
+			counter++;
+		}
+	}
+	//outputFile<<"  id: "<<Id<<"   calculating strain"<<endl;
+	Strain = zero_vector<double>(6);
+	boost::numeric::ublas::vector<double> Strain2D(3);
+	Strain2D = zero_vector<double>(3);
+	boost::numeric::ublas::axpy_prod(B,displacement,Strain2D);
+	Strain(0)=Strain2D(0);
+	Strain(1)=Strain2D(1);
+	Strain(3)=Strain2D(2);
+	if (RKId == 0){
+		//I need to keep record of this for saving and displaying purposes. This is the strain at the beginning of the time step.
+		//This strain should be recorded as the strain of the current step.
+		//Otherwise, the recorded strains will belong to artificial setup of RK step 4.
+		//Necessary updates are done when saving or displaying is applicable
+		RK1Strain = Strain;
+	}
+	//reading from the upper triangular:
+	PlasticStrain(0)= LocalGrowthStrainsMat(0,0);
+	PlasticStrain(1)= LocalGrowthStrainsMat(1,1);
+	PlasticStrain(2)= LocalGrowthStrainsMat(2,2);
+	PlasticStrain(3)= LocalGrowthStrainsMat(0,1);
+	PlasticStrain(4)= LocalGrowthStrainsMat(0,2);
+	PlasticStrain(5)= LocalGrowthStrainsMat(1,2);
+	boost::numeric::ublas::vector<double> NetStrain;
+	NetStrain= zero_vector<double>(3);
+	NetStrain(0) = Strain(0) - PlasticStrain(0); //ex
+	NetStrain(1) = Strain(1) - PlasticStrain(0); //ey
+	NetStrain(2) = Strain(3) - PlasticStrain(0); //gxy  -- skipping z terms
+	Forces = zero_vector<double>(nNodes*nDim);
+	boost::numeric::ublas::vector<double> Forces2D;
+	Forces2D = zero_vector<double>(nMult);
+	//outputFile<<"  id: "<<Id<<"   calculating forces"<<endl;
+	boost::numeric::ublas::axpy_prod(BE,NetStrain,Forces2D);
+	//boost::numeric::ublas::vector<double> ForcesFromk2D = zero_vector<double>(nMult);
+	//boost::numeric::ublas::axpy_prod(k,displacement,ForcesFromk2D);
+	//displayMatrix(Forces2D,"Forces2D______");
+	//displayMatrix(ForcesFromk2D,"ForcesFromk2D_");
+	//Now I have the forces in tissue coordinate system, I need the forces in world coordinates:
+	boost::numeric::ublas::matrix<double>forcesInReferenceCoordsMat(nDim,nNodes);
+	forcesInReferenceCoordsMat = zero_matrix<double>(nDim,nNodes);
+	counter = 0;
+	for (int i = 0; i<nNodes; ++i){
+		for (int j = 0; j<dim; ++j){
+			forcesInReferenceCoordsMat(j,i)= Forces2D(counter);
+			counter++;
+		}
+	}
+	boost::numeric::ublas::matrix<double>forcesInWorldT(nDim,nNodes);
+	forcesInWorldT = zero_matrix<double>(nDim,nNodes);
+	boost::numeric::ublas::axpy_prod(trans(WorldToReferenceRotMat),forcesInReferenceCoordsMat,forcesInWorldT);
+	counter = 0;
+	for (int i = 0; i<nNodes; ++i){
+		for (int j = 0; j<nDim; ++j){
+			Forces(counter) = forcesInWorldT(j,i);
+			counter++;
+		}
+	}
+
+
+	//cout<<"Element Id: "<<Id<<"Forces on node 351: "<<SystemForces[RKId][351][0]<<" "<<SystemForces[RKId][351][1]<<" "<<SystemForces[RKId][351][2]<<endl;
+	//Now put the forces in world coordinates into system forces, in forces per volume format
+	counter = 0;
+	for (int i = 0; i<nNodes; ++i){
+		for (int j = 0; j<nDim; ++j){
+			if (!Nodes[NodeIds[i]]->FixedPos[j]){
+				SystemForces[RKId][NodeIds[i]][j] = SystemForces[RKId][NodeIds[i]][j] - Forces(counter);
+
+			}
+			counter++;
+		}
+	}
+	//displayMatrix(Strain,"Strain");
+	//displayMatrix(PlasticStrain,"PlasticStrain");
+	//displayMatrix(NetStrain,"NetStrain");
+	//displayMatrix(Forces2D,"Forces2D");
+	//displayMatrix(forcesInReferenceCoordsMat,"forcesInReferenceCoordsMat");
+	//displayMatrix(forcesInWorldT,"forcesInWorldT");
+	//displayMatrix(Forces,"Forces");
+	//cout<<"element id: "<<Id<<" RK: "<<RKId<<"system Forces: "<<endl;
+	//for (int i = 0; i<Nodes.size(); ++i){
+	//	for (int j = 0; j<3; ++j){
+	//		cout<<SystemForces[RKId][i][j]<<" ";
+	//	}
+	//	cout<<endl;
+	//}
+}
+
+
 void	ShapeBase::updatePositions(int RKId, vector<Node*>& Nodes){
 	if (RKId < 3){
 		for (int i = 0; i<nNodes; ++i){
@@ -1209,7 +1469,7 @@ void 	ShapeBase::updateShapeChangeRate(double scale, int axis){
 	ShapeChangeRate[compansatingaxes[2]] += compansation;
 }
 */
-bool 	ShapeBase::InvertMatrix(boost::numeric::ublas::matrix<double>& input, boost::numeric::ublas::matrix<double>& inverse, double& det){
+bool 	ShapeBase::InvertMatrix(boost::numeric::ublas::matrix<double>& input, boost::numeric::ublas::matrix<double>& inverse/*, double& det*/){
 	//Matrix inversion routine.
 	//Uses lu_factorize and lu_substitute in uBLAS to invert a matrix
 	using namespace boost::numeric::ublas;
@@ -1226,11 +1486,11 @@ bool 	ShapeBase::InvertMatrix(boost::numeric::ublas::matrix<double>& input, boos
 	if (res != 0)
 		return false;
 
-	det = 1.0;
+	/*det = 1.0;
 	for(unsigned int i = 0; i < A.size1(); i++) {
 		det *= A(i,i); // multiply by elements on diagonal
 	    det = det * determinant_sign( pm );
-	}
+	}*/
 	// create identity matrix of "inverse"
 	inverse.assign(identity_matrix<double> (A.size1()));
 
@@ -1240,7 +1500,7 @@ bool 	ShapeBase::InvertMatrix(boost::numeric::ublas::matrix<double>& input, boos
 	return true;
 }
 
-int 	ShapeBase::determinant_sign(boost::numeric::ublas::permutation_matrix<std::size_t>& pm)
+/*int 	ShapeBase::determinant_sign(boost::numeric::ublas::permutation_matrix<std::size_t>& pm)
 {
     int pm_sign=1;
     std::size_t size = pm.size();
@@ -1248,7 +1508,7 @@ int 	ShapeBase::determinant_sign(boost::numeric::ublas::permutation_matrix<std::
         if (i != pm(i))
             pm_sign *= -1; // swap_rows would swap a pair of rows here, so we change sign
     return pm_sign;
-}
+}*/
 
 void	ShapeBase::crossProduct3D(double* u, double* v, double* cross){
 	cross[0] = u[1]*v[2] - u[2]*v[1];
@@ -1315,7 +1575,7 @@ void	ShapeBase::displayMatrix(boost::numeric::ublas::vector<double>& vec, string
 	cout<<endl;
 }
 
-void 	ShapeBase::assignVolumesToNodes(vector <Node*>& Nodes){
+void 	ShapeBase:: assignVolumesToNodes(vector <Node*>& Nodes){
 	for (int i=0; i<nNodes; i++){
 		Nodes[NodeIds[i]]->mass +=ReferenceShape->Volume/nNodes;
 	}

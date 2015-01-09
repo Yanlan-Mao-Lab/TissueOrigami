@@ -14,13 +14,14 @@ protected:
 	int Id;
 	int nNodes;
 
+
 	void setShapeType(string TypeName);
 	void setNodeNumber();
 public:
 	double** 	Positions;
 	double* 	CurrentNormal;
 	double		Volume;
-
+	double 		height; //slab height for 2D elements, value is -100 for 3D elements
 	ReferenceShapeBase(string SyapeType);
 	~ReferenceShapeBase();
 	int getShapeType();

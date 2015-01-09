@@ -119,7 +119,7 @@ void MainWindow::setUpSelectionDisplayGrid(QGridLayout *SelectionDisplayGrid){
 	setDisplayPreferences(SelectionDisplayGrid);
 	cout<<"setDisplayPreferencesMenu"<<endl;
 	//Adding a last row with high stretch to push the upper columns to the top of the window:
-	SelectionDisplayGrid->setRowStretch(12+nCoordBox,10);
+	SelectionDisplayGrid->setRowStretch(14+nCoordBox,10);
 }
 
 void MainWindow::setStrainDisplayMenu(QGridLayout *SelectionDisplayGrid){
@@ -266,11 +266,20 @@ void MainWindow::setDisplayPreferences(QGridLayout *SelectionDisplayGrid){
 	DisplayPreferencesCheckBoxes[3] = new QCheckBox("ScaleBar");
 	DisplayPreferencesCheckBoxes[3]->setChecked(false);
 	connect(DisplayPreferencesCheckBoxes[3] , SIGNAL(stateChanged(int)),this,SLOT(updateScaleBarCheckBox(int)));
+	DisplayPreferencesCheckBoxes[4] = new QCheckBox("Display Transition Layer");
+	DisplayPreferencesCheckBoxes[4]->setChecked(false);
+	connect(DisplayPreferencesCheckBoxes[4] , SIGNAL(stateChanged(int)),this,SLOT(updateTransitionLayerDisplayCheckBox(int)));
+	DisplayPreferencesCheckBoxes[5] = new QCheckBox("Display Peripodium");
+	DisplayPreferencesCheckBoxes[5]->setChecked(false);
+	connect(DisplayPreferencesCheckBoxes[5] , SIGNAL(stateChanged(int)),this,SLOT(updatePeripodiumDisplayCheckBox(int)));
+
 
 	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[0],7+nCoordBox,0,1,1,Qt::AlignLeft);
 	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[1],8+nCoordBox,0,1,1,Qt::AlignLeft);
 	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[2],9+nCoordBox,0,1,1,Qt::AlignLeft);
 	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[3],10+nCoordBox,0,1,1,Qt::AlignLeft);
+	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[4],11+nCoordBox,0,1,1,Qt::AlignLeft);
+	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[5],12+nCoordBox,0,1,1,Qt::AlignLeft);
 }
 
 void  MainWindow::updateTissueCoordCheckBox(int s){
@@ -301,6 +310,19 @@ void  MainWindow::updateScaleBarCheckBox(int s){
 		MainGLWidget->drawTissueScaleBar = false;
 }
 
+void  MainWindow::updatePeripodiumDisplayCheckBox(int s){
+	if ( s == 2 )
+		MainGLWidget->drawPeripodium = true;
+	else
+		MainGLWidget->drawPeripodium = false;
+}
+
+void  MainWindow::updateTransitionLayerDisplayCheckBox(int s){
+	if ( s == 2 )
+		MainGLWidget->drawTransitionLayer = true;
+	else
+		MainGLWidget->drawTransitionLayer = false;
+}
 
 void MainWindow::updateStrain(int s){
 	MainGLWidget->StrainToDisplay = s;

@@ -18,7 +18,8 @@ private:
 public:
 	PrismLateral(int* NodeIds,vector<Node*>& Nodes, int CurrId);
 	~PrismLateral();
-	void  setElasticProperties(double E,double v);
+	void  setElasticProperties(double EApical, double EBasal, double EMid,double v);
+	void  calculateBasalNormal(double * normal);
 };
 
 #endif

@@ -34,8 +34,8 @@ private:
 	vector <int> LateralNodeList;
 	int	 nLateralNodes;
 	int DVRight,DVLeft;
-	int stretchTimeSteps;
-	double stretchVelocity;
+	double StretchVelocity;
+
 
 	bool readModeOfSim(int& i, int argc, char **argv);
 	bool readParameters(int& i, int argc, char **argv);
@@ -51,6 +51,8 @@ private:
 	void initiatePrismFromSave();
 	void initiatePrismFromMeshInput();
 	void initiateLateralPrismFromSave();
+	void initiateTetrahedraFromMeshInput();
+	void initiateTriangleFromMeshInput();
 	void initiateLateralPrismFromMeshInput();
 	void initiatePrismFromSaveForUpdate(int k);
 	void removeElementFromEndOfList();
@@ -80,6 +82,7 @@ private:
 	void initiateElementsByRowAndColumn(int Row, int Column);
 	void assignPhysicalParameters();
 	void calculateStiffnessMatrices();
+	void correctAlignmentOfTransitionElements();
 	void assignNodeMasses();
 	void fixAllD(int i);
 	void fixZ(int i);
@@ -107,8 +110,8 @@ private:
 	double calculatePeripodiumResistanceForce(int RKId);
 	void addPeripodiumResistance(int RKId);
 	bool readPLYMesh(string inputMeshFile, string inputMeshNodes);
-	void addStretch(double xMin, double xMax, double stretchStrain, double stretchTime);
-	void addStretchForces(int RKId, double xMin, double xMax);
+	void setStretch();
+	void addStretchForces(int RKId);
 public:
 
 	ofstream outputFile;
@@ -127,7 +130,8 @@ public:
 	string name_saveFile;
 	int imageSaveInterval;
 	int dataSaveInterval;
-	double E, poisson;
+	double EApical,EBasal,EMid;
+	double poisson;
 	double ApicalVisc, BasalVisc;
 	int noiseOnPysProp[4];
 	int MeshType;
@@ -156,7 +160,9 @@ public:
 	double RK1PeripodiumStrain;
 	bool AddLateralNodes;
 	bool AddPeripodialArea;
-
+	bool stretcherAttached;
+	int StretchInitialStep, StretchEndStep;
+	double StretchMin, StretchMax, StretchStrain;
 	vector <int*> TrianglesToDraw;
 	vector <double*> NodesToDraw;
 

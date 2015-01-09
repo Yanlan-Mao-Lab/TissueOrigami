@@ -44,6 +44,8 @@ using namespace std;
      bool drawNetForces;
      bool drawVelocities;
      bool drawTissueScaleBar;
+     bool drawTransitionLayer;
+     bool drawPeripodium;
 
 
  signals:
@@ -65,15 +67,25 @@ using namespace std;
      void generate3DObject();
 
      //Element drawing functions
+     bool checkIfDrawingElement(int i);
+     bool checkIfDrawingNode(int i);
      void drawElement(int i, bool picking);
      void highlightElement(int i);
      void drawReferenceElement(int i);
      void drawPrism(int i);
      void drawPrismLateral(int i);
+     void drawTetrahedron(int i);
+     void drawTriangle(int i);
      void drawPrismForPicking(int i);
+     void drawTetrahedronForPicking(int i);
+     void drawTriangleForPicking(int i);
      void drawReferencePrism(int i);
      void drawReferencePrismLateral(int i);
+     void drawReferenceTetrahedron(int i);
+     void drawReferenceTriangle(int i);
      void highlightPrism(int i);
+     void highlightTetrahedron(int i);
+     void highlightTriangle(int i);
      void fillItemSelectionInfo(int i);
 
 
@@ -103,6 +115,8 @@ using namespace std;
      void		drawAxesArrows();
      void 		drawScaleBar();
      void 		drawTissueCoordSystemPrism(int i);
+     void 		drawTissueCoordSystemTetrahedron(int i);
+     void 		drawTissueCoordSystemTriangle(int i);
      void 		drawForces();
      void 		drawNodeVelocities();
      void 		drawArrow3D(double* pos, double* endPoint, double r, double g, double b);

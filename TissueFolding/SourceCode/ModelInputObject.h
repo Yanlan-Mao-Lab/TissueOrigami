@@ -30,6 +30,7 @@ private:
 	bool readGrowthType2(ifstream& file);
 	bool readShapeChangeOptions(ifstream& file);
 	bool readShapeChangeType1(ifstream& file);
+	bool readStretcherSetup(ifstream& file);
 public:
 	Simulation* Sim;
 	const char*  parameterFileName;

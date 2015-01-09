@@ -2,7 +2,7 @@
 
 using namespace std;
 
-Node::Node(int id, int dim, double* pos, int tissuePos){
+Node::Node(int id, int dim, double* pos, int tissuePos, int tissueType){
 	Id = id;
 	nDim = dim;
 	const int n = nDim;
@@ -27,7 +27,9 @@ Node::Node(int id, int dim, double* pos, int tissuePos){
 	}
 	Viscosity = -10.0;
 	tissuePlacement = tissuePos;
-	mass =0.0;
+	this->tissueType = tissueType;
+	atCircumference = false;
+	mass = 0.0;
 }
 
 Node::~Node(){
