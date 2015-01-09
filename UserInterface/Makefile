@@ -49,7 +49,6 @@ SOURCES       = SourceCode/main.cpp \
 		SourceCode/MainWindow.cpp \
 		SourceCode/GLWidget.cpp \
 		../TissueFolding/SourceCode/Prism.cpp \
-		../TissueFolding/SourceCode/PrismLateral.cpp \
 		../TissueFolding/SourceCode/Triangle.cpp \
 		../TissueFolding/SourceCode/ReferenceShapeBase.cpp \
 		../TissueFolding/SourceCode/ShapeBase.cpp \
@@ -61,7 +60,6 @@ OBJECTS       = main.o \
 		MainWindow.o \
 		GLWidget.o \
 		Prism.o \
-		PrismLateral.o \
 		Triangle.o \
 		ReferenceShapeBase.o \
 		ShapeBase.o \
@@ -429,7 +427,7 @@ qmake_all: FORCE
 
 dist: 
 	@test -d .tmp/TissueFoldingUI1.0.0 || mkdir -p .tmp/TissueFoldingUI1.0.0
-	$(COPY_FILE) --parents $(SOURCES) $(DIST) .tmp/TissueFoldingUI1.0.0/ && $(COPY_FILE) --parents SourceCode/MainWindow.h SourceCode/GLWidget.h ../TissueFolding/SourceCode/ModelInputObject.h ../TissueFolding/SourceCode/Node.h ../TissueFolding/SourceCode/Prism.h ../TissueFolding/SourceCode/PrismLateral.h ../TissueFolding/SourceCode/ReferenceShapeBase.h ../TissueFolding/SourceCode/ShapeBase.h ../TissueFolding/SourceCode/Simulation.h ../TissueFolding/SourceCode/Triangle.h .tmp/TissueFoldingUI1.0.0/ && $(COPY_FILE) --parents SourceCode/main.cpp SourceCode/MainWindow.cpp SourceCode/GLWidget.cpp ../TissueFolding/SourceCode/Prism.cpp ../TissueFolding/SourceCode/PrismLateral.cpp ../TissueFolding/SourceCode/Triangle.cpp ../TissueFolding/SourceCode/ReferenceShapeBase.cpp ../TissueFolding/SourceCode/ShapeBase.cpp ../TissueFolding/SourceCode/Simulation.cpp ../TissueFolding/SourceCode/Node.cpp ../TissueFolding/SourceCode/ModelInputObject.cpp .tmp/TissueFoldingUI1.0.0/ && (cd `dirname .tmp/TissueFoldingUI1.0.0` && $(TAR) TissueFoldingUI1.0.0.tar TissueFoldingUI1.0.0 && $(COMPRESS) TissueFoldingUI1.0.0.tar) && $(MOVE) `dirname .tmp/TissueFoldingUI1.0.0`/TissueFoldingUI1.0.0.tar.gz . && $(DEL_FILE) -r .tmp/TissueFoldingUI1.0.0
+	$(COPY_FILE) --parents $(SOURCES) $(DIST) .tmp/TissueFoldingUI1.0.0/ && $(COPY_FILE) --parents SourceCode/MainWindow.h SourceCode/GLWidget.h ../TissueFolding/SourceCode/ModelInputObject.h ../TissueFolding/SourceCode/Node.h ../TissueFolding/SourceCode/Prism.h ../TissueFolding/SourceCode/PrismLateral.h ../TissueFolding/SourceCode/ReferenceShapeBase.h ../TissueFolding/SourceCode/ShapeBase.h ../TissueFolding/SourceCode/Simulation.h ../TissueFolding/SourceCode/Triangle.h .tmp/TissueFoldingUI1.0.0/ && $(COPY_FILE) --parents SourceCode/main.cpp SourceCode/MainWindow.cpp SourceCode/GLWidget.cpp ../TissueFolding/SourceCode/Prism.cpp ../TissueFolding/SourceCode/Triangle.cpp ../TissueFolding/SourceCode/ReferenceShapeBase.cpp ../TissueFolding/SourceCode/ShapeBase.cpp ../TissueFolding/SourceCode/Simulation.cpp ../TissueFolding/SourceCode/Node.cpp ../TissueFolding/SourceCode/ModelInputObject.cpp .tmp/TissueFoldingUI1.0.0/ && (cd `dirname .tmp/TissueFoldingUI1.0.0` && $(TAR) TissueFoldingUI1.0.0.tar TissueFoldingUI1.0.0 && $(COMPRESS) TissueFoldingUI1.0.0.tar) && $(MOVE) `dirname .tmp/TissueFoldingUI1.0.0`/TissueFoldingUI1.0.0.tar.gz . && $(DEL_FILE) -r .tmp/TissueFoldingUI1.0.0
 
 
 clean:compiler_clean 
@@ -2772,15 +2770,6 @@ Prism.o: ../TissueFolding/SourceCode/Prism.cpp ../TissueFolding/SourceCode/Prism
 		../TissueFolding/SourceCode/ReferenceShapeBase.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o Prism.o ../TissueFolding/SourceCode/Prism.cpp
 
-PrismLateral.o: ../TissueFolding/SourceCode/PrismLateral.cpp ../TissueFolding/SourceCode/PrismLateral.h \
-		../TissueFolding/SourceCode/Prism.h \
-		../TissueFolding/SourceCode/ShapeBase.h \
-		/usr/include/gsl/gsl_matrix.h \
-		/usr/include/gsl/gsl_linalg.h \
-		../TissueFolding/SourceCode/Node.h \
-		../TissueFolding/SourceCode/ReferenceShapeBase.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o PrismLateral.o ../TissueFolding/SourceCode/PrismLateral.cpp
-
 Triangle.o: ../TissueFolding/SourceCode/Triangle.cpp ../TissueFolding/SourceCode/Triangle.h \
 		../TissueFolding/SourceCode/ShapeBase.h \
 		/usr/include/gsl/gsl_matrix.h \
@@ -2807,7 +2796,6 @@ Simulation.o: ../TissueFolding/SourceCode/Simulation.cpp ../TissueFolding/Source
 		../TissueFolding/SourceCode/Node.h \
 		../TissueFolding/SourceCode/ReferenceShapeBase.h \
 		../TissueFolding/SourceCode/Prism.h \
-		../TissueFolding/SourceCode/PrismLateral.h \
 		../TissueFolding/SourceCode/Triangle.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o Simulation.o ../TissueFolding/SourceCode/Simulation.cpp
 
@@ -2847,7 +2835,6 @@ install_sources: first FORCE
 	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/UserInterface/SourceCode/MainWindow.cpp $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
 	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/UserInterface/SourceCode/GLWidget.cpp $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
 	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/Prism.cpp $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
-	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/PrismLateral.cpp $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
 	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/Triangle.cpp $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
 	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/ReferenceShapeBase.cpp $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
 	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/ShapeBase.cpp $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
@@ -2884,7 +2871,6 @@ uninstall_sources: FORCE
 	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/ShapeBase.cpp
 	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/ReferenceShapeBase.cpp
 	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/Triangle.cpp
-	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/PrismLateral.cpp
 	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/Prism.cpp
 	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/GLWidget.cpp
 	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/MainWindow.cpp

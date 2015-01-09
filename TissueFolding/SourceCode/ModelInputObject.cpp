@@ -365,30 +365,6 @@ bool ModelInputObject::readMeshType2(ifstream& file){
 		cerr<<"Error in reading nodes to fix, curr string: "<<currHeader<<", should have been: BasalCircumferenceFixXY:" <<endl;
 		return false;
 	}
-	file >> currHeader;
-	if(currHeader == "AddLateralNodes:"){
-			file >> Sim->AddLateralNodes;
-	}
-	else{
-		cerr<<"Error in reading nodes to fix, curr string: "<<currHeader<<", should have been: AddLateralNodes:" <<endl;
-		return false;
-	}
-	file >> currHeader;
-	if(currHeader == "LateralFixZ:"){
-			file >> Sim->LateralNodeFix[0];
-	}
-	else{
-		cerr<<"Error in reading nodes to fix, curr string: "<<currHeader<<", should have been: LateralFixZ:" <<endl;
-		return false;
-	}
-	file >> currHeader;
-	if(currHeader == "LateralFixXY:"){
-			file >> Sim->LateralNodeFix[1];
-	}
-	else{
-		cerr<<"Error in reading nodes to fix, curr string: "<<currHeader<<", should have been: LateralFixXY:" <<endl;
-		return false;
-	}
 	//checking consistency:
 	if (Sim->Column>Sim->Row-2){
 		Sim->Column = Sim->Row-2;
@@ -406,7 +382,7 @@ bool ModelInputObject::readPeripodiumParameters(ifstream& file){
 	string currHeader;
 	file >> currHeader;
 	if(currHeader == "AddPeripodium:"){
-		file >>Sim->AddPeripodialArea;
+		file >>Sim->AddPeripodium;
 	}
 	else{
 		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: AddPeripodium:" <<endl;

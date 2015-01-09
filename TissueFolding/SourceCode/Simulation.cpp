@@ -1,8 +1,6 @@
 
 #include "Simulation.h"
 #include "Prism.h"
-#include "PrismLateral.h"
-#include "Tetrahedron.h"
 #include "Triangle.h"
 #include <string.h>
 
@@ -13,11 +11,8 @@ Simulation::Simulation(){
 	ModInp = new ModelInputObject();
 	SystemCentre[0]=0.0; SystemCentre[1]=0.0; SystemCentre[2]=0.0;
 	timestep = 0;
-	ReferencePeripodiumArea = 0.0;
-	PeripodiumStrain = 0.0;
 	reachedEndOfSaveFile = false;
-	AddLateralNodes = false;
-	AddPeripodialArea = false;
+	AddPeripodium = false;
 	setDefaultParameters();
 };
 
@@ -80,15 +75,11 @@ void Simulation::setDefaultParameters(){
 	ApicalNodeFix[1]= false;
 	BasalNodeFix[0]= false;
 	BasalNodeFix[1]= false;
-	LateralNodeFix[0]= false;
-	LateralNodeFix[1]= false;
 	nGrowthFunctions = 0;
 	nShapeChangeFunctions = 0;
 	TensionCompressionSaved = true;
 	ForcesSaved = true;
 	VelocitiesSaved = true;
-	nLateralNodes = 0;
-	AddPeripodialArea = false;
 	PeripodiumElasticity = 0.0;
 	DVRight = 0;
 	DVLeft = 1;
@@ -214,22 +205,6 @@ bool Simulation::checkInputConsistency(){
 	if(!BasalNodeFix[0] && BasalNodeFix[1]){
 		cerr <<"Basal nodes: There is no option to fix x and y movement while keeping z free for pinned nodes, correct mesh options"<<endl;
 		BasalNodeFix[0] = true;
-		return false;
-	}
-	if(AddLateralNodes == false && AddPeripodialArea){
-		cerr <<"You need to add lateral nodes to have peripodium effects, correct mesh options"<<endl;
-		AddPeripodialArea=false;
-		return false;
-	}
-	if(AddLateralNodes == false && (LateralNodeFix[0] || LateralNodeFix[1] )){
-		cerr <<"You need to add lateral nodes to be able to fix them in any coordinate, correct mesh options"<<endl;
-		LateralNodeFix[0]=false;
-		LateralNodeFix[1]=false;
-		return false;
-	}
-	if(!LateralNodeFix[0] && LateralNodeFix[1]){
-		cerr <<"Lateral nodes: There is no option to fix x and y movement while keeping z free for pinned nodes, correct mesh options"<<endl;
-		LateralNodeFix[0]=true;
 		return false;
 	}
 	return true;
@@ -535,12 +510,6 @@ void Simulation::initiateElementsFromMeshInput(){
 		if (shapeType == 1){
 			initiatePrismFromMeshInput();
 		}
-		else if (shapeType == 2){
-			initiateLateralPrismFromMeshInput();
-		}
-		else if (shapeType == 3){
-			initiateTetrahedraFromMeshInput();
-		}
 		else if (shapeType == 4){
 			initiateTriangleFromMeshInput();
 		}
@@ -560,9 +529,6 @@ void Simulation::initiateElementsFromSave(){
 		saveFileToDisplayMesh >> shapeType;
 		if (shapeType == 1){
 			initiatePrismFromSave();
-		}
-		else if (shapeType == 2){
-			initiateLateralPrismFromSave();
 		}
 		else{
 			cerr<<"Error in shape type, corrupt save file! - currShapeType: "<<shapeType<<endl;
@@ -606,23 +572,6 @@ void Simulation::initiatePrismFromMeshInput(){
 	//Elements[Elements.size()-1]->displayReferencePositions();
 }
 
-void Simulation::initiateTetrahedraFromMeshInput(){
-	int* NodeIds;
-	NodeIds = new int[4];
-	for (int i =0 ;i<4; ++i){
-		int savedId;
-		saveFileToDisplayMesh >> savedId;
-		NodeIds[i] = savedId;
-	}
-	Tetrahedron* TetrahedronPnt01;
-	TetrahedronPnt01 = new Tetrahedron(NodeIds, Nodes, currElementId);
-	TetrahedronPnt01->updateReferencePositionMatrixFromMeshInput(saveFileToDisplayMesh);
-	Elements.push_back(TetrahedronPnt01);
-	currElementId++;
-	delete[] NodeIds;
-	//Elements[Elements.size()-1]->displayReferencePositions();
-}
-
 void Simulation::initiateTriangleFromMeshInput(){
 	int* NodeIds;
 	NodeIds = new int[3];
@@ -645,45 +594,6 @@ void Simulation::initiateTriangleFromMeshInput(){
 	currElementId++;
 	delete[] NodeIds;
 	//Elements[Elements.size()-1]->displayReferencePositions();
-}
-
-
-void Simulation::initiateLateralPrismFromSave(){
-	//inserts a new prism at order k into elements vector
-	//the node ids and reference shape positions
-	//will be updated in function: updateShapeFromSave
-
-	int* NodeIds;
-	NodeIds = new int[6];
-	for (int i =0 ;i<6; ++i){
-		NodeIds[i] = 0;
-	}
-	PrismLateral* PrismPnt01;
-	PrismPnt01 = new PrismLateral(NodeIds, Nodes, currElementId);
-	PrismPnt01->updateShapeFromSave(saveFileToDisplayMesh);
-	Elements.push_back(PrismPnt01);
-	currElementId++;
-	delete[] NodeIds;
-}
-
-
-void Simulation::initiateLateralPrismFromMeshInput(){
-	//inserts a new prism at order k into elements vector
-	//the node ids and reference shape positions
-	//will be updated in function: updateShapeFromSave
-	int* NodeIds;
-	NodeIds = new int[6];
-	for (int i =0 ;i<6; ++i){
-		int savedId;
-		saveFileToDisplayMesh >> savedId;
-		NodeIds[i] = savedId;
-	}
-	PrismLateral* PrismPnt01;
-	PrismPnt01 = new PrismLateral(NodeIds, Nodes, currElementId);
-	PrismPnt01->updateReferencePositionMatrixFromMeshInput(saveFileToDisplayMesh);
-	Elements.push_back(PrismPnt01);
-	currElementId++;
-	delete[] NodeIds;
 }
 
 void Simulation::reInitiateSystemForces(int oldSize){
@@ -741,7 +651,6 @@ void Simulation::updateTensionCompressionFromSave(){
 			saveFileToDisplayTenComp.read((char*) &Elements[i]->CurrPlasticStrainsInTissueCoordsMat(j,j), sizeof Elements[i]->CurrPlasticStrainsInTissueCoordsMat(j,j));
 		}
 	}
-	saveFileToDisplayTenComp.read((char*) &PeripodiumStrain, sizeof PeripodiumStrain);
 }
 
 void Simulation::initiatePrismFromSaveForUpdate(int k){
@@ -948,9 +857,6 @@ void Simulation::initiateMesh(int MeshType, int Row, int Column, float SideLengt
 		//  ApicalCircumferenceFixXY: 0
 		//  BasalCircumferenceFixZ: 0
 		//  BasalCircumferenceFixXY: 0
-		//  AddLateralNodes: 1
-		//  LateralFixZ: 0
-		//  LateralFixXY: 0
 		initiateNodesByRowAndColumn(Row,Column,SideLength,zHeight);
 		initiateElementsByRowAndColumn(Row,Column);
 	}
@@ -1167,19 +1073,7 @@ void Simulation::initiateNodesByRowAndColumn(int Row, int Column, float SideLeng
 	if (BasalNodeFix[0] || BasalNodeFix[1] || ApicalNodeFix[0] || ApicalNodeFix[1] ){
 		fixApicalBasalNodes(NodesToFix);
 	}
-	if (AddLateralNodes){
-		cout<<"generating lateral node list"<<endl;
-        GenerateLateralNodeList(NodesToFix,toprowcounter);
-        GenerateLateralNodes();
-	}
-	if (LateralNodeFix[0] || LateralNodeFix[1]){
-		fixLateralNodes();
-	}
-	if (AddPeripodialArea){
-		//This is at the initial setup, I want to calculate the initial area of the peripodium, using the normal positions of nodes.
-		//This will correspond to RK step 1, RKId = 0;
-		ReferencePeripodiumArea = calculatePeripodiumArea(0);
-	}
+
 	delete[] pos;
 }
 
@@ -1210,24 +1104,9 @@ void Simulation::fixApicalBasalNodes(vector<int> &NodesToFix){
 	}
 }
 
-void Simulation::fixLateralNodes(){
-	for (int i=0; i<nLateralNodes; ++i){
-		if(LateralNodeFix[0]){
-			//The nodes on the circumference on the basal side (bottom)
-			//have their z position fixed.
-			fixZ(PeripodiumAnchorNodeList[i]);
-		}
-		if(LateralNodeFix[1]){
-			//The nodes on the circumference on the basal side (bottom)
-			//have their x & y positions fixed.
-			fixAllD(PeripodiumAnchorNodeList[i]);
-		}
-	}
-}
-void Simulation::GenerateLateralNodeList(vector<int> &NodesToFix, int nLastRow){
+void Simulation::GenerateCircumferencialNodeList(vector<int> &NodesToFix, int nLastRow){
 	//Now I have a list of nodes to fix, written in a specific order.
 	//I would like reorder these, to generate a continuous strip around the tissue
-	cout<<"generating lateral node list - inside"<<endl;
 	vector <int> list1, list2, list3, list4;
     int n = NodesToFix.size();
     int i=0;
@@ -1235,7 +1114,7 @@ void Simulation::GenerateLateralNodeList(vector<int> &NodesToFix, int nLastRow){
     i++;
     list2.push_back(NodesToFix[i]);
     i++;
-    cout<<"generating lateral node list = before while loop"<<endl;
+    cout<<"generating Circumferencial node list = before while loop"<<endl;
     while(i<n-2*nLastRow){
     	list1.push_back(NodesToFix[i]);
     	list2.push_back(NodesToFix[i+1]);
@@ -1243,7 +1122,7 @@ void Simulation::GenerateLateralNodeList(vector<int> &NodesToFix, int nLastRow){
     	list4.push_back(NodesToFix[i+3]);
     	i += 4;
     }
-    cout<<"generating lateral node list - after while loop"<<endl;
+    cout<<"generating Circumferencial node list - after while loop"<<endl;
     for ( int k=0; k<nLastRow; ++k){
     	list1.push_back(NodesToFix[i]);
     	i++;
@@ -1256,91 +1135,21 @@ void Simulation::GenerateLateralNodeList(vector<int> &NodesToFix, int nLastRow){
     //list1 + inverse of list2 + list4 + inverse of list3
     //list1:
     for(vector <int>::iterator it = list1.begin(); it<list1.end(); ++it){
-    	LateralNodeList.push_back(*it);
+    	CircumferencialNodeList.push_back(*it);
     }
     //inverse of list2:
     for(vector <int>::iterator it = list2.end()-1; it>=list2.begin(); --it){
-    	LateralNodeList.push_back(*it);
+    	CircumferencialNodeList.push_back(*it);
     }
     //list4:
     for(vector <int>::iterator it = list4.begin(); it<list4.end(); ++it){
-    	LateralNodeList.push_back(*it);
+    	CircumferencialNodeList.push_back(*it);
     }
     //inverse of list3:
     for(vector <int>::iterator it = list3.end()-1; it>=list3.begin(); --it){
-    	LateralNodeList.push_back(*it);
+    	CircumferencialNodeList.push_back(*it);
     }
     cout<<"merged lists"<<endl;
-    //for (i=0; i<LateralNodeList.size(); ++i){
-    //	cout<<"i: "<<i<<" LateralNodeList[i]: "<<LateralNodeList[i]<<endl;
-    //}
-}
-
-void Simulation::GenerateLateralNodes(){
-	//I have the list of nodes, that are the apical base for the nodes I am going to add
-	//as lateral tips. The list of nodes starts form the first node, rotating clockwise
-	//the position of each added node will be pointing out from the tissue
-	int n = LateralNodeList.size();
-	double vec1[3], vec2[3];
-	double* dir = new double[3];
-	//calculating the vector pointing out, the first connection is between the beginning
-	// and the end of the list:
-    for(int i=0; i < n; ++i){
-		int index0 = LateralNodeList[i];
-		int index1, index2;
-		if (i==0){
-			index1 = LateralNodeList[i+1];
-			index2 = LateralNodeList[n-1];
-		}
-		else if(i==n-1){
-			index1 = LateralNodeList[0];
-			index2 = LateralNodeList[i-1];
-		}
-		else{
-			index1 = LateralNodeList[i+1];
-			index2 = LateralNodeList[i-1];
-		}
-		double norm2 = 0.0;
-		for (int j=0;j<3; ++j){
-			vec1[j]=Nodes[index1]->Position[j] - Nodes[index0]->Position[j];
-			vec2[j]=Nodes[index2]->Position[j] - Nodes[index0]->Position[j];
-			dir[j] = -vec1[j] - vec2[j];
-			norm2 +=dir[j]*dir[j];
-		}
-		if (norm2 <1E-8){
-			//the vectors form a straight line, I will need to rotate one to get the perpendicular:
-			//rotating -90 degrees around z:
-			dir[0]=(1.0)*vec2[1];
-			dir[1]=(-1.0)*vec2[0];
-			dir[2]=vec2[2];
-			norm2 = 0;
-			for (int j=0;j<3; ++j){
-				norm2 += vec1[j]*vec1[j];
-			}
-		}
-		//normalise vec1:
-		double norm = pow(norm2,0.5);
-		for (int j=0; j<3; ++j){
-			dir[j] /= norm;
-		}
-		//now I will get the point that is moving in the dir direction form my current node, and also migrating apically,
-		//half the length of the tissue:
-		double sqrt3 = 1.7321;
-		float h = sqrt3/2*SideLength;
-		dir[0] = dir[0]*h + Nodes[index0]->Position[0];
-		dir[1] = dir[1]*h + Nodes[index0]->Position[1];
-		dir[2] = dir[2]*h + Nodes[index0]->Position[2] + zHeight/2.0;
-		Node* tmp_nd;
-		int nNodes = Nodes.size();
-		tmp_nd = new Node(nNodes, 3, dir, 3, 0);	//lateral layer is still considered a part of columnar layer
-		Nodes.push_back(tmp_nd);
-		PeripodiumAnchorNodeList.push_back(nNodes);
-		//fixZ(nNodes);
-		//fixAllD(nNodes);
-		nLateralNodes++;
-    }
-    delete[] dir;
-    cout<<"finished generating lateral nodes"<<endl;
 }
 
 void Simulation::initiateElementsByRowAndColumn(int Row, int Column){
@@ -1348,7 +1157,7 @@ void Simulation::initiateElementsByRowAndColumn(int Row, int Column){
 	int xinit2 = xinit1+Row+1;
 	int xinit3 = 0;
 	int xinit4 = xinit1+2*(Row+1)-1;
-	int n = (Nodes.size() - nLateralNodes) /2.0;
+	int n = Nodes.size() /2.0;
     //initialising the tissue elements:
 	for (int ColCount = 0; ColCount < Column; ++ColCount){
 		int CurrRowNum = Row + 1 - ColCount;
@@ -1407,28 +1216,6 @@ void Simulation::initiateElementsByRowAndColumn(int Row, int Column){
 		xinit2 = xinit4 + CurrRowNum-1;
 		xinit3 = xinit4;
 		xinit4 = xinit2 + CurrRowNum-2;
-	}
-	//initialising the lateral elements of the circumference:
-	cout<<"initiating the lateral elements"<<endl;
-	for (int i =nLateralNodes-1 ;i>=0; --i){
-		int secondIndex = i-1;
-		if(i==0){
-			secondIndex = nLateralNodes-1;
-		}
-		int* NodeIds;
-		NodeIds = new int[6];
-		NodeIds[0] = LateralNodeList[i];
-		NodeIds[1] = LateralNodeList[i]+n;
-		NodeIds[2] = 2*n+i;
-		NodeIds[3] = LateralNodeList[secondIndex];
-		NodeIds[4] = LateralNodeList[secondIndex]+n;
-		NodeIds[5] = 2*n+secondIndex;
-		PrismLateral* PrismPnt01;
-		PrismPnt01 = new PrismLateral(NodeIds, Nodes, currElementId);
-		//Prism* PrismPnt01;
-		//PrismPnt01 = new Prism(NodeIds, Nodes, currElementId);
-		Elements.push_back(PrismPnt01);
-		currElementId++;
 	}
 	cout<<"finalised element initiation"<<endl;
 }
@@ -1548,13 +1335,9 @@ void Simulation::runOneStep(){
 			Elements[i]->calculateForces(RKId, SystemForces, Nodes, outputFile);
 		}
 		//outputFile<<"     calculated forces"<<endl;
-		if(AddPeripodialArea){
-			addPeripodiumResistance(RKId);
-		}
 		if (stretcherAttached && timestep>StretchInitialStep && timestep<StretchEndStep){
 			addStretchForces(RKId);
 		}
-		//outputFile<<"     checked peripodium"<<endl;
 		updateNodePositions(RKId);
 		//outputFile<<"     updated node pos"<<endl;
 		updateElementPositions(RKId);
@@ -1566,9 +1349,6 @@ void Simulation::runOneStep(){
 			Elements[i]->updateElementsNodePositions(RKId, SystemForces, Nodes, dt);
 			updateElementPositions(RKId);
 
-		}
-		if(AddPeripodialArea){
-			addPeripodiumResistance(RKId);
 		}
 	}*/
 	/*cout<<"Forces on node 0: "<<endl;
@@ -1759,7 +1539,6 @@ void Simulation::saveStep(){
 	writeElements();
 	writeSaveFileStepFooter();
 	writeTensionCompression();
-	writePeripodiumTensionCompression();
 	writeForces();
 	writeVelocities();
 }
@@ -1840,9 +1619,6 @@ void Simulation::writeTensionCompression(){
 	}
 }
 
-void Simulation::writePeripodiumTensionCompression(){
-	saveFileTensionCompression.write((char*) &PeripodiumStrain, sizeof PeripodiumStrain);
-}
 
 void Simulation::writeForces(){
 	int n = Nodes.size();
@@ -1989,83 +1765,6 @@ void Simulation::changeCellShapeRing(int currIndex){
 	}
 }
 */
-double Simulation::calculatePeripodiumArea(int RKId){
-	//approximating the area of peripodial membrane from lateral nodes
-	double sum =0;
-	for (int i=0; i< nLateralNodes; ++i){
-		int index1 = PeripodiumAnchorNodeList[i];
-		int index0,index2;
-		if (index1 ==0 ){
-			index0 = PeripodiumAnchorNodeList[nLateralNodes-1];
-			index2 = PeripodiumAnchorNodeList[i+1];
-
-		}
-		else if(index1 == nLateralNodes-1){
-			index0 = PeripodiumAnchorNodeList[i-1];
-			index2 = PeripodiumAnchorNodeList[0];
-		}
-		else{
-			index0 = PeripodiumAnchorNodeList[i-1];
-			index2 = PeripodiumAnchorNodeList[i+1];
-		}
-		double x, y0, y2;
-		if (RKId == 0 ){
-			//I am calculating the current peripodium area, if this is first RK step, I will use normal node posiitons
-			x = Nodes[index1]->Position[0];
-			y0 = Nodes[index0]->Position[1];
-			y2 = Nodes[index2]->Position[1];
-
-		}
-		else{
-			//In any other Runge-Kutta step, I will use RK positions of nodes to calculate current area
-			x = Nodes[index1]->RKPosition[0];
-			y0 = Nodes[index0]->RKPosition[1];
-			y2 = Nodes[index2]->RKPosition[1];
-		}
-		sum += x * (y2 - y0);
-	}
-	sum *=0.5;
-	return sum;
-};
-
-double Simulation::calculatePeripodiumResistanceForce(int RKId){
-	double CurrentPeripodiumArea = calculatePeripodiumArea(RKId);
-	PeripodiumStrain = (CurrentPeripodiumArea - ReferencePeripodiumArea) / ReferencePeripodiumArea;
-	if (RKId == 0 ){
-		//I need to keep track of this value for saving and displaying purposes.
-		//Otherwise, the saved value will be the strain at the artificial setup of RK step 4.
-		RK1PeripodiumStrain = PeripodiumStrain;
-	}
-	double ForceMagnitude = PeripodiumStrain * PeripodiumElasticity;
-	//cout<<"referenceperipodium: "<<ReferencePeripodiumArea<<" Current Area: "<< CurrentPeripodiumArea<<" PeripodiumStrain: "<< PeripodiumStrain<<" ForceMagnitude: "<<ForceMagnitude<<endl;
-	return ForceMagnitude;
-}
-
-void Simulation::addPeripodiumResistance(int RKId){
-	double ForceMagnitude = calculatePeripodiumResistanceForce(RKId);
-	if (ForceMagnitude <1E-6 &&  ForceMagnitude>-1E-6){
-		return;
-	}
-	double ForcePerEdge = ForceMagnitude / (nLateralNodes-1);
-	calculateSystemCentre();
-	ForceMagnitude /= nLateralNodes;
-	calculateSystemCentre();
-	for (int i=0; i< nLateralNodes; ++i){
-		double x = Nodes[PeripodiumAnchorNodeList[i]]->Position[0];
-		double y = Nodes[PeripodiumAnchorNodeList[i]]->Position[1];
-		x = SystemCentre[0]-x;
-		y = SystemCentre[1]-y;
-		double mag = x*x +y*y;//+z*z;
-		if (mag > 1E-6){
-			mag = pow(mag,0.5);
-			x /= mag;
-			y /= mag;
-		}
-		SystemForces[RKId][PeripodiumAnchorNodeList[i]][0] += x * ForceMagnitude;
-		SystemForces[RKId][PeripodiumAnchorNodeList[i]][1] += y * ForceMagnitude;
-		//cout<<"i: "<<i<<" (x,y,z): "<<x<<" , "<<y<<" , "<<z<<", ForceMag(x,y,z): "<<x * ForceMagnitude<<" , "<<y * ForceMagnitude<<" , "<<z * ForceMagnitude<<endl;
-	}
-}
 
 void Simulation::CoordinateDisplay(){
 	for (int i=0;i<Elements.size();++i){

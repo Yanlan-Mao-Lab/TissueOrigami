@@ -31,8 +31,8 @@ private:
 	bool TensionCompressionSaved;
 	bool ForcesSaved;
 	bool VelocitiesSaved;
-	vector <int> LateralNodeList;
-	int	 nLateralNodes;
+	vector <int> CircumferencialNodeList;
+	int	 nCircumferencialNodes;
 	int DVRight,DVLeft;
 	double StretchVelocity;
 
@@ -50,10 +50,8 @@ private:
 	void initiateElementsFromMEshInput();
 	void initiatePrismFromSave();
 	void initiatePrismFromMeshInput();
-	void initiateLateralPrismFromSave();
 	void initiateTetrahedraFromMeshInput();
 	void initiateTriangleFromMeshInput();
-	void initiateLateralPrismFromMeshInput();
 	void initiatePrismFromSaveForUpdate(int k);
 	void removeElementFromEndOfList();
 	void updateNodeNumberFromSave();
@@ -76,9 +74,7 @@ private:
 	void initiateSinglePrismElement();
 	void initiateNodesByRowAndColumn(int Row, int Column,  float SideLength, float zHeight);
 	void fixApicalBasalNodes(vector<int> &NodesToFix);
-	void fixLateralNodes();
-	void GenerateLateralNodeList(vector<int> &NodesToFix, int nLastRow);
-	void GenerateLateralNodes();
+	void GenerateCircumferencialNodeList(vector<int> &NodesToFix, int nLastRow);
 	void initiateElementsByRowAndColumn(int Row, int Column);
 	void assignPhysicalParameters();
 	void calculateStiffnessMatrices();
@@ -94,7 +90,6 @@ private:
 	void writeElements();
 	void writeSaveFileStepFooter();
 	void writeTensionCompression();
-	void writePeripodiumTensionCompression();
 	void writeForces();
 	void writeVelocities();
 	void calculateGrowth();
@@ -104,11 +99,6 @@ private:
 	void calculateGrowthRing(int currIndexForParameters);
 	void changeCellShapesInSystem();
 	void changeCellShapeRing(int currIndexForParameters);
-	double calculatePeripodiumArea(int RKId);
-	double calculatePeripodiumResistance(int RKId);
-	double calculatePeripodiumResistanceForce(int RKId);
-	void addPeripodiumResistance(int RKId);
-	bool readPLYMesh(string inputMeshFile, string inputMeshNodes);
 	void setStretch();
 	void addStretchForces(int RKId);
 public:
@@ -140,9 +130,6 @@ public:
 	float zHeight;
 	bool ApicalNodeFix[2];
 	bool BasalNodeFix[2];
-	bool LateralNodeFix[2];
-	vector <int> PeripodiumAnchorNodeList;
-	double ReferencePeripodiumArea;
 	double PeripodiumElasticity;
 	int nGrowthFunctions;
 	vector <int> GrowthFunctionTypes;
@@ -155,10 +142,7 @@ public:
 	vector <ShapeBase*> Elements;
 	double*** SystemForces;
 	double SystemCentre[3];
-	double PeripodiumStrain;
-	double RK1PeripodiumStrain;
-	bool AddLateralNodes;
-	bool AddPeripodialArea;
+	bool AddPeripodium;
 	bool stretcherAttached;
 	int StretchInitialStep, StretchEndStep;
 	double StretchMin, StretchMax, StretchStrain;

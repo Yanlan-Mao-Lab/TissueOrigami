@@ -72,18 +72,12 @@ using namespace std;
      void highlightElement(int i);
      void drawReferenceElement(int i);
      void drawPrism(int i);
-     void drawPrismLateral(int i);
-     void drawTetrahedron(int i);
      void drawTriangle(int i);
      void drawPrismForPicking(int i);
-     void drawTetrahedronForPicking(int i);
      void drawTriangleForPicking(int i);
      void drawReferencePrism(int i);
-     void drawReferencePrismLateral(int i);
-     void drawReferenceTetrahedron(int i);
      void drawReferenceTriangle(int i);
      void highlightPrism(int i);
-     void highlightTetrahedron(int i);
      void highlightTriangle(int i);
      void fillItemSelectionInfo(int i);
 

@@ -133,7 +133,6 @@ void MainWindow::setStrainDisplayMenu(QGridLayout *SelectionDisplayGrid){
 	StrainComboBox->addItem("Strain in DV");
 	StrainComboBox->addItem("Strain in AP");
 	StrainComboBox->addItem("Strain in AB");
-	StrainComboBox->addItem("Strain in Peripodium");
 	StrainComboBox->setEnabled(false);
 	connect(StrainComboBox , SIGNAL(currentIndexChanged(int)),this,SLOT(updateStrain(int)));
 
