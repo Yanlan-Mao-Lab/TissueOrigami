@@ -45,7 +45,6 @@ public slots:
     void updateVelocityCheckBox(int);
     void  updateScaleBarCheckBox(int);
     void  updatePeripodiumDisplayCheckBox(int s);
-    void  updateTransitionLayerDisplayCheckBox(int s);
 
 //signals:
  //   void StrainComboBoxCanged();
@@ -76,7 +75,7 @@ public slots:
     QComboBox   	*PysPropComboBox;
     QDoubleSpinBox 	*PysPropSpinBoxes[2];
     QGroupBox   	*ColourCodingBox;
-    QCheckBox		*DisplayPreferencesCheckBoxes[6];
+    QCheckBox		*DisplayPreferencesCheckBoxes[5];
     QLabel			*SimTime;
  };
 

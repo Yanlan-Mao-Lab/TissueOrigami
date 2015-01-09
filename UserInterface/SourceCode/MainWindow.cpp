@@ -266,12 +266,9 @@ void MainWindow::setDisplayPreferences(QGridLayout *SelectionDisplayGrid){
 	DisplayPreferencesCheckBoxes[3] = new QCheckBox("ScaleBar");
 	DisplayPreferencesCheckBoxes[3]->setChecked(false);
 	connect(DisplayPreferencesCheckBoxes[3] , SIGNAL(stateChanged(int)),this,SLOT(updateScaleBarCheckBox(int)));
-	DisplayPreferencesCheckBoxes[4] = new QCheckBox("Display Transition Layer");
+	DisplayPreferencesCheckBoxes[4] = new QCheckBox("Display Peripodium");
 	DisplayPreferencesCheckBoxes[4]->setChecked(false);
-	connect(DisplayPreferencesCheckBoxes[4] , SIGNAL(stateChanged(int)),this,SLOT(updateTransitionLayerDisplayCheckBox(int)));
-	DisplayPreferencesCheckBoxes[5] = new QCheckBox("Display Peripodium");
-	DisplayPreferencesCheckBoxes[5]->setChecked(false);
-	connect(DisplayPreferencesCheckBoxes[5] , SIGNAL(stateChanged(int)),this,SLOT(updatePeripodiumDisplayCheckBox(int)));
+	connect(DisplayPreferencesCheckBoxes[4] , SIGNAL(stateChanged(int)),this,SLOT(updatePeripodiumDisplayCheckBox(int)));
 
 
 	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[0],7+nCoordBox,0,1,1,Qt::AlignLeft);
@@ -279,7 +276,6 @@ void MainWindow::setDisplayPreferences(QGridLayout *SelectionDisplayGrid){
 	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[2],9+nCoordBox,0,1,1,Qt::AlignLeft);
 	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[3],10+nCoordBox,0,1,1,Qt::AlignLeft);
 	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[4],11+nCoordBox,0,1,1,Qt::AlignLeft);
-	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[5],12+nCoordBox,0,1,1,Qt::AlignLeft);
 }
 
 void  MainWindow::updateTissueCoordCheckBox(int s){
@@ -315,13 +311,6 @@ void  MainWindow::updatePeripodiumDisplayCheckBox(int s){
 		MainGLWidget->drawPeripodium = true;
 	else
 		MainGLWidget->drawPeripodium = false;
-}
-
-void  MainWindow::updateTransitionLayerDisplayCheckBox(int s){
-	if ( s == 2 )
-		MainGLWidget->drawTransitionLayer = true;
-	else
-		MainGLWidget->drawTransitionLayer = false;
 }
 
 void MainWindow::updateStrain(int s){

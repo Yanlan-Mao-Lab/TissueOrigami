@@ -193,34 +193,25 @@ void 	ShapeBase::setTissuePlacement(vector<Node*>& Nodes){
 
 void 	ShapeBase::setTissueType(vector<Node*>& Nodes){
 	bool hasColumnarNode = false;
-	bool hasTransitionNode = false;
 	bool hasPeripodiumNode = false;
 	for (int i = 0; i<nNodes; ++i){
 		if (Nodes[NodeIds[i]]->tissueType == 0){
 			hasColumnarNode = true;
 		}
 		else if (Nodes[NodeIds[i]]->tissueType == 1){
-			hasTransitionNode = true;
-		}
-		else if (Nodes[NodeIds[i]]->tissueType == 2){
 			hasPeripodiumNode = true;
 		}
 	}
-	if (hasTransitionNode){
+	if (hasPeripodiumNode){
 		tissueType = 1;
 	}
-	else{
-		if (hasPeripodiumNode){
-			tissueType = 2;
-		}
-		else if (hasColumnarNode){
-			//ASK PERIPODIUM FIRST, SOME PERIPODIUM ELEMENTS DO HAVE COLUMNAR NODES, NO COLUMNAR ELEMENT SHOULD HAVE A PERIPODIUM NODE
-			tissueType = 0;
-		}
+	else if (hasColumnarNode){
+		//ASK PERIPODIUM FIRST, SOME PERIPODIUM ELEMENTS DO HAVE COLUMNAR NODES, NO COLUMNAR ELEMENT SHOULD HAVE A PERIPODIUM NODE
+		tissueType = 0;
+	}
 
-		else {
-			cerr<<"Element is not placed into tissue correctly, Id: "<<Id<<endl;
-		}
+	else {
+		cerr<<"Element is not placed into tissue correctly, Id: "<<Id<<endl;
 	}
 }
 

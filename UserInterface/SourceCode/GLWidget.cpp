@@ -14,7 +14,7 @@ using namespace std;
 
  GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
  {
-	 cout<<"initiating gl widget"<<endl;
+	 //cout<<"initiating gl widget"<<endl;
 	 obj_pos[0] = -10.0f;
 	 obj_pos[1] =  4.0f;
 	 obj_pos[2] =  50.0f;
@@ -60,7 +60,6 @@ using namespace std;
   	 drawNetForces = false;
      drawVelocities = false;
      drawPeripodium = false;
-     drawTransitionLayer = false;
      cout<<"gl initiated"<<endl;
  }
 
@@ -160,9 +159,6 @@ using namespace std;
 
  bool GLWidget::checkIfDrawingElement(int i){
 	 bool drawthisElement = true;
-	 if (!drawTransitionLayer && Sim01->Elements[i]->tissueType == 1){
-		 drawthisElement = false;
-	 }
 	 if (!drawPeripodium && Sim01->Elements[i]->tissueType == 2){
 	 	 drawthisElement = false;
 	 }
@@ -171,9 +167,6 @@ using namespace std;
 
  bool GLWidget::checkIfDrawingNode(int i){
  	 bool drawthisNode = true;
- 	 if (!drawTransitionLayer && Sim01->Nodes[i]->tissueType == 1){
- 		 drawthisNode = false;
- 	 }
  	 if (!drawPeripodium && Sim01->Nodes[i]->tissueType == 2){
  	 	 drawthisNode = false;
  	 }

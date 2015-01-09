@@ -22,7 +22,7 @@ public:
 	vector <double> posx,posy,posz;
 	vector <double> InvardNormalsX, InvardNormalsY;
 	vector <double> zVec0,zVec1,zVec2;
-	vector <int> tissueType; //0: columnar layer, 1: transition layer, 2: peripodium
+	vector <int> tissueType; //0: columnar layer, 1: peripodium
 	vector <int> atBorder;	//1 id the node is at the circumference of the setup, 0 otherwise
 	double tetha;
 	double dtet;
@@ -783,7 +783,7 @@ void EllipseLayoutGenerator::writeMeshFileForSimulation(double zHeight, int zLay
 	cerr<<"posx.size(): "<<posx.size()<<" "<<posx.size()*(zLayers+1)<<endl;
 	int n = posx.size();
 	for (int i=0;i<n;++i){
-		MeshFile<<posx[i]<<"	"<<posy[i]<<"	"<<posz[i]<<"    0	"<<tissueType[i]<<"	"<<atBorder[i]<<endl;	//x-coord   y-coord   z-coord   basal-node identifier(0) tissueType(columnar-0, transition-1,peripodium-2) flag for border nodes
+		MeshFile<<posx[i]<<"	"<<posy[i]<<"	"<<posz[i]<<"    0	"<<tissueType[i]<<"	"<<atBorder[i]<<endl;	//x-coord   y-coord   z-coord   basal-node identifier(0) tissueType(columnar-0, peripodium-2) flag for border nodes
 		
 	}
 	double dzHeight = zHeight/zLayers;
@@ -838,7 +838,7 @@ void EllipseLayoutGenerator::writeTriangleMeshFileForSimulation(double zHeight){
 	MeshFile<<posx.size()<<endl;
 	int n = posx.size();
 	for (int i=0;i<n;++i){
-		MeshFile<<posx[i]<<"	"<<posy[i]<<"	0	    2	"<<tissueType[i]<<"	"<<atBorder[i]<<endl;	//x-coord   y-coord   z-coord   mid-node identifier(0) tissueType(columnar-0, transition-1,peripodium-2) flag for border nodes
+		MeshFile<<posx[i]<<"	"<<posy[i]<<"	0	    2	"<<tissueType[i]<<"	"<<atBorder[i]<<endl;	//x-coord   y-coord   z-coord   mid-node identifier(0) tissueType(columnar-0,peripodium-2) flag for border nodes
 		
 	}
 	int nTri = triangles.size();
@@ -882,7 +882,7 @@ void EllipseLayoutGenerator::addInitialPosZ(double curvedEndRadia, int nCurveLay
 		double distance = posx[i]*posx[i]/r12 + posy[i]*posy[i]/r22;
 		if (distance<1){
 			//cout<<"distance id: "<<distance<<"size of tissueType: "<<tissueType.size()<<endl;
-			tissueType.push_back(0); //0: columnar layer; 1: transition layer; 2: peripodium
+			tissueType.push_back(0); //0: columnar layer; 2: peripodium
 			posz.push_back(0.0);
 			if (InvardNormalsX[i] == -100) {
 				//this is a newly added point, and it does require setting the normals 
@@ -892,34 +892,8 @@ void EllipseLayoutGenerator::addInitialPosZ(double curvedEndRadia, int nCurveLay
 				InvardNormalsY[i]=0.0;
 				
 			}
-		}
-		else {
-			//cout<<"Node is outside columnar layer:" <<i<<" pos: "<<posx[i]<<" "<<posy[i]<<endl;			
-			tissueType.push_back(1); //0: columnar layer; 1: transition layer; 2: peripodium			
-			bool foundlayer = false;
-			int counter = 0;
-			double tet = pi/2.0/nCurveLayers;
-
-			while (!foundlayer && counter <nCurveLayers ){
-				double temR1 = r1Init + (counter+1)*1.2*sideLen;
-				double temR2 = r2Init + (counter+1)*1.2*sideLen;
-				double d = posx[i]*posx[i]/temR1/temR1 + posy[i]*posy[i]/temR2/temR2;				
-				//cout<<" layer: "<<counter+1<<" tempRs: "<<temR1<<" "<<temR2<<" calculated d: "<<d<<endl;
-				if(d < 1){
-					foundlayer = true;
-					//posz.push_back((counter+1)*dZ);
-					double currZ = curvedEndRadia* (1.0 - cos(tet*(counter+1)));
-					//cout<<"Layer : "<<counter+1<<" Z: "<<currZ<<" tempR1&R2: "<<temR1<<" "<<temR2<<endl; 
-					posz.push_back( currZ );			
-				}
-				counter++;			
-			}
-			if(!foundlayer){
-				cerr<<"ERROR!! - Node is not in the calculated layers, z-height will not be assigned"<<endl;			
-			}
 		}	
 	}
-	cout<<"finished funciton"<<endl;
 }
 
 void EllipseLayoutGenerator::correctNormalsForAddedPoints(){

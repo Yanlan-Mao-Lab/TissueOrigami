@@ -82,7 +82,6 @@ private:
 	void initiateElementsByRowAndColumn(int Row, int Column);
 	void assignPhysicalParameters();
 	void calculateStiffnessMatrices();
-	void correctAlignmentOfTransitionElements();
 	void assignNodeMasses();
 	void fixAllD(int i);
 	void fixZ(int i);

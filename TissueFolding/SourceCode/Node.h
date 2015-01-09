@@ -18,7 +18,7 @@ public:
 	double **Velocity;
 	double Viscosity;
 	int tissuePlacement;	//1 -> apical, 0 -> basal, 2->middle, 3 -> lateral
-	int tissueType;		 	//0 -> columnar layer, 1->transition layer, 2->peripodium
+	int tissueType;		 	//0 -> columnar layer, 1->peripodium
 	bool atCircumference;
 	double mass;
 	void setViscosity(double ApicalVisc,double BasalVisc);

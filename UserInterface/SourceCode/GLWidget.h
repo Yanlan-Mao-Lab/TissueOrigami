@@ -44,7 +44,6 @@ using namespace std;
      bool drawNetForces;
      bool drawVelocities;
      bool drawTissueScaleBar;
-     bool drawTransitionLayer;
      bool drawPeripodium;
 
 

@@ -253,7 +253,6 @@ bool Simulation::initiateSystem(){
 	initiateSystemForces();
 	calculateSystemCentre();
 	assignPhysicalParameters();
-	correctAlignmentOfTransitionElements();
 	calculateStiffnessMatrices();
 	assignNodeMasses();
 	if (stretcherAttached){
@@ -1013,15 +1012,6 @@ void Simulation::initiateMesh(int MeshType){
 	}
 }
 
-void Simulation::correctAlignmentOfTransitionElements(){
-	int n = Elements.size();
-	for (int i=0; i< n; ++i){
-		if (Elements[i]->tissueType == 1 || Elements[i]->tissueType == 2 ){
-			Elements[i]->AlignReferenceBaseNormalToZ();
-		}
-	}
-}
-
 void Simulation::calculateStiffnessMatrices(){
 	int n = Elements.size();
 	for (int i=0; i<n; ++i){
@@ -1481,11 +1471,11 @@ void Simulation::assignPhysicalParameters(){
 
 void Simulation::runOneStep(){
 	if(timestep==0){
-		for(int i=0;i<Nodes.size();++i){
+		/*for(int i=0;i<Nodes.size();++i){
 			Nodes[i]->Position[0] *=0.5;
 			Nodes[i]->Position[1] *=0.5;
 			Nodes[i]->Position[2] *=1.0;
-		}/*
+		}
 		double R[3][3];
 		double Rx[3][3] = {{1,0,0},{0,0,-1},{0,1,0}};
 		double Ry[3][3] = {{0,0,1},{0,1,0},{-1,0,0}};
@@ -1502,10 +1492,10 @@ void Simulation::runOneStep(){
 			Nodes[i]->Position[0]=x;
 			Nodes[i]->Position[1]=y;
 			Nodes[i]->Position[2]=z;
-		}*/
+		}
 		for(int i=0;i<Elements.size();++i){
 			Elements[i]->updatePositions(3,Nodes);
-		}
+		}*/
 	}
 	int displayfreq = 60/dt;
 	if (timestep%displayfreq == 0){
@@ -1617,24 +1607,16 @@ void Simulation::updateNodePositions(int RKId){
 		else{
 			multiplier =1.0;
 		}
-		cout<<"RK: "<<RKId<<" system forces:"<<endl;
-		for (int i=0;i<n;++i){
-			for (int j=0; j<Nodes[i]->nDim; ++j){
-				cout<<"	"<<SystemForces[RKId][i][j]<<"  ";
-			}
-			cout<<endl;
-		}
 		for (int i=0;i<n;++i){
 			for (int j=0; j<Nodes[i]->nDim; ++j){
 				Nodes[i]->Velocity[RKId][j] = SystemForces[RKId][i][j]/ (Nodes[i]->Viscosity*Nodes[i]->mass) ;
 				Nodes[i]->RKPosition[j] = Nodes[i]->Position[j] + Nodes[i]->Velocity[RKId][j]*multiplier*dt;
 			}
 			//cout<<"RK: "<<RKId<<" node: "<<i<<"mass: "<<Nodes[i]->mass<<" visc: "<<Nodes[i]->Viscosity<<endl;
-			cout<<"RK: "<<RKId<<" node: "<<i<<"mass: "<<Nodes[i]->mass<<"	 velocity: ";
-			for (int j=0; j<Nodes[i]->nDim; ++j){
-				cout<<Nodes[i]->Velocity[RKId][j]<<" ";
-			}
-			cout<<endl;
+			//for (int j=0; j<Nodes[i]->nDim; ++j){
+			//	cout<<"	"<<Nodes[i]->Velocity[RKId][j]<<" ";
+			//}
+			//cout<<endl;
 			//cout<<"	Old pos: ";
 			//for (int j=0; j<Nodes[i]->nDim; ++j){
 			//	cout<<Nodes[i]->Position[j]<<" ";
