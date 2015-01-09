@@ -36,6 +36,7 @@ protected:
 	//void getCurrentAlignmentFaces(double* RefSide, double* ShapeSide, double* RefFace, double* ShapeFace);
 	//void updateAlignmentTurn();
 	void calculateReferenceVolume();
+	double  getApicalSideLengthAverage();
 
 public:
 	Triangle(int* NodeIds,vector<Node*>& Nodes, int CurrId, double h);

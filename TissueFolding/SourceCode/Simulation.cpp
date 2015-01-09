@@ -3,6 +3,8 @@
 #include "Prism.h"
 #include "Triangle.h"
 #include <string.h>
+#include <algorithm>    // std::sort
+#include <vector>
 
 using namespace std;
 
@@ -225,6 +227,10 @@ bool Simulation::initiateSystem(){
 	else if(MeshType == 4){
 		initiateMesh(MeshType);
 	}
+	if (AddPeripodium){
+		addPeripodiumToTissue();
+	}
+
 	initiateSystemForces();
 	calculateSystemCentre();
 	assignPhysicalParameters();
@@ -918,6 +924,201 @@ void Simulation::initiateMesh(int MeshType){
 	}
 }
 
+void Simulation::addPeripodiumToTissue(){
+	bool success = true;
+	success = generateColumnarCircumferenceNodeList();
+	if (!success){
+		return;
+	}
+	calculateSystemCentre();
+	sortColumnarCircumferenceNodeList();
+	addPeripodiumNodes();
+	addPeripodiumElements();
+	//addMassToPeripodiumNodes();
+	//distributeCircumferenceMass();
+}
+
+bool Simulation::generateColumnarCircumferenceNodeList(){
+	//generating a list of nodes that are at the circumference and at the basal surface
+	int n = Nodes.size();
+	for (int i=0; i<n; ++i){
+		if (Nodes[i]->atCircumference && Nodes[i]->tissuePlacement == 0){ // tissuePlacement = 0 -> basal node
+			ColumnarCircumferencialNodeList.push_back(i);
+		}
+	}
+	n = ColumnarCircumferencialNodeList.size();
+	if (n<=0){
+		cerr<<"No circumferncial nodes indicated! Cannot generate peripodium"<<endl;
+		AddPeripodium = false;
+		return false;
+	}
+}
+
+void Simulation::sortColumnarCircumferenceNodeList(){
+	//ordering the circumferencial nodes of the basal surface in clockwise rotation
+	//sort (ColumnarCircumferencialNodeList.begin(), ColumnarCircumferencialNodeList.end(), bind(&Simualtion::sortcomparison, this, _1, _2));
+	int n = ColumnarCircumferencialNodeList.size();
+	vector <double> angles;
+	for (int j =0 ; j<n; ++j){
+		double x = Nodes[ColumnarCircumferencialNodeList[j]]->Position[0];
+		double y = Nodes[ColumnarCircumferencialNodeList[j]]->Position[1];
+		double tet = atan2(y,x);
+		if (tet<0){tet += 2.0*3.14;}
+		angles.push_back(tet);
+	}
+
+	cout<<"ColumnarCircumferencialNodeList before sort"<<endl;
+	for (int j =0 ; j<n; ++j){
+		cout<<ColumnarCircumferencialNodeList[j]<<" "<<angles[j]<<endl;
+	}
+	bool swapped = true;
+	//for (int j =1 ; j<n; ++j){
+	while (swapped){
+		swapped = false;
+		for(int i=1; i<n; ++i){
+			if(angles[i]<angles[i-1]){
+				int temp=ColumnarCircumferencialNodeList[i-1];
+				ColumnarCircumferencialNodeList[i-1]=ColumnarCircumferencialNodeList[i];
+				ColumnarCircumferencialNodeList[i]=temp;
+				double td = angles[i-1];
+				angles[i-1]=angles[i];
+				angles[i-1]=td;
+				swapped = true;
+			}
+		}
+	}
+	//}
+	cout<<"ColumnarCircumferencialNodeList after sort"<<endl;
+	for (int j =0 ; j<n; ++j){
+		cout<<ColumnarCircumferencialNodeList[j]<<" "<<angles[j]<<endl;
+	}
+}
+
+bool Simulation::sortcomparison(int i, int j){
+/*	if ((Nodes[i]->Position[0] - SystemCentre[0] ) >= 0 && ( Nodes[j]->Position[0] - SystemCentre[0] )< 0)
+		return true;
+	if ((Nodes[i]->Position[0] - SystemCentre[0] ) < 0 && ( Nodes[j]->Position[0] - SystemCentre[0] ) >= 0)
+		return false;
+	if ((Nodes[i]->Position[0] - SystemCentre[0] ) == 0 && (Nodes[j]->Position[0] - SystemCentre[0]) == 0) {
+		if ( (Nodes[i]->Position[1] - SystemCentre[1]) >= 0 || (Nodes[j]->Position[1] - SystemCentre[1]) >= 0)
+			return Nodes[i]->Position[1] > Nodes[j]->Position[1];
+		return Nodes[j]->Position[1] > Nodes[i]->Position[1];
+	}
+
+	// compute the cross product of vectors (center -> a) x (center -> b)
+	int det = (Nodes[i]->Position[0] - SystemCentre[0]) * (Nodes[j]->Position[1] - SystemCentre[1]) - (Nodes[j]->Position[0] - SystemCentre[0]) * (Nodes[i]->Position[1] - SystemCentre[1]);
+	if (det < 0)
+		return true;
+	if (det > 0)
+		return false;
+
+	// points a and b are on the same line from the center
+	// check which point is closer to the center
+	int d1 = (Nodes[i]->Position[0] - SystemCentre[0]) * (Nodes[i]->Position[0] - SystemCentre[0]) + (Nodes[i]->Position[1] - SystemCentre[1]) * (Nodes[i]->Position[1] - SystemCentre[1]);
+	int d2 = (Nodes[j]->Position[0] - SystemCentre[0]) * (Nodes[j]->Position[0] - SystemCentre[0]) + (Nodes[j]->Position[1] - SystemCentre[1]) * (Nodes[j]->Position[1] - SystemCentre[1]);
+	return d1 > d2;
+*/
+}
+
+void Simulation::calculateCentreOfNodes(double* centre){
+	centre[0] = 0.0;
+	centre[1] = 0.0;
+	centre[2] = 0.0;
+	int n = ColumnarCircumferencialNodeList.size();
+	double x =0.0, y = 0.0, z= 0.0;
+	for (int i=0; i<n; ++i){
+		for (int j=0; j<Nodes[ColumnarCircumferencialNodeList[i]]->nDim; ++j){
+			centre[j] += Nodes[ColumnarCircumferencialNodeList[i]]->Position[j];
+		}
+	}
+	for (int j=0; j<3; ++j){
+		centre[j] /= n;
+	}
+}
+
+void Simulation::addPeripodiumNodes(){
+	double d = getAverageSideLength();
+	int n = ColumnarCircumferencialNodeList.size();
+	for (int i=0; i<n; ++i){
+		int index1 = ColumnarCircumferencialNodeList[i];
+		int index2 = ColumnarCircumferencialNodeList[0];
+		if (i<n-1) {
+			//the connected node is node zero for the last node on the list, for all else, it is (i+1)th node on the list
+			index2 = ColumnarCircumferencialNodeList[i+1];
+		}
+		double MidPoint[2];
+		MidPoint[0] = 0.5 * (Nodes[index1]->Position[0] + Nodes[index2]->Position[0]);
+		MidPoint[1] = 0.5 * (Nodes[index1]->Position[1] + Nodes[index2]->Position[1]);
+		double vec[2] = { Nodes[index2]->Position[0] - Nodes[index1]->Position[0], Nodes[index2]->Position[1] - Nodes[index1]->Position[1]};
+		//rotate the vector from node 0 to node 1 cw 90 degrees
+		double* norm;
+		norm = new double[3];
+		norm[0] = vec[1];
+		norm[1] = -1.0*vec[0];
+		norm[2] = 0.0;
+		cout<<"	1 norm: "<<norm[0]<<" "<<norm[1]<<" "<<norm[2]<<endl;
+		//normalise the vector, and scale with average side length:
+		double mag = pow((norm[0]*norm[0] + norm[1]*norm[1]),0.5);
+		mag /=d;
+		norm[0] /= mag; norm[1] /=mag;
+		//calculate x,y position of the node:
+		norm[0] += MidPoint[0]; norm[1] += MidPoint[1];
+		Node* tmp_nd;
+		cout<<"Adding Peroipodium node: "<<endl;
+		cout<<"	idx1: "<<index1<<" idx2: "<<index2<<endl;
+		cout<<"	vec : "<<vec[0]<<" "<<vec[1]<<" "<<vec[2]<<endl;
+		cout<<"	norm: "<<norm[0]<<" "<<norm[1]<<" "<<norm[2]<<endl;
+		tmp_nd = new Node(Nodes.size(), 3, norm,0,1);  //tissue type is peripodium, node type is basal
+		Nodes.push_back(tmp_nd);
+		PeripodiumCircumferencialNodeList.push_back(tmp_nd->Id);
+		delete[] norm;
+	}
+	//AssignAssociatedNodesToPeripodiumCircumference();
+}
+
+double Simulation::getAverageSideLength(){
+	double dsum =0.0;
+	int n = Elements.size();
+	for(int i=0; i<n; ++i){
+		dsum += Elements[i]->getApicalSideLengthAverage();
+	}
+	dsum /= (double)n;
+	return dsum;
+}
+
+//void Simulation::AssignAssociatedNodesToPeripodiumCircumference(){
+
+//}
+
+void Simulation::addPeripodiumElements(){
+	int n = ColumnarCircumferencialNodeList.size();
+	calculateSystemCentre();
+	SystemCentre[2] -= 1; // The apical surface is assumed to took towards (-)ve z
+	for (int i=0; i<n; ++i){
+		int index1 = ColumnarCircumferencialNodeList[i];
+		int index2 = ColumnarCircumferencialNodeList[0];
+		if (i<n-1) {
+			//the connected node is node zero for the last node on the list, for all else, it is (i+1)th node on the list
+			index2 = ColumnarCircumferencialNodeList[i+1];
+		}
+		int* NodeIds;
+		NodeIds = new int[3];
+		NodeIds[0] = index1;
+		NodeIds[1] = index2;
+		NodeIds[2] = PeripodiumCircumferencialNodeList[i];
+
+		double height = 5;
+		Triangle* TrianglePnt01;
+		cout<<"NodeIds: "<<NodeIds[0]<<" "<<NodeIds[1]<<" "<<NodeIds[2]<<endl;
+		TrianglePnt01 = new Triangle(NodeIds, Nodes, currElementId, height);
+		TrianglePnt01->AlignReferenceApicalNormalToZ(SystemCentre);  //correcting the alignment of the triangular element such that the apical side will be aligned with (+)ve z
+		Elements.push_back(TrianglePnt01);
+		currElementId++;
+		delete[] NodeIds;
+	}
+	calculateSystemCentre();
+}
+
 void Simulation::calculateStiffnessMatrices(){
 	int n = Elements.size();
 	for (int i=0; i<n; ++i){
@@ -1103,7 +1304,7 @@ void Simulation::fixApicalBasalNodes(vector<int> &NodesToFix){
 		}
 	}
 }
-
+/*
 void Simulation::GenerateCircumferencialNodeList(vector<int> &NodesToFix, int nLastRow){
 	//Now I have a list of nodes to fix, written in a specific order.
 	//I would like reorder these, to generate a continuous strip around the tissue
@@ -1151,7 +1352,7 @@ void Simulation::GenerateCircumferencialNodeList(vector<int> &NodesToFix, int nL
     }
     cout<<"merged lists"<<endl;
 }
-
+*/
 void Simulation::initiateElementsByRowAndColumn(int Row, int Column){
 	int xinit1 = 0;
 	int xinit2 = xinit1+Row+1;

@@ -35,6 +35,7 @@ protected:
 	void calculatePlaneNormals(double** normals);
 	void assignNodalVector(double* vec, int id0, int id1);
 	bool checkNodePlaneConsistency(double** normals);
+	double getApicalSideLengthAverage();
 
 public:
 	Prism(int* NodeIds,vector<Node*>& Nodes, int CurrId);

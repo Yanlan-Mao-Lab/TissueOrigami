@@ -493,3 +493,17 @@ void 	Triangle::correctFor2DAlignment(){
 	delete[] normal;
 	delete[] z;
 }
+
+double Triangle::getApicalSideLengthAverage(){
+	double dx,dy,dz;
+	double dsum =0.0;
+	int pairs[3][2] = {{0,1},{0,3},{2,3}};
+	for (int i=0; i<3; ++i){
+		dx = Positions[pairs[i][0]][0] - Positions[pairs[i][1]][0];
+		dy = Positions[pairs[i][0]][1] - Positions[pairs[i][1]][1];
+		dy = Positions[pairs[i][0]][2] - Positions[pairs[i][1]][2];
+		dsum += pow((dx*dx + dy*dy+dz*dz),0.5);
+	}
+	dsum /= 3.0;
+	return dsum;
+}

@@ -165,6 +165,7 @@ public:
 
 	void alignElementOnReference();
 	virtual void correctFor2DAlignment(){ParentErrorMessage();};
+	virtual double getApicalSideLengthAverage(){ParentErrorMessage();};
 	void updatePositionsAlignedToReferenceForRK();
 	void growShape();
 	void assignVolumesToNodes(vector <Node*>& Nodes);

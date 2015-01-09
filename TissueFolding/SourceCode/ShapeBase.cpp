@@ -209,10 +209,11 @@ void 	ShapeBase::setTissueType(vector<Node*>& Nodes){
 		//ASK PERIPODIUM FIRST, SOME PERIPODIUM ELEMENTS DO HAVE COLUMNAR NODES, NO COLUMNAR ELEMENT SHOULD HAVE A PERIPODIUM NODE
 		tissueType = 0;
 	}
-
 	else {
 		cerr<<"Element is not placed into tissue correctly, Id: "<<Id<<endl;
 	}
+	cout<<"Element : "<<Id<<" hasColumnarNode: "<<hasColumnarNode<<" hasPeripodiumNode "<<hasPeripodiumNode<<" tissueType: "<<tissueType<<endl;
+
 }
 
 void 	ShapeBase::setReferencePositionMatrix(){

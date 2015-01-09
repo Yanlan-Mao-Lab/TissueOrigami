@@ -1,9 +1,9 @@
 InputMeshParameters:
   MeshInputMode(int-seeDocumentation): 4
-  MeshFile(full-path):   /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Triangle0.mesh
+  MeshFile(full-path):   /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Prism0.mesh
 
 PeripodiumParameters:
-  AddPeripodium: 0
+  AddPeripodium: 1
   PeripodiumYoungsModulus: 20.0
 
 TimeParameters:

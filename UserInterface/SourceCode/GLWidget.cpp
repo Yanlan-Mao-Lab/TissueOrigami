@@ -159,7 +159,7 @@ using namespace std;
 
  bool GLWidget::checkIfDrawingElement(int i){
 	 bool drawthisElement = true;
-	 if (!drawPeripodium && Sim01->Elements[i]->tissueType == 2){
+	 if (!drawPeripodium && Sim01->Elements[i]->tissueType == 1){
 	 	 drawthisElement = false;
 	 }
 	 return drawthisElement;
@@ -167,7 +167,7 @@ using namespace std;
 
  bool GLWidget::checkIfDrawingNode(int i){
  	 bool drawthisNode = true;
- 	 if (!drawPeripodium && Sim01->Nodes[i]->tissueType == 2){
+ 	 if (!drawPeripodium && Sim01->Nodes[i]->tissueType == 1){
  	 	 drawthisNode = false;
  	 }
  	 return drawthisNode;
