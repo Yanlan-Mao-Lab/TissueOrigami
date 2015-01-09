@@ -22,7 +22,6 @@ SOURCES += $$CurrPath/SourceCode/main.cpp \
 	$$CurrPath/SourceCode/GLWidget.cpp \
 	$$CurrPath/../TissueFolding/SourceCode/Prism.cpp \
 	$$CurrPath/../TissueFolding/SourceCode/PrismLateral.cpp \
-	$$CurrPath/../TissueFolding/SourceCode/Tetrahedron.cpp \
 	$$CurrPath/../TissueFolding/SourceCode/Triangle.cpp \
 	$$CurrPath/../TissueFolding/SourceCode/ReferenceShapeBase.cpp \
  	$$CurrPath/../TissueFolding/SourceCode/ShapeBase.cpp \
