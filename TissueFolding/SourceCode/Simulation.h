@@ -33,6 +33,7 @@ private:
 	bool VelocitiesSaved;
 	vector <int> ColumnarCircumferencialNodeList;
 	vector <int> PeripodiumCircumferencialNodeList;
+	vector <int> ApicalColumnarCircumferencialNodeList;
 	int	 nCircumferencialNodes;
 	int DVRight,DVLeft;
 	double StretchVelocity;
@@ -71,14 +72,21 @@ private:
 	void initiateMesh(int MeshType, int Row, int Column, float SideLength, float zHeight);
 	void initiateMesh(int MeshType, string inputtype, float SideLength, float zHeight );
 	void initiateMesh(int MeshType);
-	void addPeripodiumToTissue();
+	bool addPeripodiumToTissue();
 	bool generateColumnarCircumferenceNodeList();
 	void sortColumnarCircumferenceNodeList();
 	bool sortcomparison(int i, int j);
 	void calculateCentreOfNodes(double* centre);
 	double getAverageSideLength();
-	void addPeripodiumNodes();
-	void addPeripodiumElements();
+	bool CalculateTissueHeight();
+	void addPeripodiumNodes(vector <int*> &trianglecornerlist, double height, double d);
+	void AddPeripodiumCircumference(double height, int& index_begin, int &index_end);
+	void AddHorizontalRowOfPeripodiumNodes(vector <int*> &trianglecornerlist, double d, int &index_begin, int &index_end);
+	void AddVerticalRowOfPeripodiumNodes(int& layerCount, int nLayers, vector <int*> &trianglecornerlist, double height,  int &index_begin, int &index_end);
+	void AddPeripodiumCap(int layerCount, vector <int*> &trianglecornerlist, double height, int index_begin, int index_end);
+	void FillNodeAssociationDueToPeripodium();
+	void assignMassWeightsDueToPeripodium();
+	void addPeripodiumElements(vector <int*> &trianglecornerlist, double height);
 	void initiateSinglePrismNodes(float zHeight);
 	void initiateSinglePrismElement();
 	void initiateNodesByRowAndColumn(int Row, int Column,  float SideLength, float zHeight);
@@ -88,6 +96,7 @@ private:
 	void assignPhysicalParameters();
 	void calculateStiffnessMatrices();
 	void assignNodeMasses();
+	void assignConnectedElementsAndWightsToNodes();
 	void fixAllD(int i);
 	void fixZ(int i);
 	void zeroForcesOnNode(int RKId, int i);
@@ -110,6 +119,8 @@ private:
 	void changeCellShapeRing(int currIndexForParameters);
 	void setStretch();
 	void addStretchForces(int RKId);
+	void LaserAblate(double OriginX, double OriginY, double Radius);
+	void fillInNodeNeighbourhood();
 public:
 
 	ofstream outputFile;
@@ -150,6 +161,7 @@ public:
 	vector <Node*> Nodes;
 	vector <ShapeBase*> Elements;
 	double*** SystemForces;
+	double*** PackingForces;
 	double SystemCentre[3];
 	bool AddPeripodium;
 	bool stretcherAttached;
@@ -157,6 +169,8 @@ public:
 	double StretchMin, StretchMax, StretchStrain;
 	vector <int*> TrianglesToDraw;
 	vector <double*> NodesToDraw;
+	double TissueHeight;
+	int TissueHeightDiscretisationLayers;
 
 	Simulation();
 	~Simulation();
@@ -167,13 +181,17 @@ public:
 	void cleanMatrixUpdateData();
 	void resetForces();
 	void runOneStep();
+	void calculatePacking(int RKId, double threshold);
+	void redistributePeripodiumForces(int RKId);
 	void updateNodePositions(int RKId);
+	void updateNodePositionsForPeripodiumCircumference(int RKId);
 	void updateElementPositions(int RKId);
 	void updateElementPositionsSingle(int RKId, int i );
 	bool initiateSavedSystem();
 	void updateOneStepFromSave();
 	void alignTissueDVToXPositive();
 	void calculateDVDistance();
+	void TissueAxisPositionDisplay();
 	void CoordinateDisplay();
 
 };

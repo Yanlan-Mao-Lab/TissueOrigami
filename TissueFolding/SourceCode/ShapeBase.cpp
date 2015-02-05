@@ -8,7 +8,7 @@ void 	ShapeBase::ParentErrorMessage(){
 }
 
 void	ShapeBase::setShapeType(string TypeName){
-	cout<<"inside set shape type"<<endl;
+	//cout<<"inside set shape type"<<endl;
 	if (TypeName == "Prism"){
 		this->ShapeType = 1;
 	}
@@ -19,13 +19,13 @@ void	ShapeBase::setShapeType(string TypeName){
 		this->ShapeType = 3;
 	}
 	else if (TypeName == "Triangle"){
-		cout<<"set shape type to triangle"<<endl;
+		//cout<<"set shape type to triangle"<<endl;
 		this->ShapeType = 4;
 	}
 	else{
 		this->ShapeType= -100;
 	};
-	cout<<"finalised set shape type"<<endl;
+	//cout<<"finalised set shape type"<<endl;
 }
 
 void	ShapeBase::setIdentificationColour(){
@@ -147,7 +147,6 @@ void 	ShapeBase::setPositionMatrix(vector<Node*>& Nodes){
 			PositionsInTissueCoord[i][j] = 0.0;
 		}
 	}
-
 }
 
 void 	ShapeBase::setTissuePlacement(vector<Node*>& Nodes){
@@ -206,13 +205,13 @@ void 	ShapeBase::setTissueType(vector<Node*>& Nodes){
 		tissueType = 1;
 	}
 	else if (hasColumnarNode){
-		//ASK PERIPODIUM FIRST, SOME PERIPODIUM ELEMENTS DO HAVE COLUMNAR NODES, NO COLUMNAR ELEMENT SHOULD HAVE A PERIPODIUM NODE
+		//ASK PERIPODIUM FIRST, SOME PERIPODIUM ELEMENTS CAN HAVE COLUMNAR NODES, NO COLUMNAR ELEMENT SHOULD HAVE A PERIPODIUM NODE
 		tissueType = 0;
 	}
 	else {
 		cerr<<"Element is not placed into tissue correctly, Id: "<<Id<<endl;
 	}
-	cout<<"Element : "<<Id<<" hasColumnarNode: "<<hasColumnarNode<<" hasPeripodiumNode "<<hasPeripodiumNode<<" tissueType: "<<tissueType<<endl;
+	//cout<<"Element : "<<Id<<" hasColumnarNode: "<<hasColumnarNode<<" hasPeripodiumNode "<<hasPeripodiumNode<<" tissueType: "<<tissueType<<endl;
 
 }
 
@@ -283,10 +282,22 @@ void 	ShapeBase::getStrain(int type, float &StrainMag){
 	StrainMag = 0.0;
 	if (type == 0){
 		//this is the average strain
-		for (int i=0; i<3; ++i){
-			StrainMag += ( StrainTissueMat(i,i) ) ;
+		for (int i=0; i<6; ++i){
+			for (int j=i; j<3; ++j){
+				if (i==j || StrainTissueMat(i,j)>0 ){
+					StrainMag += ( StrainTissueMat(i,j) ) ;
+				}
+				else{
+					StrainMag -= ( StrainTissueMat(i,j) ) ;
+				}
+			}
 		}
-		StrainMag /= 3;
+		StrainMag /= 6;
+		//if (Id == 300 || Id == 301){
+		//	cout<<"Element: "<<Id<<endl;
+		//	displayMatrix(Strain,"Strain");
+		//	displayMatrix(StrainTissueMat,"StrainTissueMat");
+		//}
 	}
 	else if (type == 1){
 		StrainMag = ( StrainTissueMat(0,0) );
@@ -307,9 +318,16 @@ void 	ShapeBase::getPlasticStrain(int type, float &StrainMag){
 	StrainMag = 0.0;
 	if (type == 0){
 		for (int i=0; i<3; ++i){
-			StrainMag += CurrPlasticStrainsInTissueCoordsMat(i,i);
+			for (int j=i; j<3; ++j){
+				if (i==j || CurrPlasticStrainsInTissueCoordsMat(i,j)>0 ){
+					StrainMag += ( CurrPlasticStrainsInTissueCoordsMat(i,j) ) ;
+				}
+				else{
+					StrainMag -= ( CurrPlasticStrainsInTissueCoordsMat(i,j) ) ;
+				}
+			}
 		}
-		StrainMag /= 3;
+		StrainMag /= 6;
 	}
 	else if (type == 1){
 		StrainMag = CurrPlasticStrainsInTissueCoordsMat(0,0);
@@ -1004,6 +1022,15 @@ bool 	ShapeBase::calculateAlignmentRotationMatrix(double** RefNormalised, double
 }
 */
 
+bool 	ShapeBase::DoesPointBelogToMe(int IdNode){
+	for (int i = 0; i<nNodes; ++i){
+		if (NodeIds[i] == IdNode){
+			return true;
+		}
+	}
+	return false;
+}
+
 double 	ShapeBase::determinant3by3Matrix(double* rotMat){
 	double det =0.0;
 	det  =  rotMat[0]*(rotMat[4]*rotMat[8]-rotMat[5]*rotMat[7]);
@@ -1203,6 +1230,7 @@ void  ShapeBase::rotateReferenceElementByRotationMatrix(double* rotMat){
 }
 
 void	ShapeBase::calculateForces(int RKId, double ***SystemForces, vector <Node*>& Nodes, ofstream& outputFile){
+
 	if (ShapeType == 1 || ShapeType == 2 || ShapeType == 3){
 		calculateForces3D(RKId, SystemForces, Nodes, outputFile);
 	}
@@ -1293,14 +1321,32 @@ void	ShapeBase::calculateForces3D(int RKId, double ***SystemForces, vector <Node
 			counter++;
 		}
 	}
+	/*if (Id == 442 || Id == 197){
+		cout<<"element id: "<<Id<<" RK: "<<RKId<<"system Forces: "<<endl;
+			for (int i = 0; i<nNodes; ++i){
+				cout<<" Node: "<<NodeIds[i]<<" ";
+				for (int j = 0; j<3; ++j){
+					cout<<SystemForces[RKId][NodeIds[i]][j]<<" ";
+				}
+				cout<<endl;
+			}
+			displayMatrix(Strain,"Strain");
+			//displayMatrix(PlasticStrain,"PlasticStrain");
+			//displayMatrix(NetStrain,"NetStrain");
+			//displayMatrix(Forces2D,"Forces2D");
+			//displayMatrix(forcesInReferenceCoordsMat,"forcesInReferenceCoordsMat");
+			//displayMatrix(forcesInWorldT,"forcesInWorldT");
+			//displayMatrix(Forces,"Forces");
+	}*/
 }
 
 void	ShapeBase::calculateForces2D(int RKId, double ***SystemForces, vector <Node*>& Nodes, ofstream& outputFile){
-	//cout<<"calculating forces"<<endl;
+	//cout<<"calculating forces for 2D"<<endl;
 	int dim = nDim-1;	//calculating forces and strains for 2D
 	const int nMult = nNodes*dim;
 	using namespace boost::numeric::ublas;
 	boost::numeric::ublas::vector<double> displacement(nMult);
+	//cout<<"updating positions aligned to ref"<<endl;
 	if (RKId != 0 ){
 		//If we are at the first RK step, the positions aligned to reference
 		//will be up to date from alignment calculation.
@@ -1310,6 +1356,7 @@ void	ShapeBase::calculateForces2D(int RKId, double ***SystemForces, vector <Node
 		//outputFile<<"  id: "<<Id<<" Updating positions aligned to reference"<<endl;
 		updatePositionsAlignedToReferenceForRK();
 	}
+	//cout<<"finalised positions aligned to ref"<<endl;
 	int counter = 0;
 	for (int i = 0; i<nNodes; ++i){
 		for (int j = 0; j<dim; ++j){
@@ -1317,11 +1364,15 @@ void	ShapeBase::calculateForces2D(int RKId, double ***SystemForces, vector <Node
 			counter++;
 		}
 	}
+	//cout<<"calculated displacement - RKId: "<<RKId<<" elementId : "<<Id<<endl;
+	//displayMatrix(B,"B");
+	//displayMatrix(displacement,"displacement");
 	//outputFile<<"  id: "<<Id<<"   calculating strain"<<endl;
 	Strain = zero_vector<double>(6);
 	boost::numeric::ublas::vector<double> Strain2D(3);
 	Strain2D = zero_vector<double>(3);
 	boost::numeric::ublas::axpy_prod(B,displacement,Strain2D);
+	//cout<<"calculated strain2D"<<endl;
 	Strain(0)=Strain2D(0);
 	Strain(1)=Strain2D(1);
 	Strain(3)=Strain2D(2);
@@ -1332,6 +1383,7 @@ void	ShapeBase::calculateForces2D(int RKId, double ***SystemForces, vector <Node
 		//Necessary updates are done when saving or displaying is applicable
 		RK1Strain = Strain;
 	}
+	//cout<<"updated RK1Strain"<<endl;
 	//reading from the upper triangular:
 	PlasticStrain(0)= LocalGrowthStrainsMat(0,0);
 	PlasticStrain(1)= LocalGrowthStrainsMat(1,1);
@@ -1339,16 +1391,19 @@ void	ShapeBase::calculateForces2D(int RKId, double ***SystemForces, vector <Node
 	PlasticStrain(3)= LocalGrowthStrainsMat(0,1);
 	PlasticStrain(4)= LocalGrowthStrainsMat(0,2);
 	PlasticStrain(5)= LocalGrowthStrainsMat(1,2);
+	//cout<<"updated PlasticStrain"<<endl;
 	boost::numeric::ublas::vector<double> NetStrain;
 	NetStrain= zero_vector<double>(3);
 	NetStrain(0) = Strain(0) - PlasticStrain(0); //ex
 	NetStrain(1) = Strain(1) - PlasticStrain(0); //ey
 	NetStrain(2) = Strain(3) - PlasticStrain(0); //gxy  -- skipping z terms
+	//cout<<"calculated  NetStrain"<<endl;
 	Forces = zero_vector<double>(nNodes*nDim);
 	boost::numeric::ublas::vector<double> Forces2D;
 	Forces2D = zero_vector<double>(nMult);
 	//outputFile<<"  id: "<<Id<<"   calculating forces"<<endl;
 	boost::numeric::ublas::axpy_prod(BE,NetStrain,Forces2D);
+	//cout<<"calculated  Forces2D"<<endl;
 	//boost::numeric::ublas::vector<double> ForcesFromk2D = zero_vector<double>(nMult);
 	//boost::numeric::ublas::axpy_prod(k,displacement,ForcesFromk2D);
 	//displayMatrix(Forces2D,"Forces2D______");
@@ -1363,9 +1418,11 @@ void	ShapeBase::calculateForces2D(int RKId, double ***SystemForces, vector <Node
 			counter++;
 		}
 	}
+	//cout<<"assigned forcesInReferenceCoordsMat"<<endl;
 	boost::numeric::ublas::matrix<double>forcesInWorldT(nDim,nNodes);
 	forcesInWorldT = zero_matrix<double>(nDim,nNodes);
 	boost::numeric::ublas::axpy_prod(trans(WorldToReferenceRotMat),forcesInReferenceCoordsMat,forcesInWorldT);
+	//cout<<"calculated forcesInReferenceCoordsMat"<<endl;
 	counter = 0;
 	for (int i = 0; i<nNodes; ++i){
 		for (int j = 0; j<nDim; ++j){
@@ -1373,7 +1430,7 @@ void	ShapeBase::calculateForces2D(int RKId, double ***SystemForces, vector <Node
 			counter++;
 		}
 	}
-
+	//cout<<"calculated Forces"<<endl;
 
 	//cout<<"Element Id: "<<Id<<"Forces on node 351: "<<SystemForces[RKId][351][0]<<" "<<SystemForces[RKId][351][1]<<" "<<SystemForces[RKId][351][2]<<endl;
 	//Now put the forces in world coordinates into system forces, in forces per volume format
@@ -1387,6 +1444,7 @@ void	ShapeBase::calculateForces2D(int RKId, double ***SystemForces, vector <Node
 			counter++;
 		}
 	}
+	//cout<<"updated SystemForces"<<endl;
 	//displayMatrix(Strain,"Strain");
 	//displayMatrix(PlasticStrain,"PlasticStrain");
 	//displayMatrix(NetStrain,"NetStrain");
@@ -1401,6 +1459,39 @@ void	ShapeBase::calculateForces2D(int RKId, double ***SystemForces, vector <Node
 	//	}
 	//	cout<<endl;
 	//}
+	/*
+	if (Id == 442 || Id == 197){
+		cout<<"element id: "<<Id<<" RK: "<<RKId<<"system Forces: "<<endl;
+			for (int i = 0; i<nNodes; ++i){
+				cout<<" Node: "<<NodeIds[i]<<" ";
+				for (int j = 0; j<3; ++j){
+					cout<<SystemForces[RKId][NodeIds[i]][j]<<" ";
+				}
+				cout<<endl;
+			}
+			displayMatrix(Strain,"Strain");
+	}
+	*/
+}
+
+void	ShapeBase::fillNodeNeighbourhood(vector<Node*>& Nodes){
+	for (int i = 0; i<nNodes; ++i){
+		for (int j = 0; j<nNodes; ++j){
+			if ( i !=j ){
+				int n = Nodes[NodeIds[i]]->immediateNeigs.size();
+				bool alreadyOnList = false;
+				for (int k=0; k<n; ++k){
+					if (NodeIds[j] == Nodes[NodeIds[i]]->immediateNeigs[k]){
+						alreadyOnList = true;
+						break;
+					}
+				}
+				if (!alreadyOnList){
+					Nodes[NodeIds[i]]->immediateNeigs.push_back(NodeIds[j]);
+				}
+			}
+		}
+	}
 }
 
 
@@ -1571,6 +1662,35 @@ void 	ShapeBase:: assignVolumesToNodes(vector <Node*>& Nodes){
 	for (int i=0; i<nNodes; i++){
 		Nodes[NodeIds[i]]->mass +=ReferenceShape->Volume/nNodes;
 	}
+}
+
+void 	ShapeBase:: assignElementToConnectedNodes(vector <Node*>& Nodes){
+	for (int i=0; i<nNodes; i++){
+		Nodes[NodeIds[i]]->connectedElementIds.push_back(Id);
+		double weightfFraction = (ReferenceShape->Volume/nNodes)/Nodes[NodeIds[i]]->mass;
+		Nodes[NodeIds[i]]->connectedElementWeights.push_back(weightfFraction);
+	}
+}
+
+void 	ShapeBase:: removeMassFromNodes(vector <Node*>& Nodes){
+	for (int i=0; i<nNodes; i++){
+			Nodes[NodeIds[i]]->mass -=ReferenceShape->Volume/nNodes;
+			//updating the weight fractions of the elements on the node due to elimination of the ablated element:
+			int n = Nodes[NodeIds[i]]->connectedElementIds.size();
+			double scaler = 1.0;
+			for (int j=0;j<n;++j){
+				if (Nodes[NodeIds[i]]->connectedElementIds[j]==Id){
+					scaler = 1.0 - Nodes[NodeIds[i]]->connectedElementWeights[j];
+					Nodes[NodeIds[i]]->connectedElementWeights[j]  = 0.0;
+					break;
+				}
+			}
+			for (int j=0;j<n;++j){
+				Nodes[NodeIds[i]]->connectedElementWeights[j] /= scaler;
+			}
+			//All wiights are normlised as the sum will make 1.0. Now I do not want this element in the weighing,
+			//it does not have a mass anymore, therefore I will multiply all the remaining weights with (1-w_ablated);
+		}
 }
 /*
 void ShapeBase::updateElementsNodePositions(int RKId, double ***SystemForces, vector <Node*>& Nodes, double dt){

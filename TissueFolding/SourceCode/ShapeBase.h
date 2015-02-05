@@ -29,7 +29,7 @@ private:
 protected:
 	int 	tissuePlacement; //1 -> apical, 0 -> basal, 2->middle, 3 -> lateral
 	int 	ShapeType;
-	int 	Id;
+
 	int 	nNodes;
 
 	int 	nDim;
@@ -86,6 +86,7 @@ protected:
 
 
 public:
+	int 	Id;
 	boost::numeric::ublas::matrix<double> LocalGrowthStrainsMat;
 	int* 	NodeIds;
 	virtual ~ShapeBase(){
@@ -102,13 +103,15 @@ public:
 	bool 	IsChangingShape;
 	bool 	WorldToTissueRotMatUpToDate;
 	bool 	GrowthStrainsRotMatUpToDate;
-	int 	tissueType;
+	bool	NormalForPackingUpToDate;
+	int 	tissueType;	//Columnar layer = 0, peripodium = 1
+	bool	IsAblated;
 	double 	CurrShapeChangeToAdd[3];
 	//int alingmentTurn;
 	//double* CurrentNormal;
 	//bool updatedReference;
 	double* TissueCoordinateSystem;
-
+	double* normalForPacking;
 	int 	getId();
 	string 	getName();
 	int 	getShapeType();
@@ -166,9 +169,21 @@ public:
 	void alignElementOnReference();
 	virtual void correctFor2DAlignment(){ParentErrorMessage();};
 	virtual double getApicalSideLengthAverage(){ParentErrorMessage();};
+	virtual void getApicalTriangles(vector <int> &ApicalTriangles){ParentErrorMessage();};
+	virtual int getCorrecpondingApical(int currNodeId){ParentErrorMessage();};
+	virtual bool IsThisNodeMyBasal(int currNodeId){ParentErrorMessage();};
+	virtual double getElementHeight(){ParentErrorMessage();};
+	virtual bool IsPointCloseEnoughForPacking(double* Pos, float threshold){ParentErrorMessage();};
+	virtual void calculateNormalForPacking(){ParentErrorMessage();};
+	virtual void AddPackingToApicalSurface(double Fx, double Fy,double Fz, int RKId,  double ***SystemForces, double ***PackingForces, vector<Node*> &Nodes){ParentErrorMessage();};
+	virtual void getApicalNodePos(double* posCorner){ParentErrorMessage();};
+	virtual bool IspointInsideApicalTriangle(double x, double y,double z){ParentErrorMessage();};
+	bool DoesPointBelogToMe(int IdNode);
 	void updatePositionsAlignedToReferenceForRK();
 	void growShape();
 	void assignVolumesToNodes(vector <Node*>& Nodes);
+	void assignElementToConnectedNodes(vector <Node*>& Nodes);
+	void removeMassFromNodes(vector <Node*>& Nodes);
 	bool RotatedElement;
 	boost::numeric::ublas::matrix<double> WorldToTissueRotMat;
 	double **PositionsInTissueCoord;
@@ -183,6 +198,7 @@ public:
 	bool	calculateDisplacementGradientRotationMatrix(double** RefNormalised, double* rotMat);
 	void 	updateElementsNodePositions(int RKId, double ***SystemForces, vector <Node*>& Nodes, double dt);
 	void 	updateReferencePositionMatrixFromMeshInput(ifstream& file);
+	void	fillNodeNeighbourhood(vector<Node*>& Nodes);
 };
 
 #endif

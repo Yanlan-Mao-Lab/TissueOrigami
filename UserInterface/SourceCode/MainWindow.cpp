@@ -266,15 +266,23 @@ void MainWindow::setDisplayPreferences(QGridLayout *SelectionDisplayGrid){
 	DisplayPreferencesCheckBoxes[3]->setChecked(false);
 	connect(DisplayPreferencesCheckBoxes[3] , SIGNAL(stateChanged(int)),this,SLOT(updateScaleBarCheckBox(int)));
 	DisplayPreferencesCheckBoxes[4] = new QCheckBox("Display Peripodium");
-	DisplayPreferencesCheckBoxes[4]->setChecked(false);
+	DisplayPreferencesCheckBoxes[4]->setChecked(true);
 	connect(DisplayPreferencesCheckBoxes[4] , SIGNAL(stateChanged(int)),this,SLOT(updatePeripodiumDisplayCheckBox(int)));
-
+	DisplayPreferencesCheckBoxes[5] = new QCheckBox("Display Columnar Layer");
+	DisplayPreferencesCheckBoxes[5]->setChecked(true);
+	connect(DisplayPreferencesCheckBoxes[5] , SIGNAL(stateChanged(int)),this,SLOT(updateColumnarLayerDisplayCheckBox(int)));
+	//draw packing forces checkbox
+	DisplayPreferencesCheckBoxes[6] = new QCheckBox("Packing Forces");
+	DisplayPreferencesCheckBoxes[6]->setChecked(false);
+	connect(DisplayPreferencesCheckBoxes[6] , SIGNAL(stateChanged(int)),this,SLOT(updatePackingForceCheckBox(int)));
 
 	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[0],7+nCoordBox,0,1,1,Qt::AlignLeft);
 	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[1],8+nCoordBox,0,1,1,Qt::AlignLeft);
+	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[6],8+nCoordBox,2,1,1,Qt::AlignLeft);
 	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[2],9+nCoordBox,0,1,1,Qt::AlignLeft);
 	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[3],10+nCoordBox,0,1,1,Qt::AlignLeft);
 	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[4],11+nCoordBox,0,1,1,Qt::AlignLeft);
+	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[5],12+nCoordBox,0,1,1,Qt::AlignLeft);
 }
 
 void  MainWindow::updateTissueCoordCheckBox(int s){
@@ -290,6 +298,14 @@ void  MainWindow::updateNetForceCheckBox(int s){
 	else
 		MainGLWidget->drawNetForces = false;
 }
+
+void  MainWindow::updatePackingForceCheckBox(int s){
+	if ( s == 2 )
+		MainGLWidget->drawPackingForces = true;
+	else
+		MainGLWidget->drawPackingForces = false;
+}
+
 
 void  MainWindow::updateVelocityCheckBox(int s){
 	if ( s == 2 )
@@ -310,6 +326,13 @@ void  MainWindow::updatePeripodiumDisplayCheckBox(int s){
 		MainGLWidget->drawPeripodium = true;
 	else
 		MainGLWidget->drawPeripodium = false;
+}
+
+void  MainWindow::updateColumnarLayerDisplayCheckBox(int s){
+	if ( s == 2 )
+		MainGLWidget->drawColumnar = true;
+	else
+		MainGLWidget->drawColumnar = false;
 }
 
 void MainWindow::updateStrain(int s){
@@ -431,6 +454,7 @@ void MainWindow::timerSimulationStep(){
 			}
 			//spitting coordinates:
 			//Sim01->CoordinateDisplay();
+			Sim01->TissueAxisPositionDisplay();
 		}
 	}
 	else{

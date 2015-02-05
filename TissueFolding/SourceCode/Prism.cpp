@@ -5,7 +5,7 @@
 using namespace std;
 
 Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
-	cout<<"constructing prism"<<endl;
+	//cout<<"constructing prism"<<endl;
 	nNodes = 6;
 	nDim = 3;
 	Id = CurrId;
@@ -16,10 +16,12 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
 	GrowthRate = new double[3];
 	ShapeChangeRate  = new double[3];
 	CurrGrowthStrainAddition = new double[3];
+	normalForPacking =  new double[3];
 	for (int i=0; i<3; ++i){
 		CurrGrowthStrainAddition[i] = 0;
 		GrowthRate[i] = 0;
 		ShapeChangeRate[i] =0;
+		normalForPacking[i] =0;
 	}
 	CurrShapeChangeStrainsUpToDate = false;
 	CurrGrowthStrainsUpToDate = false;
@@ -29,7 +31,8 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
 	IsChangingShape = false;
 	GrewInThePast = false;
 	ChangedShapeInThePast = false;
-
+	NormalForPackingUpToDate = false;
+	IsAblated = false;
 	setIdentificationColour();
 	setShapeType("Prism");
 	ReferenceShape = new ReferenceShapeBase("Prism");
@@ -468,9 +471,15 @@ bool Prism::checkNodePlaneConsistency(double** normals){
 		dotp[2] = dotProduct3D(u,normals[List[i][2]]);
 		if(dotp[1]<0 ||  dotp[2]<0){
 			cerr <<"The element is not consistent! side planes, Id: "<<Id<<endl;
-				return false;
+			for (int i=0; i<nNodes;++i){
+				for (int j =0; j<nDim; ++j){
+					cout<<Positions[i][j]<<"  ";
+				}
+				cout<<endl;
 			}
+			return false;
 		}
+	}
 		/*if(dotp[1]<0 && dotp[2]<0){
 			cerr <<"The element is not consistent!";
 			return false;
@@ -509,13 +518,177 @@ bool Prism::checkNodePlaneConsistency(double** normals){
 double Prism::getApicalSideLengthAverage(){
 	double dx,dy,dz;
 	double dsum =0.0;
-	int pairs[3][2] = {{0,1},{0,3},{2,3}};
+	int pairs[3][2] = {{3,4},{3,5},{4,5}};
 	for (int i=0; i<3; ++i){
 		dx = Positions[pairs[i][0]][0] - Positions[pairs[i][1]][0];
 		dy = Positions[pairs[i][0]][1] - Positions[pairs[i][1]][1];
-		dy = Positions[pairs[i][0]][2] - Positions[pairs[i][1]][2];
+		dz = Positions[pairs[i][0]][2] - Positions[pairs[i][1]][2];
 		dsum += pow((dx*dx + dy*dy+dz*dz),0.5);
 	}
 	dsum /= 3.0;
 	return dsum;
+}
+
+void Prism::getApicalTriangles(vector <int> &ApicalTriangles){
+	ApicalTriangles.push_back(NodeIds[3]);
+	ApicalTriangles.push_back(NodeIds[4]);
+	ApicalTriangles.push_back(NodeIds[5]);
+}
+
+int Prism::getCorrecpondingApical(int currNodeId){
+	if (NodeIds[0] == currNodeId){
+		return NodeIds[3];
+	}
+	if (NodeIds[1] == currNodeId){
+		return NodeIds[4];
+	}
+	if (NodeIds[2] == currNodeId){
+		return NodeIds[5];
+	}
+	return -100;
+}
+
+bool Prism::IsThisNodeMyBasal(int currNodeId){
+	if (NodeIds[0] == currNodeId || NodeIds[1] == currNodeId || NodeIds[2] == currNodeId ){
+		return true;
+	}
+	return false;
+}
+
+double Prism::getElementHeight(){
+	double dx = Positions[0][0] - Positions[3][0];
+	double dy = Positions[0][1] - Positions[3][1];
+	double dz = Positions[0][2] - Positions[3][2];
+	return pow((dx*dx + dy*dy + dz*dz),0.5);
+}
+
+
+void Prism::AddPackingToApicalSurface(double Fx, double Fy,double Fz, int RKId,  double ***SystemForces,  double ***PackingForces, vector<Node*> &Nodes){
+	double F[3];
+	F[0] = Fx / 3.0;
+	F[1] = Fy / 3.0;
+	F[2] = Fz / 3.0;
+	for(int j=0; j<nDim; ++j){
+		if (!Nodes[NodeIds[3]]->FixedPos[j]){
+			SystemForces[RKId][NodeIds[3]][j] -= F[j];
+			PackingForces[RKId][NodeIds[3]][j] -= F[j];
+		}
+		if (!Nodes[NodeIds[4]]->FixedPos[j]){
+			SystemForces[RKId][NodeIds[4]][j] -= F[j];
+			PackingForces[RKId][NodeIds[4]][j] -= F[j];
+		}
+		if (!Nodes[NodeIds[5]]->FixedPos[j]){
+			SystemForces[RKId][NodeIds[5]][j] -= F[j];
+			PackingForces[RKId][NodeIds[5]][j] -= F[j];
+		}
+	}
+}
+
+void Prism::calculateNormalForPacking(){
+	double * u;
+	u = new double[3];
+	double * v;
+	v = new double[3];
+	for (int i=0; i<nDim; ++i){
+		u[i] = Positions[4][i] - Positions[3][i];
+		v[i] = Positions[5][i] - Positions[3][i];
+		normalForPacking[i] = 0.0;
+	}
+	//cerr<<"		u: "<<u[0]<<" "<<u[1]<<" "<<u[2]<<" v: "<<v[0]<<" "<<v[1]<<" "<<v[2]<<endl;
+	crossProduct3D(u,v,normalForPacking);
+	//cerr<<"		normal before normalisation: "<<normal[0]<<" "<<normal[1]<<" "<<normal[2]<<endl;
+	normaliseVector3D(normalForPacking);
+	//cerr<<"		normal after normalisation: "<<normal[0]<<" "<<normal[1]<<" "<<normal[2]<<endl;
+	for (int i=0; i<nDim; ++i){
+		u[i] = Positions[0][i] - Positions[3][i];
+	}
+	//cerr<<"		vector to basal: "<<u[0]<<" "<<u[1]<<" "<<u[2]<<endl;
+	double  dot = dotProduct3D(u,normalForPacking);
+	//cerr<<"		dot product: "<<dot<<endl;
+	if (dot<0){
+		for (int i=0; i<nDim; ++i){
+			normalForPacking[i] *=(-1.0);
+		}
+	}
+	NormalForPackingUpToDate = true;
+	//cerr<<"		normal after direction correction: "<<normal[0]<<" "<<normal[1]<<" "<<normal[2]<<endl;
+	delete[] v;
+	delete[] u;
+}
+
+
+bool Prism::IsPointCloseEnoughForPacking(double* Pos, float threshold){
+	float dmin = 2.0*threshold;
+	float dminNeg = (-2.0)*threshold;
+	for (int i=3; i<6; ++i){
+		float dx =100.0, dy = 100.0, dz = 100.0;
+		dx = Pos[0]-Positions[i][0];
+		dy = Pos[1]-Positions[i][1];
+		dz = Pos[2]-Positions[i][2];
+		if ((dx >0 && dx < dmin) || (dx <0 && dx >dminNeg)){
+			if ((dy >0 && dy < dmin) || (dy <0 && dy >dminNeg)){
+				if ((dz >0 && dz < dmin) || (dz <0 && dz >dminNeg)){
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
+void  Prism::getApicalNodePos(double* posCorner){
+	posCorner[0] = Positions[3][0];
+	posCorner[1] = Positions[3][1];
+	posCorner[2] = Positions[3][2];
+}
+
+bool  Prism::IspointInsideApicalTriangle(double x, double y,double z){
+	//cout<<"Called inside tri check for prism"<<endl;
+	double a[3] = {x- Positions[3][0], y-Positions[3][1],z-Positions[3][2]};
+	double b[3] = {Positions[4][0] - Positions[3][0], Positions[4][1] -Positions[3][1], Positions[4][2] -Positions[3][2]};
+	double c[3] = {Positions[5][0] - Positions[3][0], Positions[5][1] -Positions[3][1], Positions[5][2] -Positions[3][2]};
+	int coord1 =0,coord2=0;
+	while (b[coord1] !=0.0 && coord1<3){
+		coord1++;
+	}
+	while (c[coord2] !=0.0 && coord2<3 && coord2==coord1){
+		coord2++;
+	}
+	float temp = b[coord2]/b[coord1]*(a[coord1]-c[coord1])+c[coord2];
+	if (temp != 0){
+		float  t = a[coord2]/temp;
+		if (t >= 0 && t<=1){
+			float s = (a[coord1]-c[coord1]*t)/b[coord1];
+			if (s>=0 && s<=1.0 &&  s+t <=1){
+				cout<<"IS inside triangle: s = "<<s<<" t = "<<t<<" ID : "<<Id<<" NodePos "<<x<<" "<<y<<" "<<z<<endl;
+				cout<<"a: "<<a[0]<<" "<<a[1]<<" "<<a[2]<<" b: "<<b[0]<<" "<<b[1]<<" "<<b[2]<<" c: "<<c[0]<<" "<<c[1]<<" "<<c[2]<<" coord1&2: "<<coord1<<" "<<coord2<<endl;
+				return true;
+			}
+		}
+	}
+	//cout<<"returning false: "<<coord1<<" "<<coord2<<endl;
+	return false;
+	/*float p0x= Positions[3][0];
+	float p0y= Positions[3][1];
+	float p0z= Positions[3][2];
+
+	float p1x= Positions[4][0];
+	float p1y= Positions[4][1];
+	float p1z= Positions[4][2];
+
+	float p2x= Positions[5][0];
+	float p2y= Positions[5][1];
+	float p2z= Positions[5][2];
+	float lhs = y - p0y - ((p1y-p0y)*(x-p0x)/(p1x-p0x));
+	float rhs = (p2y -p0y)-((p1y-p0y)*(p2x-p0x)/(p1x-p0x));
+	float t = lhs / rhs;
+	if (t >= 0 && t<=1){
+		float s = (x-p0x -(p2x-p0x)*t)/(p1x-p0x);
+		if (s>=0 && s<=1.0 &&  s+t <=1){
+			cout<<"IS inside triangle: s = "<<s<<" t = "<<t<<" ID : "<<Id<<" NodePos "<<x<<" "<<y<<" "<<z<<endl;
+			return true;
+		}
+	}
+
+	return false;*/
 }

@@ -58,8 +58,10 @@ using namespace std;
   	 setSizePolicy(QSizePolicy ::Expanding , QSizePolicy ::Expanding );
   	 drawTissueCoordinates = false;
   	 drawNetForces = false;
+  	 drawPackingForces = false;
      drawVelocities = false;
-     drawPeripodium = false;
+     drawPeripodium = true;
+     drawColumnar = true;
      cout<<"gl initiated"<<endl;
  }
 
@@ -86,9 +88,22 @@ using namespace std;
      glGetFloatv(GL_LINE_WIDTH_RANGE,LineRange);
      ReferenceLineThickness = (LineRange[1]-LineRange[0])/2.0;
      MainShapeLineThickness = (LineRange[1]-LineRange[0])/10.0;
+     initialiseNodeColourList();
      DisplayStrains = false;
      glTranslatef( obj_pos[0], obj_pos[1], -obj_pos[2] );
      glMultMatrixf(MatRot);
+
+ }
+
+ void GLWidget::initialiseNodeColourList(){
+	 const int n = Sim01->Nodes.size();
+     NodeColourList = new float*[n];
+     for (int i=0; i<n; ++i){
+    	 NodeColourList[i]=new float[3];
+    	 NodeColourList[i][0]=0.0;
+    	 NodeColourList[i][1]=0.0;
+    	 NodeColourList[i][2]=0.0;
+     }
  }
 
  void GLWidget::paintGL()
@@ -104,14 +119,13 @@ using namespace std;
 
 	 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	 glLoadIdentity();
-
+	 constructNodeColourList();
 	 drawColourbar();
 	 drawAxesArrows();
 	 if (drawTissueScaleBar){
 		 drawScaleBar();
 	 }
 	 glTranslatef( obj_pos[0], obj_pos[1], -obj_pos[2] );
-
 	 glTranslatef( Sim01->SystemCentre[0], Sim01->SystemCentre[1], -Sim01->SystemCentre[2]);
 	 glMultMatrixf(MatRot);
 	 glTranslatef( -Sim01->SystemCentre[0], -Sim01->SystemCentre[1], Sim01->SystemCentre[2]);
@@ -126,6 +140,7 @@ using namespace std;
 		 drawElement(i,false);
 	 }
 	 drawForces();
+	 drawPackForces();
 	 drawNodeVelocities();
 
 
@@ -159,17 +174,26 @@ using namespace std;
 
  bool GLWidget::checkIfDrawingElement(int i){
 	 bool drawthisElement = true;
-	 if (!drawPeripodium && Sim01->Elements[i]->tissueType == 1){
+	 if (Sim01->Elements[i]->IsAblated){
+		 drawthisElement = false;
+	 }
+	 if (!drawPeripodium && Sim01->Elements[i]->tissueType == 1){	//I am NOT drawing peripodium and this element is a peripodium element
 	 	 drawthisElement = false;
+	 }
+	 if (!drawColumnar && Sim01->Elements[i]->tissueType == 0){		//I am NOT drawing columnar layer and this element is a columnar element
+		 drawthisElement = false;
 	 }
 	 return drawthisElement;
  }
 
  bool GLWidget::checkIfDrawingNode(int i){
  	 bool drawthisNode = true;
- 	 if (!drawPeripodium && Sim01->Nodes[i]->tissueType == 1){
+ 	 if (!drawPeripodium && Sim01->Nodes[i]->tissueType == 1){	//I am NOT drawing peripodium and this element is a peripodium node
  	 	 drawthisNode = false;
  	 }
+	 if (!drawColumnar && Sim01->Nodes[i]->tissueType == 0){	//I am NOT drawing columnar layer and this element is a columnar node
+		 drawthisNode = false;
+	 }
  	 return drawthisNode;
  }
 
@@ -219,16 +243,134 @@ using namespace std;
 		 }
 	// glPopMatrix();
  }
+ void GLWidget::constructNodeColourList(){
+	float threshold = 1E-10;
+	vector<Node*>::iterator itNode;
+	for (itNode=Sim01->Nodes.begin(); itNode<Sim01->Nodes.end(); ++itNode){
+		float* currColour;
+		currColour = new float[3];
+		if(!DisplayStrains && !DisplayPysProp && !drawNetForces && !drawPackingForces && !drawVelocities){
+			//I am not displaying ant data on the colours, therefore I do not need any calculaitons on element basis, the colour is constant
+			if ((*itNode)->tissueType == 0){ // columnar layer
+				NodeColourList[(*itNode)->Id][0]=0.75;
+				NodeColourList[(*itNode)->Id][1]=1.0;
+				NodeColourList[(*itNode)->Id][2]=1.0;
+			}
+			else if ((*itNode)->tissueType == 1){ // peripodium layer
+				NodeColourList[(*itNode)->Id][0]=1.0;
+				NodeColourList[(*itNode)->Id][1]=1.0;
+				NodeColourList[(*itNode)->Id][2]=0.75;
+			}
+		}
+		else{
+			if(DisplayStrains){
+				float StrainMag = 0.0;
+				int nConnectedElements = (*itNode)->connectedElementIds.size();
+				for (int i=0;i<nConnectedElements; ++i){
+					float TmpStrainMag =0.0, PlasticStrainMag=0;
+					Sim01->Elements[(*itNode)->connectedElementIds[i]]->getStrain(StrainToDisplay, TmpStrainMag);
+					Sim01->Elements[(*itNode)->connectedElementIds[i]]->getPlasticStrain(StrainToDisplay, PlasticStrainMag);
+					StrainMag += (TmpStrainMag - PlasticStrainMag)*(*itNode)->connectedElementWeights[i];
+				}
+				getDisplayColour(currColour, StrainMag);
+			}
+			else if (DisplayPysProp){
+				float PysPropMag = 0.0;
+				//float* PysPropColour;
+				//PysPropColour = new float[3];
+				//If the physical property is viscosity, then get the colour directly
+				if (PysPropToDisplay == 0){
+					PysPropMag = (*itNode)->Viscosity;
+				}
+				else{
+					int nConnectedElements = (*itNode)->connectedElementIds.size();
+					for (int i=0;i<nConnectedElements; ++i){
+						float TmpPysPropMag =0.0;
+						Sim01->Elements[(*itNode)->connectedElementIds[i]]->getPysProp(PysPropToDisplay, TmpPysPropMag);
+						PysPropMag += TmpPysPropMag*(*itNode)->connectedElementWeights[i];
+					}
+				}
+				getDisplayColour(currColour,PysPropMag);
+			}
+			else if(drawNetForces){
+				float ForceMag = 0.0;
+				double F[3];
+				F[0] = Sim01->SystemForces[0][(*itNode)->Id][0];
+				F[1] = Sim01->SystemForces[0][(*itNode)->Id][1];
+				F[2] = Sim01->SystemForces[0][(*itNode)->Id][2];
+				ForceMag = F[0]* F[0] + F[1]*F[1] + F[2]* F[2];
+				ForceMag = pow(ForceMag,0.5);
+				if (ForceMag>threshold){
+					getForceColour(currColour,ForceMag);
+				}
+				else{
+					currColour[0] = 1.0;
+					currColour[1] = 1.0;
+					currColour[2] = 0.8;
+				}
+			}
+			else if(drawPackingForces){
+				float ForceMag = 0.0;
+				double F[3];
+				F[0] = Sim01->PackingForces[0][(*itNode)->Id][0];
+				F[1] = Sim01->PackingForces[0][(*itNode)->Id][1];
+				F[2] = Sim01->PackingForces[0][(*itNode)->Id][2];
+				ForceMag = F[0]* F[0] + F[1]*F[1] + F[2]* F[2];
+				ForceMag = pow(ForceMag,0.5);
+				if (ForceMag>threshold){
+					getForceColour(currColour,ForceMag);
+				}
+				else{
+					currColour[0] = 1.0;
+					currColour[1] = 1.0;
+					currColour[2] = 0.8;
+				}
+			}
+			else if(drawVelocities){
+				float VelMag = 0.0;
+				double v[3] = {(*itNode)->Velocity[0][0],(*itNode)->Velocity[0][1],(*itNode)->Velocity[0][2]};
+				VelMag = v[0]*v[0]+v[1]*v[1]+v[2]*v[2];
+				VelMag = pow(VelMag,0.5);
+				if (VelMag>threshold){
+					getVelocityColour(currColour, VelMag);
+				}
+				else{
+					currColour[0] = 1.0;
+					currColour[1] = 1.0;
+					currColour[2] = 0.8;
+				}
+			}
+			NodeColourList[(*itNode)->Id][0]=currColour[0];
+			NodeColourList[(*itNode)->Id][1]=currColour[1];
+			NodeColourList[(*itNode)->Id][2]=currColour[2];
+			delete[] currColour;
+		}
+	}
+}
 
  float** GLWidget::getElementColourList(int i){
-	float** NodeColourList;
 	const int n = Sim01->Elements[i]->getNodeNumber();
-	NodeColourList = new float*[n];
-	for (int j = 0; j<n; j++){
-		NodeColourList[j] = new float[3];
-		NodeColourList[j][0]=0.75;
-		NodeColourList[j][1]=1.0;
-		NodeColourList[j][2]=1.0;
+	int* NodeIds = Sim01->Elements[i]->getNodeIds();
+	float** NodeColours;
+	NodeColours = new float*[n];
+	for (int j = 0; j<n; j++){		NodeColours[j] = new float[3];
+		NodeColours[j][0]=NodeColourList[NodeIds[j]][0];
+		NodeColours[j][1]=NodeColourList[NodeIds[j]][1];
+		NodeColours[j][2]=NodeColourList[NodeIds[j]][2];
+	}
+	/*for (int j = 0; j<n; j++){
+		if (Sim01->Elements[i]->tissueType == 0){ // columnar layer
+			NodeColourList[j] = new float[3];
+			NodeColourList[j][0]=0.75;
+			NodeColourList[j][1]=1.0;
+			NodeColourList[j][2]=1.0;
+		}
+		else if (Sim01->Elements[i]->tissueType == 1){ // peripodium layer
+			NodeColourList[j] = new float[3];
+			NodeColourList[j][0]=1.0;
+			NodeColourList[j][1]=1.0;
+			NodeColourList[j][2]=0.75;
+		}
 	}
 	if(DisplayStrains){
 		float* StrainColour;
@@ -272,19 +414,19 @@ using namespace std;
 			}
 		}
 
-	}
-	return NodeColourList;
+	}*/
+	return NodeColours;
  }
 
+
  void GLWidget::drawPrism(int i){
-	//Drawing the surfaces
+	 //Drawing the surfaces
 	const int nTriangle = 8; //top + bottom + 2 for each side.
 	int TriangleConnectivity[nTriangle][3] = {{0,1,2},{3,4,5},{0,2,3},{2,3,5},{0,1,3},{1,3,4},{1,2,5},{1,5,4}};
 	const int nLineStrip = 12;
 	int BorderConnectivity[nLineStrip] = {0,2,5,3,0,1,4,3,5,4,1,2};
-	float** NodeColourList;
-	NodeColourList = getElementColourList(i);
-
+	float** NodeColours;
+	NodeColours = getElementColourList(i);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glEnable(GL_POLYGON_OFFSET_FILL); // Avoid Stitching!
 	glPolygonOffset(1.0, 1.0); 	//These are necessary so the depth test can keep the lines above surfaces
@@ -292,7 +434,7 @@ using namespace std;
 		for (int j =0; j<nTriangle;++j){
 			for (int k =0; k<3; ++k){
 				int pointId = TriangleConnectivity[j][k];
-				glColor3f(NodeColourList[pointId][0],NodeColourList[pointId][1],NodeColourList[pointId][2]);
+				glColor3f(NodeColours[pointId][0],NodeColours[pointId][1],NodeColours[pointId][2]);
 				float x = Sim01->Elements[i]->Positions[pointId][0];
 				float y = Sim01->Elements[i]->Positions[pointId][1];
 				float z = Sim01->Elements[i]->Positions[pointId][2];
@@ -319,6 +461,7 @@ using namespace std;
 			glVertex3f( x, y, z);
 		}
 	glEnd();
+	delete[] NodeColours;
  }
 
  void GLWidget::drawTriangle(int i){
@@ -327,8 +470,8 @@ using namespace std;
  	int TriangleConnectivity[nTriangle][3] = {{0,1,2}};
  	const int nLineStrip = 4;
  	int BorderConnectivity[nLineStrip] = {0,1,2,0};
- 	float** NodeColourList;
- 	NodeColourList = getElementColourList(i);
+ 	float** NodeColours;
+ 	NodeColours = getElementColourList(i);
 
  	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
  	glEnable(GL_POLYGON_OFFSET_FILL); // Avoid Stitching!
@@ -337,7 +480,7 @@ using namespace std;
  		for (int j =0; j<nTriangle;++j){
  			for (int k =0; k<3; ++k){
  				int pointId = TriangleConnectivity[j][k];
- 				glColor3f(NodeColourList[pointId][0],NodeColourList[pointId][1],NodeColourList[pointId][2]);
+ 				glColor3f(NodeColours[pointId][0],NodeColours[pointId][1],NodeColours[pointId][2]);
  				float x = Sim01->Elements[i]->Positions[pointId][0];
  				float y = Sim01->Elements[i]->Positions[pointId][1];
  				float z = Sim01->Elements[i]->Positions[pointId][2];
@@ -364,6 +507,7 @@ using namespace std;
  			glVertex3f( x, y, z);
  		}
  	glEnd();
+ 	delete[] NodeColours;
   }
 
  void GLWidget::drawTissueCoordSystemPrism(int i){
@@ -485,6 +629,23 @@ using namespace std;
 	glEnd();
 	delete[] TissueCoords;
  }
+
+ void GLWidget::getForceColour(float* OutputColour, float Data){
+	 double scale2[2] = {0,0.1};
+	 double r = (Data- scale2[0])/(scale2[1]-scale2[0]);
+	 OutputColour[0] = r;
+	 OutputColour[1] = 0.0;
+	 OutputColour[2] = 0.0;
+ }
+
+ void GLWidget::getVelocityColour(float* OutputColour, float Data){
+	 double scale2[2] = {0,0.1};
+	 double b = (Data- scale2[0])/(scale2[1]-scale2[0]);
+	 OutputColour[0] = 0.0;
+	 OutputColour[1] = b;
+	 OutputColour[2] = 0.0;
+ }
+
  void GLWidget::getDisplayColour(float* OutputColour, float Data){
 	 float DataMin=0, DataMax=0;
 	 if(DisplayStrains){
@@ -1249,6 +1410,8 @@ using namespace std;
   	}
   	glEnd();
   }
+
+
  void GLWidget::drawForces(){
 	 if (drawNetForces){
 		 double threshold2 = 1E-16;
@@ -1290,6 +1453,46 @@ using namespace std;
 
  }
 
+ void GLWidget::drawPackForces(){
+	 if (drawPackingForces){
+		 double threshold2 = 1E-16;
+		 double minlength = 0.3, maxlength = 2;
+		 double minlength2 = minlength*minlength, maxlength2 = maxlength*maxlength;
+		 double scale2[2] = {0,0.1}, scale = 10.0;
+		 double scalesq = scale*scale;
+		 int n = Sim01->Nodes.size();
+		 for (int i =0; i<n; ++i){
+			 bool drawCurrentNode = checkIfDrawingNode(i);
+			 if (drawCurrentNode){
+				 double* F;
+				 F = new double[3];
+				 F[0] = Sim01->PackingForces[0][i][0];
+				 F[1] = Sim01->PackingForces[0][i][1];
+				 F[2] = Sim01->PackingForces[0][i][2];
+				 //cout<<"Force: "<<F[0]<<" "<<F[1]<<" "<<F[2]<<endl;
+				 //check if the force is large enough to display:
+				 double mag2 = F[0]* F[0] + F[1]*F[1] + F[2]* F[2];
+				 if (mag2 > threshold2){
+					 double mag = pow(mag2,0.5);
+					 double r = (mag- scale2[0])/(scale2[1]-scale2[0]);
+					 double a = mag2/scalesq;
+					 if (a < minlength2 ){
+						 scale = mag/minlength;
+					 }
+					 else if ( a > maxlength2){
+						 scale = mag/maxlength;
+					 }
+					 F[0] =  F[0]/scale + Sim01->Nodes[i]->Position[0];
+					 F[1] =  F[1]/scale + Sim01->Nodes[i]->Position[1];
+					 F[2] =  F[2]/scale + Sim01->Nodes[i]->Position[2];
+					 drawArrow3D(Sim01->Nodes[i]->Position, F, r, 0.0, 0.0);
+				 }
+				 delete[] F;
+			 }
+		 }
+	 }
+
+ }
  void GLWidget::drawNodeVelocities(){
 	 if (drawVelocities){
 		 double threshold2 = 1E-16;

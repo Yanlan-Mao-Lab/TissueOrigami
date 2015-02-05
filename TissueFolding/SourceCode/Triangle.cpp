@@ -11,7 +11,7 @@
 using namespace std;
 
 Triangle::Triangle(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, double h){
-	cout<<"constructing triangle"<<endl;
+	//cout<<"constructing triangle"<<endl;
 	nNodes = 3;
 	nDim = 3;	//the triangle has its  nodes in 3D, but the calculations will only use 2 dimensions.
 	Id = CurrId;
@@ -19,13 +19,16 @@ Triangle::Triangle(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, double h){
 	IdentifierColour = new int[3];
 	E = 10.0;
 	v = 0.3;
+	slabHeight = h;
 	GrowthRate = new double[3];
 	ShapeChangeRate  = new double[3];
 	CurrGrowthStrainAddition = new double[3];
+	normalForPacking =  new double[3];
 	for (int i=0; i<3; ++i){
 		CurrGrowthStrainAddition[i] = 0;
 		GrowthRate[i] = 0;
 		ShapeChangeRate[i] = 0;
+		normalForPacking[i] = 0.0;
 	}
 	CurrShapeChangeStrainsUpToDate = false;
 	CurrGrowthStrainsUpToDate = false;
@@ -35,6 +38,8 @@ Triangle::Triangle(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, double h){
 	IsChangingShape = false;
 	GrewInThePast = false;
 	ChangedShapeInThePast = false;
+	NormalForPackingUpToDate = false;
+	IsAblated = false;
 	setIdentificationColour();
 	setShapeType("Triangle");
 	ReferenceShape = new ReferenceShapeBase("Triangle");
@@ -42,7 +47,7 @@ Triangle::Triangle(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, double h){
 	setPositionMatrix(Nodes);
 	setReferencePositionMatrix();
 	setCoeffMat();
-	ReferenceShape->height = 5.0;
+	ReferenceShape->height = slabHeight;
 	calculateReferenceVolume();
 	setTissuePlacement(Nodes);
 	setTissueType(Nodes);
@@ -88,7 +93,7 @@ Triangle::Triangle(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, double h){
 
 	normalCrossOrder[0] = 1;
 	normalCrossOrder[1] = 2;
-	cout<<"finalised construction"<<endl;
+	//cout<<"finalised construction"<<endl;
 }
 
 Triangle::~Triangle(){
@@ -370,8 +375,8 @@ void Triangle::AlignReferenceApicalNormalToZ(double* SystemCentre){
 	z[2] = -1.0;
 	double c, s;
 	calculateRotationAngleSinCos(normal,z,c,s);  //align normal to z
-	cout<<"vec0: "<<vec0[0]<<" "<<vec0[1]<<" "<<vec0[2]<<" vec1: "<<vec1[0]<<" "<<vec1[1]<<" "<<vec1[2]<<endl;
-	cout<<"normal: "<<normal[0]<<" "<<normal[1]<<" "<<normal[2]<<" sin: "<<s<<" cos: "<<c<<endl;
+	//cout<<"vec0: "<<vec0[0]<<" "<<vec0[1]<<" "<<vec0[2]<<" vec1: "<<vec1[0]<<" "<<vec1[1]<<" "<<vec1[2]<<endl;
+	//cout<<"normal: "<<normal[0]<<" "<<normal[1]<<" "<<normal[2]<<" sin: "<<s<<" cos: "<<c<<endl;
 	if (c<0.9998){
 		double *rotAx;
 		rotAx = new double[3];
@@ -497,13 +502,132 @@ void 	Triangle::correctFor2DAlignment(){
 double Triangle::getApicalSideLengthAverage(){
 	double dx,dy,dz;
 	double dsum =0.0;
-	int pairs[3][2] = {{0,1},{0,3},{2,3}};
+	int pairs[3][2] = {{0,1},{0,2},{1,2}};
 	for (int i=0; i<3; ++i){
 		dx = Positions[pairs[i][0]][0] - Positions[pairs[i][1]][0];
 		dy = Positions[pairs[i][0]][1] - Positions[pairs[i][1]][1];
-		dy = Positions[pairs[i][0]][2] - Positions[pairs[i][1]][2];
-		dsum += pow((dx*dx + dy*dy+dz*dz),0.5);
+		dz = Positions[pairs[i][0]][2] - Positions[pairs[i][1]][2];
+		dsum += pow((dx*dx + dy*dy + dz*dz),0.5);
 	}
 	dsum /= 3.0;
 	return dsum;
+}
+
+double Triangle::getElementHeight(){
+	return slabHeight;
+}
+
+void Triangle::AddPackingToApicalSurface(double Fx, double Fy,double Fz, int RKId,  double ***SystemForces, double ***PackingForces, vector<Node*> &Nodes){
+	double F[3];
+	F[0] = Fx / 3.0;
+	F[1] = Fy / 3.0;
+	F[2] = Fz / 3.0;
+	for(int j=0; j<nDim; ++j){
+		if (!Nodes[NodeIds[0]]->FixedPos[j]){
+			SystemForces[RKId][NodeIds[0]][j]  -= F[j];
+			PackingForces[RKId][NodeIds[0]][j] -= F[j];
+		}
+		if (!Nodes[NodeIds[1]]->FixedPos[j]){
+			SystemForces[RKId][NodeIds[1]][j]  -= F[j];
+			PackingForces[RKId][NodeIds[1]][j] -= F[j];
+		}
+		if (!Nodes[NodeIds[2]]->FixedPos[j]){
+			SystemForces[RKId][NodeIds[2]][j]  -= F[j];
+			PackingForces[RKId][NodeIds[2]][j] -= F[j];
+		}
+	}
+}
+
+void Triangle::calculateNormalForPacking(){
+	double * u;
+	u = new double[3];
+	double * v;
+	v = new double[3];
+	for (int i=0; i<nDim; ++i){
+		u[i] = Positions[1][i] - Positions[0][i];
+		v[i] = Positions[2][i] - Positions[0][i];
+		normalForPacking[i] = 0.0;
+	}
+	//cerr<<"		u: "<<u[0]<<" "<<u[1]<<" "<<u[2]<<" v: "<<v[0]<<" "<<v[1]<<" "<<v[2]<<endl;
+	crossProduct3D(u,v,normalForPacking);
+	//cerr<<"		normal before normalisation: "<<normal[0]<<" "<<normal[1]<<" "<<normal[2]<<endl;
+	normaliseVector3D(normalForPacking);
+	NormalForPackingUpToDate = true;
+	delete[] v;
+	delete[] u;
+
+}
+bool Triangle::IsPointCloseEnoughForPacking(double* Pos, float threshold){
+	float dmin = 2.0*threshold;
+	float dminNeg = (-2.0)*threshold;
+	for (int i=0; i<3; ++i){
+		float dx =100.0, dy = 100.0, dz = 100.0;
+		dx = Pos[0]-Positions[i][0];
+		dy = Pos[1]-Positions[i][1];
+		dz = Pos[2]-Positions[i][2];
+		if ((dx >0 && dx < dmin) || (dx <0 && dx >dminNeg)){
+			if ((dy >0 && dy < dmin) || (dy <0 && dy >dminNeg)){
+				if ((dz >0 && dz < dmin) || (dz <0 && dz >dminNeg)){
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
+void  Triangle::getApicalNodePos(double* posCorner){
+	posCorner[0] = Positions[0][0];
+	posCorner[1] = Positions[0][1];
+	posCorner[2] = Positions[0][2];
+}
+
+bool Triangle::IspointInsideApicalTriangle(double x, double y,double z){
+	//cout<<"Called inside tri check for triangle"<<endl;
+	double a[3] = {x- Positions[0][0], y-Positions[0][1],z-Positions[0][2]};
+	double b[3] = {Positions[1][0] - Positions[0][0], Positions[1][1] -Positions[0][1], Positions[1][2] -Positions[0][2]};
+	double c[3] = {Positions[2][0] - Positions[0][0], Positions[2][1] -Positions[0][1], Positions[2][2] -Positions[0][2]};
+	int coord1 =0,coord2=0;
+	while (b[coord1] !=0.0 && coord1<3){
+		coord1++;
+	}
+	while (c[coord2] !=0.0 && coord2<3 && coord2==coord1){
+		coord2++;
+	}
+	float temp = b[coord2]/b[coord1]*(a[coord1]-c[coord1])+c[coord2];
+	if (temp != 0){
+		float  t = a[coord2]/temp;
+		if (t >= 0 && t<=1){
+			float s = (a[coord1]-c[coord1]*t)/b[coord1];
+			if (s>=0 && s<=1.0 &&  s+t <=1){
+				//cout<<"IS inside triangle: s = "<<s<<" t = "<<t<<" ID : "<<Id<<" NodePos "<<x<<" "<<y<<" "<<z<<endl;
+				return true;
+			}
+		}
+	}
+	//cout<<"returning false:" <<coord1<<" "<<coord2<<endl;
+	return false;
+
+	/*	float p0x= Positions[0][0];
+	float p0y= Positions[0][1];
+	float p0z= Positions[0][2];
+
+	float p1x= Positions[1][0];
+	float p1y= Positions[1][1];
+	float p1z= Positions[1][2];
+
+	float p2x= Positions[2][0];
+	float p2y= Positions[2][1];
+	float p2z= Positions[2][2];
+	float lhs = y - p0y - ((p1y-p0y)*(x-p0x)/(p1x-p0x));
+	float rhs = (p2y -p0y)-((p1y-p0y)*(p2x-p0x)/(p1x-p0x));
+	float t = lhs / rhs;
+	if (t >= 0 && t<=1){
+		float s = (x-p0x -(p2x-p0x)*t)/(p1x-p0x);
+		if (s>=0 && s<=1.0 &&  s+t <=1){
+			return true;
+		}
+	}
+	return false;
+	*/
 }

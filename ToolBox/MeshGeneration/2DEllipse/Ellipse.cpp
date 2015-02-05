@@ -58,7 +58,9 @@ public:
 	void addRectangle();
 	void calculateAverageSideLength();
 	void addZVecs(double curvedEndRadia, int nCurveLayers);
+	void addZVecsRect(double curvedEndRadia, int nCurveLayers);
 	void addInitialPosZ(double curvedEndRadia, int nCurveLayers);
+	void addInitialPosZRect(double curvedEndRadia, int nCurveLayers);
 	int calculateLargeRadiaAndLayers(double curvedEndRadia);
 	void addZPosToCurve(int nLast, int counter, double dZ);
 	void correctNormalsForAddedPoints();
@@ -310,6 +312,26 @@ void EllipseLayoutGenerator::addRectangle(){
 		CurrPosY.push_back((-1.0)*CurrPosY[i]);		
 	}
 	n = CurrPosX.size();
+	//calculating the normals pointing towards the inside of ellipse
+	for (int i = 0; i<n; ++i){
+		int index0 = i-1;
+		int index1 = i+1;
+		if (index0 == -1) { index0=n-1; }
+		if (index1 ==  n) { index1 =0; }
+		double vec1[2] = {CurrPosX[index0] - CurrPosX[i], CurrPosY[index0] - CurrPosY[i] };
+		double vec2[2] = {CurrPosX[index1] - CurrPosX[i], CurrPosY[index1] - CurrPosY[i] };
+		double mag = vec1[0] *vec1[0] + vec1[1]*vec1[1];
+		if (mag> 1E-14){mag = pow(mag,0.5); vec1[0] /= mag; vec1[1] /= mag;}
+		mag = vec2[0] *vec2[0] + vec2[1]*vec2[1];
+		if (mag> 1E-14){mag = pow(mag,0.5); vec2[0] /= mag; vec2[1] /= mag;}
+		vec1[0] += vec2[0]; vec1[1] += vec2[1];
+		mag = vec1[0]*vec1[0] + vec1[1]*vec1[1];
+		if (mag> 1E-14){mag = pow(mag,0.5); vec1[0] /= mag; vec1[1] /= mag;}
+		InvardNormalsX.push_back(vec1[0]);
+		InvardNormalsY.push_back(vec1[1]);
+		//cout<<" point: "<<InvardNormalsX.size()-1<<" position: "<<CurrPosX[i]<<" "<<CurrPosY[i]<<"neigs: "<<CurrPosX[index0]<<" "<<CurrPosY[index0]<<"  "<<CurrPosX[index1]<<" "<<CurrPosY[index1]<<" normal: "<<InvardNormalsX[i]<<" "<<InvardNormalsY[i]<<endl;
+	}
+	n = CurrPosX.size();
 	for (int i = 0; i<n; ++i){
 		posx.push_back(CurrPosX[i]);
 		posy.push_back(CurrPosY[i]);
@@ -505,7 +527,7 @@ void EllipseLayoutGenerator::Tesselate2D(){
 	ostringstream Convert;
 	Convert << maxArea; // Use some manipulators
 	string maxAreaStr = Convert.str(); // Give the result to the string
-	string sysCommand = "/home/melda/Desktop/MeshGenerate/triangle/triangle -q33a"+maxAreaStr+" ./Points.node  ";
+	string sysCommand = "/home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/triangle/triangle -q33a"+maxAreaStr+" ./Points.node  ";
 	cerr<<"Running triangulation with: "<<sysCommand<<endl;
 	system(sysCommand.c_str());
 }
@@ -896,6 +918,23 @@ void EllipseLayoutGenerator::addInitialPosZ(double curvedEndRadia, int nCurveLay
 	}
 }
 
+void EllipseLayoutGenerator::addInitialPosZRect(double curvedEndRadia, int nCurveLayers){
+	int n = posx.size();
+	for (int i=0;i<n;++i){
+		//cout<<"distance id: "<<distance<<"size of tissueType: "<<tissueType.size()<<endl;
+		tissueType.push_back(0); //0: columnar layer; 2: peripodium
+		posz.push_back(0.0);
+		if (InvardNormalsX[i] == -100) {
+			//this is a newly added point, and it does require setting the normals 
+			//but it also is inside the columnar layer, where the normals will not be used
+			//just as in the midline, I am setting the nomral to 0, and will not bother with it later on;
+			InvardNormalsX[i]=0.0;
+			InvardNormalsY[i]=0.0;
+		
+		}
+	}
+}
+
 void EllipseLayoutGenerator::correctNormalsForAddedPoints(){
 	int n = posx.size();
 	double threshold = sideLen*1.25;	
@@ -964,6 +1003,19 @@ void EllipseLayoutGenerator::addZVecs(double curvedEndRadia, int nCurveLayers){
 
 }
 
+
+void EllipseLayoutGenerator::addZVecsRect(double curvedEndRadia, int nCurveLayers){
+	//adding the zVectors of the columnar layer, 
+	//the vectors are going from basal to apical layer (0,0,1);	
+	int n = posx.size();
+	for (int i=0;i<n;++i){
+		zVec0.push_back(0.0);
+		zVec1.push_back(0.0);
+		zVec2.push_back(1.0);
+	}
+
+}
+
 int EllipseLayoutGenerator::calculateLargeRadiaAndLayers(double curvedEndRadia){
 	double QuarterCircumference = pi*curvedEndRadia/2.0;
 	r1 = r1Init +  QuarterCircumference;
@@ -977,10 +1029,11 @@ int EllipseLayoutGenerator::calculateLargeRadiaAndLayers(double curvedEndRadia){
 
 int main(int argc, char **argv)
 {	
-	double 	DVRadius = 20.0;
+	int 	GlobalShape = 1; 	//1 = ellipse, 2 = rectangle
+	double 	DVRadius = 10.0;
 	double 	APRadius = 10.0;
-	double 	ABHeight = 5.0;
-	double 	sideLength = 5.0;
+	double 	ABHeight = 1.0;
+	double 	sideLength = 0.5;
 	int    	ABLayers =1;
 	bool 	addCurvedEnd = false;
 	double	curvedEndRadia = ABHeight*1.5; // starting from the basal side
@@ -993,8 +1046,12 @@ int main(int argc, char **argv)
 		Lay01.calculateCircumference();
 		Lay01.calculateCurrentBorderNumber();
 		Lay01.calculatedtet();
-		Lay01.addEquidistantRingMin();	
-		//Lay01.addRectangle();
+		if (GlobalShape == 1) {	//Generating ellipse tissue	
+			Lay01.addEquidistantRingMin();	
+		}
+		else if (GlobalShape == 2) {	//Generating rectangular tissue
+			Lay01.addRectangle();
+		}
 		calculateNextRing = Lay01.updateRadia();
 	}
 	//outside the ring calculation, now I will add points in the middle, in horizontal or vertical,
@@ -1018,9 +1075,16 @@ int main(int argc, char **argv)
 	Lay01.Tesselate2D();
 	Lay01.readInTesselation2D();
 	Lay01.calculateAverageSideLength();
-	Lay01.addInitialPosZ(curvedEndRadia, nCurveLayers);
-	Lay01.correctNormalsForAddedPoints();
-	Lay01.addZVecs(curvedEndRadia, nCurveLayers);
+	if (GlobalShape == 1) {	//Generating ellipse tissue	
+		Lay01.addInitialPosZ(curvedEndRadia, nCurveLayers);
+		Lay01.correctNormalsForAddedPoints();	
+		Lay01.addZVecs(curvedEndRadia, nCurveLayers);
+	}
+	else if (GlobalShape == 2) {	//Generating rectangular tissue
+		Lay01.addInitialPosZRect(curvedEndRadia, nCurveLayers);
+		Lay01.correctNormalsForAddedPoints();
+		Lay01.addZVecsRect(curvedEndRadia, nCurveLayers);
+	}
 	Lay01.writeMeshFileForSimulation(ABHeight,ABLayers);	
 	Lay01.writeTriangleMeshFileForSimulation(ABHeight);
 	//output the points for plotting:

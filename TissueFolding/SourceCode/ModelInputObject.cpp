@@ -706,7 +706,7 @@ bool ModelInputObject::readStretcherSetup(ifstream& file){
 	if(currHeader == "StretcherAttached(bool):"){
 		bool stretcherAttached;
 		file >> stretcherAttached;
-		cerr<<"stretcherAttached "<<stretcherAttached<<endl;
+		//cerr<<"stretcherAttached "<<stretcherAttached<<endl;
 		Sim->stretcherAttached = stretcherAttached;
 	}
 	else{
@@ -763,6 +763,6 @@ bool ModelInputObject::readStretcherSetup(ifstream& file){
 		cerr<<"Error in reading stretcher setup: "<<currHeader<<", should have been: DVClampMax:" <<endl;
 		return false;
 	}
-	cout<<"StretcherAttached "<<Sim->stretcherAttached<<"InitialStep "<<Sim->StretchInitialStep<<" EndStep: "<<Sim->StretchEndStep<<" ClapmPos: "<<Sim->StretchMin<<" "<<Sim->StretchMax<<" strain: "<<Sim->StretchStrain<<endl;
+	//cout<<"StretcherAttached "<<Sim->stretcherAttached<<"InitialStep "<<Sim->StretchInitialStep<<" EndStep: "<<Sim->StretchEndStep<<" ClapmPos: "<<Sim->StretchMin<<" "<<Sim->StretchMax<<" strain: "<<Sim->StretchStrain<<endl;
 	return true;
 }

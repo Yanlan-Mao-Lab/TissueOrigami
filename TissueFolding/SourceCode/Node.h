@@ -3,6 +3,8 @@
 
 #include <stdio.h>
 #include <iostream>
+#include <vector>
+using namespace std;
 
 class Node{
 private:
@@ -21,6 +23,16 @@ public:
 	int tissueType;		 	//0 -> columnar layer, 1->peripodium
 	bool atCircumference;
 	double mass;
+	bool atPeripodiumCircumference;
+	vector <int> AssociatedNodesDueToPeripodium;
+	vector <double> AssociatedNodeWeightsDueToPeripodium;
+	vector <int> immediateNeigs;
+	vector <int> connectedElementIds;
+	vector <double> connectedElementWeights;
+
 	void setViscosity(double ApicalVisc,double BasalVisc);
+	bool checkIfNeighbour(int IdToCheck);
+	void displayConnectedElementIds();
+	void displayConnectedElementWeights();
 };
 #endif

@@ -46,7 +46,15 @@ public:
 	void  calculateReferenceStiffnessMatrix();
 	//void  calculateForces(int RKid, double** SystemForces);
 	void  checkHealth();
-
+	void getApicalTriangles(vector <int> &ApicalTriangles);
+	int getCorrecpondingApical(int currNodeId);
+	bool IsThisNodeMyBasal(int currNodeId);
+	double getElementHeight();
+	void AddPackingToApicalSurface(double Fx, double Fy,double Fz, int RKId,  double ***SystemForces,  double ***PackingForces,vector<Node*> &Nodes);
+	bool IsPointCloseEnoughForPacking(double* Pos, float threshold);
+	void calculateNormalForPacking();
+	void getApicalNodePos(double* posCorner);
+	bool IspointInsideApicalTriangle(double x, double y,double z);
 
 };
 

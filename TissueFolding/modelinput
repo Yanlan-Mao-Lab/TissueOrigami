@@ -1,18 +1,18 @@
 InputMeshParameters:
   MeshInputMode(int-seeDocumentation): 4
-  MeshFile(full-path):   /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Prism0.mesh
+  MeshFile(full-path):   /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Prism20-9-2.mesh
 
 PeripodiumParameters:
-  AddPeripodium: 1
+  AddPeripodium: 0
   PeripodiumYoungsModulus: 20.0
 
 TimeParameters:
   TimeStep(sec): 0.25
-  SimulationLength(sec): 100.0
+  SimulationLength(sec): 6000
 
 PysicalProperties:
   YoungsModulusApical: 20.0	YoungsModulusBasal: 20.0	YoungsModulusMid: 20.0		Noise(%-int): 0
-  PoissonsRatio: 0.0		Noise(%-int): 0
+  PoissonsRatio: 0.3		Noise(%-int): 0
   ApicalViscosity: 100.0 	Noise(%-int): 0
   BasalViscosity: 100.0		
 
@@ -25,17 +25,17 @@ SaveOptions:
 GrowthOptions:
   NumberofGrowthFunctions(int): 4
   GrowthFunctionType(int-seeDocumentation): 1
-  InitialTime(sec): 100000
-  FinalTime(sec):  240
-  MaxValue(fractionPerHour-DV,AP,AB):  6.0 6.0 0.0
+  InitialTime(sec): 1000000
+  FinalTime(sec):  180
+  MaxValue(fractionPerHour-DV,AP,AB):  10.0 10.0 0.0
   
 GrowthFunctionType(int-seeDocumentation): 2
-  InitialTime(sec): 10000
+  InitialTime(sec): 100000
   FinalTime(sec):  600
   Centre:  9.0 0.0
   InnerRadius: 0.0
   OuterRadius:  5.0
-  MaxValue(fractionPerHour-DV,AP,AB): 5.0 5.0 0.0
+  MaxValue(fractionPerHour-DV,AP,AB): 60.15 60.15 0.0
 
   GrowthFunctionType(int-seeDocumentation): 2
   InitialTime(sec): 100000
@@ -43,7 +43,7 @@ GrowthFunctionType(int-seeDocumentation): 2
   Centre:  9.0 0.0
   InnerRadius: 0.0
   OuterRadius:  6.0
-  MaxValue(fractionPerHour-DV,AP,AB):  0.60 0.60 0.0
+  MaxValue(fractionPerHour-DV,AP,AB):  0.45 0.45 0.0
 
   GrowthFunctionType(int-seeDocumentation): 2
   InitialTime(sec): 100000
@@ -51,7 +51,7 @@ GrowthFunctionType(int-seeDocumentation): 2
   Centre:  -9.0 0.0
   InnerRadius: 0.0
   OuterRadius:  6.0
-  MaxValue(fractionPerHour-DV,AP,AB):  0.60 0.60 0.0
+  MaxValue(fractionPerHour-DV,AP,AB):  0.30 0.30 0.0
 
 ShapeChangeOptions:
   NumberofShapeChangeFunctions(int): 2

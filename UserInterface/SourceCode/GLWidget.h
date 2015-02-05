@@ -42,9 +42,11 @@ using namespace std;
      vector <QString> SelectedPos;
      bool drawTissueCoordinates;
      bool drawNetForces;
+     bool drawPackingForces;
      bool drawVelocities;
      bool drawTissueScaleBar;
      bool drawPeripodium;
+     bool drawColumnar;
 
 
  signals:
@@ -64,6 +66,7 @@ using namespace std;
      void getColourOfPoint(QPoint LastPos);
      void drawForPicking ();
      void generate3DObject();
+     void initialiseNodeColourList();
 
      //Element drawing functions
      bool checkIfDrawingElement(int i);
@@ -91,6 +94,7 @@ using namespace std;
      int 	PickedColour[4];
      float 	ReferenceLineThickness, MainShapeLineThickness;
      bool 	DisplayFixedNodes;
+     float** NodeColourList;
 
     // QColor qtGreen;
      QColor 	qtPurple;
@@ -102,6 +106,9 @@ using namespace std;
      void 		rotateCurrentRotationQuaternian(double* Qrot);
      void 		rotateMatrix();
      void 		getDisplayColour(float* StrainColour, float Data);
+     void 		getVelocityColour(float* OutputColour, float Data);
+     void 		getForceColour(float* OutputColour, float Data);
+     void 		constructNodeColourList();
      float** 	getElementColourList(int i);
      void 		drawColourbar();
      void 		drawFixedNodes();
@@ -111,6 +118,7 @@ using namespace std;
      void 		drawTissueCoordSystemTetrahedron(int i);
      void 		drawTissueCoordSystemTriangle(int i);
      void 		drawForces();
+     void 		drawPackForces();
      void 		drawNodeVelocities();
      void 		drawArrow3D(double* pos, double* endPoint, double r, double g, double b);
  };

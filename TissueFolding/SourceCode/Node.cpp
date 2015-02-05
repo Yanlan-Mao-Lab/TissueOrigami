@@ -29,6 +29,7 @@ Node::Node(int id, int dim, double* pos, int tissuePos, int tissueType){
 	tissuePlacement = tissuePos;
 	this->tissueType = tissueType;
 	atCircumference = false;
+	atPeripodiumCircumference = false;
 	mass = 0.0;
 }
 
@@ -56,4 +57,33 @@ void Node::setViscosity(double ApicalVisc,double BasalVisc){
 		//middle or lateral node
 		Viscosity = (ApicalVisc + BasalVisc) /2.0;
 	}
+}
+
+bool Node::checkIfNeighbour(int IdToCheck){
+	vector<int>::iterator itInt;
+	for(itInt = immediateNeigs.begin(); itInt < immediateNeigs.end(); ++itInt){
+		if ((*itInt) == IdToCheck){
+			return true;
+		}
+	}
+	return false;
+}
+
+
+void Node::displayConnectedElementIds(){
+	int n = connectedElementIds.size();
+	cout<<"	Connected Element Ids: ";
+	for (int i=0; i<n ; ++i){
+		cout<<connectedElementIds[i]<<"	";
+	}
+	cout<<endl;
+}
+
+void Node::displayConnectedElementWeights(){
+	int n = connectedElementWeights.size();
+	cout<<"	Connected Element weights: ";
+	for (int i=0; i<n ; ++i){
+		cout<<connectedElementWeights[i]<<"	";
+	}
+	cout<<endl;
 }

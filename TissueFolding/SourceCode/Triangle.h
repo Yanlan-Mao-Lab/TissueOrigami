@@ -22,6 +22,7 @@ class Triangle : public ShapeBase{
 
 protected:
 	int normalCrossOrder[2];
+	double slabHeight;
 	void setTissueCoordsRotationsBuffers();
 	void getCurrRelaxedShape(boost::numeric::ublas::matrix<double> & CurrRelaxedShape);
 	void setShapeFunctionDerivatives(boost::numeric::ublas::matrix<double> &ShapeFuncDer,double eta, double nu);
@@ -36,7 +37,8 @@ protected:
 	//void getCurrentAlignmentFaces(double* RefSide, double* ShapeSide, double* RefFace, double* ShapeFace);
 	//void updateAlignmentTurn();
 	void calculateReferenceVolume();
-	double  getApicalSideLengthAverage();
+	double getApicalSideLengthAverage();
+	double getElementHeight();
 
 public:
 	Triangle(int* NodeIds,vector<Node*>& Nodes, int CurrId, double h);
@@ -47,6 +49,11 @@ public:
 	void  correctFor2DAlignment();
 	void  calculateReferenceStiffnessMatrix();
 	void  checkHealth();
+	void AddPackingToApicalSurface(double Fx, double Fy,double Fz, int RKId,  double ***SystemForces, double ***PackingForces, vector<Node*> &Nodes);
+	bool IsPointCloseEnoughForPacking(double* Pos, float threshold);
+	void getApicalNodePos(double* posCorner);
+	void calculateNormalForPacking();
+	bool IspointInsideApicalTriangle(double x, double y,double z);
 };
 
 #endif /* TRIANGLE_H_ */
