@@ -190,6 +190,7 @@ void 	ShapeBase::setTissuePlacement(vector<Node*>& Nodes){
 }
 
 
+
 void 	ShapeBase::setTissueType(vector<Node*>& Nodes){
 	bool hasColumnarNode = false;
 	bool hasPeripodiumNode = false;
@@ -212,7 +213,6 @@ void 	ShapeBase::setTissueType(vector<Node*>& Nodes){
 		cerr<<"Element is not placed into tissue correctly, Id: "<<Id<<endl;
 	}
 	//cout<<"Element : "<<Id<<" hasColumnarNode: "<<hasColumnarNode<<" hasPeripodiumNode "<<hasPeripodiumNode<<" tissueType: "<<tissueType<<endl;
-
 }
 
 void 	ShapeBase::setReferencePositionMatrix(){
@@ -228,8 +228,13 @@ void 	ShapeBase::setReferencePositionMatrix(){
 }
 
 void 	ShapeBase::updateShapeFromSave(ifstream& file){
+	file >> IsAblated;
 	updateNodeIdsFromSave(file);
 	updateReferencePositionMatrixFromSave(file);
+	//displayName();
+	//displayPositions();
+	//displayReferencePositions();
+	//displayNodeIds();
 }
 
 void 	ShapeBase::updateNodeIdsFromSave(ifstream& file){
@@ -253,6 +258,19 @@ void 	ShapeBase::updateReferencePositionMatrixFromSave(ifstream& file){
 
 void 	ShapeBase::updateReferencePositionMatrixFromMeshInput(ifstream& file){
 	updateReferencePositionMatrixFromSave(file);
+}
+
+void ShapeBase::updateElementVolumesAndTissuePlacementsForSave(vector<Node*>& Nodes){
+	calculateReferenceVolume();
+	setTissuePlacement(Nodes);
+	setTissueType(Nodes);
+}
+
+void 	ShapeBase::displayNodeIds(){
+	for (int i=0; i<nNodes;++i){
+			cout<<NodeIds[i]<<"  ";
+		cout<<endl;
+	}
 }
 
 void 	ShapeBase::displayPositions(){

@@ -49,12 +49,13 @@ private:
 	void initiateNodesFromMeshInput();
 	void initiateElementsFromSave();
 	void initiateElementsFromMeshInput();
-	void initiateElementsFromMEshInput();
 	void initiatePrismFromSave();
+	void initiateTriangleFromSave(double height);
 	void initiatePrismFromMeshInput();
 	void initiateTetrahedraFromMeshInput();
 	void initiateTriangleFromMeshInput();
 	void initiatePrismFromSaveForUpdate(int k);
+	void initiateTriangleFromSaveForUpdate(int k,double height);
 	void removeElementFromEndOfList();
 	void updateNodeNumberFromSave();
 	void updateNodePositionsFromSave();
@@ -68,10 +69,10 @@ private:
 	bool openFiles();
 	bool reOpenOutputFile();
 	void initiateSystemForces();
-	void initiateMesh(int MeshType,float zHeight);
-	void initiateMesh(int MeshType, int Row, int Column, float SideLength, float zHeight);
-	void initiateMesh(int MeshType, string inputtype, float SideLength, float zHeight );
-	void initiateMesh(int MeshType);
+	bool initiateMesh(int MeshType,float zHeight);
+	bool initiateMesh(int MeshType, int Row, int Column, float SideLength, float zHeight);
+	bool initiateMesh(int MeshType, string inputtype, float SideLength, float zHeight );
+	bool initiateMesh(int MeshType);
 	bool addPeripodiumToTissue();
 	bool generateColumnarCircumferenceNodeList();
 	void sortColumnarCircumferenceNodeList();
@@ -103,6 +104,8 @@ private:
 	void updateDisplaySaveValuesFromRK();
 	void saveStep();
 	void writeSimulationSummary();
+	void writeMeshFileSummary();
+	void writeGrowthRatesSummary();
 	void writeSaveFileStepHeader();
 	void writeNodes();
 	void writeElements();
@@ -121,6 +124,9 @@ private:
 	void addStretchForces(int RKId);
 	void LaserAblate(double OriginX, double OriginY, double Radius);
 	void fillInNodeNeighbourhood();
+	void updateElementVolumesAndTissuePlacements();
+	void clearNodeMassLists();
+	void clearLaserAblatedSites();
 public:
 
 	ofstream outputFile;

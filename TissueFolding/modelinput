@@ -1,6 +1,6 @@
 InputMeshParameters:
   MeshInputMode(int-seeDocumentation): 4
-  MeshFile(full-path):   /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Prism20-9-2.mesh
+  MeshFile(full-path):   /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Prism.mesh
 
 PeripodiumParameters:
   AddPeripodium: 0
@@ -8,7 +8,7 @@ PeripodiumParameters:
 
 TimeParameters:
   TimeStep(sec): 0.25
-  SimulationLength(sec): 6000
+  SimulationLength(sec): 2.1
 
 PysicalProperties:
   YoungsModulusApical: 20.0	YoungsModulusBasal: 20.0	YoungsModulusMid: 20.0		Noise(%-int): 0
@@ -19,8 +19,8 @@ PysicalProperties:
 SaveOptions:
   SaveImages(bool): 1
   SaveData(bool):   1
-  ImageSaveInterval(sec): 60
-  DataSaveInterval(sec):  60
+  ImageSaveInterval(sec): 1
+  DataSaveInterval(sec):  1
 
 GrowthOptions:
   NumberofGrowthFunctions(int): 4

@@ -389,7 +389,6 @@ void Triangle::AlignReferenceApicalNormalToZ(double* SystemCentre){
 		delete[] rotAx;
 		delete[] rotMat;
 	}
-
 	//then re-calculate the stiffness matrix.
 	delete[] vec0;
 	delete[] vec1;

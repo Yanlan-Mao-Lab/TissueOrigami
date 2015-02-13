@@ -56,6 +56,7 @@ protected:
 	double  dotProduct3D(double* u, double* v);
 	void 	updateNodeIdsFromSave(ifstream& file);
 	void 	updateReferencePositionMatrixFromSave(ifstream& file);
+	virtual void calculateReferenceVolume(){ParentErrorMessage();};
 	//bool	areSidesFacingSameDirection(double* RefSide, double* ShapeSide);
 	void 	updateTissueCoordStrain();
 	void 	updateTissueCoordPlasticStrain();
@@ -132,6 +133,7 @@ public:
 	double** getReferencePos();
 	double*	 getReferenceNormal();
 	void 	displayName();
+	void	displayNodeIds();
 	void 	displayPositions();
 	void 	displayReferencePositions();
 	void 	displayIdentifierColour();
@@ -145,7 +147,7 @@ public:
 	void 	setGrowthRate(double x, double y, double z);
 	void 	setShapeChangeRate(double x, double y, double z);
 	void 	updateGrowthToAdd(double* growthscale);
-
+	void 	updateElementVolumesAndTissuePlacementsForSave(vector<Node*>& Nodes);
 
 	virtual void  checkHealth(){ParentErrorMessage();};
 	void 	resetCurrStepGrowthData();

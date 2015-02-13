@@ -222,13 +222,16 @@ bool Simulation::initiateSystem(){
 		return Success;
 	}
 	if (MeshType == 1){
-		initiateMesh(MeshType, zHeight); //zHeight
+		Success = initiateMesh(MeshType, zHeight); //zHeight
 	}
 	else if (MeshType == 2){
-		initiateMesh(MeshType, Row, Column,  SideLength,  zHeight);
+		Success = initiateMesh(MeshType, Row, Column,  SideLength,  zHeight);
 	}
 	else if(MeshType == 4){
-		initiateMesh(MeshType);
+		Success = initiateMesh(MeshType);
+	}
+	if (!Success){
+		return Success;
 	}
 	if (AddPeripodium){
 		Success = addPeripodiumToTissue();
@@ -258,7 +261,6 @@ bool Simulation::initiateSystem(){
 		cout<<"writing the summary current simulation parameters"<<endl;
 		writeSimulationSummary();
 	}
-
 	return Success;
 }
 
@@ -369,10 +371,78 @@ void Simulation::writeSimulationSummary(){
 	saveFileSimulationSummary<<dt<<endl;
 	saveFileSimulationSummary<<"DataSaveInterval(sec):  ";
 	saveFileSimulationSummary<<dataSaveInterval*dt<<endl;
-	saveFileSimulationSummary<<"ModelinputName  ";
+	saveFileSimulationSummary<<"ModelinputName:  ";
 	saveFileSimulationSummary<<ModInp->parameterFileName<<endl;
+	saveFileSimulationSummary<<"Mesh Type:  ";
+	saveFileSimulationSummary<<MeshType<<endl;
+	writeMeshFileSummary();
+	writeGrowthRatesSummary();
 
 }
+
+void Simulation::writeMeshFileSummary(){
+	if ( MeshType == 2){
+		saveFileSimulationSummary<<"	Row: ";
+		saveFileSimulationSummary<<Row;
+		saveFileSimulationSummary<<"	Column: ";
+		saveFileSimulationSummary<<Column;
+		saveFileSimulationSummary<<"	SideLength: ";
+		saveFileSimulationSummary<<SideLength;
+		saveFileSimulationSummary<<"	zHeight: ";
+		saveFileSimulationSummary<<zHeight;
+		saveFileSimulationSummary<<endl;
+	}
+	if ( MeshType == 4){
+		saveFileSimulationSummary<<"	MeshFileName: ";
+		saveFileSimulationSummary<<inputMeshFileName;
+		saveFileSimulationSummary<<endl;
+	}
+}
+
+void Simulation::writeGrowthRatesSummary(){
+	int currIndex = 0;
+	for (int i=0; i<nGrowthFunctions; ++i){
+		if (GrowthFunctionTypes[i] == 1){
+			saveFileSimulationSummary<<"Growth Type:  Uniform (1)"<<endl;
+			saveFileSimulationSummary<<"	Initial time(sec): ";
+			saveFileSimulationSummary<<GrowthParameters[currIndex];
+			saveFileSimulationSummary<<"	FinalTime time(sec): ";
+			saveFileSimulationSummary<<GrowthParameters[currIndex+1];
+			saveFileSimulationSummary<<"	GrowthRate(fraction/hr): ";
+			saveFileSimulationSummary<<GrowthParameters[currIndex+2]/dt*3600.0;
+			saveFileSimulationSummary<<"  ";
+			saveFileSimulationSummary<<GrowthParameters[currIndex+3]/dt*3600.0;
+			saveFileSimulationSummary<<"  ";
+			saveFileSimulationSummary<<GrowthParameters[currIndex+4]/dt*3600.0;
+			saveFileSimulationSummary<<endl;
+			currIndex += 5;
+		}
+		else if(GrowthFunctionTypes[i] == 2){
+			saveFileSimulationSummary<<"Growth Type:  Ring (2)"<<endl;
+			saveFileSimulationSummary<<"	Initial time(sec): ";
+			saveFileSimulationSummary<<GrowthParameters[currIndex];
+			saveFileSimulationSummary<<"	FinalTime time(sec): ";
+			saveFileSimulationSummary<<GrowthParameters[currIndex+1];
+			saveFileSimulationSummary<<"	Centre(micron): ";
+			saveFileSimulationSummary<<GrowthParameters[currIndex+2];
+			saveFileSimulationSummary<<"  ";
+			saveFileSimulationSummary<<GrowthParameters[currIndex+3];
+			saveFileSimulationSummary<<"	Inner radius(micron): ";
+			saveFileSimulationSummary<<GrowthParameters[currIndex+4];
+			saveFileSimulationSummary<<"	Outer radius(micron): ";
+			saveFileSimulationSummary<<GrowthParameters[currIndex+5];
+			saveFileSimulationSummary<<"	GrowthRate(fraction/hr): ";
+			saveFileSimulationSummary<<GrowthParameters[currIndex+6]/dt*3600.0;
+			saveFileSimulationSummary<<"  ";
+			saveFileSimulationSummary<<GrowthParameters[currIndex+7]/dt*3600.0;
+			saveFileSimulationSummary<<"  ";
+			saveFileSimulationSummary<<GrowthParameters[currIndex+8]/dt*3600.0;
+			saveFileSimulationSummary<<endl;
+		}
+	}
+
+}
+
 
 bool Simulation::openFilesToDisplay(){
 	string saveFileString = saveDirectoryToDisplayString +"/Save_Frame";
@@ -439,6 +509,16 @@ bool Simulation::initiateSavedSystem(){
 	if (VelocitiesSaved){
 		updateVelocitiesFromSave();
 	}
+	updateElementVolumesAndTissuePlacements();
+	clearNodeMassLists();
+	assignNodeMasses();
+	assignConnectedElementsAndWightsToNodes();
+	clearLaserAblatedSites();
+	int n = Elements.size();
+	for (int i=0; i<n; ++i){
+		//This is updating positions from save, I am only interested in normal positions, no Runge-Kutta steps. This corresponds to RK step 4, RKId = 3
+		Elements[i]->updatePositions(3, Nodes);
+	}
 	//skipping the footer:
 	getline(saveFileToDisplayMesh,currline);
 	while (currline.empty() && !saveFileToDisplayMesh.eof()){
@@ -485,16 +565,24 @@ bool Simulation::readSystemSummaryFromSave(){
 void Simulation::initiateNodesFromSave(){
 	int n;
 	saveFileToDisplayMesh >> n;
+	cout<<"number of nodes: "<<n<<endl;
 	Node* tmp_nd;
 	for (int i=0; i<n; ++i){
 		double* pos = new double[3];
+		int tissuePlacement, tissueType;
+		bool atCircumference;
 		saveFileToDisplayMesh >> pos[0];
 		saveFileToDisplayMesh >> pos[1];
 		saveFileToDisplayMesh >> pos[2];
-		tmp_nd = new Node(i, 3, pos,-1, -1);
+		saveFileToDisplayMesh >> tissuePlacement;
+		saveFileToDisplayMesh >> tissueType;
+		saveFileToDisplayMesh >> atCircumference;
+		tmp_nd = new Node(i, 3, pos,tissuePlacement, tissueType);
+		tmp_nd-> atCircumference = atCircumference;
 		Nodes.push_back(tmp_nd);
 		delete[] pos;
 	}
+	cout<<"number of nodes: "<<Nodes.size()<<endl;
 }
 
 void Simulation::initiateNodesFromMeshInput(){
@@ -552,23 +640,29 @@ void Simulation::initiateElementsFromMeshInput(){
 void Simulation::initiateElementsFromSave(){
 	int n;
 	saveFileToDisplayMesh >> n;
+	cout<<"number of elements: "<<n<<endl;
 	for (int i=0; i<n; ++i){
 		int shapeType;
 		saveFileToDisplayMesh >> shapeType;
 		if (shapeType == 1){
 			initiatePrismFromSave();
 		}
+		else if (shapeType == 4){
+			double height = 0.0;
+			saveFileToDisplayMesh >> height;
+			initiateTriangleFromSave(height);
+		}
 		else{
 			cerr<<"Error in shape type, corrupt save file! - currShapeType: "<<shapeType<<endl;
 		}
 	}
+	cout<<"number of elements: "<<Elements.size()<<endl;
 }
 
 void Simulation::initiatePrismFromSave(){
 	//inserts a new prism at order k into elements vector
 	//the node ids and reference shape positions
 	//will be updated in function: updateShapeFromSave
-
 	int* NodeIds;
 	NodeIds = new int[6];
 	for (int i =0 ;i<6; ++i){
@@ -578,6 +672,31 @@ void Simulation::initiatePrismFromSave(){
 	PrismPnt01 = new Prism(NodeIds, Nodes, currElementId);
 	PrismPnt01->updateShapeFromSave(saveFileToDisplayMesh);
 	Elements.push_back(PrismPnt01);
+	currElementId++;
+	delete[] NodeIds;
+	//cout<<"Element: "<<PrismPnt01->Id<<endl;
+	//Elements[Elements.size()-1]->displayPositions();
+	//Elements[Elements.size()-1]->displayReferencePositions();
+}
+
+void Simulation::initiateTriangleFromSave(double height){
+	//inserts a new triangle at order k into elements vector
+	//the node ids and reference shape positions
+	//will be updated in function: updateShapeFromSave
+	int* NodeIds;
+	NodeIds = new int[3];
+	for (int i =0 ;i<3; ++i){
+		NodeIds[i] = 0;
+	}
+	Triangle* TrianglePnt01;
+	TrianglePnt01 = new Triangle(NodeIds, Nodes, currElementId, height);
+	TrianglePnt01->updateShapeFromSave(saveFileToDisplayMesh);
+	calculateSystemCentre();
+	//CORRECT THIS LATER ON!!!
+	SystemCentre[2] -= 1; // The apical surface is assumed to took towards (-)ve z
+	TrianglePnt01->AlignReferenceApicalNormalToZ(SystemCentre);  //correcting the alignment of the triangular element such that the apical side will be aligned with (+)ve z
+	calculateSystemCentre();
+	Elements.push_back(TrianglePnt01);
 	currElementId++;
 	delete[] NodeIds;
 	//Elements[Elements.size()-1]->displayReferencePositions();
@@ -661,8 +780,8 @@ void Simulation::updateForcesFromSave(){
 	int n = Nodes.size();
 	for (int i=0;i<n;++i){
 		saveFileToDisplayForce.read((char*) &SystemForces[0][i][0], sizeof SystemForces[0][i][0]);
-		saveFileToDisplayForce.read((char*) &SystemForces[0][i][0], sizeof SystemForces[0][i][1]);
-		saveFileToDisplayForce.read((char*) &SystemForces[0][i][0], sizeof SystemForces[0][i][2]);
+		saveFileToDisplayForce.read((char*) &SystemForces[0][i][1], sizeof SystemForces[0][i][1]);
+		saveFileToDisplayForce.read((char*) &SystemForces[0][i][2], sizeof SystemForces[0][i][2]);
 	}
 }
 
@@ -707,6 +826,32 @@ void Simulation::initiatePrismFromSaveForUpdate(int k){
 	delete[] NodeIds;
 }
 
+void Simulation::initiateTriangleFromSaveForUpdate(int k, double height){
+	//inserts a new triangle at order k into elements vector
+	//the node ids and reference shape positions
+	//will be updated in function: updateShapeFromSave
+	int* NodeIds;
+	NodeIds = new int[3];
+	for (int i =0 ;i<3; ++i){
+		//the node ids will be updated in function: updateShapeFromSave
+		NodeIds[i] = 0;
+	}
+	Triangle* TrianglePnt01;
+	TrianglePnt01 = new Triangle(NodeIds, Nodes, currElementId, height);
+	TrianglePnt01->updateShapeFromSave(saveFileToDisplayMesh);
+	calculateSystemCentre();
+	//CORRECT THIS LATER ON!!!
+	SystemCentre[2] -= 1; // The apical surface is assumed to took towards (-)ve z
+	TrianglePnt01->AlignReferenceApicalNormalToZ(SystemCentre);  //correcting the alignment of the triangular element such that the apical side will be aligned with (+)ve z
+	calculateSystemCentre();
+	vector<ShapeBase*>::iterator it = Elements.begin();
+	it += k;
+	Elements.insert(it,TrianglePnt01);
+	currElementId++;
+	delete[] NodeIds;
+}
+
+
 void Simulation::updateOneStepFromSave(){
 	//cout<<"Updating step from save:"<<endl;
 	string currline;
@@ -718,6 +863,7 @@ void Simulation::updateOneStepFromSave(){
 	}
 	//cout<<"skipped header: "<<currline<<endl;
 	updateNodeNumberFromSave();
+	cout<<"updated node number: "<<Nodes.size();
 	updateNodePositionsFromSave();
 	updateElementStatesFromSave();
 	int n = Elements.size();
@@ -734,7 +880,10 @@ void Simulation::updateOneStepFromSave(){
 	if(VelocitiesSaved){
 		updateVelocitiesFromSave();
 	}
-
+	clearNodeMassLists();
+	assignNodeMasses();
+	assignConnectedElementsAndWightsToNodes();
+	clearLaserAblatedSites();
 	//skipping the footer:
 	string currline2;
 	getline(saveFileToDisplayMesh,currline2);
@@ -806,21 +955,30 @@ void  Simulation::updateElementStatesFromSave(){
 		int shapeType;
 		saveFileToDisplayMesh >> shapeType;
 		int currShapeType = Elements[i]->getShapeType();
-		if (shapeType == currShapeType || shapeType == 2){
+		if (shapeType == currShapeType || shapeType == 2 || shapeType ==4){
 			//cout<<"shape type is correct, moving on to update"<<endl;
 			//The current shape on the list, and the shape I am reading are of same type, I can read it:
+			if (shapeType ==4){
+				double height;
+				saveFileToDisplayMesh >> height;
+			}
 			Elements[i]->updateShapeFromSave(saveFileToDisplayMesh);
 		}
 		else{
 			//cout<<"shape type is wrong"<<endl;
 			//the current element is a different type, I need to insert generate a new element, and insert it here:
 			if (shapeType == 1){
-
 				//the new shape is a prism, I will add it now;
 				initiatePrismFromSaveForUpdate(i);
-				removeElementFromEndOfList();
-				currElementNumber = Elements.size();
 			}
+			if (shapeType == 4){
+				//the new shape is a triangle, I will add it now;
+				double height;
+				saveFileToDisplayMesh >> height;
+				initiateTriangleFromSaveForUpdate(i,height);
+			}
+			removeElementFromEndOfList();
+			currElementNumber = Elements.size();
 		}
 	}
 	while(n>currElementNumber){
@@ -828,11 +986,19 @@ void  Simulation::updateElementStatesFromSave(){
 		saveFileToDisplayMesh >> shapeType;
 		if (shapeType == 1){
 			int i = Elements.size()-1;
-			//this will initiate a prism at the current point in the Elemetns vector
+			//this will initiate a prism at the current point in the Elements vector
 			//then it will read the node ids and reference positions from the save file
 			//it will update the node ids, and reference positions.
 			//the normal positions will be updated using function updatePositions, called by updateOneStepFromSave
 			initiatePrismFromSaveForUpdate(i);
+			currElementNumber = Elements.size();
+		}
+		if (shapeType == 4){
+			int i = Elements.size()-1;
+			//the new shape is a triangle, I will add it now;
+			double height;
+			saveFileToDisplayMesh >> height;
+			initiateTriangleFromSaveForUpdate(i,height);
 			currElementNumber = Elements.size();
 		}
 	}
@@ -856,28 +1022,36 @@ void Simulation::updateNodePositionsFromSave(){
 		saveFileToDisplayMesh >> Nodes[i]->Position[0];
 		saveFileToDisplayMesh >> Nodes[i]->Position[1];
 		saveFileToDisplayMesh >> Nodes[i]->Position[2];
+		saveFileToDisplayMesh >> Nodes[i]->tissuePlacement;
+		saveFileToDisplayMesh >> Nodes[i]->tissueType;
+		saveFileToDisplayMesh >> Nodes[i]->atCircumference;
 	}
 }
 
-void Simulation::initiateMesh(int MeshType, float zHeight){
+bool Simulation::initiateMesh(int MeshType, float zHeight){
 	if (MeshType == 1 ){
 		initiateSinglePrismNodes(zHeight);
 		initiateSinglePrismElement();
 	}
 	else if (MeshType == 2){
 		cerr<<"Error: Too few arguments for mesh by dimensions"<<endl;
+		return false;
 	}
 	else if ( MeshType == 3 || MeshType ==4 ){
 		cerr<<"Error: Wrong set of arguments  for mesh triangulation"<<endl;
+		return false;
 	}
 	else {
 		cerr<<"Error: Mesh Type not recognised"<<endl;
+		return false;
 	}
+	return true;
 }
 
-void Simulation::initiateMesh(int MeshType, int Row, int Column, float SideLength, float zHeight){
+bool Simulation::initiateMesh(int MeshType, int Row, int Column, float SideLength, float zHeight){
 	if ( MeshType == 1 ){
 		cerr<<"Error: Too many arguments for a single element system"<<endl;
+		return false;
 	}
 	if ( MeshType == 2){
 		//The necessary parameters:
@@ -896,45 +1070,58 @@ void Simulation::initiateMesh(int MeshType, int Row, int Column, float SideLengt
 	}
 	else if ( MeshType == 3 ){
 		cerr<<"Error: Wrong set of arguments for mesh triangulation"<<endl;
+		return false;
 	}
 	else if ( MeshType ==4 ){
-			cerr<<"Error: Too many arguments for reading the mesh from file"<<endl;
+		cerr<<"Error: Too many arguments for reading the mesh from file"<<endl;
+		return false;
 	}
 	else {
 		cerr<<"Error: Mesh Type not recognised"<<endl;
+		return false;
 	}
+	return true;
 }
 
-void Simulation::initiateMesh(int MeshType, string inputtype, float SideLength, float zHeight ){
+bool Simulation::initiateMesh(int MeshType, string inputtype, float SideLength, float zHeight ){
 	if ( MeshType == 1 ){
 		cerr<<"Error: Too many arguments for a single element system"<<endl;
+		return false;
 	}
 	if ( MeshType == 2){
 		cerr<<"Error: Too few arguments for mesh by dimensions"<<endl;
+		return false;
 	}
 	else if ( MeshType == 3 ){
 		//this will be inputting circumference of the tissue, and the sidelength and z-height
 		//generate mesh by triangulation
+		return false;
 	}
 	else if ( MeshType ==4 ){
 		cerr<<"Error: Too many arguments for reading the mesh from file"<<endl;
+		return false;
 		//this will be reading full mesh data
 		//read mesh data from file
 	}
 	else {
 		cerr<<"Error: Mesh Type not recognised"<<endl;
+		return false;
 	}
+	return true;
 }
 
-void Simulation::initiateMesh(int MeshType){
+bool Simulation::initiateMesh(int MeshType){
 	if ( MeshType == 1 ){
 		cerr<<"Error: Too many arguments for a single element system"<<endl;
+		return false;
 	}
 	if ( MeshType == 2){
 		cerr<<"Error: Too few arguments for mesh by dimensions"<<endl;
+		return false;
 	}
 	else if ( MeshType == 3 ){
 		cerr<<"Error: Wrong set of arguments  for mesh triangulation"<<endl;
+		return false;
 	}
 	else if ( MeshType ==4 ){
 		//this will be reading full mesh data
@@ -943,13 +1130,16 @@ void Simulation::initiateMesh(int MeshType){
 		saveFileToDisplayMesh.open(name_inputMeshFile, ifstream::in);
 		if (!(saveFileToDisplayMesh.good() && saveFileToDisplayMesh.is_open())){
 			cerr<<"Cannot open the save file to display: "<<name_inputMeshFile<<endl;
+			return false;
 		}
 		initiateNodesFromMeshInput();
 		initiateElementsFromMeshInput();
 	}
 	else {
 		cerr<<"Error: Mesh Type not recognised"<<endl;
+		return false;
 	}
+	return true;
 }
 
 
@@ -2413,7 +2603,7 @@ void Simulation::writeNodes(){
 			saveFileMesh.precision(3);saveFileMesh.width(10);
 			saveFileMesh<<Nodes[i]->Position[1];
 			saveFileMesh.precision(3);saveFileMesh.width(10);
-			saveFileMesh<<0.0<<endl;
+			saveFileMesh<<0.0;
 
 		}
 		else{
@@ -2422,8 +2612,15 @@ void Simulation::writeNodes(){
 				saveFileMesh.precision(3);saveFileMesh.width(10);
 				saveFileMesh<<Nodes[i]->Position[j];
 			}
-			saveFileMesh<<endl;
+
 		}
+		saveFileMesh.width(4);
+		saveFileMesh<<Nodes[i]->tissuePlacement;
+		saveFileMesh.width(4);
+		saveFileMesh<<Nodes[i]->tissueType;
+		saveFileMesh.width(4);
+		saveFileMesh<<Nodes[i]->atCircumference;
+		saveFileMesh<<endl;
 	}
 }
 
@@ -2434,6 +2631,13 @@ void Simulation::writeElements(){
 		int shapetype = Elements[i]->getShapeType();
 		saveFileMesh.width(4);
 		saveFileMesh<<shapetype;
+		if(shapetype == 4 ){
+			double height = Elements[i]->getElementHeight();
+			saveFileMesh.precision(3);saveFileMesh.width(10);
+			saveFileMesh<<height;
+		}
+		saveFileMesh.width(4);
+		saveFileMesh<<Elements[i]->IsAblated;
 		int nodeNumber = Elements[i]->getNodeNumber();
 		int*  NodeIds = Elements[i]->getNodeIds();
 		for (int j = 0; j<nodeNumber; ++j ){
@@ -2468,8 +2672,8 @@ void Simulation::writeForces(){
 	int n = Nodes.size();
 	for (int i=0;i<n;++i){
 		saveFileForces.write((char*) &SystemForces[0][i][0], sizeof SystemForces[0][i][0]);
-		saveFileForces.write((char*) &SystemForces[0][i][0], sizeof SystemForces[0][i][1]);
-		saveFileForces.write((char*) &SystemForces[0][i][0], sizeof SystemForces[0][i][2]);
+		saveFileForces.write((char*) &SystemForces[0][i][1], sizeof SystemForces[0][i][1]);
+		saveFileForces.write((char*) &SystemForces[0][i][2], sizeof SystemForces[0][i][2]);
 	}
 }
 
@@ -2738,3 +2942,38 @@ void Simulation::LaserAblate(double OriginX, double OriginY, double Radius){
 	}
 
 }
+
+
+
+void Simulation::updateElementVolumesAndTissuePlacements(){
+	int n = Elements.size();
+	for (int i=0; i<n;++i){
+		Elements[i]->updateElementVolumesAndTissuePlacementsForSave(Nodes);
+	}
+}
+
+void Simulation::clearNodeMassLists(){
+	int n = Nodes.size();
+	for (int i=0 ;i<n;++i){
+		Nodes[i]->connectedElementIds.size();
+		Nodes[i]->connectedElementIds.clear();
+		Nodes[i]->connectedElementWeights.clear();
+		Nodes[i]->mass=0.0;
+	}
+}
+
+void Simulation::clearLaserAblatedSites(){
+	int nE = Elements.size();
+	for (int i=0; i<nE; ++i){
+		if (Elements[i]->IsAblated){
+			Elements[i]->removeMassFromNodes(Nodes);
+		}
+	}
+	int n = Nodes.size();
+	for (int i=0; i<n; ++i){
+		if (Nodes[i]->mass <=0){
+			Nodes[i]->mass = 0.1;
+		}
+	}
+}
+

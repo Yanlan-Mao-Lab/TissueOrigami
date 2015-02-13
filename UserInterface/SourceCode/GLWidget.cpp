@@ -130,7 +130,6 @@ using namespace std;
 	 glMultMatrixf(MatRot);
 	 glTranslatef( -Sim01->SystemCentre[0], -Sim01->SystemCentre[1], Sim01->SystemCentre[2]);
 
-
 	 if (ItemSelected){
 		 //cout<<"item is selected calling reference shape drawing!"<<endl;
 		 drawReferenceElement(SelectedItemIndex);
@@ -438,6 +437,7 @@ using namespace std;
 				float x = Sim01->Elements[i]->Positions[pointId][0];
 				float y = Sim01->Elements[i]->Positions[pointId][1];
 				float z = Sim01->Elements[i]->Positions[pointId][2];
+				//cout<<"triangle : "<<j<<" point: "<<k<<" position : "<<x<<" y "<<y<<" z "<<z<<" colour: "<<NodeColours[pointId][0]<<" "<<NodeColours[pointId][1]<<" "<<NodeColours[pointId][2]<<endl;
 				glVertex3f( x, y, z);
 			}
 		}
