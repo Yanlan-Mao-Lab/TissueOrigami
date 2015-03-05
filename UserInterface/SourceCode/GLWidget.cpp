@@ -87,7 +87,7 @@ using namespace std;
      GLfloat LineRange[2];
      glGetFloatv(GL_LINE_WIDTH_RANGE,LineRange);
      ReferenceLineThickness = (LineRange[1]-LineRange[0])/2.0;
-     MainShapeLineThickness = (LineRange[1]-LineRange[0])/10.0;
+     MainShapeLineThickness = (LineRange[1]-LineRange[0])/5.0;
      initialiseNodeColourList();
      DisplayStrains = false;
      glTranslatef( obj_pos[0], obj_pos[1], -obj_pos[2] );

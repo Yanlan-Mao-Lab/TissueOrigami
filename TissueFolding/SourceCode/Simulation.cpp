@@ -514,11 +514,8 @@ bool Simulation::initiateSavedSystem(){
 	assignNodeMasses();
 	assignConnectedElementsAndWightsToNodes();
 	clearLaserAblatedSites();
-	int n = Elements.size();
-	for (int i=0; i<n; ++i){
-		//This is updating positions from save, I am only interested in normal positions, no Runge-Kutta steps. This corresponds to RK step 4, RKId = 3
-		Elements[i]->updatePositions(3, Nodes);
-	}
+	//This is updating positions from save, I am only interested in normal positions, no Runge-Kutta steps. This corresponds to RK step 4, RKId = 3
+	updateElementPositions(3);
 	//skipping the footer:
 	getline(saveFileToDisplayMesh,currline);
 	while (currline.empty() && !saveFileToDisplayMesh.eof()){
@@ -2009,7 +2006,7 @@ void Simulation::assignPhysicalParameters(){
 }
 
 void Simulation::runOneStep(){
-	if(timestep==0){
+	/*if(timestep==0){
 		for(int i=0;i<Nodes.size();++i){
 			if (Nodes[i]->atCircumference){
 				Nodes[i]->FixedPos[0] = true;
@@ -2020,7 +2017,7 @@ void Simulation::runOneStep(){
 			Nodes[i]->Position[1] *=1.5;
 			Nodes[i]->Position[2] *=1.0;
 		}
-		/*double R[3][3];
+		double R[3][3];
 		double Rx[3][3] = {{1,0,0},{0,0,-1},{0,1,0}};
 		double Ry[3][3] = {{0,0,1},{0,1,0},{-1,0,0}};
 		double Rz[3][3] = {{0,-1,0},{1,0,0},{0,0,1}};
@@ -2036,12 +2033,12 @@ void Simulation::runOneStep(){
 			Nodes[i]->Position[0]=x;
 			Nodes[i]->Position[1]=y;
 			Nodes[i]->Position[2]=z;
-		}*/
+		}
 		for(int i=0;i<Elements.size();++i){
 			Elements[i]->updatePositions(3,Nodes);
 		}
-	}
-	if(timestep==10/dt){
+	}*/
+	if(timestep==-10/dt){
 		LaserAblate(0.0,0.0,1.8);
 	}
 	int displayfreq = 60/dt;
