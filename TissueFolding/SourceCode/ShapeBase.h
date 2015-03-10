@@ -41,7 +41,6 @@ protected:
 	bool 	CurrGrowthStrainsUpToDate;
 	bool 	GrewInThePast;
 	bool 	ChangedShapeInThePast;
-
 	void 	setShapeType(string TypeName);
 	void 	readNodeIds(int* tmpNodeIds);
 	void 	setPositionMatrix(vector<Node*>& Nodes);

@@ -40,6 +40,7 @@ using namespace std;
      float DisplayPysPropRange[5][2];	//current range
      float DisplayPysPropBounds[5][4];  //the minimum and maximum they can get
      vector <QString> SelectedPos;
+     vector <QString> SelectedId;
      bool drawTissueCoordinates;
      bool drawNetForces;
      bool drawPackingForces;

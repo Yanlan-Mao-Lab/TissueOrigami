@@ -201,6 +201,8 @@ void MainWindow::setItemSelectionTitles(QFont font, QFont boldFont, QGridLayout 
 
 	QLabel *CoordTitle = new QLabel("Coordinates");
 	CoordTitle ->setFont(boldFont);
+	QLabel *NodeIdTitle = new QLabel("id");
+	NodeIdTitle ->setFont(boldFont);
 	QLabel *CoordTitlex = new QLabel("x");
 	CoordTitlex ->setFont(boldFont);
 	QLabel *CoordTitley = new QLabel("y");
@@ -213,9 +215,10 @@ void MainWindow::setItemSelectionTitles(QFont font, QFont boldFont, QGridLayout 
 	SelectionDisplayGrid->addWidget(NameBox,1,1,1,2,Qt::AlignLeft);
 
 	SelectionDisplayGrid->addWidget(CoordTitle,2,0,1,3,Qt::AlignHCenter);
-	SelectionDisplayGrid->addWidget(CoordTitlex,3,1,1,1,Qt::AlignHCenter);
-	SelectionDisplayGrid->addWidget(CoordTitley,3,2,1,1,Qt::AlignHCenter);
-	SelectionDisplayGrid->addWidget(CoordTitlez,3,3,1,1,Qt::AlignHCenter);
+	SelectionDisplayGrid->addWidget(NodeIdTitle,3,1,1,1,Qt::AlignHCenter);
+	SelectionDisplayGrid->addWidget(CoordTitlex,3,2,1,1,Qt::AlignHCenter);
+	SelectionDisplayGrid->addWidget(CoordTitley,3,3,1,1,Qt::AlignHCenter);
+	SelectionDisplayGrid->addWidget(CoordTitlez,3,4,1,1,Qt::AlignHCenter);
 }
 
 void MainWindow::setCoordBoxes(QFont font, QFont boldFont, QGridLayout *SelectionDisplayGrid){
@@ -227,25 +230,31 @@ void MainWindow::setCoordBoxes(QFont font, QFont boldFont, QGridLayout *Selectio
 	CoordLabel_n[5] = new QLabel("Node 6");
 	for (int i = 0 ;i<nCoordBox; ++i){
 		CoordLabel_n[i] ->setFont(boldFont);
+		CoordBox_id[i] = new QLineEdit();
 		CoordBox_x[i] = new QLineEdit();
 		CoordBox_y[i] = new QLineEdit();
 		CoordBox_z[i] = new QLineEdit();
+		CoordBox_id[i]->setPlaceholderText( "No input" );
 		CoordBox_x[i]->setPlaceholderText( "No input" );
 		CoordBox_y[i]->setPlaceholderText( "No input" );
 		CoordBox_z[i]->setPlaceholderText( "No input" );
+		CoordBox_id[i]->setReadOnly(true);
 		CoordBox_x[i]->setReadOnly(true);
 		CoordBox_y[i]->setReadOnly(true);
 		CoordBox_z[i]->setReadOnly(true);
+		CoordBox_id[i]->setFont(font);
 		CoordBox_x[i]->setFont(font);
 		CoordBox_y[i]->setFont(font);
 		CoordBox_z[i]->setFont(font);
+		CoordBox_id[i]->setFixedWidth(70);
 		CoordBox_x[i]->setFixedWidth(70);
 		CoordBox_y[i]->setFixedWidth(70);
 		CoordBox_z[i]->setFixedWidth(70);
 		SelectionDisplayGrid->addWidget(CoordLabel_n[i],i+4,0,1,1,Qt::AlignLeft);
-		SelectionDisplayGrid->addWidget(CoordBox_x[i],i+4,1,1,1,Qt::AlignLeft);
-		SelectionDisplayGrid->addWidget(CoordBox_y[i],i+4,2,1,1,Qt::AlignLeft);
-		SelectionDisplayGrid->addWidget(CoordBox_z[i],i+4,3,1,1,Qt::AlignLeft);
+		SelectionDisplayGrid->addWidget(CoordBox_id[i],i+4,1,1,1,Qt::AlignLeft);
+		SelectionDisplayGrid->addWidget(CoordBox_x[i],i+4,2,1,1,Qt::AlignLeft);
+		SelectionDisplayGrid->addWidget(CoordBox_y[i],i+4,3,1,1,Qt::AlignLeft);
+		SelectionDisplayGrid->addWidget(CoordBox_z[i],i+4,4,1,1,Qt::AlignLeft);
 	}
 }
 
@@ -276,13 +285,13 @@ void MainWindow::setDisplayPreferences(QGridLayout *SelectionDisplayGrid){
 	DisplayPreferencesCheckBoxes[6]->setChecked(false);
 	connect(DisplayPreferencesCheckBoxes[6] , SIGNAL(stateChanged(int)),this,SLOT(updatePackingForceCheckBox(int)));
 
-	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[0],7+nCoordBox,0,1,1,Qt::AlignLeft);
-	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[1],8+nCoordBox,0,1,1,Qt::AlignLeft);
-	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[6],8+nCoordBox,2,1,1,Qt::AlignLeft);
-	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[2],9+nCoordBox,0,1,1,Qt::AlignLeft);
-	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[3],10+nCoordBox,0,1,1,Qt::AlignLeft);
-	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[4],11+nCoordBox,0,1,1,Qt::AlignLeft);
-	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[5],12+nCoordBox,0,1,1,Qt::AlignLeft);
+	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[0],7+nCoordBox,0,1,1,Qt::AlignLeft);  // Tissue Coordinates
+	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[1],8+nCoordBox,0,1,2,Qt::AlignLeft);  // Net Forces
+	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[6],8+nCoordBox,2,1,2,Qt::AlignLeft);  // Packing Forces
+	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[2],9+nCoordBox,0,1,1,Qt::AlignLeft);  // Velocities
+	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[3],10+nCoordBox,0,1,1,Qt::AlignLeft); // Scale Bar
+	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[4],11+nCoordBox,0,1,1,Qt::AlignLeft); // Display Peripodium
+	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[5],12+nCoordBox,0,1,1,Qt::AlignLeft); // Display Columnar Layer
 }
 
 void  MainWindow::updateTissueCoordCheckBox(int s){
@@ -422,16 +431,20 @@ void MainWindow::SelectedItemChange(){
     QString tmpstring = QString::fromStdString(MainGLWidget->SelectedItemName);
     NameBox->setText(tmpstring);
     for (int i = 0 ;i<nCoordBox; ++i){
+    	 CoordBox_id[i]->setText ( "" );
     	 CoordBox_x[i]->setText ( "" );
     	 CoordBox_y[i]->setText ( "" );
     	 CoordBox_z[i]->setText ( "" );
+    	 CoordBox_id[i]->setEnabled(false);
     	 CoordBox_x[i]->setEnabled(false);
     	 CoordBox_y[i]->setEnabled(false);
     	 CoordBox_z[i]->setEnabled(false);
     	 if (MainGLWidget->SelectedPos.size()>i*3){
+    		 CoordBox_id[i]->setText ( MainGLWidget->SelectedId[i] );
 			 CoordBox_x[i]->setText ( MainGLWidget->SelectedPos[i*3] );
 			 CoordBox_y[i]->setText ( MainGLWidget->SelectedPos[i*3+1] );
 			 CoordBox_z[i]->setText ( MainGLWidget->SelectedPos[i*3+2] );
+			 CoordBox_id[i]->setEnabled(true);
 			 CoordBox_x[i]->setEnabled(true);
 			 CoordBox_y[i]->setEnabled(true);
 			 CoordBox_z[i]->setEnabled(true);

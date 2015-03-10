@@ -17,7 +17,7 @@ using namespace std;
 	 //cout<<"initiating gl widget"<<endl;
 	 obj_pos[0] = -10.0f;
 	 obj_pos[1] =  4.0f;
-	 obj_pos[2] =  50.0f;
+	 obj_pos[2] =  250.0f;
 	 MatRot[0]  = 1.0; MatRot[1]  = 0.0; MatRot[2]  = 0.0; MatRot[3]  = 0.0;
 	 MatRot[4]  = 0.0; MatRot[5]  = 1.0; MatRot[6]  = 0.0; MatRot[7]  = 0.0;
 	 MatRot[8]  = 0.0; MatRot[9]  = 0.0; MatRot[10] = 1.0; MatRot[11] = 0.0;
@@ -810,7 +810,7 @@ using namespace std;
  			if(j==0){glColor3f(1,0,0);}else{glColor3f(0,0,1);}
  			float x = pos[pointId][0];
  			float y = pos[pointId][1];
- 			float z = pos[pointId][2] + 10.0;
+ 			float z = pos[pointId][2] + 50.0;
  			//cout<<"x,y,z: "<<x<<" "<<y<<" "<<z<<endl;
  			glVertex3f( x, y, z);
  		}
@@ -839,7 +839,7 @@ using namespace std;
 			if(j==0){glColor3f(1,0,0);}else{glColor3f(0,1,0);}
 			float x = Sim01->Elements[i]->PositionsAlignedToReference[pointId][0];
 			float y = Sim01->Elements[i]->PositionsAlignedToReference[pointId][1];
-			float z = Sim01->Elements[i]->PositionsAlignedToReference[pointId][2]+10;
+			float z = Sim01->Elements[i]->PositionsAlignedToReference[pointId][2]+50;
 			//cout<<"x,y,z: "<<x<<" "<<y<<" "<<z<<endl;
 			glVertex3f( x, y, z);
 		}
@@ -1109,7 +1109,8 @@ using namespace std;
   {
 	 float numDegrees = event->delta() / 8;
 	 float numSteps = numDegrees / 30;
-	 obj_pos[2] += -numSteps;
+	 float speed = 5.0;
+	 obj_pos[2] += -speed*numSteps;
 	 updateGL();
   }
 
@@ -1127,6 +1128,9 @@ using namespace std;
 	 SelectedItemIndex = -1;
 	 while ( SelectedPos.size()>0){
 		 SelectedPos.pop_back();
+ 	 }
+	 while ( SelectedId.size()>0){
+		 SelectedId.pop_back();
  	 }
  }
 
@@ -1158,12 +1162,15 @@ using namespace std;
 	SelectedItemName = Sim01->Elements[i]->getName();
 	int nNodes = Sim01->Elements[i]->getNodeNumber();
 	int nDim = Sim01->Elements[i]->getDim();
+	int* NodeIds =  Sim01->Elements[i]->getNodeIds();
 	for (int j=0;j<nNodes;j++){
 		for (int k =0 ;k<nDim; k++){
 			QString tmpstring = QString::number(Sim01->Elements[i]->Positions[j][k], 'f', 2);
 			SelectedPos.push_back(tmpstring);
 			//cout<<"j: "<<j<<"k: "<<k<<" string: "<<tmpstring.toStdString()<<endl;
 		}
+		QString tmpstring = QString::number(Sim01->Elements[i]->NodeIds[j], 'f', 0);
+		SelectedId.push_back(tmpstring);
 	}
  }
 

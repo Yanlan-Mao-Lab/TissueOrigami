@@ -1196,12 +1196,11 @@ void Simulation::sortColumnarCircumferenceNodeList(){
 		angles.push_back(tet);
 	}
 
-	cout<<"ColumnarCircumferencialNodeList before sort"<<endl;
+	/*cout<<"ColumnarCircumferencialNodeList before sort"<<endl;
 	for (int j =0 ; j<n; ++j){
-		cout<<ColumnarCircumferencialNodeList[j]<<" "<<angles[j]<<endl;
-	}
+		cout<<j<<"of "<<n<<": "<<  ColumnarCircumferencialNodeList[j]<<" "<<angles[j]<<endl;
+	}*/
 	bool swapped = true;
-	//for (int j =1 ; j<n; ++j){
 	while (swapped){
 		swapped = false;
 		for(int i=1; i<n; ++i){
@@ -1211,16 +1210,21 @@ void Simulation::sortColumnarCircumferenceNodeList(){
 				ColumnarCircumferencialNodeList[i]=temp;
 				double td = angles[i-1];
 				angles[i-1]=angles[i];
-				angles[i-1]=td;
+				angles[i]=td;
+				//also change the apical list!
+				temp=ApicalColumnarCircumferencialNodeList[i-1];
+				ApicalColumnarCircumferencialNodeList[i-1]=ApicalColumnarCircumferencialNodeList[i];
+				ApicalColumnarCircumferencialNodeList[i]=temp;
 				swapped = true;
+				//cout<<"swapped "<<i <<" with "<<i-1<<endl;
 			}
 		}
 	}
-	//}
+	/*
 	cout<<"ColumnarCircumferencialNodeList after sort"<<endl;
 	for (int j =0 ; j<n; ++j){
 		cout<<ColumnarCircumferencialNodeList[j]<<" "<<angles[j]<<endl;
-	}
+	}*/
 }
 
 bool Simulation::sortcomparison(int i, int j){
@@ -1447,6 +1451,7 @@ void Simulation::AddPeripodiumCap(int layerCount,  vector <int*> &trianglecorner
 		counter++;
 		PeripodiumNodeId.push_back(Nodes[i]->Id);
 		CorrespondingApicalNodeId.push_back(Nodes[ApicalColumnarCircumferencialNodeList[idx]]->Id);
+		cout<<"peripodium Node: "<<Nodes[i]->Id<<" pos: "<<Nodes[i]->Position[0]<<" "<<Nodes[i]->Position[1]<<" "<<Nodes[i]->Position[2]<<" corr. node id: "<<Nodes[ApicalColumnarCircumferencialNodeList[idx]]->Id<<endl;
 	}
 	// The end point is 0.5*height above the apical surface.
 	// I also want to add one more layer of curvature, same height as each triangle in the side peripodium spans
@@ -1476,10 +1481,16 @@ void Simulation::AddPeripodiumCap(int layerCount,  vector <int*> &trianglecorner
 				Nodes.push_back(tmp_nd);
 				PeripodiumNodeId.push_back(tmp_nd->Id);
 				CorrespondingApicalNodeId.push_back(Nodes[i]->Id);
+				cout<<"temp Node: "<<tmp_nd->Id<<" pos: "<<pos[0]<<" "<<pos[1]<<" "<<pos[2]<<" corr. node id: "<<Nodes[i]->Id<<endl;
 			}
 		}
 	}
+	/*cout<<"apical node - peripodium node couples: "<<endl;
+	for (int a = 0; a< PeripodiumNodeId.size(); a++){
+		cout<<PeripodiumNodeId[a]<<" "<<CorrespondingApicalNodeId[a]<<endl;
+	}*/
 	//Now I have generated the nodes and have the corresponding node mapping, I can add the triangles to list:
+	int initialpointfordisplay = trianglecornerlist.size();
 	for (int i = 0; i<Elements.size(); ++i){
 		vector <int> ApicalTriangles;
 		Elements[i]->getApicalTriangles(ApicalTriangles);
@@ -1506,7 +1517,10 @@ void Simulation::AddPeripodiumCap(int layerCount,  vector <int*> &trianglecorner
 			}
 		}
 	}
-
+	/*cout<<"triangle corners for peripodium cap: "<<endl;
+	for (int a =initialpointfordisplay; a< trianglecornerlist.size(); a++){
+		cout<<trianglecornerlist[a][0]<<" "<<trianglecornerlist[a][1]<<" "<<trianglecornerlist[a][2]<<endl;
+	}*/
 }
 
 void Simulation::FillNodeAssociationDueToPeripodium(){
@@ -1529,11 +1543,11 @@ void Simulation::FillNodeAssociationDueToPeripodium(){
 			}
 			Nodes[index]->AssociatedNodesDueToPeripodium.push_back(currNodeId);
 		}
-		cout<<"Node: "<<index<<" pos : "<<Nodes[index]->Position[0]<<" "<<Nodes[index]->Position[1]<<" "<<Nodes[index]->Position[2]<<endl;
+		/*cout<<"Node: "<<index<<" pos : "<<Nodes[index]->Position[0]<<" "<<Nodes[index]->Position[1]<<" "<<Nodes[index]->Position[2]<<endl;
 		for(int j = 0; j< Nodes[index]->AssociatedNodesDueToPeripodium.size(); ++j){
 			int a = Nodes[index]->AssociatedNodesDueToPeripodium[j];
 			cout<<"	Associated Node Pos: "<<Nodes[a]->Position[0]<<" "<<Nodes[a]->Position[1]<<" "<<Nodes[a]->Position[2]<<endl;
-		}
+		}*/
 	}
 }
 
@@ -2086,6 +2100,7 @@ void Simulation::runOneStep(){
 			Elements[i]->growShape();
 		}
 	}
+
 	double packingThreshold = getAverageSideLength();
 	packingThreshold *=0.7; //I am adding a 40% safety to average side length, and then taking half of it as threshold for packing
 	for (int RKId = 0; RKId<4; ++RKId){

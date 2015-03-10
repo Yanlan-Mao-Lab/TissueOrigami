@@ -23,6 +23,7 @@ class Triangle : public ShapeBase{
 protected:
 	int normalCrossOrder[2];
 	double slabHeight;
+	double 	apicalZDir;
 	void setTissueCoordsRotationsBuffers();
 	void getCurrRelaxedShape(boost::numeric::ublas::matrix<double> & CurrRelaxedShape);
 	void setShapeFunctionDerivatives(boost::numeric::ublas::matrix<double> &ShapeFuncDer,double eta, double nu);

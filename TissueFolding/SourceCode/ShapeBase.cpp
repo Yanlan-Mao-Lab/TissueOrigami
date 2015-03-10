@@ -691,9 +691,10 @@ void 	ShapeBase::calculateGrowthInLocalCoordinates(double * strainsToAdd){
 	LocalGrowthStrainsMat(0,1) = ( (1.0 + LocalGrowthStrainsMat(0,1)) * (1.0 + CurrLocalGrowthToAdd(0,1)) ) - 1.0;
 	LocalGrowthStrainsMat(0,2) = ( (1.0 + LocalGrowthStrainsMat(0,2)) * (1.0 + CurrLocalGrowthToAdd(0,2)) ) - 1.0;
 	LocalGrowthStrainsMat(1,2) = ( (1.0 + LocalGrowthStrainsMat(1,2)) * (1.0 + CurrLocalGrowthToAdd(1,2)) ) - 1.0;
-	//if (Id == 12 ){
-	//	displayMatrix(LocalGrowthStrainsMat,"LocalGrowthStrainsMat");
-	//}
+
+	cout<<"Element: "<<Id<<endl;
+	displayMatrix(LocalGrowthStrainsMat,"LocalGrowthStrainsMat");
+
 	delete[] RefCoords;
 }
 
@@ -1233,7 +1234,7 @@ void	ShapeBase::rotateVectorByRotationMatrix(double* u,double* rotMat){
 }
 
 void  ShapeBase::rotateReferenceElementByRotationMatrix(double* rotMat){
-
+	cout<<"rotaitng the reference matrix of element: "<<Id<<endl;
 	for (int i=0; i<nNodes; ++i){
 		double * u;
 		u = new double[3];

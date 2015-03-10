@@ -93,6 +93,7 @@ Triangle::Triangle(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, double h){
 
 	normalCrossOrder[0] = 1;
 	normalCrossOrder[1] = 2;
+	apicalZDir = +1.0;
 	//cout<<"finalised construction"<<endl;
 }
 
@@ -357,7 +358,7 @@ void Triangle::AlignReferenceApicalNormalToZ(double* SystemCentre){
 	//having the order of vector calculation, I need to get the normal of the apical side for the reference triangle
 	double* vec0;
 	double* vec1;
-	vec0 = new double[3];	//vector from node 0 to node 1 or 2, the selection is done so that the cross-product points towards apical direction
+	vec0 = new double[3];	//vector from node 0 to node 1 or 2, the selection is done so that the cross-product points towards apical direction (towards the lumen - between peripodial membrane and columnar layer)
 	vec1 = new double[3]; 	//vector from node 0 to (same as above)
 	for (int i = 0; i<nDim; ++i){
 		vec0[i] = ReferenceShape->Positions[normalCrossOrder[0]][i] - ReferenceShape->Positions[0][i];
@@ -367,12 +368,12 @@ void Triangle::AlignReferenceApicalNormalToZ(double* SystemCentre){
 	normal = new double[3];
 	crossProduct3D(vec0,vec1,normal);
 	normaliseVector3D(normal);
-	//then rotate the reference to have this vector pointing towards (+ve) z;
+	//then rotate the reference to have this vector pointing towards (-ve) z;
 	double* z;
 	z = new double[3];
 	z[0] = 0.0;
 	z[1] = 0.0;
-	z[2] = -1.0;
+	z[2] = apicalZDir;
 	double c, s;
 	calculateRotationAngleSinCos(normal,z,c,s);  //align normal to z
 	//cout<<"vec0: "<<vec0[0]<<" "<<vec0[1]<<" "<<vec0[2]<<" vec1: "<<vec1[0]<<" "<<vec1[1]<<" "<<vec1[2]<<endl;
@@ -394,7 +395,6 @@ void Triangle::AlignReferenceApicalNormalToZ(double* SystemCentre){
 	delete[] vec1;
 	delete[] normal;
 	delete[] z;
-
 }
 
 void Triangle::calculateApicalNormalCrossOrder(double* SystemCentre){
@@ -414,6 +414,12 @@ void Triangle::calculateApicalNormalCrossOrder(double* SystemCentre){
 	double* vecToCentre = new double[3];
 	for (int i = 0; i<nDim; ++i){
 		vecToCentre[i] = SystemCentre[i] - ElementCentre[i];
+	}
+	if (vecToCentre[2]>=0){
+		apicalZDir = +1.0;
+	}
+	else{
+		apicalZDir = -1.0;
 	}
 	normaliseVector3D(vecToCentre);
 
@@ -450,12 +456,12 @@ void 	Triangle::correctFor2DAlignment(){
 	normal = new double[3];
 	crossProduct3D(vec0,vec1,normal);
 	normaliseVector3D(normal);
-	//This normal should be in aligned with (-)ve z; (which is the same vector of the reference element as I have already aligned it!
+	//This normal should be in aligned with the direction of z towards apical side - towards the lumen between columnar and paripodial membrane (which is the same vector of the reference element as I have already aligned it!
 	double* z;
 	z = new double[3];
 	z[0] = 0.0;
 	z[1] = 0.0;
-	z[2] = -1.0;
+	z[2] = apicalZDir;
 	double c, s;
 	calculateRotationAngleSinCos(normal,z,c,s);  //align normal to z
 	if (c<0.9998){

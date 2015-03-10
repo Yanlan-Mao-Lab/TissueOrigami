@@ -67,6 +67,7 @@ public slots:
     QLineEdit 	*NameBox;
     QTimer *timer;
     int nCoordBox;
+    QLineEdit 		*CoordBox_id[6];
     QLineEdit 		*CoordBox_x[6];
     QLineEdit 		*CoordBox_y[6];
     QLineEdit 		*CoordBox_z[6];
