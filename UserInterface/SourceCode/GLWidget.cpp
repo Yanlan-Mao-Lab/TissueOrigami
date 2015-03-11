@@ -521,7 +521,7 @@ using namespace std;
 		centre[j] /= 6.0;
 	}
 	double tip[3];
-	double scale = 1.5;
+	double scale = 4.5;
 	double* TissueCoords;
 	TissueCoords = new double[9];
 	Sim01->Elements[i]->getTissueCoordinaSystem(TissueCoords);
@@ -561,7 +561,7 @@ using namespace std;
 		centre[j] /= 4.0;
 	}
 	double tip[3];
-	double scale = 1.5;
+	double scale = 4.5;
 	double* TissueCoords;
 	TissueCoords = new double[9];
 	Sim01->Elements[i]->getTissueCoordinaSystem(TissueCoords);
@@ -601,7 +601,7 @@ using namespace std;
 		centre[j] /= 3.0;
 	}
 	double tip[3];
-	double scale = 1.5;
+	double scale = 4.5;
 	double* TissueCoords;
 	TissueCoords = new double[9];
 	Sim01->Elements[i]->getTissueCoordinaSystem(TissueCoords);

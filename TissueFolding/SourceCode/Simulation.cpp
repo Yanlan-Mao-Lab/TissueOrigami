@@ -2023,13 +2023,13 @@ void Simulation::assignPhysicalParameters(){
 void Simulation::runOneStep(){
 	/*if(timestep==0){
 		for(int i=0;i<Nodes.size();++i){
-			if (Nodes[i]->atCircumference){
-				Nodes[i]->FixedPos[0] = true;
-				Nodes[i]->FixedPos[1] = true;
-				Nodes[i]->FixedPos[2] = true;
-			}
-			Nodes[i]->Position[0] *=1.5;
-			Nodes[i]->Position[1] *=1.5;
+			//if (Nodes[i]->atCircumference){
+			//	Nodes[i]->FixedPos[0] = true;
+			//	Nodes[i]->FixedPos[1] = true;
+			//	Nodes[i]->FixedPos[2] = true;
+			//}
+			Nodes[i]->Position[0] *=2.0;
+			Nodes[i]->Position[1] *=2.0;
 			Nodes[i]->Position[2] *=1.0;
 		}
 		double R[3][3];
@@ -2168,6 +2168,9 @@ void Simulation::runOneStep(){
 	}
 	timestep++;
 	//outputFile<<"finished runonestep"<<endl;
+	//for (int i=0; i<Elements.size(); ++i){
+	//	cout<<"Element: "<<Elements[i]->Id<<" Local Strains: "<<Elements[i]->Strain[0]<<" "<<Elements[i]->Strain[1]<<" "<<Elements[i]->Strain[2]<<" "<<Elements[i]->Strain[3]<<" "<<Elements[i]->Strain[4]<<" "<<Elements[i]->Strain[5]<<endl;
+	//}
 }
 
 void Simulation::fillInNodeNeighbourhood(){
@@ -2700,10 +2703,12 @@ void Simulation::writeVelocities(){
 }
 
 void Simulation::calculateGrowth(){
+	//cout<<"Calculating Growth"<<endl;
 	int currIndexForParameters = 0;
 	cleanUpGrowthRates();
 	for (int i=0; i<nGrowthFunctions; ++i){
 		if (GrowthFunctionTypes[i] == 1){
+			//cout<<"Calculating Uniform Growth"<<endl;
 			calculateGrowthUniform(currIndexForParameters);
 			currIndexForParameters += 5;
 		}
@@ -2744,11 +2749,13 @@ void Simulation::calculateGrowthUniform(int currIndex){
 	float initTime = GrowthParameters[currIndex];
 	float endTime = GrowthParameters[currIndex+1];
 	float simTime = dt*timestep;
+	//cout<<"inside uniform growth function, initTime: "<<initTime <<" endtime: "<<endTime<<" simTime"<<simTime<<endl;
 	if(simTime > initTime && simTime < endTime ){
 		double MaxValue[3] = {GrowthParameters[currIndex+2],GrowthParameters[currIndex+3],GrowthParameters[currIndex+4]};
 		int  n = Elements.size();
 		for ( int i = 0; i < n; ++i ){
 			if (Elements[i]->tissueType == 0){ //grow columnar layer
+				//cout<<"updating growth for element: "<<Elements[i]->Id<<endl;
 				Elements[i]->updateGrowthToAdd(MaxValue);
 				//This value is stored as fraction per hour, conversion is done by a time scale variable:
 				float timescale = 60*60/dt;

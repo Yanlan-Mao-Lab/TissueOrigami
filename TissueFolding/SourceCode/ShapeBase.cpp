@@ -1084,10 +1084,10 @@ void 	ShapeBase::updatePositionsAlignedToReferenceForRK(){
 }
 
 void 	ShapeBase::alignElementOnReference(){
-	if (tissueType == 1){
-		cout<<" Element : "<<Id<<endl;
-		displayMatrix(WorldToReferenceRotMat,"WorldToReferenceRotMat_BeforeAlignment");
-	}
+	//if (tissueType == 1){
+	//	cout<<" Element : "<<Id<<endl;
+	//	displayMatrix(WorldToReferenceRotMat,"WorldToReferenceRotMat_BeforeAlignment");
+	//}
 	updatePositionsAlignedToReferenceWithBuffers();
 	const int n = nNodes;
 	const int dim = nDim;
@@ -1114,10 +1114,10 @@ void 	ShapeBase::alignElementOnReference(){
 		//Now I will manually correct for alignment in z plane for 2D elements, then move on the SV decomposition:
 		if (ShapeType == 4){
 			correctFor2DAlignment();
-			if (tissueType == 1){
-				cout<<" Element : "<<Id<<endl;
-				displayMatrix(WorldToReferenceRotMat,"WorldToReferenceRotMat_After2DAlignment");
-			}
+			//if (tissueType == 1){
+			//	cout<<" Element : "<<Id<<endl;
+			//	displayMatrix(WorldToReferenceRotMat,"WorldToReferenceRotMat_After2DAlignment");
+			//}
 		}
 		//Now continuing on SV decomposition
 		bool calculateRotation = calculateDisplacementGradientRotationMatrix(RefNormalised, rotMat);
@@ -1152,10 +1152,10 @@ void 	ShapeBase::alignElementOnReference(){
 			tmpMat = boost::numeric::ublas::zero_matrix<double>(3,3);
 			boost::numeric::ublas::axpy_prod(CurrentRotMat,WorldToReferenceRotMat, tmpMat);
 			WorldToReferenceRotMat = tmpMat;
-			if (tissueType == 1){
-				cout<<" Element : "<<Id<<endl;
-				displayMatrix(WorldToReferenceRotMat,"WorldToReferenceRotMat_after3DAlignment");
-			}
+			//if (tissueType == 1){
+			//	cout<<" Element : "<<Id<<endl;
+			//	displayMatrix(WorldToReferenceRotMat,"WorldToReferenceRotMat_after3DAlignment");
+			//}
 		}
 		else{
 			//alignement seems necessary, yet the rotation matrix was identity
@@ -1174,10 +1174,10 @@ void 	ShapeBase::alignElementOnReference(){
 			PositionsAlignedToReference[i][2] += refCentre[2];
 		}
 	}
-	if (tissueType == 1){
-		cout<<" Element : "<<Id<<endl;
-		displayMatrix(WorldToReferenceRotMat,"WorldToReferenceRotMat_afterAllAlignment");
-	}
+	//if (tissueType == 1){
+	//	cout<<" Element : "<<Id<<endl;
+	//	displayMatrix(WorldToReferenceRotMat,"WorldToReferenceRotMat_afterAllAlignment");
+	//}
 	delete[] RefNormalised;
 	delete[] rotMat;
 	delete 	 refCentre;
@@ -1405,6 +1405,7 @@ void	ShapeBase::calculateForces2D(int RKId, double ***SystemForces, vector <Node
 			counter++;
 		}
 	}
+	//outputFile<<"  id: "<<Id<<"   calculating strain"<<endl;
 	//cout<<"calculated displacement - RKId: "<<RKId<<" elementId : "<<Id<<endl;
 	//displayMatrix(B,"B");
 	//displayMatrix(displacement,"displacement");
@@ -1436,8 +1437,13 @@ void	ShapeBase::calculateForces2D(int RKId, double ***SystemForces, vector <Node
 	boost::numeric::ublas::vector<double> NetStrain;
 	NetStrain= zero_vector<double>(3);
 	NetStrain(0) = Strain(0) - PlasticStrain(0); //ex
-	NetStrain(1) = Strain(1) - PlasticStrain(0); //ey
-	NetStrain(2) = Strain(3) - PlasticStrain(0); //gxy  -- skipping z terms
+	NetStrain(1) = Strain(1) - PlasticStrain(1); //ey
+	NetStrain(2) = Strain(3) - PlasticStrain(3); //gxy  -- skipping z terms
+	/*if (RKId == 0){
+		cout<<"RKID: "<<RKId<<" Element: "<<Id<<" Local Strains: "<<Strain[0]<<" "<<Strain[1]<<" "<<Strain[2]<<" "<<Strain[3]<<" "<<Strain[4]<<" "<<Strain[5]<<endl;
+		cout<<"RKID: "<<RKId<<" Element: "<<Id<<" Plastic Strains: "<<PlasticStrain[0]<<" "<<PlasticStrain[1]<<" "<<PlasticStrain[2]<<" "<<PlasticStrain[3]<<" "<<PlasticStrain[4]<<" "<<PlasticStrain[5]<<endl;
+		cout<<"RKID: "<<RKId<<" Element: "<<Id<<" Net Strains: "<<NetStrain[0]<<" "<<NetStrain[1]<<" "<<NetStrain[2]<<endl;
+	}*/
 	//cout<<"calculated  NetStrain"<<endl;
 	Forces = zero_vector<double>(nNodes*nDim);
 	boost::numeric::ublas::vector<double> Forces2D;

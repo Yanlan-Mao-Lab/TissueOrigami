@@ -354,6 +354,10 @@ void Triangle::checkHealth(){
 }
 
 void Triangle::AlignReferenceApicalNormalToZ(double* SystemCentre){
+	if (Id == 38){
+		cout<<"Element: "<<Id<<"Reference Matrix before z-alignment"<<endl;
+		displayReferencePositions();
+	}
 	calculateApicalNormalCrossOrder(SystemCentre);
 	//having the order of vector calculation, I need to get the normal of the apical side for the reference triangle
 	double* vec0;
@@ -384,8 +388,10 @@ void Triangle::AlignReferenceApicalNormalToZ(double* SystemCentre){
 
 	double c, s;
 	calculateRotationAngleSinCos(normal,z,c,s);  //align normal to z
-	//cout<<"vec0: "<<vec0[0]<<" "<<vec0[1]<<" "<<vec0[2]<<" vec1: "<<vec1[0]<<" "<<vec1[1]<<" "<<vec1[2]<<endl;
-	//cout<<"normal: "<<normal[0]<<" "<<normal[1]<<" "<<normal[2]<<" sin: "<<s<<" cos: "<<c<<endl;
+	if (Id == 38){
+		cout<<"vec0: "<<vec0[0]<<" "<<vec0[1]<<" "<<vec0[2]<<" vec1: "<<vec1[0]<<" "<<vec1[1]<<" "<<vec1[2]<<endl;
+		cout<<"normal: "<<normal[0]<<" "<<normal[1]<<" "<<normal[2]<<" sin: "<<s<<" cos: "<<c<<endl;
+	}
 	if (c<0.9998){
 		double *rotAx;
 		rotAx = new double[3];
@@ -393,8 +399,12 @@ void Triangle::AlignReferenceApicalNormalToZ(double* SystemCentre){
 		rotMat = new double[9]; //matrix is written in one row
 		calculateRotationAxis(normal,z,rotAx,c);	//calculating the rotation axis that is perpendicular to both normal and z
 		constructRotationMatrix(c,s,rotAx,rotMat);	//calculating the rotation matrix
-		rotateReferenceElementByRotationMatrix(rotMat);
 		//You need to carry out a rotation:
+		rotateReferenceElementByRotationMatrix(rotMat);
+		if (Id == 38){
+			cout<<"Element: "<<Id<<"Reference Matrix after z-alignment"<<endl;
+			displayReferencePositions();
+		}
 		delete[] rotAx;
 		delete[] rotMat;
 	}
@@ -441,20 +451,36 @@ void Triangle::calculateApicalNormalCrossOrder(double* SystemCentre){
 		apicalZDir = -1.0;
 	}*/
 	normaliseVector3D(vecToCentre);
-
 	double dotP = dotProduct3D(normal, vecToCentre);
 	if (dotP < 0){
 		//the normal is pointing towards the "basal side" that is outside the tissue,
 		//not into the lumen between columnar and peripodial layers
 		//the normal pointing towards the apical surface is constructed with vec0 X vec1, the order should be reversed.
-		normalCrossOrder[0] =2;
+		//The triangle has nodes ordered in clock-wise order!
+		//Need to correct - swapping 1 & 2:
+		int NodeId = NodeIds[1];
+		double Pos[3]= {Positions[1][0], Positions[1][1],Positions[1][2]};
+		double RefPos[3]= {ReferenceShape->Positions[1][0], ReferenceShape->Positions[1][1], ReferenceShape->Positions[1][2]};
+		NodeIds[1] = NodeIds[2];
+		NodeIds[2] = NodeId;
+		for (int i=0;i<nDim;i++){
+			Positions[1][i] = Positions[2][i];
+			Positions[2][i]= Pos[i];
+			ReferenceShape->Positions[1][i] = ReferenceShape->Positions[2][i];
+			ReferenceShape->Positions[2][i]= RefPos[i];
+		}
+	}
+		/*normalCrossOrder[0] =2;
 		normalCrossOrder[1] =1;
+
 	}
 	else{
 		normalCrossOrder[0] =1;
 		normalCrossOrder[1] =2;
+	}*/
+	if (Id == 38){
+		cout<<"Triangle: "<<Id<<" vecToCentre: "<<vecToCentre[0]<<" "<<vecToCentre[1]<<" "<<vecToCentre[2]<<" cross order: "<<normalCrossOrder[0]<<" "<<normalCrossOrder[1]<<endl;
 	}
-	cout<<"Triangle: "<<Id<<" vecToCentre: "<<vecToCentre[0]<<" "<<vecToCentre[1]<<" "<<vecToCentre[2]<<endl;
 	delete[] vec0;
 	delete[] vec1;
 	delete[] normal;
@@ -498,7 +524,7 @@ void 	Triangle::correctFor2DAlignment(){
 		rotMat = new double[9]; //matrix is written in one row
 		calculateRotationAxis(normal,z,rotAx,c);	//calculating the rotation axis that is perpendicular to both normal and z
 		constructRotationMatrix(c,s,rotAx,rotMat);	//calculating the rotation matrix
-		cout<<"Element: "<<Id<<" rotMat param - c: "<<c<<" s: "<<s<<" normal: "<<normal[0]<<" "<<normal[1]<<" "<<normal[2]<<" rotAx: "<<rotAx[0]<<" "<<rotAx[1]<<" "<<rotAx[2]<<endl;
+		//cout<<"Element: "<<Id<<" rotMat param - c: "<<c<<" s: "<<s<<" normal: "<<normal[0]<<" "<<normal[1]<<" "<<normal[2]<<" rotAx: "<<rotAx[0]<<" "<<rotAx[1]<<" "<<rotAx[2]<<endl;
 		//You need to carry out a rotation:
 		double u[3];
 		for (int i=0; i<nNodes; ++i){
