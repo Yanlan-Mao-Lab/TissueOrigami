@@ -214,7 +214,8 @@ void  Prism::AlignReferenceBaseNormalToZ(){
 		rotAx = new double[3];
 		double *rotMat;
 		rotMat = new double[9]; //matrix is written in one row
-		calculateRotationAxis(normal,z,rotAx);	//calculating the rotation axis that is perpendicular to both u and v
+		calculateRotationAxis(normal,z,rotAx,c);	//calculating the rotation axis that is perpendicular to both u and v
+		//calculateRotationAxis(normal,z,rotAx);	//calculating the rotation axis that is perpendicular to both u and v
 		constructRotationMatrix(c,s,rotAx,rotMat);
 		rotateReferenceElementByRotationMatrix(rotMat);
 		delete[] rotAx;

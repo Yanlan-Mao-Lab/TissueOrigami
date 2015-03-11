@@ -93,7 +93,7 @@ Triangle::Triangle(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, double h){
 
 	normalCrossOrder[0] = 1;
 	normalCrossOrder[1] = 2;
-	apicalZDir = +1.0;
+	//apicalZDir = +1.0;
 	//cout<<"finalised construction"<<endl;
 }
 
@@ -368,12 +368,20 @@ void Triangle::AlignReferenceApicalNormalToZ(double* SystemCentre){
 	normal = new double[3];
 	crossProduct3D(vec0,vec1,normal);
 	normaliseVector3D(normal);
-	//then rotate the reference to have this vector pointing towards (-ve) z;
-	double* z;
+	//then rotate the reference to have this vector pointing towards apical z-direction;
+	/*double* z;
 	z = new double[3];
 	z[0] = 0.0;
 	z[1] = 0.0;
 	z[2] = apicalZDir;
+	*/
+	//then rotate the reference to have the vector pointing towards the lumen, to align to (+)ve z;
+	double* z;
+	z = new double[3];
+	z[0] = 0.0;
+	z[1] = 0.0;
+	z[2] = +1;
+
 	double c, s;
 	calculateRotationAngleSinCos(normal,z,c,s);  //align normal to z
 	//cout<<"vec0: "<<vec0[0]<<" "<<vec0[1]<<" "<<vec0[2]<<" vec1: "<<vec1[0]<<" "<<vec1[1]<<" "<<vec1[2]<<endl;
@@ -383,7 +391,7 @@ void Triangle::AlignReferenceApicalNormalToZ(double* SystemCentre){
 		rotAx = new double[3];
 		double *rotMat;
 		rotMat = new double[9]; //matrix is written in one row
-		calculateRotationAxis(normal,z,rotAx);	//calculating the rotation axis that is perpendicular to both normal and z
+		calculateRotationAxis(normal,z,rotAx,c);	//calculating the rotation axis that is perpendicular to both normal and z
 		constructRotationMatrix(c,s,rotAx,rotMat);	//calculating the rotation matrix
 		rotateReferenceElementByRotationMatrix(rotMat);
 		//You need to carry out a rotation:
@@ -412,15 +420,26 @@ void Triangle::calculateApicalNormalCrossOrder(double* SystemCentre){
 	normaliseVector3D(normal);
 	double* ElementCentre = getCentre();
 	double* vecToCentre = new double[3];
-	for (int i = 0; i<nDim; ++i){
-		vecToCentre[i] = SystemCentre[i] - ElementCentre[i];
+	double targetPoint[3];
+	if(tissueType == 1) {  // If tissue type is peropodial membrane, then point to tissue centre
+		targetPoint[0] = SystemCentre[0];
+		targetPoint[1] = SystemCentre[1];
+		targetPoint[2] = SystemCentre[2];
 	}
-	if (vecToCentre[2]>=0){
+	else{ // If these are columnar layer elements that are 2D, then aim for hegither than the system centre, to ensure pointing at apical layer
+		targetPoint[0] = SystemCentre[0]+slabHeight/2;
+		targetPoint[1] = SystemCentre[1]+slabHeight/2;
+		targetPoint[2] = SystemCentre[2]+slabHeight/2;
+	}
+	for (int i = 0; i<nDim; ++i){
+		vecToCentre[i] = targetPoint[i] - ElementCentre[i];
+	}
+	/*if (vecToCentre[2]>=0){
 		apicalZDir = +1.0;
 	}
 	else{
 		apicalZDir = -1.0;
-	}
+	}*/
 	normaliseVector3D(vecToCentre);
 
 	double dotP = dotProduct3D(normal, vecToCentre);
@@ -435,6 +454,7 @@ void Triangle::calculateApicalNormalCrossOrder(double* SystemCentre){
 		normalCrossOrder[0] =1;
 		normalCrossOrder[1] =2;
 	}
+	cout<<"Triangle: "<<Id<<" vecToCentre: "<<vecToCentre[0]<<" "<<vecToCentre[1]<<" "<<vecToCentre[2]<<endl;
 	delete[] vec0;
 	delete[] vec1;
 	delete[] normal;
@@ -456,12 +476,19 @@ void 	Triangle::correctFor2DAlignment(){
 	normal = new double[3];
 	crossProduct3D(vec0,vec1,normal);
 	normaliseVector3D(normal);
-	//This normal should be in aligned with the direction of z towards apical side - towards the lumen between columnar and paripodial membrane (which is the same vector of the reference element as I have already aligned it!
+	/*//This normal should be in aligned with the direction of z towards apical side - towards the lumen between columnar and paripodial membrane (which is the same vector of the reference element as I have already aligned it!
 	double* z;
 	z = new double[3];
 	z[0] = 0.0;
 	z[1] = 0.0;
 	z[2] = apicalZDir;
+	*/
+	//This normal should be in aligned with the direction of z towards apical side - towards the lumen between columnar and paripodial membrane (which is the same vector of the reference element as I have already aligned it!
+	double* z;
+	z = new double[3];
+	z[0] = 0.0;
+	z[1] = 0.0;
+	z[2] = +1;
 	double c, s;
 	calculateRotationAngleSinCos(normal,z,c,s);  //align normal to z
 	if (c<0.9998){
@@ -469,8 +496,9 @@ void 	Triangle::correctFor2DAlignment(){
 		rotAx = new double[3];
 		double *rotMat;
 		rotMat = new double[9]; //matrix is written in one row
-		calculateRotationAxis(normal,z,rotAx);	//calculating the rotation axis that is perpendicular to both normal and z
+		calculateRotationAxis(normal,z,rotAx,c);	//calculating the rotation axis that is perpendicular to both normal and z
 		constructRotationMatrix(c,s,rotAx,rotMat);	//calculating the rotation matrix
+		cout<<"Element: "<<Id<<" rotMat param - c: "<<c<<" s: "<<s<<" normal: "<<normal[0]<<" "<<normal[1]<<" "<<normal[2]<<" rotAx: "<<rotAx[0]<<" "<<rotAx[1]<<" "<<rotAx[2]<<endl;
 		//You need to carry out a rotation:
 		double u[3];
 		for (int i=0; i<nNodes; ++i){

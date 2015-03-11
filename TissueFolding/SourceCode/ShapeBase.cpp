@@ -543,7 +543,7 @@ bool 	ShapeBase::calculateWorldToTissueRotMat(double* v){
 		rotAx = new double[3];
 		double *rotMat;
 		rotMat = new double[9]; //matrix is written in one row
-		calculateRotationAxis(u,v,rotAx);	//calculating the rotation axis that is perpendicular to both u and v
+		calculateRotationAxis(u,v,rotAx,c);	//calculating the rotation axis that is perpendicular to both u and v
 		constructRotationMatrix(c,s,rotAx,rotMat);
 		WorldToTissueRotMat(0,0)=rotMat[0];
 		WorldToTissueRotMat(0,1)=rotMat[1];
@@ -617,7 +617,7 @@ bool 	ShapeBase::calculateGrowthStrainsRotMat(double* v){
 		rotAx = new double[3];
 		double *rotMat;
 		rotMat = new double[9]; //matrix is written in one row
-		calculateRotationAxis(u,v,rotAx);	//calculating the rotation axis that is perpendicular to both u and v
+		calculateRotationAxis(u,v,rotAx,c);	//calculating the rotation axis that is perpendicular to both u and v
 		constructRotationMatrix(c,s,rotAx,rotMat);
 		GrowthStrainsRotMat(0,0)=rotMat[0];
 		GrowthStrainsRotMat(0,1)=rotMat[1];
@@ -692,8 +692,8 @@ void 	ShapeBase::calculateGrowthInLocalCoordinates(double * strainsToAdd){
 	LocalGrowthStrainsMat(0,2) = ( (1.0 + LocalGrowthStrainsMat(0,2)) * (1.0 + CurrLocalGrowthToAdd(0,2)) ) - 1.0;
 	LocalGrowthStrainsMat(1,2) = ( (1.0 + LocalGrowthStrainsMat(1,2)) * (1.0 + CurrLocalGrowthToAdd(1,2)) ) - 1.0;
 
-	cout<<"Element: "<<Id<<endl;
-	displayMatrix(LocalGrowthStrainsMat,"LocalGrowthStrainsMat");
+	//cout<<"Element: "<<Id<<endl;
+	//displayMatrix(LocalGrowthStrainsMat,"LocalGrowthStrainsMat");
 
 	delete[] RefCoords;
 }
@@ -1084,6 +1084,10 @@ void 	ShapeBase::updatePositionsAlignedToReferenceForRK(){
 }
 
 void 	ShapeBase::alignElementOnReference(){
+	if (tissueType == 1){
+		cout<<" Element : "<<Id<<endl;
+		displayMatrix(WorldToReferenceRotMat,"WorldToReferenceRotMat_BeforeAlignment");
+	}
 	updatePositionsAlignedToReferenceWithBuffers();
 	const int n = nNodes;
 	const int dim = nDim;
@@ -1110,6 +1114,10 @@ void 	ShapeBase::alignElementOnReference(){
 		//Now I will manually correct for alignment in z plane for 2D elements, then move on the SV decomposition:
 		if (ShapeType == 4){
 			correctFor2DAlignment();
+			if (tissueType == 1){
+				cout<<" Element : "<<Id<<endl;
+				displayMatrix(WorldToReferenceRotMat,"WorldToReferenceRotMat_After2DAlignment");
+			}
 		}
 		//Now continuing on SV decomposition
 		bool calculateRotation = calculateDisplacementGradientRotationMatrix(RefNormalised, rotMat);
@@ -1144,6 +1152,10 @@ void 	ShapeBase::alignElementOnReference(){
 			tmpMat = boost::numeric::ublas::zero_matrix<double>(3,3);
 			boost::numeric::ublas::axpy_prod(CurrentRotMat,WorldToReferenceRotMat, tmpMat);
 			WorldToReferenceRotMat = tmpMat;
+			if (tissueType == 1){
+				cout<<" Element : "<<Id<<endl;
+				displayMatrix(WorldToReferenceRotMat,"WorldToReferenceRotMat_after3DAlignment");
+			}
 		}
 		else{
 			//alignement seems necessary, yet the rotation matrix was identity
@@ -1161,6 +1173,10 @@ void 	ShapeBase::alignElementOnReference(){
 			PositionsAlignedToReference[i][1] += refCentre[1];
 			PositionsAlignedToReference[i][2] += refCentre[2];
 		}
+	}
+	if (tissueType == 1){
+		cout<<" Element : "<<Id<<endl;
+		displayMatrix(WorldToReferenceRotMat,"WorldToReferenceRotMat_afterAllAlignment");
 	}
 	delete[] RefNormalised;
 	delete[] rotMat;
@@ -1204,10 +1220,16 @@ void	ShapeBase::calculateRotationAngleSinCos(double* u, double* v, double& c, do
 	}
 }
 
-void	ShapeBase::calculateRotationAxis(double* u, double* v,double* rotAx){
+void	ShapeBase::calculateRotationAxis(double* u, double* v,double* rotAx, double c){
 	//aligning u onto v:
-	crossProduct3D(u,v,rotAx);
-	normaliseVector3D(rotAx);
+	if (c>-0.9998){
+		crossProduct3D(u,v,rotAx);
+		normaliseVector3D(rotAx);
+	}
+	else{
+		//the angle is 180 degree, the standard rotation axis calculation will be wrong, I am rotating over x axis at all times;
+		rotAx[0]= 1;rotAx[1]= 0;rotAx[2]= 0;
+	}
 }
 
 void	ShapeBase::constructRotationMatrix(double c, double s, double* rotAx, double* rotMat){

@@ -690,7 +690,7 @@ void Simulation::initiateTriangleFromSave(double height){
 	TrianglePnt01->updateShapeFromSave(saveFileToDisplayMesh);
 	calculateSystemCentre();
 	//CORRECT THIS LATER ON!!!
-	SystemCentre[2] -= 1; // The apical surface is assumed to took towards (-)ve z
+	//SystemCentre[2] -= 10; // The apical surface is assumed to look towards (-)ve z
 	TrianglePnt01->AlignReferenceApicalNormalToZ(SystemCentre);  //correcting the alignment of the triangular element such that the apical side will be aligned with (+)ve z
 	calculateSystemCentre();
 	Elements.push_back(TrianglePnt01);
@@ -732,7 +732,7 @@ void Simulation::initiateTriangleFromMeshInput(){
 	TrianglePnt01->updateReferencePositionMatrixFromMeshInput(saveFileToDisplayMesh);
 	calculateSystemCentre();
 	//CORRECT THIS LATER ON!!!
-	SystemCentre[2] -= 1; // The apical surface is assumed to took towards (-)ve z
+	//SystemCentre[2] -= 10; // The apical surface is assumed to look towards (-)ve z
 	TrianglePnt01->AlignReferenceApicalNormalToZ(SystemCentre);  //correcting the alignment of the triangular element such that the apical side will be aligned with (+)ve z
 	calculateSystemCentre();
 	Elements.push_back(TrianglePnt01);
@@ -839,7 +839,7 @@ void Simulation::initiateTriangleFromSaveForUpdate(int k, double height){
 	TrianglePnt01->updateShapeFromSave(saveFileToDisplayMesh);
 	calculateSystemCentre();
 	//CORRECT THIS LATER ON!!!
-	SystemCentre[2] -= 1; // The apical surface is assumed to took towards (-)ve z
+	SystemCentre[2] -= 10; // The apical surface is assumed to took towards (-)ve z
 	TrianglePnt01->AlignReferenceApicalNormalToZ(SystemCentre);  //correcting the alignment of the triangular element such that the apical side will be aligned with (+)ve z
 	calculateSystemCentre();
 	vector<ShapeBase*>::iterator it = Elements.begin();
@@ -1657,7 +1657,7 @@ bool Simulation::CalculateTissueHeight(){
 void Simulation::addPeripodiumElements(vector <int*> &trianglecornerlist, double height){
 	int n = trianglecornerlist.size();
 	calculateSystemCentre();
-	SystemCentre[2] -= 1; // The apical surface is assumed to took towards (-)ve z
+	//SystemCentre[2] -= 10; // The apical surface is assumed to took towards (-)ve z
 	for (int i=0; i<n; ++i){
 		int* NodeIds;
 		NodeIds = new int[3];
@@ -2492,7 +2492,7 @@ void Simulation::alignTissueDVToXPositive(){
 	rotAx = new double[3];
 	double *rotMat;
 	rotMat = new double[9]; //matrix is written in one row
-	Elements[0]->calculateRotationAxis(u,v,rotAx);	//calculating the rotation axis that is perpendicular to both u and v
+	Elements[0]->calculateRotationAxis(u,v,rotAx,c);	//calculating the rotation axis that is perpendicular to both u and v
 	Elements[0]->constructRotationMatrix(c,s,rotAx,rotMat);
 	int n = Nodes.size();
 	for(int i=0;i<n;++i){

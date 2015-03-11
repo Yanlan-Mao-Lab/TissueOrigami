@@ -162,7 +162,7 @@ public:
 	double 	determinant3by3Matrix(boost::numeric::ublas::matrix<double>& Mat);
 	double 	determinant2by2Matrix(boost::numeric::ublas::matrix<double>& Mat);
 	void	calculateRotationAngleSinCos(double* u, double* v, double& c, double& s);
-	void	calculateRotationAxis(double* u, double* v,double* rotAx);
+	void	calculateRotationAxis(double* u, double* v,double* rotAx, double c);
 	void	constructRotationMatrix(double c, double s, double* rotAx, double* rotMat);
 	void	rotateVectorByRotationMatrix(double* u,double* rotMat);
 
