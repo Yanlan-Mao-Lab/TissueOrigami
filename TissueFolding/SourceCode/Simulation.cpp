@@ -710,6 +710,7 @@ void Simulation::initiatePrismFromMeshInput(){
 	Prism* PrismPnt01;
 	PrismPnt01 = new Prism(NodeIds, Nodes, currElementId);
 	PrismPnt01->updateReferencePositionMatrixFromMeshInput(saveFileToDisplayMesh);
+	PrismPnt01->checkRotationConsistency3D();
 	Elements.push_back(PrismPnt01);
 	currElementId++;
 	delete[] NodeIds;

@@ -115,6 +115,56 @@ void Prism::setCoeffMat(){
 	CoeffMat(5,2)=1;CoeffMat(5,6)=1;
 }
 
+void Prism::checkRotationConsistency3D(){
+	//The nodes should be ordered in counter-clock-wise order
+	//The view-vector is from apical towards basal
+	//(If the system is not rotated, and is in standard coordinate system,
+	//I am looking from top, view is (-)ve z;
+	//If they are not, correct the order here
+
+	double *vec1   = new double[3];
+	double *vec2   = new double[3];
+	double *view   = new double[3];
+	double *normal = new double[3];
+	for (int i= 0; i<nDim; ++i){
+		vec1[i] = Positions[1][i] - Positions[0][i];
+		vec2[i] = Positions[2][i] - Positions[0][i];
+		view[i] = Positions[0][i] - Positions[3][i];
+	}
+	crossProduct3D(vec1,vec2,normal);
+	double  dot = dotProduct3D(view,normal);
+	if (dot > 0) {
+		cerr<<"prism: "<<Id<<" nodes are ordered clockwise, correcting"<<endl;
+		delete[] vec1;
+		delete[] vec2;
+		delete[] view;
+		delete[] normal;
+		cout<<"Positions before swap, element: "<<Id<<endl;
+		displayPositions();
+		//swapping node ids:
+		int ids[2] = { NodeIds[1], NodeIds[4]};
+		NodeIds[1] = NodeIds[2];
+		NodeIds[4] = NodeIds[5];
+		NodeIds[2] = ids[0];
+		NodeIds[5] = ids[1];
+		//swapping positions:
+		for (int i = 0; i<nDim; ++i){
+			double pos[2] = {Positions[1][i],Positions[4][i]};
+			double refpos[2] = {ReferenceShape->Positions[1][i],ReferenceShape->Positions[4][i]};
+			Positions[1][i] = Positions[2][i];
+			Positions[4][i] = Positions[5][i];
+			Positions[2][i] = pos[0];
+			Positions[5][i] = pos[1];
+			ReferenceShape->Positions[1][i] = ReferenceShape->Positions[2][i];
+			ReferenceShape->Positions[4][i] = ReferenceShape->Positions[5][i];
+			ReferenceShape->Positions[2][i] = refpos[0];
+			ReferenceShape->Positions[5][i] = refpos[1];
+		}
+		cout<<"Positions after swap, element: "<<Id<<endl;
+		displayPositions();
+	}
+}
+
 void  Prism::calculateBasalNormal(double * normal){
 	double * u;
 	u = new double[3];
@@ -431,9 +481,9 @@ void Prism::calculatePlaneNormals(double** normals){
 		assignNodalVector(u,List[i][0],List[i][1]);
 		assignNodalVector(v,List[i][0],List[i][2]);
 		crossProduct3D(u,v,normals[i]);
-		//cout<<"u "<<u[0]<<" "<<u[1]<<" "<<u[2]<<endl;
-		//cout<<"v "<<v[0]<<" "<<v[1]<<" "<<v[2]<<endl;
-		//cout<<"normals["<<i<<"] "<<normals[i][0]<<" "<<normals[i][1]<<" "<<normals[i][2]<<endl;
+		//cerr<<"u "<<u[0]<<" "<<u[1]<<" "<<u[2]<<endl;
+		//cerr<<"v "<<v[0]<<" "<<v[1]<<" "<<v[2]<<endl;
+		//cerr<<"normals["<<i<<"] "<<normals[i][0]<<" "<<normals[i][1]<<" "<<normals[i][2]<<endl;
 	}
 	delete[] u;
 	delete[] v;
@@ -457,13 +507,16 @@ bool Prism::checkNodePlaneConsistency(double** normals){
 	//int ListOfBorder[6][3] = {{4,1,5},{3,0,5},{3,0,4},{4,1,5},{3,0,5},{3,0,4}};
 	double *u;
 	u = new double[3];
-	int i=0;
 	for (int i =0; i<nNodes; ++i){
 		assignNodalVector(u,List[i][3],i);
 		double dotp[3];
 		dotp[0] = dotProduct3D(u,normals[List[i][0]]);
 		if (dotp[0]<0){
 			cerr <<"The element is not consistent! - top/bottom plane, Id: "<<Id<<endl;
+			//cerr<<"i: "<<i<<endl;
+			//cerr<<"normals["<<List[i][0]<<"]: "<<normals[List[i][0]][0]<<" "<<normals[List[i][0]][1]<<" "<<normals[List[i][0]][2]<<endl;
+			//cerr<<"u: "<<u[0]<<" "<<u[1]<<" "<<u[2]<<endl;
+			//cerr<<"dotp: "<<dotp[0]<<endl;
 			return false;
 		}
 		assignNodalVector(u,List[i][4],i);

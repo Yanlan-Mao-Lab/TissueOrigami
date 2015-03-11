@@ -55,6 +55,7 @@ public:
 	void calculateNormalForPacking();
 	void getApicalNodePos(double* posCorner);
 	bool IspointInsideApicalTriangle(double x, double y,double z);
+	void checkRotationConsistency3D();
 
 };
 

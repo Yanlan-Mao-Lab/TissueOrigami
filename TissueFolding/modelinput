@@ -1,6 +1,6 @@
 InputMeshParameters:
   MeshInputMode(int-seeDocumentation): 4
-  MeshFile(full-path):   /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Wind48hr_02.mesh
+  MeshFile(full-path):   /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/DoublePrism.mesh
 
 PeripodiumParameters:
   AddPeripodium: 0
@@ -25,7 +25,7 @@ SaveOptions:
 GrowthOptions:
   NumberofGrowthFunctions(int): 4
   GrowthFunctionType(int-seeDocumentation): 1
-  InitialTime(sec): 0
+  InitialTime(sec): 10000000
   FinalTime(sec):  1800
   MaxValue(fractionPerHour-DV,AP,AB):  1.6095 1.6095 0.0
   
