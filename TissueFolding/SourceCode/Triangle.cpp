@@ -23,12 +23,14 @@ Triangle::Triangle(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, double h){
 	GrowthRate = new double[3];
 	ShapeChangeRate  = new double[3];
 	CurrGrowthStrainAddition = new double[3];
-	normalForPacking =  new double[3];
+	ApicalNormalForPacking =  new double[3];
+	BasalNormalForPacking =  new double[3];
 	for (int i=0; i<3; ++i){
 		CurrGrowthStrainAddition[i] = 0;
 		GrowthRate[i] = 0;
 		ShapeChangeRate[i] = 0;
-		normalForPacking[i] = 0.0;
+		ApicalNormalForPacking[i] = 0.0;
+		BasalNormalForPacking[i] = 0.0;
 	}
 	CurrShapeChangeStrainsUpToDate = false;
 	CurrGrowthStrainsUpToDate = false;
@@ -38,7 +40,8 @@ Triangle::Triangle(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, double h){
 	IsChangingShape = false;
 	GrewInThePast = false;
 	ChangedShapeInThePast = false;
-	NormalForPackingUpToDate = false;
+	ApicalNormalForPackingUpToDate = false;
+	BasalNormalForPackingUpToDate = false;
 	IsAblated = false;
 	setIdentificationColour();
 	setShapeType("Triangle");
@@ -576,7 +579,7 @@ double Triangle::getElementHeight(){
 	return slabHeight;
 }
 
-void Triangle::AddPackingToApicalSurface(double Fx, double Fy,double Fz, int RKId,  double ***SystemForces, double ***PackingForces, vector<Node*> &Nodes){
+void Triangle::AddPackingToSurface(int tissueplacement, double Fx, double Fy,double Fz, int RKId,  double ***SystemForces, double ***PackingForces, vector<Node*> &Nodes){
 	double F[3];
 	F[0] = Fx / 3.0;
 	F[1] = Fy / 3.0;
@@ -597,7 +600,7 @@ void Triangle::AddPackingToApicalSurface(double Fx, double Fy,double Fz, int RKI
 	}
 }
 
-void Triangle::calculateNormalForPacking(){
+void Triangle::calculateNormalForPacking(int tissuePlacement){
 	double * u;
 	u = new double[3];
 	double * v;
@@ -605,13 +608,17 @@ void Triangle::calculateNormalForPacking(){
 	for (int i=0; i<nDim; ++i){
 		u[i] = Positions[1][i] - Positions[0][i];
 		v[i] = Positions[2][i] - Positions[0][i];
-		normalForPacking[i] = 0.0;
+		ApicalNormalForPacking[i] = 0.0;
 	}
 	//cerr<<"		u: "<<u[0]<<" "<<u[1]<<" "<<u[2]<<" v: "<<v[0]<<" "<<v[1]<<" "<<v[2]<<endl;
-	crossProduct3D(u,v,normalForPacking);
+	crossProduct3D(u,v,ApicalNormalForPacking);
 	//cerr<<"		normal before normalisation: "<<normal[0]<<" "<<normal[1]<<" "<<normal[2]<<endl;
-	normaliseVector3D(normalForPacking);
-	NormalForPackingUpToDate = true;
+	normaliseVector3D(ApicalNormalForPacking);
+	ApicalNormalForPackingUpToDate = true;
+	BasalNormalForPacking[0] = (-1.0)*ApicalNormalForPacking[0];
+	BasalNormalForPacking[1] = (-1.0)*ApicalNormalForPacking[1];
+	BasalNormalForPacking[2] = (-1.0)*ApicalNormalForPacking[2];
+	BasalNormalForPackingUpToDate = true;
 	delete[] v;
 	delete[] u;
 
@@ -641,52 +648,61 @@ void  Triangle::getApicalNodePos(double* posCorner){
 	posCorner[2] = Positions[0][2];
 }
 
-bool Triangle::IspointInsideApicalTriangle(double x, double y,double z){
+void  Triangle::getBasalNodePos(double* posCorner){
+	posCorner[0] = Positions[0][0];
+	posCorner[1] = Positions[0][1];
+	posCorner[2] = Positions[0][2];
+}
+
+
+bool Triangle::IspointInsideTriangle(int tissueplacement,double x, double y,double z){
+	bool isInside = false;
 	//cout<<"Called inside tri check for triangle"<<endl;
-	double a[3] = {x- Positions[0][0], y-Positions[0][1],z-Positions[0][2]};
-	double b[3] = {Positions[1][0] - Positions[0][0], Positions[1][1] -Positions[0][1], Positions[1][2] -Positions[0][2]};
-	double c[3] = {Positions[2][0] - Positions[0][0], Positions[2][1] -Positions[0][1], Positions[2][2] -Positions[0][2]};
-	int coord1 =0,coord2=0;
-	while (b[coord1] !=0.0 && coord1<3){
-		coord1++;
+	int  E0Index, E1Index, E2Index;
+	E0Index = 0;
+	E1Index = 1;
+	E2Index = 2;
+	double *E0E1 = new double[3];
+	double *E0E2 = new double[3];
+	for (int i=0; i<3; ++i){
+		E0E1[i]=Positions[E1Index][i] - Positions[E0Index][i];
+		E0E2[i]=Positions[E2Index][i] - Positions[E0Index][i];
 	}
-	while (c[coord2] !=0.0 && coord2<3 && coord2==coord1){
-		coord2++;
-	}
-	float temp = b[coord2]/b[coord1]*(a[coord1]-c[coord1])+c[coord2];
-	if (temp != 0){
-		float  t = a[coord2]/temp;
-		if (t >= 0 && t<=1){
-			float s = (a[coord1]-c[coord1]*t)/b[coord1];
-			if (s>=0 && s<=1.0 &&  s+t <=1){
-				//cout<<"IS inside triangle: s = "<<s<<" t = "<<t<<" ID : "<<Id<<" NodePos "<<x<<" "<<y<<" "<<z<<endl;
-				return true;
+	double *CrossP = new double [3];
+	crossProduct3D(E0E1,E0E2,CrossP);
+	double DoubleArea = calculateMagnitudeVector3D(CrossP);
+	double alpha =0.0, beta = 0.0, gamma = 0.0;
+	double *PE1 = new double[3];
+	PE1[0] = Positions[E1Index][0] - x;
+	PE1[1] = Positions[E1Index][1] - y;
+	PE1[2] = Positions[E1Index][2] - z;
+	double *PE2 = new double[3];
+	PE2[0] = Positions[E2Index][0] - x;
+	PE2[1] = Positions[E2Index][1] - y;
+	PE2[2] = Positions[E2Index][2] - z;
+	crossProduct3D(PE1,PE2,CrossP);
+	alpha = calculateMagnitudeVector3D(CrossP);
+	alpha /= DoubleArea;
+	if (alpha >0 && alpha <= 1.0+1E-10){
+		double *PE0 = new double[3];
+		PE0[0] = Positions[E0Index][0] - x;
+		PE0[1] = Positions[E0Index][1] - y;
+		PE0[2] = Positions[E0Index][2] - z;
+		crossProduct3D(PE2,PE0,CrossP);
+		beta = calculateMagnitudeVector3D(CrossP);
+		beta /= DoubleArea;
+		delete[] PE0;
+		if (beta >0 && beta <= 1.0+1E-10){
+			gamma = 1 - alpha - beta;
+			if (gamma >0 && gamma <1.0){
+				isInside = true;
 			}
 		}
 	}
-	//cout<<"returning false:" <<coord1<<" "<<coord2<<endl;
-	return false;
-
-	/*	float p0x= Positions[0][0];
-	float p0y= Positions[0][1];
-	float p0z= Positions[0][2];
-
-	float p1x= Positions[1][0];
-	float p1y= Positions[1][1];
-	float p1z= Positions[1][2];
-
-	float p2x= Positions[2][0];
-	float p2y= Positions[2][1];
-	float p2z= Positions[2][2];
-	float lhs = y - p0y - ((p1y-p0y)*(x-p0x)/(p1x-p0x));
-	float rhs = (p2y -p0y)-((p1y-p0y)*(p2x-p0x)/(p1x-p0x));
-	float t = lhs / rhs;
-	if (t >= 0 && t<=1){
-		float s = (x-p0x -(p2x-p0x)*t)/(p1x-p0x);
-		if (s>=0 && s<=1.0 &&  s+t <=1){
-			return true;
-		}
-	}
-	return false;
-	*/
+	delete[] E0E1;
+	delete[] E0E2;
+	delete[] CrossP;
+	delete[] PE1;
+	delete[] PE2;
+	return isInside;
 }

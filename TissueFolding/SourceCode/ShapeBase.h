@@ -25,7 +25,7 @@ using namespace std;
 
 class ShapeBase{
 private:
-	void ParentErrorMessage();
+	void ParentErrorMessage(string functionName);
 protected:
 	int 	tissuePlacement; //1 -> apical, 0 -> basal, 2->middle, 3 -> lateral
 	int 	ShapeType;
@@ -55,7 +55,7 @@ protected:
 	double  dotProduct3D(double* u, double* v);
 	void 	updateNodeIdsFromSave(ifstream& file);
 	void 	updateReferencePositionMatrixFromSave(ifstream& file);
-	virtual void calculateReferenceVolume(){ParentErrorMessage();};
+	virtual void calculateReferenceVolume(){ParentErrorMessage("calculateReferenceVolume");};
 	//bool	areSidesFacingSameDirection(double* RefSide, double* ShapeSide);
 	void 	updateTissueCoordStrain();
 	void 	updateTissueCoordPlasticStrain();
@@ -103,7 +103,8 @@ public:
 	bool 	IsChangingShape;
 	bool 	WorldToTissueRotMatUpToDate;
 	bool 	GrowthStrainsRotMatUpToDate;
-	bool	NormalForPackingUpToDate;
+	bool	ApicalNormalForPackingUpToDate;
+	bool	BasalNormalForPackingUpToDate;
 	int 	tissueType;	//Columnar layer = 0, peripodium = 1
 	bool	IsAblated;
 	double 	CurrShapeChangeToAdd[3];
@@ -111,7 +112,8 @@ public:
 	//double* CurrentNormal;
 	//bool updatedReference;
 	double* TissueCoordinateSystem;
-	double* normalForPacking;
+	double* ApicalNormalForPacking;
+	double* BasalNormalForPacking;
 	int 	getId();
 	string 	getName();
 	int 	getShapeType();
@@ -136,11 +138,11 @@ public:
 	void 	displayPositions();
 	void 	displayReferencePositions();
 	void 	displayIdentifierColour();
-	virtual void setElasticProperties(double EApical,double EBasal, double EMid,double v){ParentErrorMessage();};
-	virtual void calculateBasalNormal(double * normal){ParentErrorMessage();};
-	virtual void AlignReferenceBaseNormalToZ(){ParentErrorMessage();};
+	virtual void setElasticProperties(double EApical,double EBasal, double EMid,double v){ParentErrorMessage("setElasticProperties");};
+	virtual void calculateBasalNormal(double * normal){ParentErrorMessage("calculateBasalNormal");};
+	virtual void AlignReferenceBaseNormalToZ(){ParentErrorMessage("AlignReferenceBaseNormalToZ");};
 	void 	updateGrowthRate(double scalex, double scaley, double scalez);
-	virtual void calculateReferenceStiffnessMatrix(){ParentErrorMessage();};
+	virtual void calculateReferenceStiffnessMatrix(){ParentErrorMessage("calculateReferenceStiffnessMatrix");};
 	void 	calculateForces(int RKId, double ***SystemForces, vector <Node*>& Nodes, ofstream& outputFile);
 	void 	updatePositions(int RKId, vector<Node*>& Nodes);
 	void 	setGrowthRate(double x, double y, double z);
@@ -148,7 +150,7 @@ public:
 	void 	updateGrowthToAdd(double* growthscale);
 	void 	updateElementVolumesAndTissuePlacementsForSave(vector<Node*>& Nodes);
 
-	virtual void  checkHealth(){ParentErrorMessage();};
+	virtual void  checkHealth(){ParentErrorMessage("checkHealth");};
 	void 	resetCurrStepGrowthData();
 	void 	resetCurrStepShapeChangeData();
 	//void 	calculatePlasticStrain();
@@ -157,6 +159,7 @@ public:
 	void 	displayMatrix(boost::numeric::ublas::matrix<double>& mat, string matname);
 	void 	displayMatrix(boost::numeric::ublas::matrix<int>& mat, string matname);
 	void 	displayMatrix(boost::numeric::ublas::vector<double>& vec, string matname);
+	double	calculateMagnitudeVector3D(double* v);
 	void	normaliseVector3D(double* v);
 	double 	determinant3by3Matrix(double* rotMat);
 	double 	determinant3by3Matrix(boost::numeric::ublas::matrix<double>& Mat);
@@ -168,17 +171,18 @@ public:
 
 
 	void alignElementOnReference();
-	virtual void correctFor2DAlignment(){ParentErrorMessage();};
-	virtual double getApicalSideLengthAverage(){ParentErrorMessage();};
-	virtual void getApicalTriangles(vector <int> &ApicalTriangles){ParentErrorMessage();};
-	virtual int getCorrecpondingApical(int currNodeId){ParentErrorMessage();};
-	virtual bool IsThisNodeMyBasal(int currNodeId){ParentErrorMessage();};
-	virtual double getElementHeight(){ParentErrorMessage();};
-	virtual bool IsPointCloseEnoughForPacking(double* Pos, float threshold){ParentErrorMessage();};
-	virtual void calculateNormalForPacking(){ParentErrorMessage();};
-	virtual void AddPackingToApicalSurface(double Fx, double Fy,double Fz, int RKId,  double ***SystemForces, double ***PackingForces, vector<Node*> &Nodes){ParentErrorMessage();};
-	virtual void getApicalNodePos(double* posCorner){ParentErrorMessage();};
-	virtual bool IspointInsideApicalTriangle(double x, double y,double z){ParentErrorMessage();};
+	virtual void correctFor2DAlignment(){ParentErrorMessage("correctFor2DAlignment");};
+	virtual double getApicalSideLengthAverage(){ParentErrorMessage("getApicalSideLengthAverage");};
+	virtual void getApicalTriangles(vector <int> &ApicalTriangles){ParentErrorMessage("getApicalTriangles");};
+	virtual int getCorrecpondingApical(int currNodeId){ParentErrorMessage("getCorrecpondingApical");};
+	virtual bool IsThisNodeMyBasal(int currNodeId){ParentErrorMessage("IsThisNodeMyBasal");};
+	virtual double getElementHeight(){ParentErrorMessage("getElementHeight");};
+	virtual bool IsPointCloseEnoughForPacking(double* Pos, float threshold){ParentErrorMessage("IsPointCloseEnoughForPacking");};
+	virtual void calculateNormalForPacking(int tissuePlacement){ParentErrorMessage("calculateNormalForPacking");};
+	virtual void AddPackingToSurface(int tissueplacement, double Fx, double Fy,double Fz, int RKId,  double ***SystemForces, double ***PackingForces, vector<Node*> &Nodes){ParentErrorMessage("AddPackingToApicalSurface");};
+	virtual void getApicalNodePos(double* posCorner){ParentErrorMessage("getApicalNodePos");};
+	virtual void getBasalNodePos(double* posCorner){ParentErrorMessage("getBasalNodePos");};
+	virtual bool IspointInsideTriangle(int tissueplacement, double x, double y,double z){ParentErrorMessage("IspointInsideTriangle");};
 	bool DoesPointBelogToMe(int IdNode);
 	void updatePositionsAlignedToReferenceForRK();
 	void growShape();

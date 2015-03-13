@@ -3,8 +3,8 @@
 #include <sstream>
 
 
-void 	ShapeBase::ParentErrorMessage(){
-	cerr<<"You are calling the function from a parent here, check declaration is via pointers"<<endl;
+void 	ShapeBase::ParentErrorMessage(string functionName){
+	cerr<<"You are calling the function: "<<functionName<<" from a parent here, check declaration is via pointers"<<endl;
 }
 
 void	ShapeBase::setShapeType(string TypeName){
@@ -1644,6 +1644,12 @@ void	ShapeBase::crossProduct3D(double* u, double* v, double* cross){
 	cross[0] = u[1]*v[2] - u[2]*v[1];
 	cross[1] = u[2]*v[0] - u[0]*v[2];
 	cross[2] = u[0]*v[1] - u[1]*v[0];
+}
+
+double	ShapeBase::calculateMagnitudeVector3D(double* v){
+	double mag = v[0]*v[0]+v[1]*v[1]+v[2]*v[2];
+	mag = pow(mag,0.5);
+	return mag;
 }
 
 void	ShapeBase::normaliseVector3D(double* v){

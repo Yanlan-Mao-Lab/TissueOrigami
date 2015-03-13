@@ -1,20 +1,20 @@
 InputMeshParameters:
   MeshInputMode(int-seeDocumentation): 4
-  MeshFile(full-path):   /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Wind48hr_01.mesh
+  MeshFile(full-path):   /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/DoublePrism.mesh
 
 PeripodiumParameters:
-  AddPeripodium: 1
+  AddPeripodium: 0
   PeripodiumYoungsModulus: 3000.0
 
 TimeParameters:
   TimeStep(sec): 0.25
-  SimulationLength(sec): 7200
+  SimulationLength(sec): 0.25
 
 PysicalProperties:
   YoungsModulusApical: 100.0	YoungsModulusBasal: 100.0	YoungsModulusMid: 100.0		Noise(%-int): 0
-  PoissonsRatio: 0.3		Noise(%-int): 0
-  ApicalViscosity: 100.0 	Noise(%-int): 0
-  BasalViscosity: 100.0		
+  PoissonsRatio: 0.0		Noise(%-int): 0
+  ApicalViscosity: 1.0 	Noise(%-int): 0
+  BasalViscosity: 1.0		
 
 SaveOptions:
   SaveImages(bool): 1
@@ -25,14 +25,14 @@ SaveOptions:
 GrowthOptions:
   NumberofGrowthFunctions(int): 4
   GrowthFunctionType(int-seeDocumentation): 1
-  InitialTime(sec): 0
+  InitialTime(sec): 1000000
   FinalTime(sec):  3600
   MaxValue(fractionPerHour-DV,AP,AB):  0.804 0.804 0.0
   
   GrowthFunctionType(int-seeDocumentation): 1
-  InitialTime(sec): 10000
-  FinalTime(sec):  600
-  MaxValue(fractionPerHour-DV,AP,AB):  4 4 0.0
+  InitialTime(sec): 1000000
+  FinalTime(sec): 0.75
+  MaxValue(fractionPerHour-DV,AP,AB):  14400 14400 14400.0
 
   GrowthFunctionType(int-seeDocumentation): 2
   InitialTime(sec): 100000

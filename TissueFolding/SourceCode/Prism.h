@@ -50,11 +50,12 @@ public:
 	int getCorrecpondingApical(int currNodeId);
 	bool IsThisNodeMyBasal(int currNodeId);
 	double getElementHeight();
-	void AddPackingToApicalSurface(double Fx, double Fy,double Fz, int RKId,  double ***SystemForces,  double ***PackingForces,vector<Node*> &Nodes);
+	void AddPackingToSurface(int tissueplacement, double Fx, double Fy,double Fz, int RKId,  double ***SystemForces,  double ***PackingForces,vector<Node*> &Nodes);
 	bool IsPointCloseEnoughForPacking(double* Pos, float threshold);
-	void calculateNormalForPacking();
+	void calculateNormalForPacking(int tissuePlacement);
 	void getApicalNodePos(double* posCorner);
-	bool IspointInsideApicalTriangle(double x, double y,double z);
+	void getBasalNodePos(double* posCorner);
+	bool IspointInsideTriangle(int tissueplacement,double x, double y,double z);
 	void checkRotationConsistency3D();
 
 };

@@ -50,11 +50,12 @@ public:
 	void  correctFor2DAlignment();
 	void  calculateReferenceStiffnessMatrix();
 	void  checkHealth();
-	void AddPackingToApicalSurface(double Fx, double Fy,double Fz, int RKId,  double ***SystemForces, double ***PackingForces, vector<Node*> &Nodes);
+	void AddPackingToSurface(int tissueplacement, double Fx, double Fy,double Fz, int RKId,  double ***SystemForces, double ***PackingForces, vector<Node*> &Nodes);
 	bool IsPointCloseEnoughForPacking(double* Pos, float threshold);
 	void getApicalNodePos(double* posCorner);
-	void calculateNormalForPacking();
-	bool IspointInsideApicalTriangle(double x, double y,double z);
+	void getBasalNodePos(double* posCorner);
+	void calculateNormalForPacking(int tissueplacement);
+	bool IspointInsideTriangle(int tissueplacement, double x, double y,double z);
 };
 
 #endif /* TRIANGLE_H_ */
