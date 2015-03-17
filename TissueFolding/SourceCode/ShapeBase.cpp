@@ -7,6 +7,21 @@ void 	ShapeBase::ParentErrorMessage(string functionName){
 	cerr<<"You are calling the function: "<<functionName<<" from a parent here, check declaration is via pointers"<<endl;
 }
 
+bool 	ShapeBase::ParentErrorMessage(string functionName, bool returnValue){
+	cerr<<"You are calling the function: "<<functionName<<" from a parent here, check declaration is via pointers"<<endl;
+	return returnValue;
+}
+
+double 	ShapeBase::ParentErrorMessage(string functionName, double returnValue){
+	cerr<<"You are calling the function: "<<functionName<<" from a parent here, check declaration is via pointers"<<endl;
+	return returnValue;
+}
+
+int 	ShapeBase::ParentErrorMessage(string functionName, int returnValue){
+	cerr<<"You are calling the function: "<<functionName<<" from a parent here, check declaration is via pointers"<<endl;
+	return returnValue;
+}
+
 void	ShapeBase::setShapeType(string TypeName){
 	//cout<<"inside set shape type"<<endl;
 	if (TypeName == "Prism"){
@@ -145,6 +160,7 @@ void 	ShapeBase::setPositionMatrix(vector<Node*>& Nodes){
 		for (int j = 0; j<dim; ++j){
 			Positions[i][j] = Nodes[NodeIds[i]]->Position[j];
 			PositionsInTissueCoord[i][j] = 0.0;
+			PositionsAlignedToReference[i][j] = 0.0;
 		}
 	}
 }
@@ -1041,6 +1057,44 @@ bool 	ShapeBase::calculateAlignmentRotationMatrix(double** RefNormalised, double
 }
 */
 
+
+bool 	ShapeBase::checkPackingToThisNodeViaState(int ColumnarLayerDiscretisationLayers, Node* NodePointer){
+	if(IsAblated){
+		//if the element is ablated, do not pack against it
+		return false;
+	}
+	if(ColumnarLayerDiscretisationLayers>1){
+		//If the columnar layer is discretised into multiple layers, the apical elements should be checked against apical nodes,
+		// and basal nodes should be checked against basal elements. The midline elements should not have packing, BUT on  a single layer tissue, all is midline, therefore
+		// this check would not be valid.
+		if (tissuePlacement == 2){	//tissue placement of the element is midline in a multi-layered columnar layer, it should not pack to anything
+			return false;
+		}
+		if (NodePointer->tissuePlacement == 1){
+			//node is apical, should pack to apical elements of the columnar layer only - and all of the peripodial membrane
+			if (tissueType == 0 && tissuePlacement == 1){ //tissue type of the element is columnar, tissue placement is basal
+				return false;
+			}
+		}
+		else if (NodePointer->tissuePlacement == 0){
+			//node is basal, should pack to apical elements of the columnar layer only - and all of the peripodial membrane
+			//BUT, all peripodial membrane nodes are put in as basal nodes, the node itself can be on the peripodial membrane,
+			//in which case, it should pack to the element regardless (midline elemetns are already eliminated above)
+			if (NodePointer->tissueType == 0){  //tissue type of the node is columnar
+				if (tissueType == 0 && tissuePlacement == 0){ //tissue type of the element is columnar, tissue placement is apical
+					return false;
+				}
+			}
+		}
+	}
+	//The node and element are positioned correctly to be able to pack, then does the element belong to the node?
+	bool pointBelongsToElement = DoesPointBelogToMe(NodePointer->Id);
+	if (pointBelongsToElement){
+		return false;
+	}
+	return true;
+}
+
 bool 	ShapeBase::DoesPointBelogToMe(int IdNode){
 	for (int i = 0; i<nNodes; ++i){
 		if (NodeIds[i] == IdNode){
@@ -1256,7 +1310,7 @@ void	ShapeBase::rotateVectorByRotationMatrix(double* u,double* rotMat){
 }
 
 void  ShapeBase::rotateReferenceElementByRotationMatrix(double* rotMat){
-	cout<<"rotaitng the reference matrix of element: "<<Id<<endl;
+	//cout<<"rotating the reference matrix of element: "<<Id<<endl;
 	for (int i=0; i<nNodes; ++i){
 		double * u;
 		u = new double[3];
@@ -1271,7 +1325,6 @@ void  ShapeBase::rotateReferenceElementByRotationMatrix(double* rotMat){
 }
 
 void	ShapeBase::calculateForces(int RKId, double ***SystemForces, vector <Node*>& Nodes, ofstream& outputFile){
-
 	if (ShapeType == 1 || ShapeType == 2 || ShapeType == 3){
 		calculateForces3D(RKId, SystemForces, Nodes, outputFile);
 	}
@@ -1478,7 +1531,6 @@ void	ShapeBase::calculateForces2D(int RKId, double ***SystemForces, vector <Node
 		}
 	}
 	//cout<<"calculated Forces"<<endl;
-
 	//cout<<"Element Id: "<<Id<<"Forces on node 351: "<<SystemForces[RKId][351][0]<<" "<<SystemForces[RKId][351][1]<<" "<<SystemForces[RKId][351][2]<<endl;
 	//Now put the forces in world coordinates into system forces, in forces per volume format
 	counter = 0;

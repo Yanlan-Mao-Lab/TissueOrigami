@@ -439,7 +439,7 @@ void MainWindow::SelectedItemChange(){
     	 CoordBox_x[i]->setEnabled(false);
     	 CoordBox_y[i]->setEnabled(false);
     	 CoordBox_z[i]->setEnabled(false);
-    	 if (MainGLWidget->SelectedPos.size()>i*3){
+    	 if ((signed int)MainGLWidget->SelectedPos.size()>i*3){
     		 CoordBox_id[i]->setText ( MainGLWidget->SelectedId[i] );
 			 CoordBox_x[i]->setText ( MainGLWidget->SelectedPos[i*3] );
 			 CoordBox_y[i]->setText ( MainGLWidget->SelectedPos[i*3+1] );
@@ -501,8 +501,9 @@ void MainWindow::takeScreenshot(){
 	originalPixmap = screen->grabWindow(this->winId(),x,y,w,h);
 	//QString timepoint = QString::number(timestep);
 	QString timepoint = QString("%1").arg(Sim01->timestep,6,10,QChar('0'));
+	QString timeinsec = QString("%1").arg(Sim01->timestep*Sim01->dt);
 	QString directory = QString(Sim01->saveDirectory.c_str());
-	QString fileName = directory+"/ScreenShots/frame"+ timepoint +".png";
+	QString fileName = directory+"/ScreenShots/frame"+ timepoint +"-"+timeinsec+"sec.png";
 	cout<<fileName.toStdString()<<endl;
 	originalPixmap.save(fileName, "png");
 }

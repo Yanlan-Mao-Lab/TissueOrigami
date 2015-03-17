@@ -26,8 +26,10 @@ using namespace std;
 class ShapeBase{
 private:
 	void ParentErrorMessage(string functionName);
+	bool ParentErrorMessage(string functionName, bool returnValue);
+	double ParentErrorMessage(string functionName, double returnValue);
+	int ParentErrorMessage(string functionName, int returnValue);
 protected:
-	int 	tissuePlacement; //1 -> apical, 0 -> basal, 2->middle, 3 -> lateral
 	int 	ShapeType;
 
 	int 	nNodes;
@@ -105,6 +107,7 @@ public:
 	bool 	GrowthStrainsRotMatUpToDate;
 	bool	ApicalNormalForPackingUpToDate;
 	bool	BasalNormalForPackingUpToDate;
+	int 	tissuePlacement; //1 -> apical, 0 -> basal, 2->middle, 3 -> lateral
 	int 	tissueType;	//Columnar layer = 0, peripodium = 1
 	bool	IsAblated;
 	double 	CurrShapeChangeToAdd[3];
@@ -114,6 +117,8 @@ public:
 	double* TissueCoordinateSystem;
 	double* ApicalNormalForPacking;
 	double* BasalNormalForPacking;
+	double VolumePerNode;
+
 	int 	getId();
 	string 	getName();
 	int 	getShapeType();
@@ -172,17 +177,18 @@ public:
 
 	void alignElementOnReference();
 	virtual void correctFor2DAlignment(){ParentErrorMessage("correctFor2DAlignment");};
-	virtual double getApicalSideLengthAverage(){ParentErrorMessage("getApicalSideLengthAverage");};
+	virtual double getApicalSideLengthAverage(){return ParentErrorMessage("getApicalSideLengthAverage",0.0);};
 	virtual void getApicalTriangles(vector <int> &ApicalTriangles){ParentErrorMessage("getApicalTriangles");};
-	virtual int getCorrecpondingApical(int currNodeId){ParentErrorMessage("getCorrecpondingApical");};
-	virtual bool IsThisNodeMyBasal(int currNodeId){ParentErrorMessage("IsThisNodeMyBasal");};
-	virtual double getElementHeight(){ParentErrorMessage("getElementHeight");};
-	virtual bool IsPointCloseEnoughForPacking(double* Pos, float threshold){ParentErrorMessage("IsPointCloseEnoughForPacking");};
+	virtual int getCorrecpondingApical(int currNodeId){return ParentErrorMessage("getCorrecpondingApical", -100);};
+	virtual bool IsThisNodeMyBasal(int currNodeId){return ParentErrorMessage("IsThisNodeMyBasal", false);};
+	virtual double getElementHeight(){return ParentErrorMessage("getElementHeight", 0.0);};
+	virtual bool IsPointCloseEnoughForPacking(double* Pos,  float Peripodialthreshold, float Columnarthreshold, int TissuePlacementOfPackingNode, int TissueTypeOfPackingNode){return ParentErrorMessage("IsPointCloseEnoughForPacking", false);};
 	virtual void calculateNormalForPacking(int tissuePlacement){ParentErrorMessage("calculateNormalForPacking");};
 	virtual void AddPackingToSurface(int tissueplacement, double Fx, double Fy,double Fz, int RKId,  double ***SystemForces, double ***PackingForces, vector<Node*> &Nodes){ParentErrorMessage("AddPackingToApicalSurface");};
 	virtual void getApicalNodePos(double* posCorner){ParentErrorMessage("getApicalNodePos");};
 	virtual void getBasalNodePos(double* posCorner){ParentErrorMessage("getBasalNodePos");};
-	virtual bool IspointInsideTriangle(int tissueplacement, double x, double y,double z){ParentErrorMessage("IspointInsideTriangle");};
+	virtual bool IspointInsideTriangle(int tissueplacement, double x, double y,double z){return ParentErrorMessage("IspointInsideTriangle",false );};
+	bool checkPackingToThisNodeViaState(int ColumnarLayerDiscretisationLAyers, Node* NodePointer);
 	bool DoesPointBelogToMe(int IdNode);
 	void updatePositionsAlignedToReferenceForRK();
 	void growShape();

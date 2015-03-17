@@ -32,6 +32,8 @@ public:
 
 	void setViscosity(double ApicalVisc,double BasalVisc);
 	bool checkIfNeighbour(int IdToCheck);
+	bool checkIfNodeHasPacking();
+	void getCurrentRKPosition(int RKId, double* pos);
 	void displayConnectedElementIds();
 	void displayConnectedElementWeights();
 };

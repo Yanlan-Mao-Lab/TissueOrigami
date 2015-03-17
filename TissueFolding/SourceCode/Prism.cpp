@@ -85,6 +85,7 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
 	TissueCoordinateSystem[6]=0.0;
 	TissueCoordinateSystem[7]=0.0;
 	TissueCoordinateSystem[8]=1.0;
+	VolumePerNode = 0;
 	//RefToTissueRotMat = boost::numeric::ublas::zero_matrix<double>(3,3);
 	//RefToTissueRotMatT = boost::numeric::ublas::zero_matrix<double>(3,3);
 	//TissueToWorldRotMat = boost::numeric::ublas::zero_matrix<double>(3,3);
@@ -446,6 +447,7 @@ void Prism::calculateReferenceVolume(){
 	double sintet = pow((1-costet*costet),0.5);
 	double baseArea = baseSide1* baseSide2 * sintet / 2.0;
 	ReferenceShape->Volume = height * baseArea;
+	VolumePerNode = ReferenceShape->Volume/nNodes;
 	//cout<<"baseSide1: "<<baseSide1<<" baseSide2: "<<baseSide2<<" costet: "<<costet<<" sintet: "<<sintet<<endl;
 	//cout<<"basearea: "<<baseArea<<" heignt: "<<	height<<" Volume: "<<ReferenceShape->Volume<<endl;
 }
@@ -461,6 +463,9 @@ void Prism::checkHealth(){
 	}
 	calculatePlaneNormals(normals);
 	bool elementsAreHealthy = checkNodePlaneConsistency(normals);
+	if (!elementsAreHealthy){
+		cerr<<" Element not healthy! : "<<Id<<endl;
+	}
 	for (int i=0; i<8;++i){
 		delete[] normals[i];
 	}
@@ -485,9 +490,9 @@ void Prism::calculatePlaneNormals(double** normals){
 		assignNodalVector(u,List[i][0],List[i][1]);
 		assignNodalVector(v,List[i][0],List[i][2]);
 		crossProduct3D(u,v,normals[i]);
-		//cerr<<"u "<<u[0]<<" "<<u[1]<<" "<<u[2]<<endl;
-		//cerr<<"v "<<v[0]<<" "<<v[1]<<" "<<v[2]<<endl;
-		//cerr<<"normals["<<i<<"] "<<normals[i][0]<<" "<<normals[i][1]<<" "<<normals[i][2]<<endl;
+		//cout<<" Id: "<<Id<<" u "<<u[0]<<" "<<u[1]<<" "<<u[2]<<endl;
+		//cout<<" Id: "<<Id<<" v "<<v[0]<<" "<<v[1]<<" "<<v[2]<<endl;
+		//cout<<" Id: "<<Id<<" normals["<<i<<"] "<<normals[i][0]<<" "<<normals[i][1]<<" "<<normals[i][2]<<endl;
 	}
 	delete[] u;
 	delete[] v;
@@ -507,8 +512,9 @@ bool Prism::checkNodePlaneConsistency(double** normals){
 	//cout<<"inside check consistency, Id: "<<Id<<endl;
 	//List of constricting planes for each node:
 	//format is for each node (0->5): [plane1, plane2, plane3, node id for plane1, node id  for plane2&3]
-	int List[6][5] = {{3,6,7,3,2},{3,2,5,4,2},{3,1,4,5,1},{0,6,7,0,2},{0,2,5,1,2},{0,1,4,2,1}};
 	//int ListOfBorder[6][3] = {{4,1,5},{3,0,5},{3,0,4},{4,1,5},{3,0,5},{3,0,4}};
+	int List[6][5] = {{3,6,7,3,2},{3,2,5,4,2},{3,1,4,5,1},{0,6,7,0,2},{0,2,5,1,2},{0,1,4,2,1}};
+	bool elementHealthy = true;
 	double *u;
 	u = new double[3];
 	for (int i =0; i<nNodes; ++i){
@@ -517,59 +523,31 @@ bool Prism::checkNodePlaneConsistency(double** normals){
 		dotp[0] = dotProduct3D(u,normals[List[i][0]]);
 		if (dotp[0]<0){
 			cerr <<"The element is not consistent! - top/bottom plane, Id: "<<Id<<endl;
-			//cerr<<"i: "<<i<<endl;
-			//cerr<<"normals["<<List[i][0]<<"]: "<<normals[List[i][0]][0]<<" "<<normals[List[i][0]][1]<<" "<<normals[List[i][0]][2]<<endl;
-			//cerr<<"u: "<<u[0]<<" "<<u[1]<<" "<<u[2]<<endl;
-			//cerr<<"dotp: "<<dotp[0]<<endl;
-			return false;
+			cerr<<"i: "<<i<<endl;
+			cerr<<"normals["<<List[i][0]<<"]: "<<normals[List[i][0]][0]<<" "<<normals[List[i][0]][1]<<" "<<normals[List[i][0]][2]<<endl;
+			cerr<<"u: "<<u[0]<<" "<<u[1]<<" "<<u[2]<<endl;
+			cerr<<"dotp: "<<dotp[0]<<endl;
+			elementHealthy =  false;
 		}
 		assignNodalVector(u,List[i][4],i);
 		dotp[1] = dotProduct3D(u,normals[List[i][1]]);
 		dotp[2] = dotProduct3D(u,normals[List[i][2]]);
 		if(dotp[1]<0 ||  dotp[2]<0){
 			cerr <<"The element is not consistent! side planes, Id: "<<Id<<endl;
+			cerr<<"dot 1: "<<dotp[1]<<" dot2 :"<<dotp[2]<<endl;
+			cerr<<"1 : normals["<<List[i][1]<<"]: "<<normals[List[i][1]][0]<<" "<<normals[List[i][1]][1]<<" "<<normals[List[i][1]][2]<<endl;
+			cerr<<"2 : normals["<<List[i][2]<<"]: "<<normals[List[i][2]][0]<<" "<<normals[List[i][2]][1]<<" "<<normals[List[i][2]][2]<<endl;
 			for (int i=0; i<nNodes;++i){
 				for (int j =0; j<nDim; ++j){
 					cout<<Positions[i][j]<<"  ";
 				}
 				cout<<endl;
 			}
-			return false;
+			elementHealthy =  false;
 		}
 	}
-		/*if(dotp[1]<0 && dotp[2]<0){
-			cerr <<"The element is not consistent!";
-			return false;
-		}
-		else if(dotp[1]<0){
-			//of the two planes making up the side, the node is passing one but not the other
-			//I need the vecotr pointing from intersection corner, projected on the plane.
-
-			assignNodalVector(u,ListOfBorder[i][0],i);
-			double *v,*p;
-			v = new double[3];
-			p = new double[3];
-			assignNodalVector(v,ListOfBorder[i][0],ListOfBorder[i][1]); //vector between two corners - one side of the triangle forming current plane
-			assignNodalVector(p,ListOfBorder[i][0],List[i][3]); // vector between two corners - border between two planes
-			double* cross1;
-			cross1 = new double[3];
-			double* cross2;
-			cross2 = new double[3];
-			crossProduct3D(p,v,cross1);
-			crossProduct3D(p,u,cross1);
-			//if the vecors are looking at the same direction, then the
-
-			delete[] v;
-			delete[] p;
-			delete[] cross1;
-			delete[] cross2;
-		}
-		else if(dotp[2]<0){
-			//of the two planes making up the side, the node is passing one but not the other
-		}
-	}*/
 	delete[] u;
-	return true;
+	return elementHealthy;
 }
 
 double Prism::getApicalSideLengthAverage(){
@@ -708,10 +686,29 @@ void Prism::calculateNormalForPacking(int tissuePlacement){
 }
 
 
-bool Prism::IsPointCloseEnoughForPacking(double* Pos, float threshold){
+bool Prism::IsPointCloseEnoughForPacking(double* Pos,  float Peripodialthreshold, float Columnarthreshold, int TissuePlacementOfPackingNode, int TissueTypeOfPackingNode){
+	float threshold = 1000.0;
+	if (tissueType == 1){ //element is on the peripodial membrane, use the distance threshold of the peripodial membrane
+		threshold = Peripodialthreshold;
+	}
+	else{
+		threshold = Columnarthreshold;
+	}
+	int initial =0, final = 6;
+	//check against all the nodes if tissue type of the node is peripodial, only check against the necessary side if node is on the columnar layer
+	if (TissueTypeOfPackingNode == 0){  //node is on the columnar layer;
+		if (TissuePlacementOfPackingNode == 0){
+			//tissue placement of the node is basal, should check it against basal nodes only
+			final = 3;
+		}
+		else if (TissuePlacementOfPackingNode == 1){
+			//tissue placement of the node is apical, should check it against basal nodes only
+			initial = 3;
+		}
+	}
 	float dmin = 2.0*threshold;
 	float dminNeg = (-2.0)*threshold;
-	for (int i=3; i<6; ++i){
+	for (int i=initial; i<final; ++i){
 		float dx =100.0, dy = 100.0, dz = 100.0;
 		dx = Pos[0]-Positions[i][0];
 		dy = Pos[1]-Positions[i][1];
@@ -742,7 +739,7 @@ void  Prism::getBasalNodePos(double* posCorner){
 bool  Prism::IspointInsideTriangle(int tissueplacement,double x, double y,double z){
 	bool isInside = false;
 	//Using Barycentric coordinates:
-	int  E0Index, E1Index, E2Index;
+	int  E0Index = -1, E1Index = -1, E2Index = -1;
 	if (tissueplacement ==0 ){ //checking basal surface
 		E0Index = 0;
 		E1Index = 1;
@@ -756,13 +753,19 @@ bool  Prism::IspointInsideTriangle(int tissueplacement,double x, double y,double
 	double *E0E1 = new double[3];
 	double *E0E2 = new double[3];
 
+	//cout<<" surface positions: "<<endl;
+	//cout<<"	"<<Positions[E0Index][0]<<" "<<Positions[E0Index][1]<<" "<<Positions[E0Index][2]<<endl;
+	//cout<<"	"<<Positions[E1Index][0]<<" "<<Positions[E1Index][1]<<" "<<Positions[E1Index][2]<<endl;
+	//cout<<"	"<<Positions[E2Index][0]<<" "<<Positions[E2Index][1]<<" "<<Positions[E2Index][2]<<endl;
+	//cout<<" point: "<<x<<" "<<y<<" "<<z<<endl;
+
 	for (int i=0; i<3; ++i){
 		E0E1[i]=Positions[E1Index][i] - Positions[E0Index][i];
 		E0E2[i]=Positions[E2Index][i] - Positions[E0Index][i];
 	}
-	double *CrossP = new double [3];
-	crossProduct3D(E0E1,E0E2,CrossP);
-	double DoubleArea = calculateMagnitudeVector3D(CrossP);
+	double *CrossPMain = new double [3];
+	crossProduct3D(E0E1,E0E2,CrossPMain);
+	double DoubleArea = calculateMagnitudeVector3D(CrossPMain);
 	double alpha =0.0, beta = 0.0, gamma = 0.0;
 	double *PE1 = new double[3];
 	PE1[0] = Positions[E1Index][0] - x;
@@ -772,31 +775,44 @@ bool  Prism::IspointInsideTriangle(int tissueplacement,double x, double y,double
 	PE2[0] = Positions[E2Index][0] - x;
 	PE2[1] = Positions[E2Index][1] - y;
 	PE2[2] = Positions[E2Index][2] - z;
+	double *CrossP = new double [3];
 	crossProduct3D(PE1,PE2,CrossP);
-	alpha = calculateMagnitudeVector3D(CrossP);
-	alpha /= DoubleArea;
-	cout<<" alpha: "<<alpha<<" ";
-	if (alpha >-1E-10 && alpha <= 1.0+1E-10){
-		double *PE0 = new double[3];
-		PE0[0] = Positions[E0Index][0] - x;
-		PE0[1] = Positions[E0Index][1] - y;
-		PE0[2] = Positions[E0Index][2] - z;
-		crossProduct3D(PE2,PE0,CrossP);
-		beta = calculateMagnitudeVector3D(CrossP);
-		beta /= DoubleArea;
-		cout<<" beta: "<<beta<<" ";
-		if (beta >-1E-10 && beta <= 1.0+1E-10){
-			gamma = 1 - alpha - beta;
-			cout<<" gamma: "<<gamma<<" ";
-			if (gamma >-1E-10 && gamma <1.0+1E-10){
-				isInside =  true;
+	//the vectors should look at te same direction:
+	double dotp = dotProduct3D(CrossP,CrossPMain);
+	//cout<<"dotp for alpha:  "<<dotp<<" ";
+	if (dotp>0){
+		alpha = calculateMagnitudeVector3D(CrossP);
+		alpha /= DoubleArea;
+		//cout<<" alpha: "<<alpha<<" ";
+		if (alpha >-1E-10 && alpha <= 1.0+1E-10){
+			double *PE0 = new double[3];
+			PE0[0] = Positions[E0Index][0] - x;
+			PE0[1] = Positions[E0Index][1] - y;
+			PE0[2] = Positions[E0Index][2] - z;
+			crossProduct3D(PE2,PE0,CrossP);
+			dotp = dotProduct3D(CrossP,CrossPMain);
+			//cout<<"dotp for beta:  "<<dotp<<" ";
+			if (dotp>0){
+				beta = calculateMagnitudeVector3D(CrossP);
+				beta /= DoubleArea;
+				//cout<<" beta: "<<beta<<" ";
+				if (beta >-1E-10 && beta <= 1.0+1E-10){
+					gamma = 1 - alpha - beta;
+					//cout<<" gamma: "<<gamma<<" ";
+					crossProduct3D(PE1,PE0,CrossP);
+					if (gamma >-1E-10 && gamma <1.0+1E-10){
+						isInside =  true;
+					}
+				}
 			}
+			delete[] PE0;
 		}
-		delete[] PE0;
+		//cout<<endl;
 	}
-	cout<<endl;
+
 	delete[] E0E1;
 	delete[] E0E2;
+	delete[] CrossPMain;
 	delete[] CrossP;
 	delete[] PE1;
 	delete[] PE2;

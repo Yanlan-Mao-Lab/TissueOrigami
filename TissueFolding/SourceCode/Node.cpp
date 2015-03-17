@@ -69,6 +69,28 @@ bool Node::checkIfNeighbour(int IdToCheck){
 	return false;
 }
 
+bool Node::checkIfNodeHasPacking(){
+	if (atPeripodiumCircumference){
+		return false;
+	}
+	if (tissuePlacement == 2){	//Node is midline node (neither apical nor basal)
+		return false;
+	}
+	return true;
+}
+
+void Node::getCurrentRKPosition(int RKId, double* pos){
+	if (RKId == 0){
+		pos[0] = Position[0];
+		pos[1] = Position[1];
+		pos[2] = Position[2];
+	}
+	else{
+		pos[0]= RKPosition[0];
+		pos[1]= RKPosition[1];
+		pos[2]= RKPosition[2];
+	}
+}
 
 void Node::displayConnectedElementIds(){
 	int n = connectedElementIds.size();

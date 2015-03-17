@@ -135,7 +135,8 @@ using namespace std;
 		 drawReferenceElement(SelectedItemIndex);
 		 highlightElement(SelectedItemIndex);
 	 }
-	 for (int i =0; i<Sim01->Elements.size();i++){
+	 int n = Sim01->Elements.size();
+	 for (int i =0; i<n;i++){
 		 drawElement(i,false);
 	 }
 	 drawForces();
@@ -631,7 +632,7 @@ using namespace std;
  }
 
  void GLWidget::getForceColour(float* OutputColour, float Data){
-	 double scale2[2] = {0,0.1};
+	 double scale2[2] = {0,10.0};
 	 double r = (Data- scale2[0])/(scale2[1]-scale2[0]);
 	 OutputColour[0] = r;
 	 OutputColour[1] = 0.0;
@@ -639,7 +640,7 @@ using namespace std;
  }
 
  void GLWidget::getVelocityColour(float* OutputColour, float Data){
-	 double scale2[2] = {0,0.1};
+	 double scale2[2] = {0,10.0};
 	 double b = (Data- scale2[0])/(scale2[1]-scale2[0]);
 	 OutputColour[0] = 0.0;
 	 OutputColour[1] = b;
@@ -1146,7 +1147,8 @@ using namespace std;
  }
 
  void GLWidget::findElement(){
-	 for (int i =0; i<Sim01->Elements.size();i++){
+	 int n = Sim01->Elements.size();
+	 for (int i =0; i<n;i++){
 		 int* ElementColour = Sim01->Elements[i]->getIdentifierColour();
 		 ItemSelected = checkPickedColour(ElementColour);
 		 if (ItemSelected){
@@ -1424,7 +1426,7 @@ using namespace std;
 		 double threshold2 = 1E-16;
 		 double minlength = 0.3, maxlength = 2;
 		 double minlength2 = minlength*minlength, maxlength2 = maxlength*maxlength;
-		 double scale2[2] = {0,0.1}, scale = 10.0;
+		 double scale2[2] = {0,10.0}, scale = 10.0;
 		 double scalesq = scale*scale;
 		 int n = Sim01->Nodes.size();
 		 for (int i =0; i<n; ++i){
@@ -1442,22 +1444,23 @@ using namespace std;
 					 double mag = pow(mag2,0.5);
 					 double r = (mag- scale2[0])/(scale2[1]-scale2[0]);
 					 double a = mag2/scalesq;
+					 double currscale = scale;
 					 if (a < minlength2 ){
-						 scale = mag/minlength;
+						 currscale = mag/minlength;
 					 }
 					 else if ( a > maxlength2){
-						 scale = mag/maxlength;
+						 currscale = mag/maxlength;
 					 }
-					 F[0] =  F[0]/scale + Sim01->Nodes[i]->Position[0];
-					 F[1] =  F[1]/scale + Sim01->Nodes[i]->Position[1];
-					 F[2] =  F[2]/scale + Sim01->Nodes[i]->Position[2];
+					 //cout<<"Element: "<<i<<" F: "<<F[0]<<" "<<F[1]<<" "<<F[2]<<" Fmag: "<<mag<<" scale: "<<currscale<<" r: "<<r <<endl;
+					 F[0] =  F[0]/currscale + Sim01->Nodes[i]->Position[0];
+					 F[1] =  F[1]/currscale + Sim01->Nodes[i]->Position[1];
+					 F[2] =  F[2]/currscale + Sim01->Nodes[i]->Position[2];
 					 drawArrow3D(Sim01->Nodes[i]->Position, F, r, 0.0, 0.0);
 				 }
 				 delete[] F;
 			 }
 		 }
 	 }
-
  }
 
  void GLWidget::drawPackForces(){
@@ -1483,15 +1486,16 @@ using namespace std;
 					 double mag = pow(mag2,0.5);
 					 double r = (mag- scale2[0])/(scale2[1]-scale2[0]);
 					 double a = mag2/scalesq;
+					 double currscale = scale;
 					 if (a < minlength2 ){
-						 scale = mag/minlength;
+						 currscale = mag/minlength;
 					 }
 					 else if ( a > maxlength2){
-						 scale = mag/maxlength;
+						 currscale = mag/maxlength;
 					 }
-					 F[0] =  F[0]/scale + Sim01->Nodes[i]->Position[0];
-					 F[1] =  F[1]/scale + Sim01->Nodes[i]->Position[1];
-					 F[2] =  F[2]/scale + Sim01->Nodes[i]->Position[2];
+					 F[0] =  F[0]/currscale + Sim01->Nodes[i]->Position[0];
+					 F[1] =  F[1]/currscale + Sim01->Nodes[i]->Position[1];
+					 F[2] =  F[2]/currscale + Sim01->Nodes[i]->Position[2];
 					 drawArrow3D(Sim01->Nodes[i]->Position, F, r, 0.0, 0.0);
 				 }
 				 delete[] F;

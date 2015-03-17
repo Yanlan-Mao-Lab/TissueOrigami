@@ -78,7 +78,7 @@ public slots:
     QComboBox   	*PysPropComboBox;
     QDoubleSpinBox 	*PysPropSpinBoxes[2];
     QGroupBox   	*ColourCodingBox;
-    QCheckBox		*DisplayPreferencesCheckBoxes[6];
+    QCheckBox		*DisplayPreferencesCheckBoxes[7];
     QLabel			*SimTime;
  };
 

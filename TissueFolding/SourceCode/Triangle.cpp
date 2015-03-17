@@ -11,7 +11,7 @@
 using namespace std;
 
 Triangle::Triangle(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, double h){
-	//cout<<"constructing triangle"<<endl;
+	cout<<"constructing triangle: "<<CurrId<<endl;
 	nNodes = 3;
 	nDim = 3;	//the triangle has its  nodes in 3D, but the calculations will only use 2 dimensions.
 	Id = CurrId;
@@ -96,8 +96,10 @@ Triangle::Triangle(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, double h){
 
 	normalCrossOrder[0] = 1;
 	normalCrossOrder[1] = 2;
+	VolumePerNode = 0;
 	//apicalZDir = +1.0;
-	//cout<<"finalised construction"<<endl;
+	displayPositions();
+	cout<<"finalised construction"<<endl;
 }
 
 Triangle::~Triangle(){
@@ -351,16 +353,13 @@ void Triangle::calculateReferenceVolume(){
 	if (ReferenceShape->Volume<0){
 		ReferenceShape->Volume *=(-1.0);
 	}
+	VolumePerNode = ReferenceShape->Volume/nNodes;
 }
 
 void Triangle::checkHealth(){
 }
 
 void Triangle::AlignReferenceApicalNormalToZ(double* SystemCentre){
-	if (Id == 38){
-		cout<<"Element: "<<Id<<"Reference Matrix before z-alignment"<<endl;
-		displayReferencePositions();
-	}
 	calculateApicalNormalCrossOrder(SystemCentre);
 	//having the order of vector calculation, I need to get the normal of the apical side for the reference triangle
 	double* vec0;
@@ -391,10 +390,6 @@ void Triangle::AlignReferenceApicalNormalToZ(double* SystemCentre){
 
 	double c, s;
 	calculateRotationAngleSinCos(normal,z,c,s);  //align normal to z
-	if (Id == 38){
-		cout<<"vec0: "<<vec0[0]<<" "<<vec0[1]<<" "<<vec0[2]<<" vec1: "<<vec1[0]<<" "<<vec1[1]<<" "<<vec1[2]<<endl;
-		cout<<"normal: "<<normal[0]<<" "<<normal[1]<<" "<<normal[2]<<" sin: "<<s<<" cos: "<<c<<endl;
-	}
 	if (c<0.9998){
 		double *rotAx;
 		rotAx = new double[3];
@@ -623,7 +618,15 @@ void Triangle::calculateNormalForPacking(int tissuePlacement){
 	delete[] u;
 
 }
-bool Triangle::IsPointCloseEnoughForPacking(double* Pos, float threshold){
+
+bool Triangle::IsPointCloseEnoughForPacking(double* Pos,  float Peripodialthreshold, float Columnarthreshold, int TissuePlacementOfPackingNode, int TissueTypeOfPackingNode){
+	float threshold = 1000.0;
+	if (tissueType == 1){ //element is on the peripodial membrane, use the distance threshold of the peripodial membrane
+		threshold = Peripodialthreshold;
+	}
+	else{
+		threshold = Columnarthreshold;
+	}
 	float dmin = 2.0*threshold;
 	float dminNeg = (-2.0)*threshold;
 	for (int i=0; i<3; ++i){
@@ -654,7 +657,6 @@ void  Triangle::getBasalNodePos(double* posCorner){
 	posCorner[2] = Positions[0][2];
 }
 
-
 bool Triangle::IspointInsideTriangle(int tissueplacement,double x, double y,double z){
 	bool isInside = false;
 	//cout<<"Called inside tri check for triangle"<<endl;
@@ -668,9 +670,9 @@ bool Triangle::IspointInsideTriangle(int tissueplacement,double x, double y,doub
 		E0E1[i]=Positions[E1Index][i] - Positions[E0Index][i];
 		E0E2[i]=Positions[E2Index][i] - Positions[E0Index][i];
 	}
-	double *CrossP = new double [3];
-	crossProduct3D(E0E1,E0E2,CrossP);
-	double DoubleArea = calculateMagnitudeVector3D(CrossP);
+	double *CrossPMain = new double [3];
+	crossProduct3D(E0E1,E0E2,CrossPMain);
+	double DoubleArea = calculateMagnitudeVector3D(CrossPMain);
 	double alpha =0.0, beta = 0.0, gamma = 0.0;
 	double *PE1 = new double[3];
 	PE1[0] = Positions[E1Index][0] - x;
@@ -680,27 +682,37 @@ bool Triangle::IspointInsideTriangle(int tissueplacement,double x, double y,doub
 	PE2[0] = Positions[E2Index][0] - x;
 	PE2[1] = Positions[E2Index][1] - y;
 	PE2[2] = Positions[E2Index][2] - z;
+	double *CrossP = new double [3];
 	crossProduct3D(PE1,PE2,CrossP);
-	alpha = calculateMagnitudeVector3D(CrossP);
-	alpha /= DoubleArea;
-	if (alpha >0 && alpha <= 1.0+1E-10){
-		double *PE0 = new double[3];
-		PE0[0] = Positions[E0Index][0] - x;
-		PE0[1] = Positions[E0Index][1] - y;
-		PE0[2] = Positions[E0Index][2] - z;
-		crossProduct3D(PE2,PE0,CrossP);
-		beta = calculateMagnitudeVector3D(CrossP);
-		beta /= DoubleArea;
-		delete[] PE0;
-		if (beta >0 && beta <= 1.0+1E-10){
-			gamma = 1 - alpha - beta;
-			if (gamma >0 && gamma <1.0){
-				isInside = true;
+	double dotp = dotProduct3D(CrossP,CrossPMain);
+	//cout<<"dotp for alpha:  "<<dotp<<" ";
+	if (dotp>0){
+		alpha = calculateMagnitudeVector3D(CrossP);
+		alpha /= DoubleArea;
+		//cout<<" alpha: "<<alpha<<" ";
+		if (alpha >0 && alpha <= 1.0+1E-10){
+			double *PE0 = new double[3];
+			PE0[0] = Positions[E0Index][0] - x;
+			PE0[1] = Positions[E0Index][1] - y;
+			PE0[2] = Positions[E0Index][2] - z;
+			crossProduct3D(PE2,PE0,CrossP);
+			dotp = dotProduct3D(CrossP,CrossPMain);
+			if (dotp>0){
+				beta = calculateMagnitudeVector3D(CrossP);
+				beta /= DoubleArea;
+				delete[] PE0;
+				if (beta >0 && beta <= 1.0+1E-10){
+					gamma = 1 - alpha - beta;
+					if (gamma >0 && gamma <1.0){
+						isInside = true;
+					}
+				}
 			}
 		}
 	}
 	delete[] E0E1;
 	delete[] E0E2;
+	delete[] CrossPMain;
 	delete[] CrossP;
 	delete[] PE1;
 	delete[] PE2;

@@ -233,6 +233,10 @@ bool Simulation::initiateSystem(){
 	if (!Success){
 		return Success;
 	}
+	Success = CalculateTissueHeight(); //Calculating how many layers the columnar layer has, and what the actual height is.
+	if (!Success){
+		return Success;
+	}
 	if (AddPeripodium){
 		Success = addPeripodiumToTissue();
 	}
@@ -363,7 +367,9 @@ bool Simulation::reOpenOutputFile(){
 	outputFile.open(name_outputFile, ofstream::out);
 	if (!(outputFile.good() && outputFile.is_open())){
 		cerr<<"at step: "<<timestep<<" could not open file: "<<name_outputFile<<endl;
+		return false;
 	}
+	return true;
 }
 
 void Simulation::writeSimulationSummary(){
@@ -1151,8 +1157,8 @@ bool Simulation::addPeripodiumToTissue(){
 	calculateSystemCentre();
 	sortColumnarCircumferenceNodeList();
 	vector <int*> trianglecornerlist;
-	double d = getAverageSideLength();
-	Success = CalculateTissueHeight();
+	double d=0.0, dummy =0.0;
+	getAverageSideLength(dummy,d);	//first term will get you the average side length of the peripodial membrane elements, second is the columnar elements
 	if (!Success){
 		return Success;
 	}
@@ -1182,11 +1188,11 @@ bool Simulation::generateColumnarCircumferenceNodeList(){
 		AddPeripodium = false;
 		return false;
 	}
+	return true;
 }
 
 void Simulation::sortColumnarCircumferenceNodeList(){
 	//ordering the circumferencial nodes of the basal surface in clockwise rotation
-	//sort (ColumnarCircumferencialNodeList.begin(), ColumnarCircumferencialNodeList.end(), bind(&Simualtion::sortcomparison, this, _1, _2));
 	int n = ColumnarCircumferencialNodeList.size();
 	vector <double> angles;
 	for (int j =0 ; j<n; ++j){
@@ -1228,31 +1234,6 @@ void Simulation::sortColumnarCircumferenceNodeList(){
 	}*/
 }
 
-bool Simulation::sortcomparison(int i, int j){
-/*	if ((Nodes[i]->Position[0] - SystemCentre[0] ) >= 0 && ( Nodes[j]->Position[0] - SystemCentre[0] )< 0)
-		return true;
-	if ((Nodes[i]->Position[0] - SystemCentre[0] ) < 0 && ( Nodes[j]->Position[0] - SystemCentre[0] ) >= 0)
-		return false;
-	if ((Nodes[i]->Position[0] - SystemCentre[0] ) == 0 && (Nodes[j]->Position[0] - SystemCentre[0]) == 0) {
-		if ( (Nodes[i]->Position[1] - SystemCentre[1]) >= 0 || (Nodes[j]->Position[1] - SystemCentre[1]) >= 0)
-			return Nodes[i]->Position[1] > Nodes[j]->Position[1];
-		return Nodes[j]->Position[1] > Nodes[i]->Position[1];
-	}
-
-	// compute the cross product of vectors (center -> a) x (center -> b)
-	int det = (Nodes[i]->Position[0] - SystemCentre[0]) * (Nodes[j]->Position[1] - SystemCentre[1]) - (Nodes[j]->Position[0] - SystemCentre[0]) * (Nodes[i]->Position[1] - SystemCentre[1]);
-	if (det < 0)
-		return true;
-	if (det > 0)
-		return false;
-
-	// points a and b are on the same line from the center
-	// check which point is closer to the center
-	int d1 = (Nodes[i]->Position[0] - SystemCentre[0]) * (Nodes[i]->Position[0] - SystemCentre[0]) + (Nodes[i]->Position[1] - SystemCentre[1]) * (Nodes[i]->Position[1] - SystemCentre[1]);
-	int d2 = (Nodes[j]->Position[0] - SystemCentre[0]) * (Nodes[j]->Position[0] - SystemCentre[0]) + (Nodes[j]->Position[1] - SystemCentre[1]) * (Nodes[j]->Position[1] - SystemCentre[1]);
-	return d1 > d2;
-*/
-}
 
 void Simulation::calculateCentreOfNodes(double* centre){
 	centre[0] = 0.0;
@@ -1406,6 +1387,9 @@ void Simulation::AddVerticalRowOfPeripodiumNodes(int& layerCount, int nLayers, v
 		norm[0] = MidPoint[0]+vec[0]*multiplier;
 		norm[1] = MidPoint[1]+vec[1]*multiplier;
 		norm[2] = MidPoint[2]+z;
+		cout<<"layerCount: "<<layerCount<<"  MidPoint          : "<<MidPoint[0]<<" "<<MidPoint[1]<<" "<<MidPoint[2]<<endl;
+		cout<<"layerCount: "<<layerCount<<"  z: "<<z<<" vec  : "<<vec[0]<<" "<<vec[1]<<" "<<vec[2]<<endl;
+		cout<<"layerCount: "<<layerCount<<" norm for added node: "<<norm[0]<<" "<<norm[1]<<" "<<norm[2]<<endl;
 		Node* tmp_nd;
 		//Adding Peroipodium node:
 		tmp_nd = new Node(Nodes.size(), 3, norm,0,1);  //tissue type is peripodium, node type is basal
@@ -1427,7 +1411,7 @@ void Simulation::AddVerticalRowOfPeripodiumNodes(int& layerCount, int nLayers, v
 		else{TriNodeIds1[2]=tmp_nd->Id+1;}
 		trianglecornerlist.push_back(TriNodeIds1);
 
-		//cerr<<"Triangle Corner Ids: "<<trianglecornerlist[trianglecornerlist.size()-1][0]<<" "<<trianglecornerlist[trianglecornerlist.size()-1][1]<<" "<<trianglecornerlist[trianglecornerlist.size()-1][2]<<endl;
+		cerr<<"Triangle Corner Ids: "<<trianglecornerlist[trianglecornerlist.size()-1][0]<<" "<<trianglecornerlist[trianglecornerlist.size()-1][1]<<" "<<trianglecornerlist[trianglecornerlist.size()-1][2]<<endl;
 		counter ++;
 		delete[] norm;
 	}
@@ -1482,7 +1466,7 @@ void Simulation::AddPeripodiumCap(int layerCount,  vector <int*> &trianglecorner
 				Nodes.push_back(tmp_nd);
 				PeripodiumNodeId.push_back(tmp_nd->Id);
 				CorrespondingApicalNodeId.push_back(Nodes[i]->Id);
-				cout<<"temp Node: "<<tmp_nd->Id<<" pos: "<<pos[0]<<" "<<pos[1]<<" "<<pos[2]<<" corr. node id: "<<Nodes[i]->Id<<endl;
+				//cout<<"temp Node: "<<tmp_nd->Id<<" pos: "<<pos[0]<<" "<<pos[1]<<" "<<pos[2]<<" corr. node id: "<<Nodes[i]->Id<<endl;
 			}
 		}
 	}
@@ -1588,7 +1572,7 @@ void Simulation::addPeripodiumNodes(vector <int*> &trianglecornerlist, double he
 	AddHorizontalRowOfPeripodiumNodes(trianglecornerlist, triangleHeight, index_begin, index_end);
 	//calculating how many layers of triangles I need for spanning the height of the tissue:
 	int nLayers = ceil(height / triangleHeight );
-	//I need an odd number of layers, so that the final shape will be the same as the circumference of aolumnar layer:
+	//I need an odd number of layers, so that the final shape will be the same as the circumference of columnar layer:
 	if (nLayers %2 == 0){
 		nLayers --;
 	}
@@ -1603,14 +1587,27 @@ void Simulation::addPeripodiumNodes(vector <int*> &trianglecornerlist, double he
 	//AssignAssociatedNodesToPeripodiumCircumference();
 }
 
-double Simulation::getAverageSideLength(){
-	double dsum =0.0;
+void Simulation::getAverageSideLength(double& periAverageSideLength, double& colAverageSideLength){
+	double dsumPeri =0.0, dsumCol = 0.0;
+	int colCounter =0, periCounter=0;
 	int n = Elements.size();
 	for(int i=0; i<n; ++i){
-		dsum += Elements[i]->getApicalSideLengthAverage();
+		if (!Elements[i]->IsAblated){
+			//do not count ablated elements
+			if (Elements[i]->tissueType==0){ //element belongs to columnar layer
+				dsumCol += Elements[i]->getApicalSideLengthAverage();
+				colCounter++;
+			}
+			else{
+				dsumPeri += Elements[i]->getApicalSideLengthAverage();
+				periCounter++;
+			}
+		}
 	}
-	dsum /= (double)n;
-	return dsum;
+	colAverageSideLength = dsumCol / (double)colCounter;
+	if (periCounter>0){
+		periAverageSideLength = dsumPeri / (double)periCounter;
+	}
 }
 
 bool Simulation::CalculateTissueHeight(){
@@ -2021,18 +2018,8 @@ void Simulation::assignPhysicalParameters(){
 }
 
 void Simulation::runOneStep(){
-	if(timestep==0){
-		for(int i=6;i<Nodes.size();++i){
-			//if (Nodes[i]->atCircumference){
-			//	Nodes[i]->FixedPos[0] = true;
-			//	Nodes[i]->FixedPos[1] = true;
-			//	Nodes[i]->FixedPos[2] = true;
-			//}
-			//Nodes[i]->Position[0] +=2.0;
-			//Nodes[i]->Position[1] +=2.0;
-		}
-
-		/*for(int i=0;i<Nodes.size();++i){
+	/*if(timestep==0){
+		for(int i=0;i<Nodes.size();++i){
 			//if (Nodes[i]->atCircumference){
 			//	Nodes[i]->FixedPos[0] = true;
 			//	Nodes[i]->FixedPos[1] = true;
@@ -2041,7 +2028,7 @@ void Simulation::runOneStep(){
 			Nodes[i]->Position[0] *=2.0;
 			Nodes[i]->Position[1] *=2.0;
 			Nodes[i]->Position[2] *=1.0;
-		}*/
+		}
 		double R[3][3];
 		double Rx[3][3] = {{1,0,0},{0,0,-1},{0,1,0}};
 		double Ry[3][3] = {{0,0,1},{0,1,0},{-1,0,0}};
@@ -2051,7 +2038,6 @@ void Simulation::runOneStep(){
 				R[j][k] = Ry[j][k];
 			}
 		}
-		/*
 		for(int i=0;i<Nodes.size();++i){
 			double x = Nodes[i]->Position[0]*R[0][0] + Nodes[i]->Position[1]*R[0][1] + Nodes[i]->Position[2]*R[0][2];
 			double y = Nodes[i]->Position[0]*R[1][0] + Nodes[i]->Position[1]*R[1][1] + Nodes[i]->Position[2]*R[1][2];
@@ -2059,63 +2045,21 @@ void Simulation::runOneStep(){
 			Nodes[i]->Position[0]=x;
 			Nodes[i]->Position[1]=y;
 			Nodes[i]->Position[2]=z;
-		}*/
-		double c1[3]={0.0,0.0,0.0}, c2[3]={0.0,0.0,0.0};
-		for (int i=0;i<6;i++){
-			c1[0] += Nodes[i]->Position[0]/6.0;
-			c1[1] += Nodes[i]->Position[1]/6.0;
-			c1[2] += Nodes[i]->Position[2]/6.0;
-		}
-		for (int i=6;i<12;i++){
-			c2[0] += Nodes[i]->Position[0]/6.0;
-			c2[1] += Nodes[i]->Position[1]/6.0;
-			c2[2] += Nodes[i]->Position[2]/6.0;
-		}
-		for(int i=6;i<Nodes.size();++i){
-			Nodes[i]->Position[0] -= c2[0];
-			Nodes[i]->Position[1] -= c2[1];
-			Nodes[i]->Position[2] -= c2[2];
-			double x = Nodes[i]->Position[0]*R[0][0] + Nodes[i]->Position[1]*R[0][1] + Nodes[i]->Position[2]*R[0][2];
-			double y = Nodes[i]->Position[0]*R[1][0] + Nodes[i]->Position[1]*R[1][1] + Nodes[i]->Position[2]*R[1][2];
-			double z = Nodes[i]->Position[0]*R[2][0] + Nodes[i]->Position[1]*R[2][1] + Nodes[i]->Position[2]*R[2][2];
-			Nodes[i]->Position[0]=x + c2[0];
-			Nodes[i]->Position[1]=y + c2[1];
-			Nodes[i]->Position[2]=z + c2[2];
-		}
-		for(int i=0;i<6;++i){
-			Nodes[i]->Position[0] -= c1[0];
-			Nodes[i]->Position[1] -= c1[1];
-			Nodes[i]->Position[2] -= c1[2];
-			for (int aa = 0; aa<3; aa++){
-				double x = Nodes[i]->Position[0]*R[0][0] + Nodes[i]->Position[1]*R[0][1] + Nodes[i]->Position[2]*R[0][2];
-				double y = Nodes[i]->Position[0]*R[1][0] + Nodes[i]->Position[1]*R[1][1] + Nodes[i]->Position[2]*R[1][2];
-				double z = Nodes[i]->Position[0]*R[2][0] + Nodes[i]->Position[1]*R[2][1] + Nodes[i]->Position[2]*R[2][2];
-				Nodes[i]->Position[0]=x;
-				Nodes[i]->Position[1]=y;
-				Nodes[i]->Position[2]=z;
-			}
-			Nodes[i]->Position[0] += c1[0];
-			Nodes[i]->Position[1] += c1[1];
-			Nodes[i]->Position[2] += c1[2];
-		}
-		int list[6][2] = {{6,1},{7,0},{8,2},{9,4},{10,3},{11,5}};
-		for(int aa=0 ; aa<6 ;++aa){
-			//Nodes[list[aa][0]]->Position[0] = Nodes[list[aa][1]]->Position[0]+20.1;
-			//Nodes[list[aa][0]]->Position[1] = Nodes[list[aa][1]]->Position[1];
-			Nodes[list[aa][0]]->Position[0] += 20.1;
-			Nodes[list[aa][0]]->Position[2] = Nodes[list[aa][1]]->Position[2];
-
 		}
 		for(int i=0;i<Elements.size();++i){
 			Elements[i]->updatePositions(3,Nodes);
 		}
-	}
+		//for (int i=0; i<Nodes.size();++i){
+		//	cout<<"Node: "<<i<<" pos: "<<Nodes[i]->Position[0]<<" "<<Nodes[i]->Position[1]<<" "<<Nodes[i]->Position[2]<<endl;
+		//}
+	}*/
 	if(timestep==-10/dt){
 		LaserAblate(0.0,0.0,1.8);
 	}
 	int displayfreq = 60/dt;
 	if (timestep%displayfreq == 0){
-		//reOpenOutputFile();
+		//Success = reOpenOutputFile();
+		//if(!Success){cerr<<" outputfile not open, time : "<<timestep * dt<<endl;}
 		outputFile<<"time : "<<timestep * dt<<endl;
 	}
 	int perturbstep = -1200/dt;
@@ -2134,8 +2078,8 @@ void Simulation::runOneStep(){
 	cleanGrowthData();
 	resetForces();
 	//alignTissueDVToXPositive();
-	int freq = 10.0/dt + 1 ;
-	if (timestep% freq  == 0){
+	int freq = 10.0/dt ;
+	if ((timestep - 1)% freq  == 0){
 		calculateDVDistance();
 		//outputFile<<"calculating element health"<<endl;
 		int nElement = Elements.size();
@@ -2159,21 +2103,12 @@ void Simulation::runOneStep(){
 		}
 	}
 
-	double packingThreshold = getAverageSideLength();
-	packingThreshold *=0.7; //I am adding a 40% safety to average side length, and then taking half of it as threshold for packing
+	double periPackingThreshold = 1000, colPackingThreshold = 1000;
+	getAverageSideLength(periPackingThreshold,colPackingThreshold);
+	//packingThreshold *=0.7; //I am adding a 40% safety to average side length, and then taking half of it as threshold for packing
 	for (int RKId = 0; RKId<4; ++RKId){
 		//outputFile<<"started RK: "<<RKId<<endl;
-		calculatePacking(RKId,packingThreshold);
-		//cout<<"Packing Forces: "<<endl;
-		//for (int p = 648; p<651; ++p){
-		//	cout<<"Node: "<<p<<" RK: "<<RKId<<" pos: "<<Nodes[p]->Position[0]<<" "<<Nodes[p]->Position[1]<<" "<<Nodes[p]->Position[2]<<" f: "<<PackingForces[RKId][p][0]<<" "<<PackingForces[RKId][p][1]<<" "<<PackingForces[RKId][p][2]<<endl;
-		//}
-		//cout<<"After Packing, systemForces:"<<endl;
-		//cout<<"node 497 - at peri: "<<Nodes[497]->atPeripodiumCircumference<<" pos: "<<Nodes[497]->Position[0]<<" "<<Nodes[497]->Position[1]<<" "<<Nodes[497]->Position[2]<<endl;
-		//cout<<"	forces: "<<SystemForces[RKId][497][0]<<" "<<SystemForces[RKId][497][1]<<" "<<SystemForces[RKId][497][2]<<endl;
-		//cout<<"node 394 - at peri: "<<Nodes[394]->atPeripodiumCircumference<<" pos: "<<Nodes[394]->Position[0]<<" "<<Nodes[394]->Position[1]<<" "<<Nodes[394]->Position[2]<<endl;
-		//cout<<"	forces: "<<SystemForces[RKId][394][0]<<" "<<SystemForces[RKId][394][1]<<" "<<SystemForces[RKId][394][2]<<endl;
-
+		calculatePacking(RKId,periPackingThreshold,colPackingThreshold);
 		for (int i=0; i<nElement; ++i){
 			if (!Elements[i]->IsAblated){
 				Elements[i]->calculateForces(RKId, SystemForces, Nodes, outputFile);
@@ -2187,35 +2122,11 @@ void Simulation::runOneStep(){
 		updateNodePositions(RKId);
 		//outputFile<<"     updated node pos"<<endl;
 		updateElementPositions(RKId);
-		for (int i=0; i<Nodes.size(); ++i){
-			cout<<"RK: "<<RKId<<" Node: "<<i<<"	PackingForces: "<<PackingForces[RKId][i][0]<<"	"<<PackingForces[RKId][i][1]<<"	"<<PackingForces[RKId][i][2]<<endl;
-		}
+		//for (int i=0; i<Nodes.size(); ++i){
+		//	cout<<"RK: "<<RKId<<" Node: "<<i<<"	PackingForces: "<<PackingForces[RKId][i][0]<<"	"<<PackingForces[RKId][i][1]<<"	"<<PackingForces[RKId][i][2]<<endl;
+		//}
 		//outputFile<<"     updated element pos"<<endl;
-		/*cout<<"After elastic calc, systemForces:"<<endl;
-		cout<<"node 497 - at peri: "<<Nodes[497]->atPeripodiumCircumference<<" pos: "<<Nodes[497]->Position[0]<<" "<<Nodes[497]->Position[1]<<" "<<Nodes[497]->Position[2]<<endl;
-		cout<<"	forces: "<<SystemForces[RKId][497][0]<<" "<<SystemForces[RKId][497][1]<<" "<<SystemForces[RKId][497][2]<<endl;
-		cout<<"node 197 - pos: "<<Nodes[197]->Position[0]<<" "<<Nodes[197]->Position[1]<<" "<<Nodes[197]->Position[2]<<endl;
-		cout<<"	forces: "<<SystemForces[RKId][197][0]<<" "<<SystemForces[RKId][197][1]<<" "<<SystemForces[RKId][197][2]<<endl;
-		 */
 	}
-	/*for (int RKId = 0; RKId<4; ++RKId){
-		for (int i=0; i<nElement; ++i){
-			Elements[i]->calculateForces(RKId, SystemForces, Nodes);
-			Elements[i]->updateElementsNodePositions(RKId, SystemForces, Nodes, dt);
-			updateElementPositions(RKId);
-
-		}
-	}*/
-	/*cout<<"Forces on node 0: "<<endl;
-	for (int i=0;i<4;++i){
-		cout<<" RK: "<<i<<" ";
-		for (int j=0;j<3;++j){
-			cout<<SystemForces[i][0][j]<<" ";
-		}
-		cout<<endl;
-	}
-	*/
-
 	if (displayIsOn && !DisplaySave){
 		//The simulation is not displaying a saved setup, it is running and displaying
 		//I need to correct the values to be displayed, and store averages, otherwise
@@ -2240,11 +2151,81 @@ void Simulation::fillInNodeNeighbourhood(){
 	}
 }
 
-void Simulation::calculatePacking(int RKId, double threshold){
+void Simulation::getApicalNormalAndCornerPosForPacking(ShapeBase* ElementPointer, double* normalForPacking,double* posCorner){
+	if (!ElementPointer->ApicalNormalForPackingUpToDate){
+		ElementPointer->calculateNormalForPacking(1);
+	}
+	normalForPacking[0] = ElementPointer->ApicalNormalForPacking[0];
+	normalForPacking[1] = ElementPointer->ApicalNormalForPacking[1];
+	normalForPacking[2] = ElementPointer->ApicalNormalForPacking[2];
+	ElementPointer->getApicalNodePos(posCorner);
+}
+
+void Simulation::getBasalNormalAndCornerPosForPacking(ShapeBase* ElementPointer, double* normalForPacking,double* posCorner){
+	if (!ElementPointer->BasalNormalForPackingUpToDate){
+		ElementPointer->calculateNormalForPacking(0);
+	}
+	normalForPacking[0] = ElementPointer->BasalNormalForPacking[0];
+	normalForPacking[1] = ElementPointer->BasalNormalForPacking[1];
+	normalForPacking[2] = ElementPointer->BasalNormalForPacking[2];
+	ElementPointer->getBasalNodePos(posCorner);
+}
+
+void Simulation::getNormalAndCornerPosForPacking(Node* NodePointer, ShapeBase* ElementPointer, double* normalForPacking,double* posCorner, bool& bothperipodial){
+	if (NodePointer->tissueType == 1 && NodePointer->tissueType == 1){
+		//both element and the node are on the peripodial membrane
+		//I will update the normal of the element here, and flag the interaction to be between two peripodial membrane entities.
+		//This will mean, they will push away from each other, regardless of direction.
+		//The flag will be checked to reverse the normal direction in case the dot product is negative. I am not doing it here
+		//as it will be a duplicate calculation.
+		getApicalNormalAndCornerPosForPacking(ElementPointer, normalForPacking, posCorner);
+		bothperipodial = true;
+	}
+	else if (NodePointer->tissueType == 0 ){
+		//the node is on the columnar layer. apical nodes should pack apically and basal nodes should pack basally, the element will give the correct vectors
+		//even if it is on peripodial membrane
+		if (NodePointer->tissuePlacement == 1){  //node is apical, should pack to apical nodes only
+			getApicalNormalAndCornerPosForPacking(ElementPointer, normalForPacking, posCorner);
+		}
+		else if (NodePointer->tissuePlacement == 0){ //node is basal, should pack to apical nodes only
+			getBasalNormalAndCornerPosForPacking(ElementPointer, normalForPacking, posCorner);
+		}
+	}
+	else if (ElementPointer->tissueType == 0 && NodePointer->tissueType == 1){
+		//Element is on the columnar layer and the node is on the peripodial membrane
+		//if the tissue has multiple discretisation layers, the peripodial node should be pushed out of the tissue side the elemnt belongs to
+		//(if the element is apical, push it out towards the apical surface and vice versa.
+		if (TissueHeightDiscretisationLayers>1){
+			if (ElementPointer->tissuePlacement == 0 ){ //element is basal:
+				getBasalNormalAndCornerPosForPacking(ElementPointer, normalForPacking, posCorner);
+			}
+			else if (ElementPointer->tissuePlacement == 1 ){//element is apical:
+				getApicalNormalAndCornerPosForPacking(ElementPointer, normalForPacking, posCorner);
+			}
+			else{cerr<<"Element has error in tissue placement, packing, Element id: "<<ElementPointer->Id<<endl;}
+		}
+		else{
+			//tissue does not have multiple layers, I will push out from the apical surface
+			//if your tissue is complicated enough to have wrapping around peripodial membrane,
+			//it will have flips with a single layer of columnar elements anyway.
+			//USE multi-layer discretisation for columnar layer if you have packing issues.
+			getApicalNormalAndCornerPosForPacking(ElementPointer, normalForPacking, posCorner);
+		}
+	}
+}
+
+inline void Simulation::CapPackingForce(double& Fmag){
+	double Fcap = 1e4;
+	if (Fmag > Fcap){
+		Fmag = Fcap;
+	}
+}
+
+void Simulation::calculatePacking(int RKId, double PeriThreshold, double ColThreshold){
 	//cout<<"inside calculate packing"<<endl;
-	//threshold = 2.1;
+	double multiplier = 0.05; //just a term to scale the forces down
+	double threshold = 3;	 //packing forces start at 3 microns
 	double t2 = threshold*threshold;
-	double multiplier = t2/5;
 
 	vector<Node*>::iterator itNode;
 	vector<ShapeBase*>::iterator itEle;
@@ -2254,59 +2235,39 @@ void Simulation::calculatePacking(int RKId, double threshold){
 		(*itEle)->BasalNormalForPackingUpToDate = false;
 	}
 	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-		if (!(*itNode)->atPeripodiumCircumference){
-			//bool memberOf44 = Elements[44]->DoesPointBelogToMe((*itNode)->Id);
+		bool NodeHasPacking = (*itNode)->checkIfNodeHasPacking();
+		if (NodeHasPacking){
 			//cout<<"calculating packing for node: "<<(*itNode)->Id<<endl;
 			double* pos;
 			pos = new double[3];
-			if (RKId == 0){
-				pos[0] = (*itNode)->Position[0];
-				pos[1] = (*itNode)->Position[1];
-				pos[2] = (*itNode)->Position[2];
-			}
-			else{
-				pos[0]= (*itNode)->RKPosition[0];
-				pos[1]= (*itNode)->RKPosition[1];
-				pos[2]= (*itNode)->RKPosition[2];
-			}
+			(*itNode)->getCurrentRKPosition(RKId,pos);
 			for (itEle=Elements.begin(); itEle<Elements.end(); ++itEle){
 				//excluding elements that own this element
-				bool IsNodeMemberOfThisElement = (*itEle)->DoesPointBelogToMe((*itNode)->Id);
-				bool checkPackingToThisElement = false;
-				if (!IsNodeMemberOfThisElement){
-					//the node does not belong to the element, lets have a preliminary distance check:
-					checkPackingToThisElement = (*itEle)->IsPointCloseEnoughForPacking((*itNode)->Position, threshold);
-					//cout<<"Node :"<<(*itNode)->Id <<" is not a member of element: "<<(*itEle)->Id<<" check packing? "<<checkPackingToThisElement<<endl;
+				bool PackingToThisElement =  (*itEle)->checkPackingToThisNodeViaState(TissueHeightDiscretisationLayers, (*itNode));
+				if (PackingToThisElement){
+					//the node does not belong to the element, and placed correctly. Lets have a preliminary distance check:
+					PackingToThisElement = (*itEle)->IsPointCloseEnoughForPacking((*itNode)->Position, PeriThreshold, ColThreshold,(*itNode)->tissuePlacement, (*itNode)->tissueType);
 				}
-				if (checkPackingToThisElement){
-					//point is close enough to the element for packing.
+				if (PackingToThisElement){
+					//All position and state conditions are satisfied, and the point is close enough to the element for packing.
 					double* normalForPacking;
 					normalForPacking = new double[3];
 					normalForPacking[0]=0.0;normalForPacking[1]=0.0;normalForPacking[2]=0.0;
 					double* posCorner;
 					posCorner = new double[3];
-					if ((*itNode)->tissuePlacement == 1){  //node is apical, should pack to apical nodes only
-						if (!(*itEle)->ApicalNormalForPackingUpToDate){
-							(*itEle)->calculateNormalForPacking(1);
-						}
-						normalForPacking[0] = (*itEle)->ApicalNormalForPacking[0];
-						normalForPacking[1] = (*itEle)->ApicalNormalForPacking[1];
-						normalForPacking[2] = (*itEle)->ApicalNormalForPacking[2];
-						(*itEle)->getApicalNodePos(posCorner);
-					}
-					else if ((*itNode)->tissuePlacement == 0){ //node is basal, should pack to apical nodes only
-						if (!(*itEle)->BasalNormalForPackingUpToDate){
-							(*itEle)->calculateNormalForPacking(0);
-						}
-						normalForPacking[0] = (*itEle)->BasalNormalForPacking[0];
-						normalForPacking[1] = (*itEle)->BasalNormalForPacking[1];
-						normalForPacking[2] = (*itEle)->BasalNormalForPacking[2];
-						(*itEle)->getBasalNodePos(posCorner);
-					}
-					//cout<<"Normal for packing for element: "<<(*itEle)->Id<<" "<<normalForPacking[0]<<" "<<normalForPacking[1]<<" "<<normalForPacking[2]<<endl;
+					bool bothperipodial = false;
+					getNormalAndCornerPosForPacking((*itNode),(*itEle),normalForPacking,posCorner,bothperipodial);
 					double dProjectionOffset = 0.0;
 					for (int i=0; i<3; ++i){
 						dProjectionOffset += (pos[i] - posCorner[i])*normalForPacking[i];
+					}
+					//cout<<"dProjectionOffset: "<<dProjectionOffset<<endl;
+					if (bothperipodial && dProjectionOffset<0){
+						//both node and element lie on the peripodial membrane, the directionality does not come from tissue placement, they should always push away.
+						dProjectionOffset *= -1.0;
+						normalForPacking[0] *= -1.0;
+						normalForPacking[1] *= -1.0;
+						normalForPacking[2] *= -1.0;
 					}
 					//cout<<" calculated distace between node and element: "<<dProjectionOffset<<" threshold : "<<threshold<<endl;
 					//In the case that there is packing (the point will lie on the triangle, the distance
@@ -2319,24 +2280,16 @@ void Simulation::calculatePacking(int RKId, double threshold){
 						VecprojectedPoint[1] = (-1.0)*dProjectionOffset*(normalForPacking[1]);
 						VecprojectedPoint[2] = (-1.0)*dProjectionOffset*(normalForPacking[2]);
 						double projectedPoint[3] = {pos[0] + VecprojectedPoint[0], pos[1] + VecprojectedPoint[1], pos[2] + VecprojectedPoint[2]};
+						//cout<<"projected point: "<<projectedPoint[0]<<" "<<projectedPoint[1]<<projectedPoint[2]<<endl;
 						//check if the projected point lies on the triangle, if so the distance is (-1.0)*dProjectionOffet
 						bool pointInsideTriangle = (*itEle)->IspointInsideTriangle((*itNode)->tissuePlacement,projectedPoint[0],projectedPoint[1],projectedPoint[2]);
-						/*cout<<"checking packing to element: "<<(*itEle)->Id<<endl;
-							cout<<"	normalForPacking: "<<(*itEle)->normalForPacking[0]<<" "<<(*itEle)->normalForPacking[1]<<" "<<(*itEle)->normalForPacking[2]<<endl;
-							cout<<"	posCorner: "<<posCorner[0]<<" "<<posCorner[1]<<" "<<posCorner[2]<<endl;
-							cout<<"	dProjectionOffet: "<<dProjectionOffset<<endl;
-							cout<<"	normalForPacking: "<<(*itEle)->normalForPacking[0]<<" "<<(*itEle)->normalForPacking[1]<<" "<<(*itEle)->normalForPacking[2]<<endl;
-							cout<<"	VecprojectedPoint comp "<<VecprojectedPoint[0]<<" "<<VecprojectedPoint[1]<<" "<<VecprojectedPoint[2]<<endl;
-							cout<<"	VecprojectedPoint manu "<<(-1.0)*dProjectionOffset*((*itEle)->normalForPacking[0])<<" "<<(-1.0)*dProjectionOffset*((*itEle)->normalForPacking[1])<<" "<<(-1.0)*dProjectionOffset*((*itEle)->normalForPacking[2])<<endl;
-							cout<<"	projectedPoint "<<projectedPoint[0]<<" "<<projectedPoint[1]<<" "<<projectedPoint[2]<<endl;
-							cout<<"	point inside triangle: "<<pointInsideTriangle<<endl;*/
-						cout<<" Node : " <<(*itNode)->Id <<" element: "<<(*itEle)->Id<<"	- inside tri? "<<pointInsideTriangle<<endl;
 						if (pointInsideTriangle){
 							//there is packing:
+							//cout<<" Node : " <<(*itNode)->Id <<" element: "<<(*itEle)->Id<<" projected point: "<<projectedPoint[0]<<" "<<projectedPoint[1]<<projectedPoint[2]<<endl;
 							float d2 = dProjectionOffset*dProjectionOffset;
-							//cout<<"point is inside triangle: d2: "<<d2 <<endl;
+							//cout<<"	point is inside triangle: d2: "<<d2 <<endl;
 							//normalising force direction
-							cout<<" Node : " <<(*itNode)->Id <<" element: "<<(*itEle)->Id<<"	- before normalisation VecprojectedPoint: "<<VecprojectedPoint[0]<<" "<<VecprojectedPoint[1]<<" "<<VecprojectedPoint[2]<<endl;
+							//cout<<" Node : " <<(*itNode)->Id <<" element: "<<(*itEle)->Id<<"	- before normalisation VecprojectedPoint: "<<VecprojectedPoint[0]<<" "<<VecprojectedPoint[1]<<" "<<VecprojectedPoint[2]<<endl;
 							if (dProjectionOffset<0){
 								VecprojectedPoint[0] /= dProjectionOffset;
 								VecprojectedPoint[1] /= dProjectionOffset;
@@ -2348,19 +2301,25 @@ void Simulation::calculatePacking(int RKId, double threshold){
 								VecprojectedPoint[2] /= (-1.0)*dProjectionOffset;
 							}
 							//cleaning up noise to allow accurate calculation of strong pushing forces
-							cout<<" Node : " <<(*itNode)->Id <<" element: "<<(*itEle)->Id<<"	- after normalisation VecprojectedPoint: "<<VecprojectedPoint[0]<<" "<<VecprojectedPoint[1]<<" "<<VecprojectedPoint[2]<<endl;
+							//cout<<" Node : " <<(*itNode)->Id <<" element: "<<(*itEle)->Id<<"	- after normalisation VecprojectedPoint: "<<VecprojectedPoint[0]<<" "<<VecprojectedPoint[1]<<" "<<VecprojectedPoint[2]<<endl;
 							for (int i=0;i<3; i++){
 								if(VecprojectedPoint[i]<1E-6 && VecprojectedPoint[i]>-1E-6){
 									VecprojectedPoint[i]=0.0;
 								}
 							}
+							//cout<<"Normal for packing for element: "<<(*itEle)->Id<<" vec: "<<normalForPacking[0]<<" "<<normalForPacking[1]<<" "<<normalForPacking[2]<<endl;
+							//cout<<"Node "<<(*itNode)->Id<<" position: "<<pos[0]<<" "<<pos[1]<<" "<<pos[2]<<" "<<" corner position: "<<posCorner[0]<<" "<<posCorner[1]<<" "<<posCorner[2]<<endl;
 							//cout<<"	normalised VecprojectedPoint "<<VecprojectedPoint[0]<<" "<<VecprojectedPoint[1]<<" "<<VecprojectedPoint[2]<<endl;
-							double Fmag = multiplier * (1.0/d2 - 1.0/t2);
+							double averageMass = 0.5*((*itEle)->VolumePerNode + (*itNode)->mass);
+							double Fmag = averageMass* multiplier * (1.0/d2 - 1.0/t2);
+							CapPackingForce(Fmag);
+							//cout<<"	d2  "<<d2 <<endl;
 							//cout<<"	Fmag  "<<Fmag <<endl;
 							double F[3];
 							F[0] = Fmag * VecprojectedPoint[0];
 							F[1] = Fmag * VecprojectedPoint[1];
 							F[2] = Fmag * VecprojectedPoint[2];
+							//cout<<"Node "<<(*itNode)->Id<<" is packing to Element: "<<(*itEle)->Id<<" mag: "<<Fmag<<" Force: "<<F[0] <<" "<<F[1]<<" " <<F[2]<<endl;
 							//cout<<" Force: "<<F[0] <<" "<<F[1]<<" " <<F[2]<<endl;
 							//direction correction with (-) sign
 							for(int j=0; j<3; ++j){

@@ -76,9 +76,8 @@ private:
 	bool addPeripodiumToTissue();
 	bool generateColumnarCircumferenceNodeList();
 	void sortColumnarCircumferenceNodeList();
-	bool sortcomparison(int i, int j);
 	void calculateCentreOfNodes(double* centre);
-	double getAverageSideLength();
+	void getAverageSideLength(double& periAverageSideLength, double& colAverageSideLength);
 	bool CalculateTissueHeight();
 	void addPeripodiumNodes(vector <int*> &trianglecornerlist, double height, double d);
 	void AddPeripodiumCircumference(double height, int& index_begin, int &index_end);
@@ -187,7 +186,11 @@ public:
 	void cleanMatrixUpdateData();
 	void resetForces();
 	void runOneStep();
-	void calculatePacking(int RKId, double threshold);
+	void calculatePacking(int RKId, double PeriThreshold, double ColThreshold);
+	void getNormalAndCornerPosForPacking(Node* NodePointer, ShapeBase* ElementPointer, double* normalForPacking,double* posCorner, bool& bothperipodial);
+	void getApicalNormalAndCornerPosForPacking(ShapeBase* ElementPointer, double* normalForPacking,double* posCorner);
+	void getBasalNormalAndCornerPosForPacking(ShapeBase* ElementPointer, double* normalForPacking,double* posCorner);
+	inline void CapPackingForce(double& Fmag);
 	void redistributePeripodiumForces(int RKId);
 	void updateNodePositions(int RKId);
 	void updateNodePositionsForPeripodiumCircumference(int RKId);
