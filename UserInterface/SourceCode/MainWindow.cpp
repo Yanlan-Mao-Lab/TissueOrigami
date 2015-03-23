@@ -102,13 +102,38 @@ void MainWindow::setUpCentralWidget(){
     CentralWidget->setStyleSheet("QWidget { background-color: rgb(233,229,243) }");
     CentralWidget->setLayout(MainGrid);
     connect(MainGLWidget, SIGNAL(SelectedItemChanged()), this, SLOT(SelectedItemChange()));
+    connect(MainGLWidget, SIGNAL(NeedToClearManualElementSelection()), this, SLOT(ManualElementSelectionReset()));
+    connect(MainGLWidget, SIGNAL(NeedToClearManualNodeSelection()), this, SLOT(ManualNodeSelectionReset()));
+}
+
+void MainWindow::setSelectionByIdSection(QFont font, QFont boldFont, QGridLayout *SelectionDisplayGrid){
+	QLabel *NodeSelectTitle = new QLabel("Select Node:");
+	NodeSelectBox = new QLineEdit();
+	NodeSelectBox->setPlaceholderText ( QString("# from 0 to %1").arg(Sim01->Nodes.size()) );
+	NodeSelectBox->setFont(font);
+	NodeSelectBox->setStyleSheet("background-color: white");
+	NodeSelectBox->setValidator( new QIntValidator(0, Sim01->Nodes.size()-1, this) );
+
+	QLabel *ElementSelectTitle = new QLabel("Select Element:");
+	ElementSelectBox = new QLineEdit();
+	ElementSelectBox->setPlaceholderText ( QString("# from 0 to %1").arg(Sim01->Elements.size()) );
+	ElementSelectBox->setFont(font);
+	ElementSelectBox->setStyleSheet("background-color: white");
+	ElementSelectBox->setValidator( new QIntValidator(0, Sim01->Elements.size()-1, this) );
+	connect(NodeSelectBox, SIGNAL(textChanged(const QString &)), this, SLOT(manualNodeSelection(const QString &)));
+
+	SelectionDisplayGrid->addWidget(NodeSelectTitle,0,3,1,1,Qt::AlignLeft);
+	SelectionDisplayGrid->addWidget(ElementSelectTitle,0,4,1,1,Qt::AlignLeft);
+	SelectionDisplayGrid->addWidget(NodeSelectBox,1,3,1,1,Qt::AlignLeft);
+	SelectionDisplayGrid->addWidget(ElementSelectBox,1,4,1,1,Qt::AlignLeft);
+	connect(ElementSelectBox, SIGNAL(textChanged(const QString &)), this, SLOT(manualElementSelection(const QString &)));
 }
 
 void MainWindow::setUpSelectionDisplayGrid(QGridLayout *SelectionDisplayGrid){
 	QFont boldFont("SansSerif", 10, QFont::Bold,true);
 	QFont font("SansSerif", 10);
-
 	setItemSelectionTitles(font, boldFont, SelectionDisplayGrid);
+	setSelectionByIdSection(font, boldFont, SelectionDisplayGrid);
 	setCoordBoxes(font, boldFont, SelectionDisplayGrid);
 
 	cout<<"inside setting selection display grid"<<endl;
@@ -210,7 +235,7 @@ void MainWindow::setItemSelectionTitles(QFont font, QFont boldFont, QGridLayout 
 	QLabel *CoordTitlez = new QLabel("z");
 	CoordTitlez ->setFont(boldFont);
 
-	SelectionDisplayGrid->addWidget(PanelTitle,0,0,1,3,Qt::AlignLeft);
+	SelectionDisplayGrid->addWidget(PanelTitle,0,0,1,2,Qt::AlignLeft);
 	SelectionDisplayGrid->addWidget(NameTitle,1,0,1,1,Qt::AlignLeft);
 	SelectionDisplayGrid->addWidget(NameBox,1,1,1,2,Qt::AlignLeft);
 
@@ -451,6 +476,34 @@ void MainWindow::SelectedItemChange(){
 		}
     }
  };
+
+void MainWindow::manualNodeSelection(const QString &newValue){
+	MainGLWidget->manualNodeSelection(newValue.toInt());
+	//cerr<<"Manual Node Selection Update"<<newValue.toInt()<<endl;
+}
+
+void MainWindow::manualElementSelection(const QString &newValue){
+	MainGLWidget->manualElementSelection(newValue.toInt());
+	//cerr<<"Manual Element Selection Update: "<<newValue.toInt()<<endl;
+}
+
+void MainWindow::ManualElementSelectionReset(){
+	MainGLWidget->ManualNodeSelection = false;
+	MainGLWidget->ManualSelectedNodeId = -100;
+	ElementSelectBox->blockSignals(true);
+	ElementSelectBox->setValidator( new QIntValidator(0, Sim01->Elements.size()-1, this) );
+	ElementSelectBox->setPlaceholderText ( QString("# from 0 to %1").arg(Sim01->Elements.size()) );
+	ElementSelectBox->setText("");
+	ElementSelectBox->blockSignals(false);
+}
+
+void MainWindow::ManualNodeSelectionReset(){
+	NodeSelectBox->blockSignals(true);
+	NodeSelectBox->setValidator( new QIntValidator(0, Sim01->Nodes.size()-1, this) );
+	NodeSelectBox->setPlaceholderText ( QString("# from 0 to %1").arg(Sim01->Nodes.size()) );
+	NodeSelectBox->setText("");
+	NodeSelectBox->blockSignals(false);
+}
 
 void MainWindow::timerSimulationStep(){
 	//cout<<"Called the function via timer"<<endl;

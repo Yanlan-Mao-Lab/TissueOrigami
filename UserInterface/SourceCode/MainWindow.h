@@ -33,6 +33,10 @@ class MainWindow : public QMainWindow
 
 public slots:
     void SelectedItemChange();
+    void manualNodeSelection(const QString &);
+    void manualElementSelection(const QString &);
+    void ManualElementSelectionReset();
+    void ManualNodeSelectionReset();
     void timerSimulationStep();
     void updateStrain(int);
     void updateStrainCheckBox(int);
@@ -57,6 +61,7 @@ public slots:
     void setUpGLWidget();
     void setUpCentralWidget();
     void setUpSelectionDisplayGrid(QGridLayout *SelectionDisplayGrid);
+    void setSelectionByIdSection(QFont font, QFont boldFont, QGridLayout *SelectionDisplayGrid);
     void setCoordBoxes(QFont font, QFont boldFont, QGridLayout *SelectionDisplayGrid);
     void setItemSelectionTitles(QFont font, QFont boldFont, QGridLayout *SelectionDisplayGrid);
     void setStrainDisplayMenu(QGridLayout *DisplayOptionsGrid);
@@ -65,6 +70,8 @@ public slots:
     void takeScreenshot();
     QWidget		*CentralWidget;
     QLineEdit 	*NameBox;
+    QLineEdit 	*NodeSelectBox;
+    QLineEdit 	*ElementSelectBox;
     QTimer *timer;
     int nCoordBox;
     QLineEdit 		*CoordBox_id[6];

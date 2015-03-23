@@ -29,9 +29,13 @@ using namespace std;
      Simulation* Sim01;
      QSize minimumSizeHint() const;
      QSize sizeHint() const;
+     void manualElementSelection(int i);
+     void manualNodeSelection(int i);
      bool ItemSelected;
      string SelectedItemName;
      int SelectedItemIndex;
+     bool ManualNodeSelection;
+     int ManualSelectedNodeId;
      bool DisplayStrains;
      float DisplayStrainRange[2];
      int StrainToDisplay;
@@ -52,6 +56,8 @@ using namespace std;
 
  signals:
  	 void SelectedItemChanged();
+ 	 void NeedToClearManualElementSelection();
+ 	 void NeedToClearManualNodeSelection();
 
  protected:
      void initializeGL();
@@ -62,8 +68,10 @@ using namespace std;
      void mouseMoveEvent(QMouseEvent *event);
      void wheelEvent(QWheelEvent *event);
      void ObjectSelection(QPoint LastPos);
-     void resetItemSelectionInfo();
+     void resetItemSelectionInfo(int source);
      void findElement();
+     bool findElement(int i);
+     bool findNode(int i);
      void getColourOfPoint(QPoint LastPos);
      void drawForPicking ();
      void generate3DObject();
@@ -74,6 +82,7 @@ using namespace std;
      bool checkIfDrawingNode(int i);
      void drawElement(int i, bool picking);
      void highlightElement(int i);
+     void highlightNode(int i);
      void drawReferenceElement(int i);
      void drawPrism(int i);
      void drawTriangle(int i);

@@ -62,6 +62,8 @@ using namespace std;
      drawVelocities = false;
      drawPeripodium = true;
      drawColumnar = true;
+     ManualNodeSelection = false;
+     ManualSelectedNodeId = -100;
      cout<<"gl initiated"<<endl;
  }
 
@@ -134,6 +136,9 @@ using namespace std;
 		 //cout<<"item is selected calling reference shape drawing!"<<endl;
 		 drawReferenceElement(SelectedItemIndex);
 		 highlightElement(SelectedItemIndex);
+	 }
+	 if (ManualNodeSelection){
+		 highlightNode(ManualSelectedNodeId);
 	 }
 	 int n = Sim01->Elements.size();
 	 for (int i =0; i<n;i++){
@@ -220,6 +225,32 @@ using namespace std;
 	 }
  }
 
+
+void GLWidget::highlightNode(int i){
+	float markerSize = 1.0;
+	double x = Sim01->Nodes[i]->Position[0];
+	double y = Sim01->Nodes[i]->Position[1];
+	double z[3] = {Sim01->Nodes[i]->Position[2]-markerSize,Sim01->Nodes[i]->Position[2]+markerSize,Sim01->Nodes[i]->Position[2]};
+	glColor3f(0.8,0.8,0.0);
+	glBegin(GL_TRIANGLES);
+		for (int k =0; k<2; ++k){glVertex3f( x, y, z[k]);}
+		glVertex3f( x+markerSize, y, z[2]);
+		for (int k =0; k<2; ++k){glVertex3f( x, y, z[k]);}
+		glVertex3f( x-markerSize, y, z[2]);
+		for (int k =0; k<2; ++k){glVertex3f( x, y, z[k]);}
+		glVertex3f( x, y+markerSize, z[2]);
+		for (int k =0; k<2; ++k){glVertex3f( x, y, z[k]);}
+		glVertex3f( x, y-markerSize, z[2]);
+		for (int k =0; k<2; ++k){glVertex3f( x, y, z[k]);}
+		glVertex3f( x+markerSize, y+markerSize, z[2]);
+		for (int k =0; k<2; ++k){glVertex3f( x, y, z[k]);}
+		glVertex3f( x+markerSize, y-markerSize, z[2]);
+		for (int k =0; k<2; ++k){glVertex3f( x, y, z[k]);}
+		glVertex3f( x-markerSize, y+markerSize, z[2]);
+		for (int k =0; k<2; ++k){glVertex3f( x, y, z[k]);}
+		glVertex3f( x-markerSize, y-markerSize, z[2]);
+	glEnd();
+}
 
  void GLWidget::highlightElement(int i){
 	int ShapeType = Sim01->Elements[i]->getShapeType();
@@ -631,7 +662,7 @@ using namespace std;
  }
 
  void GLWidget::getForceColour(float* OutputColour, float Data){
-	 double scale2[2] = {0,100.0};
+	 double scale2[2] = {0,1000.0};
 	 double r = (Data- scale2[0])/(scale2[1]-scale2[0]);
 	 //OutputColour[0] = r;
 	 //OutputColour[1] = 0.0;
@@ -1125,12 +1156,42 @@ using namespace std;
  void GLWidget::ObjectSelection(QPoint LastPos){
 	 drawForPicking();
 	 getColourOfPoint(LastPos);
-	 resetItemSelectionInfo();
+	 resetItemSelectionInfo(1);
 	 findElement();
 	 emit SelectedItemChanged();
  }
 
- void GLWidget::resetItemSelectionInfo(){
+
+ void GLWidget::manualElementSelection(int i){
+	 resetItemSelectionInfo(2);
+	 bool validElementId = findElement(i);
+	 if (validElementId){
+		emit SelectedItemChanged();
+	 }
+ }
+
+ void GLWidget::manualNodeSelection(int i){
+	 resetItemSelectionInfo(3);
+	 bool validNodeId = findNode(i);
+	 if (validNodeId){
+		emit SelectedItemChanged();
+	 }
+ }
+
+ void GLWidget::resetItemSelectionInfo(int source){
+	 if (source == 1){
+		 //The source is item selection via screen click, I will clear up the changes of both manual inputs
+		 emit NeedToClearManualElementSelection();
+		 emit NeedToClearManualNodeSelection();
+	 }
+	 else if (source == 2){
+		 //source is a manual element selection, I will clear up the manual node selection input
+		 emit NeedToClearManualNodeSelection();
+	 }
+	 else if (source == 3){
+		 //source is manual node selection, I will clear the manual element selection
+		 emit NeedToClearManualElementSelection();
+	 }
 	 ItemSelected = false;
 	 SelectedItemName = "";
 	 SelectedItemIndex = -1;
@@ -1167,6 +1228,44 @@ using namespace std;
 	}
  }
 
+bool GLWidget::findElement(int i){
+	int n = Sim01->Elements.size();
+	if (i<n){
+		if (checkIfDrawingElement(i)){
+			ItemSelected = true;
+			fillItemSelectionInfo(i);
+			SelectedItemIndex = i;
+			//update();
+			return true;
+		}
+	}
+	return false;
+ }
+
+bool GLWidget::findNode(int i){
+	int n = Sim01->Nodes.size();
+	if (i<n){
+		//Node id is small enough
+		n = Sim01->Elements.size();
+		for (int j =0; j<n; ++j){
+			if(Sim01->Elements[j]->DoesPointBelogToMe(i)){
+				//The node belongs to the element:
+				if (checkIfDrawingElement(j)){
+					//We are drawing the element
+					ItemSelected = true;
+					fillItemSelectionInfo(j);
+					SelectedItemIndex = j;
+					ManualNodeSelection = true;
+					ManualSelectedNodeId = i;
+					//update();
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+ }
+
  void GLWidget::fillItemSelectionInfo(int i){
 	SelectedItemName = Sim01->Elements[i]->getName();
 	int nNodes = Sim01->Elements[i]->getNodeNumber();
@@ -1181,6 +1280,7 @@ using namespace std;
 		QString tmpstring = QString::number(Sim01->Elements[i]->NodeIds[j], 'f', 0);
 		SelectedId.push_back(tmpstring);
 	}
+	//cout<<"SelectedItemName: "<<SelectedItemName<<endl;
  }
 
  void GLWidget::drawColourbar(){

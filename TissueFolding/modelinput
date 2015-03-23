@@ -7,7 +7,7 @@ PeripodiumParameters:
   PeripodiumYoungsModulus: 3000.0
 
 TimeParameters:
-  TimeStep(sec): 0.1
+  TimeStep(sec): 0.2
   SimulationLength(sec): 5400
 
 PysicalProperties:
