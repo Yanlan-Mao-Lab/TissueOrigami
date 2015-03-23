@@ -152,11 +152,11 @@ bool Simulation::readParameters(int& i, int argc, char **argv){
 		cerr<<" input the model input file"<<endl;
 		return false;
 	}
-	cerr<<"Reading parameter input file"<<endl;
+	//cerr<<"Reading parameter input file"<<endl;
 	const char* inpstring = argv[i];
 	ModInp->Sim=this;
 	ModInp->parameterFileName =  inpstring;
-	cerr<<" Reading parameters from file: "<<ModInp->parameterFileName<<endl;
+	//cerr<<" Reading parameters from file: "<<ModInp->parameterFileName<<endl;
 	bool Success = ModInp->readParameters();
 	if (!Success){
 		return Success;
@@ -233,7 +233,10 @@ bool Simulation::initiateSystem(){
 	if (!Success){
 		return Success;
 	}
+	cout<<"Success before calculate tissue height: "<<Success<<endl;
 	Success = CalculateTissueHeight(); //Calculating how many layers the columnar layer has, and what the actual height is.
+	cout<<"Success after calculate tissue height: "<<Success<<endl;
+
 	if (!Success){
 		return Success;
 	}
@@ -1329,7 +1332,7 @@ void Simulation::AddHorizontalRowOfPeripodiumNodes(vector <int*> &trianglecorner
 	index_end = tmp_end;
 }
 
-void Simulation::AddVerticalRowOfPeripodiumNodes(int& layerCount, int nLayers, vector <int*> &trianglecornerlist, double height,  int &index_begin, int &index_end){
+void Simulation::AddVerticalRowOfPeripodiumNodes(int& layerCount, int nLayers, vector <int*> &trianglecornerlist, double height, double lumenHeight, int &index_begin, int &index_end){
 	int tmp_begin=0, tmp_end=0;
 	int counter = 0;
 	for (int i = index_begin; i<=index_end; ++i){
@@ -1354,7 +1357,7 @@ void Simulation::AddVerticalRowOfPeripodiumNodes(int& layerCount, int nLayers, v
 			int targetindex = ColumnarCircumferencialNodeList[idx];
 			targetpoint[0] = Nodes[targetindex]->Position[0];
 			targetpoint[1] = Nodes[targetindex]->Position[1];
-			targetpoint[2] = Nodes[targetindex]->Position[2] + 1.5*height ;
+			targetpoint[2] = Nodes[targetindex]->Position[2] + height + lumenHeight*0.5 ;
 		}
 		else{
 			//the target point should be the midpoint of the two connected nodes:
@@ -1372,24 +1375,24 @@ void Simulation::AddVerticalRowOfPeripodiumNodes(int& layerCount, int nLayers, v
 			int targetindex2 = ColumnarCircumferencialNodeList[idx2];
 			targetpoint[0] = 0.5 * (Nodes[targetindex1]->Position[0] + Nodes[targetindex2]->Position[0] );
 			targetpoint[1] = 0.5 * (Nodes[targetindex1]->Position[1] + Nodes[targetindex2]->Position[1] );
-			targetpoint[2] = 0.5 * (Nodes[targetindex1]->Position[2] + Nodes[targetindex2]->Position[2] ) + 1.5*height ;
+			targetpoint[2] = 0.5 * (Nodes[targetindex1]->Position[2] + Nodes[targetindex2]->Position[2] ) + height + lumenHeight*0.5 ;
 		}
 		double vec[3] = {targetpoint[0] - MidPoint[0], targetpoint[1] - MidPoint[1], targetpoint[2] - MidPoint[2]};
 		double mag = pow((vec[0]*vec[0] + vec[1]*vec[1] + vec[2]*vec[2]),0.5);
 		vec[0] /= mag;
 		vec[1] /= mag;
 		vec[2] /= mag;
-		//The height spanned in this direction should be height of the tissue / number of layers:
-		double z = height / (float) nLayers;
+		//The height spanned in this direction should be (half height of the tissue + half lumen height) / number of layers:
+		double z = (height*0.5 + lumenHeight*0.5) / (float) nLayers;
 		double multiplier = z / vec[2];
 		double* norm;
 		norm = new double[3];
 		norm[0] = MidPoint[0]+vec[0]*multiplier;
 		norm[1] = MidPoint[1]+vec[1]*multiplier;
 		norm[2] = MidPoint[2]+z;
-		cout<<"layerCount: "<<layerCount<<"  MidPoint          : "<<MidPoint[0]<<" "<<MidPoint[1]<<" "<<MidPoint[2]<<endl;
-		cout<<"layerCount: "<<layerCount<<"  z: "<<z<<" vec  : "<<vec[0]<<" "<<vec[1]<<" "<<vec[2]<<endl;
-		cout<<"layerCount: "<<layerCount<<" norm for added node: "<<norm[0]<<" "<<norm[1]<<" "<<norm[2]<<endl;
+		//cout<<"layerCount: "<<layerCount<<"  MidPoint          : "<<MidPoint[0]<<" "<<MidPoint[1]<<" "<<MidPoint[2]<<endl;
+		//cout<<"layerCount: "<<layerCount<<"  z: "<<z<<" vec  : "<<vec[0]<<" "<<vec[1]<<" "<<vec[2]<<endl;
+		//cout<<"layerCount: "<<layerCount<<" norm for added node: "<<norm[0]<<" "<<norm[1]<<" "<<norm[2]<<endl;
 		Node* tmp_nd;
 		//Adding Peroipodium node:
 		tmp_nd = new Node(Nodes.size(), 3, norm,0,1);  //tissue type is peripodium, node type is basal
@@ -1411,7 +1414,7 @@ void Simulation::AddVerticalRowOfPeripodiumNodes(int& layerCount, int nLayers, v
 		else{TriNodeIds1[2]=tmp_nd->Id+1;}
 		trianglecornerlist.push_back(TriNodeIds1);
 
-		cerr<<"Triangle Corner Ids: "<<trianglecornerlist[trianglecornerlist.size()-1][0]<<" "<<trianglecornerlist[trianglecornerlist.size()-1][1]<<" "<<trianglecornerlist[trianglecornerlist.size()-1][2]<<endl;
+		//cerr<<"Triangle Corner Ids: "<<trianglecornerlist[trianglecornerlist.size()-1][0]<<" "<<trianglecornerlist[trianglecornerlist.size()-1][1]<<" "<<trianglecornerlist[trianglecornerlist.size()-1][2]<<endl;
 		counter ++;
 		delete[] norm;
 	}
@@ -1420,7 +1423,7 @@ void Simulation::AddVerticalRowOfPeripodiumNodes(int& layerCount, int nLayers, v
 	layerCount++;
 }
 
-void Simulation::AddPeripodiumCap(int layerCount,  vector <int*> &trianglecornerlist, double height, int index_begin, int index_end){
+void Simulation::AddPeripodiumCap(int layerCount,  vector <int*> &trianglecornerlist, double height, double lumenHeight, int index_begin, int index_end){
 	//Now I have the indices of the nodes specifying the last row.
 	//I want to cap the tissue, with the topology of the apical surfaces of the columnar layer
 	vector <int> PeripodiumNodeId;
@@ -1436,13 +1439,15 @@ void Simulation::AddPeripodiumCap(int layerCount,  vector <int*> &trianglecorner
 		counter++;
 		PeripodiumNodeId.push_back(Nodes[i]->Id);
 		CorrespondingApicalNodeId.push_back(Nodes[ApicalColumnarCircumferencialNodeList[idx]]->Id);
-		cout<<"peripodium Node: "<<Nodes[i]->Id<<" pos: "<<Nodes[i]->Position[0]<<" "<<Nodes[i]->Position[1]<<" "<<Nodes[i]->Position[2]<<" corr. node id: "<<Nodes[ApicalColumnarCircumferencialNodeList[idx]]->Id<<endl;
+		//cout<<"peripodium Node: "<<Nodes[i]->Id<<" pos: "<<Nodes[i]->Position[0]<<" "<<Nodes[i]->Position[1]<<" "<<Nodes[i]->Position[2]<<" corr. node id: "<<Nodes[ApicalColumnarCircumferencialNodeList[idx]]->Id<<endl;
 	}
-	// The end point is 0.5*height above the apical surface.
-	// I also want to add one more layer of curvature, same height as each triangle in the side peripodium spans
+	// The end point is 0.5*lumenHeight above the apical surface.
+	//I want to add the remaining 50% height of the lumen as a curvature coered by the first layer of peripodium nodes
+	//  	Eliminated idea -- I also want to add one more layer of curvature, same height as each triangle in the side peripodium spans
 	// the layer count is equal to (nLayers -1 ) at the moment, as I am at the topmost layer
 	// I can obtain the increment I need from adding the sum of these as a z offset:
-	double zOffset = height*0.5 + height / (float) (layerCount+1);
+	//double zOffset = height*0.5 + height / (float) (layerCount+1);
+	double zOffset = lumenHeight;
 	for (int i = 0; i<Nodes.size(); ++i){
 		if (Nodes[i]->tissuePlacement == 1){ //Node is apical
 			int id = Nodes[i]->Id;
@@ -1563,15 +1568,18 @@ void Simulation::assignMassWeightsDueToPeripodium(){
 
 
 void Simulation::addPeripodiumNodes(vector <int*> &trianglecornerlist, double height, double d){
-	cerr<<"Adding peripodium nodes"<<endl;
+	//cerr<<"Adding peripodium nodes"<<endl;
 	//int n = ColumnarCircumferencialNodeList.size();
+	double lumenHeight = height*0.3;	//I want the lumen of the tissue to be 30% of tissue hight
 	int index_begin = 0, index_end =0;
 	//Adding a midline range of nodes
 	AddPeripodiumCircumference(height, index_begin, index_end);
 	double triangleHeight = 0.866*d; //0.866 is square-root(3)/2, this is the height of the triangle I am adding,
 	AddHorizontalRowOfPeripodiumNodes(trianglecornerlist, triangleHeight, index_begin, index_end);
-	//calculating how many layers of triangles I need for spanning the height of the tissue:
-	int nLayers = ceil(height / triangleHeight );
+	//calculating how many layers of triangles I need for spanning the necessary height, I want the side layer to go up
+	// 50% of tissue height (to reach the same level as the top of columnar layer)
+	// + 50% of the lumen size. The remaining 50% of lumen size will be spanned by the first row of cap elements.
+	int nLayers = ceil((height*0.5 + lumenHeight*0.5) / triangleHeight );
 	//I need an odd number of layers, so that the final shape will be the same as the circumference of columnar layer:
 	if (nLayers %2 == 0){
 		nLayers --;
@@ -1581,9 +1589,9 @@ void Simulation::addPeripodiumNodes(vector <int*> &trianglecornerlist, double he
 	triangleHeight = pow((triangleHeight*triangleHeight + height*height),0.5) / (float)nLayers;
 	int layerCount = 0;
 	for (int i=0; i<nLayers; ++i){
-		AddVerticalRowOfPeripodiumNodes(layerCount, nLayers, trianglecornerlist, height, index_begin, index_end);
+		AddVerticalRowOfPeripodiumNodes(layerCount, nLayers, trianglecornerlist, height, lumenHeight, index_begin, index_end);
 	}
-	AddPeripodiumCap(layerCount, trianglecornerlist, height, index_begin, index_end);
+	AddPeripodiumCap(layerCount, trianglecornerlist, height, lumenHeight, index_begin, index_end);
 	//AssignAssociatedNodesToPeripodiumCircumference();
 }
 
@@ -1610,43 +1618,66 @@ void Simulation::getAverageSideLength(double& periAverageSideLength, double& col
 	}
 }
 
-bool Simulation::CalculateTissueHeight(){
-	//Find the first basal node on the Nodes List
-	//Find the first element that has this node on the elements list
-	//Move apically through the elements until you reach the apical surface - an apical node
-	//Find a basal node:
-	vector<Node*>::iterator itNode;
-	bool foundNode = false;
-	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-		if((*itNode)->tissuePlacement == 0){ //Node is basal
-			foundNode = true;
+bool  Simulation::isColumnarLayer3D(){
+	bool ColumnarLayer3D = false;
+	vector<ShapeBase*>::iterator itElement;
+	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		if ((*itElement)->ShapeDim == 3){
+			ColumnarLayer3D  = true;
 			break;
 		}
 	}
-	if (!foundNode){
-		return false;
-	}
-	//Find an element using the basal node, and move on the elements apically, until you reach the apical surface:
-	int currNodeId = (*itNode)->Id;
-	vector<ShapeBase*>::iterator itElement;
-	bool foundElement = true;
-	TissueHeightDiscretisationLayers = 0;
-	while(Nodes[currNodeId]->tissuePlacement != 1 && foundElement){ //while the node is not apical, and I could fing the next element
-		foundElement = false;
-		for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-			bool IsBasalOwner = (*itElement)->IsThisNodeMyBasal(currNodeId);
-			if (IsBasalOwner){
-				foundElement = true;
+	return ColumnarLayer3D;
+}
+
+bool Simulation::CalculateTissueHeight(){
+	//check if the columnar layer is made of 3D elements:
+	bool ColumnarLayer3D = isColumnarLayer3D();
+	if (ColumnarLayer3D){
+		//Find the first basal node on the Nodes List
+		//Find the first element that has this node on the elements list
+		//Move apically through the elements until you reach the apical surface - an apical node
+		//Find a basal node:
+		vector<Node*>::iterator itNode;
+		bool foundNode = false;
+		for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+			if((*itNode)->tissuePlacement == 0){ //Node is basal
+				foundNode = true;
 				break;
 			}
 		}
-		double currentH = (*itElement)->getElementHeight();
-		TissueHeight += currentH;
-		TissueHeightDiscretisationLayers++;
-		currNodeId = (*itElement)->getCorrecpondingApical(currNodeId); //have the next node
+		if (!foundNode){
+			return false;
+		}
+		//Find an element using the basal node, and move on the elements apically, until you reach the apical surface:
+		int currNodeId = (*itNode)->Id;
+		vector<ShapeBase*>::iterator itElement;
+		bool foundElement = true;
+		TissueHeightDiscretisationLayers = 0;
+		while(Nodes[currNodeId]->tissuePlacement != 1 && foundElement){ //while the node is not apical, and I could find the next element
+			foundElement = false;
+			for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+				bool IsBasalOwner = (*itElement)->IsThisNodeMyBasal(currNodeId);
+				if (IsBasalOwner){
+					foundElement = true;
+					break;
+				}
+			}
+			double currentH = (*itElement)->getElementHeight();
+			TissueHeight += currentH;
+			TissueHeightDiscretisationLayers++;
+			currNodeId = (*itElement)->getCorrecpondingApical(currNodeId); //have the next node
+		}
+		if (!foundElement){
+			return false;
+		}
 	}
-	if (!foundElement){
-		return false;
+	else{
+		TissueHeight = Elements[0]->ReferenceShape->height;
+		if (TissueHeight == 0){
+			cout<<"The coulmanr layer is 2D, but the tissue height of the elements is not assigned properly, cannot obtain TissueHeight"<<endl;
+			return false;
+		}
 	}
 	return true;
 }
@@ -2475,6 +2506,12 @@ void Simulation::updateNodePositions(int RKId){
 				Nodes[i]->Velocity[0][j] = 1.0/6.0 * (Nodes[i]->Velocity[0][j] + 2.0 * (Nodes[i]->Velocity[1][j] + Nodes[i]->Velocity[2][j]) + Nodes[i]->Velocity[3][j]);
 				Nodes[i]->Position[j] += Nodes[i]->Velocity[0][j]*dt;
 			}
+			/*if(Nodes[i]->Id == 93 || Nodes[i]->Id == 98 || Nodes[i]->Id == 111 || Nodes[i]->Id == 112 || Nodes[i]->Id == 113 || Nodes[i]->Id == 114){
+				double mag = Nodes[i]->Velocity[0][0]* Nodes[i]->Velocity[0][0] + Nodes[i]->Velocity[0][1]* Nodes[i]->Velocity[0][1] +Nodes[i]->Velocity[0][2]* Nodes[i]->Velocity[0][2];
+				mag = pow(mag,0.5);
+				cout<<" Node :"<<Nodes[i]->Id<<"mass: "<<Nodes[i]->mass<<" Velocity mag:  "<<mag<<" Velocity vec: "<<Nodes[i]->Velocity[0][0]<<" "<<Nodes[i]->Velocity[0][1]<<" "<<Nodes[i]->Velocity[0][2]<<endl;
+
+			}*/
 		//	cout<<endl;
 		}
 	}

@@ -78,12 +78,13 @@ private:
 	void sortColumnarCircumferenceNodeList();
 	void calculateCentreOfNodes(double* centre);
 	void getAverageSideLength(double& periAverageSideLength, double& colAverageSideLength);
+	bool isColumnarLayer3D();
 	bool CalculateTissueHeight();
 	void addPeripodiumNodes(vector <int*> &trianglecornerlist, double height, double d);
 	void AddPeripodiumCircumference(double height, int& index_begin, int &index_end);
 	void AddHorizontalRowOfPeripodiumNodes(vector <int*> &trianglecornerlist, double d, int &index_begin, int &index_end);
-	void AddVerticalRowOfPeripodiumNodes(int& layerCount, int nLayers, vector <int*> &trianglecornerlist, double height,  int &index_begin, int &index_end);
-	void AddPeripodiumCap(int layerCount, vector <int*> &trianglecornerlist, double height, int index_begin, int index_end);
+	void AddVerticalRowOfPeripodiumNodes(int& layerCount, int nLayers, vector <int*> &trianglecornerlist, double height, double lumenHeight, int &index_begin, int &index_end);
+	void AddPeripodiumCap(int layerCount, vector <int*> &trianglecornerlist, double height, double lumenHeight, int index_begin, int index_end);
 	void FillNodeAssociationDueToPeripodium();
 	void assignMassWeightsDueToPeripodium();
 	void addPeripodiumElements(vector <int*> &trianglecornerlist, double height);

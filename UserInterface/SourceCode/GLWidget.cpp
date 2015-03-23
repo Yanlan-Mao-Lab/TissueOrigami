@@ -489,7 +489,6 @@ using namespace std;
  			}
  		}
  	glEnd();
-
  	glDisable(GL_POLYGON_OFFSET_FILL);
  	if (drawTissueCoordinates){
  		drawTissueCoordSystemTriangle(i);
@@ -833,6 +832,7 @@ using namespace std;
  		}
  	glEnd();
 	//drawing them again at z+10 position for easy visualisation (green)
+ 	Sim01->Elements[i]->updatePositionALignedToReferenceForDrawing();
  	glBegin(GL_LINE_STRIP);
 		for (int j =0; j<nLineStrip;++j){
 			int pointId = BorderConnectivity[j];
@@ -886,6 +886,7 @@ using namespace std;
 
 
  	//drawing the positions of element aligned to reference in green
+ 	Sim01->Elements[i]->updatePositionALignedToReferenceForDrawing();
  	glColor3f(0,1,0);
  	glBegin(GL_LINE_STRIP);
  		for (int j =0; j<nLineStrip;++j){

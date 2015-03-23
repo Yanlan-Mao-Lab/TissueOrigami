@@ -11,10 +11,11 @@
 using namespace std;
 
 Triangle::Triangle(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, double h){
-	cout<<"constructing triangle: "<<CurrId<<endl;
+	//cout<<"constructing triangle: "<<CurrId<<endl;
 	nNodes = 3;
 	nDim = 3;	//the triangle has its  nodes in 3D, but the calculations will only use 2 dimensions.
 	Id = CurrId;
+	ShapeDim = 2;	//2D shape
 	NodeIds = new int[3];
 	IdentifierColour = new int[3];
 	E = 10.0;
@@ -98,8 +99,8 @@ Triangle::Triangle(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, double h){
 	normalCrossOrder[1] = 2;
 	VolumePerNode = 0;
 	//apicalZDir = +1.0;
-	displayPositions();
-	cout<<"finalised construction"<<endl;
+	//displayPositions();
+	//cout<<"finalised construction"<<endl;
 }
 
 Triangle::~Triangle(){
@@ -198,6 +199,26 @@ void Triangle::calculateReferenceStiffnessMatrix(){
 	manualB(0,0)=y23; manualB(0,1)=0.0; manualB(0,2)=y31; manualB(0,3)=0.0; manualB(0,4)=y12;  manualB(0,5)=0.0;
 	manualB(1,0)=0.0; manualB(1,1)=x32; manualB(1,2)=0.0; manualB(1,3)=x13; manualB(1,4)=0.0;  manualB(1,5)=x21;
 	manualB(2,0)=x32; manualB(2,1)=y23; manualB(2,2)=x13; manualB(2,3)=y31; manualB(2,4)=x21;  manualB(2,5)=y12;
+	if (this->Id == 1166){
+		cout<<"Element : "<<Id<<endl;
+		cout<<"Reference Shape Positions: "<<endl;
+		for (int i = 0; i<nNodes; ++i){
+			for (int j = 0; j<nDim; ++j){
+				cout<<" 	"<<ReferenceShape->Positions[i][j]<<" ";
+			}
+			cout<<endl;
+		}
+		cout<<"Area: "<<Area<<endl;
+		cout<<"Volume: "<<ReferenceShape->Volume<<endl;
+		cout<<"Height: "<<height<<endl;
+		cout<<"x13: "<<x13<<" "<<x13*Area*2.0<<endl;
+		cout<<"x21: "<<x21<<" "<<x21*Area*2.0<<endl;
+		cout<<"x32: "<<x32<<" "<<x32*Area*2.0<<endl;
+		cout<<"y12: "<<y12<<" "<<y12*Area*2.0<<endl;
+		cout<<"y23: "<<y23<<" "<<y23*Area*2.0<<endl;
+		cout<<"y31: "<<y31<<" "<<y31*Area*2.0<<endl;
+		displayMatrix(manualB, "manulaB");
+	}
 	matrix<double> manualBE  = zero_matrix<double>(dim*n, 3);
 	matrix<double> manualBT = trans(manualB);
 	boost::numeric::ublas::axpy_prod(manualBT,height*Area*D,manualBE);
@@ -345,15 +366,40 @@ void Triangle::calculateCurrk(boost::numeric::ublas::matrix<double>& currk, boos
 void Triangle::calculateReferenceVolume(){
 	double x1 = ReferenceShape->Positions[0][0];
 	double y1 = ReferenceShape->Positions[0][1];
+	double z1 = ReferenceShape->Positions[0][2];
 	double x2 = ReferenceShape->Positions[1][0];
 	double y2 = ReferenceShape->Positions[1][1];
+	double z2 = ReferenceShape->Positions[1][2];
 	double x3 = ReferenceShape->Positions[2][0];
 	double y3 = ReferenceShape->Positions[2][1];
-	ReferenceShape->Volume = 0.5 * ReferenceShape->height * (x1*y2+x2*y3+x3*y1-x2*y1-x3*y2-x1*y3);
+	double z3 = ReferenceShape->Positions[2][2];
+	double* v1 = new double[3];
+	v1[0] = x2-x1;
+	v1[1] = y2-y1;
+	v1[2] = z2-z1;
+	double* v2 = new double [3];
+	v2[0] = x3-x1;
+	v2[1] = y3-y1;
+	v2[2] = z3-z1;
+	double* cross = new double[3];
+	crossProduct3D(v1,v2,cross);
+	double area = 0.5 * pow(cross[0]*cross[0] + cross[1]*cross[1] + cross[2]*cross[2],0.5) ;
+	ReferenceShape->Volume =  ReferenceShape->height * area ;
+	/*if (Id == 1166){
+		cout<<"Id "<<Id<<" , area: "<<area<<" height: "<< ReferenceShape->height<<" volume: "<<ReferenceShape->Volume <<endl;
+		cout<<"Id "<<Id<<" , v1: "<<v1[0]<<" "<<v1[1]<<" "<<v1[2]<<" v2: "<<v2[0]<<" "<<v2[1]<<" "<<v2[2]<<" cross: "<<cross[0]<<" "<<cross[1]<<" "<<cross[2]<<endl;
+		cout<<"pnt1: "<<x1<<" "<<y1<<" pnt2: "<<x2<<" "<<y2<<" pnt3: "<<x3<<" "<<endl;
+		displayPositions();
+		displayReferencePositions();
+	}*/
+	//ReferenceShape->Volume = 0.5 * ReferenceShape->height * (x1*y2+x2*y3+x3*y1-x2*y1-x3*y2-x1*y3);
 	if (ReferenceShape->Volume<0){
 		ReferenceShape->Volume *=(-1.0);
 	}
 	VolumePerNode = ReferenceShape->Volume/nNodes;
+	//delete[] v1;
+	//delete[] v2;
+	//delete[] cross;
 }
 
 void Triangle::checkHealth(){
@@ -399,10 +445,6 @@ void Triangle::AlignReferenceApicalNormalToZ(double* SystemCentre){
 		constructRotationMatrix(c,s,rotAx,rotMat);	//calculating the rotation matrix
 		//You need to carry out a rotation:
 		rotateReferenceElementByRotationMatrix(rotMat);
-		if (Id == 38){
-			cout<<"Element: "<<Id<<"Reference Matrix after z-alignment"<<endl;
-			displayReferencePositions();
-		}
 		delete[] rotAx;
 		delete[] rotMat;
 	}
@@ -476,9 +518,6 @@ void Triangle::calculateApicalNormalCrossOrder(double* SystemCentre){
 		normalCrossOrder[0] =1;
 		normalCrossOrder[1] =2;
 	}*/
-	if (Id == 38){
-		cout<<"Triangle: "<<Id<<" vecToCentre: "<<vecToCentre[0]<<" "<<vecToCentre[1]<<" "<<vecToCentre[2]<<" cross order: "<<normalCrossOrder[0]<<" "<<normalCrossOrder[1]<<endl;
-	}
 	delete[] vec0;
 	delete[] vec1;
 	delete[] normal;
@@ -516,6 +555,7 @@ void 	Triangle::correctFor2DAlignment(){
 	double c, s;
 	calculateRotationAngleSinCos(normal,z,c,s);  //align normal to z
 	if (c<0.9998){
+		//cout<<"Element: "<<Id<<" correction for 2D alignment, c: "<<c<<endl;
 		double *rotAx;
 		rotAx = new double[3];
 		double *rotMat;

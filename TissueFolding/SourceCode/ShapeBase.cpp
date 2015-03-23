@@ -1325,10 +1325,10 @@ void  ShapeBase::rotateReferenceElementByRotationMatrix(double* rotMat){
 }
 
 void	ShapeBase::calculateForces(int RKId, double ***SystemForces, vector <Node*>& Nodes, ofstream& outputFile){
-	if (ShapeType == 1 || ShapeType == 2 || ShapeType == 3){
+	if (ShapeDim == 3){		//3D element
 		calculateForces3D(RKId, SystemForces, Nodes, outputFile);
 	}
-	else if (ShapeType == 4){
+	else if (ShapeDim == 2){	//2D element
 		calculateForces2D(RKId, SystemForces, Nodes, outputFile);
 	}
 }
@@ -1415,23 +1415,10 @@ void	ShapeBase::calculateForces3D(int RKId, double ***SystemForces, vector <Node
 			counter++;
 		}
 	}
-	/*if (Id == 442 || Id == 197){
-		cout<<"element id: "<<Id<<" RK: "<<RKId<<"system Forces: "<<endl;
-			for (int i = 0; i<nNodes; ++i){
-				cout<<" Node: "<<NodeIds[i]<<" ";
-				for (int j = 0; j<3; ++j){
-					cout<<SystemForces[RKId][NodeIds[i]][j]<<" ";
-				}
-				cout<<endl;
-			}
-			displayMatrix(Strain,"Strain");
-			//displayMatrix(PlasticStrain,"PlasticStrain");
-			//displayMatrix(NetStrain,"NetStrain");
-			//displayMatrix(Forces2D,"Forces2D");
-			//displayMatrix(forcesInReferenceCoordsMat,"forcesInReferenceCoordsMat");
-			//displayMatrix(forcesInWorldT,"forcesInWorldT");
-			//displayMatrix(Forces,"Forces");
-	}*/
+}
+
+void	ShapeBase::updatePositionALignedToReferenceForDrawing(){
+	alignElementOnReference();
 }
 
 void	ShapeBase::calculateForces2D(int RKId, double ***SystemForces, vector <Node*>& Nodes, ofstream& outputFile){
@@ -1448,7 +1435,9 @@ void	ShapeBase::calculateForces2D(int RKId, double ***SystemForces, vector <Node
 		//I do not need to re-calculate alignment, the change will be negligable, but I still need to update the positions
 		//using the same rotation matrices.
 		//outputFile<<"  id: "<<Id<<" Updating positions aligned to reference"<<endl;
-		updatePositionsAlignedToReferenceForRK();
+		//updatePositionsAlignedToReferenceForRK();
+		//No correct alignemtn every turn:
+		alignElementOnReference();
 	}
 	//cout<<"finalised positions aligned to ref"<<endl;
 	int counter = 0;
@@ -1498,6 +1487,47 @@ void	ShapeBase::calculateForces2D(int RKId, double ***SystemForces, vector <Node
 		cout<<"RKID: "<<RKId<<" Element: "<<Id<<" Net Strains: "<<NetStrain[0]<<" "<<NetStrain[1]<<" "<<NetStrain[2]<<endl;
 	}*/
 	//cout<<"calculated  NetStrain"<<endl;
+	/*if(Id == 1166 || Id == 1164 || Id == 1162 || Id == 1168 || Id == 1170 || Id == 1095 || Id == 1093 || Id == 1091 || Id == 1097 || Id == 1099){
+		cout<<"RK: "<<RKId<<" Element: "<<Id<<" Positions: "<<endl;
+		for (int i = 0; i<nNodes; ++i){
+			for (int j = 0; j<nDim; ++j){
+				cout<<" 	"<<Positions[i][j]<<" ";
+			}
+			cout<<endl;
+		}
+		cout<<"RK: "<<RKId<<" Element: "<<Id<<" PositionsAlignedToReference: "<<endl;
+		for (int i = 0; i<nNodes; ++i){
+			for (int j = 0; j<dim; ++j){
+				cout<<" 	"<<PositionsAlignedToReference[i][j]<<" ";
+			}
+			cout<<endl;
+		}
+		cout<<"RK: "<<RKId<<" Element: "<<Id<<" ReferenceShape->Positions: "<<endl;
+		for (int i = 0; i<nNodes; ++i){
+			for (int j = 0; j<nDim; ++j){
+				cout<<" 	"<<ReferenceShape->Positions[i][j]<<" ";
+			}
+			cout<<endl;
+		}
+		double* v1;
+		v1 = new double[3];
+		double* v2;
+		v2 = new double[3];
+		double* vcross;
+		vcross = new double[3];
+		for (int i=0;i<3;i++){
+			v1[i] =  PositionsAlignedToReference[1][i] -  PositionsAlignedToReference[0][i];
+			v2[i] =  PositionsAlignedToReference[2][i] -  PositionsAlignedToReference[0][i];
+		}
+		crossProduct3D(v1,v2,vcross);
+		cout<<"positions aligned to reference normal: "<<vcross[0]<<" "<<vcross[1]<<"  "<<vcross[2]<<endl;
+		cout<<"Element "<<Id <<" ";
+		displayMatrix(Strain2D,"Strain2D");
+		cout<<"Element "<<Id <<" ";
+		displayMatrix(Strain,"Strain");
+		cout<<"Element "<<Id <<" ";
+		displayMatrix(B,"B");
+	}*/
 	Forces = zero_vector<double>(nNodes*nDim);
 	boost::numeric::ublas::vector<double> Forces2D;
 	Forces2D = zero_vector<double>(nMult);
@@ -1558,19 +1588,6 @@ void	ShapeBase::calculateForces2D(int RKId, double ***SystemForces, vector <Node
 	//	}
 	//	cout<<endl;
 	//}
-	/*
-	if (Id == 442 || Id == 197){
-		cout<<"element id: "<<Id<<" RK: "<<RKId<<"system Forces: "<<endl;
-			for (int i = 0; i<nNodes; ++i){
-				cout<<" Node: "<<NodeIds[i]<<" ";
-				for (int j = 0; j<3; ++j){
-					cout<<SystemForces[RKId][NodeIds[i]][j]<<" ";
-				}
-				cout<<endl;
-			}
-			displayMatrix(Strain,"Strain");
-	}
-	*/
 }
 
 void	ShapeBase::fillNodeNeighbourhood(vector<Node*>& Nodes){

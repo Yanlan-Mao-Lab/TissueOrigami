@@ -46,7 +46,13 @@ int main(int argc, char **argv)
 	}
 	else{
 		Success = Sim01->initiateSystem();
-		cout<<"system initiated"<<endl;
+		if (Success == 0 ){
+			cout<<"System is not initiated successfully, terminating"<<endl;
+			return true;
+		}
+		else{
+			cout<<"system initiated"<<endl;
+		}
 		int n = Sim01->Elements.size();
 		for (int i=0; i<n; ++i){
 			//This is the initial setup, the elements should take the actual positions of the nodes, this corresponds to RK step 4, RKId= 3

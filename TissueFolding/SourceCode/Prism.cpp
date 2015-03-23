@@ -9,6 +9,7 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
 	nNodes = 6;
 	nDim = 3;
 	Id = CurrId;
+	ShapeDim = 3;	//3D shape
 	NodeIds = new int[6];
 	IdentifierColour = new int[3];
 	E = 10.0;

@@ -1,14 +1,14 @@
 InputMeshParameters:
   MeshInputMode(int-seeDocumentation): 4
-  MeshFile(full-path):   /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Wind48hr_04.mesh
+  MeshFile(full-path):   /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Wind48hr_05.mesh
 
 PeripodiumParameters:
   AddPeripodium: 1
   PeripodiumYoungsModulus: 3000.0
 
 TimeParameters:
-  TimeStep(sec): 0.05
-  SimulationLength(sec): 0.1
+  TimeStep(sec): 0.1
+  SimulationLength(sec): 5400
 
 PysicalProperties:
   YoungsModulusApical: 3000.0	YoungsModulusBasal: 3000.0	YoungsModulusMid: 3000.0	Noise(%-int): 0

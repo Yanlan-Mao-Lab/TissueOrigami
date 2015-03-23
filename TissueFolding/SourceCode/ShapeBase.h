@@ -89,6 +89,7 @@ protected:
 
 public:
 	int 	Id;
+	int		ShapeDim;
 	boost::numeric::ublas::matrix<double> LocalGrowthStrainsMat;
 	int* 	NodeIds;
 	virtual ~ShapeBase(){
@@ -176,6 +177,7 @@ public:
 
 
 	void alignElementOnReference();
+	void updatePositionALignedToReferenceForDrawing();
 	virtual void correctFor2DAlignment(){ParentErrorMessage("correctFor2DAlignment");};
 	virtual double getApicalSideLengthAverage(){return ParentErrorMessage("getApicalSideLengthAverage",0.0);};
 	virtual void getApicalTriangles(vector <int> &ApicalTriangles){ParentErrorMessage("getApicalTriangles");};
