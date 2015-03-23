@@ -631,19 +631,25 @@ using namespace std;
  }
 
  void GLWidget::getForceColour(float* OutputColour, float Data){
-	 double scale2[2] = {0,10.0};
+	 double scale2[2] = {0,100.0};
 	 double r = (Data- scale2[0])/(scale2[1]-scale2[0]);
-	 OutputColour[0] = r;
-	 OutputColour[1] = 0.0;
-	 OutputColour[2] = 0.0;
+	 //OutputColour[0] = r;
+	 //OutputColour[1] = 0.0;
+	 //OutputColour[2] = 0.0;
+	 OutputColour[0] = 1.0;
+	 OutputColour[1] = 1.0-r;
+	 OutputColour[2] = 0.8*(1.0-r);
  }
 
  void GLWidget::getVelocityColour(float* OutputColour, float Data){
 	 double scale2[2] = {0,10.0};
 	 double b = (Data- scale2[0])/(scale2[1]-scale2[0]);
-	 OutputColour[0] = 0.0;
-	 OutputColour[1] = b;
-	 OutputColour[2] = 0.0;
+	 //OutputColour[0] = 0.0;
+	 //OutputColour[1] = b;
+	 //OutputColour[2] = 0.0;
+	 OutputColour[0] = 1.0-b;
+	 OutputColour[1] = 1.0;
+	 OutputColour[2] = 0.8*(1.0-b);
  }
 
  void GLWidget::getDisplayColour(float* OutputColour, float Data){
