@@ -33,24 +33,25 @@ class MainWindow : public QMainWindow
 
 public slots:
     void SelectedItemChange();
-    void manualNodeSelection(const QString &);
-    void manualElementSelection(const QString &);
-    void ManualElementSelectionReset();
-    void ManualNodeSelectionReset();
-    void timerSimulationStep();
-    void updateStrain(int);
-    void updateStrainCheckBox(int);
-    void updateStrainSpinBoxes(double);
-    void updatePysProp(int s);
-    void updatePysCheckBox(int);
-    void updatePysPropSpinBoxes(double d);
-    void updateTissueCoordCheckBox(int);
-    void updateNetForceCheckBox(int);
-    void updatePackingForceCheckBox(int);
-    void updateVelocityCheckBox(int);
-    void  updateScaleBarCheckBox(int);
-    void  updatePeripodiumDisplayCheckBox(int s);
-    void  updateColumnarLayerDisplayCheckBox(int s);
+    void	manualNodeSelection(const QString &);
+    void 	manualElementSelection(const QString &);
+    void 	ManualElementSelectionReset();
+    void 	ManualNodeSelectionReset();
+    void 	timerSimulationStep();
+    void 	updateStrain(int);
+    void 	updateStrainCheckBox(int);
+    void 	updateStrainSpinBoxes(double);
+    void 	updatePysProp(int s);
+    void 	updatePysCheckBox(int);
+    void 	updatePysPropSpinBoxes(double d);
+    void 	updateTissueCoordCheckBox(int);
+    void 	updateNetForceCheckBox(int);
+    void 	updatePackingForceCheckBox(int);
+    void 	updateVelocityCheckBox(int);
+    void  	updateScaleBarCheckBox(int);
+    void  	updatePeripodiumDisplayCheckBox(int s);
+    void  	updateColumnarLayerDisplayCheckBox(int s);
+    void  	updateOrthagonalPerspectiveViewToggle();
 
 //signals:
  //   void StrainComboBoxCanged();
@@ -61,6 +62,8 @@ public slots:
     void setUpGLWidget();
     void setUpCentralWidget();
     void setUpSelectionDisplayGrid(QGridLayout *SelectionDisplayGrid);
+    void setUpProjectDisplayOptionGrid(QGridLayout *ProjectDisplayOptionsGrid);
+    void setUpViewOptionsGrid(QGridLayout *ViewOptionsGrid);
     void setSelectionByIdSection(QFont font, QFont boldFont, QGridLayout *SelectionDisplayGrid);
     void setCoordBoxes(QFont font, QFont boldFont, QGridLayout *SelectionDisplayGrid);
     void setItemSelectionTitles(QFont font, QFont boldFont, QGridLayout *SelectionDisplayGrid);
@@ -72,8 +75,8 @@ public slots:
     QLineEdit 	*NameBox;
     QLineEdit 	*NodeSelectBox;
     QLineEdit 	*ElementSelectBox;
-    QTimer *timer;
-    int nCoordBox;
+    QTimer 		*timer;
+    int 		nCoordBox;
     QLineEdit 		*CoordBox_id[6];
     QLineEdit 		*CoordBox_x[6];
     QLineEdit 		*CoordBox_y[6];
@@ -87,6 +90,7 @@ public slots:
     QGroupBox   	*ColourCodingBox;
     QCheckBox		*DisplayPreferencesCheckBoxes[7];
     QLabel			*SimTime;
+    QPushButton		*PerspectiveButton;
  };
 
 

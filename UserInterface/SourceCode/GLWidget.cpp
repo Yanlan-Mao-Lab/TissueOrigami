@@ -64,6 +64,15 @@ using namespace std;
      drawColumnar = true;
      ManualNodeSelection = false;
      ManualSelectedNodeId = -100;
+     PerspectiveView = true;
+     orthoViewLimits[0] = -250;
+     orthoViewLimits[1] =  250;
+     orthoViewLimits[2] = -250;
+     orthoViewLimits[3] =  250;
+     orthoViewLimits[4] = -1000;
+     orthoViewLimits[5] =  1000;
+
+
      cout<<"gl initiated"<<endl;
  }
 
@@ -115,7 +124,13 @@ using namespace std;
 
 	 glMatrixMode(GL_PROJECTION);
 	 glLoadIdentity();
-	 glFrustum(-1*aspectratio, 1*aspectratio, -1, 1, 1, 1000); // near and far match your triangle Z distance
+
+	 if (PerspectiveView) {
+		 glFrustum(-1*aspectratio, 1*aspectratio, -1, 1, 1, 1000); // near and far match your triangle Z distance
+	 }
+	 else{
+		 glOrtho(orthoViewLimits[2]*aspectratio, orthoViewLimits[3]*aspectratio, orthoViewLimits[2], orthoViewLimits[3], orthoViewLimits[4],orthoViewLimits[5]);
+	 }
 
 	 glMatrixMode(GL_MODELVIEW);
 
@@ -274,6 +289,7 @@ void GLWidget::highlightNode(int i){
 		 }
 	// glPopMatrix();
  }
+
  void GLWidget::constructNodeColourList(){
 	float threshold = 1E-10;
 	vector<Node*>::iterator itNode;
@@ -1149,7 +1165,17 @@ void GLWidget::highlightNode(int i){
 	 float numDegrees = event->delta() / 8;
 	 float numSteps = numDegrees / 30;
 	 float speed = 5.0;
-	 obj_pos[2] += -speed*numSteps;
+	 //if (PerspectiveView){
+		 obj_pos[2] += -speed*numSteps;
+	 //}
+	 //else{
+		 //ortagonal view, the zoomiing should change the x & y clipping
+		// speed *= 2.0;
+		 orthoViewLimits[2] += speed*numSteps;
+		 orthoViewLimits[3] -= speed*numSteps;
+		 orthoViewLimits[0] = orthoViewLimits[2]*aspectratio;
+		 orthoViewLimits[1] = orthoViewLimits[3]*aspectratio;
+	 //}
 	 updateGL();
   }
 

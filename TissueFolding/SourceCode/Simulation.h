@@ -84,7 +84,8 @@ private:
 	void AddPeripodiumCircumference(double height, int& index_begin, int &index_end);
 	void AddHorizontalRowOfPeripodiumNodes(vector <int*> &trianglecornerlist, double d, int &index_begin, int &index_end);
 	void AddVerticalRowOfPeripodiumNodes(int& layerCount, int nLayers, vector <int*> &trianglecornerlist, double height, double lumenHeight, int &index_begin, int &index_end);
-	void AddPeripodiumCap(int layerCount, vector <int*> &trianglecornerlist, double height, double lumenHeight, int index_begin, int index_end);
+	void AddPeripodiumCapToMidAttached(int layerCount, vector <int*> &trianglecornerlist, double height, double lumenHeight, int index_begin, int index_end);
+	void AddPeripodiumCapToApicalAttached(int layerCount, vector <int*> &trianglecornerlist, double height, double lumenHeight, int index_begin, int index_end);
 	void FillNodeAssociationDueToPeripodium();
 	void assignMassWeightsDueToPeripodium();
 	void addPeripodiumElements(vector <int*> &trianglecornerlist, double height);
@@ -170,6 +171,7 @@ public:
 	double*** PackingForces;
 	double SystemCentre[3];
 	bool AddPeripodium;
+	int PeripodiumType;
 	bool stretcherAttached;
 	int StretchInitialStep, StretchEndStep;
 	double StretchMin, StretchMax, StretchStrain;
@@ -195,6 +197,8 @@ public:
 	void redistributePeripodiumForces(int RKId);
 	void updateNodePositions(int RKId);
 	void updateNodePositionsForPeripodiumCircumference(int RKId);
+	void realignPositionsForMidAttachedPeripodialMembrane(int RKId);
+	void realignPositionsForApicalAttachedPeripodialMembrane(int RKId);
 	void updateElementPositions(int RKId);
 	void updateElementPositionsSingle(int RKId, int i );
 	bool initiateSavedSystem();

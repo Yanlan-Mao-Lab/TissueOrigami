@@ -30,29 +30,29 @@ using namespace std;
      QSize minimumSizeHint() const;
      QSize sizeHint() const;
      void manualElementSelection(int i);
-     void manualNodeSelection(int i);
-     bool ItemSelected;
-     string SelectedItemName;
-     int SelectedItemIndex;
-     bool ManualNodeSelection;
-     int ManualSelectedNodeId;
-     bool DisplayStrains;
-     float DisplayStrainRange[2];
-     int StrainToDisplay;
-     bool DisplayPysProp;
-     int PysPropToDisplay;
-     float DisplayPysPropRange[5][2];	//current range
-     float DisplayPysPropBounds[5][4];  //the minimum and maximum they can get
+     void 	manualNodeSelection(int i);
+     bool 		ItemSelected;
+     string 	SelectedItemName;
+     int 		SelectedItemIndex;
+     bool 		ManualNodeSelection;
+     int	 	ManualSelectedNodeId;
+     bool 		DisplayStrains;
+     float 		DisplayStrainRange[2];
+     int 		StrainToDisplay;
+     bool 		DisplayPysProp;
+     int 		PysPropToDisplay;
+     float 		DisplayPysPropRange[5][2];	//current range
+     float 		DisplayPysPropBounds[5][4];  //the minimum and maximum they can get
      vector <QString> SelectedPos;
      vector <QString> SelectedId;
-     bool drawTissueCoordinates;
-     bool drawNetForces;
-     bool drawPackingForces;
-     bool drawVelocities;
-     bool drawTissueScaleBar;
-     bool drawPeripodium;
-     bool drawColumnar;
-
+     bool 		drawTissueCoordinates;
+     bool 		drawNetForces;
+     bool 		drawPackingForces;
+     bool 		drawVelocities;
+     bool 		drawTissueScaleBar;
+     bool 		drawPeripodium;
+     bool 		drawColumnar;
+     bool 		PerspectiveView;
 
  signals:
  	 void SelectedItemChanged();
@@ -105,7 +105,7 @@ using namespace std;
      float 	ReferenceLineThickness, MainShapeLineThickness;
      bool 	DisplayFixedNodes;
      float** NodeColourList;
-
+     float orthoViewLimits[6];
     // QColor qtGreen;
      QColor 	qtPurple;
      double 	Qcurr[4], Qlast[4];

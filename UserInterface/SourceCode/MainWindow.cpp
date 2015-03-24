@@ -68,6 +68,17 @@ void MainWindow::generateControlPanel(){
 	setUpSelectionDisplayGrid(SelectionDisplayGrid);
 	ControlPanelMainHBox->addLayout(SelectionDisplayGrid,Qt::AlignTop);
 
+	//Generating project display options panel:
+	QGridLayout *ProjectDisplayOptionsGrid = new QGridLayout;
+	setUpProjectDisplayOptionGrid(ProjectDisplayOptionsGrid);
+	ControlPanelMainHBox->addLayout(ProjectDisplayOptionsGrid,Qt::AlignTop);
+
+
+	//Generating view options Panel:
+	QGridLayout *ViewOptionsGrid = new QGridLayout;
+	setUpViewOptionsGrid(ViewOptionsGrid);
+	ControlPanelMainHBox->addLayout(ViewOptionsGrid,Qt::AlignBottom);
+
 	//Generating the quit button:
 	QPushButton	*QuitButton = new QPushButton("Quit",this);
 	QuitButton->setFixedWidth(100);
@@ -106,19 +117,26 @@ void MainWindow::setUpCentralWidget(){
     connect(MainGLWidget, SIGNAL(NeedToClearManualNodeSelection()), this, SLOT(ManualNodeSelectionReset()));
 }
 
-void MainWindow::setSelectionByIdSection(QFont font, QFont boldFont, QGridLayout *SelectionDisplayGrid){
-	QLabel *NodeSelectTitle = new QLabel("Select Node:");
+void MainWindow::setSelectionByIdSection(QFont font1, QFont boldFont1, QGridLayout *SelectionDisplayGrid){
+	QFont boldFont("SansSerif", 9, QFont::Bold,true);
+	QFont font("SansSerif", 9);
+	QLabel *NodeSelectTitle = new QLabel("Select <br> Node:");
+	NodeSelectTitle->setFont(font);
+	//setWordWrap(true);
 	NodeSelectBox = new QLineEdit();
-	NodeSelectBox->setPlaceholderText ( QString("# from 0 to %1").arg(Sim01->Nodes.size()) );
+	NodeSelectBox->setPlaceholderText ( QString("# 0-%1").arg(Sim01->Nodes.size()-1) );
 	NodeSelectBox->setFont(font);
 	NodeSelectBox->setStyleSheet("background-color: white");
+	NodeSelectBox->setFixedWidth(70);
 	NodeSelectBox->setValidator( new QIntValidator(0, Sim01->Nodes.size()-1, this) );
 
-	QLabel *ElementSelectTitle = new QLabel("Select Element:");
+	QLabel *ElementSelectTitle = new QLabel("Select <br> Element:");
+	ElementSelectTitle->setFont(font);
 	ElementSelectBox = new QLineEdit();
-	ElementSelectBox->setPlaceholderText ( QString("# from 0 to %1").arg(Sim01->Elements.size()) );
+	ElementSelectBox->setPlaceholderText ( QString("# 0-%1").arg(Sim01->Elements.size()-1) );
 	ElementSelectBox->setFont(font);
 	ElementSelectBox->setStyleSheet("background-color: white");
+	ElementSelectBox->setFixedWidth(70);
 	ElementSelectBox->setValidator( new QIntValidator(0, Sim01->Elements.size()-1, this) );
 	connect(NodeSelectBox, SIGNAL(textChanged(const QString &)), this, SLOT(manualNodeSelection(const QString &)));
 
@@ -133,21 +151,38 @@ void MainWindow::setUpSelectionDisplayGrid(QGridLayout *SelectionDisplayGrid){
 	QFont boldFont("SansSerif", 10, QFont::Bold,true);
 	QFont font("SansSerif", 10);
 	setItemSelectionTitles(font, boldFont, SelectionDisplayGrid);
-	setSelectionByIdSection(font, boldFont, SelectionDisplayGrid);
 	setCoordBoxes(font, boldFont, SelectionDisplayGrid);
-
-	cout<<"inside setting selection display grid"<<endl;
-	setStrainDisplayMenu(SelectionDisplayGrid);
-	cout<<"setStrainDisplayMenu"<<endl;
-	setPysPropDisplayMenu(SelectionDisplayGrid);
-	cout<<"setPysPropDisplayMenu"<<endl;
-	setDisplayPreferences(SelectionDisplayGrid);
-	cout<<"setDisplayPreferencesMenu"<<endl;
-	//Adding a last row with high stretch to push the upper columns to the top of the window:
-	SelectionDisplayGrid->setRowStretch(14+nCoordBox,10);
+	setSelectionByIdSection(font, boldFont, SelectionDisplayGrid);
 }
 
-void MainWindow::setStrainDisplayMenu(QGridLayout *SelectionDisplayGrid){
+void MainWindow::setUpProjectDisplayOptionGrid(QGridLayout *ProjectDisplayOptionsGrid){
+	QFont boldFont("SansSerif", 10, QFont::Bold,true);
+	QFont font("SansSerif", 10);
+	setStrainDisplayMenu(ProjectDisplayOptionsGrid);
+	setPysPropDisplayMenu(ProjectDisplayOptionsGrid);
+	setDisplayPreferences(ProjectDisplayOptionsGrid);
+	//Adding a last row with high stretch to push the upper columns to the top of the window:
+	ProjectDisplayOptionsGrid->setRowStretch(10,10);
+
+
+}
+void MainWindow::setUpViewOptionsGrid(QGridLayout *ViewOptionsGrid){
+	QFont boldFont("SansSerif", 10, QFont::Bold,true);
+	QFont font("SansSerif", 10);
+	//Adding first row with high stretch to push the upper columns to the bottom of the window:
+	ViewOptionsGrid->setRowStretch(0,10);
+	//Adding last column with high stretch to push the previous columns to the left of the window:
+	ViewOptionsGrid->setColumnStretch(10,10);
+	PerspectiveButton = new QPushButton("Switch To \n Orthagonal View",this);
+	PerspectiveButton->setFixedWidth(150);
+	//Connecting the button to toggle function
+	connect(PerspectiveButton, SIGNAL(clicked()), this,SLOT(updateOrthagonalPerspectiveViewToggle()));
+	ViewOptionsGrid->addWidget(PerspectiveButton,1,0,1,1);
+
+
+}
+
+void MainWindow::setStrainDisplayMenu(QGridLayout *ProjectDisplayOptionsGrid){
 
 	DisplayCheckBoxes[0] = new QCheckBox("Strain");
 	DisplayCheckBoxes[0]->setChecked(false);
@@ -174,13 +209,17 @@ void MainWindow::setStrainDisplayMenu(QGridLayout *SelectionDisplayGrid){
     connect(StrainSpinBoxes[0], SIGNAL(valueChanged (double)), this, SLOT(updateStrainSpinBoxes(double)));
     connect(StrainSpinBoxes[1], SIGNAL(valueChanged (double)), this, SLOT(updateStrainSpinBoxes(double)));
 
-	SelectionDisplayGrid->addWidget(DisplayCheckBoxes[0],4+nCoordBox,0,1,2,Qt::AlignLeft);
-	SelectionDisplayGrid->addWidget(StrainComboBox,5+nCoordBox,0,1,2,Qt::AlignLeft);
-	SelectionDisplayGrid->addWidget(StrainSpinBoxes[0],6+nCoordBox,0,1,1,Qt::AlignLeft);
-	SelectionDisplayGrid->addWidget(StrainSpinBoxes[1],6+nCoordBox,1,1,1,Qt::AlignLeft);
+    //ProjectDisplayOptionsGrid->addWidget(DisplayCheckBoxes[0],4+nCoordBox,0,1,2,Qt::AlignLeft);
+    //ProjectDisplayOptionsGrid->addWidget(StrainComboBox,5+nCoordBox,0,1,2,Qt::AlignLeft);
+    //ProjectDisplayOptionsGrid->addWidget(StrainSpinBoxes[0],6+nCoordBox,0,1,1,Qt::AlignLeft);
+    //ProjectDisplayOptionsGrid->addWidget(StrainSpinBoxes[1],6+nCoordBox,1,1,1,Qt::AlignLeft);
+    ProjectDisplayOptionsGrid->addWidget(DisplayCheckBoxes[0],0,0,1,2,Qt::AlignLeft);
+    ProjectDisplayOptionsGrid->addWidget(StrainComboBox,1,0,1,2,Qt::AlignLeft);
+    ProjectDisplayOptionsGrid->addWidget(StrainSpinBoxes[0],2,0,1,1,Qt::AlignLeft);
+    ProjectDisplayOptionsGrid->addWidget(StrainSpinBoxes[1],2,1,1,1,Qt::AlignLeft);
 }
 
-void MainWindow::setPysPropDisplayMenu(QGridLayout *SelectionDisplayGrid){
+void MainWindow::setPysPropDisplayMenu(QGridLayout *ProjectDisplayOptionsGrid){
 
 	DisplayCheckBoxes[1] = new QCheckBox("Physical Properties");
 	DisplayCheckBoxes[1]->setChecked(false);
@@ -208,14 +247,19 @@ void MainWindow::setPysPropDisplayMenu(QGridLayout *SelectionDisplayGrid){
     connect(PysPropSpinBoxes[0], SIGNAL(valueChanged (double)), this, SLOT(updatePysPropSpinBoxes(double)));
     connect(PysPropSpinBoxes[1], SIGNAL(valueChanged (double)), this, SLOT(updatePysPropSpinBoxes(double)));
 
-	SelectionDisplayGrid->addWidget(DisplayCheckBoxes[1],4+nCoordBox,2,1,2,Qt::AlignLeft);
-	SelectionDisplayGrid->addWidget(PysPropComboBox,5+nCoordBox,2,1,2,Qt::AlignLeft);
-	SelectionDisplayGrid->addWidget(PysPropSpinBoxes[0],6+nCoordBox,2,1,1,Qt::AlignLeft);
-	SelectionDisplayGrid->addWidget(PysPropSpinBoxes[1],6+nCoordBox,3,1,1,Qt::AlignLeft);
+
+    //SelectionDisplayGrid->addWidget(DisplayCheckBoxes[1],4+nCoordBox,2,1,2,Qt::AlignLeft);
+	//SelectionDisplayGrid->addWidget(PysPropComboBox,5+nCoordBox,2,1,2,Qt::AlignLeft);
+	//SelectionDisplayGrid->addWidget(PysPropSpinBoxes[0],6+nCoordBox,2,1,1,Qt::AlignLeft);
+	//SelectionDisplayGrid->addWidget(PysPropSpinBoxes[1],6+nCoordBox,3,1,1,Qt::AlignLeft);
+    ProjectDisplayOptionsGrid->addWidget(DisplayCheckBoxes[1],0,2,1,2,Qt::AlignLeft);
+    ProjectDisplayOptionsGrid->addWidget(PysPropComboBox,1,2,1,2,Qt::AlignLeft);
+    ProjectDisplayOptionsGrid->addWidget(PysPropSpinBoxes[0],2,2,1,1,Qt::AlignLeft);
+    ProjectDisplayOptionsGrid->addWidget(PysPropSpinBoxes[1],2,3,1,1,Qt::AlignLeft);
 }
 
 void MainWindow::setItemSelectionTitles(QFont font, QFont boldFont, QGridLayout *SelectionDisplayGrid){
-	QLabel *PanelTitle = new QLabel("SelectedItemProperties");
+	QLabel *PanelTitle = new QLabel("Selected Item Properties");
 	PanelTitle->setFont(boldFont);
 	QLabel *NameTitle = new QLabel("Name:");
 	NameTitle->setFont(boldFont);
@@ -224,8 +268,8 @@ void MainWindow::setItemSelectionTitles(QFont font, QFont boldFont, QGridLayout 
 	NameBox->setReadOnly(true);
 	NameBox->setFont(font);
 
-	QLabel *CoordTitle = new QLabel("Coordinates");
-	CoordTitle ->setFont(boldFont);
+	//QLabel *CoordTitle = new QLabel("Coordinates");
+	//CoordTitle ->setFont(boldFont);
 	QLabel *NodeIdTitle = new QLabel("id");
 	NodeIdTitle ->setFont(boldFont);
 	QLabel *CoordTitlex = new QLabel("x");
@@ -239,11 +283,11 @@ void MainWindow::setItemSelectionTitles(QFont font, QFont boldFont, QGridLayout 
 	SelectionDisplayGrid->addWidget(NameTitle,1,0,1,1,Qt::AlignLeft);
 	SelectionDisplayGrid->addWidget(NameBox,1,1,1,2,Qt::AlignLeft);
 
-	SelectionDisplayGrid->addWidget(CoordTitle,2,0,1,3,Qt::AlignHCenter);
-	SelectionDisplayGrid->addWidget(NodeIdTitle,3,1,1,1,Qt::AlignHCenter);
-	SelectionDisplayGrid->addWidget(CoordTitlex,3,2,1,1,Qt::AlignHCenter);
-	SelectionDisplayGrid->addWidget(CoordTitley,3,3,1,1,Qt::AlignHCenter);
-	SelectionDisplayGrid->addWidget(CoordTitlez,3,4,1,1,Qt::AlignHCenter);
+	//SelectionDisplayGrid->addWidget(CoordTitle,2,0,1,3,Qt::AlignHCenter);
+	SelectionDisplayGrid->addWidget(NodeIdTitle,2,1,1,1,Qt::AlignHCenter);
+	SelectionDisplayGrid->addWidget(CoordTitlex,2,2,1,1,Qt::AlignHCenter);
+	SelectionDisplayGrid->addWidget(CoordTitley,2,3,1,1,Qt::AlignHCenter);
+	SelectionDisplayGrid->addWidget(CoordTitlez,2,4,1,1,Qt::AlignHCenter);
 }
 
 void MainWindow::setCoordBoxes(QFont font, QFont boldFont, QGridLayout *SelectionDisplayGrid){
@@ -275,15 +319,15 @@ void MainWindow::setCoordBoxes(QFont font, QFont boldFont, QGridLayout *Selectio
 		CoordBox_x[i]->setFixedWidth(70);
 		CoordBox_y[i]->setFixedWidth(70);
 		CoordBox_z[i]->setFixedWidth(70);
-		SelectionDisplayGrid->addWidget(CoordLabel_n[i],i+4,0,1,1,Qt::AlignLeft);
-		SelectionDisplayGrid->addWidget(CoordBox_id[i],i+4,1,1,1,Qt::AlignLeft);
-		SelectionDisplayGrid->addWidget(CoordBox_x[i],i+4,2,1,1,Qt::AlignLeft);
-		SelectionDisplayGrid->addWidget(CoordBox_y[i],i+4,3,1,1,Qt::AlignLeft);
-		SelectionDisplayGrid->addWidget(CoordBox_z[i],i+4,4,1,1,Qt::AlignLeft);
+		SelectionDisplayGrid->addWidget(CoordLabel_n[i],i+3,0,1,1,Qt::AlignLeft);
+		SelectionDisplayGrid->addWidget(CoordBox_id[i],i+3,1,1,1,Qt::AlignLeft);
+		SelectionDisplayGrid->addWidget(CoordBox_x[i],i+3,2,1,1,Qt::AlignLeft);
+		SelectionDisplayGrid->addWidget(CoordBox_y[i],i+3,3,1,1,Qt::AlignLeft);
+		SelectionDisplayGrid->addWidget(CoordBox_z[i],i+3,4,1,1,Qt::AlignLeft);
 	}
 }
 
-void MainWindow::setDisplayPreferences(QGridLayout *SelectionDisplayGrid){
+void MainWindow::setDisplayPreferences(QGridLayout *ProjectDisplayOptionsGrid){
 	//draw tissue coordinate system CheckBox
 	DisplayPreferencesCheckBoxes[0] = new QCheckBox("Tissue Coordinates");
 	DisplayPreferencesCheckBoxes[0]->setChecked(false);
@@ -310,13 +354,34 @@ void MainWindow::setDisplayPreferences(QGridLayout *SelectionDisplayGrid){
 	DisplayPreferencesCheckBoxes[6]->setChecked(false);
 	connect(DisplayPreferencesCheckBoxes[6] , SIGNAL(stateChanged(int)),this,SLOT(updatePackingForceCheckBox(int)));
 
-	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[0],7+nCoordBox,0,1,1,Qt::AlignLeft);  // Tissue Coordinates
-	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[1],8+nCoordBox,0,1,2,Qt::AlignLeft);  // Net Forces
-	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[6],8+nCoordBox,2,1,2,Qt::AlignLeft);  // Packing Forces
-	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[2],9+nCoordBox,0,1,1,Qt::AlignLeft);  // Velocities
-	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[3],10+nCoordBox,0,1,1,Qt::AlignLeft); // Scale Bar
-	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[4],11+nCoordBox,0,1,1,Qt::AlignLeft); // Display Peripodium
-	SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[5],12+nCoordBox,0,1,1,Qt::AlignLeft); // Display Columnar Layer
+	//SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[0],7+nCoordBox,0,1,1,Qt::AlignLeft);  // Tissue Coordinates
+	//SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[1],8+nCoordBox,0,1,2,Qt::AlignLeft);  // Net Forces
+	//SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[6],8+nCoordBox,2,1,2,Qt::AlignLeft);  // Packing Forces
+	//SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[2],9+nCoordBox,0,1,1,Qt::AlignLeft);  // Velocities
+	//SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[3],10+nCoordBox,0,1,1,Qt::AlignLeft); // Scale Bar
+	//SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[4],11+nCoordBox,0,1,1,Qt::AlignLeft); // Display Peripodium
+	//SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[5],12+nCoordBox,0,1,1,Qt::AlignLeft); // Display Columnar Layer
+
+	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[0],3,0,1,1,Qt::AlignLeft);  // Tissue Coordinates
+	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[1],4,0,1,2,Qt::AlignLeft);  // Net Forces
+	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[6],4,2,1,2,Qt::AlignLeft);  // Packing Forces
+	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[2],5,0,1,1,Qt::AlignLeft);  // Velocities
+	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[3],6,0,1,1,Qt::AlignLeft); // Scale Bar
+	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[4],7,0,1,1,Qt::AlignLeft); // Display Peripodium
+	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[5],8,0,1,1,Qt::AlignLeft); // Display Columnar Layer
+}
+
+void  MainWindow::updateOrthagonalPerspectiveViewToggle(){
+	//cout<<"button clicked, perspevctiveView: "<<MainGLWidget->PerspectiveView<<endl;
+	if (MainGLWidget->PerspectiveView){
+		//the view was perspective, toggling to orthagonal, and changing the text in button for future toggle choice:
+		MainGLWidget->PerspectiveView = false;
+		PerspectiveButton->setText("Switch To \n Perspective View");
+	}
+	else{
+		MainGLWidget->PerspectiveView = true;
+		PerspectiveButton->setText("Switch To \n Orthagonal View");
+	}
 }
 
 void  MainWindow::updateTissueCoordCheckBox(int s){
@@ -492,7 +557,7 @@ void MainWindow::ManualElementSelectionReset(){
 	MainGLWidget->ManualSelectedNodeId = -100;
 	ElementSelectBox->blockSignals(true);
 	ElementSelectBox->setValidator( new QIntValidator(0, Sim01->Elements.size()-1, this) );
-	ElementSelectBox->setPlaceholderText ( QString("# from 0 to %1").arg(Sim01->Elements.size()) );
+	ElementSelectBox->setPlaceholderText ( QString("# 0 to %1").arg(Sim01->Elements.size()-1) );
 	ElementSelectBox->setText("");
 	ElementSelectBox->blockSignals(false);
 }
@@ -500,7 +565,7 @@ void MainWindow::ManualElementSelectionReset(){
 void MainWindow::ManualNodeSelectionReset(){
 	NodeSelectBox->blockSignals(true);
 	NodeSelectBox->setValidator( new QIntValidator(0, Sim01->Nodes.size()-1, this) );
-	NodeSelectBox->setPlaceholderText ( QString("# from 0 to %1").arg(Sim01->Nodes.size()) );
+	NodeSelectBox->setPlaceholderText ( QString("# 0 to %1").arg(Sim01->Nodes.size()-1) );
 	NodeSelectBox->setText("");
 	NodeSelectBox->blockSignals(false);
 }

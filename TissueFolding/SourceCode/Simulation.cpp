@@ -17,6 +17,7 @@ Simulation::Simulation(){
 	timestep = 0;
 	reachedEndOfSaveFile = false;
 	AddPeripodium = false;
+	PeripodiumType = 0;
 	setDefaultParameters();
 };
 
@@ -1159,15 +1160,30 @@ bool Simulation::addPeripodiumToTissue(){
 	}
 	calculateSystemCentre();
 	sortColumnarCircumferenceNodeList();
-	vector <int*> trianglecornerlist;
-	double d=0.0, dummy =0.0;
-	getAverageSideLength(dummy,d);	//first term will get you the average side length of the peripodial membrane elements, second is the columnar elements
-	if (!Success){
-		return Success;
+	if (PeripodiumType == 1){
+		//2D triangular dome of peripodial membrane, attached to the midline of the tissue
+		vector <int*> trianglecornerlist;
+		double d=0.0, dummy =0.0;
+		getAverageSideLength(dummy,d);	//first term will get you the average side length of the peripodial membrane elements, second is the columnar elements
+		if (!Success){
+			return Success;
+		}
+		addPeripodiumNodes(trianglecornerlist, TissueHeight, d);
+		FillNodeAssociationDueToPeripodium();
+		addPeripodiumElements(trianglecornerlist, TissueHeight);
 	}
-	addPeripodiumNodes(trianglecornerlist, TissueHeight, d);
-	FillNodeAssociationDueToPeripodium();
-	addPeripodiumElements(trianglecornerlist, TissueHeight);
+	else if (PeripodiumType == 2){
+		//2D triangular dome of peripodial membrane, attached to the apical side of the tissue
+		vector <int*> trianglecornerlist;
+		double d=0.0, dummy =0.0;
+		getAverageSideLength(dummy,d);	//first term will get you the average side length of the peripodial membrane elements, second is the columnar elements
+		if (!Success){
+			return Success;
+		}
+		addPeripodiumNodes(trianglecornerlist, TissueHeight, d);
+		FillNodeAssociationDueToPeripodium();
+		addPeripodiumElements(trianglecornerlist, TissueHeight);
+	}
 	return Success;
 	//addMassToPeripodiumNodes();
 	//distributeCircumferenceMass();
@@ -1255,6 +1271,15 @@ void Simulation::calculateCentreOfNodes(double* centre){
 }
 
 void Simulation::AddPeripodiumCircumference(double height, int& index_begin, int &index_end){
+	double zoffset = 0.0;
+	if (PeripodiumType == 1) {
+		//adding the nodes to midzone, the offset should be half the height
+		zoffset = height/2.0;
+	}
+	if (PeripodiumType == 2) {
+		//adding the nodes to apical layer, (the forces still apply to whole column) the offset should be equal to height
+		zoffset = height;
+	}
 	int n = ColumnarCircumferencialNodeList.size();
 	for (int i=0; i<n; ++i){
 		int index = ColumnarCircumferencialNodeList[i];
@@ -1262,7 +1287,7 @@ void Simulation::AddPeripodiumCircumference(double height, int& index_begin, int
 		pos = new double[3];
 		pos[0] = Nodes[index]->Position[0];
 		pos[1] = Nodes[index]->Position[1];
-		pos[2] = Nodes[index]->Position[2] + height/2.0;
+		pos[2] = Nodes[index]->Position[2] + zoffset;
 		Node* tmp_nd;
 		tmp_nd = new Node(Nodes.size(), 3, pos,0,1);  //tissue type is peripodium, node type is basal
 		Nodes.push_back(tmp_nd);
@@ -1423,7 +1448,7 @@ void Simulation::AddVerticalRowOfPeripodiumNodes(int& layerCount, int nLayers, v
 	layerCount++;
 }
 
-void Simulation::AddPeripodiumCap(int layerCount,  vector <int*> &trianglecornerlist, double height, double lumenHeight, int index_begin, int index_end){
+void Simulation::AddPeripodiumCapToMidAttached(int layerCount,  vector <int*> &trianglecornerlist, double height, double lumenHeight, int index_begin, int index_end){
 	//Now I have the indices of the nodes specifying the last row.
 	//I want to cap the tissue, with the topology of the apical surfaces of the columnar layer
 	vector <int> PeripodiumNodeId;
@@ -1443,7 +1468,6 @@ void Simulation::AddPeripodiumCap(int layerCount,  vector <int*> &trianglecorner
 	}
 	// The end point is 0.5*lumenHeight above the apical surface.
 	//I want to add the remaining 50% height of the lumen as a curvature coered by the first layer of peripodium nodes
-	//  	Eliminated idea -- I also want to add one more layer of curvature, same height as each triangle in the side peripodium spans
 	// the layer count is equal to (nLayers -1 ) at the moment, as I am at the topmost layer
 	// I can obtain the increment I need from adding the sum of these as a z offset:
 	//double zOffset = height*0.5 + height / (float) (layerCount+1);
@@ -1513,6 +1537,88 @@ void Simulation::AddPeripodiumCap(int layerCount,  vector <int*> &trianglecorner
 	}*/
 }
 
+
+
+void Simulation::AddPeripodiumCapToApicalAttached(int layerCount,  vector <int*> &trianglecornerlist, double height, double lumenHeight, int index_begin, int index_end){
+	//Now I have the indices of the nodes specifying the last row.
+	//I want to cap the tissue, with the topology of the apical surfaces of the columnar layer
+	vector <int> PeripodiumNodeId;
+	vector <int> CorrespondingApicalNodeId;
+	int n = ApicalColumnarCircumferencialNodeList.size();
+	//map the circumference to peripodium nodes:
+	int counter =0;
+	for (int i = index_begin; i <= index_end; ++i){
+		PeripodiumNodeId.push_back(Nodes[i]->Id);
+		CorrespondingApicalNodeId.push_back(Nodes[ApicalColumnarCircumferencialNodeList[i-index_begin]]->Id);
+		//cout<<"peripodium Node: "<<Nodes[i]->Id<<" pos: "<<Nodes[i]->Position[0]<<" "<<Nodes[i]->Position[1]<<" "<<Nodes[i]->Position[2]<<" corr. node id: "<<Nodes[ApicalColumnarCircumferencialNodeList[idx]]->Id<<endl;
+	}
+	// The end point is on hte apical surface
+	//I want to add the height of the lumen as a curvature covered by the first layer of peripodial membrane nodes
+	double zOffset = lumenHeight;
+	for (int i = 0; i<Nodes.size(); ++i){
+		if (Nodes[i]->tissuePlacement == 1){ //Node is apical
+			int id = Nodes[i]->Id;
+			bool AtCircumference = false;
+			for (int j =0 ; j< n; ++j){
+				if (id == Nodes[ApicalColumnarCircumferencialNodeList[j]]->Id ){
+					//if it is not on the circumference of peripodium, skip
+					AtCircumference = true;
+					break;
+				}
+			}
+			if (!AtCircumference){
+				double* pos;
+				pos = new double[3];
+				pos[0] = Nodes[i]->Position[0];
+				pos[1] = Nodes[i]->Position[1];
+				pos[2] = Nodes[i]->Position[2] + zOffset;
+				Node* tmp_nd;
+				//Adding Peroipodium node:
+				tmp_nd = new Node(Nodes.size(), 3, pos,0,1);  //tissue type is peripodium, node type is basal
+				Nodes.push_back(tmp_nd);
+				PeripodiumNodeId.push_back(tmp_nd->Id);
+				CorrespondingApicalNodeId.push_back(Nodes[i]->Id);
+				//cout<<"temp Node: "<<tmp_nd->Id<<" pos: "<<pos[0]<<" "<<pos[1]<<" "<<pos[2]<<" corr. node id: "<<Nodes[i]->Id<<endl;
+			}
+		}
+	}
+	/*cout<<"apical node - peripodium node couples: "<<endl;
+	for (int a = 0; a< PeripodiumNodeId.size(); a++){
+		cout<<PeripodiumNodeId[a]<<" "<<CorrespondingApicalNodeId[a]<<endl;
+	}*/
+	//Now I have generated the nodes and have the corresponding node mapping, I can add the triangles to list:
+	int initialpointfordisplay = trianglecornerlist.size();
+	for (int i = 0; i<Elements.size(); ++i){
+		vector <int> ApicalTriangles;
+		Elements[i]->getApicalTriangles(ApicalTriangles);
+		int nList = ApicalTriangles.size();
+		for (int k=0; k<nList-2; ++k){
+			if (Nodes[ApicalTriangles[k]]->tissuePlacement == 1 &&
+				Nodes[ApicalTriangles[k+1]]->tissuePlacement == 1 &&
+				Nodes[ApicalTriangles[k+2]]->tissuePlacement == 1){
+				int* TriNodeIds;
+				TriNodeIds = new int[3];
+				int nDict = CorrespondingApicalNodeId.size();
+				for (int dictionaryIndex =0; dictionaryIndex<nDict; ++dictionaryIndex){
+					if (CorrespondingApicalNodeId[dictionaryIndex] == ApicalTriangles[k]){
+						TriNodeIds[0]=PeripodiumNodeId[dictionaryIndex];
+					}
+					if (CorrespondingApicalNodeId[dictionaryIndex] == ApicalTriangles[k+1]){
+						TriNodeIds[1]=PeripodiumNodeId[dictionaryIndex];
+					}
+					if (CorrespondingApicalNodeId[dictionaryIndex] == ApicalTriangles[k+2]){
+						TriNodeIds[2]=PeripodiumNodeId[dictionaryIndex];
+					}
+				}
+				trianglecornerlist.push_back(TriNodeIds);
+			}
+		}
+	}
+	/*cout<<"triangle corners for peripodium cap: "<<endl;
+	for (int a =initialpointfordisplay; a< trianglecornerlist.size(); a++){
+		cout<<trianglecornerlist[a][0]<<" "<<trianglecornerlist[a][1]<<" "<<trianglecornerlist[a][2]<<endl;
+	}*/
+}
 void Simulation::FillNodeAssociationDueToPeripodium(){
 	//Take the peripodium circumferential list
 	//Start from the associated Basal columnar circumferential node
@@ -1574,24 +1680,29 @@ void Simulation::addPeripodiumNodes(vector <int*> &trianglecornerlist, double he
 	int index_begin = 0, index_end =0;
 	//Adding a midline range of nodes
 	AddPeripodiumCircumference(height, index_begin, index_end);
-	double triangleHeight = 0.866*d; //0.866 is square-root(3)/2, this is the height of the triangle I am adding,
-	AddHorizontalRowOfPeripodiumNodes(trianglecornerlist, triangleHeight, index_begin, index_end);
-	//calculating how many layers of triangles I need for spanning the necessary height, I want the side layer to go up
-	// 50% of tissue height (to reach the same level as the top of columnar layer)
-	// + 50% of the lumen size. The remaining 50% of lumen size will be spanned by the first row of cap elements.
-	int nLayers = ceil((height*0.5 + lumenHeight*0.5) / triangleHeight );
-	//I need an odd number of layers, so that the final shape will be the same as the circumference of columnar layer:
-	if (nLayers %2 == 0){
-		nLayers --;
-	}
-	//now I want nLayers many layers to cover exactly the height of the tissue, the distance should be the hipotenus divided by nLayers
-	//I will adjust the triangle height
-	triangleHeight = pow((triangleHeight*triangleHeight + height*height),0.5) / (float)nLayers;
 	int layerCount = 0;
-	for (int i=0; i<nLayers; ++i){
-		AddVerticalRowOfPeripodiumNodes(layerCount, nLayers, trianglecornerlist, height, lumenHeight, index_begin, index_end);
+	if (PeripodiumType == 1){
+		double triangleHeight = 0.866*d; //0.866 is square-root(3)/2, this is the height of the triangle I am adding,
+		AddHorizontalRowOfPeripodiumNodes(trianglecornerlist, triangleHeight, index_begin, index_end);
+		//calculating how many layers of triangles I need for spanning the necessary height, I want the side layer to go up
+		// 50% of tissue height (to reach the same level as the top of columnar layer)
+		// + 50% of the lumen size. The remaining 50% of lumen size will be spanned by the first row of cap elements.
+		int nLayers = ceil((height*0.5 + lumenHeight*0.5) / triangleHeight );
+		//I need an odd number of layers, so that the final shape will be the same as the circumference of columnar layer:
+		if (nLayers %2 == 0){
+			nLayers --;
+		}
+		//now I want nLayers many layers to cover exactly the height of the tissue, the distance should be the hipotenus divided by nLayers
+		//I will adjust the triangle height
+		triangleHeight = pow((triangleHeight*triangleHeight + height*height),0.5) / (float)nLayers;
+		for (int i=0; i<nLayers; ++i){
+			AddVerticalRowOfPeripodiumNodes(layerCount, nLayers, trianglecornerlist, height, lumenHeight, index_begin, index_end);
+		}
+		AddPeripodiumCapToMidAttached(layerCount, trianglecornerlist, height, lumenHeight, index_begin, index_end);
 	}
-	AddPeripodiumCap(layerCount, trianglecornerlist, height, lumenHeight, index_begin, index_end);
+	else if (PeripodiumType == 2){
+		AddPeripodiumCapToApicalAttached(layerCount, trianglecornerlist, height, lumenHeight, index_begin, index_end);
+	}
 	//AssignAssociatedNodesToPeripodiumCircumference();
 }
 
@@ -2518,7 +2629,7 @@ void Simulation::updateNodePositions(int RKId){
 	updateNodePositionsForPeripodiumCircumference(RKId);
 };
 
-void Simulation::updateNodePositionsForPeripodiumCircumference(int RKId){
+void Simulation::realignPositionsForMidAttachedPeripodialMembrane(int RKId){
 	int n = PeripodiumCircumferencialNodeList.size();
 	if (RKId < 3){
 		for (int i=0; i<n; ++i){
@@ -2560,6 +2671,55 @@ void Simulation::updateNodePositionsForPeripodiumCircumference(int RKId){
 				Nodes[index]->Position[k] = sumPos[k]/nA;
 			}
 		}
+	}
+}
+
+void Simulation::realignPositionsForApicalAttachedPeripodialMembrane(int RKId){
+	int n = PeripodiumCircumferencialNodeList.size();
+	if (RKId < 3){
+		for (int i=0; i<n; ++i){
+			int index = PeripodiumCircumferencialNodeList[i];
+			int nA = Nodes[index]->AssociatedNodesDueToPeripodium.size();
+			for(int j = 0; j < nA; ++j){
+				int index2 = Nodes[index]->AssociatedNodesDueToPeripodium[j];
+				if(Nodes[index2] -> tissuePlacement ==1 ){
+					//found the apical node!
+					for (int k=0; k<Nodes[index2]->nDim; ++k){
+						Nodes[index]->Velocity[RKId][k] = Nodes[index2]->Velocity[RKId][k];
+						Nodes[index]->RKPosition[k] =  Nodes[index2]->RKPosition[k];
+					}
+					break;
+				}
+			}
+		}
+	}
+	else{
+		for (int i=0; i<n; ++i){
+			int index = PeripodiumCircumferencialNodeList[i];
+			int nA = Nodes[index]->AssociatedNodesDueToPeripodium.size();
+			for(int j = 0; j < nA; ++j){
+				int index2 = Nodes[index]->AssociatedNodesDueToPeripodium[j];
+				if(Nodes[index2] -> tissuePlacement ==1 ){
+					//found Apical Node!
+					for (int k=0; k<Nodes[index2]->nDim; ++k){
+						Nodes[index]->Velocity[RKId][k] = Nodes[index2]->Velocity[RKId][k];
+						Nodes[index]->Velocity[0][k] = Nodes[index2]->Velocity[0][k];
+						Nodes[index]->Position[k] =  Nodes[index2]->Position[k];
+					}
+					break;
+				}
+			}
+		}
+	}
+}
+
+
+void Simulation::updateNodePositionsForPeripodiumCircumference(int RKId){
+	if (PeripodiumType == 1) {
+		realignPositionsForMidAttachedPeripodialMembrane(RKId);
+	}
+	if (PeripodiumType == 2) {
+		realignPositionsForApicalAttachedPeripodialMembrane(RKId);
 	}
 }
 

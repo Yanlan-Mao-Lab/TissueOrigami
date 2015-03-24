@@ -389,6 +389,14 @@ bool ModelInputObject::readPeripodiumParameters(ifstream& file){
 		return false;
 	}
 	file >> currHeader;
+	if(currHeader == "PeripodiumType:"){
+		file >>Sim->PeripodiumType;
+	}
+	else{
+		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: PeripodiumYoungsModulus:" <<endl;
+		return false;
+	}
+	file >> currHeader;
 	if(currHeader == "PeripodiumYoungsModulus:"){
 		file >>Sim->PeripodiumElasticity;
 	}
