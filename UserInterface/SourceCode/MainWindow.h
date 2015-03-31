@@ -51,6 +51,7 @@ public slots:
     void  	updateScaleBarCheckBox(int);
     void  	updatePeripodiumDisplayCheckBox(int s);
     void  	updateColumnarLayerDisplayCheckBox(int s);
+    void  	updateBoundingBoxCheckBox(int s);
     void  	updateOrthagonalPerspectiveViewToggle();
 
 //signals:
@@ -88,7 +89,7 @@ public slots:
     QComboBox   	*PysPropComboBox;
     QDoubleSpinBox 	*PysPropSpinBoxes[2];
     QGroupBox   	*ColourCodingBox;
-    QCheckBox		*DisplayPreferencesCheckBoxes[7];
+    QCheckBox		*DisplayPreferencesCheckBoxes[8];
     QLabel			*SimTime;
     QPushButton		*PerspectiveButton;
  };

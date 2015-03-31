@@ -37,7 +37,7 @@ private:
 	int	 nCircumferencialNodes;
 	int DVRight,DVLeft;
 	double StretchVelocity;
-
+	double BoundingBoxSize[3];
 
 	bool readModeOfSim(int& i, int argc, char **argv);
 	bool readParameters(int& i, int argc, char **argv);
@@ -119,6 +119,7 @@ private:
 	void cleanUpShapeChangeRates();
 	void calculateGrowthUniform(int currIndexForParameters);
 	void calculateGrowthRing(int currIndexForParameters);
+	void calculateGrowthGridBased(int currIndexForParameters);
 	void changeCellShapesInSystem();
 	void changeCellShapeRing(int currIndexForParameters);
 	void setStretch();
@@ -161,6 +162,7 @@ public:
 	int nGrowthFunctions;
 	vector <int> GrowthFunctionTypes;
 	vector <float> GrowthParameters;
+	vector <double***> GrowthMatrices;
 
 	int nShapeChangeFunctions;
 	vector <int> ShapeChangeFunctionTypes;
@@ -179,6 +181,7 @@ public:
 	vector <double*> NodesToDraw;
 	double TissueHeight;
 	int TissueHeightDiscretisationLayers;
+	double boundingBox[2][3];
 
 	Simulation();
 	~Simulation();
@@ -188,6 +191,7 @@ public:
 	void cleanGrowthData();
 	void cleanMatrixUpdateData();
 	void resetForces();
+	void calculateColumnarLayerBoundingBox();
 	void runOneStep();
 	void calculatePacking(int RKId, double PeriThreshold, double ColThreshold);
 	void getNormalAndCornerPosForPacking(Node* NodePointer, ShapeBase* ElementPointer, double* normalForPacking,double* posCorner, bool& bothperipodial);

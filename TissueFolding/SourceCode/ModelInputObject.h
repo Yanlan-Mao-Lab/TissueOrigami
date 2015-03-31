@@ -26,8 +26,9 @@ private:
 	bool readMeshType2(ifstream& file);
 	bool readMeshType4(ifstream& file);
 	bool readGrowthOptions(ifstream& file);
-	bool readGrowthType1(ifstream& file);
-	bool readGrowthType2(ifstream& file);
+	bool readGrowthType1(ifstream& file);	//uniform growth
+	bool readGrowthType2(ifstream& file);	//ring type growth
+	bool readGrowthType3(ifstream& file);	//node based growth read from file;
 	bool readShapeChangeOptions(ifstream& file);
 	bool readShapeChangeType1(ifstream& file);
 	bool readStretcherSetup(ifstream& file);

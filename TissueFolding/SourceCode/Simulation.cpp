@@ -3,7 +3,7 @@
 #include "Prism.h"
 #include "Triangle.h"
 #include <string.h>
-#include <algorithm>    // std::sort
+//#include <algorithm>    // std::sort
 #include <vector>
 
 using namespace std;
@@ -18,7 +18,15 @@ Simulation::Simulation(){
 	reachedEndOfSaveFile = false;
 	AddPeripodium = false;
 	PeripodiumType = 0;
+	BoundingBoxSize[0]=1000.0; BoundingBoxSize[1]=1000.0; BoundingBoxSize[2]=1000.0;
 	setDefaultParameters();
+
+
+	//double GrowthMatrix[3][3][3] = {
+	//							{{1.00, 0.50, 0.00}, {1.00, 0.50, 0.00}, {1.00, 0.50, 0.00}},
+	//							{{1.00, 0.75, 0.00}, {1.00, 0.625,0.00}, {1.00, 0.50, 0.00}},
+	//							{{1.00, 1.00, 0.00}, {1.00, 0.75, 0.00}, {1.00, 0.50, 0.00}}
+	//							};
 };
 
 Simulation::~Simulation(){
@@ -67,6 +75,7 @@ void Simulation::setDefaultParameters(){
 	EApical = 10.0;
 	EBasal = 10.0;
 	EMid = 10.0;
+	PeripodiumElasticity = 10.0;
 	poisson = 0.3;
 	ApicalVisc = 10.0;
 	BasalVisc = 100.0;
@@ -94,6 +103,12 @@ void Simulation::setDefaultParameters(){
 	StretchInitialStep = -100;
 	StretchEndStep = -100;
 	StretchVelocity = 0.0;
+	boundingBox[0][0] =  1000.0;	//left x
+	boundingBox[0][1] =  1000.0;	//low y
+	boundingBox[0][2] =  1000.0;	//bottom z
+	boundingBox[1][0] = -1000.0;	//right x
+	boundingBox[1][1] = -1000.0;	//high y
+	boundingBox[1][2] = -1000.0;	//top z
 }
 
 bool Simulation::readExecutableInputs(int argc, char **argv){
@@ -234,10 +249,7 @@ bool Simulation::initiateSystem(){
 	if (!Success){
 		return Success;
 	}
-	cout<<"Success before calculate tissue height: "<<Success<<endl;
 	Success = CalculateTissueHeight(); //Calculating how many layers the columnar layer has, and what the actual height is.
-	cout<<"Success after calculate tissue height: "<<Success<<endl;
-
 	if (!Success){
 		return Success;
 	}
@@ -449,6 +461,18 @@ void Simulation::writeGrowthRatesSummary(){
 			saveFileSimulationSummary<<GrowthParameters[currIndex+8]/dt*3600.0;
 			saveFileSimulationSummary<<endl;
 		}
+		else if(GrowthFunctionTypes[i] == 3){
+			saveFileSimulationSummary<<"Growth Type:  From File"<<endl;
+			saveFileSimulationSummary<<"	Initial time(sec): ";
+			saveFileSimulationSummary<<GrowthParameters[currIndex];
+			saveFileSimulationSummary<<"	FinalTime time(sec): ";
+			saveFileSimulationSummary<<GrowthParameters[currIndex+1];
+			saveFileSimulationSummary<<"	Growth  matrix index: ";
+			saveFileSimulationSummary<<GrowthParameters[currIndex+2];
+			saveFileSimulationSummary<<"	Growth matrix mesh size: ";
+			saveFileSimulationSummary<<GrowthParameters[currIndex+3]<<" "<<GrowthParameters[currIndex+4];
+			saveFileSimulationSummary<<endl;
+		}
 	}
 
 }
@@ -509,6 +533,7 @@ bool Simulation::initiateSavedSystem(){
 	getline(saveFileToDisplayMesh,currline);
 	initiateNodesFromSave();
 	initiateElementsFromSave();
+	assignPhysicalParameters();
 	initiateSystemForces();
 	if (TensionCompressionSaved){
 		updateTensionCompressionFromSave();
@@ -520,10 +545,12 @@ bool Simulation::initiateSavedSystem(){
 		updateVelocitiesFromSave();
 	}
 	updateElementVolumesAndTissuePlacements();
+	cleanMatrixUpdateData();
 	clearNodeMassLists();
 	assignNodeMasses();
 	assignConnectedElementsAndWightsToNodes();
 	clearLaserAblatedSites();
+	calculateStiffnessMatrices();
 	//This is updating positions from save, I am only interested in normal positions, no Runge-Kutta steps. This corresponds to RK step 4, RKId = 3
 	updateElementPositions(3);
 	//skipping the footer:
@@ -805,12 +832,18 @@ void Simulation::updateVelocitiesFromSave(){
 void Simulation::updateTensionCompressionFromSave(){
 	int n = Elements.size();
 	for (int i=0;i<n;++i){
-		for (int j=0; j<3; ++j){
-			saveFileToDisplayTenComp.read((char*) &Elements[i]->StrainTissueMat(j,j), sizeof Elements[i]->StrainTissueMat(j,j));
+		for (int j=0; j<6; ++j){
+			saveFileToDisplayTenComp.read((char*) &Elements[i]->Strain(j), sizeof Elements[i]->Strain(j));
 		}
-		for (int j=0; j<3; ++j){
-			saveFileToDisplayTenComp.read((char*) &Elements[i]->CurrPlasticStrainsInTissueCoordsMat(j,j), sizeof Elements[i]->CurrPlasticStrainsInTissueCoordsMat(j,j));
+		for (int j=0; j<6; ++j){
+			saveFileToDisplayTenComp.read((char*) &Elements[i]->PlasticStrain(j), sizeof Elements[i]->PlasticStrain(j));
 		}
+		//for (int j=0; j<3; ++j){
+		//	saveFileToDisplayTenComp.read((char*) &Elements[i]->StrainTissueMat(j,j), sizeof Elements[i]->StrainTissueMat(j,j));
+		//}
+		//for (int j=0; j<3; ++j){
+		//	saveFileToDisplayTenComp.read((char*) &Elements[i]->CurrPlasticStrainsInTissueCoordsMat(j,j), sizeof Elements[i]->CurrPlasticStrainsInTissueCoordsMat(j,j));
+		//}
 	}
 }
 
@@ -871,7 +904,7 @@ void Simulation::updateOneStepFromSave(){
 	}
 	//cout<<"skipped header: "<<currline<<endl;
 	updateNodeNumberFromSave();
-	cout<<"updated node number: "<<Nodes.size();
+	//cout<<"updated node number: "<<Nodes.size();
 	updateNodePositionsFromSave();
 	updateElementStatesFromSave();
 	int n = Elements.size();
@@ -892,6 +925,7 @@ void Simulation::updateOneStepFromSave(){
 	assignNodeMasses();
 	assignConnectedElementsAndWightsToNodes();
 	clearLaserAblatedSites();
+	calculateColumnarLayerBoundingBox();
 	//skipping the footer:
 	string currline2;
 	getline(saveFileToDisplayMesh,currline2);
@@ -1246,8 +1280,8 @@ void Simulation::sortColumnarCircumferenceNodeList(){
 			}
 		}
 	}
-	/*
-	cout<<"ColumnarCircumferencialNodeList after sort"<<endl;
+
+	/*cout<<"ColumnarCircumferencialNodeList after sort"<<endl;
 	for (int j =0 ; j<n; ++j){
 		cout<<ColumnarCircumferencialNodeList[j]<<" "<<angles[j]<<endl;
 	}*/
@@ -1629,6 +1663,7 @@ void Simulation::FillNodeAssociationDueToPeripodium(){
 		int index = PeripodiumCircumferencialNodeList[i];
 		int currNodeId = ColumnarCircumferencialNodeList[i];
 		Nodes[index]->AssociatedNodesDueToPeripodium.push_back(ColumnarCircumferencialNodeList[i]);
+		Nodes[ColumnarCircumferencialNodeList[i]]->LinkedPeripodiumNodeId = Nodes[index]->Id;
 		while(Nodes[currNodeId]->tissuePlacement != 1){ //While I have not reached the apical node
 			for (int j= 0; j<nE; ++j){
 				bool IsBasalOwner = Elements[j]->IsThisNodeMyBasal(currNodeId);
@@ -1638,12 +1673,14 @@ void Simulation::FillNodeAssociationDueToPeripodium(){
 				}
 			}
 			Nodes[index]->AssociatedNodesDueToPeripodium.push_back(currNodeId);
+			if (currNodeId != Nodes[currNodeId]->Id ){cerr<<"Error in node association index"<<endl;}
+			Nodes[currNodeId]->LinkedPeripodiumNodeId = Nodes[index]->Id;
 		}
-		/*cout<<"Node: "<<index<<" pos : "<<Nodes[index]->Position[0]<<" "<<Nodes[index]->Position[1]<<" "<<Nodes[index]->Position[2]<<endl;
-		for(int j = 0; j< Nodes[index]->AssociatedNodesDueToPeripodium.size(); ++j){
-			int a = Nodes[index]->AssociatedNodesDueToPeripodium[j];
-			cout<<"	Associated Node Pos: "<<Nodes[a]->Position[0]<<" "<<Nodes[a]->Position[1]<<" "<<Nodes[a]->Position[2]<<endl;
-		}*/
+		//cout<<"Node: "<<index<<" pos : "<<Nodes[index]->Position[0]<<" "<<Nodes[index]->Position[1]<<" "<<Nodes[index]->Position[2]<<endl;
+		//for(int j = 0; j< Nodes[index]->AssociatedNodesDueToPeripodium.size(); ++j){
+		//	int a = Nodes[index]->AssociatedNodesDueToPeripodium[j];
+		//	cout<<"	Associated Node id: "<<Nodes[a]->Id<<" Pos: "<<Nodes[a]->Position[0]<<" "<<Nodes[a]->Position[1]<<" "<<Nodes[a]->Position[2]<<endl;
+		//}
 	}
 }
 
@@ -2160,7 +2197,17 @@ void Simulation::assignPhysicalParameters(){
 }
 
 void Simulation::runOneStep(){
-	/*if(timestep==0){
+	if(timestep==0){
+		calculateColumnarLayerBoundingBox();
+		calculateDVDistance();
+		//outputFile<<"calculating element health"<<endl;
+		int nElement = Elements.size();
+		for (int i=0; i<nElement; ++i){
+			Elements[i]->calculateRelativePosInBoundingBox(boundingBox[0][0],boundingBox[0][1],BoundingBoxSize[0],BoundingBoxSize[1]);
+		}
+		//cout<<"In loop for t=0: "<<endl;
+		//Elements[0]->displayRelativePosInBoundingBox();
+		/*
 		for(int i=0;i<Nodes.size();++i){
 			//if (Nodes[i]->atCircumference){
 			//	Nodes[i]->FixedPos[0] = true;
@@ -2194,7 +2241,10 @@ void Simulation::runOneStep(){
 		//for (int i=0; i<Nodes.size();++i){
 		//	cout<<"Node: "<<i<<" pos: "<<Nodes[i]->Position[0]<<" "<<Nodes[i]->Position[1]<<" "<<Nodes[i]->Position[2]<<endl;
 		//}
-	}*/
+		 */
+	}
+	//cout<<"outisde loop for t=0: "<<endl;
+	//Elements[0]->displayRelativePosInBoundingBox();
 	if(timestep==-10/dt){
 		LaserAblate(0.0,0.0,1.8);
 	}
@@ -2222,11 +2272,11 @@ void Simulation::runOneStep(){
 	//alignTissueDVToXPositive();
 	int freq = 10.0/dt ;
 	if ((timestep - 1)% freq  == 0){
+		calculateColumnarLayerBoundingBox();
 		calculateDVDistance();
-		//outputFile<<"calculating element health"<<endl;
 		int nElement = Elements.size();
 		for (int i=0; i<nElement; ++i){
-			Elements[i]->checkHealth();
+			Elements[i]->calculateRelativePosInBoundingBox(boundingBox[0][0],boundingBox[0][1],BoundingBoxSize[0],BoundingBoxSize[1]);
 		}
 	}
 	int nElement = Elements.size();
@@ -2234,6 +2284,8 @@ void Simulation::runOneStep(){
 		//outputFile<<"calculating growth"<<endl;
 		calculateGrowth();
 	}
+	//cout<<"after calculate growth: "<<endl;
+	//Elements[0]->displayRelativePosInBoundingBox();
 	//if(nShapeChangeFunctions>0){
 	//	changeCellShapesInSystem();
 	//}
@@ -2366,7 +2418,7 @@ inline void Simulation::CapPackingForce(double& Fmag){
 void Simulation::calculatePacking(int RKId, double PeriThreshold, double ColThreshold){
 	//cout<<"inside calculate packing"<<endl;
 	double multiplier = 0.05; //just a term to scale the forces down
-	double threshold = 3;	 //packing forces start at 3 microns
+	double threshold = 5;	 //packing forces start at 3 microns
 	double t2 = threshold*threshold;
 
 	vector<Node*>::iterator itNode;
@@ -2379,7 +2431,9 @@ void Simulation::calculatePacking(int RKId, double PeriThreshold, double ColThre
 	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
 		bool NodeHasPacking = (*itNode)->checkIfNodeHasPacking();
 		if (NodeHasPacking){
-			//cout<<"calculating packing for node: "<<(*itNode)->Id<<endl;
+			//if ((*itNode)->Id == 358) {
+			//	cout<<"calculating packing for node: "<<(*itNode)->Id<<endl;
+			//}
 			double* pos;
 			pos = new double[3];
 			(*itNode)->getCurrentRKPosition(RKId,pos);
@@ -2474,8 +2528,13 @@ void Simulation::calculatePacking(int RKId, double PeriThreshold, double ColThre
 							//add opposite force to the element nodes:
 							(*itEle)->AddPackingToSurface((*itNode)->tissuePlacement, F[0],F[1],F[2],RKId, SystemForces,PackingForces, Nodes);
 							//cout<<"added packing to surface"<<endl;
+
 							//if(/*(*itNode)->Id == 13 && (*itEle)->Id == 44*/ memberOf44 && (*itEle)->Id>592){
-							//	cout<<"threshold: "<<threshold<<" distance: "<<dProjectionOffet<<" Node: "<<(*itNode)->Id<<" Element: "<<(*itEle)->Id<<" forcemag: "<<Fmag;
+							//if ((*itNode)->Id == 358) {
+							//	cout<<" threshold: "<<threshold<<" Node: "<<(*itNode)->Id<<" Element: "<<(*itEle)->Id<<" forcemag: "<<Fmag;
+							//}
+							//cout<<"threshold: "<<threshold<<" distance: "<<dProjectionOffet<<" Node: "<<(*itNode)->Id<<" Element: "<<(*itEle)->Id<<" forcemag: "<<Fmag;
+
 							//	cout<<" Fdir: "<<VecprojectedPoint[0]<<" "<<VecprojectedPoint[1]<<" "<<VecprojectedPoint[2]<<endl;
 							//	cout<<"	pos:"<<(*itNode)->Position[0]<<" "<<(*itNode)->Position[1]<<" "<<(*itNode)->Position[2]<<endl;
 							//}
@@ -2815,6 +2874,35 @@ void Simulation::resetForces(){
 	}
 }
 
+void Simulation::calculateColumnarLayerBoundingBox(){
+	boundingBox[0][0] =  100000.0;	//lower left x
+	boundingBox[0][1] =  100000.0;	//lower left y
+	boundingBox[0][2] =  100000.0;	//lower z
+	boundingBox[1][0] = -100000.0;	//upper right x
+	boundingBox[1][1] = -100000.0;	//upper right y
+	boundingBox[1][2] = -100000.0;	//upper z
+	bool found[2][3] = {{false,false,false},{false,false,false}};
+	vector<Node*>::iterator itNode;
+	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+		for (int i=0; i<(*itNode)->nDim; ++i){
+			if ( (*itNode)->Position[i] < boundingBox[0][i] ){
+				boundingBox[0][i] = (*itNode)->Position[i];
+				found[0][i] = true;
+			}
+			else if((*itNode)->Position[i]>boundingBox[1][i]){
+				boundingBox[1][i] = (*itNode)->Position[i];
+				found[1][i] = true;
+			}
+		}
+	}
+	for (int i=0; i<3; ++i){
+		BoundingBoxSize[i] = boundingBox[1][i] - boundingBox[0][i];
+	}
+	if (!found[0][0] && !found[0][1] && !found[0][2] && !found[1][0] && !found[1][1] && !found[1][2]){
+		cerr<<" error in bounding box calculation! Found? :"<<found[0][0]<<" "<<found[0][1]<<" "<<found[0][2]<<" "<<found[1][0]<<" "<<found[1][1]<<" "<<found[1][2]<<endl;
+	}
+}
+
 void Simulation::updateDisplaySaveValuesFromRK(){
 	//in display and save, I am using the storage for RK step 1. I need to make this the average values of 4 steps, otherwise
 	//it will show the misleading RK 1 values only.
@@ -2930,9 +3018,15 @@ void Simulation::writeTensionCompression(){
 		saveFileTensionCompression.write((char*) &Elements[i]->Strain(0), sizeof Elements[i]->Strain(0));
 		saveFileTensionCompression.write((char*) &Elements[i]->Strain(1), sizeof Elements[i]->Strain(1));
 		saveFileTensionCompression.write((char*) &Elements[i]->Strain(2), sizeof Elements[i]->Strain(2));
+		saveFileTensionCompression.write((char*) &Elements[i]->Strain(3), sizeof Elements[i]->Strain(3));
+		saveFileTensionCompression.write((char*) &Elements[i]->Strain(4), sizeof Elements[i]->Strain(4));
+		saveFileTensionCompression.write((char*) &Elements[i]->Strain(5), sizeof Elements[i]->Strain(5));
 		saveFileTensionCompression.write((char*) &Elements[i]->PlasticStrain(0), sizeof Elements[i]->PlasticStrain(0));
 		saveFileTensionCompression.write((char*) &Elements[i]->PlasticStrain(1), sizeof Elements[i]->PlasticStrain(1));
 		saveFileTensionCompression.write((char*) &Elements[i]->PlasticStrain(2), sizeof Elements[i]->PlasticStrain(2));
+		saveFileTensionCompression.write((char*) &Elements[i]->PlasticStrain(3), sizeof Elements[i]->PlasticStrain(3));
+		saveFileTensionCompression.write((char*) &Elements[i]->PlasticStrain(4), sizeof Elements[i]->PlasticStrain(4));
+		saveFileTensionCompression.write((char*) &Elements[i]->PlasticStrain(5), sizeof Elements[i]->PlasticStrain(5));
 	}
 }
 
@@ -2969,7 +3063,12 @@ void Simulation::calculateGrowth(){
 			calculateGrowthRing(currIndexForParameters);
 			currIndexForParameters += 9;
 		}
+		else if(GrowthFunctionTypes[i] == 3){
+			calculateGrowthGridBased(currIndexForParameters);
+			currIndexForParameters += 5;
+		}
 	}
+	//calculateGrowthGridBased();
 }
 /*
 void Simulation::changeCellShapesInSystem(){
@@ -3052,6 +3151,58 @@ void Simulation::calculateGrowthRing(int currIndex){
 					Elements[i]->updateGrowthRate(maxValue[0]*sf*timescale,maxValue[1]*sf*timescale,maxValue[2]*sf*timescale);
 				}
 				delete[] Elementcentre;
+			}
+		}
+	}
+}
+
+void Simulation::calculateGrowthGridBased(int currIndex){
+	float initTime = GrowthParameters[currIndex];
+	float endTime = GrowthParameters[currIndex+1];
+	int growtMatrixIndex = (int) GrowthParameters[currIndex+2];
+	int nGridX = (int) GrowthParameters[currIndex+3];
+	int nGridY = (int) GrowthParameters[currIndex+4];
+	float simTime = dt*timestep;
+	double ***GrowthMatrix;
+	GrowthMatrix = GrowthMatrices[growtMatrixIndex];
+
+	if(simTime > initTime && simTime < endTime ){
+		vector<ShapeBase*>::iterator itElement;
+		for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+			if ((*itElement)->tissueType == 0){ //grow columnar layer
+				double* ReletivePos = new double[2];
+				//normalising the element centre position with bounding box
+				(*itElement)->getRelativePosInBoundingBox(ReletivePos);
+				ReletivePos[0] *= (float) (nGridX-1);
+				ReletivePos[1] *= (float) (nGridY-1);
+				int indexX = floor(ReletivePos[0]);
+				double fracX  = ReletivePos[0] - indexX;
+				if (indexX == nGridX) { //this is for the point that is exactly the point determining the bounding box high end in X
+					indexX--;
+					fracX = 1.0;
+				}
+				int indexY = floor(ReletivePos[1]);
+				double fracY  = ReletivePos[1] - indexY;
+				if (indexY == nGridY) { //this is for the point that is exactly the point determining the bounding box high end in Y
+					indexY--;
+					fracY = 1.0;
+				}
+				double growthYmid[2][3]= {{0.0,0.0,0.0},{0.0,0.0,0.0}};
+				double growthscale[3]= {0.0,0.0,0.0};
+				for (int axis = 0; axis<3; ++axis){
+					growthYmid[0][axis] = GrowthMatrix[indexX][indexY][axis]*(1.0-fracX) + GrowthMatrix[indexX+1][indexY][axis]*fracX;
+					growthYmid[1][axis] = GrowthMatrix[indexX][indexY+1][axis]*(1.0-fracX) + GrowthMatrix[indexX+1][indexY+1][axis]*fracX;
+					growthscale[axis] = growthYmid[0][axis]*(1.0-fracY) + growthYmid[1][axis]*fracY;
+				}
+				//growing the shape
+				(*itElement)->updateGrowthToAdd(growthscale);
+				//This value is stored as fraction per hour, conversion is done by a time scale variable:
+				float timescale = 60*60/dt;
+				(*itElement)->updateGrowthRate(growthscale[0]*timescale,growthscale[1]*timescale,growthscale[2]*timescale);
+				//if ((*itElement)->Id == 237 || (*itElement)->Id == 337 || (*itElement)->Id == 326 || (*itElement)->Id == 328 || (*itElement)->Id == 294 || (*itElement)->Id == 305){
+				//	cout<<" Element : "<<(*itElement)->Id<<" placement: "<<indexX<<" "<<indexY<<" frac: "<<fracX<<" "<<fracY<<" Relpos: "<<ReletivePos[0]<<" "<<ReletivePos[1]<<endl;
+				//}
+				delete[] ReletivePos;
 			}
 		}
 	}

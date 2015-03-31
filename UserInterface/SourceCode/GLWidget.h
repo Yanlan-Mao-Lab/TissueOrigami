@@ -43,6 +43,8 @@ using namespace std;
      int 		PysPropToDisplay;
      float 		DisplayPysPropRange[5][2];	//current range
      float 		DisplayPysPropBounds[5][4];  //the minimum and maximum they can get
+     int		DisplayPysPropDecimals[5];	//the decimal points for spin boxes
+     float 		DisplayPysPropSteps[5];	//current step of the spinbox
      vector <QString> SelectedPos;
      vector <QString> SelectedId;
      bool 		drawTissueCoordinates;
@@ -53,6 +55,7 @@ using namespace std;
      bool 		drawPeripodium;
      bool 		drawColumnar;
      bool 		PerspectiveView;
+     bool		displayBoundingBox;
 
  signals:
  	 void SelectedItemChanged();
@@ -130,6 +133,7 @@ using namespace std;
      void 		drawForces();
      void 		drawPackForces();
      void 		drawNodeVelocities();
+     void 		drawBoundingBox();
      void 		drawArrow3D(double* pos, double* endPoint, double r, double g, double b);
  };
 

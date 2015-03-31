@@ -8,8 +8,8 @@ PeripodiumParameters:
   PeripodiumYoungsModulus: 3000.0
 
 TimeParameters:
-  TimeStep(sec): 0.25
-  SimulationLength(sec): 5400
+  TimeStep(sec): 0.5
+  SimulationLength(sec): 10800
 
 PysicalProperties:
   YoungsModulusApical: 3000.0	YoungsModulusBasal: 3000.0	YoungsModulusMid: 3000.0	Noise(%-int): 0
@@ -24,21 +24,11 @@ SaveOptions:
   DataSaveInterval(sec):  60
 
 GrowthOptions:
-  NumberofGrowthFunctions(int): 4
+  NumberofGrowthFunctions(int): 3
   GrowthFunctionType(int-seeDocumentation): 1
   InitialTime(sec): 10000
   FinalTime(sec):  3600
   MaxValue(fractionPerHour-DV,AP,AB):  0.804 0.804 0.0
-  
-  GrowthFunctionType(int-seeDocumentation): 1
-  InitialTime(sec): 100000.25
-  FinalTime(sec): 0.75
-  MaxValue(fractionPerHour-DV,AP,AB):  14400.0 14400.0 0.0
-
-  GrowthFunctionType(int-seeDocumentation): 1
-  InitialTime(sec): 0.25
-  FinalTime(sec): 360
-  MaxValue(fractionPerHour-DV,AP,AB):  2.5 2.5 0.0
 
   GrowthFunctionType(int-seeDocumentation): 2
   InitialTime(sec): 10000
@@ -48,10 +38,17 @@ GrowthOptions:
   OuterRadius:  20.0
   MaxValue(fractionPerHour-DV,AP,AB):  0.45 0.45 0.0
 
+  GrowthFunctionType(int-seeDocumentation): 3
+  InitialTime(sec): 0
+  FinalTime(sec):  7200
+  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/growthFile03
+
+
+
 ShapeChangeOptions:
   NumberofShapeChangeFunctions(int): 2
   ShapeChangeFunctionType(int-seeDocumentation): 1
-  InitialTime(sec): 10000
+  InitialTime(sec): 1000000
   FinalTime(sec):  900
   Centre:  2.0 0.0
   InnerRadius:  0.0
@@ -60,7 +57,7 @@ ShapeChangeOptions:
   MaxValue(fractionPerHour): -41.7
 
   ShapeChangeFunctionType(int-seeDocumentation): 1
-  InitialTime(sec): 100000
+  InitialTime(sec): 10000000
   FinalTime(sec):  900
   Centre:  51 0.0
   InnerRadius:  35.0

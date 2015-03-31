@@ -137,6 +137,11 @@ double* ShapeBase::getCentre(){
 	return d;
 }
 
+void ShapeBase::getRelativePosInBoundingBox(double* relativePos){
+	relativePos[0] =  RelativePosInBoundingBox[0];
+	relativePos[1] =  RelativePosInBoundingBox[1];
+}
+
 void 	ShapeBase::readNodeIds(int* inpNodeIds){
 	for (int i=0; i<nNodes; ++i){
 		this->NodeIds[i] = inpNodeIds[i];
@@ -444,6 +449,21 @@ void 	ShapeBase::growShape(){
 	// reference prism rotates, and it could have been updated in shape change functions up till this point.
 	// There fore, I will re-calculate only if necessary
 }
+void 	ShapeBase::calculateRelativePosInBoundingBox(double BoindingBoxXMin, double BoundingBoxYMin, double BoundingBoxLength, double BoundingBoxWidth){
+	RelativePosInBoundingBox = getCentre();
+	//cout<<"Elements: "<<Id<<" centre: "<< RelativePosInBoundingBox[0]<<" "<<RelativePosInBoundingBox[1]<<" ";
+	//cout<<" Bounding box: "<<BoindingBoxXMin<<" "<<BoundingBoxYMin<<" "<<BoundingBoxLength<<" "<<BoundingBoxWidth<<"  ";
+	RelativePosInBoundingBox[0] = (RelativePosInBoundingBox[0] - BoindingBoxXMin) / BoundingBoxLength;
+	RelativePosInBoundingBox[1] = (RelativePosInBoundingBox[1] - BoundingBoxYMin) / BoundingBoxWidth;
+	//cout<<" rel Pos: "<< RelativePosInBoundingBox[0]<<" "<<RelativePosInBoundingBox[1]<<endl;
+	//double* a = new double[3];
+	//a = getRelativePosInBoundingBox();
+	//cout<<" a: "<< a[0]<<" "<<a[1]<<endl;
+	//delete[] a;
+}
+void 	ShapeBase::displayRelativePosInBoundingBox(){
+	cout<<"Element: "<<Id<<"  rel Pos from element: "<<RelativePosInBoundingBox[0]<<" "<<RelativePosInBoundingBox[1]<<endl;
+}
 
 void 	ShapeBase::updateTissueCoordStrain(){
 	boost::numeric::ublas::matrix<double> tmpMat1(3,3);
@@ -459,6 +479,8 @@ void 	ShapeBase::updateTissueCoordStrain(){
 	StrainMat(0,1) = Strain(3);
 	StrainMat(2,1) = Strain(4);
 	StrainMat(0,2) = Strain(5);
+	//cout<<"Is rot mat up to date?: "<<GrowthStrainsRotMatUpToDate<<" Displaying strains: "<<endl;
+	//displayMatrix(Strain,"Strain");
 	if(!GrowthStrainsRotMatUpToDate){
 		//updating the rotation matrix:
 		double* RefCoords;
@@ -936,6 +958,7 @@ void 	ShapeBase::dudEdXde3D(double** RefNormalised, boost::numeric::ublas::vecto
 			counter++;
 		}
 	}
+	//displayMatrix(Bo,"Bo");
 	boost::numeric::ublas::axpy_prod(Bo,displacement,dude);
 	boost::numeric::ublas::axpy_prod(Bo,refpos,dXde);
 }
@@ -1091,6 +1114,13 @@ bool 	ShapeBase::checkPackingToThisNodeViaState(int ColumnarLayerDiscretisationL
 	bool pointBelongsToElement = DoesPointBelogToMe(NodePointer->Id);
 	if (pointBelongsToElement){
 		return false;
+	}
+	//If the element is peripodial membrane, and the node isassociated to a peroipodial node, is the node associated with any members of the element?
+	if(tissueType == 1 && NodePointer->LinkedPeripodiumNodeId != -1 ){
+		pointBelongsToElement = DoesPointBelogToMe(NodePointer->LinkedPeripodiumNodeId);
+		if (pointBelongsToElement){
+			return false;
+		}
 	}
 	return true;
 }

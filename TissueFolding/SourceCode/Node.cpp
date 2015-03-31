@@ -31,6 +31,7 @@ Node::Node(int id, int dim, double* pos, int tissuePos, int tissueType){
 	atCircumference = false;
 	atPeripodiumCircumference = false;
 	mass = 0.0;
+	LinkedPeripodiumNodeId = -1;
 }
 
 Node::~Node(){

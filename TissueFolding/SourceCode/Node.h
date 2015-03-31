@@ -26,6 +26,7 @@ public:
 	bool atPeripodiumCircumference;
 	vector <int> AssociatedNodesDueToPeripodium;
 	vector <double> AssociatedNodeWeightsDueToPeripodium;
+	int LinkedPeripodiumNodeId;
 	vector <int> immediateNeigs;
 	vector <int> connectedElementIds;
 	vector <double> connectedElementWeights;

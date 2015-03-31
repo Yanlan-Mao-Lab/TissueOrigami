@@ -161,6 +161,14 @@ void MainWindow::setUpProjectDisplayOptionGrid(QGridLayout *ProjectDisplayOption
 	setStrainDisplayMenu(ProjectDisplayOptionsGrid);
 	setPysPropDisplayMenu(ProjectDisplayOptionsGrid);
 	setDisplayPreferences(ProjectDisplayOptionsGrid);
+	int widthPhysProp = PysPropComboBox->minimumSizeHint().width();
+	int widthStrain = StrainComboBox->minimumSizeHint().width();
+	if (widthPhysProp>widthStrain){
+		StrainComboBox->setMinimumWidth(widthPhysProp);
+	}
+	else{
+		PysPropComboBox->setMinimumWidth(widthStrain);
+	}
 	//Adding a last row with high stretch to push the upper columns to the top of the window:
 	ProjectDisplayOptionsGrid->setRowStretch(10,10);
 
@@ -198,21 +206,17 @@ void MainWindow::setStrainDisplayMenu(QGridLayout *ProjectDisplayOptionsGrid){
 
     StrainSpinBoxes[0] = new  QDoubleSpinBox();
     StrainSpinBoxes[1] = new  QDoubleSpinBox();
-    StrainSpinBoxes[0]->setRange( -10.0, -0.1 );
-    StrainSpinBoxes[0]->setSingleStep( 0.1 );
-    StrainSpinBoxes[0]->setValue ( -1.0 );
+    StrainSpinBoxes[0]->setRange( -10.0, -0.05 );
+    StrainSpinBoxes[0]->setSingleStep( 0.05 );
+    StrainSpinBoxes[0]->setValue ( -0.1 );
     StrainSpinBoxes[0]->setEnabled(false);
-    StrainSpinBoxes[1]->setRange( 0.1, 10.0 );
-    StrainSpinBoxes[1]->setSingleStep( 0.1 );
-    StrainSpinBoxes[1]->setValue( 1.0 );
+    StrainSpinBoxes[1]->setRange( 0.05, 10.0 );
+    StrainSpinBoxes[1]->setSingleStep( 0.05 );
+    StrainSpinBoxes[1]->setValue( 0.1 );
     StrainSpinBoxes[1]->setEnabled(false);
     connect(StrainSpinBoxes[0], SIGNAL(valueChanged (double)), this, SLOT(updateStrainSpinBoxes(double)));
     connect(StrainSpinBoxes[1], SIGNAL(valueChanged (double)), this, SLOT(updateStrainSpinBoxes(double)));
 
-    //ProjectDisplayOptionsGrid->addWidget(DisplayCheckBoxes[0],4+nCoordBox,0,1,2,Qt::AlignLeft);
-    //ProjectDisplayOptionsGrid->addWidget(StrainComboBox,5+nCoordBox,0,1,2,Qt::AlignLeft);
-    //ProjectDisplayOptionsGrid->addWidget(StrainSpinBoxes[0],6+nCoordBox,0,1,1,Qt::AlignLeft);
-    //ProjectDisplayOptionsGrid->addWidget(StrainSpinBoxes[1],6+nCoordBox,1,1,1,Qt::AlignLeft);
     ProjectDisplayOptionsGrid->addWidget(DisplayCheckBoxes[0],0,0,1,2,Qt::AlignLeft);
     ProjectDisplayOptionsGrid->addWidget(StrainComboBox,1,0,1,2,Qt::AlignLeft);
     ProjectDisplayOptionsGrid->addWidget(StrainSpinBoxes[0],2,0,1,1,Qt::AlignLeft);
@@ -352,23 +356,18 @@ void MainWindow::setDisplayPreferences(QGridLayout *ProjectDisplayOptionsGrid){
 	//draw packing forces checkbox
 	DisplayPreferencesCheckBoxes[6] = new QCheckBox("Packing Forces");
 	DisplayPreferencesCheckBoxes[6]->setChecked(false);
-	connect(DisplayPreferencesCheckBoxes[6] , SIGNAL(stateChanged(int)),this,SLOT(updatePackingForceCheckBox(int)));
-
-	//SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[0],7+nCoordBox,0,1,1,Qt::AlignLeft);  // Tissue Coordinates
-	//SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[1],8+nCoordBox,0,1,2,Qt::AlignLeft);  // Net Forces
-	//SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[6],8+nCoordBox,2,1,2,Qt::AlignLeft);  // Packing Forces
-	//SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[2],9+nCoordBox,0,1,1,Qt::AlignLeft);  // Velocities
-	//SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[3],10+nCoordBox,0,1,1,Qt::AlignLeft); // Scale Bar
-	//SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[4],11+nCoordBox,0,1,1,Qt::AlignLeft); // Display Peripodium
-	//SelectionDisplayGrid->addWidget(DisplayPreferencesCheckBoxes[5],12+nCoordBox,0,1,1,Qt::AlignLeft); // Display Columnar Layer
-
-	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[0],3,0,1,1,Qt::AlignLeft);  // Tissue Coordinates
+	//draw Bounding Box checkbox
+	DisplayPreferencesCheckBoxes[7] = new QCheckBox("Bounding Box");
+	DisplayPreferencesCheckBoxes[7]->setChecked(true);
+	connect(DisplayPreferencesCheckBoxes[7] , SIGNAL(stateChanged(int)),this,SLOT(updateBoundingBoxCheckBox(int)));
+	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[0],3,0,1,2,Qt::AlignLeft);  // Tissue Coordinates
+	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[7],3,2,1,2,Qt::AlignLeft);  // display bounding box
 	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[1],4,0,1,2,Qt::AlignLeft);  // Net Forces
 	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[6],4,2,1,2,Qt::AlignLeft);  // Packing Forces
 	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[2],5,0,1,1,Qt::AlignLeft);  // Velocities
-	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[3],6,0,1,1,Qt::AlignLeft); // Scale Bar
-	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[4],7,0,1,1,Qt::AlignLeft); // Display Peripodium
-	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[5],8,0,1,1,Qt::AlignLeft); // Display Columnar Layer
+	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[3],6,0,1,2,Qt::AlignLeft); // Scale Bar
+	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[4],7,0,1,2,Qt::AlignLeft); // Display Peripodium
+	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[5],8,0,1,2,Qt::AlignLeft); // Display Columnar Layer
 }
 
 void  MainWindow::updateOrthagonalPerspectiveViewToggle(){
@@ -434,6 +433,13 @@ void  MainWindow::updateColumnarLayerDisplayCheckBox(int s){
 		MainGLWidget->drawColumnar = false;
 }
 
+void  MainWindow::updateBoundingBoxCheckBox(int s){
+	if ( s == 2 )
+		MainGLWidget->displayBoundingBox  = true;
+	else
+		MainGLWidget->displayBoundingBox  = false;
+}
+
 void MainWindow::updateStrain(int s){
 	MainGLWidget->StrainToDisplay = s;
 	MainGLWidget->update();
@@ -446,11 +452,16 @@ void MainWindow::updatePysProp(int s){
 	float high = MainGLWidget->DisplayPysPropRange[MainGLWidget->PysPropToDisplay][1];
 	float min[2] = {MainGLWidget->DisplayPysPropBounds[MainGLWidget->PysPropToDisplay][0],MainGLWidget->DisplayPysPropBounds[MainGLWidget->PysPropToDisplay][2]};
 	float max[2] = {MainGLWidget->DisplayPysPropBounds[MainGLWidget->PysPropToDisplay][1],MainGLWidget->DisplayPysPropBounds[MainGLWidget->PysPropToDisplay][3]};
-
+	int   decimals = MainGLWidget->DisplayPysPropDecimals[MainGLWidget->PysPropToDisplay];
+	float step = MainGLWidget->DisplayPysPropSteps[MainGLWidget->PysPropToDisplay];
 	PysPropSpinBoxes[0]->setRange( min[0], max[0] );
 	PysPropSpinBoxes[0]->setValue (low);
+	PysPropSpinBoxes[0]->setDecimals(decimals);
+	PysPropSpinBoxes[0]->setSingleStep( step );
 	PysPropSpinBoxes[1]->setRange( min[1], max[1] );
 	PysPropSpinBoxes[1]->setValue (high);
+	PysPropSpinBoxes[1]->setDecimals(decimals);
+	PysPropSpinBoxes[1]->setSingleStep( step );
 	//MainGLWidget->update();
 	//cout<<"Pys prop to display: "<<MainGLWidget->StrainToDisplay <<endl;
 
@@ -492,10 +503,17 @@ void MainWindow::updatePysCheckBox(int s){
 		float high = MainGLWidget->DisplayPysPropRange[MainGLWidget->PysPropToDisplay][1];
 		float min[2] = {MainGLWidget->DisplayPysPropBounds[MainGLWidget->PysPropToDisplay][0],MainGLWidget->DisplayPysPropBounds[MainGLWidget->PysPropToDisplay][2]};
 		float max[2] = {MainGLWidget->DisplayPysPropBounds[MainGLWidget->PysPropToDisplay][1],MainGLWidget->DisplayPysPropBounds[MainGLWidget->PysPropToDisplay][3]};
+		int decimals = MainGLWidget->DisplayPysPropDecimals[MainGLWidget->PysPropToDisplay];
+		float step =  MainGLWidget->DisplayPysPropSteps[MainGLWidget->PysPropToDisplay];
+
 		PysPropSpinBoxes[0]->setRange( min[0], max[0] );
 		PysPropSpinBoxes[0]->setValue (low);
+		PysPropSpinBoxes[0]->setDecimals(decimals);
+		PysPropSpinBoxes[0]->setSingleStep( step );
 		PysPropSpinBoxes[1]->setRange( min[1], max[1] );
 		PysPropSpinBoxes[1]->setValue (high);
+		PysPropSpinBoxes[1]->setDecimals(decimals);
+		PysPropSpinBoxes[1]->setSingleStep( step );
 		PysPropComboBox->setEnabled(true);
 		PysPropSpinBoxes[0]->setEnabled(true);
 		PysPropSpinBoxes[1]->setEnabled(true);
@@ -575,7 +593,6 @@ void MainWindow::timerSimulationStep(){
 	if (Sim01->DisplaySave){
 		if(!Sim01->reachedEndOfSaveFile){
 			Sim01->updateOneStepFromSave();
-
 			QTime dieTime= QTime::currentTime().addSecs(1);
 			while( QTime::currentTime() < dieTime ){
 			    QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
@@ -585,7 +602,7 @@ void MainWindow::timerSimulationStep(){
 			}
 			//spitting coordinates:
 			//Sim01->CoordinateDisplay();
-			Sim01->TissueAxisPositionDisplay();
+			//Sim01->TissueAxisPositionDisplay();
 		}
 	}
 	else{

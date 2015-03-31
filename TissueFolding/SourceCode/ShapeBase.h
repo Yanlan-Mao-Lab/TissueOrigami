@@ -43,6 +43,7 @@ protected:
 	bool 	CurrGrowthStrainsUpToDate;
 	bool 	GrewInThePast;
 	bool 	ChangedShapeInThePast;
+	double* RelativePosInBoundingBox;
 	void 	setShapeType(string TypeName);
 	void 	readNodeIds(int* tmpNodeIds);
 	void 	setPositionMatrix(vector<Node*>& Nodes);
@@ -128,6 +129,9 @@ public:
 	int 	getDim();
 	int* 	getIdentifierColour();
 	double* getCentre();
+	void	calculateRelativePosInBoundingBox(double BoindingBoxXMin, double BoundingBoxYMin, double BoundingBoxLength, double BoundingBoxWidth);
+	void	displayRelativePosInBoundingBox();
+	void	getRelativePosInBoundingBox(double* relativePos);
 	void 	getStrain(int type, float &StrainMag);
 	void 	getPlasticStrain(int type, float &StrainMag);
 	void	getTissueCoordinaSystem(double* TissueCoords);

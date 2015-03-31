@@ -26,12 +26,14 @@ Triangle::Triangle(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, double h){
 	CurrGrowthStrainAddition = new double[3];
 	ApicalNormalForPacking =  new double[3];
 	BasalNormalForPacking =  new double[3];
+	RelativePosInBoundingBox = new double[3];
 	for (int i=0; i<3; ++i){
 		CurrGrowthStrainAddition[i] = 0;
 		GrowthRate[i] = 0;
 		ShapeChangeRate[i] = 0;
 		ApicalNormalForPacking[i] = 0.0;
 		BasalNormalForPacking[i] = 0.0;
+		RelativePosInBoundingBox[i] = 0.0;
 	}
 	CurrShapeChangeStrainsUpToDate = false;
 	CurrGrowthStrainsUpToDate = false;
@@ -110,6 +112,7 @@ Triangle::~Triangle(){
 	}
 	delete[] Positions;
 	delete[] PositionsAlignedToReference;
+	delete[] RelativePosInBoundingBox;
 	//delete[] PositionsInTissueCoord;
 	delete[] NodeIds;
 	delete[] IdentifierColour;
@@ -199,7 +202,7 @@ void Triangle::calculateReferenceStiffnessMatrix(){
 	manualB(0,0)=y23; manualB(0,1)=0.0; manualB(0,2)=y31; manualB(0,3)=0.0; manualB(0,4)=y12;  manualB(0,5)=0.0;
 	manualB(1,0)=0.0; manualB(1,1)=x32; manualB(1,2)=0.0; manualB(1,3)=x13; manualB(1,4)=0.0;  manualB(1,5)=x21;
 	manualB(2,0)=x32; manualB(2,1)=y23; manualB(2,2)=x13; manualB(2,3)=y31; manualB(2,4)=x21;  manualB(2,5)=y12;
-	if (this->Id == 1166){
+	/*if (this->Id == 1166){
 		cout<<"Element : "<<Id<<endl;
 		cout<<"Reference Shape Positions: "<<endl;
 		for (int i = 0; i<nNodes; ++i){
@@ -218,7 +221,7 @@ void Triangle::calculateReferenceStiffnessMatrix(){
 		cout<<"y23: "<<y23<<" "<<y23*Area*2.0<<endl;
 		cout<<"y31: "<<y31<<" "<<y31*Area*2.0<<endl;
 		displayMatrix(manualB, "manulaB");
-	}
+	}*/
 	matrix<double> manualBE  = zero_matrix<double>(dim*n, 3);
 	matrix<double> manualBT = trans(manualB);
 	boost::numeric::ublas::axpy_prod(manualBT,height*Area*D,manualBE);
@@ -227,6 +230,7 @@ void Triangle::calculateReferenceStiffnessMatrix(){
 	B = manualB;
 	BE = manualBE;
 	Bo = ShapeFuncDerStack;
+	cout<<"finished stiffness matrix of triangle"<<endl;
 }
 /*void Triangle::calculateReferenceStiffnessMatrix(){
 	const int n = nNodes;

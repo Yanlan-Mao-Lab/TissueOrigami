@@ -19,12 +19,14 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
 	CurrGrowthStrainAddition = new double[3];
 	ApicalNormalForPacking =  new double[3];
 	BasalNormalForPacking =  new double[3];
+	RelativePosInBoundingBox = new double[3];
 	for (int i=0; i<3; ++i){
 		CurrGrowthStrainAddition[i] = 0;
 		GrowthRate[i] = 0;
 		ShapeChangeRate[i] =0;
 		ApicalNormalForPacking[i] = 0;
 		BasalNormalForPacking[i] = 0;
+		RelativePosInBoundingBox[i] =0;
 	}
 	CurrShapeChangeStrainsUpToDate = false;
 	CurrGrowthStrainsUpToDate = false;
@@ -100,12 +102,13 @@ Prism::~Prism(){
 	}
 	delete[] Positions;
 	delete[] PositionsAlignedToReference;
+	delete[] RelativePosInBoundingBox;
 	//delete[] PositionsInTissueCoord;
 	delete[] NodeIds;
 	delete[] IdentifierColour;
 	delete[] GrowthRate;
 	delete[] ShapeChangeRate;
-	delete ReferenceShape;
+	delete	 ReferenceShape;
     //cout<<"finalised the destructor for prism class"<<endl;
 }
 

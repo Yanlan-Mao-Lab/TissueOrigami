@@ -38,22 +38,33 @@ using namespace std;
      DisplayStrains = false;
      DisplayPysProp = false;
      //current ranges:
-     DisplayPysPropRange[0][0] = 1.0; DisplayPysPropRange[0][1] = 250.0;
-     DisplayPysPropRange[1][0] = 1.0; DisplayPysPropRange[1][1] = 50.0;
+     DisplayPysPropRange[0][0] = 1.0; DisplayPysPropRange[0][1] = 100.0;
+     DisplayPysPropRange[1][0] = 1.0; DisplayPysPropRange[1][1] = 5000.0;
      DisplayPysPropRange[2][0] = 0.0; DisplayPysPropRange[2][1] = 0.5;
-     DisplayPysPropRange[3][0] = -1.0; DisplayPysPropRange[3][1] = 4.0;
-     DisplayPysPropRange[4][0] = -6.0; DisplayPysPropRange[3][1] = 6.0;
+     DisplayPysPropRange[3][0] = -1.0; DisplayPysPropRange[3][1] = 10.0;
+     DisplayPysPropRange[4][0] = -1.0; DisplayPysPropRange[3][1] = 10.0;
      //the minimum and maximum they can get:
      DisplayPysPropBounds[0][0] = 0.0; DisplayPysPropBounds[0][1] = 50.0;
-     DisplayPysPropBounds[0][2] = 51.0; DisplayPysPropBounds[0][3] = 400.0;
+     DisplayPysPropBounds[0][2] = 51.0; DisplayPysPropBounds[0][3] = 250.0;
      DisplayPysPropBounds[1][0] = 1.0; DisplayPysPropBounds[1][1] = 50.0;
-     DisplayPysPropBounds[1][2] = 51.0; DisplayPysPropBounds[1][3] = 100.0;
+     DisplayPysPropBounds[1][2] = 51.0; DisplayPysPropBounds[1][3] = 10000.0;
      DisplayPysPropBounds[2][0] = 0.0; DisplayPysPropBounds[2][1] = 0.1;
      DisplayPysPropBounds[2][2] = 0.11; DisplayPysPropBounds[2][3] = 0.5;
      DisplayPysPropBounds[3][0] = -4.0; DisplayPysPropBounds[3][1] = 0.0;
      DisplayPysPropBounds[3][2] = 0.0; DisplayPysPropBounds[3][3] = 4.0;
      DisplayPysPropBounds[4][0] = -6.0; DisplayPysPropBounds[4][1] = 0.0;
      DisplayPysPropBounds[4][2] = 0.0; DisplayPysPropBounds[4][3] = 6.0;
+     //the decimals to display:
+     DisplayPysPropDecimals[0] = 0;
+     DisplayPysPropDecimals[1] = 0;
+	 DisplayPysPropDecimals[2] = 2;
+	 DisplayPysPropDecimals[3] = 2;
+	 DisplayPysPropDecimals[4] = 2;
+	 DisplayPysPropSteps[0] = 1;
+	 DisplayPysPropSteps[1] = 10;
+	 DisplayPysPropSteps[2] = 0.05;
+	 DisplayPysPropSteps[3] = 0.05;
+	 DisplayPysPropSteps[4] = 0.05;
 
   	 setSizePolicy(QSizePolicy ::Expanding , QSizePolicy ::Expanding );
   	 drawTissueCoordinates = false;
@@ -71,8 +82,7 @@ using namespace std;
      orthoViewLimits[3] =  250;
      orthoViewLimits[4] = -1000;
      orthoViewLimits[5] =  1000;
-
-
+     displayBoundingBox = true;
      cout<<"gl initiated"<<endl;
  }
 
@@ -148,7 +158,6 @@ using namespace std;
 	 glTranslatef( -Sim01->SystemCentre[0], -Sim01->SystemCentre[1], Sim01->SystemCentre[2]);
 
 	 if (ItemSelected){
-		 //cout<<"item is selected calling reference shape drawing!"<<endl;
 		 drawReferenceElement(SelectedItemIndex);
 		 highlightElement(SelectedItemIndex);
 	 }
@@ -162,7 +171,7 @@ using namespace std;
 	 drawForces();
 	 drawPackForces();
 	 drawNodeVelocities();
-
+	 drawBoundingBox();
 
 /*
 	glColor3f(0.8,0,0);
@@ -752,6 +761,12 @@ void GLWidget::highlightNode(int i){
 		 g = 0;
 		 b = 1.0 - d*(1-minB)/(segment/2.0);
 	 }
+	 //invert the display from blue to red for growth!:
+	 if (DisplayPysProp &&  PysPropToDisplay==3){
+		 double tmpred = r;
+		 r=b;
+		 b=tmpred;
+	 }
 	 //cout<<"data: "<<Data<<" colour: "<<r<<" "<<g<<" "<<b<<"Datamin: "<<DataMin<<"DataMax: "<<DataMin<<endl;
 	 OutputColour[0] = r;
 	 OutputColour[1] = g;
@@ -839,8 +854,10 @@ void GLWidget::highlightNode(int i){
  	glLineWidth(ReferenceLineThickness);
  	//Drawing the borders
  	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+ 	//cout<<"getting the reference pos:"<<endl;
  	double** pos = Sim01->Elements[i]->getReferencePos();
-	//drawing the posiions of reference elementin red
+ 	//cout<<"drawing the reference pos:"<<endl;
+ 	//drawing the posiions of reference elementin red
  	glColor3f(1,0,0);
  	glBegin(GL_LINE_STRIP);
  		for (int j =0; j<nLineStrip;++j){
@@ -869,7 +886,7 @@ void GLWidget::highlightNode(int i){
  		}
  	glEnd();
 
-
+ 	Sim01->Elements[i]->updatePositionALignedToReferenceForDrawing();
  	//drawing the positions of element aligned to reference in green
  	glColor3f(0,1,0);
  	glBegin(GL_LINE_STRIP);
@@ -884,8 +901,7 @@ void GLWidget::highlightNode(int i){
  			glVertex3f( x, y, z);
  		}
  	glEnd();
-	//drawing them again at z+10 position for easy visualisation (green)
- 	Sim01->Elements[i]->updatePositionALignedToReferenceForDrawing();
+ 	//drawing them again at z+50 position for easy visualisation (green)
  	glBegin(GL_LINE_STRIP);
 		for (int j =0; j<nLineStrip;++j){
 			int pointId = BorderConnectivity[j];
@@ -1311,7 +1327,12 @@ bool GLWidget::findNode(int i){
 
  void GLWidget::drawColourbar(){
 	 glPushMatrix();
-	 	 glTranslatef( 0, 0, -20.0f);
+	 	 if (PerspectiveView) {
+	 		 glTranslatef( 0, 0, -20.0f);
+	 	 }
+	 	 else{
+	 		 glScalef(13.0,13.0,1.0);
+	 	 }
 		 bool draw = false;
 		 float DataMin, DataMax;
 		 if(DisplayStrains){
@@ -1459,7 +1480,12 @@ bool GLWidget::findNode(int i){
 
  void GLWidget::drawAxesArrows(){
 	glPushMatrix();
-		glTranslatef( -15.0f, -15.0f, -20.0f);
+		if (PerspectiveView) {
+			glTranslatef( -15.0f, -15.0f, -20.0f);	 }
+		else{
+			glTranslatef( -200.0f, -200.0f, 0.0f);
+			glScalef(15.0,15.0,1.0);
+		}
 		glMultMatrixf(MatRot);
 		glLineWidth(ReferenceLineThickness);
 		glBegin(GL_LINES);
@@ -1674,6 +1700,36 @@ bool GLWidget::findNode(int i){
 				 delete[] v;
 			 }
 		 }
+	 }
+ }
+
+ void GLWidget::drawBoundingBox(){
+	 if (displayBoundingBox){
+		 glLineWidth(ReferenceLineThickness);
+		 glColor3f(1.0,0.0,1.0);
+		 //glLineStipple(1, 0x3F07);
+		 //glEnable(GL_LINE_STIPPLE);
+		 glBegin(GL_LINE_LOOP);
+		 		glVertex3f(Sim01->boundingBox[0][0],Sim01->boundingBox[0][1],Sim01->boundingBox[0][2]);
+		 		glVertex3f(Sim01->boundingBox[1][0],Sim01->boundingBox[0][1],Sim01->boundingBox[0][2]);
+		 		glVertex3f(Sim01->boundingBox[1][0],Sim01->boundingBox[1][1],Sim01->boundingBox[0][2]);
+		 		glVertex3f(Sim01->boundingBox[0][0],Sim01->boundingBox[1][1],Sim01->boundingBox[0][2]);
+		 		glVertex3f(Sim01->boundingBox[0][0],Sim01->boundingBox[0][1],Sim01->boundingBox[0][2]);
+		 		glVertex3f(Sim01->boundingBox[0][0],Sim01->boundingBox[0][1],Sim01->boundingBox[1][2]);
+		 		glVertex3f(Sim01->boundingBox[1][0],Sim01->boundingBox[0][1],Sim01->boundingBox[1][2]);
+		 		glVertex3f(Sim01->boundingBox[1][0],Sim01->boundingBox[1][1],Sim01->boundingBox[1][2]);
+		 		glVertex3f(Sim01->boundingBox[0][0],Sim01->boundingBox[1][1],Sim01->boundingBox[1][2]);
+		 		glVertex3f(Sim01->boundingBox[0][0],Sim01->boundingBox[0][1],Sim01->boundingBox[1][2]);
+		 glEnd();
+		 glBegin(GL_LINES);
+	 		glVertex3f(Sim01->boundingBox[1][0],Sim01->boundingBox[0][1],Sim01->boundingBox[0][2]);
+	 		glVertex3f(Sim01->boundingBox[1][0],Sim01->boundingBox[0][1],Sim01->boundingBox[1][2]);
+	 		glVertex3f(Sim01->boundingBox[1][0],Sim01->boundingBox[1][1],Sim01->boundingBox[0][2]);
+	 		glVertex3f(Sim01->boundingBox[1][0],Sim01->boundingBox[1][1],Sim01->boundingBox[1][2]);
+	 		glVertex3f(Sim01->boundingBox[0][0],Sim01->boundingBox[1][1],Sim01->boundingBox[0][2]);
+	 		glVertex3f(Sim01->boundingBox[0][0],Sim01->boundingBox[1][1],Sim01->boundingBox[1][2]);
+		 glEnd();
+		 //glDisable(GL_LINE_STIPPLE);
 	 }
  }
 
