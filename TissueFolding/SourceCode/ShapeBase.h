@@ -158,6 +158,7 @@ public:
 	void 	setGrowthRate(double x, double y, double z);
 	void 	setShapeChangeRate(double x, double y, double z);
 	void 	updateGrowthToAdd(double* growthscale);
+	void 	updatePeripodialGrowth(double growthscale);
 	void 	updateElementVolumesAndTissuePlacementsForSave(vector<Node*>& Nodes);
 	bool 	readNodeIdData(ifstream& file);
 	bool	readReferencePositionData(ifstream& file);

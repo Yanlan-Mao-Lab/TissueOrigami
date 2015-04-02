@@ -118,6 +118,7 @@ double 	ShapeBase::getPoissonRatio(){
 }
 
 double* ShapeBase::getGrowthRate(){
+	cout<<"Element "<<Id<<" Growth rate: "<<GrowthRate[0]<<" "<<GrowthRate[1]<<" "<<GrowthRate[2]<<endl;
 	return GrowthRate;
 }
 
@@ -467,6 +468,15 @@ void 	ShapeBase::updateGrowthToAdd(double* growthscale){
 	GrewInThePast = true;
 	for (int i=0;i<3;++i){
 			CurrGrowthStrainAddition[i]  += growthscale[i];
+	}
+}
+
+void 	ShapeBase::updatePeripodialGrowth(double growthscale){
+	IsGrowing = true;
+	GrewInThePast = true;
+	for (int i=0;i<2;++i){
+		LocalGrowthStrainsMat(0,0) = ( (1.0 + LocalGrowthStrainsMat(0,0)) * (1.0 + growthscale) ) - 1.0;
+		LocalGrowthStrainsMat(1,1) = ( (1.0 + LocalGrowthStrainsMat(1,1)) * (1.0 + growthscale) ) - 1.0;
 	}
 }
 

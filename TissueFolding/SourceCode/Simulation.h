@@ -126,6 +126,7 @@ private:
 	void calculateGrowthUniform(int currIndexForParameters);
 	void calculateGrowthRing(int currIndexForParameters);
 	void calculateGrowthGridBased(int currIndexForParameters);
+	void calculatePeripodialGrowthGridBased(int currIndexForParameters);
 	void changeCellShapesInSystem();
 	void changeCellShapeRing(int currIndexForParameters);
 	void setStretch();

@@ -560,6 +560,18 @@ void Simulation::writeGrowthRatesSummary(){
 			saveFileSimulationSummary<<GrowthParameters[currIndex+3]<<" "<<GrowthParameters[currIndex+4];
 			saveFileSimulationSummary<<endl;
 		}
+		else if(GrowthFunctionTypes[i] == 4){
+			saveFileSimulationSummary<<"Growth Type:  Peripodial growth From File"<<endl;
+			saveFileSimulationSummary<<"	Initial time(sec): ";
+			saveFileSimulationSummary<<GrowthParameters[currIndex];
+			saveFileSimulationSummary<<"	FinalTime time(sec): ";
+			saveFileSimulationSummary<<GrowthParameters[currIndex+1];
+			saveFileSimulationSummary<<"	Growth  matrix index: ";
+			saveFileSimulationSummary<<GrowthParameters[currIndex+2];
+			saveFileSimulationSummary<<"	Growth matrix mesh size: ";
+			saveFileSimulationSummary<<GrowthParameters[currIndex+3]<<" "<<GrowthParameters[currIndex+4];
+			saveFileSimulationSummary<<endl;
+		}
 	}
 
 }
@@ -999,9 +1011,9 @@ void Simulation::updateVelocitiesFromSave(){
 }
 
 void Simulation::updateTensionCompressionFromSave(){
-	for (int i=0;i<6;++i){
-		cout<<" at timestep :"<< timestep<<" the plastic strains of element 0:	"<<Elements[0]->PlasticStrain(i)<<"	normal strain: 	"<<Elements[i]->Strain(0)<<endl;
-	}
+	//for (int i=0;i<6;++i){
+	//	cout<<" at timestep :"<< timestep<<" the plastic strains of element 0:	"<<Elements[0]->PlasticStrain(i)<<"	normal strain: 	"<<Elements[i]->Strain(0)<<endl;
+	//}
 	int n = Elements.size();
 	for (int i=0;i<n;++i){
 		for (int j=0; j<6; ++j){
@@ -2477,7 +2489,7 @@ void Simulation::runOneStep(){
 	//outputFile<<"calculating alignment of reference"<<endl;
 	for (int i=0; i<nElement; ++i){
 		Elements[i]->alignElementOnReference();
-		if (Elements[i]->IsGrowing){
+		if (Elements[i]->IsGrowing && Elements[i]->tissueType == 0){ //only columnar layer is grown this way, peripodial membrane is already grown without alignment
 			Elements[i]->growShape();
 		}
 	}
@@ -3198,9 +3210,9 @@ void Simulation::writeElements(){
 }
 
 void Simulation::writeTensionCompression(){
-	for (int i=0;i<6;++i){
-		cout<<" at timestep :"<< timestep<<" the plastic strains of element 0:	"<<Elements[0]->PlasticStrain(i)<<"	normal strain: 	"<<Elements[i]->Strain(0)<<endl;
-	}
+	//for (int i=0;i<6;++i){
+	//	cout<<" at timestep :"<< timestep<<" the plastic strains of element 0:	"<<Elements[0]->PlasticStrain(i)<<"	normal strain: 	"<<Elements[i]->Strain(0)<<endl;
+	//}
 	int n = Elements.size();
 	for (int i=0;i<n;++i){
 		saveFileTensionCompression.write((char*) &Elements[i]->Strain(0), sizeof Elements[i]->Strain(0));
@@ -3256,6 +3268,10 @@ void Simulation::calculateGrowth(){
 		}
 		else if(GrowthFunctionTypes[i] == 3){
 			calculateGrowthGridBased(currIndexForParameters);
+			currIndexForParameters += 5;
+		}
+		else if(GrowthFunctionTypes[i] == 4){
+			calculatePeripodialGrowthGridBased(currIndexForParameters);
 			currIndexForParameters += 5;
 		}
 	}
@@ -3390,6 +3406,57 @@ void Simulation::calculateGrowthGridBased(int currIndex){
 				//This value is stored as fraction per hour, conversion is done by a time scale variable:
 				float timescale = 60*60/dt;
 				(*itElement)->updateGrowthRate(growthscale[0]*timescale,growthscale[1]*timescale,growthscale[2]*timescale);
+				//if ((*itElement)->Id == 237 || (*itElement)->Id == 337 || (*itElement)->Id == 326 || (*itElement)->Id == 328 || (*itElement)->Id == 294 || (*itElement)->Id == 305){
+				//	cout<<" Element : "<<(*itElement)->Id<<" placement: "<<indexX<<" "<<indexY<<" frac: "<<fracX<<" "<<fracY<<" Relpos: "<<ReletivePos[0]<<" "<<ReletivePos[1]<<endl;
+				//}
+				delete[] ReletivePos;
+			}
+		}
+	}
+}
+
+void Simulation::calculatePeripodialGrowthGridBased(int currIndex){
+	float initTime = GrowthParameters[currIndex];
+	float endTime = GrowthParameters[currIndex+1];
+	int growtMatrixIndex = (int) GrowthParameters[currIndex+2];
+	int nGridX = (int) GrowthParameters[currIndex+3];
+	int nGridY = (int) GrowthParameters[currIndex+4];
+	float simTime = dt*timestep;
+	double ***GrowthMatrix;
+	GrowthMatrix = GrowthMatrices[growtMatrixIndex];
+
+	if(simTime > initTime && simTime < endTime ){
+		vector<ShapeBase*>::iterator itElement;
+		for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+			if ((*itElement)->tissueType == 1){ //grow peripodial layer
+				double* ReletivePos = new double[2];
+				//normalising the element centre position with bounding box
+				(*itElement)->getRelativePosInBoundingBox(ReletivePos);
+				ReletivePos[0] *= (float) (nGridX-1);
+				ReletivePos[1] *= (float) (nGridY-1);
+				int indexX = floor(ReletivePos[0]);
+				double fracX  = ReletivePos[0] - indexX;
+				if (indexX == nGridX) { //this is for the point that is exactly the point determining the bounding box high end in X
+					indexX--;
+					fracX = 1.0;
+				}
+				int indexY = floor(ReletivePos[1]);
+				double fracY  = ReletivePos[1] - indexY;
+				if (indexY == nGridY) { //this is for the point that is exactly the point determining the bounding box high end in Y
+					indexY--;
+					fracY = 1.0;
+				}
+				double growthYmid[2]= {0.0,0.0};
+				double growthscale = 0.0;
+				growthYmid[0] = GrowthMatrix[indexX][indexY][0]*(1.0-fracX) + GrowthMatrix[indexX+1][indexY][0]*fracX;
+				growthYmid[1] = GrowthMatrix[indexX][indexY+1][0]*(1.0-fracX) + GrowthMatrix[indexX+1][indexY+1][0]*fracX;
+				growthscale = growthYmid[0]*(1.0-fracY) + growthYmid[1]*fracY;
+
+				//growing the shape
+				(*itElement)->updatePeripodialGrowth(growthscale);
+				//This value is stored as fraction per hour, conversion is done by a time scale variable:
+				float timescale = 60*60/dt;
+				(*itElement)->updateGrowthRate(growthscale*timescale,growthscale*timescale,0.0);
 				//if ((*itElement)->Id == 237 || (*itElement)->Id == 337 || (*itElement)->Id == 326 || (*itElement)->Id == 328 || (*itElement)->Id == 294 || (*itElement)->Id == 305){
 				//	cout<<" Element : "<<(*itElement)->Id<<" placement: "<<indexX<<" "<<indexY<<" frac: "<<fracX<<" "<<fracY<<" Relpos: "<<ReletivePos[0]<<" "<<ReletivePos[1]<<endl;
 				//}

@@ -29,6 +29,7 @@ private:
 	bool readGrowthType1(ifstream& file);	//uniform growth
 	bool readGrowthType2(ifstream& file);	//ring type growth
 	bool readGrowthType3(ifstream& file);	//node based growth read from file;
+	bool readGrowthType4(ifstream& file);	//node based growth for peripodial membrane read from file;
 	bool readShapeChangeOptions(ifstream& file);
 	bool readShapeChangeType1(ifstream& file);
 	bool readStretcherSetup(ifstream& file);

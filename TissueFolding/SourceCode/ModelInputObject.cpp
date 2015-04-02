@@ -132,6 +132,9 @@ bool ModelInputObject::readGrowthOptions(ifstream& file){
 		else if (type == 3){
 			Success = readGrowthType3(file);
 		}
+		else if (type == 4){
+			Success = readGrowthType4(file);
+		}
 		else{
 			cerr<<"Error in reading growth type, please enter a valid type: {1, 2, 3}, current type: "<<type<<endl;
 			return false;
@@ -377,6 +380,91 @@ bool ModelInputObject::readGrowthType3(ifstream& file){
 				}
 			}
 		}*/
+		Sim->GrowthMatrices.push_back(GrowthMatrix);
+
+	}
+	else{
+		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: Filename(full-path):" <<endl;
+		return false;
+	}
+	return true;
+}
+
+bool ModelInputObject::readGrowthType4(ifstream& file){
+	string currHeader;
+	file >> currHeader;
+	cout<<"entered read growth type 4, current header: "<<currHeader<<endl;
+	if(currHeader == "InitialTime(sec):"){
+		float initialtime;
+		file >> initialtime;
+		Sim->GrowthParameters.push_back(initialtime);
+	}
+	else{
+		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: InitialTime(sec):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "FinalTime(sec):"){
+		float finaltime;
+		file >> finaltime;
+		Sim->GrowthParameters.push_back(finaltime);
+	}
+	else{
+		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: FinalTime(sec):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "Filename(full-path):"){
+		string filepath;
+		file >> filepath;
+		cerr<<" filename is: "<<filepath<<endl;
+		const char* name_growthRates = filepath.c_str();
+		ifstream GrowthRateFile;
+		GrowthRateFile.open(name_growthRates, ifstream::in);
+		if (!(GrowthRateFile.good() && GrowthRateFile.is_open())){
+			cerr<<"could not open growth rate file file: "<<name_growthRates<<endl;
+			return false;
+		}
+		//adding the indice of the growth matrix
+		Sim->GrowthParameters.push_back(Sim->GrowthMatrices.size());
+		//cout<<"reading from growth file"<<endl;
+		int gridX, gridY;
+		GrowthRateFile >> gridX;
+		Sim->GrowthParameters.push_back(gridX);
+		GrowthRateFile >> gridY;
+		Sim->GrowthParameters.push_back(gridY);
+		float rate;
+		double timeMultiplier = Sim->dt / 3600.0;
+		cout<<"constructing growth matrix"<<endl;
+		double*** GrowthMatrix;
+		GrowthMatrix = new double**[(const int) gridX];
+		for (int i=0; i<gridX; ++i){
+			GrowthMatrix[i] = new double*[(const int) gridY];
+			for (int j=0; j<gridY; ++j){
+				GrowthMatrix[i][j] = new double[1];
+				GrowthMatrix[i][j][0] = 0.0;
+			}
+		}
+		cout<<"reading growth matrix"<<endl;
+		for (int j=gridY-1; j>-1; --j){
+			for (int i=0; i<gridX; ++i){
+				cout<<"i :"<<i<<" j: "<<j<<" ";
+				GrowthRateFile >> rate;
+				cout<<"rate: "<<rate<<" ";
+				GrowthMatrix[i][j][0] = rate;
+				cout<<"matrix value: "<<GrowthMatrix[i][j][0]<<endl;
+			}
+		}
+		GrowthRateFile.close();
+		cout<<"growth matrix: "<<endl;
+		for (int i=0; i<gridX; ++i){
+			for (int j=0; j<gridY; ++j){
+				cout<<GrowthMatrix[i][j][0]<<" ";
+				GrowthMatrix[i][j][0] *= timeMultiplier;
+				cout<<"	";
+			}
+			cout<<endl;
+		}cout<<endl;
 		Sim->GrowthMatrices.push_back(GrowthMatrix);
 
 	}
