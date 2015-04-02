@@ -1867,6 +1867,11 @@ void 	ShapeBase:: assignVolumesToNodes(vector <Node*>& Nodes){
 		Nodes[NodeIds[i]]->mass +=ReferenceShape->Volume/nNodes;
 	}
 }
+void 	ShapeBase:: assignSurfaceAreaToNodes(vector <Node*>& Nodes){
+	for (int i=0; i<nNodes; i++){
+		Nodes[NodeIds[i]]->surface +=ReferenceShape->BasalArea/nNodes;
+	}
+}
 
 void 	ShapeBase:: assignElementToConnectedNodes(vector <Node*>& Nodes){
 	for (int i=0; i<nNodes; i++){
@@ -1876,7 +1881,7 @@ void 	ShapeBase:: assignElementToConnectedNodes(vector <Node*>& Nodes){
 	}
 }
 
-void 	ShapeBase:: removeMassFromNodes(vector <Node*>& Nodes){
+void 	ShapeBase::removeMassFromNodes(vector <Node*>& Nodes){
 	for (int i=0; i<nNodes; i++){
 			Nodes[NodeIds[i]]->mass -=ReferenceShape->Volume/nNodes;
 			//updating the weight fractions of the elements on the node due to elimination of the ablated element:
@@ -1895,6 +1900,24 @@ void 	ShapeBase:: removeMassFromNodes(vector <Node*>& Nodes){
 			//All wiights are normlised as the sum will make 1.0. Now I do not want this element in the weighing,
 			//it does not have a mass anymore, therefore I will multiply all the remaining weights with (1-w_ablated);
 		}
+}
+
+void 	ShapeBase::checkDisplayClipping(double xClip, double yClip, double zClip){
+	IsClippedInDisplay=false;
+	for (int j=0; j<nNodes; ++j){
+		 if(Positions[j][0]>xClip){
+			 IsClippedInDisplay = true;
+			 return;
+		 }
+		 if(Positions[j][1]<yClip){
+			 IsClippedInDisplay = true;
+			 return;
+		 }
+		 if(Positions[j][2]>zClip){
+			 IsClippedInDisplay = true;
+			 return;
+		 }
+	 }
 }
 /*
 void ShapeBase::updateElementsNodePositions(int RKId, double ***SystemForces, vector <Node*>& Nodes, double dt){

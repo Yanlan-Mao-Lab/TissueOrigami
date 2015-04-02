@@ -103,7 +103,23 @@ void Simulation::setDefaultParameters(){
 	stretcherAttached = false;
 	StretchInitialStep = -100;
 	StretchEndStep = -100;
+	PipetteSuction = false;
 	StretchVelocity = 0.0;
+	PipetteInitialStep= -100;
+	PipetteEndStep = 0.0;
+	ApicalSuction = true;
+	pipetteCentre[0] = 0.0;
+	pipetteCentre[1] = 0.0;
+	pipetteCentre[2] = 0.0;
+	pipetteDepth = 0.0;
+	pipetteRadius =0.0;
+	SuctionPressure[0] = 0.0;
+	SuctionPressure[1] = 0.0;
+	SuctionPressure[2] = 0.0;
+	pipetteRadiusSq = pipetteRadius*pipetteRadius;
+	effectLimitsInZ[0] = pipetteCentre[2] - pipetteDepth;
+	effectLimitsInZ[1] = pipetteCentre[2] + pipetteDepth;
+
 	boundingBox[0][0] =  1000.0;	//left x
 	boundingBox[0][1] =  1000.0;	//low y
 	boundingBox[0][2] =  1000.0;	//bottom z
@@ -356,6 +372,9 @@ bool Simulation::initiateSystem(){
 	if (stretcherAttached){
 		setStretch();
 	}
+	if(PipetteSuction){
+		setupPipetteExperiment();
+	}
 	if (ContinueFromSave){
 		cout<<"Reading Final SimulationStep: "<<endl;
 		Success = readFinalSimulationStep();
@@ -374,6 +393,7 @@ void Simulation::assignNodeMasses(){
 	int n= Elements.size();
 	for (int i=0; i<n; ++i){
 		Elements[i]->assignVolumesToNodes(Nodes);
+		Elements[i]->assignSurfaceAreaToNodes(Nodes);
 	}
 }
 
@@ -2106,8 +2126,6 @@ void Simulation::initiateSystemForces(){
 			//cout<<"systemforces[i][j]: "<<SystemForces[i][0]<<" "<<SystemForces[i][0]<<" "<<SystemForces[i][0]<<endl;
 		}
 	}
-
-
 }
 
 void Simulation::initiateSinglePrismNodes(float zHeight){
@@ -2496,6 +2514,9 @@ void Simulation::runOneStep(){
 
 	double periPackingThreshold = 1000, colPackingThreshold = 1000;
 	getAverageSideLength(periPackingThreshold,colPackingThreshold);
+
+	int PipetteInitialStep = 0.;
+	int PipetteEndStep = 100000;
 	//packingThreshold *=0.7; //I am adding a 40% safety to average side length, and then taking half of it as threshold for packing
 	for (int RKId = 0; RKId<4; ++RKId){
 		//outputFile<<"started RK: "<<RKId<<endl;
@@ -2508,6 +2529,10 @@ void Simulation::runOneStep(){
 		//outputFile<<"     calculated forces"<<endl;
 		if (stretcherAttached && timestep>StretchInitialStep && timestep<StretchEndStep){
 			addStretchForces(RKId);
+		}
+
+		if (PipetteSuction && timestep> PipetteInitialStep && timestep<PipetteEndStep){
+			addPipetteForces(RKId);
 		}
 		redistributePeripodiumForces(RKId);
 		updateNodePositions(RKId);
@@ -2815,9 +2840,15 @@ void Simulation::redistributePeripodiumForces(int RKId){
 		for(int j = 0; j < nA; ++j){
 			int index2 = Nodes[index]->AssociatedNodesDueToPeripodium[j];
 			double w = Nodes[index]->AssociatedNodeWeightsDueToPeripodium[j];
-			SystemForces[RKId][index2][0] += F[0]*w;
-			SystemForces[RKId][index2][1] += F[1]*w;
-			SystemForces[RKId][index2][2] += F[2]*w;
+			if(!Nodes[index2]->FixedPos[0]){
+				SystemForces[RKId][index2][0] += F[0]*w;
+			}
+			if(!Nodes[index2]->FixedPos[1]){
+				SystemForces[RKId][index2][1] += F[1]*w;
+			}
+			if(!Nodes[index2]->FixedPos[2]){
+				SystemForces[RKId][index2][2] += F[2]*w;
+			}
 		}
 		SystemForces[RKId][index][0] = 0.0;
 		SystemForces[RKId][index][1] = 0.0;
@@ -3587,6 +3618,67 @@ void Simulation::addStretchForces(int RKId){
 	}
 }
 
+void Simulation::setupPipetteExperiment(){
+	pipetteRadiusSq = pipetteRadius*pipetteRadius;
+	effectLimitsInZ[0] = pipetteCentre[2] - pipetteDepth;
+	effectLimitsInZ[1] = pipetteCentre[2] + pipetteDepth;
+	//Now I set up the upper and lower boundaries to cover both apical and basal suction, but I need to extend the boundary
+	//inside the tube, such that the nodes will not stop being suced in after they go inside a certain length into the tube
+	//This means increasing the upper boundary for apical suction, and reducing the lower boundary for basal suction:
+	if(ApicalSuction){
+		effectLimitsInZ[1] += 1000;
+	}
+	else{
+		effectLimitsInZ[0] -= 1000;
+	}
+	//cout<<"set the system, fixing nodes:"<<endl;
+	//Now I am sticking the other side of hte tissue to a surface
+	int n = Nodes.size();
+	if (ApicalSuction){
+		for (int i=0; i<n; ++i){
+			//fix basal nodes of columnar layer:
+			if(Nodes[i]->tissuePlacement == 0 && Nodes[i]->tissueType == 0) {
+				fixAllD(i);
+			}
+		}
+	}
+	else{
+		for (int i=0; i<n; ++i){
+			//fix apical nodes and all peripodial membrane nodes:
+			if(Nodes[i]->tissuePlacement == 1 || Nodes[i]->tissueType == 1) {
+				fixAllD(i);
+			}
+		}
+	}
+}
+
+void Simulation::addPipetteForces(int RKId){
+	//cout<<"in add pipette forces"<<endl;
+	int n = Nodes.size();
+	for (int i=0; i<n; ++i){
+		//cout<<"Node "<<i<<" z pos: "<<Nodes[i]->Position[2]<<"effectLimitsInZ: "<<effectLimitsInZ[0]<<" "<<effectLimitsInZ[1]<<endl;
+		if (Nodes[i]->Position[2]> effectLimitsInZ[0] &&  Nodes[i]->Position[2]< effectLimitsInZ[1]){
+			//cout<<"Node "<<i<<" is within z range"<<endl;
+			double dx = pipetteCentre[0] - Nodes[i]->Position[0];
+			double dy = pipetteCentre[1] - Nodes[i]->Position[1];
+			//cout<<"dx: "<<dx<<" dy: "<<dy<<" dx*dx+dy*dy: "<<dx*dx+dy*dy<<endl;
+			if (dx*dx+dy*dy < pipetteRadiusSq){
+				//cout<<"Node: "<<i<<" being sucked into pipette, force: "<<SuctionPressure[0]*Nodes[i]->surface<<" "<<SuctionPressure[1]*Nodes[i]->surface<<" "<<SuctionPressure[2]*Nodes[i]->surface<<endl;
+				//node is within suciton range
+				if(!Nodes[i]->FixedPos[0]){
+					SystemForces[RKId][i][0]=SuctionPressure[0]*Nodes[i]->surface;
+				}
+				if(!Nodes[i]->FixedPos[1]){
+					SystemForces[RKId][i][1]=SuctionPressure[1]*Nodes[i]->surface;
+				}
+				if(!Nodes[i]->FixedPos[2]){
+					SystemForces[RKId][i][2]=SuctionPressure[2]*Nodes[i]->surface;
+				}
+			}
+		}
+	}
+}
+
 void Simulation::LaserAblate(double OriginX, double OriginY, double Radius){
 	vector <int> AblatedNodes;
 	vector <int> AblatedElements;
@@ -3641,6 +3733,7 @@ void Simulation::clearNodeMassLists(){
 		Nodes[i]->connectedElementIds.clear();
 		Nodes[i]->connectedElementWeights.clear();
 		Nodes[i]->mass=0.0;
+		Nodes[i]->surface=0.0;
 	}
 }
 

@@ -23,6 +23,7 @@ public:
 	int tissueType;		 	//0 -> columnar layer, 1->peripodium
 	bool atCircumference;
 	double mass;
+	double surface;
 	bool atPeripodiumCircumference;
 	vector <int> AssociatedNodesDueToPeripodium;
 	vector <double> AssociatedNodeWeightsDueToPeripodium;

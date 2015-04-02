@@ -39,6 +39,7 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
 	ApicalNormalForPackingUpToDate = false;
 	BasalNormalForPackingUpToDate = false;
 	IsAblated = false;
+	IsClippedInDisplay = false;
 	setIdentificationColour();
 	setShapeType("Prism");
 	ReferenceShape = new ReferenceShapeBase("Prism");
@@ -450,6 +451,7 @@ void Prism::calculateReferenceVolume(){
 	costet /= (baseSide1*baseSide2);
 	double sintet = pow((1-costet*costet),0.5);
 	double baseArea = baseSide1* baseSide2 * sintet / 2.0;
+	ReferenceShape->BasalArea = baseArea;
 	ReferenceShape->Volume = height * baseArea;
 	VolumePerNode = ReferenceShape->Volume/nNodes;
 	//cout<<"baseSide1: "<<baseSide1<<" baseSide2: "<<baseSide2<<" costet: "<<costet<<" sintet: "<<sintet<<endl;

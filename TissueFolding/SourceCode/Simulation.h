@@ -131,6 +131,8 @@ private:
 	void changeCellShapeRing(int currIndexForParameters);
 	void setStretch();
 	void addStretchForces(int RKId);
+	void setupPipetteExperiment();
+	void addPipetteForces(int RKId);
 	void LaserAblate(double OriginX, double OriginY, double Radius);
 	void fillInNodeNeighbourhood();
 	void updateElementVolumesAndTissuePlacements();
@@ -182,7 +184,17 @@ public:
 	bool AddPeripodium;
 	int PeripodiumType;
 	bool stretcherAttached;
+	bool PipetteSuction;
+	bool ApicalSuction;
 	int StretchInitialStep, StretchEndStep;
+	int PipetteInitialStep, PipetteEndStep;
+	double pipetteCentre[3];
+	double pipetteDepth;
+	double pipetteRadius;
+	double pipetteRadiusSq;
+	double effectLimitsInZ[2];
+
+	double SuctionPressure[3];
 	double StretchMin, StretchMax, StretchStrain;
 	vector <int*> TrianglesToDraw;
 	vector <double*> NodesToDraw;

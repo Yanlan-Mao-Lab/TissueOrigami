@@ -27,10 +27,11 @@ using namespace std;
      ~GLWidget();
 
      Simulation* Sim01;
-     QSize minimumSizeHint() const;
-     QSize sizeHint() const;
-     void manualElementSelection(int i);
-     void 	manualNodeSelection(int i);
+     QSize		minimumSizeHint() const;
+     QSize 		sizeHint() const;
+     void 		manualElementSelection(int i);
+     void 		manualNodeSelection(int i);
+     void		updateClipping();
      bool 		ItemSelected;
      string 	SelectedItemName;
      int 		SelectedItemIndex;
@@ -56,6 +57,7 @@ using namespace std;
      bool 		drawColumnar;
      bool 		PerspectiveView;
      bool		displayBoundingBox;
+     double  	xClip, yClip, zClip;
 
  signals:
  	 void SelectedItemChanged();

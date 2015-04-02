@@ -4,6 +4,8 @@ using namespace std;
 
 ReferenceShapeBase::ReferenceShapeBase(string ShapeType){
 	height = -100;
+	BasalArea = 0.0;
+	Volume = 0.0;
 	setShapeType(ShapeType);
 	setNodeNumber();
 }

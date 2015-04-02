@@ -21,6 +21,7 @@ public:
 	double** 	Positions;
 	double* 	CurrentNormal;
 	double		Volume;
+	double 		BasalArea;
 	double 		height; //slab height for 2D elements, value is -100 for 3D elements
 	ReferenceShapeBase(string SyapeType);
 	~ReferenceShapeBase();

@@ -112,6 +112,7 @@ public:
 	int 	tissuePlacement; //1 -> apical, 0 -> basal, 2->middle, 3 -> lateral
 	int 	tissueType;	//Columnar layer = 0, peripodium = 1
 	bool	IsAblated;
+	bool	IsClippedInDisplay;
 	double 	CurrShapeChangeToAdd[3];
 	//int alingmentTurn;
 	//double* CurrentNormal;
@@ -202,6 +203,7 @@ public:
 	void updatePositionsAlignedToReferenceForRK();
 	void growShape();
 	void assignVolumesToNodes(vector <Node*>& Nodes);
+	void assignSurfaceAreaToNodes(vector <Node*>& Nodes);
 	void assignElementToConnectedNodes(vector <Node*>& Nodes);
 	void removeMassFromNodes(vector <Node*>& Nodes);
 	bool RotatedElement;
@@ -219,6 +221,7 @@ public:
 	void 	updateElementsNodePositions(int RKId, double ***SystemForces, vector <Node*>& Nodes, double dt);
 	void 	updateReferencePositionMatrixFromMeshInput(ifstream& file);
 	void	fillNodeNeighbourhood(vector<Node*>& Nodes);
+	void 	checkDisplayClipping(double xClip, double yClip, double zClip);
 };
 
 #endif

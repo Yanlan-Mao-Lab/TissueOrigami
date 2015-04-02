@@ -181,11 +181,24 @@ void MainWindow::setUpViewOptionsGrid(QGridLayout *ViewOptionsGrid){
 	ViewOptionsGrid->setRowStretch(0,10);
 	//Adding last column with high stretch to push the previous columns to the left of the window:
 	ViewOptionsGrid->setColumnStretch(10,10);
+
+	ClippingSliders[0] = new QSlider(Qt::Horizontal);
+	ClippingSliders[0]->setValue(99);
+	connect(ClippingSliders[0], SIGNAL(valueChanged(int)), this, SLOT(xClipChange(int)));
+	ClippingSliders[1] = new QSlider(Qt::Horizontal);
+	ClippingSliders[1]->setValue(99);
+	connect(ClippingSliders[1], SIGNAL(valueChanged(int)), this, SLOT(yClipChange(int)));
+	ClippingSliders[2] = new QSlider(Qt::Horizontal);
+	ClippingSliders[2]->setValue(99);
+	connect(ClippingSliders[2], SIGNAL(valueChanged(int)), this, SLOT(zClipChange(int)));
+	ViewOptionsGrid->addWidget(ClippingSliders[0],1,0,1,1);
+	ViewOptionsGrid->addWidget(ClippingSliders[1],2,0,1,1);
+	ViewOptionsGrid->addWidget(ClippingSliders[2],3,0,1,1);
 	PerspectiveButton = new QPushButton("Switch To \n Orthagonal View",this);
 	PerspectiveButton->setFixedWidth(150);
 	//Connecting the button to toggle function
 	connect(PerspectiveButton, SIGNAL(clicked()), this,SLOT(updateOrthagonalPerspectiveViewToggle()));
-	ViewOptionsGrid->addWidget(PerspectiveButton,1,0,1,1);
+	ViewOptionsGrid->addWidget(PerspectiveButton,4,0,1,1);
 
 
 }
@@ -368,6 +381,24 @@ void MainWindow::setDisplayPreferences(QGridLayout *ProjectDisplayOptionsGrid){
 	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[3],6,0,1,2,Qt::AlignLeft); // Scale Bar
 	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[4],7,0,1,2,Qt::AlignLeft); // Display Peripodium
 	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[5],8,0,1,2,Qt::AlignLeft); // Display Columnar Layer
+}
+
+void  MainWindow::xClipChange(int k){
+	MainGLWidget->xClip = Sim01->boundingBox[0][0] +( ( Sim01->boundingBox[1][0] - Sim01->boundingBox[0][0] ) * (double) (k+5)/100.0 );
+	MainGLWidget->updateClipping();
+	//cout<<"x:" <<k<<" "<<MainGLWidget->xClip<<endl;
+}
+
+void  MainWindow::yClipChange(int k){
+	MainGLWidget->yClip = Sim01->boundingBox[0][1] +( ( Sim01->boundingBox[1][1] - Sim01->boundingBox[0][1] ) * (double) (95-k)/100.0 );
+	MainGLWidget->updateClipping();
+	//cout<<"y:" <<k<<" "<<MainGLWidget->yClip<<endl;
+}
+
+void  MainWindow::zClipChange(int k){
+	MainGLWidget->zClip = Sim01->boundingBox[0][2] +( ( Sim01->boundingBox[1][2] - Sim01->boundingBox[0][2] ) * (double) (k+5)/100.0 );
+	MainGLWidget->updateClipping();
+	//cout<<"z:" <<k<<" "<<MainGLWidget->zClip<<endl;
 }
 
 void  MainWindow::updateOrthagonalPerspectiveViewToggle(){

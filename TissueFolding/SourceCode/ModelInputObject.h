@@ -33,6 +33,7 @@ private:
 	bool readShapeChangeOptions(ifstream& file);
 	bool readShapeChangeType1(ifstream& file);
 	bool readStretcherSetup(ifstream& file);
+	bool readPipetteSetup(ifstream& file);
 public:
 	Simulation* Sim;
 	const char*  parameterFileName;

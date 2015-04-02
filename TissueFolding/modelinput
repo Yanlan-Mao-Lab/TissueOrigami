@@ -1,6 +1,6 @@
 InputMeshParameters:
   MeshInputMode(int-seeDocumentation): 4
-  MeshFile(full-path):   /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Wind48hr_05.mesh
+  MeshFile(full-path):   /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Wind48hr_01.mesh
 
 PeripodiumParameters:
   AddPeripodium: 1
@@ -9,13 +9,13 @@ PeripodiumParameters:
 
 TimeParameters:
   TimeStep(sec): 0.1
-  SimulationLength(sec): 10800
+  SimulationLength(sec): 1200
 
 PysicalProperties:
   YoungsModulusApical: 3000.0	YoungsModulusBasal: 3000.0	YoungsModulusMid: 3000.0	Noise(%-int): 0
   PoissonsRatio: 0.0		Noise(%-int): 0
-  ApicalViscosity: 50.0 	Noise(%-int): 0
-  BasalViscosity: 50.0		
+  ApicalViscosity: 100.0 	Noise(%-int): 0
+  BasalViscosity: 100.0		
 
 SaveOptions:
   SaveImages(bool): 1
@@ -39,12 +39,12 @@ GrowthOptions:
   MaxValue(fractionPerHour-DV,AP,AB):  0.45 0.45 0.0
 
   GrowthFunctionType(int-seeDocumentation): 3
-  InitialTime(sec): 0
+  InitialTime(sec): 1000000
   FinalTime(sec):  7200
   Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/growthFile03
 
   GrowthFunctionType(int-seeDocumentation): 4
-  InitialTime(sec): 0
+  InitialTime(sec): 1000000
   FinalTime(sec):  7200
   Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/PerigrowthFile03
 
@@ -76,4 +76,14 @@ Stretcher:
   DVClampMin: -10
   DVClampMax: +10
   MaxStrain: 0.5
+
+Pipette_Aspiration:
+  PipetteAspitarionActive(bool): 1
+  InitialTime(sec): 0
+  FinalTime(sec): 60
+  ApicalSuciton(bool-will_set_up_basal_suction_if_false): 1
+  Centre_Position(x,y,z): 0.0 0.0 25.0
+  Pipette_Radius(micron): 5.0
+  Pipette_Effect_Debth(micron): 10.0
+  Pipette_Suction_Pressure(x,y,z-unit): 0.0 0.0 50.0
 

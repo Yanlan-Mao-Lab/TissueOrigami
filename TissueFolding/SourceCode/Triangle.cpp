@@ -46,6 +46,7 @@ Triangle::Triangle(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, double h){
 	ApicalNormalForPackingUpToDate = false;
 	BasalNormalForPackingUpToDate = false;
 	IsAblated = false;
+	IsClippedInDisplay = false;
 	setIdentificationColour();
 	setShapeType("Triangle");
 	ReferenceShape = new ReferenceShapeBase("Triangle");
@@ -388,6 +389,7 @@ void Triangle::calculateReferenceVolume(){
 	double* cross = new double[3];
 	crossProduct3D(v1,v2,cross);
 	double area = 0.5 * pow(cross[0]*cross[0] + cross[1]*cross[1] + cross[2]*cross[2],0.5) ;
+	ReferenceShape->BasalArea = area;
 	ReferenceShape->Volume =  ReferenceShape->height * area ;
 	/*if (Id == 1166){
 		cout<<"Id "<<Id<<" , area: "<<area<<" height: "<< ReferenceShape->height<<" volume: "<<ReferenceShape->Volume <<endl;
@@ -399,6 +401,9 @@ void Triangle::calculateReferenceVolume(){
 	//ReferenceShape->Volume = 0.5 * ReferenceShape->height * (x1*y2+x2*y3+x3*y1-x2*y1-x3*y2-x1*y3);
 	if (ReferenceShape->Volume<0){
 		ReferenceShape->Volume *=(-1.0);
+	}
+	if (ReferenceShape->BasalArea<0){
+		ReferenceShape->BasalArea *=(-1.0);
 	}
 	VolumePerNode = ReferenceShape->Volume/nNodes;
 	//delete[] v1;

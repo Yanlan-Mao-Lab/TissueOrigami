@@ -83,6 +83,9 @@ using namespace std;
      orthoViewLimits[4] = -1000;
      orthoViewLimits[5] =  1000;
      displayBoundingBox = true;
+     xClip = 1000.0;
+     yClip = 1000.0;
+     zClip = 1000.0;
      cout<<"gl initiated"<<endl;
  }
 
@@ -157,6 +160,7 @@ using namespace std;
 	 glMultMatrixf(MatRot);
 	 glTranslatef( -Sim01->SystemCentre[0], -Sim01->SystemCentre[1], Sim01->SystemCentre[2]);
 
+
 	 if (ItemSelected){
 		 drawReferenceElement(SelectedItemIndex);
 		 highlightElement(SelectedItemIndex);
@@ -201,8 +205,20 @@ using namespace std;
 	 swapBuffers();
  }
 
+
+ void GLWidget::updateClipping(){
+	 //cout<<"updating the clipping"<<endl;
+	 int n = Sim01->Elements.size();
+	 for (int i=0; i<n; ++i){
+		 Sim01->Elements[i]->checkDisplayClipping(xClip, yClip, zClip);
+	 }
+ }
+
  bool GLWidget::checkIfDrawingElement(int i){
 	 bool drawthisElement = true;
+	 if (Sim01->Elements[i]->IsClippedInDisplay){
+		 drawthisElement = false;
+	 }
 	 if (Sim01->Elements[i]->IsAblated){
 		 drawthisElement = false;
 	 }

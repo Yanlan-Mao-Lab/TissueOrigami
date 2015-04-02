@@ -14,6 +14,7 @@
 #include <QMainWindow>
 #include <QLineEdit>
 #include <QTimer>
+#include <QSlider>
 class GLWidget;
 
 #include "../TissueFolding/SourceCode/Simulation.h"
@@ -53,6 +54,9 @@ public slots:
     void  	updateColumnarLayerDisplayCheckBox(int s);
     void  	updateBoundingBoxCheckBox(int s);
     void  	updateOrthagonalPerspectiveViewToggle();
+    void 	xClipChange(int);
+    void 	yClipChange(int);
+    void 	zClipChange(int);
 
 //signals:
  //   void StrainComboBoxCanged();
@@ -92,6 +96,7 @@ public slots:
     QCheckBox		*DisplayPreferencesCheckBoxes[8];
     QLabel			*SimTime;
     QPushButton		*PerspectiveButton;
+    QSlider			*ClippingSliders[3];
  };
 
 
