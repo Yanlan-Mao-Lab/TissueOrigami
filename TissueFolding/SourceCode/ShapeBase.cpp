@@ -266,6 +266,17 @@ void 	ShapeBase::updateNodeIdsFromSave(ifstream& file){
 	}
 }
 
+bool 	ShapeBase::readNodeIdData(ifstream& file){
+	for (int i = 0; i<nNodes; ++i){
+		int savedId;
+		file >> savedId;
+		if (NodeIds[i] != savedId){
+			return false;
+		}
+	}
+	return true;
+}
+
 void 	ShapeBase::updateReferencePositionMatrixFromSave(ifstream& file){
 	for (int i = 0; i<nNodes; ++i){
 		for (int j = 0; j<nDim; ++j){
@@ -275,6 +286,25 @@ void 	ShapeBase::updateReferencePositionMatrixFromSave(ifstream& file){
 			//cout<<"savedPos: "<<savedPos<<endl;
 		}
 	}
+}
+
+bool	ShapeBase::readReferencePositionData(ifstream& file){
+	for (int i = 0; i<nNodes; ++i){
+		for (int j = 0; j<nDim; ++j){
+			double savedPos;
+			file >> savedPos;
+			if (ReferenceShape -> Positions[i][j] != savedPos){
+				//the positions are not equal, it may be an issue of rounding, my satisfactory precision is one digit in the save files,
+				float r1 = round(ReferenceShape -> Positions[i][j]*10.0)/10.0;
+				float r2 = round(savedPos*10.0)/10.0;
+				if (r1 != r2){
+					cout<<"ReferenceShape -> Positions: "<<ReferenceShape -> Positions[i][j]<<" savedPos "<<savedPos<<" rounded refpos: "<<r1<<" rounded savedPos: "<<r2<<endl;
+					return false;
+				}
+			}
+		}
+	}
+	return true;
 }
 
 void 	ShapeBase::updateReferencePositionMatrixFromMeshInput(ifstream& file){
@@ -734,6 +764,18 @@ void 	ShapeBase::calculateGrowthInLocalCoordinates(double * strainsToAdd){
 	//displayMatrix(LocalGrowthStrainsMat,"LocalGrowthStrainsMat");
 
 	delete[] RefCoords;
+}
+
+void 	ShapeBase::convertPlasticStrainToGrowthStrain(){
+	//writing as a upper triangular
+	//for (int i=0;i<6;i++){cout<<"Read Plastic Strains: "<<PlasticStrain(i)<<" ";}
+	//cout<<endl;
+	LocalGrowthStrainsMat(0,0) = PlasticStrain(0);
+	LocalGrowthStrainsMat(1,1) = PlasticStrain(1);
+	LocalGrowthStrainsMat(2,2) = PlasticStrain(2);
+	LocalGrowthStrainsMat(0,1) = PlasticStrain(3);
+	LocalGrowthStrainsMat(0,2) = PlasticStrain(4);
+	LocalGrowthStrainsMat(1,2) = PlasticStrain(5);
 }
 
 void 	ShapeBase::updatePositionsAlignedToReferenceWithBuffers(){

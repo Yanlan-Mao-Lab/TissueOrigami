@@ -230,7 +230,7 @@ void Triangle::calculateReferenceStiffnessMatrix(){
 	B = manualB;
 	BE = manualBE;
 	Bo = ShapeFuncDerStack;
-	cout<<"finished stiffness matrix of triangle"<<endl;
+	//cout<<"finished stiffness matrix of triangle"<<endl;
 }
 /*void Triangle::calculateReferenceStiffnessMatrix(){
 	const int n = nNodes;

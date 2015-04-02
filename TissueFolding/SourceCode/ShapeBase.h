@@ -159,7 +159,9 @@ public:
 	void 	setShapeChangeRate(double x, double y, double z);
 	void 	updateGrowthToAdd(double* growthscale);
 	void 	updateElementVolumesAndTissuePlacementsForSave(vector<Node*>& Nodes);
-
+	bool 	readNodeIdData(ifstream& file);
+	bool	readReferencePositionData(ifstream& file);
+	void 	convertPlasticStrainToGrowthStrain();
 	virtual void  checkHealth(){ParentErrorMessage("checkHealth");};
 	void 	resetCurrStepGrowthData();
 	void 	resetCurrStepShapeChangeData();

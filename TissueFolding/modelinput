@@ -8,8 +8,8 @@ PeripodiumParameters:
   PeripodiumYoungsModulus: 3000.0
 
 TimeParameters:
-  TimeStep(sec): 0.5
-  SimulationLength(sec): 10800
+  TimeStep(sec): 0.4
+  SimulationLength(sec): 3001
 
 PysicalProperties:
   YoungsModulusApical: 3000.0	YoungsModulusBasal: 3000.0	YoungsModulusMid: 3000.0	Noise(%-int): 0
@@ -26,22 +26,27 @@ SaveOptions:
 GrowthOptions:
   NumberofGrowthFunctions(int): 3
   GrowthFunctionType(int-seeDocumentation): 1
-  InitialTime(sec): 10000
-  FinalTime(sec):  3600
-  MaxValue(fractionPerHour-DV,AP,AB):  0.804 0.804 0.0
+  InitialTime(sec): 0
+  FinalTime(sec):  120
+  MaxValue(fractionPerHour-DV,AP,AB):  2.804 2.804 0.0
 
   GrowthFunctionType(int-seeDocumentation): 2
-  InitialTime(sec): 10000
-  FinalTime(sec):  3600
+  InitialTime(sec): 100000
+  FinalTime(sec):  120
   Centre:  10.0 0.0
   InnerRadius: 0.0
   OuterRadius:  20.0
   MaxValue(fractionPerHour-DV,AP,AB):  0.45 0.45 0.0
 
   GrowthFunctionType(int-seeDocumentation): 3
-  InitialTime(sec): 0
+  InitialTime(sec): 10000
   FinalTime(sec):  7200
   Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/growthFile03
+
+  GrowthFunctionType(int-seeDocumentation): 4
+  InitialTime(sec): 10000
+  FinalTime(sec):  7200
+  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/PerigrowthFile01
 
 
 

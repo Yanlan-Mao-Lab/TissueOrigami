@@ -19,6 +19,7 @@ Simulation::Simulation(){
 	AddPeripodium = false;
 	PeripodiumType = 0;
 	BoundingBoxSize[0]=1000.0; BoundingBoxSize[1]=1000.0; BoundingBoxSize[2]=1000.0;
+	ContinueFromSave = false;
 	setDefaultParameters();
 
 
@@ -144,7 +145,7 @@ bool Simulation::readExecutableInputs(int argc, char **argv){
 bool Simulation::readModeOfSim(int& i, int argc, char **argv){
 	i++;
 	if (i >= argc){
-		cerr<<" input the mode of simulation: {DisplaySave, SimulationOnTheGo, Default}"<<endl;
+		cerr<<" input the mode of simulation: {DisplaySave, SimulationOnTheGo, ContinueFromSave, Default}"<<endl;
 		return false;
 	}
 	const char* inpstring = argv[i];
@@ -156,8 +157,14 @@ bool Simulation::readModeOfSim(int& i, int argc, char **argv){
 		DisplaySave = false;
 		return true;
 	}
+	else if (string(inpstring) == "ContinueFromSave"){
+		ContinueFromSave = true;
+		DisplaySave = false;
+		//DisplaySave = true;
+		return true;
+	}
 	else{
-		cerr<<"Please provide input mode: -mode {DisplaySave, SimulationOnTheGo, Default}";
+		cerr<<"Please provide input mode: -mode {DisplaySave, SimulationOnTheGo, ContinueFromSave, Default}";
 		return false;
 	}
 }
@@ -206,7 +213,78 @@ bool Simulation::readOutputDirectory(int& i, int argc, char **argv){
 
 }
 
+bool Simulation::readFinalSimulationStep(){
+	bool success  = openFilesToDisplay();
+	if (!success){
+		return false;
+	}
+	//backing up data save interval and time step before reading the system summary:
+	double timeStepCurrentSim = dt;
+	int dataSaveIntervalCurrentSim = dataSaveInterval;
+	bool ZerothFrame = true;
+	//reading system properties:
+	success  = readSystemSummaryFromSave();
+	if (!success){
+		return false;
+	}
+	string currline;
+	while(reachedEndOfSaveFile == false){
+		//skipping the header:
+		getline(saveFileToDisplayMesh,currline);
+		if(saveFileToDisplayMesh.eof()){
+			reachedEndOfSaveFile = true;
+			break;
+		}
+		success = readNodeDataToContinueFromSave();
+		if (!success){
+			return false;
+		}
+		readElementDataToContinueFromSave();
+
+		//assignPhysicalParameters();
+
+		if (TensionCompressionSaved){
+			readTensionCompressionToContinueFromSave();
+		}
+		if (ZerothFrame){
+			ZerothFrame = false;
+		}
+		else{
+			timestep = timestep + dataSaveInterval;
+		}
+		cout<<"read time point: "<<timestep<<" this is "<<timestep*dt<<" sec"<<endl;
+		//skipping the footer:
+		getline(saveFileToDisplayMesh,currline);
+		while (currline.empty() && !saveFileToDisplayMesh.eof()){
+			//skipping empty line
+			getline(saveFileToDisplayMesh,currline);
+		}
+	}
+	//Outside the loop for reading all time frames:
+	updateElementVolumesAndTissuePlacements();
+	cleanMatrixUpdateData();
+	clearNodeMassLists();
+	assignNodeMasses();
+	assignConnectedElementsAndWeightsToNodes();
+	clearLaserAblatedSites();
+	calculateStiffnessMatrices();
+	//This is updating positions from save, I am only interested in normal positions, no Runge-Kutta steps. This corresponds to RK step 4, RKId = 3
+	updateElementPositions(3);
+	calculateColumnarLayerBoundingBox();
+	//bring the time step and data save stime steps to the main modelinput:
+	dataSaveInterval = dataSaveIntervalCurrentSim;
+	dt = timeStepCurrentSim;
+	//During a simulation, the data is saved after the step is run, and the time step is incremented after the save. Now I have read in the final step,
+	//I need to increment my time step to continue the next time step from here.
+	timestep++;
+	return true;
+}
+
 bool Simulation::checkInputConsistency(){
+	if (ContinueFromSave &&  saveDirectoryToDisplayString == "Not-Set"){
+		cerr <<"The mode is set to continue from saved simulation, please provide an input directory containing the saved profile, using -dInput"<<endl;
+		return false;
+	}
 	if (saveData || saveImages){
 		if (saveDirectory == "Not-Set"){
 			cerr <<"Modelinput file requires saving, please provide output directory, using -od tag"<<endl;
@@ -244,6 +322,7 @@ bool Simulation::initiateSystem(){
 		Success = initiateMesh(MeshType, Row, Column,  SideLength,  zHeight);
 	}
 	else if(MeshType == 4){
+		cout<<"mesh type : 4"<<endl;
 		Success = initiateMesh(MeshType);
 	}
 	if (!Success){
@@ -265,7 +344,7 @@ bool Simulation::initiateSystem(){
 	assignPhysicalParameters();
 	calculateStiffnessMatrices();
 	assignNodeMasses();
-	assignConnectedElementsAndWightsToNodes();
+	assignConnectedElementsAndWeightsToNodes();
 	//for (int i=0; i<Nodes.size();++i){
 	//	cout<<"Node: "<<i<<endl;
 	//	Nodes[i]->displayConnectedElementIds();
@@ -276,6 +355,13 @@ bool Simulation::initiateSystem(){
 	}
 	if (stretcherAttached){
 		setStretch();
+	}
+	if (ContinueFromSave){
+		cout<<"Reading Final SimulationStep: "<<endl;
+		Success = readFinalSimulationStep();
+		if (!Success){
+			return Success;
+		}
 	}
 	if (saveData){
 		cout<<"writing the summary current simulation parameters"<<endl;
@@ -291,7 +377,7 @@ void Simulation::assignNodeMasses(){
 	}
 }
 
-void Simulation::assignConnectedElementsAndWightsToNodes(){
+void Simulation::assignConnectedElementsAndWeightsToNodes(){
 	int n= Elements.size();
 	for (int i=0; i<n; ++i){
 		Elements[i]->assignElementToConnectedNodes(Nodes);
@@ -327,6 +413,7 @@ bool Simulation::openFiles(){
 		//tension compression information at each step:
 		saveFileString = saveDirectory +"/Save_TensionCompression";
 		const char* name_saveFileTenComp = saveFileString.c_str();
+		cout<<"opening the file" <<name_saveFileTenComp<<endl;
 		saveFileTensionCompression.open(name_saveFileTenComp, ofstream::binary);
 		if (saveFileTensionCompression.good() && saveFileTensionCompression.is_open()){
 			Success = true;
@@ -494,7 +581,8 @@ bool Simulation::openFilesToDisplay(){
 		return false;
 	}
 	saveFileString = saveDirectoryToDisplayString +"/Save_TensionCompression";
-	const char* name_saveFileToDisplayTenComp = saveFileString.c_str();;
+	const char* name_saveFileToDisplayTenComp = saveFileString.c_str();
+	cout<<"the file opened for tension and compression: "<<name_saveFileToDisplayTenComp<<endl;
 	saveFileToDisplayTenComp.open(name_saveFileToDisplayTenComp, ifstream::in);
 	if (!(saveFileToDisplayTenComp.good() && saveFileToDisplayTenComp.is_open())){
 		cerr<<"Cannot open the save file to display: "<<name_saveFileToDisplayTenComp<<endl;
@@ -548,7 +636,7 @@ bool Simulation::initiateSavedSystem(){
 	cleanMatrixUpdateData();
 	clearNodeMassLists();
 	assignNodeMasses();
-	assignConnectedElementsAndWightsToNodes();
+	assignConnectedElementsAndWeightsToNodes();
 	clearLaserAblatedSites();
 	calculateStiffnessMatrices();
 	//This is updating positions from save, I am only interested in normal positions, no Runge-Kutta steps. This corresponds to RK step 4, RKId = 3
@@ -591,8 +679,31 @@ bool Simulation::readSystemSummaryFromSave(){
 		return false;
 	}
 	saveFileToDisplaySimSum >> dummydouble;
-	dataSaveInterval =  dummydouble/dt;
+	dataSaveInterval =  (int) ceil(dummydouble/dt);
+	return true;
+}
 
+bool Simulation::readNodeDataToContinueFromSave(){
+	int n;
+	saveFileToDisplayMesh >> n;
+	if(Nodes.size() != n){
+		cerr<<"The node number from save file("<<n<<") and model input("<<Nodes.size()<<") are not consistent - cannot continue simulation from save"<<endl;
+		return false;
+	}
+	for (int i=0; i<n; ++i){
+		int tissuePlacement, tissueType;
+		bool atCircumference;
+		saveFileToDisplayMesh >> Nodes[i]->Position[0];
+		saveFileToDisplayMesh >> Nodes[i]->Position[1];
+		saveFileToDisplayMesh >> Nodes[i]->Position[2];
+		saveFileToDisplayMesh >> tissuePlacement;
+		saveFileToDisplayMesh >> tissueType;
+		saveFileToDisplayMesh >> atCircumference;
+		if (Nodes[i]->tissuePlacement != tissuePlacement || Nodes[i]->atCircumference != atCircumference || Nodes[i]->tissueType != tissueType ){
+			cerr<<"Node "<<i<<" properties are not consistent  - cannot continue simulation from save "<<endl;
+			return false;
+		}
+	}
 	return true;
 }
 
@@ -670,7 +781,6 @@ void Simulation::initiateElementsFromMeshInput(){
 }
 
 
-
 void Simulation::initiateElementsFromSave(){
 	int n;
 	saveFileToDisplayMesh >> n;
@@ -693,6 +803,47 @@ void Simulation::initiateElementsFromSave(){
 	cout<<"number of elements: "<<Elements.size()<<endl;
 }
 
+bool Simulation::readElementDataToContinueFromSave(){
+	int n;
+	saveFileToDisplayMesh >> n;
+	if (Elements.size() != n){
+		cerr<<"The element number from save file and model input are not consistent - cannot continue simulation from save"<<endl;
+		return false;
+	}
+	for (int i=0; i<n; ++i){
+		int shapeType;
+		saveFileToDisplayMesh >> shapeType;
+		if (Elements[i]->getShapeType() != shapeType){
+			cerr<<"The element type from save file and model input are not consistent - cannot continue simulation from save"<<endl;
+			return false;
+		}
+		if (shapeType == 1){
+			bool success = readShapeData(i);
+			if (!success){
+				cerr<<"Error reading shape data, element: "<<i<<endl;
+				return false;
+			}
+		}
+		else if (shapeType == 4){
+			double height = 0.0;
+			saveFileToDisplayMesh >> height;
+			if (Elements[i]->ReferenceShape->height != height){
+				cerr<<"The element height from save file and model input are not consistent - cannot continue simulation from save"<<endl;
+				return false;
+			}
+			bool success = readShapeData(i);
+			if (!success){
+				cerr<<"Error reading shape data, element: "<<i<<endl;
+				return false;
+			}
+		}
+		else{
+			cerr<<"Error in shape type, corrupt save file! - currShapeType: "<<shapeType<<endl;
+		}
+	}
+	return true;
+}
+
 void Simulation::initiatePrismFromSave(){
 	//inserts a new prism at order k into elements vector
 	//the node ids and reference shape positions
@@ -713,6 +864,26 @@ void Simulation::initiatePrismFromSave(){
 	//Elements[Elements.size()-1]->displayReferencePositions();
 }
 
+bool Simulation::readShapeData(int i){
+	bool IsAblated;
+	saveFileToDisplayMesh >> IsAblated;
+	if ( Elements[i]->IsAblated != IsAblated){
+		cerr<<"The element "<<i<<" ablation from save file and model input are not consistent - cannot continue simulation from save"<<endl;
+		return false;
+	}
+	bool success = Elements[i]->readNodeIdData(saveFileToDisplayMesh);
+	if (!success){
+		cerr<<"The element "<<i<<" node ids from save file and model input are not consistent - cannot continue simulation from save"<<endl;
+		return false;
+	}
+	success = Elements[i]->readReferencePositionData(saveFileToDisplayMesh);
+	if (!success){
+		cerr<<"The element "<<i<<" reference shape from save file and model input are not consistent - cannot continue simulation from save"<<endl;
+		return false;
+	}
+	return true;
+}
+
 void Simulation::initiateTriangleFromSave(double height){
 	//inserts a new triangle at order k into elements vector
 	//the node ids and reference shape positions
@@ -726,8 +897,6 @@ void Simulation::initiateTriangleFromSave(double height){
 	TrianglePnt01 = new Triangle(NodeIds, Nodes, currElementId, height);
 	TrianglePnt01->updateShapeFromSave(saveFileToDisplayMesh);
 	calculateSystemCentre();
-	//CORRECT THIS LATER ON!!!
-	//SystemCentre[2] -= 10; // The apical surface is assumed to look towards (-)ve z
 	TrianglePnt01->AlignReferenceApicalNormalToZ(SystemCentre);  //correcting the alignment of the triangular element such that the apical side will be aligned with (+)ve z
 	calculateSystemCentre();
 	Elements.push_back(TrianglePnt01);
@@ -830,6 +999,9 @@ void Simulation::updateVelocitiesFromSave(){
 }
 
 void Simulation::updateTensionCompressionFromSave(){
+	for (int i=0;i<6;++i){
+		cout<<" at timestep :"<< timestep<<" the plastic strains of element 0:	"<<Elements[0]->PlasticStrain(i)<<"	normal strain: 	"<<Elements[i]->Strain(0)<<endl;
+	}
 	int n = Elements.size();
 	for (int i=0;i<n;++i){
 		for (int j=0; j<6; ++j){
@@ -844,6 +1016,19 @@ void Simulation::updateTensionCompressionFromSave(){
 		//for (int j=0; j<3; ++j){
 		//	saveFileToDisplayTenComp.read((char*) &Elements[i]->CurrPlasticStrainsInTissueCoordsMat(j,j), sizeof Elements[i]->CurrPlasticStrainsInTissueCoordsMat(j,j));
 		//}
+	}
+}
+
+void Simulation::readTensionCompressionToContinueFromSave(){
+	int n = Elements.size();
+	for (int i=0;i<n;++i){
+		for (int j=0; j<6; ++j){
+			saveFileToDisplayTenComp.read((char*) &Elements[i]->Strain(j), sizeof Elements[i]->Strain(j));
+		}
+		for (int j=0; j<6; ++j){
+			saveFileToDisplayTenComp.read((char*) &Elements[i]->PlasticStrain(j), sizeof Elements[i]->PlasticStrain(j));
+		}
+		Elements[i]->convertPlasticStrainToGrowthStrain();
 	}
 }
 
@@ -894,7 +1079,6 @@ void Simulation::initiateTriangleFromSaveForUpdate(int k, double height){
 
 
 void Simulation::updateOneStepFromSave(){
-	//cout<<"Updating step from save:"<<endl;
 	string currline;
 	//skipping the header:
 	getline(saveFileToDisplayMesh,currline);
@@ -904,7 +1088,6 @@ void Simulation::updateOneStepFromSave(){
 	}
 	//cout<<"skipped header: "<<currline<<endl;
 	updateNodeNumberFromSave();
-	//cout<<"updated node number: "<<Nodes.size();
 	updateNodePositionsFromSave();
 	updateElementStatesFromSave();
 	int n = Elements.size();
@@ -913,6 +1096,7 @@ void Simulation::updateOneStepFromSave(){
 		Elements[i]->updatePositions(3, Nodes);
 	}
 	if (TensionCompressionSaved){
+		cout<<"updating tension compression: "<<endl;
 		updateTensionCompressionFromSave();
 	}
 	if (ForcesSaved){
@@ -923,7 +1107,7 @@ void Simulation::updateOneStepFromSave(){
 	}
 	clearNodeMassLists();
 	assignNodeMasses();
-	assignConnectedElementsAndWightsToNodes();
+	assignConnectedElementsAndWeightsToNodes();
 	clearLaserAblatedSites();
 	calculateColumnarLayerBoundingBox();
 	//skipping the footer:
@@ -937,10 +1121,10 @@ void Simulation::updateOneStepFromSave(){
 		//cout<<"skipping empty line"<<endl;
 		getline(saveFileToDisplayMesh,currline2);
 	}
-	if(saveFileToDisplayMesh.eof()){
-		reachedEndOfSaveFile = true;
-		return;
-	}
+	//if(saveFileToDisplayMesh.eof()){
+	//	reachedEndOfSaveFile = true;
+	//	return;
+	//}
 	//cout<<"in step update, skipped footer: "<<currline2<<endl;
 	timestep = timestep + dataSaveInterval;
 }
@@ -1176,6 +1360,7 @@ bool Simulation::initiateMesh(int MeshType){
 		}
 		initiateNodesFromMeshInput();
 		initiateElementsFromMeshInput();
+		saveFileToDisplayMesh.close();
 	}
 	else {
 		cerr<<"Error: Mesh Type not recognised"<<endl;
@@ -2955,18 +3140,18 @@ void Simulation::writeNodes(){
 	saveFileMesh<<n<<endl;
 	for (int i = 0; i<n; ++i){
 		if(Nodes[i]->nDim==2){
-			saveFileMesh.precision(3);saveFileMesh.width(10);
+			saveFileMesh.precision(10);saveFileMesh.width(20);
 			saveFileMesh<<Nodes[i]->Position[0];
-			saveFileMesh.precision(3);saveFileMesh.width(10);
+			saveFileMesh.precision(10);saveFileMesh.width(20);
 			saveFileMesh<<Nodes[i]->Position[1];
-			saveFileMesh.precision(3);saveFileMesh.width(10);
+			saveFileMesh.precision(10);saveFileMesh.width(20);
 			saveFileMesh<<0.0;
 
 		}
 		else{
 			int ndim = Nodes[i]->nDim;
 			for (int j=0;j<ndim;++j){
-				saveFileMesh.precision(3);saveFileMesh.width(10);
+				saveFileMesh.precision(10);saveFileMesh.width(20);
 				saveFileMesh<<Nodes[i]->Position[j];
 			}
 
@@ -2990,7 +3175,7 @@ void Simulation::writeElements(){
 		saveFileMesh<<shapetype;
 		if(shapetype == 4 ){
 			double height = Elements[i]->getElementHeight();
-			saveFileMesh.precision(3);saveFileMesh.width(10);
+			saveFileMesh.precision(5);saveFileMesh.width(12);
 			saveFileMesh<<height;
 		}
 		saveFileMesh.width(4);
@@ -3004,7 +3189,7 @@ void Simulation::writeElements(){
 		double** refPos = Elements[i]->getReferencePos();
 		for (int j = 0; j<nodeNumber; ++j ){
 			for (int k = 0; k<dim; ++k ){
-				saveFileMesh.precision(3);saveFileMesh.width(10);
+				saveFileMesh.precision(5);saveFileMesh.width(12);
 				saveFileMesh<<refPos[j][k];
 			}
 		}
@@ -3013,6 +3198,9 @@ void Simulation::writeElements(){
 }
 
 void Simulation::writeTensionCompression(){
+	for (int i=0;i<6;++i){
+		cout<<" at timestep :"<< timestep<<" the plastic strains of element 0:	"<<Elements[0]->PlasticStrain(i)<<"	normal strain: 	"<<Elements[i]->Strain(0)<<endl;
+	}
 	int n = Elements.size();
 	for (int i=0;i<n;++i){
 		saveFileTensionCompression.write((char*) &Elements[i]->Strain(0), sizeof Elements[i]->Strain(0));
@@ -3028,6 +3216,7 @@ void Simulation::writeTensionCompression(){
 		saveFileTensionCompression.write((char*) &Elements[i]->PlasticStrain(4), sizeof Elements[i]->PlasticStrain(4));
 		saveFileTensionCompression.write((char*) &Elements[i]->PlasticStrain(5), sizeof Elements[i]->PlasticStrain(5));
 	}
+	saveFileTensionCompression.flush();
 }
 
 
@@ -3038,6 +3227,7 @@ void Simulation::writeForces(){
 		saveFileForces.write((char*) &SystemForces[0][i][1], sizeof SystemForces[0][i][1]);
 		saveFileForces.write((char*) &SystemForces[0][i][2], sizeof SystemForces[0][i][2]);
 	}
+	saveFileForces.flush();
 }
 
 void Simulation::writeVelocities(){
@@ -3047,6 +3237,7 @@ void Simulation::writeVelocities(){
 			saveFileVelocities.write((char*) &Nodes[i]->Velocity[j], sizeof Nodes[i]->Velocity[j]);
 		}
 	}
+	saveFileVelocities.flush();
 }
 
 void Simulation::calculateGrowth(){

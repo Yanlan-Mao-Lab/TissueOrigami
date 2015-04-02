@@ -608,6 +608,7 @@ void MainWindow::timerSimulationStep(){
 	else{
 		if (Sim01->timestep < Sim01->SimLength){
 			//cout<<"calling runonestep"<<endl;
+			//cout<<"dataSaveInterval before calling a step: " <<Sim01->dataSaveInterval<<endl;
 			Sim01->runOneStep();
 			bool slowsteps = false;
 			if (slowsteps){

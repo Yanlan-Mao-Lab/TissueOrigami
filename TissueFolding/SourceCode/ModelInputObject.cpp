@@ -684,6 +684,7 @@ bool ModelInputObject::readSaveOptions(ifstream& file){
 		float timeInSec;
 		file >> timeInSec;
 		Sim->dataSaveInterval = timeInSec/Sim->dt;
+		cout<<"ddataSaveInterval as read from file: "<<Sim->dataSaveInterval<<endl;
 	}
 	else{
 		cerr<<"Error in reading data save interval, current string: "<<currHeader<<" should have been: DataSaveInterval(sec)" <<endl;

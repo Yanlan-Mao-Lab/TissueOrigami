@@ -38,6 +38,7 @@ private:
 	int DVRight,DVLeft;
 	double StretchVelocity;
 	double BoundingBoxSize[3];
+	bool ContinueFromSave;
 
 	bool readModeOfSim(int& i, int argc, char **argv);
 	bool readParameters(int& i, int argc, char **argv);
@@ -46,10 +47,13 @@ private:
 	bool openFilesToDisplay();
 	bool readSystemSummaryFromSave();
 	void initiateNodesFromSave();
+	bool readNodeDataToContinueFromSave();
 	void initiateNodesFromMeshInput();
 	void initiateElementsFromSave();
+	bool readElementDataToContinueFromSave();
 	void initiateElementsFromMeshInput();
 	void initiatePrismFromSave();
+	bool readShapeData(int i);
 	void initiateTriangleFromSave(double height);
 	void initiatePrismFromMeshInput();
 	void initiateTetrahedraFromMeshInput();
@@ -62,7 +66,9 @@ private:
 	void updateElementStatesFromSave();
 	void updateForcesFromSave();
 	void updateTensionCompressionFromSave();
+	void readTensionCompressionToContinueFromSave();
 	void updateVelocitiesFromSave();
+	bool readFinalSimulationStep();
 	void reInitiateSystemForces(int oldSize);
 	bool checkInputConsistency();
 	void setDefaultParameters();
@@ -98,7 +104,7 @@ private:
 	void assignPhysicalParameters();
 	void calculateStiffnessMatrices();
 	void assignNodeMasses();
-	void assignConnectedElementsAndWightsToNodes();
+	void assignConnectedElementsAndWeightsToNodes();
 	void fixAllD(int i);
 	void fixZ(int i);
 	void zeroForcesOnNode(int RKId, int i);
