@@ -118,7 +118,7 @@ double 	ShapeBase::getPoissonRatio(){
 }
 
 double* ShapeBase::getGrowthRate(){
-	cout<<"Element "<<Id<<" Growth rate: "<<GrowthRate[0]<<" "<<GrowthRate[1]<<" "<<GrowthRate[2]<<endl;
+	//cout<<"Element "<<Id<<" Growth rate: "<<GrowthRate[0]<<" "<<GrowthRate[1]<<" "<<GrowthRate[2]<<endl;
 	return GrowthRate;
 }
 
@@ -295,11 +295,10 @@ bool	ShapeBase::readReferencePositionData(ifstream& file){
 			double savedPos;
 			file >> savedPos;
 			if (ReferenceShape -> Positions[i][j] != savedPos){
-				//the positions are not equal, it may be an issue of rounding, my satisfactory precision is one digit in the save files,
-				float r1 = round(ReferenceShape -> Positions[i][j]*10.0)/10.0;
-				float r2 = round(savedPos*10.0)/10.0;
-				if (r1 != r2){
-					cout<<"ReferenceShape -> Positions: "<<ReferenceShape -> Positions[i][j]<<" savedPos "<<savedPos<<" rounded refpos: "<<r1<<" rounded savedPos: "<<r2<<endl;
+				//the positions are not equal, it may be an issue of rounding, my satisfactory precision is 2%
+				float percentError = (ReferenceShape -> Positions[i][j] - savedPos) / ReferenceShape -> Positions[i][j]*100.0;
+				if (percentError>2.0 || percentError< -2.0){
+					cout<<"ReferenceShape->Positions: "<<ReferenceShape -> Positions[i][j]<<" savedPos "<<savedPos<<" percent Error: "<<percentError<<endl;
 					return false;
 				}
 			}
@@ -474,10 +473,8 @@ void 	ShapeBase::updateGrowthToAdd(double* growthscale){
 void 	ShapeBase::updatePeripodialGrowth(double growthscale){
 	IsGrowing = true;
 	GrewInThePast = true;
-	for (int i=0;i<2;++i){
-		LocalGrowthStrainsMat(0,0) = ( (1.0 + LocalGrowthStrainsMat(0,0)) * (1.0 + growthscale) ) - 1.0;
-		LocalGrowthStrainsMat(1,1) = ( (1.0 + LocalGrowthStrainsMat(1,1)) * (1.0 + growthscale) ) - 1.0;
-	}
+	LocalGrowthStrainsMat(0,0) = ( (1.0 + LocalGrowthStrainsMat(0,0)) * (1.0 + growthscale) ) - 1.0;
+	LocalGrowthStrainsMat(1,1) = ( (1.0 + LocalGrowthStrainsMat(1,1)) * (1.0 + growthscale) ) - 1.0;
 }
 
 void 	ShapeBase::growShape(){
@@ -594,6 +591,10 @@ void 	ShapeBase::updateTissueCoordinateSystem(double* TissueCoords){
 	boost::numeric::ublas::matrix<double> tmpMat1;
 	TissueCoordSystem =boost::numeric::ublas::identity_matrix<double>(3,3);
 	tmpMat1 = boost::numeric::ublas::identity_matrix<double>(3,3);
+	//negative z alignment:
+	if(capElement){
+		tmpMat1(2,2)=-1;
+	}
 	axpy_prod(WorldToTissueRotMat,tmpMat1,TissueCoordSystem);
 	//0,1,2 will give the x coordinate, 3,4,5 will give the y coordinate etc.
 	TissueCoords[0] = TissueCoordSystem(0,0);
@@ -614,6 +615,8 @@ bool 	ShapeBase::calculateWorldToTissueRotMat(double* v){
 	u[0] = 0;
 	u[1] = 0;
 	u[2] = 1;
+	//negative z alignment:
+	if(v[2]<0){u[2] = -1;capElement=true;}
 	double c, s;
 	calculateRotationAngleSinCos(u,v,c,s); //align u onto v
 	if (c<0.9998){
@@ -751,11 +754,77 @@ void 	ShapeBase::calculateGrowthInLocalCoordinates(double * strainsToAdd){
 		boost::numeric::ublas::matrix<double>tmpMat3;
 		tmpMat3 =  boost::numeric::ublas::zero_matrix<double>(3,3);
 		boost::numeric::ublas::axpy_prod(R,GrowthStrainsRotMat,tmpMat1);
+		//
+
+		boost::numeric::ublas::matrix<double>tmpMat0;
+		tmpMat0 =  boost::numeric::ublas::zero_matrix<double>(3,3);
+		boost::numeric::ublas::axpy_prod(tmpMat1,WorldToTissueRotMat,tmpMat0);
+		tmpMat1 = tmpMat0;
+
+
+/*
+		if (Id == 12){
+			boost::numeric::ublas::axpy_prod(WorldToTissueRotMat,CurrGrowthToAddTissue,tmpMat3);
+			boost::numeric::ublas::axpy_prod(tmpMat3,trans(WorldToTissueRotMat),tmpMat0);
+			cout<<"Element: "<<Id<<endl;
+			displayMatrix(tmpMat0,"Growth_With_Rotation_Of_Peripoda_Only");
+		}
+*/
+/*		boost::numeric::ublas::matrix<double>tmpMat1a;
+		tmpMat1a =  boost::numeric::ublas::zero_matrix<double>(3,3);
+		boost::numeric::ublas::matrix<double>tmpMat2a;
+		tmpMat2a =  boost::numeric::ublas::zero_matrix<double>(3,3);
+		boost::numeric::ublas::axpy_prod(R,WorldToTissueRotMat,tmpMat1a);
+		boost::numeric::ublas::axpy_prod(tmpMat1a,RT,tmpMat2a);
+		boost::numeric::ublas::axpy_prod(tmpMat2a,CurrGrowthToAddTissue,tmpMat3);
+		boost::numeric::ublas::axpy_prod(tmpMat3,trans(tmpMat2a),CurrGrowthToAddTissue);
+*/
+		//
 		boost::numeric::ublas::axpy_prod(tmpMat1,RT,tmpMat2);
 		boost::numeric::ublas::axpy_prod(tmpMat2,CurrGrowthToAddTissue,tmpMat3);
 		//boost::numeric::ublas::axpy_prod(R,trans(GrowthStrainsRotMat),tmpMat1);
 		//boost::numeric::ublas::axpy_prod(tmpMat1,RT,tmpMat2);
 		boost::numeric::ublas::axpy_prod(tmpMat3,trans(tmpMat2),CurrLocalGrowthToAdd);
+
+
+		/*boost::numeric::ublas::matrix<double>StrainMat(3,3);
+		double s[6];
+		//the growth I should have had:
+		if(Id ==12 || Id ==2){
+			cout<<" Element: "<<Id<<endl;
+			displayMatrix(tmpMat2,"tmpMat2");
+			displayMatrix(GrowthStrainsRotMat,"GrowthStrainsRotMat");
+			for (int aa=0; aa<3; aa++){
+				if (aa == 0){
+					//xdeformation 100%:
+					s[0] = 0.00417252; s[1] = 0.946865; s[2] = 0; s[3] = -0.125711; s[4] = 0; s[5] = 0;
+				}
+				if (aa == 1){
+					//y growth 100%:
+					s[0] = 0.947874; s[1]= -4.897e-05; s[2]= 0; s[3]= -0.001705; s[4]=0; s[5]= 0;
+				}
+				if (aa == 2){
+					//z growth 100%:
+					s[0] = 0.0886233; s[1] = 0.0942321; s[2] = 0; s[3] = 0.182769; s[4] = 0; s[5] = 0;
+				}
+				//the strain I want:
+				StrainMat(0,0) = s[0];
+				StrainMat(1,1) = s[1];
+				StrainMat(2,2) = s[2];
+				StrainMat(1,0) = s[3];
+				StrainMat(1,2) = s[4];
+				StrainMat(2,0) = s[5];
+				StrainMat(0,1) = s[3];
+				StrainMat(2,1) = s[4];
+				StrainMat(0,2) = s[5];
+				boost::numeric::ublas::axpy_prod(trans(tmpMat2),StrainMat,tmpMat3);
+				boost::numeric::ublas::axpy_prod(tmpMat3,tmpMat2,StrainMat);
+				//displayMatrix(CurrGrowthToAddTissue,"the growth I have");
+				if (aa == 0){displayMatrix(StrainMat,"the growth I should have had for x deformation");}
+				if (aa == 1){displayMatrix(StrainMat,"the growth I should have had for y deformation");}
+				if (aa == 2){displayMatrix(StrainMat,"the growth I should have had for z deformation");}
+			}
+		}*/
 	}
 	else{
 		CurrLocalGrowthToAdd(0,0)= strainsToAdd[0];
@@ -772,7 +841,10 @@ void 	ShapeBase::calculateGrowthInLocalCoordinates(double * strainsToAdd){
 
 	//cout<<"Element: "<<Id<<endl;
 	//displayMatrix(LocalGrowthStrainsMat,"LocalGrowthStrainsMat");
-
+	if (Id ==24 || Id == 68){
+		cout<<"Element: "<<Id<<" LocalGrowthStrainsMat: "<<endl;
+		displayMatrix(LocalGrowthStrainsMat,"LocalGrowthStrainsMat");
+	}
 	delete[] RefCoords;
 }
 
@@ -989,10 +1061,10 @@ bool	ShapeBase::calculateDisplacementGradientRotationMatrix(double** RefNormalis
 	return false; //none of the off - diagonal terms of the matrix are above the threshold, the current rotation is only niumerical error.
 }
 void 	ShapeBase::calculatedudEdXde(double** RefNormalised, boost::numeric::ublas::vector<double>& dude, boost::numeric::ublas::vector<double>& dXde){
-	if (ShapeType == 1 || ShapeType == 2 || ShapeType == 3){
+	if (ShapeDim == 3){			//3D element
 		dudEdXde3D(RefNormalised, dude,dXde);
 	}
-	else if (ShapeType == 4){
+	else if (ShapeDim == 2){	//2D element
 		dudEdXde2D(RefNormalised, dude,dXde);
 	}
 }
@@ -1248,7 +1320,7 @@ void 	ShapeBase::alignElementOnReference(){
 		//SV decomposition alignment will work nicely on 3D elements, BUT
 		//a 2D element will not be able correct for rotations in z plane.
 		//Now I will manually correct for alignment in z plane for 2D elements, then move on the SV decomposition:
-		if (ShapeType == 4){
+		if  (ShapeDim == 2){	//2D element
 			correctFor2DAlignment();
 			//if (tissueType == 1){
 			//	cout<<" Element : "<<Id<<endl;
@@ -1919,6 +1991,263 @@ void 	ShapeBase::checkDisplayClipping(double xClip, double yClip, double zClip){
 		 }
 	 }
 }
+
+double* 	ShapeBase::calculateGrowthInCircumferencialAxes(){
+	cout<<"Element : "<<Id<<endl;
+	//cout<<"positions: "<<endl;
+	//displayPositions();
+	//cout<<"reference positions: "<<endl;
+	//displayReferencePositions();
+	double *v = new double[3];
+	for (int i=0; i<3; ++i){
+		v[i]=ReferenceShape->Positions[5][i]-	ReferenceShape->Positions[4][i];
+	}
+	normaliseVector3D(v);
+	cout<<"vector v on prism: "<<v[0]<<" "<<v[1]<<" "<<v[2]<<endl;
+	double *u = new double[3];
+	u[0]=1.0;
+	u[1]=0.0;
+	u[2]=0.0;
+	double c, s;
+	calculateRotationAngleSinCos(u,v,c,s);  //align u to v: align the growth in tissue to growth in local
+	boost::numeric::ublas::matrix<double> StrainCircumferenceMat(3,3);
+	StrainCircumferenceMat = boost::numeric::ublas::zero_matrix<double> (3,3);
+	if (c<0.9998){
+		double *rotAx;
+		rotAx = new double[3];
+		double *rotMat;
+		rotMat = new double[9]; //matrix is written in one row
+		calculateRotationAxis(u,v,rotAx,c);	//calculating the rotation axis that is perpendicular to both u and v
+		constructRotationMatrix(c,s,rotAx,rotMat);
+
+		boost::numeric::ublas::matrix<double> LocalToCircumferenceRotMat(3,3);
+		LocalToCircumferenceRotMat = boost::numeric::ublas::zero_matrix<double> (3,3);
+		LocalToCircumferenceRotMat(0,0)=rotMat[0];
+		LocalToCircumferenceRotMat(0,1)=rotMat[1];
+		LocalToCircumferenceRotMat(0,2)=rotMat[2];
+		LocalToCircumferenceRotMat(1,0)=rotMat[3];
+		LocalToCircumferenceRotMat(1,1)=rotMat[4];
+		LocalToCircumferenceRotMat(1,2)=rotMat[5];
+		LocalToCircumferenceRotMat(2,0)=rotMat[6];
+		LocalToCircumferenceRotMat(2,1)=rotMat[7];
+		LocalToCircumferenceRotMat(2,2)=rotMat[8];
+
+		boost::numeric::ublas::matrix<double> tmpMat1(3,3);
+		boost::numeric::ublas::matrix<double> StrainMat(3,3);
+		tmpMat1 = boost::numeric::ublas::zero_matrix<double> (3,3);
+		StrainMat = boost::numeric::ublas::zero_matrix<double> (3,3);
+
+		/*StrainMat(0,0) = Strain(0);
+		StrainMat(1,1) = Strain(1);
+		StrainMat(2,2) = Strain(2);
+		StrainMat(1,0) = Strain(3);
+		StrainMat(1,2) = Strain(4);
+		StrainMat(2,0) = Strain(5);
+		StrainMat(0,1) = Strain(3);
+		StrainMat(2,1) = Strain(4);
+		StrainMat(0,2) = Strain(5);*/
+		StrainMat(0,0) = PlasticStrain(0);
+		StrainMat(1,1) = PlasticStrain(1);
+		StrainMat(2,2) = PlasticStrain(2);
+		StrainMat(1,0) = PlasticStrain(3);
+		StrainMat(1,2) = PlasticStrain(4);
+		StrainMat(2,0) = PlasticStrain(5);
+		StrainMat(0,1) = PlasticStrain(3);
+		StrainMat(2,1) = PlasticStrain(4);
+		StrainMat(0,2) = PlasticStrain(5);
+		//axpy_prod(trans(LocalToCircumferenceRotMat),StrainMat,tmpMat1);
+		//axpy_prod(tmpMat1,LocalToCircumferenceRotMat,StrainCircumferenceMat);
+		axpy_prod(LocalToCircumferenceRotMat,StrainMat,tmpMat1);
+		axpy_prod(tmpMat1,trans(LocalToCircumferenceRotMat),StrainCircumferenceMat);
+		cout<<"Element 2: "<<endl;
+		cout<<"rotAx: "<<rotAx[0]<<" "<<rotAx[1]<<rotAx[2]<<endl;
+		displayMatrix(LocalToCircumferenceRotMat,"LocalToCircumferenceRotMat");
+		displayMatrix(StrainMat,"StrainMat");
+		displayMatrix(StrainCircumferenceMat,"StrainCircumferenceMat");
+
+		axpy_prod(trans(LocalToCircumferenceRotMat),StrainCircumferenceMat,tmpMat1);
+		axpy_prod(tmpMat1,LocalToCircumferenceRotMat,StrainMat);
+
+		/*boost::numeric::ublas::vector<double> tmpMat2(3);
+		boost::numeric::ublas::vector<double> tmpMat3(3);
+		tmpMat2(0) = 1.0;
+		tmpMat2(1) = 0.0;
+		tmpMat2(2) = 0.0;
+		axpy_prod(LocalToCircumferenceRotMat,tmpMat2,tmpMat3);
+		cout<<"world(=)ve x  after rotation: "<<tmpMat3(0)<<" "<<tmpMat3(1)<<" "<<tmpMat3(2)<<endl;
+		tmpMat2(0) = 0.0;
+		tmpMat2(1) = 1.0;
+		tmpMat2(2) = 0.0;
+		axpy_prod(LocalToCircumferenceRotMat,tmpMat2,tmpMat3);
+		cout<<"world(=)ve y  after rotation: "<<tmpMat3(0)<<" "<<tmpMat3(1)<<" "<<tmpMat3(2)<<endl;
+		tmpMat2(0) = 0.0;
+		tmpMat2(1) = 0.0;
+		tmpMat2(2) = 1.0;
+		axpy_prod(LocalToCircumferenceRotMat,tmpMat2,tmpMat3);
+		cout<<"world(=)ve z  after rotation: "<<tmpMat3(0)<<" "<<tmpMat3(1)<<" "<<tmpMat3(2)<<endl;*/
+	}
+	delete[] u;
+	delete[] v;
+	double* circumStrain = new double[6];
+	circumStrain[0] = StrainCircumferenceMat(0,0);
+	circumStrain[1] = StrainCircumferenceMat(1,1);
+	circumStrain[2] = StrainCircumferenceMat(2,2);
+	circumStrain[3] = StrainCircumferenceMat(1,0);
+	circumStrain[4] = StrainCircumferenceMat(1,2);
+	circumStrain[5] = StrainCircumferenceMat(2,0);
+	return circumStrain;
+}
+
+void ShapeBase::calculateGrowthFromCircumferencialAxes(double* circumStrain){
+	boost::numeric::ublas::matrix<double> StrainCircumferenceMat(3,3);
+	StrainCircumferenceMat = boost::numeric::ublas::zero_matrix<double> (3,3);
+	StrainCircumferenceMat(0,0) = circumStrain[0];
+	StrainCircumferenceMat(1,1) = circumStrain[1];
+	StrainCircumferenceMat(2,2) = circumStrain[2];
+	StrainCircumferenceMat(1,0) = circumStrain[3];
+	StrainCircumferenceMat(1,2) = circumStrain[4];
+	StrainCircumferenceMat(2,0) = circumStrain[5];
+	StrainCircumferenceMat(0,1) = circumStrain[3];
+	StrainCircumferenceMat(2,1) = circumStrain[4];
+	StrainCircumferenceMat(0,2) = circumStrain[5];
+	//correct for z alignment first:
+	double* vec0;
+	double* vec1;
+	vec0 = new double[3];	//vector from node 0 to node 1 or 2, the selection is done so that the cross-product points towards apical direction (towards the lumen - between peripodial membrane and columnar layer)
+	vec1 = new double[3]; 	//vector from node 0 to (same as above)
+	for (int i = 0; i<nDim; ++i){
+		vec0[i] = Positions[1][i] - Positions[0][i];
+		vec1[i] = Positions[2][i] - Positions[0][i];
+	}
+	double* normal;
+	normal = new double[3];
+	crossProduct3D(vec0,vec1,normal);
+	normaliseVector3D(normal);
+	//align normal to (+)ve z:
+	double *v = new double[3];
+	v[0]=0.0;
+	v[1]=0.0;
+	v[2]=-1.0;
+	double c, s;
+	calculateRotationAngleSinCos(v,normal,c,s);  //align v to normal: align the growth in tissue to growth in local
+	boost::numeric::ublas::vector<double> tmpMat2(3);
+	boost::numeric::ublas::vector<double> tmpMatx(3);
+	boost::numeric::ublas::vector<double> tmpMaty(3);
+	boost::numeric::ublas::vector<double> tmpMatz(3);
+	//if (c<0.9998){
+	if (0==1){
+		double *rotAx;
+		rotAx = new double[3];
+		double *rotMat;
+		rotMat = new double[9]; //matrix is written in one row
+		calculateRotationAxis(v,normal,rotAx,c);	//calculating the rotation axis that is perpendicular to both u and v
+		constructRotationMatrix(c,s,rotAx,rotMat);
+		boost::numeric::ublas::matrix<double> CircumferenceToLocalRotMat(3,3);
+		CircumferenceToLocalRotMat = boost::numeric::ublas::zero_matrix<double> (3,3);
+		CircumferenceToLocalRotMat(0,0)=rotMat[0];
+		CircumferenceToLocalRotMat(0,1)=rotMat[1];
+		CircumferenceToLocalRotMat(0,2)=rotMat[2];
+		CircumferenceToLocalRotMat(1,0)=rotMat[3];
+		CircumferenceToLocalRotMat(1,1)=rotMat[4];
+		CircumferenceToLocalRotMat(1,2)=rotMat[5];
+		CircumferenceToLocalRotMat(2,0)=rotMat[6];
+		CircumferenceToLocalRotMat(2,1)=rotMat[7];
+		CircumferenceToLocalRotMat(2,2)=rotMat[8];
+		boost::numeric::ublas::matrix<double> tmpMat1(3,3);
+		boost::numeric::ublas::matrix<double> StrainMat(3,3);
+		tmpMat1 = boost::numeric::ublas::zero_matrix<double> (3,3);
+		StrainMat = boost::numeric::ublas::zero_matrix<double> (3,3);
+
+		axpy_prod(CircumferenceToLocalRotMat,StrainCircumferenceMat,tmpMat1);
+		axpy_prod(tmpMat1,trans(CircumferenceToLocalRotMat),StrainCircumferenceMat);
+		cout<<"Element 12: "<<endl;
+		cout<<"rotAx: "<<rotAx[0]<<" "<<rotAx[1]<<rotAx[2]<<endl;
+		displayMatrix(CircumferenceToLocalRotMat,"CircumferenceToLocalRotMat");
+		displayMatrix(StrainCircumferenceMat,"StrainCircumferenceMat");
+		displayMatrix(StrainMat,"StrainMat");
+
+
+		tmpMat2(0) = 0.7179;
+		tmpMat2(1) = -0.6962;
+		tmpMat2(2) = 0.0;
+		axpy_prod(CircumferenceToLocalRotMat,tmpMat2,tmpMatx);
+		cout<<"world(+)ve x  after first rotation: "<<tmpMatx(0)<<" "<<tmpMatx(1)<<" "<<tmpMatx(2)<<endl;
+		tmpMat2(0) = 0.6962;
+		tmpMat2(1) = 0.7179;
+		tmpMat2(2) = 0.0;
+		axpy_prod(CircumferenceToLocalRotMat,tmpMat2,tmpMaty);
+		cout<<"world(+)ve y  after first rotation: "<<tmpMaty(0)<<" "<<tmpMaty(1)<<" "<<tmpMaty(2)<<endl;
+		tmpMat2(0) = 0.0;
+		tmpMat2(1) = 0.0;
+		tmpMat2(2) = 1.0;
+		axpy_prod(CircumferenceToLocalRotMat,tmpMat2,tmpMatz);
+		cout<<"world(+)ve z  after first  rotation: "<<tmpMatz(0)<<" "<<tmpMatz(1)<<" "<<tmpMatz(2)<<endl;
+	}
+
+	double *u = new double[3];
+	for (int i=0; i<3; ++i){
+		u[i]=ReferenceShape->Positions[1][i]-	ReferenceShape->Positions[2][i];
+	}
+	normaliseVector3D(u);
+	cout<<"the vector u: "<<u[0]<<" "<<u[1]<<" "<<u[2]<<endl;
+	v[0]=1.0;
+	v[1]=0.0;
+	v[2]=0.0;
+	calculateRotationAngleSinCos(u,v,c,s);  //align u to v: align the growth in tissue to growth in local
+	if (c<0.9998){
+		double *rotAx;
+		rotAx = new double[3];
+		double *rotMat;
+		rotMat = new double[9]; //matrix is written in one row
+		calculateRotationAxis(u,v,rotAx,c);	//calculating the rotation axis that is perpendicular to both u and v
+		constructRotationMatrix(c,s,rotAx,rotMat);
+		boost::numeric::ublas::matrix<double> CircumferenceToLocalRotMat(3,3);
+		CircumferenceToLocalRotMat = boost::numeric::ublas::zero_matrix<double> (3,3);
+		CircumferenceToLocalRotMat(0,0)=rotMat[0];
+		CircumferenceToLocalRotMat(0,1)=rotMat[1];
+		CircumferenceToLocalRotMat(0,2)=rotMat[2];
+		CircumferenceToLocalRotMat(1,0)=rotMat[3];
+		CircumferenceToLocalRotMat(1,1)=rotMat[4];
+		CircumferenceToLocalRotMat(1,2)=rotMat[5];
+		CircumferenceToLocalRotMat(2,0)=rotMat[6];
+		CircumferenceToLocalRotMat(2,1)=rotMat[7];
+		CircumferenceToLocalRotMat(2,2)=rotMat[8];
+
+		boost::numeric::ublas::matrix<double> tmpMat1(3,3);
+		boost::numeric::ublas::matrix<double> StrainMat(3,3);
+		tmpMat1 = boost::numeric::ublas::zero_matrix<double> (3,3);
+		StrainMat = boost::numeric::ublas::zero_matrix<double> (3,3);
+
+		//axpy_prod(trans(CircumferenceToLocalRotMat),StrainCircumferenceMat,tmpMat1);
+		//axpy_prod(tmpMat1,CircumferenceToLocalRotMat,StrainMat);
+		axpy_prod(CircumferenceToLocalRotMat,StrainCircumferenceMat,tmpMat1);
+		axpy_prod(tmpMat1,trans(CircumferenceToLocalRotMat),StrainMat);
+
+		cout<<"Element 12: "<<endl;
+		cout<<"rotAx: "<<rotAx[0]<<" "<<rotAx[1]<<rotAx[2]<<endl;
+		displayMatrix(CircumferenceToLocalRotMat,"CircumferenceToLocalRotMat");
+		displayMatrix(StrainCircumferenceMat,"StrainCircumferenceMat");
+		displayMatrix(StrainMat,"StrainMat");
+
+		//the strain I want:
+		StrainMat(0,0) = 0.00417252;
+		StrainMat(1,1) = 0.946865;
+		StrainMat(2,2) = 0.0;
+		StrainMat(1,0) = -0.125711;
+		StrainMat(1,2) = 0.0;
+		StrainMat(2,0) = 0.0;
+		StrainMat(0,1) = -0.125711;
+		StrainMat(2,1) = 0.0;
+		StrainMat(0,2) = 0.0;
+		//axpy_prod(CircumferenceToLocalRotMat,StrainMat,tmpMat1);
+		//axpy_prod(tmpMat1,trans(CircumferenceToLocalRotMat),StrainCircumferenceMat);
+		axpy_prod(trans(CircumferenceToLocalRotMat),StrainMat,tmpMat1);
+		axpy_prod(tmpMat1,CircumferenceToLocalRotMat,StrainCircumferenceMat);
+		displayMatrix(StrainCircumferenceMat,"StrainCircumferenceMat");
+		displayMatrix(StrainMat,"StrainMat");
+	}
+}
+
 /*
 void ShapeBase::updateElementsNodePositions(int RKId, double ***SystemForces, vector <Node*>& Nodes, double dt){
 	//Update Node positions:
@@ -1962,4 +2291,234 @@ void ShapeBase::updateElementsNodePositions(int RKId, double ***SystemForces, ve
 		}
 	}
 };*/
+void ShapeBase::calculatGrowthScalingMatrices(){
+	xGrowthScaling  = boost::numeric::ublas::zero_matrix<double>(3,3);
+	yGrowthScaling  = boost::numeric::ublas::zero_matrix<double>(3,3);
+	zGrowthScaling  = boost::numeric::ublas::zero_matrix<double>(3,3);
+	//extending the shape in x direction for j = 0, in y for j=1, and in z for j=2:
+	for(int j=0; j<3; j++){
+		for (int i=0;i<nNodes; ++i){
+				Positions[i][j] *=2.0;
+		}
+		cout<<" calculating element: "<<Id<<" in dimension "<<j<<" (0=x, 1=y, 2=z)"<<endl;
+		alignElementOnReference();
+		if (ShapeDim == 3){		//3D element
+			calculateGrowthScalingMatricesIn3D(j);
+		}
+		else if (ShapeDim == 2){	//2D element
+			calculateGrowthScalingMatricesIn2D(j);
+		}
+		for (int i=0;i<nNodes; ++i){
+				Positions[i][j] /=2.0;
+		}
+	}
+}
 
+void ShapeBase::calculateGrowthScalingMatricesIn2D(int dimension){
+	int dim = nDim-1;	//calculating forces and strains for 2D
+	const int nMult = nNodes*dim;
+	boost::numeric::ublas::vector<double> displacement(nMult);
+	int counter = 0;
+	for (int i = 0; i<nNodes; ++i){
+		for (int j = 0; j<dim; ++j){
+			displacement(counter) = PositionsAlignedToReference[i][j]-ReferenceShape->Positions[i][j];
+			counter++;
+		}
+	}
+	Strain = boost::numeric::ublas::zero_vector<double>(6);
+	boost::numeric::ublas::vector<double> Strain2D(3);
+	Strain2D = boost::numeric::ublas::zero_vector<double>(3);
+	boost::numeric::ublas::axpy_prod(B,displacement,Strain2D);
+	//cout<<"calculated strain2D"<<endl;
+	Strain(0)=Strain2D(0);
+	Strain(1)=Strain2D(1);
+	Strain(3)=Strain2D(2);
+	if(dimension == 0){ //calculating x
+		calculateRotationAndGetTheScalingMatrix(xGrowthScaling);
+	}
+	else if (dimension == 1){ //calculating y
+		calculateRotationAndGetTheScalingMatrix(yGrowthScaling);
+	}
+	else if (dimension == 2){ //calculating z
+		calculateRotationAndGetTheScalingMatrix(zGrowthScaling);
+	}
+}
+
+void ShapeBase::calculateGrowthScalingMatricesIn3D(int dimension){
+	alignElementOnReference();
+	const int nMult = nNodes*nDim;
+	boost::numeric::ublas::vector<double> displacement(nMult);
+	int counter = 0;
+	for (int i = 0; i<nNodes; ++i){
+		for (int j = 0; j<nDim; ++j){
+			displacement(counter) = PositionsAlignedToReference[i][j]-ReferenceShape->Positions[i][j];
+			counter++;
+		}
+	}
+	Strain = boost::numeric::ublas::zero_vector<double>(6);
+	boost::numeric::ublas::axpy_prod(B,displacement,Strain);
+	if(dimension == 0){ //calculating x
+		calculateRotationAndGetTheScalingMatrix(xGrowthScaling);
+		WorldToTissueRotMat= boost::numeric::ublas::identity_matrix<double>(3,3);
+		GrowthStrainsRotMat = boost::numeric::ublas::identity_matrix<double>(3,3);
+		WorldToReferenceRotMat = boost::numeric::ublas::identity_matrix<double>(3,3);
+	}
+	else if (dimension == 1){ //calculating y
+		calculateRotationAndGetTheScalingMatrix(yGrowthScaling);
+		WorldToTissueRotMat= boost::numeric::ublas::identity_matrix<double>(3,3);
+		GrowthStrainsRotMat = boost::numeric::ublas::identity_matrix<double>(3,3);
+		WorldToReferenceRotMat = boost::numeric::ublas::identity_matrix<double>(3,3);
+	}
+	else if (dimension == 2){ //calculating z
+		calculateRotationAndGetTheScalingMatrix(zGrowthScaling);
+		WorldToTissueRotMat= boost::numeric::ublas::identity_matrix<double>(3,3);
+		GrowthStrainsRotMat = boost::numeric::ublas::identity_matrix<double>(3,3);
+		WorldToReferenceRotMat = boost::numeric::ublas::identity_matrix<double>(3,3);
+	}
+
+}
+
+void ShapeBase::calculateRotationAndGetTheScalingMatrix(boost::numeric::ublas::matrix<double>& mat){
+	//Now I have the strain the element should have if it was extended 100% in x
+	//calculate the growth input that is needed for this strain:
+	double* RefCoords;
+	RefCoords = new double[9];
+	calculateReferenceCoordSysAlignedToTissue(RefCoords);
+	double* v = new double[3];
+	v[0]=RefCoords[0];
+	v[1]=RefCoords[1];
+	v[2]=RefCoords[2];
+	bool rotateMatrix = calculateGrowthStrainsRotMat(v);
+	boost::numeric::ublas::matrix<double>  CurrLocalGrowthToAdd;
+	CurrLocalGrowthToAdd = boost::numeric::ublas::zero_matrix<double>(3,3);
+	boost::numeric::ublas::matrix<double>StrainMat(3,3);
+	StrainMat(0,0) = Strain(0);
+	StrainMat(1,1) = Strain(1);
+	StrainMat(2,2) = Strain(2);
+	StrainMat(1,0) = Strain(3);
+	StrainMat(1,2) = Strain(4);
+	StrainMat(2,0) = Strain(5);
+	StrainMat(0,1) = Strain(3);
+	StrainMat(2,1) = Strain(4);
+	StrainMat(0,2) = Strain(5);
+	if (rotateMatrix){
+		boost::numeric::ublas::matrix<double>  CurrGrowthToAddTissue;
+		CurrGrowthToAddTissue = boost::numeric::ublas::zero_matrix<double>(3,3);
+		boost::numeric::ublas::matrix<double>tmpMat1;
+		tmpMat1 =  boost::numeric::ublas::zero_matrix<double>(3,3);
+
+		boost::numeric::ublas::matrix<double>R;
+		R =  boost::numeric::ublas::identity_matrix<double>(3,3);
+		R(2,2)=2.0;
+		boost::numeric::ublas::matrix<double>RT;
+		RT =  boost::numeric::ublas::identity_matrix<double>(3,3);
+		RT(2,2)=0.5;
+		boost::numeric::ublas::matrix<double>tmpMat2;
+		tmpMat2 =  boost::numeric::ublas::zero_matrix<double>(3,3);
+		boost::numeric::ublas::matrix<double>tmpMat3;
+		tmpMat3 =  boost::numeric::ublas::zero_matrix<double>(3,3);
+		boost::numeric::ublas::axpy_prod(R,GrowthStrainsRotMat,tmpMat1);
+		boost::numeric::ublas::axpy_prod(tmpMat1,RT,tmpMat2);
+
+		boost::numeric::ublas::axpy_prod(trans(tmpMat2),StrainMat,tmpMat3);
+		boost::numeric::ublas::axpy_prod(tmpMat3,tmpMat2,StrainMat);
+		if(Id ==12){
+			cout<<"Element: "<<Id<<endl;
+			displayMatrix(tmpMat2,"tmpMat2");
+			displayMatrix(GrowthStrainsRotMat,"GrowthStrainsRotMat");
+		}
+	}
+	mat = StrainMat;
+	if(Id ==12){
+		displayMatrix(mat,"mat_calculated");
+		displayMatrix(Strain,"strain");
+	}
+}
+
+
+
+void 	ShapeBase::alignGrowthCalculationOnReference(){
+	//if (tissueType == 1){
+	//	cout<<" Element : "<<Id<<endl;
+	//	displayMatrix(WorldToReferenceRotMat,"WorldToReferenceRotMat_BeforeAlignment");
+	//}
+	const int n = nNodes;
+	const int dim = nDim;
+	double* refCentre = new double[dim];
+	double** RefNormalised = new double*[n];
+	for (int i = 0; i<nNodes; ++i){
+		RefNormalised[i] = new double[dim];
+	}
+	bringShapePositionsToOrigin(RefNormalised,refCentre);
+	bool needAlignment = calculateAlignmentScore(RefNormalised);
+	double* rotMat;
+	rotMat = new double[9];
+	if (needAlignment){
+		//bool calculateRotation = calculateAlignmentRotationMatrix(RefNormalised, rotMat);
+		/*if (Id == 12 ) {
+			cout<<"rotMat from node alignment: "<<endl;
+			for (int i=0; i<9 ;++i){
+				cout<<rotMat[i]<<" ";
+			}
+			cout<<endl;
+		}*/
+		//SV decomposition alignment will work nicely on 3D elements, BUT
+		//a 2D element will not be able correct for rotations in z plane.
+		//Now I will manually correct for alignment in z plane for 2D elements, then move on the SV decomposition:
+		if (ShapeType == 4){
+			correctFor2DAlignment();
+			//if (tissueType == 1){
+			//	cout<<" Element : "<<Id<<endl;
+			//	displayMatrix(WorldToReferenceRotMat,"WorldToReferenceRotMat_After2DAlignment");
+			//}
+		}
+		//Now continuing on SV decomposition
+		bool calculateRotation = calculateDisplacementGradientRotationMatrix(RefNormalised, rotMat);
+		/*if (Id == 12 &&  calculateRotation ) {
+			cout<<"rotMat from strain decomposition: "<<endl;
+			for (int i=0; i<9 ;++i){
+				cout<<rotMat[i]<<" ";
+			}
+			cout<<endl;
+		}*/
+		if (calculateRotation){
+			double u[3];
+			for (int i=0; i<nNodes; ++i){
+				u[0] = PositionsAlignedToReference[i][0];
+				u[1] = PositionsAlignedToReference[i][1];
+				u[2] = PositionsAlignedToReference[i][2];
+				rotateVectorByRotationMatrix(u,rotMat);
+				PositionsAlignedToReference[i][0] = u[0] + refCentre[0];
+				PositionsAlignedToReference[i][1] = u[1] + refCentre[1];
+				PositionsAlignedToReference[i][2] = u[2] + refCentre[2];
+			}
+			//if (tissueType == 1){
+			//	cout<<" Element : "<<Id<<endl;
+			//	displayMatrix(WorldToReferenceRotMat,"WorldToReferenceRotMat_after3DAlignment");
+			//}
+		}
+		else{
+			//alignement seems necessary, yet the rotation matrix was identity
+			for (int i=0; i<nNodes; ++i){
+				PositionsAlignedToReference[i][0] += refCentre[0];
+				PositionsAlignedToReference[i][1] += refCentre[1];
+				PositionsAlignedToReference[i][2] += refCentre[2];
+			}
+		}
+	}
+	else{
+		//there have been no rotation, I want to centre the positions on reference now
+		for (int i=0; i<nNodes; ++i){
+			PositionsAlignedToReference[i][0] += refCentre[0];
+			PositionsAlignedToReference[i][1] += refCentre[1];
+			PositionsAlignedToReference[i][2] += refCentre[2];
+		}
+	}
+	//if (tissueType == 1){
+	//	cout<<" Element : "<<Id<<endl;
+	//	displayMatrix(WorldToReferenceRotMat,"WorldToReferenceRotMat_afterAllAlignment");
+	//}
+	delete[] RefNormalised;
+	delete[] rotMat;
+	delete 	 refCentre;
+}

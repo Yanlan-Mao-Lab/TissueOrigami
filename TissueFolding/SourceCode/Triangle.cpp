@@ -47,6 +47,8 @@ Triangle::Triangle(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, double h){
 	BasalNormalForPackingUpToDate = false;
 	IsAblated = false;
 	IsClippedInDisplay = false;
+	capElement = false;
+	tiltedElement = false;
 	setIdentificationColour();
 	setShapeType("Triangle");
 	ReferenceShape = new ReferenceShapeBase("Triangle");
@@ -65,6 +67,10 @@ Triangle::Triangle(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, double h){
 	PlasticStrain = boost::numeric::ublas::zero_vector<double>(6);
 	CurrPlasticStrainsInTissueCoordsMat = boost::numeric::ublas::zero_matrix<double>(3,3);
 	LocalGrowthStrainsMat = boost::numeric::ublas::zero_matrix<double>(3,3);
+
+	xGrowthScaling  = boost::numeric::ublas::zero_matrix<double>(3,3);
+	yGrowthScaling  = boost::numeric::ublas::zero_matrix<double>(3,3);
+	zGrowthScaling  = boost::numeric::ublas::zero_matrix<double>(3,3);
 
 	WorldToTissueRotMat= boost::numeric::ublas::identity_matrix<double>(3,3);
 	GrowthStrainsRotMat = boost::numeric::ublas::identity_matrix<double>(3,3);
@@ -429,13 +435,7 @@ void Triangle::AlignReferenceApicalNormalToZ(double* SystemCentre){
 	normal = new double[3];
 	crossProduct3D(vec0,vec1,normal);
 	normaliseVector3D(normal);
-	//then rotate the reference to have this vector pointing towards apical z-direction;
-	/*double* z;
-	z = new double[3];
-	z[0] = 0.0;
-	z[1] = 0.0;
-	z[2] = apicalZDir;
-	*/
+
 	//then rotate the reference to have the vector pointing towards the lumen, to align to (+)ve z;
 	double* z;
 	z = new double[3];

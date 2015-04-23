@@ -1847,6 +1847,9 @@ void Simulation::AddPeripodiumCapToApicalAttached(int layerCount,  vector <int*>
 			if (Nodes[ApicalTriangles[k]]->tissuePlacement == 1 &&
 				Nodes[ApicalTriangles[k+1]]->tissuePlacement == 1 &&
 				Nodes[ApicalTriangles[k+2]]->tissuePlacement == 1){
+				//This is an element that is adding a peripodial membrane triangle,
+				//This will be the base node of the said triangle, if the triangle is tilted
+				//I will record all the information now, and apply the changes to tilted triangles i
 				int* TriNodeIds;
 				TriNodeIds = new int[3];
 				int nDict = CorrespondingApicalNodeId.size();
@@ -1930,7 +1933,7 @@ void Simulation::assignMassWeightsDueToPeripodium(){
 void Simulation::addPeripodiumNodes(vector <int*> &trianglecornerlist, double height, double d){
 	//cerr<<"Adding peripodium nodes"<<endl;
 	//int n = ColumnarCircumferencialNodeList.size();
-	double lumenHeight = height*0.3;	//I want the lumen of the tissue to be 30% of tissue hight
+	double lumenHeight = height*0.3;//height*0.3;	//I want the lumen of the tissue to be 30% of tissue hight
 	int index_begin = 0, index_end =0;
 	//Adding a midline range of nodes
 	AddPeripodiumCircumference(height, index_begin, index_end);
@@ -2420,6 +2423,9 @@ void Simulation::runOneStep(){
 		for (int i=0; i<nElement; ++i){
 			Elements[i]->calculateRelativePosInBoundingBox(boundingBox[0][0],boundingBox[0][1],BoundingBoxSize[0],BoundingBoxSize[1]);
 		}
+		//for (int i=0; i<nElement; ++i){
+		//	Elements[i]->calculatGrowthScalingMatrices();
+		//}
 		//cout<<"In loop for t=0: "<<endl;
 		//Elements[0]->displayRelativePosInBoundingBox();
 		/*
@@ -2430,7 +2436,7 @@ void Simulation::runOneStep(){
 			//	Nodes[i]->FixedPos[2] = true;
 			//}
 			Nodes[i]->Position[0] *=2.0;
-			Nodes[i]->Position[1] *=2.0;
+			Nodes[i]->Position[1] *=1.0;
 			Nodes[i]->Position[2] *=1.0;
 		}
 		double R[3][3];
@@ -2452,11 +2458,11 @@ void Simulation::runOneStep(){
 		}
 		for(int i=0;i<Elements.size();++i){
 			Elements[i]->updatePositions(3,Nodes);
-		}
+		}*/
 		//for (int i=0; i<Nodes.size();++i){
 		//	cout<<"Node: "<<i<<" pos: "<<Nodes[i]->Position[0]<<" "<<Nodes[i]->Position[1]<<" "<<Nodes[i]->Position[2]<<endl;
 		//}
-		 */
+
 	}
 	//cout<<"outisde loop for t=0: "<<endl;
 	//Elements[0]->displayRelativePosInBoundingBox();
@@ -2507,7 +2513,9 @@ void Simulation::runOneStep(){
 	//outputFile<<"calculating alignment of reference"<<endl;
 	for (int i=0; i<nElement; ++i){
 		Elements[i]->alignElementOnReference();
-		if (Elements[i]->IsGrowing && Elements[i]->tissueType == 0){ //only columnar layer is grown this way, peripodial membrane is already grown without alignment
+		//deletion here:
+		//if (Elements[i]->IsGrowing && Elements[i]->tissueType == 0){ //only columnar layer is grown this way, peripodial membrane is already grown without alignment
+		if (Elements[i]->IsGrowing){
 			Elements[i]->growShape();
 		}
 	}
@@ -2515,8 +2523,7 @@ void Simulation::runOneStep(){
 	double periPackingThreshold = 1000, colPackingThreshold = 1000;
 	getAverageSideLength(periPackingThreshold,colPackingThreshold);
 
-	int PipetteInitialStep = 0.;
-	int PipetteEndStep = 100000;
+
 	//packingThreshold *=0.7; //I am adding a 40% safety to average side length, and then taking half of it as threshold for packing
 	for (int RKId = 0; RKId<4; ++RKId){
 		//outputFile<<"started RK: "<<RKId<<endl;
@@ -2555,9 +2562,16 @@ void Simulation::runOneStep(){
 	}
 	timestep++;
 	//outputFile<<"finished runonestep"<<endl;
-	//for (int i=0; i<Elements.size(); ++i){
-	//	cout<<"Element: "<<Elements[i]->Id<<" Local Strains: "<<Elements[i]->Strain[0]<<" "<<Elements[i]->Strain[1]<<" "<<Elements[i]->Strain[2]<<" "<<Elements[i]->Strain[3]<<" "<<Elements[i]->Strain[4]<<" "<<Elements[i]->Strain[5]<<endl;
-	//}
+	for (int i=0; i<Elements.size(); ++i){
+		//cout<<"Element: "<<Elements[i]->Id<<" Local Strains: "<<Elements[i]->Strain[0]<<" "<<Elements[i]->Strain[1]<<" "<<Elements[i]->Strain[2]<<" "<<Elements[i]->Strain[3]<<" "<<Elements[i]->Strain[4]<<" "<<Elements[i]->Strain[5]<<endl;
+		cout<<"Element: "<<Elements[i]->Id<<" Plastic Strains: "<<Elements[i]->PlasticStrain[0]<<" "<<Elements[i]->PlasticStrain[1]<<" "<<Elements[i]->PlasticStrain[2]<<" "<<Elements[i]->PlasticStrain[3]<<" "<<Elements[i]->PlasticStrain[4]<<" "<<Elements[i]->PlasticStrain[5]<<endl;
+	}
+	calculatePersonalisedGrowthRates();
+	//cout<<"Finished strain display"<<endl;
+	//double* circumStrain = new double[6];
+	//circumStrain = Elements[2]->calculateGrowthInCircumferencialAxes();
+	//Elements[12]->calculateGrowthFromCircumferencialAxes(circumStrain);
+	//delete[] circumStrain;
 }
 
 void Simulation::fillInNodeNeighbourhood(){
@@ -2634,6 +2648,79 @@ inline void Simulation::CapPackingForce(double& Fmag){
 	double Fcap = 1e4;
 	if (Fmag > Fcap){
 		Fmag = Fcap;
+	}
+}
+
+void Simulation::checkPackingToPipette(bool& packsToPip, double* pos, double* pipF, double mass, int id){
+	double pipThickness = 2; //microns
+	double multiplier = 0.05; //just a term to scale the forces down
+	double threshold = 1.0;	 //pipette packing forces start at 2 microns
+	double t2 = threshold*threshold;
+	double pipRange2[2] = {pipetteRadius-threshold, pipetteRadius+pipThickness+threshold};
+	pipRange2[0] *= pipRange2[0];
+	pipRange2[1] *= pipRange2[1];
+	double dist[3] = {pos[0]-pipetteCentre[0], pos[1]-pipetteCentre[1], pos[2]-pipetteCentre[2]};
+	double dist2[3] = {dist[0]*dist[0], dist[1]*dist[1],dist[2]*dist[2]};
+	double xydist2 = dist2[0]+dist2[1];
+	if (xydist2 > pipRange2[0] && xydist2<pipRange2[1]){
+		//cout<<"Node "<<id<<" is within range - pos: "<<pos[0]<<" "<<pos[1]<<" "<<pos[2]<<endl;
+		//the node is within the packing ring range
+		//is it close enough to bottom?
+		if (dist2[2]<t2){
+			//yes the node should be pushe (-ve)z for apical suciton and (+)ve z for basal suction:
+			if (dist2[2]<1e-2){dist2[2] = 1e-2;}
+			double Fmag = mass * multiplier * (1.0/dist2[2] - 1.0/t2);
+			pipF[0] = 0.0;
+			pipF[1] = 0.0;
+			pipF[2] = Fmag;
+			if (ApicalSuction){
+				pipF[2] *= -1.0;
+			}
+			packsToPip = true;
+			//cout<<"Node is pushed from bottom -  packing force: "<<pipF[0]<<" "<<pipF[1]<<" "<<pipF[2]<<endl;
+			return;
+		}
+		//the node is not close to the pipette tip in x&y but not in range to be pushed by tip bottom, it may be too far away
+		//now I need to check the distance in z and then the walls:
+		if( (ApicalSuction && dist[2]>0) || (!ApicalSuction && dist[2]<0) ) {
+			double midWallDist2 =  pipetteRadius + 0.5*pipThickness;
+			midWallDist2 *= midWallDist2;
+			double d2 = 0.0;
+			if (midWallDist2>xydist2){
+				//the node should be pushed inside:
+				multiplier *= -1.0;
+				if(xydist2>pipetteRadius*pipetteRadius){
+					//the node is inside the pipette: maximum force, d2 is zero:
+					d2 =1e-2;
+				}
+				else{
+					double dx = pos[0]-pipetteRadius;
+					double dy = pos[1]-pipetteRadius;
+					d2 = dx*dx+dy*dy;
+				}
+			}
+			else{
+				if(xydist2<(pipetteRadius+pipThickness)*(pipetteRadius+pipThickness)){
+					//the node is inside the pipette: maximum force, d2 is zero:
+					d2 =1e-2;
+				}
+				else{
+					double dx = pos[0]-pipetteRadius-pipThickness;
+					double dy = pos[1]-pipetteRadius-pipThickness;
+					d2 = dx*dx+dy*dy;
+				}
+			}
+			if (d2<1e-2){d2 = 1e-2;}
+			double Fmag = mass * multiplier * (1.0/d2 - 1.0/t2);
+			double xydist = pow(xydist2,0.5);
+			Fmag /= xydist;
+			pipF[0] = Fmag*dist[0];
+			pipF[1] = Fmag*dist[1];
+			pipF[2] = 0.0;
+			//cout<<"Node "<<id<<" is pushed from side wall - packing force: "<<pipF[0]<<" "<<pipF[1]<<" "<<pipF[2]<<endl;
+			packsToPip = true;
+			return;
+		}
 	}
 }
 
@@ -2763,6 +2850,24 @@ void Simulation::calculatePacking(int RKId, double PeriThreshold, double ColThre
 						}
 					}
 					delete[] posCorner;
+				}
+			}
+			if (PipetteSuction && timestep> PipetteInitialStep && timestep<PipetteEndStep){
+				if ( (ApicalSuction && (*itNode)->tissuePlacement == 1) || (!ApicalSuction && (*itNode)->tissuePlacement == 0)){
+					//checking packing of node to the pipette:
+					double* pipF;
+					pipF = new double[3];
+					bool packsToPip = false;
+					checkPackingToPipette(packsToPip, pos, pipF,(*itNode)->mass,(*itNode)->Id);
+					if (packsToPip){
+						for (int j=0;j<3;++j){
+							if (!(*itNode)->FixedPos[j]){
+								SystemForces[RKId][(*itNode)->Id][j] += pipF[j];
+								PackingForces[RKId][(*itNode)->Id][j] += pipF[j];
+							}
+						}
+					}
+					delete[] pipF;
 				}
 			}
 			delete[] pos;
@@ -3341,16 +3446,18 @@ void Simulation::calculateGrowthUniform(int currIndex){
 	float simTime = dt*timestep;
 	//cout<<"inside uniform growth function, initTime: "<<initTime <<" endtime: "<<endTime<<" simTime"<<simTime<<endl;
 	if(simTime > initTime && simTime < endTime ){
+		cout<<"calculating growth"<<endl;
 		double MaxValue[3] = {GrowthParameters[currIndex+2],GrowthParameters[currIndex+3],GrowthParameters[currIndex+4]};
 		int  n = Elements.size();
 		for ( int i = 0; i < n; ++i ){
-			if (Elements[i]->tissueType == 0){ //grow columnar layer
+			//deletion here:
+			//if (Elements[i]->tissueType == 0){ //grow columnar layer
 				//cout<<"updating growth for element: "<<Elements[i]->Id<<endl;
 				Elements[i]->updateGrowthToAdd(MaxValue);
 				//This value is stored as fraction per hour, conversion is done by a time scale variable:
 				float timescale = 60*60/dt;
 				Elements[i]->updateGrowthRate(MaxValue[0]*timescale,MaxValue[1]*timescale,MaxValue[2]*timescale);
-			}
+			//}
 		}
 	}
 }
@@ -3441,6 +3548,9 @@ void Simulation::calculateGrowthGridBased(int currIndex){
 				//	cout<<" Element : "<<(*itElement)->Id<<" placement: "<<indexX<<" "<<indexY<<" frac: "<<fracX<<" "<<fracY<<" Relpos: "<<ReletivePos[0]<<" "<<ReletivePos[1]<<endl;
 				//}
 				delete[] ReletivePos;
+				if ((*itElement)->Id ==24 || (*itElement)->Id == 68){
+					cout<<"Element: "<<(*itElement)->Id<<" growth: "<<growthscale[0]<<" "<<growthscale[1]<<growthscale[2]<<endl;
+				}
 			}
 		}
 	}
@@ -3492,6 +3602,9 @@ void Simulation::calculatePeripodialGrowthGridBased(int currIndex){
 				//	cout<<" Element : "<<(*itElement)->Id<<" placement: "<<indexX<<" "<<indexY<<" frac: "<<fracX<<" "<<fracY<<" Relpos: "<<ReletivePos[0]<<" "<<ReletivePos[1]<<endl;
 				//}
 				delete[] ReletivePos;
+				if ((*itElement)->Id ==24 || (*itElement)->Id == 68){
+					cout<<"Element: "<<(*itElement)->Id<<" growth: "<<growthscale<<endl;
+				}
 			}
 		}
 	}
@@ -3662,17 +3775,23 @@ void Simulation::addPipetteForces(int RKId){
 			double dx = pipetteCentre[0] - Nodes[i]->Position[0];
 			double dy = pipetteCentre[1] - Nodes[i]->Position[1];
 			//cout<<"dx: "<<dx<<" dy: "<<dy<<" dx*dx+dy*dy: "<<dx*dx+dy*dy<<endl;
-			if (dx*dx+dy*dy < pipetteRadiusSq){
+			double d2 = dx*dx+dy*dy ;
+			if (d2 < pipetteRadiusSq){
+				double multiplier = 1.0;
+				bool scalePressure = true;
+				if(scalePressure){ multiplier = (1 - d2/pipetteRadiusSq);}
+				double LocalPressure[3] = { multiplier*SuctionPressure[0], multiplier*SuctionPressure[1],multiplier*SuctionPressure[2]};
+
 				//cout<<"Node: "<<i<<" being sucked into pipette, force: "<<SuctionPressure[0]*Nodes[i]->surface<<" "<<SuctionPressure[1]*Nodes[i]->surface<<" "<<SuctionPressure[2]*Nodes[i]->surface<<endl;
 				//node is within suciton range
 				if(!Nodes[i]->FixedPos[0]){
-					SystemForces[RKId][i][0]=SuctionPressure[0]*Nodes[i]->surface;
+					SystemForces[RKId][i][0]=LocalPressure[0]*Nodes[i]->surface;
 				}
 				if(!Nodes[i]->FixedPos[1]){
-					SystemForces[RKId][i][1]=SuctionPressure[1]*Nodes[i]->surface;
+					SystemForces[RKId][i][1]=LocalPressure[1]*Nodes[i]->surface;
 				}
 				if(!Nodes[i]->FixedPos[2]){
-					SystemForces[RKId][i][2]=SuctionPressure[2]*Nodes[i]->surface;
+					SystemForces[RKId][i][2]=LocalPressure[2]*Nodes[i]->surface;
 				}
 			}
 		}
@@ -3752,3 +3871,169 @@ void Simulation::clearLaserAblatedSites(){
 	}
 }
 
+void Simulation::calculatePersonalisedGrowthRates(){
+	Elements[12]->tiltedElement= true;
+	Elements[12]->BaseElementId=2;
+	vector<ShapeBase*>::iterator itElement;
+	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		if ( (*itElement)->tiltedElement ){
+			calculateTiltedElementPositionOnBase((*itElement));
+		}
+	}
+	//Check if growth rate should be corrected for tilted elements:
+	int GrowthFunctionId = 0;
+	double DVGrowth = 1.0, APGrowth=0.0, ABGrowth = 0.0;
+	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		if ( (*itElement)->tiltedElement ){
+			calculatePersonalisedSingleGrowthRate((*itElement), DVGrowth, APGrowth, ABGrowth, GrowthFunctionId);
+		}
+	}
+}
+
+void Simulation::calculateTiltedElementPositionOnBase(ShapeBase* currElement){
+	int n = currElement->getNodeNumber();
+	currElement->barycentricCoords  = new double*[n];
+	for (int j=0; j<n ; ++j){
+		currElement->barycentricCoords[j] = new double[4];
+		currElement->barycentricCoords[j][0] = 0.0;
+		currElement->barycentricCoords[j][1] = 0.0;
+		currElement->barycentricCoords[j][2] = 0.0;
+		currElement->barycentricCoords[j][3] = 0.0;
+	}
+	boost::numeric::ublas::matrix<double> T(2,2);
+	double x0 = Elements[currElement->BaseElementId] -> Positions[0][0];
+	double x1 = Elements[currElement->BaseElementId] -> Positions[1][0];
+	double x2 = Elements[currElement->BaseElementId] -> Positions[2][0];
+	double y0 = Elements[currElement->BaseElementId] -> Positions[0][1];
+	double y1 = Elements[currElement->BaseElementId] -> Positions[1][1];
+	double y2 = Elements[currElement->BaseElementId] -> Positions[2][1];
+	double z0 = Elements[currElement->BaseElementId] -> Positions[0][2];
+	double z1 = Elements[currElement->BaseElementId] -> Positions[1][2];
+	double z2 = Elements[currElement->BaseElementId] -> Positions[2][2];
+	double dz0= Elements[currElement->BaseElementId] -> Positions[3][2] - Elements[currElement->BaseElementId] -> Positions[0][2];
+	double dz1= Elements[currElement->BaseElementId] -> Positions[4][2] - Elements[currElement->BaseElementId] -> Positions[1][2];
+	double dz2= Elements[currElement->BaseElementId] -> Positions[5][2] - Elements[currElement->BaseElementId] -> Positions[2][2];
+	// T = [x0 - x2 , x1 - x2
+	//      y0 - y2 , y1 - y2]
+	T(0,0) = x0 - x2;
+	T(0,1) = x1 - x2;
+	T(1,0) = y0 - y2;
+	T(1,1) = y1 - y2;
+	double detT = currElement->determinant2by2Matrix(T);
+	for (int i=0; i<n; i++){
+		double x = currElement->Positions[i][0];
+		double y = currElement->Positions[i][1];
+		double z = currElement->Positions[i][2];
+		currElement->barycentricCoords[i][0] =  ( (y1 - y2)*(x - x2) + (x2 - x1)*(y - y2) )/detT;	//lambda1
+		currElement->barycentricCoords[i][1] =  ( (y2 - y0)*(x - x2) + (x0 - x2)*(y - y2) )/detT;	//lambda2
+		currElement->barycentricCoords[i][2] = 1.0 - currElement->barycentricCoords[i][0] - currElement->barycentricCoords[i][1];	//lambda3
+		currElement->barycentricCoords[i][3] = (z - z0) / dz0;
+	}
+}
+
+void Simulation::calculatePersonalisedSingleGrowthRate(ShapeBase* currElement, double DVGrowth, double APGrowth, double ABGrowth, double GrowthFunctionId){
+	calculateBaseElementsFinalPosition(currElement->BaseElementId, DVGrowth,  APGrowth, ABGrowth);
+	//Now the final shape is stored in PositionsAlignedToReference of BaseElement
+	//I will displace the nodes of this "grown" shape to reflect the "grown" position of the current element
+	//I will use the barycentric coordinates, and store the position in PositionsAlignedToReference of current element
+	calculateCurrentElementsFinalPosition(currElement);
+	//Now I have the final position stored in the PositionsAlignedToReference of current element, I want to calculate the strains:
+	currElement->alignGrowthCalculationOnReference();
+	int nNodes = currElement->getNodeNumber();
+	int counter = 0;
+	boost::numeric::ublas::vector<double> displacementA;
+	boost::numeric::ublas::vector<double> Strain;
+	int dim = 0;
+	if (currElement->ShapeDim == 3){
+		dim = 3;
+		displacementA = boost::numeric::ublas::zero_vector<double>(nNodes*dim);
+		Strain = boost::numeric::ublas::zero_vector<double>(6);
+	}
+	else if (currElement->ShapeDim == 2){
+		dim = 2;
+		displacementA = boost::numeric::ublas::zero_vector<double>(nNodes*dim);
+		Strain = boost::numeric::ublas::zero_vector<double>(3);
+	}
+	for (int i = 0; i<nNodes; ++i){
+		for (int j = 0; j<dim; ++j){
+			displacementA(counter) = currElement->PositionsAlignedToReference[i][j]-currElement->ReferenceShape->Positions[i][j];
+			counter++;
+		}
+	}
+	boost::numeric::ublas::axpy_prod(currElement->B,displacementA,Strain);
+	currElement->displayMatrix(Strain,"Growth_Necessary_For_Element_12_fromfunctions");
+}
+
+void Simulation::calculateBaseElementsFinalPosition(int Id,double DVGrowth, double APGrowth, double ABGrowth){
+	int nNodes = Elements[Id]->getNodeNumber();
+	int nDim = Elements[Id]->getDim();
+	bool ContinueIteration = true;
+	int iterationCounter = 0;
+	double tolerance = 1E-14;
+	double negTolerance = (-1.0)*tolerance;
+	while (ContinueIteration){
+		iterationCounter++;
+		Elements[Id]->alignGrowthCalculationOnReference();
+		const int nMult = nNodes*nDim;
+		boost::numeric::ublas::vector<double> displacement(nMult);
+		int counter = 0;
+		for (int i = 0; i<nNodes; ++i){
+			for (int j = 0; j<nDim; ++j){
+				displacement(counter) = Elements[Id]->PositionsAlignedToReference[i][j]-Elements[Id]->ReferenceShape->Positions[i][j];
+				counter++;
+			}
+		}
+		boost::numeric::ublas::vector<double> Forces;
+		boost::numeric::ublas::vector<double> NetStrain(6);
+		boost::numeric::ublas::vector<double> PlasticStrain;
+		boost::numeric::ublas::vector<double> Strain(6);
+		boost::numeric::ublas::axpy_prod(Elements[Id]->B,displacement,Strain);
+		PlasticStrain = boost::numeric::ublas::zero_vector<double>(6);
+		PlasticStrain(0)=DVGrowth;
+		PlasticStrain(1)=APGrowth;
+		PlasticStrain(2)=ABGrowth;
+		NetStrain = Strain - PlasticStrain;
+		Forces = boost::numeric::ublas::zero_vector<double>(nNodes*nDim);
+		boost::numeric::ublas::axpy_prod(Elements[Id]->BE,NetStrain,Forces);
+		//Elements[2]->displayMatrix(NetStrain,"NetStrain_at_current_step");
+		counter = 0;
+		for (int i=0;i<nNodes;i++){
+			for (int j=0; j<nDim; j++){
+				Elements[Id]->PositionsAlignedToReference[i][j] -= Forces(counter) /100000.0;
+				counter++;
+			}
+		}
+		ContinueIteration = false;
+		for (int i=0; i<6; ++i){
+			if (NetStrain(i)>tolerance || NetStrain(i)<negTolerance){
+				ContinueIteration = true;
+				break;
+			}
+		}
+		if (ContinueIteration && iterationCounter>1000){
+			cout<<"GrowthFunction did not converge! Element: "<<endl;
+			ContinueIteration = false;
+		}
+	}
+}
+
+void Simulation::calculateCurrentElementsFinalPosition(ShapeBase* currElement){
+	int nNodes = currElement->getNodeNumber();
+	double x0 = Elements[currElement->BaseElementId] -> PositionsAlignedToReference[0][0];
+	double x1 = Elements[currElement->BaseElementId] -> PositionsAlignedToReference[1][0];
+	double x2 = Elements[currElement->BaseElementId] -> PositionsAlignedToReference[2][0];
+	double y0 = Elements[currElement->BaseElementId] -> PositionsAlignedToReference[0][1];
+	double y1 = Elements[currElement->BaseElementId] -> PositionsAlignedToReference[1][1];
+	double y2 = Elements[currElement->BaseElementId] -> PositionsAlignedToReference[2][1];
+	double z0 = Elements[currElement->BaseElementId] -> PositionsAlignedToReference[0][2];
+	double z1 = Elements[currElement->BaseElementId] -> PositionsAlignedToReference[1][2];
+	double z2 = Elements[currElement->BaseElementId] -> PositionsAlignedToReference[2][2];
+	double dz0= Elements[currElement->BaseElementId] -> PositionsAlignedToReference[3][2] - Elements[currElement->BaseElementId] -> PositionsAlignedToReference[0][2];
+	double dz1= Elements[currElement->BaseElementId] -> PositionsAlignedToReference[4][2] - Elements[currElement->BaseElementId] -> PositionsAlignedToReference[1][2];
+	double dz2= Elements[currElement->BaseElementId] -> PositionsAlignedToReference[5][2] - Elements[currElement->BaseElementId] -> PositionsAlignedToReference[2][2];
+	for (int i=0; i<nNodes; ++i){
+		currElement->PositionsAlignedToReference[i][0] = currElement->barycentricCoords[i][0]*x0 + currElement->barycentricCoords[i][1]*x1 + currElement->barycentricCoords[i][2]*x2;
+		currElement->PositionsAlignedToReference[i][1] = currElement->barycentricCoords[i][0]*y0 + currElement->barycentricCoords[i][1]*y1 + currElement->barycentricCoords[i][2]*y2;
+		currElement->PositionsAlignedToReference[i][2] = currElement->barycentricCoords[i][3]*dz0 + z0;
+	}
+}

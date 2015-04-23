@@ -213,6 +213,7 @@ public:
 	void calculateColumnarLayerBoundingBox();
 	void runOneStep();
 	void calculatePacking(int RKId, double PeriThreshold, double ColThreshold);
+	void checkPackingToPipette(bool& packsToPip, double* pos, double* pipF,double mass, int id);
 	void getNormalAndCornerPosForPacking(Node* NodePointer, ShapeBase* ElementPointer, double* normalForPacking,double* posCorner, bool& bothperipodial);
 	void getApicalNormalAndCornerPosForPacking(ShapeBase* ElementPointer, double* normalForPacking,double* posCorner);
 	void getBasalNormalAndCornerPosForPacking(ShapeBase* ElementPointer, double* normalForPacking,double* posCorner);
@@ -230,6 +231,11 @@ public:
 	void calculateDVDistance();
 	void TissueAxisPositionDisplay();
 	void CoordinateDisplay();
+	void calculatePersonalisedGrowthRates();
+	void calculateTiltedElementPositionOnBase(ShapeBase* currElement);
+	void calculatePersonalisedSingleGrowthRate(ShapeBase* currElement, double DVGrowth, double APGrowth, double ABGrowth, double GrowthFunctionId);
+	void calculateBaseElementsFinalPosition(int Id,double DVGrowth, double APGrowth, double ABGrowth);
+	void calculateCurrentElementsFinalPosition(ShapeBase* currElement);
 
 };
 

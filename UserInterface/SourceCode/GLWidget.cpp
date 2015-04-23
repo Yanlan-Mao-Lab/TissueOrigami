@@ -430,63 +430,6 @@ void GLWidget::highlightNode(int i){
 		NodeColours[j][1]=NodeColourList[NodeIds[j]][1];
 		NodeColours[j][2]=NodeColourList[NodeIds[j]][2];
 	}
-	/*for (int j = 0; j<n; j++){
-		if (Sim01->Elements[i]->tissueType == 0){ // columnar layer
-			NodeColourList[j] = new float[3];
-			NodeColourList[j][0]=0.75;
-			NodeColourList[j][1]=1.0;
-			NodeColourList[j][2]=1.0;
-		}
-		else if (Sim01->Elements[i]->tissueType == 1){ // peripodium layer
-			NodeColourList[j] = new float[3];
-			NodeColourList[j][0]=1.0;
-			NodeColourList[j][1]=1.0;
-			NodeColourList[j][2]=0.75;
-		}
-	}
-	if(DisplayStrains){
-		float* StrainColour;
-		StrainColour = new float[3];
-		float StrainMag;
-		float TmpStrainMag =0.0, PlasticStrainMag=0;
-		Sim01->Elements[i]->getStrain(StrainToDisplay, TmpStrainMag);
-		Sim01->Elements[i]->getPlasticStrain(StrainToDisplay, PlasticStrainMag);
-		StrainMag = TmpStrainMag - PlasticStrainMag;
-		getDisplayColour(StrainColour, StrainMag);
-		//cout<<"strain mag : "<<StrainMag<<" colour: "<<StrainColour[0]<<" "<<StrainColour[1]<<" "<<StrainColour[2]<<endl;
-		for (int j = 0; j<n; j++){
-			NodeColourList[j][0] = StrainColour[0];
-			NodeColourList[j][1] = StrainColour[1];
-			NodeColourList[j][2] = StrainColour[2];
-		}
-
-	}
-	else if (DisplayPysProp){
-		float PysPropMag =0.0;
-		float* PysPropColour;
-		PysPropColour = new float[3];
-		//if the property is viscosity, get the value for every node
-		//if it is a parameter uniform within the element, get one point:
-		if (PysPropToDisplay == 0){
-			for (int j = 0; j<n; j++){
-				Sim01->Elements[i]->getNodeBasedPysProp(PysPropToDisplay, j, Sim01->Nodes, PysPropMag);
-				getDisplayColour(PysPropColour,PysPropMag);
-				NodeColourList[j][0] = PysPropColour[0];
-				NodeColourList[j][1] = PysPropColour[1];
-				NodeColourList[j][2] = PysPropColour[2];
-			}
-		}
-		else{
-			Sim01->Elements[i]->getPysProp(PysPropToDisplay, PysPropMag);
-			getDisplayColour(PysPropColour,PysPropMag);
-			for (int j = 0; j<n; j++){
-				NodeColourList[j][0] = PysPropColour[0];
-				NodeColourList[j][1] = PysPropColour[1];
-				NodeColourList[j][2] = PysPropColour[2];
-			}
-		}
-
-	}*/
 	return NodeColours;
  }
 

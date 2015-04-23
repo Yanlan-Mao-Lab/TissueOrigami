@@ -40,6 +40,9 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
 	BasalNormalForPackingUpToDate = false;
 	IsAblated = false;
 	IsClippedInDisplay = false;
+	capElement = false;
+	tiltedElement = false;
+
 	setIdentificationColour();
 	setShapeType("Prism");
 	ReferenceShape = new ReferenceShapeBase("Prism");
@@ -58,6 +61,9 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
 	CurrPlasticStrainsInTissueCoordsMat = boost::numeric::ublas::zero_matrix<double>(3,3);
 	LocalGrowthStrainsMat = boost::numeric::ublas::zero_matrix<double>(3,3);
 
+	xGrowthScaling  = boost::numeric::ublas::zero_matrix<double>(3,3);
+	yGrowthScaling  = boost::numeric::ublas::zero_matrix<double>(3,3);
+	zGrowthScaling  = boost::numeric::ublas::zero_matrix<double>(3,3);
 	WorldToTissueRotMat= boost::numeric::ublas::identity_matrix<double>(3,3);
 	GrowthStrainsRotMat = boost::numeric::ublas::identity_matrix<double>(3,3);
 	RotatedElement = false;

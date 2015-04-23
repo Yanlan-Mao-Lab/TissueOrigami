@@ -54,7 +54,7 @@ protected:
 	void 	rotateReferenceElementByRotationMatrix(double* rotMat);
 	bool 	InvertMatrix(boost::numeric::ublas::matrix<double>& input, boost::numeric::ublas::matrix<double>& inverse);
 	int 	determinant_sign(boost::numeric::ublas::permutation_matrix<std::size_t>& pm);
-	void	crossProduct3D(double* u, double* v, double* cross);
+
 	double  dotProduct3D(double* u, double* v);
 	void 	updateNodeIdsFromSave(ifstream& file);
 	void 	updateReferencePositionMatrixFromSave(ifstream& file);
@@ -75,11 +75,14 @@ protected:
 	void 	dudEdXde3D(double** RefNormalised, boost::numeric::ublas::vector<double>& dude, boost::numeric::ublas::vector<double>& dXde);
 	void 	dudEdXde2D(double** RefNormalised, boost::numeric::ublas::vector<double>& dude, boost::numeric::ublas::vector<double>& dXde);
 
+
+	boost::numeric::ublas::matrix<double> xGrowthScaling;
+	boost::numeric::ublas::matrix<double> yGrowthScaling;
+	boost::numeric::ublas::matrix<double> zGrowthScaling;
 	boost::numeric::ublas::matrix<double> D;
 	boost::numeric::ublas::matrix<int> CoeffMat;
 	boost::numeric::ublas::matrix<double> k;
-	boost::numeric::ublas::matrix<double> B;
-	boost::numeric::ublas::matrix<double> BE;
+
 	boost::numeric::ublas::matrix<double> Bo;
 	boost::numeric::ublas::vector<double> Forces;
 
@@ -89,6 +92,8 @@ protected:
 
 
 public:
+	boost::numeric::ublas::matrix<double> B;
+	boost::numeric::ublas::matrix<double> BE;
 	int 	Id;
 	int		ShapeDim;
 	boost::numeric::ublas::matrix<double> LocalGrowthStrainsMat;
@@ -121,6 +126,12 @@ public:
 	double* ApicalNormalForPacking;
 	double* BasalNormalForPacking;
 	double VolumePerNode;
+	bool capElement;
+	bool tiltedElement;
+	int BaseElementId;						//The base shape ID that was used for creating the tilted shape
+	//int** NodeMatchingList;					//The node order matching between the base reference element and the current element
+	double** barycentricCoords;
+	//double** ScaledDisplacementVectorList;	//The displacement of every node from the base scaled to the length of the corresponding edge
 
 	int 	getId();
 	string 	getName();
@@ -206,6 +217,14 @@ public:
 	void assignSurfaceAreaToNodes(vector <Node*>& Nodes);
 	void assignElementToConnectedNodes(vector <Node*>& Nodes);
 	void removeMassFromNodes(vector <Node*>& Nodes);
+
+	double* calculateGrowthInCircumferencialAxes();
+	void 	calculateGrowthFromCircumferencialAxes(double* circumStrain);
+	void 	calculatGrowthScalingMatrices();
+	void 	calculateGrowthScalingMatricesIn2D(int dimension);
+	void 	calculateGrowthScalingMatricesIn3D(int dimension);
+	void 	calculateRotationAndGetTheScalingMatrix(boost::numeric::ublas::matrix<double>& mat);
+
 	bool RotatedElement;
 	boost::numeric::ublas::matrix<double> WorldToTissueRotMat;
 	double **PositionsInTissueCoord;
@@ -222,6 +241,8 @@ public:
 	void 	updateReferencePositionMatrixFromMeshInput(ifstream& file);
 	void	fillNodeNeighbourhood(vector<Node*>& Nodes);
 	void 	checkDisplayClipping(double xClip, double yClip, double zClip);
+	void	crossProduct3D(double* u, double* v, double* cross);
+	void	alignGrowthCalculationOnReference();
 };
 
 #endif

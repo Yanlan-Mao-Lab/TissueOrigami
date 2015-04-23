@@ -8,8 +8,8 @@ PeripodiumParameters:
   PeripodiumYoungsModulus: 3000.0
 
 TimeParameters:
-  TimeStep(sec): 0.1
-  SimulationLength(sec): 1200
+  TimeStep(sec): 0.25
+  SimulationLength(sec): 0.25
 
 PysicalProperties:
   YoungsModulusApical: 3000.0	YoungsModulusBasal: 3000.0	YoungsModulusMid: 3000.0	Noise(%-int): 0
@@ -20,15 +20,15 @@ PysicalProperties:
 SaveOptions:
   SaveImages(bool): 1
   SaveData(bool):   1
-  ImageSaveInterval(sec): 60
-  DataSaveInterval(sec):  60
+  ImageSaveInterval(sec): 120
+  DataSaveInterval(sec):  120
 
 GrowthOptions:
   NumberofGrowthFunctions(int): 4
   GrowthFunctionType(int-seeDocumentation): 1
-  InitialTime(sec): 100000
-  FinalTime(sec):  1
-  MaxValue(fractionPerHour-DV,AP,AB):  2.804 2.804 0.0
+  InitialTime(sec): 0.0
+  FinalTime(sec):  0.3
+  MaxValue(fractionPerHour-DV,AP,AB): 14400.0 0.0 0.0
 
   GrowthFunctionType(int-seeDocumentation): 2
   InitialTime(sec): 100000
@@ -39,14 +39,14 @@ GrowthOptions:
   MaxValue(fractionPerHour-DV,AP,AB):  0.45 0.45 0.0
 
   GrowthFunctionType(int-seeDocumentation): 3
-  InitialTime(sec): 1000000
-  FinalTime(sec):  7200
+  InitialTime(sec): 100000
+  FinalTime(sec):  3600
   Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/growthFile03
 
   GrowthFunctionType(int-seeDocumentation): 4
-  InitialTime(sec): 1000000
-  FinalTime(sec):  7200
-  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/PerigrowthFile03
+  InitialTime(sec): 100000
+  FinalTime(sec):  21600
+  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/PerigrowthFile03-1
 
 
 ShapeChangeOptions:
@@ -78,12 +78,11 @@ Stretcher:
   MaxStrain: 0.5
 
 Pipette_Aspiration:
-  PipetteAspitarionActive(bool): 1
+  PipetteAspitarionActive(bool): 0
   InitialTime(sec): 0
-  FinalTime(sec): 60
+  FinalTime(sec): 120
   ApicalSuciton(bool-will_set_up_basal_suction_if_false): 1
-  Centre_Position(x,y,z): 0.0 0.0 25.0
+  Centre_Position(x,y,z): 0.0 0.0 6.0
   Pipette_Radius(micron): 5.0
-  Pipette_Effect_Debth(micron): 10.0
-  Pipette_Suction_Pressure(x,y,z-unit): 0.0 0.0 50.0
-
+  Pipette_Effect_Debth(micron): 8.0
+  Pipette_Suction_Pressure(x,y,z-unit): 0.0 0.0 20.0

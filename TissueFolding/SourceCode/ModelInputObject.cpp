@@ -322,31 +322,31 @@ bool ModelInputObject::readGrowthType3(ifstream& file){
 				}
 			}
 		}
-		cout<<"reading growth matrix"<<endl;
+		//cout<<"reading growth matrix"<<endl;
 		for (int j=gridY-1; j>-1; --j){
 			for (int i=0; i<gridX; ++i){
 				for (int k=0; k<3; ++k){
-					cout<<"i :"<<i<<" j: "<<j<<" k: "<<k<<" ";
+					//cout<<"i :"<<i<<" j: "<<j<<" k: "<<k<<" ";
 					GrowthRateFile >> rate;
-					cout<<"rate: "<<rate<<" ";
+					//cout<<"rate: "<<rate<<" ";
 					//GrowthMatrix[i][j][k] = rate*timeMultiplier;
 					GrowthMatrix[i][j][k] = rate;
-					cout<<"matrix value: "<<GrowthMatrix[i][j][k]<<endl;
+					//cout<<"matrix value: "<<GrowthMatrix[i][j][k]<<endl;
 				}
 			}
 		}
 		GrowthRateFile.close();
-		cout<<"growth matrix: "<<endl;
+		//cout<<"growth matrix: "<<endl;
 		for (int i=0; i<gridX; ++i){
 			for (int j=0; j<gridY; ++j){
 				for (int k=0; k<3; ++k){
-					cout<<GrowthMatrix[i][j][k]<<" ";
+					//cout<<GrowthMatrix[i][j][k]<<" ";
 					GrowthMatrix[i][j][k] *= timeMultiplier;
 				}
-				cout<<"	";
+				//cout<<"	";
 			}
-			cout<<endl;
-		}cout<<endl;
+			//cout<<endl;
+		}//cout<<endl;
 		/*GrowthMatrix[0][0][0] = 1.00;
 		GrowthMatrix[0][0][1] = 0.50;
 		GrowthMatrix[0][0][2] = 0.00;
