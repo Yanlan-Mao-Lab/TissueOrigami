@@ -531,69 +531,8 @@ void Simulation::writeMeshFileSummary(){
 void Simulation::writeGrowthRatesSummary(){
 	int currIndex = 0;
 	for (int i=0; i<nGrowthFunctions; ++i){
-		if (GrowthFunctionTypes[i] == 1){
-			saveFileSimulationSummary<<"Growth Type:  Uniform (1)"<<endl;
-			saveFileSimulationSummary<<"	Initial time(sec): ";
-			saveFileSimulationSummary<<GrowthParameters[currIndex];
-			saveFileSimulationSummary<<"	FinalTime time(sec): ";
-			saveFileSimulationSummary<<GrowthParameters[currIndex+1];
-			saveFileSimulationSummary<<"	GrowthRate(fraction/hr): ";
-			saveFileSimulationSummary<<GrowthParameters[currIndex+2]/dt*3600.0;
-			saveFileSimulationSummary<<"  ";
-			saveFileSimulationSummary<<GrowthParameters[currIndex+3]/dt*3600.0;
-			saveFileSimulationSummary<<"  ";
-			saveFileSimulationSummary<<GrowthParameters[currIndex+4]/dt*3600.0;
-			saveFileSimulationSummary<<endl;
-			currIndex += 5;
-		}
-		else if(GrowthFunctionTypes[i] == 2){
-			saveFileSimulationSummary<<"Growth Type:  Ring (2)"<<endl;
-			saveFileSimulationSummary<<"	Initial time(sec): ";
-			saveFileSimulationSummary<<GrowthParameters[currIndex];
-			saveFileSimulationSummary<<"	FinalTime time(sec): ";
-			saveFileSimulationSummary<<GrowthParameters[currIndex+1];
-			saveFileSimulationSummary<<"	Centre(micron): ";
-			saveFileSimulationSummary<<GrowthParameters[currIndex+2];
-			saveFileSimulationSummary<<"  ";
-			saveFileSimulationSummary<<GrowthParameters[currIndex+3];
-			saveFileSimulationSummary<<"	Inner radius(micron): ";
-			saveFileSimulationSummary<<GrowthParameters[currIndex+4];
-			saveFileSimulationSummary<<"	Outer radius(micron): ";
-			saveFileSimulationSummary<<GrowthParameters[currIndex+5];
-			saveFileSimulationSummary<<"	GrowthRate(fraction/hr): ";
-			saveFileSimulationSummary<<GrowthParameters[currIndex+6]/dt*3600.0;
-			saveFileSimulationSummary<<"  ";
-			saveFileSimulationSummary<<GrowthParameters[currIndex+7]/dt*3600.0;
-			saveFileSimulationSummary<<"  ";
-			saveFileSimulationSummary<<GrowthParameters[currIndex+8]/dt*3600.0;
-			saveFileSimulationSummary<<endl;
-		}
-		else if(GrowthFunctionTypes[i] == 3){
-			saveFileSimulationSummary<<"Growth Type:  From File"<<endl;
-			saveFileSimulationSummary<<"	Initial time(sec): ";
-			saveFileSimulationSummary<<GrowthParameters[currIndex];
-			saveFileSimulationSummary<<"	FinalTime time(sec): ";
-			saveFileSimulationSummary<<GrowthParameters[currIndex+1];
-			saveFileSimulationSummary<<"	Growth  matrix index: ";
-			saveFileSimulationSummary<<GrowthParameters[currIndex+2];
-			saveFileSimulationSummary<<"	Growth matrix mesh size: ";
-			saveFileSimulationSummary<<GrowthParameters[currIndex+3]<<" "<<GrowthParameters[currIndex+4];
-			saveFileSimulationSummary<<endl;
-		}
-		else if(GrowthFunctionTypes[i] == 4){
-			saveFileSimulationSummary<<"Growth Type:  Peripodial growth From File"<<endl;
-			saveFileSimulationSummary<<"	Initial time(sec): ";
-			saveFileSimulationSummary<<GrowthParameters[currIndex];
-			saveFileSimulationSummary<<"	FinalTime time(sec): ";
-			saveFileSimulationSummary<<GrowthParameters[currIndex+1];
-			saveFileSimulationSummary<<"	Growth  matrix index: ";
-			saveFileSimulationSummary<<GrowthParameters[currIndex+2];
-			saveFileSimulationSummary<<"	Growth matrix mesh size: ";
-			saveFileSimulationSummary<<GrowthParameters[currIndex+3]<<" "<<GrowthParameters[currIndex+4];
-			saveFileSimulationSummary<<endl;
-		}
+		GrowthFunctions[i]->writeSummary(saveFileSimulationSummary,dt);
 	}
-
 }
 
 
@@ -2415,6 +2354,7 @@ void Simulation::assignPhysicalParameters(){
 }
 
 void Simulation::runOneStep(){
+	cout<<"inside runonestep"<<endl;
 	if(timestep==0){
 		calculateColumnarLayerBoundingBox();
 		calculateDVDistance();
@@ -2564,9 +2504,9 @@ void Simulation::runOneStep(){
 	//outputFile<<"finished runonestep"<<endl;
 	for (int i=0; i<Elements.size(); ++i){
 		//cout<<"Element: "<<Elements[i]->Id<<" Local Strains: "<<Elements[i]->Strain[0]<<" "<<Elements[i]->Strain[1]<<" "<<Elements[i]->Strain[2]<<" "<<Elements[i]->Strain[3]<<" "<<Elements[i]->Strain[4]<<" "<<Elements[i]->Strain[5]<<endl;
-		cout<<"Element: "<<Elements[i]->Id<<" Plastic Strains: "<<Elements[i]->PlasticStrain[0]<<" "<<Elements[i]->PlasticStrain[1]<<" "<<Elements[i]->PlasticStrain[2]<<" "<<Elements[i]->PlasticStrain[3]<<" "<<Elements[i]->PlasticStrain[4]<<" "<<Elements[i]->PlasticStrain[5]<<endl;
+		//cout<<"Element: "<<Elements[i]->Id<<" Plastic Strains: "<<Elements[i]->PlasticStrain[0]<<" "<<Elements[i]->PlasticStrain[1]<<" "<<Elements[i]->PlasticStrain[2]<<" "<<Elements[i]->PlasticStrain[3]<<" "<<Elements[i]->PlasticStrain[4]<<" "<<Elements[i]->PlasticStrain[5]<<endl;
 	}
-	calculatePersonalisedGrowthRates();
+	//calculatePersonalisedGrowthRates();
 	//cout<<"Finished strain display"<<endl;
 	//double* circumStrain = new double[6];
 	//circumStrain = Elements[2]->calculateGrowthInCircumferencialAxes();
@@ -3393,21 +3333,21 @@ void Simulation::calculateGrowth(){
 	int currIndexForParameters = 0;
 	cleanUpGrowthRates();
 	for (int i=0; i<nGrowthFunctions; ++i){
-		if (GrowthFunctionTypes[i] == 1){
+		if (GrowthFunctions[i]->Type == 1){
 			//cout<<"Calculating Uniform Growth"<<endl;
-			calculateGrowthUniform(currIndexForParameters);
+			calculateGrowthUniform(GrowthFunctions[i]);
 			currIndexForParameters += 5;
 		}
-		else if(GrowthFunctionTypes[i] == 2){
-			calculateGrowthRing(currIndexForParameters);
+		else if(GrowthFunctions[i]->Type == 2){
+			calculateGrowthRing(GrowthFunctions[i]);
 			currIndexForParameters += 9;
 		}
-		else if(GrowthFunctionTypes[i] == 3){
-			calculateGrowthGridBased(currIndexForParameters);
+		else if(GrowthFunctions[i]->Type == 3){
+			calculateGrowthGridBased(GrowthFunctions[i]);
 			currIndexForParameters += 5;
 		}
-		else if(GrowthFunctionTypes[i] == 4){
-			calculatePeripodialGrowthGridBased(currIndexForParameters);
+		else if(GrowthFunctions[i]->Type  == 4){
+			calculatePeripodialGrowthGridBased(GrowthFunctions[i]);
 			currIndexForParameters += 5;
 		}
 	}
@@ -3440,39 +3380,38 @@ void Simulation::cleanUpShapeChangeRates(){
 	}
 }
 
-void Simulation::calculateGrowthUniform(int currIndex){
-	float initTime = GrowthParameters[currIndex];
-	float endTime = GrowthParameters[currIndex+1];
+void Simulation::calculateGrowthUniform(GrowthFunctionBase* currGF){
 	float simTime = dt*timestep;
-	//cout<<"inside uniform growth function, initTime: "<<initTime <<" endtime: "<<endTime<<" simTime"<<simTime<<endl;
-	if(simTime > initTime && simTime < endTime ){
+	//cout<<"inside uniform growth function, initTime: "<<currGF->initTime <<" endtime: "<<currGF->endTime<<" simTime"<<simTime<<endl;
+	if(simTime > currGF->initTime && simTime < currGF->endTime ){
 		cout<<"calculating growth"<<endl;
-		double MaxValue[3] = {GrowthParameters[currIndex+2],GrowthParameters[currIndex+3],GrowthParameters[currIndex+4]};
+		double maxValue[3];
+		currGF->getGrowthRate(maxValue[0], maxValue[1], maxValue[2]);
 		int  n = Elements.size();
 		for ( int i = 0; i < n; ++i ){
 			//deletion here:
 			//if (Elements[i]->tissueType == 0){ //grow columnar layer
 				//cout<<"updating growth for element: "<<Elements[i]->Id<<endl;
-				Elements[i]->updateGrowthToAdd(MaxValue);
+				Elements[i]->updateGrowthToAdd(maxValue);
 				//This value is stored as fraction per hour, conversion is done by a time scale variable:
 				float timescale = 60*60/dt;
-				Elements[i]->updateGrowthRate(MaxValue[0]*timescale,MaxValue[1]*timescale,MaxValue[2]*timescale);
+				Elements[i]->updateGrowthRate(maxValue[0]*timescale,maxValue[1]*timescale,maxValue[2]*timescale);
 			//}
 		}
 	}
 }
 
-void Simulation::calculateGrowthRing(int currIndex){
-	float initTime = GrowthParameters[currIndex];
-	float endTime = GrowthParameters[currIndex+1];
+void Simulation::calculateGrowthRing(GrowthFunctionBase* currGF){
 	float simTime = dt*timestep;
-	if(simTime > initTime && simTime < endTime ){
+	if(simTime > currGF->initTime && simTime < currGF->endTime ){
 		//The growth function is active at current time, now I will grow the elements.
 		//First get the remaining data from the growth function parameters
-		float centre[2] = {GrowthParameters[currIndex+2], GrowthParameters[currIndex+3]};
-		float innerRadius = {GrowthParameters[currIndex+4]};
-		float outerRadius = {GrowthParameters[currIndex+5]};
-		float maxValue[3] = {GrowthParameters[currIndex+6],GrowthParameters[currIndex+7],GrowthParameters[currIndex+8]};
+		float centre[2];
+		currGF->getCentre(centre[0], centre[1]);
+		float innerRadius = currGF->getInnerRadius();
+		float outerRadius = currGF->getOuterRadius();
+		double maxValue[3];
+		currGF->getGrowthRate(maxValue[0], maxValue[1], maxValue[2]);
 		float innerRadius2 = innerRadius*innerRadius;
 		float outerRadius2 = outerRadius*outerRadius;
 		int  n = Elements.size();
@@ -3501,17 +3440,12 @@ void Simulation::calculateGrowthRing(int currIndex){
 	}
 }
 
-void Simulation::calculateGrowthGridBased(int currIndex){
-	float initTime = GrowthParameters[currIndex];
-	float endTime = GrowthParameters[currIndex+1];
-	int growtMatrixIndex = (int) GrowthParameters[currIndex+2];
-	int nGridX = (int) GrowthParameters[currIndex+3];
-	int nGridY = (int) GrowthParameters[currIndex+4];
+void Simulation::calculateGrowthGridBased(GrowthFunctionBase* currGF){
+	int nGridX = currGF->getGridX();
+	int nGridY = currGF->getGridY();
 	float simTime = dt*timestep;
-	double ***GrowthMatrix;
-	GrowthMatrix = GrowthMatrices[growtMatrixIndex];
-
-	if(simTime > initTime && simTime < endTime ){
+	cout<<"calculating growth grid based, initTime: "<<currGF->initTime<<" endTime: "<< currGF->endTime<<" simTime: "<<simTime<<endl;
+	if(simTime > currGF->initTime && simTime < currGF->endTime ){
 		vector<ShapeBase*>::iterator itElement;
 		for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 			if ((*itElement)->tissueType == 0){ //grow columnar layer
@@ -3535,8 +3469,8 @@ void Simulation::calculateGrowthGridBased(int currIndex){
 				double growthYmid[2][3]= {{0.0,0.0,0.0},{0.0,0.0,0.0}};
 				double growthscale[3]= {0.0,0.0,0.0};
 				for (int axis = 0; axis<3; ++axis){
-					growthYmid[0][axis] = GrowthMatrix[indexX][indexY][axis]*(1.0-fracX) + GrowthMatrix[indexX+1][indexY][axis]*fracX;
-					growthYmid[1][axis] = GrowthMatrix[indexX][indexY+1][axis]*(1.0-fracX) + GrowthMatrix[indexX+1][indexY+1][axis]*fracX;
+					growthYmid[0][axis] = currGF->getGrowthMatrixElement(indexX,indexY,axis)*(1.0-fracX) + currGF->getGrowthMatrixElement(indexX+1,indexY,axis)*fracX;
+					growthYmid[1][axis] = currGF->getGrowthMatrixElement(indexX,indexY+1,axis)*(1.0-fracX) + currGF->getGrowthMatrixElement(indexX+1,indexY+1,axis)*fracX;
 					growthscale[axis] = growthYmid[0][axis]*(1.0-fracY) + growthYmid[1][axis]*fracY;
 				}
 				//growing the shape
@@ -3556,17 +3490,12 @@ void Simulation::calculateGrowthGridBased(int currIndex){
 	}
 }
 
-void Simulation::calculatePeripodialGrowthGridBased(int currIndex){
-	float initTime = GrowthParameters[currIndex];
-	float endTime = GrowthParameters[currIndex+1];
-	int growtMatrixIndex = (int) GrowthParameters[currIndex+2];
-	int nGridX = (int) GrowthParameters[currIndex+3];
-	int nGridY = (int) GrowthParameters[currIndex+4];
+void Simulation::calculatePeripodialGrowthGridBased(GrowthFunctionBase* currGF){
+	int nGridX = currGF->getGridX();
+	int nGridY = currGF->getGridY();
 	float simTime = dt*timestep;
-	double ***GrowthMatrix;
-	GrowthMatrix = GrowthMatrices[growtMatrixIndex];
-
-	if(simTime > initTime && simTime < endTime ){
+	cout<<"calculating peripodial growth grid based, initTime: "<<currGF->initTime<<" endTime: "<< currGF->endTime<<" simTime: "<<simTime<<endl;
+	if(simTime > currGF->initTime && simTime < currGF->endTime ){
 		vector<ShapeBase*>::iterator itElement;
 		for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 			if ((*itElement)->tissueType == 1){ //grow peripodial layer
@@ -3589,8 +3518,8 @@ void Simulation::calculatePeripodialGrowthGridBased(int currIndex){
 				}
 				double growthYmid[2]= {0.0,0.0};
 				double growthscale = 0.0;
-				growthYmid[0] = GrowthMatrix[indexX][indexY][0]*(1.0-fracX) + GrowthMatrix[indexX+1][indexY][0]*fracX;
-				growthYmid[1] = GrowthMatrix[indexX][indexY+1][0]*(1.0-fracX) + GrowthMatrix[indexX+1][indexY+1][0]*fracX;
+				growthYmid[0] = currGF->getGrowthMatrixElement(indexX,indexY,0)*(1.0-fracX) + currGF->getGrowthMatrixElement(indexX+1,indexY,0)*fracX;
+				growthYmid[1] = currGF->getGrowthMatrixElement(indexX,indexY+1,0)*(1.0-fracX) + currGF->getGrowthMatrixElement(indexX+1,indexY+1,0)*fracX;
 				growthscale = growthYmid[0]*(1.0-fracY) + growthYmid[1]*fracY;
 
 				//growing the shape

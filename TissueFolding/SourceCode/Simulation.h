@@ -10,6 +10,8 @@
 #include "ModelInputObject.h"
 #include "ShapeBase.h"
 #include "Node.h"
+#include "GrowthFunctionBase.h"
+#include "GrowthFunctionTypes.h"
 
 class ModelInputObject;
 using namespace std;
@@ -39,6 +41,7 @@ private:
 	double StretchVelocity;
 	double BoundingBoxSize[3];
 	bool ContinueFromSave;
+
 
 	bool readModeOfSim(int& i, int argc, char **argv);
 	bool readParameters(int& i, int argc, char **argv);
@@ -123,10 +126,10 @@ private:
 	void calculateGrowth();
 	void cleanUpGrowthRates();
 	void cleanUpShapeChangeRates();
-	void calculateGrowthUniform(int currIndexForParameters);
-	void calculateGrowthRing(int currIndexForParameters);
-	void calculateGrowthGridBased(int currIndexForParameters);
-	void calculatePeripodialGrowthGridBased(int currIndexForParameters);
+	void calculateGrowthUniform(GrowthFunctionBase* currGF);
+	void calculateGrowthRing(GrowthFunctionBase* currGF);
+	void calculateGrowthGridBased(GrowthFunctionBase* currGF);
+	void calculatePeripodialGrowthGridBased(GrowthFunctionBase* currGF);
 	void changeCellShapesInSystem();
 	void changeCellShapeRing(int currIndexForParameters);
 	void setStretch();
@@ -201,6 +204,7 @@ public:
 	double TissueHeight;
 	int TissueHeightDiscretisationLayers;
 	double boundingBox[2][3];
+	vector<GrowthFunctionBase*> GrowthFunctions;
 
 	Simulation();
 	~Simulation();

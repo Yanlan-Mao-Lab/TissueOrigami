@@ -1,19 +1,19 @@
 InputMeshParameters:
   MeshInputMode(int-seeDocumentation): 4
-  MeshFile(full-path):   /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Wind48hr_01.mesh
+  MeshFile(full-path):   /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Wind48hr_03.mesh
 
 PeripodiumParameters:
-  AddPeripodium: 1
+  AddPeripodium: 0
   PeripodiumType: 2
   PeripodiumYoungsModulus: 3000.0
 
 TimeParameters:
   TimeStep(sec): 0.25
-  SimulationLength(sec): 0.25
+  SimulationLength(sec): 1000.25
 
 PysicalProperties:
   YoungsModulusApical: 3000.0	YoungsModulusBasal: 3000.0	YoungsModulusMid: 3000.0	Noise(%-int): 0
-  PoissonsRatio: 0.0		Noise(%-int): 0
+  PoissonsRatio: 0.3		Noise(%-int): 0
   ApicalViscosity: 100.0 	Noise(%-int): 0
   BasalViscosity: 100.0		
 
@@ -26,25 +26,25 @@ SaveOptions:
 GrowthOptions:
   NumberofGrowthFunctions(int): 4
   GrowthFunctionType(int-seeDocumentation): 1
-  InitialTime(sec): 0.0
+  InitialTime(sec): 10000
   FinalTime(sec):  0.3
   MaxValue(fractionPerHour-DV,AP,AB): 14400.0 0.0 0.0
 
   GrowthFunctionType(int-seeDocumentation): 2
-  InitialTime(sec): 100000
+  InitialTime(sec): 10000
   FinalTime(sec):  1
-  Centre:  10.0 0.0
+  Centre:  0.0 0.0
   InnerRadius: 0.0
   OuterRadius:  20.0
   MaxValue(fractionPerHour-DV,AP,AB):  0.45 0.45 0.0
 
   GrowthFunctionType(int-seeDocumentation): 3
-  InitialTime(sec): 100000
+  InitialTime(sec): 10
   FinalTime(sec):  3600
   Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/growthFile03
 
   GrowthFunctionType(int-seeDocumentation): 4
-  InitialTime(sec): 100000
+  InitialTime(sec): 20
   FinalTime(sec):  21600
   Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/PerigrowthFile03-1
 
