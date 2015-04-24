@@ -236,8 +236,12 @@ public:
 	void TissueAxisPositionDisplay();
 	void CoordinateDisplay();
 	void calculatePersonalisedGrowthRates();
+	void correctTiltedGrowthForGrowthFunction(GrowthFunctionBase* currGF);
+	void calculatePersonalisedUniformOrRingGrowth(ShapeBase* currElement, GrowthFunctionBase* currGF, double* NewGrowth);
+	void calculatePersonalisedGridBasedGrowth(ShapeBase* currElement, GrowthFunctionBase* currGF, double* NewGrowth);
+	void calculatePersonalisedPeripodialGridBasedGrowth(ShapeBase* currElement, GrowthFunctionBase* currGF, double* NewGrowth);
 	void calculateTiltedElementPositionOnBase(ShapeBase* currElement);
-	void calculatePersonalisedSingleGrowthRate(ShapeBase* currElement, double DVGrowth, double APGrowth, double ABGrowth, double GrowthFunctionId);
+	void calculatePersonalisedSingleGrowthRate(ShapeBase* currElement, double DVGrowth, double APGrowth, double ABGrowth, double* NewGrowth);
 	void calculateBaseElementsFinalPosition(int Id,double DVGrowth, double APGrowth, double ABGrowth);
 	void calculateCurrentElementsFinalPosition(ShapeBase* currElement);
 

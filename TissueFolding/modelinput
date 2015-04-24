@@ -1,9 +1,9 @@
 InputMeshParameters:
   MeshInputMode(int-seeDocumentation): 4
-  MeshFile(full-path):   /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Wind48hr_03.mesh
+  MeshFile(full-path):   /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Wind48hr_01.mesh
 
 PeripodiumParameters:
-  AddPeripodium: 0
+  AddPeripodium: 1
   PeripodiumType: 2
   PeripodiumYoungsModulus: 3000.0
 

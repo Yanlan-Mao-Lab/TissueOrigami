@@ -2358,6 +2358,7 @@ void Simulation::runOneStep(){
 	if(timestep==0){
 		calculateColumnarLayerBoundingBox();
 		calculateDVDistance();
+		calculatePersonalisedGrowthRates();
 		//outputFile<<"calculating element health"<<endl;
 		int nElement = Elements.size();
 		for (int i=0; i<nElement; ++i){
@@ -2506,7 +2507,6 @@ void Simulation::runOneStep(){
 		//cout<<"Element: "<<Elements[i]->Id<<" Local Strains: "<<Elements[i]->Strain[0]<<" "<<Elements[i]->Strain[1]<<" "<<Elements[i]->Strain[2]<<" "<<Elements[i]->Strain[3]<<" "<<Elements[i]->Strain[4]<<" "<<Elements[i]->Strain[5]<<endl;
 		//cout<<"Element: "<<Elements[i]->Id<<" Plastic Strains: "<<Elements[i]->PlasticStrain[0]<<" "<<Elements[i]->PlasticStrain[1]<<" "<<Elements[i]->PlasticStrain[2]<<" "<<Elements[i]->PlasticStrain[3]<<" "<<Elements[i]->PlasticStrain[4]<<" "<<Elements[i]->PlasticStrain[5]<<endl;
 	}
-	//calculatePersonalisedGrowthRates();
 	//cout<<"Finished strain display"<<endl;
 	//double* circumStrain = new double[6];
 	//circumStrain = Elements[2]->calculateGrowthInCircumferencialAxes();
@@ -3330,25 +3330,20 @@ void Simulation::writeVelocities(){
 
 void Simulation::calculateGrowth(){
 	//cout<<"Calculating Growth"<<endl;
-	int currIndexForParameters = 0;
 	cleanUpGrowthRates();
 	for (int i=0; i<nGrowthFunctions; ++i){
 		if (GrowthFunctions[i]->Type == 1){
 			//cout<<"Calculating Uniform Growth"<<endl;
 			calculateGrowthUniform(GrowthFunctions[i]);
-			currIndexForParameters += 5;
 		}
 		else if(GrowthFunctions[i]->Type == 2){
 			calculateGrowthRing(GrowthFunctions[i]);
-			currIndexForParameters += 9;
 		}
 		else if(GrowthFunctions[i]->Type == 3){
 			calculateGrowthGridBased(GrowthFunctions[i]);
-			currIndexForParameters += 5;
 		}
 		else if(GrowthFunctions[i]->Type  == 4){
 			calculatePeripodialGrowthGridBased(GrowthFunctions[i]);
-			currIndexForParameters += 5;
 		}
 	}
 	//calculateGrowthGridBased();
@@ -3389,9 +3384,14 @@ void Simulation::calculateGrowthUniform(GrowthFunctionBase* currGF){
 		currGF->getGrowthRate(maxValue[0], maxValue[1], maxValue[2]);
 		int  n = Elements.size();
 		for ( int i = 0; i < n; ++i ){
+			double GrowthForElement[3] = {maxValue[0],maxValue[1],maxValue[2]};
 			//deletion here:
 			//if (Elements[i]->tissueType == 0){ //grow columnar layer
 				//cout<<"updating growth for element: "<<Elements[i]->Id<<endl;
+				if (currGF->correctForTiltedElements && Elements[i]->tiltedElement){
+					//convert the growth to include shear strains!! Then select either personalised or normal value!
+					Elements[i]->readPersonalisedUniformGrowthRate(currGF->Id,GrowthForElement[0],GrowthForElement[1],GrowthForElement[2]);
+				}
 				Elements[i]->updateGrowthToAdd(maxValue);
 				//This value is stored as fraction per hour, conversion is done by a time scale variable:
 				float timescale = 60*60/dt;
@@ -3803,6 +3803,7 @@ void Simulation::clearLaserAblatedSites(){
 void Simulation::calculatePersonalisedGrowthRates(){
 	Elements[12]->tiltedElement= true;
 	Elements[12]->BaseElementId=2;
+
 	vector<ShapeBase*>::iterator itElement;
 	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 		if ( (*itElement)->tiltedElement ){
@@ -3810,14 +3811,84 @@ void Simulation::calculatePersonalisedGrowthRates(){
 		}
 	}
 	//Check if growth rate should be corrected for tilted elements:
-	int GrowthFunctionId = 0;
-	double DVGrowth = 1.0, APGrowth=0.0, ABGrowth = 0.0;
+	for (int i=0; i<nGrowthFunctions; ++i){
+		cout<<"started function : "<<i<<endl;
+		if(GrowthFunctions[i]->correctForTiltedElements){
+			correctTiltedGrowthForGrowthFunction(GrowthFunctions[i]);
+		}
+		cout<<"finalised function : "<<i<<endl;
+	}
+	cout<<"Element 12 personalised growth rates: "<<endl;
+	for (int i=0;i<Elements[12]->PersonalisedGrowthFunctions.size();++i){
+		cout<<"Function: "<<i<<" type: "<<Elements[12]->PersonalisedGrowthFunctions[i]->Type<<" id: "<<Elements[12]->PersonalisedGrowthFunctions[i]->Id<<endl;
+	}
+}
+
+
+void Simulation::correctTiltedGrowthForGrowthFunction(GrowthFunctionBase* currGF){
+	vector<ShapeBase*>::iterator itElement;
 	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 		if ( (*itElement)->tiltedElement ){
-			calculatePersonalisedSingleGrowthRate((*itElement), DVGrowth, APGrowth, ABGrowth, GrowthFunctionId);
+			//initialising the personalised growth function for this element
+			(*itElement)->initialisePersonalisedGrowthFunction(currGF);
+			double* NewGrowth;
+			if ((*itElement)->ShapeDim == 3){
+				NewGrowth = new double[6];
+			}
+			else if ((*itElement)->ShapeDim == 2){
+				NewGrowth = new double[3];
+			}
+			if ( currGF->Type == 1 || currGF->Type == 2 ){
+				calculatePersonalisedUniformOrRingGrowth((*itElement),currGF, NewGrowth);
+			}
+			else if ( currGF->Type == 3 ){
+				calculatePersonalisedGridBasedGrowth((*itElement),currGF, NewGrowth);
+			}
+			else if ( currGF->Type == 4 ){
+				calculatePersonalisedPeripodialGridBasedGrowth((*itElement),currGF, NewGrowth);
+			}
+			delete[] NewGrowth;
 		}
 	}
 }
+
+void Simulation::calculatePersonalisedUniformOrRingGrowth(ShapeBase* currElement, GrowthFunctionBase* currGF, double* NewGrowth){
+	double DVRate;
+	double APRate;
+	double ABRate;
+	currGF->getGrowthRate(DVRate, APRate, ABRate);
+	calculatePersonalisedSingleGrowthRate(currElement, DVRate, APRate, ABRate, NewGrowth);
+	currElement->updateUniformOrRingGrowthRate(NewGrowth, currGF->Id);
+}
+
+void Simulation::calculatePersonalisedGridBasedGrowth(ShapeBase* currElement, GrowthFunctionBase* currGF, double* NewGrowth){
+	int nGridX = currGF->getGridX();
+	int nGridY = currGF->getGridY();
+	for (int i=0; i<nGridX; ++i){
+		for (int j=0; j<nGridY; ++j){
+			double DVRate = currGF->getGrowthMatrixElement(i,j,0);
+			double APRate = currGF->getGrowthMatrixElement(i,j,1);
+			double ABRate = currGF->getGrowthMatrixElement(i,j,2);
+			calculatePersonalisedSingleGrowthRate(currElement, DVRate, APRate, ABRate, NewGrowth);
+			currElement->updatePeriOrColGridBasedGrowthRate(NewGrowth, currGF->Id, i,j);
+		}
+	}
+}
+
+void Simulation::calculatePersonalisedPeripodialGridBasedGrowth(ShapeBase* currElement, GrowthFunctionBase* currGF, double* NewGrowth){
+	int nGridX = currGF->getGridX();
+	int nGridY = currGF->getGridY();
+	for (int i=0; i<nGridX; ++i){
+		for (int j=0; j<nGridY; ++j){
+			double DVRate = currGF->getGrowthMatrixElement(i,j,0);
+			double APRate = DVRate;
+			double ABRate = 0.0;
+			calculatePersonalisedSingleGrowthRate(currElement, DVRate, APRate, ABRate, NewGrowth);
+			currElement->updatePeriOrColGridBasedGrowthRate(NewGrowth, currGF->Id, i,j);
+		}
+	}
+}
+
 
 void Simulation::calculateTiltedElementPositionOnBase(ShapeBase* currElement){
 	int n = currElement->getNodeNumber();
@@ -3860,7 +3931,7 @@ void Simulation::calculateTiltedElementPositionOnBase(ShapeBase* currElement){
 	}
 }
 
-void Simulation::calculatePersonalisedSingleGrowthRate(ShapeBase* currElement, double DVGrowth, double APGrowth, double ABGrowth, double GrowthFunctionId){
+void Simulation::calculatePersonalisedSingleGrowthRate(ShapeBase* currElement, double DVGrowth, double APGrowth, double ABGrowth, double* NewGrowth){
 	calculateBaseElementsFinalPosition(currElement->BaseElementId, DVGrowth,  APGrowth, ABGrowth);
 	//Now the final shape is stored in PositionsAlignedToReference of BaseElement
 	//I will displace the nodes of this "grown" shape to reflect the "grown" position of the current element
@@ -3873,15 +3944,18 @@ void Simulation::calculatePersonalisedSingleGrowthRate(ShapeBase* currElement, d
 	boost::numeric::ublas::vector<double> displacementA;
 	boost::numeric::ublas::vector<double> Strain;
 	int dim = 0;
+	int NewGrowthSize = 0;
 	if (currElement->ShapeDim == 3){
 		dim = 3;
 		displacementA = boost::numeric::ublas::zero_vector<double>(nNodes*dim);
 		Strain = boost::numeric::ublas::zero_vector<double>(6);
+		NewGrowthSize = 6;
 	}
 	else if (currElement->ShapeDim == 2){
 		dim = 2;
 		displacementA = boost::numeric::ublas::zero_vector<double>(nNodes*dim);
 		Strain = boost::numeric::ublas::zero_vector<double>(3);
+		NewGrowthSize = 3;
 	}
 	for (int i = 0; i<nNodes; ++i){
 		for (int j = 0; j<dim; ++j){
@@ -3890,6 +3964,10 @@ void Simulation::calculatePersonalisedSingleGrowthRate(ShapeBase* currElement, d
 		}
 	}
 	boost::numeric::ublas::axpy_prod(currElement->B,displacementA,Strain);
+	for (int i=0; i<NewGrowthSize; i++){
+		NewGrowth[i] = Strain(i);
+		cout<<"NewGrowth["<<i<<"]: "<<NewGrowth[i]<<endl;
+	}
 	currElement->displayMatrix(Strain,"Growth_Necessary_For_Element_12_fromfunctions");
 }
 

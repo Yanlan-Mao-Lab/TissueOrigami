@@ -20,6 +20,8 @@
 
 #include "Node.h"
 #include "ReferenceShapeBase.h"
+#include "GrowthFunctionBase.h"
+#include "GrowthFunctionTypes.h"
 
 using namespace std;
 
@@ -127,11 +129,12 @@ public:
 	double* BasalNormalForPacking;
 	double VolumePerNode;
 	bool capElement;
+	//Parameters for correction for tilted growth
 	bool tiltedElement;
 	int BaseElementId;						//The base shape ID that was used for creating the tilted shape
-	//int** NodeMatchingList;					//The node order matching between the base reference element and the current element
+	vector <GrowthFunctionBase*> PersonalisedGrowthFunctions;
 	double** barycentricCoords;
-	//double** ScaledDisplacementVectorList;	//The displacement of every node from the base scaled to the length of the corresponding edge
+	//End of parameters for correction for tilted growth
 
 	int 	getId();
 	string 	getName();
@@ -243,6 +246,14 @@ public:
 	void 	checkDisplayClipping(double xClip, double yClip, double zClip);
 	void	crossProduct3D(double* u, double* v, double* cross);
 	void	alignGrowthCalculationOnReference();
+	void	initialisePersonalisedGrowthFunction(GrowthFunctionBase* currGF);
+	void	initialisePersonalisedUniformGrowth(GrowthFunctionBase* currGF);
+	void	initialisePersonalisedRingGrowth(GrowthFunctionBase* currGF);
+	void	initialisePersonalisedGridBasedGrowth(GrowthFunctionBase* currGF);
+	void	initialisePersonalisedPeripodialGridBasedGrowth(GrowthFunctionBase* currGF);
+	void	readNewGrowthRate(double* NewGrowth, double& ex, double&ey, double& ez, double& exy, double& exz, double& eyz);
+	void	updateUniformOrRingGrowthRate(double* NewGrowth, int GrowthId);
+	void	updatePeriOrColGridBasedGrowthRate(double* NewGrowth, int GrowthId, int i, int j);
 };
 
 #endif

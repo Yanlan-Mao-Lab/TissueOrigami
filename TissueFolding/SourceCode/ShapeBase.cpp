@@ -2522,3 +2522,102 @@ void 	ShapeBase::alignGrowthCalculationOnReference(){
 	delete[] rotMat;
 	delete 	 refCentre;
 }
+
+void ShapeBase::initialisePersonalisedGrowthFunction(GrowthFunctionBase* currGF){
+	if( currGF->Type == 1 ){
+		initialisePersonalisedUniformGrowth(currGF);
+	}
+	else if ( currGF->Type == 2 ){
+		initialisePersonalisedRingGrowth(currGF);
+	}
+	else if ( currGF->Type == 3 ){
+		initialisePersonalisedGridBasedGrowth(currGF);
+	}
+	else if ( currGF->Type == 4 ){
+		initialisePersonalisedPeripodialGridBasedGrowth(currGF);
+	}
+}
+void	ShapeBase::initialisePersonalisedUniformGrowth(GrowthFunctionBase* currGF){
+	GrowthFunctionBase* personalisedGF;
+	double DVRate;
+	double APRate;
+	double ABRate;
+	currGF->getGrowthRate(DVRate, APRate, ABRate);
+	personalisedGF = new UniformGrowthFunction(currGF->Id, currGF->Type, currGF->initTime, currGF->endTime, DVRate, APRate,  ABRate);
+	PersonalisedGrowthFunctions.push_back(personalisedGF);
+}
+
+void	ShapeBase::initialisePersonalisedRingGrowth(GrowthFunctionBase* currGF){
+	GrowthFunctionBase* personalisedGF;
+	double DVRate;
+	double APRate;
+	double ABRate;
+	currGF->getGrowthRate(DVRate, APRate, ABRate);
+	float centreX, centreY;
+	currGF->getCentre(centreX, centreY);
+	float innerR = currGF->getInnerRadius();
+	float outerR = currGF->getOuterRadius();
+	personalisedGF = new RingGrowthFunction(currGF->Id,  currGF->Type, currGF->initTime, currGF->endTime, centreX, centreY, innerR,  outerR, DVRate, APRate,  ABRate);
+	PersonalisedGrowthFunctions.push_back(personalisedGF);
+}
+
+void	ShapeBase::initialisePersonalisedGridBasedGrowth(GrowthFunctionBase* currGF){
+	GrowthFunctionBase* personalisedGF;
+	int nGridX = currGF->getGridX();
+	int nGridY = currGF->getGridY();
+	double*** GrowthMat = currGF->getGrowthMatrix();
+	personalisedGF = new GridBasedGrowthFunction(currGF->Id,  currGF->Type, currGF->initTime, currGF->endTime, nGridX, nGridY, GrowthMat);
+}
+
+void	ShapeBase::initialisePersonalisedPeripodialGridBasedGrowth(GrowthFunctionBase* currGF){
+	GrowthFunctionBase* personalisedGF;
+	int nGridX = currGF->getGridX();
+	int nGridY = currGF->getGridY();
+	double*** GrowthMat = currGF->getGrowthMatrix();
+	personalisedGF = new PeripodialGridBasedGrowthFunction(currGF->Id,  currGF->Type, currGF->initTime, currGF->endTime, nGridX, nGridY, GrowthMat);
+}
+void	ShapeBase::readNewGrowthRate(double* NewGrowth, double& ex, double&ey, double& ez, double& exy, double& exz, double& eyz){
+	if (ShapeDim == 3){
+		ex = NewGrowth[0];
+		ey = NewGrowth[1];
+		ez = NewGrowth[2];
+		exy = NewGrowth[3];
+		exz = NewGrowth[4];
+		eyz = NewGrowth[5];
+	}
+	else if (ShapeDim == 2){
+		cout<<"shape Dim is 2"<<endl;
+		ex = NewGrowth[0];
+		ey = NewGrowth[1];
+		exy = NewGrowth[2];
+	}
+}
+
+void	ShapeBase::updateUniformOrRingGrowthRate(double* NewGrowth, int GrowthId){
+	cout<<"Updating uniform growth"<<endl;
+	double ex = 0.0, ey = 0.0, ez = 0.0, exy = 0.0, exz = 0.0, eyz = 0.0;
+	readNewGrowthRate(NewGrowth, ex, ey,ez,exy,exz,eyz);
+	cout<<"read the growth rate"<<endl;
+	for (int i=0; i<PersonalisedGrowthFunctions.size(); ++i ){
+		if (PersonalisedGrowthFunctions[i]->Id == GrowthId){
+			cout<<"Found growth function"<<endl;
+			PersonalisedGrowthFunctions[i]->setGrowtRate(ex,ey,ez);
+			cout<<"updated normal growth "<<endl;
+			PersonalisedGrowthFunctions[i]->setShearValuesGrowthRate(exy,exz,eyz);
+			cout<<"updated shear growth "<<endl;
+			break;
+		}
+	}
+}
+
+void	ShapeBase::updatePeriOrColGridBasedGrowthRate(double* NewGrowth, int GrowthId, int i, int j){
+	double ex = 0.0, ey = 0.0, ez = 0.0, exy = 0.0, exz = 0.0, eyz = 0.0;
+	readNewGrowthRate(NewGrowth, ex, ey,ez,exy,exz,eyz);
+	for (int i=0; i<PersonalisedGrowthFunctions.size(); ++i ){
+		if (PersonalisedGrowthFunctions[i]->Id == GrowthId){
+			PersonalisedGrowthFunctions[i]->setGrowthMatrixElement(ex,ey,ez,i,j);
+			PersonalisedGrowthFunctions[i]->setShearValuesGrowthMatrixElement(exy,exz,eyz,i,j);
+			break;
+		}
+	}
+}
