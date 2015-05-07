@@ -16,8 +16,9 @@ Simulation::Simulation(){
 	TissueHeightDiscretisationLayers= 1;
 	timestep = 0;
 	reachedEndOfSaveFile = false;
-	AddPeripodium = false;
-	PeripodiumType = 0;
+	AddPeripodialMembrane = false;
+	PeripodialMembraneType = -1;
+	lumenHeight = -20;
 	BoundingBoxSize[0]=1000.0; BoundingBoxSize[1]=1000.0; BoundingBoxSize[2]=1000.0;
 	ContinueFromSave = false;
 	setDefaultParameters();
@@ -61,6 +62,12 @@ Simulation::~Simulation(){
 		Nodes.pop_back();
 		delete tmp_pt;
 	}
+	while(!GrowthFunctions.empty()){
+		GrowthFunctionBase* tmp_GF;
+		tmp_GF = GrowthFunctions.back();
+		GrowthFunctions.pop_back();
+		delete tmp_GF;
+	}
 	//cerr<<"destructor for simulation finalised"<<endl;
 };
 
@@ -76,7 +83,7 @@ void Simulation::setDefaultParameters(){
 	EApical = 10.0;
 	EBasal = 10.0;
 	EMid = 10.0;
-	PeripodiumElasticity = 10.0;
+	PeripodialElasticity = 10.0;
 	poisson = 0.3;
 	ApicalVisc = 10.0;
 	BasalVisc = 100.0;
@@ -97,7 +104,9 @@ void Simulation::setDefaultParameters(){
 	TensionCompressionSaved = true;
 	ForcesSaved = true;
 	VelocitiesSaved = true;
-	PeripodiumElasticity = 0.0;
+	PeripodialElasticity = 0.0;
+	PeripodialThicnessScale = 1.0;
+	lumenHeightScale = 0.3;
 	DVRight = 0;
 	DVLeft = 1;
 	stretcherAttached = false;
@@ -323,6 +332,14 @@ bool Simulation::checkInputConsistency(){
 		BasalNodeFix[0] = true;
 		return false;
 	}
+	if (AddPeripodialMembrane == false){
+		for (int i=0; i<nGrowthFunctions; ++i){
+			if(GrowthFunctions[i]->applyToPeripodialMembrane){
+				cerr<<"There is no peripodial membrane, while growth function "<<i<<" is applicable to peropodial membrane"<<endl;
+				return false;
+			}
+		}
+	}
 	return true;
 }
 
@@ -348,8 +365,8 @@ bool Simulation::initiateSystem(){
 	if (!Success){
 		return Success;
 	}
-	if (AddPeripodium){
-		Success = addPeripodiumToTissue();
+	if (AddPeripodialMembrane){
+		Success = addPeripodialMembraneToTissue();
 	}
 	if (!Success){
 		return Success;
@@ -366,8 +383,8 @@ bool Simulation::initiateSystem(){
 	//	Nodes[i]->displayConnectedElementIds();
 	//	Nodes[i]->displayConnectedElementWeights();
 	//}
-	if (AddPeripodium){
-		assignMassWeightsDueToPeripodium();
+	if (AddPeripodialMembrane){
+		assignMassWeightsDueToPeripodialMembrane();
 	}
 	if (stretcherAttached){
 		setStretch();
@@ -1342,7 +1359,7 @@ bool Simulation::initiateMesh(int MeshType){
 
 
 
-bool Simulation::addPeripodiumToTissue(){
+bool Simulation::addPeripodialMembraneToTissue(){
 	bool Success = true;
 	Success = generateColumnarCircumferenceNodeList();
 	if (!Success){
@@ -1350,7 +1367,7 @@ bool Simulation::addPeripodiumToTissue(){
 	}
 	calculateSystemCentre();
 	sortColumnarCircumferenceNodeList();
-	if (PeripodiumType == 1){
+	//if (PeripodialMembraneType == 1){
 		//2D triangular dome of peripodial membrane, attached to the midline of the tissue
 		vector <int*> trianglecornerlist;
 		double d=0.0, dummy =0.0;
@@ -1358,11 +1375,12 @@ bool Simulation::addPeripodiumToTissue(){
 		if (!Success){
 			return Success;
 		}
-		addPeripodiumNodes(trianglecornerlist, TissueHeight, d);
-		FillNodeAssociationDueToPeripodium();
-		addPeripodiumElements(trianglecornerlist, TissueHeight);
-	}
-	else if (PeripodiumType == 2){
+		lumenHeight = TissueHeight*lumenHeightScale;
+		addPeripodialMembraneNodes(trianglecornerlist, TissueHeight, d);
+		FillNodeAssociationDueToPeripodialMembrane();
+		addPeripodialMembraneElements(trianglecornerlist, PeripodialThicnessScale*TissueHeight);
+	//}
+	/*else if (PeripodialMembraneType == 2){
 		//2D triangular dome of peripodial membrane, attached to the apical side of the tissue
 		vector <int*> trianglecornerlist;
 		double d=0.0, dummy =0.0;
@@ -1370,13 +1388,11 @@ bool Simulation::addPeripodiumToTissue(){
 		if (!Success){
 			return Success;
 		}
-		addPeripodiumNodes(trianglecornerlist, TissueHeight, d);
-		FillNodeAssociationDueToPeripodium();
-		addPeripodiumElements(trianglecornerlist, TissueHeight);
-	}
+		addPeripodialMembraneNodes(trianglecornerlist, TissueHeight, d);
+		FillNodeAssociationDueToPeripodialMembrane();
+		addPeripodialMembraneElements(trianglecornerlist, TissueHeight);
+	}*/
 	return Success;
-	//addMassToPeripodiumNodes();
-	//distributeCircumferenceMass();
 }
 
 bool Simulation::generateColumnarCircumferenceNodeList(){
@@ -1393,8 +1409,8 @@ bool Simulation::generateColumnarCircumferenceNodeList(){
 	}
 	n = ColumnarCircumferencialNodeList.size();
 	if (n<=0){
-		cerr<<"No circumferncial nodes indicated! Cannot generate peripodium"<<endl;
-		AddPeripodium = false;
+		cerr<<"No circumferncial nodes indicated! Cannot generate PeripodialMembrane"<<endl;
+		AddPeripodialMembrane = false;
 		return false;
 	}
 	return true;
@@ -1460,13 +1476,16 @@ void Simulation::calculateCentreOfNodes(double* centre){
 	}
 }
 
-void Simulation::AddPeripodiumCircumference(double height, int& index_begin, int &index_end){
+void Simulation::AddPeripodialMembraneCircumference(double height, int& index_begin, int &index_end){
 	double zoffset = 0.0;
-	if (PeripodiumType == 1) {
+	if (PeripodialMembraneType == 0) {
+		zoffset = height + lumenHeight; //the offset of the circumferential peripodial nodes from the basal layer, this is a hoovering membrane, it should be higher than the actual tissue
+	}
+	if (PeripodialMembraneType == 1) {
 		//adding the nodes to midzone, the offset should be half the height
 		zoffset = height/2.0;
 	}
-	if (PeripodiumType == 2) {
+	if (PeripodialMembraneType == 2) {
 		//adding the nodes to apical layer, (the forces still apply to whole column) the offset should be equal to height
 		zoffset = height;
 	}
@@ -1479,18 +1498,18 @@ void Simulation::AddPeripodiumCircumference(double height, int& index_begin, int
 		pos[1] = Nodes[index]->Position[1];
 		pos[2] = Nodes[index]->Position[2] + zoffset;
 		Node* tmp_nd;
-		tmp_nd = new Node(Nodes.size(), 3, pos,0,1);  //tissue type is peripodium, node type is basal
+		tmp_nd = new Node(Nodes.size(), 3, pos,0,1);  //tissue type is PeripodialMembrane, node type is basal
 		Nodes.push_back(tmp_nd);
 		if (i==0){index_begin = tmp_nd->Id;}
 		else if (i==n-1){index_end = tmp_nd->Id;}
-		PeripodiumCircumferencialNodeList.push_back(tmp_nd->Id);
-		tmp_nd->atPeripodiumCircumference = true;
+		PeripodialMembraneCircumferencialNodeList.push_back(tmp_nd->Id);
+		tmp_nd->atPeripodialCircumference = true;
 		//cerr<<"NodeId: "<<tmp_nd->Id<<" pos: "<<tmp_nd->Position[0]<<" "<<tmp_nd->Position[1]<<" "<<tmp_nd->Position[2]<<endl;
 		delete[] pos;
 	}
 }
 
-void Simulation::AddHorizontalRowOfPeripodiumNodes(vector <int*> &trianglecornerlist, double d, int &index_begin, int &index_end){
+void Simulation::AddHorizontalRowOfPeripodialMembraneNodes(vector <int*> &trianglecornerlist, double d, int &index_begin, int &index_end){
 	int tmp_begin=0, tmp_end=0;
 	for (int i = index_begin; i<=index_end; ++i){
 		int index1 = i;
@@ -1521,7 +1540,7 @@ void Simulation::AddHorizontalRowOfPeripodiumNodes(vector <int*> &trianglecorner
 		norm[2] += MidPoint[2];
 		Node* tmp_nd;
 		//Adding Peroipodium node:
-		tmp_nd = new Node(Nodes.size(), 3, norm,0,1);  //tissue type is peripodium, node type is basal
+		tmp_nd = new Node(Nodes.size(), 3, norm,0,1);  //tissue type is PeripodialMembrane, node type is basal
 		Nodes.push_back(tmp_nd);
 		if (i==index_begin){tmp_begin = tmp_nd->Id;}
 		else if (i==index_end){tmp_end = tmp_nd->Id;}
@@ -1547,7 +1566,7 @@ void Simulation::AddHorizontalRowOfPeripodiumNodes(vector <int*> &trianglecorner
 	index_end = tmp_end;
 }
 
-void Simulation::AddVerticalRowOfPeripodiumNodes(int& layerCount, int nLayers, vector <int*> &trianglecornerlist, double height, double lumenHeight, int &index_begin, int &index_end){
+void Simulation::AddVerticalRowOfPeripodialMembraneNodes(int& layerCount, int nLayers, vector <int*> &trianglecornerlist, double height, int &index_begin, int &index_end){
 	int tmp_begin=0, tmp_end=0;
 	int counter = 0;
 	for (int i = index_begin; i<=index_end; ++i){
@@ -1610,7 +1629,7 @@ void Simulation::AddVerticalRowOfPeripodiumNodes(int& layerCount, int nLayers, v
 		//cout<<"layerCount: "<<layerCount<<" norm for added node: "<<norm[0]<<" "<<norm[1]<<" "<<norm[2]<<endl;
 		Node* tmp_nd;
 		//Adding Peroipodium node:
-		tmp_nd = new Node(Nodes.size(), 3, norm,0,1);  //tissue type is peripodium, node type is basal
+		tmp_nd = new Node(Nodes.size(), 3, norm,0,1);  //tissue type is PeripodialMembrane, node type is basal
 		Nodes.push_back(tmp_nd);
 		if (i==index_begin){tmp_begin = tmp_nd->Id;}
 		else if (i==index_end){tmp_end = tmp_nd->Id;}
@@ -1638,13 +1657,13 @@ void Simulation::AddVerticalRowOfPeripodiumNodes(int& layerCount, int nLayers, v
 	layerCount++;
 }
 
-void Simulation::AddPeripodiumCapToMidAttached(int layerCount,  vector <int*> &trianglecornerlist, double height, double lumenHeight, int index_begin, int index_end){
+void Simulation::AddPeripodialMembraneCapToMidAttached(int layerCount,  vector <int*> &trianglecornerlist, double height, int index_begin, int index_end){
 	//Now I have the indices of the nodes specifying the last row.
 	//I want to cap the tissue, with the topology of the apical surfaces of the columnar layer
-	vector <int> PeripodiumNodeId;
+	vector <int> PeripodialMembraneNodeId;
 	vector <int> CorrespondingApicalNodeId;
 	int n = ApicalColumnarCircumferencialNodeList.size();
-	//map the circumference to peripodium nodes:
+	//map the circumference to PeripodialMembrane nodes:
 	int counter =0;
 	for (int i = index_begin; i <= index_end; ++i){
 		int idx = counter + layerCount*0.5 +1;
@@ -1652,12 +1671,12 @@ void Simulation::AddPeripodiumCapToMidAttached(int layerCount,  vector <int*> &t
 			idx -= n;
 		}
 		counter++;
-		PeripodiumNodeId.push_back(Nodes[i]->Id);
+		PeripodialMembraneNodeId.push_back(Nodes[i]->Id);
 		CorrespondingApicalNodeId.push_back(Nodes[ApicalColumnarCircumferencialNodeList[idx]]->Id);
-		//cout<<"peripodium Node: "<<Nodes[i]->Id<<" pos: "<<Nodes[i]->Position[0]<<" "<<Nodes[i]->Position[1]<<" "<<Nodes[i]->Position[2]<<" corr. node id: "<<Nodes[ApicalColumnarCircumferencialNodeList[idx]]->Id<<endl;
+		//cout<<"PeripodialMembrane Node: "<<Nodes[i]->Id<<" pos: "<<Nodes[i]->Position[0]<<" "<<Nodes[i]->Position[1]<<" "<<Nodes[i]->Position[2]<<" corr. node id: "<<Nodes[ApicalColumnarCircumferencialNodeList[idx]]->Id<<endl;
 	}
 	// The end point is 0.5*lumenHeight above the apical surface.
-	//I want to add the remaining 50% height of the lumen as a curvature coered by the first layer of peripodium nodes
+	//I want to add the remaining 50% height of the lumen as a curvature coered by the first layer of PeripodialMembrane nodes
 	// the layer count is equal to (nLayers -1 ) at the moment, as I am at the topmost layer
 	// I can obtain the increment I need from adding the sum of these as a z offset:
 	//double zOffset = height*0.5 + height / (float) (layerCount+1);
@@ -1668,7 +1687,7 @@ void Simulation::AddPeripodiumCapToMidAttached(int layerCount,  vector <int*> &t
 			bool AtCircumference = false;
 			for (int j =0 ; j< n; ++j){
 				if (id == Nodes[ApicalColumnarCircumferencialNodeList[j]]->Id ){
-					//if it is not on the circumference of peripodium, skip
+					//if it is not on the circumference of PeripodialMembrane, skip
 					AtCircumference = true;
 					break;
 				}
@@ -1681,17 +1700,17 @@ void Simulation::AddPeripodiumCapToMidAttached(int layerCount,  vector <int*> &t
 				pos[2] = Nodes[i]->Position[2] + zOffset;
 				Node* tmp_nd;
 				//Adding Peroipodium node:
-				tmp_nd = new Node(Nodes.size(), 3, pos,0,1);  //tissue type is peripodium, node type is basal
+				tmp_nd = new Node(Nodes.size(), 3, pos,0,1);  //tissue type is PeripodialMembrane, node type is basal
 				Nodes.push_back(tmp_nd);
-				PeripodiumNodeId.push_back(tmp_nd->Id);
+				PeripodialMembraneNodeId.push_back(tmp_nd->Id);
 				CorrespondingApicalNodeId.push_back(Nodes[i]->Id);
 				//cout<<"temp Node: "<<tmp_nd->Id<<" pos: "<<pos[0]<<" "<<pos[1]<<" "<<pos[2]<<" corr. node id: "<<Nodes[i]->Id<<endl;
 			}
 		}
 	}
-	/*cout<<"apical node - peripodium node couples: "<<endl;
-	for (int a = 0; a< PeripodiumNodeId.size(); a++){
-		cout<<PeripodiumNodeId[a]<<" "<<CorrespondingApicalNodeId[a]<<endl;
+	/*cout<<"apical node - PeripodialMembrane node couples: "<<endl;
+	for (int a = 0; a< PeripodialMembraneNodeId.size(); a++){
+		cout<<PeripodialMembraneNodeId[a]<<" "<<CorrespondingApicalNodeId[a]<<endl;
 	}*/
 	//Now I have generated the nodes and have the corresponding node mapping, I can add the triangles to list:
 	int initialpointfordisplay = trianglecornerlist.size();
@@ -1708,20 +1727,20 @@ void Simulation::AddPeripodiumCapToMidAttached(int layerCount,  vector <int*> &t
 				int nDict = CorrespondingApicalNodeId.size();
 				for (int dictionaryIndex =0; dictionaryIndex<nDict; ++dictionaryIndex){
 					if (CorrespondingApicalNodeId[dictionaryIndex] == ApicalTriangles[k]){
-						TriNodeIds[0]=PeripodiumNodeId[dictionaryIndex];
+						TriNodeIds[0]=PeripodialMembraneNodeId[dictionaryIndex];
 					}
 					if (CorrespondingApicalNodeId[dictionaryIndex] == ApicalTriangles[k+1]){
-						TriNodeIds[1]=PeripodiumNodeId[dictionaryIndex];
+						TriNodeIds[1]=PeripodialMembraneNodeId[dictionaryIndex];
 					}
 					if (CorrespondingApicalNodeId[dictionaryIndex] == ApicalTriangles[k+2]){
-						TriNodeIds[2]=PeripodiumNodeId[dictionaryIndex];
+						TriNodeIds[2]=PeripodialMembraneNodeId[dictionaryIndex];
 					}
 				}
 				trianglecornerlist.push_back(TriNodeIds);
 			}
 		}
 	}
-	/*cout<<"triangle corners for peripodium cap: "<<endl;
+	/*cout<<"triangle corners for peripodial membrane cap: "<<endl;
 	for (int a =initialpointfordisplay; a< trianglecornerlist.size(); a++){
 		cout<<trianglecornerlist[a][0]<<" "<<trianglecornerlist[a][1]<<" "<<trianglecornerlist[a][2]<<endl;
 	}*/
@@ -1729,18 +1748,18 @@ void Simulation::AddPeripodiumCapToMidAttached(int layerCount,  vector <int*> &t
 
 
 
-void Simulation::AddPeripodiumCapToApicalAttached(int layerCount,  vector <int*> &trianglecornerlist, double height, double lumenHeight, int index_begin, int index_end){
+void Simulation::AddPeripodialMembraneCapToApicalAttached(int layerCount,  vector <int*> &trianglecornerlist, double height, int index_begin, int index_end){
 	//Now I have the indices of the nodes specifying the last row.
 	//I want to cap the tissue, with the topology of the apical surfaces of the columnar layer
-	vector <int> PeripodiumNodeId;
+	vector <int> PeripodialMembraneNodeId;
 	vector <int> CorrespondingApicalNodeId;
 	int n = ApicalColumnarCircumferencialNodeList.size();
-	//map the circumference to peripodium nodes:
+	//map the circumference to peripodial membrane nodes:
 	int counter =0;
 	for (int i = index_begin; i <= index_end; ++i){
-		PeripodiumNodeId.push_back(Nodes[i]->Id);
+		PeripodialMembraneNodeId.push_back(Nodes[i]->Id);
 		CorrespondingApicalNodeId.push_back(Nodes[ApicalColumnarCircumferencialNodeList[i-index_begin]]->Id);
-		//cout<<"peripodium Node: "<<Nodes[i]->Id<<" pos: "<<Nodes[i]->Position[0]<<" "<<Nodes[i]->Position[1]<<" "<<Nodes[i]->Position[2]<<" corr. node id: "<<Nodes[ApicalColumnarCircumferencialNodeList[idx]]->Id<<endl;
+		//cout<<"Peripodial membrane Node: "<<Nodes[i]->Id<<" pos: "<<Nodes[i]->Position[0]<<" "<<Nodes[i]->Position[1]<<" "<<Nodes[i]->Position[2]<<" corr. node id: "<<Nodes[ApicalColumnarCircumferencialNodeList[idx]]->Id<<endl;
 	}
 	// The end point is on hte apical surface
 	//I want to add the height of the lumen as a curvature covered by the first layer of peripodial membrane nodes
@@ -1751,7 +1770,7 @@ void Simulation::AddPeripodiumCapToApicalAttached(int layerCount,  vector <int*>
 			bool AtCircumference = false;
 			for (int j =0 ; j< n; ++j){
 				if (id == Nodes[ApicalColumnarCircumferencialNodeList[j]]->Id ){
-					//if it is not on the circumference of peripodium, skip
+					//if it is not on the circumference of Peripodial membrane, skip
 					AtCircumference = true;
 					break;
 				}
@@ -1764,17 +1783,17 @@ void Simulation::AddPeripodiumCapToApicalAttached(int layerCount,  vector <int*>
 				pos[2] = Nodes[i]->Position[2] + zOffset;
 				Node* tmp_nd;
 				//Adding Peroipodium node:
-				tmp_nd = new Node(Nodes.size(), 3, pos,0,1);  //tissue type is peripodium, node type is basal
+				tmp_nd = new Node(Nodes.size(), 3, pos,0,1);  //tissue type is Peripodial Membrane, node type is basal
 				Nodes.push_back(tmp_nd);
-				PeripodiumNodeId.push_back(tmp_nd->Id);
+				PeripodialMembraneNodeId.push_back(tmp_nd->Id);
 				CorrespondingApicalNodeId.push_back(Nodes[i]->Id);
 				//cout<<"temp Node: "<<tmp_nd->Id<<" pos: "<<pos[0]<<" "<<pos[1]<<" "<<pos[2]<<" corr. node id: "<<Nodes[i]->Id<<endl;
 			}
 		}
 	}
-	/*cout<<"apical node - peripodium node couples: "<<endl;
-	for (int a = 0; a< PeripodiumNodeId.size(); a++){
-		cout<<PeripodiumNodeId[a]<<" "<<CorrespondingApicalNodeId[a]<<endl;
+	/*cout<<"apical node - peripodial membrane node couples: "<<endl;
+	for (int a = 0; a< PeripodialMembraneNodeId.size(); a++){
+		cout<<PeripodialMembraneNodeId[a]<<" "<<CorrespondingApicalNodeId[a]<<endl;
 	}*/
 	//Now I have generated the nodes and have the corresponding node mapping, I can add the triangles to list:
 	int initialpointfordisplay = trianglecornerlist.size();
@@ -1794,35 +1813,121 @@ void Simulation::AddPeripodiumCapToApicalAttached(int layerCount,  vector <int*>
 				int nDict = CorrespondingApicalNodeId.size();
 				for (int dictionaryIndex =0; dictionaryIndex<nDict; ++dictionaryIndex){
 					if (CorrespondingApicalNodeId[dictionaryIndex] == ApicalTriangles[k]){
-						TriNodeIds[0]=PeripodiumNodeId[dictionaryIndex];
+						TriNodeIds[0]=PeripodialMembraneNodeId[dictionaryIndex];
 					}
 					if (CorrespondingApicalNodeId[dictionaryIndex] == ApicalTriangles[k+1]){
-						TriNodeIds[1]=PeripodiumNodeId[dictionaryIndex];
+						TriNodeIds[1]=PeripodialMembraneNodeId[dictionaryIndex];
 					}
 					if (CorrespondingApicalNodeId[dictionaryIndex] == ApicalTriangles[k+2]){
-						TriNodeIds[2]=PeripodiumNodeId[dictionaryIndex];
+						TriNodeIds[2]=PeripodialMembraneNodeId[dictionaryIndex];
 					}
 				}
 				trianglecornerlist.push_back(TriNodeIds);
 			}
 		}
 	}
-	/*cout<<"triangle corners for peripodium cap: "<<endl;
+	/*cout<<"triangle corners for Peripodial membrane cap: "<<endl;
 	for (int a =initialpointfordisplay; a< trianglecornerlist.size(); a++){
 		cout<<trianglecornerlist[a][0]<<" "<<trianglecornerlist[a][1]<<" "<<trianglecornerlist[a][2]<<endl;
 	}*/
 }
-void Simulation::FillNodeAssociationDueToPeripodium(){
-	//Take the peripodium circumferential list
+
+void Simulation::AddPeripodialMembraneCapToHoovering(int layerCount,  vector <int*> &trianglecornerlist, double height, int index_begin, int index_end){
+	//Now I have the indices of the nodes specifying the last row.
+	//I want to cap the tissue, with the topology of the apical surfaces of the columnar layer
+	vector <int> PeripodialMembraneNodeId;
+	vector <int> CorrespondingApicalNodeId;
+	int n = ApicalColumnarCircumferencialNodeList.size();
+	//map the circumference to peripodial membrane nodes:
+	int counter =0;
+	for (int i = index_begin; i <= index_end; ++i){
+		PeripodialMembraneNodeId.push_back(Nodes[i]->Id);
+		CorrespondingApicalNodeId.push_back(Nodes[ApicalColumnarCircumferencialNodeList[i-index_begin]]->Id);
+		//cout<<"Peripodial membrane Node: "<<Nodes[i]->Id<<" pos: "<<Nodes[i]->Position[0]<<" "<<Nodes[i]->Position[1]<<" "<<Nodes[i]->Position[2]<<" corr. node id: "<<Nodes[ApicalColumnarCircumferencialNodeList[idx]]->Id<<endl;
+	}
+	// The end point is on hte apical surface
+	//I want to add the height of the lumen as a curvature covered by the first layer of peripodial membrane nodes
+	double zOffset = lumenHeight;
+	for (int i = 0; i<Nodes.size(); ++i){
+		if (Nodes[i]->tissuePlacement == 1){ //Node is apical
+			int id = Nodes[i]->Id;
+			bool AtCircumference = false;
+			for (int j =0 ; j< n; ++j){
+				if (id == Nodes[ApicalColumnarCircumferencialNodeList[j]]->Id ){
+					//if it is not on the circumference of peripodial membrane, skip
+					AtCircumference = true;
+					break;
+				}
+			}
+			if (!AtCircumference){
+				double* pos;
+				pos = new double[3];
+				pos[0] = Nodes[i]->Position[0];
+				pos[1] = Nodes[i]->Position[1];
+				pos[2] = Nodes[i]->Position[2] + zOffset;
+				Node* tmp_nd;
+				//Adding Peroipodium node:
+				tmp_nd = new Node(Nodes.size(), 3, pos,0,1);  //tissue type is peripodial membrane, node type is basal
+				Nodes.push_back(tmp_nd);
+				PeripodialMembraneNodeId.push_back(tmp_nd->Id);
+				CorrespondingApicalNodeId.push_back(Nodes[i]->Id);
+				//cout<<"temp Node: "<<tmp_nd->Id<<" pos: "<<pos[0]<<" "<<pos[1]<<" "<<pos[2]<<" corr. node id: "<<Nodes[i]->Id<<endl;
+			}
+		}
+	}
+	/*cout<<"apical node - peripodial membrane node couples: "<<endl;
+	for (int a = 0; a< PeripodialMembranemNodeId.size(); a++){
+		cout<<PeripodialMembraneNodeId[a]<<" "<<CorrespondingApicalNodeId[a]<<endl;
+	}*/
+	//Now I have generated the nodes and have the corresponding node mapping, I can add the triangles to list:
+	int initialpointfordisplay = trianglecornerlist.size();
+	for (int i = 0; i<Elements.size(); ++i){
+		vector <int> ApicalTriangles;
+		Elements[i]->getApicalTriangles(ApicalTriangles);
+		int nList = ApicalTriangles.size();
+		for (int k=0; k<nList-2; ++k){
+			if (Nodes[ApicalTriangles[k]]->tissuePlacement == 1 &&
+				Nodes[ApicalTriangles[k+1]]->tissuePlacement == 1 &&
+				Nodes[ApicalTriangles[k+2]]->tissuePlacement == 1){
+				//This is an element that is adding a peripodial membrane triangle,
+				//This will be the base node of the said triangle, if the triangle is tilted
+				//I will record all the information now, and apply the changes to tilted triangles i
+				int* TriNodeIds;
+				TriNodeIds = new int[3];
+				int nDict = CorrespondingApicalNodeId.size();
+				for (int dictionaryIndex =0; dictionaryIndex<nDict; ++dictionaryIndex){
+					if (CorrespondingApicalNodeId[dictionaryIndex] == ApicalTriangles[k]){
+						TriNodeIds[0]=PeripodialMembraneNodeId[dictionaryIndex];
+					}
+					if (CorrespondingApicalNodeId[dictionaryIndex] == ApicalTriangles[k+1]){
+						TriNodeIds[1]=PeripodialMembraneNodeId[dictionaryIndex];
+					}
+					if (CorrespondingApicalNodeId[dictionaryIndex] == ApicalTriangles[k+2]){
+						TriNodeIds[2]=PeripodialMembraneNodeId[dictionaryIndex];
+					}
+				}
+				trianglecornerlist.push_back(TriNodeIds);
+			}
+		}
+	}
+	/*cout<<"triangle corners for peripodial membrane cap: "<<endl;
+	for (int a =initialpointfordisplay; a< trianglecornerlist.size(); a++){
+		cout<<trianglecornerlist[a][0]<<" "<<trianglecornerlist[a][1]<<" "<<trianglecornerlist[a][2]<<endl;
+	}*/
+}
+
+
+void Simulation::FillNodeAssociationDueToPeripodialMembrane(){
+	//Take the peripodial membrane circumferential list
 	//Start from the associated Basal columnar circumferential node
 	//Move apically through the elements until you reach the apical surface - an apical node
-	int n = PeripodiumCircumferencialNodeList.size();
+	int n = PeripodialMembraneCircumferencialNodeList.size();
 	int nE = Elements.size();
 	for (int i=0; i< n; ++i){
-		int index = PeripodiumCircumferencialNodeList[i];
+		int index = PeripodialMembraneCircumferencialNodeList[i];
 		int currNodeId = ColumnarCircumferencialNodeList[i];
-		Nodes[index]->AssociatedNodesDueToPeripodium.push_back(ColumnarCircumferencialNodeList[i]);
-		Nodes[ColumnarCircumferencialNodeList[i]]->LinkedPeripodiumNodeId = Nodes[index]->Id;
+		Nodes[index]->AssociatedNodesDueToPeripodialMembrane.push_back(ColumnarCircumferencialNodeList[i]);
+		Nodes[ColumnarCircumferencialNodeList[i]]->LinkedPeripodialNodeId = Nodes[index]->Id;
 		while(Nodes[currNodeId]->tissuePlacement != 1){ //While I have not reached the apical node
 			for (int j= 0; j<nE; ++j){
 				bool IsBasalOwner = Elements[j]->IsThisNodeMyBasal(currNodeId);
@@ -1831,55 +1936,57 @@ void Simulation::FillNodeAssociationDueToPeripodium(){
 					break;
 				}
 			}
-			Nodes[index]->AssociatedNodesDueToPeripodium.push_back(currNodeId);
+			Nodes[index]->AssociatedNodesDueToPeripodialMembrane.push_back(currNodeId);
 			if (currNodeId != Nodes[currNodeId]->Id ){cerr<<"Error in node association index"<<endl;}
-			Nodes[currNodeId]->LinkedPeripodiumNodeId = Nodes[index]->Id;
+			Nodes[currNodeId]->LinkedPeripodialNodeId = Nodes[index]->Id;
 		}
 		//cout<<"Node: "<<index<<" pos : "<<Nodes[index]->Position[0]<<" "<<Nodes[index]->Position[1]<<" "<<Nodes[index]->Position[2]<<endl;
-		//for(int j = 0; j< Nodes[index]->AssociatedNodesDueToPeripodium.size(); ++j){
-		//	int a = Nodes[index]->AssociatedNodesDueToPeripodium[j];
+		//for(int j = 0; j< Nodes[index]->AssociatedNodesDueToPeripodialMembrane.size(); ++j){
+		//	int a = Nodes[index]->AssociatedNodesDueToPeripodialMembrane[j];
 		//	cout<<"	Associated Node id: "<<Nodes[a]->Id<<" Pos: "<<Nodes[a]->Position[0]<<" "<<Nodes[a]->Position[1]<<" "<<Nodes[a]->Position[2]<<endl;
 		//}
 	}
 }
 
 
-void Simulation::assignMassWeightsDueToPeripodium(){
-	//Take the peripodium circumferential list
+void Simulation::assignMassWeightsDueToPeripodialMembrane(){
+	//Take the peripodial membrane circumferential list
 	//calculate the sum of associated node masses
-	//Add the weigthing fractions to AssociatedNodeWeightsDueToPeripodium of each Node
-	int n = PeripodiumCircumferencialNodeList.size();
+	//Add the weigthing fractions to AssociatedNodeWeightsDueToPeripodialMembrane of each Node
+	int n = PeripodialMembraneCircumferencialNodeList.size();
 	for (int i=0; i< n; ++i){
-		int index = PeripodiumCircumferencialNodeList[i];
-		int nA = Nodes[index]->AssociatedNodesDueToPeripodium.size();
+		int index = PeripodialMembraneCircumferencialNodeList[i];
+		int nA = Nodes[index]->AssociatedNodesDueToPeripodialMembrane.size();
 		double weightSum = 0.0;
 		for(int j = 0; j < nA; ++j){
-			int index2 = Nodes[index]->AssociatedNodesDueToPeripodium[j];
+			int index2 = Nodes[index]->AssociatedNodesDueToPeripodialMembrane[j];
 			double w = Nodes[index2]->mass;
 			weightSum += w;
-			Nodes[index]->AssociatedNodeWeightsDueToPeripodium.push_back(w);
+			Nodes[index]->AssociatedNodeWeightsDueToPeripodialMembrane.push_back(w);
 		}
 		for(int j = 0; j < nA; ++j){
-			int index2 = Nodes[index]->AssociatedNodesDueToPeripodium[j];
-			Nodes[index]->AssociatedNodeWeightsDueToPeripodium[j] /= weightSum;
+			int index2 = Nodes[index]->AssociatedNodesDueToPeripodialMembrane[j];
+			Nodes[index]->AssociatedNodeWeightsDueToPeripodialMembrane[j] /= weightSum;
 			//Distributing the weight of this node onto the associated nodes
-			Nodes[index2]->mass += Nodes[index]->mass*Nodes[index]->AssociatedNodeWeightsDueToPeripodium[j];
+			Nodes[index2]->mass += Nodes[index]->mass*Nodes[index]->AssociatedNodeWeightsDueToPeripodialMembrane[j];
 		}
 	}
 }
 
 
-void Simulation::addPeripodiumNodes(vector <int*> &trianglecornerlist, double height, double d){
-	//cerr<<"Adding peripodium nodes"<<endl;
+void Simulation::addPeripodialMembraneNodes(vector <int*> &trianglecornerlist, double height, double d){
+	//cerr<<"Adding peripodial membrane nodes"<<endl;
 	//int n = ColumnarCircumferencialNodeList.size();
-	double lumenHeight = height*0.3;//height*0.3;	//I want the lumen of the tissue to be 30% of tissue hight
 	int index_begin = 0, index_end =0;
 	//Adding a midline range of nodes
-	AddPeripodiumCircumference(height, index_begin, index_end);
+	AddPeripodialMembraneCircumference(height, index_begin, index_end);
 	int layerCount = 0;
-	if (PeripodiumType == 1){
+	if (PeripodialMembraneType == 0){
+		AddPeripodialMembraneCapToHoovering(layerCount, trianglecornerlist, height, index_begin, index_end);
+	}
+	else if (PeripodialMembraneType == 1){
 		double triangleHeight = 0.866*d; //0.866 is square-root(3)/2, this is the height of the triangle I am adding,
-		AddHorizontalRowOfPeripodiumNodes(trianglecornerlist, triangleHeight, index_begin, index_end);
+		AddHorizontalRowOfPeripodialMembraneNodes(trianglecornerlist, triangleHeight, index_begin, index_end);
 		//calculating how many layers of triangles I need for spanning the necessary height, I want the side layer to go up
 		// 50% of tissue height (to reach the same level as the top of columnar layer)
 		// + 50% of the lumen size. The remaining 50% of lumen size will be spanned by the first row of cap elements.
@@ -1892,14 +1999,14 @@ void Simulation::addPeripodiumNodes(vector <int*> &trianglecornerlist, double he
 		//I will adjust the triangle height
 		triangleHeight = pow((triangleHeight*triangleHeight + height*height),0.5) / (float)nLayers;
 		for (int i=0; i<nLayers; ++i){
-			AddVerticalRowOfPeripodiumNodes(layerCount, nLayers, trianglecornerlist, height, lumenHeight, index_begin, index_end);
+			AddVerticalRowOfPeripodialMembraneNodes(layerCount, nLayers, trianglecornerlist, height, index_begin, index_end);
 		}
-		AddPeripodiumCapToMidAttached(layerCount, trianglecornerlist, height, lumenHeight, index_begin, index_end);
+		AddPeripodialMembraneCapToMidAttached(layerCount, trianglecornerlist, height, index_begin, index_end);
 	}
-	else if (PeripodiumType == 2){
-		AddPeripodiumCapToApicalAttached(layerCount, trianglecornerlist, height, lumenHeight, index_begin, index_end);
+	else if (PeripodialMembraneType == 2){
+		AddPeripodialMembraneCapToApicalAttached(layerCount, trianglecornerlist, height, index_begin, index_end);
 	}
-	//AssignAssociatedNodesToPeripodiumCircumference();
+	//AssignAssociatedNodesToPeripodialMembraneCircumference();
 }
 
 void Simulation::getAverageSideLength(double& periAverageSideLength, double& colAverageSideLength){
@@ -1989,7 +2096,7 @@ bool Simulation::CalculateTissueHeight(){
 	return true;
 }
 
-void Simulation::addPeripodiumElements(vector <int*> &trianglecornerlist, double height){
+void Simulation::addPeripodialMembraneElements(vector <int*> &trianglecornerlist, double height){
 	int n = trianglecornerlist.size();
 	calculateSystemCentre();
 	//SystemCentre[2] -= 10; // The apical surface is assumed to took towards (-)ve z
@@ -2339,8 +2446,8 @@ void Simulation::assignPhysicalParameters(){
 		if (Elements[i]->tissueType == 0){ //Element is on the columnar layer
 			Elements[i]->setElasticProperties(EApical*(1 + noise1/100.0),EBasal*(1 + noise1/100.0),EMid*(1 + noise1/100.0),poisson*(1 + noise2/100));
 		}
-		if (Elements[i]->tissueType == 1){ //Element is on the peripodium
-			double currE = PeripodiumElasticity*(1 + noise1/100.0);
+		if (Elements[i]->tissueType == 1){ //Element is on the peripodial membrane
+			double currE = PeripodialElasticity*(1 + noise1/100.0);
 			Elements[i]->setElasticProperties(currE,currE,currE,poisson*(1 + noise2/100));
 		}
 	}
@@ -2354,11 +2461,13 @@ void Simulation::assignPhysicalParameters(){
 }
 
 void Simulation::runOneStep(){
-	cout<<"inside runonestep"<<endl;
+	//cout<<"time step: "<<timestep<<endl;
 	if(timestep==0){
 		calculateColumnarLayerBoundingBox();
 		calculateDVDistance();
+		cout<<"calculating personalised growth rates ... "<<endl;
 		calculatePersonalisedGrowthRates();
+		cout<<"finished calculating personalised growth rates. "<<endl;
 		//outputFile<<"calculating element health"<<endl;
 		int nElement = Elements.size();
 		for (int i=0; i<nElement; ++i){
@@ -2463,8 +2572,6 @@ void Simulation::runOneStep(){
 
 	double periPackingThreshold = 1000, colPackingThreshold = 1000;
 	getAverageSideLength(periPackingThreshold,colPackingThreshold);
-
-
 	//packingThreshold *=0.7; //I am adding a 40% safety to average side length, and then taking half of it as threshold for packing
 	for (int RKId = 0; RKId<4; ++RKId){
 		//outputFile<<"started RK: "<<RKId<<endl;
@@ -2482,7 +2589,7 @@ void Simulation::runOneStep(){
 		if (PipetteSuction && timestep> PipetteInitialStep && timestep<PipetteEndStep){
 			addPipetteForces(RKId);
 		}
-		redistributePeripodiumForces(RKId);
+		redistributePeripodialMembraneForces(RKId);
 		updateNodePositions(RKId);
 		//outputFile<<"     updated node pos"<<endl;
 		updateElementPositions(RKId);
@@ -2503,10 +2610,10 @@ void Simulation::runOneStep(){
 	}
 	timestep++;
 	//outputFile<<"finished runonestep"<<endl;
-	for (int i=0; i<Elements.size(); ++i){
+	//for (int i=0; i<Elements.size(); ++i){
 		//cout<<"Element: "<<Elements[i]->Id<<" Local Strains: "<<Elements[i]->Strain[0]<<" "<<Elements[i]->Strain[1]<<" "<<Elements[i]->Strain[2]<<" "<<Elements[i]->Strain[3]<<" "<<Elements[i]->Strain[4]<<" "<<Elements[i]->Strain[5]<<endl;
 		//cout<<"Element: "<<Elements[i]->Id<<" Plastic Strains: "<<Elements[i]->PlasticStrain[0]<<" "<<Elements[i]->PlasticStrain[1]<<" "<<Elements[i]->PlasticStrain[2]<<" "<<Elements[i]->PlasticStrain[3]<<" "<<Elements[i]->PlasticStrain[4]<<" "<<Elements[i]->PlasticStrain[5]<<endl;
-	}
+	//}
 	//cout<<"Finished strain display"<<endl;
 	//double* circumStrain = new double[6];
 	//circumStrain = Elements[2]->calculateGrowthInCircumferencialAxes();
@@ -2823,9 +2930,9 @@ void Simulation::calculatePacking(int RKId, double PeriThreshold, double ColThre
 	float dminNeg =(-1.0)*threshold;
 	float t2 = threshold*threshold;
 	for (itNode0=Nodes.begin(); itNode0<Nodes.end(); ++itNode0){
-		if (!(*itNode0)->atPeripodiumCircumference){
+		if (!(*itNode0)->atPeripodialMembraneCircumference){
 			for (itNode1=itNode0+1; itNode1<Nodes.end(); ++itNode1){
-				if (!(*itNode1)->atPeripodiumCircumference){
+				if (!(*itNode1)->atPeripodialMembraneCircumference){
 					float dx =100.0, dy = 100.0, dz = 100.0;
 					if (RKId ==0){
 						dx = (*itNode1)->Position[0]-(*itNode0)->Position[0];
@@ -2876,15 +2983,15 @@ void Simulation::calculatePacking(int RKId, double PeriThreshold, double ColThre
 */
 
 
-void Simulation::redistributePeripodiumForces(int RKId){
-	int n = PeripodiumCircumferencialNodeList.size();
+void Simulation::redistributePeripodialMembraneForces(int RKId){
+	int n = PeripodialMembraneCircumferencialNodeList.size();
 	for (int i=0; i<n; ++i){
-		int index = PeripodiumCircumferencialNodeList[i];
+		int index = PeripodialMembraneCircumferencialNodeList[i];
 		double F[3] = {SystemForces[RKId][index][0], SystemForces[RKId][index][1], SystemForces[RKId][index][2]};
-		int nA = Nodes[index]->AssociatedNodesDueToPeripodium.size();
+		int nA = Nodes[index]->AssociatedNodesDueToPeripodialMembrane.size();
 		for(int j = 0; j < nA; ++j){
-			int index2 = Nodes[index]->AssociatedNodesDueToPeripodium[j];
-			double w = Nodes[index]->AssociatedNodeWeightsDueToPeripodium[j];
+			int index2 = Nodes[index]->AssociatedNodesDueToPeripodialMembrane[j];
+			double w = Nodes[index]->AssociatedNodeWeightsDueToPeripodialMembrane[j];
 			if(!Nodes[index2]->FixedPos[0]){
 				SystemForces[RKId][index2][0] += F[0]*w;
 			}
@@ -2958,19 +3065,19 @@ void Simulation::updateNodePositions(int RKId){
 		//	cout<<endl;
 		}
 	}
-	updateNodePositionsForPeripodiumCircumference(RKId);
+	updateNodePositionsForPeripodialMembraneCircumference(RKId);
 };
 
 void Simulation::realignPositionsForMidAttachedPeripodialMembrane(int RKId){
-	int n = PeripodiumCircumferencialNodeList.size();
+	int n = PeripodialMembraneCircumferencialNodeList.size();
 	if (RKId < 3){
 		for (int i=0; i<n; ++i){
-			int index = PeripodiumCircumferencialNodeList[i];
-			int nA = Nodes[index]->AssociatedNodesDueToPeripodium.size();
+			int index = PeripodialMembraneCircumferencialNodeList[i];
+			int nA = Nodes[index]->AssociatedNodesDueToPeripodialMembrane.size();
 			double RKsumV[3] = {0.0,0.0,0.0};
 			double RKsumPos[3] = {0.0,0.0,0.0};
 			for(int j = 0; j < nA; ++j){
-				int index2 = Nodes[index]->AssociatedNodesDueToPeripodium[j];
+				int index2 = Nodes[index]->AssociatedNodesDueToPeripodialMembrane[j];
 				for (int k=0; k<Nodes[index2]->nDim; ++k){
 					RKsumV[k] += Nodes[index2]->Velocity[RKId][k];
 					RKsumPos[k] += Nodes[index2]->RKPosition[k];
@@ -2984,13 +3091,13 @@ void Simulation::realignPositionsForMidAttachedPeripodialMembrane(int RKId){
 	}
 	else{
 		for (int i=0; i<n; ++i){
-			int index = PeripodiumCircumferencialNodeList[i];
-			int nA = Nodes[index]->AssociatedNodesDueToPeripodium.size();
+			int index = PeripodialMembraneCircumferencialNodeList[i];
+			int nA = Nodes[index]->AssociatedNodesDueToPeripodialMembrane.size();
 			double sumV[3] = {0.0,0.0,0.0};
 			double RKsumV[3] = {0.0,0.0,0.0};
 			double sumPos[3] = {0.0,0.0,0.0};
 			for(int j = 0; j < nA; ++j){
-				int index2 = Nodes[index]->AssociatedNodesDueToPeripodium[j];
+				int index2 = Nodes[index]->AssociatedNodesDueToPeripodialMembrane[j];
 				for (int k=0; k<Nodes[index2]->nDim; ++k){
 					RKsumV[k] += Nodes[index2]->Velocity[RKId][k];
 					sumV[k] += Nodes[index2]->Velocity[0][k];
@@ -3007,13 +3114,13 @@ void Simulation::realignPositionsForMidAttachedPeripodialMembrane(int RKId){
 }
 
 void Simulation::realignPositionsForApicalAttachedPeripodialMembrane(int RKId){
-	int n = PeripodiumCircumferencialNodeList.size();
+	int n = PeripodialMembraneCircumferencialNodeList.size();
 	if (RKId < 3){
 		for (int i=0; i<n; ++i){
-			int index = PeripodiumCircumferencialNodeList[i];
-			int nA = Nodes[index]->AssociatedNodesDueToPeripodium.size();
+			int index = PeripodialMembraneCircumferencialNodeList[i];
+			int nA = Nodes[index]->AssociatedNodesDueToPeripodialMembrane.size();
 			for(int j = 0; j < nA; ++j){
-				int index2 = Nodes[index]->AssociatedNodesDueToPeripodium[j];
+				int index2 = Nodes[index]->AssociatedNodesDueToPeripodialMembrane[j];
 				if(Nodes[index2] -> tissuePlacement ==1 ){
 					//found the apical node!
 					for (int k=0; k<Nodes[index2]->nDim; ++k){
@@ -3027,10 +3134,10 @@ void Simulation::realignPositionsForApicalAttachedPeripodialMembrane(int RKId){
 	}
 	else{
 		for (int i=0; i<n; ++i){
-			int index = PeripodiumCircumferencialNodeList[i];
-			int nA = Nodes[index]->AssociatedNodesDueToPeripodium.size();
+			int index = PeripodialMembraneCircumferencialNodeList[i];
+			int nA = Nodes[index]->AssociatedNodesDueToPeripodialMembrane.size();
 			for(int j = 0; j < nA; ++j){
-				int index2 = Nodes[index]->AssociatedNodesDueToPeripodium[j];
+				int index2 = Nodes[index]->AssociatedNodesDueToPeripodialMembrane[j];
 				if(Nodes[index2] -> tissuePlacement ==1 ){
 					//found Apical Node!
 					for (int k=0; k<Nodes[index2]->nDim; ++k){
@@ -3046,12 +3153,57 @@ void Simulation::realignPositionsForApicalAttachedPeripodialMembrane(int RKId){
 }
 
 
-void Simulation::updateNodePositionsForPeripodiumCircumference(int RKId){
-	if (PeripodiumType == 1) {
-		realignPositionsForMidAttachedPeripodialMembrane(RKId);
+void Simulation::realignPositionsForHooveringPeripodialMembrane(int RKId){
+	int n = PeripodialMembraneCircumferencialNodeList.size();
+	if (RKId < 3){
+		for (int i=0; i<n; ++i){
+			int index = PeripodialMembraneCircumferencialNodeList[i];
+			int nA = Nodes[index]->AssociatedNodesDueToPeripodialMembrane.size();
+			for(int j = 0; j < nA; ++j){
+				int index2 = Nodes[index]->AssociatedNodesDueToPeripodialMembrane[j];
+				if(Nodes[index2] -> tissuePlacement ==1 ){
+					//found the apical node!
+					for (int k=0; k<Nodes[index2]->nDim; ++k){
+						Nodes[index]->Velocity[RKId][k] = Nodes[index2]->Velocity[RKId][k];
+						Nodes[index]->RKPosition[k] =  Nodes[index2]->RKPosition[k];
+					}
+					Nodes[index]->RKPosition[2] += lumenHeight;
+					break;
+				}
+			}
+		}
 	}
-	if (PeripodiumType == 2) {
+	else{
+		for (int i=0; i<n; ++i){
+			int index = PeripodialMembraneCircumferencialNodeList[i];
+			int nA = Nodes[index]->AssociatedNodesDueToPeripodialMembrane.size();
+			for(int j = 0; j < nA; ++j){
+				int index2 = Nodes[index]->AssociatedNodesDueToPeripodialMembrane[j];
+				if(Nodes[index2] -> tissuePlacement ==1 ){
+					//found Apical Node!
+					for (int k=0; k<Nodes[index2]->nDim; ++k){
+						Nodes[index]->Velocity[RKId][k] = Nodes[index2]->Velocity[RKId][k];
+						Nodes[index]->Velocity[0][k] = Nodes[index2]->Velocity[0][k];
+						Nodes[index]->Position[k] =  Nodes[index2]->Position[k];
+					}
+					Nodes[index]->Position[2] += lumenHeight;
+					break;
+				}
+			}
+		}
+	}
+}
+
+
+void Simulation::updateNodePositionsForPeripodialMembraneCircumference(int RKId){
+	if (PeripodialMembraneType==0){
+		realignPositionsForHooveringPeripodialMembrane(RKId);
+	}
+	if(PeripodialMembraneType == 2) {
 		realignPositionsForApicalAttachedPeripodialMembrane(RKId);
+	}
+	if (PeripodialMembraneType == 1) {
+		realignPositionsForMidAttachedPeripodialMembrane(RKId);
 	}
 }
 
@@ -3342,9 +3494,6 @@ void Simulation::calculateGrowth(){
 		else if(GrowthFunctions[i]->Type == 3){
 			calculateGrowthGridBased(GrowthFunctions[i]);
 		}
-		else if(GrowthFunctions[i]->Type  == 4){
-			calculatePeripodialGrowthGridBased(GrowthFunctions[i]);
-		}
 	}
 	//calculateGrowthGridBased();
 }
@@ -3379,25 +3528,38 @@ void Simulation::calculateGrowthUniform(GrowthFunctionBase* currGF){
 	float simTime = dt*timestep;
 	//cout<<"inside uniform growth function, initTime: "<<currGF->initTime <<" endtime: "<<currGF->endTime<<" simTime"<<simTime<<endl;
 	if(simTime > currGF->initTime && simTime < currGF->endTime ){
-		cout<<"calculating growth"<<endl;
-		double maxValue[3];
-		currGF->getGrowthRate(maxValue[0], maxValue[1], maxValue[2]);
+		//cout<<"calculating growth"<<endl;
+		double *maxValues;
+		maxValues = new double[6];
+		currGF->getGrowthRate(maxValues);
+		float timescale = 60*60/dt;
 		int  n = Elements.size();
 		for ( int i = 0; i < n; ++i ){
-			double GrowthForElement[3] = {maxValue[0],maxValue[1],maxValue[2]};
 			//deletion here:
-			//if (Elements[i]->tissueType == 0){ //grow columnar layer
-				//cout<<"updating growth for element: "<<Elements[i]->Id<<endl;
+			//tissue type == 0 is columnar layer, ==1 is peripodial membrane
+			if ((currGF->applyToColumnarLayer && Elements[i]->tissueType == 0) || (currGF->applyToPeripodialMembrane && Elements[i]->tissueType == 1)){
+				 //cout<<"updating growth for element: "<<Elements[i]->Id<<endl;
 				if (currGF->correctForTiltedElements && Elements[i]->tiltedElement){
 					//convert the growth to include shear strains!! Then select either personalised or normal value!
-					Elements[i]->readPersonalisedUniformGrowthRate(currGF->Id,GrowthForElement[0],GrowthForElement[1],GrowthForElement[2]);
+					double* tiltCorrectedGrowth;
+					tiltCorrectedGrowth = new double[6];
+					for (int a =0; a<6; ++a ){
+						tiltCorrectedGrowth[a] = maxValues[a];
+					}
+					Elements[i]->readPersonalisedGrowthRate(currGF->Id,tiltCorrectedGrowth);
+					Elements[i]->updateGrowthToAdd(tiltCorrectedGrowth);
+					//This value is stored as fraction per hour, conversion is done by the time scale variable:
+					Elements[i]->updateGrowthRate(tiltCorrectedGrowth[0]*timescale,tiltCorrectedGrowth[1]*timescale,tiltCorrectedGrowth[2]*timescale);
+					delete[] tiltCorrectedGrowth;
 				}
-				Elements[i]->updateGrowthToAdd(maxValue);
-				//This value is stored as fraction per hour, conversion is done by a time scale variable:
-				float timescale = 60*60/dt;
-				Elements[i]->updateGrowthRate(maxValue[0]*timescale,maxValue[1]*timescale,maxValue[2]*timescale);
-			//}
+				else{
+					Elements[i]->updateGrowthToAdd(maxValues);
+					//This value is stored as fraction per hour, conversion is done by the time scale variable:
+					Elements[i]->updateGrowthRate(maxValues[0]*timescale,maxValues[1]*timescale,maxValues[2]*timescale);
+				}
+			}
 		}
+		delete[] maxValues;
 	}
 }
 
@@ -3410,13 +3572,14 @@ void Simulation::calculateGrowthRing(GrowthFunctionBase* currGF){
 		currGF->getCentre(centre[0], centre[1]);
 		float innerRadius = currGF->getInnerRadius();
 		float outerRadius = currGF->getOuterRadius();
-		double maxValue[3];
-		currGF->getGrowthRate(maxValue[0], maxValue[1], maxValue[2]);
+		double* maxValues;
+		maxValues = new double[6];
+		currGF->getGrowthRate(maxValues);
 		float innerRadius2 = innerRadius*innerRadius;
 		float outerRadius2 = outerRadius*outerRadius;
 		int  n = Elements.size();
 		for ( int i = 0; i < n; ++i ){
-			if (Elements[i]->tissueType == 0){ //grow columnar layer
+			if ((currGF->applyToColumnarLayer && Elements[i]->tissueType == 0) || (currGF->applyToPeripodialMembrane && Elements[i]->tissueType == 1)){
 				double* Elementcentre = new double[3];
 				Elementcentre = Elements[i]->getCentre();
 				//the distance is calculated in the x-y projection
@@ -3427,16 +3590,37 @@ void Simulation::calculateGrowthRing(GrowthFunctionBase* currGF){
 					float distance = pow(dmag2,0.5);
 					//calculating the growth rate: as a fraction increase within this time point
 					double sf = (1.0 - (distance - innerRadius) / (outerRadius - innerRadius) );
-					double growthscale[3] = {maxValue[0] * sf, maxValue[1] * sf, maxValue[2] * sf};
+					double* growthscale;
+					growthscale = new double[6];
+					if (currGF->correctForTiltedElements && Elements[i]->tiltedElement){
+						//convert the growth to include shear strains!! Then select either personalised or normal value!
+						double* tiltCorrectedGrowth;
+						tiltCorrectedGrowth = new double[6];
+						for (int a =0; a<6; ++a ){
+							tiltCorrectedGrowth[a] = maxValues[a];
+						}
+						Elements[i]->readPersonalisedGrowthRate(currGF->Id,tiltCorrectedGrowth);
+						for (int a=0; a<6; ++a){
+							growthscale[a] = tiltCorrectedGrowth[a]* sf;
+						}
+						delete[] tiltCorrectedGrowth;
+					}
+					else{
+						for (int a =0; a<6; ++a ){
+							growthscale[a] = maxValues[a]*sf;
+						}
+					}
 					//growing the shape
 					Elements[i]->updateGrowthToAdd(growthscale);
 					//This value is stored as fraction per hour, conversion is done by a time scale variable:
 					float timescale = 60*60/dt;
-					Elements[i]->updateGrowthRate(maxValue[0]*sf*timescale,maxValue[1]*sf*timescale,maxValue[2]*sf*timescale);
+					Elements[i]->updateGrowthRate(growthscale[0]*timescale,growthscale[1]*timescale,growthscale[2]*timescale);
+					delete[] growthscale;
 				}
 				delete[] Elementcentre;
 			}
 		}
+		delete[] maxValues;
 	}
 }
 
@@ -3444,11 +3628,11 @@ void Simulation::calculateGrowthGridBased(GrowthFunctionBase* currGF){
 	int nGridX = currGF->getGridX();
 	int nGridY = currGF->getGridY();
 	float simTime = dt*timestep;
-	cout<<"calculating growth grid based, initTime: "<<currGF->initTime<<" endTime: "<< currGF->endTime<<" simTime: "<<simTime<<endl;
+	//cout<<"calculating growth grid based, initTime: "<<currGF->initTime<<" endTime: "<< currGF->endTime<<" simTime: "<<simTime<<endl;
 	if(simTime > currGF->initTime && simTime < currGF->endTime ){
 		vector<ShapeBase*>::iterator itElement;
 		for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-			if ((*itElement)->tissueType == 0){ //grow columnar layer
+			if ((currGF->applyToColumnarLayer && (*itElement)->tissueType == 0) || (currGF->applyToPeripodialMembrane && (*itElement)->tissueType == 1)){
 				double* ReletivePos = new double[2];
 				//normalising the element centre position with bounding box
 				(*itElement)->getRelativePosInBoundingBox(ReletivePos);
@@ -3467,10 +3651,29 @@ void Simulation::calculateGrowthGridBased(GrowthFunctionBase* currGF){
 					fracY = 1.0;
 				}
 				double growthYmid[2][3]= {{0.0,0.0,0.0},{0.0,0.0,0.0}};
-				double growthscale[3]= {0.0,0.0,0.0};
+				double* growthscale;
+				growthscale = new double[6];
+				GrowthFunctionBase* tiltCorrectedGF;
+				if (currGF->correctForTiltedElements && (*itElement)->tiltedElement){
+					//find the personalised growth funstion equivalent to the current one:
+					for (int i=0; i<(*itElement)->PersonalisedGrowthFunctions.size(); ++i ){
+						if ((*itElement)->PersonalisedGrowthFunctions[i]->Id == currGF->Id){
+							tiltCorrectedGF = (*itElement)->PersonalisedGrowthFunctions[i];
+							break;
+						}
+					}
+				}
+				else{
+					tiltCorrectedGF = currGF;
+				}
 				for (int axis = 0; axis<3; ++axis){
-					growthYmid[0][axis] = currGF->getGrowthMatrixElement(indexX,indexY,axis)*(1.0-fracX) + currGF->getGrowthMatrixElement(indexX+1,indexY,axis)*fracX;
-					growthYmid[1][axis] = currGF->getGrowthMatrixElement(indexX,indexY+1,axis)*(1.0-fracX) + currGF->getGrowthMatrixElement(indexX+1,indexY+1,axis)*fracX;
+					growthYmid[0][axis] = tiltCorrectedGF->getGrowthMatrixElement(indexX,indexY,axis)*(1.0-fracX) + tiltCorrectedGF->getGrowthMatrixElement(indexX+1,indexY,axis)*fracX;
+					growthYmid[1][axis] = tiltCorrectedGF->getGrowthMatrixElement(indexX,indexY+1,axis)*(1.0-fracX) + tiltCorrectedGF->getGrowthMatrixElement(indexX+1,indexY+1,axis)*fracX;
+					growthscale[axis] = growthYmid[0][axis]*(1.0-fracY) + growthYmid[1][axis]*fracY;
+				}
+				for (int axis = 3; axis<6; ++axis){
+					growthYmid[0][axis] = tiltCorrectedGF->getShearValuesGrowthMatrixElement(indexX,indexY,axis)*(1.0-fracX) + tiltCorrectedGF->getShearValuesGrowthMatrixElement(indexX+1,indexY,axis)*fracX;
+					growthYmid[1][axis] = tiltCorrectedGF->getShearValuesGrowthMatrixElement(indexX,indexY+1,axis)*(1.0-fracX) + tiltCorrectedGF->getShearValuesGrowthMatrixElement(indexX+1,indexY+1,axis)*fracX;
 					growthscale[axis] = growthYmid[0][axis]*(1.0-fracY) + growthYmid[1][axis]*fracY;
 				}
 				//growing the shape
@@ -3482,58 +3685,7 @@ void Simulation::calculateGrowthGridBased(GrowthFunctionBase* currGF){
 				//	cout<<" Element : "<<(*itElement)->Id<<" placement: "<<indexX<<" "<<indexY<<" frac: "<<fracX<<" "<<fracY<<" Relpos: "<<ReletivePos[0]<<" "<<ReletivePos[1]<<endl;
 				//}
 				delete[] ReletivePos;
-				if ((*itElement)->Id ==24 || (*itElement)->Id == 68){
-					cout<<"Element: "<<(*itElement)->Id<<" growth: "<<growthscale[0]<<" "<<growthscale[1]<<growthscale[2]<<endl;
-				}
-			}
-		}
-	}
-}
-
-void Simulation::calculatePeripodialGrowthGridBased(GrowthFunctionBase* currGF){
-	int nGridX = currGF->getGridX();
-	int nGridY = currGF->getGridY();
-	float simTime = dt*timestep;
-	cout<<"calculating peripodial growth grid based, initTime: "<<currGF->initTime<<" endTime: "<< currGF->endTime<<" simTime: "<<simTime<<endl;
-	if(simTime > currGF->initTime && simTime < currGF->endTime ){
-		vector<ShapeBase*>::iterator itElement;
-		for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-			if ((*itElement)->tissueType == 1){ //grow peripodial layer
-				double* ReletivePos = new double[2];
-				//normalising the element centre position with bounding box
-				(*itElement)->getRelativePosInBoundingBox(ReletivePos);
-				ReletivePos[0] *= (float) (nGridX-1);
-				ReletivePos[1] *= (float) (nGridY-1);
-				int indexX = floor(ReletivePos[0]);
-				double fracX  = ReletivePos[0] - indexX;
-				if (indexX == nGridX) { //this is for the point that is exactly the point determining the bounding box high end in X
-					indexX--;
-					fracX = 1.0;
-				}
-				int indexY = floor(ReletivePos[1]);
-				double fracY  = ReletivePos[1] - indexY;
-				if (indexY == nGridY) { //this is for the point that is exactly the point determining the bounding box high end in Y
-					indexY--;
-					fracY = 1.0;
-				}
-				double growthYmid[2]= {0.0,0.0};
-				double growthscale = 0.0;
-				growthYmid[0] = currGF->getGrowthMatrixElement(indexX,indexY,0)*(1.0-fracX) + currGF->getGrowthMatrixElement(indexX+1,indexY,0)*fracX;
-				growthYmid[1] = currGF->getGrowthMatrixElement(indexX,indexY+1,0)*(1.0-fracX) + currGF->getGrowthMatrixElement(indexX+1,indexY+1,0)*fracX;
-				growthscale = growthYmid[0]*(1.0-fracY) + growthYmid[1]*fracY;
-
-				//growing the shape
-				(*itElement)->updatePeripodialGrowth(growthscale);
-				//This value is stored as fraction per hour, conversion is done by a time scale variable:
-				float timescale = 60*60/dt;
-				(*itElement)->updateGrowthRate(growthscale*timescale,growthscale*timescale,0.0);
-				//if ((*itElement)->Id == 237 || (*itElement)->Id == 337 || (*itElement)->Id == 326 || (*itElement)->Id == 328 || (*itElement)->Id == 294 || (*itElement)->Id == 305){
-				//	cout<<" Element : "<<(*itElement)->Id<<" placement: "<<indexX<<" "<<indexY<<" frac: "<<fracX<<" "<<fracY<<" Relpos: "<<ReletivePos[0]<<" "<<ReletivePos[1]<<endl;
-				//}
-				delete[] ReletivePos;
-				if ((*itElement)->Id ==24 || (*itElement)->Id == 68){
-					cout<<"Element: "<<(*itElement)->Id<<" growth: "<<growthscale<<endl;
-				}
+				delete[] growthscale;
 			}
 		}
 	}
@@ -3801,9 +3953,10 @@ void Simulation::clearLaserAblatedSites(){
 }
 
 void Simulation::calculatePersonalisedGrowthRates(){
-	Elements[12]->tiltedElement= true;
-	Elements[12]->BaseElementId=2;
-
+	for (int a = 0; a<10; ++a){
+		Elements[a+10]->tiltedElement= true;
+		Elements[a+10]->BaseElementId=a;
+	}
 	vector<ShapeBase*>::iterator itElement;
 	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 		if ( (*itElement)->tiltedElement ){
@@ -3812,16 +3965,16 @@ void Simulation::calculatePersonalisedGrowthRates(){
 	}
 	//Check if growth rate should be corrected for tilted elements:
 	for (int i=0; i<nGrowthFunctions; ++i){
-		cout<<"started function : "<<i<<endl;
 		if(GrowthFunctions[i]->correctForTiltedElements){
+			cout<<"started function : "<<i<<endl;
 			correctTiltedGrowthForGrowthFunction(GrowthFunctions[i]);
+			cout<<"finalised function : "<<i<<endl;
 		}
-		cout<<"finalised function : "<<i<<endl;
 	}
-	cout<<"Element 12 personalised growth rates: "<<endl;
-	for (int i=0;i<Elements[12]->PersonalisedGrowthFunctions.size();++i){
-		cout<<"Function: "<<i<<" type: "<<Elements[12]->PersonalisedGrowthFunctions[i]->Type<<" id: "<<Elements[12]->PersonalisedGrowthFunctions[i]->Id<<endl;
-	}
+	//cout<<"Element 12 personalised growth rates: "<<endl;
+	//for (int i=0;i<Elements[12]->PersonalisedGrowthFunctions.size();++i){
+	//	cout<<"Function: "<<i<<" type: "<<Elements[12]->PersonalisedGrowthFunctions[i]->Type<<" id: "<<Elements[12]->PersonalisedGrowthFunctions[i]->Id<<endl;
+	//}
 }
 
 
@@ -3832,12 +3985,12 @@ void Simulation::correctTiltedGrowthForGrowthFunction(GrowthFunctionBase* currGF
 			//initialising the personalised growth function for this element
 			(*itElement)->initialisePersonalisedGrowthFunction(currGF);
 			double* NewGrowth;
-			if ((*itElement)->ShapeDim == 3){
+			//if ((*itElement)->ShapeDim == 3){
 				NewGrowth = new double[6];
-			}
-			else if ((*itElement)->ShapeDim == 2){
-				NewGrowth = new double[3];
-			}
+			//}
+			//else if ((*itElement)->ShapeDim == 2){
+			//	NewGrowth = new double[3];
+			//}
 			if ( currGF->Type == 1 || currGF->Type == 2 ){
 				calculatePersonalisedUniformOrRingGrowth((*itElement),currGF, NewGrowth);
 			}
@@ -3853,26 +4006,34 @@ void Simulation::correctTiltedGrowthForGrowthFunction(GrowthFunctionBase* currGF
 }
 
 void Simulation::calculatePersonalisedUniformOrRingGrowth(ShapeBase* currElement, GrowthFunctionBase* currGF, double* NewGrowth){
-	double DVRate;
-	double APRate;
-	double ABRate;
-	currGF->getGrowthRate(DVRate, APRate, ABRate);
+	double* rate;
+	rate = new double[6];
+	currGF->getGrowthRate(rate);
+	double DVRate = rate[0];
+	double APRate = rate[1];
+	double ABRate = rate[2];
+	delete[] rate;
+	//cout<<"calculating personalised growth on ring or uniform, element: "<<currElement->Id<<endl;
 	calculatePersonalisedSingleGrowthRate(currElement, DVRate, APRate, ABRate, NewGrowth);
 	currElement->updateUniformOrRingGrowthRate(NewGrowth, currGF->Id);
+	//cout<<"finished."<<endl;
 }
 
 void Simulation::calculatePersonalisedGridBasedGrowth(ShapeBase* currElement, GrowthFunctionBase* currGF, double* NewGrowth){
 	int nGridX = currGF->getGridX();
 	int nGridY = currGF->getGridY();
+	cout<<"calculating personalised growth on grid based growth, element: "<<currElement->Id<<endl;
 	for (int i=0; i<nGridX; ++i){
 		for (int j=0; j<nGridY; ++j){
+			//cout<<"	grid:"<<i<<" "<<j<<endl;
 			double DVRate = currGF->getGrowthMatrixElement(i,j,0);
 			double APRate = currGF->getGrowthMatrixElement(i,j,1);
 			double ABRate = currGF->getGrowthMatrixElement(i,j,2);
 			calculatePersonalisedSingleGrowthRate(currElement, DVRate, APRate, ABRate, NewGrowth);
-			currElement->updatePeriOrColGridBasedGrowthRate(NewGrowth, currGF->Id, i,j);
+			currElement->updateGridBasedGrowthRate(NewGrowth, currGF->Id, i,j);
 		}
 	}
+	cout<<"finished."<<endl;
 }
 
 void Simulation::calculatePersonalisedPeripodialGridBasedGrowth(ShapeBase* currElement, GrowthFunctionBase* currGF, double* NewGrowth){
@@ -3884,7 +4045,7 @@ void Simulation::calculatePersonalisedPeripodialGridBasedGrowth(ShapeBase* currE
 			double APRate = DVRate;
 			double ABRate = 0.0;
 			calculatePersonalisedSingleGrowthRate(currElement, DVRate, APRate, ABRate, NewGrowth);
-			currElement->updatePeriOrColGridBasedGrowthRate(NewGrowth, currGF->Id, i,j);
+			currElement->updateGridBasedGrowthRate(NewGrowth, currGF->Id, i,j);
 		}
 	}
 }
@@ -3892,14 +4053,6 @@ void Simulation::calculatePersonalisedPeripodialGridBasedGrowth(ShapeBase* currE
 
 void Simulation::calculateTiltedElementPositionOnBase(ShapeBase* currElement){
 	int n = currElement->getNodeNumber();
-	currElement->barycentricCoords  = new double*[n];
-	for (int j=0; j<n ; ++j){
-		currElement->barycentricCoords[j] = new double[4];
-		currElement->barycentricCoords[j][0] = 0.0;
-		currElement->barycentricCoords[j][1] = 0.0;
-		currElement->barycentricCoords[j][2] = 0.0;
-		currElement->barycentricCoords[j][3] = 0.0;
-	}
 	boost::numeric::ublas::matrix<double> T(2,2);
 	double x0 = Elements[currElement->BaseElementId] -> Positions[0][0];
 	double x1 = Elements[currElement->BaseElementId] -> Positions[1][0];
@@ -3932,6 +4085,7 @@ void Simulation::calculateTiltedElementPositionOnBase(ShapeBase* currElement){
 }
 
 void Simulation::calculatePersonalisedSingleGrowthRate(ShapeBase* currElement, double DVGrowth, double APGrowth, double ABGrowth, double* NewGrowth){
+	cout<<"Element: "<<currElement->Id<<" DVGrowth " << DVGrowth<<" APGrowth: "<<APGrowth<<" ABGrowth: "<<ABGrowth<<endl;
 	calculateBaseElementsFinalPosition(currElement->BaseElementId, DVGrowth,  APGrowth, ABGrowth);
 	//Now the final shape is stored in PositionsAlignedToReference of BaseElement
 	//I will displace the nodes of this "grown" shape to reflect the "grown" position of the current element
@@ -3944,18 +4098,15 @@ void Simulation::calculatePersonalisedSingleGrowthRate(ShapeBase* currElement, d
 	boost::numeric::ublas::vector<double> displacementA;
 	boost::numeric::ublas::vector<double> Strain;
 	int dim = 0;
-	int NewGrowthSize = 0;
 	if (currElement->ShapeDim == 3){
 		dim = 3;
 		displacementA = boost::numeric::ublas::zero_vector<double>(nNodes*dim);
 		Strain = boost::numeric::ublas::zero_vector<double>(6);
-		NewGrowthSize = 6;
 	}
 	else if (currElement->ShapeDim == 2){
 		dim = 2;
 		displacementA = boost::numeric::ublas::zero_vector<double>(nNodes*dim);
 		Strain = boost::numeric::ublas::zero_vector<double>(3);
-		NewGrowthSize = 3;
 	}
 	for (int i = 0; i<nNodes; ++i){
 		for (int j = 0; j<dim; ++j){
@@ -3964,11 +4115,23 @@ void Simulation::calculatePersonalisedSingleGrowthRate(ShapeBase* currElement, d
 		}
 	}
 	boost::numeric::ublas::axpy_prod(currElement->B,displacementA,Strain);
-	for (int i=0; i<NewGrowthSize; i++){
-		NewGrowth[i] = Strain(i);
-		cout<<"NewGrowth["<<i<<"]: "<<NewGrowth[i]<<endl;
+
+	//Now i have new growth in local coordinate system, I need to convert it to tissue coordinates:
+	if (currElement->ShapeDim == 2){
+		NewGrowth[0] = Strain(0);
+		NewGrowth[1] = Strain(1);
+		NewGrowth[2] = 0.0;
+		NewGrowth[3] = Strain(2);
+		NewGrowth[4] = 0.0;
+		NewGrowth[5] = 0.0;
 	}
-	currElement->displayMatrix(Strain,"Growth_Necessary_For_Element_12_fromfunctions");
+	else if (currElement->ShapeDim == 3){
+		for (int i =0; i<6; ++i){
+			NewGrowth[i] = Strain(i);
+		}
+	}
+	currElement->alignElementOnReference(); //updating WorldToReferenceRotMat to calculate the converison to tissue coordinates correctly
+	currElement->convertLocalStrainToTissueStrain(NewGrowth);
 }
 
 void Simulation::calculateBaseElementsFinalPosition(int Id,double DVGrowth, double APGrowth, double ABGrowth){

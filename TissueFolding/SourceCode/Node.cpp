@@ -29,10 +29,10 @@ Node::Node(int id, int dim, double* pos, int tissuePos, int tissueType){
 	tissuePlacement = tissuePos;
 	this->tissueType = tissueType;
 	atCircumference = false;
-	atPeripodiumCircumference = false;
+	atPeripodialCircumference = false;
 	mass = 0.0;
 	surface = 0.0;
-	LinkedPeripodiumNodeId = -1;
+	LinkedPeripodialNodeId = -1;
 }
 
 Node::~Node(){
@@ -72,7 +72,7 @@ bool Node::checkIfNeighbour(int IdToCheck){
 }
 
 bool Node::checkIfNodeHasPacking(){
-	if (atPeripodiumCircumference){
+	if (atPeripodialCircumference){
 		return false;
 	}
 	if (tissuePlacement == 2){	//Node is midline node (neither apical nor basal)

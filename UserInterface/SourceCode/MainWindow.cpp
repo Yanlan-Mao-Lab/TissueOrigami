@@ -360,9 +360,9 @@ void MainWindow::setDisplayPreferences(QGridLayout *ProjectDisplayOptionsGrid){
 	DisplayPreferencesCheckBoxes[3] = new QCheckBox("ScaleBar");
 	DisplayPreferencesCheckBoxes[3]->setChecked(false);
 	connect(DisplayPreferencesCheckBoxes[3] , SIGNAL(stateChanged(int)),this,SLOT(updateScaleBarCheckBox(int)));
-	DisplayPreferencesCheckBoxes[4] = new QCheckBox("Display Peripodium");
+	DisplayPreferencesCheckBoxes[4] = new QCheckBox("Display Peripodial Membrane");
 	DisplayPreferencesCheckBoxes[4]->setChecked(true);
-	connect(DisplayPreferencesCheckBoxes[4] , SIGNAL(stateChanged(int)),this,SLOT(updatePeripodiumDisplayCheckBox(int)));
+	connect(DisplayPreferencesCheckBoxes[4] , SIGNAL(stateChanged(int)),this,SLOT(updatePeripodialDisplayCheckBox(int)));
 	DisplayPreferencesCheckBoxes[5] = new QCheckBox("Display Columnar Layer");
 	DisplayPreferencesCheckBoxes[5]->setChecked(true);
 	connect(DisplayPreferencesCheckBoxes[5] , SIGNAL(stateChanged(int)),this,SLOT(updateColumnarLayerDisplayCheckBox(int)));
@@ -379,7 +379,7 @@ void MainWindow::setDisplayPreferences(QGridLayout *ProjectDisplayOptionsGrid){
 	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[6],4,2,1,2,Qt::AlignLeft);  // Packing Forces
 	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[2],5,0,1,1,Qt::AlignLeft);  // Velocities
 	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[3],6,0,1,2,Qt::AlignLeft); // Scale Bar
-	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[4],7,0,1,2,Qt::AlignLeft); // Display Peripodium
+	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[4],7,0,1,2,Qt::AlignLeft); // Display Peripodial Membrane
 	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[5],8,0,1,2,Qt::AlignLeft); // Display Columnar Layer
 }
 
@@ -450,11 +450,11 @@ void  MainWindow::updateScaleBarCheckBox(int s){
 		MainGLWidget->drawTissueScaleBar = false;
 }
 
-void  MainWindow::updatePeripodiumDisplayCheckBox(int s){
+void  MainWindow::updatePeripodialDisplayCheckBox(int s){
 	if ( s == 2 )
-		MainGLWidget->drawPeripodium = true;
+		MainGLWidget->drawPeripodialMembrane = true;
 	else
-		MainGLWidget->drawPeripodium = false;
+		MainGLWidget->drawPeripodialMembrane = false;
 }
 
 void  MainWindow::updateColumnarLayerDisplayCheckBox(int s){

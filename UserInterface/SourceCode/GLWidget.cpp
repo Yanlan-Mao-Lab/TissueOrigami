@@ -71,7 +71,7 @@ using namespace std;
   	 drawNetForces = false;
   	 drawPackingForces = false;
      drawVelocities = false;
-     drawPeripodium = true;
+     drawPeripodialMembrane = true;
      drawColumnar = true;
      ManualNodeSelection = false;
      ManualSelectedNodeId = -100;
@@ -222,7 +222,7 @@ using namespace std;
 	 if (Sim01->Elements[i]->IsAblated){
 		 drawthisElement = false;
 	 }
-	 if (!drawPeripodium && Sim01->Elements[i]->tissueType == 1){	//I am NOT drawing peripodium and this element is a peripodium element
+	 if (!drawPeripodialMembrane && Sim01->Elements[i]->tissueType == 1){	//I am NOT drawing peripodial membrane and this element is a peripodial element
 	 	 drawthisElement = false;
 	 }
 	 if (!drawColumnar && Sim01->Elements[i]->tissueType == 0){		//I am NOT drawing columnar layer and this element is a columnar element
@@ -233,7 +233,7 @@ using namespace std;
 
  bool GLWidget::checkIfDrawingNode(int i){
  	 bool drawthisNode = true;
- 	 if (!drawPeripodium && Sim01->Nodes[i]->tissueType == 1){	//I am NOT drawing peripodium and this element is a peripodium node
+ 	 if (!drawPeripodialMembrane && Sim01->Nodes[i]->tissueType == 1){	//I am NOT drawing peripodial membrane and this element is a peripodial node
  	 	 drawthisNode = false;
  	 }
 	 if (!drawColumnar && Sim01->Nodes[i]->tissueType == 0){	//I am NOT drawing columnar layer and this element is a columnar node
@@ -328,7 +328,7 @@ void GLWidget::highlightNode(int i){
 				NodeColourList[(*itNode)->Id][1]=1.0;
 				NodeColourList[(*itNode)->Id][2]=1.0;
 			}
-			else if ((*itNode)->tissueType == 1){ // peripodium layer
+			else if ((*itNode)->tissueType == 1){ // Peripodial membrane
 				NodeColourList[(*itNode)->Id][0]=1.0;
 				NodeColourList[(*itNode)->Id][1]=1.0;
 				NodeColourList[(*itNode)->Id][2]=0.75;

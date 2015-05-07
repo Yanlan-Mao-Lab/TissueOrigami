@@ -53,7 +53,7 @@ using namespace std;
      bool 		drawPackingForces;
      bool 		drawVelocities;
      bool 		drawTissueScaleBar;
-     bool 		drawPeripodium;
+     bool 		drawPeripodialMembrane;
      bool 		drawColumnar;
      bool 		PerspectiveView;
      bool		displayBoundingBox;

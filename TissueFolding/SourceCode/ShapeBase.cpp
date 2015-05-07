@@ -166,7 +166,7 @@ void 	ShapeBase::setPositionMatrix(vector<Node*>& Nodes){
 		for (int j = 0; j<dim; ++j){
 			Positions[i][j] = Nodes[NodeIds[i]]->Position[j];
 			PositionsInTissueCoord[i][j] = 0.0;
-			PositionsAlignedToReference[i][j] = 0.0;
+			PositionsAlignedToReference[i][j] = Positions[i][j];
 		}
 	}
 }
@@ -215,26 +215,26 @@ void 	ShapeBase::setTissuePlacement(vector<Node*>& Nodes){
 
 void 	ShapeBase::setTissueType(vector<Node*>& Nodes){
 	bool hasColumnarNode = false;
-	bool hasPeripodiumNode = false;
+	bool hasPeripodialNode = false;
 	for (int i = 0; i<nNodes; ++i){
 		if (Nodes[NodeIds[i]]->tissueType == 0){
 			hasColumnarNode = true;
 		}
 		else if (Nodes[NodeIds[i]]->tissueType == 1){
-			hasPeripodiumNode = true;
+			hasPeripodialNode = true;
 		}
 	}
-	if (hasPeripodiumNode){
+	if (hasPeripodialNode){
 		tissueType = 1;
 	}
 	else if (hasColumnarNode){
-		//ASK PERIPODIUM FIRST, SOME PERIPODIUM ELEMENTS CAN HAVE COLUMNAR NODES, NO COLUMNAR ELEMENT SHOULD HAVE A PERIPODIUM NODE
+		//ASK PERIPODIAL MEMBRANE FIRST, SOME PERIPODIAL ELEMENTS CAN HAVE COLUMNAR NODES, NO COLUMNAR ELEMENT SHOULD HAVE A PERIPODIAL NODE
 		tissueType = 0;
 	}
 	else {
 		cerr<<"Element is not placed into tissue correctly, Id: "<<Id<<endl;
 	}
-	//cout<<"Element : "<<Id<<" hasColumnarNode: "<<hasColumnarNode<<" hasPeripodiumNode "<<hasPeripodiumNode<<" tissueType: "<<tissueType<<endl;
+	//cout<<"Element : "<<Id<<" hasColumnarNode: "<<hasColumnarNode<<" hasPeripodialmNode "<<hasPeripodialNode<<" tissueType: "<<tissueType<<endl;
 }
 
 void 	ShapeBase::setReferencePositionMatrix(){
@@ -465,16 +465,9 @@ void 	ShapeBase::resetCurrStepShapeChangeData(){
 void 	ShapeBase::updateGrowthToAdd(double* growthscale){
 	IsGrowing = true;
 	GrewInThePast = true;
-	for (int i=0;i<3;++i){
+	for (int i=0;i<6;++i){
 			CurrGrowthStrainAddition[i]  += growthscale[i];
 	}
-}
-
-void 	ShapeBase::updatePeripodialGrowth(double growthscale){
-	IsGrowing = true;
-	GrewInThePast = true;
-	LocalGrowthStrainsMat(0,0) = ( (1.0 + LocalGrowthStrainsMat(0,0)) * (1.0 + growthscale) ) - 1.0;
-	LocalGrowthStrainsMat(1,1) = ( (1.0 + LocalGrowthStrainsMat(1,1)) * (1.0 + growthscale) ) - 1.0;
 }
 
 void 	ShapeBase::growShape(){
@@ -718,6 +711,68 @@ bool 	ShapeBase::calculateGrowthStrainsRotMat(double* v){
 	}
 }
 
+void 	ShapeBase::convertLocalStrainToTissueStrain(double * localStrains){
+	//get the (+)ve z of the reference aligned onto current coordinate system (use transpose of rotation matrix you already have for alignment)
+	double* RefCoords;
+	RefCoords = new double[9];
+	calculateReferenceCoordSysAlignedToTissue(RefCoords);
+	//Now this rotated vectors x, y, and (+)ve z defines the coordinate system you want the growth strains in. Get the rotation matrix, and calculate strains.
+	//get (+)x vector in reference coordinates aligned to tissue in z.
+	double* v = new double[3];
+	v[0]=RefCoords[0];
+	v[1]=RefCoords[1];
+	v[2]=RefCoords[2];
+	bool rotateMatrix = calculateGrowthStrainsRotMat(v);
+	boost::numeric::ublas::matrix<double>  CurrGrowthToAddTissue;
+	CurrGrowthToAddTissue = boost::numeric::ublas::zero_matrix<double>(3,3);
+	if (rotateMatrix){
+		boost::numeric::ublas::matrix<double>  CurrLocalGrowthToAdd;
+		CurrLocalGrowthToAdd = boost::numeric::ublas::zero_matrix<double>(3,3);
+		boost::numeric::ublas::matrix<double>tmpMat1;
+		tmpMat1 =  boost::numeric::ublas::zero_matrix<double>(3,3);
+		//cout<<"constructing CurrGrowthToAddTissue"<<endl;
+		CurrLocalGrowthToAdd(0,0) = localStrains[0];
+		CurrLocalGrowthToAdd(1,1) = localStrains[1];
+		CurrLocalGrowthToAdd(2,2) = localStrains[2];
+		CurrLocalGrowthToAdd(1,0) = localStrains[3];
+		CurrLocalGrowthToAdd(1,2) = localStrains[4];
+		CurrLocalGrowthToAdd(2,0) = localStrains[5];
+		CurrLocalGrowthToAdd(0,1) = localStrains[3];
+		CurrLocalGrowthToAdd(2,1) = localStrains[4];
+		CurrLocalGrowthToAdd(0,2) = localStrains[5];
+		boost::numeric::ublas::matrix<double>R;
+		R =  boost::numeric::ublas::identity_matrix<double>(3,3);
+		R(2,2)=2.0;
+		boost::numeric::ublas::matrix<double>RT;
+		RT =  boost::numeric::ublas::identity_matrix<double>(3,3);
+		RT(2,2)=0.5;
+		boost::numeric::ublas::matrix<double>tmpMat2;
+		tmpMat2 =  boost::numeric::ublas::zero_matrix<double>(3,3);
+		boost::numeric::ublas::matrix<double>tmpMat3;
+		tmpMat3 =  boost::numeric::ublas::zero_matrix<double>(3,3);
+		boost::numeric::ublas::axpy_prod(R,GrowthStrainsRotMat,tmpMat1);
+
+		//I think this should be deleted:
+		//boost::numeric::ublas::matrix<double>tmpMat0;
+		//tmpMat0 =  boost::numeric::ublas::zero_matrix<double>(3,3);
+		//boost::numeric::ublas::axpy_prod(tmpMat1,WorldToTissueRotMat,tmpMat0);
+		//tmpMat1 = tmpMat0;
+		//end of potential deletion
+
+		boost::numeric::ublas::axpy_prod(tmpMat1,RT,tmpMat2);
+		boost::numeric::ublas::axpy_prod(trans(tmpMat2),CurrLocalGrowthToAdd,tmpMat3);
+		boost::numeric::ublas::axpy_prod(tmpMat3,tmpMat2,CurrGrowthToAddTissue);
+		localStrains[0] = CurrGrowthToAddTissue(0,0);
+		localStrains[1] = CurrGrowthToAddTissue(1,1);
+		localStrains[2] = CurrGrowthToAddTissue(2,2);
+		localStrains[3] = CurrGrowthToAddTissue(0,1);
+		localStrains[4] = CurrGrowthToAddTissue(1,2);
+		localStrains[5] = CurrGrowthToAddTissue(0,2);
+	}
+	delete[] RefCoords;
+}
+
+
 void 	ShapeBase::calculateGrowthInLocalCoordinates(double * strainsToAdd){
 	//get the (+)ve z of the reference aligned onto current coordinate system (use transpose of rotation matrix you already have for alignment)
 	double* RefCoords;
@@ -738,9 +793,15 @@ void 	ShapeBase::calculateGrowthInLocalCoordinates(double * strainsToAdd){
 		boost::numeric::ublas::matrix<double>tmpMat1;
 		tmpMat1 =  boost::numeric::ublas::zero_matrix<double>(3,3);
 		//cout<<"constructing CurrGrowthToAddTissue"<<endl;
-		CurrGrowthToAddTissue(0,0)= strainsToAdd[0];
-		CurrGrowthToAddTissue(1,1)= strainsToAdd[1];
-		CurrGrowthToAddTissue(2,2)= strainsToAdd[2];
+		CurrGrowthToAddTissue(0,0) = strainsToAdd[0];
+		CurrGrowthToAddTissue(1,1) = strainsToAdd[1];
+		CurrGrowthToAddTissue(2,2) = strainsToAdd[2];
+		CurrGrowthToAddTissue(1,0) = strainsToAdd[3];
+		CurrGrowthToAddTissue(1,2) = strainsToAdd[4];
+		CurrGrowthToAddTissue(2,0) = strainsToAdd[5];
+		CurrGrowthToAddTissue(0,1) = strainsToAdd[3];
+		CurrGrowthToAddTissue(2,1) = strainsToAdd[4];
+		CurrGrowthToAddTissue(0,2) = strainsToAdd[5];
 		//boost::numeric::ublas::axpy_prod(GrowthStrainsRotMat,CurrGrowthToAddTissue,tmpMat1);
 		//boost::numeric::ublas::axpy_prod(tmpMat1,trans(GrowthStrainsRotMat),CurrLocalGrowthToAdd);
 		boost::numeric::ublas::matrix<double>R;
@@ -754,39 +815,19 @@ void 	ShapeBase::calculateGrowthInLocalCoordinates(double * strainsToAdd){
 		boost::numeric::ublas::matrix<double>tmpMat3;
 		tmpMat3 =  boost::numeric::ublas::zero_matrix<double>(3,3);
 		boost::numeric::ublas::axpy_prod(R,GrowthStrainsRotMat,tmpMat1);
-		//
 
-		boost::numeric::ublas::matrix<double>tmpMat0;
-		tmpMat0 =  boost::numeric::ublas::zero_matrix<double>(3,3);
-		boost::numeric::ublas::axpy_prod(tmpMat1,WorldToTissueRotMat,tmpMat0);
-		tmpMat1 = tmpMat0;
+		//I think this should be deleted:
+		//boost::numeric::ublas::matrix<double>tmpMat0;
+		//tmpMat0 =  boost::numeric::ublas::zero_matrix<double>(3,3);
+		//boost::numeric::ublas::axpy_prod(tmpMat1,WorldToTissueRotMat,tmpMat0);
+		//tmpMat1 = tmpMat0;
+		//end of potential deletion
 
-
-/*
-		if (Id == 12){
-			boost::numeric::ublas::axpy_prod(WorldToTissueRotMat,CurrGrowthToAddTissue,tmpMat3);
-			boost::numeric::ublas::axpy_prod(tmpMat3,trans(WorldToTissueRotMat),tmpMat0);
-			cout<<"Element: "<<Id<<endl;
-			displayMatrix(tmpMat0,"Growth_With_Rotation_Of_Peripoda_Only");
-		}
-*/
-/*		boost::numeric::ublas::matrix<double>tmpMat1a;
-		tmpMat1a =  boost::numeric::ublas::zero_matrix<double>(3,3);
-		boost::numeric::ublas::matrix<double>tmpMat2a;
-		tmpMat2a =  boost::numeric::ublas::zero_matrix<double>(3,3);
-		boost::numeric::ublas::axpy_prod(R,WorldToTissueRotMat,tmpMat1a);
-		boost::numeric::ublas::axpy_prod(tmpMat1a,RT,tmpMat2a);
-		boost::numeric::ublas::axpy_prod(tmpMat2a,CurrGrowthToAddTissue,tmpMat3);
-		boost::numeric::ublas::axpy_prod(tmpMat3,trans(tmpMat2a),CurrGrowthToAddTissue);
-*/
-		//
 		boost::numeric::ublas::axpy_prod(tmpMat1,RT,tmpMat2);
 		boost::numeric::ublas::axpy_prod(tmpMat2,CurrGrowthToAddTissue,tmpMat3);
 		//boost::numeric::ublas::axpy_prod(R,trans(GrowthStrainsRotMat),tmpMat1);
 		//boost::numeric::ublas::axpy_prod(tmpMat1,RT,tmpMat2);
 		boost::numeric::ublas::axpy_prod(tmpMat3,trans(tmpMat2),CurrLocalGrowthToAdd);
-
-
 		/*boost::numeric::ublas::matrix<double>StrainMat(3,3);
 		double s[6];
 		//the growth I should have had:
@@ -825,12 +866,26 @@ void 	ShapeBase::calculateGrowthInLocalCoordinates(double * strainsToAdd){
 				if (aa == 2){displayMatrix(StrainMat,"the growth I should have had for z deformation");}
 			}
 		}*/
+		//cout<<"Element: "<<Id<<endl;
+		//displayMatrix(CurrGrowthToAddTissue,"CurrGrowthToAddTissue");
+		//for (int aa=0; aa<6; aa++){cout<<strainsToAdd[aa]<<"  ";};cout<<endl;
+		//displayMatrix(CurrLocalGrowthToAdd,"CurrLocalGrowthToAdd");
 	}
 	else{
-		CurrLocalGrowthToAdd(0,0)= strainsToAdd[0];
-		CurrLocalGrowthToAdd(1,1)= strainsToAdd[1];
-		CurrLocalGrowthToAdd(2,2)= strainsToAdd[2];
+		CurrLocalGrowthToAdd(0,0) = strainsToAdd[0];
+		CurrLocalGrowthToAdd(1,1) = strainsToAdd[1];
+		CurrLocalGrowthToAdd(2,2) = strainsToAdd[2];
+		CurrLocalGrowthToAdd(0,1) = strainsToAdd[3];
+		CurrLocalGrowthToAdd(0,2) = strainsToAdd[5];
+		CurrLocalGrowthToAdd(1,2) = strainsToAdd[4];
+		//cout<<"in else statement Element: "<<Id<<endl;
+		//for (int aa=0; aa<6; aa++){cout<<strainsToAdd[aa]<<"  ";};cout<<endl;
+		//displayMatrix(CurrLocalGrowthToAdd,"CurrLocalGrowthToAdd");
 	}
+	//cout<<"Element: "<<Id<<endl;
+	//cout<<"currTissueStrainsToAdd: "<<strainsToAdd[0]<<" "<<strainsToAdd[1]<<" "<<strainsToAdd[2]<<" "<<strainsToAdd[3]<<" "<<strainsToAdd[4]<<" "<<strainsToAdd[5]<<endl;
+	//cout<<"CurrLocalGrowthToAdd: "<<CurrLocalGrowthToAdd(0,0)<<" "<<CurrLocalGrowthToAdd(1,1)<<" "<<CurrLocalGrowthToAdd(2,2)<<" "<<CurrLocalGrowthToAdd(0,1)<<" "<<CurrLocalGrowthToAdd(1,2)<<" "<<CurrLocalGrowthToAdd(0,2)<<endl;
+
 	//writing as a upper triangular
 	LocalGrowthStrainsMat(0,0) = ( (1.0 + LocalGrowthStrainsMat(0,0)) * (1.0 + CurrLocalGrowthToAdd(0,0)) ) - 1.0;
 	LocalGrowthStrainsMat(1,1) = ( (1.0 + LocalGrowthStrainsMat(1,1)) * (1.0 + CurrLocalGrowthToAdd(1,1)) ) - 1.0;
@@ -840,11 +895,11 @@ void 	ShapeBase::calculateGrowthInLocalCoordinates(double * strainsToAdd){
 	LocalGrowthStrainsMat(1,2) = ( (1.0 + LocalGrowthStrainsMat(1,2)) * (1.0 + CurrLocalGrowthToAdd(1,2)) ) - 1.0;
 
 	//cout<<"Element: "<<Id<<endl;
-	//displayMatrix(LocalGrowthStrainsMat,"LocalGrowthStrainsMat");
-	if (Id ==24 || Id == 68){
-		cout<<"Element: "<<Id<<" LocalGrowthStrainsMat: "<<endl;
-		displayMatrix(LocalGrowthStrainsMat,"LocalGrowthStrainsMat");
-	}
+	//displayMatrix(CurrLocalGrowthToAdd,"CurrLocalGrowthToAdd");
+	//if (Id ==24 || Id == 68){
+	//	cout<<"Element: "<<Id<<" LocalGrowthStrainsMat: "<<endl;
+	//	displayMatrix(LocalGrowthStrainsMat,"LocalGrowthStrainsMat");
+	//}
 	delete[] RefCoords;
 }
 
@@ -1240,8 +1295,8 @@ bool 	ShapeBase::checkPackingToThisNodeViaState(int ColumnarLayerDiscretisationL
 		return false;
 	}
 	//If the element is peripodial membrane, and the node isassociated to a peroipodial node, is the node associated with any members of the element?
-	if(tissueType == 1 && NodePointer->LinkedPeripodiumNodeId != -1 ){
-		pointBelongsToElement = DoesPointBelogToMe(NodePointer->LinkedPeripodiumNodeId);
+	if(tissueType == 1 && NodePointer->LinkedPeripodialNodeId != -1 ){
+		pointBelongsToElement = DoesPointBelogToMe(NodePointer->LinkedPeripodialNodeId);
 		if (pointBelongsToElement){
 			return false;
 		}
@@ -1529,6 +1584,11 @@ void	ShapeBase::calculateForces3D(int RKId, double ***SystemForces, vector <Node
 	NetStrain= zero_vector<double>(6);
 	NetStrain = Strain - PlasticStrain;
 	Forces = zero_vector<double>(nMult);
+	//cout<<"Element: "<<Id<<endl;
+	//displayMatrix(LocalGrowthStrainsMat,"LocalGrowthStrainsMat");
+	//displayMatrix(Strain,"Strain");
+	//displayMatrix(PlasticStrain,"PlasticStrain");
+	//displayMatrix(NetStrain,"NetStrain");
 	//outputFile<<"  id: "<<Id<<"   calculating forces"<<endl;
 	boost::numeric::ublas::axpy_prod(BE,NetStrain,Forces);
 	//Now I have the forces in tissue coordinate system, I need the forces in world coordinates:
@@ -1992,7 +2052,7 @@ void 	ShapeBase::checkDisplayClipping(double xClip, double yClip, double zClip){
 	 }
 }
 
-double* 	ShapeBase::calculateGrowthInCircumferencialAxes(){
+/*double* 	ShapeBase::calculateGrowthInCircumferencialAxes(){
 	cout<<"Element : "<<Id<<endl;
 	//cout<<"positions: "<<endl;
 	//displayPositions();
@@ -2037,15 +2097,6 @@ double* 	ShapeBase::calculateGrowthInCircumferencialAxes(){
 		tmpMat1 = boost::numeric::ublas::zero_matrix<double> (3,3);
 		StrainMat = boost::numeric::ublas::zero_matrix<double> (3,3);
 
-		/*StrainMat(0,0) = Strain(0);
-		StrainMat(1,1) = Strain(1);
-		StrainMat(2,2) = Strain(2);
-		StrainMat(1,0) = Strain(3);
-		StrainMat(1,2) = Strain(4);
-		StrainMat(2,0) = Strain(5);
-		StrainMat(0,1) = Strain(3);
-		StrainMat(2,1) = Strain(4);
-		StrainMat(0,2) = Strain(5);*/
 		StrainMat(0,0) = PlasticStrain(0);
 		StrainMat(1,1) = PlasticStrain(1);
 		StrainMat(2,2) = PlasticStrain(2);
@@ -2059,7 +2110,7 @@ double* 	ShapeBase::calculateGrowthInCircumferencialAxes(){
 		//axpy_prod(tmpMat1,LocalToCircumferenceRotMat,StrainCircumferenceMat);
 		axpy_prod(LocalToCircumferenceRotMat,StrainMat,tmpMat1);
 		axpy_prod(tmpMat1,trans(LocalToCircumferenceRotMat),StrainCircumferenceMat);
-		cout<<"Element 2: "<<endl;
+		//cout<<"Element 2: "<<endl;
 		cout<<"rotAx: "<<rotAx[0]<<" "<<rotAx[1]<<rotAx[2]<<endl;
 		displayMatrix(LocalToCircumferenceRotMat,"LocalToCircumferenceRotMat");
 		displayMatrix(StrainMat,"StrainMat");
@@ -2068,23 +2119,6 @@ double* 	ShapeBase::calculateGrowthInCircumferencialAxes(){
 		axpy_prod(trans(LocalToCircumferenceRotMat),StrainCircumferenceMat,tmpMat1);
 		axpy_prod(tmpMat1,LocalToCircumferenceRotMat,StrainMat);
 
-		/*boost::numeric::ublas::vector<double> tmpMat2(3);
-		boost::numeric::ublas::vector<double> tmpMat3(3);
-		tmpMat2(0) = 1.0;
-		tmpMat2(1) = 0.0;
-		tmpMat2(2) = 0.0;
-		axpy_prod(LocalToCircumferenceRotMat,tmpMat2,tmpMat3);
-		cout<<"world(=)ve x  after rotation: "<<tmpMat3(0)<<" "<<tmpMat3(1)<<" "<<tmpMat3(2)<<endl;
-		tmpMat2(0) = 0.0;
-		tmpMat2(1) = 1.0;
-		tmpMat2(2) = 0.0;
-		axpy_prod(LocalToCircumferenceRotMat,tmpMat2,tmpMat3);
-		cout<<"world(=)ve y  after rotation: "<<tmpMat3(0)<<" "<<tmpMat3(1)<<" "<<tmpMat3(2)<<endl;
-		tmpMat2(0) = 0.0;
-		tmpMat2(1) = 0.0;
-		tmpMat2(2) = 1.0;
-		axpy_prod(LocalToCircumferenceRotMat,tmpMat2,tmpMat3);
-		cout<<"world(=)ve z  after rotation: "<<tmpMat3(0)<<" "<<tmpMat3(1)<<" "<<tmpMat3(2)<<endl;*/
 	}
 	delete[] u;
 	delete[] v;
@@ -2096,7 +2130,7 @@ double* 	ShapeBase::calculateGrowthInCircumferencialAxes(){
 	circumStrain[4] = StrainCircumferenceMat(1,2);
 	circumStrain[5] = StrainCircumferenceMat(2,0);
 	return circumStrain;
-}
+}*/
 
 void ShapeBase::calculateGrowthFromCircumferencialAxes(double* circumStrain){
 	boost::numeric::ublas::matrix<double> StrainCircumferenceMat(3,3);
@@ -2248,49 +2282,6 @@ void ShapeBase::calculateGrowthFromCircumferencialAxes(double* circumStrain){
 	}
 }
 
-/*
-void ShapeBase::updateElementsNodePositions(int RKId, double ***SystemForces, vector <Node*>& Nodes, double dt){
-	//Update Node positions:
-	int n = nNodes;
-	if (RKId < 3){
-		//the first 3 RK steps, the velocity will be calculated, and the positions will be updated from normal positions to RKPositions, with half dt:
-		double multiplier=0.0;
-		if (RKId<2){
-			multiplier =0.5;
-		}
-		else{
-			multiplier =1.0;
-		}
-		for (int i=0;i<n;++i){
-			for (int j=0; j<Nodes[NodeIds[i]]->nDim; ++j){
-				Nodes[NodeIds[i]]->Velocity[RKId][j] = SystemForces[RKId][NodeIds[i]][j]/ Nodes[NodeIds[i]]->Viscosity ;
-				Nodes[NodeIds[i]]->RKPosition[j] = Nodes[NodeIds[i]]->Position[j] + Nodes[NodeIds[i]]->Velocity[RKId][j]*multiplier*dt;
-			}
-		}
-	}
-	else{
-		//this is the last RK step, I need to update the velocity only with RK, then I need to calculate the final positions
-		//from 4 RK velocities:
-		for (int i=0;i<n;++i){
-		//	cout<<"Nodes "<<i<<" velocity: ";
-			for (int j=0; j<Nodes[i]->nDim; ++j){
-				Nodes[NodeIds[i]]->Velocity[RKId][j] = SystemForces[RKId][NodeIds[i]][j]/Nodes[NodeIds[i]]->Viscosity;
-				//now I have 4 velocity data (corresponding to Runge-Kutta  k1, k2, k3, and k4)
-				//writing  the velocity into v[0]
-				//cout<<Nodes[i]->Velocity[0][j]<<" "<<Nodes[i]->Velocity[1][j]<<" "<<Nodes[i]->Velocity[2][j]<<" "<<Nodes[i]->Velocity[3][j]<<" ";
-				Nodes[NodeIds[i]]->Velocity[0][j] = 1.0/6.0 * (Nodes[NodeIds[i]]->Velocity[0][j] + 2.0 * (Nodes[NodeIds[i]]->Velocity[1][j] + Nodes[NodeIds[i]]->Velocity[2][j]) + Nodes[NodeIds[i]]->Velocity[3][j]);
-				Nodes[NodeIds[i]]->Position[j] += Nodes[NodeIds[i]]->Velocity[0][j]*dt;
-			}
-		//	cout<<endl;
-		}
-	}
-	//Now I need to clear these forces, as they are already applied, no cumulative effect!
-	for (int i=0;i<n;++i){
-		for (int j=0; j<Nodes[i]->nDim; ++j){
-			SystemForces[RKId][NodeIds[i]][j]=0.0;
-		}
-	}
-};*/
 void ShapeBase::calculatGrowthScalingMatrices(){
 	xGrowthScaling  = boost::numeric::ublas::zero_matrix<double>(3,3);
 	yGrowthScaling  = boost::numeric::ublas::zero_matrix<double>(3,3);
@@ -2422,17 +2413,8 @@ void ShapeBase::calculateRotationAndGetTheScalingMatrix(boost::numeric::ublas::m
 
 		boost::numeric::ublas::axpy_prod(trans(tmpMat2),StrainMat,tmpMat3);
 		boost::numeric::ublas::axpy_prod(tmpMat3,tmpMat2,StrainMat);
-		if(Id ==12){
-			cout<<"Element: "<<Id<<endl;
-			displayMatrix(tmpMat2,"tmpMat2");
-			displayMatrix(GrowthStrainsRotMat,"GrowthStrainsRotMat");
-		}
 	}
 	mat = StrainMat;
-	if(Id ==12){
-		displayMatrix(mat,"mat_calculated");
-		displayMatrix(Strain,"strain");
-	}
 }
 
 
@@ -2533,31 +2515,34 @@ void ShapeBase::initialisePersonalisedGrowthFunction(GrowthFunctionBase* currGF)
 	else if ( currGF->Type == 3 ){
 		initialisePersonalisedGridBasedGrowth(currGF);
 	}
-	else if ( currGF->Type == 4 ){
-		initialisePersonalisedPeripodialGridBasedGrowth(currGF);
-	}
 }
 void	ShapeBase::initialisePersonalisedUniformGrowth(GrowthFunctionBase* currGF){
 	GrowthFunctionBase* personalisedGF;
-	double DVRate;
-	double APRate;
-	double ABRate;
-	currGF->getGrowthRate(DVRate, APRate, ABRate);
-	personalisedGF = new UniformGrowthFunction(currGF->Id, currGF->Type, currGF->initTime, currGF->endTime, DVRate, APRate,  ABRate);
+	double* rate;
+	rate = new double[6];
+	currGF->getGrowthRate(rate);
+	double DVRate = rate[0];
+	double APRate = rate[1];
+	double ABRate = rate[2];
+	delete[] rate;
+	personalisedGF = new UniformGrowthFunction(currGF->Id, currGF->Type, currGF->initTime, currGF->endTime, currGF->applyToColumnarLayer, currGF->applyToPeripodialMembrane, DVRate, APRate,  ABRate);
 	PersonalisedGrowthFunctions.push_back(personalisedGF);
 }
 
 void	ShapeBase::initialisePersonalisedRingGrowth(GrowthFunctionBase* currGF){
 	GrowthFunctionBase* personalisedGF;
-	double DVRate;
-	double APRate;
-	double ABRate;
-	currGF->getGrowthRate(DVRate, APRate, ABRate);
+	double* rate;
+	rate = new double[6];
+	currGF->getGrowthRate(rate);
+	double DVRate = rate[0];
+	double APRate = rate[1];
+	double ABRate = rate[2];
+	delete[] rate;
 	float centreX, centreY;
 	currGF->getCentre(centreX, centreY);
 	float innerR = currGF->getInnerRadius();
 	float outerR = currGF->getOuterRadius();
-	personalisedGF = new RingGrowthFunction(currGF->Id,  currGF->Type, currGF->initTime, currGF->endTime, centreX, centreY, innerR,  outerR, DVRate, APRate,  ABRate);
+	personalisedGF = new RingGrowthFunction(currGF->Id,  currGF->Type, currGF->initTime, currGF->endTime, currGF->applyToColumnarLayer, currGF->applyToPeripodialMembrane, centreX, centreY, innerR,  outerR, DVRate, APRate,  ABRate);
 	PersonalisedGrowthFunctions.push_back(personalisedGF);
 }
 
@@ -2566,57 +2551,59 @@ void	ShapeBase::initialisePersonalisedGridBasedGrowth(GrowthFunctionBase* currGF
 	int nGridX = currGF->getGridX();
 	int nGridY = currGF->getGridY();
 	double*** GrowthMat = currGF->getGrowthMatrix();
-	personalisedGF = new GridBasedGrowthFunction(currGF->Id,  currGF->Type, currGF->initTime, currGF->endTime, nGridX, nGridY, GrowthMat);
+	personalisedGF = new GridBasedGrowthFunction(currGF->Id,  currGF->Type, currGF->initTime, currGF->endTime, currGF->applyToColumnarLayer, currGF->applyToPeripodialMembrane, nGridX, nGridY, GrowthMat);
 }
 
-void	ShapeBase::initialisePersonalisedPeripodialGridBasedGrowth(GrowthFunctionBase* currGF){
-	GrowthFunctionBase* personalisedGF;
-	int nGridX = currGF->getGridX();
-	int nGridY = currGF->getGridY();
-	double*** GrowthMat = currGF->getGrowthMatrix();
-	personalisedGF = new PeripodialGridBasedGrowthFunction(currGF->Id,  currGF->Type, currGF->initTime, currGF->endTime, nGridX, nGridY, GrowthMat);
-}
 void	ShapeBase::readNewGrowthRate(double* NewGrowth, double& ex, double&ey, double& ez, double& exy, double& exz, double& eyz){
-	if (ShapeDim == 3){
+	//if (ShapeDim == 3){
 		ex = NewGrowth[0];
 		ey = NewGrowth[1];
 		ez = NewGrowth[2];
 		exy = NewGrowth[3];
 		exz = NewGrowth[4];
 		eyz = NewGrowth[5];
-	}
-	else if (ShapeDim == 2){
-		cout<<"shape Dim is 2"<<endl;
-		ex = NewGrowth[0];
-		ey = NewGrowth[1];
-		exy = NewGrowth[2];
-	}
+	//}
+	//else if (ShapeDim == 2){
+		//cout<<"shape Dim is 2"<<endl;
+	//	ex = NewGrowth[0];
+		//ey = NewGrowth[1];
+		//exy = NewGrowth[2];
+	//}
 }
 
 void	ShapeBase::updateUniformOrRingGrowthRate(double* NewGrowth, int GrowthId){
-	cout<<"Updating uniform growth"<<endl;
+	//cout<<"Updating uniform growth"<<endl;
 	double ex = 0.0, ey = 0.0, ez = 0.0, exy = 0.0, exz = 0.0, eyz = 0.0;
 	readNewGrowthRate(NewGrowth, ex, ey,ez,exy,exz,eyz);
-	cout<<"read the growth rate"<<endl;
+	//cout<<"read the growth rate"<<endl;
 	for (int i=0; i<PersonalisedGrowthFunctions.size(); ++i ){
 		if (PersonalisedGrowthFunctions[i]->Id == GrowthId){
-			cout<<"Found growth function"<<endl;
+			//cout<<"Found growth function"<<endl;
 			PersonalisedGrowthFunctions[i]->setGrowtRate(ex,ey,ez);
-			cout<<"updated normal growth "<<endl;
+			//cout<<"updated normal growth "<<endl;
 			PersonalisedGrowthFunctions[i]->setShearValuesGrowthRate(exy,exz,eyz);
-			cout<<"updated shear growth "<<endl;
+			//cout<<"updated shear growth "<<endl;
 			break;
 		}
 	}
 }
 
-void	ShapeBase::updatePeriOrColGridBasedGrowthRate(double* NewGrowth, int GrowthId, int i, int j){
+void	ShapeBase::updateGridBasedGrowthRate(double* NewGrowth, int GrowthId, int i, int j){
 	double ex = 0.0, ey = 0.0, ez = 0.0, exy = 0.0, exz = 0.0, eyz = 0.0;
 	readNewGrowthRate(NewGrowth, ex, ey,ez,exy,exz,eyz);
 	for (int i=0; i<PersonalisedGrowthFunctions.size(); ++i ){
 		if (PersonalisedGrowthFunctions[i]->Id == GrowthId){
 			PersonalisedGrowthFunctions[i]->setGrowthMatrixElement(ex,ey,ez,i,j);
 			PersonalisedGrowthFunctions[i]->setShearValuesGrowthMatrixElement(exy,exz,eyz,i,j);
+			break;
+		}
+	}
+}
+
+void	ShapeBase::readPersonalisedGrowthRate(int GrowthId, double* tiltCorrectedGrowth){
+	for (int i=0; i<PersonalisedGrowthFunctions.size(); ++i ){
+		if (PersonalisedGrowthFunctions[i]->Id == GrowthId){
+			PersonalisedGrowthFunctions[i]->getGrowthRate(tiltCorrectedGrowth);
 			break;
 		}
 	}

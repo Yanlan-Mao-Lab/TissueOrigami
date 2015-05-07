@@ -50,7 +50,7 @@ public slots:
     void 	updatePackingForceCheckBox(int);
     void 	updateVelocityCheckBox(int);
     void  	updateScaleBarCheckBox(int);
-    void  	updatePeripodiumDisplayCheckBox(int s);
+    void  	updatePeripodialDisplayCheckBox(int s);
     void  	updateColumnarLayerDisplayCheckBox(int s);
     void  	updateBoundingBoxCheckBox(int s);
     void  	updateOrthagonalPerspectiveViewToggle();

@@ -23,17 +23,27 @@ Triangle::Triangle(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, double h){
 	slabHeight = h;
 	GrowthRate = new double[3];
 	ShapeChangeRate  = new double[3];
-	CurrGrowthStrainAddition = new double[3];
+	CurrGrowthStrainAddition = new double[6];
 	ApicalNormalForPacking =  new double[3];
 	BasalNormalForPacking =  new double[3];
 	RelativePosInBoundingBox = new double[3];
+	barycentricCoords  = new double*[nNodes];
+	for (int j=0; j<nNodes ; ++j){
+		barycentricCoords[j] = new double[4];
+		barycentricCoords[j][0] = 0.0;
+		barycentricCoords[j][1] = 0.0;
+		barycentricCoords[j][2] = 0.0;
+		barycentricCoords[j][3] = 0.0;
+	}
 	for (int i=0; i<3; ++i){
-		CurrGrowthStrainAddition[i] = 0;
 		GrowthRate[i] = 0;
 		ShapeChangeRate[i] = 0;
 		ApicalNormalForPacking[i] = 0.0;
 		BasalNormalForPacking[i] = 0.0;
 		RelativePosInBoundingBox[i] = 0.0;
+	}
+	for (int i=0; i<6; ++i){
+		CurrGrowthStrainAddition[i] = 0;
 	}
 	CurrShapeChangeStrainsUpToDate = false;
 	CurrGrowthStrainsUpToDate = false;
@@ -116,6 +126,7 @@ Triangle::~Triangle(){
 	//cout<<"called the destructor for triangle class"<<endl;
 	for (int i=0; i<nNodes; ++i){
 		delete[] Positions[i];
+		delete[] barycentricCoords[i];
 	}
 	delete[] Positions;
 	delete[] PositionsAlignedToReference;

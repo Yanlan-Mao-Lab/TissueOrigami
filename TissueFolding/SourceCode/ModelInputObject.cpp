@@ -54,8 +54,8 @@ bool ModelInputObject::readParameters(){
 			if(currParameterHeader == "InputMeshParameters:"){
 				Success  = readMeshParameters(parametersFile);
 			}
-			else if(currParameterHeader == "PeripodiumParameters:"){
-				Success  = readPeripodiumParameters(parametersFile);
+			else if(currParameterHeader == "PeripodialMembraneParameters:"){
+				Success  = readPeripodialMembraneParameters(parametersFile);
 			}
 			else if(currParameterHeader == "TimeParameters:"){
 				Success  = readTimeParameters(parametersFile);
@@ -139,9 +139,6 @@ bool ModelInputObject::readGrowthOptions(ifstream& file){
 		else if (type == 3){
 			Success = readGrowthType3(file);
 		}
-		else if (type == 4){
-			Success = readGrowthType4(file);
-		}
 		else{
 			cerr<<"Error in reading growth type, please enter a valid type: {1, 2, 3}, current type: "<<type<<endl;
 			return false;
@@ -160,6 +157,8 @@ bool ModelInputObject::readGrowthType1(ifstream& file){
 	cout<<"entered read growth type 1, current header: "<<currHeader<<endl;
 	float initialtime;
 	float finaltime;
+	bool applyToColumnarLayer = false;
+	bool applyToPeripodialMembrane = false;
 	float DVRate;
 	float APRate;
 	float ABRate;
@@ -180,6 +179,22 @@ bool ModelInputObject::readGrowthType1(ifstream& file){
 		return false;
 	}
 	file >> currHeader;
+	if(currHeader == "ApplyToColumnarLayer(bool):"){
+			file >> applyToColumnarLayer;
+	}
+	else{
+		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: ApplyToColumnarLayer(bool):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "ApplyToPeripodialMembrane(bool):"){
+			file >> applyToPeripodialMembrane;
+	}
+	else{
+		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: ApplyToPeripodialMembrane(bool):" <<endl;
+		return false;
+	}
+	file >> currHeader;
 	if(currHeader == "MaxValue(fractionPerHour-DV,AP,AB):"){
 		double divider = (60*60/Sim->dt);
 		file >> DVRate;
@@ -196,7 +211,7 @@ bool ModelInputObject::readGrowthType1(ifstream& file){
 	GrowthFunctionBase* GSBp;
 	int Id = Sim->GrowthFunctions.size();
 	//type is 1
-	GSBp = new UniformGrowthFunction(Id, 1, initialtime, finaltime, DVRate, APRate,  ABRate);
+	GSBp = new UniformGrowthFunction(Id, 1, initialtime, finaltime, applyToColumnarLayer, applyToPeripodialMembrane, DVRate, APRate,  ABRate);
 	Sim->GrowthFunctions.push_back(GSBp);
 	return true;
 }
@@ -207,6 +222,8 @@ bool ModelInputObject::readGrowthType2(ifstream& file){
 	cout<<"entered read growth type 2, current header: "<<currHeader<<endl;
 	float initialtime;
 	float finaltime;
+	bool applyToColumnarLayer = false;
+	bool applyToPeripodialMembrane = false;
 	float CentreX,CentreY;
 	float innerR, outerR;
 	float DVRate;
@@ -225,6 +242,22 @@ bool ModelInputObject::readGrowthType2(ifstream& file){
 	}
 	else{
 		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: FinalTime(sec):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "ApplyToColumnarLayer(bool):"){
+			file >> applyToColumnarLayer;
+	}
+	else{
+		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: ApplyToColumnarLayer(bool):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "ApplyToPeripodialMembrane(bool):"){
+			file >> applyToPeripodialMembrane;
+	}
+	else{
+		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: ApplyToPeripodialMembrane(bool):" <<endl;
 		return false;
 	}
 	file >> currHeader;
@@ -269,7 +302,7 @@ bool ModelInputObject::readGrowthType2(ifstream& file){
 	GrowthFunctionBase* GSBp;
 	int Id = Sim->GrowthFunctions.size();
 	//type is 2
-	GSBp = new RingGrowthFunction(Id, 2, initialtime, finaltime, CentreX, CentreY, innerR,  outerR, DVRate, APRate,  ABRate);
+	GSBp = new RingGrowthFunction(Id, 2, initialtime, finaltime, applyToColumnarLayer, applyToPeripodialMembrane, CentreX, CentreY, innerR,  outerR, DVRate, APRate,  ABRate);
 	Sim->GrowthFunctions.push_back(GSBp);
 	return true;
 }
@@ -280,6 +313,8 @@ bool ModelInputObject::readGrowthType3(ifstream& file){
 	cout<<"entered read growth type 3, current header: "<<currHeader<<endl;
 	float initialtime;
 	float finaltime;
+	bool applyToColumnarLayer = false;
+	bool applyToPeripodialMembrane = false;
 	int gridX, gridY;
 	double*** GrowthMatrix;
 	if(currHeader == "InitialTime(sec):"){
@@ -295,6 +330,22 @@ bool ModelInputObject::readGrowthType3(ifstream& file){
 	}
 	else{
 		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: FinalTime(sec):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "ApplyToColumnarLayer(bool):"){
+			file >> applyToColumnarLayer;
+	}
+	else{
+		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: ApplyToColumnarLayer(bool):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "ApplyToPeripodialMembrane(bool):"){
+			file >> applyToPeripodialMembrane;
+	}
+	else{
+		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: ApplyToPeripodialMembrane(bool):" <<endl;
 		return false;
 	}
 	file >> currHeader;
@@ -359,96 +410,8 @@ bool ModelInputObject::readGrowthType3(ifstream& file){
 	GrowthFunctionBase* GSBp;
 	int Id = Sim->GrowthFunctions.size();
 	//type is 3
-	GSBp = new GridBasedGrowthFunction(Id, 3, initialtime, finaltime, gridX, gridY, GrowthMatrix);
+	GSBp = new GridBasedGrowthFunction(Id, 3, initialtime, finaltime, applyToColumnarLayer, applyToPeripodialMembrane, gridX, gridY, GrowthMatrix);
 	Sim->GrowthFunctions.push_back(GSBp);
-	return true;
-}
-
-bool ModelInputObject::readGrowthType4(ifstream& file){
-	string currHeader;
-	file >> currHeader;
-	cout<<"entered read growth type 4, current header: "<<currHeader<<endl;
-	float initialtime;
-	float finaltime;
-	int gridX, gridY;
-	double*** GrowthMatrix;
-	if(currHeader == "InitialTime(sec):"){
-		file >> initialtime;
-	}
-	else{
-		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: InitialTime(sec):" <<endl;
-		return false;
-	}
-	file >> currHeader;
-	if(currHeader == "FinalTime(sec):"){
-		file >> finaltime;
-	}
-	else{
-		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: FinalTime(sec):" <<endl;
-		return false;
-	}
-	file >> currHeader;
-	if(currHeader == "Filename(full-path):"){
-		string filepath;
-		file >> filepath;
-		cerr<<" filename is: "<<filepath<<endl;
-		const char* name_growthRates = filepath.c_str();
-		ifstream GrowthRateFile;
-		GrowthRateFile.open(name_growthRates, ifstream::in);
-		if (!(GrowthRateFile.good() && GrowthRateFile.is_open())){
-			cerr<<"could not open growth rate file file: "<<name_growthRates<<endl;
-			return false;
-		}
-		//adding the indice of the growth matrix
-		//cout<<"reading from growth file"<<endl;
-		GrowthRateFile >> gridX;
-		GrowthRateFile >> gridY;
-		float rate;
-		double timeMultiplier = Sim->dt / 3600.0;
-		cout<<"constructing growth matrix"<<endl;
-		GrowthMatrix = new double**[(const int) gridX];
-		for (int i=0; i<gridX; ++i){
-			GrowthMatrix[i] = new double*[(const int) gridY];
-			for (int j=0; j<gridY; ++j){
-				GrowthMatrix[i][j] = new double[1];
-				GrowthMatrix[i][j][0] = 0.0;
-			}
-		}
-		cout<<"reading growth matrix"<<endl;
-		for (int j=gridY-1; j>-1; --j){
-			for (int i=0; i<gridX; ++i){
-				GrowthRateFile >> rate;
-				GrowthMatrix[i][j][0] = rate;
-				cout<<" read rate: "<<rate<<endl;
-			}
-		}
-		GrowthRateFile.close();
-		for (int i=0; i<gridX; ++i){
-			for (int j=0; j<gridY; ++j){
-				GrowthMatrix[i][j][0] *= timeMultiplier;
-			}
-		}
-	}
-	else{
-		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: Filename(full-path):" <<endl;
-		return false;
-	}
-	cout<<"constructing gorwth function object - grid: "<<gridX<<" "<<gridY<<endl;
-	for (int i=0; i<gridX; ++i){
-		for (int j=0; j<gridY; ++j){
-			for (int k=0; k<1; ++k){
-				cout<<GrowthMatrix[i][j][k]<<" ";
-			}
-			cout<<"	";
-		}
-		cout<<endl;
-	}cout<<endl;
-	GrowthFunctionBase* GSBp;
-	int Id = Sim->GrowthFunctions.size();
-	//type is 4
-	GSBp = new PeripodialGridBasedGrowthFunction(Id, 4, initialtime, finaltime, gridX, gridY, GrowthMatrix);
-	Sim->GrowthFunctions.push_back(GSBp);
-	cout<<"finalised function"<<endl;
 	return true;
 }
 
@@ -574,30 +537,46 @@ bool ModelInputObject::readMeshType2(ifstream& file){
 	return true;
 }
 
-bool ModelInputObject::readPeripodiumParameters(ifstream& file){
+bool ModelInputObject::readPeripodialMembraneParameters(ifstream& file){
 	string currHeader;
 	file >> currHeader;
-	if(currHeader == "AddPeripodium:"){
-		file >>Sim->AddPeripodium;
+	if(currHeader == "AddPeripodialMembrane:"){
+		file >>Sim->AddPeripodialMembrane;
 	}
 	else{
-		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: AddPeripodium:" <<endl;
+		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: AddPeripodialMembrane:" <<endl;
 		return false;
 	}
 	file >> currHeader;
-	if(currHeader == "PeripodiumType:"){
-		file >>Sim->PeripodiumType;
+	if(currHeader == "PeripodialMembraneType:"){
+		file >>Sim->PeripodialMembraneType;
 	}
 	else{
-		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: PeripodiumYoungsModulus:" <<endl;
+		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: PeripodialMembraneYoungsModulus:" <<endl;
 		return false;
 	}
 	file >> currHeader;
-	if(currHeader == "PeripodiumYoungsModulus:"){
-		file >>Sim->PeripodiumElasticity;
+	if(currHeader == "PeripodialMembraneThickness(fractionOfTissueHeight):"){
+		file >>Sim->PeripodialThicnessScale;
 	}
 	else{
-		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: PeripodiumYoungsModulus:" <<endl;
+		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: PeripodialMembraneThickness(fractionOfTissueHeight):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "LumenHeightScale(fractionOfTissueHeight):"){
+		file >>Sim->lumenHeightScale;
+	}
+	else{
+		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: LumenHeightScale(fractionOfTissueHeight):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "PeripodialMembraneYoungsModulus:"){
+		file >>Sim->PeripodialElasticity;
+	}
+	else{
+		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: PeripodialMembraneYoungsModulus:" <<endl;
 		return false;
 	}
 	return true;

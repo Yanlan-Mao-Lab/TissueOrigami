@@ -20,14 +20,14 @@ public:
 	double **Velocity;
 	double Viscosity;
 	int tissuePlacement;	//1 -> apical, 0 -> basal, 2->middle, 3 -> lateral
-	int tissueType;		 	//0 -> columnar layer, 1->peripodium
+	int tissueType;		 	//0 -> columnar layer, 1->PeripodialMembrane
 	bool atCircumference;
 	double mass;
 	double surface;
-	bool atPeripodiumCircumference;
-	vector <int> AssociatedNodesDueToPeripodium;
-	vector <double> AssociatedNodeWeightsDueToPeripodium;
-	int LinkedPeripodiumNodeId;
+	bool atPeripodialCircumference;
+	vector <int> AssociatedNodesDueToPeripodialMembrane;
+	vector <double> AssociatedNodeWeightsDueToPeripodialMembrane;
+	int LinkedPeripodialNodeId;
 	vector <int> immediateNeigs;
 	vector <int> connectedElementIds;
 	vector <double> connectedElementWeights;

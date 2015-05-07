@@ -117,7 +117,7 @@ public:
 	bool	ApicalNormalForPackingUpToDate;
 	bool	BasalNormalForPackingUpToDate;
 	int 	tissuePlacement; //1 -> apical, 0 -> basal, 2->middle, 3 -> lateral
-	int 	tissueType;	//Columnar layer = 0, peripodium = 1
+	int 	tissueType;	//Columnar layer = 0, PeripodialMembrane = 1
 	bool	IsAblated;
 	bool	IsClippedInDisplay;
 	double 	CurrShapeChangeToAdd[3];
@@ -173,7 +173,6 @@ public:
 	void 	setGrowthRate(double x, double y, double z);
 	void 	setShapeChangeRate(double x, double y, double z);
 	void 	updateGrowthToAdd(double* growthscale);
-	void 	updatePeripodialGrowth(double growthscale);
 	void 	updateElementVolumesAndTissuePlacementsForSave(vector<Node*>& Nodes);
 	bool 	readNodeIdData(ifstream& file);
 	bool	readReferencePositionData(ifstream& file);
@@ -221,7 +220,10 @@ public:
 	void assignElementToConnectedNodes(vector <Node*>& Nodes);
 	void removeMassFromNodes(vector <Node*>& Nodes);
 
-	double* calculateGrowthInCircumferencialAxes();
+
+	void 	convertLocalStrainToTissueStrain(double* strainsToAdd);
+
+	//double* calculateGrowthInCircumferencialAxes();
 	void 	calculateGrowthFromCircumferencialAxes(double* circumStrain);
 	void 	calculatGrowthScalingMatrices();
 	void 	calculateGrowthScalingMatricesIn2D(int dimension);
@@ -250,10 +252,10 @@ public:
 	void	initialisePersonalisedUniformGrowth(GrowthFunctionBase* currGF);
 	void	initialisePersonalisedRingGrowth(GrowthFunctionBase* currGF);
 	void	initialisePersonalisedGridBasedGrowth(GrowthFunctionBase* currGF);
-	void	initialisePersonalisedPeripodialGridBasedGrowth(GrowthFunctionBase* currGF);
 	void	readNewGrowthRate(double* NewGrowth, double& ex, double&ey, double& ez, double& exy, double& exz, double& eyz);
 	void	updateUniformOrRingGrowthRate(double* NewGrowth, int GrowthId);
-	void	updatePeriOrColGridBasedGrowthRate(double* NewGrowth, int GrowthId, int i, int j);
+	void	updateGridBasedGrowthRate(double* NewGrowth, int GrowthId, int i, int j);
+	void	readPersonalisedGrowthRate(int GrowthId, double* tiltCorrectedGrowth);
 };
 
 #endif
