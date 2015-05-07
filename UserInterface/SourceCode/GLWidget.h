@@ -18,6 +18,7 @@ using namespace std;
 
 #include "../TissueFolding/SourceCode/Simulation.h"
 
+/*! GLWidget class */
  class GLWidget : public QGLWidget
  {
      Q_OBJECT

@@ -21,23 +21,15 @@
 class Triangle : public ShapeBase{
 
 protected:
-	int normalCrossOrder[2];
-	double slabHeight;
-	//double 	apicalZDir;
-	void setTissueCoordsRotationsBuffers();
-	void getCurrRelaxedShape(boost::numeric::ublas::matrix<double> & CurrRelaxedShape);
-	void setShapeFunctionDerivatives(boost::numeric::ublas::matrix<double> &ShapeFuncDer,double eta, double nu);
-	void setShapeFunctionDerivativeStack(boost::numeric::ublas::matrix<double> &ShapeFuncDer,boost::numeric::ublas::matrix<double> &ShapeFuncDerStack);
-	void setCoeffMat();
-	void calculateCurrk(boost::numeric::ublas::matrix<double> &currk, boost::numeric::ublas::matrix<double> &currB, boost::numeric::ublas::matrix<double>& currBE, boost::numeric::ublas::matrix<double> &currBo, double eta, double nu);
-	//void calculateNormalToBottom();
-	//void calculateReferenceNormalToBottom();
-	//void calculateNormalToTop();
-	//void calculateReferenceNormalToTop();
-	//void getCurrentAlignmentSides(double*, double*);
-	//void getCurrentAlignmentFaces(double* RefSide, double* ShapeSide, double* RefFace, double* ShapeFace);
-	//void updateAlignmentTurn();
-	void calculateReferenceVolume();
+	int normalCrossOrder[2];	///< The ids of the nodes that will be used in calculation of normal pointing towards the apical surface.
+	double slabHeight;			///< The slab height of the triangle, which is the amount of tissue in 3D, that the 2D element is be representing.
+	void setTissueCoordsRotationsBuffers();  ///< The function to set the buffers for rotation matrices
+	void getCurrRelaxedShape(boost::numeric::ublas::matrix<double> & CurrRelaxedShape); ///< The function will return the positions of the reference shape of the element
+	void setShapeFunctionDerivatives(boost::numeric::ublas::matrix<double> &ShapeFuncDer,double eta, double nu);	///< The function will set the shape function derivatives for given barycentric coordinates for stiffness matrix calculation
+	void setShapeFunctionDerivativeStack(boost::numeric::ublas::matrix<double> &ShapeFuncDer,boost::numeric::ublas::matrix<double> &ShapeFuncDerStack);	///< The function will set the shape function derivatives stack from already calculated shape function derivatives. The matrix form is necessary in calculation of the stiffness matrix.
+	void setCoeffMat();	///<The function will set the coefficient matrix of the elemetn necessary for stiffness matrix calculation
+	void calculateCurrk(boost::numeric::ublas::matrix<double> &currk, boost::numeric::ublas::matrix<double> &currB, boost::numeric::ublas::matrix<double>& currBE, boost::numeric::ublas::matrix<double> &currBo, double eta, double nu);	//This funciton will calculate the stiffness matrix for given barycentric coordinates, necessary for each step of the gaussian integration for calculation of the stiffness matrix
+	void calculateReferenceVolume();	///< This function will calculate the the volume of the reference element, using reference shape positions and Triangle#slabHeight
 	double getApicalSideLengthAverage();
 	double getElementHeight();
 

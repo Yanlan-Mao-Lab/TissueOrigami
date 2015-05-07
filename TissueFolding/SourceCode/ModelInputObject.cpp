@@ -579,6 +579,15 @@ bool ModelInputObject::readPeripodialMembraneParameters(ifstream& file){
 		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: PeripodialMembraneYoungsModulus:" <<endl;
 		return false;
 	}
+	file >> currHeader;
+	if(currHeader == "PeripodialMembraneViscosity:"){
+		file >>Sim->PeripodialViscosity;
+	}
+	else{
+		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: PeripodialMembraneViscosity:" <<endl;
+		return false;
+	}
+
 	return true;
 }
 

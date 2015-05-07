@@ -8,6 +8,7 @@ PeripodialMembraneParameters:
   PeripodialMembraneThickness(fractionOfTissueHeight): 0.5
   LumenHeightScale(fractionOfTissueHeight): 0.3
   PeripodialMembraneYoungsModulus: 3000.0
+  PeripodialMembraneViscosity: 50.0
 
 TimeParameters:
   TimeStep(sec): 0.1

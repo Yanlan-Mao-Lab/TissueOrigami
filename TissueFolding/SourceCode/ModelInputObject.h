@@ -15,6 +15,7 @@
 class Simulation;
 using namespace std;
 
+/*! ModelInputObject class */
 class ModelInputObject {
 private:
 	bool checkFileStatus(ifstream &file, string fileName);
@@ -34,6 +35,9 @@ private:
 	bool readStretcherSetup(ifstream& file);
 	bool readPipetteSetup(ifstream& file);
 public:
+    /** An enum type.
+     *  The documentation block cannot be put after the enum!
+     */
 	Simulation* Sim;
 	const char*  parameterFileName;
 	string meshFileName;

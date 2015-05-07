@@ -105,6 +105,7 @@ void Simulation::setDefaultParameters(){
 	ForcesSaved = true;
 	VelocitiesSaved = true;
 	PeripodialElasticity = 0.0;
+	PeripodialViscosity = ApicalVisc;
 	PeripodialThicnessScale = 1.0;
 	lumenHeightScale = 0.3;
 	DVRight = 0;
@@ -2456,7 +2457,7 @@ void Simulation::assignPhysicalParameters(){
 		r = r - 1.0;
 		float noise3 = r*noiseOnPysProp[1];
 		noise3 = (1 + noise3/100.0);
-		Nodes[i]->setViscosity(ApicalVisc*noise3, BasalVisc*noise3);
+		Nodes[i]->setViscosity(ApicalVisc*noise3, BasalVisc*noise3, PeripodialViscosity*noise3);
 	}
 }
 

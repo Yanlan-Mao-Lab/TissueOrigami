@@ -172,6 +172,7 @@ public:
 	bool ApicalNodeFix[2];
 	bool BasalNodeFix[2];
 	double PeripodialElasticity;
+	double PeripodialViscosity;
 	double PeripodialThicnessScale;
 	double lumenHeight;
 	double lumenHeightScale;
