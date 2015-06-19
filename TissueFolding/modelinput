@@ -1,21 +1,21 @@
 InputMeshParameters:
   MeshInputMode(int-seeDocumentation): 4
-  MeshFile(full-path):   /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Wind48hr_05.mesh
+  MeshFile(full-path):   /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Wind48hr_01.mesh
 
 PeripodialMembraneParameters:
   AddPeripodialMembrane: 1
   PeripodialMembraneType: 0
   PeripodialMembraneThickness(fractionOfTissueHeight): 0.5
   LumenHeightScale(fractionOfTissueHeight): 0.3
-  PeripodialMembraneYoungsModulus: 3000.0
+  PeripodialMembraneYoungsModulus: 2000.0
   PeripodialMembraneViscosity: 50.0
 
 TimeParameters:
-  TimeStep(sec): 0.1
+  TimeStep(sec): 0.05
   SimulationLength(sec): 21600
 
 PysicalProperties:
-  YoungsModulusApical: 3000.0	YoungsModulusBasal: 3000.0	YoungsModulusMid: 3000.0	Noise(%-int): 0
+  YoungsModulusApical: 2000.0	YoungsModulusBasal: 2000.0	YoungsModulusMid: 2000.0	Noise(%-int): 0
   PoissonsRatio: 0.3		Noise(%-int): 0
   ApicalViscosity: 50.0 	Noise(%-int): 0
   BasalViscosity: 50.0		
@@ -50,14 +50,14 @@ GrowthOptions:
   FinalTime(sec):  14400
   ApplyToColumnarLayer(bool): 1
   ApplyToPeripodialMembrane(bool): 0
-  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/ColumnarGrowthRateTimeAdjusted003
+  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/ColumnarGrowthRateTimeAdjusted002
 
   GrowthFunctionType(int-seeDocumentation): 3
   InitialTime(sec): 0
   FinalTime(sec):  14400
   ApplyToColumnarLayer(bool): 0
   ApplyToPeripodialMembrane(bool): 1
-  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/PeripodialGrowthRateTimeAdjusted003
+  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/PeripodialGrowthRateTimeAdjusted002
 
 ShapeChangeOptions:
   NumberofShapeChangeFunctions(int): 2

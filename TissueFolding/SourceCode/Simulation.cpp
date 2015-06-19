@@ -3651,7 +3651,7 @@ void Simulation::calculateGrowthGridBased(GrowthFunctionBase* currGF){
 					indexY--;
 					fracY = 1.0;
 				}
-				double growthYmid[2][3]= {{0.0,0.0,0.0},{0.0,0.0,0.0}};
+				double growthYmid[2][6]= {{0.0,0.0,0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0,0.0,0.0}};
 				double* growthscale;
 				growthscale = new double[6];
 				GrowthFunctionBase* tiltCorrectedGF;
@@ -3672,10 +3672,11 @@ void Simulation::calculateGrowthGridBased(GrowthFunctionBase* currGF){
 					growthYmid[1][axis] = tiltCorrectedGF->getGrowthMatrixElement(indexX,indexY+1,axis)*(1.0-fracX) + tiltCorrectedGF->getGrowthMatrixElement(indexX+1,indexY+1,axis)*fracX;
 					growthscale[axis] = growthYmid[0][axis]*(1.0-fracY) + growthYmid[1][axis]*fracY;
 				}
-				for (int axis = 3; axis<6; ++axis){
-					growthYmid[0][axis] = tiltCorrectedGF->getShearValuesGrowthMatrixElement(indexX,indexY,axis)*(1.0-fracX) + tiltCorrectedGF->getShearValuesGrowthMatrixElement(indexX+1,indexY,axis)*fracX;
-					growthYmid[1][axis] = tiltCorrectedGF->getShearValuesGrowthMatrixElement(indexX,indexY+1,axis)*(1.0-fracX) + tiltCorrectedGF->getShearValuesGrowthMatrixElement(indexX+1,indexY+1,axis)*fracX;
-					growthscale[axis] = growthYmid[0][axis]*(1.0-fracY) + growthYmid[1][axis]*fracY;
+				//getting the shear deformations
+				for (int axis = 0; axis<3; ++axis){
+					growthYmid[0][axis+3] = tiltCorrectedGF->getShearValuesGrowthMatrixElement(indexX,indexY,axis)*(1.0-fracX) + tiltCorrectedGF->getShearValuesGrowthMatrixElement(indexX+1,indexY,axis)*fracX;
+					growthYmid[1][axis+3] = tiltCorrectedGF->getShearValuesGrowthMatrixElement(indexX,indexY+1,axis)*(1.0-fracX) + tiltCorrectedGF->getShearValuesGrowthMatrixElement(indexX+1,indexY+1,axis)*fracX;
+					growthscale[axis+3] = growthYmid[0][axis]*(1.0-fracY) + growthYmid[1][axis]*fracY;
 				}
 				//growing the shape
 				(*itElement)->updateGrowthToAdd(growthscale);
