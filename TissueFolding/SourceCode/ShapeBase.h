@@ -19,8 +19,8 @@
 //#include </usr/include/gsl/gsl_matrix.h>
 //#include </usr/include/gsl/gsl_linalg.h>
 
-#include </gsl/gsl_matrix.h>
-#include </gsl/gsl_linalg.h>
+#include <gsl/gsl_matrix.h>
+#include <gsl/gsl_linalg.h>
 
 #include "Node.h"
 #include "ReferenceShapeBase.h"
