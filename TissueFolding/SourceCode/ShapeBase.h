@@ -15,8 +15,12 @@
 #include <boost/numeric/ublas/lu.hpp>
 #include <boost/numeric/ublas/triangular.hpp>
 #include <boost/numeric/ublas/io.hpp>
-#include </usr/include/gsl/gsl_matrix.h>
-#include </usr/include/gsl/gsl_linalg.h>
+//this was the working version in linux. It should be working with correct addition of the path to INCLUDEPATH in .pro file
+//#include </usr/include/gsl/gsl_matrix.h>
+//#include </usr/include/gsl/gsl_linalg.h>
+
+#include </gsl/gsl_matrix.h>
+#include </gsl/gsl_linalg.h>
 
 #include "Node.h"
 #include "ReferenceShapeBase.h"
