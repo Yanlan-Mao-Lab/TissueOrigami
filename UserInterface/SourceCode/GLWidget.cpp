@@ -371,7 +371,7 @@ void GLWidget::highlightNode(int i){
 				F[1] = Sim01->SystemForces[0][(*itNode)->Id][1];
 				F[2] = Sim01->SystemForces[0][(*itNode)->Id][2];
 				ForceMag = F[0]* F[0] + F[1]*F[1] + F[2]* F[2];
-				ForceMag = pow(ForceMag,0.5);
+				ForceMag = pow(ForceMag,(double)0.5);
 				if (ForceMag>threshold){
 					getForceColour(currColour,ForceMag);
 				}
@@ -388,7 +388,7 @@ void GLWidget::highlightNode(int i){
 				F[1] = Sim01->PackingForces[0][(*itNode)->Id][1];
 				F[2] = Sim01->PackingForces[0][(*itNode)->Id][2];
 				ForceMag = F[0]* F[0] + F[1]*F[1] + F[2]* F[2];
-				ForceMag = pow(ForceMag,0.5);
+				ForceMag = pow(ForceMag,(double)0.5);
 				if (ForceMag>threshold){
 					getForceColour(currColour,ForceMag);
 				}
@@ -402,7 +402,7 @@ void GLWidget::highlightNode(int i){
 				float VelMag = 0.0;
 				double v[3] = {(*itNode)->Velocity[0][0],(*itNode)->Velocity[0][1],(*itNode)->Velocity[0][2]};
 				VelMag = v[0]*v[0]+v[1]*v[1]+v[2]*v[2];
-				VelMag = pow(VelMag,0.5);
+				VelMag = pow(VelMag,(double)0.5);
 				if (VelMag>threshold){
 					getVelocityColour(currColour, VelMag);
 				}
