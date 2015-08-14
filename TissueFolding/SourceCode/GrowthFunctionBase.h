@@ -18,7 +18,6 @@ public:
 		this->applyToColumnarLayer = applyToColumnarLayer;
 		this->applyToPeripodialMembrane = applyToPeripodialMembrane;
 		//the implementation of tilted elements is not correct as yet. Do not toggle this on as of now
-		correctForTiltedElements = false;
 	}
 	~GrowthFunctionBase(){};
 
@@ -28,7 +27,6 @@ public:
 	float endTime;
 	bool applyToColumnarLayer;
 	bool applyToPeripodialMembrane;
-	bool correctForTiltedElements;
 
 
 	void 	ParentErrorMessage(string functionName){
@@ -50,13 +48,9 @@ public:
 	virtual int			getGridX(){return ParentErrorMessage("getGridX",0);};
 	virtual int			getGridY(){return ParentErrorMessage("getGridY",0);};
 	virtual double*** 	getGrowthMatrix(){ParentErrorMessage("getGrowthMatrix");double*** a;return a;}
-	virtual	double*** 	getShearValuesGrowthMatrix(){ParentErrorMessage("getGrowthMatrix");double*** a;return a;}
 	virtual	double 		getGrowthMatrixElement(int i, int j, int k){return ParentErrorMessage("getGrowthMatrixElement",0.0);};
-	virtual	double 		getShearValuesGrowthMatrixElement(int i, int j, int k){return ParentErrorMessage("getShearValuesGrowthMatrixElement",0.0);};
 	virtual void		setGrowtRate(double ex, double ey, double ez){ParentErrorMessage("setGrowtRate");};
-	virtual void		setShearValuesGrowthRate(double exy, double exz, double eyz){ParentErrorMessage("setShearValuesGrowthRate");};
 	virtual void		setGrowthMatrixElement(double ex, double ey, double ez, int i, int j){ParentErrorMessage("setGrowtRate");};
-	virtual void		setShearValuesGrowthMatrixElement(double exy, double exz, double eyz, int i, int j){ParentErrorMessage("setShearValuesGrowthRate");};
 
 };
 #endif

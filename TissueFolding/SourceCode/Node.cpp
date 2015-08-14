@@ -32,6 +32,7 @@ Node::Node(int id, int dim, double* pos, int tissuePos, int tissueType){
 	atPeripodialCircumference = false;
 	mass = 0.0;
 	surface = 0.0;
+    zProjectedArea = 0.0;
 	LinkedPeripodialNodeId = -1;
 }
 
@@ -39,9 +40,14 @@ Node::~Node(){
 	//cout<<"called the destructor for node class"<<endl;
 	delete[] Position;
 	delete[] RKPosition;
+    /*for (int i=0; i<4; ++i){
+        for (int j=0; j<3; ++j){
+            cout<<"Velocity["<<i<<"]["<<j<<"] of node "<<Id<<": "<<Velocity[i][j]<<endl;
+        }
+    }*/
 	for (int i=0; i<4; ++i){
 		delete[] Velocity[i];
-	}
+	}    
 	delete[] Velocity;
 	delete[] FixedPos;
 	//cout<<"finalised the destructor for node class"<<endl;
@@ -124,7 +130,7 @@ void Node::getCurrentRKPosition(int RKId, double* pos){
 
 void Node::displayConnectedElementIds(){
 	/**
-	 *  The function will display on screen the list of unique Id numbers for the elements utilising this node.
+	 *  The function will display on screen the list of unique Node#Id s for the elements utilising this node.
 	 *  These elements are listed in Node#connectedElementIds.
 	 */
 	int n = connectedElementIds.size();

@@ -39,8 +39,7 @@ public:
 	void  setElasticProperties(double EApical, double EBasal, double EMid,double v);
 	void  calculateApicalNormalCrossOrder(double* SystemCentre);
 	void  AlignReferenceApicalNormalToZ(double* SystemCentre);
-	void  correctFor2DAlignment();
-	void  calculateReferenceStiffnessMatrix();
+    //void  calculateReferenceStiffnessMatrix();
 	void  checkHealth();
 	void AddPackingToSurface(int tissueplacement, double Fx, double Fy,double Fz, int RKId,  double ***SystemForces, double ***PackingForces, vector<Node*> &Nodes);
 	bool IsPointCloseEnoughForPacking(double* Pos,  float Peripodialthreshold, float Columnarthreshold, int TissuePlacementOfPackingNode, int TissueTypeOfPackingNode);

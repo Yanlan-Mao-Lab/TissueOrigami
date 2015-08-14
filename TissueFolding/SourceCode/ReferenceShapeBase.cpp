@@ -11,12 +11,11 @@ ReferenceShapeBase::ReferenceShapeBase(string ShapeType){
 }
 
 ReferenceShapeBase::~ReferenceShapeBase(){
-	for (int i=0; i<nNodes; ++i){
+    for (int i=0; i<nNodes; ++i){
 		delete[] Positions[i];
 	}
 	delete[] Positions;
-	delete[] CurrentNormal;
-}
+ }
 
 void ReferenceShapeBase::setShapeType(string TypeName){
 	if (TypeName == "Prism"){

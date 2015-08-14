@@ -49,7 +49,6 @@ using namespace std;
      float 		DisplayPysPropSteps[5];	//current step of the spinbox
      vector <QString> SelectedPos;
      vector <QString> SelectedId;
-     bool 		drawTissueCoordinates;
      bool 		drawNetForces;
      bool 		drawPackingForces;
      bool 		drawVelocities;
@@ -58,6 +57,7 @@ using namespace std;
      bool 		drawColumnar;
      bool 		PerspectiveView;
      bool		displayBoundingBox;
+     bool       displayPipette;
      double  	xClip, yClip, zClip;
 
  signals:
@@ -130,13 +130,11 @@ using namespace std;
      void 		drawFixedNodes();
      void		drawAxesArrows();
      void 		drawScaleBar();
-     void 		drawTissueCoordSystemPrism(int i);
-     void 		drawTissueCoordSystemTetrahedron(int i);
-     void 		drawTissueCoordSystemTriangle(int i);
      void 		drawForces();
      void 		drawPackForces();
      void 		drawNodeVelocities();
      void 		drawBoundingBox();
+     void 		drawPipette();
      void 		drawArrow3D(double* pos, double* endPoint, double r, double g, double b);
  };
 

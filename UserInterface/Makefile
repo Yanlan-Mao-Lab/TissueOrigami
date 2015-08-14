@@ -18,7 +18,7 @@ CXXFLAGS      = -pipe -O2 -Wall -W -D_REENTRANT -fPIE $(DEFINES)
 INCPATH       = -I/opt/Qt5.2.1/5.2.1/gcc_64/mkspecs/linux-g++ -I. -I/opt/Qt5.2.1/5.2.1/gcc_64/include -I/opt/Qt5.2.1/5.2.1/gcc_64/include/QtOpenGL -I/opt/Qt5.2.1/5.2.1/gcc_64/include/QtWidgets -I/opt/Qt5.2.1/5.2.1/gcc_64/include/QtGui -I/opt/Qt5.2.1/5.2.1/gcc_64/include/QtCore -I.
 LINK          = g++
 LFLAGS        = -Wl,-O1 -Wl,-rpath,/opt/Qt5.2.1/5.2.1/gcc_64 -Wl,-rpath,/opt/Qt5.2.1/5.2.1/gcc_64/lib
-LIBS          = $(SUBLIBS) -L/usr/include -lgsl -lgslcblas -L/opt/Qt5.2.1/5.2.1/gcc_64/lib -lQt5OpenGL -lQt5Widgets -lQt5Gui -lQt5Core -lGL -lpthread 
+LIBS          = $(SUBLIBS) -L/usr/include -lgsl -lgslcblas -lpardiso500-GNU461-X86-64 -fopenmp -llapack -L/opt/Qt5.2.1/5.2.1/gcc_64/lib -lQt5OpenGL -lQt5Widgets -lQt5Gui -lQt5Core -lGL -lpthread 
 AR            = ar cqs
 RANLIB        = 
 QMAKE         = /opt/Qt5.2.1/5.2.1/gcc_64/bin/qmake
@@ -897,8 +897,6 @@ moc_MainWindow.cpp: /opt/Qt5.2.1/5.2.1/gcc_64/include/QtGui/QtGui \
 		../TissueFolding/SourceCode/Simulation.h \
 		../TissueFolding/SourceCode/ModelInputObject.h \
 		../TissueFolding/SourceCode/ShapeBase.h \
-		/usr/include/gsl/gsl_matrix.h \
-		/usr/include/gsl/gsl_linalg.h \
 		../TissueFolding/SourceCode/Node.h \
 		../TissueFolding/SourceCode/ReferenceShapeBase.h \
 		../TissueFolding/SourceCode/GrowthFunctionBase.h \
@@ -1357,8 +1355,6 @@ moc_GLWidget.cpp: /opt/Qt5.2.1/5.2.1/gcc_64/include/QtOpenGL/QGLWidget \
 		../TissueFolding/SourceCode/Simulation.h \
 		../TissueFolding/SourceCode/ModelInputObject.h \
 		../TissueFolding/SourceCode/ShapeBase.h \
-		/usr/include/gsl/gsl_matrix.h \
-		/usr/include/gsl/gsl_linalg.h \
 		../TissueFolding/SourceCode/Node.h \
 		../TissueFolding/SourceCode/ReferenceShapeBase.h \
 		../TissueFolding/SourceCode/GrowthFunctionBase.h \
@@ -1825,8 +1821,6 @@ main.o: SourceCode/main.cpp /opt/Qt5.2.1/5.2.1/gcc_64/include/QtWidgets/QGraphic
 		../TissueFolding/SourceCode/Simulation.h \
 		../TissueFolding/SourceCode/ModelInputObject.h \
 		../TissueFolding/SourceCode/ShapeBase.h \
-		/usr/include/gsl/gsl_matrix.h \
-		/usr/include/gsl/gsl_linalg.h \
 		../TissueFolding/SourceCode/Node.h \
 		../TissueFolding/SourceCode/ReferenceShapeBase.h \
 		../TissueFolding/SourceCode/GrowthFunctionBase.h \
@@ -2293,8 +2287,6 @@ MainWindow.o: SourceCode/MainWindow.cpp /opt/Qt5.2.1/5.2.1/gcc_64/include/QtGui/
 		../TissueFolding/SourceCode/Simulation.h \
 		../TissueFolding/SourceCode/ModelInputObject.h \
 		../TissueFolding/SourceCode/ShapeBase.h \
-		/usr/include/gsl/gsl_matrix.h \
-		/usr/include/gsl/gsl_linalg.h \
 		../TissueFolding/SourceCode/Node.h \
 		../TissueFolding/SourceCode/ReferenceShapeBase.h \
 		../TissueFolding/SourceCode/GrowthFunctionBase.h \
@@ -2767,8 +2759,6 @@ GLWidget.o: SourceCode/GLWidget.cpp /opt/Qt5.2.1/5.2.1/gcc_64/include/QtGui/QtGu
 		../TissueFolding/SourceCode/Simulation.h \
 		../TissueFolding/SourceCode/ModelInputObject.h \
 		../TissueFolding/SourceCode/ShapeBase.h \
-		/usr/include/gsl/gsl_matrix.h \
-		/usr/include/gsl/gsl_linalg.h \
 		../TissueFolding/SourceCode/Node.h \
 		../TissueFolding/SourceCode/ReferenceShapeBase.h \
 		../TissueFolding/SourceCode/GrowthFunctionBase.h \
@@ -2777,35 +2767,33 @@ GLWidget.o: SourceCode/GLWidget.cpp /opt/Qt5.2.1/5.2.1/gcc_64/include/QtGui/QtGu
 
 Prism.o: ../TissueFolding/SourceCode/Prism.cpp ../TissueFolding/SourceCode/Prism.h \
 		../TissueFolding/SourceCode/ShapeBase.h \
-		/usr/include/gsl/gsl_matrix.h \
-		/usr/include/gsl/gsl_linalg.h \
 		../TissueFolding/SourceCode/Node.h \
-		../TissueFolding/SourceCode/ReferenceShapeBase.h
+		../TissueFolding/SourceCode/ReferenceShapeBase.h \
+		../TissueFolding/SourceCode/GrowthFunctionBase.h \
+		../TissueFolding/SourceCode/GrowthFunctionTypes.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o Prism.o ../TissueFolding/SourceCode/Prism.cpp
 
 Triangle.o: ../TissueFolding/SourceCode/Triangle.cpp ../TissueFolding/SourceCode/Triangle.h \
 		../TissueFolding/SourceCode/ShapeBase.h \
-		/usr/include/gsl/gsl_matrix.h \
-		/usr/include/gsl/gsl_linalg.h \
 		../TissueFolding/SourceCode/Node.h \
-		../TissueFolding/SourceCode/ReferenceShapeBase.h
+		../TissueFolding/SourceCode/ReferenceShapeBase.h \
+		../TissueFolding/SourceCode/GrowthFunctionBase.h \
+		../TissueFolding/SourceCode/GrowthFunctionTypes.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o Triangle.o ../TissueFolding/SourceCode/Triangle.cpp
 
 ReferenceShapeBase.o: ../TissueFolding/SourceCode/ReferenceShapeBase.cpp ../TissueFolding/SourceCode/ReferenceShapeBase.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ReferenceShapeBase.o ../TissueFolding/SourceCode/ReferenceShapeBase.cpp
 
 ShapeBase.o: ../TissueFolding/SourceCode/ShapeBase.cpp ../TissueFolding/SourceCode/ShapeBase.h \
-		/usr/include/gsl/gsl_matrix.h \
-		/usr/include/gsl/gsl_linalg.h \
 		../TissueFolding/SourceCode/Node.h \
-		../TissueFolding/SourceCode/ReferenceShapeBase.h
+		../TissueFolding/SourceCode/ReferenceShapeBase.h \
+		../TissueFolding/SourceCode/GrowthFunctionBase.h \
+		../TissueFolding/SourceCode/GrowthFunctionTypes.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ShapeBase.o ../TissueFolding/SourceCode/ShapeBase.cpp
 
 Simulation.o: ../TissueFolding/SourceCode/Simulation.cpp ../TissueFolding/SourceCode/Simulation.h \
 		../TissueFolding/SourceCode/ModelInputObject.h \
 		../TissueFolding/SourceCode/ShapeBase.h \
-		/usr/include/gsl/gsl_matrix.h \
-		/usr/include/gsl/gsl_linalg.h \
 		../TissueFolding/SourceCode/Node.h \
 		../TissueFolding/SourceCode/ReferenceShapeBase.h \
 		../TissueFolding/SourceCode/GrowthFunctionBase.h \
@@ -2820,8 +2808,6 @@ Node.o: ../TissueFolding/SourceCode/Node.cpp ../TissueFolding/SourceCode/Node.h
 ModelInputObject.o: ../TissueFolding/SourceCode/ModelInputObject.cpp ../TissueFolding/SourceCode/ModelInputObject.h \
 		../TissueFolding/SourceCode/Simulation.h \
 		../TissueFolding/SourceCode/ShapeBase.h \
-		/usr/include/gsl/gsl_matrix.h \
-		/usr/include/gsl/gsl_linalg.h \
 		../TissueFolding/SourceCode/Node.h \
 		../TissueFolding/SourceCode/ReferenceShapeBase.h \
 		../TissueFolding/SourceCode/GrowthFunctionBase.h \

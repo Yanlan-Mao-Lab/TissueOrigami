@@ -27,14 +27,6 @@ Triangle::Triangle(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, double h){
 	ApicalNormalForPacking =  new double[3];
 	BasalNormalForPacking =  new double[3];
 	RelativePosInBoundingBox = new double[3];
-	barycentricCoords  = new double*[nNodes];
-	for (int j=0; j<nNodes ; ++j){
-		barycentricCoords[j] = new double[4];
-		barycentricCoords[j][0] = 0.0;
-		barycentricCoords[j][1] = 0.0;
-		barycentricCoords[j][2] = 0.0;
-		barycentricCoords[j][3] = 0.0;
-	}
 	for (int i=0; i<3; ++i){
 		GrowthRate[i] = 0;
 		ShapeChangeRate[i] = 0;
@@ -47,8 +39,6 @@ Triangle::Triangle(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, double h){
 	}
 	CurrShapeChangeStrainsUpToDate = false;
 	CurrGrowthStrainsUpToDate = false;
-	WorldToTissueRotMatUpToDate= false;
-	GrowthStrainsRotMatUpToDate= false;
 	IsGrowing = false;
 	IsChangingShape = false;
 	GrewInThePast = false;
@@ -58,7 +48,6 @@ Triangle::Triangle(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, double h){
 	IsAblated = false;
 	IsClippedInDisplay = false;
 	capElement = false;
-	tiltedElement = false;
 	setIdentificationColour();
 	setShapeType("Triangle");
 	ReferenceShape = new ReferenceShapeBase("Triangle");
@@ -71,48 +60,17 @@ Triangle::Triangle(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, double h){
 	setTissuePlacement(Nodes);
 	setTissueType(Nodes);
 
-	Strain = boost::numeric::ublas::zero_vector<double>(6);
-	RK1Strain = boost::numeric::ublas::zero_vector<double>(6);
-	StrainTissueMat = boost::numeric::ublas::zero_matrix<double>(3,3);
-	PlasticStrain = boost::numeric::ublas::zero_vector<double>(6);
-	CurrPlasticStrainsInTissueCoordsMat = boost::numeric::ublas::zero_matrix<double>(3,3);
-	LocalGrowthStrainsMat = boost::numeric::ublas::zero_matrix<double>(3,3);
+    Strain = gsl_matrix_calloc(6,1);
 
-	xGrowthScaling  = boost::numeric::ublas::zero_matrix<double>(3,3);
-	yGrowthScaling  = boost::numeric::ublas::zero_matrix<double>(3,3);
-	zGrowthScaling  = boost::numeric::ublas::zero_matrix<double>(3,3);
-
-	WorldToTissueRotMat= boost::numeric::ublas::identity_matrix<double>(3,3);
-	GrowthStrainsRotMat = boost::numeric::ublas::identity_matrix<double>(3,3);
+    GrowthStrainsRotMat = gsl_matrix_alloc(3,3);
+    gsl_matrix_set_identity(GrowthStrainsRotMat);
 	RotatedElement = false;
-	WorldToReferenceRotMat = boost::numeric::ublas::identity_matrix<double>(3,3);
-	//setting rotation matrices to identity;
-	for (int i=0; i<3; ++i){
-		for (int j=0; j<3; ++j){
-			int matrixElement;
-			if (i==j){
-				matrixElement=1;
-			}
-			else{
-				matrixElement=0;
-			}
-			WorldToReferenceRotMat(i,j) = matrixElement;
-		}
-	}
+
 
 	CurrShapeChangeToAdd[0] = 0;
 	CurrShapeChangeToAdd[1] = 0;
 	CurrShapeChangeToAdd[2] = 0;
-	TissueCoordinateSystem = new double[9];
-	TissueCoordinateSystem[0]=1.0;
-	TissueCoordinateSystem[1]=0.0;
-	TissueCoordinateSystem[2]=0.0;
-	TissueCoordinateSystem[3]=0.0;
-	TissueCoordinateSystem[4]=1.0;
-	TissueCoordinateSystem[5]=0.0;
-	TissueCoordinateSystem[6]=0.0;
-	TissueCoordinateSystem[7]=0.0;
-	TissueCoordinateSystem[8]=1.0;
+
 
 	normalCrossOrder[0] = 1;
 	normalCrossOrder[1] = 2;
@@ -126,10 +84,8 @@ Triangle::~Triangle(){
 	//cout<<"called the destructor for triangle class"<<endl;
 	for (int i=0; i<nNodes; ++i){
 		delete[] Positions[i];
-		delete[] barycentricCoords[i];
 	}
 	delete[] Positions;
-	delete[] PositionsAlignedToReference;
 	delete[] RelativePosInBoundingBox;
 	//delete[] PositionsInTissueCoord;
 	delete[] NodeIds;
@@ -143,10 +99,11 @@ Triangle::~Triangle(){
 
 void Triangle::setCoeffMat(){
 	using namespace boost::numeric::ublas;
-	CoeffMat = zero_matrix<int> (3, (nDim-1.0)*(nDim-1.0));
-	CoeffMat(0,0)=1;
-	CoeffMat(1,3)=1;
-	CoeffMat(2,1)=1;CoeffMat(2,2)=1;
+    CoeffMat = gsl_matrix_calloc (3, (nDim-1.0)*(nDim-1.0));
+    gsl_matrix_set(CoeffMat,0,0,1);
+    gsl_matrix_set(CoeffMat,1,3,1);
+    gsl_matrix_set(CoeffMat,2,1,1);
+    gsl_matrix_set(CoeffMat,2,2,1);
 }
 
 void  Triangle::setElasticProperties(double EApical, double EBasal, double EMid, double v){
@@ -161,11 +118,13 @@ void  Triangle::setElasticProperties(double EApical, double EBasal, double EMid,
 	if (v>0.5){v = 0.5;}
 	else if (v<0.0){v = 0.0;}
 	using namespace boost::numeric::ublas;
-	D = zero_matrix<double>(3,3);
+    D = gsl_matrix_calloc(3,3);
 	double multiplier = E/((1+v)*(1-2*v));
-	D(0,0)= multiplier*(1-v);	D(0,1)=	multiplier*v;
-	D(1,0)= multiplier*v;		D(1,1)= multiplier*(1-v);
-	D(2,2)= multiplier*(1-2*v)/2;
+    gsl_matrix_set(D,0,0, multiplier*(1-v));
+    gsl_matrix_set(D,0,1, multiplier*v);
+    gsl_matrix_set(D,1,0, multiplier*v);
+    gsl_matrix_set(D,1,1, multiplier*(1-v));
+    gsl_matrix_set(D,2,2, multiplier*(1-2*v)/2);
 }
 
 void Triangle::getCurrRelaxedShape(boost::numeric::ublas::matrix<double> & CurrRelaxedShape){
@@ -196,60 +155,42 @@ void Triangle::setShapeFunctionDerivativeStack(boost::numeric::ublas::matrix<dou
 	}
 	subrange(ShapeFuncDerStack, dim,2*dim,1,dim*n) = subrange(ShapeFuncDerStack, 0,dim,0,dim*n-1);
 }
-
+/*
 void Triangle::calculateReferenceStiffnessMatrix(){
-	using namespace boost::numeric::ublas;
-	const int n = nNodes;
-	const int dim = nDim-1;	//calculation in 2D
-	double Area = ReferenceShape->Volume/ReferenceShape->height;
-	double height = ReferenceShape->height;
-	matrix<double> ShapeFuncDer (dim, n);
-	setShapeFunctionDerivatives(ShapeFuncDer,1.0,1.0);
-	//Generating the shape function derivatives stack:
-	int dim2 = dim*dim;
-	matrix<double> ShapeFuncDerStack = zero_matrix<double>(dim2, dim*n);
-	setShapeFunctionDerivativeStack(ShapeFuncDer,ShapeFuncDerStack);
-	double y23 = (1.0/2.0/Area) * (ReferenceShape->Positions[1][1]-ReferenceShape->Positions[2][1]);
-	double y31 = (1.0/2.0/Area) * (ReferenceShape->Positions[2][1]-ReferenceShape->Positions[0][1]);
-	double y12 = (1.0/2.0/Area) * (ReferenceShape->Positions[0][1]-ReferenceShape->Positions[1][1]);
-	double x32 = (1.0/2.0/Area) * (ReferenceShape->Positions[2][0]-ReferenceShape->Positions[1][0]);
-	double x13 = (1.0/2.0/Area) * (ReferenceShape->Positions[0][0]-ReferenceShape->Positions[2][0]);
-	double x21 = (1.0/2.0/Area) * (ReferenceShape->Positions[1][0]-ReferenceShape->Positions[0][0]);
-	matrix<double> manualk  = zero_matrix<double>(dim*n, dim*n);
-	matrix<double> manualB  = zero_matrix<double>(3, dim*n);
-	manualB(0,0)=y23; manualB(0,1)=0.0; manualB(0,2)=y31; manualB(0,3)=0.0; manualB(0,4)=y12;  manualB(0,5)=0.0;
-	manualB(1,0)=0.0; manualB(1,1)=x32; manualB(1,2)=0.0; manualB(1,3)=x13; manualB(1,4)=0.0;  manualB(1,5)=x21;
-	manualB(2,0)=x32; manualB(2,1)=y23; manualB(2,2)=x13; manualB(2,3)=y31; manualB(2,4)=x21;  manualB(2,5)=y12;
-	/*if (this->Id == 1166){
-		cout<<"Element : "<<Id<<endl;
-		cout<<"Reference Shape Positions: "<<endl;
-		for (int i = 0; i<nNodes; ++i){
-			for (int j = 0; j<nDim; ++j){
-				cout<<" 	"<<ReferenceShape->Positions[i][j]<<" ";
-			}
-			cout<<endl;
-		}
-		cout<<"Area: "<<Area<<endl;
-		cout<<"Volume: "<<ReferenceShape->Volume<<endl;
-		cout<<"Height: "<<height<<endl;
-		cout<<"x13: "<<x13<<" "<<x13*Area*2.0<<endl;
-		cout<<"x21: "<<x21<<" "<<x21*Area*2.0<<endl;
-		cout<<"x32: "<<x32<<" "<<x32*Area*2.0<<endl;
-		cout<<"y12: "<<y12<<" "<<y12*Area*2.0<<endl;
-		cout<<"y23: "<<y23<<" "<<y23*Area*2.0<<endl;
-		cout<<"y31: "<<y31<<" "<<y31*Area*2.0<<endl;
-		displayMatrix(manualB, "manulaB");
-	}*/
-	matrix<double> manualBE  = zero_matrix<double>(dim*n, 3);
-	matrix<double> manualBT = trans(manualB);
-	boost::numeric::ublas::axpy_prod(manualBT,height*Area*D,manualBE);
-	boost::numeric::ublas::axpy_prod(manualBE,manualB,manualk);
-	k = manualk;
-	B = manualB;
-	BE = manualBE;
-	Bo = ShapeFuncDerStack;
-	//cout<<"finished stiffness matrix of triangle"<<endl;
-}
+    using namespace boost::numeric::ublas;
+    const int n = nNodes;
+    const int dim = nDim-1;	//calculation in 2D
+    double Area = ReferenceShape->Volume/ReferenceShape->height;
+    double height = ReferenceShape->height;
+    matrix<double> ShapeFuncDer (dim, n);
+    setShapeFunctionDerivatives(ShapeFuncDer,1.0,1.0);
+    //Generating the shape function derivatives stack:
+    int dim2 = dim*dim;
+    matrix<double> ShapeFuncDerStack = zero_matrix<double>(dim2, dim*n);
+    setShapeFunctionDerivativeStack(ShapeFuncDer,ShapeFuncDerStack);
+    double y23 = (1.0/2.0/Area) * (ReferenceShape->Positions[1][1]-ReferenceShape->Positions[2][1]);
+    double y31 = (1.0/2.0/Area) * (ReferenceShape->Positions[2][1]-ReferenceShape->Positions[0][1]);
+    double y12 = (1.0/2.0/Area) * (ReferenceShape->Positions[0][1]-ReferenceShape->Positions[1][1]);
+    double x32 = (1.0/2.0/Area) * (ReferenceShape->Positions[2][0]-ReferenceShape->Positions[1][0]);
+    double x13 = (1.0/2.0/Area) * (ReferenceShape->Positions[0][0]-ReferenceShape->Positions[2][0]);
+    double x21 = (1.0/2.0/Area) * (ReferenceShape->Positions[1][0]-ReferenceShape->Positions[0][0]);
+    matrix<double> manualk  = zero_matrix<double>(dim*n, dim*n);
+    matrix<double> manualB  = zero_matrix<double>(3, dim*n);
+    manualB(0,0)=y23; manualB(0,1)=0.0; manualB(0,2)=y31; manualB(0,3)=0.0; manualB(0,4)=y12;  manualB(0,5)=0.0;
+    manualB(1,0)=0.0; manualB(1,1)=x32; manualB(1,2)=0.0; manualB(1,3)=x13; manualB(1,4)=0.0;  manualB(1,5)=x21;
+    manualB(2,0)=x32; manualB(2,1)=y23; manualB(2,2)=x13; manualB(2,3)=y31; manualB(2,4)=x21;  manualB(2,5)=y12;
+
+    matrix<double> manualBE  = zero_matrix<double>(dim*n, 3);
+    matrix<double> manualBT = trans(manualB);
+    boost::numeric::ublas::axpy_prod(manualBT,height*Area*D,manualBE);
+    boost::numeric::ublas::axpy_prod(manualBE,manualB,manualk);
+    k = manualk;
+    B = manualB;
+    BE = manualBE;
+    Bo = ShapeFuncDerStack;
+    //cout<<"finished stiffness matrix of triangle"<<endl;
+}*/
+
 /*void Triangle::calculateReferenceStiffnessMatrix(){
 	const int n = nNodes;
 	const int dim = nDim-1;	//calculation in 2D
@@ -336,7 +277,7 @@ void Triangle::calculateReferenceStiffnessMatrix(){
 
 
 }*/
-
+/*
 void Triangle::calculateCurrk(boost::numeric::ublas::matrix<double>& currk, boost::numeric::ublas::matrix<double>& currB, boost::numeric::ublas::matrix<double>& currBE, boost::numeric::ublas::matrix<double>& currBo, double eta, double nu){
 	const int n = nNodes;
 	const int dim = nDim - 1; //calculation in 2D
@@ -384,7 +325,7 @@ void Triangle::calculateCurrk(boost::numeric::ublas::matrix<double>& currk, boos
 	//displayMatrix(currB,"CurrB");
 	//currB = currB*detJ;
 }
-
+*/
 void Triangle::calculateReferenceVolume(){
 	double x1 = ReferenceShape->Positions[0][0];
 	double y1 = ReferenceShape->Positions[0][1];
@@ -544,76 +485,6 @@ void Triangle::calculateApicalNormalCrossOrder(double* SystemCentre){
 	delete[] vecToCentre;
 	delete[] ElementCentre;
 
-}
-
-void 	Triangle::correctFor2DAlignment(){
-	double* vec0;
-	double* vec1;
-	vec0 = new double[3];	//vector from node 0 to node 1 or 2, the selection is done so that the cross-product points towards apical direction
-	vec1 = new double[3]; 	//vector from node 0 to (same as above)
-	for (int i = 0; i<nDim; ++i){
-		vec0[i] = PositionsAlignedToReference[normalCrossOrder[0]][i] - PositionsAlignedToReference[0][i];
-		vec1[i] = PositionsAlignedToReference[normalCrossOrder[1]][i] - PositionsAlignedToReference[0][i];
-	}
-	double* normal;
-	normal = new double[3];
-	crossProduct3D(vec0,vec1,normal);
-	normaliseVector3D(normal);
-	/*//This normal should be in aligned with the direction of z towards apical side - towards the lumen between columnar and paripodial membrane (which is the same vector of the reference element as I have already aligned it!
-	double* z;
-	z = new double[3];
-	z[0] = 0.0;
-	z[1] = 0.0;
-	z[2] = apicalZDir;
-	*/
-	//This normal should be in aligned with the direction of z towards apical side - towards the lumen between columnar and paripodial membrane (which is the same vector of the reference element as I have already aligned it!
-	double* z;
-	z = new double[3];
-	z[0] = 0.0;
-	z[1] = 0.0;
-	z[2] = +1;
-	double c, s;
-	calculateRotationAngleSinCos(normal,z,c,s);  //align normal to z
-	if (c<0.9998){
-		//cout<<"Element: "<<Id<<" correction for 2D alignment, c: "<<c<<endl;
-		double *rotAx;
-		rotAx = new double[3];
-		double *rotMat;
-		rotMat = new double[9]; //matrix is written in one row
-		calculateRotationAxis(normal,z,rotAx,c);	//calculating the rotation axis that is perpendicular to both normal and z
-		constructRotationMatrix(c,s,rotAx,rotMat);	//calculating the rotation matrix
-		//cout<<"Element: "<<Id<<" rotMat param - c: "<<c<<" s: "<<s<<" normal: "<<normal[0]<<" "<<normal[1]<<" "<<normal[2]<<" rotAx: "<<rotAx[0]<<" "<<rotAx[1]<<" "<<rotAx[2]<<endl;
-		//You need to carry out a rotation:
-		double u[3];
-		for (int i=0; i<nNodes; ++i){
-			u[0] = PositionsAlignedToReference[i][0];
-			u[1] = PositionsAlignedToReference[i][1];
-			u[2] = PositionsAlignedToReference[i][2];
-			rotateVectorByRotationMatrix(u,rotMat);
-			PositionsAlignedToReference[i][0] = u[0];
-			PositionsAlignedToReference[i][1] = u[1];
-			PositionsAlignedToReference[i][2] = u[2];
-		}
-		int counter = 0;
-		boost::numeric::ublas::matrix<double>CurrentRotMat(3,3);
-		for (int i=0; i<3; ++i){
-			for (int j=0; j<3; ++j){
-				CurrentRotMat(i,j) = rotMat[counter];
-				counter++;
-			}
-		}
-		boost::numeric::ublas::matrix<double>tmpMat(3,3);
-		tmpMat = boost::numeric::ublas::zero_matrix<double>(3,3);
-		boost::numeric::ublas::axpy_prod(CurrentRotMat,WorldToReferenceRotMat, tmpMat);
-		WorldToReferenceRotMat = tmpMat;
-		delete[] rotAx;
-		delete[] rotMat;
-	}
-	//then re-calculate the stiffness matrix.
-	delete[] vec0;
-	delete[] vec1;
-	delete[] normal;
-	delete[] z;
 }
 
 double Triangle::getApicalSideLengthAverage(){

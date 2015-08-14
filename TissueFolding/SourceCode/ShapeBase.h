@@ -44,13 +44,26 @@ protected:
 	int* 	IdentifierColour;
 	double* GrowthRate;
 	double* ShapeChangeRate;
+    bool    rotatedGrowth;
 	double* CurrGrowthStrainAddition;
 	bool 	CurrShapeChangeStrainsUpToDate;
 	bool 	CurrGrowthStrainsUpToDate;
 	bool 	GrewInThePast;
 	bool 	ChangedShapeInThePast;
 	double* RelativePosInBoundingBox;
-	void 	setShapeType(string TypeName);
+    gsl_matrix **ShapeFuncDerivatives;
+    gsl_matrix **ShapeFuncDerStacks;
+    gsl_matrix **InvdXdes;
+    double* detdXdes;
+    gsl_matrix **Bmatrices;
+    gsl_matrix **CMatrices;
+    gsl_matrix **FeMatrices;
+    gsl_matrix **invJShapeFuncDerStack;
+    gsl_matrix **elasticStress;
+    double* detFs;
+
+    double ZProjectedBasalArea,ZProjectedApicalArea;
+    void 	setShapeType(string TypeName);
 	void 	readNodeIds(int* tmpNodeIds);
 	void 	setPositionMatrix(vector<Node*>& Nodes);
 	void 	setTissuePlacement(vector<Node*>& Nodes);
@@ -59,65 +72,60 @@ protected:
 	void 	setIdentificationColour();
 	void 	rotateReferenceElementByRotationMatrix(double* rotMat);
 	bool 	InvertMatrix(boost::numeric::ublas::matrix<double>& input, boost::numeric::ublas::matrix<double>& inverse);
-	int 	determinant_sign(boost::numeric::ublas::permutation_matrix<std::size_t>& pm);
+    bool 	InvertMatrix(gsl_matrix* input, gsl_matrix* inverse);
+
+    int 	determinant_sign(boost::numeric::ublas::permutation_matrix<std::size_t>& pm);
 
 	double  dotProduct3D(double* u, double* v);
 	void 	updateNodeIdsFromSave(ifstream& file);
 	void 	updateReferencePositionMatrixFromSave(ifstream& file);
 	virtual void calculateReferenceVolume(){ParentErrorMessage("calculateReferenceVolume");};
-	//bool	areSidesFacingSameDirection(double* RefSide, double* ShapeSide);
-	void 	updateTissueCoordStrain();
-	void 	updateTissueCoordPlasticStrain();
-	void 	updateTissueCoordinateSystem();
-	void 	updatePositionsAlignedToReferenceWithBuffers();
-	void 	calculateGrowthInLocalCoordinates(double* strainsToAdd);
-	void 	calculateReferenceCoordSysAlignedToTissue(double* RefCoords);
-	bool 	calculateWorldToTissueRotMat(double* v);
 	bool 	calculateGrowthStrainsRotMat(double* v);
-	void 	updateTissueCoordinateSystem(double* TissueCoords);
-	void	calculateForces2D(int RKId, double ***SystemForces, vector <Node*>& Nodes, ofstream& outputFile);
 	void	calculateForces3D(int RKId, double ***SystemForces, vector <Node*>& Nodes, ofstream& outputFile);
-	void 	calculatedudEdXde(double** RefNormalised, boost::numeric::ublas::vector<double>& dude, boost::numeric::ublas::vector<double>& dXde);
-	void 	dudEdXde3D(double** RefNormalised, boost::numeric::ublas::vector<double>& dude, boost::numeric::ublas::vector<double>& dXde);
-	void 	dudEdXde2D(double** RefNormalised, boost::numeric::ublas::vector<double>& dude, boost::numeric::ublas::vector<double>& dXde);
+    gsl_matrix* calculateEForNodalForces(gsl_matrix* F, gsl_matrix* Fe);
+    gsl_matrix* calculateSForNodalForces(gsl_matrix* E);
+    gsl_matrix* calculateCompactStressForNodalForces(gsl_matrix* Fe, gsl_matrix* S, gsl_matrix* FeT, gsl_matrix *Stress);
+    gsl_matrix* calculateInverseJacobianStackForNodalForces(gsl_matrix* Jacobian);
+    gsl_matrix* calculateBTforNodalForces(gsl_matrix* InvJacobianStack, gsl_matrix* ShapeFuncDerStack, gsl_matrix *B, gsl_matrix* invJShFuncDerS);
 
+    void	calculateCMatrix(int pointNo);
+    void    consturctBaTBb(gsl_matrix* B, gsl_matrix* BaT, gsl_matrix* Bb, int a, int b);
+    void    calculateElasticKIntegral1(gsl_matrix* currK,int pointNo);
+    void	calculateElasticKIntegral2(gsl_matrix* currK,int pointNo);
 
-	boost::numeric::ublas::matrix<double> xGrowthScaling;
-	boost::numeric::ublas::matrix<double> yGrowthScaling;
-	boost::numeric::ublas::matrix<double> zGrowthScaling;
-	boost::numeric::ublas::matrix<double> D;
-	boost::numeric::ublas::matrix<int> CoeffMat;
-	boost::numeric::ublas::matrix<double> k;
+    bool 	disassembleRotationMatrixForZ(gsl_matrix* rotMat);
+    bool 	calculate3DRotMatFromF(gsl_matrix* rotMat);
 
-	boost::numeric::ublas::matrix<double> Bo;
-	boost::numeric::ublas::vector<double> Forces;
+    gsl_matrix* D;
+    gsl_matrix* CoeffMat;
+    double D81[4][4][4][4];
+
+    //boost::numeric::ublas::vector<double> Forces;
 
 	double E, v;
-
-
-
+    double lambda, mu;
+    gsl_matrix* Fg;
+    gsl_matrix* InvFg;
+    gsl_matrix* TriPointF;
+    gsl_matrix* TriPointKe;
 
 public:
-	boost::numeric::ublas::matrix<double> B;
-	boost::numeric::ublas::matrix<double> BE;
-	int 	Id;
+    //boost::numeric::ublas::matrix<double> B;
+    //boost::numeric::ublas::matrix<double> BE;
+    int 	Id;
 	int		ShapeDim;
-	boost::numeric::ublas::matrix<double> LocalGrowthStrainsMat;
+    //boost::numeric::ublas::matrix<double> LocalGrowthStrainsMat;
 	int* 	NodeIds;
 	virtual ~ShapeBase(){
 			//while deleting a ShapeBase* that happens to point a child, this destructor will be called after the child destructor
 			};
 	double** Positions;
 	ReferenceShapeBase* ReferenceShape;
-	boost::numeric::ublas::vector<double> Strain;
-	boost::numeric::ublas::vector<double> RK1Strain;
-	boost::numeric::ublas::matrix<double> StrainTissueMat;
-	boost::numeric::ublas::vector<double> PlasticStrain;
-	boost::numeric::ublas::matrix<double> CurrPlasticStrainsInTissueCoordsMat;
-	bool 	IsGrowing;
+    gsl_matrix* Strain;
+    gsl_matrix* RK1Strain;
+
+    bool 	IsGrowing;
 	bool 	IsChangingShape;
-	bool 	WorldToTissueRotMatUpToDate;
-	bool 	GrowthStrainsRotMatUpToDate;
 	bool	ApicalNormalForPackingUpToDate;
 	bool	BasalNormalForPackingUpToDate;
 	int 	tissuePlacement; //1 -> apical, 0 -> basal, 2->middle, 3 -> lateral
@@ -125,20 +133,11 @@ public:
 	bool	IsAblated;
 	bool	IsClippedInDisplay;
 	double 	CurrShapeChangeToAdd[3];
-	//int alingmentTurn;
-	//double* CurrentNormal;
-	//bool updatedReference;
-	double* TissueCoordinateSystem;
 	double* ApicalNormalForPacking;
 	double* BasalNormalForPacking;
+    double GrownVolume;
 	double VolumePerNode;
 	bool capElement;
-	//Parameters for correction for tilted growth
-	bool tiltedElement;
-	int BaseElementId;						//The base shape ID that was used for creating the tilted shape
-	vector <GrowthFunctionBase*> PersonalisedGrowthFunctions;
-	double** barycentricCoords;
-	//End of parameters for correction for tilted growth
 
 	int 	getId();
 	string 	getName();
@@ -152,28 +151,32 @@ public:
 	void	displayRelativePosInBoundingBox();
 	void	getRelativePosInBoundingBox(double* relativePos);
 	void 	getStrain(int type, float &StrainMag);
-	void 	getPlasticStrain(int type, float &StrainMag);
-	void	getTissueCoordinaSystem(double* TissueCoords);
 	void 	getNodeBasedPysProp(int type, int NodeNo, vector<Node*>& Nodes, float& PysPropMag);
-	void 	getPysProp(int type, float &PysPropMag);
+    void 	getPysProp(int type, float &PysPropMag, double dt);
 	double 	getYoungModulus();
 	double 	getPoissonRatio();
 	double* getGrowthRate();
 	double* getShapeChangeRate();
 	double** getReferencePos();
-	double*	 getReferenceNormal();
+    void    getPos(gsl_matrix* Pos);
+    gsl_matrix* getFg();
 	void 	displayName();
 	void	displayNodeIds();
 	void 	displayPositions();
 	void 	displayReferencePositions();
 	void 	displayIdentifierColour();
-	virtual void setElasticProperties(double EApical,double EBasal, double EMid,double v){ParentErrorMessage("setElasticProperties");};
+    void    setFg(gsl_matrix* currFg);
+    virtual void setElasticProperties(double EApical,double EBasal, double EMid,double v){ParentErrorMessage("setElasticProperties");};
 	virtual void calculateBasalNormal(double * normal){ParentErrorMessage("calculateBasalNormal");};
 	virtual void AlignReferenceBaseNormalToZ(){ParentErrorMessage("AlignReferenceBaseNormalToZ");};
 	void 	updateGrowthRate(double scalex, double scaley, double scalez);
 	virtual void calculateReferenceStiffnessMatrix(){ParentErrorMessage("calculateReferenceStiffnessMatrix");};
-	void 	calculateForces(int RKId, double ***SystemForces, vector <Node*>& Nodes, ofstream& outputFile);
-	void 	updatePositions(int RKId, vector<Node*>& Nodes);
+    virtual void calculateElementShapeFunctionDerivatives(){ParentErrorMessage("calculateReferenceStiffnessMatrix");};
+    virtual void calculateCurrNodalForces(gsl_matrix *gslcurrg, gsl_matrix *gslcurrF, int pointNo){ParentErrorMessage("gslcalculateCurrNodalForces");};
+
+
+    void 	calculateForces(int RKId, double ***SystemForces, vector <Node*>& Nodes, ofstream& outputFile);
+    void 	updatePositions(int RKId, vector<Node*>& Nodes);
 	void 	setGrowthRate(double x, double y, double z);
 	void 	setShapeChangeRate(double x, double y, double z);
 	void 	updateGrowthToAdd(double* growthscale);
@@ -184,26 +187,34 @@ public:
 	virtual void  checkHealth(){ParentErrorMessage("checkHealth");};
 	void 	resetCurrStepGrowthData();
 	void 	resetCurrStepShapeChangeData();
+    void    writeKelasticToMainKatrix(gsl_matrix* Ke);
+    void    calculateImplicitKElastic();
+    void	calculateForceFromStress(int nodeId, gsl_matrix* Externalstress, gsl_matrix* ExternalNodalForces);
+
+
 	//void 	calculatePlasticStrain();
 	//void 	changeShape(double shapechangescale, int axis);
 	void 	updateShapeFromSave(ifstream& file);
 	void 	displayMatrix(boost::numeric::ublas::matrix<double>& mat, string matname);
 	void 	displayMatrix(boost::numeric::ublas::matrix<int>& mat, string matname);
 	void 	displayMatrix(boost::numeric::ublas::vector<double>& vec, string matname);
+    void 	displayMatrix(gsl_matrix* mat, string matname);
+    void 	displayMatrix(gsl_vector* mat, string matname);
+    void createMatrixCopy(gsl_matrix *dest, gsl_matrix* src);
 	double	calculateMagnitudeVector3D(double* v);
 	void	normaliseVector3D(double* v);
 	double 	determinant3by3Matrix(double* rotMat);
 	double 	determinant3by3Matrix(boost::numeric::ublas::matrix<double>& Mat);
+    double 	determinant3by3Matrix(gsl_matrix* Mat);
 	double 	determinant2by2Matrix(boost::numeric::ublas::matrix<double>& Mat);
 	void	calculateRotationAngleSinCos(double* u, double* v, double& c, double& s);
 	void	calculateRotationAxis(double* u, double* v,double* rotAx, double c);
 	void	constructRotationMatrix(double c, double s, double* rotAx, double* rotMat);
 	void	rotateVectorByRotationMatrix(double* u,double* rotMat);
 
+    void 	growShapeByFg(double dt);
+    void    CalculateGrowthRotationByF();
 
-	void alignElementOnReference();
-	void updatePositionALignedToReferenceForDrawing();
-	virtual void correctFor2DAlignment(){ParentErrorMessage("correctFor2DAlignment");};
 	virtual double getApicalSideLengthAverage(){return ParentErrorMessage("getApicalSideLengthAverage",0.0);};
 	virtual void getApicalTriangles(vector <int> &ApicalTriangles){ParentErrorMessage("getApicalTriangles");};
 	virtual int getCorrecpondingApical(int currNodeId){return ParentErrorMessage("getCorrecpondingApical", -100);};
@@ -217,49 +228,33 @@ public:
 	virtual bool IspointInsideTriangle(int tissueplacement, double x, double y,double z){return ParentErrorMessage("IspointInsideTriangle",false );};
 	bool checkPackingToThisNodeViaState(int ColumnarLayerDiscretisationLAyers, Node* NodePointer);
 	bool DoesPointBelogToMe(int IdNode);
-	void updatePositionsAlignedToReferenceForRK();
 	void growShape();
 	void assignVolumesToNodes(vector <Node*>& Nodes);
 	void assignSurfaceAreaToNodes(vector <Node*>& Nodes);
+    void calculateZProjectedAreas();
+    void assignZProjectedAreas(vector <Node*> Nodes);
 	void assignElementToConnectedNodes(vector <Node*>& Nodes);
 	void removeMassFromNodes(vector <Node*>& Nodes);
 
 
 	void 	convertLocalStrainToTissueStrain(double* strainsToAdd);
 
-	//double* calculateGrowthInCircumferencialAxes();
-	void 	calculateGrowthFromCircumferencialAxes(double* circumStrain);
-	void 	calculatGrowthScalingMatrices();
-	void 	calculateGrowthScalingMatricesIn2D(int dimension);
-	void 	calculateGrowthScalingMatricesIn3D(int dimension);
-	void 	calculateRotationAndGetTheScalingMatrix(boost::numeric::ublas::matrix<double>& mat);
-
 	bool RotatedElement;
-	boost::numeric::ublas::matrix<double> WorldToTissueRotMat;
-	double **PositionsInTissueCoord;
-	double **PositionsAlignedToReference;
-	boost::numeric::ublas::matrix<double> WorldToReferenceRotMat;
-	boost::numeric::ublas::matrix<double> GrowthStrainsRotMat;
+    gsl_matrix* GrowthStrainsRotMat;
+
 
 	//bool 	calculateAlignmentRotationMatrix(double** RefNormalised, double* rotMat);
 	bool 	calculateAlignmentScore(double** RefNormalised);
 	void 	bringShapePositionsToOrigin(double** RefNormalised, double* refCentre);
-	void 	bringPositionAlignedToReferenceToOrigin(double* refCentre);
-	bool	calculateDisplacementGradientRotationMatrix(double** RefNormalised, double* rotMat);
 	void 	updateElementsNodePositions(int RKId, double ***SystemForces, vector <Node*>& Nodes, double dt);
 	void 	updateReferencePositionMatrixFromMeshInput(ifstream& file);
 	void	fillNodeNeighbourhood(vector<Node*>& Nodes);
 	void 	checkDisplayClipping(double xClip, double yClip, double zClip);
 	void	crossProduct3D(double* u, double* v, double* cross);
 	void	alignGrowthCalculationOnReference();
-	void	initialisePersonalisedGrowthFunction(GrowthFunctionBase* currGF);
-	void	initialisePersonalisedUniformGrowth(GrowthFunctionBase* currGF);
-	void	initialisePersonalisedRingGrowth(GrowthFunctionBase* currGF);
-	void	initialisePersonalisedGridBasedGrowth(GrowthFunctionBase* currGF);
 	void	readNewGrowthRate(double* NewGrowth, double& ex, double&ey, double& ez, double& exy, double& exz, double& eyz);
 	void	updateUniformOrRingGrowthRate(double* NewGrowth, int GrowthId);
 	void	updateGridBasedGrowthRate(double* NewGrowth, int GrowthId, int i, int j);
-	void	readPersonalisedGrowthRate(int GrowthId, double* tiltCorrectedGrowth);
 };
 
 #endif

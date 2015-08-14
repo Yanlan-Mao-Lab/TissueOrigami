@@ -10,6 +10,10 @@
 #include "GLWidget.h"
 #include "../TissueFolding/SourceCode/ShapeBase.h"
 
+//needed for MacOS version:
+//#include <OpenGL/OpenGL.h>
+//#include <OpenGL/gl3.h>
+
 using namespace std;
 
  GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
@@ -17,7 +21,7 @@ using namespace std;
 	 //cout<<"initiating gl widget"<<endl;
 	 obj_pos[0] = -10.0f;
 	 obj_pos[1] =  4.0f;
-	 obj_pos[2] =  250.0f;
+     obj_pos[2] =  250.0f;//250.0f;
 	 MatRot[0]  = 1.0; MatRot[1]  = 0.0; MatRot[2]  = 0.0; MatRot[3]  = 0.0;
 	 MatRot[4]  = 0.0; MatRot[5]  = 1.0; MatRot[6]  = 0.0; MatRot[7]  = 0.0;
 	 MatRot[8]  = 0.0; MatRot[9]  = 0.0; MatRot[10] = 1.0; MatRot[11] = 0.0;
@@ -67,7 +71,6 @@ using namespace std;
 	 DisplayPysPropSteps[4] = 0.05;
 
   	 setSizePolicy(QSizePolicy ::Expanding , QSizePolicy ::Expanding );
-  	 drawTissueCoordinates = false;
   	 drawNetForces = false;
   	 drawPackingForces = false;
      drawVelocities = false;
@@ -82,7 +85,7 @@ using namespace std;
      orthoViewLimits[3] =  250;
      orthoViewLimits[4] = -1000;
      orthoViewLimits[5] =  1000;
-     displayBoundingBox = true;
+     displayBoundingBox = false;
      xClip = 1000.0;
      yClip = 1000.0;
      zClip = 1000.0;
@@ -105,7 +108,7 @@ using namespace std;
 
  void GLWidget::initializeGL()
  {
-	 qglClearColor(QColor::fromRgbF(1, 1, 1, 1));
+     qglClearColor(QColor::fromRgbF(1, 1, 1, 1));
      glEnable(GL_DEPTH_TEST);
      setAutoBufferSwap(true);
      GLfloat LineRange[2];
@@ -117,6 +120,11 @@ using namespace std;
      glTranslatef( obj_pos[0], obj_pos[1], -obj_pos[2] );
      glMultMatrixf(MatRot);
 
+    //On MacOS version:
+	//int a = 1;
+    //    int *swap_interval = &a;
+    //    CGLContextObj cgl_context = CGLGetCurrentContext();
+    //    CGLSetParameter(cgl_context, kCGLCPSwapInterval, swap_interval);
  }
 
  void GLWidget::initialiseNodeColourList(){
@@ -132,22 +140,22 @@ using namespace std;
 
  void GLWidget::paintGL()
  {
-	 QSize viewport_size = size();
-	 glViewport(0, 0, viewport_size.width(), viewport_size.height());
+     //glScalef(this->devicePixelRatio(),this->devicePixelRatio(),this->devicePixelRatio());
+     QSize viewport_size = size();
+     glViewport(0, 0, viewport_size.width()*this->devicePixelRatio(), viewport_size.height()*this->devicePixelRatio());
 
 	 glMatrixMode(GL_PROJECTION);
 	 glLoadIdentity();
 
 	 if (PerspectiveView) {
-		 glFrustum(-1*aspectratio, 1*aspectratio, -1, 1, 1, 1000); // near and far match your triangle Z distance
+         glFrustum(-1*aspectratio, 1*aspectratio, -1, 1, 1, 10000); // near and far match your triangle Z distance
 	 }
 	 else{
 		 glOrtho(orthoViewLimits[2]*aspectratio, orthoViewLimits[3]*aspectratio, orthoViewLimits[2], orthoViewLimits[3], orthoViewLimits[4],orthoViewLimits[5]);
 	 }
 
 	 glMatrixMode(GL_MODELVIEW);
-
-	 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	 glLoadIdentity();
 	 constructNodeColourList();
 	 drawColourbar();
@@ -176,6 +184,7 @@ using namespace std;
 	 drawPackForces();
 	 drawNodeVelocities();
 	 drawBoundingBox();
+     drawPipette();
 
 /*
 	glColor3f(0.8,0,0);
@@ -202,7 +211,8 @@ using namespace std;
 	 if (DisplayFixedNodes){
 		 drawFixedNodes();
 	 }
-	 swapBuffers();
+
+     //swapBuffers();
  }
 
 
@@ -341,8 +351,7 @@ void GLWidget::highlightNode(int i){
 				for (int i=0;i<nConnectedElements; ++i){
 					float TmpStrainMag =0.0, PlasticStrainMag=0;
 					Sim01->Elements[(*itNode)->connectedElementIds[i]]->getStrain(StrainToDisplay, TmpStrainMag);
-					Sim01->Elements[(*itNode)->connectedElementIds[i]]->getPlasticStrain(StrainToDisplay, PlasticStrainMag);
-					StrainMag += (TmpStrainMag - PlasticStrainMag)*(*itNode)->connectedElementWeights[i];
+                    StrainMag += (TmpStrainMag)*(*itNode)->connectedElementWeights[i];
 				}
 				getDisplayColour(currColour, StrainMag);
 			}
@@ -358,7 +367,7 @@ void GLWidget::highlightNode(int i){
 					int nConnectedElements = (*itNode)->connectedElementIds.size();
 					for (int i=0;i<nConnectedElements; ++i){
 						float TmpPysPropMag =0.0;
-						Sim01->Elements[(*itNode)->connectedElementIds[i]]->getPysProp(PysPropToDisplay, TmpPysPropMag);
+                        Sim01->Elements[(*itNode)->connectedElementIds[i]]->getPysProp(PysPropToDisplay, TmpPysPropMag, Sim01->dt);
 						PysPropMag += TmpPysPropMag*(*itNode)->connectedElementWeights[i];
 					}
 				}
@@ -382,6 +391,7 @@ void GLWidget::highlightNode(int i){
 				}
 			}
 			else if(drawPackingForces){
+                //cout<<"Drawing Packing Forces"<<endl;
 				float ForceMag = 0.0;
 				double F[3];
 				F[0] = Sim01->PackingForces[0][(*itNode)->Id][0];
@@ -389,7 +399,8 @@ void GLWidget::highlightNode(int i){
 				F[2] = Sim01->PackingForces[0][(*itNode)->Id][2];
 				ForceMag = F[0]* F[0] + F[1]*F[1] + F[2]* F[2];
 				ForceMag = pow(ForceMag,(float)0.5);
-				if (ForceMag>threshold){
+                //cout<<"PAcking Force: "<<F[0]<<" "<<F[1]<<" "<<F[2]<<endl;
+                if (ForceMag>threshold){
 					getForceColour(currColour,ForceMag);
 				}
 				else{
@@ -460,9 +471,6 @@ void GLWidget::highlightNode(int i){
 	glEnd();
 
 	glDisable(GL_POLYGON_OFFSET_FILL);
-	if (drawTissueCoordinates){
-		drawTissueCoordSystemPrism(i);
-	}
 
 	glLineWidth(MainShapeLineThickness);
 	//Drawing the borders
@@ -505,10 +513,6 @@ void GLWidget::highlightNode(int i){
  		}
  	glEnd();
  	glDisable(GL_POLYGON_OFFSET_FILL);
- 	if (drawTissueCoordinates){
- 		drawTissueCoordSystemTriangle(i);
- 	}
-
  	glLineWidth(MainShapeLineThickness);
  	//Drawing the borders
  	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -524,126 +528,6 @@ void GLWidget::highlightNode(int i){
  	glEnd();
  	delete[] NodeColours;
   }
-
- void GLWidget::drawTissueCoordSystemPrism(int i){
-	glLineWidth(ReferenceLineThickness);
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	float centre[3] = {0.0,0.0,0.0};
-	for (int j=0; j<3; ++j){
-		for (int k=0; k<6; ++k){
-			centre[j] += Sim01->Elements[i]->Positions[k][j];
-		}
-		centre[j] /= 6.0;
-	}
-	double tip[3];
-	double scale = 4.5;
-	double* TissueCoords;
-	TissueCoords = new double[9];
-	Sim01->Elements[i]->getTissueCoordinaSystem(TissueCoords);
-	glBegin(GL_LINES);
-		glColor3f(1,0,0);
-		tip[0] = centre[0] + scale*TissueCoords[0];
-		tip[1] = centre[1] + scale*TissueCoords[1];
-		tip[2] = centre[2] + scale*TissueCoords[2];
-
-		glVertex3f( centre[0], centre[1], centre[2]);
-		glVertex3f( tip[0] , tip[1], tip[2]);
-		glColor3f(0,1,0);
-		tip[0] = centre[0] + scale*TissueCoords[3];
-		tip[1] = centre[1] + scale*TissueCoords[4];
-		tip[2] = centre[2] + scale*TissueCoords[5];
-
-		glVertex3f( centre[0], centre[1], centre[2]);
-		glVertex3f( tip[0] , tip[1], tip[2]);
-		glColor3f(0,0,1);
-		tip[0] = centre[0] + scale*TissueCoords[6];
-		tip[1] = centre[1] + scale*TissueCoords[7];
-		tip[2] = centre[2] + scale*TissueCoords[8];
-		glVertex3f( centre[0], centre[1], centre[2]);
-		glVertex3f( tip[0] , tip[1], tip[2]);
-	glEnd();
-	delete[] TissueCoords;
- }
-
- void GLWidget::drawTissueCoordSystemTetrahedron(int i){
-	glLineWidth(ReferenceLineThickness);
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	float centre[3] = {0.0,0.0,0.0};
-	for (int j=0; j<3; ++j){
-		for (int k=0; k<4; ++k){
-			centre[j] += Sim01->Elements[i]->Positions[k][j];
-		}
-		centre[j] /= 4.0;
-	}
-	double tip[3];
-	double scale = 4.5;
-	double* TissueCoords;
-	TissueCoords = new double[9];
-	Sim01->Elements[i]->getTissueCoordinaSystem(TissueCoords);
-	glBegin(GL_LINES);
-		glColor3f(1,0,0);
-		tip[0] = centre[0] + scale*TissueCoords[0];
-		tip[1] = centre[1] + scale*TissueCoords[1];
-		tip[2] = centre[2] + scale*TissueCoords[2];
-
-		glVertex3f( centre[0], centre[1], centre[2]);
-		glVertex3f( tip[0] , tip[1], tip[2]);
-		glColor3f(0,1,0);
-		tip[0] = centre[0] + scale*TissueCoords[3];
-		tip[1] = centre[1] + scale*TissueCoords[4];
-		tip[2] = centre[2] + scale*TissueCoords[5];
-
-		glVertex3f( centre[0], centre[1], centre[2]);
-		glVertex3f( tip[0] , tip[1], tip[2]);
-		glColor3f(0,0,1);
-		tip[0] = centre[0] + scale*TissueCoords[6];
-		tip[1] = centre[1] + scale*TissueCoords[7];
-		tip[2] = centre[2] + scale*TissueCoords[8];
-		glVertex3f( centre[0], centre[1], centre[2]);
-		glVertex3f( tip[0] , tip[1], tip[2]);
-	glEnd();
-	delete[] TissueCoords;
- }
-
- void GLWidget::drawTissueCoordSystemTriangle(int i){
-	glLineWidth(ReferenceLineThickness);
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	float centre[3] = {0.0,0.0,0.0};
-	for (int j=0; j<3; ++j){
-		for (int k=0; k<3; ++k){
-			centre[j] += Sim01->Elements[i]->Positions[k][j];
-		}
-		centre[j] /= 3.0;
-	}
-	double tip[3];
-	double scale = 4.5;
-	double* TissueCoords;
-	TissueCoords = new double[9];
-	Sim01->Elements[i]->getTissueCoordinaSystem(TissueCoords);
-	glBegin(GL_LINES);
-		glColor3f(1,0,0);
-		tip[0] = centre[0] + scale*TissueCoords[0];
-		tip[1] = centre[1] + scale*TissueCoords[1];
-		tip[2] = centre[2] + scale*TissueCoords[2];
-
-		glVertex3f( centre[0], centre[1], centre[2]);
-		glVertex3f( tip[0] , tip[1], tip[2]);
-		glColor3f(0,1,0);
-		tip[0] = centre[0] + scale*TissueCoords[3];
-		tip[1] = centre[1] + scale*TissueCoords[4];
-		tip[2] = centre[2] + scale*TissueCoords[5];
-
-		glVertex3f( centre[0], centre[1], centre[2]);
-		glVertex3f( tip[0] , tip[1], tip[2]);
-		glColor3f(0,0,1);
-		tip[0] = centre[0] + scale*TissueCoords[6];
-		tip[1] = centre[1] + scale*TissueCoords[7];
-		tip[2] = centre[2] + scale*TissueCoords[8];
-		glVertex3f( centre[0], centre[1], centre[2]);
-		glVertex3f( tip[0] , tip[1], tip[2]);
-	glEnd();
-	delete[] TissueCoords;
- }
 
  void GLWidget::getForceColour(float* OutputColour, float Data){
 	 double scale2[2] = {0,1000.0};
@@ -830,49 +714,6 @@ void GLWidget::highlightNode(int i){
  			glVertex3f( x, y, z);
  		}
  	glEnd();
-	//drawing them again in blue, at z+10 for easy visualisation
- 	glColor3f(0,0,1);
- 	glBegin(GL_LINE_STRIP);
- 		for (int j =0; j<nLineStrip;++j){
- 			int pointId = BorderConnectivity[j];
- 			//cout<<j<<" point id: "<<pointId<<endl;
- 			if(j==0){glColor3f(1,0,0);}else{glColor3f(0,0,1);}
- 			float x = pos[pointId][0];
- 			float y = pos[pointId][1];
- 			float z = pos[pointId][2] + 50.0;
- 			//cout<<"x,y,z: "<<x<<" "<<y<<" "<<z<<endl;
- 			glVertex3f( x, y, z);
- 		}
- 	glEnd();
-
- 	Sim01->Elements[i]->updatePositionALignedToReferenceForDrawing();
- 	//drawing the positions of element aligned to reference in green
- 	glColor3f(0,1,0);
- 	glBegin(GL_LINE_STRIP);
- 		for (int j =0; j<nLineStrip;++j){
- 			int pointId = BorderConnectivity[j];
- 			//cout<<j<<" point id: "<<pointId<<endl;
- 			if(j==0){glColor3f(1,0,0);}else{glColor3f(0,1,0);}
- 			float x = Sim01->Elements[i]->PositionsAlignedToReference[pointId][0];
- 			float y = Sim01->Elements[i]->PositionsAlignedToReference[pointId][1];
- 			float z = Sim01->Elements[i]->PositionsAlignedToReference[pointId][2];
- 			//cout<<"x,y,z: "<<x<<" "<<y<<" "<<z<<endl;
- 			glVertex3f( x, y, z);
- 		}
- 	glEnd();
- 	//drawing them again at z+50 position for easy visualisation (green)
- 	glBegin(GL_LINE_STRIP);
-		for (int j =0; j<nLineStrip;++j){
-			int pointId = BorderConnectivity[j];
-			//cout<<j<<" point id: "<<pointId<<endl;
-			if(j==0){glColor3f(1,0,0);}else{glColor3f(0,1,0);}
-			float x = Sim01->Elements[i]->PositionsAlignedToReference[pointId][0];
-			float y = Sim01->Elements[i]->PositionsAlignedToReference[pointId][1];
-			float z = Sim01->Elements[i]->PositionsAlignedToReference[pointId][2]+50;
-			//cout<<"x,y,z: "<<x<<" "<<y<<" "<<z<<endl;
-			glVertex3f( x, y, z);
-		}
-	glEnd();
 }
 
  void GLWidget::drawReferenceTriangle(int i){
@@ -897,63 +738,20 @@ void GLWidget::highlightNode(int i){
  			glVertex3f( x, y, z);
  		}
  	glEnd();
-	//drawing them again in blue, at z+10 for easy visualisation
- 	glColor3f(0,0,1);
- 	glBegin(GL_LINE_STRIP);
- 		for (int j =0; j<nLineStrip;++j){
- 			int pointId = BorderConnectivity[j];
- 			//cout<<j<<" point id: "<<pointId<<endl;
- 			if(j==0){glColor3f(1,0,0);}else{glColor3f(0,0,1);}
- 			float x = pos[pointId][0];
- 			float y = pos[pointId][1];
- 			float z = pos[pointId][2] + 10.0;
- 			//cout<<"x,y,z: "<<x<<" "<<y<<" "<<z<<endl;
- 			glVertex3f( x, y, z);
- 		}
- 	glEnd();
-
-
- 	//drawing the positions of element aligned to reference in green
- 	Sim01->Elements[i]->updatePositionALignedToReferenceForDrawing();
- 	glColor3f(0,1,0);
- 	glBegin(GL_LINE_STRIP);
- 		for (int j =0; j<nLineStrip;++j){
- 			int pointId = BorderConnectivity[j];
- 			//cout<<j<<" point id: "<<pointId<<endl;
- 			if(j==0){glColor3f(1,0,0);}else{glColor3f(0,1,0);}
- 			float x = Sim01->Elements[i]->PositionsAlignedToReference[pointId][0];
- 			float y = Sim01->Elements[i]->PositionsAlignedToReference[pointId][1];
- 			float z = Sim01->Elements[i]->PositionsAlignedToReference[pointId][2];
- 			//cout<<"x,y,z: "<<x<<" "<<y<<" "<<z<<endl;
- 			glVertex3f( x, y, z);
- 		}
- 	glEnd();
-	//drawing them again at z+10 position for easy visualisation (green)
- 	glBegin(GL_LINE_STRIP);
- 		for (int j =0; j<nLineStrip;++j){
- 			int pointId = BorderConnectivity[j];
- 			//cout<<j<<" point id: "<<pointId<<endl;
- 			if(j==0){glColor3f(1,0,0);}else{glColor3f(0,1,0);}
- 			float x = Sim01->Elements[i]->PositionsAlignedToReference[pointId][0];
- 			float y = Sim01->Elements[i]->PositionsAlignedToReference[pointId][1];
- 			float z = Sim01->Elements[i]->PositionsAlignedToReference[pointId][2]+10;
- 			//cout<<"x,y,z: "<<x<<" "<<y<<" "<<z<<endl;
- 			glVertex3f( x, y, z);
- 		}
- 	glEnd();
   }
-
-
-
 
  void GLWidget::resizeGL(int width, int height)
  {
+     width *= this->devicePixelRatio();
+     height *= this->devicePixelRatio();
      int  side = qMin(width, height);
      glViewport((width - side) / 2, (height - side) / 2, width, height);
      aspectratio = float(width) /float (height);
      glMatrixMode(GL_PROJECTION);
      glLoadIdentity();
      glMatrixMode(GL_MODELVIEW);
+     glLoadIdentity();
+     //cout<<(width - side) / 2<<"  "<<(height - side) / 2<<"  "<<width<<"  "<<height<<"  "<<side<<endl;
  }
 
  void GLWidget::mousePressEvent(QMouseEvent *event)
@@ -962,6 +760,7 @@ void GLWidget::highlightNode(int i){
      if(event->button()==Qt::LeftButton){
          MouseButton = 0;
          InitialClickPos = event->pos();
+         //cout<<"Read an initial click at: "<<InitialClickPos.x()<<" "<<InitialClickPos.y()<<endl;
      }
      else if(event->button()==Qt::MidButton){
     	 MouseButton = 1;
@@ -976,12 +775,34 @@ void GLWidget::highlightNode(int i){
       lastPos = event->pos();
       if(event->button()==Qt::LeftButton){
           MouseButton = 0;
+          //cout<<"read a mouse relaese event at: "<<lastPos.x()<<" "<<lastPos.y()<<endl;
           int dx = InitialClickPos.x() - lastPos.x();
+          int dy = InitialClickPos.x() - lastPos.x();
+          dx *=this->devicePixelRatio();
+          dy *=this->devicePixelRatio();
           if (dx<0) {
-        	  dx = dx*(-1);
+              dx *= -1;
           }
-          if (dx<5){
+          if (dy<0) {
+              dy *= -1;
+          }
+          if (dx<5 && dy<5){
         	  ObjectSelection(lastPos);
+          }
+          else{
+              //cout<<"dx is above 5, the mouse has been moved I will move the scene"<<endl;
+              //this is an alternative view movement option added as mac OS X does not have a default middle button click,
+              //replica of MouseButton == 1 event:
+              int dx = lastPos.x() - InitialClickPos.x();
+              int dy = lastPos.y() - InitialClickPos.y();
+              dx *=this->devicePixelRatio();
+              dy *=this->devicePixelRatio();
+              cout<<"dx: "<<dx<<" dy: "<<dy<<endl;
+              float speed = 0.01;
+              obj_pos[0] +=  dx*speed;
+              obj_pos[1] += -dy*speed;
+              lastPos = event->pos();
+              updateGL();
           }
       }
   }
@@ -992,27 +813,29 @@ void GLWidget::highlightNode(int i){
 		 lastPos = event->pos();
 	 }
 	 else if(MouseButton==1){
-    	 int dx = event->x() - lastPos.x();
+         //eliminating this for mac:
+         int dx = event->x() - lastPos.x();
     	 int dy = event->y() - lastPos.y();
+         dx *=this->devicePixelRatio();
+         dy *=this->devicePixelRatio();
     	 float speed = 0.01;
     	 obj_pos[0] +=  dx*speed;
     	 obj_pos[1] += -dy*speed;
-    	 //cerr<<"right button "<<dx<<" "<<dy<<" "<<obj_pos[0]<<" "<<obj_pos[1]<<endl;
+         //cerr<<"right button "<<dx<<" "<<dy<<" "<<obj_pos[0]<<" "<<obj_pos[1]<<endl;
     	 lastPos = event->pos();
-    	 updateGL();
+         updateGL();
      }
 	 else if(MouseButton==2){
 
 		 float speed = 50;
 		 QSize viewport_size = size();
-		 float width = viewport_size.width();
-		 float height =viewport_size.height();
+         float width  = viewport_size.width()/this->devicePixelRatio();
+         float height = viewport_size.height()/this->devicePixelRatio();
 		 double initialPos[3] = {lastPos.x()/(width*2.0) - 1.0, lastPos.y()/(height*2.0) - 1.0,  0.0};
 		 double finalPos[3]   = {event->x()/(width*2.0) - 1.0, event->y()/(height*2.0)  - 1.0,  0.0};
-		 initialPos[1] = (-1.0)* initialPos[1];
-		 finalPos[1]   = (-1.0)* finalPos[1];
-
-		 float r = 20;
+         initialPos[1] = (-1.0) * initialPos[1];
+         finalPos[1]   = (-1.0) * finalPos[1];
+         float r = 20;
 		 float r2 = r*r;
 		 //Projecting event location:
 		 double lengthSq = finalPos[0]*finalPos[0]+finalPos[1]*finalPos[1];
@@ -1063,14 +886,17 @@ void GLWidget::highlightNode(int i){
 		 dot = initialPos[0]*finalPos[0] + initialPos[1]*finalPos[1] + initialPos[2]*finalPos[2];
 		 double angle = acosf(min(1.0,dot));
 		 angle *= speed;
-		 double* Qrot;
-		 Qrot = new double[4];
-		 Qrot[0]= cosf(angle); Qrot[1] = sinf(angle)* cross[0]; Qrot[2] = sinf(angle)*cross[1]; Qrot[3] = sinf(angle)*cross[2];
-		 rotateByQuaternians(Qrot);
-		 //cout<<"initialpos: "<<initialPos[0]<<" "<<initialPos[1]<<" "<<initialPos[2]<<endl;
-		 //cout<<"fianlpos:   "<<finalPos[0]<<" "<<finalPos[1]<<" "<<finalPos[2]<<endl;
-		 //cout<<"angle:      "<<angle<<endl;
-		 //cout<<"QRot:		"<<Qrot[0]<<" "<<Qrot[1]<<" "<<Qrot[2]<<" "<<Qrot[3]<<endl;
+
+         if (angle>1E-4 || angle < -1E-4){
+             double* Qrot;
+             Qrot = new double[4];
+             Qrot[0]= cosf(angle); Qrot[1] = sinf(angle)* cross[0]; Qrot[2] = sinf(angle)*cross[1]; Qrot[3] = sinf(angle)*cross[2];
+             //cout<<"QRot:		"<<Qrot[0]<<" "<<Qrot[1]<<" "<<Qrot[2]<<" "<<Qrot[3]<<endl;
+             rotateByQuaternians(Qrot);
+         }
+         //cout<<"initialpos: "<<initialPos[0]<<" "<<initialPos[1]<<" "<<initialPos[2]<<endl;
+         //cout<<"fianlpos:   "<<finalPos[0]<<" "<<finalPos[1]<<" "<<finalPos[2]<<endl;
+         //cout<<"angle:      "<<angle<<endl;
 
 		 lastPos = event->pos();
 		 updateGL();
@@ -1207,7 +1033,7 @@ void GLWidget::highlightNode(int i){
  void GLWidget::getColourOfPoint(QPoint LastPos){
 	 QSize viewport_size = size();
 	 unsigned char pixels[4];
-	 glReadPixels(LastPos.x(), viewport_size.height() - LastPos.y(), 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixels);
+     glReadPixels(LastPos.x()*this->devicePixelRatio(), viewport_size.height()*this->devicePixelRatio() - LastPos.y()*this->devicePixelRatio(), 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixels);
 	 //cerr << "pos: "<<LastPos.x()<<" "<<LastPos.x()<<" rgba: " << (int)pixels[0] <<" "<< (int)pixels[1] <<" "<< (int)pixels[2] << " " << (int)pixels[3] << endl;
 	 PickedColour[0] = (int)pixels[0];
 	 PickedColour[1] = (int)pixels[1];
@@ -1475,8 +1301,8 @@ bool GLWidget::findNode(int i){
 	 for (int i =0; i<Sim01->Elements.size();i++){
 		drawElement(i,true);
 	 }
-	  //To debug, you can actually draw the colour buffer to the screen, and see the change in behaviour
-	 //swapBuffers();
+      //To debug, you can actually draw the colour buffer to the screen, and see the change in behaviour
+     //swapBuffers();
 	 glEnable(GL_DITHER);
  }
 
@@ -1597,7 +1423,7 @@ bool GLWidget::findNode(int i){
 				 F[0] = Sim01->PackingForces[0][i][0];
 				 F[1] = Sim01->PackingForces[0][i][1];
 				 F[2] = Sim01->PackingForces[0][i][2];
-				 //cout<<"Force: "<<F[0]<<" "<<F[1]<<" "<<F[2]<<endl;
+                 //cout<<"Force: "<<F[0]<<" "<<F[1]<<" "<<F[2]<<endl;
 				 //check if the force is large enough to display:
 				 double mag2 = F[0]* F[0] + F[1]*F[1] + F[2]* F[2];
 				 if (mag2 > threshold2){
@@ -1660,6 +1486,37 @@ bool GLWidget::findNode(int i){
 			 }
 		 }
 	 }
+ }
+
+ void GLWidget::drawPipette(){
+     if (Sim01->PipetteSuction && displayPipette){
+         for (int i=0; i<2; i++){
+             //drawing inner and outer borders:
+             double distance  = Sim01->pipetteRadius;
+             glColor3f(0.5,0.5,0.6);
+             if (i == 1){
+                 distance  += Sim01->pipetteThickness;
+                 glColor3f(0.6,0.6,0.7);
+             }
+             float DEG2RAD = 3.14159/180;
+             glLineWidth(ReferenceLineThickness);
+             //glLineStipple(1, 0x3F07);
+             //glEnable(GL_LINE_STIPPLE);
+             glBegin(GL_LINE_LOOP);
+                for (int i=0; i < 180; i++){
+                   float degInRad = i*DEG2RAD;
+                   float x = cos(degInRad)*distance + Sim01->pipetteCentre[0];
+                   float y = sin(degInRad)*distance + Sim01->pipetteCentre[1];
+                   float z = Sim01->pipetteCentre[2];
+                   glVertex3f(x,y,z);
+                   glBegin(GL_LINES);
+                          glVertex3f(x,y,z);
+                          glVertex3f(x,y,z+100);
+                   glEnd();
+                }
+             glEnd();
+         }
+     }
  }
 
  void GLWidget::drawBoundingBox(){

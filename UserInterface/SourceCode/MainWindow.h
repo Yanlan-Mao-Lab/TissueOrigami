@@ -15,9 +15,15 @@
 #include <QLineEdit>
 #include <QTimer>
 #include <QSlider>
+//Ubuntu version:
+//#include <time.h>
+#include <ctime>
 class GLWidget;
 
 #include "../TissueFolding/SourceCode/Simulation.h"
+
+
+using namespace std;
 
 class MainWindow : public QMainWindow
  {
@@ -45,7 +51,7 @@ public slots:
     void 	updatePysProp(int s);
     void 	updatePysCheckBox(int);
     void 	updatePysPropSpinBoxes(double d);
-    void 	updateTissueCoordCheckBox(int);
+    void    updateDisplayPipette(int);
     void 	updateNetForceCheckBox(int);
     void 	updatePackingForceCheckBox(int);
     void 	updateVelocityCheckBox(int);
@@ -97,6 +103,11 @@ public slots:
     QLabel			*SimTime;
     QPushButton		*PerspectiveButton;
     QSlider			*ClippingSliders[3];
+    //MacOS version:
+    std::clock_t    simulationStartClock;
+    //for UBUNTU:
+    //clock			simulationStartClock;
+    bool            displayedSimulationLength;
  };
 
 

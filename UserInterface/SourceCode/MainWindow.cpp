@@ -23,7 +23,7 @@ class MainWindow;
 MainWindow::MainWindow(Simulation* Sim01)
  {
 	MainScene = new QGraphicsScene;
-	MainScene->setSceneRect(0, 0, 800, 480);
+    MainScene->setSceneRect(0, 0, 1000, 480);
     MainGrid = new QGridLayout;
     CentralWidget = new QWidget;
     this->Sim01 = Sim01;
@@ -38,6 +38,8 @@ MainWindow::MainWindow(Simulation* Sim01)
 
     //QLabel *SimTime = new QLabel("SimTime");
     //SimTime->setText( "aaa" );
+    simulationStartClock = std::clock();
+    displayedSimulationLength = false;
 
     MainScene->update();
 
@@ -345,10 +347,10 @@ void MainWindow::setCoordBoxes(QFont font, QFont boldFont, QGridLayout *Selectio
 }
 
 void MainWindow::setDisplayPreferences(QGridLayout *ProjectDisplayOptionsGrid){
-	//draw tissue coordinate system CheckBox
-	DisplayPreferencesCheckBoxes[0] = new QCheckBox("Tissue Coordinates");
+    //draw pipette aspiration CheckBox
+    DisplayPreferencesCheckBoxes[0] = new QCheckBox("Display Pipette");
 	DisplayPreferencesCheckBoxes[0]->setChecked(false);
-	connect(DisplayPreferencesCheckBoxes[0] , SIGNAL(stateChanged(int)),this,SLOT(updateTissueCoordCheckBox(int)));
+    connect(DisplayPreferencesCheckBoxes[0] , SIGNAL(stateChanged(int)),this,SLOT(updateDisplayPipette(int)));
 	//draw net forces checkbox
 	DisplayPreferencesCheckBoxes[1] = new QCheckBox("Net Forces");
 	DisplayPreferencesCheckBoxes[1]->setChecked(false);
@@ -369,11 +371,12 @@ void MainWindow::setDisplayPreferences(QGridLayout *ProjectDisplayOptionsGrid){
 	//draw packing forces checkbox
 	DisplayPreferencesCheckBoxes[6] = new QCheckBox("Packing Forces");
 	DisplayPreferencesCheckBoxes[6]->setChecked(false);
+    connect(DisplayPreferencesCheckBoxes[6] , SIGNAL(stateChanged(int)),this,SLOT(updatePackingForceCheckBox(int)));
 	//draw Bounding Box checkbox
 	DisplayPreferencesCheckBoxes[7] = new QCheckBox("Bounding Box");
-	DisplayPreferencesCheckBoxes[7]->setChecked(true);
+    DisplayPreferencesCheckBoxes[7]->setChecked(false);
 	connect(DisplayPreferencesCheckBoxes[7] , SIGNAL(stateChanged(int)),this,SLOT(updateBoundingBoxCheckBox(int)));
-	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[0],3,0,1,2,Qt::AlignLeft);  // Tissue Coordinates
+    ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[0],3,0,1,2,Qt::AlignLeft);  // display pipette
 	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[7],3,2,1,2,Qt::AlignLeft);  // display bounding box
 	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[1],4,0,1,2,Qt::AlignLeft);  // Net Forces
 	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[6],4,2,1,2,Qt::AlignLeft);  // Packing Forces
@@ -414,18 +417,18 @@ void  MainWindow::updateOrthagonalPerspectiveViewToggle(){
 	}
 }
 
-void  MainWindow::updateTissueCoordCheckBox(int s){
-	if ( s == 2 )
-		MainGLWidget->drawTissueCoordinates = true;
-	else
-		MainGLWidget->drawTissueCoordinates = false;
-}
-
 void  MainWindow::updateNetForceCheckBox(int s){
 	if ( s == 2 )
 		MainGLWidget->drawNetForces = true;
 	else
 		MainGLWidget->drawNetForces = false;
+}
+
+void  MainWindow::updateDisplayPipette(int s){
+    if ( s == 2 )
+        MainGLWidget->displayPipette = true;
+    else
+        MainGLWidget->displayPipette = false;
 }
 
 void  MainWindow::updatePackingForceCheckBox(int s){
@@ -620,14 +623,17 @@ void MainWindow::ManualNodeSelectionReset(){
 }
 
 void MainWindow::timerSimulationStep(){
-	//cout<<"Called the function via timer"<<endl;
+    //cout<<"Called the function via timer"<<endl;
+    //for (int j=0; j<3; ++j){
+    //    cout<<"Node 2025 at circmference: "<<Sim01->Nodes[2025]->atCircumference<<" fixed pos "<<j<<" "<<Sim01->Nodes[2025]->FixedPos[j]<<endl;
+    //}
 	if (Sim01->DisplaySave){
 		if(!Sim01->reachedEndOfSaveFile){
 			Sim01->updateOneStepFromSave();
-			QTime dieTime= QTime::currentTime().addSecs(1);
-			while( QTime::currentTime() < dieTime ){
+            QTime dieTime= QTime::currentTime().addSecs(1);
+            while( QTime::currentTime() < dieTime ){
 			    QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
-			}
+            }
 			if (Sim01->saveImages){
 				takeScreenshot();
 			}
@@ -638,7 +644,7 @@ void MainWindow::timerSimulationStep(){
 	}
 	else{
 		if (Sim01->timestep < Sim01->SimLength){
-			//cout<<"calling runonestep"<<endl;
+			cout<<"calling runonestep"<<endl;
 			//cout<<"dataSaveInterval before calling a step: " <<Sim01->dataSaveInterval<<endl;
 			Sim01->runOneStep();
 			bool slowsteps = false;
@@ -652,8 +658,14 @@ void MainWindow::timerSimulationStep(){
 				takeScreenshot();
 			}
 		}
-	}
-	MainGLWidget->update();
+        else if(!displayedSimulationLength){
+            displayedSimulationLength = true;
+            double duration = ( std::clock() - simulationStartClock ) / (double) CLOCKS_PER_SEC;
+            cout<<"Simulation length in seconds: "<< duration <<endl;
+            //close();
+        }
+    }
+    MainGLWidget->update();
 
 }
 

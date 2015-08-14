@@ -1,6 +1,8 @@
 #include "Prism.h"
 #include "ReferenceShapeBase.h"
-
+#include <stdio.h>
+#include <gsl/gsl_blas.h>
+#include <gsl/gsl_linalg.h>
 
 using namespace std;
 
@@ -14,20 +16,16 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
 	IdentifierColour = new int[3];
 	E = 10.0;
 	v = 0.3;
+    lambda = E*v /(1+v)/(1-2.0*v);
+    mu = E/2.0/(1+v);
+
+    D = gsl_matrix_calloc(6,6);
 	GrowthRate = new double[3];
 	ShapeChangeRate  = new double[3];
 	CurrGrowthStrainAddition = new double[6];
 	ApicalNormalForPacking =  new double[3];
 	BasalNormalForPacking =  new double[3];
 	RelativePosInBoundingBox = new double[3];
-	barycentricCoords  = new double*[nNodes];
-	for (int j=0; j<nNodes ; ++j){
-		barycentricCoords[j] = new double[4];
-		barycentricCoords[j][0] = 0.0;
-		barycentricCoords[j][1] = 0.0;
-		barycentricCoords[j][2] = 0.0;
-		barycentricCoords[j][3] = 0.0;
-	}
 	for (int i=0; i<3; ++i){
 		GrowthRate[i] = 0;
 		ShapeChangeRate[i] =0;
@@ -40,8 +38,6 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
 	}
 	CurrShapeChangeStrainsUpToDate = false;
 	CurrGrowthStrainsUpToDate = false;
-	WorldToTissueRotMatUpToDate= false;
-	GrowthStrainsRotMatUpToDate= false;
 	IsGrowing = false;
 	IsChangingShape = false;
 	GrewInThePast = false;
@@ -51,7 +47,7 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
 	IsAblated = false;
 	IsClippedInDisplay = false;
 	capElement = false;
-	tiltedElement = false;
+    rotatedGrowth = false;
 
 	setIdentificationColour();
 	setShapeType("Prism");
@@ -64,81 +60,104 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
 	setTissuePlacement(Nodes);
 	setTissueType(Nodes);
 
-	Strain = boost::numeric::ublas::zero_vector<double>(6);
-	RK1Strain = boost::numeric::ublas::zero_vector<double>(6);
-	StrainTissueMat = boost::numeric::ublas::zero_matrix<double>(3,3);
-	PlasticStrain = boost::numeric::ublas::zero_vector<double>(6);
-	CurrPlasticStrainsInTissueCoordsMat = boost::numeric::ublas::zero_matrix<double>(3,3);
-	LocalGrowthStrainsMat = boost::numeric::ublas::zero_matrix<double>(3,3);
-
-	xGrowthScaling  = boost::numeric::ublas::zero_matrix<double>(3,3);
-	yGrowthScaling  = boost::numeric::ublas::zero_matrix<double>(3,3);
-	zGrowthScaling  = boost::numeric::ublas::zero_matrix<double>(3,3);
-	WorldToTissueRotMat= boost::numeric::ublas::identity_matrix<double>(3,3);
-	GrowthStrainsRotMat = boost::numeric::ublas::identity_matrix<double>(3,3);
-	RotatedElement = false;
-	WorldToReferenceRotMat = boost::numeric::ublas::identity_matrix<double>(3,3);
-	//setting rotation matrices to identity;
-	for (int i=0; i<3; ++i){
-		for (int j=0; j<3; ++j){
-			int matrixElement;
-			if (i==j){
-				matrixElement=1;
-			}
-			else{
-				matrixElement=0;
-			}
-			WorldToReferenceRotMat(i,j) = matrixElement;
-		}
-	}
+    ShapeFuncDerivatives = new gsl_matrix*[3];
+    ShapeFuncDerStacks = new gsl_matrix*[3];
+    InvdXdes = new gsl_matrix*[3];
+    detdXdes = new double[3];
+    Bmatrices = new gsl_matrix*[3];
+    FeMatrices = new gsl_matrix*[3];
+    CMatrices = new gsl_matrix*[3];
+    detFs = new double[3];
+    invJShapeFuncDerStack = new gsl_matrix*[3];
+    elasticStress = new gsl_matrix*[3];
+    for (int i=0; i<3; ++i){
+        ShapeFuncDerivatives[i] = gsl_matrix_calloc(nDim, nNodes);
+        ShapeFuncDerStacks[i] = gsl_matrix_calloc(nDim*nDim, nDim*nNodes);
+        InvdXdes[i] = gsl_matrix_calloc(nDim, nDim);
+        detdXdes[i] = 0.0;
+        Bmatrices[i] = gsl_matrix_calloc(nNodes,nDim*nNodes);
+        FeMatrices[i] = gsl_matrix_calloc(3,3);
+        CMatrices[i] = gsl_matrix_calloc(6,6);
+        invJShapeFuncDerStack[i] = gsl_matrix_calloc(nDim*nDim, nDim*nNodes);
+        elasticStress[i] = gsl_matrix_calloc(3,3);
+    }
+    Strain = gsl_matrix_calloc(6,1);
+    RK1Strain = gsl_matrix_calloc(6,1);
+    GrowthStrainsRotMat = gsl_matrix_alloc(3,3);
+    gsl_matrix_set_identity(GrowthStrainsRotMat);
+    Fg = gsl_matrix_alloc(3,3);
+    gsl_matrix_set_identity(Fg);
+    InvFg = gsl_matrix_calloc(3,3);
+    gsl_matrix_set_identity(InvFg);
+    TriPointF = gsl_matrix_calloc(3,3);
+    TriPointKe = gsl_matrix_calloc(nDim*nNodes,nDim*nNodes);
+	RotatedElement = false;    
 
 	CurrShapeChangeToAdd[0] = 0;
 	CurrShapeChangeToAdd[1] = 0;
 	CurrShapeChangeToAdd[2] = 0;
-	TissueCoordinateSystem = new double[9];
-	TissueCoordinateSystem[0]=1.0;
-	TissueCoordinateSystem[1]=0.0;
-	TissueCoordinateSystem[2]=0.0;
-	TissueCoordinateSystem[3]=0.0;
-	TissueCoordinateSystem[4]=1.0;
-	TissueCoordinateSystem[5]=0.0;
-	TissueCoordinateSystem[6]=0.0;
-	TissueCoordinateSystem[7]=0.0;
-	TissueCoordinateSystem[8]=1.0;
+
 	VolumePerNode = 0;
-	//RefToTissueRotMat = boost::numeric::ublas::zero_matrix<double>(3,3);
-	//RefToTissueRotMatT = boost::numeric::ublas::zero_matrix<double>(3,3);
-	//TissueToWorldRotMat = boost::numeric::ublas::zero_matrix<double>(3,3);
-	//setTissueCoordsRotationsBuffers();
+    ZProjectedBasalArea=0.0;
+    ZProjectedApicalArea=0.0;
 }
 
 Prism::~Prism(){
 	//cout<<"called the destructor for prism class"<<endl;
 	for (int i=0; i<nNodes; ++i){
 		delete[] Positions[i];
-		delete[] barycentricCoords[i];
 	}
-	delete[] Positions;
-	delete[] PositionsAlignedToReference;
+    delete[] Positions;
 	delete[] RelativePosInBoundingBox;
-	//delete[] PositionsInTissueCoord;
-	delete[] NodeIds;
+    delete[] NodeIds;
 	delete[] IdentifierColour;
 	delete[] GrowthRate;
-	delete[] ShapeChangeRate;
+    delete[] ShapeChangeRate;
 	delete	 ReferenceShape;
-    //cout<<"finalised the destructor for prism class"<<endl;
+
+    //freeing matrices allocated in this function
+    gsl_matrix_free(D);
+    gsl_matrix_free(CoeffMat);
+    gsl_matrix_free(Fg);
+    gsl_matrix_free(InvFg);
+    gsl_matrix_free(TriPointF);
+    gsl_matrix_free(Strain);
+    gsl_matrix_free(RK1Strain);
+    gsl_matrix_free(TriPointKe);
+    gsl_matrix_free(GrowthStrainsRotMat);
+    for (int i=0; i<3; ++i){
+        gsl_matrix_free (ShapeFuncDerivatives[i]);
+        gsl_matrix_free (ShapeFuncDerStacks[i]);
+        gsl_matrix_free (InvdXdes[i]);
+        gsl_matrix_free (Bmatrices[i]);
+        gsl_matrix_free (FeMatrices[i]);
+        gsl_matrix_free (CMatrices[i]);
+        gsl_matrix_free (invJShapeFuncDerStack[i]);
+        gsl_matrix_free (elasticStress[i]);
+    }
+    delete[] ShapeFuncDerivatives;
+    delete[] ShapeFuncDerStacks;
+    delete[] InvdXdes;
+    delete[] detdXdes;
+    delete[] Bmatrices;
+    delete[] FeMatrices;
+    delete[] CMatrices;
+    delete[] detFs;
+    delete[] invJShapeFuncDerStack;
+    delete[] elasticStress;
 }
 
 void Prism::setCoeffMat(){
-	using namespace boost::numeric::ublas;
-	CoeffMat = zero_matrix<int> (6, nDim*nDim);
-	CoeffMat(0,0)=1;
-	CoeffMat(1,4)=1;
-	CoeffMat(2,8)=1;
-	CoeffMat(3,1)=1;CoeffMat(3,3)=1;
-	CoeffMat(4,5)=1;CoeffMat(4,7)=1;
-	CoeffMat(5,2)=1;CoeffMat(5,6)=1;
+    CoeffMat = gsl_matrix_calloc(6, nDim*nDim);
+    gsl_matrix_set(CoeffMat,0,0,1);
+    gsl_matrix_set(CoeffMat,1,4,1);
+    gsl_matrix_set(CoeffMat,2,8,1);
+    gsl_matrix_set(CoeffMat,3,1,1);
+    gsl_matrix_set(CoeffMat,3,3,1);
+    gsl_matrix_set(CoeffMat,4,5,1);
+    gsl_matrix_set(CoeffMat,4,7,1);
+    gsl_matrix_set(CoeffMat,5,2,1);
+    gsl_matrix_set(CoeffMat,5,6,1);
 }
 
 void Prism::checkRotationConsistency3D(){
@@ -262,190 +281,220 @@ void  Prism::setElasticProperties(double EApical, double EBasal, double EMid, do
 	this -> v = v; //poisson ratio
 	if (v>0.5){v = 0.5;}
 	else if (v<0.0){v = 0.0;}
-	using namespace boost::numeric::ublas;
-	D = zero_matrix<double>(6,6);
-	double multiplier = E/((1+v)*(1-2*v));
-	D(0,0)= multiplier*(1-v);	D(0,1)=	multiplier*v;		D(0,2)=	multiplier*v;
-	D(1,0)= multiplier*v;		D(1,1)= multiplier*(1-v);	D(1,2)= multiplier*v;
-	D(2,0)= multiplier*v;		D(2,1)= multiplier*v;		D(2,2)= multiplier*(1-v);
-	D(3,3)= multiplier*(1-2*v)/2;
-	D(4,4)= multiplier*(1-2*v)/2;
-	D(5,5)= multiplier*(1-2*v)/2;
 
-	//make it behave like a sheet only: (remove all z-response)
-	//D(2,0)= 0.0;
-	//D(2,1)= 0.0;
-	//D(0,2)= 0.0;
-	//D(1,2)= 0.0;
-	//making it more resistive in Ez
-	//D(2,2) *= 3.0;
+    lambda = E*v/(1+v)/(1-2.0*v);
+    mu = E/2.0/(1+v);
+
+	double multiplier = E/((1+v)*(1-2*v));
+    gsl_matrix_set(D,0,0,  multiplier*(1-v));
+    gsl_matrix_set(D,0,1,  multiplier*v);
+    gsl_matrix_set(D,0,2,  multiplier*v);
+    gsl_matrix_set(D,1,0,  multiplier*v);
+    gsl_matrix_set(D,1,1,  multiplier*(1-v));
+    gsl_matrix_set(D,1,2,  multiplier*v);
+    gsl_matrix_set(D,2,0,  multiplier*v);
+    gsl_matrix_set(D,2,1,  multiplier*v);
+    gsl_matrix_set(D,2,2,  multiplier*(1-v));
+    gsl_matrix_set(D,3,3,  multiplier*(1-2*v)/2);
+    gsl_matrix_set(D,4,4,  multiplier*(1-2*v)/2);
+    gsl_matrix_set(D,5,5,  multiplier*(1-2*v)/2);
+	
+    //calculating 4th order tensor D
+    double Idouble[3][3] = {{1.0,0.0,0.0} , {0.0,1.0,0.0}, {0.0,0.0,1.0}};
+    for (int I = 0; I<nDim; ++I){
+        for (int J = 0; J<nDim; ++J){
+            for (int K = 0; K<nDim; ++K){
+                for (int L = 0; L<nDim; ++L){
+                    D81[I][J][K][L] = lambda*Idouble[K][L]*Idouble[I][J] + mu * ( Idouble[I][K]*Idouble[J][L] + Idouble[I][L]*Idouble[J][K] );
+                }
+            }
+        }
+    }
 }
 
 
-void Prism::getCurrRelaxedShape(boost::numeric::ublas::matrix<double> & CurrRelaxedShape){
-	using namespace boost::numeric::ublas;
+void Prism::getCurrRelaxedShape(gsl_matrix* CurrRelaxedShape){
 	for (int i =0; i<nNodes; ++i){
 		for (int j=0; j<nDim; ++j){
-			CurrRelaxedShape(i,j) = ReferenceShape->Positions[i][j];
+            gsl_matrix_set(CurrRelaxedShape,i,j,ReferenceShape->Positions[i][j]);
 		}
 	}
 }
 
-void Prism::setShapeFunctionDerivatives(boost::numeric::ublas::matrix<double> &ShapeFuncDer, double eta, double zeta, double nu){
+void Prism::setShapeFunctionDerivatives(gsl_matrix* ShapeFuncDer, double eta, double zeta, double nu){
 	double alpha  = (1 - zeta)/2;
 	double beta = (1 + zeta)/2;
 	double lambda = 1-eta-nu;
 
-	ShapeFuncDer(0,0)= -alpha;
-	ShapeFuncDer(0,1)=  alpha;
-	ShapeFuncDer(0,2)=  0;
-	ShapeFuncDer(0,3)= -beta;
-	ShapeFuncDer(0,4)=	beta;
-	ShapeFuncDer(0,5)=	0;
+    gsl_matrix_set(ShapeFuncDer,0,0, -alpha);
+    gsl_matrix_set(ShapeFuncDer,0,1,  alpha);
+    gsl_matrix_set(ShapeFuncDer,0,2,  0);
+    gsl_matrix_set(ShapeFuncDer,0,3, -beta);
+    gsl_matrix_set(ShapeFuncDer,0,4,  beta);
+    gsl_matrix_set(ShapeFuncDer,0,5, 0);
 
-	ShapeFuncDer(1,0)= -alpha;
-	ShapeFuncDer(1,1)=	0;
-	ShapeFuncDer(1,2)=  alpha;
-	ShapeFuncDer(1,3)= -beta;
-	ShapeFuncDer(1,4)=  0;
-	ShapeFuncDer(1,5)=  beta;
+    gsl_matrix_set(ShapeFuncDer,1,0, -alpha);
+    gsl_matrix_set(ShapeFuncDer,1,1,  0);
+    gsl_matrix_set(ShapeFuncDer,1,2,  alpha);
+    gsl_matrix_set(ShapeFuncDer,1,3, -beta);
+    gsl_matrix_set(ShapeFuncDer,1,4,  0);
+    gsl_matrix_set(ShapeFuncDer,1,5,  beta);
 
-	ShapeFuncDer(2,0)= -lambda/2;
-	ShapeFuncDer(2,1)= -eta/2;
-	ShapeFuncDer(2,2)= -nu/2;
-	ShapeFuncDer(2,3)=	lambda/2;
-	ShapeFuncDer(2,4)=	eta/2;
-	ShapeFuncDer(2,5)=	nu/2;
+    gsl_matrix_set(ShapeFuncDer,2,0, -lambda/2);
+    gsl_matrix_set(ShapeFuncDer,2,1, -eta/2);
+    gsl_matrix_set(ShapeFuncDer,2,2, -nu/2);
+    gsl_matrix_set(ShapeFuncDer,2,3,  lambda/2);
+    gsl_matrix_set(ShapeFuncDer,2,4,  eta/2);
+    gsl_matrix_set(ShapeFuncDer,2,5,  nu/2);
 }
 
-void Prism::setShapeFunctionDerivativeStack(boost::numeric::ublas::matrix<double> &ShapeFuncDer,boost::numeric::ublas::matrix<double> &ShapeFuncDerStack){
+void Prism::setShapeFunctionDerivativeStack(gsl_matrix* ShapeFuncDer, gsl_matrix* ShapeFuncDerStack){
 	int n = nNodes;
 	int dim = nDim;
 	for (int i=0; i<n;++i){
-		subrange(ShapeFuncDerStack, 0,dim,i*dim,i*dim+1) = subrange(ShapeFuncDer,0,dim,i,i+1);
+        for (int k=0; k<dim; ++k){
+            gsl_matrix_set(ShapeFuncDerStack,k,i*dim, gsl_matrix_get(ShapeFuncDer,k,i));
+        }
+        //subrange(ShapeFuncDerStack, 0,dim,i*dim,i*dim+1) = subrange(ShapeFuncDer,0,dim,i,i+1);
 	}
-	subrange(ShapeFuncDerStack, dim,2*dim,1,dim*n) = subrange(ShapeFuncDerStack, 0,dim,0,dim*n-1);
-	subrange(ShapeFuncDerStack, 2*dim,3*dim,1,dim*n) = subrange(ShapeFuncDerStack, dim,2*dim,0,dim*n-1);
+    for (int k =dim; k<2*dim; ++k){
+        for (int m =1; m<dim*n; ++m){
+            gsl_matrix_set(ShapeFuncDerStack,k,m,gsl_matrix_get(ShapeFuncDerStack,k-dim,m-1));
+        }
+    }
+    for (int k =2*dim; k<3*dim; ++k){
+        for (int m =1; m<dim*n; ++m){
+            gsl_matrix_set(ShapeFuncDerStack,k,m,gsl_matrix_get(ShapeFuncDerStack,k-dim,m-1));
+        }
+    }
+    //subrange(ShapeFuncDerStack, dim,2*dim,1,dim*n) = subrange(ShapeFuncDerStack, 0,dim,0,dim*n-1);
+    //subrange(ShapeFuncDerStack, 2*dim,3*dim,1,dim*n) = subrange(ShapeFuncDerStack, dim,2*dim,0,dim*n-1);
 }
 
-void Prism::calculateReferenceStiffnessMatrix(){
-	const int n = nNodes;
-	const int dim = nDim;
-
-	using namespace boost::numeric::ublas;
-	//Setting up the current reference shape position matrix:
-	matrix<double> CurrRelaxedShape (n, dim);
-	getCurrRelaxedShape(CurrRelaxedShape);
-
-	double GaussPoints[4] = {-0.861136312, -0.339981044, 0.339981044, 0.861136312};
-	double GaussCoeff[4] = {0.347854845, 0.652145155,  0.652145155, 0.347854845};
-
-	double eta, zeta, nu;
-	k  = zero_matrix<double>(dim*n, dim*n);
-	B  = zero_matrix<double>(6, dim*n);
-	BE = zero_matrix<double>(dim*n,6);
-	Bo = zero_matrix<double>(dim*dim,dim*n);
-
-	for (int etaiter = 0; etaiter<4; ++etaiter){
-		float EtaLimits[2] = {0,1.0};
-		eta = GaussPoints[etaiter];
-		eta = (EtaLimits[1]-EtaLimits[0])/2 * eta + (EtaLimits[1]+EtaLimits[0])/2;
-		float etaMultiplier = GaussCoeff[etaiter] * (EtaLimits[1]-EtaLimits[0])/2;
-		matrix<double> kSumNu  = zero_matrix<double>(dim*n, dim*n);
-		matrix<double> BSumNu  = zero_matrix<double>(6, dim*n);
-		matrix<double> BESumNu = zero_matrix<double>(dim*n, 6);
-		matrix<double> BoSumNu = zero_matrix<double>(dim*dim, dim*n);
-		for(int nuiter = 0; nuiter<4; ++nuiter){
-			float NuLimits[2] = {0, 1-eta};
-			nu = GaussPoints[nuiter];
-			nu = (NuLimits[1]-NuLimits[0])/2*nu + (NuLimits[1]+NuLimits[0])/2;
-			float nuMultiplier = GaussCoeff[nuiter] * (NuLimits[1]-NuLimits[0])/2;
-			matrix<double> kSumZeta  = zero_matrix<double>(dim*n, dim*n);
-			matrix<double> BSumZeta  = zero_matrix<double>(6, dim*n);
-			matrix<double> BESumZeta = zero_matrix<double>(dim*n, 6);
-			matrix<double> BoSumZeta = zero_matrix<double>(dim*dim, dim*n);
-			for (int zetaiter = 0; zetaiter<4; ++zetaiter){
-				zeta = GaussPoints[zetaiter];
-				matrix<double> currk  (dim*n, dim*n);
-				matrix<double> currB  (6, dim*n);
-				matrix<double> currBE (dim*n, 6);
-				matrix<double> currBo (dim*dim, dim*n);
-				calculateCurrk(currk, currB, currBE, currBo, eta,zeta,nu);
-				kSumZeta  = kSumZeta + GaussCoeff[zetaiter]   * currk;
-				BSumZeta  = BSumZeta + GaussCoeff[zetaiter] * currB;
-				BESumZeta = BESumZeta + GaussCoeff[zetaiter]  * currBE;
-				BoSumZeta = BoSumZeta + GaussCoeff[zetaiter]  * currBo;
-			}
-			kSumNu  = kSumNu  + nuMultiplier * kSumZeta;
-			BSumNu  = BSumNu  + nuMultiplier * BSumZeta;
-			BESumNu = BESumNu + nuMultiplier * BESumZeta;
-			BoSumNu = BoSumNu + nuMultiplier * BoSumZeta;
-		}
-		k  = k  + etaMultiplier * kSumNu;
-		B  = B  + etaMultiplier * BSumNu;
-		BE = BE + etaMultiplier * BESumNu;
-		Bo = Bo + etaMultiplier * BoSumNu;
-	}
-	//displayMatrix(k,"k");
+void Prism::calculateElementShapeFunctionDerivatives(){
+    //Shape Function Derivatives 3-point:
+    double points[3][3]={{1.0/6.0,1.0/6.0,0.0},{2.0/3.0,1.0/6.0,0.0},{1.0/6.0,2.0/3.0,0.0}};
+    //Setting up the current reference shape position matrix:
+    gsl_matrix * CurrRelaxedShape = gsl_matrix_calloc(nNodes, nDim);
+    gsl_matrix * dXde  = gsl_matrix_calloc(nDim, nDim);
+    getCurrRelaxedShape(CurrRelaxedShape);
+    for (int iter =0; iter<3;++iter){
+        double eta  = points[iter][0];
+        double nu   = points[iter][1];
+        double zeta = points[iter][2];
+        //calculating shape function derivatives:
+        setShapeFunctionDerivatives(ShapeFuncDerivatives[iter],eta,zeta,nu);
+        setShapeFunctionDerivativeStack(ShapeFuncDerivatives[iter],ShapeFuncDerStacks[iter]);
+        gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, ShapeFuncDerivatives[iter], CurrRelaxedShape, 0.0, dXde);
+        gsl_matrix_transpose(dXde);
+        detdXdes[iter] = determinant3by3Matrix(dXde);
+        bool inverted = InvertMatrix(dXde, InvdXdes[iter]);
+        if (!inverted){
+            cerr<<"dXde not inverted at point "<<iter<<"!!"<<endl;
+        }
+    }
 }
 
-void Prism::calculateCurrk(boost::numeric::ublas::matrix<double>& currk, boost::numeric::ublas::matrix<double>& currB, boost::numeric::ublas::matrix<double>& currBE, boost::numeric::ublas::matrix<double>& currBo, double eta, double zeta, double nu){
-	const int n = nNodes;
-	const int dim = nDim;
+void Prism::calculateCurrNodalForces(gsl_matrix *currg, gsl_matrix *currF, int pointNo){
+    const int n = nNodes;
+    const int dim = nDim;
+    gsl_matrix *currFe = gsl_matrix_alloc(dim,dim);
+    gsl_matrix *CurrShape = gsl_matrix_alloc(n,dim);
 
-	currB  = boost::numeric::ublas::zero_matrix<double>(6, dim*n);
-	currBE = boost::numeric::ublas::zero_matrix<double>(dim*n, 6);
-	currk = boost::numeric::ublas::zero_matrix<double>(dim*n, dim*n);
-	currBo  = boost::numeric::ublas::zero_matrix<double>(dim*dim, dim*n);
-	using namespace boost::numeric::ublas;
-	//Setting up the current reference shape position matrix:
-	matrix<double> CurrRelaxedShape (n, dim);
-	getCurrRelaxedShape(CurrRelaxedShape);
+    //Getting the current shape positions matrix:
+    getPos(CurrShape);
 
-	matrix<double> ShapeFuncDer (dim, n);
-	setShapeFunctionDerivatives(ShapeFuncDer,eta,zeta,nu);
+    //calculating dx/de (Jacobian) and reading out dX/de, shape function derivaties:
+    gsl_matrix * ShapeFuncDer = ShapeFuncDerivatives[pointNo];
+    gsl_matrix * ShapeFuncDerStack = ShapeFuncDerStacks[pointNo];
+    gsl_matrix * InvdXde = InvdXdes[pointNo];
+    gsl_matrix * Jacobian = gsl_matrix_calloc(dim, dim);
+    gsl_matrix * B = Bmatrices[pointNo];
+    gsl_matrix * invJShFuncDerS = invJShapeFuncDerStack[pointNo];
+    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, ShapeFuncDer, CurrShape, 0.0, Jacobian);
+    gsl_matrix_transpose(Jacobian);
 
-	//Generating the shape function derivatives stack:
-	int dim2 = dim*dim;
-	matrix<double> ShapeFuncDerStack = zero_matrix<double>(dim2, dim*n);
-	setShapeFunctionDerivativeStack(ShapeFuncDer,ShapeFuncDerStack);
+    //calculating F:
+    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, Jacobian, InvdXde, 0.0, currF);
 
-	matrix<double> Jacobian (dim, dim);
-	Jacobian  = zero_matrix<double> (dim,dim);
-	//Jacobian =  ShapeFuncDer*CurrRelaxedShape
-	boost::numeric::ublas::axpy_prod(ShapeFuncDer,CurrRelaxedShape,Jacobian);
-	double detJ = determinant3by3Matrix(Jacobian);
-	//Getting the inverse of Jacobian:
-	matrix<double> InvJacobian (dim, dim);
-	bool inverted = InvertMatrix(Jacobian, InvJacobian);
-	if (!inverted){
-		cerr<<"Jacobian not inverted!!"<<endl;
-	}
+    //calculating Fe:
+    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currF, InvFg, 0.0, currFe);
+    //cout<<"Element: "<<Id<<endl;
+    //displayMatrix(Fg, "Fg");
+    //displayMatrix(currFe, "Fe");
+    //displayMatrix(currF, "F");
+    gsl_matrix * currFeT = gsl_matrix_alloc(dim, dim);
+    gsl_matrix_transpose_memcpy(currFeT,currFe);
+    createMatrixCopy(FeMatrices[pointNo], currFe); // storing Fe for use in implicit elastic K calculation.
 
-	//Generating the inverse Jacobian stack:
-	matrix<double> InvJacobianStack = zero_matrix<double>(dim2,dim2);
-	for (int i =0; i<dim; i++){
-		subrange(InvJacobianStack, i*dim,(i+1)*dim,i*dim,(i+1)*dim) = InvJacobian;
-	}
+    //calculating E (E = 1/2 *(Fe^T*Fe-I):
+    gsl_matrix * E = calculateEForNodalForces(currFe,currFeT);
 
-	//Generating currB:
-	matrix<double> tmpMat1(6, dim2);
-	tmpMat1 = zero_matrix<double>(6, dim2);
-	boost::numeric::ublas::axpy_prod(CoeffMat,InvJacobianStack,tmpMat1);
-	boost::numeric::ublas::axpy_prod(tmpMat1,ShapeFuncDerStack,currB);
-	currBo = ShapeFuncDerStack;
-	//Generating currk:
-	matrix<double> currBT = trans(currB);
-	boost::numeric::ublas::axpy_prod(currBT,detJ*D,currBE);
-	boost::numeric::ublas::axpy_prod(currBE,currB,currk);
-	//currB = currB*detJ;
-	//cout<<"Id: "<<Id<<" detJ: "<<detJ<<endl;
+    //calculating S: (S = D:E)
+    gsl_matrix* S = calculateSForNodalForces(E);
+
+    //calculating stress (stress = detFe^-1 Fe S Fe^T):
+    gsl_matrix_set_zero(elasticStress[pointNo]);
+    gsl_matrix* compactStress  = calculateCompactStressForNodalForces(currFe,S,currFeT, elasticStress[pointNo]);
+    //displayMatrix(E,"E");
+    //cout<<"pointNo: "<<pointNo<<endl;
+    //displayMatrix(compactStress,"compactStress");
+    //displayMatrix(currFe,"Fe");
+    //displayMatrix(S,"S");
+    //Now from stress, I will calculate nodal forces via B.
+    //Calculating the inverse Jacobian stack matrix:
+    gsl_matrix* InvJacobianStack = calculateInverseJacobianStackForNodalForces(Jacobian);
+
+    //Calculating currB^T:
+    detFs[pointNo] = determinant3by3Matrix(currF);
+    gsl_matrix* currBT = calculateBTforNodalForces(InvJacobianStack,ShapeFuncDerStack, B, invJShFuncDerS);
+
+    //calculating nodal forces as B^T compactStress detF
+    gsl_matrix_scale(currBT,detFs[pointNo]);
+    gsl_matrix_scale(currBT,detdXdes[pointNo]);
+    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currBT, compactStress,0.0, currg);
+
+/*
+    gsl_matrix* C = CMatrices[pointNo];
+    calculateCMatrix(pointNo);
+    gsl_matrix* tmp1 = gsl_matrix_calloc(3,3);
+    gsl_matrix* InvFe = gsl_matrix_calloc(nDim,nDim);
+    gsl_matrix* tmpFeForInversion = gsl_matrix_calloc(nDim,nDim);
+    createMatrixCopy(tmpFeForInversion,currFe);
+    bool inverted = InvertMatrix(tmpFeForInversion, InvFe);
+    gsl_matrix* InvFeT = gsl_matrix_calloc(nDim,nDim);
+    gsl_matrix_transpose_memcpy(InvFeT,InvFe);
+    gsl_matrix* b = gsl_matrix_calloc(nDim,nDim);
+    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, InvFeT, E,0.0, tmp1);
+    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, tmp1, InvFe,0.0, b);
+    gsl_matrix* bVoigt = gsl_matrix_calloc(6,1);
+    gsl_matrix_set(bVoigt,0,0, gsl_matrix_get(b,0,0));
+    gsl_matrix_set(bVoigt,1,0, gsl_matrix_get(b,1,1));
+    gsl_matrix_set(bVoigt,2,0, gsl_matrix_get(b,2,2));
+    gsl_matrix_set(bVoigt,3,0, 2.0*gsl_matrix_get(b,0,1));
+    gsl_matrix_set(bVoigt,4,0, 2.0*gsl_matrix_get(b,2,1));
+    gsl_matrix_set(bVoigt,5,0, 2.0*gsl_matrix_get(b,0,2));
+    gsl_matrix* sigma2 = gsl_matrix_calloc(6,1);
+    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, C, bVoigt,0.0, sigma2);
+
+    displayMatrix(sigma2,"sigma2");
+    displayMatrix(compactStress,"compactStress");
+*/
+    //freeing the matrices allocated in this function
+    gsl_matrix_free(currFeT);
+    gsl_matrix_free(E);
+    gsl_matrix_free(S);
+    gsl_matrix_free(compactStress);
+    gsl_matrix_free(InvJacobianStack);
+    gsl_matrix_free(currBT);
+    //cout<<"Finished calculate nodel forces"<<endl;
 }
+
 
 void Prism::calculateReferenceVolume(){
 	double height = 0.0;
 	for (int i = 0; i<3; ++i){
-		double d = ReferenceShape-> Positions[0][i] - ReferenceShape-> Positions[3][i];
+        double d = ReferenceShape->Positions[0][i] - ReferenceShape->Positions[3][i];
 		d *= d;
 		height +=d;
 	}
@@ -470,7 +519,8 @@ void Prism::calculateReferenceVolume(){
 	double baseArea = baseSide1* baseSide2 * sintet / 2.0;
 	ReferenceShape->BasalArea = baseArea;
 	ReferenceShape->Volume = height * baseArea;
-	VolumePerNode = ReferenceShape->Volume/nNodes;
+    GrownVolume = ReferenceShape->Volume;
+    VolumePerNode = GrownVolume/nNodes;
 	//cout<<"baseSide1: "<<baseSide1<<" baseSide2: "<<baseSide2<<" costet: "<<costet<<" sintet: "<<sintet<<endl;
 	//cout<<"basearea: "<<baseArea<<" heignt: "<<	height<<" Volume: "<<ReferenceShape->Volume<<endl;
 }
@@ -527,7 +577,7 @@ void Prism::assignNodalVector(double* vec, int id0, int id1){
 		cerr<<"Error in node input in nodal vector assignment!"<<endl;
 	}
 	for (int i=0; i<nDim; ++i){
-		vec[i] = PositionsAlignedToReference[id1][i] - PositionsAlignedToReference[id0][i];
+        vec[i] = Positions[id1][i] - Positions[id0][i];
 	}
 }
 
@@ -640,7 +690,7 @@ void Prism::AddPackingToSurface(int tissueplacement, double Fx, double Fy,double
 	for(int j=0; j<nDim; ++j){
 		if (!Nodes[NodeIds[Id0]]->FixedPos[j]){
 			SystemForces[RKId][NodeIds[Id0]][j] -= F[j];
-			PackingForces[RKId][NodeIds[Id0]][j] -= F[j];
+            PackingForces[RKId][NodeIds[Id0]][j] -= F[j];
 		}
 		if (!Nodes[NodeIds[Id1]]->FixedPos[j]){
 			SystemForces[RKId][NodeIds[Id1]][j] -= F[j];

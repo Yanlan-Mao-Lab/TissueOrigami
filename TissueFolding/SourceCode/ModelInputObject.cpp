@@ -365,7 +365,8 @@ bool ModelInputObject::readGrowthType3(ifstream& file){
 		GrowthRateFile >> gridX;
 		GrowthRateFile >> gridY;
 		float rate;
-		double timeMultiplier = Sim->dt / 3600.0;
+        //double timeMultiplier = Sim->dt / 3600.0;
+        double timeMultiplier = 1.0 / 3600.0; // converting rate er hour to rate per second
 		cout<<"constructing growth matrix"<<endl;
 		GrowthMatrix = new double**[(const int) gridX];
 		for (int i=0; i<gridX; ++i){
@@ -726,6 +727,11 @@ bool ModelInputObject::readSaveOptions(ifstream& file){
 		float timeInSec;
 		file >> timeInSec;
 		Sim->imageSaveInterval = timeInSec/Sim->dt;
+        //the image save interval cannot be smaller than time step!, if this is the case,
+        //dataSaveInterval will be zero! Check and correct if necessary
+        if (Sim->imageSaveInterval < 1 ){
+          Sim->imageSaveInterval =1;
+        }
 	}
 	else{
 		cerr<<"Error in reading image save interval, current string: "<<currHeader<<" should have been: ImageSaveInterval(sec)" <<endl;
@@ -737,7 +743,12 @@ bool ModelInputObject::readSaveOptions(ifstream& file){
 		float timeInSec;
 		file >> timeInSec;
 		Sim->dataSaveInterval = timeInSec/Sim->dt;
-		cout<<"ddataSaveInterval as read from file: "<<Sim->dataSaveInterval<<endl;
+        //the data save interval cannot be smaller than time step!, if this is the case,
+        //dataSaveInterval will be zero! Check and correct if necessary
+        if (Sim->dataSaveInterval < 1 ){
+          Sim->dataSaveInterval =1;
+        }
+        cout<<"dataSaveInterval as read from file: "<<Sim->dataSaveInterval<<endl;
 	}
 	else{
 		cerr<<"Error in reading data save interval, current string: "<<currHeader<<" should have been: DataSaveInterval(sec)" <<endl;
@@ -988,6 +999,9 @@ bool ModelInputObject::readPipetteSetup(ifstream& file){
 		double endtime;
 		file >> endtime;
 		Sim->PipetteEndStep = endtime/Sim->dt;
+        if (Sim->PipetteEndStep<1){
+            Sim->PipetteEndStep =1;
+        }
 	}
 	else{
 		cerr<<"Error in reading pipette aspiration setup: "<<currHeader<<", should have been: FinalTime(sec):" <<endl;

@@ -22,15 +22,18 @@ private:
 	ModelInputObject* ModInp;
 	ofstream saveFileMesh;
 	ofstream saveFileTensionCompression;
+    ofstream saveFileGrowth;
 	ofstream saveFileVelocities;
 	ofstream saveFileForces;
 	ofstream saveFileSimulationSummary;
 	ifstream saveFileToDisplayMesh;
 	ifstream saveFileToDisplayTenComp;
+    ifstream saveFileToDisplayGrowth;
 	ifstream saveFileToDisplayForce;
 	ifstream saveFileToDisplayVel;
 	ifstream saveFileToDisplaySimSum;
 	bool TensionCompressionSaved;
+    bool GrowthSaved;
 	bool ForcesSaved;
 	bool VelocitiesSaved;
 	vector <int> ColumnarCircumferencialNodeList;
@@ -41,7 +44,7 @@ private:
 	double StretchVelocity;
 	double BoundingBoxSize[3];
 	bool ContinueFromSave;
-
+    int growthRotationUpdateFrequency;
 
 	bool readModeOfSim(int& i, int argc, char **argv);
 	bool readParameters(int& i, int argc, char **argv);
@@ -69,7 +72,9 @@ private:
 	void updateElementStatesFromSave();
 	void updateForcesFromSave();
 	void updateTensionCompressionFromSave();
+    void updateGrowthFromSave();
 	void readTensionCompressionToContinueFromSave();
+    void readGrowthToContinueFromSave();
 	void updateVelocitiesFromSave();
 	bool readFinalSimulationStep();
 	void reInitiateSystemForces(int oldSize);
@@ -89,6 +94,7 @@ private:
 	void getAverageSideLength(double& periAverageSideLength, double& colAverageSideLength);
 	bool isColumnarLayer3D();
 	bool CalculateTissueHeight();
+    void AddPeripodialMembraneNewScratch();
 	void addPeripodialMembraneNodes(vector <int*> &trianglecornerlist, double height, double d);
 	void AddPeripodialMembraneCircumference(double height, int& index_begin, int &index_end);
 	void AddHorizontalRowOfPeripodialMembraneNodes(vector <int*> &trianglecornerlist, double d, int &index_begin, int &index_end);
@@ -107,11 +113,15 @@ private:
 	void initiateElementsByRowAndColumn(int Row, int Column);
 	void assignPhysicalParameters();
 	void calculateStiffnessMatrices();
-	void assignNodeMasses();
+    void calculateShapeFunctionDerivatives();
+    void assignNodeMasses();
+    void updateNodeMasses();
+    void updateElementToConnectedNodes(vector <Node*>& Nodes);
 	void assignConnectedElementsAndWeightsToNodes();
 	void fixAllD(int i);
 	void fixZ(int i);
 	void zeroForcesOnNode(int RKId, int i);
+    void processDisplayDataAndSave();
 	void updateDisplaySaveValuesFromRK();
 	void saveStep();
 	void writeSimulationSummary();
@@ -122,10 +132,12 @@ private:
 	void writeElements();
 	void writeSaveFileStepFooter();
 	void writeTensionCompression();
+    void writeGrowth();
 	void writeForces();
 	void writeVelocities();
 	void calculateGrowth();
 	void cleanUpGrowthRates();
+    void updateGrowthRotationMatrices();
 	void cleanUpShapeChangeRates();
 	void calculateGrowthUniform(GrowthFunctionBase* currGF);
 	void calculateGrowthRing(GrowthFunctionBase* currGF);
@@ -136,12 +148,13 @@ private:
 	void setStretch();
 	void addStretchForces(int RKId);
 	void setupPipetteExperiment();
-	void addPipetteForces(int RKId);
+    void addPipetteForces(gsl_matrix *gExt);
 	void LaserAblate(double OriginX, double OriginY, double Radius);
 	void fillInNodeNeighbourhood();
 	void updateElementVolumesAndTissuePlacements();
 	void clearNodeMassLists();
 	void clearLaserAblatedSites();
+    void manualPerturbationToInitialSetup(bool deform, bool rotate);
 public:
 
 	ofstream outputFile;
@@ -199,9 +212,9 @@ public:
 	double pipetteCentre[3];
 	double pipetteDepth;
 	double pipetteRadius;
+    double pipetteThickness;
 	double pipetteRadiusSq;
 	double effectLimitsInZ[2];
-
 	double SuctionPressure[3];
 	double StretchMin, StretchMax, StretchStrain;
 	vector <int*> TrianglesToDraw;
@@ -220,8 +233,35 @@ public:
 	void cleanMatrixUpdateData();
 	void resetForces();
 	void calculateColumnarLayerBoundingBox();
+    void calculateZProjectedAreas();
+    void correctzProjectedAreaForMidNodes();
+    void clearProjectedAreas();
 	void runOneStep();
-	void calculatePacking(int RKId, double PeriThreshold, double ColThreshold);
+    void updateStep4RK();
+    void updateStepNR();
+    void constructUnMatrix(gsl_matrix* un);
+    void constructLumpedMassViscosityDtMatrix(gsl_matrix* mviscdt);
+    void calculateElasticForcesForNR(gsl_matrix* ge);
+    void calculateViscousForcesForNR(gsl_matrix* gv, gsl_matrix* mviscdt, gsl_matrix* uk, gsl_matrix* un);
+    void calculateImplicitKElastic(gsl_matrix* K);
+    void calculateImplucitKViscous(gsl_matrix* K, gsl_matrix*  mviscdt);
+    void calculateImplucitKViscousNumerical(gsl_matrix*  mviscdt, gsl_matrix*  un, gsl_matrix* uk);
+    void calculateImplucitKElasticNumerical(gsl_matrix* K,gsl_matrix* geNoPerturbation);
+    void solveForDeltaU(gsl_matrix* K, gsl_vector* g, gsl_vector *deltaU);
+    void constructiaForPardiso(gsl_matrix* K, int* ia, const int nmult, vector<int> &ja_vec, vector<double> &a_vec);
+    void writeKinPardisoFormat(const int nNonzero, vector<int> &ja_vec, vector<double> &a_vec, int* ja, double* a);
+    void writeginPardisoFormat(gsl_vector* g, double* b, const int n);
+    int  solveWithPardiso(double* a, double*b, int* ia, int* ja, gsl_vector* x ,const int n_variables);
+    void EliminateNode0Displacement(gsl_vector* deltaU);
+    void updateUkInNR(gsl_matrix* uk, gsl_vector* deltaU);
+    void updateElementPositionsinNR(gsl_matrix* uk);
+    bool checkConvergenceViaDeltaU(gsl_vector* deltaU);
+    bool checkConvergenceViaForce(gsl_vector* gSum);
+    void updateNodePositionsNR(gsl_matrix* uk);
+    void calcutateFixedK(gsl_matrix* K, gsl_vector* g);
+    void smallStrainrunOneStep();
+    void packToPipetteWall(gsl_matrix* gExt, gsl_vector* gSum);
+    void calculatePacking(int RKId, double PeriThreshold, double ColThreshold);
 	void checkPackingToPipette(bool& packsToPip, double* pos, double* pipF,double mass, int id);
 	void getNormalAndCornerPosForPacking(Node* NodePointer, ShapeBase* ElementPointer, double* normalForPacking,double* posCorner, bool& bothperipodial);
 	void getApicalNormalAndCornerPosForPacking(ShapeBase* ElementPointer, double* normalForPacking,double* posCorner);
@@ -241,13 +281,8 @@ public:
 	void calculateDVDistance();
 	void TissueAxisPositionDisplay();
 	void CoordinateDisplay();
-	void calculatePersonalisedGrowthRates();
 	void correctTiltedGrowthForGrowthFunction(GrowthFunctionBase* currGF);
-	void calculatePersonalisedUniformOrRingGrowth(ShapeBase* currElement, GrowthFunctionBase* currGF, double* NewGrowth);
-	void calculatePersonalisedGridBasedGrowth(ShapeBase* currElement, GrowthFunctionBase* currGF, double* NewGrowth);
-	void calculatePersonalisedPeripodialGridBasedGrowth(ShapeBase* currElement, GrowthFunctionBase* currGF, double* NewGrowth);
 	void calculateTiltedElementPositionOnBase(ShapeBase* currElement);
-	void calculatePersonalisedSingleGrowthRate(ShapeBase* currElement, double DVGrowth, double APGrowth, double ABGrowth, double* NewGrowth);
 	void calculateBaseElementsFinalPosition(int Id,double DVGrowth, double APGrowth, double ABGrowth);
 	void calculateCurrentElementsFinalPosition(ShapeBase* currElement);
 
