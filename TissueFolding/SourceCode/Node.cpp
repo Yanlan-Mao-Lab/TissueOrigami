@@ -29,11 +29,9 @@ Node::Node(int id, int dim, double* pos, int tissuePos, int tissueType){
 	tissuePlacement = tissuePos;
 	this->tissueType = tissueType;
 	atCircumference = false;
-	atPeripodialCircumference = false;
 	mass = 0.0;
 	surface = 0.0;
     zProjectedArea = 0.0;
-	LinkedPeripodialNodeId = -1;
 }
 
 Node::~Node(){
@@ -98,11 +96,8 @@ bool Node::checkIfNodeHasPacking(){
 	 *  function Simulation#calculatePacking. It is not necessary to calculate packing under the following conditions:
 	 *  1) The node is at the middle of the columnar layer, the packing should have stopped any other node/element coming close enough to this node, as
 	 *  they would need to penetrate through the apical or basal surface of the tissue to reach this node.
-	 *  2) The node is at the circumference of the peripodial membrane, hence is anchored to columnar layer apical circumference.
+	 *
 	 */
-	if (atPeripodialCircumference){
-		return false;
-	}
 	if (tissuePlacement == 2){	//Node is midline node (neither apical nor basal)
 		return false;
 	}

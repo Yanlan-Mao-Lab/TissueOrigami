@@ -646,13 +646,6 @@ bool 	ShapeBase::checkPackingToThisNodeViaState(int ColumnarLayerDiscretisationL
 	if (pointBelongsToElement){
 		return false;
 	}
-	//If the element is peripodial membrane, and the node isassociated to a peroipodial node, is the node associated with any members of the element?
-	if(tissueType == 1 && NodePointer->LinkedPeripodialNodeId != -1 ){
-        pointBelongsToElement = DoesPointBelogToMe(NodePointer->LinkedPeripodialNodeId);
-		if (pointBelongsToElement){
-			return false;
-		}
-	}
 	return true;
 }
 

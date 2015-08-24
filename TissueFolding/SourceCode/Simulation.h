@@ -36,9 +36,6 @@ private:
     bool GrowthSaved;
 	bool ForcesSaved;
 	bool VelocitiesSaved;
-	vector <int> ColumnarCircumferencialNodeList;
-	vector <int> PeripodialMembraneCircumferencialNodeList;
-	vector <int> ApicalColumnarCircumferencialNodeList;
 	int	 nCircumferencialNodes;
 	int DVRight,DVLeft;
 	double StretchVelocity;
@@ -87,15 +84,14 @@ private:
 	bool initiateMesh(int MeshType, int Row, int Column, float SideLength, float zHeight);
 	bool initiateMesh(int MeshType, string inputtype, float SideLength, float zHeight );
 	bool initiateMesh(int MeshType);
-	bool addPeripodialMembraneToTissueOld();
-	bool generateColumnarCircumferenceNodeList();
-	void sortColumnarCircumferenceNodeList();
-	void calculateCentreOfNodes(double* centre);
+	bool generateColumnarCircumferenceNodeList(vector <int> &ColumnarCircumferencialNodeList);
+	void sortColumnarCircumferenceNodeList(vector <int> &ColumnarCircumferencialNodeList);
 	void getAverageSideLength(double& periAverageSideLength, double& colAverageSideLength);
 	bool isColumnarLayer3D();
-	bool CalculateTissueHeight();
+	bool calculateTissueHeight();
+	bool addPeripodialMembraneToTissue();
 	void calculateDiscretisationLayers(double &hColumnar, int& LumenHeightDiscretisationLayers, double &hLumen, double &peripodialHeight, int& peripodialHeightDiscretisationLayers, double& hPeripodial);
-	void fillColumnarBasedNodeList(vector< vector<int> > &ColumnarBasedNodeArray);
+	void fillColumnarBasedNodeList(vector< vector<int> > &ColumnarBasedNodeArray, vector <int> &ColumnarCircumferencialNodeList);
 	void calculateNewNodePosForPeripodialNodeAddition(int nodeId0, int nodeId1, double* pos, double sideThickness);
 	void addNodesForPeripodialOnOuterCircumference (vector< vector<int> > &ColumnarBasedNodeArray, vector< vector<int> > &OuterNodeArray, double hColumnar, int LumenHeightDiscretisationLayers, double hLumen, int peripodialHeightDiscretisationLayers, double hPeripodial);
 	void addNodesForPeripodialOnColumnarCircumference (vector< vector<int> > &ColumnarBasedNodeArray, int LumenHeightDiscretisationLayers, double hLumen, int peripodialHeightDiscretisationLayers, double hPeripodial);
@@ -104,25 +100,16 @@ private:
 	void constructTriangleCornerListOfApicalSurface( vector< vector<int> > &TriangleList);
 	void addCapPeripodialElements( vector< vector<int> > &TriangleList, vector< vector<int> > &PeripodialCapNodeArray, int peripodialHeightDiscretisationLayers);
 	void correctCircumferentialNodeAssignment(vector< vector<int> > OuterNodeArray);
-	bool addPeripodialMembraneToTissue();
-	void addPeripodialMembraneNodes(vector <int*> &trianglecornerlist, double height, double d);
-	void AddPeripodialMembraneCircumference(double height, int& index_begin, int &index_end);
-	void AddHorizontalRowOfPeripodialMembraneNodes(vector <int*> &trianglecornerlist, double d, int &index_begin, int &index_end);
-	void AddVerticalRowOfPeripodialMembraneNodes(int& layerCount, int nLayers, vector <int*> &trianglecornerlist, double height, int &index_begin, int &index_end);
-	void AddPeripodialMembraneCapToMidAttached(int layerCount, vector <int*> &trianglecornerlist, double height, int index_begin, int index_end);
-	void AddPeripodialMembraneCapToApicalAttached(int layerCount, vector <int*> &trianglecornerlist, double height, int index_begin, int index_end);
-	void AddPeripodialMembraneCapToHoovering(int layerCount, vector <int*> &trianglecornerlist, double height, int index_begin, int index_end);
-	void FillNodeAssociationDueToPeripodialMembrane();
-	void assignMassWeightsDueToPeripodialMembrane();
-	void addPeripodialMembraneElements(vector <int*> &trianglecornerlist, double height);
+
+
 	void initiateSinglePrismNodes(float zHeight);
 	void initiateSinglePrismElement();
 	void initiateNodesByRowAndColumn(int Row, int Column,  float SideLength, float zHeight);
 	void fixApicalBasalNodes(vector<int> &NodesToFix);
 	void checkForNodeFixing();
-	//void GenerateColumnarCircumferencialNodeList(vector<int> &NodesToFix, int nLastRow);
 	void initiateElementsByRowAndColumn(int Row, int Column);
 	void assignPhysicalParameters();
+	void checkForZeroViscosity();
 	void calculateStiffnessMatrices();
     void calculateShapeFunctionDerivatives();
     void assignNodeMasses();
@@ -166,7 +153,7 @@ private:
 	void addStretchForces(int RKId);
 	void setupPipetteExperiment();
     void addPipetteForces(gsl_matrix *gExt);
-	void LaserAblate(double OriginX, double OriginY, double Radius);
+	void laserAblate(double OriginX, double OriginY, double Radius);
 	void fillInNodeNeighbourhood();
 	void updateElementVolumesAndTissuePlacements();
 	void clearNodeMassLists();
@@ -193,6 +180,7 @@ public:
 	double EApical,EBasal,EMid;
 	double poisson;
 	double ApicalVisc, BasalVisc;
+	bool zeroViscosity;
 	int noiseOnPysProp[4];
 	int MeshType;
 	int Row;
@@ -222,10 +210,10 @@ public:
 	double*** PackingForces;
 	double SystemCentre[3];
 	bool AddPeripodialMembrane;
-	int PeripodialMembraneType;
 	bool stretcherAttached;
 	bool PipetteSuction;
 	bool ApicalSuction;
+	vector <int> TransientZFixListForPipette;
 	int StretchInitialStep, StretchEndStep;
 	int PipetteInitialStep, PipetteEndStep;
 	double pipetteCentre[3];
@@ -271,7 +259,6 @@ public:
     void writeKinPardisoFormat(const int nNonzero, vector<int> &ja_vec, vector<double> &a_vec, int* ja, double* a);
     void writeginPardisoFormat(gsl_vector* g, double* b, const int n);
     int  solveWithPardiso(double* a, double*b, int* ia, int* ja, gsl_vector* x ,const int n_variables);
-    void EliminateNode0Displacement(gsl_vector* deltaU);
     void updateUkInNR(gsl_matrix* uk, gsl_vector* deltaU);
     void updateElementPositionsinNR(gsl_matrix* uk);
     bool checkConvergenceViaDeltaU(gsl_vector* deltaU);
@@ -279,7 +266,7 @@ public:
     void updateNodePositionsNR(gsl_matrix* uk);
     void calcutateFixedK(gsl_matrix* K, gsl_vector* g);
     void smallStrainrunOneStep();
-    void packToPipetteWall(gsl_matrix* gExt, gsl_vector* gSum);
+    void packToPipetteWall();
     void calculatePacking(int RKId, double PeriThreshold, double ColThreshold);
 	void checkPackingToPipette(bool& packsToPip, double* pos, double* pipF,double mass, int id);
 	void getNormalAndCornerPosForPacking(Node* NodePointer, ShapeBase* ElementPointer, double* normalForPacking,double* posCorner, bool& bothperipodial);
@@ -288,10 +275,6 @@ public:
 	inline void CapPackingForce(double& Fmag);
 	void redistributePeripodialMembraneForces(int RKId);
 	void updateNodePositions(int RKId);
-	void updateNodePositionsForPeripodialMembraneCircumference(int RKId);
-	void realignPositionsForMidAttachedPeripodialMembrane(int RKId);
-	void realignPositionsForApicalAttachedPeripodialMembrane(int RKId);
-	void realignPositionsForHooveringPeripodialMembrane(int RKId);
 	void updateElementPositions(int RKId);
 	void updateElementPositionsSingle(int RKId, int i );
 	bool initiateSavedSystem();
@@ -299,7 +282,7 @@ public:
 	void alignTissueDVToXPositive();
 	void calculateDVDistance();
 	void TissueAxisPositionDisplay();
-	void CoordinateDisplay();
+	void coordinateDisplay();
 	void correctTiltedGrowthForGrowthFunction(GrowthFunctionBase* currGF);
 	void calculateTiltedElementPositionOnBase(ShapeBase* currElement);
 	void calculateBaseElementsFinalPosition(int Id,double DVGrowth, double APGrowth, double ABGrowth);

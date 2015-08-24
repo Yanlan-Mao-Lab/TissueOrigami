@@ -8,7 +8,7 @@ PeripodialMembraneParameters:
   PeripodialMembraneLateralThickness(fractionOfTissueHeight): 0.3
   LumenHeightScale(fractionOfTissueHeight): 0.3
   PeripodialMembraneYoungsModulus: 1000.0
-  PeripodialMembraneViscosity: 10.0
+  PeripodialMembraneViscosity: 0.0
 
 NodeFixingOptions:
   ApicalSurfaceFix(bool-x,y,z): 0 0 0
@@ -24,8 +24,8 @@ TimeParameters:
 PysicalProperties:
   YoungsModulusApical: 1000.0	YoungsModulusBasal: 1000.0	YoungsModulusMid: 1000.0	Noise(%-int): 0
   PoissonsRatio: 0.3		Noise(%-int): 0
-  ApicalViscosity: 10.0 	Noise(%-int): 0
-  BasalViscosity: 10.0		
+  ApicalViscosity: 0.0 	Noise(%-int): 0
+  BasalViscosity: 0.0		
 
 SaveOptions:
   SaveImages(bool): 1
