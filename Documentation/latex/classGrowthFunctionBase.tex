@@ -1,0 +1,82 @@
+\hypertarget{classGrowthFunctionBase}{}\section{Growth\+Function\+Base Class Reference}
+\label{classGrowthFunctionBase}\index{Growth\+Function\+Base@{Growth\+Function\+Base}}
+Inheritance diagram for Growth\+Function\+Base\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classGrowthFunctionBase}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{classGrowthFunctionBase_a061b31ad8a0cb228628c7104029a94bf}{}{\bfseries Growth\+Function\+Base} (int id, int type, float init\+Time, float end\+Time, bool apply\+To\+Columnar\+Layer, bool apply\+To\+Peripodial\+Membrane)\label{classGrowthFunctionBase_a061b31ad8a0cb228628c7104029a94bf}
+
+\item 
+\hypertarget{classGrowthFunctionBase_ad5b4e88d33c4b72444c5c25c25ab68fb}{}void {\bfseries Parent\+Error\+Message} (string function\+Name)\label{classGrowthFunctionBase_ad5b4e88d33c4b72444c5c25c25ab68fb}
+
+\item 
+\hypertarget{classGrowthFunctionBase_aed234af9feb797628d4a2d598dcf9632}{}double {\bfseries Parent\+Error\+Message} (string function\+Name, double return\+Value)\label{classGrowthFunctionBase_aed234af9feb797628d4a2d598dcf9632}
+
+\item 
+\hypertarget{classGrowthFunctionBase_a9097ca54f854aa0d1c8d220c971580dd}{}int {\bfseries Parent\+Error\+Message} (string function\+Name, int return\+Value)\label{classGrowthFunctionBase_a9097ca54f854aa0d1c8d220c971580dd}
+
+\item 
+\hypertarget{classGrowthFunctionBase_abd31142fe0bcc9a95a39c85cb55438a8}{}virtual void {\bfseries write\+Summary} (ofstream \&save\+File\+Simulation\+Summary, double dt)\label{classGrowthFunctionBase_abd31142fe0bcc9a95a39c85cb55438a8}
+
+\item 
+\hypertarget{classGrowthFunctionBase_aa031bd3d28993402ee5bdb3d8cae7fa6}{}virtual void {\bfseries get\+Centre} (float \&centre\+X, float \&centre\+Y)\label{classGrowthFunctionBase_aa031bd3d28993402ee5bdb3d8cae7fa6}
+
+\item 
+\hypertarget{classGrowthFunctionBase_a05ace7e6cb21566ad03e72e56962d58b}{}virtual float {\bfseries get\+Inner\+Radius} ()\label{classGrowthFunctionBase_a05ace7e6cb21566ad03e72e56962d58b}
+
+\item 
+\hypertarget{classGrowthFunctionBase_a2ba8f7659e1c0546998671458943233d}{}virtual float {\bfseries get\+Outer\+Radius} ()\label{classGrowthFunctionBase_a2ba8f7659e1c0546998671458943233d}
+
+\item 
+\hypertarget{classGrowthFunctionBase_a9598654cae114f6b443167898ac4d095}{}virtual void {\bfseries get\+Growth\+Rate} (double $\ast$max\+Value)\label{classGrowthFunctionBase_a9598654cae114f6b443167898ac4d095}
+
+\item 
+\hypertarget{classGrowthFunctionBase_a1dfd024db9bf627777741c68f7b5ddf2}{}virtual int {\bfseries get\+Grid\+X} ()\label{classGrowthFunctionBase_a1dfd024db9bf627777741c68f7b5ddf2}
+
+\item 
+\hypertarget{classGrowthFunctionBase_a1445bfc812abb72fd6757859aa302feb}{}virtual int {\bfseries get\+Grid\+Y} ()\label{classGrowthFunctionBase_a1445bfc812abb72fd6757859aa302feb}
+
+\item 
+\hypertarget{classGrowthFunctionBase_a067bdcd836e7196ce5cfc9120b9499c1}{}virtual double $\ast$$\ast$$\ast$ {\bfseries get\+Growth\+Matrix} ()\label{classGrowthFunctionBase_a067bdcd836e7196ce5cfc9120b9499c1}
+
+\item 
+\hypertarget{classGrowthFunctionBase_a4e40d019aff99e72b1aee79d93c8e9a0}{}virtual double {\bfseries get\+Growth\+Matrix\+Element} (int i, int j, int k)\label{classGrowthFunctionBase_a4e40d019aff99e72b1aee79d93c8e9a0}
+
+\item 
+\hypertarget{classGrowthFunctionBase_abcfbd2e1fbad91b3f9002ef7fc7625e5}{}virtual void {\bfseries set\+Growt\+Rate} (double ex, double ey, double ez)\label{classGrowthFunctionBase_abcfbd2e1fbad91b3f9002ef7fc7625e5}
+
+\item 
+\hypertarget{classGrowthFunctionBase_a29781080624a8ab028af36f3326b6240}{}virtual void {\bfseries set\+Growth\+Matrix\+Element} (double ex, double ey, double ez, int i, int j)\label{classGrowthFunctionBase_a29781080624a8ab028af36f3326b6240}
+
+\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{classGrowthFunctionBase_a90fc4b14e2adcda0930fe93b1490fb7a}{}int {\bfseries Type}\label{classGrowthFunctionBase_a90fc4b14e2adcda0930fe93b1490fb7a}
+
+\item 
+\hypertarget{classGrowthFunctionBase_aa669a940ab77009f9b2b9c9885e9cd9e}{}int {\bfseries Id}\label{classGrowthFunctionBase_aa669a940ab77009f9b2b9c9885e9cd9e}
+
+\item 
+\hypertarget{classGrowthFunctionBase_ae92513a7b41637df8e26e7db35ddf97c}{}float {\bfseries init\+Time}\label{classGrowthFunctionBase_ae92513a7b41637df8e26e7db35ddf97c}
+
+\item 
+\hypertarget{classGrowthFunctionBase_a3ff4db0573d354a75666a5f3ca446941}{}float {\bfseries end\+Time}\label{classGrowthFunctionBase_a3ff4db0573d354a75666a5f3ca446941}
+
+\item 
+\hypertarget{classGrowthFunctionBase_a3d56771e7c145589a14e11cc331e0326}{}bool {\bfseries apply\+To\+Columnar\+Layer}\label{classGrowthFunctionBase_a3d56771e7c145589a14e11cc331e0326}
+
+\item 
+\hypertarget{classGrowthFunctionBase_a08ae19f58cb98fa8e315a77f52749732}{}bool {\bfseries apply\+To\+Peripodial\+Membrane}\label{classGrowthFunctionBase_a08ae19f58cb98fa8e315a77f52749732}
+
+\end{DoxyCompactItemize}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+/home/melda/\+Documents/\+Tissue\+Folding/\+Tissue\+Folding/\+Source\+Code/Growth\+Function\+Base.\+h\end{DoxyCompactItemize}
