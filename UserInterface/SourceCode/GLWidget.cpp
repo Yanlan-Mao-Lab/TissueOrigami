@@ -797,8 +797,8 @@ void GLWidget::highlightNode(int i){
               int dy = lastPos.y() - InitialClickPos.y();
               dx *=this->devicePixelRatio();
               dy *=this->devicePixelRatio();
-              cout<<"dx: "<<dx<<" dy: "<<dy<<endl;
-              float speed = 0.01;
+              //cout<<"dx: "<<dx<<" dy: "<<dy<<endl;
+              float speed = 0.05;
               obj_pos[0] +=  dx*speed;
               obj_pos[1] += -dy*speed;
               lastPos = event->pos();
@@ -1157,6 +1157,7 @@ bool GLWidget::findNode(int i){
 
  void GLWidget::drawFixedNodes(){
  	int n = Sim01->Nodes.size();
+ 	float MarkerSize = 1.0;
  	for(int i = 0; i<n; ++i){
  		bool PositionFixed=false;
  		float colour[3]={0.0,0.0,0.0};
@@ -1181,12 +1182,12 @@ bool GLWidget::findNode(int i){
  			glColor3f(colour[0],colour[1],colour[2]);
  			if (Sim01->Nodes[i]->nDim == 2){
  				float trianglepoints[3][2];
- 				trianglepoints[0][0]=Sim01->Nodes[i]->Position[0]- 0.1;
- 				trianglepoints[0][1]=Sim01->Nodes[i]->Position[1]- 0.1;
- 				trianglepoints[1][0]=Sim01->Nodes[i]->Position[0]+ 0.1;
- 				trianglepoints[1][1]=Sim01->Nodes[i]->Position[1]- 0.1;
+ 				trianglepoints[0][0]=Sim01->Nodes[i]->Position[0]- MarkerSize;
+ 				trianglepoints[0][1]=Sim01->Nodes[i]->Position[1]- MarkerSize;
+ 				trianglepoints[1][0]=Sim01->Nodes[i]->Position[0]+ MarkerSize;
+ 				trianglepoints[1][1]=Sim01->Nodes[i]->Position[1]- MarkerSize;
  				trianglepoints[2][0]=Sim01->Nodes[i]->Position[0];
- 				trianglepoints[2][1]=Sim01->Nodes[i]->Position[1]+ 0.1;
+ 				trianglepoints[2][1]=Sim01->Nodes[i]->Position[1]+ MarkerSize;
  				glBegin(GL_TRIANGLES);
  					for (int j = 0; j < 3; ++j){
  						glVertex3f( trianglepoints[j][0],  trianglepoints[j][1], 0);
@@ -1196,18 +1197,18 @@ bool GLWidget::findNode(int i){
  			else{
  				//this is the 3D case:
  				float trianglepoints[4][3];
- 				trianglepoints[0][0]=Sim01->Nodes[i]->Position[0]- 0.1;
- 				trianglepoints[0][1]=Sim01->Nodes[i]->Position[1]- 0.1;
- 				trianglepoints[0][2]=Sim01->Nodes[i]->Position[2]- 0.1;
- 				trianglepoints[1][0]=Sim01->Nodes[i]->Position[0]+ 0.1;
- 				trianglepoints[1][1]=Sim01->Nodes[i]->Position[1]- 0.1;
+ 				trianglepoints[0][0]=Sim01->Nodes[i]->Position[0]- MarkerSize;
+ 				trianglepoints[0][1]=Sim01->Nodes[i]->Position[1]- MarkerSize;
+ 				trianglepoints[0][2]=Sim01->Nodes[i]->Position[2]- MarkerSize;
+ 				trianglepoints[1][0]=Sim01->Nodes[i]->Position[0]+ MarkerSize;
+ 				trianglepoints[1][1]=Sim01->Nodes[i]->Position[1]- MarkerSize;
  				trianglepoints[1][2]=Sim01->Nodes[i]->Position[2];
  				trianglepoints[2][0]=Sim01->Nodes[i]->Position[0];
- 				trianglepoints[2][1]=Sim01->Nodes[i]->Position[1]+ 0.1;
+ 				trianglepoints[2][1]=Sim01->Nodes[i]->Position[1]+ MarkerSize;
  				trianglepoints[2][2]=Sim01->Nodes[i]->Position[2];
- 				trianglepoints[3][0]=Sim01->Nodes[i]->Position[0]- 0.1;
- 				trianglepoints[3][1]=Sim01->Nodes[i]->Position[1]- 0.1;
- 				trianglepoints[3][2]=Sim01->Nodes[i]->Position[2]+ 0.1;
+ 				trianglepoints[3][0]=Sim01->Nodes[i]->Position[0]- MarkerSize;
+ 				trianglepoints[3][1]=Sim01->Nodes[i]->Position[1]- MarkerSize;
+ 				trianglepoints[3][2]=Sim01->Nodes[i]->Position[2]+ MarkerSize;
  				int order[4][3]={{0,1,2},{0,2,3},{0,1,3},{1,2,3}};
  				glBegin(GL_TRIANGLES);
  					for (int j = 0; j < 4; ++j){

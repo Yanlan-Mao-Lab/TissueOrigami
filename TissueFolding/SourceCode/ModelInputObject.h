@@ -23,6 +23,7 @@ private:
 	bool readSaveOptions(ifstream &file);
 	bool readMeshParameters(ifstream& file);
 	bool readPeripodialMembraneParameters(ifstream& file);
+	bool readNodeFixingParameters(ifstream& file);
 	bool readTimeParameters(ifstream &file);
 	bool readMeshType2(ifstream& file);
 	bool readMeshType4(ifstream& file);

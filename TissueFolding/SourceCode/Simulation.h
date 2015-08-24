@@ -87,14 +87,24 @@ private:
 	bool initiateMesh(int MeshType, int Row, int Column, float SideLength, float zHeight);
 	bool initiateMesh(int MeshType, string inputtype, float SideLength, float zHeight );
 	bool initiateMesh(int MeshType);
-	bool addPeripodialMembraneToTissue();
+	bool addPeripodialMembraneToTissueOld();
 	bool generateColumnarCircumferenceNodeList();
 	void sortColumnarCircumferenceNodeList();
 	void calculateCentreOfNodes(double* centre);
 	void getAverageSideLength(double& periAverageSideLength, double& colAverageSideLength);
 	bool isColumnarLayer3D();
 	bool CalculateTissueHeight();
-    void AddPeripodialMembraneNewScratch();
+	void calculateDiscretisationLayers(double &hColumnar, int& LumenHeightDiscretisationLayers, double &hLumen, double &peripodialHeight, int& peripodialHeightDiscretisationLayers, double& hPeripodial);
+	void fillColumnarBasedNodeList(vector< vector<int> > &ColumnarBasedNodeArray);
+	void calculateNewNodePosForPeripodialNodeAddition(int nodeId0, int nodeId1, double* pos, double sideThickness);
+	void addNodesForPeripodialOnOuterCircumference (vector< vector<int> > &ColumnarBasedNodeArray, vector< vector<int> > &OuterNodeArray, double hColumnar, int LumenHeightDiscretisationLayers, double hLumen, int peripodialHeightDiscretisationLayers, double hPeripodial);
+	void addNodesForPeripodialOnColumnarCircumference (vector< vector<int> > &ColumnarBasedNodeArray, int LumenHeightDiscretisationLayers, double hLumen, int peripodialHeightDiscretisationLayers, double hPeripodial);
+	void addLateralPeripodialElements(int totalLayers, vector< vector<int> > &ColumnarBasedNodeArray, vector< vector<int> > &OuterNodeArray);
+	void addNodesForPeripodialOnCap(vector< vector<int> > &ColumnarBasedNodeArray, vector< vector<int> > &PeripodialCapNodeArray, int TissueHeightDiscretisationLayers, int LumenHeightDiscretisationLayers, int peripodialHeightDiscretisationLayers, double hPeripodial);
+	void constructTriangleCornerListOfApicalSurface( vector< vector<int> > &TriangleList);
+	void addCapPeripodialElements( vector< vector<int> > &TriangleList, vector< vector<int> > &PeripodialCapNodeArray, int peripodialHeightDiscretisationLayers);
+	void correctCircumferentialNodeAssignment(vector< vector<int> > OuterNodeArray);
+	bool addPeripodialMembraneToTissue();
 	void addPeripodialMembraneNodes(vector <int*> &trianglecornerlist, double height, double d);
 	void AddPeripodialMembraneCircumference(double height, int& index_begin, int &index_end);
 	void AddHorizontalRowOfPeripodialMembraneNodes(vector <int*> &trianglecornerlist, double d, int &index_begin, int &index_end);
@@ -109,6 +119,7 @@ private:
 	void initiateSinglePrismElement();
 	void initiateNodesByRowAndColumn(int Row, int Column,  float SideLength, float zHeight);
 	void fixApicalBasalNodes(vector<int> &NodesToFix);
+	void checkForNodeFixing();
 	//void GenerateColumnarCircumferencialNodeList(vector<int> &NodesToFix, int nLastRow);
 	void initiateElementsByRowAndColumn(int Row, int Column);
 	void assignPhysicalParameters();
@@ -119,7 +130,13 @@ private:
     void updateElementToConnectedNodes(vector <Node*>& Nodes);
 	void assignConnectedElementsAndWeightsToNodes();
 	void fixAllD(int i);
+	void fixAllD(Node* currNode);
+	void fixX(int i);
+	void fixX(Node* currNode);
+	void fixY(int i);
+	void fixY(Node* currNode);
 	void fixZ(int i);
+	void fixZ(Node* currNode);
 	void zeroForcesOnNode(int RKId, int i);
     void processDisplayDataAndSave();
 	void updateDisplaySaveValuesFromRK();
@@ -182,11 +199,13 @@ public:
 	int Column;
 	float SideLength;
 	float zHeight;
-	bool ApicalNodeFix[2];
-	bool BasalNodeFix[2];
+	bool ApicalNodeFix[3];
+	bool BasalNodeFix[3];
+	bool CircumferentialNodeFix[3][3]; //row 0: apical circumferece x,y,z ; row 1: basal circumference x,y,z; row 2: all circumference x,y,z
 	double PeripodialElasticity;
 	double PeripodialViscosity;
 	double PeripodialThicnessScale;
+	double PeripodialLateralThicnessScale; //the thickness of the side region linking two layers, as a fraction of tissue thickness
 	double lumenHeight;
 	double lumenHeightScale;
 	int nGrowthFunctions;

@@ -105,8 +105,6 @@ public slots:
     QSlider			*ClippingSliders[3];
     //MacOS version:
     std::clock_t    simulationStartClock;
-    //for UBUNTU:
-    //clock			simulationStartClock;
     bool            displayedSimulationLength;
  };
 

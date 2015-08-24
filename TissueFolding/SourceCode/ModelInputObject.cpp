@@ -57,6 +57,9 @@ bool ModelInputObject::readParameters(){
 			else if(currParameterHeader == "PeripodialMembraneParameters:"){
 				Success  = readPeripodialMembraneParameters(parametersFile);
 			}
+			else if(currParameterHeader == "NodeFixingOptions:"){
+				Success  = readNodeFixingParameters(parametersFile);
+			}
 			else if(currParameterHeader == "TimeParameters:"){
 				Success  = readTimeParameters(parametersFile);
 			}
@@ -441,7 +444,60 @@ bool ModelInputObject::readMeshParameters(ifstream& file){
 	return true;
 }
 
-
+bool ModelInputObject::readNodeFixingParameters(ifstream& file){
+	string currHeader;
+	file >> currHeader;
+		if(currHeader == "ApicalSurfaceFix(bool-x,y,z):"){
+			file >>Sim->ApicalNodeFix[0];
+			file >>Sim->ApicalNodeFix[1];
+			file >>Sim->ApicalNodeFix[2];
+		}
+		else{
+			cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: ApicalSurfaceFix(bool-x,y,z):" <<endl;
+			return false;
+		}
+		file >> currHeader;
+		if(currHeader == "BasalSurfaceFix(bool-x,y,z):"){
+			file >>Sim->BasalNodeFix[0];
+			file >>Sim->BasalNodeFix[1];
+			file >>Sim->BasalNodeFix[2];
+		}
+		else{
+			cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: BasalSurfaceFix(bool-x,y,z):" <<endl;
+			return false;
+		}
+		file >> currHeader;
+		if(currHeader == "ApicalCircumferenceFix(bool-x,y,z):"){
+			file >>Sim->CircumferentialNodeFix[0][0];
+			file >>Sim->CircumferentialNodeFix[0][1];
+			file >>Sim->CircumferentialNodeFix[0][2];
+		}
+		else{
+			cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: ApicalCircumferenceFix(bool-x,y,z):" <<endl;
+			return false;
+		}
+		file >> currHeader;
+		if(currHeader == "BasalCircumferenceFix(bool-x,y,z):"){
+			file >>Sim->CircumferentialNodeFix[1][0];
+			file >>Sim->CircumferentialNodeFix[1][1];
+			file >>Sim->CircumferentialNodeFix[1][2];
+		}
+		else{
+			cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: BasalCircumferenceFix(bool-x,y,z):" <<endl;
+			return false;
+		}
+		file >> currHeader;
+		if(currHeader == "CircumferenceFix(bool-x,y,z):"){
+			file >>Sim->CircumferentialNodeFix[2][0];
+			file >>Sim->CircumferentialNodeFix[2][1];
+			file >>Sim->CircumferentialNodeFix[2][2];
+		}
+		else{
+			cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: CircumferenceFix(bool-x,y,z):" <<endl;
+			return false;
+		}
+		return true;
+}
 
 bool ModelInputObject::readMeshType4(ifstream& file){
 	string currHeader;
@@ -450,10 +506,9 @@ bool ModelInputObject::readMeshType4(ifstream& file){
 		file >> Sim->inputMeshFileName;
 	}
 	else{
-		cerr<<"Error in reading mesh row number, curr string: "<<currHeader<<", should have been: MeshFile(full-path):" <<endl;
+		cerr<<"Error in reading mesh path, curr string: "<<currHeader<<", should have been: MeshFile(full-path):" <<endl;
 		return false;
 	}
-	//checking consistency:
 	return true;
 }
 
@@ -549,19 +604,19 @@ bool ModelInputObject::readPeripodialMembraneParameters(ifstream& file){
 		return false;
 	}
 	file >> currHeader;
-	if(currHeader == "PeripodialMembraneType:"){
-		file >>Sim->PeripodialMembraneType;
-	}
-	else{
-		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: PeripodialMembraneYoungsModulus:" <<endl;
-		return false;
-	}
-	file >> currHeader;
 	if(currHeader == "PeripodialMembraneThickness(fractionOfTissueHeight):"){
 		file >>Sim->PeripodialThicnessScale;
 	}
 	else{
 		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: PeripodialMembraneThickness(fractionOfTissueHeight):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "PeripodialMembraneLateralThickness(fractionOfTissueHeight):"){
+		file >>Sim->PeripodialLateralThicnessScale;
+	}
+	else{
+		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: PeripodialMembraneLateralThickness(fractionOfTissueHeight):" <<endl;
 		return false;
 	}
 	file >> currHeader;

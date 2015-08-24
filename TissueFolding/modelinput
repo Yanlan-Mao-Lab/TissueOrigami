@@ -1,30 +1,37 @@
 InputMeshParameters:
   MeshInputMode(int-seeDocumentation): 4
-  MeshFile(full-path):   /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Wind48hr_01.mesh
+  MeshFile(full-path):   /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Wind48hr_02.mesh
 
 PeripodialMembraneParameters:
-  AddPeripodialMembrane: 0
-  PeripodialMembraneType: 0
+  AddPeripodialMembrane: 1
   PeripodialMembraneThickness(fractionOfTissueHeight): 0.5
+  PeripodialMembraneLateralThickness(fractionOfTissueHeight): 0.3
   LumenHeightScale(fractionOfTissueHeight): 0.3
-  PeripodialMembraneYoungsModulus: 4000.0
-  PeripodialMembraneViscosity: 50.0
+  PeripodialMembraneYoungsModulus: 1000.0
+  PeripodialMembraneViscosity: 10.0
+
+NodeFixingOptions:
+  ApicalSurfaceFix(bool-x,y,z): 0 0 0
+  BasalSurfaceFix(bool-x,y,z): 0 0 0
+  ApicalCircumferenceFix(bool-x,y,z): 0 0 0
+  BasalCircumferenceFix(bool-x,y,z): 0 0 0
+  CircumferenceFix(bool-x,y,z): 0 0 0
 
 TimeParameters:
-  TimeStep(sec): 0.05
-  SimulationLength(sec): 21600
+  TimeStep(sec): 1
+  SimulationLength(sec): 1
 
 PysicalProperties:
-  YoungsModulusApical: 3000.0	YoungsModulusBasal: 3000.0	YoungsModulusMid: 3000.0	Noise(%-int): 0
+  YoungsModulusApical: 1000.0	YoungsModulusBasal: 1000.0	YoungsModulusMid: 1000.0	Noise(%-int): 0
   PoissonsRatio: 0.3		Noise(%-int): 0
-  ApicalViscosity: 50.0 	Noise(%-int): 0
-  BasalViscosity: 50.0		
+  ApicalViscosity: 10.0 	Noise(%-int): 0
+  BasalViscosity: 10.0		
 
 SaveOptions:
   SaveImages(bool): 1
   SaveData(bool):   1
-  ImageSaveInterval(sec): 60
-  DataSaveInterval(sec):  60
+  ImageSaveInterval(sec): 1
+  DataSaveInterval(sec):  1
 
 GrowthOptions:
   NumberofGrowthFunctions(int): 4
@@ -88,11 +95,11 @@ Stretcher:
   MaxStrain: 0.5
 
 Pipette_Aspiration:
-  PipetteAspitarionActive(bool): 1
+  PipetteAspitarionActive(bool): 0
   InitialTime(sec): 0
   FinalTime(sec): 10
   ApicalSuciton(bool-will_set_up_basal_suction_if_false): 1
-  Centre_Position(x,y,z): -28.8 0.0 6.0
-  Pipette_Radius(micron): 10.0
-  Pipette_Effect_Debth(micron): 7.0
+  Centre_Position(x,y,z): 0.0 0.0 51.0
+  Pipette_Radius(micron): 13.0
+  Pipette_Effect_Debth(micron): 8.0
   Pipette_Suction_Pressure(x,y,z-unit): 0.0 0.0 20.0

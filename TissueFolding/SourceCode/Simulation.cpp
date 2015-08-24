@@ -1,7 +1,6 @@
 
 #include "Simulation.h"
 #include "Prism.h"
-#include "Triangle.h"
 #include <string.h>
 #include <vector>
 #include <gsl/gsl_linalg.h>
@@ -75,7 +74,6 @@ Simulation::~Simulation(){
 		delete tmp_GF;
         //cerr<<"GrowtFuncitons list size: "<<GrowthFunctions.size()<<endl;
 	}
-
 }
 
 void Simulation::setDefaultParameters(){
@@ -102,10 +100,13 @@ void Simulation::setDefaultParameters(){
 	Column = Row-2;
 	SideLength=1.0;
 	zHeight = 2.0;
-	ApicalNodeFix[0]= false;
-	ApicalNodeFix[1]= false;
-	BasalNodeFix[0]= false;
-	BasalNodeFix[1]= false;
+	for (int i=0; i<3; ++i){
+		ApicalNodeFix[i]= false;
+		BasalNodeFix[i]= false;
+		for (int j=0; j<3; j++){
+			CircumferentialNodeFix[i][j]= false;
+		}
+	}
 	nGrowthFunctions = 0;
 	nShapeChangeFunctions = 0;
 	TensionCompressionSaved = true;
@@ -115,6 +116,7 @@ void Simulation::setDefaultParameters(){
 	PeripodialElasticity = 0.0;
 	PeripodialViscosity = ApicalVisc;
 	PeripodialThicnessScale = 1.0;
+	PeripodialLateralThicnessScale = 0.3;
 	lumenHeightScale = 0.3;
 	DVRight = 0;
 	DVLeft = 1;
@@ -335,16 +337,6 @@ bool Simulation::checkInputConsistency(){
 			return false;
 		}
 	}
-	if(!ApicalNodeFix[0] && ApicalNodeFix[1]){
-		cerr <<"Apical nodes: There is no option to fix x and y movement while keeping z free for pinned nodes, correct mesh options"<<endl;
-		ApicalNodeFix[0] = true;
-		return false;
-	}
-	if(!BasalNodeFix[0] && BasalNodeFix[1]){
-		cerr <<"Basal nodes: There is no option to fix x and y movement while keeping z free for pinned nodes, correct mesh options"<<endl;
-		BasalNodeFix[0] = true;
-		return false;
-	}
 	if (AddPeripodialMembrane == false){
 		for (int i=0; i<nGrowthFunctions; ++i){
 			if(GrowthFunctions[i]->applyToPeripodialMembrane){
@@ -368,7 +360,7 @@ bool Simulation::initiateSystem(){
 		Success = initiateMesh(MeshType, Row, Column,  SideLength,  zHeight);
 	}
 	else if(MeshType == 4){
-		cout<<"mesh type : 4"<<endl;
+		//cout<<"mesh type : 4"<<endl;
 		Success = initiateMesh(MeshType);
 	}
 	if (!Success){
@@ -381,6 +373,7 @@ bool Simulation::initiateSystem(){
 	if (AddPeripodialMembrane){
 		Success = addPeripodialMembraneToTissue();
 	}
+	checkForNodeFixing();
 	if (!Success){
 		return Success;
 	}
@@ -761,7 +754,6 @@ void Simulation::initiateNodesFromSave(){
 
 void Simulation::initiateNodesFromMeshInput(){
 	int n;
-	vector <int> NodesToFix;
 	saveFileToDisplayMesh >> n;
 	Node* tmp_nd;
 	for (int i=0; i<n; ++i){
@@ -776,15 +768,10 @@ void Simulation::initiateNodesFromMeshInput(){
 		saveFileToDisplayMesh >> tissueType;
 		saveFileToDisplayMesh >> atCircumference;
 		tmp_nd = new Node(i, 3, pos,tissuePos, tissueType);
-		if (atCircumference ==1) {
-			tmp_nd->atCircumference = true;
-			NodesToFix.push_back(Nodes.size()); //If there is any fixing of the circumference, then this is a node that should be fixed
-		}
+		tmp_nd->atCircumference = atCircumference;
 		Nodes.push_back(tmp_nd);
+
 		delete[] pos;
-	}
-	if (BasalNodeFix[0] || BasalNodeFix[1] || ApicalNodeFix[0] || ApicalNodeFix[1] ){
-		fixApicalBasalNodes(NodesToFix);
 	}
 	//for (int i=0; i<n; ++i){
 	//	cout<<"node "<<i<<"pos: "<<
@@ -799,9 +786,6 @@ void Simulation::initiateElementsFromMeshInput(){
 		saveFileToDisplayMesh >> shapeType;
 		if (shapeType == 1){
 			initiatePrismFromMeshInput();
-		}
-		else if (shapeType == 4){
-			initiateTriangleFromMeshInput();
 		}
 		else{
 			cerr<<"Error in shape type, corrupt save file! - currShapeType: "<<shapeType<<endl;
@@ -819,11 +803,6 @@ void Simulation::initiateElementsFromSave(){
 		saveFileToDisplayMesh >> shapeType;
 		if (shapeType == 1){
 			initiatePrismFromSave();
-		}
-		else if (shapeType == 4){
-			double height = 0.0;
-			saveFileToDisplayMesh >> height;
-			initiateTriangleFromSave(height);
 		}
 		else{
 			cerr<<"Error in shape type, corrupt save file! - currShapeType: "<<shapeType<<endl;
@@ -913,26 +892,6 @@ bool Simulation::readShapeData(int i){
 	return true;
 }
 
-void Simulation::initiateTriangleFromSave(double height){
-	//inserts a new triangle at order k into elements vector
-	//the node ids and reference shape positions
-	//will be updated in function: updateShapeFromSave
-	int* NodeIds;
-	NodeIds = new int[3];
-	for (int i =0 ;i<3; ++i){
-		NodeIds[i] = 0;
-	}
-	Triangle* TrianglePnt01;
-	TrianglePnt01 = new Triangle(NodeIds, Nodes, currElementId, height);
-	TrianglePnt01->updateShapeFromSave(saveFileToDisplayMesh);
-	calculateSystemCentre();
-	TrianglePnt01->AlignReferenceApicalNormalToZ(SystemCentre);  //correcting the alignment of the triangular element such that the apical side will be aligned with (+)ve z
-	calculateSystemCentre();
-	Elements.push_back(TrianglePnt01);
-	currElementId++;
-	delete[] NodeIds;
-	//Elements[Elements.size()-1]->displayReferencePositions();
-}
 
 void Simulation::initiatePrismFromMeshInput(){
 	int* NodeIds;
@@ -952,29 +911,7 @@ void Simulation::initiatePrismFromMeshInput(){
 	//Elements[Elements.size()-1]->displayReferencePositions();
 }
 
-void Simulation::initiateTriangleFromMeshInput(){
-	int* NodeIds;
-	NodeIds = new int[3];
-	for (int i =0 ;i<3; ++i){
-		int savedId;
-		saveFileToDisplayMesh >> savedId;
-		NodeIds[i] = savedId;
-	}
-	double height;
-	saveFileToDisplayMesh >> height;
-	Triangle* TrianglePnt01;
-	TrianglePnt01 = new Triangle(NodeIds, Nodes, currElementId, height);
-	TrianglePnt01->updateReferencePositionMatrixFromMeshInput(saveFileToDisplayMesh);
-	calculateSystemCentre();
-	//CORRECT THIS LATER ON!!!
-	//SystemCentre[2] -= 10; // The apical surface is assumed to look towards (-)ve z
-	TrianglePnt01->AlignReferenceApicalNormalToZ(SystemCentre);  //correcting the alignment of the triangular element such that the apical side will be aligned with (+)ve z
-	calculateSystemCentre();
-	Elements.push_back(TrianglePnt01);
-	currElementId++;
-	delete[] NodeIds;
-	//Elements[Elements.size()-1]->displayReferencePositions();
-}
+
 
 void Simulation::reInitiateSystemForces(int oldSize){
 	//deleting the old system forces:
@@ -1097,31 +1034,6 @@ void Simulation::initiatePrismFromSaveForUpdate(int k){
 	vector<ShapeBase*>::iterator it = Elements.begin();
 	it += k;
 	Elements.insert(it,PrismPnt01);
-	currElementId++;
-	delete[] NodeIds;
-}
-
-void Simulation::initiateTriangleFromSaveForUpdate(int k, double height){
-	//inserts a new triangle at order k into elements vector
-	//the node ids and reference shape positions
-	//will be updated in function: updateShapeFromSave
-	int* NodeIds;
-	NodeIds = new int[3];
-	for (int i =0 ;i<3; ++i){
-		//the node ids will be updated in function: updateShapeFromSave
-		NodeIds[i] = 0;
-	}
-	Triangle* TrianglePnt01;
-	TrianglePnt01 = new Triangle(NodeIds, Nodes, currElementId, height);
-	TrianglePnt01->updateShapeFromSave(saveFileToDisplayMesh);
-	calculateSystemCentre();
-	//CORRECT THIS LATER ON!!!
-	SystemCentre[2] -= 10; // The apical surface is assumed to took towards (-)ve z
-	TrianglePnt01->AlignReferenceApicalNormalToZ(SystemCentre);  //correcting the alignment of the triangular element such that the apical side will be aligned with (+)ve z
-	calculateSystemCentre();
-	vector<ShapeBase*>::iterator it = Elements.begin();
-	it += k;
-	Elements.insert(it,TrianglePnt01);
 	currElementId++;
 	delete[] NodeIds;
 }
@@ -1249,12 +1161,6 @@ void  Simulation::updateElementStatesFromSave(){
 				//the new shape is a prism, I will add it now;
 				initiatePrismFromSaveForUpdate(i);
 			}
-			if (shapeType == 4){
-				//the new shape is a triangle, I will add it now;
-				double height;
-				saveFileToDisplayMesh >> height;
-				initiateTriangleFromSaveForUpdate(i,height);
-			}
 			removeElementFromEndOfList();
 			currElementNumber = Elements.size();
 		}
@@ -1269,14 +1175,6 @@ void  Simulation::updateElementStatesFromSave(){
 			//it will update the node ids, and reference positions.
 			//the normal positions will be updated using function updatePositions, called by updateOneStepFromSave
 			initiatePrismFromSaveForUpdate(i);
-			currElementNumber = Elements.size();
-		}
-		if (shapeType == 4){
-			int i = Elements.size()-1;
-			//the new shape is a triangle, I will add it now;
-			double height;
-			saveFileToDisplayMesh >> height;
-			initiateTriangleFromSaveForUpdate(i,height);
 			currElementNumber = Elements.size();
 		}
 	}
@@ -1423,7 +1321,7 @@ bool Simulation::initiateMesh(int MeshType){
 
 
 
-bool Simulation::addPeripodialMembraneToTissue(){
+bool Simulation::addPeripodialMembraneToTissueOld(){
 	bool Success = true;
 	Success = generateColumnarCircumferenceNodeList();
 	if (!Success){
@@ -2111,6 +2009,7 @@ bool  Simulation::isColumnarLayer3D(){
 bool Simulation::CalculateTissueHeight(){
 	//check if the columnar layer is made of 3D elements:
 	bool ColumnarLayer3D = isColumnarLayer3D();
+	TissueHeight = 0;
 	if (ColumnarLayer3D){
 		//Find the first basal node on the Nodes List
 		//Find the first element that has this node on the elements list
@@ -2170,11 +2069,11 @@ void Simulation::addPeripodialMembraneElements(vector <int*> &trianglecornerlist
 		NodeIds[0] = trianglecornerlist[i][0];
 		NodeIds[1] = trianglecornerlist[i][1];
 		NodeIds[2] = trianglecornerlist[i][2];
-		Triangle* TrianglePnt01;
+		//Triangle* TrianglePnt01;
 		//cout<<"NodeIds: "<<NodeIds[0]<<" "<<NodeIds[1]<<" "<<NodeIds[2]<<endl;
-		TrianglePnt01 = new Triangle(NodeIds, Nodes, currElementId, height);
-		TrianglePnt01->AlignReferenceApicalNormalToZ(SystemCentre);  //correcting the alignment of the triangular element such that the apical side will be aligned with (+)ve z
-		Elements.push_back(TrianglePnt01);
+		//TrianglePnt01 = new Triangle(NodeIds, Nodes, currElementId, height);
+		//TrianglePnt01->AlignReferenceApicalNormalToZ(SystemCentre);  //correcting the alignment of the triangular element such that the apical side will be aligned with (+)ve z
+		//Elements.push_back(TrianglePnt01);
 		currElementId++;
 		delete[] NodeIds;
 	}
@@ -2197,9 +2096,57 @@ void Simulation::calculateShapeFunctionDerivatives(){
     }
 }
 
+void Simulation::fixAllD(Node* currNode){
+	for (int j =0 ; j<currNode->nDim; ++j){
+		currNode->FixedPos[j]=true;
+	}
+}
 void Simulation::fixAllD(int i){
 	for (int j =0 ; j<Nodes[i]->nDim; ++j){
 		Nodes[i]->FixedPos[j]=true;
+	}
+}
+
+void Simulation::fixX(Node* currNode){
+	if(currNode->nDim>0){
+		currNode->FixedPos[0]=true;
+	}
+	else{
+		cerr<<"ERROR: Node : "<<currNode->Id<<" does not have x-dimension"<<endl;
+	}
+}
+void Simulation::fixX(int i){
+	if(Nodes[i]->nDim>0){
+		Nodes[i]->FixedPos[0]=true;
+	}
+	else{
+		cerr<<"ERROR: Node : "<<Nodes[i]->Id<<" does not have x-dimension"<<endl;
+	}
+}
+
+void Simulation::fixY(Node* currNode){
+	if(currNode->nDim>1){
+		currNode->FixedPos[1]=true;
+	}
+	else{
+		cerr<<"ERROR: Node : "<<currNode->Id<<" does not have y-dimension"<<endl;
+	}
+}
+void Simulation::fixY(int i){
+	if(Nodes[i]->nDim>1){
+		Nodes[i]->FixedPos[1]=true;
+	}
+	else{
+		cerr<<"ERROR: Node : "<<Nodes[i]->Id<<" does not have y-dimension"<<endl;
+	}
+}
+
+void Simulation::fixZ(Node* currNode){
+	if(currNode->nDim>2){
+		currNode->FixedPos[2]=true;
+	}
+	else{
+		cerr<<"ERROR: Node : "<<currNode->Id<<" does not have z-dimension"<<endl;
 	}
 }
 
@@ -2208,7 +2155,7 @@ void Simulation::fixZ(int i){
 		Nodes[i]->FixedPos[2]=true;
 	}
 	else{
-		cerr<<"ERROR: Node : "<<i<<" does not have z-dimension"<<endl;
+		cerr<<"ERROR: Node : "<<Nodes[i]->Id<<" does not have z-dimension"<<endl;
 	}
 }
 
@@ -2344,40 +2291,83 @@ void Simulation::initiateNodesByRowAndColumn(int Row, int Column, float SideLeng
 		tmp_nd = new Node(n+i, 3, pos,1,0);
 		Nodes.push_back(tmp_nd);
 	}
-
-	if (BasalNodeFix[0] || BasalNodeFix[1] || ApicalNodeFix[0] || ApicalNodeFix[1] ){
-		fixApicalBasalNodes(NodesToFix);
-	}
-
 	delete[] pos;
 }
 
-void Simulation::fixApicalBasalNodes(vector<int> &NodesToFix){
-	int nNodesToFix = NodesToFix.size();
-	int n = Nodes.size()/2;
-	for (int i=0; i<nNodesToFix; ++i){
-		if(BasalNodeFix[0]){
-			//The nodes on the circumference on the basal side (bottom)
-			//have their z position fixed.
-			fixZ(NodesToFix[i]);
+void Simulation::checkForNodeFixing(){
+	//Are there any circumferential node fixing options enabled:
+	bool thereIsCircumFix = false;
+	for (int i=0;i<3; ++i){
+		for (int j=0;j<3; ++j){
+			if (CircumferentialNodeFix[i][j] == true){
+				thereIsCircumFix = true;
+				break;
+			}
 		}
-		if(BasalNodeFix[1]){
-			//The nodes on the circumference on the basal side (bottom)
-			//have their x & y positions fixed.
-			fixAllD(NodesToFix[i]);
+	}
+	//If there is any circumferential Node fixing:
+	if (thereIsCircumFix){
+		vector<Node*>::iterator itNode;
+		for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+			if ( (*itNode)->atCircumference){
+				//Node is at the circumference, now checking for all possibilities:
+				// if i == 0 , I am checking for apical circumference
+				// if i == 1 , I am checking for basal  circumference
+				// if i == 2 , I am checking for all    circumference
+				for (int i=0;i<3; ++i){
+					if ( (i == 0 && (*itNode)->tissuePlacement == 1 ) ||  //tissuePlacement == 1 is apical
+						 (i == 1 && (*itNode)->tissuePlacement == 0 ) ||  //tissuePlacement == 0 is basal
+						 (i == 2)){										  //tissuePlacement is irrelevant, fixing all
+
+						//The node is at circumference; if
+						if (CircumferentialNodeFix[i][0]){
+							fixX((*itNode));
+						}
+						if (CircumferentialNodeFix[i][1]){
+							fixY((*itNode));
+						}
+						if (CircumferentialNodeFix[i][2]){
+							fixZ((*itNode));
+						}
+					}
+				}
+			}
 		}
-		if(ApicalNodeFix[0]){
-			//The nodes on the circumference on the apical side (top)
-			//have their z position fixed.
-			fixZ(NodesToFix[i]+n);
+	}
+	if (BasalNodeFix[0] || BasalNodeFix[1] || BasalNodeFix[2] ){
+		vector<Node*>::iterator itNode;
+		for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+			if ( (*itNode)->tissuePlacement == 0){
+				if (BasalNodeFix[0]){
+					fixX((*itNode));
+				}
+				if (BasalNodeFix[1]){
+					fixY((*itNode));
+				}
+				if (BasalNodeFix[2]){
+					fixZ((*itNode));
+				}
+			}
 		}
-		if(ApicalNodeFix[1]){
-			//The nodes on the circumference on the apical side (top)
-			//have their x & y positions fixed.
-			fixAllD(NodesToFix[i]+n);
+	}
+	if (ApicalNodeFix[0] || ApicalNodeFix[1]  || ApicalNodeFix[2]){
+		vector<Node*>::iterator itNode;
+		for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+			if ( (*itNode)->tissuePlacement == 1){
+				if (ApicalNodeFix[0]){
+					fixX((*itNode));
+				}
+				if (ApicalNodeFix[1]){
+					fixY((*itNode));
+				}
+				if (ApicalNodeFix[2]){
+					fixZ((*itNode));
+				}
+			}
 		}
 	}
 }
+
 /*
 void Simulation::GenerateCircumferencialNodeList(vector<int> &NodesToFix, int nLastRow){
 	//Now I have a list of nodes to fix, written in a specific order.
@@ -2534,9 +2524,9 @@ void Simulation::assignPhysicalParameters(){
 
 void Simulation::manualPerturbationToInitialSetup(bool deform, bool rotate){
     if(timestep==0){
-        double scaleX = 1.0;
-        double scaleY = 1.0;
-        double scaleZ = 2.0;
+        double scaleX = 2.0;
+        double scaleY = 2.0;
+        double scaleZ = 1.0;
 
         double PI = 3.14159265359;
         double tetX = -45 *PI/180.0;
@@ -2548,8 +2538,6 @@ void Simulation::manualPerturbationToInitialSetup(bool deform, bool rotate){
                 Nodes[i]->Position[1] *=scaleY;
                 Nodes[i]->Position[2] *=scaleZ;
             }
-            Nodes[3]->Position[1] -= 15.0;
-            Nodes[5]->Position[0] -= 15.0;
         }
 
         if (rotate){
@@ -2590,93 +2578,414 @@ void Simulation::updateGrowthRotationMatrices(){
     }
 }
 
-void Simulation::AddPeripodialMembraneNewScratch(){
-    bool Success = true;
+void Simulation::calculateDiscretisationLayers(double &hColumnar, int& LumenHeightDiscretisationLayers, double &hLumen, double &peripodialHeight, int& peripodialHeightDiscretisationLayers, double& hPeripodial){
+	//The average columnar layer element heigth would be TissueHeight divided by the number of element layers:
+	hColumnar = TissueHeight/TissueHeightDiscretisationLayers;
+	//Calculating the height of the lumen:
+	lumenHeight = TissueHeight*lumenHeightScale;
+	//calculating how many layer I need for this lumen:
+	LumenHeightDiscretisationLayers = ceil(lumenHeight/hColumnar);
+	//calculating the actual element height needed to produce the total height with the calculated layr number:
+	hLumen = lumenHeight/LumenHeightDiscretisationLayers;
+	//calculating the height of the peripodial membrane:
+	peripodialHeight = PeripodialThicnessScale*TissueHeight;
+	//calculating how many layers I need for this peripodial membrane:
+	peripodialHeightDiscretisationLayers = ceil(peripodialHeight/hColumnar);
+	//calculating the actual element height needed to produce the total height with the calculated layr number:
+	hPeripodial = peripodialHeight/peripodialHeightDiscretisationLayers;
+	cout<<"Tissue height: "<<TissueHeight<<" columnar element height: "<<hColumnar<<" TissueHeightDiscretisationLayers: "<<TissueHeightDiscretisationLayers<<endl;
+	cout<<"Lumen height:  "<<lumenHeight<<" height of one lumen element: "<<hLumen<<" LumenHeightDiscretisationLayers: "<<LumenHeightDiscretisationLayers<<endl;
+	cout<<"Peripodial height:  "<<peripodialHeight<<" height of one peripodial element: "<<hPeripodial<<" LumenHeightDiscretisationLayers: "<<peripodialHeightDiscretisationLayers<<endl;
+}
+
+void Simulation::fillColumnarBasedNodeList(vector< vector<int> > &ColumnarBasedNodeArray){
+	int nCircumference = ColumnarCircumferencialNodeList.size();
+	for (int i =0; i<nCircumference; ++i){
+    	int currNodeId = ColumnarBasedNodeArray[i][0];
+		bool foundElement = true;
+		bool finishedTissueThicness  = false;
+		while(!finishedTissueThicness && foundElement){ //while the node is not apical, and I could find the next element
+			foundElement = false;
+			vector<ShapeBase*>::iterator itElement;
+			for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+				bool IsBasalOwner = (*itElement)->IsThisNodeMyBasal(currNodeId);
+				if (IsBasalOwner){
+					foundElement = true;
+					break;
+				}
+			}
+			//found the current node as basal node of an element
+			//get the corresponding apical node, record in the list:
+			currNodeId = (*itElement)->getCorrecpondingApical(currNodeId); //have the next node
+			ColumnarBasedNodeArray[i].push_back(currNodeId);
+			if (Nodes[currNodeId]->tissuePlacement == 1) {
+				//Added the apical node now, I can stop:
+				finishedTissueThicness = true;
+			}
+		}
+    }
+    for (int i=0;i<nCircumference; ++i){
+    	cout<<"Circumferential node stack: ";
+    	for (int j=0; j<TissueHeightDiscretisationLayers+1; ++j){
+          	cout<<ColumnarBasedNodeArray[i][j]<<" ";
+    	}
+    	cout<<endl;
+    }
+}
+
+void Simulation::addNodesForPeripodialOnColumnarCircumference (vector< vector<int> > &ColumnarBasedNodeArray, int LumenHeightDiscretisationLayers, double hLumen, int peripodialHeightDiscretisationLayers, double hPeripodial ){
+	//add nodes for the lumen and peripodial membrane on top of the columnar nodes:
+	int nCircumference = ColumnarBasedNodeArray.size();
+	for (int i=0; i<nCircumference; ++i){
+		int nodeId0 = ColumnarBasedNodeArray[i][TissueHeightDiscretisationLayers];
+		double* pos;
+		pos = new double[3];
+		for (int j=0; j<Nodes[nodeId0]->nDim; j++){
+			pos[j] = Nodes[nodeId0]->Position[j];
+		}
+		//adding nodes for lumen:
+		for (int j=1; j<LumenHeightDiscretisationLayers+1; ++j){
+			pos[2] += hLumen;
+			int newNodeId = Nodes.size();
+			Node* tmp_nd = new Node(newNodeId, 3, pos, 2, 1); //Tissue placement is midlayer (2), tissue type is peripodial membrane (1)
+			Nodes.push_back(tmp_nd);
+			ColumnarBasedNodeArray[i].push_back(newNodeId);
+		}
+		//The last node should also be apical, at it is the bottom of the peripodial membrane, looking into the lumen, change its placement:
+		Nodes[Nodes.size()-1]->tissuePlacement = 1; //made tissueplacement apical
+		//adding nodes for the peripodial membrane:
+		for (int j=1; j<peripodialHeightDiscretisationLayers+1; ++j){
+			pos[2] += hPeripodial;
+			int newNodeId = Nodes.size();
+			Node* tmp_nd = new Node(newNodeId, 3, pos, 2, 1); //Tissue placement is midlayer (2), tissue type is peripodial membrane (1)
+			Nodes.push_back(tmp_nd);
+			ColumnarBasedNodeArray[i].push_back(newNodeId);
+		}
+		//The last node should also be basal, at it is the top of the peripodial membrane, change its placement:
+		Nodes[Nodes.size()-1]->tissuePlacement = 0; //made tissueplacement basal
+		delete pos;
+	}
+}
+
+void Simulation::calculateNewNodePosForPeripodialNodeAddition(int nodeId0, int nodeId1, double* pos, double sideThickness){
+	double* vec0;
+	vec0 = new double[3];
+	double midpoint[3] = {0,0,0};
+	for (int j=0; j<Nodes[nodeId0]->nDim; j++){
+		vec0[j] = (Nodes[nodeId1]->Position[j] - Nodes[nodeId0]->Position[j])/2.0;
+		midpoint[j] = Nodes[nodeId0]->Position[j] + vec0[j];
+	}
+	Elements[0]->normaliseVector3D(vec0);
+	//The list is sorted counter-cock-wise, to point out, I will roate normalised vector v0 -90 degrees on z axis:
+	// (x,y,z) -> (y,-x,z);
+	// then I will add this vector to the calculated mid point to gt the new node's position.
+	pos[0] = midpoint[0] + vec0[1]*sideThickness;
+	pos[1] = midpoint[1] - vec0[0]*sideThickness;
+	pos[2] = midpoint[2];
+	delete[] vec0;
+}
+
+void Simulation::addNodesForPeripodialOnOuterCircumference (vector< vector<int> > &ColumnarBasedNodeArray, vector< vector<int> > &OuterNodeArray, double hColumnar, int LumenHeightDiscretisationLayers, double hLumen, int peripodialHeightDiscretisationLayers, double hPeripodial ){
+	double peripodialSideConnectionThickness =PeripodialLateralThicnessScale*TissueHeight; //in microns
+	double avrSide=0.0, dummy =0.0;
+	getAverageSideLength(dummy,avrSide);	//first term will get you the average side length of the peripodial membrane elements, second is the columnar elements
+	if (avrSide/peripodialSideConnectionThickness > 5 || avrSide/peripodialSideConnectionThickness< 0.2 ){
+		cerr<<"WARNING, the lateral connection thickness between the peripodial membrane and the columnar layer is too different than aerage alament size (more than 5 fold diference)"<<endl;
+	}
+	//Now I need the average side of an element, to add new nodes accordingly:
+	int nCircumference = ColumnarBasedNodeArray.size();
+	for (int i=0; i<nCircumference; ++i){
+		//cout<<"at node in the list: "<<i<<endl;
+		int nodeId0 = ColumnarBasedNodeArray[i][0];
+		int nodeId1;
+		if( i == nCircumference - 1){
+			nodeId1 = ColumnarBasedNodeArray[0][0];
+		}
+		else{
+			nodeId1 = ColumnarBasedNodeArray[i+1][0];
+		}
+		double* pos = new double[3];
+		calculateNewNodePosForPeripodialNodeAddition(nodeId0, nodeId1, pos, peripodialSideConnectionThickness);
+		//cout<<" calculated pos : "<<pos[0] <<" "<<pos[1]<<" "<<pos[2]<<endl;
+		//Adding the array of new nodes:
+		//adding the base:
+		int newNodeId = Nodes.size();
+		Node* tmp_nd = new Node(newNodeId, 3, pos, 0, 1); //Tissue placement basal (0), tissue type is peripodial membrane (1)
+		Nodes.push_back(tmp_nd);
+		OuterNodeArray[i].push_back(newNodeId);
+		//adding the nodes for the columnar layer:
+		for (int j=1; j<TissueHeightDiscretisationLayers+1; ++j){
+			pos[2] += hColumnar;
+			//cout<<" pos for columnar aligned new node: "<<pos[0] <<" "<<pos[1]<<" "<<pos[2]<<" hColumnar: "<<hColumnar<<endl;
+
+			int newNodeId = Nodes.size();
+			Node* tmp_nd = new Node(newNodeId, 3, pos, 2, 1); //Tissue placement is midlayer (2), tissue type is peripodial membrane (1)
+			Nodes.push_back(tmp_nd);
+			OuterNodeArray[i].push_back(newNodeId);
+		}
+		//adding nodes for lumen:
+		for (int j=1; j<LumenHeightDiscretisationLayers+1; ++j){
+			pos[2] += hLumen;
+			int newNodeId = Nodes.size();
+			Node* tmp_nd = new Node(newNodeId, 3, pos, 2, 1); //Tissue placement is midlayer (2), tissue type is peripodial membrane (1)
+			Nodes.push_back(tmp_nd);
+			OuterNodeArray[i].push_back(newNodeId);
+		}
+		//adding nodes for the peripodial membrane:
+		for (int j=1; j<peripodialHeightDiscretisationLayers+1; ++j){
+			pos[2] += hPeripodial;
+			int newNodeId = Nodes.size();
+			Node* tmp_nd = new Node(newNodeId, 3, pos, 2, 1); //Tissue placement is midlayer (2), tissue type is peripodial membrane (1)
+			Nodes.push_back(tmp_nd);
+			OuterNodeArray[i].push_back(newNodeId);
+		}
+		//The last node should also be basal, at it is the top of the peripodial membrane, change its placement:
+		Nodes[Nodes.size()-1]->tissuePlacement = 0; //made tissueplacement basal
+		delete[] pos;
+    }
+}
+
+void Simulation::addLateralPeripodialElements(int totalLayers, vector< vector<int> > &ColumnarBasedNodeArray, vector< vector<int> > &OuterNodeArray){
+    // I need to add the elements:
+    // Two elements are added for each element on the side:
+    // First triangle base will be New node 0, oldNode1, oldnode0, top of the element will be read from the node id stacks
+    // Second triangle base will be: New node 0, new node 1, old node 1
+	int nCircumference = ColumnarBasedNodeArray.size();
+	for (int i=0;i<nCircumference; ++i){
+    	for (int j=0;j<totalLayers; ++j){
+    		int indiceTri0Corner0 = i;
+			int indiceTri0Corner1 = i+1;
+			int indiceTri0Corner2 = i;
+			int indiceTri1Corner0 = indiceTri0Corner0;
+			int indiceTri1Corner1 = i+1;
+			int indiceTri1Corner2 = indiceTri0Corner1;
+			if (indiceTri0Corner1 == nCircumference){
+				indiceTri0Corner1 = 0;
+				indiceTri1Corner2 = 0;
+				indiceTri1Corner1 = 0;
+			}
+			int* NodeIds = new int[6];
+			//adding the first element:
+			NodeIds[0] = OuterNodeArray[indiceTri0Corner0][j];
+			NodeIds[1] = ColumnarBasedNodeArray[indiceTri0Corner1][j];
+			NodeIds[2] = ColumnarBasedNodeArray[indiceTri0Corner2][j];
+			NodeIds[3] = OuterNodeArray[indiceTri0Corner0][j+1];
+			NodeIds[4] = ColumnarBasedNodeArray[indiceTri0Corner1][j+1];
+			NodeIds[5] = ColumnarBasedNodeArray[indiceTri0Corner2][j+1];
+			Prism* PrismPnt01;
+			PrismPnt01 = new Prism(NodeIds, Nodes, currElementId);
+			Elements.push_back(PrismPnt01);
+			currElementId++;
+			//adding the second element:
+			NodeIds[0] = OuterNodeArray[indiceTri1Corner0][j];
+			NodeIds[1] = OuterNodeArray[indiceTri1Corner1][j];
+			NodeIds[2] = ColumnarBasedNodeArray[indiceTri1Corner2][j];
+			NodeIds[3] = OuterNodeArray[indiceTri1Corner0][j+1];
+			NodeIds[4] = OuterNodeArray[indiceTri1Corner1][j+1];
+			NodeIds[5] = ColumnarBasedNodeArray[indiceTri1Corner2][j+1];
+			PrismPnt01 = new Prism(NodeIds, Nodes, currElementId);
+			Elements.push_back(PrismPnt01);
+			currElementId++;
+    	}
+    }
+}
+
+void Simulation::addNodesForPeripodialOnCap(vector< vector<int> > &ColumnarBasedNodeArray, vector< vector<int> > &PeripodialCapNodeArray, int TissueHeightDiscretisationLayers, int LumenHeightDiscretisationLayers, int peripodialHeightDiscretisationLayers, double hPeripodial){
+    int ncurrNodes = Nodes.size();
+    int nCircumference = ColumnarBasedNodeArray.size();
+    for (int i = 0; i<ncurrNodes; ++i){
+		if (Nodes[i]->tissuePlacement == 1 && Nodes[i]->tissueType == 0){ //Node is apical and on the columnar layer
+			if (Nodes[i]->atCircumference){
+				//copy form previous list,
+				int lumenCapLayer =  TissueHeightDiscretisationLayers+LumenHeightDiscretisationLayers;
+				for (int j=0; j<nCircumference; ++j){
+					if(Nodes[i]->Id == ColumnarBasedNodeArray[j][TissueHeightDiscretisationLayers]){
+						//found the current node on hte existing list
+						PeripodialCapNodeArray[j].push_back(ColumnarBasedNodeArray[j][TissueHeightDiscretisationLayers]);
+						int n = ColumnarBasedNodeArray[j].size();
+						for (int k=lumenCapLayer; k<n; ++k ){
+							//copy all the previously added nodes to this list
+							//the 0th layer will be the apical surface of the columnar layer, it will be used to read element structure
+							//new elements will be added via the nodes on following layers
+							PeripodialCapNodeArray[j].push_back(ColumnarBasedNodeArray[j][k]);
+						}
+						break;
+					}
+				}
+			}
+			else{
+				//push back a new vector
+				int n = PeripodialCapNodeArray.size();
+				PeripodialCapNodeArray.push_back(vector<int>(0));
+				PeripodialCapNodeArray[n].push_back(Nodes[i]->Id);
+				//now I need to add the new nodes:
+				//adding nodes for the peripodial membrane:
+				double* pos;
+				pos = new double[3];
+				pos[0] = Nodes[i]->Position[0];
+				pos[1] = Nodes[i]->Position[1];
+				pos[2] = Nodes[i]->Position[2]+lumenHeight;
+				for (int j=0; j<peripodialHeightDiscretisationLayers+1; ++j){
+					int newNodeId = Nodes.size();
+					int tissuePlacement = 2; //defalut is midlayer
+					if (j==0){tissuePlacement = 1;} //The first node should be apical, as it is looking into the lumen, the basal node is corrected outside loop
+					Node* tmp_nd = new Node(newNodeId, 3, pos, tissuePlacement, 1); //Tissue placement is midlayer (2), tissue type is peripodial membrane (1)
+					Nodes.push_back(tmp_nd);
+					PeripodialCapNodeArray[n].push_back(newNodeId);
+					pos[2] += hPeripodial;
+				}
+				//The last node should also be basal, at it is the top of the peripodial membrane, change its placement:
+				Nodes[Nodes.size()-1]->tissuePlacement = 0; //made tissueplacement basal
+				delete[] pos;
+			}
+		}
+	}
+ }
+
+void Simulation::constructTriangleCornerListOfApicalSurface( vector< vector<int> > &TriangleList){
+    int nTri = 0;
+    int ncurrElement = Elements.size();
+    for (int i=0; i<ncurrElement;++i){
+    	 vector <int> ApicalTriangles;
+    	 Elements[i]->getApicalTriangles(ApicalTriangles);
+    	 int nList = ApicalTriangles.size();
+		 for (int k=0; k<nList-2; k+=3){
+			 if (Nodes[ApicalTriangles[k]]->tissuePlacement == 1 &&
+				 Nodes[ApicalTriangles[k+1]]->tissuePlacement == 1 &&
+				 Nodes[ApicalTriangles[k+2]]->tissuePlacement == 1){
+				 TriangleList.push_back(vector<int>(3));
+				 TriangleList[nTri][0] = (Nodes[ApicalTriangles[k]]->Id);
+				 TriangleList[nTri][1] = (Nodes[ApicalTriangles[k+1]]->Id);
+				 TriangleList[nTri][2] = (Nodes[ApicalTriangles[k+2]]->Id);
+				 nTri++;
+			 }
+		 }
+    }
+}
+
+void Simulation::addCapPeripodialElements( vector< vector<int> > &TriangleList, vector< vector<int> > &PeripodialCapNodeArray, int peripodialHeightDiscretisationLayers){
+	int nTri = TriangleList.size();
+	for (int i=0; i<nTri; ++i){
+		int indiceTri0Corner0, indiceTri0Corner1,indiceTri0Corner2;
+		int n = PeripodialCapNodeArray.size();
+		bool found0 = false, found1 = false, found2 = false;
+		for (int j =0; j<n; ++j){
+		   if (TriangleList[i][0] == PeripodialCapNodeArray[j][0]){
+			   indiceTri0Corner0 = j;
+			   found0 = true;
+		   }
+		   else if (TriangleList[i][1] == PeripodialCapNodeArray[j][0]){
+			   indiceTri0Corner1 = j;
+			   found1 = true;
+		   }
+		   else if (TriangleList[i][2] == PeripodialCapNodeArray[j][0]){
+			   indiceTri0Corner2 = j;
+			   found2 = true;
+		   }
+		   if (found0 && found1 && found2 ){
+			   break;
+		   }
+		}
+		//now I have the indices of the corners, adding the elements, as many layers as necessary:
+		int* NodeIds = new int[6];
+		for (int j =1; j< peripodialHeightDiscretisationLayers+1; ++j){
+			NodeIds[0] = PeripodialCapNodeArray[indiceTri0Corner0][j];
+			NodeIds[1] = PeripodialCapNodeArray[indiceTri0Corner1][j];
+			NodeIds[2] = PeripodialCapNodeArray[indiceTri0Corner2][j];
+			NodeIds[3] = PeripodialCapNodeArray[indiceTri0Corner0][j+1];
+			NodeIds[4] = PeripodialCapNodeArray[indiceTri0Corner1][j+1];
+			NodeIds[5] = PeripodialCapNodeArray[indiceTri0Corner2][j+1];
+			Prism* PrismPnt01;
+			PrismPnt01 = new Prism(NodeIds, Nodes, currElementId);
+			Elements.push_back(PrismPnt01);
+			currElementId++;
+		}
+   }
+}
+void Simulation::correctCircumferentialNodeAssignment(vector< vector<int> > OuterNodeArray){
+	//Now I added nodes and elements to the circumference of the tissue.
+	//The Nodes that were at the circumference in the columnar layer are embedded in the tissue now,
+	// while the new lateral nodes of the peripodial membrane are at the circumference.
+	//I will correct this in node booleans:
+	vector<Node*>::iterator itNode;
+	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+		//making all circumferential node flags of the columnar layer false
+		if ( (*itNode)->tissueType == 0 && (*itNode)->atCircumference){
+			(*itNode)->atCircumference = false;
+		}
+	}
+	//I have a list of the Ids fot the OuterNodes I have added, changeing their circumferential node flags to true:
+	int n0 = OuterNodeArray.size();
+	for (int i =0 ; i<n0; ++i){
+		int n1 = OuterNodeArray[i].size();
+		for (int j=0; j<n1; ++j){
+			int currId = OuterNodeArray[i][j];
+			//find the node with the curr id: (I know Ids and index order is the same now, but staying on the safe side for potential future changes
+			for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+				//making all circumferential node flags of the columnar layer false
+				if ( (*itNode)->Id == currId){
+					(*itNode)->atCircumference = true;
+					break;
+				}
+			}
+		}
+	}
+}
+
+bool Simulation::addPeripodialMembraneToTissue(){
+    //cout<<"adding peripodial membrane from scratch" <<endl;
+	bool Success = true;
+    //here I am calculating the height of the tissue and the discretisation layers used for columnar layer
+    double hColumnar; //The average columnar layer element height
+    int LumenHeightDiscretisationLayers;  //The number of elements that are used to discretised the lumen height
+    double hLumen; //The lumen element height
+    double peripodialHeight; 	//Height of the peropodial membrane
+    int peripodialHeightDiscretisationLayers; //The number of elements that are used to discretised the peripodial membrane height
+    double hPeripodial;  //The peripodial membrane element height
+    calculateDiscretisationLayers(hColumnar, LumenHeightDiscretisationLayers, hLumen, peripodialHeight, peripodialHeightDiscretisationLayers, hPeripodial);
+    //Now I have all the height information and the number of layers for each subsection of the tissue
+    //I can start adding the nodes.
+    //Initially, I am starting with the sides.
+    //First I want the list of nodes at the basal circumference of the columnar layer:
     Success = generateColumnarCircumferenceNodeList();
     if (!Success){
-        cerr<<"Error!! circumferential nodes not sorted"<<endl;
+        cerr<<"Error!! circumferential nodes not extracted properly"<<endl;
     }
+    //Now I have the list, I need to sort in to rotate in one direction:
     calculateSystemCentre();
+    //I will sort the list counter-clock-wise, while the (+)z is pointing at you
     sortColumnarCircumferenceNodeList();
-    double avrSide=0.0, dummy =0.0;
-    getAverageSideLength(dummy,avrSide);	//first term will get you the average side length of the peripodial membrane elements, second is the columnar elements
-
-    cout<<"Sorted list for columnar basal circumferential nodes"<<endl;
-    /*for (int i=0; i<ColumnarCircumferencialNodeList.size(); ++i){
-        cout<<ColumnarCircumferencialNodeList[i]<<endl;
-    }*/
-    vector <int> NewNodeIds;
-    vector <int> CorrespondingOldNodeIds;
-    for (int i=0; i<ColumnarCircumferencialNodeList.size(); ++i){
-        cout<<i<<endl;
-        double* vec0;
-        double* vec1;
-        vec0 = new double[3];
-        vec1 = new double[3];
-        int indice0 = i-1;
-        int indice1 = i+1;
-        if (i == 0){
-            indice0 = ColumnarCircumferencialNodeList.size() -1;
-        }
-        else if( i == ColumnarCircumferencialNodeList.size() -1){
-            indice1 = 0;
-        }
-        int nodeId0 = ColumnarCircumferencialNodeList[indice0];
-        int nodeId1 = ColumnarCircumferencialNodeList[indice1];
-        int nodeIdi = ColumnarCircumferencialNodeList[i];
-        for (int j=0; j<Nodes[nodeIdi]->nDim; j++){
-            vec0[j] = Nodes[nodeId0]->Position[j] - Nodes[nodeIdi]->Position[j];
-            vec1[j] = Nodes[nodeId1]->Position[j] - Nodes[nodeIdi]->Position[j];
-        }
-        Elements[0]->normaliseVector3D(vec0);
-        Elements[0]->normaliseVector3D(vec1);
-        for (int j=0; j<Nodes[nodeIdi]->nDim; j++){
-            vec0[j] += vec1[j];
-        }
-        delete[] vec1;
-        Elements[0]->normaliseVector3D(vec0);
-        double* pos;
-        pos = new double[3];
-        for (int j=0; j<Nodes[nodeIdi]->nDim; j++){
-            pos[j] = Nodes[nodeIdi]->Position[j]+avrSide*vec0[j];
-        }
-        Node* tmp_nd;
-        //tmp_nd = new Node(Nodes.size(), 3, pos,Nodes[nodeIdi]->tissuePlacement, 1);
-        NewNodeIds.push_back(Nodes.size());
-        CorrespondingOldNodeIds.push_back(nodeIdi);
-
-        int currNodeId = nodeIdi;
-        bool foundElement = true;
-        bool finishedTissueThicness  = false;
-        while(!finishedTissueThicness && foundElement){ //while the node is not apical, and I could find the next element
-            foundElement = false;
-            vector<ShapeBase*>::iterator itElement;
-            for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-                bool IsBasalOwner = (*itElement)->IsThisNodeMyBasal(currNodeId);
-                if (IsBasalOwner){
-                    foundElement = true;
-                    break;
-                }
-            }
-            currNodeId = (*itElement)->getCorrecpondingApical(currNodeId); //have the next node
-            for (int j=0; j<Nodes[currNodeId]->nDim; j++){
-                pos[j] = Nodes[currNodeId]->Position[j]+avrSide*vec0[j];
-            }
-            //tmp_nd = new Node(Nodes.size(), 3, pos,Nodes[nodeIdi]->tissuePlacement, 1);
-            NewNodeIds.push_back(Nodes.size());
-            CorrespondingOldNodeIds.push_back(currNodeId);
-            if (Nodes[currNodeId]->tissuePlacement == 1) {
-                //Added the apical node now, I can stop:
-                finishedTissueThicness = true;
-            }
-        }
-        //Nodes.push_back(tmp_nd);
-        delete[] vec0;
-        delete[] pos;
+    //Now I will create the arrays of vectors that will keep my nodes organised:
+    const int nCircumference = ColumnarCircumferencialNodeList.size();
+    vector< vector<int> > ColumnarBasedNodeArray( nCircumference , vector<int>(0) );
+    for (int i=0;i<nCircumference; ++i){
+       	ColumnarBasedNodeArray[i].push_back(ColumnarCircumferencialNodeList[i]);
     }
-    //lumenHeight = TissueHeight*lumenHeightScale;bibap
-    //Now I have all the nodes added, I need to add the elements:
+    //Fill the array of node IDs upwards, to cover the whole columnar layer:
+    fillColumnarBasedNodeList(ColumnarBasedNodeArray);
+    addNodesForPeripodialOnColumnarCircumference (ColumnarBasedNodeArray, LumenHeightDiscretisationLayers, hLumen, peripodialHeightDiscretisationLayers, hPeripodial );
+    //Now add nodes for the outer layer:
+    vector< vector<int> > OuterNodeArray( nCircumference , vector<int>(0) );
+    addNodesForPeripodialOnOuterCircumference (ColumnarBasedNodeArray, OuterNodeArray, hColumnar, LumenHeightDiscretisationLayers, hLumen, peripodialHeightDiscretisationLayers, hPeripodial );
+    //Now I need to add the elements:
+    int totalLayers = TissueHeightDiscretisationLayers+LumenHeightDiscretisationLayers+peripodialHeightDiscretisationLayers;
+    addLateralPeripodialElements(totalLayers, ColumnarBasedNodeArray, OuterNodeArray);
+    //now adding the nodes of the central region:
+    // I am initialising the vector as the size of circumference node list, for any node at the circumference, I will copy from previuos lists,
+    // for any node that is not at the circumference, I will add a new vector of integers to this list
+    vector< vector<int> > PeripodialCapNodeArray( nCircumference , vector<int>(0) );
+    addNodesForPeripodialOnCap(ColumnarBasedNodeArray, PeripodialCapNodeArray, TissueHeightDiscretisationLayers, LumenHeightDiscretisationLayers, peripodialHeightDiscretisationLayers, hPeripodial);
+    //Now I will generate the triangle list from the apical surface of the columnar layer:
+    vector< vector<int> > TriangleList( 0 , vector<int>(0) ); //The IDs of 3 nodes that are supposed to form a triangle
+    constructTriangleCornerListOfApicalSurface(TriangleList);
+    //Now I have the list of nodes forming triangles
+    //For each triangle, find the map of indices in the 0th layer of PeripodialCapNodeArray, and add elements according to the node id stacks:
+    addCapPeripodialElements( TriangleList, PeripodialCapNodeArray, peripodialHeightDiscretisationLayers);
+    //Peripodial membrane is added, now correct position assignemnts at the circumference, and related node fixing:
+    correctCircumferentialNodeAssignment(OuterNodeArray);
+    return Success;
 }
+
 
 void Simulation::runOneStep(){
     //cout<<"entered run one step"<<endl;
@@ -2685,14 +2994,15 @@ void Simulation::runOneStep(){
     resetForces();
     int freq = 10.0/dt ;
     if (freq <1 ){freq =1;}
+    /*for (int i= 0; i<Nodes.size(); ++i){
+		if (Nodes[i]->atCircumference){
+			for (int j=0; j<3; j++){
+				Nodes[i]->FixedPos[j] = true;
+				//cout<<"fixed node : "<<Nodes[i]->Id<<endl;
+			}
+		}
+	}*/
     if ((timestep - 1)% freq  == 0){
-        for (int i= 0; i<Nodes.size(); ++i){
-            if (Nodes[i]->atCircumference){
-                for (int j=0; j<3; j++){
-                    Nodes[i]->FixedPos[0] = true;
-                }
-            }
-        }
         cout<<"At time -- "<<dt*timestep<<" sec ("<<dt*timestep/3600<<" hours - "<<timestep<<" timesteps)"<<endl;
         calculateColumnarLayerBoundingBox();
         calculateDVDistance();
@@ -2726,7 +3036,7 @@ void Simulation::runOneStep(){
     processDisplayDataAndSave();
     //cout<<"finalised run one step"<<endl;
     calculateColumnarLayerBoundingBox();
-    cout<<" step: "<<timestep<<" Pressure: "<<SuctionPressure[2]<<" Pa, maximum z-height: "<<boundingBox[1][2]<<" L/a: "<<(boundingBox[1][2]-50)/(2.0*pipetteRadius)<<endl;
+    //cout<<" step: "<<timestep<<" Pressure: "<<SuctionPressure[2]<<" Pa, maximum z-height: "<<boundingBox[1][2]<<" L/a: "<<(boundingBox[1][2]-50)/(2.0*pipetteRadius)<<endl;
     timestep++;
 }
 
@@ -2855,7 +3165,7 @@ void Simulation::updateStepNR(){
         for (int i=0; i<dim*nNodes; ++i){
             gsl_vector_set(gSum,i,gsl_matrix_get(ge,i,0)+gsl_matrix_get(gv,i,0));
         }
-        if (PipetteSuction){
+        if (PipetteSuction && timestep> PipetteInitialStep && timestep<PipetteEndStep){
             gsl_matrix_set_zero(gExt);
             //Z-fix trial"
             double pipLim2[2] = {0.9*pipetteRadius, 1.4*(pipetteRadius+pipetteThickness)};
@@ -3584,153 +3894,6 @@ void 	Simulation:: updateElementToConnectedNodes(vector <Node*>& Nodes){
     }
 }
 
-void Simulation::smallStrainrunOneStep(){
-	//cout<<"time step: "<<timestep<<endl;
-	if(timestep==0){
-		calculateColumnarLayerBoundingBox();
-		calculateDVDistance();
-		//outputFile<<"calculating element health"<<endl;
-		int nElement = Elements.size();
-		for (int i=0; i<nElement; ++i){
-			Elements[i]->calculateRelativePosInBoundingBox(boundingBox[0][0],boundingBox[0][1],BoundingBoxSize[0],BoundingBoxSize[1]);
-		}
-		//for (int i=0; i<nElement; ++i){
-		//	Elements[i]->calculatGrowthScalingMatrices();
-		//}
-		//cout<<"In loop for t=0: "<<endl;
-		//Elements[0]->displayRelativePosInBoundingBox();
-		/*
-		for(int i=0;i<Nodes.size();++i){
-			//if (Nodes[i]->atCircumference){
-			//	Nodes[i]->FixedPos[0] = true;
-			//	Nodes[i]->FixedPos[1] = true;
-			//	Nodes[i]->FixedPos[2] = true;
-			//}
-			Nodes[i]->Position[0] *=2.0;
-			Nodes[i]->Position[1] *=1.0;
-			Nodes[i]->Position[2] *=1.0;
-		}
-		double R[3][3];
-		double Rx[3][3] = {{1,0,0},{0,0,-1},{0,1,0}};
-		double Ry[3][3] = {{0,0,1},{0,1,0},{-1,0,0}};
-		double Rz[3][3] = {{0,-1,0},{1,0,0},{0,0,1}};
-		for (int j =0; j<3;++j){
-			for(int k=0; k<3;++k){
-				R[j][k] = Ry[j][k];
-			}
-		}
-		for(int i=0;i<Nodes.size();++i){
-			double x = Nodes[i]->Position[0]*R[0][0] + Nodes[i]->Position[1]*R[0][1] + Nodes[i]->Position[2]*R[0][2];
-			double y = Nodes[i]->Position[0]*R[1][0] + Nodes[i]->Position[1]*R[1][1] + Nodes[i]->Position[2]*R[1][2];
-			double z = Nodes[i]->Position[0]*R[2][0] + Nodes[i]->Position[1]*R[2][1] + Nodes[i]->Position[2]*R[2][2];
-			Nodes[i]->Position[0]=x;
-			Nodes[i]->Position[1]=y;
-			Nodes[i]->Position[2]=z;
-		}
-		for(int i=0;i<Elements.size();++i){
-			Elements[i]->updatePositions(3,Nodes);
-		}*/
-		//for (int i=0; i<Nodes.size();++i){
-		//	cout<<"Node: "<<i<<" pos: "<<Nodes[i]->Position[0]<<" "<<Nodes[i]->Position[1]<<" "<<Nodes[i]->Position[2]<<endl;
-		//}
-
-	}
-	//cout<<"outisde loop for t=0: "<<endl;
-	//Elements[0]->displayRelativePosInBoundingBox();
-	if(timestep==-10/dt){
-		LaserAblate(0.0,0.0,1.8);
-	}
-	int displayfreq = 60/dt;
-	if (timestep%displayfreq == 0){
-		//Success = reOpenOutputFile();
-		//if(!Success){cerr<<" outputfile not open, time : "<<timestep * dt<<endl;}
-		outputFile<<"time : "<<timestep * dt<<endl;
-	}
-	int perturbstep = -1200/dt;
-	//cout<<"perturbstep: "<<perturbstep<<endl;
-	if (timestep == perturbstep ){
-		cerr<<"Perturbing the system, pushing middle nodes down by 0.5 units"<<endl;
-		for(int i=0;i<Nodes.size();++i){
-			if (Nodes[i]->Position[0]<20 && Nodes[i]->Position[0]>-20 && Nodes[i]->Position[1]>-10 && Nodes[i]->Position[1]<-5 ){
-				Nodes[i]->Position[2] += -1.0;
-			}
-		}
-	}
-	//if(timestep==0){Elements[0]->LocalGrowthStrainsMat(0,0) = 1.0;}
-	//cleanreferenceupdates();
-    //cleanMatrixUpdateData();
-	cleanGrowthData();
-	resetForces();
-	//alignTissueDVToXPositive();
-	int freq = 10.0/dt ;
-	if ((timestep - 1)% freq  == 0){
-		calculateColumnarLayerBoundingBox();
-		calculateDVDistance();
-		int nElement = Elements.size();
-		for (int i=0; i<nElement; ++i){
-			Elements[i]->calculateRelativePosInBoundingBox(boundingBox[0][0],boundingBox[0][1],BoundingBoxSize[0],BoundingBoxSize[1]);
-		}
-	}
-	int nElement = Elements.size();
-	if(nGrowthFunctions>0){
-		//outputFile<<"calculating growth"<<endl;
-		calculateGrowth();
-	}
-	//cout<<"after calculate growth: "<<endl;
-	//Elements[0]->displayRelativePosInBoundingBox();
-	//if(nShapeChangeFunctions>0){
-	//	changeCellShapesInSystem();
-	//}
-	//outputFile<<"calculating alignment of reference"<<endl;
-	for (int i=0; i<nElement; ++i){
-		//deletion here:
-		//if (Elements[i]->IsGrowing && Elements[i]->tissueType == 0){ //only columnar layer is grown this way, peripodial membrane is already grown without alignment
-		if (Elements[i]->IsGrowing){
-            //Elements[i]->growShape();
-		}
-	}
-
-	double periPackingThreshold = 1000, colPackingThreshold = 1000;
-	getAverageSideLength(periPackingThreshold,colPackingThreshold);
-	//packingThreshold *=0.7; //I am adding a 40% safety to average side length, and then taking half of it as threshold for packing
-	for (int RKId = 0; RKId<4; ++RKId){
-		//outputFile<<"started RK: "<<RKId<<endl;
-		calculatePacking(RKId,periPackingThreshold,colPackingThreshold);
-		for (int i=0; i<nElement; ++i){
-			if (!Elements[i]->IsAblated){
-				Elements[i]->calculateForces(RKId, SystemForces, Nodes, outputFile);
-			}
-		}
-		//outputFile<<"     calculated forces"<<endl;
-		if (stretcherAttached && timestep>StretchInitialStep && timestep<StretchEndStep){
-			addStretchForces(RKId);
-		}
-
-        //if (PipetteSuction && timestep> PipetteInitialStep && timestep<PipetteEndStep){
-        //	addPipetteForces(RKId);
-        //}
-		redistributePeripodialMembraneForces(RKId);
-		updateNodePositions(RKId);
-		//outputFile<<"     updated node pos"<<endl;
-		updateElementPositions(RKId);
-		//for (int i=0; i<Nodes.size(); ++i){
-		//	cout<<"RK: "<<RKId<<" Node: "<<i<<"	PackingForces: "<<PackingForces[RKId][i][0]<<"	"<<PackingForces[RKId][i][1]<<"	"<<PackingForces[RKId][i][2]<<endl;
-		//}
-		//outputFile<<"     updated element pos"<<endl;
-	}
-	if (displayIsOn && !DisplaySave){
-		//The simulation is not displaying a saved setup, it is running and displaying
-		//I need to correct the values to be displayed, and store averages, otherwise
-		//the displayed values will be from artificial setups of different RK steps. (RK1 or RK4 depending on parameter)
-		updateDisplaySaveValuesFromRK();
-	}
-	if (saveData && timestep % dataSaveInterval == 0){
-		updateDisplaySaveValuesFromRK();
-		saveStep();
-	}
-	timestep++;
-	//outputFile<<"finished runonestep"<<endl;
-}
 
 void Simulation::fillInNodeNeighbourhood(){
 	vector<ShapeBase*>::iterator itEle;
@@ -4903,19 +5066,20 @@ void Simulation::setupPipetteExperiment(){
 
 void Simulation::addPipetteForces(gsl_matrix* gExt){
     if      (timestep == 0) {SuctionPressure[2] = 0;}
-    else if (timestep == 1) {SuctionPressure[2] = 100;}
-    else if (timestep == 2) {SuctionPressure[2] = 200;}
-    else if (timestep == 3) {SuctionPressure[2] = 300;}
-    else if (timestep == 4) {SuctionPressure[2] = 400;}
-    else if (timestep == 5) {SuctionPressure[2] = 500;}
+    else if (timestep == 1) {SuctionPressure[2] = 0;}
+    else if (timestep == 2) {SuctionPressure[2] = 100;}
+    else if (timestep == 3) {SuctionPressure[2] = 200;}
+    else if (timestep == 4) {SuctionPressure[2] = 300;}
+    else if (timestep == 5) {SuctionPressure[2] = 400;}
+    else if (timestep == 6) {SuctionPressure[2] = 500;}
 
     //cout<<"in add pipette forces, pipette pos: "<<pipetteCentre[0]<<" "<<pipetteCentre[1]<<endl;
     int dim = 3;
 	int n = Nodes.size();
 	for (int i=0; i<n; ++i){
-        //cout<<"Node "<<i<<" z pos: "<<Nodes[i]->Position[2]<<" effectLimitsInZ: "<<effectLimitsInZ[0]<<" "<<effectLimitsInZ[1]<<endl;
+        cout<<"Node "<<i<<" z pos: "<<Nodes[i]->Position[2]<<" effectLimitsInZ: "<<effectLimitsInZ[0]<<" "<<effectLimitsInZ[1]<<endl;
 		if (Nodes[i]->Position[2]> effectLimitsInZ[0] &&  Nodes[i]->Position[2]< effectLimitsInZ[1]){
-            //cout<<"Node "<<i<<" is within z range"<<endl;
+            cout<<"Node "<<i<<" is within z range"<<endl;
 			double dx = pipetteCentre[0] - Nodes[i]->Position[0];
 			double dy = pipetteCentre[1] - Nodes[i]->Position[1];
 			//cout<<"dx: "<<dx<<" dy: "<<dy<<" dx*dx+dy*dy: "<<dx*dx+dy*dy<<endl;
