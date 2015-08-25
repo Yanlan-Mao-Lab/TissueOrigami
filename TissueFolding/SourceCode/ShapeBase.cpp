@@ -935,6 +935,39 @@ gsl_matrix* ShapeBase::calculateCompactStressForNodalForces(gsl_matrix* Fe, gsl_
     return compactStress;
 }
 
+gsl_matrix* ShapeBase::calculateInvJShFuncDerSWithFe(gsl_matrix * currFe, gsl_matrix * InvDXde, gsl_matrix* ShapeFuncDerStack, gsl_matrix *invJShFuncDerSWithFe){
+	//I want InvJe, normally J InvDXde = F, I can get Je from
+	// Je InvDXde = Fe
+	// but I can also get InvJe directly from:
+	// InvJe Je InvdXde = InvJe Fe => I InvdXde = InvJe Fe => InvdXde InvFe = InvJe I => InvJe = InvdXde InvFe
+	gsl_matrix * tmpFeforInversion =  gsl_matrix_calloc(nDim,nDim);
+	gsl_matrix* InvFe = gsl_matrix_calloc(nDim,nDim);
+	gsl_matrix* InvJe = gsl_matrix_calloc(nDim,nDim);
+	createMatrixCopy(tmpFeforInversion,currFe);
+	bool inverted = InvertMatrix(tmpFeforInversion, InvFe);
+	if (!inverted){
+		cerr<<"Fe not inverted!!"<<endl;
+	}
+	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, InvDXde, InvFe,0.0, InvJe);
+
+	int dim2 = nDim*nDim;
+	//Generating the inverse Jacobian(elastic) stack:
+	gsl_matrix * InvJacobianElasticStack =  gsl_matrix_calloc(dim2,dim2);
+	for (int i =0; i<nDim; i++){
+		for (int m=0; m<nDim; ++m){
+			for (int n=0; n<3; ++n){
+				gsl_matrix_set(InvJacobianElasticStack,i*nDim+m,i*nDim+n,gsl_matrix_get(InvJe,n,m));
+			}
+		}
+	}
+	gsl_matrix_free(tmpFeforInversion);
+	gsl_matrix_free(InvFe);
+	gsl_matrix_free(InvJe);
+	//I am calculating this for k calculation, in case there is growth. Under conditions that there is no growth, this function is not necessary,
+	//the values of invJShFuncDerSWithF and  invJShFuncDerS will be equal
+	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, InvJacobianElasticStack, ShapeFuncDerStack,0.0, invJShFuncDerSWithFe);
+
+}
 
 gsl_matrix* ShapeBase::calculateBTforNodalForces(gsl_matrix* InvJacobianStack, gsl_matrix* ShapeFuncDerStack, gsl_matrix* B, gsl_matrix *invJShFuncDerS){
     //calculating the transpose of B:
@@ -1269,87 +1302,26 @@ void	ShapeBase::calculateElasticKIntegral1(gsl_matrix* currK,int pointNo){
 
 void	ShapeBase::calculateElasticKIntegral1(gsl_matrix* currK,int pointNo){
     gsl_matrix * invJShFuncDerS = invJShapeFuncDerStack[pointNo];
+    gsl_matrix * invJShFuncDerSWithFe = invJShapeFuncDerStackwithFe[pointNo];
+
     double detF = detFs[pointNo];
     double detdXde = detdXdes[pointNo];
     gsl_matrix* Fe = FeMatrices[pointNo];
-    /*double nonZeroIJKLs[66][4] = {{1,1,1,1},
-                                  {1,1,2,2},
-                                  {2,2,1,1},
-                                  {1,1,3,3},
-                                  {3,3,1,1},
-                                  {1,1,1,2},
-                                  {1,1,2,1},
-                                  {1,2,1,1},
-                                  {2,1,1,1},
-                                  {1,1,1,3},
-                                  {1,1,3,1},
-                                  {1,3,1,1},
-                                  {3,1,1,1},
-                                  {1,1,2,3},
-                                  {1,1,3,2},
-                                  {2,3,1,1},
-                                  {3,2,1,1},
-                                  {2,2,2,2},
-                                  {2,2,3,3},
-                                  {3,3,2,2},
-                                  {2,2,1,2},
-                                  {2,2,2,1},
-                                  {1,2,2,2},
-                                  {2,1,2,2},
-                                  {2,2,1,3},
-                                  {2,2,3,1},
-                                  {1,3,2,2},
-                                  {3,1,2,2},
-                                  {2,2,2,3},
-                                  {2,2,3,2},
-                                  {2,3,2,2},
-                                  {3,2,2,2},
-                                  {3,3,3,3},
-                                  {3,3,1,2},
-                                  {3,3,2,1},
-                                  {1,2,3,3},
-                                  {2,1,3,3},
-                                  {3,3,1,3},
-                                  {3,3,3,1},
-                                  {1,3,3,3},
-                                  {3,1,3,3},
-                                  {3,3,2,3},
-                                  {3,3,3,2},
-                                  {2,3,3,3},
-                                  {3,2,3,3},
-                                  {1,2,1,2},
-                                  {1,2,2,1},
-                                  {2,1,1,2},
-                                  {1,2,1,3},
-                                  {1,2,3,1},
-                                  {1,3,1,1},
-                                  {3,1,1,2},
-                                  {1,2,2,3},
-                                  {1,2,3,2},
-                                  {2,3,1,2},
-                                  {3,2,1,2},
-                                  {1,3,1,3},
-                                  {1,3,3,1},
-                                  {3,1,1,3},
-                                  {1,3,2,3},
-                                  {1,3,3,2},
-                                  {2,3,1,3},
-                                  {3,2,1,3},
-                                  {2,3,2,3},
-                                  {2,3,3,2},
-                                  {3,2,2,3}
-                                    };*/
-
+	double detFe = determinant3by3Matrix(Fe);
     //finished calculating 4th order tensor D
     for (int a =0; a<nNodes; ++a){
         for (int b=0; b<nNodes; ++b){
             gsl_matrix* Keab = gsl_matrix_calloc(3,3);
             double DNa[3] = {0.0,0.0,0.0};
             double DNb[3] = {0.0,0.0,0.0};
+
             for (int i=0;i<nDim;++i){
-                DNa[i] = gsl_matrix_get(invJShFuncDerS,i,nDim*a);
+                // original version: DNa[i] = gsl_matrix_get(invJShFuncDerS,i,nDim*a);
+                // original version: DNb[i] = gsl_matrix_get(invJShFuncDerS,i,nDim*b);
+            	DNa[i] = gsl_matrix_get(invJShFuncDerS,i,nDim*a);
                 DNb[i] = gsl_matrix_get(invJShFuncDerS,i,nDim*b);
             }
+            //cout<<" DNb from Fe: "<<DNb[0]<<" "<<DNb[1]<<" "<<DNb[2]<<" DNb from F: "<<DNbold[0]<<" "<<DNbold[1]<<" "<<DNbold[2]<<endl;
             //writing Kab:
             for (int i = 0 ; i<nDim; ++i){
                 for (int k=0; k<nDim; ++k){
@@ -1370,7 +1342,8 @@ void	ShapeBase::calculateElasticKIntegral1(gsl_matrix* currK,int pointNo){
                         }
                     }
                     value *= detF*detdXde;
-                    value /= detF;
+                    //value /= detF;
+                    value /= detFe;
                     value += gsl_matrix_get(Keab,i,k);
                     gsl_matrix_set(Keab,i,k,value);
                 }

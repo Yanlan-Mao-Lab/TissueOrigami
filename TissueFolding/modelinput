@@ -18,8 +18,8 @@ NodeFixingOptions:
   CircumferenceFix(bool-x,y,z): 0 0 0
 
 TimeParameters:
-  TimeStep(sec): 300
-  SimulationLength(sec): 601
+  TimeStep(sec): 3600
+  SimulationLength(sec): 90000
 
 PysicalProperties:
   YoungsModulusApical: 1000.0	YoungsModulusBasal: 1000.0	YoungsModulusMid: 1000.0	Noise(%-int): 0

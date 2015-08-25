@@ -1944,8 +1944,8 @@ void Simulation::checkForZeroViscosity(){
 
 void Simulation::manualPerturbationToInitialSetup(bool deform, bool rotate){
     if(timestep==0){
-        double scaleX = 2.0;
-        double scaleY = 2.0;
+        double scaleX = 1.0;
+        double scaleY = 1.0;
         double scaleZ = 1.0;
 
         double PI = 3.14159265359;
@@ -1957,6 +1957,11 @@ void Simulation::manualPerturbationToInitialSetup(bool deform, bool rotate){
                 Nodes[i]->Position[0] *=scaleX;
                 Nodes[i]->Position[1] *=scaleY;
                 Nodes[i]->Position[2] *=scaleZ;
+                /*if (i ==32 ){
+                	Nodes[i]->Position[0] -= 5;
+                	Nodes[i]->Position[1] += 7;
+                	Nodes[i]->Position[2] += 10;
+                }*/
             }
         }
 
@@ -2418,8 +2423,8 @@ bool Simulation::addPeripodialMembraneToTissue(){
 
 
 void Simulation::runOneStep(){
-    cout<<"entered run one step"<<endl;
-    manualPerturbationToInitialSetup(false,false); //bool deform, bool rotate
+    //cout<<"entered run one step"<<endl;
+    manualPerturbationToInitialSetup(true,false); //bool deform, bool rotate
     cleanGrowthData();
     resetForces();
     int freq = 10.0/dt ;
@@ -2457,10 +2462,13 @@ void Simulation::runOneStep(){
         updateStepNR();
     }
     processDisplayDataAndSave();
-    cout<<"finalised run one step"<<endl;
+    //cout<<"finalised run one step"<<endl;
     calculateColumnarLayerBoundingBox();
     //cout<<" step: "<<timestep<<" Pressure: "<<SuctionPressure[2]<<" Pa, maximum z-height: "<<boundingBox[1][2]<<" L/a: "<<(boundingBox[1][2]-50)/(2.0*pipetteRadius)<<endl;
     timestep++;
+    //for (int i=0; i<Nodes.size(); ++i){
+    //	cout<<" Nodes["<<i<<"]->Position[0]="<<Nodes[i]->Position[0]<<"; Nodes["<<i<<"]->Position[1]="<<Nodes[i]->Position[1]<<";  Nodes["<<i<<"]->Position[2]="<<Nodes[i]->Position[2]<<"; "<<endl;
+    //}
 }
 
 void Simulation::updateStep4RK(){
@@ -2604,10 +2612,7 @@ void Simulation::updateStepNR(){
         //Elements[0]->displayMatrix(mviscdt,"mviscdt");
         //Elements[0]->displayMatrix(un,"un");
         //Elements[0]->displayMatrix(uk,"uk");
-        cout<<"Solving for deltaU: "<<endl;
         solveForDeltaU(K,gSum,deltaU);
-        cout<<"Solved for deltaU: "<<endl;
-
         converged = checkConvergenceViaDeltaU(deltaU);
         //Elements[0]->displayMatrix(deltaU,"deltaU");
         updateUkInNR(uk,deltaU);
@@ -4074,7 +4079,7 @@ void Simulation::cleanUpShapeChangeRates(){
 void Simulation::calculateGrowthUniform(GrowthFunctionBase* currGF){
 	float simTime = dt*timestep;
 	//cout<<"inside uniform growth function, initTime: "<<currGF->initTime <<" endtime: "<<currGF->endTime<<" simTime"<<simTime<<endl;
-	if(simTime > currGF->initTime && simTime < currGF->endTime ){
+	if(simTime >= currGF->initTime && simTime < currGF->endTime ){
 		//cout<<"calculating growth"<<endl;
 		double *maxValues;
         maxValues = new double[3];
@@ -4111,7 +4116,7 @@ void Simulation::calculateGrowthUniform(GrowthFunctionBase* currGF){
 
 void Simulation::calculateGrowthRing(GrowthFunctionBase* currGF){
 	float simTime = dt*timestep;
-	if(simTime > currGF->initTime && simTime < currGF->endTime ){
+	if(simTime >= currGF->initTime && simTime < currGF->endTime ){
 		//The growth function is active at current time, now I will grow the elements.
 		//First get the remaining data from the growth function parameters
 		float centre[2];
@@ -4171,7 +4176,7 @@ void Simulation::calculateGrowthGridBased(GrowthFunctionBase* currGF){
 	int nGridY = currGF->getGridY();
 	float simTime = dt*timestep;
 	//cout<<"calculating growth grid based, initTime: "<<currGF->initTime<<" endTime: "<< currGF->endTime<<" simTime: "<<simTime<<endl;
-	if(simTime > currGF->initTime && simTime < currGF->endTime ){
+	if(simTime >= currGF->initTime && simTime < currGF->endTime ){
 		vector<ShapeBase*>::iterator itElement;
 		for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 			if ((currGF->applyToColumnarLayer && (*itElement)->tissueType == 0) || (currGF->applyToPeripodialMembrane && (*itElement)->tissueType == 1) || (*itElement)->tissueType == 2){

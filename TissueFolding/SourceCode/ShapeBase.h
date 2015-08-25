@@ -61,6 +61,7 @@ protected:
     gsl_matrix **CMatrices;
     gsl_matrix **FeMatrices;
     gsl_matrix **invJShapeFuncDerStack;
+    gsl_matrix **invJShapeFuncDerStackwithFe;
     gsl_matrix **elasticStress;
     double* detFs;
 
@@ -89,6 +90,7 @@ protected:
     gsl_matrix* calculateCompactStressForNodalForces(gsl_matrix* Fe, gsl_matrix* S, gsl_matrix* FeT, gsl_matrix *Stress);
     gsl_matrix* calculateInverseJacobianStackForNodalForces(gsl_matrix* Jacobian);
     gsl_matrix* calculateBTforNodalForces(gsl_matrix* InvJacobianStack, gsl_matrix* ShapeFuncDerStack, gsl_matrix *B, gsl_matrix* invJShFuncDerS);
+    gsl_matrix* calculateInvJShFuncDerSWithFe(gsl_matrix * currFe, gsl_matrix * InvDXde, gsl_matrix* ShapeFuncDerStack, gsl_matrix *invJShFuncDerSWithF);
 
     void	calculateCMatrix(int pointNo);
     void    consturctBaTBb(gsl_matrix* B, gsl_matrix* BaT, gsl_matrix* Bb, int a, int b);

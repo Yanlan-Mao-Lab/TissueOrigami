@@ -71,6 +71,7 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
     CMatrices = new gsl_matrix*[3];
     detFs = new double[3];
     invJShapeFuncDerStack = new gsl_matrix*[3];
+    invJShapeFuncDerStackwithFe  = new gsl_matrix*[3];
     elasticStress = new gsl_matrix*[3];
     for (int i=0; i<3; ++i){
         ShapeFuncDerivatives[i] = gsl_matrix_calloc(nDim, nNodes);
@@ -81,6 +82,7 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
         FeMatrices[i] = gsl_matrix_calloc(3,3);
         CMatrices[i] = gsl_matrix_calloc(6,6);
         invJShapeFuncDerStack[i] = gsl_matrix_calloc(nDim*nDim, nDim*nNodes);
+        invJShapeFuncDerStackwithFe[i] = gsl_matrix_calloc(nDim*nDim, nDim*nNodes);
         elasticStress[i] = gsl_matrix_calloc(3,3);
     }
     Strain = gsl_matrix_calloc(6,1);
@@ -135,6 +137,7 @@ Prism::~Prism(){
         gsl_matrix_free (FeMatrices[i]);
         gsl_matrix_free (CMatrices[i]);
         gsl_matrix_free (invJShapeFuncDerStack[i]);
+        gsl_matrix_free (invJShapeFuncDerStackwithFe[i]);
         gsl_matrix_free (elasticStress[i]);
     }
     delete[] ShapeFuncDerivatives;
@@ -146,6 +149,7 @@ Prism::~Prism(){
     delete[] CMatrices;
     delete[] detFs;
     delete[] invJShapeFuncDerStack;
+    delete[] invJShapeFuncDerStackwithFe;
     delete[] elasticStress;
 }
 
@@ -414,6 +418,7 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currg, gsl_matrix *currF, int p
     gsl_matrix * Jacobian = gsl_matrix_calloc(dim, dim);
     gsl_matrix * B = Bmatrices[pointNo];
     gsl_matrix * invJShFuncDerS = invJShapeFuncDerStack[pointNo];
+    gsl_matrix * invJShFuncDerSWithFe =invJShapeFuncDerStackwithFe[pointNo];
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, ShapeFuncDer, CurrShape, 0.0, Jacobian);
     gsl_matrix_transpose(Jacobian);
 
@@ -451,6 +456,9 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currg, gsl_matrix *currF, int p
     //Calculating currB^T:
     detFs[pointNo] = determinant3by3Matrix(currF);
     gsl_matrix* currBT = calculateBTforNodalForces(InvJacobianStack,ShapeFuncDerStack, B, invJShFuncDerS);
+
+    //Calculate invJShapeFuncDerStackwithFe for K calculation (using F in inverse jacobian calculation rather than Fe):
+    calculateInvJShFuncDerSWithFe(currFe, InvdXde, ShapeFuncDerStack, invJShFuncDerSWithFe);
 
     //calculating nodal forces as B^T compactStress detF
     gsl_matrix_scale(currBT,detFs[pointNo]);
