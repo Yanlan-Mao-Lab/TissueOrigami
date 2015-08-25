@@ -37,7 +37,7 @@ private:
 	bool ForcesSaved;
 	bool VelocitiesSaved;
 	int	 nCircumferencialNodes;
-	int DVRight,DVLeft;
+	int dorsalTipIndex,ventralTipIndex;
 	double StretchVelocity;
 	double BoundingBoxSize[3];
 	bool ContinueFromSave;
@@ -95,12 +95,12 @@ private:
 	void calculateNewNodePosForPeripodialNodeAddition(int nodeId0, int nodeId1, double* pos, double sideThickness);
 	void addNodesForPeripodialOnOuterCircumference (vector< vector<int> > &ColumnarBasedNodeArray, vector< vector<int> > &OuterNodeArray, double hColumnar, int LumenHeightDiscretisationLayers, double hLumen, int peripodialHeightDiscretisationLayers, double hPeripodial);
 	void addNodesForPeripodialOnColumnarCircumference (vector< vector<int> > &ColumnarBasedNodeArray, int LumenHeightDiscretisationLayers, double hLumen, int peripodialHeightDiscretisationLayers, double hPeripodial);
-	void addLateralPeripodialElements(int totalLayers, vector< vector<int> > &ColumnarBasedNodeArray, vector< vector<int> > &OuterNodeArray);
+	void addLateralPeripodialElements(int LumenHeightDiscretisationLayers, int peripodialHeightDiscretisationLayers, vector< vector<int> > &ColumnarBasedNodeArray, vector< vector<int> > &OuterNodeArray);
 	void addNodesForPeripodialOnCap(vector< vector<int> > &ColumnarBasedNodeArray, vector< vector<int> > &PeripodialCapNodeArray, int TissueHeightDiscretisationLayers, int LumenHeightDiscretisationLayers, int peripodialHeightDiscretisationLayers, double hPeripodial);
 	void constructTriangleCornerListOfApicalSurface( vector< vector<int> > &TriangleList);
 	void addCapPeripodialElements( vector< vector<int> > &TriangleList, vector< vector<int> > &PeripodialCapNodeArray, int peripodialHeightDiscretisationLayers);
 	void correctCircumferentialNodeAssignment(vector< vector<int> > OuterNodeArray);
-
+	void assignDVTips();
 
 	void initiateSinglePrismNodes(float zHeight);
 	void initiateSinglePrismElement();

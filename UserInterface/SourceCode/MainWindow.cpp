@@ -221,13 +221,15 @@ void MainWindow::setStrainDisplayMenu(QGridLayout *ProjectDisplayOptionsGrid){
 
     StrainSpinBoxes[0] = new  QDoubleSpinBox();
     StrainSpinBoxes[1] = new  QDoubleSpinBox();
-    StrainSpinBoxes[0]->setRange( -10.0, -0.05 );
-    StrainSpinBoxes[0]->setSingleStep( 0.05 );
-    StrainSpinBoxes[0]->setValue ( -0.1 );
+    StrainSpinBoxes[0]->setRange( -1.0, -0.00 );
+    StrainSpinBoxes[0]->setSingleStep( 0.001 );
+    StrainSpinBoxes[0]->setValue ( -0.01 );
+    StrainSpinBoxes[0]->setDecimals(5);
     StrainSpinBoxes[0]->setEnabled(false);
-    StrainSpinBoxes[1]->setRange( 0.05, 10.0 );
-    StrainSpinBoxes[1]->setSingleStep( 0.05 );
-    StrainSpinBoxes[1]->setValue( 0.1 );
+    StrainSpinBoxes[1]->setRange( 0.0, 1.0 );
+    StrainSpinBoxes[1]->setSingleStep( 0.001 );
+    StrainSpinBoxes[1]->setValue( 0.01 );
+    StrainSpinBoxes[1]->setDecimals(5);
     StrainSpinBoxes[1]->setEnabled(false);
     connect(StrainSpinBoxes[0], SIGNAL(valueChanged (double)), this, SLOT(updateStrainSpinBoxes(double)));
     connect(StrainSpinBoxes[1], SIGNAL(valueChanged (double)), this, SLOT(updateStrainSpinBoxes(double)));

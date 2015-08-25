@@ -166,6 +166,14 @@ double* ShapeBase::getCentre(){
 	return d;
 }
 
+double ShapeBase::getPeripodialness(){
+	return peripodialGrowthWeight;
+}
+
+double ShapeBase::getColumnarness(){
+	return columnarGrowthWeight;
+}
+
 void ShapeBase::getRelativePosInBoundingBox(double* relativePos){
 	relativePos[0] =  RelativePosInBoundingBox[0];
 	relativePos[1] =  RelativePosInBoundingBox[1];
@@ -238,6 +246,7 @@ void 	ShapeBase::setTissuePlacement(vector<Node*>& Nodes){
 void 	ShapeBase::setTissueType(vector<Node*>& Nodes){
 	bool hasColumnarNode = false;
 	bool hasPeripodialNode = false;
+	bool hasLinkerNode = false;
 	for (int i = 0; i<nNodes; ++i){
 		if (Nodes[NodeIds[i]]->tissueType == 0){
 			hasColumnarNode = true;
@@ -245,18 +254,32 @@ void 	ShapeBase::setTissueType(vector<Node*>& Nodes){
 		else if (Nodes[NodeIds[i]]->tissueType == 1){
 			hasPeripodialNode = true;
 		}
+		else if (Nodes[NodeIds[i]]->tissueType == 2){
+			hasLinkerNode = true;
+		}
 	}
-	if (hasPeripodialNode){
+	if (hasLinkerNode){
+		tissueType = 2;
+	}
+	else if (hasPeripodialNode){
+		//ASK LINKER ZONE BEFORE THIS, SOME LINKER ELEMENTS CAN HAVE LINKER NODES, NO COLUMNAR ELEMENT OR PERIPODIAL ELEMENT SHOULD HAVE A LINKER NODE
 		tissueType = 1;
+		setGrowthWeightsViaTissuePlacement( 1.0);//default is set to be columnar, I will not set this for linkers, as they are set in the initiation of peripodial membrane
 	}
 	else if (hasColumnarNode){
-		//ASK PERIPODIAL MEMBRANE FIRST, SOME PERIPODIAL ELEMENTS CAN HAVE COLUMNAR NODES, NO COLUMNAR ELEMENT SHOULD HAVE A PERIPODIAL NODE
+		//ASK PERIPODIAL MEMBRANE BEFORE THIS, SOME PERIPODIAL ELEMENTS CAN HAVE COLUMNAR NODES, AND SOME LINKER ELEMENTS CAN HAVE COLUMNAR NODES. NO COLUMNAR ELEMENT SHOULD HAVE A PERIPODIAL NODE
 		tissueType = 0;
 	}
 	else {
 		cerr<<"Element is not placed into tissue correctly, Id: "<<Id<<endl;
 	}
 	//cout<<"Element : "<<Id<<" hasColumnarNode: "<<hasColumnarNode<<" hasPeripodialmNode "<<hasPeripodialNode<<" tissueType: "<<tissueType<<endl;
+}
+
+void 	ShapeBase::setGrowthWeightsViaTissuePlacement (double periWeight){
+	peripodialGrowthWeight = periWeight;
+	columnarGrowthWeight = 1.0 - peripodialGrowthWeight;
+	//cout<<" Element: "<<Id<<" peripodialness: "<<peripodialGrowthWeight<<" columnarness: "<<columnarGrowthWeight<<endl;
 }
 
 void 	ShapeBase::setReferencePositionMatrix(){
@@ -380,10 +403,10 @@ void 	ShapeBase::getStrain(int type, float &StrainMag){
 	StrainMag = 0.0;
 	if (type == 0){
 		//this is the average strain
-        for (int i=0; i<6; ++i){
+        for (int i=0; i<3; ++i){
            StrainMag += gsl_matrix_get(Strain,i,0) ;
         }
-		StrainMag /= 6;
+		StrainMag /= 3;
 	}
 	else if (type == 1){
         StrainMag = gsl_matrix_get(Strain,0,0);
@@ -485,11 +508,15 @@ void 	ShapeBase::growShapeByFg(double dt){
     //gsl_matrix_set_identity(Fg);
     //gsl_matrix_set(Fg,2,2,1.3); //double in z
     //gsl_matrix_set(Fg,1,2,1.1);
-    //cout<<"Growth rate: "<<GrowthRate[0]<<" "<<GrowthRate[1]<<" "<<GrowthRate[2]<<endl;
-    //displayMatrix(FgIncrement,"FgIncrement");
-    //displayMatrix(Fg,"Fg");
+    /*if (Id == 27 || Id ==40){
+		cout<<"Element: "<<Id<<endl;
+		cout<<"Growth rate: "<<GrowthRate[0]<<" "<<GrowthRate[1]<<" "<<GrowthRate[2]<<endl;
+		displayMatrix(FgIncrement,"FgIncrement");
+		displayMatrix(Fg,"Fg");
+    }*/
     gsl_matrix * tmpFgForInversion = gsl_matrix_calloc(nDim,nDim);
     createMatrixCopy(tmpFgForInversion,Fg);
+
     //gsl_matrix * tmpFgForInversion =  gsl_matrix_alloc(nDim, nDim);
     //gsl_matrix_memcpy (tmpFgForInversion, Fg);
     bool inverted = InvertMatrix(tmpFgForInversion, InvFg);
@@ -857,6 +884,7 @@ gsl_matrix* ShapeBase::calculateSForNodalForces(gsl_matrix* E){
     //displayMatrix(D,"D");
     //displayMatrix(E,"E");
     //displayMatrix(S, "S");
+    //displayMatrix(Strain,"Strain");
     gsl_matrix_free(compactS);
 /*
     double Idouble[3][3] = {{1.0,0.0,0.0} , {0.0,1.0,0.0}, {0.0,0.0,1.0}};

@@ -118,8 +118,8 @@ void Simulation::setDefaultParameters(){
 	PeripodialThicnessScale = 1.0;
 	PeripodialLateralThicnessScale = 0.3;
 	lumenHeightScale = 0.3;
-	DVRight = 0;
-	DVLeft = 1;
+	dorsalTipIndex = 0;
+	ventralTipIndex = 1;
 	stretcherAttached = false;
 	StretchInitialStep = -100;
 	StretchEndStep = -100;
@@ -374,6 +374,7 @@ bool Simulation::initiateSystem(){
 		Success = addPeripodialMembraneToTissue();
 	}
 	checkForNodeFixing();
+	assignDVTips();
 	if (!Success){
 		return Success;
 	}
@@ -1619,8 +1620,8 @@ void Simulation::initiateSinglePrismElement(){
 
 
 void Simulation::initiateNodesByRowAndColumn(int Row, int Column, float SideLength, float zHeight){
-	DVRight = Row;
-	DVLeft = 0;
+	dorsalTipIndex = Row;
+	ventralTipIndex = 0;
 	//The height of the equilateral triangle with side length: SideLength
 	double sqrt3 = 1.7321;
 	float h = sqrt3/2*SideLength;
@@ -1890,10 +1891,23 @@ void Simulation::assignPhysicalParameters(){
 		if (Elements[i]->tissueType == 0){ //Element is on the columnar layer
 			Elements[i]->setElasticProperties(EApical*(1 + noise1/100.0),EBasal*(1 + noise1/100.0),EMid*(1 + noise1/100.0),poisson*(1 + noise2/100));
 		}
-		if (Elements[i]->tissueType == 1){ //Element is on the peripodial membrane
+		else if (Elements[i]->tissueType == 1){ //Element is on the peripodial membrane
 			double currE = PeripodialElasticity*(1 + noise1/100.0);
 			Elements[i]->setElasticProperties(currE,currE,currE,poisson*(1 + noise2/100));
 		}
+		else if (Elements[i]->tissueType ==2 ){ //Element is on the linker Zone, I will weight the values:
+			double currPeripodialE = PeripodialElasticity*(1 + noise1/100.0);
+			double currEApical = EApical*(1 + noise1/100.0);
+			double currEBasal = EBasal*(1 + noise1/100.0);
+			double currEMid = EMid*(1 + noise1/100.0);
+			double periWeight = Elements[i]->getPeripodialness();
+			double colWeight = Elements[i]->getColumnarness();
+			currEApical = colWeight * currEApical + periWeight * currPeripodialE;
+			currEBasal  = colWeight * currEBasal  + periWeight * currPeripodialE;
+			currEMid    = colWeight * currEMid    + periWeight * currPeripodialE;
+			Elements[i]->setElasticProperties(currEApical,currEBasal,currEMid,poisson*(1 + noise2/100));
+		}
+
 	}
 	for (int i=0; i<Nodes.size(); ++i){
 		double r = (rand() % 200) / 100.0;
@@ -1935,9 +1949,9 @@ void Simulation::manualPerturbationToInitialSetup(bool deform, bool rotate){
         double scaleZ = 1.0;
 
         double PI = 3.14159265359;
-        double tetX = -45 *PI/180.0;
-        double tetY = -30 *PI/180.0;
-        double tetZ = 90 *PI/180.0;
+        double tetX = 0 *PI/180.0;
+        double tetY = 0 *PI/180.0;
+        double tetZ = 45 *PI/180.0;
         if(deform){
             for(int i=0;i<Nodes.size();++i){
                 Nodes[i]->Position[0] *=scaleX;
@@ -1947,6 +1961,7 @@ void Simulation::manualPerturbationToInitialSetup(bool deform, bool rotate){
         }
 
         if (rotate){
+        	//cerr<<"Rotating system"<<endl;
             double R[3][3];
             double c = cos(tetX), s = sin(tetX);
             double Rx[3][3] = {{1,0,0},{0,c,-s},{0,s,c}};
@@ -1956,7 +1971,7 @@ void Simulation::manualPerturbationToInitialSetup(bool deform, bool rotate){
             double Rz[3][3] = {{c,-s,0},{s,c,0},{0,0,1}};
             for (int j =0; j<3;++j){
                 for(int k=0; k<3;++k){
-                    R[j][k] = Ry[j][k];
+                    R[j][k] = Rz[j][k];
                 }
             }
             for(int i=0;i<Nodes.size();++i){
@@ -1968,7 +1983,6 @@ void Simulation::manualPerturbationToInitialSetup(bool deform, bool rotate){
                 Nodes[i]->Position[2]=z;
             }
         }
-
         for(int i=0;i<Elements.size();++i){
             Elements[i]->updatePositions(3,Nodes);
         }
@@ -2109,7 +2123,7 @@ void Simulation::addNodesForPeripodialOnOuterCircumference (vector< vector<int> 
 		//Adding the array of new nodes:
 		//adding the base:
 		int newNodeId = Nodes.size();
-		Node* tmp_nd = new Node(newNodeId, 3, pos, 0, 1); //Tissue placement basal (0), tissue type is peripodial membrane (1)
+		Node* tmp_nd = new Node(newNodeId, 3, pos, 0, 2); //Tissue placement basal (0), tissue type is linker zone (2)
 		Nodes.push_back(tmp_nd);
 		OuterNodeArray[i].push_back(newNodeId);
 		//adding the nodes for the columnar layer:
@@ -2118,7 +2132,7 @@ void Simulation::addNodesForPeripodialOnOuterCircumference (vector< vector<int> 
 			//cout<<" pos for columnar aligned new node: "<<pos[0] <<" "<<pos[1]<<" "<<pos[2]<<" hColumnar: "<<hColumnar<<endl;
 
 			int newNodeId = Nodes.size();
-			Node* tmp_nd = new Node(newNodeId, 3, pos, 2, 1); //Tissue placement is midlayer (2), tissue type is peripodial membrane (1)
+			Node* tmp_nd = new Node(newNodeId, 3, pos, 2, 2); //Tissue placement is midlayer (2), tissue type is linker zone (2)
 			Nodes.push_back(tmp_nd);
 			OuterNodeArray[i].push_back(newNodeId);
 		}
@@ -2126,7 +2140,7 @@ void Simulation::addNodesForPeripodialOnOuterCircumference (vector< vector<int> 
 		for (int j=1; j<LumenHeightDiscretisationLayers+1; ++j){
 			pos[2] += hLumen;
 			int newNodeId = Nodes.size();
-			Node* tmp_nd = new Node(newNodeId, 3, pos, 2, 1); //Tissue placement is midlayer (2), tissue type is peripodial membrane (1)
+			Node* tmp_nd = new Node(newNodeId, 3, pos, 2, 2); //Tissue placement is midlayer (2), tissue type is linker zone (2)
 			Nodes.push_back(tmp_nd);
 			OuterNodeArray[i].push_back(newNodeId);
 		}
@@ -2134,7 +2148,7 @@ void Simulation::addNodesForPeripodialOnOuterCircumference (vector< vector<int> 
 		for (int j=1; j<peripodialHeightDiscretisationLayers+1; ++j){
 			pos[2] += hPeripodial;
 			int newNodeId = Nodes.size();
-			Node* tmp_nd = new Node(newNodeId, 3, pos, 2, 1); //Tissue placement is midlayer (2), tissue type is peripodial membrane (1)
+			Node* tmp_nd = new Node(newNodeId, 3, pos, 2, 2); //Tissue placement is midlayer (2), tissue type is linker zone (2)
 			Nodes.push_back(tmp_nd);
 			OuterNodeArray[i].push_back(newNodeId);
 		}
@@ -2144,14 +2158,29 @@ void Simulation::addNodesForPeripodialOnOuterCircumference (vector< vector<int> 
     }
 }
 
-void Simulation::addLateralPeripodialElements(int totalLayers, vector< vector<int> > &ColumnarBasedNodeArray, vector< vector<int> > &OuterNodeArray){
+void Simulation::addLateralPeripodialElements(int LumenHeightDiscretisationLayers, int peripodialHeightDiscretisationLayers, vector< vector<int> > &ColumnarBasedNodeArray, vector< vector<int> > &OuterNodeArray){
     // I need to add the elements:
     // Two elements are added for each element on the side:
     // First triangle base will be New node 0, oldNode1, oldnode0, top of the element will be read from the node id stacks
     // Second triangle base will be: New node 0, new node 1, old node 1
+	int totalLayers = TissueHeightDiscretisationLayers+LumenHeightDiscretisationLayers+peripodialHeightDiscretisationLayers;
+	double peripodialnessFractionStep = 1.0 / (double) (LumenHeightDiscretisationLayers+1.0); //this is the step increment in periopdiallness weight at each element of lumen side. If there is 1 layer, it should be 50% peripodial, 50% columnar etc, if there are two, it should be 33%, 2x33% etc.
 	int nCircumference = ColumnarBasedNodeArray.size();
 	for (int i=0;i<nCircumference; ++i){
     	for (int j=0;j<totalLayers; ++j){
+    		//calculating the fraction of peripodialness these two elements should have:
+    		//counting which layer in the lumen they are:
+    		double peripodialWeight = 1.0; //
+    		if (j < TissueHeightDiscretisationLayers) {
+    			//the currently added elements are still aligned with columnar, below the lumen.
+    			peripodialWeight = 0.0;
+    		}
+    		else if (j<TissueHeightDiscretisationLayers+LumenHeightDiscretisationLayers){
+    			//the currently added elements are at the lumen, below peripodial membrane:
+    			peripodialWeight = (j-TissueHeightDiscretisationLayers + 1) * peripodialnessFractionStep;
+    		}
+    		// if (j>=TissueHeightDiscretisationLayers+LumenHeightDiscretisationLayers), then the added elements are above the lumen, should behave like peripodial, default was 1.0, no change.
+    		//preparing the node lists:
     		int indiceTri0Corner0 = i;
 			int indiceTri0Corner1 = i+1;
 			int indiceTri0Corner2 = i;
@@ -2173,6 +2202,7 @@ void Simulation::addLateralPeripodialElements(int totalLayers, vector< vector<in
 			NodeIds[5] = ColumnarBasedNodeArray[indiceTri0Corner2][j+1];
 			Prism* PrismPnt01;
 			PrismPnt01 = new Prism(NodeIds, Nodes, currElementId);
+			PrismPnt01->setGrowthWeightsViaTissuePlacement(peripodialWeight);
 			Elements.push_back(PrismPnt01);
 			currElementId++;
 			//adding the second element:
@@ -2183,6 +2213,7 @@ void Simulation::addLateralPeripodialElements(int totalLayers, vector< vector<in
 			NodeIds[4] = OuterNodeArray[indiceTri1Corner1][j+1];
 			NodeIds[5] = ColumnarBasedNodeArray[indiceTri1Corner2][j+1];
 			PrismPnt01 = new Prism(NodeIds, Nodes, currElementId);
+			PrismPnt01->setGrowthWeightsViaTissuePlacement(peripodialWeight);
 			Elements.push_back(PrismPnt01);
 			currElementId++;
     	}
@@ -2368,8 +2399,7 @@ bool Simulation::addPeripodialMembraneToTissue(){
     vector< vector<int> > OuterNodeArray( nCircumference , vector<int>(0) );
     addNodesForPeripodialOnOuterCircumference (ColumnarBasedNodeArray, OuterNodeArray, hColumnar, LumenHeightDiscretisationLayers, hLumen, peripodialHeightDiscretisationLayers, hPeripodial );
     //Now I need to add the elements:
-    int totalLayers = TissueHeightDiscretisationLayers+LumenHeightDiscretisationLayers+peripodialHeightDiscretisationLayers;
-    addLateralPeripodialElements(totalLayers, ColumnarBasedNodeArray, OuterNodeArray);
+    addLateralPeripodialElements(LumenHeightDiscretisationLayers,peripodialHeightDiscretisationLayers, ColumnarBasedNodeArray, OuterNodeArray);
     //now adding the nodes of the central region:
     // I am initialising the vector as the size of circumference node list, for any node at the circumference, I will copy from previuos lists,
     // for any node that is not at the circumference, I will add a new vector of integers to this list
@@ -2388,22 +2418,15 @@ bool Simulation::addPeripodialMembraneToTissue(){
 
 
 void Simulation::runOneStep(){
-    //cout<<"entered run one step"<<endl;
+    cout<<"entered run one step"<<endl;
     manualPerturbationToInitialSetup(false,false); //bool deform, bool rotate
     cleanGrowthData();
     resetForces();
     int freq = 10.0/dt ;
     if (freq <1 ){freq =1;}
-    /*for (int i= 0; i<Nodes.size(); ++i){
-		if (Nodes[i]->atCircumference){
-			for (int j=0; j<3; j++){
-				Nodes[i]->FixedPos[j] = true;
-				//cout<<"fixed node : "<<Nodes[i]->Id<<endl;
-			}
-		}
-	}*/
     if ((timestep - 1)% freq  == 0){
         cout<<"At time -- "<<dt*timestep<<" sec ("<<dt*timestep/3600<<" hours - "<<timestep<<" timesteps)"<<endl;
+        alignTissueDVToXPositive();
         calculateColumnarLayerBoundingBox();
         calculateDVDistance();
         int nElement = Elements.size();
@@ -2434,7 +2457,7 @@ void Simulation::runOneStep(){
         updateStepNR();
     }
     processDisplayDataAndSave();
-    //cout<<"finalised run one step"<<endl;
+    cout<<"finalised run one step"<<endl;
     calculateColumnarLayerBoundingBox();
     //cout<<" step: "<<timestep<<" Pressure: "<<SuctionPressure[2]<<" Pa, maximum z-height: "<<boundingBox[1][2]<<" L/a: "<<(boundingBox[1][2]-50)/(2.0*pipetteRadius)<<endl;
     timestep++;
@@ -2513,7 +2536,6 @@ void Simulation::updateStepNR(){
     gsl_matrix* K = gsl_matrix_calloc(dim*nNodes,dim*nNodes);
     //Elements[0]->displayMatrix(mviscdt,"mviscdt");
     //cout<<" checking for Pipette forces: "<<PipetteSuction<<" Pipette time: "<<PipetteInitialStep<<" "<<PipetteEndStep<<" timestep "<<timestep<<endl;
-    vector <int> TransientZFixListForPipette;
     while (!converged){
         cout<<"iteration: "<<iteratorK<<endl;
         //cout<<"Element 0 BasalArea: "<<Elements[0]->ReferenceShape->BasalArea<<endl;
@@ -2582,7 +2604,10 @@ void Simulation::updateStepNR(){
         //Elements[0]->displayMatrix(mviscdt,"mviscdt");
         //Elements[0]->displayMatrix(un,"un");
         //Elements[0]->displayMatrix(uk,"uk");
+        cout<<"Solving for deltaU: "<<endl;
         solveForDeltaU(K,gSum,deltaU);
+        cout<<"Solved for deltaU: "<<endl;
+
         converged = checkConvergenceViaDeltaU(deltaU);
         //Elements[0]->displayMatrix(deltaU,"deltaU");
         updateUkInNR(uk,deltaU);
@@ -3657,11 +3682,30 @@ void Simulation::updateElementPositionsSingle(int RKId, int i ){
 	Elements[i]->updatePositions(RKId, Nodes);
 }
 
+void Simulation::assignDVTips(){
+	double xTips[2] ={ 10000, -10000};
+	int n = Nodes.size();
+	for (int i =0; i<n; ++i){
+		if (Nodes[i]->tissuePlacement == 0 && Nodes[i]->tissueType == 0 ) { //taking the basal nodes of the columnar layer only
+			if (Nodes[i]->Position[0] < xTips[0] ){
+				dorsalTipIndex = i;
+				xTips[0] = Nodes[i]->Position[0];
+			}
+			if (Nodes[i]->Position[0] > xTips[1] ){
+				ventralTipIndex = i;
+				xTips[1] = Nodes[i]->Position[0];
+			}
+		}
+		//cout<<"DV Tip node indexes: "<<dorsalTipIndex<<" "<<ventralTipIndex<<endl;
+	}
+	//cout<<"DV Tip node indexes: "<<dorsalTipIndex<<" "<<ventralTipIndex<<endl;
+}
+
 void Simulation::alignTissueDVToXPositive(){
 	double* u = new double[3];
 	double* v = new double[3];
 	for (int i=0;i<3;++i){
-		u[i] = Nodes[DVRight]->Position[i] - Nodes[DVLeft]->Position[i];
+		u[i] = Nodes[ventralTipIndex]->Position[i] - Nodes[dorsalTipIndex]->Position[i];
 	}
 	Elements[0]->normaliseVector3D(u);
 	v[0]=1;v[1]=0;v[2]=0;
@@ -3696,7 +3740,7 @@ void Simulation::alignTissueDVToXPositive(){
 void Simulation::calculateDVDistance(){
 	double d[3];
 	for (int i=0;i<3;++i){
-		d[i] = Nodes[DVRight]->Position[i] - Nodes[DVLeft]->Position[i];
+		d[i] = Nodes[dorsalTipIndex]->Position[i] - Nodes[ventralTipIndex]->Position[i];
 		d[i] *=d[i];
 
 	}
@@ -3772,10 +3816,11 @@ void Simulation::updateDisplaySaveValuesFromRK(){
         //PackingForces[0][j][2] = 1.0/6.0 * (PackingForces[0][j][2] + 2 * (PackingForces[1][j][2] + PackingForces[2][j][2]) + PackingForces[3][j][2]);
 		//I do not need to do velocities, as I already calculate the average velocity on storage space of RK step 1, for posiiton update
 	}
-	n = Elements.size();
-    for (int j=0;j<n;++j){
-        Elements[j]->createMatrixCopy(Elements[j]->Strain, Elements[j]->RK1Strain);
-    }
+	//Open this if You are using RK
+	//n = Elements.size();
+    //for (int j=0;j<n;++j){
+    //    Elements[j]->createMatrixCopy(Elements[j]->Strain, Elements[j]->RK1Strain);
+    //}
 }
 
 void Simulation::saveStep(){
@@ -3977,11 +4022,29 @@ void Simulation::calculateGrowthUniform(GrowthFunctionBase* currGF){
 		currGF->getGrowthRate(maxValues);
 		int  n = Elements.size();
 		for ( int i = 0; i < n; ++i ){
-			//tissue type == 0 is columnar layer, ==1 is peripodial membrane
-			if ((currGF->applyToColumnarLayer && Elements[i]->tissueType == 0) || (currGF->applyToPeripodialMembrane && Elements[i]->tissueType == 1)){
-				 //cout<<"updating growth for element: "<<Elements[i]->Id<<endl;
-                Elements[i]->updateGrowthRate(maxValues[0],maxValues[1],maxValues[2]);
-           }
+			//tissue type == 0 is columnar layer, ==1 is peripodial membrane, ==2 id linker zone
+			if ( currGF->applyToColumnarLayer){
+				if (Elements[i]->tissueType == 0){ //columnar layer, grow directly
+					Elements[i]->updateGrowthRate(maxValues[0],maxValues[1],maxValues[2]);
+				}
+				else if (Elements[i]->tissueType == 2){ //Linker zone, need to weight the growth
+					double weight = Elements[i]->getColumnarness();
+					Elements[i]->updateGrowthRate(weight*maxValues[0],weight*maxValues[1],weight*maxValues[2]);
+				}
+			}
+			if ( currGF->applyToPeripodialMembrane){
+				if (Elements[i]->tissueType == 1){ //peripodial membrane, grow directly
+					Elements[i]->updateGrowthRate(maxValues[0],maxValues[1],maxValues[2]);
+				}
+				else if (Elements[i]->tissueType == 2){ //Linker zone, need to weight the growth
+					double weight = Elements[i]->getPeripodialness();
+					Elements[i]->updateGrowthRate(weight*maxValues[0],weight*maxValues[1],weight*maxValues[2]);
+				}
+			}
+			//if ((currGF->applyToColumnarLayer && Elements[i]->tissueType == 0) || (currGF->applyToPeripodialMembrane && Elements[i]->tissueType == 1)){
+			//	 //cout<<"updating growth for element: "<<Elements[i]->Id<<endl;
+			//	Elements[i]->updateGrowthRate(maxValues[0],maxValues[1],maxValues[2]);
+			//}
 		}
 		delete[] maxValues;
 	}
@@ -4003,7 +4066,7 @@ void Simulation::calculateGrowthRing(GrowthFunctionBase* currGF){
 		float outerRadius2 = outerRadius*outerRadius;
 		int  n = Elements.size();
 		for ( int i = 0; i < n; ++i ){
-			if ((currGF->applyToColumnarLayer && Elements[i]->tissueType == 0) || (currGF->applyToPeripodialMembrane && Elements[i]->tissueType == 1)){
+			if ((currGF->applyToColumnarLayer && Elements[i]->tissueType == 0) || (currGF->applyToPeripodialMembrane && Elements[i]->tissueType == 1) || Elements[i]->tissueType == 2){
 				double* Elementcentre = new double[3];
 				Elementcentre = Elements[i]->getCentre();
 				//the distance is calculated in the x-y projection
@@ -4016,7 +4079,25 @@ void Simulation::calculateGrowthRing(GrowthFunctionBase* currGF){
 					double sf = (1.0 - (distance - innerRadius) / (outerRadius - innerRadius) );
                     double growthscale[3] = {maxValues[0]*sf,maxValues[1]*sf,maxValues[2]*sf};
 					//growing the shape
-                    Elements[i]->updateGrowthRate(growthscale[0],growthscale[1],growthscale[2]);
+                    if ( currGF->applyToColumnarLayer){
+						if (Elements[i]->tissueType == 0){ //columnar layer, grow directly
+							Elements[i]->updateGrowthRate(growthscale[0],growthscale[1],growthscale[2]);
+						}
+						else if (Elements[i]->tissueType == 2){ //Linker zone, need to weight the growth
+							double weight = Elements[i]->getColumnarness();
+							Elements[i]->updateGrowthRate(weight*growthscale[0],weight*growthscale[1],weight*growthscale[2]);
+						}
+                    }
+                    if ( currGF->applyToPeripodialMembrane){
+						if (Elements[i]->tissueType == 1){ //peripodial membrane, grow directly
+							Elements[i]->updateGrowthRate(growthscale[0],growthscale[1],growthscale[2]);
+						}
+						else if (Elements[i]->tissueType == 2){ //Linker zone, need to weight the growth
+							double weight = Elements[i]->getPeripodialness();
+							Elements[i]->updateGrowthRate(weight*growthscale[0],weight*growthscale[1],weight*growthscale[2]);
+						}
+					}
+
 				}
 				delete[] Elementcentre;
 			}
@@ -4024,6 +4105,7 @@ void Simulation::calculateGrowthRing(GrowthFunctionBase* currGF){
 		delete[] maxValues;
 	}
 }
+
 
 void Simulation::calculateGrowthGridBased(GrowthFunctionBase* currGF){
 	int nGridX = currGF->getGridX();
@@ -4033,7 +4115,7 @@ void Simulation::calculateGrowthGridBased(GrowthFunctionBase* currGF){
 	if(simTime > currGF->initTime && simTime < currGF->endTime ){
 		vector<ShapeBase*>::iterator itElement;
 		for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-			if ((currGF->applyToColumnarLayer && (*itElement)->tissueType == 0) || (currGF->applyToPeripodialMembrane && (*itElement)->tissueType == 1)){
+			if ((currGF->applyToColumnarLayer && (*itElement)->tissueType == 0) || (currGF->applyToPeripodialMembrane && (*itElement)->tissueType == 1) || (*itElement)->tissueType == 2){
 				double* ReletivePos = new double[2];
 				//normalising the element centre position with bounding box
 				(*itElement)->getRelativePosInBoundingBox(ReletivePos);
@@ -4059,7 +4141,26 @@ void Simulation::calculateGrowthGridBased(GrowthFunctionBase* currGF){
 					growthscale[axis] = growthYmid[0][axis]*(1.0-fracY) + growthYmid[1][axis]*fracY;
 				}
 				//growing the shape
-                (*itElement)->updateGrowthRate(growthscale[0],growthscale[1],growthscale[2]);
+
+
+				if ( currGF->applyToColumnarLayer){
+					if ((*itElement)->tissueType == 0){ //columnar layer, grow directly
+						(*itElement)->updateGrowthRate(growthscale[0],growthscale[1],growthscale[2]);
+					}
+					else if ((*itElement)->tissueType == 2){ //Linker zone, need to weight the growth
+						double weight = (*itElement)->getColumnarness();
+						(*itElement)->updateGrowthRate(weight*growthscale[0],weight*growthscale[1],weight*growthscale[2]);
+					}
+				}
+				if ( currGF->applyToPeripodialMembrane){
+					if ((*itElement)->tissueType == 1){ //peripodial membrane, grow directly
+						(*itElement)->updateGrowthRate(growthscale[0],growthscale[1],growthscale[2]);
+					}
+					else if ((*itElement)->tissueType == 2){ //Linker zone, need to weight the growth
+						double weight = (*itElement)->getPeripodialness();
+						(*itElement)->updateGrowthRate(weight*growthscale[0],weight*growthscale[1],weight*growthscale[2]);
+					}
+				}
 				delete[] ReletivePos;
 			}
 		}

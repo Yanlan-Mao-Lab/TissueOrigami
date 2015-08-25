@@ -22,7 +22,7 @@ public:
 	double 			**Velocity;				///< The pointer(**) to the velocities of the node for each Runge-Kutta step. The final calculated velocity is stored in Velocity[0]
 	double 			Viscosity;				///< Viscosity of the node, defined by its placement within the tissue
 	int 			tissuePlacement;		///< The tissue placement is 0 for basal nodes, 1 for apical nodes, and 2 for middle range
-	int 			tissueType;		 		///< The tissue type is 0 for columnar layer and 1 for peripodial membrane
+	int 			tissueType;		 		///< The tissue type is 0 for columnar layer, 1 for peripodial membrane, and 2 for linker zone
 	bool 			atCircumference;		///< Boolean defining if the node is at the circumference of the columnar layer of the tissue.
 	double 			mass;					///< The mass of the node, calculated via the elements that use the node as a vertex
 	double 			surface;				///< The surface of the node, calculated via apical or basal elements. Lateral surfaces are not included

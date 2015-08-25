@@ -33,6 +33,8 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
 		BasalNormalForPacking[i] = 0;
 		RelativePosInBoundingBox[i] =0;
 	}
+	columnarGrowthWeight = 1.0;
+	peripodialGrowthWeight = 0.0;
 	for (int i=0; i<6; ++i){
 		CurrGrowthStrainAddition[i] = 0;
 	}
@@ -115,7 +117,7 @@ Prism::~Prism(){
     delete[] ShapeChangeRate;
 	delete	 ReferenceShape;
 
-    //freeing matrices allocated in this function
+    //freeing matrices allocated
     gsl_matrix_free(D);
     gsl_matrix_free(CoeffMat);
     gsl_matrix_free(Fg);
@@ -310,6 +312,7 @@ void  Prism::setElasticProperties(double EApical, double EBasal, double EMid, do
             }
         }
     }
+    //cout<<" Element: "<<Id<<" E : "<<E<<" v: "<<v<<" lambda: "<<lambda<< " mu: "<<mu<<endl;
 }
 
 

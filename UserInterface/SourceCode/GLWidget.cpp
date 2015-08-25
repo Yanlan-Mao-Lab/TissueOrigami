@@ -42,11 +42,11 @@ using namespace std;
      DisplayStrains = false;
      DisplayPysProp = false;
      //current ranges:
-     DisplayPysPropRange[0][0] = 1.0; DisplayPysPropRange[0][1] = 100.0;
-     DisplayPysPropRange[1][0] = 1.0; DisplayPysPropRange[1][1] = 5000.0;
+     DisplayPysPropRange[0][0] = 0.0; DisplayPysPropRange[0][1] = 100.0;
+     DisplayPysPropRange[1][0] = 100.0; DisplayPysPropRange[1][1] = 5000.0;
      DisplayPysPropRange[2][0] = 0.0; DisplayPysPropRange[2][1] = 0.5;
-     DisplayPysPropRange[3][0] = -1.0; DisplayPysPropRange[3][1] = 10.0;
-     DisplayPysPropRange[4][0] = -1.0; DisplayPysPropRange[3][1] = 10.0;
+     DisplayPysPropRange[3][0] = 0.0; DisplayPysPropRange[3][1] = 1E-5;
+     DisplayPysPropRange[4][0] = -1.0; DisplayPysPropRange[4][1] = 10.0;
      //the minimum and maximum they can get:
      DisplayPysPropBounds[0][0] = 0.0; DisplayPysPropBounds[0][1] = 50.0;
      DisplayPysPropBounds[0][2] = 51.0; DisplayPysPropBounds[0][3] = 250.0;
@@ -54,20 +54,20 @@ using namespace std;
      DisplayPysPropBounds[1][2] = 51.0; DisplayPysPropBounds[1][3] = 10000.0;
      DisplayPysPropBounds[2][0] = 0.0; DisplayPysPropBounds[2][1] = 0.1;
      DisplayPysPropBounds[2][2] = 0.11; DisplayPysPropBounds[2][3] = 0.5;
-     DisplayPysPropBounds[3][0] = -4.0; DisplayPysPropBounds[3][1] = 0.0;
-     DisplayPysPropBounds[3][2] = 0.0; DisplayPysPropBounds[3][3] = 4.0;
+     DisplayPysPropBounds[3][0] = 0.0; DisplayPysPropBounds[3][1] = 1E-5;
+     DisplayPysPropBounds[3][2] = 1E-5; DisplayPysPropBounds[3][3] = 1;
      DisplayPysPropBounds[4][0] = -6.0; DisplayPysPropBounds[4][1] = 0.0;
      DisplayPysPropBounds[4][2] = 0.0; DisplayPysPropBounds[4][3] = 6.0;
      //the decimals to display:
      DisplayPysPropDecimals[0] = 0;
      DisplayPysPropDecimals[1] = 0;
 	 DisplayPysPropDecimals[2] = 2;
-	 DisplayPysPropDecimals[3] = 2;
+	 DisplayPysPropDecimals[3] = 6;
 	 DisplayPysPropDecimals[4] = 2;
 	 DisplayPysPropSteps[0] = 1;
 	 DisplayPysPropSteps[1] = 10;
 	 DisplayPysPropSteps[2] = 0.05;
-	 DisplayPysPropSteps[3] = 0.05;
+	 DisplayPysPropSteps[3] = 1E-5;
 	 DisplayPysPropSteps[4] = 0.05;
 
   	 setSizePolicy(QSizePolicy ::Expanding , QSizePolicy ::Expanding );
@@ -232,7 +232,7 @@ using namespace std;
 	 if (Sim01->Elements[i]->IsAblated){
 		 drawthisElement = false;
 	 }
-	 if (!drawPeripodialMembrane && Sim01->Elements[i]->tissueType == 1){	//I am NOT drawing peripodial membrane and this element is a peripodial element
+	 if (!drawPeripodialMembrane && ( Sim01->Elements[i]->tissueType == 1 || Sim01->Elements[i]->tissueType == 2 )){	//I am NOT drawing peripodial membrane and this element is either a peripodial or a linekr element
 	 	 drawthisElement = false;
 	 }
 	 if (!drawColumnar && Sim01->Elements[i]->tissueType == 0){		//I am NOT drawing columnar layer and this element is a columnar element
@@ -243,7 +243,7 @@ using namespace std;
 
  bool GLWidget::checkIfDrawingNode(int i){
  	 bool drawthisNode = true;
- 	 if (!drawPeripodialMembrane && Sim01->Nodes[i]->tissueType == 1){	//I am NOT drawing peripodial membrane and this element is a peripodial node
+ 	 if (!drawPeripodialMembrane && ( Sim01->Nodes[i]->tissueType == 1 || Sim01->Nodes[i]->tissueType == 2 )){	//I am NOT drawing peripodial membrane and this node is either a peripodial or a linker node
  	 	 drawthisNode = false;
  	 }
 	 if (!drawColumnar && Sim01->Nodes[i]->tissueType == 0){	//I am NOT drawing columnar layer and this element is a columnar node
@@ -342,6 +342,11 @@ void GLWidget::highlightNode(int i){
 				NodeColourList[(*itNode)->Id][0]=1.0;
 				NodeColourList[(*itNode)->Id][1]=1.0;
 				NodeColourList[(*itNode)->Id][2]=0.75;
+			}
+			else if ((*itNode)->tissueType == 2){ // Linker Zone
+				NodeColourList[(*itNode)->Id][0]=0.87;
+				NodeColourList[(*itNode)->Id][1]=1.0;
+				NodeColourList[(*itNode)->Id][2]=0.87;
 			}
 		}
 		else{

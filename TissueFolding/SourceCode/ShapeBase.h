@@ -43,6 +43,8 @@ protected:
 	int 	nDim;
 	int* 	IdentifierColour;
 	double* GrowthRate;
+	double  columnarGrowthWeight;
+	double  peripodialGrowthWeight;
 	double* ShapeChangeRate;
     bool    rotatedGrowth;
 	double* CurrGrowthStrainAddition;
@@ -129,7 +131,7 @@ public:
 	bool	ApicalNormalForPackingUpToDate;
 	bool	BasalNormalForPackingUpToDate;
 	int 	tissuePlacement; //1 -> apical, 0 -> basal, 2->middle, 3 -> lateral
-	int 	tissueType;	//Columnar layer = 0, PeripodialMembrane = 1
+	int 	tissueType;	///< The tissue type is 0 for columnar layer, 1 for peripodial membrane, and 2 for linker zone
 	bool	IsAblated;
 	bool	IsClippedInDisplay;
 	double 	CurrShapeChangeToAdd[3];
@@ -147,6 +149,8 @@ public:
 	int 	getDim();
 	int* 	getIdentifierColour();
 	double* getCentre();
+	double	getPeripodialness();
+	double	getColumnarness();
 	void	calculateRelativePosInBoundingBox(double BoindingBoxXMin, double BoundingBoxYMin, double BoundingBoxLength, double BoundingBoxWidth);
 	void	displayRelativePosInBoundingBox();
 	void	getRelativePosInBoundingBox(double* relativePos);
@@ -166,6 +170,7 @@ public:
 	void 	displayReferencePositions();
 	void 	displayIdentifierColour();
     void    setFg(gsl_matrix* currFg);
+	void 	setGrowthWeightsViaTissuePlacement (double periWeight);
     virtual void setElasticProperties(double EApical,double EBasal, double EMid,double v){ParentErrorMessage("setElasticProperties");};
 	virtual void calculateBasalNormal(double * normal){ParentErrorMessage("calculateBasalNormal");};
 	virtual void AlignReferenceBaseNormalToZ(){ParentErrorMessage("AlignReferenceBaseNormalToZ");};
