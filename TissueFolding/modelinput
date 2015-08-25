@@ -19,7 +19,7 @@ NodeFixingOptions:
 
 TimeParameters:
   TimeStep(sec): 300
-  SimulationLength(sec): 90000
+  SimulationLength(sec): 601
 
 PysicalProperties:
   YoungsModulusApical: 1000.0	YoungsModulusBasal: 1000.0	YoungsModulusMid: 1000.0	Noise(%-int): 0

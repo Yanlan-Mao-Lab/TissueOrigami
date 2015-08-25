@@ -2821,6 +2821,7 @@ extern "C" void pardiso_chkmatrix  (int *, int *, double *, int *, int *, int *)
 extern "C" void pardiso_chkvec     (int *, int *, double *, int *);
 extern "C" void pardiso_printstats (int *, int *, double *, int *, int *, int *, double *, int *);
 
+
 int Simulation::solveWithPardiso(double* a, double*b, int* ia, int* ja, gsl_vector* deltaU ,const int n_variables){
 
     // I am copying my libraries to a different location for this to work:
@@ -2855,11 +2856,11 @@ int Simulation::solveWithPardiso(double* a, double*b, int* ia, int* ja, gsl_vect
 
     int    n = n_variables;
     int    nnz = ia[n];
-    int    mtype = -2;        /* Real symmetric matrix */
+    int    mtype = 11;        /* Real symmetric matrix */
 
     /* RHS and solution vectors. */
     int      nrhs = 1;          /* Number of right hand sides. */
-    double   x[n_variables];
+    double   x[n_variables], diag[n_variables];
     /* Internal solver memory pointer pt,                  */
     /* 32-bit: int pt[64]; 64-bit: long int pt[64]         */
     /* or void *pt[64] should be OK on both architectures  */
@@ -2877,7 +2878,7 @@ int Simulation::solveWithPardiso(double* a, double*b, int* ia, int* ja, gsl_vect
 
     /* Auxiliary variables. */
     char    *var;
-    int      i;
+    int      i, k;
 
     double   ddum;              /* Double dummy */
     int      idum;              /* Integer dummy. */
@@ -2916,6 +2917,9 @@ int Simulation::solveWithPardiso(double* a, double*b, int* ia, int* ja, gsl_vect
 
     maxfct = 1;		    /* Maximum number of numerical factorizations.  */
     mnum   = 1;         /* Which factorization to use. */
+
+    iparm[10] = 0; /* no scaling  */
+    iparm[12] = 0; /* no matching */
 
     msglvl = 0;         /* Print statistical information  */
     error  = 0;         /* Initialize error flag */
@@ -3006,9 +3010,9 @@ int Simulation::solveWithPardiso(double* a, double*b, int* ia, int* ja, gsl_vect
 /* -------------------------------------------------------------------- */
 /* ..  Back substitution and iterative refinement.                      */
 /* -------------------------------------------------------------------- */
-    phase = 33;
+   /* phase = 33;
 
-    iparm[7] = 1;       /* Max numbers of iterative refinement steps. */
+    iparm[7] = 1;       // Max numbers of iterative refinement steps.
 
     pardiso (pt, &maxfct, &mnum, &mtype, &phase,
              &n, a, ia, ja, &idum, &nrhs,
@@ -3031,6 +3035,39 @@ int Simulation::solveWithPardiso(double* a, double*b, int* ia, int* ja, gsl_vect
     for (int i=0; i<n_variables; ++i){
         gsl_vector_set(deltaU,i,x[i]);
     }
+    */
+/* -------------------------------------------------------------------- */
+/* ..  Back substitution with tranposed matrix A^t x=b                  */
+/* -------------------------------------------------------------------- */
+
+	phase = 33;
+
+	iparm[7]  = 1;       /* Max numbers of iterative refinement steps. */
+	iparm[11] = 1;       /* Solving with transpose matrix. */
+
+	pardiso (pt, &maxfct, &mnum, &mtype, &phase,
+			 &n, a, ia, ja, &idum, &nrhs,
+			 iparm, &msglvl, b, x, &error,  dparm);
+
+	if (error != 0) {
+		printf("\nERROR during solution: %d", error);
+		exit(3);
+	}
+
+	bool displayResult = false;
+	if (displayResult){
+		printf("\nSolve completed ... ");
+		printf("\nThe solution of the system is: ");
+		for (i = 0; i < n; i++) {
+			printf("\n x [%d] = % f", i, x[i] );
+		}
+		printf ("\n");
+	}
+    //Write x into deltaU:
+    for (int i=0; i<n_variables; ++i){
+        gsl_vector_set(deltaU,i,x[i]);
+    }
+
 /* -------------------------------------------------------------------- */
 /* ..  Convert matrix back to 0-based C-notation.                       */
 /* -------------------------------------------------------------------- */
@@ -3051,7 +3088,7 @@ int Simulation::solveWithPardiso(double* a, double*b, int* ia, int* ja, gsl_vect
              iparm, &msglvl, &ddum, &ddum, &error,  dparm);
     return 0;
 }
-
+/*
 void Simulation::constructiaForPardiso(gsl_matrix* K, int* ia, const int nmult, vector<int> &ja_vec, vector<double> &a_vec){
     double negThreshold = -1E-14, posThreshold = 1E-14;
     //count how many elements there are on K matrix and fill up ia:
@@ -3074,7 +3111,29 @@ void Simulation::constructiaForPardiso(gsl_matrix* K, int* ia, const int nmult, 
     }
     ia[nmult] = counter;
 }
-
+*/
+void Simulation::constructiaForPardiso(gsl_matrix* K, int* ia, const int nmult, vector<int> &ja_vec, vector<double> &a_vec){
+    double negThreshold = -1E-14, posThreshold = 1E-14;
+    //count how many elements there are on K matrix and fill up ia:
+    int counter = 0;
+    for (int i =0; i<nmult; ++i){
+        bool wroteiaForThisRow = false;
+        for (int j=0; j<nmult; ++j){
+            double Kvalue = gsl_matrix_get(K,i,j);
+            if (Kvalue>posThreshold || Kvalue<negThreshold){
+                ja_vec.push_back(j);
+                a_vec.push_back(Kvalue);
+                if (!wroteiaForThisRow){
+                    //cout<<"writing is for row "<<i<<" column is: "<<j<<endl;
+                    ia[i] = counter;
+                    wroteiaForThisRow = true;
+                }
+                counter++;
+            }
+        }
+    }
+    ia[nmult] = counter;
+}
 void Simulation::writeKinPardisoFormat(const int nNonzero, vector<int> &ja_vec, vector<double> &a_vec, int* ja, double* a){
     //now filling up the int & double arrays for ja, a
     for (int i=0 ; i<nNonzero; ++i){
