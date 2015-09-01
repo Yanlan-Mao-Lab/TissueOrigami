@@ -112,9 +112,6 @@ $(document).ready(function(){initNavTree('functions_func.html','');});
 
 <div class="contents">
 &#160;<ul>
-<li>calculateReferenceVolume()
-: <a class="el" href="classTriangle.html#aa3372ccff16fb2bbbbafb90e6e839607">Triangle</a>
-</li>
 <li>checkIfNeighbour()
 : <a class="el" href="classNode.html#a7dc5a9838a0a1963e58f648c5f7cb635">Node</a>
 </li>
@@ -127,26 +124,60 @@ $(document).ready(function(){initNavTree('functions_func.html','');});
 <li>displayConnectedElementWeights()
 : <a class="el" href="classNode.html#a755e8c3d76e7f1f0ab364fc3d4da3a9a">Node</a>
 </li>
+<li>getCentre()
+: <a class="el" href="classRingGrowthFunction.html#aa2063170e3ee5c5f22d7beef32300e9c">RingGrowthFunction</a>
+</li>
 <li>getCurrentRKPosition()
 : <a class="el" href="classNode.html#a20d72574fb53a76cf7fda7f3a862f8d0">Node</a>
 </li>
-<li>getCurrRelaxedShape()
-: <a class="el" href="classTriangle.html#a4c0e797b1552945c68f0b76cfe939a06">Triangle</a>
+<li>getGridX()
+: <a class="el" href="classGridBasedGrowthFunction.html#ae36e6ea2e7bdf41459e74d5846d6d24d">GridBasedGrowthFunction</a>
 </li>
-<li>setCoeffMat()
-: <a class="el" href="classTriangle.html#a43d8581fe626bc89e68b3f0572106211">Triangle</a>
+<li>getGridY()
+: <a class="el" href="classGridBasedGrowthFunction.html#a4a70e9e187e3079e29115f106d30e26e">GridBasedGrowthFunction</a>
 </li>
-<li>setShapeFunctionDerivatives()
-: <a class="el" href="classTriangle.html#ae226791c33e27f0152bf71dda61dfd81">Triangle</a>
+<li>getGrowthMatrix()
+: <a class="el" href="classGridBasedGrowthFunction.html#ac25ac1f12b74816a1d3d3e5dda0e8541">GridBasedGrowthFunction</a>
 </li>
-<li>setShapeFunctionDerivativeStack()
-: <a class="el" href="classTriangle.html#a96981bb576f1a27d29cd26ae42b99f7b">Triangle</a>
+<li>getGrowthMatrixElement()
+: <a class="el" href="classGridBasedGrowthFunction.html#a1775fe1788bc97569c892d01cc625ea8">GridBasedGrowthFunction</a>
 </li>
-<li>setTissueCoordsRotationsBuffers()
-: <a class="el" href="classTriangle.html#abc90c3548a0f08e5d1a34ad42748622a">Triangle</a>
+<li>getGrowthRate()
+: <a class="el" href="classRingGrowthFunction.html#ab3cc1858fb602ab40a74af7d0467c13b">RingGrowthFunction</a>
+, <a class="el" href="classUniformGrowthFunction.html#ad5be18ae004a3eed205ab3570e13202a">UniformGrowthFunction</a>
+</li>
+<li>getInnerRadius()
+: <a class="el" href="classRingGrowthFunction.html#ae1f4f4cecfab3ec343c748cfe78ab70b">RingGrowthFunction</a>
+</li>
+<li>getOuterRadius()
+: <a class="el" href="classRingGrowthFunction.html#ad5c890c72a8ce520411d28e929faec19">RingGrowthFunction</a>
+</li>
+<li>GridBasedGrowthFunction()
+: <a class="el" href="classGridBasedGrowthFunction.html#a1533e384b3ab79323e91ce68245c9a10">GridBasedGrowthFunction</a>
+</li>
+<li>GrowthFunctionBase()
+: <a class="el" href="classGrowthFunctionBase.html#a061b31ad8a0cb228628c7104029a94bf">GrowthFunctionBase</a>
+</li>
+<li>RingGrowthFunction()
+: <a class="el" href="classRingGrowthFunction.html#a7b8c3ed24ac7246be8817d1bcbc12289">RingGrowthFunction</a>
+</li>
+<li>setGrowthMatrixElement()
+: <a class="el" href="classGridBasedGrowthFunction.html#a9d01fcbba5732aad966659d4f64c145b">GridBasedGrowthFunction</a>
+</li>
+<li>setGrowtRate()
+: <a class="el" href="classRingGrowthFunction.html#a051da280e649c81afff38a1a45cb035a">RingGrowthFunction</a>
+, <a class="el" href="classUniformGrowthFunction.html#aff899907569af697d47927f61b6871a5">UniformGrowthFunction</a>
 </li>
 <li>setViscosity()
 : <a class="el" href="classNode.html#a67cfbbe5179590b5deddf7d4086bc316">Node</a>
+</li>
+<li>UniformGrowthFunction()
+: <a class="el" href="classUniformGrowthFunction.html#af74d0e65f1a9486a78871306f99e4eb1">UniformGrowthFunction</a>
+</li>
+<li>writeSummary()
+: <a class="el" href="classGridBasedGrowthFunction.html#a659418841b4a3bc8be1dec15f95d7b76">GridBasedGrowthFunction</a>
+, <a class="el" href="classRingGrowthFunction.html#a681175045cf09fadd92921e129737e65">RingGrowthFunction</a>
+, <a class="el" href="classUniformGrowthFunction.html#a227ffb3a524779628f98f110d3811399">UniformGrowthFunction</a>
 </li>
 </ul>
 </div><!-- contents -->
@@ -154,7 +185,7 @@ $(document).ready(function(){initNavTree('functions_func.html','');});
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Thu Aug 13 2015 16:22:30 for Tissue Origami by
+    <li class="footer">Generated on Tue Sep 1 2015 16:22:01 for Tissue Origami by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

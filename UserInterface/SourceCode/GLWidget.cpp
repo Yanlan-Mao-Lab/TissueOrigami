@@ -19,7 +19,7 @@ using namespace std;
  GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
  {
 	 //cout<<"initiating gl widget"<<endl;
-	 obj_pos[0] = -10.0f;
+	 obj_pos[0] = 100.0f;
 	 obj_pos[1] =  4.0f;
      obj_pos[2] =  250.0f;//250.0f;
 	 MatRot[0]  = 1.0; MatRot[1]  = 0.0; MatRot[2]  = 0.0; MatRot[3]  = 0.0;
@@ -39,7 +39,7 @@ using namespace std;
      aspectratio =1.0;
      ReferenceLineThickness = 1.0;
      MainShapeLineThickness = 1.0;
-     DisplayStrains = false;
+     DisplayStrains = true;
      DisplayPysProp = false;
      //current ranges:
      DisplayPysPropRange[0][0] = 0.0; DisplayPysPropRange[0][1] = 100.0;

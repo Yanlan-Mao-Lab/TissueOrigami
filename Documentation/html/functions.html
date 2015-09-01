@@ -86,17 +86,20 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
       <li><a href="#index_a"><span>a</span></a></li>
       <li><a href="#index_c"><span>c</span></a></li>
       <li><a href="#index_d"><span>d</span></a></li>
+      <li><a href="#index_e"><span>e</span></a></li>
       <li><a href="#index_f"><span>f</span></a></li>
       <li><a href="#index_g"><span>g</span></a></li>
       <li><a href="#index_i"><span>i</span></a></li>
-      <li><a href="#index_l"><span>l</span></a></li>
       <li><a href="#index_m"><span>m</span></a></li>
       <li><a href="#index_n"><span>n</span></a></li>
+      <li><a href="#index_o"><span>o</span></a></li>
       <li><a href="#index_p"><span>p</span></a></li>
       <li><a href="#index_r"><span>r</span></a></li>
       <li><a href="#index_s"><span>s</span></a></li>
       <li><a href="#index_t"><span>t</span></a></li>
+      <li><a href="#index_u"><span>u</span></a></li>
       <li><a href="#index_v"><span>v</span></a></li>
+      <li><a href="#index_w"><span>w</span></a></li>
       <li class="current"><a href="#index_z"><span>z</span></a></li>
     </ul>
   </div>
@@ -133,24 +136,21 @@ $(document).ready(function(){initNavTree('functions.html','');});
 <div class="textblock">Here is a list of all documented class members with links to the class documentation for each member:</div>
 
 <h3><a class="anchor" id="index_a"></a>- a -</h3><ul>
-<li>AssociatedNodesDueToPeripodialMembrane
-: <a class="el" href="classNode.html#a55ffe3c94ccad326737b510b47deff31">Node</a>
+<li>applyToColumnarLayer
+: <a class="el" href="classGrowthFunctionBase.html#a3d56771e7c145589a14e11cc331e0326">GrowthFunctionBase</a>
 </li>
-<li>AssociatedNodeWeightsDueToPeripodialMembrane
-: <a class="el" href="classNode.html#ac18a473bf44d200917cf27be42aa8a42">Node</a>
+<li>applyToPeripodialMembrane
+: <a class="el" href="classGrowthFunctionBase.html#a08ae19f58cb98fa8e315a77f52749732">GrowthFunctionBase</a>
 </li>
 <li>atCircumference
 : <a class="el" href="classNode.html#ab6b225354ad961f2e9bd5d7fe9b67b3a">Node</a>
-</li>
-<li>atPeripodialCircumference
-: <a class="el" href="classNode.html#a7a4b47d88dee36f1fea2721f765c05d0">Node</a>
 </li>
 </ul>
 
 
 <h3><a class="anchor" id="index_c"></a>- c -</h3><ul>
-<li>calculateReferenceVolume()
-: <a class="el" href="classTriangle.html#aa3372ccff16fb2bbbbafb90e6e839607">Triangle</a>
+<li>centre
+: <a class="el" href="classRingGrowthFunction.html#a5b8f1cc72d03907bb1492e6c2f288db0">RingGrowthFunction</a>
 </li>
 <li>checkIfNeighbour()
 : <a class="el" href="classNode.html#a7dc5a9838a0a1963e58f648c5f7cb635">Node</a>
@@ -177,6 +177,13 @@ $(document).ready(function(){initNavTree('functions.html','');});
 </ul>
 
 
+<h3><a class="anchor" id="index_e"></a>- e -</h3><ul>
+<li>endTime
+: <a class="el" href="classGrowthFunctionBase.html#a3ff4db0573d354a75666a5f3ca446941">GrowthFunctionBase</a>
+</li>
+</ul>
+
+
 <h3><a class="anchor" id="index_f"></a>- f -</h3><ul>
 <li>FixedPos
 : <a class="el" href="classNode.html#a80edc54e934bdfc08b66933d4c7fd6f4">Node</a>
@@ -185,28 +192,63 @@ $(document).ready(function(){initNavTree('functions.html','');});
 
 
 <h3><a class="anchor" id="index_g"></a>- g -</h3><ul>
+<li>getCentre()
+: <a class="el" href="classRingGrowthFunction.html#aa2063170e3ee5c5f22d7beef32300e9c">RingGrowthFunction</a>
+</li>
 <li>getCurrentRKPosition()
 : <a class="el" href="classNode.html#a20d72574fb53a76cf7fda7f3a862f8d0">Node</a>
 </li>
-<li>getCurrRelaxedShape()
-: <a class="el" href="classTriangle.html#a4c0e797b1552945c68f0b76cfe939a06">Triangle</a>
+<li>getGridX()
+: <a class="el" href="classGridBasedGrowthFunction.html#ae36e6ea2e7bdf41459e74d5846d6d24d">GridBasedGrowthFunction</a>
+</li>
+<li>getGridY()
+: <a class="el" href="classGridBasedGrowthFunction.html#a4a70e9e187e3079e29115f106d30e26e">GridBasedGrowthFunction</a>
+</li>
+<li>getGrowthMatrix()
+: <a class="el" href="classGridBasedGrowthFunction.html#ac25ac1f12b74816a1d3d3e5dda0e8541">GridBasedGrowthFunction</a>
+</li>
+<li>getGrowthMatrixElement()
+: <a class="el" href="classGridBasedGrowthFunction.html#a1775fe1788bc97569c892d01cc625ea8">GridBasedGrowthFunction</a>
+</li>
+<li>getGrowthRate()
+: <a class="el" href="classRingGrowthFunction.html#ab3cc1858fb602ab40a74af7d0467c13b">RingGrowthFunction</a>
+, <a class="el" href="classUniformGrowthFunction.html#ad5be18ae004a3eed205ab3570e13202a">UniformGrowthFunction</a>
+</li>
+<li>getInnerRadius()
+: <a class="el" href="classRingGrowthFunction.html#ae1f4f4cecfab3ec343c748cfe78ab70b">RingGrowthFunction</a>
+</li>
+<li>getOuterRadius()
+: <a class="el" href="classRingGrowthFunction.html#ad5c890c72a8ce520411d28e929faec19">RingGrowthFunction</a>
+</li>
+<li>GridBasedGrowthFunction()
+: <a class="el" href="classGridBasedGrowthFunction.html#a1533e384b3ab79323e91ce68245c9a10">GridBasedGrowthFunction</a>
+</li>
+<li>GrowthFunctionBase()
+: <a class="el" href="classGrowthFunctionBase.html#a061b31ad8a0cb228628c7104029a94bf">GrowthFunctionBase</a>
+</li>
+<li>GrowthMatrix
+: <a class="el" href="classGridBasedGrowthFunction.html#a5522d9b84fa95ebd65cdf290a4f0a65c">GridBasedGrowthFunction</a>
+</li>
+<li>GrowthRate
+: <a class="el" href="classRingGrowthFunction.html#a93b70ff6a7258c73a6bd2d888d09fc09">RingGrowthFunction</a>
+, <a class="el" href="classUniformGrowthFunction.html#af78591902b0cc391a62f3093fd14ad10">UniformGrowthFunction</a>
 </li>
 </ul>
 
 
 <h3><a class="anchor" id="index_i"></a>- i -</h3><ul>
 <li>Id
-: <a class="el" href="classNode.html#a1bd379569cc1a8b96432e61971aed4d9">Node</a>
+: <a class="el" href="classGrowthFunctionBase.html#aa669a940ab77009f9b2b9c9885e9cd9e">GrowthFunctionBase</a>
+, <a class="el" href="classNode.html#a1bd379569cc1a8b96432e61971aed4d9">Node</a>
 </li>
 <li>immediateNeigs
 : <a class="el" href="classNode.html#ab22060fb9f61a0d93ec52e6045828782">Node</a>
 </li>
-</ul>
-
-
-<h3><a class="anchor" id="index_l"></a>- l -</h3><ul>
-<li>LinkedPeripodialNodeId
-: <a class="el" href="classNode.html#a27a5cb226f56c7598f7e90887c664ed4">Node</a>
+<li>initTime
+: <a class="el" href="classGrowthFunctionBase.html#ae92513a7b41637df8e26e7db35ddf97c">GrowthFunctionBase</a>
+</li>
+<li>innerRadius
+: <a class="el" href="classRingGrowthFunction.html#a4e8796fbbbe9fe18c2dcd04613effcf0">RingGrowthFunction</a>
 </li>
 </ul>
 
@@ -222,8 +264,18 @@ $(document).ready(function(){initNavTree('functions.html','');});
 <li>nDim
 : <a class="el" href="classNode.html#ae23958d63ecbf80559c307c955be8227">Node</a>
 </li>
-<li>normalCrossOrder
-: <a class="el" href="classTriangle.html#a39f71d3edb0f3ba6fc632d6dcf5237ac">Triangle</a>
+<li>nGridX
+: <a class="el" href="classGridBasedGrowthFunction.html#af872b9963f3a579dcd615c23bcb58a86">GridBasedGrowthFunction</a>
+</li>
+<li>nGridY
+: <a class="el" href="classGridBasedGrowthFunction.html#a625bc963a1f1e7d1f1a35dbd0ef51728">GridBasedGrowthFunction</a>
+</li>
+</ul>
+
+
+<h3><a class="anchor" id="index_o"></a>- o -</h3><ul>
+<li>outerRadius
+: <a class="el" href="classRingGrowthFunction.html#a8b7d5268d9d47f112b56feef58193649">RingGrowthFunction</a>
 </li>
 </ul>
 
@@ -236,6 +288,9 @@ $(document).ready(function(){initNavTree('functions.html','');});
 
 
 <h3><a class="anchor" id="index_r"></a>- r -</h3><ul>
+<li>RingGrowthFunction()
+: <a class="el" href="classRingGrowthFunction.html#a7b8c3ed24ac7246be8817d1bcbc12289">RingGrowthFunction</a>
+</li>
 <li>RKPosition
 : <a class="el" href="classNode.html#abfa97f5fa4e95c932b4e3e0daabb062a">Node</a>
 </li>
@@ -243,26 +298,18 @@ $(document).ready(function(){initNavTree('functions.html','');});
 
 
 <h3><a class="anchor" id="index_s"></a>- s -</h3><ul>
-<li>setCoeffMat()
-: <a class="el" href="classTriangle.html#a43d8581fe626bc89e68b3f0572106211">Triangle</a>
+<li>setGrowthMatrixElement()
+: <a class="el" href="classGridBasedGrowthFunction.html#a9d01fcbba5732aad966659d4f64c145b">GridBasedGrowthFunction</a>
 </li>
-<li>setShapeFunctionDerivatives()
-: <a class="el" href="classTriangle.html#ae226791c33e27f0152bf71dda61dfd81">Triangle</a>
-</li>
-<li>setShapeFunctionDerivativeStack()
-: <a class="el" href="classTriangle.html#a96981bb576f1a27d29cd26ae42b99f7b">Triangle</a>
-</li>
-<li>setTissueCoordsRotationsBuffers()
-: <a class="el" href="classTriangle.html#abc90c3548a0f08e5d1a34ad42748622a">Triangle</a>
+<li>setGrowtRate()
+: <a class="el" href="classRingGrowthFunction.html#a051da280e649c81afff38a1a45cb035a">RingGrowthFunction</a>
+, <a class="el" href="classUniformGrowthFunction.html#aff899907569af697d47927f61b6871a5">UniformGrowthFunction</a>
 </li>
 <li>setViscosity()
 : <a class="el" href="classNode.html#a67cfbbe5179590b5deddf7d4086bc316">Node</a>
 </li>
 <li>Sim
 : <a class="el" href="classModelInputObject.html#a0c5fb50d9d705bc9a9b4fafeebd1cadc">ModelInputObject</a>
-</li>
-<li>slabHeight
-: <a class="el" href="classTriangle.html#a78b065ab25dff7133101ec341638532d">Triangle</a>
 </li>
 <li>surface
 : <a class="el" href="classNode.html#aab30ea418838635c21593c47f39f2699">Node</a>
@@ -276,6 +323,17 @@ $(document).ready(function(){initNavTree('functions.html','');});
 </li>
 <li>tissueType
 : <a class="el" href="classNode.html#ae621097f98f1d33d283cf65a0a02d29a">Node</a>
+, <a class="el" href="classShapeBase.html#a1d56f7eb3fed744adc268bc4da7a790f">ShapeBase</a>
+</li>
+<li>Type
+: <a class="el" href="classGrowthFunctionBase.html#a90fc4b14e2adcda0930fe93b1490fb7a">GrowthFunctionBase</a>
+</li>
+</ul>
+
+
+<h3><a class="anchor" id="index_u"></a>- u -</h3><ul>
+<li>UniformGrowthFunction()
+: <a class="el" href="classUniformGrowthFunction.html#af74d0e65f1a9486a78871306f99e4eb1">UniformGrowthFunction</a>
 </li>
 </ul>
 
@@ -290,6 +348,15 @@ $(document).ready(function(){initNavTree('functions.html','');});
 </ul>
 
 
+<h3><a class="anchor" id="index_w"></a>- w -</h3><ul>
+<li>writeSummary()
+: <a class="el" href="classGridBasedGrowthFunction.html#a659418841b4a3bc8be1dec15f95d7b76">GridBasedGrowthFunction</a>
+, <a class="el" href="classRingGrowthFunction.html#a681175045cf09fadd92921e129737e65">RingGrowthFunction</a>
+, <a class="el" href="classUniformGrowthFunction.html#a227ffb3a524779628f98f110d3811399">UniformGrowthFunction</a>
+</li>
+</ul>
+
+
 <h3><a class="anchor" id="index_z"></a>- z -</h3><ul>
 <li>zProjectedArea
 : <a class="el" href="classNode.html#af8e9678dfeffc9e99d925a83b58fde3d">Node</a>
@@ -300,7 +367,7 @@ $(document).ready(function(){initNavTree('functions.html','');});
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Thu Aug 13 2015 16:22:30 for Tissue Origami by
+    <li class="footer">Generated on Tue Sep 1 2015 16:22:00 for Tissue Origami by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

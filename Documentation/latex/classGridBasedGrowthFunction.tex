@@ -9,39 +9,82 @@ Inheritance diagram for Grid\+Based\+Growth\+Function\+:\begin{figure}[H]
 \subsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-\hypertarget{classGridBasedGrowthFunction_a1533e384b3ab79323e91ce68245c9a10}{}{\bfseries Grid\+Based\+Growth\+Function} (int id, int type, float init\+Time, float end\+Time, bool apply\+To\+Columnar\+Layer, bool apply\+To\+Peripodial\+Membrane, int n\+X, int n\+Y, double $\ast$$\ast$$\ast$Growth\+Mat)\label{classGridBasedGrowthFunction_a1533e384b3ab79323e91ce68245c9a10}
+\hyperlink{classGridBasedGrowthFunction_a1533e384b3ab79323e91ce68245c9a10}{Grid\+Based\+Growth\+Function} (int id, int type, float \hyperlink{classGrowthFunctionBase_ae92513a7b41637df8e26e7db35ddf97c}{init\+Time}, float \hyperlink{classGrowthFunctionBase_a3ff4db0573d354a75666a5f3ca446941}{end\+Time}, bool \hyperlink{classGrowthFunctionBase_a3d56771e7c145589a14e11cc331e0326}{apply\+To\+Columnar\+Layer}, bool \hyperlink{classGrowthFunctionBase_a08ae19f58cb98fa8e315a77f52749732}{apply\+To\+Peripodial\+Membrane}, int n\+X, int n\+Y, double $\ast$$\ast$$\ast$Growth\+Mat)
+\begin{DoxyCompactList}\small\item\em The constructor of \hyperlink{classGridBasedGrowthFunction}{Grid\+Based\+Growth\+Function}. \end{DoxyCompactList}\item 
+\hypertarget{classGridBasedGrowthFunction_ae36e6ea2e7bdf41459e74d5846d6d24d}{}int \hyperlink{classGridBasedGrowthFunction_ae36e6ea2e7bdf41459e74d5846d6d24d}{get\+Grid\+X} ()\label{classGridBasedGrowthFunction_ae36e6ea2e7bdf41459e74d5846d6d24d}
 
-\item 
-\hypertarget{classGridBasedGrowthFunction_ae36e6ea2e7bdf41459e74d5846d6d24d}{}int {\bfseries get\+Grid\+X} ()\label{classGridBasedGrowthFunction_ae36e6ea2e7bdf41459e74d5846d6d24d}
+\begin{DoxyCompactList}\small\item\em This function returns \hyperlink{classGridBasedGrowthFunction_af872b9963f3a579dcd615c23bcb58a86}{Grid\+Based\+Growth\+Function\+::n\+Grid\+X}. \end{DoxyCompactList}\item 
+\hypertarget{classGridBasedGrowthFunction_a4a70e9e187e3079e29115f106d30e26e}{}int \hyperlink{classGridBasedGrowthFunction_a4a70e9e187e3079e29115f106d30e26e}{get\+Grid\+Y} ()\label{classGridBasedGrowthFunction_a4a70e9e187e3079e29115f106d30e26e}
 
-\item 
-\hypertarget{classGridBasedGrowthFunction_a4a70e9e187e3079e29115f106d30e26e}{}int {\bfseries get\+Grid\+Y} ()\label{classGridBasedGrowthFunction_a4a70e9e187e3079e29115f106d30e26e}
+\begin{DoxyCompactList}\small\item\em This function returns \hyperlink{classGridBasedGrowthFunction_a625bc963a1f1e7d1f1a35dbd0ef51728}{Grid\+Based\+Growth\+Function\+::n\+Grid\+Y}. \end{DoxyCompactList}\item 
+\hypertarget{classGridBasedGrowthFunction_ac25ac1f12b74816a1d3d3e5dda0e8541}{}double $\ast$$\ast$$\ast$ \hyperlink{classGridBasedGrowthFunction_ac25ac1f12b74816a1d3d3e5dda0e8541}{get\+Growth\+Matrix} ()\label{classGridBasedGrowthFunction_ac25ac1f12b74816a1d3d3e5dda0e8541}
 
-\item 
-\hypertarget{classGridBasedGrowthFunction_ac25ac1f12b74816a1d3d3e5dda0e8541}{}double $\ast$$\ast$$\ast$ {\bfseries get\+Growth\+Matrix} ()\label{classGridBasedGrowthFunction_ac25ac1f12b74816a1d3d3e5dda0e8541}
+\begin{DoxyCompactList}\small\item\em This function returns \hyperlink{classGridBasedGrowthFunction_a5522d9b84fa95ebd65cdf290a4f0a65c}{Grid\+Based\+Growth\+Function\+::\+Growth\+Matrix}. \end{DoxyCompactList}\item 
+\hypertarget{classGridBasedGrowthFunction_a1775fe1788bc97569c892d01cc625ea8}{}double \hyperlink{classGridBasedGrowthFunction_a1775fe1788bc97569c892d01cc625ea8}{get\+Growth\+Matrix\+Element} (int i, int j, int k)\label{classGridBasedGrowthFunction_a1775fe1788bc97569c892d01cc625ea8}
 
-\item 
-\hypertarget{classGridBasedGrowthFunction_a1775fe1788bc97569c892d01cc625ea8}{}double {\bfseries get\+Growth\+Matrix\+Element} (int i, int j, int k)\label{classGridBasedGrowthFunction_a1775fe1788bc97569c892d01cc625ea8}
+\begin{DoxyCompactList}\small\item\em This function returns a the growth rate at grid point \mbox{[}i\mbox{]}\mbox{[}j\mbox{]} (in dimensions \hyperlink{classGridBasedGrowthFunction_af872b9963f3a579dcd615c23bcb58a86}{Grid\+Based\+Growth\+Function\+::n\+Grid\+X}, \hyperlink{classGridBasedGrowthFunction_a625bc963a1f1e7d1f1a35dbd0ef51728}{Grid\+Based\+Growth\+Function\+::n\+Grid\+Y}), for the growth dimension \mbox{[}k\mbox{]} (as in \mbox{[} D\+V axis (x), A\+P axis (y), and A\+B axis (z)\mbox{]} ). \end{DoxyCompactList}\item 
+\hypertarget{classGridBasedGrowthFunction_a9d01fcbba5732aad966659d4f64c145b}{}void \hyperlink{classGridBasedGrowthFunction_a9d01fcbba5732aad966659d4f64c145b}{set\+Growth\+Matrix\+Element} (double ex, double ey, double ez, int i, int j)\label{classGridBasedGrowthFunction_a9d01fcbba5732aad966659d4f64c145b}
 
-\item 
-\hypertarget{classGridBasedGrowthFunction_a9d01fcbba5732aad966659d4f64c145b}{}void {\bfseries set\+Growth\+Matrix\+Element} (double ex, double ey, double ez, int i, int j)\label{classGridBasedGrowthFunction_a9d01fcbba5732aad966659d4f64c145b}
-
-\item 
-\hypertarget{classGridBasedGrowthFunction_a659418841b4a3bc8be1dec15f95d7b76}{}void {\bfseries write\+Summary} (ofstream \&save\+File\+Simulation\+Summary, double dt)\label{classGridBasedGrowthFunction_a659418841b4a3bc8be1dec15f95d7b76}
-
-\end{DoxyCompactItemize}
+\begin{DoxyCompactList}\small\item\em This function sets a the growth rate at grid point \mbox{[}i\mbox{]}\mbox{[}j\mbox{]} (in dimensions \hyperlink{classGridBasedGrowthFunction_af872b9963f3a579dcd615c23bcb58a86}{Grid\+Based\+Growth\+Function\+::n\+Grid\+X}, \hyperlink{classGridBasedGrowthFunction_a625bc963a1f1e7d1f1a35dbd0ef51728}{Grid\+Based\+Growth\+Function\+::n\+Grid\+Y}), to the growth rate \mbox{[}ex, ey, ez\mbox{]} in the format \mbox{[} D\+V axis (x), A\+P axis (y), and A\+B axis (z)\mbox{]}. \end{DoxyCompactList}\item 
+void \hyperlink{classGridBasedGrowthFunction_a659418841b4a3bc8be1dec15f95d7b76}{write\+Summary} (ofstream \&save\+File\+Simulation\+Summary, double dt)
+\begin{DoxyCompactList}\small\item\em The function is to write the growth function summary to simulation summary file. \end{DoxyCompactList}\end{DoxyCompactItemize}
 \subsection*{Public Attributes}
 \begin{DoxyCompactItemize}
 \item 
-\hypertarget{classGridBasedGrowthFunction_af872b9963f3a579dcd615c23bcb58a86}{}int {\bfseries n\+Grid\+X}\label{classGridBasedGrowthFunction_af872b9963f3a579dcd615c23bcb58a86}
+\hypertarget{classGridBasedGrowthFunction_af872b9963f3a579dcd615c23bcb58a86}{}int \hyperlink{classGridBasedGrowthFunction_af872b9963f3a579dcd615c23bcb58a86}{n\+Grid\+X}\label{classGridBasedGrowthFunction_af872b9963f3a579dcd615c23bcb58a86}
 
-\item 
-\hypertarget{classGridBasedGrowthFunction_a625bc963a1f1e7d1f1a35dbd0ef51728}{}int {\bfseries n\+Grid\+Y}\label{classGridBasedGrowthFunction_a625bc963a1f1e7d1f1a35dbd0ef51728}
+\begin{DoxyCompactList}\small\item\em The number of grid points that discretise the tissue in x. \end{DoxyCompactList}\item 
+\hypertarget{classGridBasedGrowthFunction_a625bc963a1f1e7d1f1a35dbd0ef51728}{}int \hyperlink{classGridBasedGrowthFunction_a625bc963a1f1e7d1f1a35dbd0ef51728}{n\+Grid\+Y}\label{classGridBasedGrowthFunction_a625bc963a1f1e7d1f1a35dbd0ef51728}
 
-\item 
-\hypertarget{classGridBasedGrowthFunction_a5522d9b84fa95ebd65cdf290a4f0a65c}{}double $\ast$$\ast$$\ast$ {\bfseries Growth\+Matrix}\label{classGridBasedGrowthFunction_a5522d9b84fa95ebd65cdf290a4f0a65c}
+\begin{DoxyCompactList}\small\item\em The number of grid points that discretise the tissue in y. \end{DoxyCompactList}\item 
+\hypertarget{classGridBasedGrowthFunction_a5522d9b84fa95ebd65cdf290a4f0a65c}{}double $\ast$$\ast$$\ast$ \hyperlink{classGridBasedGrowthFunction_a5522d9b84fa95ebd65cdf290a4f0a65c}{Growth\+Matrix}\label{classGridBasedGrowthFunction_a5522d9b84fa95ebd65cdf290a4f0a65c}
 
-\end{DoxyCompactItemize}
+\begin{DoxyCompactList}\small\item\em The matrix of growth rates in (1/sec). It is a matrix of double triplets for growth rate at each grid point. The dimensions of the matrix are equal to (\hyperlink{classGridBasedGrowthFunction_af872b9963f3a579dcd615c23bcb58a86}{Grid\+Based\+Growth\+Function\+::n\+Grid\+X}, \hyperlink{classGridBasedGrowthFunction_a625bc963a1f1e7d1f1a35dbd0ef51728}{Grid\+Based\+Growth\+Function\+::n\+Grid\+Y}), and set in constructor of the \hyperlink{classGridBasedGrowthFunction}{Grid\+Based\+Growth\+Function}. The triplets store the growth rate in \mbox{[} D\+V axis (x), A\+P axis (y), and A\+B axis (z)\mbox{]}. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{classGridBasedGrowthFunction_a1533e384b3ab79323e91ce68245c9a10}{}\index{Grid\+Based\+Growth\+Function@{Grid\+Based\+Growth\+Function}!Grid\+Based\+Growth\+Function@{Grid\+Based\+Growth\+Function}}
+\index{Grid\+Based\+Growth\+Function@{Grid\+Based\+Growth\+Function}!Grid\+Based\+Growth\+Function@{Grid\+Based\+Growth\+Function}}
+\subsubsection[{Grid\+Based\+Growth\+Function}]{\setlength{\rightskip}{0pt plus 5cm}Grid\+Based\+Growth\+Function\+::\+Grid\+Based\+Growth\+Function (
+\begin{DoxyParamCaption}
+\item[{int}]{id, }
+\item[{int}]{type, }
+\item[{float}]{init\+Time, }
+\item[{float}]{end\+Time, }
+\item[{bool}]{apply\+To\+Columnar\+Layer, }
+\item[{bool}]{apply\+To\+Peripodial\+Membrane, }
+\item[{int}]{n\+X, }
+\item[{int}]{n\+Y, }
+\item[{double $\ast$$\ast$$\ast$}]{Growth\+Mat}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}\label{classGridBasedGrowthFunction_a1533e384b3ab79323e91ce68245c9a10}
+
+
+The constructor of \hyperlink{classGridBasedGrowthFunction}{Grid\+Based\+Growth\+Function}. 
+
+The first six parameters will be directed to the parent constructor, \hyperlink{classGrowthFunctionBase_a061b31ad8a0cb228628c7104029a94bf}{Growth\+Function\+Base\+::\+Growth\+Function\+Base}. ~\newline
+integers n\+X and n\+Y will set \hyperlink{classGridBasedGrowthFunction_af872b9963f3a579dcd615c23bcb58a86}{Grid\+Based\+Growth\+Function\+::n\+Grid\+X} and \hyperlink{classGridBasedGrowthFunction_a625bc963a1f1e7d1f1a35dbd0ef51728}{Grid\+Based\+Growth\+Function\+::n\+Grid\+Y}, respectively. \hyperlink{classGridBasedGrowthFunction_a5522d9b84fa95ebd65cdf290a4f0a65c}{Grid\+Based\+Growth\+Function\+::\+Growth\+Matrix} will be initiated to point at a 2 dimensional matrix of double triplets the size(n\+X, n\+Y). ~\newline
+double$\ast$$\ast$$\ast$ Growth\+Mat is the pointer to the 2-\/dimensional matrix of double triplets, holding the 3\+D growth rates at each grid point. Values stored in Growth\+Mat will set the values in \hyperlink{classGridBasedGrowthFunction_a5522d9b84fa95ebd65cdf290a4f0a65c}{Grid\+Based\+Growth\+Function\+::\+Growth\+Matrix}. The matrix storing the growth rates have been read from an input file through Model\+Input\+Object\+::read\+Growth\+Options and related functions therein ~\newline
+ 
+
+\subsection{Member Function Documentation}
+\hypertarget{classGridBasedGrowthFunction_a659418841b4a3bc8be1dec15f95d7b76}{}\index{Grid\+Based\+Growth\+Function@{Grid\+Based\+Growth\+Function}!write\+Summary@{write\+Summary}}
+\index{write\+Summary@{write\+Summary}!Grid\+Based\+Growth\+Function@{Grid\+Based\+Growth\+Function}}
+\subsubsection[{write\+Summary}]{\setlength{\rightskip}{0pt plus 5cm}void Grid\+Based\+Growth\+Function\+::write\+Summary (
+\begin{DoxyParamCaption}
+\item[{ofstream \&}]{save\+File\+Simulation\+Summary, }
+\item[{double}]{dt}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}\label{classGridBasedGrowthFunction_a659418841b4a3bc8be1dec15f95d7b76}
+
+
+The function is to write the growth function summary to simulation summary file. 
+
+This function will write the \hyperlink{classGridBasedGrowthFunction}{Grid\+Based\+Growth\+Function} details into the simulation summary file, provided as the first input. Time step (dt) of the simulation is provided as second input, to report the growth rates per hour. The output should look like\+: ~\newline
+ Growth Type\+: growth From File (3) Initial time(sec)\+: \hyperlink{classGrowthFunctionBase_ae92513a7b41637df8e26e7db35ddf97c}{Grid\+Based\+Growth\+Function\+::init\+Time} Final\+Time time(sec)\+: \hyperlink{classGrowthFunctionBase_a3ff4db0573d354a75666a5f3ca446941}{Grid\+Based\+Growth\+Function\+::end\+Time} Growth matrix mesh size\+: \hyperlink{classGridBasedGrowthFunction_af872b9963f3a579dcd615c23bcb58a86}{Grid\+Based\+Growth\+Function\+::n\+Grid\+X} \hyperlink{classGridBasedGrowthFunction_a625bc963a1f1e7d1f1a35dbd0ef51728}{Grid\+Based\+Growth\+Function\+::n\+Grid\+Y}
+
+Reimplemented from \hyperlink{classGrowthFunctionBase}{Growth\+Function\+Base}.
+
 
 
 The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}

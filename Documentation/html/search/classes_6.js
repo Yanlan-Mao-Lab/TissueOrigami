@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['triangle',['Triangle',['../classTriangle.html',1,'']]]
+  ['uniformgrowthfunction',['UniformGrowthFunction',['../classUniformGrowthFunction.html',1,'']]]
 ];

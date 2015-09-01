@@ -51,7 +51,7 @@ void \hyperlink{classNode_a755e8c3d76e7f1f0ab364fc3d4da3a9a}{display\+Connected\
 \begin{DoxyCompactList}\small\item\em The tissue placement is 0 for basal nodes, 1 for apical nodes, and 2 for middle range. \end{DoxyCompactList}\item 
 \hypertarget{classNode_ae621097f98f1d33d283cf65a0a02d29a}{}int \hyperlink{classNode_ae621097f98f1d33d283cf65a0a02d29a}{tissue\+Type}\label{classNode_ae621097f98f1d33d283cf65a0a02d29a}
 
-\begin{DoxyCompactList}\small\item\em The tissue type is 0 for columnar layer and 1 for peripodial membrane. \end{DoxyCompactList}\item 
+\begin{DoxyCompactList}\small\item\em The tissue type is 0 for columnar layer, 1 for peripodial membrane, and 2 for linker zone. \end{DoxyCompactList}\item 
 \hypertarget{classNode_ab6b225354ad961f2e9bd5d7fe9b67b3a}{}bool \hyperlink{classNode_ab6b225354ad961f2e9bd5d7fe9b67b3a}{at\+Circumference}\label{classNode_ab6b225354ad961f2e9bd5d7fe9b67b3a}
 
 \begin{DoxyCompactList}\small\item\em Boolean defining if the node is at the circumference of the columnar layer of the tissue. \end{DoxyCompactList}\item 
@@ -64,18 +64,6 @@ void \hyperlink{classNode_a755e8c3d76e7f1f0ab364fc3d4da3a9a}{display\+Connected\
 \hypertarget{classNode_af8e9678dfeffc9e99d925a83b58fde3d}{}double \hyperlink{classNode_af8e9678dfeffc9e99d925a83b58fde3d}{z\+Projected\+Area}\label{classNode_af8e9678dfeffc9e99d925a83b58fde3d}
 
 \begin{DoxyCompactList}\small\item\em The surface of the node, as projected in Z, calculated from apical or pasal surfces of elements, lateral surfaces are not included. \end{DoxyCompactList}\item 
-\hypertarget{classNode_a7a4b47d88dee36f1fea2721f765c05d0}{}bool \hyperlink{classNode_a7a4b47d88dee36f1fea2721f765c05d0}{at\+Peripodial\+Circumference}\label{classNode_a7a4b47d88dee36f1fea2721f765c05d0}
-
-\begin{DoxyCompactList}\small\item\em Boolean defining if the node is at the circumference of the peripodial membrane of the tissue. \end{DoxyCompactList}\item 
-\hypertarget{classNode_a55ffe3c94ccad326737b510b47deff31}{}vector$<$ int $>$ \hyperlink{classNode_a55ffe3c94ccad326737b510b47deff31}{Associated\+Nodes\+Due\+To\+Peripodial\+Membrane}\label{classNode_a55ffe3c94ccad326737b510b47deff31}
-
-\begin{DoxyCompactList}\small\item\em The list of columnar \hyperlink{classNode}{Node} Id\textquotesingle{}s that are associated with this node of the peripodial membrane circumference. The forces from the peripodial membrane are distributed to the columnar layer, hence anchoring the peripodial membrane to the columnar layer at the circumference, via this list. \end{DoxyCompactList}\item 
-\hypertarget{classNode_ac18a473bf44d200917cf27be42aa8a42}{}vector$<$ double $>$ \hyperlink{classNode_ac18a473bf44d200917cf27be42aa8a42}{Associated\+Node\+Weights\+Due\+To\+Peripodial\+Membrane}\label{classNode_ac18a473bf44d200917cf27be42aa8a42}
-
-\begin{DoxyCompactList}\small\item\em The list of columnar \hyperlink{classNode}{Node} weights (normalised masses) that are associated with this node of the peripodial membrane circumference. The forces from the peripodial membrane are distributed to the columnar layer,hence anchoring the peripodial membrane to the columnar layer at the circumference, as weighted by this list, order is linked to \hyperlink{classNode_a55ffe3c94ccad326737b510b47deff31}{Node\+::\+Associated\+Nodes\+Due\+To\+Peripodial\+Membrane}. \end{DoxyCompactList}\item 
-\hypertarget{classNode_a27a5cb226f56c7598f7e90887c664ed4}{}int \hyperlink{classNode_a27a5cb226f56c7598f7e90887c664ed4}{Linked\+Peripodial\+Node\+Id}\label{classNode_a27a5cb226f56c7598f7e90887c664ed4}
-
-\begin{DoxyCompactList}\small\item\em The peripodial node Id a columnar layer node is linked to. The peripodial node of the Id equal to this variable will distribute its forces on its associated nodes, one of which is the owner of this parameter. \end{DoxyCompactList}\item 
 \hypertarget{classNode_ab22060fb9f61a0d93ec52e6045828782}{}vector$<$ int $>$ \hyperlink{classNode_ab22060fb9f61a0d93ec52e6045828782}{immediate\+Neigs}\label{classNode_ab22060fb9f61a0d93ec52e6045828782}
 
 \begin{DoxyCompactList}\small\item\em The list of Id\textquotesingle{}s for immediate neighbours of the node, i.\+e. the nodes that are shared by the elements that utilise the owner of this parameter. \end{DoxyCompactList}\item 
@@ -113,7 +101,7 @@ The function will return true if the node with the unique \hyperlink{classNode_a
 
 The function to check if the node is eligible for packing. 
 
-The function will return true if the node is eligible for packing calculation. This packing will ensure volume exclusion, and is calculated via function Simulation\+::calculate\+Packing. It is not necessary to calculate packing under the following conditions\+: 1) The node is at the middle of the columnar layer, the packing should have stopped any other node/element coming close enough to this node, as they would need to penetrate through the apical or basal surface of the tissue to reach this node. 2) The node is at the circumference of the peripodial membrane, hence is anchored to columnar layer apical circumference.\hypertarget{classNode_a3030a518aa97bd50060b8733e87540f7}{}\index{Node@{Node}!display\+Connected\+Element\+Ids@{display\+Connected\+Element\+Ids}}
+The function will return true if the node is eligible for packing calculation. This packing will ensure volume exclusion, and is calculated via function Simulation\+::calculate\+Packing. It is not necessary to calculate packing under the following conditions\+: 1) The node is at the middle of the columnar layer, the packing should have stopped any other node/element coming close enough to this node, as they would need to penetrate through the apical or basal surface of the tissue to reach this node.\hypertarget{classNode_a3030a518aa97bd50060b8733e87540f7}{}\index{Node@{Node}!display\+Connected\+Element\+Ids@{display\+Connected\+Element\+Ids}}
 \index{display\+Connected\+Element\+Ids@{display\+Connected\+Element\+Ids}!Node@{Node}}
 \subsubsection[{display\+Connected\+Element\+Ids}]{\setlength{\rightskip}{0pt plus 5cm}void Node\+::display\+Connected\+Element\+Ids (
 \begin{DoxyParamCaption}

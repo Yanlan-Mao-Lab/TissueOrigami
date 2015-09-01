@@ -823,7 +823,7 @@ bool ModelInputObject::readShapeChangeOptions(ifstream& file){
 		Sim->nShapeChangeFunctions = n;
 	}
 	else{
-		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: NumberofShapeChangeFunctions(int):" <<endl;
+		cerr<<"Error in reading shape change options, curr string: "<<currHeader<<", should have been: NumberofShapeChangeFunctions(int):" <<endl;
 		return false;
 	}
 	for (int i = 0; i<n; ++i){
@@ -835,7 +835,7 @@ bool ModelInputObject::readShapeChangeOptions(ifstream& file){
 			Sim->ShapeChangeFunctionTypes.push_back(type);
 		}
 		else{
-			cerr<<"Error in reading growth type, curr string: "<<currHeader<<", should have been: ShapeChangeFunctionType(int-seeDocumentation):" <<endl;
+			cerr<<"Error in reading shpae change type, curr string: "<<currHeader<<", should have been: ShapeChangeFunctionType(int-seeDocumentation):" <<endl;
 			return false;
 		}
 		if (type == 1){
@@ -894,7 +894,7 @@ bool ModelInputObject::readShapeChangeType1(ifstream& file){
 		Sim->ShapeChangeParameters.push_back(innerR);
 	}
 	else{
-		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: Radius:" <<endl;
+		cerr<<"Error in reading shpae change options, curr string: "<<currHeader<<", should have been: Radius:" <<endl;
 		return false;
 	}
 	file >> currHeader;

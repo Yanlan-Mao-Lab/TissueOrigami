@@ -36,12 +36,9 @@ private:
 	bool readStretcherSetup(ifstream& file);
 	bool readPipetteSetup(ifstream& file);
 public:
-    /** An enum type.
-     *  The documentation block cannot be put after the enum!
-     */
-	Simulation* Sim;
-	const char*  parameterFileName;
-	string meshFileName;
+	Simulation* Sim;				///< The pointer to the simulation object, for which the parameters are being read from the modelinput file.
+	const char*  parameterFileName;	///< The name (including path) of the file containing the model input parameters.
+	string meshFileName;			///< The name (including path) of the file containing the input mesh file for tissue geometry.
 	ModelInputObject();
 	~ModelInputObject();
 

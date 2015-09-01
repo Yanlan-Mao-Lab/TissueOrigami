@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['position',['Position',['../classNode.html#a8fdca7042dc0cc7e342eb3c87cbbfb56',1,'Node']]],
-  ['prism',['Prism',['../classPrism.html',1,'']]]
+  ['outerradius',['outerRadius',['../classRingGrowthFunction.html#a8b7d5268d9d47f112b56feef58193649',1,'RingGrowthFunction']]]
 ];

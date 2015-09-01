@@ -33,6 +33,12 @@ Inheritance diagram for Shape\+Base\+:\begin{figure}[H]
 \hypertarget{classShapeBase_ab26e6cbde2c8a4f326c32a38de48bcc7}{}double $\ast$ {\bfseries get\+Centre} ()\label{classShapeBase_ab26e6cbde2c8a4f326c32a38de48bcc7}
 
 \item 
+\hypertarget{classShapeBase_a90d1eaa5a49262418cee28284da14c16}{}double {\bfseries get\+Peripodialness} ()\label{classShapeBase_a90d1eaa5a49262418cee28284da14c16}
+
+\item 
+\hypertarget{classShapeBase_a44c758ac93865a1e51e63212ebfe2787}{}double {\bfseries get\+Columnarness} ()\label{classShapeBase_a44c758ac93865a1e51e63212ebfe2787}
+
+\item 
 \hypertarget{classShapeBase_a7d1235b3555a18328d1677e5b07458ff}{}void {\bfseries calculate\+Relative\+Pos\+In\+Bounding\+Box} (double Boinding\+Box\+X\+Min, double Bounding\+Box\+Y\+Min, double Bounding\+Box\+Length, double Bounding\+Box\+Width)\label{classShapeBase_a7d1235b3555a18328d1677e5b07458ff}
 
 \item 
@@ -88,6 +94,9 @@ Inheritance diagram for Shape\+Base\+:\begin{figure}[H]
 
 \item 
 \hypertarget{classShapeBase_ad39c3f3a555a89e106c4afaaf81c72f6}{}void {\bfseries set\+Fg} (gsl\+\_\+matrix $\ast$curr\+Fg)\label{classShapeBase_ad39c3f3a555a89e106c4afaaf81c72f6}
+
+\item 
+\hypertarget{classShapeBase_a38a100fb162232636bf666eb1603f023}{}void {\bfseries set\+Growth\+Weights\+Via\+Tissue\+Placement} (double peri\+Weight)\label{classShapeBase_a38a100fb162232636bf666eb1603f023}
 
 \item 
 \hypertarget{classShapeBase_a948e9da80e40851c9813f8251d1979ec}{}virtual void {\bfseries set\+Elastic\+Properties} (double E\+Apical, double E\+Basal, double E\+Mid, double v)\label{classShapeBase_a948e9da80e40851c9813f8251d1979ec}
@@ -348,9 +357,9 @@ Inheritance diagram for Shape\+Base\+:\begin{figure}[H]
 \hypertarget{classShapeBase_aff63b1fcb823bbfdb5b19fe78dea59b8}{}int {\bfseries tissue\+Placement}\label{classShapeBase_aff63b1fcb823bbfdb5b19fe78dea59b8}
 
 \item 
-\hypertarget{classShapeBase_a1d56f7eb3fed744adc268bc4da7a790f}{}int {\bfseries tissue\+Type}\label{classShapeBase_a1d56f7eb3fed744adc268bc4da7a790f}
+\hypertarget{classShapeBase_a1d56f7eb3fed744adc268bc4da7a790f}{}int \hyperlink{classShapeBase_a1d56f7eb3fed744adc268bc4da7a790f}{tissue\+Type}\label{classShapeBase_a1d56f7eb3fed744adc268bc4da7a790f}
 
-\item 
+\begin{DoxyCompactList}\small\item\em The tissue type is 0 for columnar layer, 1 for peripodial membrane, and 2 for linker zone. \end{DoxyCompactList}\item 
 \hypertarget{classShapeBase_a4f09d39d079bfe95ea7c25f5d3de6c09}{}bool {\bfseries Is\+Ablated}\label{classShapeBase_a4f09d39d079bfe95ea7c25f5d3de6c09}
 
 \item 
@@ -450,6 +459,9 @@ Inheritance diagram for Shape\+Base\+:\begin{figure}[H]
 \hypertarget{classShapeBase_ad67919694a1d780e31f6d539781377be}{}gsl\+\_\+matrix $\ast$ {\bfseries calculate\+B\+Tfor\+Nodal\+Forces} (gsl\+\_\+matrix $\ast$Inv\+Jacobian\+Stack, gsl\+\_\+matrix $\ast$Shape\+Func\+Der\+Stack, gsl\+\_\+matrix $\ast$B, gsl\+\_\+matrix $\ast$inv\+J\+Sh\+Func\+Der\+S)\label{classShapeBase_ad67919694a1d780e31f6d539781377be}
 
 \item 
+\hypertarget{classShapeBase_aa9f48481aba22e06b07e6ce665ef58fb}{}gsl\+\_\+matrix $\ast$ {\bfseries calculate\+Inv\+J\+Sh\+Func\+Der\+S\+With\+Fe} (gsl\+\_\+matrix $\ast$curr\+Fe, gsl\+\_\+matrix $\ast$Inv\+D\+Xde, gsl\+\_\+matrix $\ast$Shape\+Func\+Der\+Stack, gsl\+\_\+matrix $\ast$inv\+J\+Sh\+Func\+Der\+S\+With\+F)\label{classShapeBase_aa9f48481aba22e06b07e6ce665ef58fb}
+
+\item 
 \hypertarget{classShapeBase_ab9e027b7bb9553a0850875c5b94ed4a5}{}void {\bfseries calculate\+C\+Matrix} (int point\+No)\label{classShapeBase_ab9e027b7bb9553a0850875c5b94ed4a5}
 
 \item 
@@ -484,6 +496,12 @@ Inheritance diagram for Shape\+Base\+:\begin{figure}[H]
 
 \item 
 \hypertarget{classShapeBase_ae31d7545110fd505629592348a2951b7}{}double $\ast$ {\bfseries Growth\+Rate}\label{classShapeBase_ae31d7545110fd505629592348a2951b7}
+
+\item 
+\hypertarget{classShapeBase_a134d82ba500ef829b6aa3e3a83783c9a}{}double {\bfseries columnar\+Growth\+Weight}\label{classShapeBase_a134d82ba500ef829b6aa3e3a83783c9a}
+
+\item 
+\hypertarget{classShapeBase_a3663f3220016756b1bd5a92477325ec2}{}double {\bfseries peripodial\+Growth\+Weight}\label{classShapeBase_a3663f3220016756b1bd5a92477325ec2}
 
 \item 
 \hypertarget{classShapeBase_a1c6db43b0794a15e4bc42b8ca994a785}{}double $\ast$ {\bfseries Shape\+Change\+Rate}\label{classShapeBase_a1c6db43b0794a15e4bc42b8ca994a785}
@@ -532,6 +550,9 @@ Inheritance diagram for Shape\+Base\+:\begin{figure}[H]
 
 \item 
 \hypertarget{classShapeBase_a9478b062928ae554c25cd3269cc9e790}{}gsl\+\_\+matrix $\ast$$\ast$ {\bfseries inv\+J\+Shape\+Func\+Der\+Stack}\label{classShapeBase_a9478b062928ae554c25cd3269cc9e790}
+
+\item 
+\hypertarget{classShapeBase_a490391c781e50cfc7e2f1a0814bb6d25}{}gsl\+\_\+matrix $\ast$$\ast$ {\bfseries inv\+J\+Shape\+Func\+Der\+Stackwith\+Fe}\label{classShapeBase_a490391c781e50cfc7e2f1a0814bb6d25}
 
 \item 
 \hypertarget{classShapeBase_acd549e0086d16194ae389ae528969596}{}gsl\+\_\+matrix $\ast$$\ast$ {\bfseries elastic\+Stress}\label{classShapeBase_acd549e0086d16194ae389ae528969596}

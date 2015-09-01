@@ -1,4 +1,6 @@
 var searchData=
 [
-  ['position',['Position',['../classNode.html#a8fdca7042dc0cc7e342eb3c87cbbfb56',1,'Node']]]
+  ['ndim',['nDim',['../classNode.html#ae23958d63ecbf80559c307c955be8227',1,'Node']]],
+  ['ngridx',['nGridX',['../classGridBasedGrowthFunction.html#af872b9963f3a579dcd615c23bcb58a86',1,'GridBasedGrowthFunction']]],
+  ['ngridy',['nGridY',['../classGridBasedGrowthFunction.html#a625bc963a1f1e7d1f1a35dbd0ef51728',1,'GridBasedGrowthFunction']]]
 ];

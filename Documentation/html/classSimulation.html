@@ -193,9 +193,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>writeginPardisoFormat
 <tr class="memitem:acb243ba7dd91cba4e63533ae9b5edd8a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acb243ba7dd91cba4e63533ae9b5edd8a"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>solveWithPardiso</b> (double *a, double *b, int *ia, int *ja, gsl_vector *x, const int n_variables)</td></tr>
 <tr class="separator:acb243ba7dd91cba4e63533ae9b5edd8a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad2c44a69af3b25356d5fef46b867d6c5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad2c44a69af3b25356d5fef46b867d6c5"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>EliminateNode0Displacement</b> (gsl_vector *deltaU)</td></tr>
-<tr class="separator:ad2c44a69af3b25356d5fef46b867d6c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a938793b4f60eebdd88f7a3a9791819a0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a938793b4f60eebdd88f7a3a9791819a0"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>updateUkInNR</b> (gsl_matrix *uk, gsl_vector *deltaU)</td></tr>
 <tr class="separator:a938793b4f60eebdd88f7a3a9791819a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -217,9 +214,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>calcutateFixedK</b> (
 <tr class="memitem:a977de0c85607b9c8e4422ca90776e72a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a977de0c85607b9c8e4422ca90776e72a"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>smallStrainrunOneStep</b> ()</td></tr>
 <tr class="separator:a977de0c85607b9c8e4422ca90776e72a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a645f89e66356cf4e79def5038d19592b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a645f89e66356cf4e79def5038d19592b"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>packToPipetteWall</b> (gsl_matrix *gExt, gsl_vector *gSum)</td></tr>
-<tr class="separator:a645f89e66356cf4e79def5038d19592b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5400ce12848ff3886d56437519728382"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5400ce12848ff3886d56437519728382"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>packToPipetteWall</b> ()</td></tr>
+<tr class="separator:a5400ce12848ff3886d56437519728382"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab7a42371989ee2ef640dbfb1bfbb21ff"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab7a42371989ee2ef640dbfb1bfbb21ff"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>calculatePacking</b> (int RKId, double PeriThreshold, double ColThreshold)</td></tr>
 <tr class="separator:ab7a42371989ee2ef640dbfb1bfbb21ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -244,18 +241,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>redistributePeripodia
 <tr class="memitem:a90c07716cd9ffe3b4c48babf77eb8904"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a90c07716cd9ffe3b4c48babf77eb8904"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>updateNodePositions</b> (int RKId)</td></tr>
 <tr class="separator:a90c07716cd9ffe3b4c48babf77eb8904"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0d4c487602899fb2a6bd8ef2cfef2f85"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0d4c487602899fb2a6bd8ef2cfef2f85"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>updateNodePositionsForPeripodialMembraneCircumference</b> (int RKId)</td></tr>
-<tr class="separator:a0d4c487602899fb2a6bd8ef2cfef2f85"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8e8865c7b7de229e04766466273342bc"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8e8865c7b7de229e04766466273342bc"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>realignPositionsForMidAttachedPeripodialMembrane</b> (int RKId)</td></tr>
-<tr class="separator:a8e8865c7b7de229e04766466273342bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4270a35735a8dd12a7a2085181e164fb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4270a35735a8dd12a7a2085181e164fb"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>realignPositionsForApicalAttachedPeripodialMembrane</b> (int RKId)</td></tr>
-<tr class="separator:a4270a35735a8dd12a7a2085181e164fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a50d1fb2839bbf2c0a6d563b2d5d01f4e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a50d1fb2839bbf2c0a6d563b2d5d01f4e"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>realignPositionsForHooveringPeripodialMembrane</b> (int RKId)</td></tr>
-<tr class="separator:a50d1fb2839bbf2c0a6d563b2d5d01f4e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a73aeedfc61d7edda6a2999eff57990d6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a73aeedfc61d7edda6a2999eff57990d6"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>updateElementPositions</b> (int RKId)</td></tr>
 <tr class="separator:a73aeedfc61d7edda6a2999eff57990d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -277,9 +262,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateDVDistance</
 <tr class="memitem:abb87948e7b8131fd5d747bf728232db2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abb87948e7b8131fd5d747bf728232db2"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>TissueAxisPositionDisplay</b> ()</td></tr>
 <tr class="separator:abb87948e7b8131fd5d747bf728232db2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a036abef711ca14c40aa838a1c2b0a4c9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a036abef711ca14c40aa838a1c2b0a4c9"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>CoordinateDisplay</b> ()</td></tr>
-<tr class="separator:a036abef711ca14c40aa838a1c2b0a4c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1d49a9ab3e83456d86ec5bfcf0d1a804"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1d49a9ab3e83456d86ec5bfcf0d1a804"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>coordinateDisplay</b> ()</td></tr>
+<tr class="separator:a1d49a9ab3e83456d86ec5bfcf0d1a804"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3b25df63c54a058e6917309aed483e6e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3b25df63c54a058e6917309aed483e6e"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>correctTiltedGrowthForGrowthFunction</b> (<a class="el" href="classGrowthFunctionBase.html">GrowthFunctionBase</a> *currGF)</td></tr>
 <tr class="separator:a3b25df63c54a058e6917309aed483e6e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -361,6 +346,9 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>ApicalVisc</b></td>
 <tr class="memitem:a39c152c1f7e8700871e9700e1e73978e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a39c152c1f7e8700871e9700e1e73978e"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>BasalVisc</b></td></tr>
 <tr class="separator:a39c152c1f7e8700871e9700e1e73978e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a439e2fbf9ee847f88fffd030acf4843c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a439e2fbf9ee847f88fffd030acf4843c"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>zeroViscosity</b></td></tr>
+<tr class="separator:a439e2fbf9ee847f88fffd030acf4843c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5e1b2288bbab80084380420e00a1f371"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5e1b2288bbab80084380420e00a1f371"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>noiseOnPysProp</b> [4]</td></tr>
 <tr class="separator:a5e1b2288bbab80084380420e00a1f371"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -379,12 +367,15 @@ float&#160;</td><td class="memItemRight" valign="bottom"><b>SideLength</b></td><
 <tr class="memitem:a27aa62c2297902e2e77159fe05362467"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a27aa62c2297902e2e77159fe05362467"></a>
 float&#160;</td><td class="memItemRight" valign="bottom"><b>zHeight</b></td></tr>
 <tr class="separator:a27aa62c2297902e2e77159fe05362467"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afbd108b961d296669b71ca0c190bc470"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afbd108b961d296669b71ca0c190bc470"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>ApicalNodeFix</b> [2]</td></tr>
-<tr class="separator:afbd108b961d296669b71ca0c190bc470"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a70368e1a66a367526a6e7de5dd9a4935"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a70368e1a66a367526a6e7de5dd9a4935"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>BasalNodeFix</b> [2]</td></tr>
-<tr class="separator:a70368e1a66a367526a6e7de5dd9a4935"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a34b767055f674bf25b1b000c60683447"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a34b767055f674bf25b1b000c60683447"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>ApicalNodeFix</b> [3]</td></tr>
+<tr class="separator:a34b767055f674bf25b1b000c60683447"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1d716c8688103f42b89242d962c9ab1b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1d716c8688103f42b89242d962c9ab1b"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>BasalNodeFix</b> [3]</td></tr>
+<tr class="separator:a1d716c8688103f42b89242d962c9ab1b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acc1062ac8c49668972bcce3fb4b333b8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acc1062ac8c49668972bcce3fb4b333b8"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>CircumferentialNodeFix</b> [3][3]</td></tr>
+<tr class="separator:acc1062ac8c49668972bcce3fb4b333b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3d8435d5bedf3810cb12138538169d9c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3d8435d5bedf3810cb12138538169d9c"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>PeripodialElasticity</b></td></tr>
 <tr class="separator:a3d8435d5bedf3810cb12138538169d9c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -394,6 +385,9 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>PeripodialViscosity
 <tr class="memitem:a1b5fd33e66ce33ae07ba854785735162"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1b5fd33e66ce33ae07ba854785735162"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>PeripodialThicnessScale</b></td></tr>
 <tr class="separator:a1b5fd33e66ce33ae07ba854785735162"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1614132f37b02b184661370a188d9b74"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1614132f37b02b184661370a188d9b74"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>PeripodialLateralThicnessScale</b></td></tr>
+<tr class="separator:a1614132f37b02b184661370a188d9b74"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a661531b9180d4b893f4f0221fe518b7b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a661531b9180d4b893f4f0221fe518b7b"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>lumenHeight</b></td></tr>
 <tr class="separator:a661531b9180d4b893f4f0221fe518b7b"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -439,9 +433,6 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>SystemCentre</b> [3
 <tr class="memitem:ac95f47d33f702be850831edff2a6973e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac95f47d33f702be850831edff2a6973e"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>AddPeripodialMembrane</b></td></tr>
 <tr class="separator:ac95f47d33f702be850831edff2a6973e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a71103995905ab0ae3396026cd8bbb7ba"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a71103995905ab0ae3396026cd8bbb7ba"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>PeripodialMembraneType</b></td></tr>
-<tr class="separator:a71103995905ab0ae3396026cd8bbb7ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab998930bbef90a5a59ba86079a44e7ae"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab998930bbef90a5a59ba86079a44e7ae"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>stretcherAttached</b></td></tr>
 <tr class="separator:ab998930bbef90a5a59ba86079a44e7ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -451,6 +442,9 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>PipetteSuction</b></t
 <tr class="memitem:a53d18b41ab9318966acb05815ab4deb0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a53d18b41ab9318966acb05815ab4deb0"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>ApicalSuction</b></td></tr>
 <tr class="separator:a53d18b41ab9318966acb05815ab4deb0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a614017cf64e201c1897117b6ce31e17c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a614017cf64e201c1897117b6ce31e17c"></a>
+vector&lt; int &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>TransientZFixListForPipette</b></td></tr>
+<tr class="separator:a614017cf64e201c1897117b6ce31e17c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a973663e403ae2b5596f10f7933111c93"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a973663e403ae2b5596f10f7933111c93"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>StretchInitialStep</b></td></tr>
 <tr class="separator:a973663e403ae2b5596f10f7933111c93"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -522,7 +516,7 @@ vector&lt; <a class="el" href="classGrowthFunctionBase.html">GrowthFunctionBase<
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="classSimulation.html">Simulation</a></li>
-    <li class="footer">Generated on Thu Aug 13 2015 16:22:30 for Tissue Origami by
+    <li class="footer">Generated on Tue Sep 1 2015 16:22:00 for Tissue Origami by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

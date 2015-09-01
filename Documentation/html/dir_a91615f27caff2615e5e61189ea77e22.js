@@ -7,6 +7,5 @@ var dir_a91615f27caff2615e5e61189ea77e22 =
     [ "Prism.h", "Prism_8h_source.html", null ],
     [ "ReferenceShapeBase.h", "ReferenceShapeBase_8h_source.html", null ],
     [ "ShapeBase.h", "ShapeBase_8h_source.html", null ],
-    [ "Simulation.h", "Simulation_8h_source.html", null ],
-    [ "Triangle.h", "Triangle_8h_source.html", null ]
+    [ "Simulation.h", "Simulation_8h_source.html", null ]
 ];

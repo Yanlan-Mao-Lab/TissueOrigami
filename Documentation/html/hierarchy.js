@@ -15,8 +15,7 @@ var hierarchy =
     ] ],
     [ "ReferenceShapeBase", "classReferenceShapeBase.html", null ],
     [ "ShapeBase", "classShapeBase.html", [
-      [ "Prism", "classPrism.html", null ],
-      [ "Triangle", "classTriangle.html", null ]
+      [ "Prism", "classPrism.html", null ]
     ] ],
     [ "Simulation", "classSimulation.html", null ]
 ];

@@ -11,6 +11,5 @@ var annotated =
     [ "RingGrowthFunction", "classRingGrowthFunction.html", "classRingGrowthFunction" ],
     [ "ShapeBase", "classShapeBase.html", "classShapeBase" ],
     [ "Simulation", "classSimulation.html", "classSimulation" ],
-    [ "Triangle", "classTriangle.html", "classTriangle" ],
     [ "UniformGrowthFunction", "classUniformGrowthFunction.html", "classUniformGrowthFunction" ]
 ];

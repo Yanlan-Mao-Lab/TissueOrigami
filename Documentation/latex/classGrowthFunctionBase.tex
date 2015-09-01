@@ -9,9 +9,8 @@ Inheritance diagram for Growth\+Function\+Base\+:\begin{figure}[H]
 \subsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-\hypertarget{classGrowthFunctionBase_a061b31ad8a0cb228628c7104029a94bf}{}{\bfseries Growth\+Function\+Base} (int id, int type, float init\+Time, float end\+Time, bool apply\+To\+Columnar\+Layer, bool apply\+To\+Peripodial\+Membrane)\label{classGrowthFunctionBase_a061b31ad8a0cb228628c7104029a94bf}
-
-\item 
+\hyperlink{classGrowthFunctionBase_a061b31ad8a0cb228628c7104029a94bf}{Growth\+Function\+Base} (int id, int type, float \hyperlink{classGrowthFunctionBase_ae92513a7b41637df8e26e7db35ddf97c}{init\+Time}, float \hyperlink{classGrowthFunctionBase_a3ff4db0573d354a75666a5f3ca446941}{end\+Time}, bool \hyperlink{classGrowthFunctionBase_a3d56771e7c145589a14e11cc331e0326}{apply\+To\+Columnar\+Layer}, bool \hyperlink{classGrowthFunctionBase_a08ae19f58cb98fa8e315a77f52749732}{apply\+To\+Peripodial\+Membrane})
+\begin{DoxyCompactList}\small\item\em The constructor of \hyperlink{classGrowthFunctionBase}{Growth\+Function\+Base}. Different growth functions will be derived from this class. \end{DoxyCompactList}\item 
 \hypertarget{classGrowthFunctionBase_ad5b4e88d33c4b72444c5c25c25ab68fb}{}void {\bfseries Parent\+Error\+Message} (string function\+Name)\label{classGrowthFunctionBase_ad5b4e88d33c4b72444c5c25c25ab68fb}
 
 \item 
@@ -57,25 +56,48 @@ Inheritance diagram for Growth\+Function\+Base\+:\begin{figure}[H]
 \subsection*{Public Attributes}
 \begin{DoxyCompactItemize}
 \item 
-\hypertarget{classGrowthFunctionBase_a90fc4b14e2adcda0930fe93b1490fb7a}{}int {\bfseries Type}\label{classGrowthFunctionBase_a90fc4b14e2adcda0930fe93b1490fb7a}
+\hypertarget{classGrowthFunctionBase_a90fc4b14e2adcda0930fe93b1490fb7a}{}int \hyperlink{classGrowthFunctionBase_a90fc4b14e2adcda0930fe93b1490fb7a}{Type}\label{classGrowthFunctionBase_a90fc4b14e2adcda0930fe93b1490fb7a}
 
-\item 
-\hypertarget{classGrowthFunctionBase_aa669a940ab77009f9b2b9c9885e9cd9e}{}int {\bfseries Id}\label{classGrowthFunctionBase_aa669a940ab77009f9b2b9c9885e9cd9e}
+\begin{DoxyCompactList}\small\item\em The type of the growth function, 1\+: uniform growth, 2\+: Ring shaped growth, 3\+: Grid based growth, where growth rates read from a separate input file. \end{DoxyCompactList}\item 
+\hypertarget{classGrowthFunctionBase_aa669a940ab77009f9b2b9c9885e9cd9e}{}int \hyperlink{classGrowthFunctionBase_aa669a940ab77009f9b2b9c9885e9cd9e}{Id}\label{classGrowthFunctionBase_aa669a940ab77009f9b2b9c9885e9cd9e}
 
-\item 
-\hypertarget{classGrowthFunctionBase_ae92513a7b41637df8e26e7db35ddf97c}{}float {\bfseries init\+Time}\label{classGrowthFunctionBase_ae92513a7b41637df8e26e7db35ddf97c}
+\begin{DoxyCompactList}\small\item\em The unique identification number of the growth function. \end{DoxyCompactList}\item 
+\hypertarget{classGrowthFunctionBase_ae92513a7b41637df8e26e7db35ddf97c}{}float \hyperlink{classGrowthFunctionBase_ae92513a7b41637df8e26e7db35ddf97c}{init\+Time}\label{classGrowthFunctionBase_ae92513a7b41637df8e26e7db35ddf97c}
 
-\item 
-\hypertarget{classGrowthFunctionBase_a3ff4db0573d354a75666a5f3ca446941}{}float {\bfseries end\+Time}\label{classGrowthFunctionBase_a3ff4db0573d354a75666a5f3ca446941}
+\begin{DoxyCompactList}\small\item\em The initiation time of the growth, in seconds. \end{DoxyCompactList}\item 
+\hypertarget{classGrowthFunctionBase_a3ff4db0573d354a75666a5f3ca446941}{}float \hyperlink{classGrowthFunctionBase_a3ff4db0573d354a75666a5f3ca446941}{end\+Time}\label{classGrowthFunctionBase_a3ff4db0573d354a75666a5f3ca446941}
 
-\item 
-\hypertarget{classGrowthFunctionBase_a3d56771e7c145589a14e11cc331e0326}{}bool {\bfseries apply\+To\+Columnar\+Layer}\label{classGrowthFunctionBase_a3d56771e7c145589a14e11cc331e0326}
+\begin{DoxyCompactList}\small\item\em The end time of the growth, in seconds. \end{DoxyCompactList}\item 
+\hypertarget{classGrowthFunctionBase_a3d56771e7c145589a14e11cc331e0326}{}bool \hyperlink{classGrowthFunctionBase_a3d56771e7c145589a14e11cc331e0326}{apply\+To\+Columnar\+Layer}\label{classGrowthFunctionBase_a3d56771e7c145589a14e11cc331e0326}
 
-\item 
-\hypertarget{classGrowthFunctionBase_a08ae19f58cb98fa8e315a77f52749732}{}bool {\bfseries apply\+To\+Peripodial\+Membrane}\label{classGrowthFunctionBase_a08ae19f58cb98fa8e315a77f52749732}
+\begin{DoxyCompactList}\small\item\em Boolean stating if the growth should be applied to columnar layer. \end{DoxyCompactList}\item 
+\hypertarget{classGrowthFunctionBase_a08ae19f58cb98fa8e315a77f52749732}{}bool \hyperlink{classGrowthFunctionBase_a08ae19f58cb98fa8e315a77f52749732}{apply\+To\+Peripodial\+Membrane}\label{classGrowthFunctionBase_a08ae19f58cb98fa8e315a77f52749732}
 
-\end{DoxyCompactItemize}
+\begin{DoxyCompactList}\small\item\em Boolean stating if the growth should be applied to peripodial membrane. \end{DoxyCompactList}\end{DoxyCompactItemize}
 
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{classGrowthFunctionBase_a061b31ad8a0cb228628c7104029a94bf}{}\index{Growth\+Function\+Base@{Growth\+Function\+Base}!Growth\+Function\+Base@{Growth\+Function\+Base}}
+\index{Growth\+Function\+Base@{Growth\+Function\+Base}!Growth\+Function\+Base@{Growth\+Function\+Base}}
+\subsubsection[{Growth\+Function\+Base}]{\setlength{\rightskip}{0pt plus 5cm}Growth\+Function\+Base\+::\+Growth\+Function\+Base (
+\begin{DoxyParamCaption}
+\item[{int}]{id, }
+\item[{int}]{type, }
+\item[{float}]{init\+Time, }
+\item[{float}]{end\+Time, }
+\item[{bool}]{apply\+To\+Columnar\+Layer, }
+\item[{bool}]{apply\+To\+Peripodial\+Membrane}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}\label{classGrowthFunctionBase_a061b31ad8a0cb228628c7104029a94bf}
+
+
+The constructor of \hyperlink{classGrowthFunctionBase}{Growth\+Function\+Base}. Different growth functions will be derived from this class. 
+
+integer id will set \hyperlink{classGrowthFunctionBase_aa669a940ab77009f9b2b9c9885e9cd9e}{Growth\+Function\+Base\+::\+Id}. ~\newline
+integer type will set \hyperlink{classGrowthFunctionBase_a90fc4b14e2adcda0930fe93b1490fb7a}{Growth\+Function\+Base\+::\+Type}. ~\newline
+floats init\+Time and end\+Time will set \hyperlink{classGrowthFunctionBase_ae92513a7b41637df8e26e7db35ddf97c}{Growth\+Function\+Base\+::init\+Time} and \hyperlink{classGrowthFunctionBase_a3ff4db0573d354a75666a5f3ca446941}{Growth\+Function\+Base\+::end\+Time} respectively. ~\newline
+booleans apply\+To\+Columnar\+Layer and apply\+To\+Peripodial\+Membrane will set \hyperlink{classGrowthFunctionBase_a3d56771e7c145589a14e11cc331e0326}{Growth\+Function\+Base\+::apply\+To\+Columnar\+Layer} and \hyperlink{classGrowthFunctionBase_a08ae19f58cb98fa8e315a77f52749732}{Growth\+Function\+Base\+::apply\+To\+Peripodial\+Membrane}, respectively. ~\newline
+ 
 
 The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
 \item 

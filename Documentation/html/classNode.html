@@ -175,7 +175,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class
 <tr class="separator:af754322e3928dc45f70b19762551890a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae621097f98f1d33d283cf65a0a02d29a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae621097f98f1d33d283cf65a0a02d29a"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#ae621097f98f1d33d283cf65a0a02d29a">tissueType</a></td></tr>
-<tr class="memdesc:ae621097f98f1d33d283cf65a0a02d29a"><td class="mdescLeft">&#160;</td><td class="mdescRight">The tissue type is 0 for columnar layer and 1 for peripodial membrane. <br /></td></tr>
+<tr class="memdesc:ae621097f98f1d33d283cf65a0a02d29a"><td class="mdescLeft">&#160;</td><td class="mdescRight">The tissue type is 0 for columnar layer, 1 for peripodial membrane, and 2 for linker zone. <br /></td></tr>
 <tr class="separator:ae621097f98f1d33d283cf65a0a02d29a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab6b225354ad961f2e9bd5d7fe9b67b3a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab6b225354ad961f2e9bd5d7fe9b67b3a"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#ab6b225354ad961f2e9bd5d7fe9b67b3a">atCircumference</a></td></tr>
@@ -193,22 +193,6 @@ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cl
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#af8e9678dfeffc9e99d925a83b58fde3d">zProjectedArea</a></td></tr>
 <tr class="memdesc:af8e9678dfeffc9e99d925a83b58fde3d"><td class="mdescLeft">&#160;</td><td class="mdescRight">The surface of the node, as projected in Z, calculated from apical or pasal surfces of elements, lateral surfaces are not included. <br /></td></tr>
 <tr class="separator:af8e9678dfeffc9e99d925a83b58fde3d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7a4b47d88dee36f1fea2721f765c05d0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7a4b47d88dee36f1fea2721f765c05d0"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a7a4b47d88dee36f1fea2721f765c05d0">atPeripodialCircumference</a></td></tr>
-<tr class="memdesc:a7a4b47d88dee36f1fea2721f765c05d0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Boolean defining if the node is at the circumference of the peripodial membrane of the tissue. <br /></td></tr>
-<tr class="separator:a7a4b47d88dee36f1fea2721f765c05d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a55ffe3c94ccad326737b510b47deff31"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a55ffe3c94ccad326737b510b47deff31"></a>
-vector&lt; int &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a55ffe3c94ccad326737b510b47deff31">AssociatedNodesDueToPeripodialMembrane</a></td></tr>
-<tr class="memdesc:a55ffe3c94ccad326737b510b47deff31"><td class="mdescLeft">&#160;</td><td class="mdescRight">The list of columnar <a class="el" href="classNode.html">Node</a> Id's that are associated with this node of the peripodial membrane circumference. The forces from the peripodial membrane are distributed to the columnar layer, hence anchoring the peripodial membrane to the columnar layer at the circumference, via this list. <br /></td></tr>
-<tr class="separator:a55ffe3c94ccad326737b510b47deff31"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac18a473bf44d200917cf27be42aa8a42"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac18a473bf44d200917cf27be42aa8a42"></a>
-vector&lt; double &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#ac18a473bf44d200917cf27be42aa8a42">AssociatedNodeWeightsDueToPeripodialMembrane</a></td></tr>
-<tr class="memdesc:ac18a473bf44d200917cf27be42aa8a42"><td class="mdescLeft">&#160;</td><td class="mdescRight">The list of columnar <a class="el" href="classNode.html">Node</a> weights (normalised masses) that are associated with this node of the peripodial membrane circumference. The forces from the peripodial membrane are distributed to the columnar layer,hence anchoring the peripodial membrane to the columnar layer at the circumference, as weighted by this list, order is linked to <a class="el" href="classNode.html#a55ffe3c94ccad326737b510b47deff31" title="The list of columnar Node Id&#39;s that are associated with this node of the peripodial membrane circumfe...">Node::AssociatedNodesDueToPeripodialMembrane</a>. <br /></td></tr>
-<tr class="separator:ac18a473bf44d200917cf27be42aa8a42"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a27a5cb226f56c7598f7e90887c664ed4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a27a5cb226f56c7598f7e90887c664ed4"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a27a5cb226f56c7598f7e90887c664ed4">LinkedPeripodialNodeId</a></td></tr>
-<tr class="memdesc:a27a5cb226f56c7598f7e90887c664ed4"><td class="mdescLeft">&#160;</td><td class="mdescRight">The peripodial node Id a columnar layer node is linked to. The peripodial node of the Id equal to this variable will distribute its forces on its associated nodes, one of which is the owner of this parameter. <br /></td></tr>
-<tr class="separator:a27a5cb226f56c7598f7e90887c664ed4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab22060fb9f61a0d93ec52e6045828782"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab22060fb9f61a0d93ec52e6045828782"></a>
 vector&lt; int &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#ab22060fb9f61a0d93ec52e6045828782">immediateNeigs</a></td></tr>
 <tr class="memdesc:ab22060fb9f61a0d93ec52e6045828782"><td class="mdescLeft">&#160;</td><td class="mdescRight">The list of Id's for immediate neighbours of the node, i.e. the nodes that are shared by the elements that utilise the owner of this parameter. <br /></td></tr>
@@ -258,7 +242,7 @@ vector&lt; double &gt;&#160;</td><td class="memItemRight" valign="bottom"><a cla
 </div><div class="memdoc">
 
 <p>The function to check if the node is eligible for packing. </p>
-<p>The function will return true if the node is eligible for packing calculation. This packing will ensure volume exclusion, and is calculated via function Simulation::calculatePacking. It is not necessary to calculate packing under the following conditions: 1) The node is at the middle of the columnar layer, the packing should have stopped any other node/element coming close enough to this node, as they would need to penetrate through the apical or basal surface of the tissue to reach this node. 2) The node is at the circumference of the peripodial membrane, hence is anchored to columnar layer apical circumference.</p>
+<p>The function will return true if the node is eligible for packing calculation. This packing will ensure volume exclusion, and is calculated via function Simulation::calculatePacking. It is not necessary to calculate packing under the following conditions: 1) The node is at the middle of the columnar layer, the packing should have stopped any other node/element coming close enough to this node, as they would need to penetrate through the apical or basal surface of the tissue to reach this node.</p>
 
 </div>
 </div>
@@ -358,7 +342,7 @@ vector&lt; double &gt;&#160;</td><td class="memItemRight" valign="bottom"><a cla
 </div><div class="memdoc">
 
 <p>The function to set the viscosity of the node. </p>
-<p>This node will take in the apical columnar layer, basal columnar layer, and peripodial membrane viscosities of the tissue as inputs, respectively. The viscosity of the node will be assigned via its <a class="el" href="classNode.html#af754322e3928dc45f70b19762551890a" title="The tissue placement is 0 for basal nodes, 1 for apical nodes, and 2 for middle range. ">Node::tissuePlacement</a> and <a class="el" href="classNode.html#ae621097f98f1d33d283cf65a0a02d29a" title="The tissue type is 0 for columnar layer and 1 for peripodial membrane. ">Node::tissueType</a>. The peripodial membrane is a 2D structure, and will not need to have the distinction between the apical and basal surfaces. On the columnar layer, nodes that are in the mid-zone of the tissue (neither on the apical nor on the basal surface, will take the average of the two values.</p>
+<p>This node will take in the apical columnar layer, basal columnar layer, and peripodial membrane viscosities of the tissue as inputs, respectively. The viscosity of the node will be assigned via its <a class="el" href="classNode.html#af754322e3928dc45f70b19762551890a" title="The tissue placement is 0 for basal nodes, 1 for apical nodes, and 2 for middle range. ">Node::tissuePlacement</a> and <a class="el" href="classNode.html#ae621097f98f1d33d283cf65a0a02d29a" title="The tissue type is 0 for columnar layer, 1 for peripodial membrane, and 2 for linker zone...">Node::tissueType</a>. The peripodial membrane is a 2D structure, and will not need to have the distinction between the apical and basal surfaces. On the columnar layer, nodes that are in the mid-zone of the tissue (neither on the apical nor on the basal surface, will take the average of the two values.</p>
 
 </div>
 </div>
@@ -372,7 +356,7 @@ vector&lt; double &gt;&#160;</td><td class="memItemRight" valign="bottom"><a cla
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="classNode.html">Node</a></li>
-    <li class="footer">Generated on Thu Aug 13 2015 16:22:30 for Tissue Origami by
+    <li class="footer">Generated on Tue Sep 1 2015 16:22:00 for Tissue Origami by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

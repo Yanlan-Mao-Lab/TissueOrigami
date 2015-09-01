@@ -11,22 +11,27 @@ private:
 
 public:
 	GrowthFunctionBase(int id, int type, float initTime, float endTime, bool applyToColumnarLayer, bool applyToPeripodialMembrane){
+		/**
+		 *  integer id will set GrowthFunctionBase#Id. \n
+		 *  integer type will set GrowthFunctionBase#Type. \n
+		 *  floats initTime and endTime will set GrowthFunctionBase#initTime and GrowthFunctionBase#endTime respectively. \n
+		 *	booleans applyToColumnarLayer and applyToPeripodialMembrane will set GrowthFunctionBase#applyToColumnarLayer and GrowthFunctionBase#applyToPeripodialMembrane, respectively. \n
+		 *   */
 		this->Id = id;
 		this->Type = type;
 		this->initTime = initTime;
 		this->endTime = endTime;
 		this->applyToColumnarLayer = applyToColumnarLayer;
 		this->applyToPeripodialMembrane = applyToPeripodialMembrane;
-		//the implementation of tilted elements is not correct as yet. Do not toggle this on as of now
-	}
+	} ///< The constructor of GrowthFunctionBase. Different growth functions will be derived from this class
 	~GrowthFunctionBase(){};
 
-	int Type;
-	int Id;
-	float initTime;
-	float endTime;
-	bool applyToColumnarLayer;
-	bool applyToPeripodialMembrane;
+	int Type; 						///< The type of the growth function, 1: uniform growth, 2: Ring shaped growth, 3: Grid based growth, where growth rates read from a separate input file
+	int Id;							///< The unique identification number of the growth function
+	float initTime;					///< The initiation time of the growth, in seconds
+	float endTime;					///< The end time of the growth, in seconds.
+	bool applyToColumnarLayer;		///< Boolean stating if the growth should be applied to columnar layer
+	bool applyToPeripodialMembrane; ///< Boolean stating if the growth should be applied to peripodial membrane
 
 
 	void 	ParentErrorMessage(string functionName){

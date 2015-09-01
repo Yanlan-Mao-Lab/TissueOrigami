@@ -126,8 +126,8 @@ Inheritance diagram for GrowthFunctionBase:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a061b31ad8a0cb228628c7104029a94bf"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a061b31ad8a0cb228628c7104029a94bf"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>GrowthFunctionBase</b> (int id, int type, float initTime, float endTime, bool applyToColumnarLayer, bool applyToPeripodialMembrane)</td></tr>
+<tr class="memitem:a061b31ad8a0cb228628c7104029a94bf"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGrowthFunctionBase.html#a061b31ad8a0cb228628c7104029a94bf">GrowthFunctionBase</a> (int id, int type, float <a class="el" href="classGrowthFunctionBase.html#ae92513a7b41637df8e26e7db35ddf97c">initTime</a>, float <a class="el" href="classGrowthFunctionBase.html#a3ff4db0573d354a75666a5f3ca446941">endTime</a>, bool <a class="el" href="classGrowthFunctionBase.html#a3d56771e7c145589a14e11cc331e0326">applyToColumnarLayer</a>, bool <a class="el" href="classGrowthFunctionBase.html#a08ae19f58cb98fa8e315a77f52749732">applyToPeripodialMembrane</a>)</td></tr>
+<tr class="memdesc:a061b31ad8a0cb228628c7104029a94bf"><td class="mdescLeft">&#160;</td><td class="mdescRight">The constructor of <a class="el" href="classGrowthFunctionBase.html">GrowthFunctionBase</a>. Different growth functions will be derived from this class.  <a href="#a061b31ad8a0cb228628c7104029a94bf">More...</a><br /></td></tr>
 <tr class="separator:a061b31ad8a0cb228628c7104029a94bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad5b4e88d33c4b72444c5c25c25ab68fb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad5b4e88d33c4b72444c5c25c25ab68fb"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>ParentErrorMessage</b> (string functionName)</td></tr>
@@ -175,24 +175,96 @@ virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>setGrowthMatr
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a90fc4b14e2adcda0930fe93b1490fb7a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a90fc4b14e2adcda0930fe93b1490fb7a"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>Type</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGrowthFunctionBase.html#a90fc4b14e2adcda0930fe93b1490fb7a">Type</a></td></tr>
+<tr class="memdesc:a90fc4b14e2adcda0930fe93b1490fb7a"><td class="mdescLeft">&#160;</td><td class="mdescRight">The type of the growth function, 1: uniform growth, 2: Ring shaped growth, 3: Grid based growth, where growth rates read from a separate input file. <br /></td></tr>
 <tr class="separator:a90fc4b14e2adcda0930fe93b1490fb7a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa669a940ab77009f9b2b9c9885e9cd9e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa669a940ab77009f9b2b9c9885e9cd9e"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>Id</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGrowthFunctionBase.html#aa669a940ab77009f9b2b9c9885e9cd9e">Id</a></td></tr>
+<tr class="memdesc:aa669a940ab77009f9b2b9c9885e9cd9e"><td class="mdescLeft">&#160;</td><td class="mdescRight">The unique identification number of the growth function. <br /></td></tr>
 <tr class="separator:aa669a940ab77009f9b2b9c9885e9cd9e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae92513a7b41637df8e26e7db35ddf97c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae92513a7b41637df8e26e7db35ddf97c"></a>
-float&#160;</td><td class="memItemRight" valign="bottom"><b>initTime</b></td></tr>
+float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGrowthFunctionBase.html#ae92513a7b41637df8e26e7db35ddf97c">initTime</a></td></tr>
+<tr class="memdesc:ae92513a7b41637df8e26e7db35ddf97c"><td class="mdescLeft">&#160;</td><td class="mdescRight">The initiation time of the growth, in seconds. <br /></td></tr>
 <tr class="separator:ae92513a7b41637df8e26e7db35ddf97c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3ff4db0573d354a75666a5f3ca446941"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3ff4db0573d354a75666a5f3ca446941"></a>
-float&#160;</td><td class="memItemRight" valign="bottom"><b>endTime</b></td></tr>
+float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGrowthFunctionBase.html#a3ff4db0573d354a75666a5f3ca446941">endTime</a></td></tr>
+<tr class="memdesc:a3ff4db0573d354a75666a5f3ca446941"><td class="mdescLeft">&#160;</td><td class="mdescRight">The end time of the growth, in seconds. <br /></td></tr>
 <tr class="separator:a3ff4db0573d354a75666a5f3ca446941"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3d56771e7c145589a14e11cc331e0326"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3d56771e7c145589a14e11cc331e0326"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>applyToColumnarLayer</b></td></tr>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGrowthFunctionBase.html#a3d56771e7c145589a14e11cc331e0326">applyToColumnarLayer</a></td></tr>
+<tr class="memdesc:a3d56771e7c145589a14e11cc331e0326"><td class="mdescLeft">&#160;</td><td class="mdescRight">Boolean stating if the growth should be applied to columnar layer. <br /></td></tr>
 <tr class="separator:a3d56771e7c145589a14e11cc331e0326"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a08ae19f58cb98fa8e315a77f52749732"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a08ae19f58cb98fa8e315a77f52749732"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>applyToPeripodialMembrane</b></td></tr>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGrowthFunctionBase.html#a08ae19f58cb98fa8e315a77f52749732">applyToPeripodialMembrane</a></td></tr>
+<tr class="memdesc:a08ae19f58cb98fa8e315a77f52749732"><td class="mdescLeft">&#160;</td><td class="mdescRight">Boolean stating if the growth should be applied to peripodial membrane. <br /></td></tr>
 <tr class="separator:a08ae19f58cb98fa8e315a77f52749732"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
+<a class="anchor" id="a061b31ad8a0cb228628c7104029a94bf"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">GrowthFunctionBase::GrowthFunctionBase </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>id</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>type</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">float&#160;</td>
+          <td class="paramname"><em>initTime</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">float&#160;</td>
+          <td class="paramname"><em>endTime</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>applyToColumnarLayer</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>applyToPeripodialMembrane</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>The constructor of <a class="el" href="classGrowthFunctionBase.html">GrowthFunctionBase</a>. Different growth functions will be derived from this class. </p>
+<p>integer id will set <a class="el" href="classGrowthFunctionBase.html#aa669a940ab77009f9b2b9c9885e9cd9e" title="The unique identification number of the growth function. ">GrowthFunctionBase::Id</a>. <br />
+integer type will set <a class="el" href="classGrowthFunctionBase.html#a90fc4b14e2adcda0930fe93b1490fb7a" title="The type of the growth function, 1: uniform growth, 2: Ring shaped growth, 3: Grid based growth...">GrowthFunctionBase::Type</a>. <br />
+floats initTime and endTime will set <a class="el" href="classGrowthFunctionBase.html#ae92513a7b41637df8e26e7db35ddf97c" title="The initiation time of the growth, in seconds. ">GrowthFunctionBase::initTime</a> and <a class="el" href="classGrowthFunctionBase.html#a3ff4db0573d354a75666a5f3ca446941" title="The end time of the growth, in seconds. ">GrowthFunctionBase::endTime</a> respectively. <br />
+booleans applyToColumnarLayer and applyToPeripodialMembrane will set <a class="el" href="classGrowthFunctionBase.html#a3d56771e7c145589a14e11cc331e0326" title="Boolean stating if the growth should be applied to columnar layer. ">GrowthFunctionBase::applyToColumnarLayer</a> and <a class="el" href="classGrowthFunctionBase.html#a08ae19f58cb98fa8e315a77f52749732" title="Boolean stating if the growth should be applied to peripodial membrane. ">GrowthFunctionBase::applyToPeripodialMembrane</a>, respectively. <br />
+ </p>
+
+</div>
+</div>
 <hr/>The documentation for this class was generated from the following file:<ul>
 <li>/home/melda/Documents/TissueFolding/TissueFolding/SourceCode/<a class="el" href="GrowthFunctionBase_8h_source.html">GrowthFunctionBase.h</a></li>
 </ul>
@@ -202,7 +274,7 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>applyToPeripodialMemb
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="classGrowthFunctionBase.html">GrowthFunctionBase</a></li>
-    <li class="footer">Generated on Thu Aug 13 2015 16:22:29 for Tissue Origami by
+    <li class="footer">Generated on Tue Sep 1 2015 16:22:00 for Tissue Origami by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

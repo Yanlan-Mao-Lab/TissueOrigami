@@ -200,6 +200,12 @@ int *&#160;</td><td class="memItemRight" valign="bottom"><b>getIdentifierColour<
 <tr class="memitem:ab26e6cbde2c8a4f326c32a38de48bcc7 inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab26e6cbde2c8a4f326c32a38de48bcc7"></a>
 double *&#160;</td><td class="memItemRight" valign="bottom"><b>getCentre</b> ()</td></tr>
 <tr class="separator:ab26e6cbde2c8a4f326c32a38de48bcc7 inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a90d1eaa5a49262418cee28284da14c16 inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a90d1eaa5a49262418cee28284da14c16"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>getPeripodialness</b> ()</td></tr>
+<tr class="separator:a90d1eaa5a49262418cee28284da14c16 inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a44c758ac93865a1e51e63212ebfe2787 inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a44c758ac93865a1e51e63212ebfe2787"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>getColumnarness</b> ()</td></tr>
+<tr class="separator:a44c758ac93865a1e51e63212ebfe2787 inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7d1235b3555a18328d1677e5b07458ff inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7d1235b3555a18328d1677e5b07458ff"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateRelativePosInBoundingBox</b> (double BoindingBoxXMin, double BoundingBoxYMin, double BoundingBoxLength, double BoundingBoxWidth)</td></tr>
 <tr class="separator:a7d1235b3555a18328d1677e5b07458ff inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -257,6 +263,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>displayIdentifierColo
 <tr class="memitem:ad39c3f3a555a89e106c4afaaf81c72f6 inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad39c3f3a555a89e106c4afaaf81c72f6"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>setFg</b> (gsl_matrix *currFg)</td></tr>
 <tr class="separator:ad39c3f3a555a89e106c4afaaf81c72f6 inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a38a100fb162232636bf666eb1603f023 inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a38a100fb162232636bf666eb1603f023"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>setGrowthWeightsViaTissuePlacement</b> (double periWeight)</td></tr>
+<tr class="separator:a38a100fb162232636bf666eb1603f023 inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad9ffbae214584cbd0cc1e34f66a8ec5c inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad9ffbae214584cbd0cc1e34f66a8ec5c"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>updateGrowthRate</b> (double scalex, double scaley, double scalez)</td></tr>
 <tr class="separator:ad9ffbae214584cbd0cc1e34f66a8ec5c inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -549,6 +558,9 @@ gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>calculateInve
 <tr class="memitem:ad67919694a1d780e31f6d539781377be inherit pro_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad67919694a1d780e31f6d539781377be"></a>
 gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>calculateBTforNodalForces</b> (gsl_matrix *InvJacobianStack, gsl_matrix *ShapeFuncDerStack, gsl_matrix *B, gsl_matrix *invJShFuncDerS)</td></tr>
 <tr class="separator:ad67919694a1d780e31f6d539781377be inherit pro_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa9f48481aba22e06b07e6ce665ef58fb inherit pro_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa9f48481aba22e06b07e6ce665ef58fb"></a>
+gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>calculateInvJShFuncDerSWithFe</b> (gsl_matrix *currFe, gsl_matrix *InvDXde, gsl_matrix *ShapeFuncDerStack, gsl_matrix *invJShFuncDerSWithF)</td></tr>
+<tr class="separator:aa9f48481aba22e06b07e6ce665ef58fb inherit pro_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab9e027b7bb9553a0850875c5b94ed4a5 inherit pro_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab9e027b7bb9553a0850875c5b94ed4a5"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateCMatrix</b> (int pointNo)</td></tr>
 <tr class="separator:ab9e027b7bb9553a0850875c5b94ed4a5 inherit pro_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -608,7 +620,8 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>BasalNormalForPacking
 int&#160;</td><td class="memItemRight" valign="bottom"><b>tissuePlacement</b></td></tr>
 <tr class="separator:aff63b1fcb823bbfdb5b19fe78dea59b8 inherit pub_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1d56f7eb3fed744adc268bc4da7a790f inherit pub_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1d56f7eb3fed744adc268bc4da7a790f"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>tissueType</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#a1d56f7eb3fed744adc268bc4da7a790f">tissueType</a></td></tr>
+<tr class="memdesc:a1d56f7eb3fed744adc268bc4da7a790f inherit pub_attribs_classShapeBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">The tissue type is 0 for columnar layer, 1 for peripodial membrane, and 2 for linker zone. <br /></td></tr>
 <tr class="separator:a1d56f7eb3fed744adc268bc4da7a790f inherit pub_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4f09d39d079bfe95ea7c25f5d3de6c09 inherit pub_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4f09d39d079bfe95ea7c25f5d3de6c09"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>IsAblated</b></td></tr>
@@ -656,6 +669,12 @@ int *&#160;</td><td class="memItemRight" valign="bottom"><b>IdentifierColour</b>
 <tr class="memitem:ae31d7545110fd505629592348a2951b7 inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae31d7545110fd505629592348a2951b7"></a>
 double *&#160;</td><td class="memItemRight" valign="bottom"><b>GrowthRate</b></td></tr>
 <tr class="separator:ae31d7545110fd505629592348a2951b7 inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a134d82ba500ef829b6aa3e3a83783c9a inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a134d82ba500ef829b6aa3e3a83783c9a"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>columnarGrowthWeight</b></td></tr>
+<tr class="separator:a134d82ba500ef829b6aa3e3a83783c9a inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3663f3220016756b1bd5a92477325ec2 inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3663f3220016756b1bd5a92477325ec2"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>peripodialGrowthWeight</b></td></tr>
+<tr class="separator:a3663f3220016756b1bd5a92477325ec2 inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1c6db43b0794a15e4bc42b8ca994a785 inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1c6db43b0794a15e4bc42b8ca994a785"></a>
 double *&#160;</td><td class="memItemRight" valign="bottom"><b>ShapeChangeRate</b></td></tr>
 <tr class="separator:a1c6db43b0794a15e4bc42b8ca994a785 inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -704,6 +723,9 @@ gsl_matrix **&#160;</td><td class="memItemRight" valign="bottom"><b>FeMatrices</
 <tr class="memitem:a9478b062928ae554c25cd3269cc9e790 inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9478b062928ae554c25cd3269cc9e790"></a>
 gsl_matrix **&#160;</td><td class="memItemRight" valign="bottom"><b>invJShapeFuncDerStack</b></td></tr>
 <tr class="separator:a9478b062928ae554c25cd3269cc9e790 inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a490391c781e50cfc7e2f1a0814bb6d25 inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a490391c781e50cfc7e2f1a0814bb6d25"></a>
+gsl_matrix **&#160;</td><td class="memItemRight" valign="bottom"><b>invJShapeFuncDerStackwithFe</b></td></tr>
+<tr class="separator:a490391c781e50cfc7e2f1a0814bb6d25 inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acd549e0086d16194ae389ae528969596 inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acd549e0086d16194ae389ae528969596"></a>
 gsl_matrix **&#160;</td><td class="memItemRight" valign="bottom"><b>elasticStress</b></td></tr>
 <tr class="separator:acd549e0086d16194ae389ae528969596 inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -760,7 +782,7 @@ gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>TriPointKe</b
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="classPrism.html">Prism</a></li>
-    <li class="footer">Generated on Thu Aug 13 2015 16:22:30 for Tissue Origami by
+    <li class="footer">Generated on Tue Sep 1 2015 16:22:00 for Tissue Origami by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>
