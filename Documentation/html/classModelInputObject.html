@@ -117,34 +117,61 @@ $(document).ready(function(){initNavTree('classModelInputObject.html','');});
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a9741685527f446bd2bf66455c5b01d0c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9741685527f446bd2bf66455c5b01d0c"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>readParameters</b> ()</td></tr>
+<tr class="memitem:a64b031469546b19177c0a13365058162"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a64b031469546b19177c0a13365058162"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classModelInputObject.html#a64b031469546b19177c0a13365058162">ModelInputObject</a> ()</td></tr>
+<tr class="memdesc:a64b031469546b19177c0a13365058162"><td class="mdescLeft">&#160;</td><td class="mdescRight">The constructor of the <a class="el" href="classModelInputObject.html">ModelInputObject</a>. <br /></td></tr>
+<tr class="separator:a64b031469546b19177c0a13365058162"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9741685527f446bd2bf66455c5b01d0c"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classModelInputObject.html#a9741685527f446bd2bf66455c5b01d0c">readParameters</a> ()</td></tr>
+<tr class="memdesc:a9741685527f446bd2bf66455c5b01d0c"><td class="mdescLeft">&#160;</td><td class="mdescRight">This is the main funciton reading the parameters from file.  <a href="#a9741685527f446bd2bf66455c5b01d0c">More...</a><br /></td></tr>
 <tr class="separator:a9741685527f446bd2bf66455c5b01d0c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a0c5fb50d9d705bc9a9b4fafeebd1cadc"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classSimulation.html">Simulation</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classModelInputObject.html#a0c5fb50d9d705bc9a9b4fafeebd1cadc">Sim</a></td></tr>
+<tr class="memitem:a0c5fb50d9d705bc9a9b4fafeebd1cadc"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0c5fb50d9d705bc9a9b4fafeebd1cadc"></a>
+<a class="el" href="classSimulation.html">Simulation</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classModelInputObject.html#a0c5fb50d9d705bc9a9b4fafeebd1cadc">Sim</a></td></tr>
+<tr class="memdesc:a0c5fb50d9d705bc9a9b4fafeebd1cadc"><td class="mdescLeft">&#160;</td><td class="mdescRight">The pointer to the simulation object, for which the parameters are being read from the modelinput file. <br /></td></tr>
 <tr class="separator:a0c5fb50d9d705bc9a9b4fafeebd1cadc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a32fadb000159d03f6c5901ce3167ada8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a32fadb000159d03f6c5901ce3167ada8"></a>
-const char *&#160;</td><td class="memItemRight" valign="bottom"><b>parameterFileName</b></td></tr>
+const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classModelInputObject.html#a32fadb000159d03f6c5901ce3167ada8">parameterFileName</a></td></tr>
+<tr class="memdesc:a32fadb000159d03f6c5901ce3167ada8"><td class="mdescLeft">&#160;</td><td class="mdescRight">The name (including path) of the file containing the model input parameters. <br /></td></tr>
 <tr class="separator:a32fadb000159d03f6c5901ce3167ada8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2621e76abbd05573aea2d5471a589405"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2621e76abbd05573aea2d5471a589405"></a>
-string&#160;</td><td class="memItemRight" valign="bottom"><b>meshFileName</b></td></tr>
+string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classModelInputObject.html#a2621e76abbd05573aea2d5471a589405">meshFileName</a></td></tr>
+<tr class="memdesc:a2621e76abbd05573aea2d5471a589405"><td class="mdescLeft">&#160;</td><td class="mdescRight">The name (including path) of the file containing the input mesh file for tissue geometry. <br /></td></tr>
 <tr class="separator:a2621e76abbd05573aea2d5471a589405"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="classModelInputObject.html">ModelInputObject</a> class </p>
-</div><h2 class="groupheader">Member Data Documentation</h2>
-<a class="anchor" id="a0c5fb50d9d705bc9a9b4fafeebd1cadc"></a>
+</div><h2 class="groupheader">Member Function Documentation</h2>
+<a class="anchor" id="a9741685527f446bd2bf66455c5b01d0c"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classSimulation.html">Simulation</a>* ModelInputObject::Sim</td>
+          <td class="memname">bool ModelInputObject::readParameters </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>An enum type. The documentation block cannot be put after the enum! </p>
+
+<p>This is the main funciton reading the parameters from file. </p>
+<p>This function will read all available model inputs from the file <a class="el" href="classModelInputObject.html#a32fadb000159d03f6c5901ce3167ada8" title="The name (including path) of the file containing the model input parameters. ">ModelInputObject::parameterFileName</a>. <br />
+It will start by opening the model input file, after each attempt to open a file, there will be a health check to ensure the file could be opened. In case there are issues with the file (most common one being the file is not opened due to a path error), the function will throw an error with corresponding explanatory error message, and quit the simulation.</p>
+<p>After successfully opening the input file, the function will read it until it reaches to the end of the file. This will involve a series of private functions, which are thoroughly documented in source code, while the processed documentation may or may not be available in this user interface documentation structure.</p>
+<p>Depending on the header the function it encounters it will read:</p>
+<p>Mesh geometry related parameters through the private function ModelInputObject::readMeshParameters</p>
+<p>Peripodial membrane structure related parameters through the private function ModelInputObject::readPeripodialMembraneParameters</p>
+<p>Inputs relating to fixing the nodes of the tissue through the private function ModelInputObject::readNodeFixingParameters</p>
+<p><a class="el" href="classSimulation.html">Simulation</a> time and time step related parameters through the private function ModelInputObject::readTimeParameters</p>
+<p>Physical parameters of the tissue through the private function ModelInputObject::readPysicalProperties</p>
+<p>Save options of the simulation through the private function ModelInputObject::readSaveOptions</p>
+<p>Growth functions and related parameters of the simulation through the private function ModelInputObject::readGrowthOptions</p>
+<p>Shape change functions and related parameters of the simulation through the private function ModelInputObject::readShapeChangeOptions</p>
+<p>Stretcher experimental setup parameters of the simulation through the private function ModelInputObject::readStretcherSetup</p>
+<p>Pipette aspiration experimental setup parameters of the simulation through the private function ModelInputObject::readPipetteSetup</p>
+<p>In the case that the function, or any of the above listed parameter reading functions, encounters an unexpected line in the model input file, it will throw an error with a corresponding explanatory message, and quit the simulation.</p>
 
 </div>
 </div>
@@ -158,7 +185,7 @@ string&#160;</td><td class="memItemRight" valign="bottom"><b>meshFileName</b></t
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="classModelInputObject.html">ModelInputObject</a></li>
-    <li class="footer">Generated on Tue Sep 1 2015 16:22:00 for Tissue Origami by
+    <li class="footer">Generated on Fri Sep 4 2015 12:21:23 for Tissue Origami by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>
