@@ -140,13 +140,15 @@ private:
 	void writeForces();
 	void writeVelocities();
 	void calculateGrowth();
+	void calculateShapeChange();
 	void cleanUpGrowthRates();
     void updateGrowthRotationMatrices();
 	void cleanUpShapeChangeRates();
 	void calculateGrowthUniform(GrowthFunctionBase* currGF);
 	void calculateGrowthRing(GrowthFunctionBase* currGF);
 	void calculateGrowthGridBased(GrowthFunctionBase* currGF);
-	void calculatePeripodialGrowthGridBased(GrowthFunctionBase* currGF);
+	//void calculatePeripodialGrowthGridBased(GrowthFunctionBase* currGF);
+	void calculateShapeChangeUniform (GrowthFunctionBase* currSCF);
 	void changeCellShapesInSystem();
 	void changeCellShapeRing(int currIndexForParameters);
 	void setStretch();
@@ -197,13 +199,14 @@ public:
 	double lumenHeight;
 	double lumenHeightScale;
 	int nGrowthFunctions;
-	vector <int> GrowthFunctionTypes;
-	vector <float> GrowthParameters;
+	//vector <int> GrowthFunctionTypes;
+	//vector <float> GrowthParameters;
 	vector <double***> GrowthMatrices;
+	vector<GrowthFunctionBase*> GrowthFunctions;
 
 	int nShapeChangeFunctions;
-	vector <int> ShapeChangeFunctionTypes;
-	vector <float> ShapeChangeParameters;
+	vector<GrowthFunctionBase*> ShapeChangeFunctions;
+
 	vector <Node*> Nodes;
 	vector <ShapeBase*> Elements;
 	double*** SystemForces;
@@ -229,7 +232,6 @@ public:
 	double TissueHeight;
 	int TissueHeightDiscretisationLayers;
 	double boundingBox[2][3];
-	vector<GrowthFunctionBase*> GrowthFunctions;
 
 	Simulation();
 	~Simulation();

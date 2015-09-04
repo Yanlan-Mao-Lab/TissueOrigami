@@ -70,6 +70,55 @@ public:
 	}///< The function is to write the growth function summary to simulation summary file
 };
 
+class UniformShapeChangeFunction : public UniformGrowthFunction{
+private:
+
+public:
+	int ShapeChangeType;
+	UniformShapeChangeFunction(int id, int type, float initTime, float endTime, bool applyToColumnarLayer, bool applyToPeripodialMembrane, int ShapeChangeType, double ShapeChangeRate) : UniformGrowthFunction( id,  type,  initTime,  endTime,  applyToColumnarLayer,  applyToPeripodialMembrane,  0,  0,  0){
+		/**
+		 *  Forst six parameters will be directed to the parent constructor, UniformGrowthFunction#UniformGrowthFunction.
+		 *  The growth rates in Dv, AB and AP will be fed as 0 to the parent constructor. \n
+		 *  The parameter ShapeChangeType will define the type of the shape change as 1: ColumnarToSquamous change, 2: Apical shrinkage, and 2: basal shrinkage.
+		 *  The paremeter ShapeChangeRate will define the rate of defined shape change. The constructor will calculate the corrected rate, as to conserve the volume
+		 *  while shape change is occuring.
+		 */
+		this->ShapeChangeType = ShapeChangeType;
+		if (ShapeChangeType == 1){
+			//Thisis change form columnat to cuboidal
+			GrowthRate[0] =   0.5 * ShapeChangeRate;  //xx
+			GrowthRate[1] =   0.5 * ShapeChangeRate;  //yy
+			GrowthRate[2] =  -1.0 *ShapeChangeRate;		  //zz
+		}
+	}///< The constructor of UniformShapeChangeFunction
+
+	~UniformShapeChangeFunction(){};
+
+	void writeSummary(ofstream &saveFileSimulationSummary,double dt){
+		/**
+		 *  This function will write the UniformGrowthFunction details into the simulation summary file, provided as the first input.
+		 *  Time step (dt) of the simulation is provided as second input, to report the growth rates per hour.
+		 *  The output should look like: \n
+		 *			Growth Type:  Uniform (1)
+		 *			Initial time(sec): UniformGrowthFunction#initTime	FinalTime time(sec): UniformGrowthFunction#endTime	GrowthRate(fraction/hr): DVGrowth(in 1/hr)  APGrowth(in 1/hr) ABGrowth(in 1/hr)
+		 */
+		saveFileSimulationSummary<<"Shape Change Type:  Uniform (1)"<<endl;
+		saveFileSimulationSummary<<"	Shape change type: ";
+		saveFileSimulationSummary<<ShapeChangeType;
+		saveFileSimulationSummary<<"	Initial time(sec): ";
+		saveFileSimulationSummary<<initTime;
+		saveFileSimulationSummary<<"	FinalTime time(sec): ";
+		saveFileSimulationSummary<<endTime;
+		saveFileSimulationSummary<<"	ShapeChangeRate(fraction/hr): ";
+		saveFileSimulationSummary<<GrowthRate[0]/dt*3600.0;
+		saveFileSimulationSummary<<"  ";
+		saveFileSimulationSummary<<GrowthRate[1]/dt*3600.0;
+		saveFileSimulationSummary<<"  ";
+		saveFileSimulationSummary<<GrowthRate[2]/dt*3600.0;
+		saveFileSimulationSummary<<endl;
+	}///< The function is to write the growth function summary to simulation summary file
+};
+
 
 class RingGrowthFunction : public GrowthFunctionBase{
 private:

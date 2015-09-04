@@ -18,31 +18,33 @@ using namespace std;
 /*! ModelInputObject class */
 class ModelInputObject {
 private:
-	bool checkFileStatus(ifstream &file, string fileName);
-	bool readPysicalProperties(ifstream &file);
-	bool readSaveOptions(ifstream &file);
-	bool readMeshParameters(ifstream& file);
-	bool readPeripodialMembraneParameters(ifstream& file);
-	bool readNodeFixingParameters(ifstream& file);
-	bool readTimeParameters(ifstream &file);
-	bool readMeshType2(ifstream& file);
-	bool readMeshType4(ifstream& file);
-	bool readGrowthOptions(ifstream& file);
-	bool readGrowthType1(ifstream& file);	//uniform growth
-	bool readGrowthType2(ifstream& file);	//ring type growth
-	bool readGrowthType3(ifstream& file);	//node based growth read from file;
-	bool readShapeChangeOptions(ifstream& file);
-	bool readShapeChangeType1(ifstream& file);
-	bool readStretcherSetup(ifstream& file);
-	bool readPipetteSetup(ifstream& file);
+	bool checkFileStatus(ifstream &file, string fileName); 	///< This function checks the health of given file.
+	bool readPysicalProperties(ifstream &file);				///< This function reads the physical parameters of the tissue from file.
+	bool readSaveOptions(ifstream &file);					///< This function reads the save options of the simulation from file.
+	bool readMeshParameters(ifstream& file);				///< This function reads the mesh structure related parameters of the tissue from file.
+	bool readPeripodialMembraneParameters(ifstream& file);	///< This function reads the peripodial membrane related parameters of the tissue from file.
+	bool readNodeFixingParameters(ifstream& file);			///< This function reads the inputs relating to fixing the nodes of the tissue from file.
+	bool readTimeParameters(ifstream &file);				///< This function reads the time related parameters of the simulation from file.
+	bool readMeshType2(ifstream& file);						///< This function reads the mesh structure details for a mesh input as columns and rows of prisms.
+	bool readMeshType4(ifstream& file);						///< This function reads the mesh structure details for a mesh given as a pre-assembled mesh in a separate input file.
+	bool readGrowthOptions(ifstream& file);					///< This function reads the growth functions and related parameters of the simulation from file.
+	bool readGrowthType1(ifstream& file);					///< This function reads the uniform growth parameters from file (UniformGrowthFunction).
+	bool readGrowthType2(ifstream& file);					///< This function reads the ring growth parameters from file (RingGrowthFunction).
+	bool readGrowthType3(ifstream& file);					///< This function reads the grid based growth parameters from file (GridBasedGrowthFunction). It will utilise a separate input file storing the growth rates.
+	bool readShapeChangeOptions(ifstream& file);			///< This function reads the active shape change functions and related parameters of the simulation from file.
+	bool readShapeChangeType1(ifstream& file);				///< This function reads the shape change  parameters from file (UniformShapeChange).
+	bool readShapeChangeType2(ifstream& file);				///< This function reads the shape change  parameters from file (CircularShapeChange).
+	bool readShapeChangeType3(ifstream& file);				///< This function reads the shape change  parameters from file (GridBasedShapeChange).
+	bool readStretcherSetup(ifstream& file);				///< This function reads the stretcher experimental setup parameters of the simulation from file.
+	bool readPipetteSetup(ifstream& file);					///< This function reads the pipette aspiration experimental setup parameters of the simulation from file.
 public:
 	Simulation* Sim;				///< The pointer to the simulation object, for which the parameters are being read from the modelinput file.
 	const char*  parameterFileName;	///< The name (including path) of the file containing the model input parameters.
 	string meshFileName;			///< The name (including path) of the file containing the input mesh file for tissue geometry.
-	ModelInputObject();
+	ModelInputObject();				///< The constructor of the ModelInputObject.
 	~ModelInputObject();
 
-	bool readParameters();
+	bool readParameters();			///< This is the main funciton reading the parameters from file
 };
 
 #endif /* MODELINPUTOBJECT_H_ */

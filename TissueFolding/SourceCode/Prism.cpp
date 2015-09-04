@@ -21,7 +21,7 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
 
     D = gsl_matrix_calloc(6,6);
 	GrowthRate = new double[3];
-	ShapeChangeRate  = new double[3];
+	ShapeChangeRate  = new double[6];
 	CurrGrowthStrainAddition = new double[6];
 	ApicalNormalForPacking =  new double[3];
 	BasalNormalForPacking =  new double[3];
@@ -93,6 +93,10 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
     gsl_matrix_set_identity(Fg);
     InvFg = gsl_matrix_calloc(3,3);
     gsl_matrix_set_identity(InvFg);
+    Fsc = gsl_matrix_alloc(3,3);
+    gsl_matrix_set_identity(Fsc);
+    InvFsc = gsl_matrix_calloc(3,3);
+    gsl_matrix_set_identity(InvFsc);
     TriPointF = gsl_matrix_calloc(3,3);
     TriPointKe = gsl_matrix_calloc(nDim*nNodes,nDim*nNodes);
 	RotatedElement = false;    
@@ -124,6 +128,8 @@ Prism::~Prism(){
     gsl_matrix_free(CoeffMat);
     gsl_matrix_free(Fg);
     gsl_matrix_free(InvFg);
+    gsl_matrix_free(Fsc);
+    gsl_matrix_free(InvFsc);
     gsl_matrix_free(TriPointF);
     gsl_matrix_free(Strain);
     gsl_matrix_free(RK1Strain);
@@ -405,6 +411,7 @@ void Prism::calculateElementShapeFunctionDerivatives(){
 void Prism::calculateCurrNodalForces(gsl_matrix *currg, gsl_matrix *currF, int pointNo){
     const int n = nNodes;
     const int dim = nDim;
+    gsl_matrix *currFscFe = gsl_matrix_alloc(dim,dim);
     gsl_matrix *currFe = gsl_matrix_alloc(dim,dim);
     gsl_matrix *CurrShape = gsl_matrix_alloc(n,dim);
 
@@ -425,8 +432,11 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currg, gsl_matrix *currF, int p
     //calculating F:
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, Jacobian, InvdXde, 0.0, currF);
 
+
     //calculating Fe:
-    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currF, InvFg, 0.0, currFe);
+    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currF, InvFg, 0.0, currFscFe);	///< Removing growth
+    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currFscFe, InvFsc, 0.0, currFe);	///< Removing shape change
+
     //cout<<"Element: "<<Id<<endl;
     //displayMatrix(Fg, "Fg");
     //displayMatrix(currFe, "Fe");
@@ -493,11 +503,13 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currg, gsl_matrix *currF, int p
 */
     //freeing the matrices allocated in this function
     gsl_matrix_free(currFeT);
+    gsl_matrix_free(currFscFe);
     gsl_matrix_free(E);
     gsl_matrix_free(S);
     gsl_matrix_free(compactStress);
     gsl_matrix_free(InvJacobianStack);
     gsl_matrix_free(currBT);
+
     //cout<<"Finished calculate nodel forces"<<endl;
 }
 

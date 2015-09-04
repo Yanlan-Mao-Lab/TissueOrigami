@@ -2423,8 +2423,8 @@ bool Simulation::addPeripodialMembraneToTissue(){
 
 
 void Simulation::runOneStep(){
-    //cout<<"entered run one step"<<endl;
-    manualPerturbationToInitialSetup(true,false); //bool deform, bool rotate
+    cout<<"entered run one step"<<endl;
+    manualPerturbationToInitialSetup(false,false); //bool deform, bool rotate
     cleanGrowthData();
     resetForces();
     int freq = 10.0/dt ;
@@ -2445,11 +2445,13 @@ void Simulation::runOneStep(){
         }
         //outputFile<<"calculating growth"<<endl;
         calculateGrowth();
+        calculateShapeChange();
     }
     int nElement = Elements.size();
     for (int i=0; i<nElement; ++i){
         if (!Elements[i]->IsAblated){
             Elements[i]->growShapeByFg(dt);
+            Elements[i]->changeShapeByFsc(dt);
         }
     }
     updateNodeMasses();
@@ -2462,7 +2464,7 @@ void Simulation::runOneStep(){
         updateStepNR();
     }
     processDisplayDataAndSave();
-    //cout<<"finalised run one step"<<endl;
+    cout<<"finalised run one step"<<endl;
     calculateColumnarLayerBoundingBox();
     //cout<<" step: "<<timestep<<" Pressure: "<<SuctionPressure[2]<<" Pa, maximum z-height: "<<boundingBox[1][2]<<" L/a: "<<(boundingBox[1][2]-50)/(2.0*pipetteRadius)<<endl;
     timestep++;
@@ -4049,6 +4051,17 @@ void Simulation::calculateGrowth(){
 	}
 	//calculateGrowthGridBased();
 }
+
+void Simulation::calculateShapeChange(){
+	cleanUpShapeChangeRates();
+	for (int i=0; i<nShapeChangeFunctions; ++i){
+		if (GrowthFunctions[i]->Type == 1){
+			//cout<<"Calculating Uniform Growth"<<endl;
+			calculateShapeChangeUniform(ShapeChangeFunctions[i]);
+		}
+	}
+}
+
 /*
 void Simulation::changeCellShapesInSystem(){
 	int currIndexForParameters = 0;
@@ -4072,7 +4085,40 @@ void Simulation::cleanUpGrowthRates(){
 void Simulation::cleanUpShapeChangeRates(){
 	int  n = Elements.size();
 	for ( int i = 0; i < n; ++i ){
-		Elements[i]->setShapeChangeRate(0.0,0.0,0.0);
+		Elements[i]->setShapeChangeRate(0.0,0.0,0.0,0.0,0.0,0.0);
+	}
+}
+
+void Simulation::calculateShapeChangeUniform (GrowthFunctionBase* currSCF){
+	float simTime = dt*timestep;
+	if(simTime >= currSCF->initTime && simTime < currSCF->endTime ){
+		//cout<<"calculating shape change uniform"<<endl;
+		double *maxValues;
+        maxValues = new double[3];
+        currSCF->getGrowthRate(maxValues);
+		int  n = Elements.size();
+		for ( int i = 0; i < n; ++i ){
+			//tissue type == 0 is columnar layer, ==1 is peripodial membrane, ==2 id linker zone
+			if ( currSCF->applyToColumnarLayer){
+				if (Elements[i]->tissueType == 0){ //columnar layer, grow directly
+					Elements[i]->updateShapeChangeRate(maxValues[0],maxValues[1],maxValues[2],0,0,0);
+				}
+				else if (Elements[i]->tissueType == 2){ //Linker zone, need to weight the growth
+					double weight = Elements[i]->getColumnarness();
+					Elements[i]->updateShapeChangeRate(weight*maxValues[0],weight*maxValues[1],weight*maxValues[2],0,0,0);
+				}
+			}
+			if ( currSCF->applyToPeripodialMembrane){
+				if (Elements[i]->tissueType == 1){ //peripodial membrane, grow directly
+					Elements[i]->updateShapeChangeRate(maxValues[0],maxValues[1],maxValues[2],0,0,0);
+				}
+				else if (Elements[i]->tissueType == 2){ //Linker zone, need to weight the growth
+					double weight = Elements[i]->getPeripodialness();
+					Elements[i]->updateShapeChangeRate(weight*maxValues[0],weight*maxValues[1],weight*maxValues[2],0,0,0);
+				}
+			}
+		}
+		delete[] maxValues;
 	}
 }
 

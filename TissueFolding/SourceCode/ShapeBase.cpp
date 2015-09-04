@@ -481,11 +481,44 @@ void 	ShapeBase::updateGrowthToAdd(double* growthscale){
 	}
 }
 
+void 	ShapeBase::changeShapeByFsc(double dt){
+    gsl_matrix* FscIncrement = gsl_matrix_calloc(nDim,nDim); ///< The increment of shape change that will be induced this step
+    if (rotatedGrowth){
+    	double rTemp[3] = {0.0,0.0,0.0};
+		for (int i = 0; i<3; ++i){
+			rTemp[i] = gsl_matrix_get(GrowthStrainsRotMat,i,0)*ShapeChangeRate[0]+gsl_matrix_get(GrowthStrainsRotMat,i,1)*ShapeChangeRate[1]+gsl_matrix_get(GrowthStrainsRotMat,i,2)*ShapeChangeRate[2];
+			if ( (ShapeChangeRate[i] <0 && rTemp[i] >0.0 ) || (ShapeChangeRate[i] >0 && rTemp[i] < 0.0) ){
+				rTemp[i] *= -1.0;
+			}
+		}
+		for (int i = 0; i<3; ++i){
+			ShapeChangeRate[i] = rTemp[i];
+		}
+	}
+    for (int i=0; i<3 ;++i){
+    	gsl_matrix_set(FscIncrement,i,i, exp(ShapeChangeRate[i]*dt));
+    }
+    gsl_matrix* temp1 = gsl_matrix_calloc(nDim,nDim);
+	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, FscIncrement, Fsc, 0.0, temp1);
+	gsl_matrix_memcpy(Fsc, temp1);
+	gsl_matrix * tmpFscForInversion = gsl_matrix_calloc(nDim,nDim);
+	createMatrixCopy(tmpFscForInversion,Fsc);
+	bool inverted = InvertMatrix(tmpFscForInversion, InvFsc);
+	if (!inverted){
+		cerr<<"Fsc not inverted!!"<<endl;
+	}
+	//double detFsc = determinant3by3Matrix(Fsc);
+	//freeing matrices allocated in this function
+	gsl_matrix_free(FscIncrement);
+	gsl_matrix_free(temp1);
+	gsl_matrix_free(tmpFscForInversion);
+}
+
 void 	ShapeBase::growShapeByFg(double dt){
     gsl_matrix* FgIncrement = gsl_matrix_calloc(nDim,nDim);
     //I need to rotate the growth rate vector, not the growth increment matrix!
-    //When rate is zero, the gorwth incremetn vector should be identity.
-    //Such tat the total growth gradient (Fg) will stay the same.
+    //When rate is zero, the growth increment vector should be identity.
+    //Such that the total growth gradient (Fg) will stay the same.
     //If you rotate a zero growth increment, then it is not identity anymore!
     if (rotatedGrowth){
         double rTemp[3] = {0.0,0.0,0.0};
@@ -1451,16 +1484,28 @@ void 	ShapeBase::setGrowthRate(double x, double y, double z){
 	GrowthRate[2] = z;
 }
 
-void 	ShapeBase::setShapeChangeRate(double x, double y, double z){
+void 	ShapeBase::setShapeChangeRate(double x, double y, double z, double xy, double yz, double xz){
 	ShapeChangeRate[0] = x;
 	ShapeChangeRate[1] = y;
 	ShapeChangeRate[2] = z;
+	ShapeChangeRate[3] = xy;
+	ShapeChangeRate[4] = yz;
+	ShapeChangeRate[5] = xz;
 }
 
 void 	ShapeBase::updateGrowthRate(double growthx, double growthy, double growthz){
     GrowthRate[0] += growthx;
     GrowthRate[1] += growthy;
     GrowthRate[2] += growthz;
+}
+
+void 	ShapeBase::updateShapeChangeRate(double x, double y, double z, double xy, double yz, double xz){
+	ShapeChangeRate[0] += x;
+	ShapeChangeRate[1] += y;
+	ShapeChangeRate[2] += z;
+	ShapeChangeRate[3] += xy;
+	ShapeChangeRate[4] += yz;
+	ShapeChangeRate[5] += xz;
 }
 
 bool 	ShapeBase::InvertMatrix(gsl_matrix* input, gsl_matrix* inverse){

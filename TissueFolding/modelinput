@@ -1,6 +1,6 @@
 InputMeshParameters:
   MeshInputMode(int-seeDocumentation): 4
-  MeshFile(full-path):   /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Wind48hr_06.mesh
+  MeshFile(full-path):   /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Wind48hr_04.mesh
 
 PeripodialMembraneParameters:
   AddPeripodialMembrane: 1
@@ -18,8 +18,8 @@ NodeFixingOptions:
   CircumferenceFix(bool-x,y,z): 0 0 0
 
 TimeParameters:
-  TimeStep(sec): 1200
-  SimulationLength(sec): 90000
+  TimeStep(sec): 600
+  SimulationLength(sec): 90001
 
 PysicalProperties:
   YoungsModulusApical: 1000.0	YoungsModulusBasal: 1000.0	YoungsModulusMid: 1000.0	Noise(%-int): 0
@@ -30,8 +30,8 @@ PysicalProperties:
 SaveOptions:
   SaveImages(bool): 1
   SaveData(bool):   1
-  ImageSaveInterval(sec): 300
-  DataSaveInterval(sec):  300
+  ImageSaveInterval(sec): 600
+  DataSaveInterval(sec):  600
 
 GrowthOptions:
   NumberofGrowthFunctions(int): 4
@@ -67,24 +67,15 @@ GrowthOptions:
   Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/PeripodialGrowthRate48-72
 
 ShapeChangeOptions:
-  NumberofShapeChangeFunctions(int): 2
+  NumberofShapeChangeFunctions(int): 1
   ShapeChangeFunctionType(int-seeDocumentation): 1
-  InitialTime(sec): 1000000
-  FinalTime(sec):  900
-  Centre:  2.0 0.0
-  InnerRadius:  0.0
-  OuterRadius:  1.0
-  AxisOfEffect(DV,AP,AB,DVAP,DVAB,APAB):  AB 
-  MaxValue(fractionPerHour): -41.7
+  InitialTime(sec): 0
+  FinalTime(sec):  86400
+  ApplyToColumnarLayer(bool): 0
+  ApplyToPeripodialMembrane(bool): 1
+  MaxValue(fractionPerHour): 0.0375
 
-  ShapeChangeFunctionType(int-seeDocumentation): 1
-  InitialTime(sec): 10000000
-  FinalTime(sec):  900
-  Centre:  51 0.0
-  InnerRadius:  35.0
-  OuterRadius:  39.0
-  AxisOfEffect(DV,AP,AB,DVAP,DVAB,APAB):  AB 
-  MaxValue(fractionPerHour): -1.0
+
 
 Stretcher:
   StretcherAttached(bool): 0

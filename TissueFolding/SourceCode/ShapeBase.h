@@ -108,8 +108,10 @@ protected:
 
 	double E, v;
     double lambda, mu;
-    gsl_matrix* Fg;
-    gsl_matrix* InvFg;
+    gsl_matrix* Fg;			///< Growth matrix
+    gsl_matrix* InvFg;		///< Inverse of growth matrix
+    gsl_matrix* Fsc;		///< Shape change matrix
+    gsl_matrix* InvFsc;		///< Inverse of shape change matrix
     gsl_matrix* TriPointF;
     gsl_matrix* TriPointKe;
 
@@ -177,6 +179,7 @@ public:
 	virtual void calculateBasalNormal(double * normal){ParentErrorMessage("calculateBasalNormal");};
 	virtual void AlignReferenceBaseNormalToZ(){ParentErrorMessage("AlignReferenceBaseNormalToZ");};
 	void 	updateGrowthRate(double scalex, double scaley, double scalez);
+	void 	updateShapeChangeRate(double x, double y, double z, double xy, double yz, double xz);
 	virtual void calculateReferenceStiffnessMatrix(){ParentErrorMessage("calculateReferenceStiffnessMatrix");};
     virtual void calculateElementShapeFunctionDerivatives(){ParentErrorMessage("calculateReferenceStiffnessMatrix");};
     virtual void calculateCurrNodalForces(gsl_matrix *gslcurrg, gsl_matrix *gslcurrF, int pointNo){ParentErrorMessage("gslcalculateCurrNodalForces");};
@@ -185,7 +188,7 @@ public:
     void 	calculateForces(int RKId, double ***SystemForces, vector <Node*>& Nodes, ofstream& outputFile);
     void 	updatePositions(int RKId, vector<Node*>& Nodes);
 	void 	setGrowthRate(double x, double y, double z);
-	void 	setShapeChangeRate(double x, double y, double z);
+	void 	setShapeChangeRate(double x, double y, double z, double xy, double yz, double xz);
 	void 	updateGrowthToAdd(double* growthscale);
 	void 	updateElementVolumesAndTissuePlacementsForSave(vector<Node*>& Nodes);
 	bool 	readNodeIdData(ifstream& file);
@@ -219,8 +222,9 @@ public:
 	void	constructRotationMatrix(double c, double s, double* rotAx, double* rotMat);
 	void	rotateVectorByRotationMatrix(double* u,double* rotMat);
 
+	void    CalculateGrowthRotationByF();
     void 	growShapeByFg(double dt);
-    void    CalculateGrowthRotationByF();
+    void 	changeShapeByFsc(double dt);
 
 	virtual double getApicalSideLengthAverage(){return ParentErrorMessage("getApicalSideLengthAverage",0.0);};
 	virtual void getApicalTriangles(vector <int> &ApicalTriangles){ParentErrorMessage("getApicalTriangles");};

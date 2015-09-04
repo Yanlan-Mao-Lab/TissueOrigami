@@ -26,15 +26,24 @@ ModelInputObject::~ModelInputObject(){
 };
 
 bool ModelInputObject::readParameters(){
+	/**
+	 *  This function will read all available model inputs from the file ModelInputObject#parameterFileName. \n
+	 *  It will start by opening the model input file, after each attempt to open a file, there will be a health check to ensure the file
+	 *  could be opened. In case there are issues with the file (most common one being the file is not opened due to a path error),
+	 *  the function will throw an error with corresponding explanatory error message, and quit the simulation.
+	 */
 	bool Success = true;
 	ifstream parametersFile;
-	//const char* name_parametersFile = parameterFileName.c_str();
-	//parametersFile.open(name_parametersFile, ifstream::in);
 	parametersFile.open(parameterFileName, ifstream::in);
 	Success = checkFileStatus(parametersFile,parameterFileName);
 	if (!Success){
 		return Success;
 	}
+	/**
+	 *  After successfully opening the input file, the function will read it until it reaches to the end of the file.
+	 *  This will involve a series of private functions, which are thoroughly documented in source code, while
+	 *  the processed documentation may or may not be available in this user interface documentation structure.
+	 */
 	while (!parametersFile.eof()){
 		string currline;
 		getline(parametersFile,currline);
@@ -51,37 +60,75 @@ bool ModelInputObject::readParameters(){
 				//and thus, currline is not technically empty, while the line is still empty
 				continue;
 			}
+			/**
+			 * Depending on the header the function it encounters it will read:
+			 */
 			if(currParameterHeader == "InputMeshParameters:"){
+				/**
+				 * Mesh geometry related parameters through the private function ModelInputObject#readMeshParameters
+				 */
 				Success  = readMeshParameters(parametersFile);
 			}
 			else if(currParameterHeader == "PeripodialMembraneParameters:"){
+				/**
+				 * Peripodial membrane structure related parameters through the private function ModelInputObject#readPeripodialMembraneParameters
+				 */
 				Success  = readPeripodialMembraneParameters(parametersFile);
 			}
 			else if(currParameterHeader == "NodeFixingOptions:"){
+				/**
+				 * Inputs relating to fixing the nodes of the tissue through the private function ModelInputObject#readNodeFixingParameters
+				 */
 				Success  = readNodeFixingParameters(parametersFile);
 			}
 			else if(currParameterHeader == "TimeParameters:"){
+				/**
+				 * Simulation time and time step related parameters through the private function ModelInputObject#readTimeParameters
+				 */
 				Success  = readTimeParameters(parametersFile);
 			}
 			else if(currParameterHeader == "PysicalProperties:"){
+				/**
+				 * Physical parameters of the tissue  through the private function ModelInputObject#readPysicalProperties
+				 */
 				Success  = readPysicalProperties(parametersFile);
 			}
 			else if (currParameterHeader == "SaveOptions:"){
+				/**
+				 * Save options of the simulation through the private function ModelInputObject#readSaveOptions
+				 */
 				Success  = readSaveOptions(parametersFile);
 			}
 			else if (currParameterHeader == "GrowthOptions:"){
+				/**
+				 * Growth functions and related parameters of the simulation through the private function ModelInputObject#readGrowthOptions
+				 */
 				Success  = readGrowthOptions(parametersFile);
 			}
 			else if(currParameterHeader == "ShapeChangeOptions:"){
+				/**
+				 * Shape change functions and related parameters of the simulation through the private function ModelInputObject#readShapeChangeOptions
+				 */
 				Success  = readShapeChangeOptions(parametersFile);
 			}
 			else if(currParameterHeader == "Stretcher:"){
+				/**
+				 * Stretcher experimental setup parameters of the simulation through the private function ModelInputObject#readStretcherSetup
+				 */
 				Success  = readStretcherSetup(parametersFile);
 			}
 			else if(currParameterHeader == "Pipette_Aspiration:"){
+				/**
+				 * Pipette aspiration experimental setup parameters of the simulation through the private function ModelInputObject#readPipetteSetup
+				 */
 				Success  = readPipetteSetup(parametersFile);
 			}
 			else {
+				/**
+				 * In the case that the function, or any of the above listed parameter reading functions, encounters an
+				 * unexpected line in the model input file, it will throw an error with a corresponding explanatory message,
+				 * and quit the simulation.
+				 */
 				cerr<<"Unidentified parameter input line: "<<endl;
 				cerr<<"		"<<currParameterHeader<<endl;
 				return false;
@@ -126,7 +173,6 @@ bool ModelInputObject::readGrowthOptions(ifstream& file){
 		cout<<"inside the loop, read growth options, current header: "<<currHeader<<endl;
 		if(currHeader == "GrowthFunctionType(int-seeDocumentation):"){
 			file >> type;
-			//Sim->GrowthFunctionTypes.push_back(type);
 		}
 		else{
 			cerr<<"Error in reading growth type, curr string: "<<currHeader<<", should have been: GrowthFunctionType(int-seeDocumentation):" <<endl;
@@ -175,7 +221,7 @@ bool ModelInputObject::readGrowthType1(ifstream& file){
 	file >> currHeader;
 	if(currHeader == "FinalTime(sec):"){
 		file >> finaltime;
-		Sim->GrowthParameters.push_back(finaltime);
+		//Sim->GrowthParameters.push_back(finaltime);
 	}
 	else{
 		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: FinalTime(sec):" <<endl;
@@ -199,13 +245,13 @@ bool ModelInputObject::readGrowthType1(ifstream& file){
 	}
 	file >> currHeader;
 	if(currHeader == "MaxValue(fractionPerHour-DV,AP,AB):"){
-		double divider = (60*60/Sim->dt);
+		double timeMultiplier = 1.0 / 3600.0;
 		file >> DVRate;
-		DVRate /= divider;
+		DVRate *= timeMultiplier;
 		file >> APRate;
-		APRate /= divider;
+		APRate *= timeMultiplier;
 		file >> ABRate;
-		ABRate /= divider;
+		ABRate *= timeMultiplier;
 	}
 	else{
 		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: MaxValue(fractionPerHour-xyz):" <<endl;
@@ -290,13 +336,13 @@ bool ModelInputObject::readGrowthType2(ifstream& file){
 	}
 	file >> currHeader;
 	if(currHeader == "MaxValue(fractionPerHour-DV,AP,AB):"){
-		double divider = (60*60/Sim->dt);
+		double timeMultiplier = 1.0 / 3600.0;
 		file >> DVRate;
-		DVRate /= divider;
+		DVRate *= timeMultiplier;
 		file >> APRate;
-		APRate /= divider;
+		APRate *= timeMultiplier;
 		file >> ABRate;
-		ABRate /= divider;
+		ABRate *= timeMultiplier;
 	}
 	else{
 		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: MaxValue(fractionPerHour-DV,AP,AB):" <<endl;
@@ -829,10 +875,9 @@ bool ModelInputObject::readShapeChangeOptions(ifstream& file){
 	for (int i = 0; i<n; ++i){
 		file >> currHeader;
 		int type;
-		cout<<"inside the loop, read shape change options, current header: "<<currHeader<<endl;
+		//cout<<"inside the loop, read shape change options, current header: "<<currHeader<<endl;
 		if(currHeader == "ShapeChangeFunctionType(int-seeDocumentation):"){
 			file >> type;
-			Sim->ShapeChangeFunctionTypes.push_back(type);
 		}
 		else{
 			cerr<<"Error in reading shpae change type, curr string: "<<currHeader<<", should have been: ShapeChangeFunctionType(int-seeDocumentation):" <<endl;
@@ -851,110 +896,67 @@ bool ModelInputObject::readShapeChangeOptions(ifstream& file){
 	}
 	return true;
 }
-
 bool ModelInputObject::readShapeChangeType1(ifstream& file){
 	string currHeader;
 	file >> currHeader;
-	cout<<"entered read shape change type 1, current header: "<<currHeader<<endl;
+	cout<<"entered read shape chenage type 1, current header: "<<currHeader<<endl;
+	float initialtime;
+	float finaltime;
+	bool applyToColumnarLayer = false;
+	bool applyToPeripodialMembrane = false;
+	float Rate;
 	if(currHeader == "InitialTime(sec):"){
-		float initialtime;
 		file >> initialtime;
-		Sim->ShapeChangeParameters.push_back(initialtime);
 	}
 	else{
-		cerr<<"Error in reading shape chenage options, curr string: "<<currHeader<<", should have been: InitialTime(sec):" <<endl;
+		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: InitialTime(sec):" <<endl;
 		return false;
 	}
 	file >> currHeader;
 	if(currHeader == "FinalTime(sec):"){
-		float finaltime;
 		file >> finaltime;
-		Sim->ShapeChangeParameters.push_back(finaltime);
+		//Sim->GrowthParameters.push_back(finaltime);
 	}
 	else{
 		cerr<<"Error in reading shape change options, curr string: "<<currHeader<<", should have been: FinalTime(sec):" <<endl;
 		return false;
 	}
 	file >> currHeader;
-	if(currHeader == "Centre:"){
-		float x,y;
-		file >> x;
-		file >> y;
-		Sim->ShapeChangeParameters.push_back(x);
-		Sim->ShapeChangeParameters.push_back(y);
+	if(currHeader == "ApplyToColumnarLayer(bool):"){
+			file >> applyToColumnarLayer;
 	}
 	else{
-		cerr<<"Error in reading shape chenge options, curr string: "<<currHeader<<", should have been: Centre:" <<endl;
+		cerr<<"Error in reading shape change options, curr string: "<<currHeader<<", should have been: ApplyToColumnarLayer(bool):" <<endl;
 		return false;
 	}
 	file >> currHeader;
-	if(currHeader == "InnerRadius:"){
-		float innerR;
-		file >> innerR;
-		Sim->ShapeChangeParameters.push_back(innerR);
+	if(currHeader == "ApplyToPeripodialMembrane(bool):"){
+			file >> applyToPeripodialMembrane;
 	}
 	else{
-		cerr<<"Error in reading shpae change options, curr string: "<<currHeader<<", should have been: Radius:" <<endl;
+		cerr<<"Error in reading shape chenage options, curr string: "<<currHeader<<", should have been: ApplyToPeripodialMembrane(bool):" <<endl;
 		return false;
 	}
-	file >> currHeader;
-	if(currHeader == "OuterRadius:"){
-		float outerR;
-		file >> outerR;
-		Sim->ShapeChangeParameters.push_back(outerR);
-	}
-	else{
-		cerr<<"Error in reading shape change options, curr string: "<<currHeader<<", should have been: Radius:" <<endl;
-		return false;
-	}
-	file >> currHeader;
-	if(currHeader == "AxisOfEffect(DV,AP,AB,DVAP,DVAB,APAB):"){
-		string axisOfEffect;
-		file >>  axisOfEffect;
-		int axis;
-		if ( axisOfEffect == "DV"){
-			axis = 0;
-		}
-		else if ( axisOfEffect == "AP"){
-			axis = 1;
-		}
-		else if ( axisOfEffect == "AB"){
-			axis = 2;
-		}
-		else if ( axisOfEffect == "DVAP"){
-			axis = 3;
-		}
-		else if ( axisOfEffect == "DVAB"){
-			axis = 4;
-		}
-		else if ( axisOfEffect == "APAB"){
-			axis = 5;
-		}
-		else {
-			cerr<<"Error in reading shape change axis, the options are {DV,AP,AB,DVAP,DVAB,APAB}, current input: "<<axisOfEffect<<endl;
-			return false;
-		}
-		Sim->ShapeChangeParameters.push_back(axis);
-	}
-	else{
-		cerr<<"Error in reading shape change options, curr string: "<<currHeader<<", should have been: AxisOfEffect(x,y,z,xy,xz,yz):" <<endl;
-		return false;
-	}
-
 	file >> currHeader;
 	if(currHeader == "MaxValue(fractionPerHour):"){
-		float maxRate;
-		//reading the rate in x,y,z dimensions from input file
-		file >> maxRate;
-		//converting the rate input as fraction per hour, into fraction per time step:
-		maxRate /= (60*60/Sim->dt);
-		cout<<"maxRate: "<<maxRate<<endl;
-		Sim->ShapeChangeParameters.push_back(maxRate);
+		double timeMultiplier = 1.0 / 3600.0;
+		file >> Rate;
+		Rate  *= timeMultiplier;
 	}
 	else{
 		cerr<<"Error in reading shape change options, curr string: "<<currHeader<<", should have been: MaxValue(fractionPerHour-xyz):" <<endl;
 		return false;
 	}
+	cerr<<"Shape change of type : 1, from time: "<<initialtime<<" to "<<finaltime<<" applicable to (C, P) "<<applyToColumnarLayer <<" "<<applyToPeripodialMembrane<<" Rate: "<<Rate<<endl;
+	GrowthFunctionBase* GSBp;
+	int Id = Sim->ShapeChangeFunctions.size();
+	//type is 1
+	GSBp = new UniformShapeChangeFunction(Id, 1, initialtime, finaltime, applyToColumnarLayer, applyToPeripodialMembrane, 1, Rate);
+	Sim->ShapeChangeFunctions.push_back(GSBp);
+	return true;
+}
+
+bool ModelInputObject::readShapeChangeType2(ifstream& file){
 	return true;
 }
 
