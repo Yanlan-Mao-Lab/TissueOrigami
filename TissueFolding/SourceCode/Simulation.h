@@ -12,6 +12,7 @@
 #include "Node.h"
 #include "GrowthFunctionBase.h"
 #include "GrowthFunctionTypes.h"
+#include "MyosinFunction.h"
 
 class ModelInputObject;
 using namespace std;
@@ -37,7 +38,7 @@ private:
 	bool ForcesSaved;
 	bool VelocitiesSaved;
 	int	 nCircumferencialNodes;
-	int dorsalTipIndex,ventralTipIndex;
+	int dorsalTipIndex,ventralTipIndex,anteriorTipIndex,posteriorTipIndex;
 	double StretchVelocity;
 	double BoundingBoxSize[3];
 	bool ContinueFromSave;
@@ -100,7 +101,7 @@ private:
 	void constructTriangleCornerListOfApicalSurface( vector< vector<int> > &TriangleList);
 	void addCapPeripodialElements( vector< vector<int> > &TriangleList, vector< vector<int> > &PeripodialCapNodeArray, int peripodialHeightDiscretisationLayers);
 	void correctCircumferentialNodeAssignment(vector< vector<int> > OuterNodeArray);
-	void assignDVTips();
+	void assignTips();
 
 	void initiateSinglePrismNodes(float zHeight);
 	void initiateSinglePrismElement();
@@ -131,6 +132,7 @@ private:
 	void writeSimulationSummary();
 	void writeMeshFileSummary();
 	void writeGrowthRatesSummary();
+	void writeMyosinSummary();
 	void writeSaveFileStepHeader();
 	void writeNodes();
 	void writeElements();
@@ -139,6 +141,10 @@ private:
     void writeGrowth();
 	void writeForces();
 	void writeVelocities();
+	void calculateMyosinForces();
+	void cleanUpMyosinForces();
+	void checkForMyosinUpdates();
+	void updateEquilibriumMyosinsFromInputSignal(MyosinFunction* currMF);
 	void calculateGrowth();
 	void calculateShapeChange();
 	void cleanUpGrowthRates();
@@ -155,6 +161,7 @@ private:
 	void addStretchForces(int RKId);
 	void setupPipetteExperiment();
     void addPipetteForces(gsl_matrix *gExt);
+    void addMyosinForces(gsl_matrix* gExt);
 	void laserAblate(double OriginX, double OriginY, double Radius);
 	void fillInNodeNeighbourhood();
 	void updateElementVolumesAndTissuePlacements();
@@ -206,6 +213,11 @@ public:
 
 	int nShapeChangeFunctions;
 	vector<GrowthFunctionBase*> ShapeChangeFunctions;
+
+	int nMyosinFunctions;
+	vector<MyosinFunction*> myosinFunctions;
+	double kMyo;
+	double forcePerMyoMolecule;
 
 	vector <Node*> Nodes;
 	vector <ShapeBase*> Elements;
@@ -282,6 +294,8 @@ public:
 	bool initiateSavedSystem();
 	void updateOneStepFromSave();
 	void alignTissueDVToXPositive();
+	void alignTissueAPToXYPlane();
+	void wrapUpAtTheEndOfSimulation();
 	void calculateDVDistance();
 	void TissueAxisPositionDisplay();
 	void coordinateDisplay();

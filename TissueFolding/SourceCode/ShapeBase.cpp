@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_blas.h>
+#include <gsl/gsl_math.h>
 
 
 
@@ -535,18 +536,14 @@ void 	ShapeBase::growShapeByFg(double dt){
     for (int i=0; i<3 ;++i){
         gsl_matrix_set(FgIncrement,i,i, exp(GrowthRate[i]*dt));
     }
+    //bibap
+    //cout<<"inside Fg, Id : "<<Id<<endl;
+    //gsl_matrix_set(FgIncrement,0,1, M_PI/12.0);
+    //gsl_matrix_set(FgIncrement,1,0, M_PI/12.0);
     gsl_matrix* temp1 = gsl_matrix_calloc(nDim,nDim);
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, FgIncrement, Fg, 0.0, temp1);
     gsl_matrix_memcpy(Fg, temp1);
-    //gsl_matrix_set_identity(Fg);
-    //gsl_matrix_set(Fg,2,2,1.3); //double in z
-    //gsl_matrix_set(Fg,1,2,1.1);
-    /*if (Id == 27 || Id ==40){
-		cout<<"Element: "<<Id<<endl;
-		cout<<"Growth rate: "<<GrowthRate[0]<<" "<<GrowthRate[1]<<" "<<GrowthRate[2]<<endl;
-		displayMatrix(FgIncrement,"FgIncrement");
-		displayMatrix(Fg,"Fg");
-    }*/
+
     gsl_matrix * tmpFgForInversion = gsl_matrix_calloc(nDim,nDim);
     createMatrixCopy(tmpFgForInversion,Fg);
 
@@ -1484,6 +1481,132 @@ void 	ShapeBase::setGrowthRate(double x, double y, double z){
 	GrowthRate[2] = z;
 }
 
+void 	ShapeBase::cleanMyosinForce(){
+	for (int i=0; i<nNodes; ++i){
+		MyoForce[i][0] = 0;
+		MyoForce[i][1] = 0;
+		MyoForce[i][2] = 0;
+	}
+}
+double ShapeBase::getCmyosinUniformForNode (int TissuePlacement){
+	if(TissuePlacement == 1) {	//apical node
+		return cMyoUniform[0];
+	}
+	if(TissuePlacement == 0) {	//basal node
+		return cMyoUniform[1];
+	}
+	return 0.0;
+}
+
+double ShapeBase::getCmyosinUnipolarForNode (int TissuePlacement){
+	if(TissuePlacement == 1) {
+		return cMyoUnipolar[0];
+	}
+	if(TissuePlacement == 0) {
+		return cMyoUnipolar[1];
+	}
+	return 0.0;
+}
+
+
+void	ShapeBase::updateUniformEquilibriumMyosinConcentration(bool isApical, double cEqUniform){
+	if (isApical){
+		cMyoUniformEq[0] = cEqUniform;
+	}
+	else{
+		cMyoUniformEq[1] = cEqUniform;
+	}
+}
+
+void	ShapeBase::updateUnpolarEquilibriumMyosinConcentration(bool isApical, double cEqUnipolar, double orientationX, double orientationY){
+	int indice = 1;
+	if (isApical){
+		indice = 0;
+	}
+	cMyoUnipolarEq[indice] = cEqUnipolar;
+	gsl_matrix_set(myoPolarityDir,indice,0,orientationX);
+	gsl_matrix_set(myoPolarityDir,indice,1,orientationY);
+	gsl_matrix_set(myoPolarityDir,indice,2,0.0);
+}
+
+void	ShapeBase::updateMyosinConcentration(double dt, double kMyo){
+	gsl_matrix_set(myoPolarityDir,0,0,1.0);
+	gsl_matrix_set(myoPolarityDir,0,1,0.0);
+	gsl_matrix_set(myoPolarityDir,0,2,0.0);
+	double thresholdValue = 1E-8, thresholdFraction= 0.01;
+	//the value of kMyo is taken form my thesis
+	double currMyoDt[3] = {dt,dt*2.0,dt/2.0};
+	double cFinal[3];
+	//First value is the final value with the current time step,
+	//second is with currTimeStep*2 and
+	//third is with 0.5 currTimeStep;
+	double cInitial, cEq;
+	for (int myoIter =0; myoIter<4; myoIter++){
+		if (myoIter == 0){
+			cInitial = cMyoUniform[0];
+			cEq = cMyoUniformEq[0];
+		}
+		else if (myoIter == 1){
+			cInitial = cMyoUniform[1];
+			cEq = cMyoUniformEq[1];
+		}
+		else if (myoIter == 2){
+			cInitial = cMyoUnipolar[0];
+			cEq = cMyoUnipolarEq[0];
+		}
+		else if (myoIter == 3){
+			cInitial = cMyoUnipolar[1];
+			cEq = cMyoUnipolarEq[1];
+		}
+		bool converged = false;
+		while (!converged){
+			int steps[3] = {dt/currMyoDt[0],dt/currMyoDt[1],dt/currMyoDt[2]};
+			//cout<<"steps: "<<steps[0]<<" "<<steps[1]<<" "<<steps[2]<<" currMyoDt: "<<currMyoDt[0]<<" "<<currMyoDt[1]<<" "<<currMyoDt[2]<<endl;
+			for (int j=0; j<3; ++j){
+				cFinal[j] = cInitial;
+				for (int i =0 ;i<steps[j]; ++i){
+					cFinal[j] += (cEq - cFinal[j])*kMyo*currMyoDt[j];
+				}
+			}
+			//check if the value of the current dt and half current dt are below the threshold:
+			//cout<<"cFinal: "<<cFinal[0]<<" "<<cFinal[1]<<" "<<cFinal[2]<<endl;
+			double diff = fabs((cFinal[0] - cFinal[2]));
+			//cout<<" diff is : "<<diff<<" threshold is :"<<thresholdValue<<endl;
+			if ( diff < thresholdValue ){
+				converged = true;
+				//cout<<"converged by difference"<<endl;
+			}
+			else if( fabs(diff / cFinal[2]) < thresholdFraction){
+				converged = true;
+				//cout<<"converged by fraction"<<endl;
+			}
+			else{
+				currMyoDt[1] = currMyoDt[0];
+				currMyoDt[0] = currMyoDt[2];
+				currMyoDt[2] *= 0.5;
+				//cout<<"updated currMyoDt: "<<currMyoDt[0]<<" "<<currMyoDt[1]<<" "<<currMyoDt[2]<<endl;
+			}
+			//need to implement increasing this
+		}
+		if (myoIter == 0){
+			cMyoUniform[0] = cFinal[2];
+		}
+		else if (myoIter == 1){
+			cMyoUniform[1] = cFinal[2];
+		}
+		else if (myoIter == 2){
+			cMyoUnipolar[0] = cFinal[2];
+		}
+		else if (myoIter == 3){
+			cMyoUnipolar[1] = cFinal[2];
+		}
+	}
+	if (Id ==0){
+		cout<<"Element: "<<Id<<" cMyo:   "<<cMyoUniform[0] <<" "<<cMyoUniform[1]<<" "<<cMyoUnipolar[0] << " "<<cMyoUnipolar[1]<<endl;
+		cout<<"Element: "<<Id<<" cMyoEq: "<<cMyoUniformEq[0] <<" "<<cMyoUniformEq[1]<<" "<<cMyoUnipolarEq[0] << " "<<cMyoUnipolarEq[1]<<endl;
+	}
+}
+
 void 	ShapeBase::setShapeChangeRate(double x, double y, double z, double xy, double yz, double xz){
 	ShapeChangeRate[0] = x;
 	ShapeChangeRate[1] = y;
@@ -1562,6 +1685,12 @@ void	ShapeBase::crossProduct3D(double* u, double* v, double* cross){
 	cross[2] = u[0]*v[1] - u[1]*v[0];
 }
 
+void	ShapeBase::crossProduct3D(gsl_vector* u, gsl_vector* v, gsl_vector* cross){
+	gsl_vector_set(cross,0, ( gsl_vector_get(u,1)*gsl_vector_get(v,2) - gsl_vector_get(u,2)*gsl_vector_get(v,1) ) );
+	gsl_vector_set(cross,1, ( gsl_vector_get(u,2)*gsl_vector_get(v,0) - gsl_vector_get(u,0)*gsl_vector_get(v,2) ) );
+	gsl_vector_set(cross,2, ( gsl_vector_get(u,0)*gsl_vector_get(v,1) - gsl_vector_get(u,1)*gsl_vector_get(v,0) ) );
+}
+
 double	ShapeBase::calculateMagnitudeVector3D(double* v){
 	double mag = v[0]*v[0]+v[1]*v[1]+v[2]*v[2];
 	mag = pow(mag,0.5);
@@ -1576,6 +1705,24 @@ void	ShapeBase::normaliseVector3D(double* v){
 		v[1] /= mag;
 		v[2] /= mag;
 	}
+}
+void	ShapeBase::normaliseVector3D(gsl_vector* v){
+	double x = gsl_vector_get(v,0);
+	double y = gsl_vector_get(v,1);
+	double z = gsl_vector_get(v,2);
+	double mag2 = x*x + y*y + z*z;
+	if (fabs(mag2) > 1E-14 && fabs(mag2 - 1.0f) > 1E-14) {
+		double mag = pow(mag2,0.5);
+		gsl_vector_scale(v,1.0/mag);
+	}
+}
+
+double	ShapeBase::getNormVector3D(gsl_vector* v){
+	double x = gsl_vector_get(v,0);
+	double y = gsl_vector_get(v,1);
+	double z = gsl_vector_get(v,2);
+	double mag2 = x*x + y*y + z*z;
+	return pow(mag2,0.5);
 }
 
 double 	ShapeBase::dotProduct3D(double* u, double* v){
@@ -1687,7 +1834,7 @@ void 	ShapeBase::calculateZProjectedAreas(){
         for (int i = 0; i<2; ++i){
             sideVec1[i]= Positions[id1][i] - Positions[id0][i];
             sideVec2[i]= Positions[id2][i] - Positions[id0][i];
-            costet += sideVec1[i]*sideVec2[i];
+            costet += sideVec1[i] * sideVec2[i];
             Side1  += sideVec1[i] * sideVec1[i];
             Side2  += sideVec2[i] * sideVec2[i];
         }
@@ -1706,6 +1853,9 @@ void 	ShapeBase::calculateZProjectedAreas(){
         }
     }
 }
+
+
+
 
 void 	ShapeBase::assignZProjectedAreas(vector <Node*> Nodes){
     if (ShapeType == 1 ){ //only written for prisms
@@ -1742,7 +1892,7 @@ void 	ShapeBase::removeMassFromNodes(vector <Node*>& Nodes){
 			for (int j=0;j<n;++j){
 				Nodes[NodeIds[i]]->connectedElementWeights[j] /= scaler;
 			}
-			//All wiights are normlised as the sum will make 1.0. Now I do not want this element in the weighing,
+			//All weights are normlised as the sum will make 1.0. Now I do not want this element in the weighing,
 			//it does not have a mass anymore, therefore I will multiply all the remaining weights with (1-w_ablated);
 		}
 }

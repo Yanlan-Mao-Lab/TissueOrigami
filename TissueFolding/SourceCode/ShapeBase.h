@@ -66,6 +66,13 @@ protected:
     double* detFs;
 
     double ZProjectedBasalArea,ZProjectedApicalArea;
+    double BasalArea, ApicalArea;
+    double cMyoUniform[2]; //apical, basal
+    double cMyoUnipolar[2]; //apical basal
+    double cMyoUniformEq[2]; //apical, basal
+    double cMyoUnipolarEq[2]; //apical basal
+    gsl_matrix* myoPolarityDir;
+
     void 	setShapeType(string TypeName);
 	void 	readNodeIds(int* tmpNodeIds);
 	void 	setPositionMatrix(vector<Node*>& Nodes);
@@ -144,6 +151,7 @@ public:
     double GrownVolume;
 	double VolumePerNode;
 	bool capElement;
+	double** MyoForce;
 
 	int 	getId();
 	string 	getName();
@@ -182,12 +190,21 @@ public:
 	void 	updateShapeChangeRate(double x, double y, double z, double xy, double yz, double xz);
 	virtual void calculateReferenceStiffnessMatrix(){ParentErrorMessage("calculateReferenceStiffnessMatrix");};
     virtual void calculateElementShapeFunctionDerivatives(){ParentErrorMessage("calculateReferenceStiffnessMatrix");};
-    virtual void calculateCurrNodalForces(gsl_matrix *gslcurrg, gsl_matrix *gslcurrF, int pointNo){ParentErrorMessage("gslcalculateCurrNodalForces");};
-
+    virtual void calculateCurrNodalForces(gsl_matrix *gslcurrg, gsl_matrix *gslcurrF, int pointNo){ParentErrorMessage("calculateCurrNodalForces");};
+    virtual void calculateApicalArea(){ParentErrorMessage("calculateApicalArea");};
+    virtual void calculateBasalArea(){ParentErrorMessage("calculateBasalArea");};
 
     void 	calculateForces(int RKId, double ***SystemForces, vector <Node*>& Nodes, ofstream& outputFile);
     void 	updatePositions(int RKId, vector<Node*>& Nodes);
 	void 	setGrowthRate(double x, double y, double z);
+	void 	cleanMyosinForce();
+	void	updateUniformEquilibriumMyosinConcentration(bool isApical, double cEqUniform);
+	void	updateUnpolarEquilibriumMyosinConcentration(bool isApical, double cEqUnipolar, double orientationX, double orientationY);
+	void	updateMyosinConcentration(double dt, double kMyo);
+	double	getCmyosinUniformForNode (int TissuePlacement);
+	double	getCmyosinUnipolarForNode (int TissuePlacement);
+	virtual void calculateMyosinForces(){ParentErrorMessage("calculateMyosinForces");};
+	virtual void distributeMyosinForce(bool isIsotropic, bool apical){ParentErrorMessage("distributeMyosin");};
 	void 	setShapeChangeRate(double x, double y, double z, double xy, double yz, double xz);
 	void 	updateGrowthToAdd(double* growthscale);
 	void 	updateElementVolumesAndTissuePlacementsForSave(vector<Node*>& Nodes);
@@ -213,6 +230,8 @@ public:
     void createMatrixCopy(gsl_matrix *dest, gsl_matrix* src);
 	double	calculateMagnitudeVector3D(double* v);
 	void	normaliseVector3D(double* v);
+	void	normaliseVector3D(gsl_vector* v);
+	double	getNormVector3D(gsl_vector* v);
 	double 	determinant3by3Matrix(double* rotMat);
 	double 	determinant3by3Matrix(boost::numeric::ublas::matrix<double>& Mat);
     double 	determinant3by3Matrix(gsl_matrix* Mat);
@@ -262,6 +281,7 @@ public:
 	void	fillNodeNeighbourhood(vector<Node*>& Nodes);
 	void 	checkDisplayClipping(double xClip, double yClip, double zClip);
 	void	crossProduct3D(double* u, double* v, double* cross);
+	void	crossProduct3D(gsl_vector* u, gsl_vector* v, gsl_vector* cross);
 	void	alignGrowthCalculationOnReference();
 	void	readNewGrowthRate(double* NewGrowth, double& ex, double&ey, double& ez, double& exy, double& exz, double& eyz);
 	void	updateUniformOrRingGrowthRate(double* NewGrowth, int GrowthId);

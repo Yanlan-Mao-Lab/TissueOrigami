@@ -56,6 +56,11 @@ public:
 	void AddPackingToSurface(int tissueplacement, double Fx, double Fy,double Fz, int RKId,  double ***SystemForces,  double ***PackingForces,vector<Node*> &Nodes);
 	bool IsPointCloseEnoughForPacking(double* Pos,  float Peripodialthreshold, float Columnarthreshold, int TissuePlacementOfPackingNode, int TissueTypeOfPackingNode);
 	void calculateNormalForPacking(int tissuePlacement);
+	void calculateApicalArea();
+	void calculateBasalArea();
+	void calculateMyosinForces();
+	void distributeMyosinForce(bool isIsotropic, bool apical);
+
 	void getApicalNodePos(double* posCorner);
 	void getBasalNodePos(double* posCorner);
 	bool IspointInsideTriangle(int tissueplacement,double x, double y,double z);

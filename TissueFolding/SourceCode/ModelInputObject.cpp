@@ -111,6 +111,12 @@ bool ModelInputObject::readParameters(){
 				 */
 				Success  = readShapeChangeOptions(parametersFile);
 			}
+			else if (currParameterHeader == "MyosinOptions:"){
+				/**
+				 * Myosin concentrations and related parameters of the simulation through the private function ModelInputObject#readMyosinOptions
+				 */
+				Success  = readMyosinOptions(parametersFile);
+			}
 			else if(currParameterHeader == "Stretcher:"){
 				/**
 				 * Stretcher experimental setup parameters of the simulation through the private function ModelInputObject#readStretcherSetup
@@ -896,6 +902,191 @@ bool ModelInputObject::readShapeChangeOptions(ifstream& file){
 	}
 	return true;
 }
+
+bool ModelInputObject::readMyosinOptions(ifstream& file){
+	string currHeader;
+	file >> currHeader;
+	int n;
+	cout<<"entered read myosin concentration options, current header: "<<currHeader<<endl;
+	if(currHeader == "NumberofMyosinFunctions(int):"){
+		file >> n;
+		Sim->nMyosinFunctions = n;
+	}
+	else{
+		cerr<<"Error in reading myosin concentration options, curr string: "<<currHeader<<", should have been: NumberofMyosinFunctions(int):" <<endl;
+		return false;
+	}
+	//regardless of how many myosin functions I have, I need the diffusion constant and the force per myosin molecule
+	file >> currHeader;
+	if(currHeader == "MyosinDiffusionRate(double-1/sec):"){
+		file >> Sim->kMyo ;
+	}
+	else{
+		cerr<<"Error in reading myosin diffusion rate, curr string: "<<currHeader<<", should have been: MyosinDiffusionRate(double-1/sec):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "ForcePerMyosinMolecule(double):"){
+		file >> Sim->forcePerMyoMolecule ;
+	}
+	else{
+		cerr<<"Error in reading force per myosin molecule, curr string: "<<currHeader<<", should have been: ForcePerMyosinMolecule(double):" <<endl;
+		return false;
+	}
+	//now I can read the myosin parameters
+	for (int i = 0; i<n; ++i){
+		readGridBasedMyosinFunction(file);
+		//cout<<"inside the loop, read shape change options, current header: "<<currHeader<<endl;
+	}
+	return true;
+}
+
+
+bool ModelInputObject::readGridBasedMyosinFunction(ifstream& file){
+	string currHeader;
+	file >> currHeader;
+	cout<<"entered read myosin, current header: "<<currHeader<<endl;
+	float initialtimeInSec;
+	int initTime;
+	bool applyToColumnarLayer = false;
+	bool applyToPeripodialMembrane = false;
+	bool isApical = true;
+	bool isPolarised = false;
+	int gridX, gridY;
+	double cEq;
+	double tet;
+	double** cEqMatrix;
+	double** angleMatrix;
+	if(currHeader == "InitialTime(sec):"){
+		file >> initialtimeInSec;
+		initTime = initialtimeInSec/Sim->dt;
+	}
+	else{
+		cerr<<"Error in reading myosin stimuli options, curr string: "<<currHeader<<", should have been: InitialTime(sec):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "ApplyToColumnarLayer(bool):"){
+			file >> applyToColumnarLayer;
+	}
+	else{
+		cerr<<"Error in reading  myosin stimuli options, curr string: "<<currHeader<<", should have been: ApplyToColumnarLayer(bool):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "ApplyToPeripodialMembrane(bool):"){
+			file >> applyToPeripodialMembrane;
+	}
+	else{
+		cerr<<"Error in reading  myosin stimuli options, curr string: "<<currHeader<<", should have been: ApplyToPeripodialMembrane(bool):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "isApical(bool):"){
+			file >> isApical;
+			cout<<"isApical: "<<isApical<<endl;
+
+	}
+	else{
+		cerr<<"Error in reading  myosin stimuli options, curr string: "<<currHeader<<", should have been: isApical(bool):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "isPolarised(bool):"){
+			file >> isPolarised;
+			cout<<"isPolarised: "<<isPolarised<<endl;
+	}
+	else{
+		cerr<<"Error in reading  myosin stimuli options, curr string: "<<currHeader<<", should have been: isPolarised(bool):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "EquilibriumConcentrationFilename(full-path):"){
+		string filepath;
+		file >> filepath;
+		cerr<<" filename is: "<<filepath<<endl;
+		const char* name_cEq = filepath.c_str();
+		ifstream cEqFile;
+		cEqFile.open(name_cEq, ifstream::in);
+		if (!(cEqFile.good() && cEqFile.is_open())){
+			cerr<<"could not open equilibrium myosin concentrations file: "<<name_cEq<<endl;
+			return false;
+		}
+		//adding the indice of the growth matrix
+		cout<<"reading from growth file"<<endl;
+		cEqFile >> gridX;
+		cEqFile >> gridY;
+		cout<<"constructing equilibrium myosin matrix"<<endl;
+		cEqMatrix = new double*[(const int) gridX];
+		for (int i=0; i<gridX; ++i){
+			cEqMatrix[i] = new double[(const int) gridY];
+			for (int j=0; j<gridY; ++j){
+				cEqMatrix[i][j] = 0.0;
+			}
+		}
+		cout<<"reading equilibrium myosin matrix"<<endl;
+		for (int j=gridY-1; j>-1; --j){
+			for (int i=0; i<gridX; ++i){
+				//cout<<"i :"<<i<<" j: "<<j<<" k: "<<k<<" ";
+				cEqFile >> cEq;
+				//cout<<"rate: "<<rate<<" ";
+				//GrowthMatrix[i][j][k] = rate*timeMultiplier;
+				cEqMatrix[i][j] = cEq;
+				//cout<<"matrix value: "<<GrowthMatrix[i][j][k]<<endl;
+			}
+		}
+		cEqFile.close();
+	}
+	else{
+		cerr<<"Error in reading  myosin stimuli options, curr string: "<<currHeader<<", should have been: EquilibriumConcentrationFilename(full-path):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "OrientationAngleFilename(full-path):"){
+		string filepath;
+		file >> filepath;
+		cerr<<" filename is: "<<filepath<<endl;
+		const char* name_angle = filepath.c_str();
+		ifstream angleFile;
+		angleFile.open(name_angle, ifstream::in);
+		if (!(angleFile.good() && angleFile.is_open())){
+			cerr<<"could not open orientation angle file: "<<name_angle<<endl;
+			return false;
+		}
+		//adding the indice of the growth matrix
+		cout<<"reading from orientation angle file"<<endl;
+		angleFile >> gridX;
+		angleFile >> gridY;
+		cout<<"constructing myosin orientation matrix"<<endl;
+		angleMatrix = new double*[(const int) gridX];
+		for (int i=0; i<gridX; ++i){
+			angleMatrix[i] = new double[(const int) gridY];
+			for (int j=0; j<gridY; ++j){
+				angleMatrix[i][j] = 0.0;
+			}
+		}
+		cout<<"reading myosin orientation matrix"<<endl;
+		for (int j=gridY-1; j>-1; --j){
+			for (int i=0; i<gridX; ++i){
+				//cout<<"i :"<<i<<" j: "<<j<<" k: "<<k<<" ";
+				angleFile >> tet;
+				angleMatrix[i][j] =  tet;
+			}
+		}
+		angleFile.close();
+	}
+	else{
+		cerr<<"Error in reading  myosin stimuli options, curr string: "<<currHeader<<", should have been: OrientationAngleFilename(full-path):" <<endl;
+		return false;
+	}
+
+	MyosinFunction* MFp;
+	int Id = Sim->myosinFunctions.size();
+	MFp = new MyosinFunction(Id, isApical, isPolarised, initTime, applyToColumnarLayer, applyToPeripodialMembrane, gridX, gridY, cEqMatrix, angleMatrix);
+	Sim->myosinFunctions.push_back(MFp);
+	return true;
+}
+
 bool ModelInputObject::readShapeChangeType1(ifstream& file){
 	string currHeader;
 	file >> currHeader;

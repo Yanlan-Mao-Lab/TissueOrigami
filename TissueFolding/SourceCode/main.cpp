@@ -29,6 +29,7 @@ int main(int argc, char * argv[])
 			//cout<<"running step: "<<Sim01.timestep<<", this is time: "<<Sim01.timestep*Sim01.dt<<" sec"<<endl;
 			Sim01->runOneStep();
 		}
+		Sim01->wrapUpAtTheEndOfSimulation();
 	}
 	delete Sim01;
 	cout<<"Finished Simulation"<<endl;

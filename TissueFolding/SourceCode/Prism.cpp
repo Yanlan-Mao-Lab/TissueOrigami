@@ -20,12 +20,30 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
     mu = E/2.0/(1+v);
 
     D = gsl_matrix_calloc(6,6);
+    MyoForce = new double*[6];
 	GrowthRate = new double[3];
 	ShapeChangeRate  = new double[6];
 	CurrGrowthStrainAddition = new double[6];
 	ApicalNormalForPacking =  new double[3];
 	BasalNormalForPacking =  new double[3];
 	RelativePosInBoundingBox = new double[3];
+
+	for (int i=0; i<nNodes; ++i){
+		MyoForce[i] = new double[3];
+		for (int j=0; j<3; j++){
+			MyoForce[i][j] = 0.0;
+		}
+	}
+	cMyoUniform[0] = 0.0;
+	cMyoUniform[1] = 0.0;
+	cMyoUnipolar[0] = 0.0;
+	cMyoUnipolar[1] = 0.0;
+	cMyoUniformEq[0] = 0.0;
+	cMyoUniformEq[1] = 0.0;
+	cMyoUnipolarEq[0] = 0.0;
+	cMyoUnipolarEq[1] = 0.0;
+
+	myoPolarityDir = gsl_matrix_calloc(2,3);
 	for (int i=0; i<3; ++i){
 		GrowthRate[i] = 0;
 		ShapeChangeRate[i] =0;
@@ -108,17 +126,21 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
 	VolumePerNode = 0;
     ZProjectedBasalArea=0.0;
     ZProjectedApicalArea=0.0;
+    BasalArea=0.0;
+    ApicalArea=0.0;
 }
 
 Prism::~Prism(){
 	//cout<<"called the destructor for prism class"<<endl;
 	for (int i=0; i<nNodes; ++i){
 		delete[] Positions[i];
+		delete[] MyoForce[i];
 	}
     delete[] Positions;
 	delete[] RelativePosInBoundingBox;
     delete[] NodeIds;
 	delete[] IdentifierColour;
+	delete[] MyoForce;
 	delete[] GrowthRate;
     delete[] ShapeChangeRate;
 	delete	 ReferenceShape;
@@ -913,4 +935,191 @@ bool  Prism::IspointInsideTriangle(int tissueplacement,double x, double y,double
 	delete[] PE1;
 	delete[] PE2;
 	return isInside;
+}
+void  	Prism::calculateMyosinForces(){
+	if (cMyoUniform[0]>0){
+		calculateApicalArea();
+		distributeMyosinForce(true,true); //isIsotropic, isApical
+		//there is unfiorm myosin activity on apical surface
+	}
+	if (cMyoUniform[1]>0){
+		calculateBasalArea();
+		distributeMyosinForce(true,false);
+		//there is unfiorm myosin activity on basal surface
+	}
+	if (cMyoUnipolar[0]>0){
+		calculateApicalArea();
+		distributeMyosinForce(false,true);
+		//there is unipolar myosin activity on apical surface
+	}
+	if (cMyoUnipolar[1]>0){
+		calculateBasalArea();
+		distributeMyosinForce(false,false);
+		//there is unipolar myosin activity on basal surface
+	}
+}
+
+void 	Prism::distributeMyosinForce(bool isIsotropic, bool apical){
+	int id0, id1, id2;
+	double forcemag;
+	int currSurface = 0;
+	if (apical){
+		id0 = 3;
+		id1 = 4;
+		id2 = 5;
+		currSurface = 0;
+		if (isIsotropic){
+			forcemag = cMyoUniform[0]*ApicalArea;
+		}
+		else{
+			forcemag = cMyoUnipolar[0]*ApicalArea;
+		}
+	}
+	else{
+		id0 = 0;
+		id1 = 1;
+		id2 = 2;
+		currSurface = 1;
+		if (isIsotropic){
+			forcemag = cMyoUniform[0]*BasalArea;
+		}
+		else{
+			forcemag = cMyoUnipolar[0]*BasalArea;
+		}
+	}
+	double centre[3] = {0.0,0.0,0.0};
+	gsl_vector* vec0 = gsl_vector_calloc(3);
+	gsl_vector* vec1 = gsl_vector_calloc(3);
+	gsl_vector* vec2 = gsl_vector_calloc(3);
+	for (int i=0; i<3; ++i){
+		centre[i] = (Positions[id0][i] + Positions[id1][i] +  Positions[id2][i])/3.0;
+		//axisSum[i] = -2.0 * centre[i];
+		gsl_vector_set(vec0,i,centre[i] - Positions[id0][i]);
+		gsl_vector_set(vec1,i,centre[i] - Positions[id1][i]);
+		gsl_vector_set(vec2,i,centre[i] - Positions[id2][i]);
+	}
+	if (!isIsotropic){
+		//If I am doing a non-isotropic calculation, then I will project the vectors towards the centre
+		// on top of the axis of interest:
+		//First I need to align the myosin polarity direction on to the surface, the forces are on the surface!:
+		//geth the normal:
+		gsl_vector* cross = gsl_vector_calloc(3);
+		crossProduct3D(vec0,vec1,cross);
+		normaliseVector3D(cross);
+		//project vector on normal:
+
+		double dotp = 0.0;
+		for (int i =0; i<3; ++i){
+			dotp += gsl_vector_get(cross,i)*gsl_matrix_get(myoPolarityDir,currSurface,i);
+		}
+		gsl_vector* alignedmyoPolarityDir = gsl_vector_calloc(3);
+		for (int i =0; i<3; ++i){
+			gsl_vector_set(alignedmyoPolarityDir,i,gsl_matrix_get(myoPolarityDir,currSurface,i) - dotp*gsl_vector_get(cross,i));
+		}
+		double proj[3] = {0,0,0};
+		for (int i =0; i<3; ++i){
+			proj[0] += gsl_vector_get(vec0,i)*gsl_vector_get(alignedmyoPolarityDir,i);
+			proj[1] += gsl_vector_get(vec1,i)*gsl_vector_get(alignedmyoPolarityDir,i);
+			proj[2] += gsl_vector_get(vec2,i)*gsl_vector_get(alignedmyoPolarityDir,i);
+		}
+		for (int i =0; i<3; ++i){
+			gsl_vector_set(vec0,i,proj[0]*gsl_vector_get(alignedmyoPolarityDir,i));
+			gsl_vector_set(vec1,i,proj[1]*gsl_vector_get(alignedmyoPolarityDir,i));
+			gsl_vector_set(vec2,i,proj[2]*gsl_vector_get(alignedmyoPolarityDir,i));
+		}
+		gsl_vector_free(alignedmyoPolarityDir);
+		gsl_vector_free(cross);
+	}
+	//now I will distribute the force proportional to the magnitude of each vector:
+	double sumMag = 0.0;
+	double x = gsl_vector_get(vec0,0);
+	double y = gsl_vector_get(vec0,1);
+	double z = gsl_vector_get(vec0,2);
+	sumMag += pow(x*x+y*y+z*z,0.5);
+	x = gsl_vector_get(vec1,0);
+	y = gsl_vector_get(vec1,1);
+	z = gsl_vector_get(vec1,2);
+	sumMag += pow(x*x+y*y+z*z,0.5);
+	x = gsl_vector_get(vec2,0);
+	y = gsl_vector_get(vec2,1);
+	z = gsl_vector_get(vec2,2);
+	sumMag += pow(x*x+y*y+z*z,0.5);
+	double scaleFactor = forcemag/sumMag;
+	gsl_vector_scale(vec0,scaleFactor);
+	gsl_vector_scale(vec1,scaleFactor);
+	gsl_vector_scale(vec2,scaleFactor);
+
+	for (int i=0; i<3; ++i){
+		MyoForce[id0][i] += gsl_vector_get(vec0,i);
+		MyoForce[id1][i] += gsl_vector_get(vec1,i);
+		MyoForce[id2][i] += gsl_vector_get(vec2,i);
+	}
+	gsl_vector_free(vec0);
+	gsl_vector_free(vec1);
+	gsl_vector_free(vec2);
+	/*cout<<" Element: "<<Id<<" Myoforces: "<<endl;
+	double sum[3] = {0,0,0};
+	for (int i=0; i<6; i++){
+		for (int j=0; j<3; j++){
+			//cout<<MyoForce[i][j]<<" ";
+			sum[j] += MyoForce[i][j];
+		}
+		//cout<<endl;
+	}
+	//cout<<endl;
+	cout<<"sum: "<<sum[0]<<" "<<sum[1]<<" "<<sum[2]<<endl;
+	*/
+}
+
+void 	Prism::calculateBasalArea(){
+    double Threshold = 1E-5;
+	int id0 = 0, id1 = 1, id2 = 2; // this is correct for basal side, I will change it for apical calculation
+	double sideVec1[3];
+	double sideVec2[3];
+	double Side1 = 0.0;
+	double Side2 = 0.0;
+	double costet = 0.0;
+	double Area = 0.0;
+	for (int i = 0; i<3; ++i){
+		sideVec1[i]= Positions[id1][i] - Positions[id0][i];
+		sideVec2[i]= Positions[id2][i] - Positions[id0][i];
+		costet += sideVec1[i] * sideVec2[i];
+		Side1  += sideVec1[i] * sideVec1[i];
+		Side2  += sideVec2[i] * sideVec2[i];
+	}
+	if (Side1 > Threshold && Side2 > Threshold){
+		Side1 = pow(Side1,0.5);
+		Side2 = pow(Side2,0.5);
+		costet /= (Side1*Side2);
+		double sintet = pow((1-costet*costet),0.5);
+		Area = Side1* Side2 * sintet / 2.0;
+	}
+	BasalArea = Area;
+	//ApicalArea = Area;
+}
+
+void 	Prism::calculateApicalArea(){
+    double Threshold = 1E-5;
+	int id0 = 3, id1 = 4, id2 = 5; // this is correct for basal side, I will change it for apical calculation
+	double sideVec1[3];
+	double sideVec2[3];
+	double Side1 = 0.0;
+	double Side2 = 0.0;
+	double costet = 0.0;
+	double Area = 0.0;
+	for (int i = 0; i<3; ++i){
+		sideVec1[i]= Positions[id1][i] - Positions[id0][i];
+		sideVec2[i]= Positions[id2][i] - Positions[id0][i];
+		costet += sideVec1[i] * sideVec2[i];
+		Side1  += sideVec1[i] * sideVec1[i];
+		Side2  += sideVec2[i] * sideVec2[i];
+	}
+	if (Side1 > Threshold && Side2 > Threshold){
+		Side1 = pow(Side1,0.5);
+		Side2 = pow(Side2,0.5);
+		costet /= (Side1*Side2);
+		double sintet = pow((1-costet*costet),0.5);
+		Area = Side1* Side2 * sintet / 2.0;
+	}
+	ApicalArea = Area;
 }

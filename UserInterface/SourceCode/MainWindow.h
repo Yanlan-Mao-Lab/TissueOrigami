@@ -46,6 +46,7 @@ public slots:
     void 	ManualNodeSelectionReset();
     void 	timerSimulationStep();
     void 	updateStrain(int);
+    void 	updateMyosinComboBox(int s);
     void 	updateStrainCheckBox(int);
     void 	updateStrainSpinBoxes(double);
     void 	updatePysProp(int s);
@@ -53,6 +54,7 @@ public slots:
     void 	updatePysPropSpinBoxes(double d);
     void    updateDisplayPipette(int);
     void 	updateNetForceCheckBox(int);
+    void	updateMyosinCheckBox(int);
     void 	updatePackingForceCheckBox(int);
     void 	updateVelocityCheckBox(int);
     void  	updateScaleBarCheckBox(int);
@@ -79,6 +81,7 @@ public slots:
     void setCoordBoxes(QFont font, QFont boldFont, QGridLayout *SelectionDisplayGrid);
     void setItemSelectionTitles(QFont font, QFont boldFont, QGridLayout *SelectionDisplayGrid);
     void setStrainDisplayMenu(QGridLayout *DisplayOptionsGrid);
+    void setMyosinComboBox(QGridLayout *DisplayOptionsGrid);
     void setPysPropDisplayMenu(QGridLayout *DisplayOptionsGrid);
     void setDisplayPreferences(QGridLayout *SelectionDisplayGrid);
     void takeScreenshot();
@@ -99,7 +102,8 @@ public slots:
     QComboBox   	*PysPropComboBox;
     QDoubleSpinBox 	*PysPropSpinBoxes[2];
     QGroupBox   	*ColourCodingBox;
-    QCheckBox		*DisplayPreferencesCheckBoxes[8];
+    QCheckBox		*DisplayPreferencesCheckBoxes[9];
+    QComboBox 		*MyosinComboBox;
     QLabel			*SimTime;
     QPushButton		*PerspectiveButton;
     QSlider			*ClippingSliders[3];

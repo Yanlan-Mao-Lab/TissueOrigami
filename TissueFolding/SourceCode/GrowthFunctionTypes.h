@@ -47,6 +47,7 @@ public:
 		GrowthRate[1] = ey;
 		GrowthRate[2] = ez;
 	}///< The function is to set the 3D growth rate of the current growth function.
+
 	void writeSummary(ofstream &saveFileSimulationSummary,double dt){
 		/**
 		 *  This function will write the UniformGrowthFunction details into the simulation summary file, provided as the first input.
@@ -145,13 +146,16 @@ public:
 		GrowthRate[2] = ABGrowth;	//z
 	}///< The constructor of RingGrowthFunction
 	~RingGrowthFunction(){};
+
 	void 	getCentre(float &centreX, float &centreY){
 		centreX = centre[0];
 		centreY = centre[1];
 	} ///< This function writes RingGrowthFunction#centre into the input float addresses centreX and centreY, in this order.
+
 	float 	getInnerRadius(){
 		return innerRadius;
 	}///< This function returns RingGrowthFunction#innerRadius.
+
 	float 	getOuterRadius(){
 		return outerRadius;
 	}///< This function returns RingGrowthFunction#outerRadius.
@@ -164,6 +168,7 @@ public:
 		maxValues[1] = GrowthRate[1];
 		maxValues[2] = GrowthRate[2];
 	}///< The function is to set the 3D maximum growth rate of the current ring growth function.
+
 	void setGrowtRate(double ex, double ey, double ez){
 		/**
 		 *  This function will set the RingGrowthFunction#GrowthRate of the current growth function to the input values
@@ -173,6 +178,7 @@ public:
 		GrowthRate[1] = ey;
 		GrowthRate[2] = ez;
 	}///< The function is to set the 3D maximum growth rate of the current ring growth function.
+
 	void writeSummary(ofstream &saveFileSimulationSummary,double dt){
 		/**
 		 *  This function will write the RingGrowthFunction details into the simulation summary file, provided as the first input.
@@ -232,6 +238,7 @@ public:
 			}
 		}
 	} ///< The constructor of GridBasedGrowthFunction
+
 	~GridBasedGrowthFunction(){
 		for (int i=0; i<nGridX; ++i){
 			for (int j=0; j<nGridY; ++j){
@@ -247,22 +254,24 @@ public:
 	int getGridX(){
 		return nGridX;
 	}///< This function returns GridBasedGrowthFunction#nGridX.
+
 	int getGridY(){
 		return nGridY;
 	}///< This function returns GridBasedGrowthFunction#nGridY.
+
 	double*** getGrowthMatrix(){
 		return GrowthMatrix;
 	}///< This function returns GridBasedGrowthFunction#GrowthMatrix.
+
 	double getGrowthMatrixElement(int i, int j, int k){
 		return GrowthMatrix[i][j][k];
-	}///< This function returns a the growth rate at grid point [i]\[j\] (in dimensions GridBasedGrowthFunction#nGridX, GridBasedGrowthFunction#nGridY), for the growth dimension [k] (as in  [ DV axis (x), AP axis (y), and AB axis (z)] ).
+	}///< This function returns the growth rate at grid point [i]\[j\] (in dimensions GridBasedGrowthFunction#nGridX, GridBasedGrowthFunction#nGridY), for the growth dimension [k] (as in  [ DV axis (x), AP axis (y), and AB axis (z)] ).
 
 	void setGrowthMatrixElement(double ex, double ey, double ez, int i, int j){
 		GrowthMatrix[i][j][0] = ex;
 		GrowthMatrix[i][j][1] = ey;
 		GrowthMatrix[i][j][2] = ez;
-	}///< This function sets a the growth rate at grid point [i]\[j\] (in dimensions GridBasedGrowthFunction#nGridX, GridBasedGrowthFunction#nGridY), to the growth rate [ex, ey, ez] in the format [ DV axis (x), AP axis (y), and AB axis (z)].
-
+	}///< This function sets the growth rate at grid point [i]\[j\] (in dimensions GridBasedGrowthFunction#nGridX, GridBasedGrowthFunction#nGridY), to the growth rate [ex, ey, ez] in the format [ DV axis (x), AP axis (y), and AB axis (z)].
 
 	void writeSummary(ofstream &saveFileSimulationSummary,double dt){
 		/**

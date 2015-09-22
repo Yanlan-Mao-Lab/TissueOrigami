@@ -74,6 +74,7 @@ using namespace std;
   	 drawNetForces = false;
   	 drawPackingForces = false;
      drawVelocities = false;
+     drawMyosinForces = false;
      drawPeripodialMembrane = true;
      drawColumnar = true;
      ManualNodeSelection = false;
@@ -183,6 +184,7 @@ using namespace std;
 	 drawForces();
 	 drawPackForces();
 	 drawNodeVelocities();
+	 drawMyosin();
 	 drawBoundingBox();
      drawPipette();
 
@@ -331,7 +333,7 @@ void GLWidget::highlightNode(int i){
 	for (itNode=Sim01->Nodes.begin(); itNode<Sim01->Nodes.end(); ++itNode){
 		float* currColour;
 		currColour = new float[3];
-		if(!DisplayStrains && !DisplayPysProp && !drawNetForces && !drawPackingForces && !drawVelocities){
+		if(!DisplayStrains && !DisplayPysProp && !drawNetForces && !drawPackingForces && !drawVelocities && !drawMyosinForces){
 			//I am not displaying ant data on the colours, therefore I do not need any calculaitons on element basis, the colour is constant
 			if ((*itNode)->tissueType == 0){ // columnar layer
 				NodeColourList[(*itNode)->Id][0]=0.75;
@@ -394,6 +396,23 @@ void GLWidget::highlightNode(int i){
 					currColour[1] = 1.0;
 					currColour[2] = 0.8;
 				}
+			}
+			else if(drawMyosinForces){
+				float cMyoMag= 0.0;
+				int nConnectedElements = (*itNode)->connectedElementIds.size();
+				for (int i=0;i<nConnectedElements; ++i){
+					float TmpMyoMag =0.0;
+					if (MyosinToDisplay == 0){
+						TmpMyoMag = Sim01->Elements[(*itNode)->connectedElementIds[i]]->getCmyosinUniformForNode((*itNode)->tissuePlacement);
+					}
+					else if (MyosinToDisplay == 1){
+						TmpMyoMag = Sim01->Elements[(*itNode)->connectedElementIds[i]]->getCmyosinUnipolarForNode((*itNode)->tissuePlacement);
+					}
+					cMyoMag += TmpMyoMag*(*itNode)->connectedElementWeights[i];
+				}
+				getConcentrationColour(currColour,cMyoMag);
+				//cout<<"current selected myosin concentration: "<<cMyoMag<<endl;
+				//cout<<" current colour:                       "<<currColour[0]<<" "<<currColour[1]<<" "<<currColour[2]<<endl;
 			}
 			else if(drawPackingForces){
                 //cout<<"Drawing Packing Forces"<<endl;
@@ -554,6 +573,14 @@ void GLWidget::highlightNode(int i){
 	 OutputColour[0] = 1.0-b;
 	 OutputColour[1] = 1.0;
 	 OutputColour[2] = 0.8*(1.0-b);
+ }
+
+ void GLWidget::getConcentrationColour(float* OutputColour, float concentration){
+	 double scale2[2] = {0,100.0};
+	 	 double g = (concentration- scale2[0])/(scale2[1]-scale2[0]);
+	 	 OutputColour[0] = 1.0-g;
+	 	 OutputColour[1] = 1.0;
+	 	 OutputColour[2] = 0.8*(1.0-g);
  }
 
  void GLWidget::getDisplayColour(float* OutputColour, float Data){
@@ -1413,6 +1440,49 @@ bool GLWidget::findNode(int i){
 	 }
  }
 
+ void GLWidget::drawMyosin(){
+	 if (drawMyosinForces){
+		 //Drawing myo forces
+		 double threshold2 = 1E-16;
+		 double minlength = 0.3, maxlength = 2;
+		 double minlength2 = minlength*minlength, maxlength2 = maxlength*maxlength;
+		 double scale2[2] = {0,10.0}, scale = 10.0;
+		 double scalesq = scale*scale;
+		 int n =  Sim01->Elements.size();
+		 for (int i =0; i<n; ++i){
+			 int* NodeIds = Sim01->Elements[i]->getNodeIds();
+			 for (int nodeIter = 0; nodeIter<6; nodeIter++){
+				 int currNodeId = NodeIds[nodeIter];
+				 double* F;
+				 F = new double[3];
+				 F[0] = Sim01->Elements[i]->MyoForce[nodeIter][0];
+				 F[1] = Sim01->Elements[i]->MyoForce[nodeIter][1];
+				 F[2] = Sim01->Elements[i]->MyoForce[nodeIter][2];
+				 double mag2 = F[0]* F[0] + F[1]*F[1] + F[2]* F[2];
+				 if (mag2 > threshold2){
+					 double mag = pow(mag2,0.5);
+					 double b = (mag- scale2[0])/(scale2[1]-scale2[0]);
+					 b /= 2.0;
+					 double a = mag2/scalesq;
+					 double currscale = scale;
+					 if (a < minlength2 ){
+						 currscale = mag/minlength;
+					 }
+					 else if ( a > maxlength2){
+						 currscale = mag/maxlength;
+					 }
+					 //cout<<"Element: "<<i<<" Node: "<<nodeIter<<"(Node: "<<currNodeId<<") F: "<<F[0]<<"\t"<<F[1]<<"\t"<<F[2]<<"\tFmag: "<<mag<<" scale: "<<currscale<<" g: "<<g <<endl;
+					 F[0] =  F[0]/currscale + Sim01->Nodes[currNodeId]->Position[0];
+					 F[1] =  F[1]/currscale + Sim01->Nodes[currNodeId]->Position[1];
+					 F[2] =  F[2]/currscale + Sim01->Nodes[currNodeId]->Position[2];
+					 drawArrow3D(Sim01->Nodes[currNodeId]->Position, F, 0.0, 0.0, b);
+				 }
+				 delete[] F;
+			 }
+		 }
+	 }
+ }
+
  void GLWidget::drawPackForces(){
 	 if (drawPackingForces){
 		 double threshold2 = 1E-16;
@@ -1454,6 +1524,7 @@ bool GLWidget::findNode(int i){
 	 }
 
  }
+
  void GLWidget::drawNodeVelocities(){
 	 if (drawVelocities){
 		 double threshold2 = 1E-16;

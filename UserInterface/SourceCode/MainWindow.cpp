@@ -163,6 +163,7 @@ void MainWindow::setUpProjectDisplayOptionGrid(QGridLayout *ProjectDisplayOption
 	setStrainDisplayMenu(ProjectDisplayOptionsGrid);
 	setPysPropDisplayMenu(ProjectDisplayOptionsGrid);
 	setDisplayPreferences(ProjectDisplayOptionsGrid);
+	setMyosinComboBox(ProjectDisplayOptionsGrid);
 	int widthPhysProp = PysPropComboBox->minimumSizeHint().width();
 	int widthStrain = StrainComboBox->minimumSizeHint().width();
 	if (widthPhysProp>widthStrain){
@@ -173,9 +174,8 @@ void MainWindow::setUpProjectDisplayOptionGrid(QGridLayout *ProjectDisplayOption
 	}
 	//Adding a last row with high stretch to push the upper columns to the top of the window:
 	ProjectDisplayOptionsGrid->setRowStretch(10,10);
-
-
 }
+
 void MainWindow::setUpViewOptionsGrid(QGridLayout *ViewOptionsGrid){
 	QFont boldFont("SansSerif", 10, QFont::Bold,true);
 	QFont font("SansSerif", 10);
@@ -205,8 +205,16 @@ void MainWindow::setUpViewOptionsGrid(QGridLayout *ViewOptionsGrid){
 
 }
 
-void MainWindow::setStrainDisplayMenu(QGridLayout *ProjectDisplayOptionsGrid){
+void MainWindow::setMyosinComboBox(QGridLayout *ProjectDisplayOptionsGrid){
+	MyosinComboBox = new QComboBox();
+	MyosinComboBox->addItem("Uniform Myosin");
+	MyosinComboBox->addItem("Uni-polar myosin");
+	MyosinComboBox->setEnabled(false);
+	connect(MyosinComboBox , SIGNAL(currentIndexChanged(int)),this,SLOT(updateMyosinComboBox(int)));
+	ProjectDisplayOptionsGrid->addWidget(MyosinComboBox,6,2,1,2,Qt::AlignLeft);
+}
 
+void MainWindow::setStrainDisplayMenu(QGridLayout *ProjectDisplayOptionsGrid){
 	DisplayCheckBoxes[0] = new QCheckBox("Strain");
 	DisplayCheckBoxes[0]->setChecked(false);
 	connect(DisplayCheckBoxes[0] , SIGNAL(stateChanged(int)),this,SLOT(updateStrainCheckBox(int)));
@@ -378,15 +386,26 @@ void MainWindow::setDisplayPreferences(QGridLayout *ProjectDisplayOptionsGrid){
 	DisplayPreferencesCheckBoxes[7] = new QCheckBox("Bounding Box");
     DisplayPreferencesCheckBoxes[7]->setChecked(false);
 	connect(DisplayPreferencesCheckBoxes[7] , SIGNAL(stateChanged(int)),this,SLOT(updateBoundingBoxCheckBox(int)));
+	//draw net forces checkbox
+	DisplayPreferencesCheckBoxes[8] = new QCheckBox("Myosin");
+	DisplayPreferencesCheckBoxes[8]->setChecked(false);
+	connect(DisplayPreferencesCheckBoxes[8] , SIGNAL(stateChanged(int)),this,SLOT(updateMyosinCheckBox(int)));
+
+
+
+
     ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[0],3,0,1,2,Qt::AlignLeft);  // display pipette
 	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[7],3,2,1,2,Qt::AlignLeft);  // display bounding box
 	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[1],4,0,1,2,Qt::AlignLeft);  // Net Forces
 	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[6],4,2,1,2,Qt::AlignLeft);  // Packing Forces
 	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[2],5,0,1,1,Qt::AlignLeft);  // Velocities
+	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[8],5,2,1,2,Qt::AlignLeft);  // display myosin box
 	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[3],6,0,1,2,Qt::AlignLeft); // Scale Bar
 	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[4],7,0,1,2,Qt::AlignLeft); // Display Peripodial Membrane
 	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[5],8,0,1,2,Qt::AlignLeft); // Display Columnar Layer
 }
+
+
 
 void  MainWindow::xClipChange(int k){
 	MainGLWidget->xClip = Sim01->boundingBox[0][0] +( ( Sim01->boundingBox[1][0] - Sim01->boundingBox[0][0] ) * (double) (k+10)/100.0 );
@@ -424,6 +443,22 @@ void  MainWindow::updateNetForceCheckBox(int s){
 		MainGLWidget->drawNetForces = true;
 	else
 		MainGLWidget->drawNetForces = false;
+}
+
+void  MainWindow::updateMyosinCheckBox(int s){
+	cout<<"updating myosin checkbox, s: "<<s<<endl;
+	if (s == 0){
+		MainGLWidget->MyosinToDisplay = -1;
+		MyosinComboBox->setEnabled(false);
+		MainGLWidget->drawMyosinForces = false;
+	}
+	else{
+		MainGLWidget->MyosinToDisplay = MyosinComboBox->currentIndex ();
+		MyosinComboBox->setEnabled(true);
+		MainGLWidget->drawMyosinForces = true;
+		cout<<" drawMyosinForces: "<<MainGLWidget->drawMyosinForces<<endl;
+		cout<<" MyosinToDisplay: "<<MainGLWidget->MyosinToDisplay <<endl;
+	}
 }
 
 void  MainWindow::updateDisplayPipette(int s){
@@ -482,6 +517,12 @@ void MainWindow::updateStrain(int s){
 	//cout<<"Strain to display: "<<MainGLWidget->StrainToDisplay <<endl;
 }
 
+void MainWindow::updateMyosinComboBox(int s){
+	MainGLWidget->MyosinToDisplay = s;
+	MainGLWidget->update();
+	//cout<<"Strain to display: "<<MainGLWidget->StrainToDisplay <<endl;
+}
+
 void MainWindow::updatePysProp(int s){
 	MainGLWidget->PysPropToDisplay = s;
 	float low = MainGLWidget->DisplayPysPropRange[MainGLWidget->PysPropToDisplay][0];
@@ -502,7 +543,6 @@ void MainWindow::updatePysProp(int s){
 	//cout<<"Pys prop to display: "<<MainGLWidget->StrainToDisplay <<endl;
 
 }
-
 void MainWindow::updateStrainCheckBox(int s){
 	if (s == 0){
 		MainGLWidget->StrainToDisplay = -1;
@@ -662,6 +702,7 @@ void MainWindow::timerSimulationStep(){
 		}
         else if(!displayedSimulationLength){
             displayedSimulationLength = true;
+            Sim01->wrapUpAtTheEndOfSimulation();
             double duration = ( std::clock() - simulationStartClock ) / (double) CLOCKS_PER_SEC;
             cout<<"Simulation length in seconds: "<< duration <<endl;
             //close();
