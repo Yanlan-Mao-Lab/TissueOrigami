@@ -175,9 +175,43 @@ double ShapeBase::getColumnarness(){
 	return columnarGrowthWeight;
 }
 
-void ShapeBase::getRelativePosInBoundingBox(double* relativePos){
-	relativePos[0] =  RelativePosInBoundingBox[0];
-	relativePos[1] =  RelativePosInBoundingBox[1];
+void ShapeBase::getRelativePosInColumnarBoundingBox(double* relativePos){
+	relativePos[0] =  columnarRelativePosInBoundingBox[0];
+	relativePos[1] =  columnarRelativePosInBoundingBox[1];
+}
+
+void ShapeBase::getRelativePosInPeripodialBoundingBox(double* relativePos){
+	relativePos[0] =  peripodialRelativePosInBoundingBox[0];
+	relativePos[1] =  peripodialRelativePosInBoundingBox[1];
+}
+
+void ShapeBase::convertRelativePosToGridIndex(double* relpos, int& indexX, int &indexY, double &fracX, double &fracY, int nGridX, int nGridY){
+	//cout<<"relpos: "<<relpos[0]<<" "<<relpos[1]<<endl;
+	relpos[0] *= (float) (nGridX-1);
+	relpos[1] *= (float) (nGridY-1);
+	indexX = floor(relpos[0]);
+	fracX  = relpos[0] - indexX;
+	indexY = floor(relpos[1]);
+	fracY  = relpos[1] - indexY;
+	//cout<<" indexX "<<indexX<<" fracX "<<fracX<<" indexY "<<indexY<<" fracY "<<fracY<<endl;
+	if (indexX >= nGridX-1) { //this is for the point that is exactly the point determining the bounding box high end in X, or the side elements for columnar parameter generation (outside the bounding box by definition
+		indexX = nGridX-2;
+		fracX = 1.0;
+		//cout<<" in if 1, indexX: "<<indexX<<" fracX: "<<fracX<<endl;
+	}else if (indexX<0){
+		indexX = 0;
+		fracX = 0.0;
+		//cout<<" in if 2, indexX: "<<indexX<<" fracX: "<<fracX<<endl;
+	}
+	if (indexY >= nGridY-1) {//this is for the point that is exactly the point determining the bounding box high end in X, or the side elements for columnar parameter generation (outside the bounding box by definition
+		indexY = nGridY-2;
+		fracY = 1.0;
+		//cout<<" in if 3, indexY: "<<indexY<<" fracY: "<<fracY<<endl;
+	}else if (indexY<0){
+		indexY = 0;
+		fracY = 0.0;
+		//cout<<" in if 4, indexY: "<<indexY<<" fracY: "<<fracY<<endl;
+	}
 }
 
 void 	ShapeBase::readNodeIds(int* inpNodeIds){
@@ -652,12 +686,18 @@ bool 	ShapeBase::calculate3DRotMatFromF(gsl_matrix* rotMat){
     return false; //none of the off - diagonal terms of the matrix are above the threshold, the current rotation is only niumerical error.
 }
 
-void 	ShapeBase::calculateRelativePosInBoundingBox(double BoindingBoxXMin, double BoundingBoxYMin, double BoundingBoxLength, double BoundingBoxWidth){
-	RelativePosInBoundingBox = getCentre();
+void 	ShapeBase::calculateRelativePosInBoundingBox(double columnarBoundingBoxXMin, double columnarBoundingBoxYMin, double columnarBoundingBoxLength, double columnarBoundingBoxWidth, double peripodialBoundingBoxXMin, double peripodialBoundingBoxYMin, double peripodialBoundingBoxLength, double peripodialBoundingBoxWidth){
+	columnarRelativePosInBoundingBox = getCentre();
+	if (tissueType != 0){ //the tissue is not columnar, so there is peripodial membrane
+		peripodialRelativePosInBoundingBox[0] = columnarRelativePosInBoundingBox[0];
+		peripodialRelativePosInBoundingBox[1] = columnarRelativePosInBoundingBox[1];
+		peripodialRelativePosInBoundingBox[0] = (peripodialRelativePosInBoundingBox[0] - peripodialBoundingBoxXMin) / peripodialBoundingBoxLength;
+		peripodialRelativePosInBoundingBox[1] = (peripodialRelativePosInBoundingBox[1] - peripodialBoundingBoxYMin) / peripodialBoundingBoxWidth;
+	}
 	//cout<<"Elements: "<<Id<<" centre: "<< RelativePosInBoundingBox[0]<<" "<<RelativePosInBoundingBox[1]<<" ";
 	//cout<<" Bounding box: "<<BoindingBoxXMin<<" "<<BoundingBoxYMin<<" "<<BoundingBoxLength<<" "<<BoundingBoxWidth<<"  ";
-	RelativePosInBoundingBox[0] = (RelativePosInBoundingBox[0] - BoindingBoxXMin) / BoundingBoxLength;
-	RelativePosInBoundingBox[1] = (RelativePosInBoundingBox[1] - BoundingBoxYMin) / BoundingBoxWidth;
+	columnarRelativePosInBoundingBox[0] = (columnarRelativePosInBoundingBox[0] - columnarBoundingBoxXMin) / columnarBoundingBoxLength;
+	columnarRelativePosInBoundingBox[1] = (columnarRelativePosInBoundingBox[1] - columnarBoundingBoxYMin) / columnarBoundingBoxWidth;
 	//cout<<" rel Pos: "<< RelativePosInBoundingBox[0]<<" "<<RelativePosInBoundingBox[1]<<endl;
 	//double* a = new double[3];
 	//a = getRelativePosInBoundingBox();
@@ -666,7 +706,15 @@ void 	ShapeBase::calculateRelativePosInBoundingBox(double BoindingBoxXMin, doubl
 }
 
 void 	ShapeBase::displayRelativePosInBoundingBox(){
-	cout<<"Element: "<<Id<<"  rel Pos from element: "<<RelativePosInBoundingBox[0]<<" "<<RelativePosInBoundingBox[1]<<endl;
+	if (tissueType == 0){
+		cout<<"Element: "<<Id<<"  rel Pos from element columnar: "<<columnarRelativePosInBoundingBox[0]<<" "<<columnarRelativePosInBoundingBox[1]<<endl;
+	}
+	else if (tissueType == 1){
+		cout<<"Element: "<<Id<<"  rel Pos from element peripodial: "<<peripodialRelativePosInBoundingBox[0]<<" "<<peripodialRelativePosInBoundingBox[1]<<endl;
+	}
+	else{
+		cout<<"Element: "<<Id<<"  rel Pos from element columnar: "<<columnarRelativePosInBoundingBox[0]<<" "<<columnarRelativePosInBoundingBox[1]<<" peripodial: "<<peripodialRelativePosInBoundingBox[0]<<" "<<peripodialRelativePosInBoundingBox[1]<<endl;
+	}
 }
 
 bool 	ShapeBase::checkPackingToThisNodeViaState(int ColumnarLayerDiscretisationLayers, Node* NodePointer){
@@ -1600,10 +1648,6 @@ void	ShapeBase::updateMyosinConcentration(double dt, double kMyo){
 		else if (myoIter == 3){
 			cMyoUnipolar[1] = cFinal[2];
 		}
-	}
-	if (Id ==0){
-		cout<<"Element: "<<Id<<" cMyo:   "<<cMyoUniform[0] <<" "<<cMyoUniform[1]<<" "<<cMyoUnipolar[0] << " "<<cMyoUnipolar[1]<<endl;
-		cout<<"Element: "<<Id<<" cMyoEq: "<<cMyoUniformEq[0] <<" "<<cMyoUniformEq[1]<<" "<<cMyoUnipolarEq[0] << " "<<cMyoUnipolarEq[1]<<endl;
 	}
 }
 

@@ -408,19 +408,34 @@ void MainWindow::setDisplayPreferences(QGridLayout *ProjectDisplayOptionsGrid){
 
 
 void  MainWindow::xClipChange(int k){
-	MainGLWidget->xClip = Sim01->boundingBox[0][0] +( ( Sim01->boundingBox[1][0] - Sim01->boundingBox[0][0] ) * (double) (k+10)/100.0 );
+	if (Sim01->AddPeripodialMembrane){
+		MainGLWidget->xClip = Sim01->peripodialBoundingBox[0][0] +( ( Sim01->peripodialBoundingBox[1][0] - Sim01->peripodialBoundingBox[0][0] ) * (double) (k+10)/100.0 );
+	}
+	else{
+		MainGLWidget->xClip = Sim01->columnarBoundingBox[0][0] +( ( Sim01->columnarBoundingBox[1][0] - Sim01->columnarBoundingBox[0][0] ) * (double) (k+10)/100.0 );
+	}
 	MainGLWidget->updateClipping();
 	//cout<<"x:" <<k<<" "<<MainGLWidget->xClip<<endl;
 }
 
 void  MainWindow::yClipChange(int k){
-	MainGLWidget->yClip = Sim01->boundingBox[0][1] +( ( Sim01->boundingBox[1][1] - Sim01->boundingBox[0][1] ) * (double) (90-k)/100.0 );
+	if (Sim01->AddPeripodialMembrane){
+		MainGLWidget->yClip = Sim01->peripodialBoundingBox[0][1] +( ( Sim01->peripodialBoundingBox[1][1] - Sim01->peripodialBoundingBox[0][1]-k)/100.0 );
+	}
+	else{
+		MainGLWidget->yClip = Sim01->columnarBoundingBox[0][1] +( ( Sim01->columnarBoundingBox[1][1] - Sim01->columnarBoundingBox[0][1] ) * (double) (90-k)/100.0 );
+	}
 	MainGLWidget->updateClipping();
 	//cout<<"y:" <<k<<" "<<MainGLWidget->yClip<<endl;
 }
 
 void  MainWindow::zClipChange(int k){
-	MainGLWidget->zClip = Sim01->boundingBox[0][2] +( ( Sim01->boundingBox[1][2] - Sim01->boundingBox[0][2] ) * (double) (k+10)/100.0 );
+	if (Sim01->AddPeripodialMembrane){
+		MainGLWidget->zClip = Sim01->peripodialBoundingBox[0][2] +( ( Sim01->peripodialBoundingBox[1][2] - Sim01->peripodialBoundingBox[0][2] ) * (double) (k+10)/100.0 );
+	}
+	else{
+		MainGLWidget->zClip = Sim01->columnarBoundingBox[0][2] +( ( Sim01->columnarBoundingBox[1][2] - Sim01->columnarBoundingBox[0][2] ) * (double) (k+10)/100.0 );
+	}
 	MainGLWidget->updateClipping();
 	//cout<<"z:" <<k<<" "<<MainGLWidget->zClip<<endl;
 }

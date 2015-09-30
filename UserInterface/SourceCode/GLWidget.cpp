@@ -1599,30 +1599,50 @@ bool GLWidget::findNode(int i){
  void GLWidget::drawBoundingBox(){
 	 if (displayBoundingBox){
 		 glLineWidth(ReferenceLineThickness);
-		 glColor3f(1.0,0.0,1.0);
 		 //glLineStipple(1, 0x3F07);
 		 //glEnable(GL_LINE_STIPPLE);
-		 glBegin(GL_LINE_LOOP);
-		 		glVertex3f(Sim01->boundingBox[0][0],Sim01->boundingBox[0][1],Sim01->boundingBox[0][2]);
-		 		glVertex3f(Sim01->boundingBox[1][0],Sim01->boundingBox[0][1],Sim01->boundingBox[0][2]);
-		 		glVertex3f(Sim01->boundingBox[1][0],Sim01->boundingBox[1][1],Sim01->boundingBox[0][2]);
-		 		glVertex3f(Sim01->boundingBox[0][0],Sim01->boundingBox[1][1],Sim01->boundingBox[0][2]);
-		 		glVertex3f(Sim01->boundingBox[0][0],Sim01->boundingBox[0][1],Sim01->boundingBox[0][2]);
-		 		glVertex3f(Sim01->boundingBox[0][0],Sim01->boundingBox[0][1],Sim01->boundingBox[1][2]);
-		 		glVertex3f(Sim01->boundingBox[1][0],Sim01->boundingBox[0][1],Sim01->boundingBox[1][2]);
-		 		glVertex3f(Sim01->boundingBox[1][0],Sim01->boundingBox[1][1],Sim01->boundingBox[1][2]);
-		 		glVertex3f(Sim01->boundingBox[0][0],Sim01->boundingBox[1][1],Sim01->boundingBox[1][2]);
-		 		glVertex3f(Sim01->boundingBox[0][0],Sim01->boundingBox[0][1],Sim01->boundingBox[1][2]);
-		 glEnd();
-		 glBegin(GL_LINES);
-	 		glVertex3f(Sim01->boundingBox[1][0],Sim01->boundingBox[0][1],Sim01->boundingBox[0][2]);
-	 		glVertex3f(Sim01->boundingBox[1][0],Sim01->boundingBox[0][1],Sim01->boundingBox[1][2]);
-	 		glVertex3f(Sim01->boundingBox[1][0],Sim01->boundingBox[1][1],Sim01->boundingBox[0][2]);
-	 		glVertex3f(Sim01->boundingBox[1][0],Sim01->boundingBox[1][1],Sim01->boundingBox[1][2]);
-	 		glVertex3f(Sim01->boundingBox[0][0],Sim01->boundingBox[1][1],Sim01->boundingBox[0][2]);
-	 		glVertex3f(Sim01->boundingBox[0][0],Sim01->boundingBox[1][1],Sim01->boundingBox[1][2]);
-		 glEnd();
-		 //glDisable(GL_LINE_STIPPLE);
+		 double boundingBox[3][3] = {{0.0,0.0,0.0}, {0.0,0.0,0.0}, {0.0,0.0,0.0}};
+		 for (int i =0; i<2; i++){
+			 if (i == 0){
+				 //drawing columnar:
+				 glColor3f(1.0,0.0,1.0);
+				 for (int k=0; k<3; ++k){
+					 for (int l=0; l<3; l++){
+						 boundingBox[k][l] = Sim01->columnarBoundingBox[k][l];
+					 }
+				 }
+			 }
+			 if (i == 1 && Sim01->AddPeripodialMembrane){
+				 //drawing columnar:
+				 glColor3f(0.5,0.0,0.5);
+				 for (int k=0; k<3; ++k){
+					 for (int l=0; l<3; l++){
+						 boundingBox[k][l] = Sim01->peripodialBoundingBox[k][l];
+					 }
+				 }
+			 }
+			 glBegin(GL_LINE_LOOP);
+					glVertex3f(boundingBox[0][0],boundingBox[0][1],boundingBox[0][2]);
+					glVertex3f(boundingBox[1][0],boundingBox[0][1],boundingBox[0][2]);
+					glVertex3f(boundingBox[1][0],boundingBox[1][1],boundingBox[0][2]);
+					glVertex3f(boundingBox[0][0],boundingBox[1][1],boundingBox[0][2]);
+					glVertex3f(boundingBox[0][0],boundingBox[0][1],boundingBox[0][2]);
+					glVertex3f(boundingBox[0][0],boundingBox[0][1],boundingBox[1][2]);
+					glVertex3f(boundingBox[1][0],boundingBox[0][1],boundingBox[1][2]);
+					glVertex3f(boundingBox[1][0],boundingBox[1][1],boundingBox[1][2]);
+					glVertex3f(boundingBox[0][0],boundingBox[1][1],boundingBox[1][2]);
+					glVertex3f(boundingBox[0][0],boundingBox[0][1],boundingBox[1][2]);
+			 glEnd();
+			 glBegin(GL_LINES);
+				glVertex3f(boundingBox[1][0],boundingBox[0][1],boundingBox[0][2]);
+				glVertex3f(boundingBox[1][0],boundingBox[0][1],boundingBox[1][2]);
+				glVertex3f(boundingBox[1][0],boundingBox[1][1],boundingBox[0][2]);
+				glVertex3f(boundingBox[1][0],boundingBox[1][1],boundingBox[1][2]);
+				glVertex3f(boundingBox[0][0],boundingBox[1][1],boundingBox[0][2]);
+				glVertex3f(boundingBox[0][0],boundingBox[1][1],boundingBox[1][2]);
+			 glEnd();
+			 //glDisable(GL_LINE_STIPPLE);
+		 }
 	 }
  }
 

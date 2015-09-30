@@ -26,7 +26,8 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
 	CurrGrowthStrainAddition = new double[6];
 	ApicalNormalForPacking =  new double[3];
 	BasalNormalForPacking =  new double[3];
-	RelativePosInBoundingBox = new double[3];
+	columnarRelativePosInBoundingBox = new double[3];
+	peripodialRelativePosInBoundingBox = new double[3];
 
 	for (int i=0; i<nNodes; ++i){
 		MyoForce[i] = new double[3];
@@ -49,7 +50,8 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
 		ShapeChangeRate[i] =0;
 		ApicalNormalForPacking[i] = 0;
 		BasalNormalForPacking[i] = 0;
-		RelativePosInBoundingBox[i] =0;
+		columnarRelativePosInBoundingBox[i] =0;
+		peripodialRelativePosInBoundingBox[i] =0;
 	}
 	columnarGrowthWeight = 1.0;
 	peripodialGrowthWeight = 0.0;
@@ -137,7 +139,8 @@ Prism::~Prism(){
 		delete[] MyoForce[i];
 	}
     delete[] Positions;
-	delete[] RelativePosInBoundingBox;
+	delete[] columnarRelativePosInBoundingBox;
+	delete[] peripodialRelativePosInBoundingBox;
     delete[] NodeIds;
 	delete[] IdentifierColour;
 	delete[] MyoForce;

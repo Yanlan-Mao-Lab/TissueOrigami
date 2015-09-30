@@ -52,7 +52,8 @@ protected:
 	bool 	CurrGrowthStrainsUpToDate;
 	bool 	GrewInThePast;
 	bool 	ChangedShapeInThePast;
-	double* RelativePosInBoundingBox;
+	double* columnarRelativePosInBoundingBox;
+	double* peripodialRelativePosInBoundingBox;
     gsl_matrix **ShapeFuncDerivatives;
     gsl_matrix **ShapeFuncDerStacks;
     gsl_matrix **InvdXdes;
@@ -163,9 +164,11 @@ public:
 	double* getCentre();
 	double	getPeripodialness();
 	double	getColumnarness();
-	void	calculateRelativePosInBoundingBox(double BoindingBoxXMin, double BoundingBoxYMin, double BoundingBoxLength, double BoundingBoxWidth);
+	void	calculateRelativePosInBoundingBox(double columnarBoundingBoxXMin, double columnarBoundingBoxYMin, double columnarBoundingBoxLength, double columnarBoundingBoxWidth, double peipodialBoundingBoxXMin, double peipodialBoundingBoxYMin, double peipodialBoundingBoxLength, double peipodialBoundingBoxWidth);
 	void	displayRelativePosInBoundingBox();
-	void	getRelativePosInBoundingBox(double* relativePos);
+	void	getRelativePosInColumnarBoundingBox(double* relativePos);
+	void	getRelativePosInPeripodialBoundingBox(double* relativePos);
+	void 	convertRelativePosToGridIndex(double* relpos, int& indexX, int &indexY, double &fracX, double &fracY, int nGridX, int nGridY);
 	void 	getStrain(int type, float &StrainMag);
 	void 	getNodeBasedPysProp(int type, int NodeNo, vector<Node*>& Nodes, float& PysPropMag);
     void 	getPysProp(int type, float &PysPropMag, double dt);

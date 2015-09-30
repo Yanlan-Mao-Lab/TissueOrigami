@@ -40,7 +40,8 @@ private:
 	int	 nCircumferencialNodes;
 	int dorsalTipIndex,ventralTipIndex,anteriorTipIndex,posteriorTipIndex;
 	double StretchVelocity;
-	double BoundingBoxSize[3];
+	double columnarBoundingBoxSize[3];
+	double peripodialBoundingBoxSize[3];
 	bool ContinueFromSave;
     int growthRotationUpdateFrequency;
 
@@ -243,7 +244,8 @@ public:
 	vector <double*> NodesToDraw;
 	double TissueHeight;
 	int TissueHeightDiscretisationLayers;
-	double boundingBox[2][3];
+	double columnarBoundingBox[2][3];
+	double peripodialBoundingBox[2][3];
 
 	Simulation();
 	~Simulation();
@@ -254,6 +256,7 @@ public:
 	void cleanMatrixUpdateData();
 	void resetForces();
 	void calculateColumnarLayerBoundingBox();
+	void calculatePeripodialBoundingBox();
     void calculateZProjectedAreas();
     void correctzProjectedAreaForMidNodes();
     void clearProjectedAreas();

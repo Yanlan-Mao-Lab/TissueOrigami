@@ -18,7 +18,8 @@ Simulation::Simulation(){
 	reachedEndOfSaveFile = false;
 	AddPeripodialMembrane = false;
 	lumenHeight = -20;
-	BoundingBoxSize[0]=1000.0; BoundingBoxSize[1]=1000.0; BoundingBoxSize[2]=1000.0;
+	columnarBoundingBoxSize[0]=1000.0; columnarBoundingBoxSize[1]=1000.0; columnarBoundingBoxSize[2]=1000.0;
+	peripodialBoundingBoxSize[0]=1000.0; peripodialBoundingBoxSize[1]=1000.0; peripodialBoundingBoxSize[2]=1000.0;
 	ContinueFromSave = false;
     growthRotationUpdateFrequency = 60.0/dt;
     if (growthRotationUpdateFrequency<1) {growthRotationUpdateFrequency =1;}
@@ -143,12 +144,18 @@ void Simulation::setDefaultParameters(){
 	effectLimitsInZ[0] = pipetteCentre[2] - pipetteDepth;
 	effectLimitsInZ[1] = pipetteCentre[2] + pipetteDepth;
 
-	boundingBox[0][0] =  1000.0;	//left x
-	boundingBox[0][1] =  1000.0;	//low y
-	boundingBox[0][2] =  1000.0;	//bottom z
-	boundingBox[1][0] = -1000.0;	//right x
-	boundingBox[1][1] = -1000.0;	//high y
-	boundingBox[1][2] = -1000.0;	//top z
+	columnarBoundingBox[0][0] =  1000.0;	//left x
+	columnarBoundingBox[0][1] =  1000.0;	//low y
+	columnarBoundingBox[0][2] =  1000.0;	//bottom z
+	columnarBoundingBox[1][0] = -1000.0;	//right x
+	columnarBoundingBox[1][1] = -1000.0;	//high y
+	columnarBoundingBox[1][2] = -1000.0;	//top z
+	peripodialBoundingBox[0][0] =  1000.0;	//left x
+	peripodialBoundingBox[0][1] =  1000.0;	//low y
+	peripodialBoundingBox[0][2] =  1000.0;	//bottom z
+	peripodialBoundingBox[1][0] = -1000.0;	//right x
+	peripodialBoundingBox[1][1] = -1000.0;	//high y
+	peripodialBoundingBox[1][2] = -1000.0;	//top z
 }
 
 bool Simulation::readExecutableInputs(int argc, char **argv){
@@ -313,6 +320,9 @@ bool Simulation::readFinalSimulationStep(){
 	//This is updating positions from save, I am only interested in normal positions, no Runge-Kutta steps. This corresponds to RK step 4, RKId = 3
 	updateElementPositions(3);
 	calculateColumnarLayerBoundingBox();
+	if (AddPeripodialMembrane){
+		calculatePeripodialBoundingBox();
+	}
 	//bring the time step and data save stime steps to the main modelinput:
 	dataSaveInterval = dataSaveIntervalCurrentSim;
 	dt = timeStepCurrentSim;
@@ -1082,6 +1092,9 @@ void Simulation::updateOneStepFromSave(){
 	assignConnectedElementsAndWeightsToNodes();
 	clearLaserAblatedSites();
 	calculateColumnarLayerBoundingBox();
+	if (AddPeripodialMembrane){
+		calculatePeripodialBoundingBox();
+	}
 	//skipping the footer:
 	string currline2;
 	getline(saveFileToDisplayMesh,currline2);
@@ -2443,10 +2456,13 @@ void Simulation::runOneStep(){
         alignTissueDVToXPositive();
         //alignTissueAPToXYPlane();
         calculateColumnarLayerBoundingBox();
+    	if (AddPeripodialMembrane){
+    		calculatePeripodialBoundingBox();
+    	}
         calculateDVDistance();
         int nElement = Elements.size();
         for (int i=0; i<nElement; ++i){
-            Elements[i]->calculateRelativePosInBoundingBox(boundingBox[0][0],boundingBox[0][1],BoundingBoxSize[0],BoundingBoxSize[1]);
+            Elements[i]->calculateRelativePosInBoundingBox(columnarBoundingBox[0][0],columnarBoundingBox[0][1],columnarBoundingBoxSize[0],columnarBoundingBoxSize[1], peripodialBoundingBox[0][0],peripodialBoundingBox[0][1],peripodialBoundingBoxSize[0],peripodialBoundingBoxSize[1]);
         }
     }
     if(nMyosinFunctions > 0){
@@ -2484,6 +2500,9 @@ void Simulation::runOneStep(){
     processDisplayDataAndSave();
     cout<<"finalised run one step"<<endl;
     calculateColumnarLayerBoundingBox();
+	if (AddPeripodialMembrane){
+		calculatePeripodialBoundingBox();
+	}
     //cout<<" step: "<<timestep<<" Pressure: "<<SuctionPressure[2]<<" Pa, maximum z-height: "<<boundingBox[1][2]<<" L/a: "<<(boundingBox[1][2]-50)/(2.0*pipetteRadius)<<endl;
     timestep++;
     //for (int i=0; i<Nodes.size(); ++i){
@@ -3911,28 +3930,60 @@ void Simulation::resetForces(){
 }
 
 void Simulation::calculateColumnarLayerBoundingBox(){
-	boundingBox[0][0] =  100000.0;	//lower left x
-	boundingBox[0][1] =  100000.0;	//lower left y
-	boundingBox[0][2] =  100000.0;	//lower z
-	boundingBox[1][0] = -100000.0;	//upper right x
-	boundingBox[1][1] = -100000.0;	//upper right y
-	boundingBox[1][2] = -100000.0;	//upper z
+	columnarBoundingBox[0][0] =  100000.0;	//lower left x
+	columnarBoundingBox[0][1] =  100000.0;	//lower left y
+	columnarBoundingBox[0][2] =  100000.0;	//lower z
+	columnarBoundingBox[1][0] = -100000.0;	//upper right x
+	columnarBoundingBox[1][1] = -100000.0;	//upper right y
+	columnarBoundingBox[1][2] = -100000.0;	//upper z
 	bool found[2][3] = {{false,false,false},{false,false,false}};
 	vector<Node*>::iterator itNode;
 	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-		for (int i=0; i<(*itNode)->nDim; ++i){
-			if ( (*itNode)->Position[i] < boundingBox[0][i] ){
-				boundingBox[0][i] = (*itNode)->Position[i];
-				found[0][i] = true;
-			}
-			else if((*itNode)->Position[i]>boundingBox[1][i]){
-				boundingBox[1][i] = (*itNode)->Position[i];
-				found[1][i] = true;
+		if ((*itNode)->tissueType == 0){ //checking only columnar layer nodes
+			for (int i=0; i<(*itNode)->nDim; ++i){
+				if ( (*itNode)->Position[i] < columnarBoundingBox[0][i] ){
+					columnarBoundingBox[0][i] = (*itNode)->Position[i];
+					found[0][i] = true;
+				}
+				else if((*itNode)->Position[i]>columnarBoundingBox[1][i]){
+					columnarBoundingBox[1][i] = (*itNode)->Position[i];
+					found[1][i] = true;
+				}
 			}
 		}
 	}
 	for (int i=0; i<3; ++i){
-		BoundingBoxSize[i] = boundingBox[1][i] - boundingBox[0][i];
+		columnarBoundingBoxSize[i] = columnarBoundingBox[1][i] - columnarBoundingBox[0][i];
+	}
+	if (!found[0][0] && !found[0][1] && !found[0][2] && !found[1][0] && !found[1][1] && !found[1][2]){
+		cerr<<" error in bounding box calculation! Found? :"<<found[0][0]<<" "<<found[0][1]<<" "<<found[0][2]<<" "<<found[1][0]<<" "<<found[1][1]<<" "<<found[1][2]<<endl;
+	}
+}
+void Simulation::calculatePeripodialBoundingBox(){
+	peripodialBoundingBox[0][0] =  100000.0;	//lower left x
+	peripodialBoundingBox[0][1] =  100000.0;	//lower left y
+	peripodialBoundingBox[0][2] =  100000.0;	//lower z
+	peripodialBoundingBox[1][0] = -100000.0;	//upper right x
+	peripodialBoundingBox[1][1] = -100000.0;	//upper right y
+	peripodialBoundingBox[1][2] = -100000.0;	//upper z
+	bool found[2][3] = {{false,false,false},{false,false,false}};
+	vector<Node*>::iterator itNode;
+	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+		if ((*itNode)->tissueType != 0){ //checking any node that is not columnar
+			for (int i=0; i<(*itNode)->nDim; ++i){
+				if ( (*itNode)->Position[i] < peripodialBoundingBox[0][i] ){
+					peripodialBoundingBox[0][i] = (*itNode)->Position[i];
+					found[0][i] = true;
+				}
+				else if((*itNode)->Position[i]>peripodialBoundingBox[1][i]){
+					peripodialBoundingBox[1][i] = (*itNode)->Position[i];
+					found[1][i] = true;
+				}
+			}
+		}
+	}
+	for (int i=0; i<3; ++i){
+		peripodialBoundingBoxSize[i] = peripodialBoundingBox[1][i] - peripodialBoundingBox[0][i];
 	}
 	if (!found[0][0] && !found[0][1] && !found[0][2] && !found[1][0] && !found[1][1] && !found[1][2]){
 		cerr<<" error in bounding box calculation! Found? :"<<found[0][0]<<" "<<found[0][1]<<" "<<found[0][2]<<" "<<found[1][0]<<" "<<found[1][1]<<" "<<found[1][2]<<endl;
@@ -4140,7 +4191,12 @@ void Simulation::updateEquilibriumMyosinsFromInputSignal(MyosinFunction* currMF)
 			//calculating the grid indices:
 			double* ReletivePos = new double[2];
 			//normalising the element centre position with bounding box
-			(*itElement)->getRelativePosInBoundingBox(ReletivePos);
+			if ((*itElement)->tissueType == 0){
+				(*itElement)->getRelativePosInColumnarBoundingBox(ReletivePos);
+			}
+			else{
+				(*itElement)->getRelativePosInPeripodialBoundingBox(ReletivePos);
+			}
 			ReletivePos[0] *= (float) (nGridX-1);
 			ReletivePos[1] *= (float) (nGridY-1);
 			int indexX = floor(ReletivePos[0]);
@@ -4375,56 +4431,83 @@ void Simulation::calculateGrowthGridBased(GrowthFunctionBase* currGF){
 	if(simTime >= currGF->initTime && simTime < currGF->endTime ){
 		vector<ShapeBase*>::iterator itElement;
 		for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+			//cout<<"calculating the element: "<<(*itElement)->Id<<endl;
 			if ((currGF->applyToColumnarLayer && (*itElement)->tissueType == 0) || (currGF->applyToPeripodialMembrane && (*itElement)->tissueType == 1) || (*itElement)->tissueType == 2){
-				double* ReletivePos = new double[2];
+				double* columnarReletivePos = new double[2];
+				double* peripodialRelativePos = new double[2];
+				int columnarIndexX = 0.0, peripodialIndexX = 0.0, columnarIndexY = 0.0, peripodialIndexY = 0.0;
+				double columnarFracX = 1.0,  peripodialFracX = 1.0, columnarFracY = 1.0, peripodialFracY = 1.0;
 				//normalising the element centre position with bounding box
-				(*itElement)->getRelativePosInBoundingBox(ReletivePos);
-				ReletivePos[0] *= (float) (nGridX-1);
-				ReletivePos[1] *= (float) (nGridY-1);
-				int indexX = floor(ReletivePos[0]);
-				double fracX  = ReletivePos[0] - indexX;
-				if (indexX == nGridX) { //this is for the point that is exactly the point determining the bounding box high end in X
-					indexX--;
-					fracX = 1.0;
+				if ((*itElement)->tissueType == 0){//columnar layer element
+					(*itElement)->getRelativePosInColumnarBoundingBox(columnarReletivePos);
+					(*itElement)->convertRelativePosToGridIndex(columnarReletivePos, columnarIndexX, columnarIndexY, columnarFracX, columnarFracY, nGridX, nGridY);
+					//cout<<"columnarReletivePos: "<<columnarReletivePos[0]<<" "<<columnarReletivePos[1]<<endl;
 				}
-				int indexY = floor(ReletivePos[1]);
-				double fracY  = ReletivePos[1] - indexY;
-				if (indexY == nGridY) { //this is for the point that is exactly the point determining the bounding box high end in Y
-					indexY--;
-					fracY = 1.0;
+				else if((*itElement)->tissueType == 1){// peripodial layer element
+					(*itElement)->getRelativePosInPeripodialBoundingBox(peripodialRelativePos);
+					(*itElement)->convertRelativePosToGridIndex(peripodialRelativePos, peripodialIndexX,peripodialIndexY, peripodialFracX, peripodialFracY, nGridX, nGridY);
+					//cout<<"peripodialRelativePos: "<<peripodialRelativePos[0]<<" "<<peripodialRelativePos[1]<<endl;
 				}
+				else {
+					(*itElement)->getRelativePosInColumnarBoundingBox(columnarReletivePos);
+					(*itElement)->getRelativePosInPeripodialBoundingBox(peripodialRelativePos);
+					(*itElement)->convertRelativePosToGridIndex(columnarReletivePos, columnarIndexX, columnarIndexY, columnarFracX, columnarFracY, nGridX, nGridY);
+					(*itElement)->convertRelativePosToGridIndex(peripodialRelativePos, peripodialIndexX,peripodialIndexY, peripodialFracX, peripodialFracY, nGridX, nGridY);
+					//cout<<"columnarReletivePos: "<<columnarReletivePos[0]<<" "<<columnarReletivePos[1]<<endl;
+					//cout<<"peripodialRelativePos: "<<peripodialRelativePos[0]<<" "<<peripodialRelativePos[1]<<endl;
+				}
+				//cout<<"The grid size: "<<nGridX<<" "<<nGridY<<endl;
+				//cout<<"The indices  : cX: "<<columnarIndexX<<" pX: "<<peripodialIndexX<<" cY: "<<columnarIndexY<<" pY: "<<peripodialIndexY<<endl;
+				//cout<<"The fractions: cX "<<columnarFracX<<" pX: "<<peripodialFracX<<" cY: "<<columnarFracY<<" pY: "<<peripodialFracY<<endl;
+
                 double growthYmid[2][3]= {{0.0,0.0,0.0},{0.0,0.0,0.0}};
-                double growthscale[3];
+                double columnarGrowthscale[3] = {0.0,0.0,0.0}, peripodialGrowthscale[3] = {0.0,0.0,0.0};
 				for (int axis = 0; axis<3; ++axis){
-                    growthYmid[0][axis] = currGF->getGrowthMatrixElement(indexX,indexY,axis)*(1.0-fracX) + currGF->getGrowthMatrixElement(indexX+1,indexY,axis)*fracX;
-                    growthYmid[1][axis] = currGF->getGrowthMatrixElement(indexX,indexY+1,axis)*(1.0-fracX) + currGF->getGrowthMatrixElement(indexX+1,indexY+1,axis)*fracX;
-					growthscale[axis] = growthYmid[0][axis]*(1.0-fracY) + growthYmid[1][axis]*fracY;
+					if (currGF->applyToColumnarLayer){
+						growthYmid[0][axis] = currGF->getGrowthMatrixElement(columnarIndexX,columnarIndexY,axis)*(1.0-columnarFracX) + currGF->getGrowthMatrixElement(columnarIndexX+1,columnarIndexY,axis)*columnarFracX;
+						//cout<<"growthYmid[0]["<<axis<<"]: "<<growthYmid[0][axis]<<endl;
+						growthYmid[1][axis] = currGF->getGrowthMatrixElement(columnarIndexX,columnarIndexY+1,axis)*(1.0-columnarFracX) + currGF->getGrowthMatrixElement(columnarIndexX+1,columnarIndexY+1,axis)*columnarFracX;
+						//cout<<"growthYmid[1]["<<axis<<"]: "<<growthYmid[1][axis]<<endl;
+						columnarGrowthscale[axis] = growthYmid[0][axis]*(1.0-columnarFracY) + growthYmid[1][axis]*columnarFracY;
+						//cout<<"columnarGrowthscale["<<axis<<"]: "<<columnarGrowthscale[axis]<<endl;
+					}
+					if (currGF->applyToPeripodialMembrane){
+						growthYmid[0][axis] = currGF->getGrowthMatrixElement(peripodialIndexX,peripodialIndexY,axis)*(1.0-peripodialFracX) + currGF->getGrowthMatrixElement(peripodialIndexX+1,peripodialIndexY,axis)*peripodialFracX;
+						//cout<<"growthYmid[0]["<<axis<<"]: "<<growthYmid[0][axis]<<endl;
+						growthYmid[1][axis] = currGF->getGrowthMatrixElement(peripodialIndexX,peripodialIndexY+1,axis)*(1.0-peripodialFracX) + currGF->getGrowthMatrixElement(peripodialIndexX+1,peripodialIndexY+1,axis)*peripodialFracX;
+						//cout<<"growthYmid[1]["<<axis<<"]: "<<growthYmid[1][axis]<<endl;
+						peripodialGrowthscale[axis] = growthYmid[0][axis]*(1.0-peripodialFracY) + growthYmid[1][axis]*peripodialFracY;
+						//cout<<"peripodialGrowthscale["<<axis<<"]: "<<peripodialGrowthscale[axis]<<endl;
+					}
 				}
 				//growing the shape
-
+				//cout<<"peripodialGrowthscale: "<<peripodialGrowthscale[0]<<" "<<peripodialGrowthscale[1]<<" "<<peripodialGrowthscale[2]<<endl;
+				//cout<<"columnarGrowthscale: "<<columnarGrowthscale[0]<<" "<<columnarGrowthscale[1]<<" "<<columnarGrowthscale[2]<<endl;
 
 				if ( currGF->applyToColumnarLayer){
 					if ((*itElement)->tissueType == 0){ //columnar layer, grow directly
-						(*itElement)->updateGrowthRate(growthscale[0],growthscale[1],growthscale[2]);
+						(*itElement)->updateGrowthRate(columnarGrowthscale[0],columnarGrowthscale[1],columnarGrowthscale[2]);
 					}
 					else if ((*itElement)->tissueType == 2){ //Linker zone, need to weight the growth
 						double weight = (*itElement)->getColumnarness();
-						(*itElement)->updateGrowthRate(weight*growthscale[0],weight*growthscale[1],weight*growthscale[2]);
+						(*itElement)->updateGrowthRate(weight*columnarGrowthscale[0],weight*columnarGrowthscale[1],weight*columnarGrowthscale[2]);
 					}
 				}
 				if ( currGF->applyToPeripodialMembrane){
 					if ((*itElement)->tissueType == 1){ //peripodial membrane, grow directly
-						(*itElement)->updateGrowthRate(growthscale[0],growthscale[1],growthscale[2]);
+						(*itElement)->updateGrowthRate(peripodialGrowthscale[0],peripodialGrowthscale[1],peripodialGrowthscale[2]);
 					}
 					else if ((*itElement)->tissueType == 2){ //Linker zone, need to weight the growth
 						double weight = (*itElement)->getPeripodialness();
-						(*itElement)->updateGrowthRate(weight*growthscale[0],weight*growthscale[1],weight*growthscale[2]);
+						(*itElement)->updateGrowthRate(weight*peripodialGrowthscale[0],weight*peripodialGrowthscale[1],weight*peripodialGrowthscale[2]);
 					}
 				}
-				delete[] ReletivePos;
+				delete[] columnarReletivePos;
+				delete[] peripodialRelativePos;
 			}
 		}
 	}
+	//cout<<"Finished growth rate calculation"<<endl;
 }
 
 void Simulation::TissueAxisPositionDisplay(){
