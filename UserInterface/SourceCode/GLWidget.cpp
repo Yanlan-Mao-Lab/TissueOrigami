@@ -74,7 +74,7 @@ using namespace std;
   	 drawNetForces = false;
   	 drawPackingForces = false;
      drawVelocities = false;
-     drawMyosinForces = false;
+     drawMyosinForces = true;
      drawPeripodialMembrane = true;
      drawColumnar = true;
      ManualNodeSelection = false;
@@ -147,7 +147,6 @@ using namespace std;
 
 	 glMatrixMode(GL_PROJECTION);
 	 glLoadIdentity();
-
 	 if (PerspectiveView) {
          glFrustum(-1*aspectratio, 1*aspectratio, -1, 1, 1, 10000); // near and far match your triangle Z distance
 	 }
@@ -850,7 +849,7 @@ void GLWidget::highlightNode(int i){
     	 int dy = event->y() - lastPos.y();
          dx *=this->devicePixelRatio();
          dy *=this->devicePixelRatio();
-    	 float speed = 0.01;
+    	 float speed = 0.05;
     	 obj_pos[0] +=  dx*speed;
     	 obj_pos[1] += -dy*speed;
          //cerr<<"right button "<<dx<<" "<<dy<<" "<<obj_pos[0]<<" "<<obj_pos[1]<<endl;

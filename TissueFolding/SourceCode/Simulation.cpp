@@ -404,6 +404,16 @@ bool Simulation::initiateSystem(){
 	//	Nodes[i]->displayConnectedElementIds();
 	//	Nodes[i]->displayConnectedElementWeights();
 	//}
+    alignTissueDVToXPositive();
+    calculateColumnarLayerBoundingBox();
+	if (AddPeripodialMembrane){
+		calculatePeripodialBoundingBox();
+	}
+    calculateDVDistance();
+    int nElement = Elements.size();
+    for (int i=0; i<nElement; ++i){
+        Elements[i]->calculateRelativePosInBoundingBox(columnarBoundingBox[0][0],columnarBoundingBox[0][1],columnarBoundingBoxSize[0],columnarBoundingBoxSize[1], peripodialBoundingBox[0][0],peripodialBoundingBox[0][1],peripodialBoundingBoxSize[0],peripodialBoundingBoxSize[1]);
+    }
 	if (stretcherAttached){
 		setStretch();
 	}
@@ -2456,6 +2466,7 @@ void Simulation::runOneStep(){
         alignTissueDVToXPositive();
         //alignTissueAPToXYPlane();
         calculateColumnarLayerBoundingBox();
+        calculateApicalSize();
     	if (AddPeripodialMembrane){
     		calculatePeripodialBoundingBox();
     	}
@@ -2678,6 +2689,7 @@ void Simulation::updateStepNR(){
                 cout<<SystemForces[0][i][2]<<" "<<gsl_vector_get(deltaU,3*i+2)<<endl;
             }
         }*/
+        //cout<<"Node 0 position: "<<Nodes[0]->Position[0]<<" "<<Nodes[0]->Position[1]<<" "<<Nodes[0]->Position[2]<<endl;
     }
     //Now the calculation is converged, I update the node positions with the latest positions uk:
     updateNodePositionsNR(uk);
@@ -3823,6 +3835,8 @@ void Simulation::assignTips(){
 void Simulation::alignTissueDVToXPositive(){
 	double* u = new double[3];
 	double* v = new double[3];
+	//For simulations with no viscosity, the position of node 0 is fixed. Node 0 is the dorsal tip of the tissue.
+	// To keep the fixed position of hte
 	for (int i=0;i<3;++i){
 		u[i] = Nodes[ventralTipIndex]->Position[i] - Nodes[dorsalTipIndex]->Position[i];
 	}
@@ -3837,13 +3851,22 @@ void Simulation::alignTissueDVToXPositive(){
 	Elements[0]->calculateRotationAxis(u,v,rotAx,c);	//calculating the rotation axis that is perpendicular to both u and v
 	Elements[0]->constructRotationMatrix(c,s,rotAx,rotMat);
 	int n = Nodes.size();
-	for(int i=0;i<n;++i){
+	/*for(int i=0;i<n;++i){
 		for(int j = 0; j< Nodes[i]->nDim; ++j){
 			u[j] = Nodes[i]->Position[j];
 		}
 		Elements[0]->rotateVectorByRotationMatrix(u,rotMat);
 		for(int j = 0; j< Nodes[i]->nDim; ++j){
 			Nodes[i]->Position[j] = u[j];
+		}
+	}*/
+	for(int i=1;i<n;++i){
+		for(int j = 0; j< Nodes[i]->nDim; ++j){
+			u[j] = Nodes[i]->Position[j] - Nodes[0]->Position[j];
+		}
+		Elements[0]->rotateVectorByRotationMatrix(u,rotMat);
+		for(int j = 0; j< Nodes[i]->nDim; ++j){
+			Nodes[i]->Position[j] = u[j] + Nodes[0]->Position[j];
 		}
 	}
 	for(int i=0;i<Elements.size();++i){
@@ -3929,6 +3952,32 @@ void Simulation::resetForces(){
 	}
 }
 
+void Simulation::calculateApicalSize(){
+	double sizeLim[2][2] = {{0.0,0.0},{0.0,0.0}};
+	bool found[2][2] = {{false,false},{false,false}};
+	vector<Node*>::iterator itNode;
+	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+		if ((*itNode)->tissueType == 0 && (*itNode)->tissuePlacement == 1){ //checking only columnar apical layer nodes
+			for (int i=0; i<2; ++i){
+				if ( (*itNode)->Position[i] < sizeLim[0][i] ){
+					sizeLim[0][i] = (*itNode)->Position[i];
+					found[0][i] = true;
+				}
+				else if((*itNode)->Position[i]>sizeLim[1][i]){
+					sizeLim[1][i] = (*itNode)->Position[i];
+					found[1][i] = true;
+				}
+			}
+		}
+	}
+	if (!found[0][0] && !found[0][1] && !found[1][0] && !found[1][1]){
+		cerr<<" error in apical bounding  box calculation! Found? :"<<found[0][0]<<" "<<found[0][1]<<" "<<found[1][0]<<" "<<found[1][1]<<endl;
+	}
+	double DV = sizeLim[1][0] - sizeLim[0][0];
+	double AP = sizeLim[1][1] - sizeLim[0][1];
+	outputFile<<"At time: "<<dt*timestep<<" apical bounding box size: "<<DV<<" "<<AP<<endl;
+}
+
 void Simulation::calculateColumnarLayerBoundingBox(){
 	columnarBoundingBox[0][0] =  100000.0;	//lower left x
 	columnarBoundingBox[0][1] =  100000.0;	//lower left y
@@ -3959,6 +4008,7 @@ void Simulation::calculateColumnarLayerBoundingBox(){
 		cerr<<" error in bounding box calculation! Found? :"<<found[0][0]<<" "<<found[0][1]<<" "<<found[0][2]<<" "<<found[1][0]<<" "<<found[1][1]<<" "<<found[1][2]<<endl;
 	}
 }
+
 void Simulation::calculatePeripodialBoundingBox(){
 	peripodialBoundingBox[0][0] =  100000.0;	//lower left x
 	peripodialBoundingBox[0][1] =  100000.0;	//lower left y
@@ -4182,7 +4232,7 @@ void Simulation::checkForMyosinUpdates(){
 }
 
 void Simulation::updateEquilibriumMyosinsFromInputSignal(MyosinFunction* currMF){
-	cout<<"inside updateEquilibriumMyosinsFromInputSignal "<<endl;
+	//cout<<"inside updateEquilibriumMyosinsFromInputSignal "<<endl;
 	int nGridX = currMF->getGridX();
 	int nGridY = currMF->getGridY();
 	vector<ShapeBase*>::iterator itElement;
@@ -4197,27 +4247,15 @@ void Simulation::updateEquilibriumMyosinsFromInputSignal(MyosinFunction* currMF)
 			else{
 				(*itElement)->getRelativePosInPeripodialBoundingBox(ReletivePos);
 			}
-			ReletivePos[0] *= (float) (nGridX-1);
-			ReletivePos[1] *= (float) (nGridY-1);
-			int indexX = floor(ReletivePos[0]);
-			double fracX  = ReletivePos[0] - indexX;
-			if (indexX == nGridX) { //this is for the point that is exactly the point determining the bounding box high end in X
-				indexX--;
-				fracX = 1.0;
-			}
-			int indexY = floor(ReletivePos[1]);
-			double fracY  = ReletivePos[1] - indexY;
-			if (indexY == nGridY) { //this is for the point that is exactly the point determining the bounding box high end in Y
-				indexY--;
-				fracY = 1.0;
-			}
+			int indexX, indexY;
+			double fracX, fracY;
+			(*itElement)->convertRelativePosToGridIndex(ReletivePos, indexX, indexY, fracX, fracY, nGridX, nGridY);
 			//reading the equilibrium myosin value
 			double cEqYmid[2]= {0.0,0.0};
 			double cEq;
 			cEqYmid[0] = currMF->getEquilibriumMyoMatrixElement(indexX,indexY)*(1.0-fracX) + currMF->getEquilibriumMyoMatrixElement(indexX+1,indexY)*fracX;
 			cEqYmid[1] = currMF->getEquilibriumMyoMatrixElement(indexX,indexY+1)*(1.0-fracX) + currMF->getEquilibriumMyoMatrixElement(indexX+1,indexY+1)*fracX;
 			cEq = cEqYmid[0]*(1.0-fracY) + cEqYmid[1]*fracY;
-			if((*itElement)->Id == 0){cout<<"cEq: "<<cEq<<endl;}
 			if (currMF->isPolarised){
 				//If the function is polarised, reading the orientation
 				double orientation[2];
@@ -4227,7 +4265,7 @@ void Simulation::updateEquilibriumMyosinsFromInputSignal(MyosinFunction* currMF)
 					orientation[axis] = cEqYmid[0]*(1.0-fracY) + cEqYmid[1]*fracY;
 				}
 				//updating the values of the shape for polarised myosin:
-				(*itElement)->updateUnpolarEquilibriumMyosinConcentration(currMF->isApical, cEq, orientation[0], orientation[1]);
+				(*itElement)->updateUnipolarEquilibriumMyosinConcentration(currMF->isApical, cEq, orientation[0], orientation[1]);
 			}
 			else{
 				//updating the values of the shape for uniform contractile:
@@ -4634,21 +4672,21 @@ void Simulation::setupPipetteExperiment(){
 
 void Simulation::addMyosinForces(gsl_matrix* gExt){
 	vector<ShapeBase*>::iterator itElement;
-	int n = Nodes.size();
 	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 	    int* nodeIds = (*itElement)->getNodeIds();
 	    int nNodes= (*itElement)->getNodeNumber();
+	    double sumMyo[3] = {0.0,0.0,0.0};
 	    for (int j=0; j<nNodes; ++j){
 			double Fx = (*itElement)->MyoForce[j][0];
 			double Fy = (*itElement)->MyoForce[j][1];
 			double Fz = (*itElement)->MyoForce[j][2];
 			int indice = nodeIds[j]*3;
+			Fx += gsl_matrix_get(gExt,indice,0);
 			gsl_matrix_set(gExt,indice,0,Fx);
+			Fy += gsl_matrix_get(gExt,indice+1,0);
 			gsl_matrix_set(gExt,indice+1,0,Fy);
+			Fz += gsl_matrix_get(gExt,indice+2,0);
 			gsl_matrix_set(gExt,indice+2,0,Fz);
-			//if ((*itElement) -> Id ==0){
-			//	Elements[0]->displayMatrix(gExt,"gExt");
-			//}
 	    }
 	}
 }

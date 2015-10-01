@@ -209,7 +209,7 @@ void MainWindow::setMyosinComboBox(QGridLayout *ProjectDisplayOptionsGrid){
 	MyosinComboBox = new QComboBox();
 	MyosinComboBox->addItem("Uniform Myosin");
 	MyosinComboBox->addItem("Uni-polar myosin");
-	MyosinComboBox->setEnabled(false);
+	MyosinComboBox->setEnabled(true);
 	connect(MyosinComboBox , SIGNAL(currentIndexChanged(int)),this,SLOT(updateMyosinComboBox(int)));
 	ProjectDisplayOptionsGrid->addWidget(MyosinComboBox,6,2,1,2,Qt::AlignLeft);
 }
@@ -388,11 +388,8 @@ void MainWindow::setDisplayPreferences(QGridLayout *ProjectDisplayOptionsGrid){
 	connect(DisplayPreferencesCheckBoxes[7] , SIGNAL(stateChanged(int)),this,SLOT(updateBoundingBoxCheckBox(int)));
 	//draw net forces checkbox
 	DisplayPreferencesCheckBoxes[8] = new QCheckBox("Myosin");
-	DisplayPreferencesCheckBoxes[8]->setChecked(false);
+	DisplayPreferencesCheckBoxes[8]->setChecked(true);
 	connect(DisplayPreferencesCheckBoxes[8] , SIGNAL(stateChanged(int)),this,SLOT(updateMyosinCheckBox(int)));
-
-
-
 
     ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[0],3,0,1,2,Qt::AlignLeft);  // display pipette
 	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[7],3,2,1,2,Qt::AlignLeft);  // display bounding box
@@ -701,7 +698,7 @@ void MainWindow::timerSimulationStep(){
 	}
 	else{
 		if (Sim01->timestep < Sim01->SimLength){
-			cout<<"calling runonestep"<<endl;
+			//cout<<"calling runonestep"<<endl;
 			//cout<<"dataSaveInterval before calling a step: " <<Sim01->dataSaveInterval<<endl;
 			Sim01->runOneStep();
 			bool slowsteps = false;
@@ -720,7 +717,7 @@ void MainWindow::timerSimulationStep(){
             Sim01->wrapUpAtTheEndOfSimulation();
             double duration = ( std::clock() - simulationStartClock ) / (double) CLOCKS_PER_SEC;
             cout<<"Simulation length in seconds: "<< duration <<endl;
-            //close();
+            close();
         }
     }
     MainGLWidget->update();

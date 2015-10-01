@@ -694,11 +694,11 @@ void 	ShapeBase::calculateRelativePosInBoundingBox(double columnarBoundingBoxXMi
 		peripodialRelativePosInBoundingBox[0] = (peripodialRelativePosInBoundingBox[0] - peripodialBoundingBoxXMin) / peripodialBoundingBoxLength;
 		peripodialRelativePosInBoundingBox[1] = (peripodialRelativePosInBoundingBox[1] - peripodialBoundingBoxYMin) / peripodialBoundingBoxWidth;
 	}
-	//cout<<"Elements: "<<Id<<" centre: "<< RelativePosInBoundingBox[0]<<" "<<RelativePosInBoundingBox[1]<<" ";
+	//cout<<"Elements: "<<Id<<" centre: "<< columnarRelativePosInBoundingBox[0]<<" "<<columnarRelativePosInBoundingBox[1]<<" ";
 	//cout<<" Bounding box: "<<BoindingBoxXMin<<" "<<BoundingBoxYMin<<" "<<BoundingBoxLength<<" "<<BoundingBoxWidth<<"  ";
 	columnarRelativePosInBoundingBox[0] = (columnarRelativePosInBoundingBox[0] - columnarBoundingBoxXMin) / columnarBoundingBoxLength;
 	columnarRelativePosInBoundingBox[1] = (columnarRelativePosInBoundingBox[1] - columnarBoundingBoxYMin) / columnarBoundingBoxWidth;
-	//cout<<" rel Pos: "<< RelativePosInBoundingBox[0]<<" "<<RelativePosInBoundingBox[1]<<endl;
+	//cout<<" rel Pos: "<< columnarRelativePosInBoundingBox[0]<<" "<<columnarRelativePosInBoundingBox[1]<<endl;
 	//double* a = new double[3];
 	//a = getRelativePosInBoundingBox();
 	//cout<<" a: "<< a[0]<<" "<<a[1]<<endl;
@@ -1566,7 +1566,7 @@ void	ShapeBase::updateUniformEquilibriumMyosinConcentration(bool isApical, doubl
 	}
 }
 
-void	ShapeBase::updateUnpolarEquilibriumMyosinConcentration(bool isApical, double cEqUnipolar, double orientationX, double orientationY){
+void	ShapeBase::updateUnipolarEquilibriumMyosinConcentration(bool isApical, double cEqUnipolar, double orientationX, double orientationY){
 	int indice = 1;
 	if (isApical){
 		indice = 0;

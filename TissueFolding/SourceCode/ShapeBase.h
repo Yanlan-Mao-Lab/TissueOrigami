@@ -202,7 +202,7 @@ public:
 	void 	setGrowthRate(double x, double y, double z);
 	void 	cleanMyosinForce();
 	void	updateUniformEquilibriumMyosinConcentration(bool isApical, double cEqUniform);
-	void	updateUnpolarEquilibriumMyosinConcentration(bool isApical, double cEqUnipolar, double orientationX, double orientationY);
+	void	updateUnipolarEquilibriumMyosinConcentration(bool isApical, double cEqUnipolar, double orientationX, double orientationY);
 	void	updateMyosinConcentration(double dt, double kMyo);
 	double	getCmyosinUniformForNode (int TissuePlacement);
 	double	getCmyosinUnipolarForNode (int TissuePlacement);

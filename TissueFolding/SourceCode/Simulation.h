@@ -255,6 +255,7 @@ public:
 	void cleanGrowthData();
 	void cleanMatrixUpdateData();
 	void resetForces();
+	void calculateApicalSize();
 	void calculateColumnarLayerBoundingBox();
 	void calculatePeripodialBoundingBox();
     void calculateZProjectedAreas();
