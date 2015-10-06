@@ -939,30 +939,30 @@ bool  Prism::IspointInsideTriangle(int tissueplacement,double x, double y,double
 	delete[] PE2;
 	return isInside;
 }
-void  	Prism::calculateMyosinForces(){
+void  	Prism::calculateMyosinForces(double forcePerMyoMolecule){
 	if (cMyoUniform[0]>0){
 		calculateApicalArea();
-		distributeMyosinForce(true,true); //isIsotropic, isApical
+		distributeMyosinForce(true,true, forcePerMyoMolecule); //isIsotropic, isApical, force per myosin molecule to calculte the actual total force
 		//there is unfiorm myosin activity on apical surface
 	}
 	if (cMyoUniform[1]>0){
 		calculateBasalArea();
-		distributeMyosinForce(true,false);
+		distributeMyosinForce(true,false, forcePerMyoMolecule);
 		//there is unfiorm myosin activity on basal surface
 	}
 	if (cMyoUnipolar[0]>0){
 		calculateApicalArea();
-		distributeMyosinForce(false,true);
+		distributeMyosinForce(false,true, forcePerMyoMolecule);
 		//there is unipolar myosin activity on apical surface
 	}
 	if (cMyoUnipolar[1]>0){
 		calculateBasalArea();
-		distributeMyosinForce(false,false);
+		distributeMyosinForce(false,false, forcePerMyoMolecule);
 		//there is unipolar myosin activity on basal surface
 	}
 }
 
-void 	Prism::distributeMyosinForce(bool isIsotropic, bool apical){
+void 	Prism::distributeMyosinForce(bool isIsotropic, bool apical, double forcePerMyoMolecule){
 	int id0, id1, id2;
 	double forcemag;
 	int currSurface = 0;
@@ -990,6 +990,7 @@ void 	Prism::distributeMyosinForce(bool isIsotropic, bool apical){
 			forcemag = cMyoUnipolar[0]*BasalArea;
 		}
 	}
+	forcemag *= forcePerMyoMolecule;
 	double centre[3] = {0.0,0.0,0.0};
 	gsl_vector* vec0 = gsl_vector_calloc(3);
 	gsl_vector* vec1 = gsl_vector_calloc(3);
@@ -1005,12 +1006,12 @@ void 	Prism::distributeMyosinForce(bool isIsotropic, bool apical){
 		//If I am doing a non-isotropic calculation, then I will project the vectors towards the centre
 		// on top of the axis of interest:
 		//First I need to align the myosin polarity direction on to the surface, the forces are on the surface!:
-		//geth the normal:
+		//get the normal:
 		gsl_vector* cross = gsl_vector_calloc(3);
 		crossProduct3D(vec0,vec1,cross);
 		normaliseVector3D(cross);
 		//project vector on normal:
-
+		cout<<"myo polarity dir: "<<gsl_matrix_get(myoPolarityDir,currSurface,0)<<" "<<gsl_matrix_get(myoPolarityDir,currSurface,1)<<endl;
 		double dotp = 0.0;
 		for (int i =0; i<3; ++i){
 			dotp += gsl_vector_get(cross,i)*gsl_matrix_get(myoPolarityDir,currSurface,i);

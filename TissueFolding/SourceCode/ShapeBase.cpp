@@ -1605,9 +1605,9 @@ void	ShapeBase::updateUnipolarEquilibriumMyosinConcentration(bool isApical, doub
 }
 
 void	ShapeBase::updateMyosinConcentration(double dt, double kMyo){
-	gsl_matrix_set(myoPolarityDir,0,0,1.0);
-	gsl_matrix_set(myoPolarityDir,0,1,0.0);
-	gsl_matrix_set(myoPolarityDir,0,2,0.0);
+	//gsl_matrix_set(myoPolarityDir,0,0,1.0);
+	//gsl_matrix_set(myoPolarityDir,0,1,0.0);
+	//gsl_matrix_set(myoPolarityDir,0,2,0.0);
 	double thresholdValue = 1E-8, thresholdFraction= 0.01;
 	//the value of kMyo is taken form my thesis
 	double currMyoDt[3] = {dt,dt*2.0,dt/2.0};

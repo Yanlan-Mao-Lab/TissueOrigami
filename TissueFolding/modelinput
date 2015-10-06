@@ -1,6 +1,6 @@
 InputMeshParameters:
   MeshInputMode(int-seeDocumentation): 4
-  MeshFile(full-path):   /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Wind48hr_02.mesh
+  MeshFile(full-path):   /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Wind48hr_03.mesh
 
 PeripodialMembraneParameters:
   AddPeripodialMembrane: 0
@@ -19,7 +19,7 @@ NodeFixingOptions:
 
 TimeParameters:
   TimeStep(sec): 10
-  SimulationLength(sec): 3610
+  SimulationLength(sec): 20
 
 PysicalProperties:
   YoungsModulusApical: 1000.0	YoungsModulusBasal: 1000.0	YoungsModulusMid: 1000.0	Noise(%-int): 0
@@ -80,11 +80,11 @@ MyosinOptions:
   MyosinDiffusionRate(double-1/sec): 0.09873
   ForcePerMyosinMolecule(double):  1.0
   InitialTime(sec):   0
-  ApplyToColumnarLayer(bool): 0
+  ApplyToColumnarLayer(bool): 1
   ApplyToPeripodialMembrane(bool): 0
   isApical(bool): 1
   isPolarised(bool): 1
-  EquilibriumConcentrationFilename(full-path): /home/melda/Documents/TissueFolding/ToolBox/MyosinLevels/MyosinStripesAP-10mic-10myo
+  EquilibriumConcentrationFilename(full-path): /home/melda/Documents/TissueFolding/ToolBox/MyosinLevels/MyosinStripesAP-20mic-10myo
   OrientationAngleFilename(full-path): /home/melda/Documents/TissueFolding/ToolBox/MyosinLevels/MyosinStripesAP-Angles
 
 Stretcher:

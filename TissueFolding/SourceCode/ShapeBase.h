@@ -210,7 +210,7 @@ public:
 	void 	getEquilibriumMyosinLevels (double *cMyoEq);
 	void 	setMyosinLevels (double cUni0, double cUni1, double cPol0, double cPol1);
 	void 	setEquilibriumMyosinLevels (double cUni0, double cUni1, double cPol0, double cPol1);
-	virtual void calculateMyosinForces(){ParentErrorMessage("calculateMyosinForces");};
+	virtual void calculateMyosinForces(double forcePerMyoMolecule){ParentErrorMessage("calculateMyosinForces");};
 	virtual void distributeMyosinForce(bool isIsotropic, bool apical){ParentErrorMessage("distributeMyosin");};
 	void 	setShapeChangeRate(double x, double y, double z, double xy, double yz, double xz);
 	void 	updateGrowthToAdd(double* growthscale);

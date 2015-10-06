@@ -58,8 +58,8 @@ public:
 	void calculateNormalForPacking(int tissuePlacement);
 	void calculateApicalArea();
 	void calculateBasalArea();
-	void calculateMyosinForces();
-	void distributeMyosinForce(bool isIsotropic, bool apical);
+	void calculateMyosinForces(double forcePerMyoMolecule);
+	void distributeMyosinForce(bool isIsotropic, bool apical, double forcePerMyoMolecule);
 
 	void getApicalNodePos(double* posCorner);
 	void getBasalNodePos(double* posCorner);

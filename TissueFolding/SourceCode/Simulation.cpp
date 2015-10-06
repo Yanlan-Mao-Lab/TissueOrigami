@@ -4306,7 +4306,7 @@ void Simulation::calculateMyosinForces(){
 	int  n = Elements.size();
 	for ( int i = 0; i < n; ++i ){
 		Elements[i]->updateMyosinConcentration(dt, kMyo);
-		Elements[i]->calculateMyosinForces();
+		Elements[i]->calculateMyosinForces(forcePerMyoMolecule);
 	}
 }
 
