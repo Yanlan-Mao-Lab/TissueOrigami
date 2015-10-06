@@ -114,6 +114,7 @@ void Simulation::setDefaultParameters(){
     GrowthSaved = true;
 	ForcesSaved = true;
 	VelocitiesSaved = true;
+	ProteinsSaved = true;
 	PeripodialElasticity = 0.0;
 	PeripodialViscosity = ApicalVisc;
 	PeripodialThicnessScale = 1.0;
@@ -124,10 +125,12 @@ void Simulation::setDefaultParameters(){
 	anteriorTipIndex = 0;
 	posteriorTipIndex = 0;
 	stretcherAttached = false;
+	distanceIndex = false;
+	StretchDistanceStep = 0.0;
+	DVClamp = true;
 	StretchInitialStep = -100;
 	StretchEndStep = -100;
 	PipetteSuction = false;
-	StretchVelocity = 0.0;
 	PipetteInitialStep= -100;
 	PipetteEndStep = 0.0;
 	ApicalSuction = true;
@@ -295,6 +298,9 @@ bool Simulation::readFinalSimulationStep(){
         if (GrowthSaved){
             readGrowthToContinueFromSave();
         }
+        if (ProteinsSaved){
+        	readProteinsToContinueFromSave();
+		}
 		if (ZerothFrame){
 			ZerothFrame = false;
 		}
@@ -523,6 +529,17 @@ bool Simulation::openFiles(){
 			cerr<<"could not open file: "<<name_saveFileForces<<endl;
 			Success = false;
 		}
+		//
+		saveFileString = saveDirectory +"/Save_Proteins";
+		const char* name_saveFileProteins = saveFileString.c_str();
+		saveFileProteins.open(name_saveFileProteins, ofstream::binary);
+		if (saveFileProteins.good() && saveFileProteins.is_open()){
+			Success = true;
+		}
+		else{
+			cerr<<"could not open file: "<<name_saveFileProteins<<endl;
+			Success = false;
+		}
 	}
 	if (saveDirectory == "Not-Set"){
 		cerr<<"Output directory is not set, outputting on Out file in current directory"<<endl;
@@ -649,6 +666,13 @@ bool Simulation::openFilesToDisplay(){
 		cerr<<"Cannot open the save file to display: "<<name_saveFileToDisplayForce<<endl;
 		ForcesSaved = false;
 	}
+	saveFileString = saveDirectoryToDisplayString +"/Save_Proteins";
+	const char* name_saveFileToDisplayProteins = saveFileString.c_str();;
+	saveFileToDisplayProteins.open(name_saveFileToDisplayProteins, ifstream::in);
+	if (!(saveFileToDisplayProteins.good() && saveFileToDisplayProteins.is_open())){
+		cerr<<"Cannot open the save file to display: "<<name_saveFileToDisplayProteins<<endl;
+		ProteinsSaved = false;
+	}
 	return true;
 }
 
@@ -681,6 +705,7 @@ bool Simulation::initiateSavedSystem(){
 	if (VelocitiesSaved){
 		updateVelocitiesFromSave();
 	}
+
 	updateElementVolumesAndTissuePlacements();
     //cleanMatrixUpdateData();
 	clearNodeMassLists();
@@ -1018,6 +1043,21 @@ void Simulation::updateGrowthFromSave(){
         gsl_matrix_free(currFg);
     }
 }
+void Simulation::updateProteinsFromSave(){
+	int n = Elements.size();
+	for (int i=0;i<n;++i){
+		double c[4];
+		double cEq[4];
+		for (int j = 0; j<4; j++){
+			saveFileToDisplayProteins.read((char*) &c[j], sizeof c[j]);
+		}
+		for (int j = 0; j<4; j++){
+			saveFileToDisplayProteins.read((char*) &cEq[j], sizeof cEq[j]);
+		}
+		Elements[i]->setMyosinLevels(c[0], c[1], c[2], c[3]);
+		Elements[i]->setEquilibriumMyosinLevels(cEq[0], cEq[1], cEq[2], cEq[3]);
+	}
+}
 
 void Simulation::readTensionCompressionToContinueFromSave(){
 	int n = Elements.size();
@@ -1044,6 +1084,22 @@ void Simulation::readGrowthToContinueFromSave(){
         Elements[i]->setFg(currFg);
         gsl_matrix_free(currFg);
     }
+}
+
+void Simulation::readProteinsToContinueFromSave(){
+	int n = Elements.size();
+	for (int i=0;i<n;++i){
+		double c[4];
+		double cEq[4];
+		for (int j = 0; j<4; j++){
+			saveFileToDisplayProteins.read((char*) &c[j], sizeof c[j]);
+		}
+		for (int j = 0; j<4; j++){
+			saveFileToDisplayProteins.read((char*) &cEq[j], sizeof cEq[j]);
+		}
+		Elements[i]->setMyosinLevels(c[0], c[1], c[2], c[3]);
+		Elements[i]->setEquilibriumMyosinLevels(cEq[0], cEq[1], cEq[2], cEq[3]);
+	}
 }
 
 void Simulation::initiatePrismFromSaveForUpdate(int k){
@@ -1096,6 +1152,9 @@ void Simulation::updateOneStepFromSave(){
 	}
 	if(VelocitiesSaved){
 		updateVelocitiesFromSave();
+	}
+	if(ProteinsSaved){
+		updateProteinsFromSave();
 	}
 	clearNodeMassLists();
 	assignNodeMasses();
@@ -2453,6 +2512,17 @@ bool Simulation::addPeripodialMembraneToTissue(){
     return Success;
 }
 
+void Simulation::checkForExperimentalSetupsBeforeIteration(){
+	if (stretcherAttached){
+		moveClampedNodesForStretcher();
+	}
+}
+
+void Simulation::checkForExperimentalSetupsWithinIteration(gsl_vector* gSum){
+	if (stretcherAttached){
+		recordForcesOnClampBorders(gSum);
+	}
+}
 
 void Simulation::runOneStep(){
     cout<<"entered run one step"<<endl;
@@ -2476,6 +2546,7 @@ void Simulation::runOneStep(){
             Elements[i]->calculateRelativePosInBoundingBox(columnarBoundingBox[0][0],columnarBoundingBox[0][1],columnarBoundingBoxSize[0],columnarBoundingBoxSize[1], peripodialBoundingBox[0][0],peripodialBoundingBox[0][1],peripodialBoundingBoxSize[0],peripodialBoundingBoxSize[1]);
         }
     }
+    checkForExperimentalSetupsBeforeIteration();
     if(nMyosinFunctions > 0){
     	checkForMyosinUpdates();
     }
@@ -2630,7 +2701,7 @@ void Simulation::updateStepNR(){
         for (int i=0; i<dim*nNodes; ++i){
             gsl_vector_set(gSum,i,gsl_vector_get(gSum,i)+gsl_matrix_get(gExt,i,0));
         }
-
+        checkForExperimentalSetupsWithinIteration(gSum);
         //Adding external forces:
         //double F = 5.509e+04 ;
         double F = 0 ;
@@ -3833,6 +3904,8 @@ void Simulation::assignTips(){
 }
 
 void Simulation::alignTissueDVToXPositive(){
+	//ventralTipIndex = 0;
+	//dorsalTipIndex = 66;
 	double* u = new double[3];
 	double* v = new double[3];
 	//For simulations with no viscosity, the position of node 0 is fixed. Node 0 is the dorsal tip of the tissue.
@@ -4071,6 +4144,7 @@ void Simulation::saveStep(){
     writeGrowth();
 	writeForces();
 	writeVelocities();
+	writeProteins();
 }
 
 void Simulation::writeSaveFileStepHeader(){
@@ -4205,6 +4279,26 @@ void Simulation::writeVelocities(){
 	}
 	saveFileVelocities.flush();
 }
+
+void Simulation::writeProteins(){
+	int n = Elements.size();
+	for (int i=0;i<n;++i){
+		double* cMyo = new double[4];
+		double* cMyoEq = new double[4];
+		Elements[i]->getMyosinLevels(cMyo);
+		Elements[i]->getEquilibriumMyosinLevels(cMyoEq);
+		saveFileProteins.write((char*) &cMyo[0], sizeof cMyo[0]);
+		saveFileProteins.write((char*) &cMyo[1], sizeof cMyo[1]);
+		saveFileProteins.write((char*) &cMyo[2], sizeof cMyo[2]);
+		saveFileProteins.write((char*) &cMyo[3], sizeof cMyo[3]);
+		saveFileProteins.write((char*) &cMyoEq[0], sizeof cMyoEq[0]);
+		saveFileProteins.write((char*) &cMyoEq[1], sizeof cMyoEq[1]);
+		saveFileProteins.write((char*) &cMyoEq[2], sizeof cMyoEq[2]);
+		saveFileProteins.write((char*) &cMyoEq[3], sizeof cMyoEq[3]);
+	}
+	saveFileProteins.flush();
+}
+
 
 void Simulation::calculateMyosinForces(){
 	//cout<<"Entered calculateMyosinForces"<<endl;
@@ -4591,48 +4685,148 @@ void Simulation::coordinateDisplay(){
 }
 
 void Simulation::setStretch(){
-	double DVmin = 1000.0;
-	double DVmax = -1000.0;
+	cout<<"setting the stretcher"<<endl;
+	for (int i=0;i<3;i++){
+		leftClampForces[i] = 0.0;
+		rightClampForces[i] = 0.0;
+	}
+	vector <int> clampedNodeIds;
+	double distance = 0;
+
+
+	if (DVClamp){
+		distance = fabs(Nodes[ventralTipIndex]->Position[0] - Nodes[dorsalTipIndex]->Position[0]);
+		cerr<<"Total DV distance: "<<distance<<" ";
+		distanceIndex = 0; //if the clamp is on DV axis, then the direction of interest is x, index is 0;
+	}
+	else{
+		distance = fabs(Nodes[anteriorTipIndex]->Position[1] - Nodes[posteriorTipIndex]->Position[1]);
+		cerr<<"Total AP distance: "<<distance<<" ";
+		distanceIndex = 1; //if the clamp is on AP axis, then the direction of interest is y, index is 1.
+	}
 	int n = Nodes.size();
 	for (int i=0; i<n; ++i){
-		if (Nodes[i]->Position[0]> StretchMax || Nodes[i]->Position[0] < StretchMin){
+		if (Nodes[i]->Position[distanceIndex]> StretchMax || Nodes[i]->Position[distanceIndex] < StretchMin){
 			Nodes[i]->FixedPos[0]=1;
 			Nodes[i]->FixedPos[1]=1;
 			Nodes[i]->FixedPos[2]=1;
-			if (Nodes[i]->Position[0]<DVmin){
-				DVmin = Nodes[i]->Position[0];
-			}
-			if (Nodes[i]->Position[0]>DVmax){
-				DVmax = Nodes[i]->Position[0];
-			}
+			clampedNodeIds.push_back(Nodes[i]->Id);
 		}
 	}
-	double distance = DVmax - DVmin;
-	cerr<<"Total DV distance: "<<distance<<" ";
+	setUpClampBorders(clampedNodeIds);
 	//the distance that is to be moved:
 	distance *= StretchStrain;
 	cerr<<"the distance that is to be moved: "<<distance<<" ";
 	//the time steps that the stretch operation should take place in:
 	double StretchTimeSteps = StretchEndStep - StretchInitialStep;
 	cerr<<"stretchTimeSteps: "<<StretchTimeSteps<<" ";
-	StretchVelocity = distance / StretchTimeSteps;
-	cerr<<"stretchVelocity: "<<StretchVelocity<<endl;
-
+	StretchDistanceStep = 0.5* (distance / StretchTimeSteps);
+	cerr<<"StretchDistanceStep: "<<StretchDistanceStep<<endl;
 }
 
-void Simulation::addStretchForces(int RKId){
-	int n = Nodes.size();
-	for (int i=0; i<n; ++i){
-		if (Nodes[i]->Position[0]> StretchMax){
-			SystemForces[RKId][i][0]=StretchVelocity*Nodes[i]->Viscosity*Nodes[i]->mass/dt;
-			SystemForces[RKId][i][1]=0.0;
-			SystemForces[RKId][i][2]=0.0;
+void Simulation::setUpClampBorders(vector<int>& clampedNodeIds){
+	int* nodeIds;
+	int n = clampedNodeIds.size();
+	int nElement = Elements.size();
+	for(int i=0; i<nElement; ++i){
+		nodeIds = Elements[i]->getNodeIds();
+		bool hasClampedNode = false;
+		bool hasNonClampedNode = false;
+		bool leftHandSide = false;
+		vector <int> clampedBorderNodes;
+		int nNodes = Elements[i]->getNodeNumber();
+		for (int j=0; j< nNodes; j++){
+			bool lastNodeWasClamped = false;
+			for (int k=0; k<n; k++){
+				if (nodeIds[j] == clampedNodeIds[k]){
+					hasClampedNode = true;
+					lastNodeWasClamped = true;
+					//check if node is recorded:
+					bool alreadyRecorded = false;
+					for (int m=0; m<leftClampBorder.size(); m++){
+						if (leftClampBorder[m] == nodeIds[j]){
+							alreadyRecorded = true;
+							break;
+						}
+					}
+					if (!alreadyRecorded){
+						for (int m=0; m<rightClampBorder.size(); m++){
+							if (rightClampBorder[m] == nodeIds[j]){
+								alreadyRecorded = true;
+								break;
+							}
+						}
+					}
+					if (!alreadyRecorded){
+						clampedBorderNodes.push_back(nodeIds[j]);
+					}
+					if (Nodes[nodeIds[j]]->Position[distanceIndex] < StretchMin){
+						leftHandSide = true;
+					}
+					break;
+				}
+			}
+			if (lastNodeWasClamped == false){
+				hasNonClampedNode = true;
+			}
 		}
-		else if( Nodes[i]->Position[0] < StretchMin ){
-			SystemForces[RKId][i][0]=(-1.0)*StretchVelocity*Nodes[i]->Viscosity*Nodes[i]->mass/dt;
-			SystemForces[RKId][i][1]=0.0;
-			SystemForces[RKId][i][2]=0.0;
+		if (hasClampedNode && hasNonClampedNode){
+			cout<<" Element "<<Elements[i]->Id<<" is at the border"<<endl;
+			if(leftHandSide){
+				cout<<"Element is on left hand side"<<endl;
+				for (int k=0; k<clampedBorderNodes.size(); k++){
+					leftClampBorder.push_back(clampedBorderNodes[k]);
+				}
+			}
+			else {
+				cout<<"Element is on right hand side"<<endl;
+				for (int k=0; k<clampedBorderNodes.size(); k++){
+					rightClampBorder.push_back(clampedBorderNodes[k]);
+				}
+			}
 		}
+	}
+	for (int k=0; k<leftClampBorder.size(); k++){
+		cout<<"left clamp border nodes: "<<leftClampBorder[k]<<endl;
+	}
+	for (int k=0; k<rightClampBorder.size(); k++){
+		cout<<"right clamp border nodes: "<<rightClampBorder[k]<<endl;
+	}
+}
+
+void Simulation::recordForcesOnClampBorders(gsl_vector* gSum){
+	cout<<"in record clamp forces"<<endl;
+	for (int i=0;i<3;i++){
+		leftClampForces[i] = 0.0;
+		rightClampForces[i] = 0.0;
+	}
+	for (int k=0; k<leftClampBorder.size(); k++){
+		leftClampForces[0] += gsl_vector_get(gSum,leftClampBorder[k]*3);
+		leftClampForces[1] += gsl_vector_get(gSum,leftClampBorder[k]*3+1);
+		leftClampForces[2] += gsl_vector_get(gSum,leftClampBorder[k]*3+2);
+	}
+	for (int k=0; k<rightClampBorder.size(); k++){
+		rightClampForces[0] += gsl_vector_get(gSum,rightClampBorder[k]*3);
+		rightClampForces[1] += gsl_vector_get(gSum,rightClampBorder[k]*3+1);
+		rightClampForces[2] += gsl_vector_get(gSum,rightClampBorder[k]*3+2);
+	}
+	outputFile<<"Forces on clamps lhs: "<<leftClampForces[0]<<" "<<leftClampForces[1]<<" "<<leftClampForces[2]<<" rhs: "<<rightClampForces[0]<<" "<<rightClampForces[1]<<" "<<rightClampForces[2]<<endl;
+}
+
+void Simulation::moveClampedNodesForStretcher(){
+	if (timestep>=StretchInitialStep && timestep<StretchEndStep){
+		int n = Nodes.size();
+		for (int i=0; i<n; ++i){
+			if (Nodes[i]->Position[distanceIndex]> StretchMax){
+				Nodes[i]->Position[distanceIndex] += StretchDistanceStep;
+			}
+			else if( Nodes[i]->Position[distanceIndex] < StretchMin ){
+				Nodes[i]->Position[distanceIndex] -= StretchDistanceStep;
+			}
+		}
+        for(int i=0;i<Elements.size();++i){
+            Elements[i]->updatePositions(3,Nodes);
+        }
 	}
 }
 

@@ -1166,6 +1166,14 @@ bool ModelInputObject::readStretcherSetup(ifstream& file){
 		return false;
 	}
 	file >> currHeader;
+	if(currHeader == "ClampedOnDV(bool):"){
+		file >> Sim->DVClamp;
+	}
+	else{
+		cerr<<"Error in reading stretcher setup: "<<currHeader<<", should have been: ClampedOnDV(bool):" <<endl;
+		return false;
+	}
+	file >> currHeader;
 	if(currHeader == "InitialTime(sec):"){
 		double inittime;
 		file >> inittime;

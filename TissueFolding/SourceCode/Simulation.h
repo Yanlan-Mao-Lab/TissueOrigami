@@ -26,20 +26,23 @@ private:
     ofstream saveFileGrowth;
 	ofstream saveFileVelocities;
 	ofstream saveFileForces;
+	ofstream saveFileProteins;
 	ofstream saveFileSimulationSummary;
 	ifstream saveFileToDisplayMesh;
 	ifstream saveFileToDisplayTenComp;
     ifstream saveFileToDisplayGrowth;
 	ifstream saveFileToDisplayForce;
+	ifstream saveFileToDisplayProteins;
 	ifstream saveFileToDisplayVel;
 	ifstream saveFileToDisplaySimSum;
 	bool TensionCompressionSaved;
     bool GrowthSaved;
 	bool ForcesSaved;
 	bool VelocitiesSaved;
+	bool ProteinsSaved;
 	int	 nCircumferencialNodes;
 	int dorsalTipIndex,ventralTipIndex,anteriorTipIndex,posteriorTipIndex;
-	double StretchVelocity;
+	double StretchDistanceStep;
 	double columnarBoundingBoxSize[3];
 	double peripodialBoundingBoxSize[3];
 	bool ContinueFromSave;
@@ -72,8 +75,10 @@ private:
 	void updateForcesFromSave();
 	void updateTensionCompressionFromSave();
     void updateGrowthFromSave();
+    void updateProteinsFromSave();
 	void readTensionCompressionToContinueFromSave();
     void readGrowthToContinueFromSave();
+    void readProteinsToContinueFromSave();
 	void updateVelocitiesFromSave();
 	bool readFinalSimulationStep();
 	void reInitiateSystemForces(int oldSize);
@@ -142,6 +147,7 @@ private:
     void writeGrowth();
 	void writeForces();
 	void writeVelocities();
+	void writeProteins();
 	void calculateMyosinForces();
 	void cleanUpMyosinForces();
 	void checkForMyosinUpdates();
@@ -159,7 +165,9 @@ private:
 	void changeCellShapesInSystem();
 	void changeCellShapeRing(int currIndexForParameters);
 	void setStretch();
-	void addStretchForces(int RKId);
+	void setUpClampBorders(vector<int>& clampedNodeIds);
+	void moveClampedNodesForStretcher();
+	void recordForcesOnClampBorders(gsl_vector* gSum);
 	void setupPipetteExperiment();
     void addPipetteForces(gsl_matrix *gExt);
     void addMyosinForces(gsl_matrix* gExt);
@@ -227,6 +235,12 @@ public:
 	double SystemCentre[3];
 	bool AddPeripodialMembrane;
 	bool stretcherAttached;
+	vector <int> leftClampBorder;
+	vector <int> rightClampBorder;
+	double leftClampForces[3];
+	double rightClampForces[3];
+	bool DVClamp;
+	int distanceIndex;	//the index of dimension for stretcher clamp position,
 	bool PipetteSuction;
 	bool ApicalSuction;
 	vector <int> TransientZFixListForPipette;
@@ -261,6 +275,8 @@ public:
     void calculateZProjectedAreas();
     void correctzProjectedAreaForMidNodes();
     void clearProjectedAreas();
+    void checkForExperimentalSetupsBeforeIteration();
+    void checkForExperimentalSetupsWithinIteration(gsl_vector* gSum);
 	void runOneStep();
     void updateStep4RK();
     void updateStepNR();

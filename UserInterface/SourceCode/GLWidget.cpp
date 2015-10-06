@@ -575,11 +575,11 @@ void GLWidget::highlightNode(int i){
  }
 
  void GLWidget::getConcentrationColour(float* OutputColour, float concentration){
-	 double scale2[2] = {0,100.0};
-	 	 double g = (concentration- scale2[0])/(scale2[1]-scale2[0]);
-	 	 OutputColour[0] = 1.0-g;
-	 	 OutputColour[1] = 1.0;
-	 	 OutputColour[2] = 0.8*(1.0-g);
+	 double scale2[2] = {0,50.0};
+	 double g = (concentration- scale2[0])/(scale2[1]-scale2[0]);
+	 OutputColour[0] = 1.0-g;
+	 OutputColour[1] = 1.0;
+	 OutputColour[2] = 0.8*(1.0-g);
  }
 
  void GLWidget::getDisplayColour(float* OutputColour, float Data){

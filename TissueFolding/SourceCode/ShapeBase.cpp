@@ -1556,6 +1556,33 @@ double ShapeBase::getCmyosinUnipolarForNode (int TissuePlacement){
 	return 0.0;
 }
 
+void ShapeBase::getMyosinLevels (double *cMyo){
+	cMyo[0] = cMyoUniform[0];
+	cMyo[1] = cMyoUniform[1];
+	cMyo[2] = cMyoUnipolar[0];
+	cMyo[3] = cMyoUnipolar[1];
+}
+
+void ShapeBase::getEquilibriumMyosinLevels (double* cMyoEq){
+	cMyoEq[0] = cMyoUniformEq[0];
+	cMyoEq[1] = cMyoUniformEq[1];
+	cMyoEq[2] = cMyoUnipolarEq[0];
+	cMyoEq[3] = cMyoUnipolarEq[1];
+}
+
+void ShapeBase::setMyosinLevels (double cUni0, double cUni1, double cPol0, double cPol1){
+	cMyoUniform[0] = cUni0;
+	cMyoUniform[1] = cUni1;
+	cMyoUnipolar[0] = cPol0;
+	cMyoUnipolar[1] = cPol1;
+}
+
+void ShapeBase::setEquilibriumMyosinLevels (double cUni0, double cUni1, double cPol0, double cPol1){
+	cMyoUniformEq[0] = cUni0;
+	cMyoUniformEq[1] = cUni1;
+	cMyoUnipolarEq[0] = cPol0;
+	cMyoUnipolarEq[1] = cPol1;
+}
 
 void	ShapeBase::updateUniformEquilibriumMyosinConcentration(bool isApical, double cEqUniform){
 	if (isApical){
