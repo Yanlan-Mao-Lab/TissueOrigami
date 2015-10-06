@@ -106,7 +106,6 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
         elasticStress[i] = gsl_matrix_calloc(3,3);
     }
     Strain = gsl_matrix_calloc(6,1);
-    RK1Strain = gsl_matrix_calloc(6,1);
     GrowthStrainsRotMat = gsl_matrix_alloc(3,3);
     gsl_matrix_set_identity(GrowthStrainsRotMat);
     Fg = gsl_matrix_alloc(3,3);
@@ -157,7 +156,6 @@ Prism::~Prism(){
     gsl_matrix_free(InvFsc);
     gsl_matrix_free(TriPointF);
     gsl_matrix_free(Strain);
-    gsl_matrix_free(RK1Strain);
     gsl_matrix_free(TriPointKe);
     gsl_matrix_free(GrowthStrainsRotMat);
     for (int i=0; i<3; ++i){
@@ -719,7 +717,7 @@ double Prism::getElementHeight(){
 }
 
 
-void Prism::AddPackingToSurface(int tissueplacement, double Fx, double Fy,double Fz, int RKId,  double ***SystemForces,  double ***PackingForces, vector<Node*> &Nodes){
+void Prism::AddPackingToSurface(int tissueplacement, double Fx, double Fy,double Fz, double **SystemForces,  double **PackingForces, vector<Node*> &Nodes){
 	int Id0, Id1, Id2;
 	if (tissueplacement == 0){//basal surface:
 		Id0 = 0;
@@ -737,16 +735,16 @@ void Prism::AddPackingToSurface(int tissueplacement, double Fx, double Fy,double
 	F[2] = Fz / 3.0;
 	for(int j=0; j<nDim; ++j){
 		if (!Nodes[NodeIds[Id0]]->FixedPos[j]){
-			SystemForces[RKId][NodeIds[Id0]][j] -= F[j];
-            PackingForces[RKId][NodeIds[Id0]][j] -= F[j];
+			SystemForces[NodeIds[Id0]][j] -= F[j];
+            PackingForces[NodeIds[Id0]][j] -= F[j];
 		}
 		if (!Nodes[NodeIds[Id1]]->FixedPos[j]){
-			SystemForces[RKId][NodeIds[Id1]][j] -= F[j];
-			PackingForces[RKId][NodeIds[Id1]][j] -= F[j];
+			SystemForces[NodeIds[Id1]][j] -= F[j];
+			PackingForces[NodeIds[Id1]][j] -= F[j];
 		}
 		if (!Nodes[NodeIds[Id2]]->FixedPos[j]){
-			SystemForces[RKId][NodeIds[Id2]][j] -= F[j];
-			PackingForces[RKId][NodeIds[Id2]][j] -= F[j];
+			SystemForces[NodeIds[Id2]][j] -= F[j];
+			PackingForces[NodeIds[Id2]][j] -= F[j];
 		}
 	}
 }

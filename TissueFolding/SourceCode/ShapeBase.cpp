@@ -859,13 +859,13 @@ void  ShapeBase::rotateReferenceElementByRotationMatrix(double* rotMat){
 	}
 }
 
-void	ShapeBase::calculateForces(int RKId, double ***SystemForces, vector <Node*>& Nodes, ofstream& outputFile){
+void	ShapeBase::calculateForces(double **SystemForces, vector <Node*>& Nodes, ofstream& outputFile){
     if (ShapeDim == 3){		//3D element
-        calculateForces3D(RKId, SystemForces, Nodes, outputFile);
+        calculateForces3D(SystemForces, Nodes, outputFile);
     }
 }
 
-void	ShapeBase::calculateForces3D(int RKId, double ***SystemForces, vector <Node*>& Nodes, ofstream& outputFile){
+void	ShapeBase::calculateForces3D(double **SystemForces, vector <Node*>& Nodes, ofstream& outputFile){
     int dim = nDim;
     int n = nNodes;
     //calculating F and B in a 3 point gaussian:
@@ -888,21 +888,21 @@ void	ShapeBase::calculateForces3D(int RKId, double ***SystemForces, vector <Node
         //displayMatrix(currg,"currg");
     }
     //displayMatrix(TriPointg,"TriPointg");
-    //cout<<"Element Id: "<<Id<<"Forces on node 351: "<<SystemForces[RKId][351][0]<<" "<<SystemForces[RKId][351][1]<<" "<<SystemForces[RKId][351][2]<<endl;
+    //cout<<"Element Id: "<<Id<<"Forces on node 351: "<<SystemForces[351][0]<<" "<<SystemForces[351][1]<<" "<<SystemForces[351][2]<<endl;
     //Now put the forces in world coordinates into system forces, in forces per volume format
     int counter = 0;
     for (int i = 0; i<nNodes; ++i){
         for (int j = 0; j<nDim; ++j){
             if (!Nodes[NodeIds[i]]->FixedPos[j]){
-                SystemForces[RKId][NodeIds[i]][j] = SystemForces[RKId][NodeIds[i]][j] - gsl_matrix_get(TriPointg,counter,0);
+                SystemForces[NodeIds[i]][j] = SystemForces[NodeIds[i]][j] - gsl_matrix_get(TriPointg,counter,0);
             }
             counter++;
         }
     }
-    /*cout<<"SystemForces RK " <<RKId<<" : "<<endl;
+    /*cout<<"SystemForces " <<endl;
     for (int i = 0; i<nNodes; ++i){
         for (int j = 0; j<nDim; ++j){
-            cout<<SystemForces[RKId][NodeIds[i]][j]<<" ";
+            cout<<SystemForces[NodeIds[i]][j]<<" ";
         }
         cout<<endl;
     }*/
@@ -1506,19 +1506,10 @@ void	ShapeBase::fillNodeNeighbourhood(vector<Node*>& Nodes){
 }
 
 
-void	ShapeBase::updatePositions(int RKId, vector<Node*>& Nodes){
-	if (RKId < 3){
-		for (int i = 0; i<nNodes; ++i){
-			for (int j = 0; j<nDim; ++j){
-				Positions[i][j] = Nodes[NodeIds[i]]->RKPosition[j];
-			}
-		}
-	}
-	else{
-		for (int i = 0; i<nNodes; ++i){
-			for (int j = 0; j<nDim; ++j){
-				Positions[i][j] = Nodes[NodeIds[i]]->Position[j];
-			}
+void	ShapeBase::updatePositions(vector<Node*>& Nodes){
+	for (int i = 0; i<nNodes; ++i){
+		for (int j = 0; j<nDim; ++j){
+			Positions[i][j] = Nodes[NodeIds[i]]->Position[j];
 		}
 	}
 }

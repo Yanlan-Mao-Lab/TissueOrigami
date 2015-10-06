@@ -92,7 +92,7 @@ protected:
 	void 	updateReferencePositionMatrixFromSave(ifstream& file);
 	virtual void calculateReferenceVolume(){ParentErrorMessage("calculateReferenceVolume");};
 	bool 	calculateGrowthStrainsRotMat(double* v);
-	void	calculateForces3D(int RKId, double ***SystemForces, vector <Node*>& Nodes, ofstream& outputFile);
+	void	calculateForces3D(double **SystemForces, vector <Node*>& Nodes, ofstream& outputFile);
     gsl_matrix* calculateEForNodalForces(gsl_matrix* F, gsl_matrix* Fe);
     gsl_matrix* calculateSForNodalForces(gsl_matrix* E);
     gsl_matrix* calculateCompactStressForNodalForces(gsl_matrix* Fe, gsl_matrix* S, gsl_matrix* FeT, gsl_matrix *Stress);
@@ -136,7 +136,6 @@ public:
 	double** Positions;
 	ReferenceShapeBase* ReferenceShape;
     gsl_matrix* Strain;
-    gsl_matrix* RK1Strain;
 
     bool 	IsGrowing;
 	bool 	IsChangingShape;
@@ -197,8 +196,8 @@ public:
     virtual void calculateApicalArea(){ParentErrorMessage("calculateApicalArea");};
     virtual void calculateBasalArea(){ParentErrorMessage("calculateBasalArea");};
 
-    void 	calculateForces(int RKId, double ***SystemForces, vector <Node*>& Nodes, ofstream& outputFile);
-    void 	updatePositions(int RKId, vector<Node*>& Nodes);
+    void 	calculateForces(double **SystemForces, vector <Node*>& Nodes, ofstream& outputFile);
+    void 	updatePositions(vector<Node*>& Nodes);
 	void 	setGrowthRate(double x, double y, double z);
 	void 	cleanMyosinForce();
 	void	updateUniformEquilibriumMyosinConcentration(bool isApical, double cEqUniform);
@@ -259,7 +258,7 @@ public:
 	virtual double getElementHeight(){return ParentErrorMessage("getElementHeight", 0.0);};
 	virtual bool IsPointCloseEnoughForPacking(double* Pos,  float Peripodialthreshold, float Columnarthreshold, int TissuePlacementOfPackingNode, int TissueTypeOfPackingNode){return ParentErrorMessage("IsPointCloseEnoughForPacking", false);};
 	virtual void calculateNormalForPacking(int tissuePlacement){ParentErrorMessage("calculateNormalForPacking");};
-	virtual void AddPackingToSurface(int tissueplacement, double Fx, double Fy,double Fz, int RKId,  double ***SystemForces, double ***PackingForces, vector<Node*> &Nodes){ParentErrorMessage("AddPackingToApicalSurface");};
+	virtual void AddPackingToSurface(int tissueplacement, double Fx, double Fy,double Fz, double **SystemForces, double **PackingForces, vector<Node*> &Nodes){ParentErrorMessage("AddPackingToApicalSurface");};
 	virtual void getApicalNodePos(double* posCorner){ParentErrorMessage("getApicalNodePos");};
 	virtual void getBasalNodePos(double* posCorner){ParentErrorMessage("getBasalNodePos");};
 	virtual bool IspointInsideTriangle(int tissueplacement, double x, double y,double z){return ParentErrorMessage("IspointInsideTriangle",false );};

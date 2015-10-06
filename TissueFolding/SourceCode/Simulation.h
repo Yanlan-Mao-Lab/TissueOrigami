@@ -131,9 +131,9 @@ private:
 	void fixY(Node* currNode);
 	void fixZ(int i);
 	void fixZ(Node* currNode);
-	void zeroForcesOnNode(int RKId, int i);
+	void zeroForcesOnNode(int i);
     void processDisplayDataAndSave();
-	void updateDisplaySaveValuesFromRK();
+	//void updateDisplaySaveValuesFromRK();
 	void saveStep();
 	void writeSimulationSummary();
 	void writeMeshFileSummary();
@@ -230,8 +230,8 @@ public:
 
 	vector <Node*> Nodes;
 	vector <ShapeBase*> Elements;
-	double*** SystemForces;
-	double*** PackingForces;
+	double** SystemForces;
+	double** PackingForces;
 	double SystemCentre[3];
 	bool AddPeripodialMembrane;
 	bool stretcherAttached;
@@ -278,7 +278,6 @@ public:
     void checkForExperimentalSetupsBeforeIteration();
     void checkForExperimentalSetupsWithinIteration(gsl_vector* gSum);
 	void runOneStep();
-    void updateStep4RK();
     void updateStepNR();
     void constructUnMatrix(gsl_matrix* un);
     void constructLumpedMassViscosityDtMatrix(gsl_matrix* mviscdt);
@@ -301,16 +300,15 @@ public:
     void calcutateFixedK(gsl_matrix* K, gsl_vector* g);
     void smallStrainrunOneStep();
     void packToPipetteWall();
-    void calculatePacking(int RKId, double PeriThreshold, double ColThreshold);
+    void calculatePacking(double PeriThreshold, double ColThreshold);
 	void checkPackingToPipette(bool& packsToPip, double* pos, double* pipF,double mass, int id);
 	void getNormalAndCornerPosForPacking(Node* NodePointer, ShapeBase* ElementPointer, double* normalForPacking,double* posCorner, bool& bothperipodial);
 	void getApicalNormalAndCornerPosForPacking(ShapeBase* ElementPointer, double* normalForPacking,double* posCorner);
 	void getBasalNormalAndCornerPosForPacking(ShapeBase* ElementPointer, double* normalForPacking,double* posCorner);
 	inline void CapPackingForce(double& Fmag);
 	void redistributePeripodialMembraneForces(int RKId);
-	void updateNodePositions(int RKId);
-	void updateElementPositions(int RKId);
-	void updateElementPositionsSingle(int RKId, int i );
+	void updateElementPositions();
+	void updateElementPositionsSingle(int i );
 	bool initiateSavedSystem();
 	void updateOneStepFromSave();
 	void alignTissueDVToXPositive();

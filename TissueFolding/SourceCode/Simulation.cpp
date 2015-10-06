@@ -37,18 +37,10 @@ Simulation::~Simulation(){
     cerr<<"destructor for simulation called"<<endl;
 	delete ModInp;
 	int n = Nodes.size();
-	//4 RK steps
-	for (int i = 0; i<4; ++i){
-		//n nodes
-		for (int j=0;j<n;++j){
-			delete[] SystemForces[i][j];
-			delete[] PackingForces[i][j];
-		}
-	}
-	//4 RK steps
-	for (int i = 0; i<4; ++i){
-		delete[] SystemForces[i];
-		delete[] PackingForces[i];
+	//n nodes
+	for (int j=0;j<n;++j){
+		delete[] SystemForces[j];
+		delete[] PackingForces[j];
 	}
 	delete[] SystemForces;
     delete[] PackingForces;
@@ -323,8 +315,7 @@ bool Simulation::readFinalSimulationStep(){
 	assignConnectedElementsAndWeightsToNodes();
 	clearLaserAblatedSites();
     calculateShapeFunctionDerivatives();
-	//This is updating positions from save, I am only interested in normal positions, no Runge-Kutta steps. This corresponds to RK step 4, RKId = 3
-	updateElementPositions(3);
+	updateElementPositions();
 	calculateColumnarLayerBoundingBox();
 	if (AddPeripodialMembrane){
 		calculatePeripodialBoundingBox();
@@ -714,8 +705,7 @@ bool Simulation::initiateSavedSystem(){
 	clearLaserAblatedSites();
     //calculateStiffnessMatrices();
     calculateShapeFunctionDerivatives();
-	//This is updating positions from save, I am only interested in normal positions, no Runge-Kutta steps. This corresponds to RK step 4, RKId = 3
-	updateElementPositions(3);
+	updateElementPositions();
 	//skipping the footer:
 	getline(saveFileToDisplayMesh,currline);
 	while (currline.empty() && !saveFileToDisplayMesh.eof()){
@@ -968,43 +958,34 @@ void Simulation::initiatePrismFromMeshInput(){
 
 void Simulation::reInitiateSystemForces(int oldSize){
 	//deleting the old system forces:
-	for (int i = 0; i<4; ++i){
-		for (int j=0;j<oldSize;++j){
-			delete[] SystemForces[i][j];
-		}
-	}
-	for (int i = 0; i<4; ++i){
-		delete[] SystemForces[i];
+	for (int j=0;j<oldSize;++j){
+		delete[] SystemForces[j];
+		delete[] PackingForces[j];
 	}
 	delete[] SystemForces;
-
+	delete[] PackingForces;
 	//reinitiating with the new size:
 	const int n = Nodes.size();
-	//4 RK steps
-	SystemForces =  new double**[4];
-	PackingForces =  new double**[4];
-	for (int i=0;i<4;++i){
-		SystemForces[i] = new double*[n];
-		PackingForces[i] = new double*[n];
-		for (int j=0;j<n;++j){
-			SystemForces[i][j] = new double[3];
-			PackingForces[i][j] = new double[3];
-			SystemForces[i][j][0]=0.0;
-			SystemForces[i][j][1]=0.0;
-			SystemForces[i][j][2]=0.0;
-			PackingForces[i][j][0]=0.0;
-			PackingForces[i][j][1]=0.0;
-			PackingForces[i][j][2]=0.0;
-		}
+	SystemForces = new double*[n];
+	PackingForces = new double*[n];
+	for (int j=0;j<n;++j){
+		SystemForces[j] = new double[3];
+		PackingForces[j] = new double[3];
+		SystemForces[j][0]=0.0;
+		SystemForces[j][1]=0.0;
+		SystemForces[j][2]=0.0;
+		PackingForces[j][0]=0.0;
+		PackingForces[j][1]=0.0;
+		PackingForces[j][2]=0.0;
 	}
 }
 
 void Simulation::updateForcesFromSave(){
 	int n = Nodes.size();
 	for (int i=0;i<n;++i){
-		saveFileToDisplayForce.read((char*) &SystemForces[0][i][0], sizeof SystemForces[0][i][0]);
-		saveFileToDisplayForce.read((char*) &SystemForces[0][i][1], sizeof SystemForces[0][i][1]);
-		saveFileToDisplayForce.read((char*) &SystemForces[0][i][2], sizeof SystemForces[0][i][2]);
+		saveFileToDisplayForce.read((char*) &SystemForces[i][0], sizeof SystemForces[i][0]);
+		saveFileToDisplayForce.read((char*) &SystemForces[i][1], sizeof SystemForces[i][1]);
+		saveFileToDisplayForce.read((char*) &SystemForces[i][2], sizeof SystemForces[i][2]);
 	}
 }
 
@@ -1137,8 +1118,8 @@ void Simulation::updateOneStepFromSave(){
 	updateElementStatesFromSave();
 	int n = Elements.size();
 	for (int i=0; i<n; ++i){
-		//This is updating positions from save, I am only interested in normal positions, no Runge-Kutta steps. This corresponds to RK step 4, RKId = 3
-		Elements[i]->updatePositions(3, Nodes);
+		//This is updating positions from save.
+		Elements[i]->updatePositions(Nodes);
 	}
 	if (TensionCompressionSaved){
         //cout<<"updating tension compression: "<<endl;
@@ -1633,40 +1614,35 @@ void Simulation::fixZ(int i){
 	}
 }
 
-void Simulation::zeroForcesOnNode(int RKId, int i){
+void Simulation::zeroForcesOnNode(int i){
 	double ForceBalance[3];
-	ForceBalance[0] = SystemForces[RKId][i][0];
-	ForceBalance[1] = SystemForces[RKId][i][1];
-	ForceBalance[2] = SystemForces[RKId][i][2];
+	ForceBalance[0] = SystemForces[i][0];
+	ForceBalance[1] = SystemForces[i][1];
+	ForceBalance[2] = SystemForces[i][2];
 	int n = Nodes.size();
 	for (int i=0;i<n;++i){
-		SystemForces[RKId][i][0]-=ForceBalance[0];
-		SystemForces[RKId][i][1]-=ForceBalance[1];
-		SystemForces[RKId][i][2]-=ForceBalance[2];
+		SystemForces[i][0]-=ForceBalance[0];
+		SystemForces[i][1]-=ForceBalance[1];
+		SystemForces[i][2]-=ForceBalance[2];
 	}
 }
 
 void Simulation::initiateSystemForces(){
 	const int n = Nodes.size();
-	//4 RK steps
-	SystemForces = new double**[4];
-	PackingForces = new double**[4];
-	for (int i=0;i<4;++i){
-		//n nodes
-		SystemForces[i] = new double*[n];
-		PackingForces[i] = new double*[n];
-		for (int j=0;j<n;++j){
-			//3 dimensions
-			SystemForces[i][j] = new double[3];
-			PackingForces[i][j] = new double[3];
-			SystemForces[i][j][0]=0.0;
-			SystemForces[i][j][1]=0.0;
-			SystemForces[i][j][2]=0.0;
-			PackingForces[i][j][0]=0.0;
-			PackingForces[i][j][1]=0.0;
-			PackingForces[i][j][2]=0.0;
-			//cout<<"systemforces[i][j]: "<<SystemForces[i][0]<<" "<<SystemForces[i][0]<<" "<<SystemForces[i][0]<<endl;
-		}
+	//n nodes
+	SystemForces = new double*[n];
+	PackingForces = new double*[n];
+	for (int j=0;j<n;++j){
+		//3 dimensions
+		SystemForces[j] = new double[3];
+		PackingForces[j] = new double[3];
+		SystemForces[j][0]=0.0;
+		SystemForces[j][1]=0.0;
+		SystemForces[j][2]=0.0;
+		PackingForces[j][0]=0.0;
+		PackingForces[j][1]=0.0;
+		PackingForces[j][2]=0.0;
+		//cout<<"systemforces[i][j]: "<<SystemForces[i][0]<<" "<<SystemForces[i][0]<<" "<<SystemForces[i][0]<<endl;
 	}
 }
 
@@ -2080,7 +2056,7 @@ void Simulation::manualPerturbationToInitialSetup(bool deform, bool rotate){
             }
         }
         for(int i=0;i<Elements.size();++i){
-            Elements[i]->updatePositions(3,Nodes);
+            Elements[i]->updatePositions(Nodes);
         }
     }
 }
@@ -2572,13 +2548,7 @@ void Simulation::runOneStep(){
     updateNodeMasses();
     updateElementToConnectedNodes(Nodes);
     calculateMyosinForces();
-    bool ExplicitCalculation = false;
-    if (ExplicitCalculation){
-        updateStep4RK();
-    }
-    else{
-        updateStepNR();
-    }
+    updateStepNR();
     processDisplayDataAndSave();
     cout<<"finalised run one step"<<endl;
     calculateColumnarLayerBoundingBox();
@@ -2597,32 +2567,6 @@ void Simulation::wrapUpAtTheEndOfSimulation(){
     //alignTissueAPToXYPlane();
 }
 
-void Simulation::updateStep4RK(){
-    for (int RKId = 0; RKId<4; ++RKId){
-        //cout<<"entered RK: "<<RKId<<endl;
-        int nElement = Elements.size();
-        for (int i=0; i<nElement; ++i){
-            if (!Elements[i]->IsAblated){
-                //cout<<"calculating forces for element:  "<<i<<endl;
-                Elements[i]->calculateForces(RKId, SystemForces, Nodes, outputFile);
-                if(RKId == 0 ){
-                    Elements[i]->createMatrixCopy(Elements[i]->RK1Strain,Elements[i]->Strain);
-                }
-            }
-        }
-        /*if (RKId ==0 ){
-            cout<<"System Forces - Displacements"<<endl;
-            for (int i=0; i<Nodes.size(); i++){
-                cout<<SystemForces[0][i][0]<<" "<<SystemForces[0][i][0]/(Nodes[i]->Viscosity*Nodes[i]->mass)*dt<<endl;
-                cout<<SystemForces[0][i][1]<<" "<<SystemForces[0][i][1]/(Nodes[i]->Viscosity*Nodes[i]->mass)*dt<<endl;
-                cout<<SystemForces[0][i][2]<<" "<<SystemForces[0][i][2]/(Nodes[i]->Viscosity*Nodes[i]->mass)*dt<<endl;
-            }
-        }*/
-        //cout<<"finalised elements & RK: "<<RKId<<endl;
-        updateNodePositions(RKId);
-        updateElementPositions(RKId);
-    }
-}
 
 void Simulation::clearProjectedAreas(){
     int n = Nodes.size();
@@ -2755,9 +2699,9 @@ void Simulation::updateStepNR(){
         /*if (iteratorK  ){
             cout<<"System Forces - Displacements"<<endl;
             for (int i=0; i<Nodes.size(); i++){
-                cout<<SystemForces[0][i][0]<<" "<<gsl_vector_get(deltaU,3*i)<<endl;
-                cout<<SystemForces[0][i][1]<<" "<<gsl_vector_get(deltaU,3*i+1)<<endl;
-                cout<<SystemForces[0][i][2]<<" "<<gsl_vector_get(deltaU,3*i+2)<<endl;
+                cout<<SystemForces[i][0]<<" "<<gsl_vector_get(deltaU,3*i)<<endl;
+                cout<<SystemForces[i][1]<<" "<<gsl_vector_get(deltaU,3*i+1)<<endl;
+                cout<<SystemForces[i][2]<<" "<<gsl_vector_get(deltaU,3*i+2)<<endl;
             }
         }*/
         //cout<<"Node 0 position: "<<Nodes[0]->Position[0]<<" "<<Nodes[0]->Position[1]<<" "<<Nodes[0]->Position[2]<<endl;
@@ -3298,21 +3242,21 @@ void Simulation::calculateElasticForcesForNR(gsl_matrix* ge){
     for (int i=0; i<nElement; ++i){
         if (!Elements[i]->IsAblated){
             //cout<<"calculating forces for element:  "<<i<<endl;
-            Elements[i]->calculateForces(0, SystemForces, Nodes, outputFile);
+            Elements[i]->calculateForces(SystemForces, Nodes, outputFile);
             /*int nNodes = Nodes.size();
             cout<<"Element "<<i<<"system forces: "<<endl;
             for (int nn=0; nn< nNodes; ++nn){
-                 cout<<"Node: "<<nn<<" "<<SystemForces[0][nn][0]<<" "<<SystemForces[0][nn][1]<<" "<<SystemForces[0][nn][2]<<endl;
+                 cout<<"Node: "<<nn<<" "<<SystemForces[nn][0]<<" "<<SystemForces[nn][1]<<" "<<SystemForces[nn][2]<<endl;
             }*/
         }
     }
-    //now all the forces are written on SysyemForces RK step = 0
+    //now all the forces are written on SysyemForces
     //I will add them into ge, this step can be made faster by separating calculate forces function into two,
     //and filling up either ge or System forces depending on hte solution method:
     int nNodes = Nodes.size();
     for (int i = 0; i< nNodes; ++i){
         for ( int j=0; j<3; j++){
-            gsl_matrix_set(ge, 3*i+j,0,SystemForces[0][i][j]);
+            gsl_matrix_set(ge, 3*i+j,0,SystemForces[i][j]);
         }
     }
     //cout<<"finalised elastic force calculation of the system"<<endl;
@@ -3399,14 +3343,14 @@ bool Simulation::checkConvergenceViaForce(gsl_vector* gSum){
 
 
 void Simulation::processDisplayDataAndSave(){
-    if (displayIsOn && !DisplaySave){
+    //if (displayIsOn && !DisplaySave){
         //The simulation is not displaying a saved setup, it is running and displaying
         //I need to correct the values to be displayed, and store averages, otherwise
         //the displayed values will be from artificial setups of different RK steps. (RK1 or RK4 depending on parameter)
-        updateDisplaySaveValuesFromRK();
-    }
+        //updateDisplaySaveValuesFromRK();
+    //}
     if (saveData && timestep % dataSaveInterval == 0){
-        updateDisplaySaveValuesFromRK();
+        //updateDisplaySaveValuesFromRK();
         saveStep();
     }
 }
@@ -3586,7 +3530,7 @@ void Simulation::checkPackingToPipette(bool& packsToPip, double* pos, double* pi
 	}
 }
 
-void Simulation::calculatePacking(int RKId, double PeriThreshold, double ColThreshold){
+void Simulation::calculatePacking(double PeriThreshold, double ColThreshold){
 	//cout<<"inside calculate packing"<<endl;
 	double multiplier = 0.05; //just a term to scale the forces down
 	double threshold = 5;	 //packing forces start at 3 microns
@@ -3607,7 +3551,7 @@ void Simulation::calculatePacking(int RKId, double PeriThreshold, double ColThre
 			//}
 			double* pos;
 			pos = new double[3];
-			(*itNode)->getCurrentRKPosition(RKId,pos);
+			(*itNode)->getCurrentPosition(pos);
 			for (itEle=Elements.begin(); itEle<Elements.end(); ++itEle){
 				//excluding elements that own this element
 				bool PackingToThisElement =  (*itEle)->checkPackingToThisNodeViaState(TissueHeightDiscretisationLayers, (*itNode));
@@ -3691,13 +3635,13 @@ void Simulation::calculatePacking(int RKId, double PeriThreshold, double ColThre
 							//direction correction with (-) sign
 							for(int j=0; j<3; ++j){
 								if (!(*itNode)->FixedPos[j]){
-									SystemForces[RKId][(*itNode)->Id][j] += F[j];
-									PackingForces[RKId][(*itNode)->Id][j] += F[j];
+									SystemForces[(*itNode)->Id][j] += F[j];
+									PackingForces[(*itNode)->Id][j] += F[j];
 								}
 							}
-							//cout<<"updated the system forces: "<<SystemForces[RKId][(*itNode)->Id][0]<<" "<<SystemForces[RKId][(*itNode)->Id][1]<<" "<<SystemForces[RKId][(*itNode)->Id][2]<<endl;
+							//cout<<"updated the system forces: "<<SystemForces[(*itNode)->Id][0]<<" "<<SystemForces[(*itNode)->Id][1]<<" "<<SystemForces[(*itNode)->Id][2]<<endl;
 							//add opposite force to the element nodes:
-							(*itEle)->AddPackingToSurface((*itNode)->tissuePlacement, F[0],F[1],F[2],RKId, SystemForces,PackingForces, Nodes);
+							(*itEle)->AddPackingToSurface((*itNode)->tissuePlacement, F[0],F[1],F[2], SystemForces,PackingForces, Nodes);
 							//cout<<"added packing to surface"<<endl;
 
 							//if(/*(*itNode)->Id == 13 && (*itEle)->Id == 44*/ memberOf44 && (*itEle)->Id>592){
@@ -3724,8 +3668,8 @@ void Simulation::calculatePacking(int RKId, double PeriThreshold, double ColThre
 					if (packsToPip){
 						for (int j=0;j<3;++j){
 							if (!(*itNode)->FixedPos[j]){
-								SystemForces[RKId][(*itNode)->Id][j] += pipF[j];
-								PackingForces[RKId][(*itNode)->Id][j] += pipF[j];
+								SystemForces[(*itNode)->Id][j] += pipF[j];
+								PackingForces[(*itNode)->Id][j] += pipF[j];
 							}
 						}
 					}
@@ -3738,140 +3682,14 @@ void Simulation::calculatePacking(int RKId, double PeriThreshold, double ColThre
 	//cout<<"finalised calculate packing"<<endl;
 }
 
-/*	float multiplier = 100.0;
-	vector<Node*>::iterator itNode0;
-	vector<Node*>::iterator itNode1;
-	float dmin = threshold;
-	float dminNeg =(-1.0)*threshold;
-	float t2 = threshold*threshold;
-	for (itNode0=Nodes.begin(); itNode0<Nodes.end(); ++itNode0){
-		if (!(*itNode0)->atPeripodialMembraneCircumference){
-			for (itNode1=itNode0+1; itNode1<Nodes.end(); ++itNode1){
-				if (!(*itNode1)->atPeripodialMembraneCircumference){
-					float dx =100.0, dy = 100.0, dz = 100.0;
-					if (RKId ==0){
-						dx = (*itNode1)->Position[0]-(*itNode0)->Position[0];
-						dy = (*itNode1)->Position[1]-(*itNode0)->Position[1];
-						dz = (*itNode1)->Position[2]-(*itNode0)->Position[2];
-					}
-					else{
-						dx = (*itNode1)->RKPosition[0]-(*itNode0)->RKPosition[0];
-						dy = (*itNode1)->RKPosition[1]-(*itNode0)->RKPosition[1];
-						dz = (*itNode1)->RKPosition[2]-(*itNode0)->RKPosition[2];
-					}
-					if ((dx >0 && dx < dmin) || (dx <0 && dx >dminNeg)){
-						if ((dy >0 && dy < dmin) || (dy <0 && dy >dminNeg)){
-							if ((dz >0 && dz < dmin) || (dz <0 && dz >dminNeg)){
-								//distance is close enough for further investigation, but are these nodes neighbours?
-								bool AreNeigs = (*itNode0)->checkIfNeighbour((*itNode1)->Id);
-								if (!AreNeigs){
-									float d2 = dx*dx+dy*dy+dz*dz;
-									if (d2 < t2){
-										float Fmag = multiplier * (1.0/d2 - 1.0/t2);
-										float d = pow(d2,0.5);
-										//normalising
-										dx /= d;
-										dy /= d;
-										dz /= d;
-										//vector id from node 0 to node 1, force should be in the opposite direction
-										SystemForces[RKId][(*itNode0)->Id][0] -= dx*Fmag;
-										SystemForces[RKId][(*itNode0)->Id][1] -= dy*Fmag;
-										SystemForces[RKId][(*itNode0)->Id][2] -= dz*Fmag;
-										//add opposite force to the second node:
-										SystemForces[RKId][(*itNode1)->Id][0] += dx*Fmag;
-										SystemForces[RKId][(*itNode1)->Id][1] += dy*Fmag;
-										SystemForces[RKId][(*itNode1)->Id][2] += dz*Fmag;
-										if ((*itNode0)->Id == 497 || (*itNode1)->Id == 497){
-											cout<<"threshold: "<<threshold<<" distance: "<<d<<" Nodes: "<<(*itNode0)->Id<<" "<<(*itNode1)->Id<<" force: "<<Fmag<<endl;
-											cout<<"	pos:"<<(*itNode0)->Position[0]<<" "<<(*itNode0)->Position[1]<<" "<<(*itNode0)->Position[2]<<endl;
-											cout<<"	pos:"<<(*itNode1)->Position[0]<<" "<<(*itNode1)->Position[1]<<" "<<(*itNode1)->Position[2]<<endl;
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-*/
-
-void Simulation::updateNodePositions(int RKId){
-	//Update Node positions:
-	int n = Nodes.size();
-	if (RKId < 3){
-		//the first 3 RK steps, the velocity will be calculated, and the positions will be updated from normal positions to RKPositions, with half dt:
-		double multiplier=0.0;
-		if (RKId<2){
-			multiplier =0.5;
-		}
-		else{
-			multiplier =1.0;
-		}
-        double v0[3] = {0.0,0.0,0.0};
-        for (int j=0; j<Nodes[0]->nDim; ++j){
-            Nodes[0]->Velocity[RKId][j] = SystemForces[RKId][0][j]/ (Nodes[0]->Viscosity*Nodes[0]->mass) ;
-            v0[j] = Nodes[0]->Velocity[RKId][j];
-            Nodes[0]->Velocity[RKId][j] = 0.0;
-            Nodes[0]->RKPosition[j] = Nodes[0]->Position[j];
-        }
-        for (int i=1;i<n;++i){
-			for (int j=0; j<Nodes[i]->nDim; ++j){
-					Nodes[i]->Velocity[RKId][j] = SystemForces[RKId][i][j]/ (Nodes[i]->Viscosity*Nodes[i]->mass) ;
-                    Nodes[i]->Velocity[RKId][j] -= v0[j];
-                    Nodes[i]->RKPosition[j] = Nodes[i]->Position[j] + Nodes[i]->Velocity[RKId][j]*multiplier*dt;
-			}
-            //cout<<"RK: "<<RKId<<" node: "<<i<<"mass: "<<Nodes[i]->mass<<" visc: "<<Nodes[i]->Viscosity<<endl;
-            //for (int j=0; j<Nodes[i]->nDim; ++j){
-            //    cout<<"	"<<Nodes[i]->Velocity[RKId][j]<<" ";
-            //}
-            //cout<<endl;
-			//cout<<"	Old pos: ";
-			//for (int j=0; j<Nodes[i]->nDim; ++j){
-			//	cout<<Nodes[i]->Position[j]<<" ";
-			//}
-			//cout<<endl<<"	New pos: ";
-			//for (int j=0; j<Nodes[i]->nDim; ++j){
-			//	cout<<Nodes[i]->RKPosition[j]<<" ";
-			//}
-			//cout<<endl;
-		}
-	}
-	else{
-		//this is the last RK step, I need to update the velocity only with RK, then I need to calculate the final positions
-		//from 4 RK velocities:
-        for (int i=1;i<n;++i){
-            //cout<<"Nodes "<<i<<" velocity: ";
-            double v0[3] = {0.0,0.0,0.0};
-            for (int j=0; j<Nodes[0]->nDim; ++j){
-                Nodes[0]->Velocity[RKId][j] = SystemForces[RKId][0][j]/ (Nodes[0]->Viscosity*Nodes[0]->mass) ;
-                v0[j] = Nodes[0]->Velocity[RKId][j];
-                Nodes[0]->Velocity[RKId][j] = 0.0;
-            }
-            for (int j=0; j<Nodes[i]->nDim; ++j){
-				Nodes[i]->Velocity[RKId][j] = SystemForces[RKId][i][j]/(Nodes[i]->Viscosity*Nodes[i]->mass);
-                Nodes[i]->Velocity[RKId][j] -= v0[j];
-                //now I have 4 velocity data (corresponding to Runge-Kutta  k1, k2, k3, and k4)
-				//writing  the velocity into v[0]
-				//cout<<Nodes[i]->Velocity[0][j]<<" "<<Nodes[i]->Velocity[1][j]<<" "<<Nodes[i]->Velocity[2][j]<<" "<<Nodes[i]->Velocity[3][j]<<" ";
-				Nodes[i]->Velocity[0][j] = 1.0/6.0 * (Nodes[i]->Velocity[0][j] + 2.0 * (Nodes[i]->Velocity[1][j] + Nodes[i]->Velocity[2][j]) + Nodes[i]->Velocity[3][j]);
-				Nodes[i]->Position[j] += Nodes[i]->Velocity[0][j]*dt;
-			}
-		}
-	}
-}
-
-
-
-void Simulation::updateElementPositions(int RKId){
+void Simulation::updateElementPositions(){
 	for (int i=0;i<Elements.size(); ++i ){
-		Elements[i]->updatePositions(RKId, Nodes);
+		Elements[i]->updatePositions(Nodes);
 	}
 }
 
-void Simulation::updateElementPositionsSingle(int RKId, int i ){
-	Elements[i]->updatePositions(RKId, Nodes);
+void Simulation::updateElementPositionsSingle(int i ){
+	Elements[i]->updatePositions(Nodes);
 }
 
 void Simulation::assignTips(){
@@ -3943,8 +3761,7 @@ void Simulation::alignTissueDVToXPositive(){
 		}
 	}
 	for(int i=0;i<Elements.size();++i){
-		//this will need to update the positions of the elements using the actual positions, which corresponds to RK ste 4, RKId = 3;
-		Elements[i]->updatePositions(3, Nodes);
+		Elements[i]->updatePositions(Nodes);
 	}
 	delete[] rotAx;
 	delete[] rotMat;
@@ -3980,8 +3797,7 @@ void Simulation::alignTissueAPToXYPlane(){
 		}
 	}
 	for(int i=0;i<Elements.size();++i){
-		//this will need to update the positions of the elements using the actual positions, which corresponds to RK ste 4, RKId = 3;
-		Elements[i]->updatePositions(3, Nodes);
+		Elements[i]->updatePositions(Nodes);
 	}
 	delete[] rotAx;
 	delete[] rotMat;
@@ -4012,15 +3828,12 @@ void Simulation::cleanGrowthData(){
 void Simulation::resetForces(){
 	int n = Nodes.size();
 	int dim = 3;
-	//4 RK steps
-	for (int i=0;i<4;++i){
-		//n nodes
-		for (int j=0;j<n;++j){
-			//3 dimensions
-			for (int k=0;k<dim;++k){
-				SystemForces[i][j][k]=0.0;
-                //PackingForces[i][j][k]=0.0;
-			}
+	//n nodes
+	for (int j=0;j<n;++j){
+		//3 dimensions
+		for (int k=0;k<dim;++k){
+			SystemForces[j][k]=0.0;
+			//PackingForces[j][k]=0.0;
 		}
 	}
 }
@@ -4111,27 +3924,6 @@ void Simulation::calculatePeripodialBoundingBox(){
 	if (!found[0][0] && !found[0][1] && !found[0][2] && !found[1][0] && !found[1][1] && !found[1][2]){
 		cerr<<" error in bounding box calculation! Found? :"<<found[0][0]<<" "<<found[0][1]<<" "<<found[0][2]<<" "<<found[1][0]<<" "<<found[1][1]<<" "<<found[1][2]<<endl;
 	}
-}
-
-void Simulation::updateDisplaySaveValuesFromRK(){
-	//in display and save, I am using the storage for RK step 1. I need to make this the average values of 4 steps, otherwise
-	//it will show the misleading RK 1 values only.
-	int n = Nodes.size();
-	for (int j=0;j<n;++j){
-		SystemForces[0][j][0] = 1.0/6.0 * (SystemForces[0][j][0] + 2 * (SystemForces[1][j][0] + SystemForces[2][j][0]) + SystemForces[3][j][0]);
-		SystemForces[0][j][1] = 1.0/6.0 * (SystemForces[0][j][1] + 2 * (SystemForces[1][j][1] + SystemForces[2][j][1]) + SystemForces[3][j][1]);
-		SystemForces[0][j][2] = 1.0/6.0 * (SystemForces[0][j][2] + 2 * (SystemForces[1][j][2] + SystemForces[2][j][2]) + SystemForces[3][j][2]);
-
-        //PackingForces[0][j][0] = 1.0/6.0 * (PackingForces[0][j][0] + 2 * (PackingForces[1][j][0] + PackingForces[2][j][0]) + PackingForces[3][j][0]);
-        //PackingForces[0][j][1] = 1.0/6.0 * (PackingForces[0][j][1] + 2 * (PackingForces[1][j][1] + PackingForces[2][j][1]) + PackingForces[3][j][1]);
-        //PackingForces[0][j][2] = 1.0/6.0 * (PackingForces[0][j][2] + 2 * (PackingForces[1][j][2] + PackingForces[2][j][2]) + PackingForces[3][j][2]);
-		//I do not need to do velocities, as I already calculate the average velocity on storage space of RK step 1, for posiiton update
-	}
-	//Open this if You are using RK
-	//n = Elements.size();
-    //for (int j=0;j<n;++j){
-    //    Elements[j]->createMatrixCopy(Elements[j]->Strain, Elements[j]->RK1Strain);
-    //}
 }
 
 void Simulation::saveStep(){
@@ -4263,9 +4055,9 @@ void Simulation::writeGrowth(){
 void Simulation::writeForces(){
 	int n = Nodes.size();
 	for (int i=0;i<n;++i){
-		saveFileForces.write((char*) &SystemForces[0][i][0], sizeof SystemForces[0][i][0]);
-		saveFileForces.write((char*) &SystemForces[0][i][1], sizeof SystemForces[0][i][1]);
-		saveFileForces.write((char*) &SystemForces[0][i][2], sizeof SystemForces[0][i][2]);
+		saveFileForces.write((char*) &SystemForces[i][0], sizeof SystemForces[i][0]);
+		saveFileForces.write((char*) &SystemForces[i][1], sizeof SystemForces[i][1]);
+		saveFileForces.write((char*) &SystemForces[i][2], sizeof SystemForces[i][2]);
 	}
 	saveFileForces.flush();
 }
@@ -4825,7 +4617,7 @@ void Simulation::moveClampedNodesForStretcher(){
 			}
 		}
         for(int i=0;i<Elements.size();++i){
-            Elements[i]->updatePositions(3,Nodes);
+            Elements[i]->updatePositions(Nodes);
         }
 	}
 }

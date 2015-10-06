@@ -104,23 +104,13 @@ bool Node::checkIfNodeHasPacking(){
 	return true;
 }
 
-void Node::getCurrentRKPosition(int RKId, double* pos){
+void Node::getCurrentPosition(double* pos){
 	/**
 	 *  The function will return the current position of the owner node.
-	 *  If the function is called during a Runge-Kutta step, the position corresponding to that step will be returned.
-	 *  (position at the end of the last position update for Runge-Kutta 1, and the position updated with Runge-Kutta rules for steps 2-4.)
-	 *  If the function is called outside Runge-Kutta calculation, the position as aresult of the latest position uptae will be returned.
 	 */
-	if (RKId == 0){
-		pos[0] = Position[0];
-		pos[1] = Position[1];
-		pos[2] = Position[2];
-	}
-	else{
-		pos[0]= RKPosition[0];
-		pos[1]= RKPosition[1];
-		pos[2]= RKPosition[2];
-	}
+	pos[0] = Position[0];
+	pos[1] = Position[1];
+	pos[2] = Position[2];
 }
 
 void Node::displayConnectedElementIds(){

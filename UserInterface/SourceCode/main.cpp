@@ -55,8 +55,7 @@ int main(int argc, char **argv)
 		}
 		int n = Sim01->Elements.size();
 		for (int i=0; i<n; ++i){
-			//This is the initial setup, the elements should take the actual positions of the nodes, this corresponds to RK step 4, RKId= 3
-			Sim01->Elements[i]->updatePositions(3,Sim01->Nodes);
+			Sim01->Elements[i]->updatePositions(Sim01->Nodes);
 		}
 	}
 

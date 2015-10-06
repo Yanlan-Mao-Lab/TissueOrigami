@@ -401,9 +401,9 @@ void GLWidget::highlightNode(int i){
 			else if(drawNetForces){
 				float ForceMag = 0.0;
 				double F[3];
-				F[0] = Sim01->SystemForces[0][(*itNode)->Id][0];
-				F[1] = Sim01->SystemForces[0][(*itNode)->Id][1];
-				F[2] = Sim01->SystemForces[0][(*itNode)->Id][2];
+				F[0] = Sim01->SystemForces[(*itNode)->Id][0];
+				F[1] = Sim01->SystemForces[(*itNode)->Id][1];
+				F[2] = Sim01->SystemForces[(*itNode)->Id][2];
 				ForceMag = F[0]* F[0] + F[1]*F[1] + F[2]* F[2];
 				ForceMag = pow(ForceMag,(float)0.5);
 				if (ForceMag>threshold){
@@ -419,9 +419,9 @@ void GLWidget::highlightNode(int i){
                 //cout<<"Drawing Packing Forces"<<endl;
 				float ForceMag = 0.0;
 				double F[3];
-				F[0] = Sim01->PackingForces[0][(*itNode)->Id][0];
-				F[1] = Sim01->PackingForces[0][(*itNode)->Id][1];
-				F[2] = Sim01->PackingForces[0][(*itNode)->Id][2];
+				F[0] = Sim01->PackingForces[(*itNode)->Id][0];
+				F[1] = Sim01->PackingForces[(*itNode)->Id][1];
+				F[2] = Sim01->PackingForces[(*itNode)->Id][2];
 				ForceMag = F[0]* F[0] + F[1]*F[1] + F[2]* F[2];
 				ForceMag = pow(ForceMag,(float)0.5);
                 //cout<<"PAcking Force: "<<F[0]<<" "<<F[1]<<" "<<F[2]<<endl;
@@ -1435,9 +1435,9 @@ bool GLWidget::findNode(int i){
 			 if (drawCurrentNode){
 				 double* F;
 				 F = new double[3];
-				 F[0] = Sim01->SystemForces[0][i][0];
-				 F[1] = Sim01->SystemForces[0][i][1];
-				 F[2] = Sim01->SystemForces[0][i][2];
+				 F[0] = Sim01->SystemForces[i][0];
+				 F[1] = Sim01->SystemForces[i][1];
+				 F[2] = Sim01->SystemForces[i][2];
 				 //cout<<"Force: "<<F[0]<<" "<<F[1]<<" "<<F[2]<<endl;
 				 //check if the force is large enough to display:
 				 double mag2 = F[0]* F[0] + F[1]*F[1] + F[2]* F[2];
@@ -1520,9 +1520,9 @@ bool GLWidget::findNode(int i){
 			 if (drawCurrentNode){
 				 double* F;
 				 F = new double[3];
-				 F[0] = Sim01->PackingForces[0][i][0];
-				 F[1] = Sim01->PackingForces[0][i][1];
-				 F[2] = Sim01->PackingForces[0][i][2];
+				 F[0] = Sim01->PackingForces[i][0];
+				 F[1] = Sim01->PackingForces[i][1];
+				 F[2] = Sim01->PackingForces[i][2];
                  //cout<<"Force: "<<F[0]<<" "<<F[1]<<" "<<F[2]<<endl;
 				 //check if the force is large enough to display:
 				 double mag2 = F[0]* F[0] + F[1]*F[1] + F[2]* F[2];

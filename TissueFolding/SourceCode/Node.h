@@ -34,7 +34,7 @@ public:
 	void setViscosity(double ApicalVisc,double BasalVisc, double PeripodialViscosity); ///< The function to set the viscosity of the node.
 	bool checkIfNeighbour(int IdToCheck); 				///< The function to check if the node with input Id (IdToCheck) is an immediate neighbour of the owner node
 	bool checkIfNodeHasPacking();						///< The function to check if the node is eligible for packing.
-	void getCurrentRKPosition(int RKId, double* pos);	///< return the current position of the node
+	void getCurrentPosition(double* pos);				///< return the current position of the node
 	void displayConnectedElementIds();					///< This function will print out a list of connected element Id's
 	void displayConnectedElementWeights();				///< This function will print out the weights of the connected elements, in the order of  Id s given in connectedElementIds
 };

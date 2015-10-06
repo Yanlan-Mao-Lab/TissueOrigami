@@ -53,7 +53,7 @@ public:
 	int getCorrecpondingApical(int currNodeId);
 	bool IsThisNodeMyBasal(int currNodeId);
 	double getElementHeight();
-	void AddPackingToSurface(int tissueplacement, double Fx, double Fy,double Fz, int RKId,  double ***SystemForces,  double ***PackingForces,vector<Node*> &Nodes);
+	void AddPackingToSurface(int tissueplacement, double Fx, double Fy,double Fz, double **SystemForces,  double **PackingForces,vector<Node*> &Nodes);
 	bool IsPointCloseEnoughForPacking(double* Pos,  float Peripodialthreshold, float Columnarthreshold, int TissuePlacementOfPackingNode, int TissueTypeOfPackingNode);
 	void calculateNormalForPacking(int tissuePlacement);
 	void calculateApicalArea();
