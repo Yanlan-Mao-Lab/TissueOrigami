@@ -379,6 +379,25 @@ void GLWidget::highlightNode(int i){
 				}
 				getDisplayColour(currColour,PysPropMag);
 			}
+			/*else if(drawMyosinForces){
+			 	//activate this if clause to display myosin levels in a nodal basis (smoothing).
+			 	// you will also need to deactivate the clause in function getElementColourList.
+				float cMyoMag= 0.0;
+				int nConnectedElements = (*itNode)->connectedElementIds.size();
+				for (int i=0;i<nConnectedElements; ++i){
+					float TmpMyoMag =0.0;
+					if (MyosinToDisplay == 0){
+						TmpMyoMag = Sim01->Elements[(*itNode)->connectedElementIds[i]]->getCmyosinUniformForNode((*itNode)->tissuePlacement);
+					}
+					else if (MyosinToDisplay == 1){
+						TmpMyoMag = Sim01->Elements[(*itNode)->connectedElementIds[i]]->getCmyosinUnipolarForNode((*itNode)->tissuePlacement);
+					}
+					cMyoMag += TmpMyoMag*(*itNode)->connectedElementWeights[i];
+				}
+				getConcentrationColour(currColour,cMyoMag);
+				//cout<<"current selected myosin concentration: "<<cMyoMag<<endl;
+				//cout<<" current colour:                       "<<currColour[0]<<" "<<currColour[1]<<" "<<currColour[2]<<endl;
+			}*/
 			else if(drawNetForces){
 				float ForceMag = 0.0;
 				double F[3];
@@ -395,23 +414,6 @@ void GLWidget::highlightNode(int i){
 					currColour[1] = 1.0;
 					currColour[2] = 0.8;
 				}
-			}
-			else if(drawMyosinForces){
-				float cMyoMag= 0.0;
-				int nConnectedElements = (*itNode)->connectedElementIds.size();
-				for (int i=0;i<nConnectedElements; ++i){
-					float TmpMyoMag =0.0;
-					if (MyosinToDisplay == 0){
-						TmpMyoMag = Sim01->Elements[(*itNode)->connectedElementIds[i]]->getCmyosinUniformForNode((*itNode)->tissuePlacement);
-					}
-					else if (MyosinToDisplay == 1){
-						TmpMyoMag = Sim01->Elements[(*itNode)->connectedElementIds[i]]->getCmyosinUnipolarForNode((*itNode)->tissuePlacement);
-					}
-					cMyoMag += TmpMyoMag*(*itNode)->connectedElementWeights[i];
-				}
-				getConcentrationColour(currColour,cMyoMag);
-				//cout<<"current selected myosin concentration: "<<cMyoMag<<endl;
-				//cout<<" current colour:                       "<<currColour[0]<<" "<<currColour[1]<<" "<<currColour[2]<<endl;
 			}
 			else if(drawPackingForces){
                 //cout<<"Drawing Packing Forces"<<endl;
@@ -459,10 +461,33 @@ void GLWidget::highlightNode(int i){
 	int* NodeIds = Sim01->Elements[i]->getNodeIds();
 	float** NodeColours;
 	NodeColours = new float*[n];
-	for (int j = 0; j<n; j++){		NodeColours[j] = new float[3];
-		NodeColours[j][0]=NodeColourList[NodeIds[j]][0];
-		NodeColours[j][1]=NodeColourList[NodeIds[j]][1];
-		NodeColours[j][2]=NodeColourList[NodeIds[j]][2];
+	for (int j = 0; j<n; j++){
+		NodeColours[j] = new float[3];
+		if(drawMyosinForces && !DisplayStrains && !DisplayPysProp){
+			//Myosin is drawn on an element basis, for ease of following the loacl distribution.
+			// deactivate this if clause to display myosin levels in a nodal basis (smoothing).
+			// you will also need to activate the clause in function constructNodeColourList.
+			float* currColour;
+			currColour = new float[3];
+			float cMyoMag;
+			if (MyosinToDisplay == 0){
+				cMyoMag = Sim01->Elements[i]->getCmyosinUniformForNode(Sim01->Nodes[NodeIds[j]]->tissuePlacement);
+			}
+			else if (MyosinToDisplay == 1){
+				cMyoMag = Sim01->Elements[i]->getCmyosinUnipolarForNode(Sim01->Nodes[NodeIds[j]]->tissuePlacement);
+			}
+			getConcentrationColour(currColour,cMyoMag);
+			NodeColours[j][0]=currColour[0];
+			NodeColours[j][1]=currColour[1];
+			NodeColours[j][2]=currColour[2];
+			delete[] currColour;
+		}
+		else{
+			NodeColours[j][0]=NodeColourList[NodeIds[j]][0];
+			NodeColours[j][1]=NodeColourList[NodeIds[j]][1];
+			NodeColours[j][2]=NodeColourList[NodeIds[j]][2];
+		}
+
 	}
 	return NodeColours;
  }
@@ -575,7 +600,7 @@ void GLWidget::highlightNode(int i){
  }
 
  void GLWidget::getConcentrationColour(float* OutputColour, float concentration){
-	 double scale2[2] = {0,50.0};
+	 double scale2[2] = {0,30.0};
 	 double g = (concentration- scale2[0])/(scale2[1]-scale2[0]);
 	 OutputColour[0] = 1.0-g;
 	 OutputColour[1] = 1.0;

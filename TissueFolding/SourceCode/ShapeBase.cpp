@@ -1676,6 +1676,8 @@ void	ShapeBase::updateMyosinConcentration(double dt, double kMyo){
 			cMyoUnipolar[1] = cFinal[2];
 		}
 	}
+	//cout<<"Element: "<<Id<<" EQ myosin levels: "<<cMyoUniformEq[0]<<" "<<cMyoUniformEq[1]<<" "<<cMyoUnipolarEq[0]<<" "<<cMyoUnipolarEq[1]<<endl;
+	//cout<<"Element: "<<Id<<" myosin levels: "<<cMyoUniform[0]<<" "<<cMyoUniform[1]<<" "<<cMyoUnipolar[0]<<" "<<cMyoUnipolar[1]<<endl;
 }
 
 void 	ShapeBase::setShapeChangeRate(double x, double y, double z, double xy, double yz, double xz){

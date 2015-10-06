@@ -984,10 +984,10 @@ void 	Prism::distributeMyosinForce(bool isIsotropic, bool apical, double forcePe
 		id2 = 2;
 		currSurface = 1;
 		if (isIsotropic){
-			forcemag = cMyoUniform[0]*BasalArea;
+			forcemag = cMyoUniform[1]*BasalArea;
 		}
 		else{
-			forcemag = cMyoUnipolar[0]*BasalArea;
+			forcemag = cMyoUnipolar[1]*BasalArea;
 		}
 	}
 	forcemag *= forcePerMyoMolecule;
@@ -1011,7 +1011,7 @@ void 	Prism::distributeMyosinForce(bool isIsotropic, bool apical, double forcePe
 		crossProduct3D(vec0,vec1,cross);
 		normaliseVector3D(cross);
 		//project vector on normal:
-		cout<<"myo polarity dir: "<<gsl_matrix_get(myoPolarityDir,currSurface,0)<<" "<<gsl_matrix_get(myoPolarityDir,currSurface,1)<<endl;
+		//cout<<"myo polarity dir: "<<gsl_matrix_get(myoPolarityDir,currSurface,0)<<" "<<gsl_matrix_get(myoPolarityDir,currSurface,1)<<endl;
 		double dotp = 0.0;
 		for (int i =0; i<3; ++i){
 			dotp += gsl_vector_get(cross,i)*gsl_matrix_get(myoPolarityDir,currSurface,i);
@@ -1062,17 +1062,18 @@ void 	Prism::distributeMyosinForce(bool isIsotropic, bool apical, double forcePe
 	gsl_vector_free(vec1);
 	gsl_vector_free(vec2);
 	/*cout<<" Element: "<<Id<<" Myoforces: "<<endl;
-	double sum[3] = {0,0,0};
+	//double sum[3] = {0,0,0};
 	for (int i=0; i<6; i++){
 		for (int j=0; j<3; j++){
-			//cout<<MyoForce[i][j]<<" ";
-			sum[j] += MyoForce[i][j];
+			cout<<MyoForce[i][j]<<" ";
+			//sum[j] += MyoForce[i][j];
 		}
-		//cout<<endl;
+		cout<<endl;
 	}
-	//cout<<endl;
-	cout<<"sum: "<<sum[0]<<" "<<sum[1]<<" "<<sum[2]<<endl;
-	*/
+	cout<<endl;
+	//cout<<"sum: "<<sum[0]<<" "<<sum[1]<<" "<<sum[2]<<endl;
+	 */
+
 }
 
 void 	Prism::calculateBasalArea(){

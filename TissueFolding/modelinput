@@ -1,6 +1,6 @@
 InputMeshParameters:
   MeshInputMode(int-seeDocumentation): 4
-  MeshFile(full-path):   /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Wind48hr_03.mesh
+  MeshFile(full-path):   /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Wind48hr_02.mesh
 
 PeripodialMembraneParameters:
   AddPeripodialMembrane: 0
@@ -83,7 +83,7 @@ MyosinOptions:
   ApplyToColumnarLayer(bool): 1
   ApplyToPeripodialMembrane(bool): 0
   isApical(bool): 1
-  isPolarised(bool): 1
+  isPolarised(bool): 0
   EquilibriumConcentrationFilename(full-path): /home/melda/Documents/TissueFolding/ToolBox/MyosinLevels/MyosinStripesAP-20mic-10myo
   OrientationAngleFilename(full-path): /home/melda/Documents/TissueFolding/ToolBox/MyosinLevels/MyosinStripesAP-Angles
 
