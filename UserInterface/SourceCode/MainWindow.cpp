@@ -717,7 +717,7 @@ void MainWindow::timerSimulationStep(){
             Sim01->wrapUpAtTheEndOfSimulation();
             double duration = ( std::clock() - simulationStartClock ) / (double) CLOCKS_PER_SEC;
             cout<<"Simulation length in seconds: "<< duration <<endl;
-            //close();
+            close();
         }
     }
     MainGLWidget->update();

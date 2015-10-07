@@ -2709,6 +2709,15 @@ void Simulation::updateStepNR(){
     //Now the calculation is converged, I update the node positions with the latest positions uk:
     updateNodePositionsNR(uk);
     //Element positions are already up to date.
+    gsl_matrix_free(un);
+    gsl_matrix_free(mviscdt);
+    gsl_matrix_free(ge);
+    gsl_matrix_free(gv);
+    gsl_matrix_free(gExt);
+    gsl_vector_free(gSum);
+    gsl_matrix_free(uk);
+    gsl_vector_free(deltaU);
+    gsl_matrix_free(K);
 }
 
 void Simulation::calculateImplucitKElasticNumerical(gsl_matrix* K, gsl_matrix* geNoPerturbation){
@@ -2753,6 +2762,9 @@ void Simulation::calculateImplucitKElasticNumerical(gsl_matrix* K, gsl_matrix* g
             }
         }
     }
+    gsl_matrix_free(KPerturbed);
+    gsl_matrix_free(geWithPerturbation);
+    gsl_matrix_free(geDiff);
 }
 
 //void Simulation::calcutateFixedK(vector<int> FixedNodes, gsl_matrix* K, gsl_vector* g){
@@ -3723,7 +3735,7 @@ void Simulation::assignTips(){
 
 void Simulation::alignTissueDVToXPositive(){
 	//ventralTipIndex = 0;
-	//dorsalTipIndex = 66;
+	//dorsalTipIndex = 88;
 	double* u = new double[3];
 	double* v = new double[3];
 	//For simulations with no viscosity, the position of node 0 is fixed. Node 0 is the dorsal tip of the tissue.
