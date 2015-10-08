@@ -434,21 +434,21 @@ void Prism::calculateElementShapeFunctionDerivatives(){
 void Prism::calculateCurrNodalForces(gsl_matrix *currg, gsl_matrix *currF, int pointNo){
     const int n = nNodes;
     const int dim = nDim;
-    gsl_matrix *currFscFe = gsl_matrix_alloc(dim,dim);
-    gsl_matrix *currFe = gsl_matrix_alloc(dim,dim);
-    gsl_matrix *CurrShape = gsl_matrix_alloc(n,dim);
+    gsl_matrix* currFscFe = gsl_matrix_alloc(dim,dim);
+    gsl_matrix* currFe = gsl_matrix_alloc(dim,dim);
+    gsl_matrix* CurrShape = gsl_matrix_alloc(n,dim);
 
     //Getting the current shape positions matrix:
     getPos(CurrShape);
 
     //calculating dx/de (Jacobian) and reading out dX/de, shape function derivaties:
-    gsl_matrix * ShapeFuncDer = ShapeFuncDerivatives[pointNo];
-    gsl_matrix * ShapeFuncDerStack = ShapeFuncDerStacks[pointNo];
-    gsl_matrix * InvdXde = InvdXdes[pointNo];
-    gsl_matrix * Jacobian = gsl_matrix_calloc(dim, dim);
-    gsl_matrix * B = Bmatrices[pointNo];
-    gsl_matrix * invJShFuncDerS = invJShapeFuncDerStack[pointNo];
-    gsl_matrix * invJShFuncDerSWithFe =invJShapeFuncDerStackwithFe[pointNo];
+    gsl_matrix* ShapeFuncDer = ShapeFuncDerivatives[pointNo];
+    gsl_matrix* ShapeFuncDerStack = ShapeFuncDerStacks[pointNo];
+    gsl_matrix* InvdXde = InvdXdes[pointNo];
+    gsl_matrix* Jacobian = gsl_matrix_calloc(dim, dim);
+    gsl_matrix* B = Bmatrices[pointNo];
+    gsl_matrix* invJShFuncDerS = invJShapeFuncDerStack[pointNo];
+    gsl_matrix* invJShFuncDerSWithFe =invJShapeFuncDerStackwithFe[pointNo];
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, ShapeFuncDer, CurrShape, 0.0, Jacobian);
     gsl_matrix_transpose(Jacobian);
 
@@ -464,12 +464,12 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currg, gsl_matrix *currF, int p
     //displayMatrix(Fg, "Fg");
     //displayMatrix(currFe, "Fe");
     //displayMatrix(currF, "F");
-    gsl_matrix * currFeT = gsl_matrix_alloc(dim, dim);
+    gsl_matrix* currFeT = gsl_matrix_alloc(dim, dim);
     gsl_matrix_transpose_memcpy(currFeT,currFe);
     createMatrixCopy(FeMatrices[pointNo], currFe); // storing Fe for use in implicit elastic K calculation.
 
     //calculating E (E = 1/2 *(Fe^T*Fe-I):
-    gsl_matrix * E = calculateEForNodalForces(currFe,currFeT);
+    gsl_matrix* E = calculateEForNodalForces(currFe,currFeT);
 
     //calculating S: (S = D:E)
     gsl_matrix* S = calculateSForNodalForces(E);
@@ -532,7 +532,9 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currg, gsl_matrix *currF, int p
     gsl_matrix_free(compactStress);
     gsl_matrix_free(InvJacobianStack);
     gsl_matrix_free(currBT);
-
+    gsl_matrix_free(currFe);
+    gsl_matrix_free(CurrShape);
+    gsl_matrix_free(Jacobian);
     //cout<<"Finished calculate nodel forces"<<endl;
 }
 

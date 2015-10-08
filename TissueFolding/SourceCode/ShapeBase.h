@@ -92,8 +92,8 @@ protected:
 	void 	updateReferencePositionMatrixFromSave(ifstream& file);
 	virtual void calculateReferenceVolume(){ParentErrorMessage("calculateReferenceVolume");};
 	bool 	calculateGrowthStrainsRotMat(double* v);
-	void	calculateForces3D(double **SystemForces, vector <Node*>& Nodes, ofstream& outputFile);
-    gsl_matrix* calculateEForNodalForces(gsl_matrix* F, gsl_matrix* Fe);
+	void	calculateForces3D(double **SystemForces, vector <Node*>& Nodes,  bool recordForcesOnFixedNodes, double **FixedNodeForces, ofstream& outputFile);
+	gsl_matrix* calculateEForNodalForces(gsl_matrix* F, gsl_matrix* Fe);
     gsl_matrix* calculateSForNodalForces(gsl_matrix* E);
     gsl_matrix* calculateCompactStressForNodalForces(gsl_matrix* Fe, gsl_matrix* S, gsl_matrix* FeT, gsl_matrix *Stress);
     gsl_matrix* calculateInverseJacobianStackForNodalForces(gsl_matrix* Jacobian);
@@ -196,7 +196,7 @@ public:
     virtual void calculateApicalArea(){ParentErrorMessage("calculateApicalArea");};
     virtual void calculateBasalArea(){ParentErrorMessage("calculateBasalArea");};
 
-    void 	calculateForces(double **SystemForces, vector <Node*>& Nodes, ofstream& outputFile);
+    void 	calculateForces(double **SystemForces,  vector <Node*>& Nodes, bool recordForcesOnFixedNodes, double** FixedNodeForces,  ofstream& outputFile);
     void 	updatePositions(vector<Node*>& Nodes);
 	void 	setGrowthRate(double x, double y, double z);
 	void 	cleanMyosinForce();

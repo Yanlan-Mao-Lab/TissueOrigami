@@ -859,13 +859,13 @@ void  ShapeBase::rotateReferenceElementByRotationMatrix(double* rotMat){
 	}
 }
 
-void	ShapeBase::calculateForces(double **SystemForces, vector <Node*>& Nodes, ofstream& outputFile){
+void	ShapeBase::calculateForces(double **SystemForces, vector <Node*>& Nodes, bool recordForcesOnFixedNodes, double **FixedNodeForces, ofstream& outputFile){
     if (ShapeDim == 3){		//3D element
-        calculateForces3D(SystemForces, Nodes, outputFile);
+        calculateForces3D(SystemForces, Nodes, recordForcesOnFixedNodes, FixedNodeForces, outputFile);
     }
 }
 
-void	ShapeBase::calculateForces3D(double **SystemForces, vector <Node*>& Nodes, ofstream& outputFile){
+void	ShapeBase::calculateForces3D(double **SystemForces, vector <Node*>& Nodes,  bool recordForcesOnFixedNodes, double **FixedNodeForces, ofstream& outputFile){
     int dim = nDim;
     int n = nNodes;
     //calculating F and B in a 3 point gaussian:
@@ -895,6 +895,9 @@ void	ShapeBase::calculateForces3D(double **SystemForces, vector <Node*>& Nodes, 
         for (int j = 0; j<nDim; ++j){
             if (!Nodes[NodeIds[i]]->FixedPos[j]){
                 SystemForces[NodeIds[i]][j] = SystemForces[NodeIds[i]][j] - gsl_matrix_get(TriPointg,counter,0);
+            }
+            else if(recordForcesOnFixedNodes){
+                FixedNodeForces[NodeIds[i]][j] = FixedNodeForces[NodeIds[i]][j] - gsl_matrix_get(TriPointg,counter,0);
             }
             counter++;
         }
@@ -996,12 +999,12 @@ gsl_matrix* ShapeBase::calculateSForNodalForces(gsl_matrix* E){
 gsl_matrix* ShapeBase::calculateCompactStressForNodalForces(gsl_matrix* Fe, gsl_matrix* S, gsl_matrix* FeT, gsl_matrix* Stress){
     //calculating stress (stress = detFe^-1 Fe S Fe^T):
     double detFe = determinant3by3Matrix(Fe);
-    gsl_matrix * tmpMat1 =  gsl_matrix_alloc(nDim, nDim);
+    gsl_matrix * tmpMat1 =  gsl_matrix_calloc(nDim, nDim);
     //cout<<"detFe: "<<detFe<<endl;
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, Fe, S,0.0, tmpMat1);
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, tmpMat1, FeT,0.0, Stress);
     gsl_matrix_scale(Stress, 1.0/detFe);
-    gsl_matrix * compactStress =  gsl_matrix_alloc(6,1);
+    gsl_matrix * compactStress =  gsl_matrix_calloc(6,1);
     gsl_matrix_set(compactStress,0,0,gsl_matrix_get(Stress,0,0));
     gsl_matrix_set(compactStress,1,0,gsl_matrix_get(Stress,1,1));
     gsl_matrix_set(compactStress,2,0,gsl_matrix_get(Stress,2,2));
@@ -1013,7 +1016,7 @@ gsl_matrix* ShapeBase::calculateCompactStressForNodalForces(gsl_matrix* Fe, gsl_
     return compactStress;
 }
 
-gsl_matrix* ShapeBase::calculateInvJShFuncDerSWithFe(gsl_matrix * currFe, gsl_matrix * InvDXde, gsl_matrix* ShapeFuncDerStack, gsl_matrix *invJShFuncDerSWithFe){
+gsl_matrix* ShapeBase::calculateInvJShFuncDerSWithFe(gsl_matrix* currFe, gsl_matrix* InvDXde, gsl_matrix* ShapeFuncDerStack, gsl_matrix *invJShFuncDerSWithFe){
 	//I want InvJe, normally J InvDXde = F, I can get Je from
 	// Je InvDXde = Fe
 	// but I can also get InvJe directly from:
@@ -1038,13 +1041,14 @@ gsl_matrix* ShapeBase::calculateInvJShFuncDerSWithFe(gsl_matrix * currFe, gsl_ma
 			}
 		}
 	}
-	gsl_matrix_free(tmpFeforInversion);
-	gsl_matrix_free(InvFe);
-	gsl_matrix_free(InvJe);
+
 	//I am calculating this for k calculation, in case there is growth. Under conditions that there is no growth, this function is not necessary,
 	//the values of invJShFuncDerSWithF and  invJShFuncDerS will be equal
 	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, InvJacobianElasticStack, ShapeFuncDerStack,0.0, invJShFuncDerSWithFe);
-
+	gsl_matrix_free(tmpFeforInversion);
+	gsl_matrix_free(InvFe);
+	gsl_matrix_free(InvJe);
+	gsl_matrix_free(InvJacobianElasticStack);
 }
 
 gsl_matrix* ShapeBase::calculateBTforNodalForces(gsl_matrix* InvJacobianStack, gsl_matrix* ShapeFuncDerStack, gsl_matrix* B, gsl_matrix *invJShFuncDerS){
@@ -1074,7 +1078,7 @@ gsl_matrix* ShapeBase::calculateBTforNodalForces(gsl_matrix* InvJacobianStack, g
 gsl_matrix* ShapeBase::calculateInverseJacobianStackForNodalForces(gsl_matrix* Jacobian){
     int dim2 = nDim*nDim;
     //invrting the Jacobian:
-    gsl_matrix * tmpJacobianForInversion =  gsl_matrix_calloc(nDim,nDim);
+    gsl_matrix* tmpJacobianForInversion =  gsl_matrix_calloc(nDim,nDim);
     gsl_matrix* InvJacobian = gsl_matrix_calloc(nDim,nDim);
     createMatrixCopy(tmpJacobianForInversion,Jacobian);
     bool inverted = InvertMatrix(tmpJacobianForInversion, InvJacobian);
@@ -1306,78 +1310,11 @@ void	ShapeBase::calculateForceFromStress(int nodeId, gsl_matrix* Externalstress,
         gsl_matrix_scale(NodeForces,detFs[pointNo]);
         gsl_matrix_scale(NodeForces,detdXdes[pointNo]);
         gsl_matrix_add(ExternalNodalForces,NodeForces);
+        gsl_matrix_free(BaT);
+        gsl_matrix_free(Bb);
     }
-    displayMatrix(ExternalNodalForces,"ExternalNodalForces");
+    //displayMatrix(ExternalNodalForces,"ExternalNodalForces");
 }
-/*
-
-void	ShapeBase::calculateElasticKIntegral1(gsl_matrix* currK,int pointNo){
-    //cout<<"inside calculateElasticKIntegral1"<<endl;
-    //calculating first part of Kelastic integraion Keab1 = Ba^T Fe D Fe^T Bb detF :
-    //Ba (6,3) = B ( (1:6)(3*a,3*a+1) ) ;
-    gsl_matrix* BaT = gsl_matrix_calloc(nDim,6);
-    gsl_matrix* Bb = gsl_matrix_calloc(6,nDim);
-    gsl_matrix* B = Bmatrices[pointNo];
-    gsl_matrix* C = CMatrices[pointNo];
-    double detF = detFs[pointNo];
-    double detdXde = detdXdes[pointNo];
-
-    //cout<<"Gauss Point: "<<pointNo<<endl;
-    //displayMatrix(C,"C_Before_update");
-    calculateCMatrix(pointNo);
-    //displayMatrix(C,"C_After_update");
-
-    /*
-    //Now I have the C matrix, E matrix and the F  matrix,
-    //I will get curretn displacemetns, and calculate stess from CBu
-    gsl_matrix* disp = gsl_matrix_calloc(18,1);
-    gsl_matrix* tmp1 = gsl_matrix_calloc(6,18);
-    for (int i =0; i<6; ++i){
-        for (int j=0; j<3; j++){
-            double d =  Positions[i][j] - ReferenceShape->Positions[i][j];
-            gsl_matrix_set(disp,i*3+j,0, d);
-        }
-    }
-    gsl_matrix* stresses = gsl_matrix_calloc(6,1);
-    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, C, B,0.0, tmp1);
-    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, tmp1, disp,0.0, stresses);
-    displayMatrix(stresses,"stresses");
-*/
-/*
-
-    for (int a =0; a<nNodes; ++a){
-        for (int b=0; b<nNodes; ++b){
-            consturctBaTBb(B, BaT,Bb,a,b);
-            //displayMatrix(BaT,"BaT");
-            //displayMatrix(Bb,"Bb");
-            //displayMatrix(B,"B");
-
-            //now I have Ba and Bb:
-            //Kab^e part 1:
-            //Ba^T C Bb dV -> in 3 point gaussian, Ba^T C Bb detF
-
-            gsl_matrix* tmp1 = gsl_matrix_calloc(3,6);
-            gsl_matrix* Keab1 = gsl_matrix_calloc(3,3);
-
-            gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, BaT, C,0.0, tmp1);
-            gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, tmp1, Bb,0.0, Keab1);
-            gsl_matrix_scale(Keab1,detF);
-            gsl_matrix_scale(Keab1,detdXde);
-            for (int i=0; i<3; ++i){
-                for (int j=0; j<3; ++j){
-                    double value = gsl_matrix_get(currK,a*nDim+i, b*nDim+j);
-                    value += gsl_matrix_get(Keab1,i, j);
-                    gsl_matrix_set(currK,a*nDim+i, b*nDim+j,value);
-                }
-            }
-            gsl_matrix_free(tmp1);
-            gsl_matrix_free(Keab1);
-        }
-    }
-    gsl_matrix_free(BaT);
-    gsl_matrix_free(Bb);
-}*/
-
 void	ShapeBase::calculateElasticKIntegral1(gsl_matrix* currK,int pointNo){
     gsl_matrix * invJShFuncDerS = invJShapeFuncDerStack[pointNo];
     gsl_matrix * invJShFuncDerSWithFe = invJShapeFuncDerStackwithFe[pointNo];

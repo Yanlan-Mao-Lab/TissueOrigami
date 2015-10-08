@@ -43,6 +43,7 @@ private:
 	int	 nCircumferencialNodes;
 	int dorsalTipIndex,ventralTipIndex,anteriorTipIndex,posteriorTipIndex;
 	double StretchDistanceStep;
+	bool recordForcesOnFixedNodes;
 	double columnarBoundingBoxSize[3];
 	double peripodialBoundingBoxSize[3];
 	bool ContinueFromSave;
@@ -167,7 +168,7 @@ private:
 	void setStretch();
 	void setUpClampBorders(vector<int>& clampedNodeIds);
 	void moveClampedNodesForStretcher();
-	void recordForcesOnClampBorders(gsl_vector* gSum);
+	void recordForcesOnClampBorders();
 	void setupPipetteExperiment();
     void addPipetteForces(gsl_matrix *gExt);
     void addMyosinForces(gsl_matrix* gExt);
@@ -232,6 +233,7 @@ public:
 	vector <ShapeBase*> Elements;
 	double** SystemForces;
 	double** PackingForces;
+	double** FixedNodeForces;
 	double SystemCentre[3];
 	bool AddPeripodialMembrane;
 	bool stretcherAttached;
@@ -276,7 +278,8 @@ public:
     void correctzProjectedAreaForMidNodes();
     void clearProjectedAreas();
     void checkForExperimentalSetupsBeforeIteration();
-    void checkForExperimentalSetupsWithinIteration(gsl_vector* gSum);
+    void checkForExperimentalSetupsWithinIteration();
+    void checkForExperimentalSetupsAfterIteration();
 	void runOneStep();
     void updateStepNR();
     void constructUnMatrix(gsl_matrix* un);

@@ -25,7 +25,6 @@ Simulation::Simulation(){
     if (growthRotationUpdateFrequency<1) {growthRotationUpdateFrequency =1;}
 	setDefaultParameters();
 
-
 	//double GrowthMatrix[3][3][3] = {
 	//							{{1.00, 0.50, 0.00}, {1.00, 0.50, 0.00}, {1.00, 0.50, 0.00}},
 	//							{{1.00, 0.75, 0.00}, {1.00, 0.625,0.00}, {1.00, 0.50, 0.00}},
@@ -41,9 +40,11 @@ Simulation::~Simulation(){
 	for (int j=0;j<n;++j){
 		delete[] SystemForces[j];
 		delete[] PackingForces[j];
+		delete[] FixedNodeForces[j];
 	}
 	delete[] SystemForces;
     delete[] PackingForces;
+    delete[] FixedNodeForces;
     cout<<"deleting elements"<<endl;
 	while(!Elements.empty()){
 		ShapeBase* tmp_pt;
@@ -117,6 +118,7 @@ void Simulation::setDefaultParameters(){
 	anteriorTipIndex = 0;
 	posteriorTipIndex = 0;
 	stretcherAttached = false;
+	recordForcesOnFixedNodes = false;
 	distanceIndex = false;
 	StretchDistanceStep = 0.0;
 	DVClamp = true;
@@ -411,9 +413,11 @@ bool Simulation::initiateSystem(){
     for (int i=0; i<nElement; ++i){
         Elements[i]->calculateRelativePosInBoundingBox(columnarBoundingBox[0][0],columnarBoundingBox[0][1],columnarBoundingBoxSize[0],columnarBoundingBoxSize[1], peripodialBoundingBox[0][0],peripodialBoundingBox[0][1],peripodialBoundingBoxSize[0],peripodialBoundingBoxSize[1]);
     }
+    cout<<"setting the stretcher"<<endl;
 	if (stretcherAttached){
 		setStretch();
 	}
+    cout<<"setting the pipette"<<endl;
 	if(PipetteSuction){
 		setupPipetteExperiment();
 	}
@@ -961,22 +965,29 @@ void Simulation::reInitiateSystemForces(int oldSize){
 	for (int j=0;j<oldSize;++j){
 		delete[] SystemForces[j];
 		delete[] PackingForces[j];
+		delete[] FixedNodeForces[j];
 	}
 	delete[] SystemForces;
 	delete[] PackingForces;
+	delete[] FixedNodeForces;
 	//reinitiating with the new size:
 	const int n = Nodes.size();
 	SystemForces = new double*[n];
 	PackingForces = new double*[n];
+	FixedNodeForces = new double*[n];
 	for (int j=0;j<n;++j){
 		SystemForces[j] = new double[3];
 		PackingForces[j] = new double[3];
+		FixedNodeForces[j] = new double[3];
 		SystemForces[j][0]=0.0;
 		SystemForces[j][1]=0.0;
 		SystemForces[j][2]=0.0;
 		PackingForces[j][0]=0.0;
 		PackingForces[j][1]=0.0;
 		PackingForces[j][2]=0.0;
+		FixedNodeForces[j][0] = 0.0;
+		FixedNodeForces[j][1] = 0.0;
+		FixedNodeForces[j][2] = 0.0;
 	}
 }
 
@@ -1632,16 +1643,22 @@ void Simulation::initiateSystemForces(){
 	//n nodes
 	SystemForces = new double*[n];
 	PackingForces = new double*[n];
+	FixedNodeForces = new double*[n];
+
 	for (int j=0;j<n;++j){
 		//3 dimensions
 		SystemForces[j] = new double[3];
 		PackingForces[j] = new double[3];
+		FixedNodeForces[j] = new double[3];
 		SystemForces[j][0]=0.0;
 		SystemForces[j][1]=0.0;
 		SystemForces[j][2]=0.0;
 		PackingForces[j][0]=0.0;
 		PackingForces[j][1]=0.0;
 		PackingForces[j][2]=0.0;
+		FixedNodeForces[j][0] = 0.0;
+		FixedNodeForces[j][1] = 0.0;
+		FixedNodeForces[j][2] = 0.0;
 		//cout<<"systemforces[i][j]: "<<SystemForces[i][0]<<" "<<SystemForces[i][0]<<" "<<SystemForces[i][0]<<endl;
 	}
 }
@@ -2494,9 +2511,12 @@ void Simulation::checkForExperimentalSetupsBeforeIteration(){
 	}
 }
 
-void Simulation::checkForExperimentalSetupsWithinIteration(gsl_vector* gSum){
+void Simulation::checkForExperimentalSetupsWithinIteration(){
+}
+
+void Simulation::checkForExperimentalSetupsAfterIteration(){
 	if (stretcherAttached){
-		recordForcesOnClampBorders(gSum);
+		recordForcesOnClampBorders();
 	}
 }
 
@@ -2645,7 +2665,7 @@ void Simulation::updateStepNR(){
         for (int i=0; i<dim*nNodes; ++i){
             gsl_vector_set(gSum,i,gsl_vector_get(gSum,i)+gsl_matrix_get(gExt,i,0));
         }
-        checkForExperimentalSetupsWithinIteration(gSum);
+        checkForExperimentalSetupsWithinIteration();
         //Adding external forces:
         //double F = 5.509e+04 ;
         double F = 0 ;
@@ -2706,6 +2726,7 @@ void Simulation::updateStepNR(){
         }*/
         //cout<<"Node 0 position: "<<Nodes[0]->Position[0]<<" "<<Nodes[0]->Position[1]<<" "<<Nodes[0]->Position[2]<<endl;
     }
+    checkForExperimentalSetupsAfterIteration();
     //Now the calculation is converged, I update the node positions with the latest positions uk:
     updateNodePositionsNR(uk);
     //Element positions are already up to date.
@@ -2767,7 +2788,6 @@ void Simulation::calculateImplucitKElasticNumerical(gsl_matrix* K, gsl_matrix* g
     gsl_matrix_free(geDiff);
 }
 
-//void Simulation::calcutateFixedK(vector<int> FixedNodes, gsl_matrix* K, gsl_vector* g){
 void Simulation::calcutateFixedK(gsl_matrix* K, gsl_vector* g){
     int dim = 3;
     int Ksize = K->size1;
@@ -2849,7 +2869,9 @@ void Simulation::calculateImplucitKViscousNumerical(gsl_matrix*  mviscdt, gsl_ma
     Elements[0]->displayMatrix(mviscdt,"mviscdt");
     Elements[0]->displayMatrix(ViscousForces0,"ViscousForces0");
     Elements[0]->displayMatrix(ViscousForces1,"ViscousForces1");
-
+    gsl_matrix_free(ViscousForces0);
+    gsl_matrix_free(ViscousForces1);
+    gsl_matrix_free(ukepsilon);
 
 }
 
@@ -3254,7 +3276,7 @@ void Simulation::calculateElasticForcesForNR(gsl_matrix* ge){
     for (int i=0; i<nElement; ++i){
         if (!Elements[i]->IsAblated){
             //cout<<"calculating forces for element:  "<<i<<endl;
-            Elements[i]->calculateForces(SystemForces, Nodes, outputFile);
+            Elements[i]->calculateForces(SystemForces, Nodes, recordForcesOnFixedNodes, FixedNodeForces, outputFile);
             /*int nNodes = Nodes.size();
             cout<<"Element "<<i<<"system forces: "<<endl;
             for (int nn=0; nn< nNodes; ++nn){
@@ -3281,27 +3303,7 @@ void Simulation::calculateViscousForcesForNR(gsl_matrix* gv, gsl_matrix* mviscdt
     Elements[0]->createMatrixCopy(displacement,un);
     gsl_matrix_sub(displacement,uk);
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, mviscdt, displacement,0.0, gv);
-
-/*
-    gsl_matrix* dispPerturb = gsl_matrix_calloc(dim*nNodes,1);
-    gsl_matrix* ukPerturb = gsl_matrix_calloc(dim*nNodes,1);
-    gsl_matrix* gvPerturb = gsl_matrix_calloc(dim*nNodes,1);
-    Elements[0]->createMatrixCopy(dispPerturb,un);
-    Elements[0]->createMatrixCopy(ukPerturb,uk);
-    double perturb = 5.0;
-    double value = gsl_matrix_get(ukPerturb,9,0) + perturb;
-    gsl_matrix_set(ukPerturb,9,0,value);
-    gsl_matrix_sub(dispPerturb,ukPerturb);
-
-    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, mviscdt, dispPerturb,0.0, gvPerturb);
-    Elements[0]->displayMatrix(displacement,"displacement");
-    Elements[0]->displayMatrix(gv,"gv");
-    Elements[0]->displayMatrix(gvPerturb,"gvPerturb");
-    gsl_matrix_sub(gvPerturb,gv);
-    Elements[0]->displayMatrix(gvPerturb,"PerturbDiff");
-    cout<<gsl_matrix_get(gvPerturb,9,0)/perturb<<" mass value:  "<<gsl_matrix_get(mviscdt,9,9)<<endl;
-
-*/
+    gsl_matrix_free(displacement);
 }
 
 void Simulation::constructUnMatrix(gsl_matrix* un){
@@ -3650,6 +3652,9 @@ void Simulation::calculatePacking(double PeriThreshold, double ColThreshold){
 									SystemForces[(*itNode)->Id][j] += F[j];
 									PackingForces[(*itNode)->Id][j] += F[j];
 								}
+								else if (recordForcesOnFixedNodes) {
+									FixedNodeForces[(*itNode)->Id][j] += F[j];
+								}
 							}
 							//cout<<"updated the system forces: "<<SystemForces[(*itNode)->Id][0]<<" "<<SystemForces[(*itNode)->Id][1]<<" "<<SystemForces[(*itNode)->Id][2]<<endl;
 							//add opposite force to the element nodes:
@@ -3682,6 +3687,9 @@ void Simulation::calculatePacking(double PeriThreshold, double ColThreshold){
 							if (!(*itNode)->FixedPos[j]){
 								SystemForces[(*itNode)->Id][j] += pipF[j];
 								PackingForces[(*itNode)->Id][j] += pipF[j];
+							}
+							else if(recordForcesOnFixedNodes){
+								FixedNodeForces[(*itNode)->Id][j] += pipF[j];
 							}
 						}
 					}
@@ -3845,6 +3853,9 @@ void Simulation::resetForces(){
 		//3 dimensions
 		for (int k=0;k<dim;++k){
 			SystemForces[j][k]=0.0;
+			if (recordForcesOnFixedNodes){
+				FixedNodeForces[j][k]=0.0;
+			}
 			//PackingForces[j][k]=0.0;
 		}
 	}
@@ -4490,6 +4501,7 @@ void Simulation::coordinateDisplay(){
 
 void Simulation::setStretch(){
 	cout<<"setting the stretcher"<<endl;
+	recordForcesOnFixedNodes = true;
 	for (int i=0;i<3;i++){
 		leftClampForces[i] = 0.0;
 		rightClampForces[i] = 0.0;
@@ -4598,21 +4610,22 @@ void Simulation::setUpClampBorders(vector<int>& clampedNodeIds){
 	}
 }
 
-void Simulation::recordForcesOnClampBorders(gsl_vector* gSum){
-	cout<<"in record clamp forces"<<endl;
-	for (int i=0;i<3;i++){
-		leftClampForces[i] = 0.0;
-		rightClampForces[i] = 0.0;
-	}
-	for (int k=0; k<leftClampBorder.size(); k++){
-		leftClampForces[0] += gsl_vector_get(gSum,leftClampBorder[k]*3);
-		leftClampForces[1] += gsl_vector_get(gSum,leftClampBorder[k]*3+1);
-		leftClampForces[2] += gsl_vector_get(gSum,leftClampBorder[k]*3+2);
-	}
-	for (int k=0; k<rightClampBorder.size(); k++){
-		rightClampForces[0] += gsl_vector_get(gSum,rightClampBorder[k]*3);
-		rightClampForces[1] += gsl_vector_get(gSum,rightClampBorder[k]*3+1);
-		rightClampForces[2] += gsl_vector_get(gSum,rightClampBorder[k]*3+2);
+void Simulation::recordForcesOnClampBorders(){
+	if (recordForcesOnFixedNodes){
+		for (int i=0;i<3;i++){
+			leftClampForces[i] = 0.0;
+			rightClampForces[i] = 0.0;
+		}
+		for (int k=0; k<leftClampBorder.size(); k++){
+			for (int j=0; j<3; ++j){
+				leftClampForces[j] += FixedNodeForces[leftClampBorder[k]][j];
+			}
+		}
+		for (int k=0; k<rightClampBorder.size(); k++){
+			for (int j=0; j<3; ++j){
+				rightClampForces[j] += FixedNodeForces[rightClampBorder[k]][j];
+			}
+		}
 	}
 	outputFile<<"Forces on clamps lhs: "<<leftClampForces[0]<<" "<<leftClampForces[1]<<" "<<leftClampForces[2]<<" rhs: "<<rightClampForces[0]<<" "<<rightClampForces[1]<<" "<<rightClampForces[2]<<endl;
 }
