@@ -231,6 +231,8 @@ public:
 
 	vector <Node*> Nodes;
 	vector <ShapeBase*> Elements;
+	int nElements;
+	int nNodes;
 	double** SystemForces;
 	double** PackingForces;
 	double** FixedNodeForces;
