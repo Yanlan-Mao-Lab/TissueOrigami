@@ -600,7 +600,7 @@ void GLWidget::highlightNode(int i){
  }
 
  void GLWidget::getConcentrationColour(float* OutputColour, float concentration){
-	 double scale2[2] = {0,30.0};
+	 double scale2[2] = {0,15.0};
 	 double g = (concentration- scale2[0])/(scale2[1]-scale2[0]);
 	 OutputColour[0] = 1.0-g;
 	 OutputColour[1] = 1.0;

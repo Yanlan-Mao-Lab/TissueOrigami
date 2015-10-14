@@ -203,6 +203,7 @@ public:
 	void	updateUniformEquilibriumMyosinConcentration(bool isApical, double cEqUniform);
 	void	updateUnipolarEquilibriumMyosinConcentration(bool isApical, double cEqUnipolar, double orientationX, double orientationY);
 	void	updateMyosinConcentration(double dt, double kMyo);
+	bool 	calculateIfInsideActiveStripe(double initialPoint,double endPoint, double stripeSize1, double stripeSize2);
 	double	getCmyosinUniformForNode (int TissuePlacement);
 	double	getCmyosinUnipolarForNode (int TissuePlacement);
 	void 	getMyosinLevels (double *cMyo);

@@ -3756,8 +3756,9 @@ void Simulation::assignTips(){
 }
 
 void Simulation::alignTissueDVToXPositive(){
+	//dorsalTipIndex = 8;
 	//ventralTipIndex = 0;
-	//dorsalTipIndex = 88;
+	//dorsalTipIndex = 80;
 	double* u = new double[3];
 	double* v = new double[3];
 	//For simulations with no viscosity, the position of node 0 is fixed. Node 0 is the dorsal tip of the tissue.
@@ -4149,6 +4150,7 @@ void Simulation::checkForMyosinUpdates(){
 	}
 }
 
+
 void Simulation::updateEquilibriumMyosinsFromInputSignal(MyosinFunction* currMF){
 	//cout<<"inside updateEquilibriumMyosinsFromInputSignal "<<endl;
 	int nGridX = currMF->getGridX();
@@ -4156,40 +4158,56 @@ void Simulation::updateEquilibriumMyosinsFromInputSignal(MyosinFunction* currMF)
 	vector<ShapeBase*>::iterator itElement;
 	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 		if ((currMF->applyToColumnarLayer && (*itElement)->tissueType == 0) || (currMF->applyToPeripodialMembrane && (*itElement)->tissueType == 1) || (*itElement)->tissueType == 2){
-			//calculating the grid indices:
-			double* ReletivePos = new double[2];
-			//normalising the element centre position with bounding box
-			if ((*itElement)->tissueType == 0){
-				(*itElement)->getRelativePosInColumnarBoundingBox(ReletivePos);
-			}
-			else{
-				(*itElement)->getRelativePosInPeripodialBoundingBox(ReletivePos);
-			}
-			int indexX, indexY;
-			double fracX, fracY;
-			(*itElement)->convertRelativePosToGridIndex(ReletivePos, indexX, indexY, fracX, fracY, nGridX, nGridY);
-			//reading the equilibrium myosin value
-			double cEqYmid[2]= {0.0,0.0};
-			double cEq;
-			cEqYmid[0] = currMF->getEquilibriumMyoMatrixElement(indexX,indexY)*(1.0-fracX) + currMF->getEquilibriumMyoMatrixElement(indexX+1,indexY)*fracX;
-			cEqYmid[1] = currMF->getEquilibriumMyoMatrixElement(indexX,indexY+1)*(1.0-fracX) + currMF->getEquilibriumMyoMatrixElement(indexX+1,indexY+1)*fracX;
-			cEq = cEqYmid[0]*(1.0-fracY) + cEqYmid[1]*fracY;
-			if (currMF->isPolarised){
-				//If the function is polarised, reading the orientation
-				double orientation[2];
-				for (int axis=0; axis<2; ++axis){
-					cEqYmid[0] = currMF->getOrientationMatrixElement(indexX,indexY,axis)*(1.0-fracX) + currMF->getOrientationMatrixElement(indexX+1,indexY,axis)*fracX;
-					cEqYmid[1] = currMF->getOrientationMatrixElement(indexX,indexY+1,axis)*(1.0-fracX) + currMF->getOrientationMatrixElement(indexX+1,indexY+1,axis)*fracX;
-					orientation[axis] = cEqYmid[0]*(1.0-fracY) + cEqYmid[1]*fracY;
+			if (currMF->manualStripes){
+				//Here, I need to check if all the nodes of the element fall into the stripeof myosin upregulations.
+				//double stripeSize1, stripeSize2;
+				//double initialPoint, endPoint;
+				bool inActiveZone = (*itElement)->calculateIfInsideActiveStripe(currMF->initialPoint,currMF->endPoint,currMF->stripeSize1,currMF->stripeSize2);
+				if (inActiveZone){
+					if (currMF->isPolarised){
+						(*itElement)->updateUnipolarEquilibriumMyosinConcentration(currMF->isApical,currMF->manualCMyoEq, currMF->manualOrientation[0], currMF->manualOrientation[1]);
+					}
+					else{
+						(*itElement)->updateUniformEquilibriumMyosinConcentration(currMF->isApical, currMF->manualCMyoEq);
+					}
 				}
-				//updating the values of the shape for polarised myosin:
-				(*itElement)->updateUnipolarEquilibriumMyosinConcentration(currMF->isApical, cEq, orientation[0], orientation[1]);
 			}
 			else{
-				//updating the values of the shape for uniform contractile:
-				(*itElement)->updateUniformEquilibriumMyosinConcentration(currMF->isApical, cEq);
+				//calculating the grid indices:
+				double* ReletivePos = new double[2];
+				//normalising the element centre position with bounding box
+				if ((*itElement)->tissueType == 0){
+					(*itElement)->getRelativePosInColumnarBoundingBox(ReletivePos);
+				}
+				else{
+					(*itElement)->getRelativePosInPeripodialBoundingBox(ReletivePos);
+				}
+				int indexX, indexY;
+				double fracX, fracY;
+				(*itElement)->convertRelativePosToGridIndex(ReletivePos, indexX, indexY, fracX, fracY, nGridX, nGridY);
+				//reading the equilibrium myosin value
+				double cEqYmid[2]= {0.0,0.0};
+				double cEq;
+				cEqYmid[0] = currMF->getEquilibriumMyoMatrixElement(indexX,indexY)*(1.0-fracX) + currMF->getEquilibriumMyoMatrixElement(indexX+1,indexY)*fracX;
+				cEqYmid[1] = currMF->getEquilibriumMyoMatrixElement(indexX,indexY+1)*(1.0-fracX) + currMF->getEquilibriumMyoMatrixElement(indexX+1,indexY+1)*fracX;
+				cEq = cEqYmid[0]*(1.0-fracY) + cEqYmid[1]*fracY;
+				if (currMF->isPolarised){
+					//If the function is polarised, reading the orientation
+					double orientation[2];
+					for (int axis=0; axis<2; ++axis){
+						cEqYmid[0] = currMF->getOrientationMatrixElement(indexX,indexY,axis)*(1.0-fracX) + currMF->getOrientationMatrixElement(indexX+1,indexY,axis)*fracX;
+						cEqYmid[1] = currMF->getOrientationMatrixElement(indexX,indexY+1,axis)*(1.0-fracX) + currMF->getOrientationMatrixElement(indexX+1,indexY+1,axis)*fracX;
+						orientation[axis] = cEqYmid[0]*(1.0-fracY) + cEqYmid[1]*fracY;
+					}
+					//updating the values of the shape for polarised myosin:
+					(*itElement)->updateUnipolarEquilibriumMyosinConcentration(currMF->isApical, cEq, orientation[0], orientation[1]);
+				}
+				else{
+					//updating the values of the shape for uniform contractile:
+					(*itElement)->updateUniformEquilibriumMyosinConcentration(currMF->isApical, cEq);
+				}
+				delete[] ReletivePos;
 			}
-			delete[] ReletivePos;
 		}
 	}
 	//cout<<"finalised updateEquilibriumMyosinsFromInputSignal "<<endl;

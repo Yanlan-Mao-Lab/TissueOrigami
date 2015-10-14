@@ -694,11 +694,9 @@ void 	ShapeBase::calculateRelativePosInBoundingBox(double columnarBoundingBoxXMi
 		peripodialRelativePosInBoundingBox[0] = (peripodialRelativePosInBoundingBox[0] - peripodialBoundingBoxXMin) / peripodialBoundingBoxLength;
 		peripodialRelativePosInBoundingBox[1] = (peripodialRelativePosInBoundingBox[1] - peripodialBoundingBoxYMin) / peripodialBoundingBoxWidth;
 	}
-	//cout<<"Elements: "<<Id<<" centre: "<< columnarRelativePosInBoundingBox[0]<<" "<<columnarRelativePosInBoundingBox[1]<<" ";
-	//cout<<" Bounding box: "<<BoindingBoxXMin<<" "<<BoundingBoxYMin<<" "<<BoundingBoxLength<<" "<<BoundingBoxWidth<<"  ";
 	columnarRelativePosInBoundingBox[0] = (columnarRelativePosInBoundingBox[0] - columnarBoundingBoxXMin) / columnarBoundingBoxLength;
 	columnarRelativePosInBoundingBox[1] = (columnarRelativePosInBoundingBox[1] - columnarBoundingBoxYMin) / columnarBoundingBoxWidth;
-	//cout<<" rel Pos: "<< columnarRelativePosInBoundingBox[0]<<" "<<columnarRelativePosInBoundingBox[1]<<endl;
+	//cout<<"Element: "<<Id<<" RelPos: "<<columnarRelativePosInBoundingBox[0]<<" "<<columnarRelativePosInBoundingBox[1]<<" "<<peripodialRelativePosInBoundingBox[0]<<" "<<peripodialRelativePosInBoundingBox[1]<<endl;
 	//double* a = new double[3];
 	//a = getRelativePosInBoundingBox();
 	//cout<<" a: "<< a[0]<<" "<<a[1]<<endl;
@@ -1464,6 +1462,75 @@ void 	ShapeBase::cleanMyosinForce(){
 		MyoForce[i][2] = 0;
 	}
 }
+
+bool ShapeBase::calculateIfInsideActiveStripe(double initialPoint,double endPoint, double stripeSize1, double stripeSize2){
+	//All nodes and the centre of the element should be inside the active zone:
+	//starting from the centre:
+	double* c;
+	c = new double[3];
+	c = getCentre();
+	for (int i=0; i<nNodes+1; ++i){
+		//getting the node position
+		double x;
+		double y;
+		double bufferFrac;
+		if (i == 0 ){
+			x = c[0];
+			y = c[1];
+			bufferFrac = 0.0;
+		}
+		else{
+			x = Positions[i-1][0];
+			y = Positions[i-1][1];
+			bufferFrac = 0.1;
+		}
+		//is the node inside the active region:
+		bool xInActiveZone = false;
+		bool yInActiveZone = false;
+		bool loopComplete = false;
+		double lowEnd = initialPoint - bufferFrac*stripeSize1;
+		double highEnd = lowEnd + stripeSize1 + 2.0*bufferFrac*stripeSize1;
+		while (!xInActiveZone && !loopComplete){
+			if(stripeSize1 == 0 || highEnd>endPoint){
+				highEnd = endPoint + bufferFrac*stripeSize1;
+				loopComplete = true;
+			}
+			//cout<<" x: "<<x<<" low: "<<lowEnd<<" high: "<<highEnd<<endl;
+			if (x>= lowEnd && x<=highEnd){
+				xInActiveZone = true;
+			}
+			lowEnd += stripeSize1*2.0;
+			highEnd = lowEnd + stripeSize1 + 2.0*bufferFrac*stripeSize1;
+		}
+		if (xInActiveZone){
+			//if x is in active zone, I will move on to check y:
+			loopComplete = false;
+			lowEnd = initialPoint;
+			highEnd = lowEnd + stripeSize2 + 2.0*bufferFrac*stripeSize2;
+			while (!yInActiveZone && !loopComplete){
+				if(stripeSize2 == 0 || highEnd>endPoint){
+					highEnd = endPoint + bufferFrac*stripeSize2;
+					loopComplete = true;
+				}
+				if (y>= lowEnd && y<=highEnd){
+					yInActiveZone = true;
+				}
+				lowEnd += stripeSize2*2.0;
+				highEnd = lowEnd + stripeSize2 + 2.0*bufferFrac*stripeSize2;
+			}
+		}
+		//cout<<"Element: "<<Id<<" point ( 0 for centre, i-1 for node): "<<i<<" pos: "<<x<<" "<<y<<" is inside: "<<xInActiveZone<<" "<<yInActiveZone<<endl;
+		if (!xInActiveZone || !yInActiveZone ){
+			//if this node is not in the active zone, then the element is not in the active zone
+			delete[] c;
+			return false;
+		}
+	}
+	//I did not return the function in any of the nodes, then all nodes must be inside the active zone:
+	delete[] c;
+	return true;
+};
+
 double ShapeBase::getCmyosinUniformForNode (int TissuePlacement){
 	if(TissuePlacement == 1) {	//apical node
 		return cMyoUniform[0];

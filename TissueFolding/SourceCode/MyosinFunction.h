@@ -24,6 +24,11 @@ public:
 	bool isPolarised;				///< The boolean stating if the myosin function is is polarised, defaul value is false, and applies a uniform contraction of the surface
 	bool applyToColumnarLayer;		///< Boolean stating if the myosin levels should be applied to columnar layer
 	bool applyToPeripodialMembrane; ///< Boolean stating if the myosin levels should be applied to peripodial membrane
+	bool manualStripes;
+	double stripeSize1, stripeSize2;
+	double initialPoint, endPoint;
+	double manualCMyoEq;
+	double manualOrientation[2];
 	int nGridX;						///< The number of grid points that discretise the tissue in x
 	int nGridY;						///< The number of grid points that discretise the tissue in y
 	double **EquilibriumMyosinMatrix;	///<The matrix of equilibrium myosin levels. It is a matrix of doubles for equilibrium concentration at each grid point. The dimensions of the matrix are equal to (MyosinFunction::nGridX, MyosinFunction::nGridY), and set in constructor of the MyosinFunction.
@@ -37,6 +42,7 @@ public:
 		 *  The matrix storing the growth rates have been read from an input file through ModelInputObject#readGrowthOptions and related functions therein \n
 		 */
 		//this ->kMyo = 0.09873;
+		this->manualStripes = false;
 		this->Id = id;
 		this->initTime = initTime;
 		this->applyToColumnarLayer = applyToColumnarLayer;
@@ -62,6 +68,58 @@ public:
 				MyosinOrientationMatrix[i][j] =  new double[2];
 				MyosinOrientationMatrix[i][j][0] = cos(tet);
 				MyosinOrientationMatrix[i][j][1] = sin(tet);
+			}
+		}
+		//Filling up unused parameters
+		this ->stripeSize1 = 0;
+		this ->stripeSize2 = 0;
+		this ->initialPoint = 0;
+		this ->endPoint = 0;
+		this ->manualCMyoEq = 0;
+		this->manualOrientation[0] = 1;
+		this->manualOrientation[1] = 0;
+	} ///< The constructor of MyosinFunction. Different growth functions will be derived from this class
+	MyosinFunction(int id, bool isApical, bool isPolarised, int initTime, bool applyToColumnarLayer, bool applyToPeripodialMembrane, double stripeSize1, double stripeSize2, double initialPoint, double endPoint, double manualcEq, double tetha){
+		/**
+		 *  The first six parameters will be directed to the parent constructor, GrowthFunctionBase#GrowthFunctionBase. \n
+		 *  integers nX and nY will set GridBasedGrowthFunction#nGridX and GridBasedGrowthFunction#nGridY, respectively.  GridBasedGrowthFunction::GrowthMatrix will be initiated to point at a 2 dimensional matrix of double triplets the size(nX, nY). \n
+		 *  double*** GrowthMat is the pointer to the 2-dimensional matrix of double triplets, holding the 3D growth rates at each grid point. Values stored in GrowthMat will set the values in GridBasedGrowthFunction::GrowthMatrix.
+		 *  The matrix storing the growth rates have been read from an input file through ModelInputObject#readGrowthOptions and related functions therein \n
+		 */
+		//this ->kMyo = 0.09873;
+		this->manualStripes = true;
+		this->Id = id;
+		this->initTime = initTime;
+		this->applyToColumnarLayer = applyToColumnarLayer;
+		this->applyToPeripodialMembrane = applyToPeripodialMembrane;
+		this->isApical = isApical;
+		this->isPolarised = isPolarised;
+		this ->nGridX = 0;
+		this ->nGridY = 0;
+		this ->stripeSize1 = stripeSize1;
+		this ->stripeSize2 = stripeSize2;
+		this ->initialPoint = initialPoint;
+		this ->endPoint = endPoint;
+		this ->manualCMyoEq = manualcEq;
+		tetha = tetha * 3.14159265359/180.0;
+		manualOrientation[0] = cos(tetha);
+		manualOrientation[1] = sin(tetha);
+		//Filling up unused parameters
+		EquilibriumMyosinMatrix = new double*[(const int) nGridX];
+		for (int i=0; i<nGridX; ++i){
+			EquilibriumMyosinMatrix[i] = new double[(const int) nGridY];
+			for (int j=0; j<nGridY; ++j){
+				EquilibriumMyosinMatrix[i][j] = 0.0;
+			}
+		}
+		MyosinOrientationMatrix = new double**[(const int) nGridX];
+		for (int i=0; i<nGridX; ++i){
+			MyosinOrientationMatrix[i] = new double*[(const int) nGridY];
+			for (int j=0; j<nGridY; ++j){
+				MyosinOrientationMatrix[i][j] = new double[2];
+				MyosinOrientationMatrix[i][j] =  new double[2];
+				MyosinOrientationMatrix[i][j][0] = 0;
+				MyosinOrientationMatrix[i][j][1] = 0;
 			}
 		}
 	} ///< The constructor of MyosinFunction. Different growth functions will be derived from this class
