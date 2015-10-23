@@ -43,6 +43,7 @@ protected:
 	int 	nDim;
 	int* 	IdentifierColour;
 	double* GrowthRate;
+	gsl_matrix* growthIncrement;
 	double  columnarGrowthWeight;
 	double  peripodialGrowthWeight;
 	double* ShapeChangeRate;
@@ -64,6 +65,7 @@ protected:
     gsl_matrix **invJShapeFuncDerStack;
     gsl_matrix **invJShapeFuncDerStackwithFe;
     gsl_matrix **elasticStress;
+	gsl_matrix* TriPointF;
     double* detFs;
 
     double ZProjectedBasalArea,ZProjectedApicalArea;
@@ -73,6 +75,8 @@ protected:
     double cMyoUniformEq[2]; //apical, basal
     double cMyoUnipolarEq[2]; //apical basal
     gsl_matrix* myoPolarityDir;
+
+
 
     void 	setShapeType(string TypeName);
 	void 	readNodeIds(int* tmpNodeIds);
@@ -120,7 +124,7 @@ protected:
     gsl_matrix* InvFg;		///< Inverse of growth matrix
     gsl_matrix* Fsc;		///< Shape change matrix
     gsl_matrix* InvFsc;		///< Inverse of shape change matrix
-    gsl_matrix* TriPointF;
+
     gsl_matrix* TriPointKe;
 
 public:
@@ -148,9 +152,9 @@ public:
 	double 	CurrShapeChangeToAdd[3];
 	double* ApicalNormalForPacking;
 	double* BasalNormalForPacking;
-    double GrownVolume;
-	double VolumePerNode;
-	bool capElement;
+    double  GrownVolume;
+	double  VolumePerNode;
+	bool 	capElement;
 	double** MyoForce;
 
 	int 	getId();
@@ -188,17 +192,20 @@ public:
     virtual void setElasticProperties(double EApical,double EBasal, double EMid,double v){ParentErrorMessage("setElasticProperties");};
 	virtual void calculateBasalNormal(double * normal){ParentErrorMessage("calculateBasalNormal");};
 	virtual void AlignReferenceBaseNormalToZ(){ParentErrorMessage("AlignReferenceBaseNormalToZ");};
-	void 	updateGrowthRate(double scalex, double scaley, double scalez);
+	void 	calculateCurrentGrowthIncrement(gsl_matrix* resultingGrowthIncrement, double dt, double growthx, double growthy, double growthz, gsl_matrix* ShearAngleRotationMatrix);
+	void 	updateGrowthRate(double dt, double scalex, double scaley, double scalez, gsl_matrix* ShearAngleRotationMatrix);
 	void 	updateShapeChangeRate(double x, double y, double z, double xy, double yz, double xz);
 	virtual void calculateReferenceStiffnessMatrix(){ParentErrorMessage("calculateReferenceStiffnessMatrix");};
     virtual void calculateElementShapeFunctionDerivatives(){ParentErrorMessage("calculateReferenceStiffnessMatrix");};
     virtual void calculateCurrNodalForces(gsl_matrix *gslcurrg, gsl_matrix *gslcurrF, int pointNo){ParentErrorMessage("calculateCurrNodalForces");};
+    virtual void calculateCurrTriPointFForRotation(gsl_matrix *currF,int pointNo){ParentErrorMessage("calculateCurrTriPointFForRotation");};
+
     virtual void calculateApicalArea(){ParentErrorMessage("calculateApicalArea");};
     virtual void calculateBasalArea(){ParentErrorMessage("calculateBasalArea");};
 
     void 	calculateForces(double **SystemForces,  vector <Node*>& Nodes, bool recordForcesOnFixedNodes, double** FixedNodeForces,  ofstream& outputFile);
     void 	updatePositions(vector<Node*>& Nodes);
-	void 	setGrowthRate(double x, double y, double z);
+	void 	setGrowthRate(double dt, double x, double y, double z);
 	void 	cleanMyosinForce();
 	void	updateUniformEquilibriumMyosinConcentration(bool isApical, double cEqUniform);
 	void	updateUnipolarEquilibriumMyosinConcentration(bool isApical, double cEqUnipolar, double orientationX, double orientationY);
@@ -247,8 +254,10 @@ public:
 	void	calculateRotationAxis(double* u, double* v,double* rotAx, double c);
 	void	constructRotationMatrix(double c, double s, double* rotAx, double* rotMat);
 	void	rotateVectorByRotationMatrix(double* u,double* rotMat);
+	void	rotateVectorByRotationMatrix(double* u,gsl_matrix* rotMat);
 
 	void    CalculateGrowthRotationByF();
+	void 	calculateTriPointFForRatation();
     void 	growShapeByFg(double dt);
     void 	changeShapeByFsc(double dt);
 

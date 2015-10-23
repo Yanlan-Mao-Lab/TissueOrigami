@@ -417,7 +417,7 @@ void  MainWindow::xClipChange(int k){
 
 void  MainWindow::yClipChange(int k){
 	if (Sim01->AddPeripodialMembrane){
-		MainGLWidget->yClip = Sim01->peripodialBoundingBox[0][1] +( ( Sim01->peripodialBoundingBox[1][1] - Sim01->peripodialBoundingBox[0][1]-k)/100.0 );
+		MainGLWidget->yClip = Sim01->peripodialBoundingBox[0][1] +( ( Sim01->peripodialBoundingBox[1][1] - Sim01->peripodialBoundingBox[0][1] ) * (double) (90.0 - k)/100.0 );
 	}
 	else{
 		MainGLWidget->yClip = Sim01->columnarBoundingBox[0][1] +( ( Sim01->columnarBoundingBox[1][1] - Sim01->columnarBoundingBox[0][1] ) * (double) (90-k)/100.0 );
@@ -715,6 +715,7 @@ void MainWindow::timerSimulationStep(){
         else if(!displayedSimulationLength){
             displayedSimulationLength = true;
             Sim01->wrapUpAtTheEndOfSimulation();
+            Sim01->writeRelaxedMeshFromCurrentState();
             double duration = ( std::clock() - simulationStartClock ) / (double) CLOCKS_PER_SEC;
             cout<<"Simulation length in seconds: "<< duration <<endl;
             //close();

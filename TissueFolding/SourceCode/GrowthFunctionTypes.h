@@ -16,12 +16,27 @@ private:
 
 public:
 	double GrowthRate[3]; ///< The double array stating the uniform growth rate throughout the tissue. Growth rate is in 1/sec, format: [ DV axis (x), AP axis (y), and AB axis (z)]
-
-	UniformGrowthFunction(int id, int type, float initTime, float endTime, bool applyToColumnarLayer, bool applyToPeripodialMembrane, double DVGrowth, double APGrowth, double ABGrowth) : GrowthFunctionBase(id, type, initTime, endTime, applyToColumnarLayer, applyToPeripodialMembrane ){
+	gsl_matrix* ShearAngleRotationMatrix;
+	double angle;
+	UniformGrowthFunction(int id, int type, float initTime, float endTime, bool applyToColumnarLayer, bool applyToPeripodialMembrane, double DVGrowth, double APGrowth, double ABGrowth, double angle) : GrowthFunctionBase(id, type, initTime, endTime, applyToColumnarLayer, applyToPeripodialMembrane ){
 		/**
 		 *  The first six parameters will be directed to the parent constructor, GrowthFunctionBase#GrowthFunctionBase. \n
 		 *  doubles DVGrowth, APGrowth and ABGrowth will set the  UniformGrowthFunction#GrowthRate, in the given order.
 		 */
+		this -> angle = angle;
+		ShearAngleRotationMatrix = gsl_matrix_calloc(3,3);
+		gsl_matrix_set_identity(ShearAngleRotationMatrix);
+		double c = cos(angle);
+		double s = sin(angle);
+		gsl_matrix_set(ShearAngleRotationMatrix,0,0,  c );
+		gsl_matrix_set(ShearAngleRotationMatrix,0,1, -1.0*s);
+		gsl_matrix_set(ShearAngleRotationMatrix,0,2,  0.0);
+		gsl_matrix_set(ShearAngleRotationMatrix,1,0,  s);
+		gsl_matrix_set(ShearAngleRotationMatrix,1,1,  c);
+		gsl_matrix_set(ShearAngleRotationMatrix,1,2,  0.0);
+		gsl_matrix_set(ShearAngleRotationMatrix,2,0,  0.0);
+		gsl_matrix_set(ShearAngleRotationMatrix,2,1,  0.0);
+		gsl_matrix_set(ShearAngleRotationMatrix,2,2,  1.0);
 		GrowthRate[0] = DVGrowth;	//x
 		GrowthRate[1] = APGrowth;	//y
 		GrowthRate[2] = ABGrowth;	//z
@@ -48,6 +63,12 @@ public:
 		GrowthRate[2] = ez;
 	}///< The function is to set the 3D growth rate of the current growth function.
 
+	gsl_matrix* getShearAngleRotationMatrix(){
+		return ShearAngleRotationMatrix;
+	}
+	double getShearAngle(){
+		return angle;
+	}
 	void writeSummary(ofstream &saveFileSimulationSummary,double dt){
 		/**
 		 *  This function will write the UniformGrowthFunction details into the simulation summary file, provided as the first input.
@@ -76,7 +97,7 @@ private:
 
 public:
 	int ShapeChangeType;
-	UniformShapeChangeFunction(int id, int type, float initTime, float endTime, bool applyToColumnarLayer, bool applyToPeripodialMembrane, int ShapeChangeType, double ShapeChangeRate) : UniformGrowthFunction( id,  type,  initTime,  endTime,  applyToColumnarLayer,  applyToPeripodialMembrane,  0,  0,  0){
+	UniformShapeChangeFunction(int id, int type, float initTime, float endTime, bool applyToColumnarLayer, bool applyToPeripodialMembrane, int ShapeChangeType, double ShapeChangeRate) : UniformGrowthFunction( id,  type,  initTime,  endTime,  applyToColumnarLayer,  applyToPeripodialMembrane,  0.0,  0.0,  0.0, 0.0){
 		/**
 		 *  Forst six parameters will be directed to the parent constructor, UniformGrowthFunction#UniformGrowthFunction.
 		 *  The growth rates in Dv, AB and AP will be fed as 0 to the parent constructor. \n
@@ -218,6 +239,8 @@ public:
 	int nGridX;	///< The number of grid points that discretise the tissue in x
 	int nGridY;	///< The number of grid points that discretise the tissue in y
 	double ***GrowthMatrix;	///<The matrix of growth rates in (1/sec). It is a matrix of double triplets for growth rate at each grid point. The dimensions of the matrix are equal to (GridBasedGrowthFunction::nGridX, GridBasedGrowthFunction::nGridY), and set in constructor of the GridBasedGrowthFunction. The triplets store the growth rate in [ DV axis (x), AP axis (y), and AB axis (z)].
+	double **xyShearAngleMatrix; ///<The matrix of xy shear rate (rad/sec). It is a matrix of doubles at each grid point. he dimensions of the matrix are equal to (GridBasedGrowthFunction::nGridX, GridBasedGrowthFunction::nGridY), and set in constructor of the GridBasedGrowthFunction.
+	gsl_matrix*** xyShearRotationsMatrix;
 	GridBasedGrowthFunction(int id, int type, float initTime, float endTime, bool applyToColumnarLayer, bool applyToPeripodialMembrane, int nX, int nY, double*** GrowthMat) : GrowthFunctionBase(id, type, initTime, endTime, applyToColumnarLayer, applyToPeripodialMembrane){
 		/**
 		 *  The first six parameters will be directed to the parent constructor, GrowthFunctionBase#GrowthFunctionBase. \n
@@ -228,27 +251,57 @@ public:
 		this ->nGridX = nX;
 		this ->nGridY = nY;
 		GrowthMatrix = new double**[(const int) nGridX];
+		xyShearAngleMatrix  = new double*[(const int) nGridX];
 		for (int i=0; i<nGridX; ++i){
 			GrowthMatrix[i] = new double*[(const int) nGridY];
+			xyShearAngleMatrix[i] = new double[(const int) nGridY];
 			for (int j=0; j<nGridY; ++j){
 				GrowthMatrix[i][j] = new double[3];
+				xyShearAngleMatrix[i][j] = 0.0;//M_PI/6/3600;
+				xyShearAngleMatrix[i][j] /= 2.0; //taking half the input shear, as I want this to be applied symmetrically to xy and yx
 				for (int k=0; k<3; ++k){
 					GrowthMatrix[i][j][k] = GrowthMat[i][j][k];
 				}
 			}
 		}
+
+		xyShearRotationsMatrix = new gsl_matrix**[(const int) nGridX];
+		for (int i=0; i<nGridX; ++i){
+			xyShearRotationsMatrix[i] = new gsl_matrix*[(const int) nGridY];
+			for (int j=0; j<nGridY; ++j){
+				xyShearRotationsMatrix[i][j] = new gsl_matrix;
+				xyShearRotationsMatrix[i][j] = gsl_matrix_calloc(3,3);
+				double c = cos(xyShearAngleMatrix[i][j]);
+				double s = sin(xyShearAngleMatrix[i][j]);
+				gsl_matrix_set(xyShearRotationsMatrix[i][j],0,0,  c );
+				gsl_matrix_set(xyShearRotationsMatrix[i][j],0,1, -1.0*s);
+				gsl_matrix_set(xyShearRotationsMatrix[i][j],0,2,  0.0);
+				gsl_matrix_set(xyShearRotationsMatrix[i][j],1,0,  s);
+				gsl_matrix_set(xyShearRotationsMatrix[i][j],1,1,  c);
+				gsl_matrix_set(xyShearRotationsMatrix[i][j],1,2,  0.0);
+				gsl_matrix_set(xyShearRotationsMatrix[i][j],2,0,  0.0);
+				gsl_matrix_set(xyShearRotationsMatrix[i][j],2,1,  0.0);
+				gsl_matrix_set(xyShearRotationsMatrix[i][j],2,2,  1.0);
+			}
+		}
+
 	} ///< The constructor of GridBasedGrowthFunction
 
 	~GridBasedGrowthFunction(){
 		for (int i=0; i<nGridX; ++i){
 			for (int j=0; j<nGridY; ++j){
 				delete[] GrowthMatrix[i][j];
+				gsl_matrix_free(xyShearRotationsMatrix[i][j]);
 			}
 		}
 		for (int i=0; i<nGridX; ++i){
 			delete[] GrowthMatrix[i];
+			delete[] xyShearRotationsMatrix[i];
+			delete[] xyShearAngleMatrix[i];
 		}
 		delete[] GrowthMatrix;
+		delete[] xyShearAngleMatrix;
+		delete[] xyShearRotationsMatrix;
 	}
 
 	int getGridX(){
@@ -263,9 +316,17 @@ public:
 		return GrowthMatrix;
 	}///< This function returns GridBasedGrowthFunction#GrowthMatrix.
 
+	double** getXyShearAngleMatrix(){
+		return xyShearAngleMatrix;
+	}///< This function returns GridBasedGrowthFunction#xyShearAngleMatrix.
+
 	double getGrowthMatrixElement(int i, int j, int k){
 		return GrowthMatrix[i][j][k];
 	}///< This function returns the growth rate at grid point [i]\[j\] (in dimensions GridBasedGrowthFunction#nGridX, GridBasedGrowthFunction#nGridY), for the growth dimension [k] (as in  [ DV axis (x), AP axis (y), and AB axis (z)] ).
+
+	double getXyShearAngleMatrixElement(int i, int j){
+		return xyShearAngleMatrix[i][j];
+	}///< This function returns the xyShear angle at grid point [i]\[j\] (in dimensions GridBasedGrowthFunction#nGridX, GridBasedGrowthFunction#nGridY).
 
 	void setGrowthMatrixElement(double ex, double ey, double ez, int i, int j){
 		GrowthMatrix[i][j][0] = ex;

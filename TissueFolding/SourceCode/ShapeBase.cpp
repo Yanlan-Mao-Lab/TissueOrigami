@@ -550,34 +550,30 @@ void 	ShapeBase::changeShapeByFsc(double dt){
 }
 
 void 	ShapeBase::growShapeByFg(double dt){
-    gsl_matrix* FgIncrement = gsl_matrix_calloc(nDim,nDim);
-    //I need to rotate the growth rate vector, not the growth increment matrix!
-    //When rate is zero, the growth increment vector should be identity.
-    //Such that the total growth gradient (Fg) will stay the same.
-    //If you rotate a zero growth increment, then it is not identity anymore!
+    //if (Id == 0){
+    //	displayMatrix(growthIncrement,"Element0growthIncrementBeforeRotation");
+    //	displayMatrix(GrowthStrainsRotMat,"Element0GrowthStrainsRotMat");
+    //}
+    //rotatedGrowth = false;
     if (rotatedGrowth){
-        double rTemp[3] = {0.0,0.0,0.0};
-        for (int i = 0; i<3; ++i){
-            rTemp[i] = gsl_matrix_get(GrowthStrainsRotMat,i,0)*GrowthRate[0]+gsl_matrix_get(GrowthStrainsRotMat,i,1)*GrowthRate[1]+gsl_matrix_get(GrowthStrainsRotMat,i,2)*GrowthRate[2];
-            if (rTemp[i] <0.0){
-                rTemp[i] *= -1.0;
-            }
-        }
-        for (int i = 0; i<3; ++i){
-            GrowthRate[i] = rTemp[i];
-        }
-    }
-    for (int i=0; i<3 ;++i){
-        gsl_matrix_set(FgIncrement,i,i, exp(GrowthRate[i]*dt));
-    }
-    //bibap
-    //cout<<"inside Fg, Id : "<<Id<<endl;
-    //gsl_matrix_set(FgIncrement,0,1, M_PI/12.0);
-    //gsl_matrix_set(FgIncrement,1,0, M_PI/12.0);
-    gsl_matrix* temp1 = gsl_matrix_calloc(nDim,nDim);
-    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, FgIncrement, Fg, 0.0, temp1);
-    gsl_matrix_memcpy(Fg, temp1);
+        gsl_matrix* temp = gsl_matrix_calloc(nDim,nDim);
+        gsl_matrix* GrowthStrainsRotMatT = gsl_matrix_calloc(nDim,nDim);
+        gsl_matrix_transpose_memcpy(GrowthStrainsRotMatT,GrowthStrainsRotMat);
+        gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, GrowthStrainsRotMatT, growthIncrement, 0.0, temp);
+    	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, temp, GrowthStrainsRotMat, 0.0, growthIncrement);
+    	//gsl_matrix_memcpy(growthIncrement, temp);
+    	gsl_matrix_free(temp);
+    	gsl_matrix_free(GrowthStrainsRotMatT);
 
+    }
+    //incrementing Fg with current growth rate:
+    gsl_matrix* temp1 = gsl_matrix_calloc(nDim,nDim);
+    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, growthIncrement, Fg, 0.0, temp1);
+    gsl_matrix_memcpy(Fg, temp1);
+    //if (Id == 0){
+   // 	displayMatrix(growthIncrement,"Element0growthIncrementAfterRotation");
+   // 	displayMatrix(Fg,"Element0Fg");
+    //}
     gsl_matrix * tmpFgForInversion = gsl_matrix_calloc(nDim,nDim);
     createMatrixCopy(tmpFgForInversion,Fg);
 
@@ -591,15 +587,18 @@ void 	ShapeBase::growShapeByFg(double dt){
     GrownVolume = detFg*ReferenceShape->Volume;
     VolumePerNode = GrownVolume/nNodes;
     //freeing matrices allocated in this function
-    gsl_matrix_free(FgIncrement);
     gsl_matrix_free(temp1);
     gsl_matrix_free(tmpFgForInversion);
 }
 
+
 void 	ShapeBase::CalculateGrowthRotationByF(){
     gsl_matrix* rotMat = gsl_matrix_alloc(3,3);
     gsl_matrix_set_identity(rotMat);
-    rotatedGrowth = false;
+    //rotatedGrowth = false;
+    //updating the F for the current shape positions
+    //(not using leftovers from previous iteration)
+    calculateTriPointFForRatation();
     rotatedGrowth = calculate3DRotMatFromF(rotMat);
     if (rotatedGrowth){
         rotatedGrowth = disassembleRotationMatrixForZ(rotMat);
@@ -610,6 +609,21 @@ void 	ShapeBase::CalculateGrowthRotationByF(){
     }
     //freeing matrices allocated in this function
     gsl_matrix_free(rotMat);
+}
+
+void 	ShapeBase::calculateTriPointFForRatation(){
+	gsl_matrix_set_zero(TriPointF);
+    gsl_matrix* currF = gsl_matrix_calloc(nDim,nDim);
+    //The point order is established in shape function derivative calculation!
+    //Make sure the weights fir in with the order - eta zeta nu:
+    //double points[3][3]={{1.0/6.0,1.0/6.0,0.0},{2.0/3.0,1.0/6.0,0.0},{1.0/6.0,2.0/3.0,0.0}};
+    double weights[3] = {1.0/3.0,1.0/3.0,1.0/3.0};
+    for (int iter =0; iter<3;++iter){
+        //cout<<"Calculating gauss point: "<<eta<<" "<<nu<<" "<<zeta<<endl;
+        calculateCurrTriPointFForRotation(currF,iter);
+        gsl_matrix_scale(currF,weights[iter]);
+        gsl_matrix_add(TriPointF, currF);
+    }
 }
 
 bool 	ShapeBase::disassembleRotationMatrixForZ(gsl_matrix* rotMat){
@@ -630,6 +644,7 @@ bool 	ShapeBase::disassembleRotationMatrixForZ(gsl_matrix* rotMat){
     //             sin(tethaZ)    cos(tethaZ)    0
     //             0              0              1]
     double tethaZ = atan2(gsl_matrix_get(rotMat,1,0),gsl_matrix_get(rotMat,0,0));
+    //rotatedGrowth_tethaZ = tethaZ;
     if (tethaZ > 0.017 || tethaZ < -0.017){ //0.017 rad is ~1 degrees
         //rotation is more than 1 degrees, element incremental growth should be rotated
         double c = cos(tethaZ);
@@ -809,7 +824,7 @@ void	ShapeBase::calculateRotationAngleSinCos(double* u, double* v, double& c, do
 
 void	ShapeBase::calculateRotationAxis(double* u, double* v,double* rotAx, double c){
 	//aligning u onto v:
-	if (c>-0.9998){
+	if (c>-0.99998){
 		crossProduct3D(u,v,rotAx);
 		normaliseVector3D(rotAx);
 	}
@@ -841,6 +856,16 @@ void	ShapeBase::rotateVectorByRotationMatrix(double* u,double* rotMat){
 	u[1] = y;
 	u[2] = z;
 }
+
+void	ShapeBase::rotateVectorByRotationMatrix(double* u,gsl_matrix* rotMat){
+	double x = gsl_matrix_get(rotMat,0,0)*u[0]+gsl_matrix_get(rotMat,0,1)*u[1]+gsl_matrix_get(rotMat,0,2)*u[2];
+	double y = gsl_matrix_get(rotMat,1,0)*u[0]+gsl_matrix_get(rotMat,1,1)*u[1]+gsl_matrix_get(rotMat,1,2)*u[2];
+	double z = gsl_matrix_get(rotMat,2,0)*u[0]+gsl_matrix_get(rotMat,2,1)*u[1]+gsl_matrix_get(rotMat,2,2)*u[2];
+	u[0] = x;
+	u[1] = y;
+	u[2] = z;
+}
+
 
 void  ShapeBase::rotateReferenceElementByRotationMatrix(double* rotMat){
 	//cout<<"rotating the reference matrix of element: "<<Id<<endl;
@@ -1449,10 +1474,15 @@ void	ShapeBase::updatePositions(vector<Node*>& Nodes){
 	}
 }
 
-void 	ShapeBase::setGrowthRate(double x, double y, double z){
+void 	ShapeBase::setGrowthRate(double dt, double x, double y, double z){
 	GrowthRate[0] = x;
 	GrowthRate[1] = y;
 	GrowthRate[2] = z;
+	gsl_matrix_set_identity(growthIncrement);
+	gsl_matrix_set(growthIncrement,0,0,exp(x*dt));
+	gsl_matrix_set(growthIncrement,1,1,exp(y*dt));
+	gsl_matrix_set(growthIncrement,2,2,exp(z*dt));
+	//if (Id ==0) {displayMatrix(growthIncrement, "Element0growthIncrement_initialSetting");}
 }
 
 void 	ShapeBase::cleanMyosinForce(){
@@ -1684,10 +1714,53 @@ void 	ShapeBase::setShapeChangeRate(double x, double y, double z, double xy, dou
 	ShapeChangeRate[5] = xz;
 }
 
-void 	ShapeBase::updateGrowthRate(double growthx, double growthy, double growthz){
+//R Fginc R^T version:
+void ShapeBase::calculateCurrentGrowthIncrement(gsl_matrix* resultingGrowthIncrement, double dt, double growthx, double growthy, double growthz, gsl_matrix* ShearAngleRotationMatrix){
+	gsl_matrix_set_identity(resultingGrowthIncrement);
+	gsl_matrix_set(resultingGrowthIncrement,0,0,exp(growthx*dt));
+	gsl_matrix_set(resultingGrowthIncrement,1,1,exp(growthy*dt));
+	gsl_matrix_set(resultingGrowthIncrement,2,2,exp(growthz*dt));
+	gsl_matrix* RotT = gsl_matrix_calloc(3,3);
+	gsl_matrix* temp = gsl_matrix_calloc(nDim,nDim);;
+	gsl_matrix_transpose_memcpy(RotT,ShearAngleRotationMatrix);
+	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, ShearAngleRotationMatrix, resultingGrowthIncrement, 0.0, temp);
+	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, temp, RotT, 0.0, resultingGrowthIncrement);
+	gsl_matrix_free(RotT);
+	gsl_matrix_free(temp);
+
+}
+
+void 	ShapeBase::updateGrowthRate(double dt, double growthx, double growthy, double growthz, gsl_matrix* ShearAngleRotationMatrix){
     GrowthRate[0] += growthx;
     GrowthRate[1] += growthy;
     GrowthRate[2] += growthz;
+
+    gsl_matrix* currCrowthIncrement = gsl_matrix_calloc(3,3);
+    gsl_matrix_set(currCrowthIncrement,0,0,exp(growthx*dt));
+    gsl_matrix_set(currCrowthIncrement,1,1,exp(growthy*dt));
+    gsl_matrix_set(currCrowthIncrement,2,2,exp(growthz*dt));
+
+    //if (Id ==0){displayMatrix(currCrowthIncrement,"currCrowthIncrement_beforeRotation");};
+    gsl_matrix* RotT = gsl_matrix_calloc(3,3);
+	gsl_matrix* temp = gsl_matrix_calloc(nDim,nDim);;
+	gsl_matrix_transpose_memcpy(RotT,ShearAngleRotationMatrix);
+	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, ShearAngleRotationMatrix, currCrowthIncrement, 0.0, temp);
+
+	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, temp, RotT, 0.0, currCrowthIncrement);
+	gsl_matrix_free(RotT);
+
+   // if (Id ==0){
+    //	displayMatrix(currCrowthIncrement,"currCrowthIncrement_afterRotation");
+    //	displayMatrix(growthIncrement,"growthIncrement_beforeAddition");
+   // };
+
+    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currCrowthIncrement, growthIncrement, 0.0, temp);
+    gsl_matrix_memcpy(growthIncrement, temp);
+
+   // if (Id ==0){
+	//	displayMatrix(growthIncrement,"growthIncrement_afterAddition");
+	//};
+	gsl_matrix_free(temp);
 }
 
 void 	ShapeBase::updateShapeChangeRate(double x, double y, double z, double xy, double yz, double xz){

@@ -21,7 +21,7 @@ protected:
 	void setCoeffMat();
 	void calculateCurrk(boost::numeric::ublas::matrix<double> &currk, boost::numeric::ublas::matrix<double> &currB, boost::numeric::ublas::matrix<double>& currBE, boost::numeric::ublas::matrix<double> &currBo, double eta, double zeta, double nu);
     void calculateCurrNodalForces(gsl_matrix *gslcurrg, gsl_matrix *gslcurrF, int pointNo);
-
+    void calculateCurrTriPointFForRotation(gsl_matrix *currF,int pointNo);
     void calculateNormalToBottom();
 	void calculateReferenceNormalToBottom();
 	void calculateNormalToTop();

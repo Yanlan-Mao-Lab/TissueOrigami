@@ -30,6 +30,7 @@ int main(int argc, char * argv[])
 			Sim01->runOneStep();
 		}
 		Sim01->wrapUpAtTheEndOfSimulation();
+		Sim01->writeRelaxedMeshFromCurrentState();
 	}
 	delete Sim01;
 	cout<<"Finished Simulation"<<endl;

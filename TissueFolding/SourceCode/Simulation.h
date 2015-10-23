@@ -282,7 +282,8 @@ public:
     void checkForExperimentalSetupsBeforeIteration();
     void checkForExperimentalSetupsWithinIteration();
     void checkForExperimentalSetupsAfterIteration();
-	void runOneStep();
+	//void bakeTissue();
+    void runOneStep();
     void updateStepNR();
     void constructUnMatrix(gsl_matrix* un);
     void constructLumpedMassViscosityDtMatrix(gsl_matrix* mviscdt);
@@ -319,6 +320,7 @@ public:
 	void alignTissueDVToXPositive();
 	void alignTissueAPToXYPlane();
 	void wrapUpAtTheEndOfSimulation();
+	void writeRelaxedMeshFromCurrentState();
 	void calculateDVDistance();
 	void TissueAxisPositionDisplay();
 	void coordinateDisplay();

@@ -70,13 +70,14 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
 	IsClippedInDisplay = false;
 	capElement = false;
     rotatedGrowth = false;
-
+    //rotatedGrowth_tethaZ = 0;
 	setIdentificationColour();
 	setShapeType("Prism");
 	ReferenceShape = new ReferenceShapeBase("Prism");
 	readNodeIds(tmpNodeIds);
 	setPositionMatrix(Nodes);
 	setReferencePositionMatrix();
+	//setGrowthTemplateMatrix();
 	setCoeffMat();
 	calculateReferenceVolume();
 	setTissuePlacement(Nodes);
@@ -116,8 +117,11 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
     gsl_matrix_set_identity(Fsc);
     InvFsc = gsl_matrix_calloc(3,3);
     gsl_matrix_set_identity(InvFsc);
+    growthIncrement = gsl_matrix_calloc(3,3);
+    gsl_matrix_set_identity(growthIncrement);
     TriPointF = gsl_matrix_calloc(3,3);
     TriPointKe = gsl_matrix_calloc(nDim*nNodes,nDim*nNodes);
+
 	RotatedElement = false;    
 
 	CurrShapeChangeToAdd[0] = 0;
@@ -148,6 +152,7 @@ Prism::~Prism(){
 	delete	 ReferenceShape;
 
     //freeing matrices allocated
+	gsl_matrix_free(growthIncrement);
     gsl_matrix_free(D);
     gsl_matrix_free(CoeffMat);
     gsl_matrix_free(Fg);
@@ -431,6 +436,24 @@ void Prism::calculateElementShapeFunctionDerivatives(){
     }
 }
 
+void Prism::calculateCurrTriPointFForRotation(gsl_matrix *currF,int pointNo){
+	const int n = nNodes;
+	const int dim = nDim;
+    gsl_matrix* CurrShape = gsl_matrix_alloc(n,dim);
+    getPos(CurrShape);
+    gsl_matrix* ShapeFuncDer = ShapeFuncDerivatives[pointNo];
+	gsl_matrix* InvdXde = InvdXdes[pointNo];
+	gsl_matrix* Jacobian = gsl_matrix_calloc(dim, dim);
+	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, ShapeFuncDer, CurrShape, 0.0, Jacobian);
+	gsl_matrix_transpose(Jacobian);
+	//calculating F:
+	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, Jacobian, InvdXde, 0.0, currF);
+
+    gsl_matrix_free(CurrShape);
+    gsl_matrix_free(Jacobian);
+}
+
+
 void Prism::calculateCurrNodalForces(gsl_matrix *currg, gsl_matrix *currF, int pointNo){
     const int n = nNodes;
     const int dim = nDim;
@@ -460,14 +483,9 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currg, gsl_matrix *currF, int p
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currF, InvFg, 0.0, currFscFe);	///< Removing growth
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currFscFe, InvFsc, 0.0, currFe);	///< Removing shape change
 
-    //cout<<"Element: "<<Id<<endl;
-    //displayMatrix(Fg, "Fg");
-    //displayMatrix(currFe, "Fe");
-    //displayMatrix(currF, "F");
-    gsl_matrix* currFeT = gsl_matrix_alloc(dim, dim);
+	gsl_matrix* currFeT = gsl_matrix_alloc(dim, dim);
     gsl_matrix_transpose_memcpy(currFeT,currFe);
     createMatrixCopy(FeMatrices[pointNo], currFe); // storing Fe for use in implicit elastic K calculation.
-
     //calculating E (E = 1/2 *(Fe^T*Fe-I):
     gsl_matrix* E = calculateEForNodalForces(currFe,currFeT);
 
@@ -524,6 +542,9 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currg, gsl_matrix *currF, int p
     displayMatrix(sigma2,"sigma2");
     displayMatrix(compactStress,"compactStress");
 */
+    //cout<<"Element: "<<Id<<endl;
+    //displayMatrix(currFe,"currFe");
+
     //freeing the matrices allocated in this function
     gsl_matrix_free(currFeT);
     gsl_matrix_free(currFscFe);

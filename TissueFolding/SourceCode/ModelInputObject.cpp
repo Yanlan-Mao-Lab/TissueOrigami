@@ -217,6 +217,7 @@ bool ModelInputObject::readGrowthType1(ifstream& file){
 	float DVRate;
 	float APRate;
 	float ABRate;
+	float angle;
 	if(currHeader == "InitialTime(sec):"){
 		file >> initialtime;
 	}
@@ -263,10 +264,20 @@ bool ModelInputObject::readGrowthType1(ifstream& file){
 		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: MaxValue(fractionPerHour-xyz):" <<endl;
 		return false;
 	}
+	file >> currHeader;
+	if(currHeader == "Angle(degreesPerHour):"){
+		file >> angle;
+		angle *= M_PI/180.0; 	 // converting to radians
+	}
+	else{
+		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: Angle(degreesPerHour):" <<endl;
+		return false;
+	}
+
 	GrowthFunctionBase* GSBp;
 	int Id = Sim->GrowthFunctions.size();
 	//type is 1
-	GSBp = new UniformGrowthFunction(Id, 1, initialtime, finaltime, applyToColumnarLayer, applyToPeripodialMembrane, DVRate, APRate,  ABRate);
+	GSBp = new UniformGrowthFunction(Id, 1, initialtime, finaltime, applyToColumnarLayer, applyToPeripodialMembrane, DVRate, APRate,  ABRate, angle);
 	Sim->GrowthFunctions.push_back(GSBp);
 	return true;
 }
