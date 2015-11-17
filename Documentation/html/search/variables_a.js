@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['rkposition',['RKPosition',['../classNode.html#abfa97f5fa4e95c932b4e3e0daabb062a',1,'Node']]]
+  ['outerradius',['outerRadius',['../classRingGrowthFunction.html#a8b7d5268d9d47f112b56feef58193649',1,'RingGrowthFunction']]]
 ];

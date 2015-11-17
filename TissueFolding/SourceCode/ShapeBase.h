@@ -31,30 +31,23 @@ using namespace std;
 
 class ShapeBase{
 private:
-	void ParentErrorMessage(string functionName);
-	bool ParentErrorMessage(string functionName, bool returnValue);
-	double ParentErrorMessage(string functionName, double returnValue);
-	int ParentErrorMessage(string functionName, int returnValue);
+	void ParentErrorMessage(string functionName);					 	///<Error message displayed when a virtual function is called through the ShapeBase(parent), while it should have been called through a child (eg. Prism). For functions taking in string inputs.
+	bool ParentErrorMessage(string functionName, bool returnValue); 	///<Error message displayed when a virtual function is called through the ShapeBase(parent), while it should have been called through a child (eg. Prism). For functions taking in string and bool inputs, returning bool.
+	double ParentErrorMessage(string functionName, double returnValue);	///<Error message displayed when a virtual function is called through the ShapeBase(parent), while it should have been called through a child (eg. Prism). For functions taking in string and double inputs, returning double.
+	int ParentErrorMessage(string functionName, int returnValue);		///<Error message displayed when a virtual function is called through the ShapeBase(parent), while it should have been called through a child (eg. Prism). For functions taking in string and int inputs, returning int.
 protected:
-	int 	ShapeType;
-
-	int 	nNodes;
-
-	int 	nDim;
-	int* 	IdentifierColour;
-	double* GrowthRate;
-	gsl_matrix* growthIncrement;
-	double  columnarGrowthWeight;
-	double  peripodialGrowthWeight;
-	double* ShapeChangeRate;
-    bool    rotatedGrowth;
-	double* CurrGrowthStrainAddition;
-	bool 	CurrShapeChangeStrainsUpToDate;
-	bool 	CurrGrowthStrainsUpToDate;
-	bool 	GrewInThePast;
-	bool 	ChangedShapeInThePast;
-	double* columnarRelativePosInBoundingBox;
-	double* peripodialRelativePosInBoundingBox;
+	int 	ShapeType;				///< The integer defining the type of the shape, Prisms shape type = 1;
+	int 	nNodes;					///< The number of nodes of the element, it is based on ShapeBase#ShapeType
+	int 	nDim;					///< The number of dimensions for the positions of each of the nodes of the element
+	int* 	IdentifierColour;		///< The unique identifier colour of the element, this is used for "picking" in the visual interface.
+	double* GrowthRate;				///< Growth rate recording for display purposes only. The recorded growth rate in x, y, and z  coordinates, does not record shear deformation induced in growth. Recorded in exponential form through time step, converted to rate per hour for display within the visual interface
+	gsl_matrix* growthIncrement;	///< The matrix (3,3) representing the incremental growth in current time step. Reset to identity at the beginning of each time step, updated in growth functions, and utilised to update Fg.
+	double  columnarGrowthWeight;	///< The fraction defining how close to the columnar layer the element is. 1.0 for columnar layer, 0.0 for peripodial membrane elements, and scaled according to position in the elements surrounding the lumen.
+	double  peripodialGrowthWeight;	///< The fraction defining how close to the peripodial membrane the element is. 0.0 for columnar layer, 1.0 for peripodial membrane elements, and scaled according to position in the elements surrounding the lumen.
+	double* ShapeChangeRate;		///< Shape change rate of the elements, only orthagonal shape changes are allowed (x, y, z). Shape changes will be scaled to conserve volume, thus three values will not be independent.
+    bool    rotatedGrowth;			///< The boolean stating if the element has rotated from the growth axis, hence the calculated growth requires further rotation to follow tissue axes.
+	double* columnarRelativePosInBoundingBox;	///< The relative position on x-y plane, within the bounding box of the columnar layer (x,y).
+	double* peripodialRelativePosInBoundingBox; ///< The relative position on x-y plane, within the bounding box of the peripodial membrane layer (x,y).
     gsl_matrix **ShapeFuncDerivatives;
     gsl_matrix **ShapeFuncDerStacks;
     gsl_matrix **InvdXdes;
@@ -128,11 +121,8 @@ protected:
     gsl_matrix* TriPointKe;
 
 public:
-    //boost::numeric::ublas::matrix<double> B;
-    //boost::numeric::ublas::matrix<double> BE;
-    int 	Id;
+     int 	Id;
 	int		ShapeDim;
-    //boost::numeric::ublas::matrix<double> LocalGrowthStrainsMat;
 	int* 	NodeIds;
 	virtual ~ShapeBase(){
 			//while deleting a ShapeBase* that happens to point a child, this destructor will be called after the child destructor
@@ -141,7 +131,7 @@ public:
 	ReferenceShapeBase* ReferenceShape;
     gsl_matrix* Strain;
 
-    bool 	IsGrowing;
+    //bool 	IsGrowing;
 	bool 	IsChangingShape;
 	bool	ApicalNormalForPackingUpToDate;
 	bool	BasalNormalForPackingUpToDate;
@@ -167,6 +157,11 @@ public:
 	double* getCentre();
 	double	getPeripodialness();
 	double	getColumnarness();
+	void	getRelativePositionInTissueInGridIndex(int nGridX, int nGridY, double*columnarReletivePos, double* peripodialRelativePos, int& columnarIndexX, int& peripodialIndexX, int& columnarIndexY, int& peripodialIndexY, double& columnarFracX, double& peripodialFracX, double& columnarFracY, double& peripodialFracY);
+	bool 	isGrowthRateApplicable(int sourceTissue, double& weight);
+	void 	calculateFgFromRates(double dt, double x, double y, double z, gsl_matrix* rotMat, gsl_matrix* increment, int sourceTissue);
+	void 	calculateFgFromGridCorners(double dt, GrowthFunctionBase* currGF, gsl_matrix* increment, int sourceTissue, int IndexX, int IndexY, double FracX, double dFracY);
+	void 	updateGrowthIncrement(gsl_matrix* columnar, gsl_matrix* peripodial);
 	void	calculateRelativePosInBoundingBox(double columnarBoundingBoxXMin, double columnarBoundingBoxYMin, double columnarBoundingBoxLength, double columnarBoundingBoxWidth, double peipodialBoundingBoxXMin, double peipodialBoundingBoxYMin, double peipodialBoundingBoxLength, double peipodialBoundingBoxWidth);
 	void	displayRelativePosInBoundingBox();
 	void	getRelativePosInColumnarBoundingBox(double* relativePos);
@@ -193,7 +188,6 @@ public:
 	virtual void calculateBasalNormal(double * normal){ParentErrorMessage("calculateBasalNormal");};
 	virtual void AlignReferenceBaseNormalToZ(){ParentErrorMessage("AlignReferenceBaseNormalToZ");};
 	void 	calculateCurrentGrowthIncrement(gsl_matrix* resultingGrowthIncrement, double dt, double growthx, double growthy, double growthz, gsl_matrix* ShearAngleRotationMatrix);
-	void 	updateGrowthRate(double dt, double scalex, double scaley, double scalez, gsl_matrix* ShearAngleRotationMatrix);
 	void 	updateShapeChangeRate(double x, double y, double z, double xy, double yz, double xz);
 	virtual void calculateReferenceStiffnessMatrix(){ParentErrorMessage("calculateReferenceStiffnessMatrix");};
     virtual void calculateElementShapeFunctionDerivatives(){ParentErrorMessage("calculateReferenceStiffnessMatrix");};
@@ -205,7 +199,8 @@ public:
 
     void 	calculateForces(double **SystemForces,  vector <Node*>& Nodes, bool recordForcesOnFixedNodes, double** FixedNodeForces,  ofstream& outputFile);
     void 	updatePositions(vector<Node*>& Nodes);
-	void 	setGrowthRate(double dt, double x, double y, double z);
+	void	updateReferencePositionsToCurentShape();
+    void 	setGrowthRate(double dt, double x, double y, double z);
 	void 	cleanMyosinForce();
 	void	updateUniformEquilibriumMyosinConcentration(bool isApical, double cEqUniform);
 	void	updateUnipolarEquilibriumMyosinConcentration(bool isApical, double cEqUnipolar, double orientationX, double orientationY);
@@ -220,21 +215,17 @@ public:
 	virtual void calculateMyosinForces(double forcePerMyoMolecule){ParentErrorMessage("calculateMyosinForces");};
 	virtual void distributeMyosinForce(bool isIsotropic, bool apical){ParentErrorMessage("distributeMyosin");};
 	void 	setShapeChangeRate(double x, double y, double z, double xy, double yz, double xz);
-	void 	updateGrowthToAdd(double* growthscale);
 	void 	updateElementVolumesAndTissuePlacementsForSave(vector<Node*>& Nodes);
 	bool 	readNodeIdData(ifstream& file);
 	bool	readReferencePositionData(ifstream& file);
 	void 	convertPlasticStrainToGrowthStrain();
 	virtual void  checkHealth(){ParentErrorMessage("checkHealth");};
-	void 	resetCurrStepGrowthData();
 	void 	resetCurrStepShapeChangeData();
     void    writeKelasticToMainKatrix(gsl_matrix* Ke);
     void    calculateImplicitKElastic();
     void	calculateForceFromStress(int nodeId, gsl_matrix* Externalstress, gsl_matrix* ExternalNodalForces);
 
 
-	//void 	calculatePlasticStrain();
-	//void 	changeShape(double shapechangescale, int axis);
 	void 	updateShapeFromSave(ifstream& file);
 	void 	displayMatrix(boost::numeric::ublas::matrix<double>& mat, string matname);
 	void 	displayMatrix(boost::numeric::ublas::matrix<int>& mat, string matname);
@@ -289,7 +280,6 @@ public:
     gsl_matrix* GrowthStrainsRotMat;
 
 
-	//bool 	calculateAlignmentRotationMatrix(double** RefNormalised, double* rotMat);
 	bool 	calculateAlignmentScore(double** RefNormalised);
 	void 	bringShapePositionsToOrigin(double** RefNormalised, double* refCentre);
 	void 	updateElementsNodePositions(int RKId, double ***SystemForces, vector <Node*>& Nodes, double dt);

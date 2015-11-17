@@ -117,26 +117,32 @@ $(document).ready(function(){initNavTree('classReferenceShapeBase.html','');});
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:af869879b4c059d8946008f50055f49a0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af869879b4c059d8946008f50055f49a0"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>ReferenceShapeBase</b> (string SyapeType)</td></tr>
-<tr class="separator:af869879b4c059d8946008f50055f49a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a88841b8e87bfec65991d55dfe565ceb7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a88841b8e87bfec65991d55dfe565ceb7"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>getShapeType</b> ()</td></tr>
-<tr class="separator:a88841b8e87bfec65991d55dfe565ceb7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3d27b5bf4c591a5973b466d2af08a118"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3d27b5bf4c591a5973b466d2af08a118"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classReferenceShapeBase.html#a3d27b5bf4c591a5973b466d2af08a118">ReferenceShapeBase</a> (string SyapeType, int <a class="el" href="classReferenceShapeBase.html#af0da93cee3f17800d7aa90b21b1b81c7">Id</a>)</td></tr>
+<tr class="memdesc:a3d27b5bf4c591a5973b466d2af08a118"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructer of the <a class="el" href="classReferenceShapeBase.html">ReferenceShapeBase</a> class. <br /></td></tr>
+<tr class="separator:a3d27b5bf4c591a5973b466d2af08a118"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:addf60ebee57a9d3b0e345b963901e3b5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="addf60ebee57a9d3b0e345b963901e3b5"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classReferenceShapeBase.html#addf60ebee57a9d3b0e345b963901e3b5">~ReferenceShapeBase</a> ()</td></tr>
+<tr class="memdesc:addf60ebee57a9d3b0e345b963901e3b5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destructor of the <a class="el" href="classReferenceShapeBase.html">ReferenceShapeBase</a> class. <br /></td></tr>
+<tr class="separator:addf60ebee57a9d3b0e345b963901e3b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a745e71ff73ef758708f39a4b3b1be4d1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a745e71ff73ef758708f39a4b3b1be4d1"></a>
-double **&#160;</td><td class="memItemRight" valign="bottom"><b>Positions</b></td></tr>
+double **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classReferenceShapeBase.html#a745e71ff73ef758708f39a4b3b1be4d1">Positions</a></td></tr>
+<tr class="memdesc:a745e71ff73ef758708f39a4b3b1be4d1"><td class="mdescLeft">&#160;</td><td class="mdescRight">The pointer to the position matrix of the reference element. The array itself is declared within the constructor, depending on <a class="el" href="classShapeBase.html#a250bd3396546342c8104f5b9c180d18f" title="The number of dimensions for the positions of each of the nodes of the element. ">ShapeBase::nDim</a> and <a class="el" href="classShapeBase.html#ae7dd93b58b3281ce90025f83d0f0e976" title="The number of nodes of the element, it is based on ShapeBase::ShapeType. ">ShapeBase::nNodes</a>, its size being [nNodes][nDim]. <br /></td></tr>
 <tr class="separator:a745e71ff73ef758708f39a4b3b1be4d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a12d2d0c2511f4f1357360ff61910ac02"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a12d2d0c2511f4f1357360ff61910ac02"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>Volume</b></td></tr>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classReferenceShapeBase.html#a12d2d0c2511f4f1357360ff61910ac02">Volume</a></td></tr>
+<tr class="memdesc:a12d2d0c2511f4f1357360ff61910ac02"><td class="mdescLeft">&#160;</td><td class="mdescRight">The volume of reference element, calculated assuming regular shapes (e.g. Perpendicular prism of equal top and bottom surfaces). <br /></td></tr>
 <tr class="separator:a12d2d0c2511f4f1357360ff61910ac02"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a214b89b970efa7a290dbe1533cf237ea"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a214b89b970efa7a290dbe1533cf237ea"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>BasalArea</b></td></tr>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classReferenceShapeBase.html#a214b89b970efa7a290dbe1533cf237ea">BasalArea</a></td></tr>
+<tr class="memdesc:a214b89b970efa7a290dbe1533cf237ea"><td class="mdescLeft">&#160;</td><td class="mdescRight">The basal area of the reference shape. <br /></td></tr>
 <tr class="separator:a214b89b970efa7a290dbe1533cf237ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a76ac694d1b1276f6847bee3c3efa84b0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a76ac694d1b1276f6847bee3c3efa84b0"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>height</b></td></tr>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classReferenceShapeBase.html#a76ac694d1b1276f6847bee3c3efa84b0">height</a></td></tr>
+<tr class="memdesc:a76ac694d1b1276f6847bee3c3efa84b0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Slab height for 2D elements, value is -100 for 3D elements. Is obsolete now, must be deleted together with any 2D element option. Mesh file reading should be cleared in parallel. <br /></td></tr>
 <tr class="separator:a76ac694d1b1276f6847bee3c3efa84b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-methods"></a>
@@ -151,13 +157,16 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setNodeNumber</b> ()<
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-attribs"></a>
 Protected Attributes</h2></td></tr>
 <tr class="memitem:a4831a54cffbafef4ded26fb8c50566e0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4831a54cffbafef4ded26fb8c50566e0"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>ShapeType</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classReferenceShapeBase.html#a4831a54cffbafef4ded26fb8c50566e0">ShapeType</a></td></tr>
+<tr class="memdesc:a4831a54cffbafef4ded26fb8c50566e0"><td class="mdescLeft">&#160;</td><td class="mdescRight">The integer defining the type of the shape, it is a negative value at the same basis of <a class="el" href="classShapeBase.html#a36aedd41e8465a186a0b0c454b5b76f3" title="The integer defining the type of the shape, Prisms shape type = 1;. ">ShapeBase::ShapeType</a>: prisms ShapeType = -1. <br /></td></tr>
 <tr class="separator:a4831a54cffbafef4ded26fb8c50566e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af0da93cee3f17800d7aa90b21b1b81c7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af0da93cee3f17800d7aa90b21b1b81c7"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>Id</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classReferenceShapeBase.html#af0da93cee3f17800d7aa90b21b1b81c7">Id</a></td></tr>
+<tr class="memdesc:af0da93cee3f17800d7aa90b21b1b81c7"><td class="mdescLeft">&#160;</td><td class="mdescRight">The unique identifier of the reference shape, it is identical to the owner shape, it is set inside the constructor. <br /></td></tr>
 <tr class="separator:af0da93cee3f17800d7aa90b21b1b81c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1183c092056a3245a350ff6f56632633"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1183c092056a3245a350ff6f56632633"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>nNodes</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classReferenceShapeBase.html#a1183c092056a3245a350ff6f56632633">nNodes</a></td></tr>
+<tr class="memdesc:a1183c092056a3245a350ff6f56632633"><td class="mdescLeft">&#160;</td><td class="mdescRight">The number of nodes of the reference element, it is based on <a class="el" href="classReferenceShapeBase.html#a4831a54cffbafef4ded26fb8c50566e0" title="The integer defining the type of the shape, it is a negative value at the same basis of ShapeBase::Sh...">ReferenceShapeBase::ShapeType</a>, through function ReferenceShapeBase::setNodeNumber. <br /></td></tr>
 <tr class="separator:a1183c092056a3245a350ff6f56632633"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this class was generated from the following files:<ul>
@@ -170,7 +179,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>nNodes</b></td></tr>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="classReferenceShapeBase.html">ReferenceShapeBase</a></li>
-    <li class="footer">Generated on Fri Sep 4 2015 12:21:23 for Tissue Origami by
+    <li class="footer">Generated on Tue Nov 3 2015 16:55:13 for Tissue Origami by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

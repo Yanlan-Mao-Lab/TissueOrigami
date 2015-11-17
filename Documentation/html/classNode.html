@@ -129,9 +129,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a1d80e6f467d8ca919872b6e47a882dd5"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a1d80e6f467d8ca919872b6e47a882dd5">checkIfNodeHasPacking</a> ()</td></tr>
 <tr class="memdesc:a1d80e6f467d8ca919872b6e47a882dd5"><td class="mdescLeft">&#160;</td><td class="mdescRight">The function to check if the node is eligible for packing.  <a href="#a1d80e6f467d8ca919872b6e47a882dd5">More...</a><br /></td></tr>
 <tr class="separator:a1d80e6f467d8ca919872b6e47a882dd5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a20d72574fb53a76cf7fda7f3a862f8d0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a20d72574fb53a76cf7fda7f3a862f8d0">getCurrentRKPosition</a> (int RKId, double *pos)</td></tr>
-<tr class="memdesc:a20d72574fb53a76cf7fda7f3a862f8d0"><td class="mdescLeft">&#160;</td><td class="mdescRight">return the current position of the node  <a href="#a20d72574fb53a76cf7fda7f3a862f8d0">More...</a><br /></td></tr>
-<tr class="separator:a20d72574fb53a76cf7fda7f3a862f8d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae4a2d9e601432a998efe24e1ac4a86cd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#ae4a2d9e601432a998efe24e1ac4a86cd">getCurrentPosition</a> (double *pos)</td></tr>
+<tr class="memdesc:ae4a2d9e601432a998efe24e1ac4a86cd"><td class="mdescLeft">&#160;</td><td class="mdescRight">return the current position of the node  <a href="#ae4a2d9e601432a998efe24e1ac4a86cd">More...</a><br /></td></tr>
+<tr class="separator:ae4a2d9e601432a998efe24e1ac4a86cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3030a518aa97bd50060b8733e87540f7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a3030a518aa97bd50060b8733e87540f7">displayConnectedElementIds</a> ()</td></tr>
 <tr class="memdesc:a3030a518aa97bd50060b8733e87540f7"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function will print out a list of connected element Id's.  <a href="#a3030a518aa97bd50060b8733e87540f7">More...</a><br /></td></tr>
 <tr class="separator:a3030a518aa97bd50060b8733e87540f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -282,32 +282,22 @@ vector&lt; double &gt;&#160;</td><td class="memItemRight" valign="bottom"><a cla
 
 </div>
 </div>
-<a class="anchor" id="a20d72574fb53a76cf7fda7f3a862f8d0"></a>
+<a class="anchor" id="ae4a2d9e601432a998efe24e1ac4a86cd"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void Node::getCurrentRKPosition </td>
+          <td class="memname">void Node::getCurrentPosition </td>
           <td>(</td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>RKId</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
           <td class="paramtype">double *&#160;</td>
-          <td class="paramname"><em>pos</em>&#160;</td>
-        </tr>
-        <tr>
+          <td class="paramname"><em>pos</em></td><td>)</td>
           <td></td>
-          <td>)</td>
-          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 <p>return the current position of the node </p>
-<p>The function will return the current position of the owner node. If the function is called during a Runge-Kutta step, the position corresponding to that step will be returned. (position at the end of the last position update for Runge-Kutta 1, and the position updated with Runge-Kutta rules for steps 2-4.) If the function is called outside Runge-Kutta calculation, the position as aresult of the latest position uptae will be returned.</p>
+<p>The function will return the current position of the owner node.</p>
 
 </div>
 </div>
@@ -356,7 +346,7 @@ vector&lt; double &gt;&#160;</td><td class="memItemRight" valign="bottom"><a cla
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="classNode.html">Node</a></li>
-    <li class="footer">Generated on Fri Sep 4 2015 12:21:23 for Tissue Origami by
+    <li class="footer">Generated on Tue Nov 3 2015 16:55:13 for Tissue Origami by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

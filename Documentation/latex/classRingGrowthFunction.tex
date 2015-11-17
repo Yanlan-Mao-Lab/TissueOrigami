@@ -9,7 +9,7 @@ Inheritance diagram for Ring\+Growth\+Function\+:\begin{figure}[H]
 \subsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-\hyperlink{classRingGrowthFunction_a7b8c3ed24ac7246be8817d1bcbc12289}{Ring\+Growth\+Function} (int id, int type, float \hyperlink{classGrowthFunctionBase_ae92513a7b41637df8e26e7db35ddf97c}{init\+Time}, float \hyperlink{classGrowthFunctionBase_a3ff4db0573d354a75666a5f3ca446941}{end\+Time}, bool \hyperlink{classGrowthFunctionBase_a3d56771e7c145589a14e11cc331e0326}{apply\+To\+Columnar\+Layer}, bool \hyperlink{classGrowthFunctionBase_a08ae19f58cb98fa8e315a77f52749732}{apply\+To\+Peripodial\+Membrane}, double Cx, double Cy, double inner\+R, double outer\+R, double D\+V\+Growth, double A\+P\+Growth, double A\+B\+Growth)
+\hyperlink{classRingGrowthFunction_a2e12b527d77b74130258ad25dc18e88d}{Ring\+Growth\+Function} (int id, int type, float \hyperlink{classGrowthFunctionBase_ae92513a7b41637df8e26e7db35ddf97c}{init\+Time}, float \hyperlink{classGrowthFunctionBase_a3ff4db0573d354a75666a5f3ca446941}{end\+Time}, bool \hyperlink{classGrowthFunctionBase_a3d56771e7c145589a14e11cc331e0326}{apply\+To\+Columnar\+Layer}, bool \hyperlink{classGrowthFunctionBase_a08ae19f58cb98fa8e315a77f52749732}{apply\+To\+Peripodial\+Membrane}, double Cx, double Cy, double inner\+R, double outer\+R, double D\+V\+Growth, double A\+P\+Growth, double A\+B\+Growth, double \hyperlink{classRingGrowthFunction_add6283d1ad999925c4202a3fa66b76ea}{angle})
 \begin{DoxyCompactList}\small\item\em The constructor of \hyperlink{classRingGrowthFunction}{Ring\+Growth\+Function}. \end{DoxyCompactList}\item 
 \hypertarget{classRingGrowthFunction_aa2063170e3ee5c5f22d7beef32300e9c}{}void \hyperlink{classRingGrowthFunction_aa2063170e3ee5c5f22d7beef32300e9c}{get\+Centre} (float \&centre\+X, float \&centre\+Y)\label{classRingGrowthFunction_aa2063170e3ee5c5f22d7beef32300e9c}
 
@@ -24,6 +24,12 @@ void \hyperlink{classRingGrowthFunction_ab3cc1858fb602ab40a74af7d0467c13b}{get\+
 \begin{DoxyCompactList}\small\item\em The function is to set the 3\+D maximum growth rate of the current ring growth function. \end{DoxyCompactList}\item 
 void \hyperlink{classRingGrowthFunction_a051da280e649c81afff38a1a45cb035a}{set\+Growt\+Rate} (double ex, double ey, double ez)
 \begin{DoxyCompactList}\small\item\em The function is to set the 3\+D maximum growth rate of the current ring growth function. \end{DoxyCompactList}\item 
+\hypertarget{classRingGrowthFunction_a05f880ba6df8b3001a8e8fdec5ba1ad6}{}gsl\+\_\+matrix $\ast$ \hyperlink{classRingGrowthFunction_a05f880ba6df8b3001a8e8fdec5ba1ad6}{get\+Shear\+Angle\+Rotation\+Matrix} ()\label{classRingGrowthFunction_a05f880ba6df8b3001a8e8fdec5ba1ad6}
+
+\begin{DoxyCompactList}\small\item\em The function return the matrix pointer to the oriented growth rotation matrix. \end{DoxyCompactList}\item 
+\hypertarget{classRingGrowthFunction_aa70523c66dce48e7e54360596787a629}{}double \hyperlink{classRingGrowthFunction_aa70523c66dce48e7e54360596787a629}{get\+Shear\+Angle} ()\label{classRingGrowthFunction_aa70523c66dce48e7e54360596787a629}
+
+\begin{DoxyCompactList}\small\item\em The function returns the oriented growth angle in radians (double). \end{DoxyCompactList}\item 
 void \hyperlink{classRingGrowthFunction_a681175045cf09fadd92921e129737e65}{write\+Summary} (ofstream \&save\+File\+Simulation\+Summary, double dt)
 \begin{DoxyCompactList}\small\item\em The function is to write the growth function summary to simulation summary file. \end{DoxyCompactList}\end{DoxyCompactItemize}
 \subsection*{Public Attributes}
@@ -40,11 +46,17 @@ void \hyperlink{classRingGrowthFunction_a681175045cf09fadd92921e129737e65}{write
 \begin{DoxyCompactList}\small\item\em The outer radius of the ring, outer boundary of the growth region in micro-\/meters. The growth will be at the maximum value set by \hyperlink{classRingGrowthFunction_a93b70ff6a7258c73a6bd2d888d09fc09}{Ring\+Growth\+Function\+::\+Growth\+Rate} at the outer radius. \end{DoxyCompactList}\item 
 \hypertarget{classRingGrowthFunction_a93b70ff6a7258c73a6bd2d888d09fc09}{}double \hyperlink{classRingGrowthFunction_a93b70ff6a7258c73a6bd2d888d09fc09}{Growth\+Rate} \mbox{[}3\mbox{]}\label{classRingGrowthFunction_a93b70ff6a7258c73a6bd2d888d09fc09}
 
-\begin{DoxyCompactList}\small\item\em The maximum growth rate at the \hyperlink{classRingGrowthFunction_a8b7d5268d9d47f112b56feef58193649}{Ring\+Growth\+Function\+::outer\+Radius}, in (1/sec), format\+: \mbox{[} D\+V axis (x), A\+P axis (y), and A\+B axis (z)\mbox{]}. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\begin{DoxyCompactList}\small\item\em The maximum growth rate at the \hyperlink{classRingGrowthFunction_a8b7d5268d9d47f112b56feef58193649}{Ring\+Growth\+Function\+::outer\+Radius}, in (1/sec), format\+: \mbox{[} D\+V axis (x), A\+P axis (y), and A\+B axis (z)\mbox{]}. \end{DoxyCompactList}\item 
+\hypertarget{classRingGrowthFunction_a9603e5de21f7bca0c23deff2c1e9efd6}{}gsl\+\_\+matrix $\ast$ \hyperlink{classRingGrowthFunction_a9603e5de21f7bca0c23deff2c1e9efd6}{Shear\+Angle\+Rotation\+Matrix}\label{classRingGrowthFunction_a9603e5de21f7bca0c23deff2c1e9efd6}
+
+\begin{DoxyCompactList}\small\item\em The rotation matrix for the orientation of the growth on x-\/y plane. This matrix is constructed through \hyperlink{classUniformGrowthFunction_a1a985ff52f9796688e00942b4d3349f8}{Uniform\+Growth\+Function\+::angle}. \end{DoxyCompactList}\item 
+\hypertarget{classRingGrowthFunction_add6283d1ad999925c4202a3fa66b76ea}{}double \hyperlink{classRingGrowthFunction_add6283d1ad999925c4202a3fa66b76ea}{angle}\label{classRingGrowthFunction_add6283d1ad999925c4202a3fa66b76ea}
+
+\begin{DoxyCompactList}\small\item\em The rotation angle for the orientation of the growth on x-\/y plane. \end{DoxyCompactList}\end{DoxyCompactItemize}
 
 
 \subsection{Constructor \& Destructor Documentation}
-\hypertarget{classRingGrowthFunction_a7b8c3ed24ac7246be8817d1bcbc12289}{}\index{Ring\+Growth\+Function@{Ring\+Growth\+Function}!Ring\+Growth\+Function@{Ring\+Growth\+Function}}
+\hypertarget{classRingGrowthFunction_a2e12b527d77b74130258ad25dc18e88d}{}\index{Ring\+Growth\+Function@{Ring\+Growth\+Function}!Ring\+Growth\+Function@{Ring\+Growth\+Function}}
 \index{Ring\+Growth\+Function@{Ring\+Growth\+Function}!Ring\+Growth\+Function@{Ring\+Growth\+Function}}
 \subsubsection[{Ring\+Growth\+Function}]{\setlength{\rightskip}{0pt plus 5cm}Ring\+Growth\+Function\+::\+Ring\+Growth\+Function (
 \begin{DoxyParamCaption}
@@ -60,9 +72,10 @@ void \hyperlink{classRingGrowthFunction_a681175045cf09fadd92921e129737e65}{write
 \item[{double}]{outer\+R, }
 \item[{double}]{D\+V\+Growth, }
 \item[{double}]{A\+P\+Growth, }
-\item[{double}]{A\+B\+Growth}
+\item[{double}]{A\+B\+Growth, }
+\item[{double}]{angle}
 \end{DoxyParamCaption}
-)\hspace{0.3cm}{\ttfamily [inline]}}\label{classRingGrowthFunction_a7b8c3ed24ac7246be8817d1bcbc12289}
+)\hspace{0.3cm}{\ttfamily [inline]}}\label{classRingGrowthFunction_a2e12b527d77b74130258ad25dc18e88d}
 
 
 The constructor of \hyperlink{classRingGrowthFunction}{Ring\+Growth\+Function}. 

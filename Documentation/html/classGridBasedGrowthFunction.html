@@ -124,9 +124,9 @@ Inheritance diagram for GridBasedGrowthFunction:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a1533e384b3ab79323e91ce68245c9a10"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGridBasedGrowthFunction.html#a1533e384b3ab79323e91ce68245c9a10">GridBasedGrowthFunction</a> (int id, int type, float <a class="el" href="classGrowthFunctionBase.html#ae92513a7b41637df8e26e7db35ddf97c">initTime</a>, float <a class="el" href="classGrowthFunctionBase.html#a3ff4db0573d354a75666a5f3ca446941">endTime</a>, bool <a class="el" href="classGrowthFunctionBase.html#a3d56771e7c145589a14e11cc331e0326">applyToColumnarLayer</a>, bool <a class="el" href="classGrowthFunctionBase.html#a08ae19f58cb98fa8e315a77f52749732">applyToPeripodialMembrane</a>, int nX, int nY, double ***GrowthMat)</td></tr>
-<tr class="memdesc:a1533e384b3ab79323e91ce68245c9a10"><td class="mdescLeft">&#160;</td><td class="mdescRight">The constructor of <a class="el" href="classGridBasedGrowthFunction.html">GridBasedGrowthFunction</a>.  <a href="#a1533e384b3ab79323e91ce68245c9a10">More...</a><br /></td></tr>
-<tr class="separator:a1533e384b3ab79323e91ce68245c9a10"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aac341fa9ccdca2d089e9f341cb68ca94"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGridBasedGrowthFunction.html#aac341fa9ccdca2d089e9f341cb68ca94">GridBasedGrowthFunction</a> (int id, int type, float <a class="el" href="classGrowthFunctionBase.html#ae92513a7b41637df8e26e7db35ddf97c">initTime</a>, float <a class="el" href="classGrowthFunctionBase.html#a3ff4db0573d354a75666a5f3ca446941">endTime</a>, bool <a class="el" href="classGrowthFunctionBase.html#a3d56771e7c145589a14e11cc331e0326">applyToColumnarLayer</a>, bool <a class="el" href="classGrowthFunctionBase.html#a08ae19f58cb98fa8e315a77f52749732">applyToPeripodialMembrane</a>, int nX, int nY, double ***GrowthMat, double **AngleMat)</td></tr>
+<tr class="memdesc:aac341fa9ccdca2d089e9f341cb68ca94"><td class="mdescLeft">&#160;</td><td class="mdescRight">The constructor of <a class="el" href="classGridBasedGrowthFunction.html">GridBasedGrowthFunction</a>.  <a href="#aac341fa9ccdca2d089e9f341cb68ca94">More...</a><br /></td></tr>
+<tr class="separator:aac341fa9ccdca2d089e9f341cb68ca94"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae36e6ea2e7bdf41459e74d5846d6d24d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae36e6ea2e7bdf41459e74d5846d6d24d"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGridBasedGrowthFunction.html#ae36e6ea2e7bdf41459e74d5846d6d24d">getGridX</a> ()</td></tr>
 <tr class="memdesc:ae36e6ea2e7bdf41459e74d5846d6d24d"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function returns <a class="el" href="classGridBasedGrowthFunction.html#af872b9963f3a579dcd615c23bcb58a86" title="The number of grid points that discretise the tissue in x. ">GridBasedGrowthFunction::nGridX</a>. <br /></td></tr>
@@ -139,13 +139,25 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class
 double ***&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGridBasedGrowthFunction.html#ac25ac1f12b74816a1d3d3e5dda0e8541">getGrowthMatrix</a> ()</td></tr>
 <tr class="memdesc:ac25ac1f12b74816a1d3d3e5dda0e8541"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function returns <a class="el" href="classGridBasedGrowthFunction.html#a5522d9b84fa95ebd65cdf290a4f0a65c" title="The matrix of growth rates in (1/sec). It is a matrix of double triplets for growth rate at each grid...">GridBasedGrowthFunction::GrowthMatrix</a>. <br /></td></tr>
 <tr class="separator:ac25ac1f12b74816a1d3d3e5dda0e8541"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad590b4a5c6e5e47f5679de5a8c6cb738"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad590b4a5c6e5e47f5679de5a8c6cb738"></a>
+double **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGridBasedGrowthFunction.html#ad590b4a5c6e5e47f5679de5a8c6cb738">getXyShearAngleMatrix</a> ()</td></tr>
+<tr class="memdesc:ad590b4a5c6e5e47f5679de5a8c6cb738"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function returns <a class="el" href="classGridBasedGrowthFunction.html#aa01cee8282299e18f27b47645da17438" title="The matrix of xy shear rate (rad/sec). It is a matrix of doubles at each grid point. he dimensions of the matrix are equal to (GridBasedGrowthFunction::nGridX, GridBasedGrowthFunction::nGridY), and set in constructor of the GridBasedGrowthFunction. ">GridBasedGrowthFunction::xyShearAngleMatrix</a>. <br /></td></tr>
+<tr class="separator:ad590b4a5c6e5e47f5679de5a8c6cb738"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1775fe1788bc97569c892d01cc625ea8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1775fe1788bc97569c892d01cc625ea8"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGridBasedGrowthFunction.html#a1775fe1788bc97569c892d01cc625ea8">getGrowthMatrixElement</a> (int i, int j, int k)</td></tr>
-<tr class="memdesc:a1775fe1788bc97569c892d01cc625ea8"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function returns a the growth rate at grid point [i][j] (in dimensions <a class="el" href="classGridBasedGrowthFunction.html#af872b9963f3a579dcd615c23bcb58a86" title="The number of grid points that discretise the tissue in x. ">GridBasedGrowthFunction::nGridX</a>, <a class="el" href="classGridBasedGrowthFunction.html#a625bc963a1f1e7d1f1a35dbd0ef51728" title="The number of grid points that discretise the tissue in y. ">GridBasedGrowthFunction::nGridY</a>), for the growth dimension [k] (as in [ DV axis (x), AP axis (y), and AB axis (z)] ). <br /></td></tr>
+<tr class="memdesc:a1775fe1788bc97569c892d01cc625ea8"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function returns the growth rate at grid point [i][j] (in dimensions <a class="el" href="classGridBasedGrowthFunction.html#af872b9963f3a579dcd615c23bcb58a86" title="The number of grid points that discretise the tissue in x. ">GridBasedGrowthFunction::nGridX</a>, <a class="el" href="classGridBasedGrowthFunction.html#a625bc963a1f1e7d1f1a35dbd0ef51728" title="The number of grid points that discretise the tissue in y. ">GridBasedGrowthFunction::nGridY</a>), for the growth dimension [k] (as in [ DV axis (x), AP axis (y), and AB axis (z)] ). <br /></td></tr>
 <tr class="separator:a1775fe1788bc97569c892d01cc625ea8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5075a53329b3a0b73a5864b7ffb37c5d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5075a53329b3a0b73a5864b7ffb37c5d"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGridBasedGrowthFunction.html#a5075a53329b3a0b73a5864b7ffb37c5d">getXyShearAngleMatrixElement</a> (int i, int j)</td></tr>
+<tr class="memdesc:a5075a53329b3a0b73a5864b7ffb37c5d"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function returns the xyShear angle at grid point [i][j] (in dimensions <a class="el" href="classGridBasedGrowthFunction.html#af872b9963f3a579dcd615c23bcb58a86" title="The number of grid points that discretise the tissue in x. ">GridBasedGrowthFunction::nGridX</a>, <a class="el" href="classGridBasedGrowthFunction.html#a625bc963a1f1e7d1f1a35dbd0ef51728" title="The number of grid points that discretise the tissue in y. ">GridBasedGrowthFunction::nGridY</a>). <br /></td></tr>
+<tr class="separator:a5075a53329b3a0b73a5864b7ffb37c5d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a85ed4f6a4b5165adf1ab8806b885f81a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a85ed4f6a4b5165adf1ab8806b885f81a"></a>
+gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGridBasedGrowthFunction.html#a85ed4f6a4b5165adf1ab8806b885f81a">getXyShearRotationsMatrixElement</a> (int i, int j)</td></tr>
+<tr class="memdesc:a85ed4f6a4b5165adf1ab8806b885f81a"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function returns the xyShear rotation matrix at grid point [i][j] (in dimensions <a class="el" href="classGridBasedGrowthFunction.html#af872b9963f3a579dcd615c23bcb58a86" title="The number of grid points that discretise the tissue in x. ">GridBasedGrowthFunction::nGridX</a>, <a class="el" href="classGridBasedGrowthFunction.html#a625bc963a1f1e7d1f1a35dbd0ef51728" title="The number of grid points that discretise the tissue in y. ">GridBasedGrowthFunction::nGridY</a>). <br /></td></tr>
+<tr class="separator:a85ed4f6a4b5165adf1ab8806b885f81a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9d01fcbba5732aad966659d4f64c145b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9d01fcbba5732aad966659d4f64c145b"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGridBasedGrowthFunction.html#a9d01fcbba5732aad966659d4f64c145b">setGrowthMatrixElement</a> (double ex, double ey, double ez, int i, int j)</td></tr>
-<tr class="memdesc:a9d01fcbba5732aad966659d4f64c145b"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function sets a the growth rate at grid point [i][j] (in dimensions <a class="el" href="classGridBasedGrowthFunction.html#af872b9963f3a579dcd615c23bcb58a86" title="The number of grid points that discretise the tissue in x. ">GridBasedGrowthFunction::nGridX</a>, <a class="el" href="classGridBasedGrowthFunction.html#a625bc963a1f1e7d1f1a35dbd0ef51728" title="The number of grid points that discretise the tissue in y. ">GridBasedGrowthFunction::nGridY</a>), to the growth rate [ex, ey, ez] in the format [ DV axis (x), AP axis (y), and AB axis (z)]. <br /></td></tr>
+<tr class="memdesc:a9d01fcbba5732aad966659d4f64c145b"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function sets the growth rate at grid point [i][j] (in dimensions <a class="el" href="classGridBasedGrowthFunction.html#af872b9963f3a579dcd615c23bcb58a86" title="The number of grid points that discretise the tissue in x. ">GridBasedGrowthFunction::nGridX</a>, <a class="el" href="classGridBasedGrowthFunction.html#a625bc963a1f1e7d1f1a35dbd0ef51728" title="The number of grid points that discretise the tissue in y. ">GridBasedGrowthFunction::nGridY</a>), to the growth rate [ex, ey, ez] in the format [ DV axis (x), AP axis (y), and AB axis (z)]. <br /></td></tr>
 <tr class="separator:a9d01fcbba5732aad966659d4f64c145b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a659418841b4a3bc8be1dec15f95d7b76"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGridBasedGrowthFunction.html#a659418841b4a3bc8be1dec15f95d7b76">writeSummary</a> (ofstream &amp;saveFileSimulationSummary, double dt)</td></tr>
 <tr class="memdesc:a659418841b4a3bc8be1dec15f95d7b76"><td class="mdescLeft">&#160;</td><td class="mdescRight">The function is to write the growth function summary to simulation summary file.  <a href="#a659418841b4a3bc8be1dec15f95d7b76">More...</a><br /></td></tr>
@@ -175,6 +187,12 @@ virtual float&#160;</td><td class="memItemRight" valign="bottom"><b>getOuterRadi
 <tr class="memitem:a9598654cae114f6b443167898ac4d095 inherit pub_methods_classGrowthFunctionBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9598654cae114f6b443167898ac4d095"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>getGrowthRate</b> (double *maxValue)</td></tr>
 <tr class="separator:a9598654cae114f6b443167898ac4d095 inherit pub_methods_classGrowthFunctionBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3c0d71849d020d29832b1aaaba87065e inherit pub_methods_classGrowthFunctionBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3c0d71849d020d29832b1aaaba87065e"></a>
+virtual gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>getShearAngleRotationMatrix</b> ()</td></tr>
+<tr class="separator:a3c0d71849d020d29832b1aaaba87065e inherit pub_methods_classGrowthFunctionBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adea116613ddb2edb7ebc0734d17c9226 inherit pub_methods_classGrowthFunctionBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adea116613ddb2edb7ebc0734d17c9226"></a>
+virtual double&#160;</td><td class="memItemRight" valign="bottom"><b>getShearAngle</b> ()</td></tr>
+<tr class="separator:adea116613ddb2edb7ebc0734d17c9226 inherit pub_methods_classGrowthFunctionBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abcfbd2e1fbad91b3f9002ef7fc7625e5 inherit pub_methods_classGrowthFunctionBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abcfbd2e1fbad91b3f9002ef7fc7625e5"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>setGrowtRate</b> (double ex, double ey, double ez)</td></tr>
 <tr class="separator:abcfbd2e1fbad91b3f9002ef7fc7625e5 inherit pub_methods_classGrowthFunctionBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -193,6 +211,13 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class
 double ***&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGridBasedGrowthFunction.html#a5522d9b84fa95ebd65cdf290a4f0a65c">GrowthMatrix</a></td></tr>
 <tr class="memdesc:a5522d9b84fa95ebd65cdf290a4f0a65c"><td class="mdescLeft">&#160;</td><td class="mdescRight">The matrix of growth rates in (1/sec). It is a matrix of double triplets for growth rate at each grid point. The dimensions of the matrix are equal to (<a class="el" href="classGridBasedGrowthFunction.html#af872b9963f3a579dcd615c23bcb58a86" title="The number of grid points that discretise the tissue in x. ">GridBasedGrowthFunction::nGridX</a>, <a class="el" href="classGridBasedGrowthFunction.html#a625bc963a1f1e7d1f1a35dbd0ef51728" title="The number of grid points that discretise the tissue in y. ">GridBasedGrowthFunction::nGridY</a>), and set in constructor of the <a class="el" href="classGridBasedGrowthFunction.html">GridBasedGrowthFunction</a>. The triplets store the growth rate in [ DV axis (x), AP axis (y), and AB axis (z)]. <br /></td></tr>
 <tr class="separator:a5522d9b84fa95ebd65cdf290a4f0a65c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa01cee8282299e18f27b47645da17438"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa01cee8282299e18f27b47645da17438"></a>
+double **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGridBasedGrowthFunction.html#aa01cee8282299e18f27b47645da17438">xyShearAngleMatrix</a></td></tr>
+<tr class="memdesc:aa01cee8282299e18f27b47645da17438"><td class="mdescLeft">&#160;</td><td class="mdescRight">The matrix of xy shear rate (rad/sec). It is a matrix of doubles at each grid point. he dimensions of the matrix are equal to (<a class="el" href="classGridBasedGrowthFunction.html#af872b9963f3a579dcd615c23bcb58a86" title="The number of grid points that discretise the tissue in x. ">GridBasedGrowthFunction::nGridX</a>, <a class="el" href="classGridBasedGrowthFunction.html#a625bc963a1f1e7d1f1a35dbd0ef51728" title="The number of grid points that discretise the tissue in y. ">GridBasedGrowthFunction::nGridY</a>), and set in constructor of the <a class="el" href="classGridBasedGrowthFunction.html">GridBasedGrowthFunction</a>. <br /></td></tr>
+<tr class="separator:aa01cee8282299e18f27b47645da17438"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a62e3267b367261ff2f37cee9a7c2b02b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a62e3267b367261ff2f37cee9a7c2b02b"></a>
+gsl_matrix ***&#160;</td><td class="memItemRight" valign="bottom"><b>xyShearRotationsMatrix</b></td></tr>
+<tr class="separator:a62e3267b367261ff2f37cee9a7c2b02b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_attribs_classGrowthFunctionBase"><td colspan="2" onclick="javascript:toggleInherit('pub_attribs_classGrowthFunctionBase')"><img src="closed.png" alt="-"/>&#160;Public Attributes inherited from <a class="el" href="classGrowthFunctionBase.html">GrowthFunctionBase</a></td></tr>
 <tr class="memitem:a90fc4b14e2adcda0930fe93b1490fb7a inherit pub_attribs_classGrowthFunctionBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a90fc4b14e2adcda0930fe93b1490fb7a"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGrowthFunctionBase.html#a90fc4b14e2adcda0930fe93b1490fb7a">Type</a></td></tr>
@@ -220,7 +245,7 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="separator:a08ae19f58cb98fa8e315a77f52749732 inherit pub_attribs_classGrowthFunctionBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a class="anchor" id="a1533e384b3ab79323e91ce68245c9a10"></a>
+<a class="anchor" id="aac341fa9ccdca2d089e9f341cb68ca94"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -279,7 +304,13 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">double ***&#160;</td>
-          <td class="paramname"><em>GrowthMat</em>&#160;</td>
+          <td class="paramname"><em>GrowthMat</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double **&#160;</td>
+          <td class="paramname"><em>AngleMat</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -352,7 +383,7 @@ double*** GrowthMat is the pointer to the 2-dimensional matrix of double triplet
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="classGridBasedGrowthFunction.html">GridBasedGrowthFunction</a></li>
-    <li class="footer">Generated on Fri Sep 4 2015 12:21:22 for Tissue Origami by
+    <li class="footer">Generated on Tue Nov 3 2015 16:55:13 for Tissue Origami by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

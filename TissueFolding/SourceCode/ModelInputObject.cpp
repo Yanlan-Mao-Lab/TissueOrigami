@@ -81,6 +81,12 @@ bool ModelInputObject::readParameters(){
 				 */
 				Success  = readNodeFixingParameters(parametersFile);
 			}
+			else if(currParameterHeader == "Manipulations:"){
+				/**
+				 * Inputs relating to manual manipulations to tissue after the mesh is read in
+				 */
+				Success  = readManupulationParamters(parametersFile);
+			}
 			else if(currParameterHeader == "TimeParameters:"){
 				/**
 				 * Simulation time and time step related parameters through the private function ModelInputObject#readTimeParameters
@@ -265,7 +271,7 @@ bool ModelInputObject::readGrowthType1(ifstream& file){
 		return false;
 	}
 	file >> currHeader;
-	if(currHeader == "Angle(degreesPerHour):"){
+	if(currHeader == "Angle(degrees):"){
 		file >> angle;
 		angle *= M_PI/180.0; 	 // converting to radians
 	}
@@ -365,10 +371,20 @@ bool ModelInputObject::readGrowthType2(ifstream& file){
 		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: MaxValue(fractionPerHour-DV,AP,AB):" <<endl;
 		return false;
 	}
+	double angle;
+	file >> currHeader;
+	if(currHeader == "Angle(degrees):"){
+		file >> angle;
+		angle *= M_PI/180.0; 	 // converting to radians
+	}
+	else{
+		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: Angle(degreesPerHour):" <<endl;
+		return false;
+	}
 	GrowthFunctionBase* GSBp;
 	int Id = Sim->GrowthFunctions.size();
 	//type is 2
-	GSBp = new RingGrowthFunction(Id, 2, initialtime, finaltime, applyToColumnarLayer, applyToPeripodialMembrane, CentreX, CentreY, innerR,  outerR, DVRate, APRate,  ABRate);
+	GSBp = new RingGrowthFunction(Id, 2, initialtime, finaltime, applyToColumnarLayer, applyToPeripodialMembrane, CentreX, CentreY, innerR,  outerR, DVRate, APRate,  ABRate, angle);
 	Sim->GrowthFunctions.push_back(GSBp);
 	return true;
 }
@@ -383,6 +399,7 @@ bool ModelInputObject::readGrowthType3(ifstream& file){
 	bool applyToPeripodialMembrane = false;
 	int gridX, gridY;
 	double*** GrowthMatrix;
+	double**  AngleMatrix;
 	if(currHeader == "InitialTime(sec):"){
 		file >> initialtime;
 	}
@@ -432,18 +449,21 @@ bool ModelInputObject::readGrowthType3(ifstream& file){
 		GrowthRateFile >> gridY;
 		float rate;
         //double timeMultiplier = Sim->dt / 3600.0;
-        double timeMultiplier = 1.0 / 3600.0; // converting rate er hour to rate per second
-		cout<<"constructing growth matrix"<<endl;
+        cout<<"initiating growth and angle matrices"<<endl;
 		GrowthMatrix = new double**[(const int) gridX];
+		AngleMatrix = new double*[(const int) gridX];
 		for (int i=0; i<gridX; ++i){
 			GrowthMatrix[i] = new double*[(const int) gridY];
+			AngleMatrix[i] = new double[(const int) gridY];
 			for (int j=0; j<gridY; ++j){
 				GrowthMatrix[i][j] = new double[3];
 				for (int k=0; k<3; ++k){
 					GrowthMatrix[i][j][k] = 0.0;
 				}
+				AngleMatrix[i][j] = 0.0;
 			}
 		}
+		double timeMultiplier = 1.0 / 3600.0; // converting rate per hour to rate per second
 		cout<<"reading growth matrix"<<endl;
 		for (int j=gridY-1; j>-1; --j){
 			for (int i=0; i<gridX; ++i){
@@ -457,18 +477,41 @@ bool ModelInputObject::readGrowthType3(ifstream& file){
 				}
 			}
 		}
+		double angle;
+		cout<<"reading angle matrix"<<endl;
+		for (int j=gridY-1; j>-1; --j){
+			for (int i=0; i<gridX; ++i){
+				GrowthRateFile >> angle;
+				AngleMatrix[i][j] = angle; // angles in degrees!
+			}
+		}
 		GrowthRateFile.close();
+		for (int i=0; i<gridX; ++i){
+			for (int j=0; j<gridY; ++j){
+				for (int k=0; k<3; ++k){
+					GrowthMatrix[i][j][k] *= timeMultiplier;
+				}
+			}
+		}
+		//display:
 		cout<<"growth matrix: "<<endl;
 		for (int i=0; i<gridX; ++i){
 			for (int j=0; j<gridY; ++j){
 				for (int k=0; k<3; ++k){
 					cout<<GrowthMatrix[i][j][k]<<" ";
-					GrowthMatrix[i][j][k] *= timeMultiplier;
 				}
 				cout<<"	";
 			}
 			cout<<endl;
 		}cout<<endl;
+		cout<<"angle matrix: "<<endl;
+		for (int i=0; i<gridX; ++i){
+			for (int j=0; j<gridY; ++j){
+				cout<<AngleMatrix[i][j]<<" ";
+			}
+			cout<<endl;
+		}
+		cout<<endl;
 	}
 	else{
 		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: Filename(full-path):" <<endl;
@@ -477,7 +520,7 @@ bool ModelInputObject::readGrowthType3(ifstream& file){
 	GrowthFunctionBase* GSBp;
 	int Id = Sim->GrowthFunctions.size();
 	//type is 3
-	GSBp = new GridBasedGrowthFunction(Id, 3, initialtime, finaltime, applyToColumnarLayer, applyToPeripodialMembrane, gridX, gridY, GrowthMatrix);
+	GSBp = new GridBasedGrowthFunction(Id, 3, initialtime, finaltime, applyToColumnarLayer, applyToPeripodialMembrane, gridX, gridY, GrowthMatrix, AngleMatrix);
 	Sim->GrowthFunctions.push_back(GSBp);
 	return true;
 }
@@ -510,56 +553,77 @@ bool ModelInputObject::readMeshParameters(ifstream& file){
 bool ModelInputObject::readNodeFixingParameters(ifstream& file){
 	string currHeader;
 	file >> currHeader;
-		if(currHeader == "ApicalSurfaceFix(bool-x,y,z):"){
-			file >>Sim->ApicalNodeFix[0];
-			file >>Sim->ApicalNodeFix[1];
-			file >>Sim->ApicalNodeFix[2];
-		}
-		else{
-			cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: ApicalSurfaceFix(bool-x,y,z):" <<endl;
-			return false;
-		}
-		file >> currHeader;
-		if(currHeader == "BasalSurfaceFix(bool-x,y,z):"){
-			file >>Sim->BasalNodeFix[0];
-			file >>Sim->BasalNodeFix[1];
-			file >>Sim->BasalNodeFix[2];
-		}
-		else{
-			cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: BasalSurfaceFix(bool-x,y,z):" <<endl;
-			return false;
-		}
-		file >> currHeader;
-		if(currHeader == "ApicalCircumferenceFix(bool-x,y,z):"){
-			file >>Sim->CircumferentialNodeFix[0][0];
-			file >>Sim->CircumferentialNodeFix[0][1];
-			file >>Sim->CircumferentialNodeFix[0][2];
-		}
-		else{
-			cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: ApicalCircumferenceFix(bool-x,y,z):" <<endl;
-			return false;
-		}
-		file >> currHeader;
-		if(currHeader == "BasalCircumferenceFix(bool-x,y,z):"){
-			file >>Sim->CircumferentialNodeFix[1][0];
-			file >>Sim->CircumferentialNodeFix[1][1];
-			file >>Sim->CircumferentialNodeFix[1][2];
-		}
-		else{
-			cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: BasalCircumferenceFix(bool-x,y,z):" <<endl;
-			return false;
-		}
-		file >> currHeader;
-		if(currHeader == "CircumferenceFix(bool-x,y,z):"){
-			file >>Sim->CircumferentialNodeFix[2][0];
-			file >>Sim->CircumferentialNodeFix[2][1];
-			file >>Sim->CircumferentialNodeFix[2][2];
-		}
-		else{
-			cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: CircumferenceFix(bool-x,y,z):" <<endl;
-			return false;
-		}
-		return true;
+	if(currHeader == "ApicalSurfaceFix(bool-x,y,z):"){
+		file >>Sim->ApicalNodeFix[0];
+		file >>Sim->ApicalNodeFix[1];
+		file >>Sim->ApicalNodeFix[2];
+	}
+	else{
+		cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: ApicalSurfaceFix(bool-x,y,z):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "BasalSurfaceFix(bool-x,y,z):"){
+		file >>Sim->BasalNodeFix[0];
+		file >>Sim->BasalNodeFix[1];
+		file >>Sim->BasalNodeFix[2];
+	}
+	else{
+		cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: BasalSurfaceFix(bool-x,y,z):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "ApicalCircumferenceFix(bool-x,y,z):"){
+		file >>Sim->CircumferentialNodeFix[0][0];
+		file >>Sim->CircumferentialNodeFix[0][1];
+		file >>Sim->CircumferentialNodeFix[0][2];
+	}
+	else{
+		cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: ApicalCircumferenceFix(bool-x,y,z):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "BasalCircumferenceFix(bool-x,y,z):"){
+		file >>Sim->CircumferentialNodeFix[1][0];
+		file >>Sim->CircumferentialNodeFix[1][1];
+		file >>Sim->CircumferentialNodeFix[1][2];
+	}
+	else{
+		cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: BasalCircumferenceFix(bool-x,y,z):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "CircumferenceFix(bool-x,y,z):"){
+		file >>Sim->CircumferentialNodeFix[2][0];
+		file >>Sim->CircumferentialNodeFix[2][1];
+		file >>Sim->CircumferentialNodeFix[2][2];
+	}
+	else{
+		cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: CircumferenceFix(bool-x,y,z):" <<endl;
+		return false;
+	}
+	return true;
+}
+
+bool ModelInputObject::readManupulationParamters(ifstream& file){
+	string currHeader;
+	file >> currHeader;
+	if(currHeader == "AddCurvature(bool):"){
+		file >>Sim->addCurvatureToTissue;
+	}
+	else{
+		cerr<<"Error in reading manipulations options, curr string: "<<currHeader<<", should have been: AddCurvature(bool):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "CurvatureDepthAtCentre(double-microns):"){
+		file >>Sim->tissueCurvatureDepth;
+	}
+	else{
+		cerr<<"Error in reading manipulations options, curr string: "<<currHeader<<", should have been: CurvatureDepthAtCentre(double-microns):" <<endl;
+		return false;
+	}
+	return true;
 }
 
 bool ModelInputObject::readMeshType4(ifstream& file){

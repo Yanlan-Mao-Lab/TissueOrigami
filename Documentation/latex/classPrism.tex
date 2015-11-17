@@ -39,13 +39,25 @@ Inheritance diagram for Prism\+:\begin{figure}[H]
 \hypertarget{classPrism_a91d08cfcf6bf111f5d9e314499bafd11}{}double {\bfseries get\+Element\+Height} ()\label{classPrism_a91d08cfcf6bf111f5d9e314499bafd11}
 
 \item 
-\hypertarget{classPrism_a9bec5b2cd9c1bf5f7aa5e2dfb9c17ac8}{}void {\bfseries Add\+Packing\+To\+Surface} (int tissueplacement, double Fx, double Fy, double Fz, int R\+K\+Id, double $\ast$$\ast$$\ast$System\+Forces, double $\ast$$\ast$$\ast$Packing\+Forces, vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&Nodes)\label{classPrism_a9bec5b2cd9c1bf5f7aa5e2dfb9c17ac8}
+\hypertarget{classPrism_a37ba7c6f45d6b5abbfb0923c0cc72fa9}{}void {\bfseries Add\+Packing\+To\+Surface} (int tissueplacement, double Fx, double Fy, double Fz, double $\ast$$\ast$System\+Forces, double $\ast$$\ast$Packing\+Forces, vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&Nodes)\label{classPrism_a37ba7c6f45d6b5abbfb0923c0cc72fa9}
 
 \item 
 \hypertarget{classPrism_a523002e7e6487db1a4506b2f0b2b4e04}{}bool {\bfseries Is\+Point\+Close\+Enough\+For\+Packing} (double $\ast$Pos, float Peripodialthreshold, float Columnarthreshold, int Tissue\+Placement\+Of\+Packing\+Node, int Tissue\+Type\+Of\+Packing\+Node)\label{classPrism_a523002e7e6487db1a4506b2f0b2b4e04}
 
 \item 
 \hypertarget{classPrism_adaa9ffb371d07e063e1b280d959a9fe6}{}void {\bfseries calculate\+Normal\+For\+Packing} (int tissue\+Placement)\label{classPrism_adaa9ffb371d07e063e1b280d959a9fe6}
+
+\item 
+\hypertarget{classPrism_a67e80515fb1cdf4438b4b7d47334bd2e}{}void {\bfseries calculate\+Apical\+Area} ()\label{classPrism_a67e80515fb1cdf4438b4b7d47334bd2e}
+
+\item 
+\hypertarget{classPrism_aa8dd4b90cdaecdbabfb48f45a9bcdc95}{}void {\bfseries calculate\+Basal\+Area} ()\label{classPrism_aa8dd4b90cdaecdbabfb48f45a9bcdc95}
+
+\item 
+\hypertarget{classPrism_a306261925defdb79ba64fc5f9ef8a23d}{}void {\bfseries calculate\+Myosin\+Forces} (double force\+Per\+Myo\+Molecule)\label{classPrism_a306261925defdb79ba64fc5f9ef8a23d}
+
+\item 
+\hypertarget{classPrism_ab11b5901fc7d65f71c7cccd1ce94a273}{}void {\bfseries distribute\+Myosin\+Force} (bool is\+Isotropic, bool apical, double force\+Per\+Myo\+Molecule)\label{classPrism_ab11b5901fc7d65f71c7cccd1ce94a273}
 
 \item 
 \hypertarget{classPrism_a243934a73a8f198ed592761ecb0927b9}{}void {\bfseries get\+Apical\+Node\+Pos} (double $\ast$pos\+Corner)\label{classPrism_a243934a73a8f198ed592761ecb0927b9}
@@ -81,7 +93,9 @@ Inheritance diagram for Prism\+:\begin{figure}[H]
 \hypertarget{classPrism_aa433244f86cdf23a611a1adc3391c3f0}{}void {\bfseries calculate\+Currk} (boost\+::numeric\+::ublas\+::matrix$<$ double $>$ \&currk, boost\+::numeric\+::ublas\+::matrix$<$ double $>$ \&curr\+B, boost\+::numeric\+::ublas\+::matrix$<$ double $>$ \&curr\+B\+E, boost\+::numeric\+::ublas\+::matrix$<$ double $>$ \&curr\+Bo, double eta, double zeta, double nu)\label{classPrism_aa433244f86cdf23a611a1adc3391c3f0}
 
 \item 
-\hypertarget{classPrism_aea47379b3064d866f93508a9337d8f12}{}void {\bfseries calculate\+Curr\+Nodal\+Forces} (gsl\+\_\+matrix $\ast$gslcurrg, gsl\+\_\+matrix $\ast$gslcurr\+F, int point\+No)\label{classPrism_aea47379b3064d866f93508a9337d8f12}
+void \hyperlink{classPrism_aea47379b3064d866f93508a9337d8f12}{calculate\+Curr\+Nodal\+Forces} (gsl\+\_\+matrix $\ast$gslcurrg, gsl\+\_\+matrix $\ast$gslcurr\+F, int point\+No)
+\item 
+\hypertarget{classPrism_ae9403142a217a005a4d588a6e472be27}{}void {\bfseries calculate\+Curr\+Tri\+Point\+F\+For\+Rotation} (gsl\+\_\+matrix $\ast$curr\+F, int point\+No)\label{classPrism_ae9403142a217a005a4d588a6e472be27}
 
 \item 
 \hypertarget{classPrism_a872ce1e6304b1400d2d0e712af2a0131}{}void {\bfseries calculate\+Normal\+To\+Bottom} ()\label{classPrism_a872ce1e6304b1400d2d0e712af2a0131}
@@ -121,6 +135,24 @@ Inheritance diagram for Prism\+:\begin{figure}[H]
 
 \end{DoxyCompactItemize}
 \subsection*{Additional Inherited Members}
+
+
+\subsection{Member Function Documentation}
+\hypertarget{classPrism_aea47379b3064d866f93508a9337d8f12}{}\index{Prism@{Prism}!calculate\+Curr\+Nodal\+Forces@{calculate\+Curr\+Nodal\+Forces}}
+\index{calculate\+Curr\+Nodal\+Forces@{calculate\+Curr\+Nodal\+Forces}!Prism@{Prism}}
+\subsubsection[{calculate\+Curr\+Nodal\+Forces}]{\setlength{\rightskip}{0pt plus 5cm}void Prism\+::calculate\+Curr\+Nodal\+Forces (
+\begin{DoxyParamCaption}
+\item[{gsl\+\_\+matrix $\ast$}]{gslcurrg, }
+\item[{gsl\+\_\+matrix $\ast$}]{gslcurr\+F, }
+\item[{int}]{point\+No}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [protected]}, {\ttfamily [virtual]}}\label{classPrism_aea47379b3064d866f93508a9337d8f12}
+$<$ Removing growth
+
+$<$ Removing shape change 
+
+Reimplemented from \hyperlink{classShapeBase}{Shape\+Base}.
+
 
 
 The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}

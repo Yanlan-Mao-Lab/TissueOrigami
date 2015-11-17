@@ -11,6 +11,8 @@ var classMainWindow =
     [ "updateBoundingBoxCheckBox", "classMainWindow.html#a52aa21a413bbc1f33a84f695b677f490", null ],
     [ "updateColumnarLayerDisplayCheckBox", "classMainWindow.html#a516111157b177a92fc5838a060f36908", null ],
     [ "updateDisplayPipette", "classMainWindow.html#ad30193e1dac5d64c7467e576e238ce03", null ],
+    [ "updateMyosinCheckBox", "classMainWindow.html#a6d97f5be9f61304b31db8f83d11f6b8d", null ],
+    [ "updateMyosinComboBox", "classMainWindow.html#aae2aa15cd495069aebec712f4064c158", null ],
     [ "updateNetForceCheckBox", "classMainWindow.html#ac6e570780295db3ff54382cbda1ea4cf", null ],
     [ "updateOrthagonalPerspectiveViewToggle", "classMainWindow.html#af2c325c24155eb2198ef705d78d452d8", null ],
     [ "updatePackingForceCheckBox", "classMainWindow.html#abf1716feb02925cadc40800ed5aa1af8", null ],

@@ -118,21 +118,30 @@ Inheritance diagram for UniformGrowthFunction:</div>
  <div class="center">
   <img src="classUniformGrowthFunction.png" usemap="#UniformGrowthFunction_map" alt=""/>
   <map id="UniformGrowthFunction_map" name="UniformGrowthFunction_map">
-<area href="classGrowthFunctionBase.html" alt="GrowthFunctionBase" shape="rect" coords="0,0,144,24"/>
+<area href="classGrowthFunctionBase.html" alt="GrowthFunctionBase" shape="rect" coords="0,0,184,24"/>
+<area href="classUniformShapeChangeFunction.html" alt="UniformShapeChangeFunction" shape="rect" coords="0,112,184,136"/>
 </map>
  </div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:af74d0e65f1a9486a78871306f99e4eb1"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUniformGrowthFunction.html#af74d0e65f1a9486a78871306f99e4eb1">UniformGrowthFunction</a> (int id, int type, float <a class="el" href="classGrowthFunctionBase.html#ae92513a7b41637df8e26e7db35ddf97c">initTime</a>, float <a class="el" href="classGrowthFunctionBase.html#a3ff4db0573d354a75666a5f3ca446941">endTime</a>, bool <a class="el" href="classGrowthFunctionBase.html#a3d56771e7c145589a14e11cc331e0326">applyToColumnarLayer</a>, bool <a class="el" href="classGrowthFunctionBase.html#a08ae19f58cb98fa8e315a77f52749732">applyToPeripodialMembrane</a>, double DVGrowth, double APGrowth, double ABGrowth)</td></tr>
-<tr class="memdesc:af74d0e65f1a9486a78871306f99e4eb1"><td class="mdescLeft">&#160;</td><td class="mdescRight">The constructor of <a class="el" href="classUniformGrowthFunction.html">UniformGrowthFunction</a>.  <a href="#af74d0e65f1a9486a78871306f99e4eb1">More...</a><br /></td></tr>
-<tr class="separator:af74d0e65f1a9486a78871306f99e4eb1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab5d7f19747a71d71cec5cc6d55b93a36"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUniformGrowthFunction.html#ab5d7f19747a71d71cec5cc6d55b93a36">UniformGrowthFunction</a> (int id, int type, float <a class="el" href="classGrowthFunctionBase.html#ae92513a7b41637df8e26e7db35ddf97c">initTime</a>, float <a class="el" href="classGrowthFunctionBase.html#a3ff4db0573d354a75666a5f3ca446941">endTime</a>, bool <a class="el" href="classGrowthFunctionBase.html#a3d56771e7c145589a14e11cc331e0326">applyToColumnarLayer</a>, bool <a class="el" href="classGrowthFunctionBase.html#a08ae19f58cb98fa8e315a77f52749732">applyToPeripodialMembrane</a>, double DVGrowth, double APGrowth, double ABGrowth, double <a class="el" href="classUniformGrowthFunction.html#a1a985ff52f9796688e00942b4d3349f8">angle</a>)</td></tr>
+<tr class="memdesc:ab5d7f19747a71d71cec5cc6d55b93a36"><td class="mdescLeft">&#160;</td><td class="mdescRight">The constructor of <a class="el" href="classUniformGrowthFunction.html">UniformGrowthFunction</a>.  <a href="#ab5d7f19747a71d71cec5cc6d55b93a36">More...</a><br /></td></tr>
+<tr class="separator:ab5d7f19747a71d71cec5cc6d55b93a36"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad5be18ae004a3eed205ab3570e13202a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUniformGrowthFunction.html#ad5be18ae004a3eed205ab3570e13202a">getGrowthRate</a> (double *maxValues)</td></tr>
 <tr class="memdesc:ad5be18ae004a3eed205ab3570e13202a"><td class="mdescLeft">&#160;</td><td class="mdescRight">The function is to get the 3D growth rate of the current growth function.  <a href="#ad5be18ae004a3eed205ab3570e13202a">More...</a><br /></td></tr>
 <tr class="separator:ad5be18ae004a3eed205ab3570e13202a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aff899907569af697d47927f61b6871a5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUniformGrowthFunction.html#aff899907569af697d47927f61b6871a5">setGrowtRate</a> (double ex, double ey, double ez)</td></tr>
 <tr class="memdesc:aff899907569af697d47927f61b6871a5"><td class="mdescLeft">&#160;</td><td class="mdescRight">The function is to set the 3D growth rate of the current growth function.  <a href="#aff899907569af697d47927f61b6871a5">More...</a><br /></td></tr>
 <tr class="separator:aff899907569af697d47927f61b6871a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5a7e9b102a299b94ba648513b66f9cd1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5a7e9b102a299b94ba648513b66f9cd1"></a>
+gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUniformGrowthFunction.html#a5a7e9b102a299b94ba648513b66f9cd1">getShearAngleRotationMatrix</a> ()</td></tr>
+<tr class="memdesc:a5a7e9b102a299b94ba648513b66f9cd1"><td class="mdescLeft">&#160;</td><td class="mdescRight">The function return the matrix pointer to the oriented growth rotation matrix. <br /></td></tr>
+<tr class="separator:a5a7e9b102a299b94ba648513b66f9cd1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8a60d83743c441f7453af8053d5e7010"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8a60d83743c441f7453af8053d5e7010"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUniformGrowthFunction.html#a8a60d83743c441f7453af8053d5e7010">getShearAngle</a> ()</td></tr>
+<tr class="memdesc:a8a60d83743c441f7453af8053d5e7010"><td class="mdescLeft">&#160;</td><td class="mdescRight">The function returns the oriented growth angle in radians (double). <br /></td></tr>
+<tr class="separator:a8a60d83743c441f7453af8053d5e7010"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a227ffb3a524779628f98f110d3811399"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUniformGrowthFunction.html#a227ffb3a524779628f98f110d3811399">writeSummary</a> (ofstream &amp;saveFileSimulationSummary, double dt)</td></tr>
 <tr class="memdesc:a227ffb3a524779628f98f110d3811399"><td class="mdescLeft">&#160;</td><td class="mdescRight">The function is to write the growth function summary to simulation summary file.  <a href="#a227ffb3a524779628f98f110d3811399">More...</a><br /></td></tr>
 <tr class="separator:a227ffb3a524779628f98f110d3811399"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -167,9 +176,18 @@ virtual int&#160;</td><td class="memItemRight" valign="bottom"><b>getGridY</b> (
 <tr class="memitem:a067bdcd836e7196ce5cfc9120b9499c1 inherit pub_methods_classGrowthFunctionBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a067bdcd836e7196ce5cfc9120b9499c1"></a>
 virtual double ***&#160;</td><td class="memItemRight" valign="bottom"><b>getGrowthMatrix</b> ()</td></tr>
 <tr class="separator:a067bdcd836e7196ce5cfc9120b9499c1 inherit pub_methods_classGrowthFunctionBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a32e0a776bc81147dc648662440d50b0d inherit pub_methods_classGrowthFunctionBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a32e0a776bc81147dc648662440d50b0d"></a>
+virtual double **&#160;</td><td class="memItemRight" valign="bottom"><b>getXyShearAngleMatrix</b> ()</td></tr>
+<tr class="separator:a32e0a776bc81147dc648662440d50b0d inherit pub_methods_classGrowthFunctionBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4e40d019aff99e72b1aee79d93c8e9a0 inherit pub_methods_classGrowthFunctionBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4e40d019aff99e72b1aee79d93c8e9a0"></a>
 virtual double&#160;</td><td class="memItemRight" valign="bottom"><b>getGrowthMatrixElement</b> (int i, int j, int k)</td></tr>
 <tr class="separator:a4e40d019aff99e72b1aee79d93c8e9a0 inherit pub_methods_classGrowthFunctionBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adfa5e38c1b2d748c035a3bdbe8717d73 inherit pub_methods_classGrowthFunctionBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adfa5e38c1b2d748c035a3bdbe8717d73"></a>
+virtual double&#160;</td><td class="memItemRight" valign="bottom"><b>getXyShearAngleMatrixElement</b> (int i, int j)</td></tr>
+<tr class="separator:adfa5e38c1b2d748c035a3bdbe8717d73 inherit pub_methods_classGrowthFunctionBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a70f43b1e57d2be8ca0e2a937da333dfa inherit pub_methods_classGrowthFunctionBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a70f43b1e57d2be8ca0e2a937da333dfa"></a>
+virtual gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>getXyShearRotationsMatrixElement</b> (int i, int j)</td></tr>
+<tr class="separator:a70f43b1e57d2be8ca0e2a937da333dfa inherit pub_methods_classGrowthFunctionBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a29781080624a8ab028af36f3326b6240 inherit pub_methods_classGrowthFunctionBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a29781080624a8ab028af36f3326b6240"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>setGrowthMatrixElement</b> (double ex, double ey, double ez, int i, int j)</td></tr>
 <tr class="separator:a29781080624a8ab028af36f3326b6240 inherit pub_methods_classGrowthFunctionBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -180,6 +198,14 @@ Public Attributes</h2></td></tr>
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUniformGrowthFunction.html#af78591902b0cc391a62f3093fd14ad10">GrowthRate</a> [3]</td></tr>
 <tr class="memdesc:af78591902b0cc391a62f3093fd14ad10"><td class="mdescLeft">&#160;</td><td class="mdescRight">The double array stating the uniform growth rate throughout the tissue. Growth rate is in 1/sec, format: [ DV axis (x), AP axis (y), and AB axis (z)]. <br /></td></tr>
 <tr class="separator:af78591902b0cc391a62f3093fd14ad10"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afef9ac84dfe60bbf3d558fbb31946087"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afef9ac84dfe60bbf3d558fbb31946087"></a>
+gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUniformGrowthFunction.html#afef9ac84dfe60bbf3d558fbb31946087">ShearAngleRotationMatrix</a></td></tr>
+<tr class="memdesc:afef9ac84dfe60bbf3d558fbb31946087"><td class="mdescLeft">&#160;</td><td class="mdescRight">The rotation matrix for the orientation of the growth on x-y plane. This matrix is constructed through <a class="el" href="classUniformGrowthFunction.html#a1a985ff52f9796688e00942b4d3349f8" title="The rotation angle for the orientation of the growth on x-y plane. ">UniformGrowthFunction::angle</a>. <br /></td></tr>
+<tr class="separator:afef9ac84dfe60bbf3d558fbb31946087"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1a985ff52f9796688e00942b4d3349f8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1a985ff52f9796688e00942b4d3349f8"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUniformGrowthFunction.html#a1a985ff52f9796688e00942b4d3349f8">angle</a></td></tr>
+<tr class="memdesc:a1a985ff52f9796688e00942b4d3349f8"><td class="mdescLeft">&#160;</td><td class="mdescRight">The rotation angle for the orientation of the growth on x-y plane. <br /></td></tr>
+<tr class="separator:a1a985ff52f9796688e00942b4d3349f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_attribs_classGrowthFunctionBase"><td colspan="2" onclick="javascript:toggleInherit('pub_attribs_classGrowthFunctionBase')"><img src="closed.png" alt="-"/>&#160;Public Attributes inherited from <a class="el" href="classGrowthFunctionBase.html">GrowthFunctionBase</a></td></tr>
 <tr class="memitem:a90fc4b14e2adcda0930fe93b1490fb7a inherit pub_attribs_classGrowthFunctionBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a90fc4b14e2adcda0930fe93b1490fb7a"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGrowthFunctionBase.html#a90fc4b14e2adcda0930fe93b1490fb7a">Type</a></td></tr>
@@ -207,7 +233,7 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="separator:a08ae19f58cb98fa8e315a77f52749732 inherit pub_attribs_classGrowthFunctionBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a class="anchor" id="af74d0e65f1a9486a78871306f99e4eb1"></a>
+<a class="anchor" id="ab5d7f19747a71d71cec5cc6d55b93a36"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -266,7 +292,13 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>ABGrowth</em>&#160;</td>
+          <td class="paramname"><em>ABGrowth</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>angle</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -400,6 +432,8 @@ doubles DVGrowth, APGrowth and ABGrowth will set the <a class="el" href="classUn
 
 <p>Reimplemented from <a class="el" href="classGrowthFunctionBase.html">GrowthFunctionBase</a>.</p>
 
+<p>Reimplemented in <a class="el" href="classUniformShapeChangeFunction.html#a196a7555899800406ee62714a20b34c4">UniformShapeChangeFunction</a>.</p>
+
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following file:<ul>
@@ -411,7 +445,7 @@ doubles DVGrowth, APGrowth and ABGrowth will set the <a class="el" href="classUn
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="classUniformGrowthFunction.html">UniformGrowthFunction</a></li>
-    <li class="footer">Generated on Fri Sep 4 2015 12:21:23 for Tissue Origami by
+    <li class="footer">Generated on Tue Nov 3 2015 16:55:13 for Tissue Origami by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

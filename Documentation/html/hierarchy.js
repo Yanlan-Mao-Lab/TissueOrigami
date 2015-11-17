@@ -3,9 +3,12 @@ var hierarchy =
     [ "GrowthFunctionBase", "classGrowthFunctionBase.html", [
       [ "GridBasedGrowthFunction", "classGridBasedGrowthFunction.html", null ],
       [ "RingGrowthFunction", "classRingGrowthFunction.html", null ],
-      [ "UniformGrowthFunction", "classUniformGrowthFunction.html", null ]
+      [ "UniformGrowthFunction", "classUniformGrowthFunction.html", [
+        [ "UniformShapeChangeFunction", "classUniformShapeChangeFunction.html", null ]
+      ] ]
     ] ],
     [ "ModelInputObject", "classModelInputObject.html", null ],
+    [ "MyosinFunction", "classMyosinFunction.html", null ],
     [ "Node", "classNode.html", null ],
     [ "QGLWidget", null, [
       [ "GLWidget", "classGLWidget.html", null ]

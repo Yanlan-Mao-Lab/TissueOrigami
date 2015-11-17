@@ -156,15 +156,36 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>getPeripodialness</
 <tr class="memitem:a44c758ac93865a1e51e63212ebfe2787"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a44c758ac93865a1e51e63212ebfe2787"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>getColumnarness</b> ()</td></tr>
 <tr class="separator:a44c758ac93865a1e51e63212ebfe2787"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7d1235b3555a18328d1677e5b07458ff"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7d1235b3555a18328d1677e5b07458ff"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateRelativePosInBoundingBox</b> (double BoindingBoxXMin, double BoundingBoxYMin, double BoundingBoxLength, double BoundingBoxWidth)</td></tr>
-<tr class="separator:a7d1235b3555a18328d1677e5b07458ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad88d175251a7604ed47e2b694f111c47"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad88d175251a7604ed47e2b694f111c47"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>getRelativePositionInTissueInGridIndex</b> (int nGridX, int nGridY, double *columnarReletivePos, double *peripodialRelativePos, int &amp;columnarIndexX, int &amp;peripodialIndexX, int &amp;columnarIndexY, int &amp;peripodialIndexY, double &amp;columnarFracX, double &amp;peripodialFracX, double &amp;columnarFracY, double &amp;peripodialFracY)</td></tr>
+<tr class="separator:ad88d175251a7604ed47e2b694f111c47"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7c429bc57f1b16e3e1d4f2bb98360298"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7c429bc57f1b16e3e1d4f2bb98360298"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>isGrowthRateApplicable</b> (int sourceTissue, double &amp;weight)</td></tr>
+<tr class="separator:a7c429bc57f1b16e3e1d4f2bb98360298"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a33c9507a7e08fd529b28f70e62dfb33e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a33c9507a7e08fd529b28f70e62dfb33e"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateFgFromRates</b> (double dt, double x, double y, double z, gsl_matrix *rotMat, gsl_matrix *increment, int sourceTissue)</td></tr>
+<tr class="separator:a33c9507a7e08fd529b28f70e62dfb33e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad158010ec26f607c4695aa7a0b767d73"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad158010ec26f607c4695aa7a0b767d73"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateFgFromGridCorners</b> (double dt, <a class="el" href="classGrowthFunctionBase.html">GrowthFunctionBase</a> *currGF, gsl_matrix *increment, int sourceTissue, int IndexX, int IndexY, double FracX, double dFracY)</td></tr>
+<tr class="separator:ad158010ec26f607c4695aa7a0b767d73"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a009b5aed1c546db5e517f9f33f67b066"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a009b5aed1c546db5e517f9f33f67b066"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>updateGrowthIncrement</b> (gsl_matrix *columnar, gsl_matrix *peripodial)</td></tr>
+<tr class="separator:a009b5aed1c546db5e517f9f33f67b066"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3d71461730bfc221c8dcf8e4a7e31b3d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3d71461730bfc221c8dcf8e4a7e31b3d"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateRelativePosInBoundingBox</b> (double columnarBoundingBoxXMin, double columnarBoundingBoxYMin, double columnarBoundingBoxLength, double columnarBoundingBoxWidth, double peipodialBoundingBoxXMin, double peipodialBoundingBoxYMin, double peipodialBoundingBoxLength, double peipodialBoundingBoxWidth)</td></tr>
+<tr class="separator:a3d71461730bfc221c8dcf8e4a7e31b3d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae5e17514271f121498ed12cebae3aebe"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae5e17514271f121498ed12cebae3aebe"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>displayRelativePosInBoundingBox</b> ()</td></tr>
 <tr class="separator:ae5e17514271f121498ed12cebae3aebe"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0d33afa938cd84b1376806a06769f6b9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0d33afa938cd84b1376806a06769f6b9"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>getRelativePosInBoundingBox</b> (double *relativePos)</td></tr>
-<tr class="separator:a0d33afa938cd84b1376806a06769f6b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa741d2a88ca8107af26816e467adc8ba"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa741d2a88ca8107af26816e467adc8ba"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>getRelativePosInColumnarBoundingBox</b> (double *relativePos)</td></tr>
+<tr class="separator:aa741d2a88ca8107af26816e467adc8ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1c8199f314d271da360831d797f7c070"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1c8199f314d271da360831d797f7c070"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>getRelativePosInPeripodialBoundingBox</b> (double *relativePos)</td></tr>
+<tr class="separator:a1c8199f314d271da360831d797f7c070"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad34b6e8535ad7a534110f03792f5f5d1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad34b6e8535ad7a534110f03792f5f5d1"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>convertRelativePosToGridIndex</b> (double *relpos, int &amp;indexX, int &amp;indexY, double &amp;fracX, double &amp;fracY, int nGridX, int nGridY)</td></tr>
+<tr class="separator:ad34b6e8535ad7a534110f03792f5f5d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aecf99016ea7c36e0bff43a40e6a89df3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aecf99016ea7c36e0bff43a40e6a89df3"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>getStrain</b> (int type, float &amp;StrainMag)</td></tr>
 <tr class="separator:aecf99016ea7c36e0bff43a40e6a89df3"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -225,9 +246,12 @@ virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateBasa
 <tr class="memitem:a362a15361e6fd25d65ed05f0cc31737a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a362a15361e6fd25d65ed05f0cc31737a"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>AlignReferenceBaseNormalToZ</b> ()</td></tr>
 <tr class="separator:a362a15361e6fd25d65ed05f0cc31737a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad9ffbae214584cbd0cc1e34f66a8ec5c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad9ffbae214584cbd0cc1e34f66a8ec5c"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>updateGrowthRate</b> (double scalex, double scaley, double scalez)</td></tr>
-<tr class="separator:ad9ffbae214584cbd0cc1e34f66a8ec5c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac2c05f660fb3d68482c8ba751b68b2ed"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac2c05f660fb3d68482c8ba751b68b2ed"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateCurrentGrowthIncrement</b> (gsl_matrix *resultingGrowthIncrement, double dt, double growthx, double growthy, double growthz, gsl_matrix *ShearAngleRotationMatrix)</td></tr>
+<tr class="separator:ac2c05f660fb3d68482c8ba751b68b2ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a227d409b04d95e3110db851a9cb3ed8c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a227d409b04d95e3110db851a9cb3ed8c"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>updateShapeChangeRate</b> (double x, double y, double z, double xy, double yz, double xz)</td></tr>
+<tr class="separator:a227d409b04d95e3110db851a9cb3ed8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1162e815f80b1b9d58c69df731702ecb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1162e815f80b1b9d58c69df731702ecb"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateReferenceStiffnessMatrix</b> ()</td></tr>
 <tr class="separator:a1162e815f80b1b9d58c69df731702ecb"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -237,21 +261,66 @@ virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateElem
 <tr class="memitem:afc2e2e90a9352778ba6bf6d547e319bf"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afc2e2e90a9352778ba6bf6d547e319bf"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateCurrNodalForces</b> (gsl_matrix *gslcurrg, gsl_matrix *gslcurrF, int pointNo)</td></tr>
 <tr class="separator:afc2e2e90a9352778ba6bf6d547e319bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa5df3f56f90f3026d3732aecf047de70"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa5df3f56f90f3026d3732aecf047de70"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateForces</b> (int RKId, double ***SystemForces, vector&lt; <a class="el" href="classNode.html">Node</a> * &gt; &amp;Nodes, ofstream &amp;outputFile)</td></tr>
-<tr class="separator:aa5df3f56f90f3026d3732aecf047de70"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac323cea68af3b9ca0cfd913222b82e49"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac323cea68af3b9ca0cfd913222b82e49"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>updatePositions</b> (int RKId, vector&lt; <a class="el" href="classNode.html">Node</a> * &gt; &amp;Nodes)</td></tr>
-<tr class="separator:ac323cea68af3b9ca0cfd913222b82e49"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac1ab3fae7adbc8fa015c99fb0d523795"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac1ab3fae7adbc8fa015c99fb0d523795"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>setGrowthRate</b> (double x, double y, double z)</td></tr>
-<tr class="separator:ac1ab3fae7adbc8fa015c99fb0d523795"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a164d682fa7804da88cb6b16330b7f404"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a164d682fa7804da88cb6b16330b7f404"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>setShapeChangeRate</b> (double x, double y, double z)</td></tr>
-<tr class="separator:a164d682fa7804da88cb6b16330b7f404"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acab38ef1a1f72d3df1dec8d6f45d09aa"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acab38ef1a1f72d3df1dec8d6f45d09aa"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>updateGrowthToAdd</b> (double *growthscale)</td></tr>
-<tr class="separator:acab38ef1a1f72d3df1dec8d6f45d09aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a146919562543c6f08d34cf1ae3e54a51"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a146919562543c6f08d34cf1ae3e54a51"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateCurrTriPointFForRotation</b> (gsl_matrix *currF, int pointNo)</td></tr>
+<tr class="separator:a146919562543c6f08d34cf1ae3e54a51"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a010092ac7af5667facbbb8fb6bd98976"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a010092ac7af5667facbbb8fb6bd98976"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateApicalArea</b> ()</td></tr>
+<tr class="separator:a010092ac7af5667facbbb8fb6bd98976"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0bc80947335afbc181fca326e9a6b7fb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0bc80947335afbc181fca326e9a6b7fb"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateBasalArea</b> ()</td></tr>
+<tr class="separator:a0bc80947335afbc181fca326e9a6b7fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a075abfd176f835cf41b581f34682785f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a075abfd176f835cf41b581f34682785f"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateForces</b> (double **SystemForces, vector&lt; <a class="el" href="classNode.html">Node</a> * &gt; &amp;Nodes, bool recordForcesOnFixedNodes, double **FixedNodeForces, ofstream &amp;outputFile)</td></tr>
+<tr class="separator:a075abfd176f835cf41b581f34682785f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a990c3d93836d53687b8af49a489dbde4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a990c3d93836d53687b8af49a489dbde4"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>updatePositions</b> (vector&lt; <a class="el" href="classNode.html">Node</a> * &gt; &amp;Nodes)</td></tr>
+<tr class="separator:a990c3d93836d53687b8af49a489dbde4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a360757aa3950487361874725c1e5ed9e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a360757aa3950487361874725c1e5ed9e"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>setGrowthRate</b> (double dt, double x, double y, double z)</td></tr>
+<tr class="separator:a360757aa3950487361874725c1e5ed9e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaf8312bb00ea6178abd9ebb1e8f40099"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aaf8312bb00ea6178abd9ebb1e8f40099"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>cleanMyosinForce</b> ()</td></tr>
+<tr class="separator:aaf8312bb00ea6178abd9ebb1e8f40099"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a47ac1da121eea90c265647b6f2115bfe"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a47ac1da121eea90c265647b6f2115bfe"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>updateUniformEquilibriumMyosinConcentration</b> (bool isApical, double cEqUniform)</td></tr>
+<tr class="separator:a47ac1da121eea90c265647b6f2115bfe"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6e4cc22d01118cf2dcb77276b56edf9d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6e4cc22d01118cf2dcb77276b56edf9d"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>updateUnipolarEquilibriumMyosinConcentration</b> (bool isApical, double cEqUnipolar, double orientationX, double orientationY)</td></tr>
+<tr class="separator:a6e4cc22d01118cf2dcb77276b56edf9d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac39db6987b89791e7a0dad1c9f3540f2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac39db6987b89791e7a0dad1c9f3540f2"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>updateMyosinConcentration</b> (double dt, double kMyo)</td></tr>
+<tr class="separator:ac39db6987b89791e7a0dad1c9f3540f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abfb5933433de7f4f6c58734be0faeac2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abfb5933433de7f4f6c58734be0faeac2"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>calculateIfInsideActiveStripe</b> (double initialPoint, double endPoint, double stripeSize1, double stripeSize2)</td></tr>
+<tr class="separator:abfb5933433de7f4f6c58734be0faeac2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1a1d8053c99109b0c13b06b2cca44dee"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1a1d8053c99109b0c13b06b2cca44dee"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>getCmyosinUniformForNode</b> (int TissuePlacement)</td></tr>
+<tr class="separator:a1a1d8053c99109b0c13b06b2cca44dee"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a69ec8a1780b516d47560a25ba17f672a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a69ec8a1780b516d47560a25ba17f672a"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>getCmyosinUnipolarForNode</b> (int TissuePlacement)</td></tr>
+<tr class="separator:a69ec8a1780b516d47560a25ba17f672a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afa44aa076cefed9d57f61dce7574832a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afa44aa076cefed9d57f61dce7574832a"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>getMyosinLevels</b> (double *cMyo)</td></tr>
+<tr class="separator:afa44aa076cefed9d57f61dce7574832a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab31ad5e068aeb94f4e851b64d966547a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab31ad5e068aeb94f4e851b64d966547a"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>getEquilibriumMyosinLevels</b> (double *cMyoEq)</td></tr>
+<tr class="separator:ab31ad5e068aeb94f4e851b64d966547a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afbcfcd90f0942e917fdc1deb1df1be1c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afbcfcd90f0942e917fdc1deb1df1be1c"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>setMyosinLevels</b> (double cUni0, double cUni1, double cPol0, double cPol1)</td></tr>
+<tr class="separator:afbcfcd90f0942e917fdc1deb1df1be1c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adef29b02faa010719b0810d3643c6b62"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adef29b02faa010719b0810d3643c6b62"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>setEquilibriumMyosinLevels</b> (double cUni0, double cUni1, double cPol0, double cPol1)</td></tr>
+<tr class="separator:adef29b02faa010719b0810d3643c6b62"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac4bc4f757144dc10e6c3170e23c30af0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac4bc4f757144dc10e6c3170e23c30af0"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateMyosinForces</b> (double forcePerMyoMolecule)</td></tr>
+<tr class="separator:ac4bc4f757144dc10e6c3170e23c30af0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a62661832529c1556931dea66adfd7ef9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a62661832529c1556931dea66adfd7ef9"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>distributeMyosinForce</b> (bool isIsotropic, bool apical)</td></tr>
+<tr class="separator:a62661832529c1556931dea66adfd7ef9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8a9f91384133d8953dbb38d71cc29d51"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8a9f91384133d8953dbb38d71cc29d51"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>setShapeChangeRate</b> (double x, double y, double z, double xy, double yz, double xz)</td></tr>
+<tr class="separator:a8a9f91384133d8953dbb38d71cc29d51"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6e36c21c648f06a0e0693b3c34472fe5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6e36c21c648f06a0e0693b3c34472fe5"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>updateElementVolumesAndTissuePlacementsForSave</b> (vector&lt; <a class="el" href="classNode.html">Node</a> * &gt; &amp;Nodes)</td></tr>
 <tr class="separator:a6e36c21c648f06a0e0693b3c34472fe5"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -267,9 +336,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>convertPlasticStrainT
 <tr class="memitem:adb6927dd05e3f6aa1c5ac5d32a30b5da"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adb6927dd05e3f6aa1c5ac5d32a30b5da"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>checkHealth</b> ()</td></tr>
 <tr class="separator:adb6927dd05e3f6aa1c5ac5d32a30b5da"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a35a4fb8458adc80435e11da10cb6627b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a35a4fb8458adc80435e11da10cb6627b"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>resetCurrStepGrowthData</b> ()</td></tr>
-<tr class="separator:a35a4fb8458adc80435e11da10cb6627b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3c08833714950163efbf15f9b1c26765"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3c08833714950163efbf15f9b1c26765"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>resetCurrStepShapeChangeData</b> ()</td></tr>
 <tr class="separator:a3c08833714950163efbf15f9b1c26765"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -309,6 +375,12 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>calculateMagnitudeV
 <tr class="memitem:afebf3d9e96e28e5272884f09b61eaab3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afebf3d9e96e28e5272884f09b61eaab3"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>normaliseVector3D</b> (double *v)</td></tr>
 <tr class="separator:afebf3d9e96e28e5272884f09b61eaab3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9e7ca6bbc30107ed82e73694f9c34717"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9e7ca6bbc30107ed82e73694f9c34717"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>normaliseVector3D</b> (gsl_vector *v)</td></tr>
+<tr class="separator:a9e7ca6bbc30107ed82e73694f9c34717"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a38c436dca2006e445f7949bc34f08e3c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a38c436dca2006e445f7949bc34f08e3c"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>getNormVector3D</b> (gsl_vector *v)</td></tr>
+<tr class="separator:a38c436dca2006e445f7949bc34f08e3c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ade98a5910e7b81ee22da6bcb91262328"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ade98a5910e7b81ee22da6bcb91262328"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>determinant3by3Matrix</b> (double *rotMat)</td></tr>
 <tr class="separator:ade98a5910e7b81ee22da6bcb91262328"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -333,12 +405,20 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>constructRotationMatr
 <tr class="memitem:ad803a237b7e7c06d419a308625a599e0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad803a237b7e7c06d419a308625a599e0"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>rotateVectorByRotationMatrix</b> (double *u, double *rotMat)</td></tr>
 <tr class="separator:ad803a237b7e7c06d419a308625a599e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa83e1b27ea3a67b958afd06f9095e0de"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa83e1b27ea3a67b958afd06f9095e0de"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>growShapeByFg</b> (double dt)</td></tr>
-<tr class="separator:aa83e1b27ea3a67b958afd06f9095e0de"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a14a573072213ea91314c8f1101f106bb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a14a573072213ea91314c8f1101f106bb"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>rotateVectorByRotationMatrix</b> (double *u, gsl_matrix *rotMat)</td></tr>
+<tr class="separator:a14a573072213ea91314c8f1101f106bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9ae4c5fc8817528493502e3f75c9a984"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9ae4c5fc8817528493502e3f75c9a984"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>CalculateGrowthRotationByF</b> ()</td></tr>
 <tr class="separator:a9ae4c5fc8817528493502e3f75c9a984"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5f5e95f38f271d28f2856109b0256aa0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5f5e95f38f271d28f2856109b0256aa0"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateTriPointFForRatation</b> ()</td></tr>
+<tr class="separator:a5f5e95f38f271d28f2856109b0256aa0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa83e1b27ea3a67b958afd06f9095e0de"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa83e1b27ea3a67b958afd06f9095e0de"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>growShapeByFg</b> (double dt)</td></tr>
+<tr class="separator:aa83e1b27ea3a67b958afd06f9095e0de"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5409de18ee9e47af0bb977f4a1e608fb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#a5409de18ee9e47af0bb977f4a1e608fb">changeShapeByFsc</a> (double dt)</td></tr>
+<tr class="separator:a5409de18ee9e47af0bb977f4a1e608fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6d8088a8bb897d79a796a253c06d954f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6d8088a8bb897d79a796a253c06d954f"></a>
 virtual double&#160;</td><td class="memItemRight" valign="bottom"><b>getApicalSideLengthAverage</b> ()</td></tr>
 <tr class="separator:a6d8088a8bb897d79a796a253c06d954f"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -360,9 +440,9 @@ virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>IsPointCloseE
 <tr class="memitem:ab6611ef2738450d5990e93ccedcb18ad"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab6611ef2738450d5990e93ccedcb18ad"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateNormalForPacking</b> (int tissuePlacement)</td></tr>
 <tr class="separator:ab6611ef2738450d5990e93ccedcb18ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac754abfd56aff0bb0b6bb1ca0f1c6b7c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac754abfd56aff0bb0b6bb1ca0f1c6b7c"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>AddPackingToSurface</b> (int tissueplacement, double Fx, double Fy, double Fz, int RKId, double ***SystemForces, double ***PackingForces, vector&lt; <a class="el" href="classNode.html">Node</a> * &gt; &amp;Nodes)</td></tr>
-<tr class="separator:ac754abfd56aff0bb0b6bb1ca0f1c6b7c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af715a49333b9ffd4fcd96a3c649cbe2b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af715a49333b9ffd4fcd96a3c649cbe2b"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>AddPackingToSurface</b> (int tissueplacement, double Fx, double Fy, double Fz, double **SystemForces, double **PackingForces, vector&lt; <a class="el" href="classNode.html">Node</a> * &gt; &amp;Nodes)</td></tr>
+<tr class="separator:af715a49333b9ffd4fcd96a3c649cbe2b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8e70b4b3be96de765028face345ad73d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8e70b4b3be96de765028face345ad73d"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>getApicalNodePos</b> (double *posCorner)</td></tr>
 <tr class="separator:a8e70b4b3be96de765028face345ad73d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -423,6 +503,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>checkDisplayClipping<
 <tr class="memitem:ab5c4c774227af1d446f80c0ef58044c9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab5c4c774227af1d446f80c0ef58044c9"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>crossProduct3D</b> (double *u, double *v, double *cross)</td></tr>
 <tr class="separator:ab5c4c774227af1d446f80c0ef58044c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a334a6cec6a698ac49006d8216a93ced9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a334a6cec6a698ac49006d8216a93ced9"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>crossProduct3D</b> (gsl_vector *u, gsl_vector *v, gsl_vector *cross)</td></tr>
+<tr class="separator:a334a6cec6a698ac49006d8216a93ced9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9a980e69b3ccad29e21499921d575829"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9a980e69b3ccad29e21499921d575829"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>alignGrowthCalculationOnReference</b> ()</td></tr>
 <tr class="separator:a9a980e69b3ccad29e21499921d575829"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -456,12 +539,6 @@ double **&#160;</td><td class="memItemRight" valign="bottom"><b>Positions</b></t
 <tr class="memitem:a4bda00f80968d836c647afe5f6d1fb36"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4bda00f80968d836c647afe5f6d1fb36"></a>
 gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>Strain</b></td></tr>
 <tr class="separator:a4bda00f80968d836c647afe5f6d1fb36"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a260226b84c840503ce7da99bfeedc57b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a260226b84c840503ce7da99bfeedc57b"></a>
-gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>RK1Strain</b></td></tr>
-<tr class="separator:a260226b84c840503ce7da99bfeedc57b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a41ddcfda39fe0be356a512b48b31e29e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a41ddcfda39fe0be356a512b48b31e29e"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>IsGrowing</b></td></tr>
-<tr class="separator:a41ddcfda39fe0be356a512b48b31e29e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a994acea5e6f2cf92c94f485e7ba5afc9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a994acea5e6f2cf92c94f485e7ba5afc9"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>IsChangingShape</b></td></tr>
 <tr class="separator:a994acea5e6f2cf92c94f485e7ba5afc9"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -502,6 +579,9 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>VolumePerNode</b></
 <tr class="memitem:a21420915ac7c8444e0e5b5f4e98d7322"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a21420915ac7c8444e0e5b5f4e98d7322"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>capElement</b></td></tr>
 <tr class="separator:a21420915ac7c8444e0e5b5f4e98d7322"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3aedc120b16a922ee9b0c1595630694b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3aedc120b16a922ee9b0c1595630694b"></a>
+double **&#160;</td><td class="memItemRight" valign="bottom"><b>MyoForce</b></td></tr>
+<tr class="separator:a3aedc120b16a922ee9b0c1595630694b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af64f900d51cec3e48a488fdd8a51eacf"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af64f900d51cec3e48a488fdd8a51eacf"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>RotatedElement</b></td></tr>
 <tr class="separator:af64f900d51cec3e48a488fdd8a51eacf"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -559,9 +639,9 @@ virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateRefe
 <tr class="memitem:a8bf9c7c8ae6a3195ec9c6b6bdaf847ab"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8bf9c7c8ae6a3195ec9c6b6bdaf847ab"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>calculateGrowthStrainsRotMat</b> (double *v)</td></tr>
 <tr class="separator:a8bf9c7c8ae6a3195ec9c6b6bdaf847ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ade15b14f3439f1c9c0bcd78c2cebad61"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ade15b14f3439f1c9c0bcd78c2cebad61"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateForces3D</b> (int RKId, double ***SystemForces, vector&lt; <a class="el" href="classNode.html">Node</a> * &gt; &amp;Nodes, ofstream &amp;outputFile)</td></tr>
-<tr class="separator:ade15b14f3439f1c9c0bcd78c2cebad61"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acbe7dfe60cdac63414879ea0e0d0fc2f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acbe7dfe60cdac63414879ea0e0d0fc2f"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateForces3D</b> (double **SystemForces, vector&lt; <a class="el" href="classNode.html">Node</a> * &gt; &amp;Nodes, bool recordForcesOnFixedNodes, double **FixedNodeForces, ofstream &amp;outputFile)</td></tr>
+<tr class="separator:acbe7dfe60cdac63414879ea0e0d0fc2f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a311e773cb7bf7c410c39026d7183b4ad"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a311e773cb7bf7c410c39026d7183b4ad"></a>
 gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>calculateEForNodalForces</b> (gsl_matrix *F, gsl_matrix *Fe)</td></tr>
 <tr class="separator:a311e773cb7bf7c410c39026d7183b4ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -602,50 +682,53 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>calculate3DRotMatFrom
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-attribs"></a>
 Protected Attributes</h2></td></tr>
 <tr class="memitem:a36aedd41e8465a186a0b0c454b5b76f3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a36aedd41e8465a186a0b0c454b5b76f3"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>ShapeType</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#a36aedd41e8465a186a0b0c454b5b76f3">ShapeType</a></td></tr>
+<tr class="memdesc:a36aedd41e8465a186a0b0c454b5b76f3"><td class="mdescLeft">&#160;</td><td class="mdescRight">The integer defining the type of the shape, Prisms shape type = 1;. <br /></td></tr>
 <tr class="separator:a36aedd41e8465a186a0b0c454b5b76f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae7dd93b58b3281ce90025f83d0f0e976"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae7dd93b58b3281ce90025f83d0f0e976"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>nNodes</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#ae7dd93b58b3281ce90025f83d0f0e976">nNodes</a></td></tr>
+<tr class="memdesc:ae7dd93b58b3281ce90025f83d0f0e976"><td class="mdescLeft">&#160;</td><td class="mdescRight">The number of nodes of the element, it is based on <a class="el" href="classShapeBase.html#a36aedd41e8465a186a0b0c454b5b76f3" title="The integer defining the type of the shape, Prisms shape type = 1;. ">ShapeBase::ShapeType</a>. <br /></td></tr>
 <tr class="separator:ae7dd93b58b3281ce90025f83d0f0e976"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a250bd3396546342c8104f5b9c180d18f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a250bd3396546342c8104f5b9c180d18f"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>nDim</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#a250bd3396546342c8104f5b9c180d18f">nDim</a></td></tr>
+<tr class="memdesc:a250bd3396546342c8104f5b9c180d18f"><td class="mdescLeft">&#160;</td><td class="mdescRight">The number of dimensions for the positions of each of the nodes of the element. <br /></td></tr>
 <tr class="separator:a250bd3396546342c8104f5b9c180d18f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a02035767d6d169d4a2c1db5f6af8a218"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a02035767d6d169d4a2c1db5f6af8a218"></a>
-int *&#160;</td><td class="memItemRight" valign="bottom"><b>IdentifierColour</b></td></tr>
+int *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#a02035767d6d169d4a2c1db5f6af8a218">IdentifierColour</a></td></tr>
+<tr class="memdesc:a02035767d6d169d4a2c1db5f6af8a218"><td class="mdescLeft">&#160;</td><td class="mdescRight">The unique identifier colour of the element, this is used for "picking" in the visual interface. <br /></td></tr>
 <tr class="separator:a02035767d6d169d4a2c1db5f6af8a218"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae31d7545110fd505629592348a2951b7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae31d7545110fd505629592348a2951b7"></a>
-double *&#160;</td><td class="memItemRight" valign="bottom"><b>GrowthRate</b></td></tr>
+double *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#ae31d7545110fd505629592348a2951b7">GrowthRate</a></td></tr>
+<tr class="memdesc:ae31d7545110fd505629592348a2951b7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Growth rate recording for display purposes only. The recorded growth rate in x, y, and z coordinates, does not record shear deformation induced in growth. Recorded in exponential form through time step, converted to rate per hour for display within the visual interface. <br /></td></tr>
 <tr class="separator:ae31d7545110fd505629592348a2951b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af553856335d7344ea67ab10f9cc3babf"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af553856335d7344ea67ab10f9cc3babf"></a>
+gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#af553856335d7344ea67ab10f9cc3babf">growthIncrement</a></td></tr>
+<tr class="memdesc:af553856335d7344ea67ab10f9cc3babf"><td class="mdescLeft">&#160;</td><td class="mdescRight">The matrix (3,3) representing the incremental growth in current time step. Reset to identity at the beginning of each time step, updated in growth functions, and utilised to update Fg. <br /></td></tr>
+<tr class="separator:af553856335d7344ea67ab10f9cc3babf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a134d82ba500ef829b6aa3e3a83783c9a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a134d82ba500ef829b6aa3e3a83783c9a"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>columnarGrowthWeight</b></td></tr>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#a134d82ba500ef829b6aa3e3a83783c9a">columnarGrowthWeight</a></td></tr>
+<tr class="memdesc:a134d82ba500ef829b6aa3e3a83783c9a"><td class="mdescLeft">&#160;</td><td class="mdescRight">The fraction defining how close to the columnar layer the element is. 1.0 for columnar layer, 0.0 for peripodial membrane elements, and scaled according to position in the elements surrounding the lumen. <br /></td></tr>
 <tr class="separator:a134d82ba500ef829b6aa3e3a83783c9a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3663f3220016756b1bd5a92477325ec2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3663f3220016756b1bd5a92477325ec2"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>peripodialGrowthWeight</b></td></tr>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#a3663f3220016756b1bd5a92477325ec2">peripodialGrowthWeight</a></td></tr>
+<tr class="memdesc:a3663f3220016756b1bd5a92477325ec2"><td class="mdescLeft">&#160;</td><td class="mdescRight">The fraction defining how close to the peripodial membrane the element is. 0.0 for columnar layer, 1.0 for peripodial membrane elements, and scaled according to position in the elements surrounding the lumen. <br /></td></tr>
 <tr class="separator:a3663f3220016756b1bd5a92477325ec2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1c6db43b0794a15e4bc42b8ca994a785"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1c6db43b0794a15e4bc42b8ca994a785"></a>
-double *&#160;</td><td class="memItemRight" valign="bottom"><b>ShapeChangeRate</b></td></tr>
+double *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#a1c6db43b0794a15e4bc42b8ca994a785">ShapeChangeRate</a></td></tr>
+<tr class="memdesc:a1c6db43b0794a15e4bc42b8ca994a785"><td class="mdescLeft">&#160;</td><td class="mdescRight">Shape change rate of the elements, only orthagonal shape changes are allowed (x, y, z). Shape changes will be scaled to conserve volume, thus three values will not be independent. <br /></td></tr>
 <tr class="separator:a1c6db43b0794a15e4bc42b8ca994a785"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aee6a2cd267d49404f5442a48c867860f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aee6a2cd267d49404f5442a48c867860f"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>rotatedGrowth</b></td></tr>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#aee6a2cd267d49404f5442a48c867860f">rotatedGrowth</a></td></tr>
+<tr class="memdesc:aee6a2cd267d49404f5442a48c867860f"><td class="mdescLeft">&#160;</td><td class="mdescRight">The boolean stating if the element has rotated from the growth axis, hence the calculated growth requires further rotation to follow tissue axes. <br /></td></tr>
 <tr class="separator:aee6a2cd267d49404f5442a48c867860f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad5b59419d3e5c4d61a14bad64f053e69"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad5b59419d3e5c4d61a14bad64f053e69"></a>
-double *&#160;</td><td class="memItemRight" valign="bottom"><b>CurrGrowthStrainAddition</b></td></tr>
-<tr class="separator:ad5b59419d3e5c4d61a14bad64f053e69"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8bb52a406f331e6938694a4902bafb20"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8bb52a406f331e6938694a4902bafb20"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>CurrShapeChangeStrainsUpToDate</b></td></tr>
-<tr class="separator:a8bb52a406f331e6938694a4902bafb20"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a526231dcaa8d4a871e198284b4c4d9ff"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a526231dcaa8d4a871e198284b4c4d9ff"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>CurrGrowthStrainsUpToDate</b></td></tr>
-<tr class="separator:a526231dcaa8d4a871e198284b4c4d9ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad7e1adfd2058cd5162816f9087a77c94"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad7e1adfd2058cd5162816f9087a77c94"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>GrewInThePast</b></td></tr>
-<tr class="separator:ad7e1adfd2058cd5162816f9087a77c94"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac733487c1f89ed95f2fc2af960d933df"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac733487c1f89ed95f2fc2af960d933df"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>ChangedShapeInThePast</b></td></tr>
-<tr class="separator:ac733487c1f89ed95f2fc2af960d933df"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a57b594e048211647ba670710be0509f2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a57b594e048211647ba670710be0509f2"></a>
-double *&#160;</td><td class="memItemRight" valign="bottom"><b>RelativePosInBoundingBox</b></td></tr>
-<tr class="separator:a57b594e048211647ba670710be0509f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3a88df07863ecf2a78fbd75543320edd"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3a88df07863ecf2a78fbd75543320edd"></a>
+double *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#a3a88df07863ecf2a78fbd75543320edd">columnarRelativePosInBoundingBox</a></td></tr>
+<tr class="memdesc:a3a88df07863ecf2a78fbd75543320edd"><td class="mdescLeft">&#160;</td><td class="mdescRight">The relative position on x-y plane, within the bounding box of the columnar layer (x,y). <br /></td></tr>
+<tr class="separator:a3a88df07863ecf2a78fbd75543320edd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3dfa65871a157645e733a4b01f1c8955"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3dfa65871a157645e733a4b01f1c8955"></a>
+double *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#a3dfa65871a157645e733a4b01f1c8955">peripodialRelativePosInBoundingBox</a></td></tr>
+<tr class="memdesc:a3dfa65871a157645e733a4b01f1c8955"><td class="mdescLeft">&#160;</td><td class="mdescRight">The relative position on x-y plane, within the bounding box of the peripodial membrane layer (x,y). <br /></td></tr>
+<tr class="separator:a3dfa65871a157645e733a4b01f1c8955"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a80a8943320a0cdc871565acded52b239"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a80a8943320a0cdc871565acded52b239"></a>
 gsl_matrix **&#160;</td><td class="memItemRight" valign="bottom"><b>ShapeFuncDerivatives</b></td></tr>
 <tr class="separator:a80a8943320a0cdc871565acded52b239"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -676,6 +759,9 @@ gsl_matrix **&#160;</td><td class="memItemRight" valign="bottom"><b>invJShapeFun
 <tr class="memitem:acd549e0086d16194ae389ae528969596"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acd549e0086d16194ae389ae528969596"></a>
 gsl_matrix **&#160;</td><td class="memItemRight" valign="bottom"><b>elasticStress</b></td></tr>
 <tr class="separator:acd549e0086d16194ae389ae528969596"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab7ac8f14929ab37e8eae5fcaf93b18a8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab7ac8f14929ab37e8eae5fcaf93b18a8"></a>
+gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>TriPointF</b></td></tr>
+<tr class="separator:ab7ac8f14929ab37e8eae5fcaf93b18a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab41f6a16647607b1c898eea1c2860367"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab41f6a16647607b1c898eea1c2860367"></a>
 double *&#160;</td><td class="memItemRight" valign="bottom"><b>detFs</b></td></tr>
 <tr class="separator:ab41f6a16647607b1c898eea1c2860367"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -685,6 +771,27 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>ZProjectedBasalArea
 <tr class="memitem:aa7043ddacbcd92480cb54467a2777627"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa7043ddacbcd92480cb54467a2777627"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>ZProjectedApicalArea</b></td></tr>
 <tr class="separator:aa7043ddacbcd92480cb54467a2777627"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2ae2b0b1dfd0672a39897e780d861254"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2ae2b0b1dfd0672a39897e780d861254"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>BasalArea</b></td></tr>
+<tr class="separator:a2ae2b0b1dfd0672a39897e780d861254"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adb4227c13db7e34dd1af182d143af47b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adb4227c13db7e34dd1af182d143af47b"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>ApicalArea</b></td></tr>
+<tr class="separator:adb4227c13db7e34dd1af182d143af47b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a485e95cb1e7a440e57884d4df5ee1350"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a485e95cb1e7a440e57884d4df5ee1350"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>cMyoUniform</b> [2]</td></tr>
+<tr class="separator:a485e95cb1e7a440e57884d4df5ee1350"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2a1e584564ef617fa1d18eb591c84a67"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2a1e584564ef617fa1d18eb591c84a67"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>cMyoUnipolar</b> [2]</td></tr>
+<tr class="separator:a2a1e584564ef617fa1d18eb591c84a67"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa32b4675de014e09732e7ab89719e679"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa32b4675de014e09732e7ab89719e679"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>cMyoUniformEq</b> [2]</td></tr>
+<tr class="separator:aa32b4675de014e09732e7ab89719e679"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a59c3af9d1dcfe4749d33ba168c5bda53"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a59c3af9d1dcfe4749d33ba168c5bda53"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>cMyoUnipolarEq</b> [2]</td></tr>
+<tr class="separator:a59c3af9d1dcfe4749d33ba168c5bda53"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afc91612adf1d146a48767756f38d1152"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afc91612adf1d146a48767756f38d1152"></a>
+gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>myoPolarityDir</b></td></tr>
+<tr class="separator:afc91612adf1d146a48767756f38d1152"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1878efccfc629e53748e8907386825b0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1878efccfc629e53748e8907386825b0"></a>
 gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>D</b></td></tr>
 <tr class="separator:a1878efccfc629e53748e8907386825b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -707,18 +814,43 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>lambda</b></td></tr
 double&#160;</td><td class="memItemRight" valign="bottom"><b>mu</b></td></tr>
 <tr class="separator:ac5819d0d117e5510611259177c477af8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4156d7c7f91f0b528214b74277279df0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4156d7c7f91f0b528214b74277279df0"></a>
-gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>Fg</b></td></tr>
+gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#a4156d7c7f91f0b528214b74277279df0">Fg</a></td></tr>
+<tr class="memdesc:a4156d7c7f91f0b528214b74277279df0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Growth matrix. <br /></td></tr>
 <tr class="separator:a4156d7c7f91f0b528214b74277279df0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afe7cb600a9316597a16512ab7b6fcd6f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afe7cb600a9316597a16512ab7b6fcd6f"></a>
-gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>InvFg</b></td></tr>
+gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#afe7cb600a9316597a16512ab7b6fcd6f">InvFg</a></td></tr>
+<tr class="memdesc:afe7cb600a9316597a16512ab7b6fcd6f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Inverse of growth matrix. <br /></td></tr>
 <tr class="separator:afe7cb600a9316597a16512ab7b6fcd6f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab7ac8f14929ab37e8eae5fcaf93b18a8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab7ac8f14929ab37e8eae5fcaf93b18a8"></a>
-gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>TriPointF</b></td></tr>
-<tr class="separator:ab7ac8f14929ab37e8eae5fcaf93b18a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a08d7f6e8f098a7b5985c615842062014"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a08d7f6e8f098a7b5985c615842062014"></a>
+gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#a08d7f6e8f098a7b5985c615842062014">Fsc</a></td></tr>
+<tr class="memdesc:a08d7f6e8f098a7b5985c615842062014"><td class="mdescLeft">&#160;</td><td class="mdescRight">Shape change matrix. <br /></td></tr>
+<tr class="separator:a08d7f6e8f098a7b5985c615842062014"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad72828aab0668c993f57727123aa96be"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad72828aab0668c993f57727123aa96be"></a>
+gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#ad72828aab0668c993f57727123aa96be">InvFsc</a></td></tr>
+<tr class="memdesc:ad72828aab0668c993f57727123aa96be"><td class="mdescLeft">&#160;</td><td class="mdescRight">Inverse of shape change matrix. <br /></td></tr>
+<tr class="separator:ad72828aab0668c993f57727123aa96be"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ace20710f27099833509c474b221c25df"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ace20710f27099833509c474b221c25df"></a>
 gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>TriPointKe</b></td></tr>
 <tr class="separator:ace20710f27099833509c474b221c25df"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Member Function Documentation</h2>
+<a class="anchor" id="a5409de18ee9e47af0bb977f4a1e608fb"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ShapeBase::changeShapeByFsc </td>
+          <td>(</td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>dt</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>&lt; The increment of shape change that will be induced this step </p>
+
+</div>
+</div>
 <hr/>The documentation for this class was generated from the following files:<ul>
 <li>/home/melda/Documents/TissueFolding/TissueFolding/SourceCode/<a class="el" href="ShapeBase_8h_source.html">ShapeBase.h</a></li>
 <li>/home/melda/Documents/TissueFolding/TissueFolding/SourceCode/ShapeBase.cpp</li>
@@ -729,7 +861,7 @@ gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>TriPointKe</b
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="classShapeBase.html">ShapeBase</a></li>
-    <li class="footer">Generated on Fri Sep 4 2015 12:21:23 for Tissue Origami by
+    <li class="footer">Generated on Tue Nov 3 2015 16:55:13 for Tissue Origami by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

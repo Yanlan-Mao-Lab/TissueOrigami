@@ -175,6 +175,233 @@ double ShapeBase::getColumnarness(){
 	return columnarGrowthWeight;
 }
 
+
+void ShapeBase::getRelativePositionInTissueInGridIndex(int nGridX, int nGridY, double* columnarReletivePos, double* peripodialRelativePos, int& columnarIndexX, int& peripodialIndexX, int& columnarIndexY, int& peripodialIndexY, double& columnarFracX, double& peripodialFracX, double& columnarFracY, double& peripodialFracY){
+	//cout<<"inside getRelativePositionInTissueInGridIndex"<<endl;
+	if (tissueType == 0){//columnar layer element
+		getRelativePosInColumnarBoundingBox(columnarReletivePos);
+		convertRelativePosToGridIndex(columnarReletivePos, columnarIndexX, columnarIndexY, columnarFracX, columnarFracY, nGridX, nGridY);
+	}
+	else if(tissueType == 1){// peripodial layer element
+		getRelativePosInPeripodialBoundingBox(peripodialRelativePos);
+		convertRelativePosToGridIndex(peripodialRelativePos, peripodialIndexX,peripodialIndexY, peripodialFracX, peripodialFracY, nGridX, nGridY);
+	}
+	else {
+		getRelativePosInColumnarBoundingBox(columnarReletivePos);
+		getRelativePosInPeripodialBoundingBox(peripodialRelativePos);
+		convertRelativePosToGridIndex(columnarReletivePos, columnarIndexX, columnarIndexY, columnarFracX, columnarFracY, nGridX, nGridY);
+		convertRelativePosToGridIndex(peripodialRelativePos, peripodialIndexX,peripodialIndexY, peripodialFracX, peripodialFracY, nGridX, nGridY);
+	}
+}
+
+bool ShapeBase::isGrowthRateApplicable( int sourceTissue, double& weight){
+	//wight is the weight of hte current tissue in linker sites
+	if (sourceTissue == 0){//columnar layer growth
+		if (tissueType == 0){ //columnar
+			weight = 1.0;
+			return true;
+		}
+		else if(tissueType == 2){ //linker
+			weight = columnarGrowthWeight;
+			return true;
+		}
+	}
+	else if (sourceTissue == 1){//peripodial membrane growth
+		if (tissueType == 1){ //peripodial
+			weight = 1.0;
+			return  true;
+		}
+		else if ( tissueType == 2) { //linker
+			weight = peripodialGrowthWeight;
+			return true;
+		}
+	}
+	return false;
+}
+
+void ShapeBase::calculateFgFromRates(double dt, double x, double y, double z, gsl_matrix* rotMat, gsl_matrix* increment, int sourceTissue){
+	double tissueWeight;
+	bool continueCalaculation = isGrowthRateApplicable(sourceTissue, tissueWeight);
+	if (continueCalaculation){
+		gsl_matrix_set(increment,0,0,exp(x*tissueWeight*dt));
+		gsl_matrix_set(increment,1,1,exp(y*tissueWeight*dt));
+		gsl_matrix_set(increment,2,2,exp(z*tissueWeight*dt));
+		gsl_matrix* temp = gsl_matrix_calloc(3,3);
+		gsl_matrix* rotMatT = gsl_matrix_calloc(3,3);
+		gsl_matrix_transpose_memcpy(rotMatT,rotMat);
+		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, rotMat, increment, 0.0, temp);
+		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, temp, rotMatT, 0.0, increment);
+		gsl_matrix_free(temp);
+		gsl_matrix_free(rotMatT);
+	}
+	else{
+		gsl_matrix_set_identity(increment);
+	}
+}
+/*
+void ShapeBase::calculateFgFromGridCorners(double dt, GrowthFunctionBase* currGF, gsl_matrix* increment, int sourceTissue,  int IndexX, int IndexY, double FracX, double FracY){
+	double tissueWeight;
+	bool continueCalaculation = isGrowthRateApplicable(sourceTissue,tissueWeight);
+	if (continueCalaculation){
+		gsl_matrix* corner0 = gsl_matrix_calloc(3,3);
+		gsl_matrix* corner1 = gsl_matrix_calloc(3,3);
+		gsl_matrix* corner2 = gsl_matrix_calloc(3,3);
+		gsl_matrix* corner3 = gsl_matrix_calloc(3,3);
+		double growth0[3], growth1[3], growth2[3], growth3[3];
+		gsl_matrix* rotMat0;
+		gsl_matrix* rotMat1;
+		gsl_matrix* rotMat2;
+		gsl_matrix* rotMat3;
+		gsl_matrix* rotMatT = gsl_matrix_calloc(3,3);
+		for (int axis =0; axis<3; axis++){
+			growth0[axis] = currGF->getGrowthMatrixElement(IndexX,IndexY,axis)*tissueWeight*(1.0-FracX)*(1.0-FracY);
+			gsl_matrix_set(corner0,axis,axis,exp(growth0[axis]*dt));
+			growth1[axis] = currGF->getGrowthMatrixElement(IndexX+1,IndexY,axis)*tissueWeight*FracX*(1.0-FracY);
+			gsl_matrix_set(corner1,axis,axis,exp(growth1[axis]*dt));
+			growth2[axis] = currGF->getGrowthMatrixElement(IndexX,IndexY+1,axis)*tissueWeight*(1.0-FracX)*FracY;
+			gsl_matrix_set(corner2,axis,axis,exp(growth2[axis]*dt));
+			growth3[axis] = currGF->getGrowthMatrixElement(IndexX+1,IndexY+1,axis)*tissueWeight*FracX*FracY;
+			gsl_matrix_set(corner3,axis,axis,exp(growth3[axis]*dt));
+		}
+		rotMat0 = currGF->getXyShearRotationsMatrixElement(IndexX,IndexY);
+		rotMat1 = currGF->getXyShearRotationsMatrixElement(IndexX+1,IndexY);
+		rotMat2 = currGF->getXyShearRotationsMatrixElement(IndexX,IndexY+1);
+		rotMat3 = currGF->getXyShearRotationsMatrixElement(IndexX+1,IndexY+1);
+		gsl_matrix* temp = gsl_matrix_calloc(nDim,nDim);
+		gsl_matrix_transpose_memcpy(rotMatT,rotMat0);
+		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, rotMat0, corner0, 0.0, temp);
+		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, temp, rotMatT, 0.0, corner0);
+		gsl_matrix_transpose_memcpy(rotMatT,rotMat1);
+		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, rotMat1, corner1, 0.0, temp);
+		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, temp, rotMatT, 0.0, corner1);
+		gsl_matrix_transpose_memcpy(rotMatT,rotMat2);
+		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, rotMat2, corner2, 0.0, temp);
+		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, temp, rotMatT, 0.0, corner2);
+		gsl_matrix_transpose_memcpy(rotMatT,rotMat3);
+		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, rotMat3, corner3, 0.0, temp);
+		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, temp, rotMatT, 0.0, corner3);
+		//applying all the growhts to increment:
+		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, corner2, corner3, 0.0, increment);
+		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, corner1, increment, 0.0, temp);
+		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, corner0, temp, 0.0, increment);
+		gsl_matrix_free(temp);
+		gsl_matrix_free(corner0);
+		gsl_matrix_free(corner1);
+		gsl_matrix_free(corner2);
+		gsl_matrix_free(corner3);
+		gsl_matrix_free(rotMatT);
+	}
+	else{
+		gsl_matrix_set_identity(increment);
+	}
+}*/
+
+void ShapeBase::calculateFgFromGridCorners(double dt, GrowthFunctionBase* currGF, gsl_matrix* increment, int sourceTissue,  int IndexX, int IndexY, double FracX, double FracY){
+	double tissueWeight;
+	bool continueCalaculation = isGrowthRateApplicable(sourceTissue,tissueWeight);
+	if (continueCalaculation){
+		double growth0[3], growth1[3], growth2[3], growth3[3];
+		double angle0 = 0.0, angle1 = 0.0, angle2 = 0.0, angle3 = 0.0;
+		gsl_matrix* rotMat  = gsl_matrix_calloc(3,3);
+		gsl_matrix* rotMatT = gsl_matrix_calloc(3,3);
+		double growth[3];
+		double angle;
+		for (int axis =0; axis<3; axis++){
+			growth0[axis] = currGF->getGrowthMatrixElement(IndexX,IndexY,axis)*tissueWeight*(1.0-FracX)*(1.0-FracY);
+			growth1[axis] = currGF->getGrowthMatrixElement(IndexX+1,IndexY,axis)*tissueWeight*FracX*(1.0-FracY);
+			growth2[axis] = currGF->getGrowthMatrixElement(IndexX,IndexY+1,axis)*tissueWeight*(1.0-FracX)*FracY;
+			growth3[axis] = currGF->getGrowthMatrixElement(IndexX+1,IndexY+1,axis)*tissueWeight*FracX*FracY;
+			growth[axis] = growth0[axis]+growth1[axis]+growth2[axis]+growth3[axis];
+			gsl_matrix_set(increment,axis,axis,exp(growth[axis]*dt));
+		}
+		//Not summing aspect ratios close to one:
+		//I want the sum of fractions that are not added in:
+		double FracEliminated = 0.0;
+		if (currGF->isAspectRatioOverOne(IndexX,IndexY)){
+			angle0 = currGF->getXyShearAngleMatrixElement(IndexX,IndexY)*(1.0-FracX)*(1.0-FracY);
+		} else {
+			FracEliminated += (1.0-FracX)*(1.0-FracY);
+		}
+		if (currGF->isAspectRatioOverOne(IndexX+1,IndexY)){
+			angle1 = currGF->getXyShearAngleMatrixElement(IndexX+1,IndexY)*FracX*(1.0-FracY);
+		} else {
+			FracEliminated += FracX*(1.0-FracY);
+		}
+		if (currGF->isAspectRatioOverOne(IndexX,IndexY+1)){
+			angle2 = currGF->getXyShearAngleMatrixElement(IndexX,IndexY+1)*(1.0-FracX)*FracY;
+		} else {
+			FracEliminated += (1.0-FracX)*FracY;
+		}
+		if (currGF->isAspectRatioOverOne(IndexX+1,IndexY+1)){
+			angle3 = currGF->getXyShearAngleMatrixElement(IndexX+1,IndexY+1)*FracX*FracY;
+		} else {
+			FracEliminated += FracX*FracY;
+		}
+		angle = angle0+angle1+angle2+angle3;
+		if (FracEliminated>0){
+			if (FracEliminated >= 0.9999999){
+				angle = 0.0;
+			}
+			else{
+				angle /= (1.0-FracEliminated); //normalising the sum to the eliminated averaging
+			}
+		}
+		/*if (Id == 6 || Id == 7){
+			cout<<"Id: "<<Id<<endl;
+			cout<<" angles: "<<angle0<<" "<<angle1<<" "<<angle2<<" "<<angle3<<endl;
+			cout<<" angles: "<<angle<<endl;
+			cout<<" growth0: "<<growth0[0]<<" "<<growth0[1]<<" "<<growth0[2]<<endl;
+			cout<<" growth1: "<<growth1[0]<<" "<<growth1[1]<<" "<<growth1[2]<<endl;
+			cout<<" growth2: "<<growth2[0]<<" "<<growth2[1]<<" "<<growth2[2]<<endl;
+			cout<<" growth3: "<<growth3[0]<<" "<<growth3[1]<<" "<<growth3[2]<<endl;
+			cout<<" growth:  "<<growth[0]<<" "<<growth[1]<<" "<<growth[2]<<endl;
+		}*/
+
+		double c = cos(angle);
+		double s = sin(angle);
+		gsl_matrix_set(rotMat,0,0,  c );
+		gsl_matrix_set(rotMat,0,1, -1.0*s);
+		gsl_matrix_set(rotMat,0,2,  0.0);
+		gsl_matrix_set(rotMat,1,0,  s);
+		gsl_matrix_set(rotMat,1,1,  c);
+		gsl_matrix_set(rotMat,1,2,  0.0);
+		gsl_matrix_set(rotMat,2,0,  0.0);
+		gsl_matrix_set(rotMat,2,1,  0.0);
+		gsl_matrix_set(rotMat,2,2,  1.0);
+		gsl_matrix* temp = gsl_matrix_calloc(nDim,nDim);
+		gsl_matrix_transpose_memcpy(rotMatT,rotMat);
+
+		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, rotMat, increment, 0.0, temp);
+		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, temp, rotMatT, 0.0, increment);
+		gsl_matrix_free(temp);
+		gsl_matrix_free(rotMat);
+		gsl_matrix_free(rotMatT);
+	}
+	else{
+		gsl_matrix_set_identity(increment);
+	}
+}
+void ShapeBase::updateGrowthIncrement(gsl_matrix* columnar, gsl_matrix* peripodial){
+	gsl_matrix* temp = gsl_matrix_calloc(nDim,nDim);
+	if (tissueType == 0){//columnar layer element, no peripodial application necessary
+		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, columnar, growthIncrement, 0.0, temp);
+		createMatrixCopy(growthIncrement, temp);
+	}
+	else if (tissueType == 1){//peripodial layer element, no columnar application necessary
+		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, peripodial, growthIncrement, 0.0, temp);
+		createMatrixCopy(growthIncrement, temp);
+	}
+	else if (tissueType == 2){//linker between columnar and peripodial layer element, the growths are already weighted, need to apply both
+		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, columnar, growthIncrement, 0.0, temp);
+		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, peripodial, temp, 0.0, growthIncrement);
+	}
+	for (int i=0; i<3; ++i){
+		//this is used for display purposes of the simulation. As each new value is added to growthIncrement, I an update this directly, and the result is already cumulative of multiple growth functions
+		GrowthRate[i] = gsl_matrix_get(growthIncrement,i,i);
+	}
+	gsl_matrix_free(temp);
+}
+
 void ShapeBase::getRelativePosInColumnarBoundingBox(double* relativePos){
 	relativePos[0] =  columnarRelativePosInBoundingBox[0];
 	relativePos[1] =  columnarRelativePosInBoundingBox[1];
@@ -465,7 +692,6 @@ void 	ShapeBase::getNodeBasedPysProp(int type, int NodeNo, vector<Node*>& Nodes,
 }
 
 void 	ShapeBase::getPysProp(int type, float &PysPropMag, double dt){
-	PysPropMag = 0.0;
 	if (type ==1){
 		PysPropMag = getYoungModulus();
 	}
@@ -475,11 +701,16 @@ void 	ShapeBase::getPysProp(int type, float &PysPropMag, double dt){
 	else if (type ==3){
 		double* growth;
 		growth = getGrowthRate();
-        double timescale = 60.0*60.0/dt; //converting groth rate from per dt to per hour
-		for (int i =0 ; i< nDim ; ++i){
-            PysPropMag += growth[i]*timescale;
+        double timescale = 60.0*60.0; //reporting per hour
+        for (int i =0 ; i< nDim ; ++i){
+			//growth is in form exp(r*dt), get r first, then adjust the time scale, and report the exponential form still:
+			//And I want to rate of volumetric growth, that is x*y*z
+			double value = exp(log(growth[i])/dt*timescale);
+			PysPropMag *= value;
 		}
-		PysPropMag /= nDim;
+        //converting to percentage increase per hour:
+        PysPropMag -= 1.0;
+        PysPropMag *= 100.0;
 	}
 	else if (type ==4){
 		double* shapechange;
@@ -491,15 +722,7 @@ void 	ShapeBase::getPysProp(int type, float &PysPropMag, double dt){
 void 	ShapeBase::displayIdentifierColour(){
 	cout <<" IdentifierColour:  "<<IdentifierColour[0]<<" "<<IdentifierColour[1]<<" "<<IdentifierColour[2]<<endl;
 }
-
-void 	ShapeBase::resetCurrStepGrowthData(){
-	for (int i=0;i<3;++i){
-		CurrGrowthStrainAddition[i]  = 0.0;
-	}
-	CurrGrowthStrainsUpToDate = false;
-	IsGrowing = false;
-}
-
+/*
 void 	ShapeBase::resetCurrStepShapeChangeData(){
 	for (int i=0;i<3;++i){
 		CurrShapeChangeToAdd[i] = 0.0;
@@ -507,15 +730,7 @@ void 	ShapeBase::resetCurrStepShapeChangeData(){
 	CurrShapeChangeStrainsUpToDate = false;
 	IsChangingShape = false;
 }
-
-void 	ShapeBase::updateGrowthToAdd(double* growthscale){
-	IsGrowing = true;
-	GrewInThePast = true;
-	for (int i=0;i<6;++i){
-			CurrGrowthStrainAddition[i]  += growthscale[i];
-	}
-}
-
+*/
 void 	ShapeBase::changeShapeByFsc(double dt){
     gsl_matrix* FscIncrement = gsl_matrix_calloc(nDim,nDim); ///< The increment of shape change that will be induced this step
     if (rotatedGrowth){
@@ -549,12 +764,8 @@ void 	ShapeBase::changeShapeByFsc(double dt){
 	gsl_matrix_free(tmpFscForInversion);
 }
 
+
 void 	ShapeBase::growShapeByFg(double dt){
-    //if (Id == 0){
-    //	displayMatrix(growthIncrement,"Element0growthIncrementBeforeRotation");
-    //	displayMatrix(GrowthStrainsRotMat,"Element0GrowthStrainsRotMat");
-    //}
-    //rotatedGrowth = false;
     if (rotatedGrowth){
         gsl_matrix* temp = gsl_matrix_calloc(nDim,nDim);
         gsl_matrix* GrowthStrainsRotMatT = gsl_matrix_calloc(nDim,nDim);
@@ -564,21 +775,13 @@ void 	ShapeBase::growShapeByFg(double dt){
     	//gsl_matrix_memcpy(growthIncrement, temp);
     	gsl_matrix_free(temp);
     	gsl_matrix_free(GrowthStrainsRotMatT);
-
     }
     //incrementing Fg with current growth rate:
     gsl_matrix* temp1 = gsl_matrix_calloc(nDim,nDim);
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, growthIncrement, Fg, 0.0, temp1);
     gsl_matrix_memcpy(Fg, temp1);
-    //if (Id == 0){
-   // 	displayMatrix(growthIncrement,"Element0growthIncrementAfterRotation");
-   // 	displayMatrix(Fg,"Element0Fg");
-    //}
     gsl_matrix * tmpFgForInversion = gsl_matrix_calloc(nDim,nDim);
     createMatrixCopy(tmpFgForInversion,Fg);
-
-    //gsl_matrix * tmpFgForInversion =  gsl_matrix_alloc(nDim, nDim);
-    //gsl_matrix_memcpy (tmpFgForInversion, Fg);
     bool inverted = InvertMatrix(tmpFgForInversion, InvFg);
     if (!inverted){
         cerr<<"Fg not inverted!!"<<endl;
@@ -708,9 +911,13 @@ void 	ShapeBase::calculateRelativePosInBoundingBox(double columnarBoundingBoxXMi
 		peripodialRelativePosInBoundingBox[1] = columnarRelativePosInBoundingBox[1];
 		peripodialRelativePosInBoundingBox[0] = (peripodialRelativePosInBoundingBox[0] - peripodialBoundingBoxXMin) / peripodialBoundingBoxLength;
 		peripodialRelativePosInBoundingBox[1] = (peripodialRelativePosInBoundingBox[1] - peripodialBoundingBoxYMin) / peripodialBoundingBoxWidth;
+		columnarRelativePosInBoundingBox[0] = peripodialRelativePosInBoundingBox[0];
+		columnarRelativePosInBoundingBox[1] = peripodialRelativePosInBoundingBox[1];
 	}
-	columnarRelativePosInBoundingBox[0] = (columnarRelativePosInBoundingBox[0] - columnarBoundingBoxXMin) / columnarBoundingBoxLength;
-	columnarRelativePosInBoundingBox[1] = (columnarRelativePosInBoundingBox[1] - columnarBoundingBoxYMin) / columnarBoundingBoxWidth;
+	else{
+		columnarRelativePosInBoundingBox[0] = (columnarRelativePosInBoundingBox[0] - columnarBoundingBoxXMin) / columnarBoundingBoxLength;
+		columnarRelativePosInBoundingBox[1] = (columnarRelativePosInBoundingBox[1] - columnarBoundingBoxYMin) / columnarBoundingBoxWidth;
+	}
 	//cout<<"Element: "<<Id<<" RelPos: "<<columnarRelativePosInBoundingBox[0]<<" "<<columnarRelativePosInBoundingBox[1]<<" "<<peripodialRelativePosInBoundingBox[0]<<" "<<peripodialRelativePosInBoundingBox[1]<<endl;
 	//double* a = new double[3];
 	//a = getRelativePosInBoundingBox();
@@ -1474,14 +1681,22 @@ void	ShapeBase::updatePositions(vector<Node*>& Nodes){
 	}
 }
 
+void	ShapeBase::updateReferencePositionsToCurentShape(){
+	for (int i=0; i<nNodes; ++i){
+		for (int j=0; j<nDim; ++j){
+			ReferenceShape ->Positions[i][j] = Positions[i][j];
+		}
+	}
+}
+
 void 	ShapeBase::setGrowthRate(double dt, double x, double y, double z){
-	GrowthRate[0] = x;
-	GrowthRate[1] = y;
-	GrowthRate[2] = z;
+	GrowthRate[0] = exp(x*dt);
+	GrowthRate[1] = exp(y*dt);
+	GrowthRate[2] = exp(z*dt);
 	gsl_matrix_set_identity(growthIncrement);
-	gsl_matrix_set(growthIncrement,0,0,exp(x*dt));
-	gsl_matrix_set(growthIncrement,1,1,exp(y*dt));
-	gsl_matrix_set(growthIncrement,2,2,exp(z*dt));
+	gsl_matrix_set(growthIncrement,0,0,GrowthRate[0]);
+	gsl_matrix_set(growthIncrement,1,1,GrowthRate[1]);
+	gsl_matrix_set(growthIncrement,2,2,GrowthRate[2]);
 	//if (Id ==0) {displayMatrix(growthIncrement, "Element0growthIncrement_initialSetting");}
 }
 
@@ -1630,9 +1845,6 @@ void	ShapeBase::updateUnipolarEquilibriumMyosinConcentration(bool isApical, doub
 }
 
 void	ShapeBase::updateMyosinConcentration(double dt, double kMyo){
-	//gsl_matrix_set(myoPolarityDir,0,0,1.0);
-	//gsl_matrix_set(myoPolarityDir,0,1,0.0);
-	//gsl_matrix_set(myoPolarityDir,0,2,0.0);
 	double thresholdValue = 1E-8, thresholdFraction= 0.01;
 	//the value of kMyo is taken form my thesis
 	double currMyoDt[3] = {dt,dt*2.0,dt/2.0};
@@ -1661,7 +1873,6 @@ void	ShapeBase::updateMyosinConcentration(double dt, double kMyo){
 		bool converged = false;
 		while (!converged){
 			int steps[3] = {dt/currMyoDt[0],dt/currMyoDt[1],dt/currMyoDt[2]};
-			//cout<<"steps: "<<steps[0]<<" "<<steps[1]<<" "<<steps[2]<<" currMyoDt: "<<currMyoDt[0]<<" "<<currMyoDt[1]<<" "<<currMyoDt[2]<<endl;
 			for (int j=0; j<3; ++j){
 				cFinal[j] = cInitial;
 				for (int i =0 ;i<steps[j]; ++i){
@@ -1669,22 +1880,17 @@ void	ShapeBase::updateMyosinConcentration(double dt, double kMyo){
 				}
 			}
 			//check if the value of the current dt and half current dt are below the threshold:
-			//cout<<"cFinal: "<<cFinal[0]<<" "<<cFinal[1]<<" "<<cFinal[2]<<endl;
 			double diff = fabs((cFinal[0] - cFinal[2]));
-			//cout<<" diff is : "<<diff<<" threshold is :"<<thresholdValue<<endl;
 			if ( diff < thresholdValue ){
 				converged = true;
-				//cout<<"converged by difference"<<endl;
 			}
 			else if( fabs(diff / cFinal[2]) < thresholdFraction){
 				converged = true;
-				//cout<<"converged by fraction"<<endl;
 			}
 			else{
 				currMyoDt[1] = currMyoDt[0];
 				currMyoDt[0] = currMyoDt[2];
 				currMyoDt[2] *= 0.5;
-				//cout<<"updated currMyoDt: "<<currMyoDt[0]<<" "<<currMyoDt[1]<<" "<<currMyoDt[2]<<endl;
 			}
 			//need to implement increasing this
 		}
@@ -1701,8 +1907,6 @@ void	ShapeBase::updateMyosinConcentration(double dt, double kMyo){
 			cMyoUnipolar[1] = cFinal[2];
 		}
 	}
-	//cout<<"Element: "<<Id<<" EQ myosin levels: "<<cMyoUniformEq[0]<<" "<<cMyoUniformEq[1]<<" "<<cMyoUnipolarEq[0]<<" "<<cMyoUnipolarEq[1]<<endl;
-	//cout<<"Element: "<<Id<<" myosin levels: "<<cMyoUniform[0]<<" "<<cMyoUniform[1]<<" "<<cMyoUnipolar[0]<<" "<<cMyoUnipolar[1]<<endl;
 }
 
 void 	ShapeBase::setShapeChangeRate(double x, double y, double z, double xy, double yz, double xz){
@@ -1728,39 +1932,6 @@ void ShapeBase::calculateCurrentGrowthIncrement(gsl_matrix* resultingGrowthIncre
 	gsl_matrix_free(RotT);
 	gsl_matrix_free(temp);
 
-}
-
-void 	ShapeBase::updateGrowthRate(double dt, double growthx, double growthy, double growthz, gsl_matrix* ShearAngleRotationMatrix){
-    GrowthRate[0] += growthx;
-    GrowthRate[1] += growthy;
-    GrowthRate[2] += growthz;
-
-    gsl_matrix* currCrowthIncrement = gsl_matrix_calloc(3,3);
-    gsl_matrix_set(currCrowthIncrement,0,0,exp(growthx*dt));
-    gsl_matrix_set(currCrowthIncrement,1,1,exp(growthy*dt));
-    gsl_matrix_set(currCrowthIncrement,2,2,exp(growthz*dt));
-
-    //if (Id ==0){displayMatrix(currCrowthIncrement,"currCrowthIncrement_beforeRotation");};
-    gsl_matrix* RotT = gsl_matrix_calloc(3,3);
-	gsl_matrix* temp = gsl_matrix_calloc(nDim,nDim);;
-	gsl_matrix_transpose_memcpy(RotT,ShearAngleRotationMatrix);
-	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, ShearAngleRotationMatrix, currCrowthIncrement, 0.0, temp);
-
-	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, temp, RotT, 0.0, currCrowthIncrement);
-	gsl_matrix_free(RotT);
-
-   // if (Id ==0){
-    //	displayMatrix(currCrowthIncrement,"currCrowthIncrement_afterRotation");
-    //	displayMatrix(growthIncrement,"growthIncrement_beforeAddition");
-   // };
-
-    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currCrowthIncrement, growthIncrement, 0.0, temp);
-    gsl_matrix_memcpy(growthIncrement, temp);
-
-   // if (Id ==0){
-	//	displayMatrix(growthIncrement,"growthIncrement_afterAddition");
-	//};
-	gsl_matrix_free(temp);
 }
 
 void 	ShapeBase::updateShapeChangeRate(double x, double y, double z, double xy, double yz, double xz){
@@ -1789,7 +1960,7 @@ bool 	ShapeBase::InvertMatrix(gsl_matrix* input, gsl_matrix* inverse){
     return true;
 }
 
-bool 	ShapeBase::InvertMatrix(boost::numeric::ublas::matrix<double>& input, boost::numeric::ublas::matrix<double>& inverse/*, double& det*/){
+bool 	ShapeBase::InvertMatrix(boost::numeric::ublas::matrix<double>& input, boost::numeric::ublas::matrix<double>& inverse){
 	//Matrix inversion routine.
 	//Uses lu_factorize and lu_substitute in uBLAS to invert a matrix
 	using namespace boost::numeric::ublas;
@@ -1806,11 +1977,6 @@ bool 	ShapeBase::InvertMatrix(boost::numeric::ublas::matrix<double>& input, boos
 	if (res != 0)
 		return false;
 
-	/*det = 1.0;
-	for(unsigned int i = 0; i < A.size1(); i++) {
-		det *= A(i,i); // multiply by elements on diagonal
-	    det = det * determinant_sign( pm );
-	}*/
 	// create identity matrix of "inverse"
 	inverse.assign(identity_matrix<double> (A.size1()));
 

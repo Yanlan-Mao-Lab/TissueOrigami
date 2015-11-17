@@ -178,6 +178,8 @@ private:
 	void clearNodeMassLists();
 	void clearLaserAblatedSites();
     void manualPerturbationToInitialSetup(bool deform, bool rotate);
+    void addCurvatureToColumnar(double h);
+
 public:
 
 	ofstream outputFile;
@@ -216,8 +218,7 @@ public:
 	double lumenHeight;
 	double lumenHeightScale;
 	int nGrowthFunctions;
-	//vector <int> GrowthFunctionTypes;
-	//vector <float> GrowthParameters;
+
 	vector <double***> GrowthMatrices;
 	vector<GrowthFunctionBase*> GrowthFunctions;
 
@@ -229,6 +230,8 @@ public:
 	double kMyo;
 	double forcePerMyoMolecule;
 
+	bool addCurvatureToTissue;
+	double tissueCurvatureDepth;
 	vector <Node*> Nodes;
 	vector <ShapeBase*> Elements;
 	int nElements;
@@ -270,7 +273,7 @@ public:
 	bool readExecutableInputs(int argc, char **argv);
 	bool initiateSystem();
 	void calculateSystemCentre();
-	void cleanGrowthData();
+	//void cleanGrowthData();
 	void cleanMatrixUpdateData();
 	void resetForces();
 	void calculateApicalSize();

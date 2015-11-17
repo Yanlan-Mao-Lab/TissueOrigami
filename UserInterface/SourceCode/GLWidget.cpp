@@ -42,11 +42,11 @@ using namespace std;
      DisplayStrains = true;
      DisplayPysProp = false;
      //current ranges:
-     DisplayPysPropRange[0][0] = 0.0; DisplayPysPropRange[0][1] = 100.0;
-     DisplayPysPropRange[1][0] = 100.0; DisplayPysPropRange[1][1] = 5000.0;
-     DisplayPysPropRange[2][0] = 0.0; DisplayPysPropRange[2][1] = 0.5;
-     DisplayPysPropRange[3][0] = 0.0; DisplayPysPropRange[3][1] = 1E-5;
-     DisplayPysPropRange[4][0] = -1.0; DisplayPysPropRange[4][1] = 10.0;
+     DisplayPysPropRange[0][0] = 0.0; DisplayPysPropRange[0][1] = 100.0; 	//viscosity
+     DisplayPysPropRange[1][0] = 100.0; DisplayPysPropRange[1][1] = 5000.0; //Young's modulus
+     DisplayPysPropRange[2][0] = 0.0; DisplayPysPropRange[2][1] = 0.5; 		//Poisson's ratio
+     DisplayPysPropRange[3][0] = 0.0; DisplayPysPropRange[3][1] = 10; 		//growth
+     DisplayPysPropRange[4][0] = -1.0; DisplayPysPropRange[4][1] = 10.0; 	//shape change
      //the minimum and maximum they can get:
      DisplayPysPropBounds[0][0] = 0.0; DisplayPysPropBounds[0][1] = 50.0;
      DisplayPysPropBounds[0][2] = 51.0; DisplayPysPropBounds[0][3] = 250.0;
@@ -54,20 +54,20 @@ using namespace std;
      DisplayPysPropBounds[1][2] = 51.0; DisplayPysPropBounds[1][3] = 10000.0;
      DisplayPysPropBounds[2][0] = 0.0; DisplayPysPropBounds[2][1] = 0.1;
      DisplayPysPropBounds[2][2] = 0.11; DisplayPysPropBounds[2][3] = 0.5;
-     DisplayPysPropBounds[3][0] = 0.0; DisplayPysPropBounds[3][1] = 1E-5;
-     DisplayPysPropBounds[3][2] = 1E-5; DisplayPysPropBounds[3][3] = 1;
+     DisplayPysPropBounds[3][0] = 0.0; DisplayPysPropBounds[3][1] = 10;
+     DisplayPysPropBounds[3][2] = 5; DisplayPysPropBounds[3][3] = 50;
      DisplayPysPropBounds[4][0] = -6.0; DisplayPysPropBounds[4][1] = 0.0;
      DisplayPysPropBounds[4][2] = 0.0; DisplayPysPropBounds[4][3] = 6.0;
      //the decimals to display:
      DisplayPysPropDecimals[0] = 0;
      DisplayPysPropDecimals[1] = 0;
 	 DisplayPysPropDecimals[2] = 2;
-	 DisplayPysPropDecimals[3] = 6;
+	 DisplayPysPropDecimals[3] = 0;
 	 DisplayPysPropDecimals[4] = 2;
 	 DisplayPysPropSteps[0] = 1;
 	 DisplayPysPropSteps[1] = 10;
 	 DisplayPysPropSteps[2] = 0.05;
-	 DisplayPysPropSteps[3] = 1E-5;
+	 DisplayPysPropSteps[3] = 1;
 	 DisplayPysPropSteps[4] = 0.05;
 
   	 setSizePolicy(QSizePolicy ::Expanding , QSizePolicy ::Expanding );
@@ -372,7 +372,11 @@ void GLWidget::highlightNode(int i){
 				else{
 					int nConnectedElements = (*itNode)->connectedElementIds.size();
 					for (int i=0;i<nConnectedElements; ++i){
-						float TmpPysPropMag =0.0;
+						float TmpPysPropMag = 0.0;
+						if ( PysPropToDisplay == 3 ){
+							//Growth is multiplicative, base should be 1.0:
+							TmpPysPropMag = 1.0;
+						}
                         Sim01->Elements[(*itNode)->connectedElementIds[i]]->getPysProp(PysPropToDisplay, TmpPysPropMag, Sim01->dt);
 						PysPropMag += TmpPysPropMag*(*itNode)->connectedElementWeights[i];
 					}

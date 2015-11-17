@@ -118,9 +118,10 @@ Inheritance diagram for GrowthFunctionBase:</div>
  <div class="center">
   <img src="classGrowthFunctionBase.png" usemap="#GrowthFunctionBase_map" alt=""/>
   <map id="GrowthFunctionBase_map" name="GrowthFunctionBase_map">
-<area href="classGridBasedGrowthFunction.html" alt="GridBasedGrowthFunction" shape="rect" coords="0,56,160,80"/>
-<area href="classRingGrowthFunction.html" alt="RingGrowthFunction" shape="rect" coords="170,56,330,80"/>
-<area href="classUniformGrowthFunction.html" alt="UniformGrowthFunction" shape="rect" coords="340,56,500,80"/>
+<area href="classGridBasedGrowthFunction.html" alt="GridBasedGrowthFunction" shape="rect" coords="0,56,184,80"/>
+<area href="classRingGrowthFunction.html" alt="RingGrowthFunction" shape="rect" coords="194,56,378,80"/>
+<area href="classUniformGrowthFunction.html" alt="UniformGrowthFunction" shape="rect" coords="388,56,572,80"/>
+<area href="classUniformShapeChangeFunction.html" alt="UniformShapeChangeFunction" shape="rect" coords="388,112,572,136"/>
 </map>
  </div></div>
 <table class="memberdecls">
@@ -153,6 +154,12 @@ virtual float&#160;</td><td class="memItemRight" valign="bottom"><b>getOuterRadi
 <tr class="memitem:a9598654cae114f6b443167898ac4d095"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9598654cae114f6b443167898ac4d095"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>getGrowthRate</b> (double *maxValue)</td></tr>
 <tr class="separator:a9598654cae114f6b443167898ac4d095"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3c0d71849d020d29832b1aaaba87065e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3c0d71849d020d29832b1aaaba87065e"></a>
+virtual gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>getShearAngleRotationMatrix</b> ()</td></tr>
+<tr class="separator:a3c0d71849d020d29832b1aaaba87065e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adea116613ddb2edb7ebc0734d17c9226"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adea116613ddb2edb7ebc0734d17c9226"></a>
+virtual double&#160;</td><td class="memItemRight" valign="bottom"><b>getShearAngle</b> ()</td></tr>
+<tr class="separator:adea116613ddb2edb7ebc0734d17c9226"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1dfd024db9bf627777741c68f7b5ddf2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1dfd024db9bf627777741c68f7b5ddf2"></a>
 virtual int&#160;</td><td class="memItemRight" valign="bottom"><b>getGridX</b> ()</td></tr>
 <tr class="separator:a1dfd024db9bf627777741c68f7b5ddf2"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -162,9 +169,18 @@ virtual int&#160;</td><td class="memItemRight" valign="bottom"><b>getGridY</b> (
 <tr class="memitem:a067bdcd836e7196ce5cfc9120b9499c1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a067bdcd836e7196ce5cfc9120b9499c1"></a>
 virtual double ***&#160;</td><td class="memItemRight" valign="bottom"><b>getGrowthMatrix</b> ()</td></tr>
 <tr class="separator:a067bdcd836e7196ce5cfc9120b9499c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a32e0a776bc81147dc648662440d50b0d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a32e0a776bc81147dc648662440d50b0d"></a>
+virtual double **&#160;</td><td class="memItemRight" valign="bottom"><b>getXyShearAngleMatrix</b> ()</td></tr>
+<tr class="separator:a32e0a776bc81147dc648662440d50b0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4e40d019aff99e72b1aee79d93c8e9a0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4e40d019aff99e72b1aee79d93c8e9a0"></a>
 virtual double&#160;</td><td class="memItemRight" valign="bottom"><b>getGrowthMatrixElement</b> (int i, int j, int k)</td></tr>
 <tr class="separator:a4e40d019aff99e72b1aee79d93c8e9a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adfa5e38c1b2d748c035a3bdbe8717d73"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adfa5e38c1b2d748c035a3bdbe8717d73"></a>
+virtual double&#160;</td><td class="memItemRight" valign="bottom"><b>getXyShearAngleMatrixElement</b> (int i, int j)</td></tr>
+<tr class="separator:adfa5e38c1b2d748c035a3bdbe8717d73"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a70f43b1e57d2be8ca0e2a937da333dfa"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a70f43b1e57d2be8ca0e2a937da333dfa"></a>
+virtual gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>getXyShearRotationsMatrixElement</b> (int i, int j)</td></tr>
+<tr class="separator:a70f43b1e57d2be8ca0e2a937da333dfa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abcfbd2e1fbad91b3f9002ef7fc7625e5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abcfbd2e1fbad91b3f9002ef7fc7625e5"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>setGrowtRate</b> (double ex, double ey, double ez)</td></tr>
 <tr class="separator:abcfbd2e1fbad91b3f9002ef7fc7625e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -274,7 +290,7 @@ booleans applyToColumnarLayer and applyToPeripodialMembrane will set <a class="e
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="classGrowthFunctionBase.html">GrowthFunctionBase</a></li>
-    <li class="footer">Generated on Fri Sep 4 2015 12:21:22 for Tissue Origami by
+    <li class="footer">Generated on Tue Nov 3 2015 16:55:13 for Tissue Origami by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

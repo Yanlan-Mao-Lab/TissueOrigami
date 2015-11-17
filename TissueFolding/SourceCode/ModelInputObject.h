@@ -24,6 +24,7 @@ private:
 	bool readMeshParameters(ifstream& file);				///< This function reads the mesh structure related parameters of the tissue from file.
 	bool readPeripodialMembraneParameters(ifstream& file);	///< This function reads the peripodial membrane related parameters of the tissue from file.
 	bool readNodeFixingParameters(ifstream& file);			///< This function reads the inputs relating to fixing the nodes of the tissue from file.
+	bool readManupulationParamters(ifstream& file);			///< This function reads the inputs relating to manipulations made on the tissue after mesh read.
 	bool readTimeParameters(ifstream &file);				///< This function reads the time related parameters of the simulation from file.
 	bool readMeshType2(ifstream& file);						///< This function reads the mesh structure details for a mesh input as columns and rows of prisms.
 	bool readMeshType4(ifstream& file);						///< This function reads the mesh structure details for a mesh given as a pre-assembled mesh in a separate input file.

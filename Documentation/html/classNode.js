@@ -6,7 +6,7 @@ var classNode =
     [ "checkIfNodeHasPacking", "classNode.html#a1d80e6f467d8ca919872b6e47a882dd5", null ],
     [ "displayConnectedElementIds", "classNode.html#a3030a518aa97bd50060b8733e87540f7", null ],
     [ "displayConnectedElementWeights", "classNode.html#a755e8c3d76e7f1f0ab364fc3d4da3a9a", null ],
-    [ "getCurrentRKPosition", "classNode.html#a20d72574fb53a76cf7fda7f3a862f8d0", null ],
+    [ "getCurrentPosition", "classNode.html#ae4a2d9e601432a998efe24e1ac4a86cd", null ],
     [ "setViscosity", "classNode.html#a67cfbbe5179590b5deddf7d4086bc316", null ],
     [ "atCircumference", "classNode.html#ab6b225354ad961f2e9bd5d7fe9b67b3a", null ],
     [ "connectedElementIds", "classNode.html#a18bae606efb025cc90b4c117776e0bf9", null ],

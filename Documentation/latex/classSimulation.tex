@@ -12,16 +12,19 @@
 \hypertarget{classSimulation_a1f9bf054812136067d30e79345f877de}{}void {\bfseries calculate\+System\+Centre} ()\label{classSimulation_a1f9bf054812136067d30e79345f877de}
 
 \item 
-\hypertarget{classSimulation_a1c1260ec044af04ef52c517b2675e0dc}{}void {\bfseries clean\+Growth\+Data} ()\label{classSimulation_a1c1260ec044af04ef52c517b2675e0dc}
-
-\item 
 \hypertarget{classSimulation_aa8fb138f6057956ce2b6e02fbcb0254f}{}void {\bfseries clean\+Matrix\+Update\+Data} ()\label{classSimulation_aa8fb138f6057956ce2b6e02fbcb0254f}
 
 \item 
 \hypertarget{classSimulation_accaeb0b305b4d779ea3551a810caf99c}{}void {\bfseries reset\+Forces} ()\label{classSimulation_accaeb0b305b4d779ea3551a810caf99c}
 
 \item 
+\hypertarget{classSimulation_a8e6ec9457aa61d2493747d0110a50ca5}{}void {\bfseries calculate\+Apical\+Size} ()\label{classSimulation_a8e6ec9457aa61d2493747d0110a50ca5}
+
+\item 
 \hypertarget{classSimulation_a7e8ad0106fac230f8c825431b94f61f4}{}void {\bfseries calculate\+Columnar\+Layer\+Bounding\+Box} ()\label{classSimulation_a7e8ad0106fac230f8c825431b94f61f4}
+
+\item 
+\hypertarget{classSimulation_adf1ee4bfc51b15dda4c2e89e9fb1ccd9}{}void {\bfseries calculate\+Peripodial\+Bounding\+Box} ()\label{classSimulation_adf1ee4bfc51b15dda4c2e89e9fb1ccd9}
 
 \item 
 \hypertarget{classSimulation_af21c5c157e6f487f879bdd7043288982}{}void {\bfseries calculate\+Z\+Projected\+Areas} ()\label{classSimulation_af21c5c157e6f487f879bdd7043288982}
@@ -33,10 +36,16 @@
 \hypertarget{classSimulation_a9c3f5acaa8ec130dedc94dfd6f7b013a}{}void {\bfseries clear\+Projected\+Areas} ()\label{classSimulation_a9c3f5acaa8ec130dedc94dfd6f7b013a}
 
 \item 
-\hypertarget{classSimulation_a87606f3d0520a91cc0af6d05428546ab}{}void {\bfseries run\+One\+Step} ()\label{classSimulation_a87606f3d0520a91cc0af6d05428546ab}
+\hypertarget{classSimulation_aa9ad0627365ad5d465b273183c7db344}{}void {\bfseries check\+For\+Experimental\+Setups\+Before\+Iteration} ()\label{classSimulation_aa9ad0627365ad5d465b273183c7db344}
 
 \item 
-\hypertarget{classSimulation_a716e8eb08d6a6bc37b7d930b21129739}{}void {\bfseries update\+Step4\+R\+K} ()\label{classSimulation_a716e8eb08d6a6bc37b7d930b21129739}
+\hypertarget{classSimulation_a2ebd37d36e25d118738d25811da4aa45}{}void {\bfseries check\+For\+Experimental\+Setups\+Within\+Iteration} ()\label{classSimulation_a2ebd37d36e25d118738d25811da4aa45}
+
+\item 
+\hypertarget{classSimulation_ae8b5dcc56bb2633d284a413f1e9dc1e9}{}void {\bfseries check\+For\+Experimental\+Setups\+After\+Iteration} ()\label{classSimulation_ae8b5dcc56bb2633d284a413f1e9dc1e9}
+
+\item 
+\hypertarget{classSimulation_a87606f3d0520a91cc0af6d05428546ab}{}void {\bfseries run\+One\+Step} ()\label{classSimulation_a87606f3d0520a91cc0af6d05428546ab}
 
 \item 
 \hypertarget{classSimulation_a6a869cb433953d1d36249460b0a74545}{}void {\bfseries update\+Step\+N\+R} ()\label{classSimulation_a6a869cb433953d1d36249460b0a74545}
@@ -105,7 +114,7 @@
 \hypertarget{classSimulation_a5400ce12848ff3886d56437519728382}{}void {\bfseries pack\+To\+Pipette\+Wall} ()\label{classSimulation_a5400ce12848ff3886d56437519728382}
 
 \item 
-\hypertarget{classSimulation_ab7a42371989ee2ef640dbfb1bfbb21ff}{}void {\bfseries calculate\+Packing} (int R\+K\+Id, double Peri\+Threshold, double Col\+Threshold)\label{classSimulation_ab7a42371989ee2ef640dbfb1bfbb21ff}
+\hypertarget{classSimulation_ac71d762415384de17ed651db09c3d7be}{}void {\bfseries calculate\+Packing} (double Peri\+Threshold, double Col\+Threshold)\label{classSimulation_ac71d762415384de17ed651db09c3d7be}
 
 \item 
 \hypertarget{classSimulation_a4789349db2f4a908064f05e0ee74265d}{}void {\bfseries check\+Packing\+To\+Pipette} (bool \&packs\+To\+Pip, double $\ast$pos, double $\ast$pip\+F, double mass, int id)\label{classSimulation_a4789349db2f4a908064f05e0ee74265d}
@@ -126,13 +135,10 @@
 \hypertarget{classSimulation_a0f2aafedd2ceaab7ef60b9493aa98b21}{}void {\bfseries redistribute\+Peripodial\+Membrane\+Forces} (int R\+K\+Id)\label{classSimulation_a0f2aafedd2ceaab7ef60b9493aa98b21}
 
 \item 
-\hypertarget{classSimulation_a90c07716cd9ffe3b4c48babf77eb8904}{}void {\bfseries update\+Node\+Positions} (int R\+K\+Id)\label{classSimulation_a90c07716cd9ffe3b4c48babf77eb8904}
+\hypertarget{classSimulation_aa92f90b98dc049a3206b4906ebf52585}{}void {\bfseries update\+Element\+Positions} ()\label{classSimulation_aa92f90b98dc049a3206b4906ebf52585}
 
 \item 
-\hypertarget{classSimulation_a73aeedfc61d7edda6a2999eff57990d6}{}void {\bfseries update\+Element\+Positions} (int R\+K\+Id)\label{classSimulation_a73aeedfc61d7edda6a2999eff57990d6}
-
-\item 
-\hypertarget{classSimulation_ac82de4f0b4cda6575e1258068fe3cd42}{}void {\bfseries update\+Element\+Positions\+Single} (int R\+K\+Id, int i)\label{classSimulation_ac82de4f0b4cda6575e1258068fe3cd42}
+\hypertarget{classSimulation_ab9fc29a2decb03a07e31e3ebb8801aec}{}void {\bfseries update\+Element\+Positions\+Single} (int i)\label{classSimulation_ab9fc29a2decb03a07e31e3ebb8801aec}
 
 \item 
 \hypertarget{classSimulation_a6ef90fd76ed4f6bb9d063e7e72e9a983}{}bool {\bfseries initiate\+Saved\+System} ()\label{classSimulation_a6ef90fd76ed4f6bb9d063e7e72e9a983}
@@ -142,6 +148,15 @@
 
 \item 
 \hypertarget{classSimulation_a91a12f6ac1b230cecbe004221326a7ca}{}void {\bfseries align\+Tissue\+D\+V\+To\+X\+Positive} ()\label{classSimulation_a91a12f6ac1b230cecbe004221326a7ca}
+
+\item 
+\hypertarget{classSimulation_a4d865136f9cb930b986af8bc86b6bd10}{}void {\bfseries align\+Tissue\+A\+P\+To\+X\+Y\+Plane} ()\label{classSimulation_a4d865136f9cb930b986af8bc86b6bd10}
+
+\item 
+\hypertarget{classSimulation_ada1776f97a899b0e77e20df658713cb3}{}void {\bfseries wrap\+Up\+At\+The\+End\+Of\+Simulation} ()\label{classSimulation_ada1776f97a899b0e77e20df658713cb3}
+
+\item 
+\hypertarget{classSimulation_ac6cb6f4e1f7060527ead71c2ce83727d}{}void {\bfseries write\+Relaxed\+Mesh\+From\+Current\+State} ()\label{classSimulation_ac6cb6f4e1f7060527ead71c2ce83727d}
 
 \item 
 \hypertarget{classSimulation_a2cdf77d01390a32cabb8ba7535a9f7dd}{}void {\bfseries calculate\+D\+V\+Distance} ()\label{classSimulation_a2cdf77d01390a32cabb8ba7535a9f7dd}
@@ -285,22 +300,28 @@
 \hypertarget{classSimulation_a47187b5d7f450b1c41e6fdaffeedc207}{}int {\bfseries n\+Growth\+Functions}\label{classSimulation_a47187b5d7f450b1c41e6fdaffeedc207}
 
 \item 
-\hypertarget{classSimulation_aa94f0cfa6a70cc5bcfee5ba7eecb8dd4}{}vector$<$ int $>$ {\bfseries Growth\+Function\+Types}\label{classSimulation_aa94f0cfa6a70cc5bcfee5ba7eecb8dd4}
-
-\item 
-\hypertarget{classSimulation_ad4e55d4978e84f7fc8db37b37056015e}{}vector$<$ float $>$ {\bfseries Growth\+Parameters}\label{classSimulation_ad4e55d4978e84f7fc8db37b37056015e}
-
-\item 
 \hypertarget{classSimulation_a8cdab34c42a949aeeaa2b76fe5cf7d76}{}vector$<$ double $\ast$$\ast$$\ast$ $>$ {\bfseries Growth\+Matrices}\label{classSimulation_a8cdab34c42a949aeeaa2b76fe5cf7d76}
+
+\item 
+\hypertarget{classSimulation_a88e857983b0152e32b969dfd3ed72fdc}{}vector$<$ \hyperlink{classGrowthFunctionBase}{Growth\+Function\+Base} $\ast$ $>$ {\bfseries Growth\+Functions}\label{classSimulation_a88e857983b0152e32b969dfd3ed72fdc}
 
 \item 
 \hypertarget{classSimulation_a74251252e9f320268055537749d674c1}{}int {\bfseries n\+Shape\+Change\+Functions}\label{classSimulation_a74251252e9f320268055537749d674c1}
 
 \item 
-\hypertarget{classSimulation_ac14e1aef8560da7de811fb3f29010dc0}{}vector$<$ int $>$ {\bfseries Shape\+Change\+Function\+Types}\label{classSimulation_ac14e1aef8560da7de811fb3f29010dc0}
+\hypertarget{classSimulation_a92ba3cb43bcbabf7e617755a28cb648b}{}vector$<$ \hyperlink{classGrowthFunctionBase}{Growth\+Function\+Base} $\ast$ $>$ {\bfseries Shape\+Change\+Functions}\label{classSimulation_a92ba3cb43bcbabf7e617755a28cb648b}
 
 \item 
-\hypertarget{classSimulation_a92336ab44094ea95f48549c511815764}{}vector$<$ float $>$ {\bfseries Shape\+Change\+Parameters}\label{classSimulation_a92336ab44094ea95f48549c511815764}
+\hypertarget{classSimulation_a99cf859f33b779f43f46e23df7227803}{}int {\bfseries n\+Myosin\+Functions}\label{classSimulation_a99cf859f33b779f43f46e23df7227803}
+
+\item 
+\hypertarget{classSimulation_aa662969fe152e645993a23834a4e6920}{}vector$<$ \hyperlink{classMyosinFunction}{Myosin\+Function} $\ast$ $>$ {\bfseries myosin\+Functions}\label{classSimulation_aa662969fe152e645993a23834a4e6920}
+
+\item 
+\hypertarget{classSimulation_a3f011f0be023bdb2dcf0e7535dc88789}{}double {\bfseries k\+Myo}\label{classSimulation_a3f011f0be023bdb2dcf0e7535dc88789}
+
+\item 
+\hypertarget{classSimulation_a7ed80530f06f7579e8bf3f4f24f685b6}{}double {\bfseries force\+Per\+Myo\+Molecule}\label{classSimulation_a7ed80530f06f7579e8bf3f4f24f685b6}
 
 \item 
 \hypertarget{classSimulation_a51e3f02b266fd5156a1d78054f1dac37}{}vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ {\bfseries Nodes}\label{classSimulation_a51e3f02b266fd5156a1d78054f1dac37}
@@ -309,10 +330,19 @@
 \hypertarget{classSimulation_a7731565e1391398dc2f6bd8880719c46}{}vector$<$ \hyperlink{classShapeBase}{Shape\+Base} $\ast$ $>$ {\bfseries Elements}\label{classSimulation_a7731565e1391398dc2f6bd8880719c46}
 
 \item 
-\hypertarget{classSimulation_a4b290b1bec21724b769c60033cd8f923}{}double $\ast$$\ast$$\ast$ {\bfseries System\+Forces}\label{classSimulation_a4b290b1bec21724b769c60033cd8f923}
+\hypertarget{classSimulation_ac18b284c6a4474c0d60eac0eeda97264}{}int {\bfseries n\+Elements}\label{classSimulation_ac18b284c6a4474c0d60eac0eeda97264}
 
 \item 
-\hypertarget{classSimulation_a46ca4dd54eb66252d513eac564ce20f5}{}double $\ast$$\ast$$\ast$ {\bfseries Packing\+Forces}\label{classSimulation_a46ca4dd54eb66252d513eac564ce20f5}
+\hypertarget{classSimulation_aacf54ee7b6003ee9c2831535ff75422c}{}int {\bfseries n\+Nodes}\label{classSimulation_aacf54ee7b6003ee9c2831535ff75422c}
+
+\item 
+\hypertarget{classSimulation_a1619473071809021f1fa2c9ce4e51477}{}double $\ast$$\ast$ {\bfseries System\+Forces}\label{classSimulation_a1619473071809021f1fa2c9ce4e51477}
+
+\item 
+\hypertarget{classSimulation_acec3236063682570b72d3e2dc18c5cc7}{}double $\ast$$\ast$ {\bfseries Packing\+Forces}\label{classSimulation_acec3236063682570b72d3e2dc18c5cc7}
+
+\item 
+\hypertarget{classSimulation_a68cffb185d34cbab55ca97eb9b7d3fce}{}double $\ast$$\ast$ {\bfseries Fixed\+Node\+Forces}\label{classSimulation_a68cffb185d34cbab55ca97eb9b7d3fce}
 
 \item 
 \hypertarget{classSimulation_a3229dca48a5d49bbcd641f74605341c0}{}double {\bfseries System\+Centre} \mbox{[}3\mbox{]}\label{classSimulation_a3229dca48a5d49bbcd641f74605341c0}
@@ -322,6 +352,24 @@
 
 \item 
 \hypertarget{classSimulation_ab998930bbef90a5a59ba86079a44e7ae}{}bool {\bfseries stretcher\+Attached}\label{classSimulation_ab998930bbef90a5a59ba86079a44e7ae}
+
+\item 
+\hypertarget{classSimulation_aac766f573e9afb8b9cc9296dbb3be436}{}vector$<$ int $>$ {\bfseries left\+Clamp\+Border}\label{classSimulation_aac766f573e9afb8b9cc9296dbb3be436}
+
+\item 
+\hypertarget{classSimulation_a911f50674e81c594c08ee991c23b986a}{}vector$<$ int $>$ {\bfseries right\+Clamp\+Border}\label{classSimulation_a911f50674e81c594c08ee991c23b986a}
+
+\item 
+\hypertarget{classSimulation_ad6d5bb340613f0a93a71bb8f3a73f609}{}double {\bfseries left\+Clamp\+Forces} \mbox{[}3\mbox{]}\label{classSimulation_ad6d5bb340613f0a93a71bb8f3a73f609}
+
+\item 
+\hypertarget{classSimulation_aa88acfad799773f87059228a07d40b37}{}double {\bfseries right\+Clamp\+Forces} \mbox{[}3\mbox{]}\label{classSimulation_aa88acfad799773f87059228a07d40b37}
+
+\item 
+\hypertarget{classSimulation_af99671c6b222e164dd65bd969632480f}{}bool {\bfseries D\+V\+Clamp}\label{classSimulation_af99671c6b222e164dd65bd969632480f}
+
+\item 
+\hypertarget{classSimulation_ac21ce1a13eb2eedd549a1f61232b948b}{}int {\bfseries distance\+Index}\label{classSimulation_ac21ce1a13eb2eedd549a1f61232b948b}
 
 \item 
 \hypertarget{classSimulation_a10cfa63b384b954f5ea34afca788f298}{}bool {\bfseries Pipette\+Suction}\label{classSimulation_a10cfa63b384b954f5ea34afca788f298}
@@ -387,10 +435,10 @@
 \hypertarget{classSimulation_aafb36172155cdd675fb7d8cbe057c0ab}{}int {\bfseries Tissue\+Height\+Discretisation\+Layers}\label{classSimulation_aafb36172155cdd675fb7d8cbe057c0ab}
 
 \item 
-\hypertarget{classSimulation_a8e5b5de0190d35c7984c4b393fd9fcd9}{}double {\bfseries bounding\+Box} \mbox{[}2\mbox{]}\mbox{[}3\mbox{]}\label{classSimulation_a8e5b5de0190d35c7984c4b393fd9fcd9}
+\hypertarget{classSimulation_a04089e6ccaa912c8ef12780163505b13}{}double {\bfseries columnar\+Bounding\+Box} \mbox{[}2\mbox{]}\mbox{[}3\mbox{]}\label{classSimulation_a04089e6ccaa912c8ef12780163505b13}
 
 \item 
-\hypertarget{classSimulation_a88e857983b0152e32b969dfd3ed72fdc}{}vector$<$ \hyperlink{classGrowthFunctionBase}{Growth\+Function\+Base} $\ast$ $>$ {\bfseries Growth\+Functions}\label{classSimulation_a88e857983b0152e32b969dfd3ed72fdc}
+\hypertarget{classSimulation_ae0a6fb9ec7c26faf354de145e18f53e2}{}double {\bfseries peripodial\+Bounding\+Box} \mbox{[}2\mbox{]}\mbox{[}3\mbox{]}\label{classSimulation_ae0a6fb9ec7c26faf354de145e18f53e2}
 
 \end{DoxyCompactItemize}
 

@@ -23,7 +23,7 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
     MyoForce = new double*[6];
 	GrowthRate = new double[3];
 	ShapeChangeRate  = new double[6];
-	CurrGrowthStrainAddition = new double[6];
+	//CurrGrowthStrainAddition = new double[6];
 	ApicalNormalForPacking =  new double[3];
 	BasalNormalForPacking =  new double[3];
 	columnarRelativePosInBoundingBox = new double[3];
@@ -55,15 +55,12 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
 	}
 	columnarGrowthWeight = 1.0;
 	peripodialGrowthWeight = 0.0;
-	for (int i=0; i<6; ++i){
-		CurrGrowthStrainAddition[i] = 0;
-	}
-	CurrShapeChangeStrainsUpToDate = false;
-	CurrGrowthStrainsUpToDate = false;
-	IsGrowing = false;
+	//CurrShapeChangeStrainsUpToDate = false;
+	//CurrGrowthStrainsUpToDate = false;
+	//IsGrowing = false;
 	IsChangingShape = false;
-	GrewInThePast = false;
-	ChangedShapeInThePast = false;
+	//GrewInThePast = false;
+	//ChangedShapeInThePast = false;
 	ApicalNormalForPackingUpToDate = false;
 	BasalNormalForPackingUpToDate = false;
 	IsAblated = false;
@@ -73,10 +70,11 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
     //rotatedGrowth_tethaZ = 0;
 	setIdentificationColour();
 	setShapeType("Prism");
-	ReferenceShape = new ReferenceShapeBase("Prism");
+	ReferenceShape = new ReferenceShapeBase("Prism",Id);
 	readNodeIds(tmpNodeIds);
 	setPositionMatrix(Nodes);
 	setReferencePositionMatrix();
+
 	//setGrowthTemplateMatrix();
 	setCoeffMat();
 	calculateReferenceVolume();

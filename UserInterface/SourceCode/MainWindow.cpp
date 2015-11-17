@@ -258,7 +258,7 @@ void MainWindow::setPysPropDisplayMenu(QGridLayout *ProjectDisplayOptionsGrid){
 	PysPropComboBox->addItem("Viscosity");
 	PysPropComboBox->addItem("Young Modulus");
 	PysPropComboBox->addItem("Poisson Ratio");
-	PysPropComboBox->addItem("GrowthRate");
+	PysPropComboBox->addItem("Growth (% per hour)");
 	PysPropComboBox->addItem("ShapeChangeRate_z");
 	PysPropComboBox->setEnabled(false);
 	connect(PysPropComboBox , SIGNAL(currentIndexChanged(int)),this,SLOT(updatePysProp(int)));

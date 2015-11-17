@@ -169,6 +169,7 @@ It will start by opening the model input file, after each attempt to open a file
 <p>Save options of the simulation through the private function ModelInputObject::readSaveOptions</p>
 <p>Growth functions and related parameters of the simulation through the private function ModelInputObject::readGrowthOptions</p>
 <p>Shape change functions and related parameters of the simulation through the private function ModelInputObject::readShapeChangeOptions</p>
+<p>Myosin concentrations and related parameters of the simulation through the private function ModelInputObject::readMyosinOptions</p>
 <p>Stretcher experimental setup parameters of the simulation through the private function ModelInputObject::readStretcherSetup</p>
 <p>Pipette aspiration experimental setup parameters of the simulation through the private function ModelInputObject::readPipetteSetup</p>
 <p>In the case that the function, or any of the above listed parameter reading functions, encounters an unexpected line in the model input file, it will throw an error with a corresponding explanatory message, and quit the simulation.</p>
@@ -185,7 +186,7 @@ It will start by opening the model input file, after each attempt to open a file
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="classModelInputObject.html">ModelInputObject</a></li>
-    <li class="footer">Generated on Fri Sep 4 2015 12:21:23 for Tissue Origami by
+    <li class="footer">Generated on Tue Nov 3 2015 16:55:13 for Tissue Origami by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

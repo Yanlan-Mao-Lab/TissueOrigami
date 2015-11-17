@@ -1,7 +1,6 @@
 var searchData=
 [
-  ['id',['Id',['../classGrowthFunctionBase.html#aa669a940ab77009f9b2b9c9885e9cd9e',1,'GrowthFunctionBase::Id()'],['../classNode.html#a1bd379569cc1a8b96432e61971aed4d9',1,'Node::Id()']]],
-  ['immediateneigs',['immediateNeigs',['../classNode.html#ab22060fb9f61a0d93ec52e6045828782',1,'Node']]],
-  ['inittime',['initTime',['../classGrowthFunctionBase.html#ae92513a7b41637df8e26e7db35ddf97c',1,'GrowthFunctionBase']]],
-  ['innerradius',['innerRadius',['../classRingGrowthFunction.html#a4e8796fbbbe9fe18c2dcd04613effcf0',1,'RingGrowthFunction']]]
+  ['growthincrement',['growthIncrement',['../classShapeBase.html#af553856335d7344ea67ab10f9cc3babf',1,'ShapeBase']]],
+  ['growthmatrix',['GrowthMatrix',['../classGridBasedGrowthFunction.html#a5522d9b84fa95ebd65cdf290a4f0a65c',1,'GridBasedGrowthFunction']]],
+  ['growthrate',['GrowthRate',['../classUniformGrowthFunction.html#af78591902b0cc391a62f3093fd14ad10',1,'UniformGrowthFunction::GrowthRate()'],['../classRingGrowthFunction.html#a93b70ff6a7258c73a6bd2d888d09fc09',1,'RingGrowthFunction::GrowthRate()'],['../classShapeBase.html#ae31d7545110fd505629592348a2951b7',1,'ShapeBase::GrowthRate()']]]
 ];

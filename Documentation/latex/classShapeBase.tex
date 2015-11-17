@@ -39,13 +39,34 @@ Inheritance diagram for Shape\+Base\+:\begin{figure}[H]
 \hypertarget{classShapeBase_a44c758ac93865a1e51e63212ebfe2787}{}double {\bfseries get\+Columnarness} ()\label{classShapeBase_a44c758ac93865a1e51e63212ebfe2787}
 
 \item 
-\hypertarget{classShapeBase_a7d1235b3555a18328d1677e5b07458ff}{}void {\bfseries calculate\+Relative\+Pos\+In\+Bounding\+Box} (double Boinding\+Box\+X\+Min, double Bounding\+Box\+Y\+Min, double Bounding\+Box\+Length, double Bounding\+Box\+Width)\label{classShapeBase_a7d1235b3555a18328d1677e5b07458ff}
+\hypertarget{classShapeBase_ad88d175251a7604ed47e2b694f111c47}{}void {\bfseries get\+Relative\+Position\+In\+Tissue\+In\+Grid\+Index} (int n\+Grid\+X, int n\+Grid\+Y, double $\ast$columnar\+Reletive\+Pos, double $\ast$peripodial\+Relative\+Pos, int \&columnar\+Index\+X, int \&peripodial\+Index\+X, int \&columnar\+Index\+Y, int \&peripodial\+Index\+Y, double \&columnar\+Frac\+X, double \&peripodial\+Frac\+X, double \&columnar\+Frac\+Y, double \&peripodial\+Frac\+Y)\label{classShapeBase_ad88d175251a7604ed47e2b694f111c47}
+
+\item 
+\hypertarget{classShapeBase_a7c429bc57f1b16e3e1d4f2bb98360298}{}bool {\bfseries is\+Growth\+Rate\+Applicable} (int source\+Tissue, double \&weight)\label{classShapeBase_a7c429bc57f1b16e3e1d4f2bb98360298}
+
+\item 
+\hypertarget{classShapeBase_a33c9507a7e08fd529b28f70e62dfb33e}{}void {\bfseries calculate\+Fg\+From\+Rates} (double dt, double x, double y, double z, gsl\+\_\+matrix $\ast$rot\+Mat, gsl\+\_\+matrix $\ast$increment, int source\+Tissue)\label{classShapeBase_a33c9507a7e08fd529b28f70e62dfb33e}
+
+\item 
+\hypertarget{classShapeBase_ad158010ec26f607c4695aa7a0b767d73}{}void {\bfseries calculate\+Fg\+From\+Grid\+Corners} (double dt, \hyperlink{classGrowthFunctionBase}{Growth\+Function\+Base} $\ast$curr\+G\+F, gsl\+\_\+matrix $\ast$increment, int source\+Tissue, int Index\+X, int Index\+Y, double Frac\+X, double d\+Frac\+Y)\label{classShapeBase_ad158010ec26f607c4695aa7a0b767d73}
+
+\item 
+\hypertarget{classShapeBase_a009b5aed1c546db5e517f9f33f67b066}{}void {\bfseries update\+Growth\+Increment} (gsl\+\_\+matrix $\ast$columnar, gsl\+\_\+matrix $\ast$peripodial)\label{classShapeBase_a009b5aed1c546db5e517f9f33f67b066}
+
+\item 
+\hypertarget{classShapeBase_a3d71461730bfc221c8dcf8e4a7e31b3d}{}void {\bfseries calculate\+Relative\+Pos\+In\+Bounding\+Box} (double columnar\+Bounding\+Box\+X\+Min, double columnar\+Bounding\+Box\+Y\+Min, double columnar\+Bounding\+Box\+Length, double columnar\+Bounding\+Box\+Width, double peipodial\+Bounding\+Box\+X\+Min, double peipodial\+Bounding\+Box\+Y\+Min, double peipodial\+Bounding\+Box\+Length, double peipodial\+Bounding\+Box\+Width)\label{classShapeBase_a3d71461730bfc221c8dcf8e4a7e31b3d}
 
 \item 
 \hypertarget{classShapeBase_ae5e17514271f121498ed12cebae3aebe}{}void {\bfseries display\+Relative\+Pos\+In\+Bounding\+Box} ()\label{classShapeBase_ae5e17514271f121498ed12cebae3aebe}
 
 \item 
-\hypertarget{classShapeBase_a0d33afa938cd84b1376806a06769f6b9}{}void {\bfseries get\+Relative\+Pos\+In\+Bounding\+Box} (double $\ast$relative\+Pos)\label{classShapeBase_a0d33afa938cd84b1376806a06769f6b9}
+\hypertarget{classShapeBase_aa741d2a88ca8107af26816e467adc8ba}{}void {\bfseries get\+Relative\+Pos\+In\+Columnar\+Bounding\+Box} (double $\ast$relative\+Pos)\label{classShapeBase_aa741d2a88ca8107af26816e467adc8ba}
+
+\item 
+\hypertarget{classShapeBase_a1c8199f314d271da360831d797f7c070}{}void {\bfseries get\+Relative\+Pos\+In\+Peripodial\+Bounding\+Box} (double $\ast$relative\+Pos)\label{classShapeBase_a1c8199f314d271da360831d797f7c070}
+
+\item 
+\hypertarget{classShapeBase_ad34b6e8535ad7a534110f03792f5f5d1}{}void {\bfseries convert\+Relative\+Pos\+To\+Grid\+Index} (double $\ast$relpos, int \&index\+X, int \&index\+Y, double \&frac\+X, double \&frac\+Y, int n\+Grid\+X, int n\+Grid\+Y)\label{classShapeBase_ad34b6e8535ad7a534110f03792f5f5d1}
 
 \item 
 \hypertarget{classShapeBase_aecf99016ea7c36e0bff43a40e6a89df3}{}void {\bfseries get\+Strain} (int type, float \&Strain\+Mag)\label{classShapeBase_aecf99016ea7c36e0bff43a40e6a89df3}
@@ -108,7 +129,10 @@ Inheritance diagram for Shape\+Base\+:\begin{figure}[H]
 \hypertarget{classShapeBase_a362a15361e6fd25d65ed05f0cc31737a}{}virtual void {\bfseries Align\+Reference\+Base\+Normal\+To\+Z} ()\label{classShapeBase_a362a15361e6fd25d65ed05f0cc31737a}
 
 \item 
-\hypertarget{classShapeBase_ad9ffbae214584cbd0cc1e34f66a8ec5c}{}void {\bfseries update\+Growth\+Rate} (double scalex, double scaley, double scalez)\label{classShapeBase_ad9ffbae214584cbd0cc1e34f66a8ec5c}
+\hypertarget{classShapeBase_ac2c05f660fb3d68482c8ba751b68b2ed}{}void {\bfseries calculate\+Current\+Growth\+Increment} (gsl\+\_\+matrix $\ast$resulting\+Growth\+Increment, double dt, double growthx, double growthy, double growthz, gsl\+\_\+matrix $\ast$Shear\+Angle\+Rotation\+Matrix)\label{classShapeBase_ac2c05f660fb3d68482c8ba751b68b2ed}
+
+\item 
+\hypertarget{classShapeBase_a227d409b04d95e3110db851a9cb3ed8c}{}void {\bfseries update\+Shape\+Change\+Rate} (double x, double y, double z, double xy, double yz, double xz)\label{classShapeBase_a227d409b04d95e3110db851a9cb3ed8c}
 
 \item 
 \hypertarget{classShapeBase_a1162e815f80b1b9d58c69df731702ecb}{}virtual void {\bfseries calculate\+Reference\+Stiffness\+Matrix} ()\label{classShapeBase_a1162e815f80b1b9d58c69df731702ecb}
@@ -120,19 +144,64 @@ Inheritance diagram for Shape\+Base\+:\begin{figure}[H]
 \hypertarget{classShapeBase_afc2e2e90a9352778ba6bf6d547e319bf}{}virtual void {\bfseries calculate\+Curr\+Nodal\+Forces} (gsl\+\_\+matrix $\ast$gslcurrg, gsl\+\_\+matrix $\ast$gslcurr\+F, int point\+No)\label{classShapeBase_afc2e2e90a9352778ba6bf6d547e319bf}
 
 \item 
-\hypertarget{classShapeBase_aa5df3f56f90f3026d3732aecf047de70}{}void {\bfseries calculate\+Forces} (int R\+K\+Id, double $\ast$$\ast$$\ast$System\+Forces, vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&Nodes, ofstream \&output\+File)\label{classShapeBase_aa5df3f56f90f3026d3732aecf047de70}
+\hypertarget{classShapeBase_a146919562543c6f08d34cf1ae3e54a51}{}virtual void {\bfseries calculate\+Curr\+Tri\+Point\+F\+For\+Rotation} (gsl\+\_\+matrix $\ast$curr\+F, int point\+No)\label{classShapeBase_a146919562543c6f08d34cf1ae3e54a51}
 
 \item 
-\hypertarget{classShapeBase_ac323cea68af3b9ca0cfd913222b82e49}{}void {\bfseries update\+Positions} (int R\+K\+Id, vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&Nodes)\label{classShapeBase_ac323cea68af3b9ca0cfd913222b82e49}
+\hypertarget{classShapeBase_a010092ac7af5667facbbb8fb6bd98976}{}virtual void {\bfseries calculate\+Apical\+Area} ()\label{classShapeBase_a010092ac7af5667facbbb8fb6bd98976}
 
 \item 
-\hypertarget{classShapeBase_ac1ab3fae7adbc8fa015c99fb0d523795}{}void {\bfseries set\+Growth\+Rate} (double x, double y, double z)\label{classShapeBase_ac1ab3fae7adbc8fa015c99fb0d523795}
+\hypertarget{classShapeBase_a0bc80947335afbc181fca326e9a6b7fb}{}virtual void {\bfseries calculate\+Basal\+Area} ()\label{classShapeBase_a0bc80947335afbc181fca326e9a6b7fb}
 
 \item 
-\hypertarget{classShapeBase_a164d682fa7804da88cb6b16330b7f404}{}void {\bfseries set\+Shape\+Change\+Rate} (double x, double y, double z)\label{classShapeBase_a164d682fa7804da88cb6b16330b7f404}
+\hypertarget{classShapeBase_a075abfd176f835cf41b581f34682785f}{}void {\bfseries calculate\+Forces} (double $\ast$$\ast$System\+Forces, vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&Nodes, bool record\+Forces\+On\+Fixed\+Nodes, double $\ast$$\ast$Fixed\+Node\+Forces, ofstream \&output\+File)\label{classShapeBase_a075abfd176f835cf41b581f34682785f}
 
 \item 
-\hypertarget{classShapeBase_acab38ef1a1f72d3df1dec8d6f45d09aa}{}void {\bfseries update\+Growth\+To\+Add} (double $\ast$growthscale)\label{classShapeBase_acab38ef1a1f72d3df1dec8d6f45d09aa}
+\hypertarget{classShapeBase_a990c3d93836d53687b8af49a489dbde4}{}void {\bfseries update\+Positions} (vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&Nodes)\label{classShapeBase_a990c3d93836d53687b8af49a489dbde4}
+
+\item 
+\hypertarget{classShapeBase_a360757aa3950487361874725c1e5ed9e}{}void {\bfseries set\+Growth\+Rate} (double dt, double x, double y, double z)\label{classShapeBase_a360757aa3950487361874725c1e5ed9e}
+
+\item 
+\hypertarget{classShapeBase_aaf8312bb00ea6178abd9ebb1e8f40099}{}void {\bfseries clean\+Myosin\+Force} ()\label{classShapeBase_aaf8312bb00ea6178abd9ebb1e8f40099}
+
+\item 
+\hypertarget{classShapeBase_a47ac1da121eea90c265647b6f2115bfe}{}void {\bfseries update\+Uniform\+Equilibrium\+Myosin\+Concentration} (bool is\+Apical, double c\+Eq\+Uniform)\label{classShapeBase_a47ac1da121eea90c265647b6f2115bfe}
+
+\item 
+\hypertarget{classShapeBase_a6e4cc22d01118cf2dcb77276b56edf9d}{}void {\bfseries update\+Unipolar\+Equilibrium\+Myosin\+Concentration} (bool is\+Apical, double c\+Eq\+Unipolar, double orientation\+X, double orientation\+Y)\label{classShapeBase_a6e4cc22d01118cf2dcb77276b56edf9d}
+
+\item 
+\hypertarget{classShapeBase_ac39db6987b89791e7a0dad1c9f3540f2}{}void {\bfseries update\+Myosin\+Concentration} (double dt, double k\+Myo)\label{classShapeBase_ac39db6987b89791e7a0dad1c9f3540f2}
+
+\item 
+\hypertarget{classShapeBase_abfb5933433de7f4f6c58734be0faeac2}{}bool {\bfseries calculate\+If\+Inside\+Active\+Stripe} (double initial\+Point, double end\+Point, double stripe\+Size1, double stripe\+Size2)\label{classShapeBase_abfb5933433de7f4f6c58734be0faeac2}
+
+\item 
+\hypertarget{classShapeBase_a1a1d8053c99109b0c13b06b2cca44dee}{}double {\bfseries get\+Cmyosin\+Uniform\+For\+Node} (int Tissue\+Placement)\label{classShapeBase_a1a1d8053c99109b0c13b06b2cca44dee}
+
+\item 
+\hypertarget{classShapeBase_a69ec8a1780b516d47560a25ba17f672a}{}double {\bfseries get\+Cmyosin\+Unipolar\+For\+Node} (int Tissue\+Placement)\label{classShapeBase_a69ec8a1780b516d47560a25ba17f672a}
+
+\item 
+\hypertarget{classShapeBase_afa44aa076cefed9d57f61dce7574832a}{}void {\bfseries get\+Myosin\+Levels} (double $\ast$c\+Myo)\label{classShapeBase_afa44aa076cefed9d57f61dce7574832a}
+
+\item 
+\hypertarget{classShapeBase_ab31ad5e068aeb94f4e851b64d966547a}{}void {\bfseries get\+Equilibrium\+Myosin\+Levels} (double $\ast$c\+Myo\+Eq)\label{classShapeBase_ab31ad5e068aeb94f4e851b64d966547a}
+
+\item 
+\hypertarget{classShapeBase_afbcfcd90f0942e917fdc1deb1df1be1c}{}void {\bfseries set\+Myosin\+Levels} (double c\+Uni0, double c\+Uni1, double c\+Pol0, double c\+Pol1)\label{classShapeBase_afbcfcd90f0942e917fdc1deb1df1be1c}
+
+\item 
+\hypertarget{classShapeBase_adef29b02faa010719b0810d3643c6b62}{}void {\bfseries set\+Equilibrium\+Myosin\+Levels} (double c\+Uni0, double c\+Uni1, double c\+Pol0, double c\+Pol1)\label{classShapeBase_adef29b02faa010719b0810d3643c6b62}
+
+\item 
+\hypertarget{classShapeBase_ac4bc4f757144dc10e6c3170e23c30af0}{}virtual void {\bfseries calculate\+Myosin\+Forces} (double force\+Per\+Myo\+Molecule)\label{classShapeBase_ac4bc4f757144dc10e6c3170e23c30af0}
+
+\item 
+\hypertarget{classShapeBase_a62661832529c1556931dea66adfd7ef9}{}virtual void {\bfseries distribute\+Myosin\+Force} (bool is\+Isotropic, bool apical)\label{classShapeBase_a62661832529c1556931dea66adfd7ef9}
+
+\item 
+\hypertarget{classShapeBase_a8a9f91384133d8953dbb38d71cc29d51}{}void {\bfseries set\+Shape\+Change\+Rate} (double x, double y, double z, double xy, double yz, double xz)\label{classShapeBase_a8a9f91384133d8953dbb38d71cc29d51}
 
 \item 
 \hypertarget{classShapeBase_a6e36c21c648f06a0e0693b3c34472fe5}{}void {\bfseries update\+Element\+Volumes\+And\+Tissue\+Placements\+For\+Save} (vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&Nodes)\label{classShapeBase_a6e36c21c648f06a0e0693b3c34472fe5}
@@ -148,9 +217,6 @@ Inheritance diagram for Shape\+Base\+:\begin{figure}[H]
 
 \item 
 \hypertarget{classShapeBase_adb6927dd05e3f6aa1c5ac5d32a30b5da}{}virtual void {\bfseries check\+Health} ()\label{classShapeBase_adb6927dd05e3f6aa1c5ac5d32a30b5da}
-
-\item 
-\hypertarget{classShapeBase_a35a4fb8458adc80435e11da10cb6627b}{}void {\bfseries reset\+Curr\+Step\+Growth\+Data} ()\label{classShapeBase_a35a4fb8458adc80435e11da10cb6627b}
 
 \item 
 \hypertarget{classShapeBase_a3c08833714950163efbf15f9b1c26765}{}void {\bfseries reset\+Curr\+Step\+Shape\+Change\+Data} ()\label{classShapeBase_a3c08833714950163efbf15f9b1c26765}
@@ -192,6 +258,12 @@ Inheritance diagram for Shape\+Base\+:\begin{figure}[H]
 \hypertarget{classShapeBase_afebf3d9e96e28e5272884f09b61eaab3}{}void {\bfseries normalise\+Vector3\+D} (double $\ast$v)\label{classShapeBase_afebf3d9e96e28e5272884f09b61eaab3}
 
 \item 
+\hypertarget{classShapeBase_a9e7ca6bbc30107ed82e73694f9c34717}{}void {\bfseries normalise\+Vector3\+D} (gsl\+\_\+vector $\ast$v)\label{classShapeBase_a9e7ca6bbc30107ed82e73694f9c34717}
+
+\item 
+\hypertarget{classShapeBase_a38c436dca2006e445f7949bc34f08e3c}{}double {\bfseries get\+Norm\+Vector3\+D} (gsl\+\_\+vector $\ast$v)\label{classShapeBase_a38c436dca2006e445f7949bc34f08e3c}
+
+\item 
 \hypertarget{classShapeBase_ade98a5910e7b81ee22da6bcb91262328}{}double {\bfseries determinant3by3\+Matrix} (double $\ast$rot\+Mat)\label{classShapeBase_ade98a5910e7b81ee22da6bcb91262328}
 
 \item 
@@ -216,11 +288,19 @@ Inheritance diagram for Shape\+Base\+:\begin{figure}[H]
 \hypertarget{classShapeBase_ad803a237b7e7c06d419a308625a599e0}{}void {\bfseries rotate\+Vector\+By\+Rotation\+Matrix} (double $\ast$u, double $\ast$rot\+Mat)\label{classShapeBase_ad803a237b7e7c06d419a308625a599e0}
 
 \item 
-\hypertarget{classShapeBase_aa83e1b27ea3a67b958afd06f9095e0de}{}void {\bfseries grow\+Shape\+By\+Fg} (double dt)\label{classShapeBase_aa83e1b27ea3a67b958afd06f9095e0de}
+\hypertarget{classShapeBase_a14a573072213ea91314c8f1101f106bb}{}void {\bfseries rotate\+Vector\+By\+Rotation\+Matrix} (double $\ast$u, gsl\+\_\+matrix $\ast$rot\+Mat)\label{classShapeBase_a14a573072213ea91314c8f1101f106bb}
 
 \item 
 \hypertarget{classShapeBase_a9ae4c5fc8817528493502e3f75c9a984}{}void {\bfseries Calculate\+Growth\+Rotation\+By\+F} ()\label{classShapeBase_a9ae4c5fc8817528493502e3f75c9a984}
 
+\item 
+\hypertarget{classShapeBase_a5f5e95f38f271d28f2856109b0256aa0}{}void {\bfseries calculate\+Tri\+Point\+F\+For\+Ratation} ()\label{classShapeBase_a5f5e95f38f271d28f2856109b0256aa0}
+
+\item 
+\hypertarget{classShapeBase_aa83e1b27ea3a67b958afd06f9095e0de}{}void {\bfseries grow\+Shape\+By\+Fg} (double dt)\label{classShapeBase_aa83e1b27ea3a67b958afd06f9095e0de}
+
+\item 
+void \hyperlink{classShapeBase_a5409de18ee9e47af0bb977f4a1e608fb}{change\+Shape\+By\+Fsc} (double dt)
 \item 
 \hypertarget{classShapeBase_a6d8088a8bb897d79a796a253c06d954f}{}virtual double {\bfseries get\+Apical\+Side\+Length\+Average} ()\label{classShapeBase_a6d8088a8bb897d79a796a253c06d954f}
 
@@ -243,7 +323,7 @@ Inheritance diagram for Shape\+Base\+:\begin{figure}[H]
 \hypertarget{classShapeBase_ab6611ef2738450d5990e93ccedcb18ad}{}virtual void {\bfseries calculate\+Normal\+For\+Packing} (int tissue\+Placement)\label{classShapeBase_ab6611ef2738450d5990e93ccedcb18ad}
 
 \item 
-\hypertarget{classShapeBase_ac754abfd56aff0bb0b6bb1ca0f1c6b7c}{}virtual void {\bfseries Add\+Packing\+To\+Surface} (int tissueplacement, double Fx, double Fy, double Fz, int R\+K\+Id, double $\ast$$\ast$$\ast$System\+Forces, double $\ast$$\ast$$\ast$Packing\+Forces, vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&Nodes)\label{classShapeBase_ac754abfd56aff0bb0b6bb1ca0f1c6b7c}
+\hypertarget{classShapeBase_af715a49333b9ffd4fcd96a3c649cbe2b}{}virtual void {\bfseries Add\+Packing\+To\+Surface} (int tissueplacement, double Fx, double Fy, double Fz, double $\ast$$\ast$System\+Forces, double $\ast$$\ast$Packing\+Forces, vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&Nodes)\label{classShapeBase_af715a49333b9ffd4fcd96a3c649cbe2b}
 
 \item 
 \hypertarget{classShapeBase_a8e70b4b3be96de765028face345ad73d}{}virtual void {\bfseries get\+Apical\+Node\+Pos} (double $\ast$pos\+Corner)\label{classShapeBase_a8e70b4b3be96de765028face345ad73d}
@@ -306,6 +386,9 @@ Inheritance diagram for Shape\+Base\+:\begin{figure}[H]
 \hypertarget{classShapeBase_ab5c4c774227af1d446f80c0ef58044c9}{}void {\bfseries cross\+Product3\+D} (double $\ast$u, double $\ast$v, double $\ast$cross)\label{classShapeBase_ab5c4c774227af1d446f80c0ef58044c9}
 
 \item 
+\hypertarget{classShapeBase_a334a6cec6a698ac49006d8216a93ced9}{}void {\bfseries cross\+Product3\+D} (gsl\+\_\+vector $\ast$u, gsl\+\_\+vector $\ast$v, gsl\+\_\+vector $\ast$cross)\label{classShapeBase_a334a6cec6a698ac49006d8216a93ced9}
+
+\item 
 \hypertarget{classShapeBase_a9a980e69b3ccad29e21499921d575829}{}void {\bfseries align\+Growth\+Calculation\+On\+Reference} ()\label{classShapeBase_a9a980e69b3ccad29e21499921d575829}
 
 \item 
@@ -337,12 +420,6 @@ Inheritance diagram for Shape\+Base\+:\begin{figure}[H]
 
 \item 
 \hypertarget{classShapeBase_a4bda00f80968d836c647afe5f6d1fb36}{}gsl\+\_\+matrix $\ast$ {\bfseries Strain}\label{classShapeBase_a4bda00f80968d836c647afe5f6d1fb36}
-
-\item 
-\hypertarget{classShapeBase_a260226b84c840503ce7da99bfeedc57b}{}gsl\+\_\+matrix $\ast$ {\bfseries R\+K1\+Strain}\label{classShapeBase_a260226b84c840503ce7da99bfeedc57b}
-
-\item 
-\hypertarget{classShapeBase_a41ddcfda39fe0be356a512b48b31e29e}{}bool {\bfseries Is\+Growing}\label{classShapeBase_a41ddcfda39fe0be356a512b48b31e29e}
 
 \item 
 \hypertarget{classShapeBase_a994acea5e6f2cf92c94f485e7ba5afc9}{}bool {\bfseries Is\+Changing\+Shape}\label{classShapeBase_a994acea5e6f2cf92c94f485e7ba5afc9}
@@ -382,6 +459,9 @@ Inheritance diagram for Shape\+Base\+:\begin{figure}[H]
 
 \item 
 \hypertarget{classShapeBase_a21420915ac7c8444e0e5b5f4e98d7322}{}bool {\bfseries cap\+Element}\label{classShapeBase_a21420915ac7c8444e0e5b5f4e98d7322}
+
+\item 
+\hypertarget{classShapeBase_a3aedc120b16a922ee9b0c1595630694b}{}double $\ast$$\ast$ {\bfseries Myo\+Force}\label{classShapeBase_a3aedc120b16a922ee9b0c1595630694b}
 
 \item 
 \hypertarget{classShapeBase_af64f900d51cec3e48a488fdd8a51eacf}{}bool {\bfseries Rotated\+Element}\label{classShapeBase_af64f900d51cec3e48a488fdd8a51eacf}
@@ -441,7 +521,7 @@ Inheritance diagram for Shape\+Base\+:\begin{figure}[H]
 \hypertarget{classShapeBase_a8bf9c7c8ae6a3195ec9c6b6bdaf847ab}{}bool {\bfseries calculate\+Growth\+Strains\+Rot\+Mat} (double $\ast$v)\label{classShapeBase_a8bf9c7c8ae6a3195ec9c6b6bdaf847ab}
 
 \item 
-\hypertarget{classShapeBase_ade15b14f3439f1c9c0bcd78c2cebad61}{}void {\bfseries calculate\+Forces3\+D} (int R\+K\+Id, double $\ast$$\ast$$\ast$System\+Forces, vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&Nodes, ofstream \&output\+File)\label{classShapeBase_ade15b14f3439f1c9c0bcd78c2cebad61}
+\hypertarget{classShapeBase_acbe7dfe60cdac63414879ea0e0d0fc2f}{}void {\bfseries calculate\+Forces3\+D} (double $\ast$$\ast$System\+Forces, vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&Nodes, bool record\+Forces\+On\+Fixed\+Nodes, double $\ast$$\ast$Fixed\+Node\+Forces, ofstream \&output\+File)\label{classShapeBase_acbe7dfe60cdac63414879ea0e0d0fc2f}
 
 \item 
 \hypertarget{classShapeBase_a311e773cb7bf7c410c39026d7183b4ad}{}gsl\+\_\+matrix $\ast$ {\bfseries calculate\+E\+For\+Nodal\+Forces} (gsl\+\_\+matrix $\ast$F, gsl\+\_\+matrix $\ast$Fe)\label{classShapeBase_a311e773cb7bf7c410c39026d7183b4ad}
@@ -483,51 +563,42 @@ Inheritance diagram for Shape\+Base\+:\begin{figure}[H]
 \subsection*{Protected Attributes}
 \begin{DoxyCompactItemize}
 \item 
-\hypertarget{classShapeBase_a36aedd41e8465a186a0b0c454b5b76f3}{}int {\bfseries Shape\+Type}\label{classShapeBase_a36aedd41e8465a186a0b0c454b5b76f3}
+\hypertarget{classShapeBase_a36aedd41e8465a186a0b0c454b5b76f3}{}int \hyperlink{classShapeBase_a36aedd41e8465a186a0b0c454b5b76f3}{Shape\+Type}\label{classShapeBase_a36aedd41e8465a186a0b0c454b5b76f3}
 
-\item 
-\hypertarget{classShapeBase_ae7dd93b58b3281ce90025f83d0f0e976}{}int {\bfseries n\+Nodes}\label{classShapeBase_ae7dd93b58b3281ce90025f83d0f0e976}
+\begin{DoxyCompactList}\small\item\em The integer defining the type of the shape, Prisms shape type = 1;. \end{DoxyCompactList}\item 
+\hypertarget{classShapeBase_ae7dd93b58b3281ce90025f83d0f0e976}{}int \hyperlink{classShapeBase_ae7dd93b58b3281ce90025f83d0f0e976}{n\+Nodes}\label{classShapeBase_ae7dd93b58b3281ce90025f83d0f0e976}
 
-\item 
-\hypertarget{classShapeBase_a250bd3396546342c8104f5b9c180d18f}{}int {\bfseries n\+Dim}\label{classShapeBase_a250bd3396546342c8104f5b9c180d18f}
+\begin{DoxyCompactList}\small\item\em The number of nodes of the element, it is based on \hyperlink{classShapeBase_a36aedd41e8465a186a0b0c454b5b76f3}{Shape\+Base\+::\+Shape\+Type}. \end{DoxyCompactList}\item 
+\hypertarget{classShapeBase_a250bd3396546342c8104f5b9c180d18f}{}int \hyperlink{classShapeBase_a250bd3396546342c8104f5b9c180d18f}{n\+Dim}\label{classShapeBase_a250bd3396546342c8104f5b9c180d18f}
 
-\item 
-\hypertarget{classShapeBase_a02035767d6d169d4a2c1db5f6af8a218}{}int $\ast$ {\bfseries Identifier\+Colour}\label{classShapeBase_a02035767d6d169d4a2c1db5f6af8a218}
+\begin{DoxyCompactList}\small\item\em The number of dimensions for the positions of each of the nodes of the element. \end{DoxyCompactList}\item 
+\hypertarget{classShapeBase_a02035767d6d169d4a2c1db5f6af8a218}{}int $\ast$ \hyperlink{classShapeBase_a02035767d6d169d4a2c1db5f6af8a218}{Identifier\+Colour}\label{classShapeBase_a02035767d6d169d4a2c1db5f6af8a218}
 
-\item 
-\hypertarget{classShapeBase_ae31d7545110fd505629592348a2951b7}{}double $\ast$ {\bfseries Growth\+Rate}\label{classShapeBase_ae31d7545110fd505629592348a2951b7}
+\begin{DoxyCompactList}\small\item\em The unique identifier colour of the element, this is used for \char`\"{}picking\char`\"{} in the visual interface. \end{DoxyCompactList}\item 
+\hypertarget{classShapeBase_ae31d7545110fd505629592348a2951b7}{}double $\ast$ \hyperlink{classShapeBase_ae31d7545110fd505629592348a2951b7}{Growth\+Rate}\label{classShapeBase_ae31d7545110fd505629592348a2951b7}
 
-\item 
-\hypertarget{classShapeBase_a134d82ba500ef829b6aa3e3a83783c9a}{}double {\bfseries columnar\+Growth\+Weight}\label{classShapeBase_a134d82ba500ef829b6aa3e3a83783c9a}
+\begin{DoxyCompactList}\small\item\em Growth rate recording for display purposes only. The recorded growth rate in x, y, and z coordinates, does not record shear deformation induced in growth. Recorded in exponential form through time step, converted to rate per hour for display within the visual interface. \end{DoxyCompactList}\item 
+\hypertarget{classShapeBase_af553856335d7344ea67ab10f9cc3babf}{}gsl\+\_\+matrix $\ast$ \hyperlink{classShapeBase_af553856335d7344ea67ab10f9cc3babf}{growth\+Increment}\label{classShapeBase_af553856335d7344ea67ab10f9cc3babf}
 
-\item 
-\hypertarget{classShapeBase_a3663f3220016756b1bd5a92477325ec2}{}double {\bfseries peripodial\+Growth\+Weight}\label{classShapeBase_a3663f3220016756b1bd5a92477325ec2}
+\begin{DoxyCompactList}\small\item\em The matrix (3,3) representing the incremental growth in current time step. Reset to identity at the beginning of each time step, updated in growth functions, and utilised to update Fg. \end{DoxyCompactList}\item 
+\hypertarget{classShapeBase_a134d82ba500ef829b6aa3e3a83783c9a}{}double \hyperlink{classShapeBase_a134d82ba500ef829b6aa3e3a83783c9a}{columnar\+Growth\+Weight}\label{classShapeBase_a134d82ba500ef829b6aa3e3a83783c9a}
 
-\item 
-\hypertarget{classShapeBase_a1c6db43b0794a15e4bc42b8ca994a785}{}double $\ast$ {\bfseries Shape\+Change\+Rate}\label{classShapeBase_a1c6db43b0794a15e4bc42b8ca994a785}
+\begin{DoxyCompactList}\small\item\em The fraction defining how close to the columnar layer the element is. 1.\+0 for columnar layer, 0.\+0 for peripodial membrane elements, and scaled according to position in the elements surrounding the lumen. \end{DoxyCompactList}\item 
+\hypertarget{classShapeBase_a3663f3220016756b1bd5a92477325ec2}{}double \hyperlink{classShapeBase_a3663f3220016756b1bd5a92477325ec2}{peripodial\+Growth\+Weight}\label{classShapeBase_a3663f3220016756b1bd5a92477325ec2}
 
-\item 
-\hypertarget{classShapeBase_aee6a2cd267d49404f5442a48c867860f}{}bool {\bfseries rotated\+Growth}\label{classShapeBase_aee6a2cd267d49404f5442a48c867860f}
+\begin{DoxyCompactList}\small\item\em The fraction defining how close to the peripodial membrane the element is. 0.\+0 for columnar layer, 1.\+0 for peripodial membrane elements, and scaled according to position in the elements surrounding the lumen. \end{DoxyCompactList}\item 
+\hypertarget{classShapeBase_a1c6db43b0794a15e4bc42b8ca994a785}{}double $\ast$ \hyperlink{classShapeBase_a1c6db43b0794a15e4bc42b8ca994a785}{Shape\+Change\+Rate}\label{classShapeBase_a1c6db43b0794a15e4bc42b8ca994a785}
 
-\item 
-\hypertarget{classShapeBase_ad5b59419d3e5c4d61a14bad64f053e69}{}double $\ast$ {\bfseries Curr\+Growth\+Strain\+Addition}\label{classShapeBase_ad5b59419d3e5c4d61a14bad64f053e69}
+\begin{DoxyCompactList}\small\item\em Shape change rate of the elements, only orthagonal shape changes are allowed (x, y, z). Shape changes will be scaled to conserve volume, thus three values will not be independent. \end{DoxyCompactList}\item 
+\hypertarget{classShapeBase_aee6a2cd267d49404f5442a48c867860f}{}bool \hyperlink{classShapeBase_aee6a2cd267d49404f5442a48c867860f}{rotated\+Growth}\label{classShapeBase_aee6a2cd267d49404f5442a48c867860f}
 
-\item 
-\hypertarget{classShapeBase_a8bb52a406f331e6938694a4902bafb20}{}bool {\bfseries Curr\+Shape\+Change\+Strains\+Up\+To\+Date}\label{classShapeBase_a8bb52a406f331e6938694a4902bafb20}
+\begin{DoxyCompactList}\small\item\em The boolean stating if the element has rotated from the growth axis, hence the calculated growth requires further rotation to follow tissue axes. \end{DoxyCompactList}\item 
+\hypertarget{classShapeBase_a3a88df07863ecf2a78fbd75543320edd}{}double $\ast$ \hyperlink{classShapeBase_a3a88df07863ecf2a78fbd75543320edd}{columnar\+Relative\+Pos\+In\+Bounding\+Box}\label{classShapeBase_a3a88df07863ecf2a78fbd75543320edd}
 
-\item 
-\hypertarget{classShapeBase_a526231dcaa8d4a871e198284b4c4d9ff}{}bool {\bfseries Curr\+Growth\+Strains\+Up\+To\+Date}\label{classShapeBase_a526231dcaa8d4a871e198284b4c4d9ff}
+\begin{DoxyCompactList}\small\item\em The relative position on x-\/y plane, within the bounding box of the columnar layer (x,y). \end{DoxyCompactList}\item 
+\hypertarget{classShapeBase_a3dfa65871a157645e733a4b01f1c8955}{}double $\ast$ \hyperlink{classShapeBase_a3dfa65871a157645e733a4b01f1c8955}{peripodial\+Relative\+Pos\+In\+Bounding\+Box}\label{classShapeBase_a3dfa65871a157645e733a4b01f1c8955}
 
-\item 
-\hypertarget{classShapeBase_ad7e1adfd2058cd5162816f9087a77c94}{}bool {\bfseries Grew\+In\+The\+Past}\label{classShapeBase_ad7e1adfd2058cd5162816f9087a77c94}
-
-\item 
-\hypertarget{classShapeBase_ac733487c1f89ed95f2fc2af960d933df}{}bool {\bfseries Changed\+Shape\+In\+The\+Past}\label{classShapeBase_ac733487c1f89ed95f2fc2af960d933df}
-
-\item 
-\hypertarget{classShapeBase_a57b594e048211647ba670710be0509f2}{}double $\ast$ {\bfseries Relative\+Pos\+In\+Bounding\+Box}\label{classShapeBase_a57b594e048211647ba670710be0509f2}
-
-\item 
+\begin{DoxyCompactList}\small\item\em The relative position on x-\/y plane, within the bounding box of the peripodial membrane layer (x,y). \end{DoxyCompactList}\item 
 \hypertarget{classShapeBase_a80a8943320a0cdc871565acded52b239}{}gsl\+\_\+matrix $\ast$$\ast$ {\bfseries Shape\+Func\+Derivatives}\label{classShapeBase_a80a8943320a0cdc871565acded52b239}
 
 \item 
@@ -558,6 +629,9 @@ Inheritance diagram for Shape\+Base\+:\begin{figure}[H]
 \hypertarget{classShapeBase_acd549e0086d16194ae389ae528969596}{}gsl\+\_\+matrix $\ast$$\ast$ {\bfseries elastic\+Stress}\label{classShapeBase_acd549e0086d16194ae389ae528969596}
 
 \item 
+\hypertarget{classShapeBase_ab7ac8f14929ab37e8eae5fcaf93b18a8}{}gsl\+\_\+matrix $\ast$ {\bfseries Tri\+Point\+F}\label{classShapeBase_ab7ac8f14929ab37e8eae5fcaf93b18a8}
+
+\item 
 \hypertarget{classShapeBase_ab41f6a16647607b1c898eea1c2860367}{}double $\ast$ {\bfseries det\+Fs}\label{classShapeBase_ab41f6a16647607b1c898eea1c2860367}
 
 \item 
@@ -565,6 +639,27 @@ Inheritance diagram for Shape\+Base\+:\begin{figure}[H]
 
 \item 
 \hypertarget{classShapeBase_aa7043ddacbcd92480cb54467a2777627}{}double {\bfseries Z\+Projected\+Apical\+Area}\label{classShapeBase_aa7043ddacbcd92480cb54467a2777627}
+
+\item 
+\hypertarget{classShapeBase_a2ae2b0b1dfd0672a39897e780d861254}{}double {\bfseries Basal\+Area}\label{classShapeBase_a2ae2b0b1dfd0672a39897e780d861254}
+
+\item 
+\hypertarget{classShapeBase_adb4227c13db7e34dd1af182d143af47b}{}double {\bfseries Apical\+Area}\label{classShapeBase_adb4227c13db7e34dd1af182d143af47b}
+
+\item 
+\hypertarget{classShapeBase_a485e95cb1e7a440e57884d4df5ee1350}{}double {\bfseries c\+Myo\+Uniform} \mbox{[}2\mbox{]}\label{classShapeBase_a485e95cb1e7a440e57884d4df5ee1350}
+
+\item 
+\hypertarget{classShapeBase_a2a1e584564ef617fa1d18eb591c84a67}{}double {\bfseries c\+Myo\+Unipolar} \mbox{[}2\mbox{]}\label{classShapeBase_a2a1e584564ef617fa1d18eb591c84a67}
+
+\item 
+\hypertarget{classShapeBase_aa32b4675de014e09732e7ab89719e679}{}double {\bfseries c\+Myo\+Uniform\+Eq} \mbox{[}2\mbox{]}\label{classShapeBase_aa32b4675de014e09732e7ab89719e679}
+
+\item 
+\hypertarget{classShapeBase_a59c3af9d1dcfe4749d33ba168c5bda53}{}double {\bfseries c\+Myo\+Unipolar\+Eq} \mbox{[}2\mbox{]}\label{classShapeBase_a59c3af9d1dcfe4749d33ba168c5bda53}
+
+\item 
+\hypertarget{classShapeBase_afc91612adf1d146a48767756f38d1152}{}gsl\+\_\+matrix $\ast$ {\bfseries myo\+Polarity\+Dir}\label{classShapeBase_afc91612adf1d146a48767756f38d1152}
 
 \item 
 \hypertarget{classShapeBase_a1878efccfc629e53748e8907386825b0}{}gsl\+\_\+matrix $\ast$ {\bfseries D}\label{classShapeBase_a1878efccfc629e53748e8907386825b0}
@@ -588,19 +683,32 @@ Inheritance diagram for Shape\+Base\+:\begin{figure}[H]
 \hypertarget{classShapeBase_ac5819d0d117e5510611259177c477af8}{}double {\bfseries mu}\label{classShapeBase_ac5819d0d117e5510611259177c477af8}
 
 \item 
-\hypertarget{classShapeBase_a4156d7c7f91f0b528214b74277279df0}{}gsl\+\_\+matrix $\ast$ {\bfseries Fg}\label{classShapeBase_a4156d7c7f91f0b528214b74277279df0}
+\hypertarget{classShapeBase_a4156d7c7f91f0b528214b74277279df0}{}gsl\+\_\+matrix $\ast$ \hyperlink{classShapeBase_a4156d7c7f91f0b528214b74277279df0}{Fg}\label{classShapeBase_a4156d7c7f91f0b528214b74277279df0}
 
-\item 
-\hypertarget{classShapeBase_afe7cb600a9316597a16512ab7b6fcd6f}{}gsl\+\_\+matrix $\ast$ {\bfseries Inv\+Fg}\label{classShapeBase_afe7cb600a9316597a16512ab7b6fcd6f}
+\begin{DoxyCompactList}\small\item\em Growth matrix. \end{DoxyCompactList}\item 
+\hypertarget{classShapeBase_afe7cb600a9316597a16512ab7b6fcd6f}{}gsl\+\_\+matrix $\ast$ \hyperlink{classShapeBase_afe7cb600a9316597a16512ab7b6fcd6f}{Inv\+Fg}\label{classShapeBase_afe7cb600a9316597a16512ab7b6fcd6f}
 
-\item 
-\hypertarget{classShapeBase_ab7ac8f14929ab37e8eae5fcaf93b18a8}{}gsl\+\_\+matrix $\ast$ {\bfseries Tri\+Point\+F}\label{classShapeBase_ab7ac8f14929ab37e8eae5fcaf93b18a8}
+\begin{DoxyCompactList}\small\item\em Inverse of growth matrix. \end{DoxyCompactList}\item 
+\hypertarget{classShapeBase_a08d7f6e8f098a7b5985c615842062014}{}gsl\+\_\+matrix $\ast$ \hyperlink{classShapeBase_a08d7f6e8f098a7b5985c615842062014}{Fsc}\label{classShapeBase_a08d7f6e8f098a7b5985c615842062014}
 
-\item 
+\begin{DoxyCompactList}\small\item\em Shape change matrix. \end{DoxyCompactList}\item 
+\hypertarget{classShapeBase_ad72828aab0668c993f57727123aa96be}{}gsl\+\_\+matrix $\ast$ \hyperlink{classShapeBase_ad72828aab0668c993f57727123aa96be}{Inv\+Fsc}\label{classShapeBase_ad72828aab0668c993f57727123aa96be}
+
+\begin{DoxyCompactList}\small\item\em Inverse of shape change matrix. \end{DoxyCompactList}\item 
 \hypertarget{classShapeBase_ace20710f27099833509c474b221c25df}{}gsl\+\_\+matrix $\ast$ {\bfseries Tri\+Point\+Ke}\label{classShapeBase_ace20710f27099833509c474b221c25df}
 
 \end{DoxyCompactItemize}
 
+
+\subsection{Member Function Documentation}
+\hypertarget{classShapeBase_a5409de18ee9e47af0bb977f4a1e608fb}{}\index{Shape\+Base@{Shape\+Base}!change\+Shape\+By\+Fsc@{change\+Shape\+By\+Fsc}}
+\index{change\+Shape\+By\+Fsc@{change\+Shape\+By\+Fsc}!Shape\+Base@{Shape\+Base}}
+\subsubsection[{change\+Shape\+By\+Fsc}]{\setlength{\rightskip}{0pt plus 5cm}void Shape\+Base\+::change\+Shape\+By\+Fsc (
+\begin{DoxyParamCaption}
+\item[{double}]{dt}
+\end{DoxyParamCaption}
+)}\label{classShapeBase_a5409de18ee9e47af0bb977f4a1e608fb}
+$<$ The increment of shape change that will be induced this step 
 
 The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
 \item 

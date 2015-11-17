@@ -117,33 +117,40 @@ $(document).ready(function(){initNavTree('ReferenceShapeBase_8h_source.html','')
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;</div>
 <div class="line"><a name="l00011"></a><span class="lineno"><a class="line" href="classReferenceShapeBase.html">   11</a></span>&#160;<span class="keyword">class </span><a class="code" href="classReferenceShapeBase.html">ReferenceShapeBase</a>{</div>
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="keyword">protected</span>:</div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;    <span class="keywordtype">int</span> ShapeType;</div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;    <span class="keywordtype">int</span> Id;</div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;    <span class="keywordtype">int</span> nNodes;</div>
+<div class="line"><a name="l00013"></a><span class="lineno"><a class="line" href="classReferenceShapeBase.html#a4831a54cffbafef4ded26fb8c50566e0">   13</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="classReferenceShapeBase.html#a4831a54cffbafef4ded26fb8c50566e0">ShapeType</a>;      </div>
+<div class="line"><a name="l00014"></a><span class="lineno"><a class="line" href="classReferenceShapeBase.html#af0da93cee3f17800d7aa90b21b1b81c7">   14</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="classReferenceShapeBase.html#af0da93cee3f17800d7aa90b21b1b81c7">Id</a>;             </div>
+<div class="line"><a name="l00015"></a><span class="lineno"><a class="line" href="classReferenceShapeBase.html#a1183c092056a3245a350ff6f56632633">   15</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="classReferenceShapeBase.html#a1183c092056a3245a350ff6f56632633">nNodes</a>;         </div>
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;</div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;</div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;    <span class="keywordtype">void</span> setShapeType(<span class="keywordtype">string</span> TypeName);</div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;    <span class="keywordtype">void</span> setNodeNumber();</div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;    <span class="keywordtype">void</span> setShapeType(<span class="keywordtype">string</span> TypeName); <span class="comment">//&lt;The function setting the shape type of the reference element</span></div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;    <span class="keywordtype">void</span> setNodeNumber();               <span class="comment">//&lt;The function setting the number of nodes of the reference element, selection based on ReferenceShapeBase#ShapeType</span></div>
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;    <span class="keywordtype">double</span>**    Positions;</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;    <span class="keywordtype">double</span>      Volume;</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;    <span class="keywordtype">double</span>      BasalArea;</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;    <span class="keywordtype">double</span>      height; <span class="comment">//slab height for 2D elements, value is -100 for 3D elements</span></div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;    <a class="code" href="classReferenceShapeBase.html">ReferenceShapeBase</a>(<span class="keywordtype">string</span> SyapeType);</div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;    ~<a class="code" href="classReferenceShapeBase.html">ReferenceShapeBase</a>();</div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;    <span class="keywordtype">int</span> getShapeType();</div>
+<div class="line"><a name="l00021"></a><span class="lineno"><a class="line" href="classReferenceShapeBase.html#a745e71ff73ef758708f39a4b3b1be4d1">   21</a></span>&#160;    <span class="keywordtype">double</span>**    <a class="code" href="classReferenceShapeBase.html#a745e71ff73ef758708f39a4b3b1be4d1">Positions</a>;  </div>
+<div class="line"><a name="l00022"></a><span class="lineno"><a class="line" href="classReferenceShapeBase.html#a12d2d0c2511f4f1357360ff61910ac02">   22</a></span>&#160;    <span class="keywordtype">double</span>      <a class="code" href="classReferenceShapeBase.html#a12d2d0c2511f4f1357360ff61910ac02">Volume</a>;     </div>
+<div class="line"><a name="l00023"></a><span class="lineno"><a class="line" href="classReferenceShapeBase.html#a214b89b970efa7a290dbe1533cf237ea">   23</a></span>&#160;    <span class="keywordtype">double</span>      <a class="code" href="classReferenceShapeBase.html#a214b89b970efa7a290dbe1533cf237ea">BasalArea</a>;  </div>
+<div class="line"><a name="l00024"></a><span class="lineno"><a class="line" href="classReferenceShapeBase.html#a76ac694d1b1276f6847bee3c3efa84b0">   24</a></span>&#160;    <span class="keywordtype">double</span>      <a class="code" href="classReferenceShapeBase.html#a76ac694d1b1276f6847bee3c3efa84b0">height</a>;     </div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;    <a class="code" href="classReferenceShapeBase.html">ReferenceShapeBase</a>(<span class="keywordtype">string</span> SyapeType, <span class="keywordtype">int</span> Id); </div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;    ~<a class="code" href="classReferenceShapeBase.html">ReferenceShapeBase</a>();   </div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;    <span class="comment">//int getShapeType();</span></div>
 <div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;};</div>
 <div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;</div>
 <div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="ttc" id="classReferenceShapeBase_html"><div class="ttname"><a href="classReferenceShapeBase.html">ReferenceShapeBase</a></div><div class="ttdef"><b>Definition:</b> ReferenceShapeBase.h:11</div></div>
+<div class="ttc" id="classReferenceShapeBase_html_a1183c092056a3245a350ff6f56632633"><div class="ttname"><a href="classReferenceShapeBase.html#a1183c092056a3245a350ff6f56632633">ReferenceShapeBase::nNodes</a></div><div class="ttdeci">int nNodes</div><div class="ttdoc">The number of nodes of the reference element, it is based on ReferenceShapeBase::ShapeType, through function ReferenceShapeBase::setNodeNumber. </div><div class="ttdef"><b>Definition:</b> ReferenceShapeBase.h:15</div></div>
+<div class="ttc" id="classReferenceShapeBase_html_a76ac694d1b1276f6847bee3c3efa84b0"><div class="ttname"><a href="classReferenceShapeBase.html#a76ac694d1b1276f6847bee3c3efa84b0">ReferenceShapeBase::height</a></div><div class="ttdeci">double height</div><div class="ttdoc">Slab height for 2D elements, value is -100 for 3D elements. Is obsolete now, must be deleted together...</div><div class="ttdef"><b>Definition:</b> ReferenceShapeBase.h:24</div></div>
 <div class="ttc" id="namespacestd_html"><div class="ttname"><a href="namespacestd.html">std</a></div></div>
+<div class="ttc" id="classReferenceShapeBase_html_af0da93cee3f17800d7aa90b21b1b81c7"><div class="ttname"><a href="classReferenceShapeBase.html#af0da93cee3f17800d7aa90b21b1b81c7">ReferenceShapeBase::Id</a></div><div class="ttdeci">int Id</div><div class="ttdoc">The unique identifier of the reference shape, it is identical to the owner shape, it is set inside th...</div><div class="ttdef"><b>Definition:</b> ReferenceShapeBase.h:14</div></div>
+<div class="ttc" id="classReferenceShapeBase_html_a214b89b970efa7a290dbe1533cf237ea"><div class="ttname"><a href="classReferenceShapeBase.html#a214b89b970efa7a290dbe1533cf237ea">ReferenceShapeBase::BasalArea</a></div><div class="ttdeci">double BasalArea</div><div class="ttdoc">The basal area of the reference shape. </div><div class="ttdef"><b>Definition:</b> ReferenceShapeBase.h:23</div></div>
+<div class="ttc" id="classReferenceShapeBase_html_a4831a54cffbafef4ded26fb8c50566e0"><div class="ttname"><a href="classReferenceShapeBase.html#a4831a54cffbafef4ded26fb8c50566e0">ReferenceShapeBase::ShapeType</a></div><div class="ttdeci">int ShapeType</div><div class="ttdoc">The integer defining the type of the shape, it is a negative value at the same basis of ShapeBase::Sh...</div><div class="ttdef"><b>Definition:</b> ReferenceShapeBase.h:13</div></div>
+<div class="ttc" id="classReferenceShapeBase_html_a12d2d0c2511f4f1357360ff61910ac02"><div class="ttname"><a href="classReferenceShapeBase.html#a12d2d0c2511f4f1357360ff61910ac02">ReferenceShapeBase::Volume</a></div><div class="ttdeci">double Volume</div><div class="ttdoc">The volume of reference element, calculated assuming regular shapes (e.g. Perpendicular prism of equa...</div><div class="ttdef"><b>Definition:</b> ReferenceShapeBase.h:22</div></div>
+<div class="ttc" id="classReferenceShapeBase_html_a745e71ff73ef758708f39a4b3b1be4d1"><div class="ttname"><a href="classReferenceShapeBase.html#a745e71ff73ef758708f39a4b3b1be4d1">ReferenceShapeBase::Positions</a></div><div class="ttdeci">double ** Positions</div><div class="ttdoc">The pointer to the position matrix of the reference element. The array itself is declared within the ...</div><div class="ttdef"><b>Definition:</b> ReferenceShapeBase.h:21</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_9dee18ce9f954c3c428820e89cc0b95c.html">TissueFolding</a></li><li class="navelem"><a class="el" href="dir_a91615f27caff2615e5e61189ea77e22.html">SourceCode</a></li><li class="navelem"><b>ReferenceShapeBase.h</b></li>
-    <li class="footer">Generated on Fri Sep 4 2015 12:21:22 for Tissue Origami by
+    <li class="footer">Generated on Tue Nov 3 2015 16:55:12 for Tissue Origami by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

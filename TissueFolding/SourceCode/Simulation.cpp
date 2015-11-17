@@ -154,6 +154,9 @@ void Simulation::setDefaultParameters(){
 	peripodialBoundingBox[1][0] = -1000.0;	//right x
 	peripodialBoundingBox[1][1] = -1000.0;	//high y
 	peripodialBoundingBox[1][2] = -1000.0;	//top z
+
+	addCurvatureToTissue = false;
+	tissueCurvatureDepth = 0.0;
 }
 
 bool Simulation::readExecutableInputs(int argc, char **argv){
@@ -384,6 +387,9 @@ bool Simulation::initiateSystem(){
 	}
 	if (AddPeripodialMembrane){
 		Success = addPeripodialMembraneToTissue();
+	}
+	if (addCurvatureToTissue){
+		addCurvatureToColumnar(tissueCurvatureDepth);
 	}
 	checkForNodeFixing();
 	assignTips();
@@ -1442,6 +1448,7 @@ bool Simulation::initiateMesh(int MeshType){
 		}
 		initiateNodesFromMeshInput();
 		initiateElementsFromMeshInput();
+		//addCurvatureToColumnar(5.0);
 		saveFileToDisplayMesh.close();
 	}
 	else {
@@ -1480,10 +1487,6 @@ void Simulation::sortColumnarCircumferenceNodeList(vector <int> &ColumnarCircumf
 		angles.push_back(tet);
 	}
 
-	/*cout<<"ColumnarCircumferencialNodeList before sort"<<endl;
-	for (int j =0 ; j<n; ++j){
-		cout<<j<<"of "<<n<<": "<<  ColumnarCircumferencialNodeList[j]<<" "<<angles[j]<<endl;
-	}*/
 	bool swapped = true;
 	while (swapped){
 		swapped = false;
@@ -1500,11 +1503,6 @@ void Simulation::sortColumnarCircumferenceNodeList(vector <int> &ColumnarCircumf
 			}
 		}
 	}
-
-	/*cout<<"ColumnarCircumferencialNodeList after sort"<<endl;
-	for (int j =0 ; j<n; ++j){
-		cout<<ColumnarCircumferencialNodeList[j]<<" "<<angles[j]<<endl;
-	}*/
 }
 
 void Simulation::getAverageSideLength(double& periAverageSideLength, double& colAverageSideLength){
@@ -1893,55 +1891,6 @@ void Simulation::checkForNodeFixing(){
 	}
 }
 
-/*
-void Simulation::GenerateCircumferencialNodeList(vector<int> &NodesToFix, int nLastRow){
-	//Now I have a list of nodes to fix, written in a specific order.
-	//I would like reorder these, to generate a continuous strip around the tissue
-	vector <int> list1, list2, list3, list4;
-    int n = NodesToFix.size();
-    int i=0;
-    list1.push_back(NodesToFix[i]);
-    i++;
-    list2.push_back(NodesToFix[i]);
-    i++;
-    cout<<"generating Circumferencial node list = before while loop"<<endl;
-    while(i<n-2*nLastRow){
-    	list1.push_back(NodesToFix[i]);
-    	list2.push_back(NodesToFix[i+1]);
-    	list3.push_back(NodesToFix[i+2]);
-    	list4.push_back(NodesToFix[i+3]);
-    	i += 4;
-    }
-    cout<<"generating Circumferencial node list - after while loop"<<endl;
-    for ( int k=0; k<nLastRow; ++k){
-    	list1.push_back(NodesToFix[i]);
-    	i++;
-    }
-    for ( int k=0; k<nLastRow; ++k){
-    	list3.push_back(NodesToFix[i]);
-        i++;
-    }
-     //now I will need to merge these 4 lists in the order:
-    //list1 + inverse of list2 + list4 + inverse of list3
-    //list1:
-    for(vector <int>::iterator it = list1.begin(); it<list1.end(); ++it){
-    	CircumferencialNodeList.push_back(*it);
-    }
-    //inverse of list2:
-    for(vector <int>::iterator it = list2.end()-1; it>=list2.begin(); --it){
-    	CircumferencialNodeList.push_back(*it);
-    }
-    //list4:
-    for(vector <int>::iterator it = list4.begin(); it<list4.end(); ++it){
-    	CircumferencialNodeList.push_back(*it);
-    }
-    //inverse of list3:
-    for(vector <int>::iterator it = list3.end()-1; it>=list3.begin(); --it){
-    	CircumferencialNodeList.push_back(*it);
-    }
-    cout<<"merged lists"<<endl;
-}
-*/
 void Simulation::initiateElementsByRowAndColumn(int Row, int Column){
 	int xinit1 = 0;
 	int xinit2 = xinit1+Row+1;
@@ -2110,6 +2059,43 @@ void Simulation::checkForZeroViscosity(){
 
 
     }
+}
+void Simulation::addCurvatureToColumnar(double h){
+	//find the tips:
+	double l1 = -1000, l2 = 1000, l3 = -1000;
+	vector<Node*>::iterator itNode;
+	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+		if ((*itNode)->Position[0] > l1 ){
+			l1 = (*itNode)->Position[0];
+		}
+		if ((*itNode)->Position[0] < l2 ){
+			l2 = (*itNode)->Position[0];
+		}
+		if ((*itNode)->Position[1] > l3 ){
+			l3 = (*itNode)->Position[1];
+		}
+	}
+	l2 *= -1.0;
+	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+		double x = (*itNode)->Position[0];
+		double y = (*itNode)->Position[1];
+		double z = (*itNode)->Position[2];
+		double a = l1;
+		double c = l3;
+		if ((*itNode)->Position[0] < 0){
+			a = l2;
+		}
+		double value = (1 - x*x/a/a - y*y/c/c);
+		if (value>0){
+			(*itNode)->Position[2] += pow((1 - x*x/a/a - y*y/c/c)*h*h,0.5);
+		}
+	}
+
+	vector<ShapeBase*>::iterator itElement;
+	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		(*itElement)->updatePositions(Nodes);
+		(*itElement)->updateReferencePositionsToCurentShape();
+	}
 }
 
 void Simulation::manualPerturbationToInitialSetup(bool deform, bool rotate){
@@ -2614,18 +2600,10 @@ void Simulation::checkForExperimentalSetupsAfterIteration(){
 	}
 }
 
-/*void Simulation::bakeTissue(){
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		(*itElement)->bakeElement();
-	}
-}
-*/
 
 void Simulation::runOneStep(){
     cout<<"entered run one step"<<endl;
     manualPerturbationToInitialSetup(false,false); //bool deform, bool rotate
-    cleanGrowthData();
     resetForces();
     int freq = 10.0/dt ;
     if (freq <1 ){freq =1;}
@@ -2684,29 +2662,6 @@ void Simulation::runOneStep(){
     //for (int i=0; i<nNodes; ++i){
     //	cout<<" Nodes["<<i<<"]->Position[0]="<<Nodes[i]->Position[0]<<"; Nodes["<<i<<"]->Position[1]="<<Nodes[i]->Position[1]<<";  Nodes["<<i<<"]->Position[2]="<<Nodes[i]->Position[2]<<"; "<<endl;
     //}
-    //calculating diagonals:
-    /*if (nNodes>39){
-    	double dx = Nodes[27]->Position[0]-Nodes[35]->Position[0];
-    	double dy = Nodes[27]->Position[1]-Nodes[35]->Position[1];
-    	double d1= dx*dx + dy*dy;
-    	d1 = pow(d1,0.5);
-    	dx = Nodes[39]->Position[0]-Nodes[31]->Position[0];
-    	dy = Nodes[39]->Position[1]-Nodes[31]->Position[1];
-    	double d2= dx*dx + dy*dy;
-    	d2 = pow(d2,0.5);
-    	cout<<"diagonals: "<<d1<<" "<<d2<<endl;
-    }*/
-    if (nNodes>23){
-		double x1 = (Nodes[22]->Position[0]+Nodes[23]->Position[0])/2.0;
-		double x2 = (Nodes[29]->Position[0]+Nodes[28]->Position[0])/2.0;
-		double y1 = (Nodes[22]->Position[1]+Nodes[23]->Position[1])/2.0;
-		double y2 = (Nodes[29]->Position[1]+Nodes[28]->Position[1])/2.0;
-		double dx = x1 - x2;
-		double dy = y1 - y2;
-		double d1= dx*dx + dy*dy;
-		d1 = pow(d1,0.5);
-		cout<<"length: "<<d1<<endl;
-	}
 }
 
 void Simulation::wrapUpAtTheEndOfSimulation(){
@@ -2842,14 +2797,6 @@ void Simulation::updateStepNR(){
             cerr<<"Error: did not converge!!!"<<endl;
             converged = true;
         }
-        /*if (iteratorK  ){
-            cout<<"System Forces - Displacements"<<endl;
-            for (int i=0; i<nNodes; i++){
-                cout<<SystemForces[i][0]<<" "<<gsl_vector_get(deltaU,3*i)<<endl;
-                cout<<SystemForces[i][1]<<" "<<gsl_vector_get(deltaU,3*i+1)<<endl;
-                cout<<SystemForces[i][2]<<" "<<gsl_vector_get(deltaU,3*i+2)<<endl;
-            }
-        }*/
         //cout<<"Node 0 position: "<<Nodes[0]->Position[0]<<" "<<Nodes[0]->Position[1]<<" "<<Nodes[0]->Position[2]<<endl;
     }
     checkForExperimentalSetupsAfterIteration();
@@ -3320,30 +3267,7 @@ int Simulation::solveWithPardiso(double* a, double*b, int* ia, int* ja, gsl_vect
              iparm, &msglvl, &ddum, &ddum, &error,  dparm);
     return 0;
 }
-/*
-void Simulation::constructiaForPardiso(gsl_matrix* K, int* ia, const int nmult, vector<int> &ja_vec, vector<double> &a_vec){
-    double negThreshold = -1E-14, posThreshold = 1E-14;
-    //count how many elements there are on K matrix and fill up ia:
-    int counter = 0;
-    for (int i =0; i<nmult; ++i){
-        bool wroteiaForThisRow = false;
-        for (int j=i; j<nmult; ++j){
-            double Kvalue = gsl_matrix_get(K,i,j);
-            if (Kvalue>posThreshold || Kvalue<negThreshold){
-                ja_vec.push_back(j);
-                a_vec.push_back(Kvalue);
-                if (!wroteiaForThisRow){
-                    //cout<<"writing is for row "<<i<<" column is: "<<j<<endl;
-                    ia[i] = counter;
-                    wroteiaForThisRow = true;
-                }
-                counter++;
-            }
-        }
-    }
-    ia[nmult] = counter;
-}
-*/
+
 void Simulation::constructiaForPardiso(gsl_matrix* K, int* ia, const int nmult, vector<int> &ja_vec, vector<double> &a_vec){
     double negThreshold = -1E-14, posThreshold = 1E-14;
     //count how many elements there are on K matrix and fill up ia:
@@ -3396,13 +3320,7 @@ void Simulation::calculateElasticForcesForNR(gsl_matrix* ge){
     vector<ShapeBase*>::iterator itElement;
     for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
         if (!(*itElement)->IsAblated){
-            //cout<<"calculating forces for element:  "<<i<<endl;
         	(*itElement)->calculateForces(SystemForces, Nodes, recordForcesOnFixedNodes, FixedNodeForces, outputFile);
-            /*
-            cout<<"Element "<<i<<"system forces: "<<endl;
-            for (int nn=0; nn< nNodes; ++nn){
-                 cout<<"Node: "<<nn<<" "<<SystemForces[nn][0]<<" "<<SystemForces[nn][1]<<" "<<SystemForces[nn][2]<<endl;
-            }*/
         }
     }
     //now all the forces are written on SysyemForces
@@ -3778,16 +3696,6 @@ void Simulation::calculatePacking(double PeriThreshold, double ColThreshold){
 							//add opposite force to the element nodes:
 							(*itEle)->AddPackingToSurface((*itNode)->tissuePlacement, F[0],F[1],F[2], SystemForces,PackingForces, Nodes);
 							//cout<<"added packing to surface"<<endl;
-
-							//if(/*(*itNode)->Id == 13 && (*itEle)->Id == 44*/ memberOf44 && (*itEle)->Id>592){
-							//if ((*itNode)->Id == 358) {
-							//	cout<<" threshold: "<<threshold<<" Node: "<<(*itNode)->Id<<" Element: "<<(*itEle)->Id<<" forcemag: "<<Fmag;
-							//}
-							//cout<<"threshold: "<<threshold<<" distance: "<<dProjectionOffet<<" Node: "<<(*itNode)->Id<<" Element: "<<(*itEle)->Id<<" forcemag: "<<Fmag;
-
-							//	cout<<" Fdir: "<<VecprojectedPoint[0]<<" "<<VecprojectedPoint[1]<<" "<<VecprojectedPoint[2]<<endl;
-							//	cout<<"	pos:"<<(*itNode)->Position[0]<<" "<<(*itNode)->Position[1]<<" "<<(*itNode)->Position[2]<<endl;
-							//}
 						}
 					}
 					delete[] posCorner;
@@ -3944,14 +3852,6 @@ void Simulation::calculateDVDistance(){
 	double dmag = d[0]+d[1]+d[2];
 	dmag = pow(dmag,0.5);
 	//outputFile<<"time: "<<timestep * dt<<" DV distance is: "<<dmag<<endl;
-}
-
-void Simulation::cleanGrowthData(){
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		(*itElement)->resetCurrStepGrowthData();
-		//Elements[i]->resetCurrStepShapeChangeData();
-	}
 }
 
 void Simulation::resetForces(){
@@ -4313,7 +4213,7 @@ void Simulation::calculateGrowth(){
 	cleanUpGrowthRates();
 	for (int i=0; i<nGrowthFunctions; ++i){
 		if (GrowthFunctions[i]->Type == 1){
-			//cout<<"Calculating Uniform Growth"<<endl;
+			//cout<<"Calculating Uniform Growth, function: "<<i<<endl;
 			calculateGrowthUniform(GrowthFunctions[i]);
 		}
 		else if(GrowthFunctions[i]->Type == 2){
@@ -4336,18 +4236,6 @@ void Simulation::calculateShapeChange(){
 	}
 }
 
-/*
-void Simulation::changeCellShapesInSystem(){
-	int currIndexForParameters = 0;
-	cleanUpShapeChangeRates();
-	for (int i=0; i<nShapeChangeFunctions; ++i){
-		if(ShapeChangeFunctionTypes[i] == 1){
-			changeCellShapeRing(currIndexForParameters);
-			currIndexForParameters += 8;
-		}
-	}
-}
-*/
 
 void Simulation::cleanUpGrowthRates(){
 	vector<ShapeBase*>::iterator itElement;
@@ -4400,37 +4288,27 @@ void Simulation::calculateGrowthUniform(GrowthFunctionBase* currGF){
 	float simTime = dt*timestep;
 	//cout<<"inside uniform growth function, initTime: "<<currGF->initTime <<" endtime: "<<currGF->endTime<<" simTime"<<simTime<<endl;
 	if(simTime >= currGF->initTime && simTime < currGF->endTime ){
-		//cout<<"calculating growth"<<endl;
-		double *maxValues;
-        maxValues = new double[3];
-		currGF->getGrowthRate(maxValues);
+		gsl_matrix* columnarFgIncrement = gsl_matrix_calloc(3,3);
+		gsl_matrix* peripodialFgIncrement = gsl_matrix_calloc(3,3);
+		double *growthRates;
+        growthRates = new double[3];
+		currGF->getGrowthRate(growthRates);
     	vector<ShapeBase*>::iterator itElement;
     	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 			//tissue type == 0 is columnar layer, ==1 is peripodial membrane, ==2 id linker zone
-			if ( currGF->applyToColumnarLayer){
-				if ((*itElement)->tissueType == 0){ //columnar layer, grow directly
-					(*itElement)->updateGrowthRate(dt,maxValues[0],maxValues[1],maxValues[2], currGF->getShearAngleRotationMatrix());
-					//(*itElement)->updateGrowthTemplate(dt,maxValues[0],maxValues[1],currGF->getShearAngle());
-				}
-				else if ((*itElement)->tissueType == 2){ //Linker zone, need to weight the growth
-					double weight = (*itElement)->getColumnarness();
-					(*itElement)->updateGrowthRate(dt,weight*maxValues[0],weight*maxValues[1],weight*maxValues[2], currGF->getShearAngleRotationMatrix());
-					//(*itElement)->updateGrowthTemplate(dt,weight*maxValues[0],weight*maxValues[1], currGF->getShearAngle());
-				}
+    		gsl_matrix_set_identity(columnarFgIncrement);
+			gsl_matrix_set_identity(peripodialFgIncrement);
+			if (currGF->applyToColumnarLayer){
+				(*itElement)->calculateFgFromRates(dt, growthRates[0],growthRates[1],growthRates[2], currGF->getShearAngleRotationMatrix(), columnarFgIncrement, 0);
 			}
-			if ( currGF->applyToPeripodialMembrane){
-				if ((*itElement)->tissueType == 1){ //peripodial membrane, grow directly
-					(*itElement)->updateGrowthRate(dt,maxValues[0],maxValues[1],maxValues[2], currGF->getShearAngleRotationMatrix());
-					//(*itElement)->updateGrowthTemplate(dt,maxValues[0],maxValues[1], currGF->getShearAngle());
-				}
-				else if ((*itElement)->tissueType == 2){ //Linker zone, need to weight the growth
-					double weight = (*itElement)->getPeripodialness();
-					(*itElement)->updateGrowthRate(dt,weight*maxValues[0],weight*maxValues[1],weight*maxValues[2],currGF->getShearAngleRotationMatrix());
-					//(*itElement)->updateGrowthTemplate(dt,weight*maxValues[0],weight*maxValues[1],currGF->getShearAngle());
-				}
+			if (currGF->applyToPeripodialMembrane){
+				(*itElement)->calculateFgFromRates(dt, growthRates[0],growthRates[1],growthRates[2], currGF->getShearAngleRotationMatrix(), peripodialFgIncrement, 1);
 			}
+			(*itElement)->updateGrowthIncrement(columnarFgIncrement,peripodialFgIncrement);
 		}
-		delete[] maxValues;
+		delete[] growthRates;
+		gsl_matrix_free(columnarFgIncrement);
+		gsl_matrix_free(peripodialFgIncrement);
 	}
 }
 
@@ -4448,184 +4326,67 @@ void Simulation::calculateGrowthRing(GrowthFunctionBase* currGF){
 		currGF->getGrowthRate(maxValues);
 		float innerRadius2 = innerRadius*innerRadius;
 		float outerRadius2 = outerRadius*outerRadius;
+		gsl_matrix* columnarFgIncrement = gsl_matrix_calloc(3,3);
+		gsl_matrix* peripodialFgIncrement = gsl_matrix_calloc(3,3);
     	vector<ShapeBase*>::iterator itElement;
     	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-			if ((currGF->applyToColumnarLayer && (*itElement)->tissueType == 0) || (currGF->applyToPeripodialMembrane && (*itElement)->tissueType == 1) || (*itElement)->tissueType == 2){
-				double* Elementcentre = new double[3];
-				Elementcentre = (*itElement)->getCentre();
-				//the distance is calculated in the x-y projection
-				double d[2] = {centre[0] - Elementcentre[0], centre[1] - Elementcentre[1]};
-				double dmag2 = d[0]*d[0] + d[1]*d[1];
-				if (dmag2 > innerRadius2 && dmag2 < outerRadius2){
-					//the element is within the growth zone.
-					float distance = pow(dmag2,0.5);
-					//calculating the growth rate: as a fraction increase within this time point
-					double sf = (1.0 - (distance - innerRadius) / (outerRadius - innerRadius) );
-                    double growthscale[3] = {maxValues[0]*sf,maxValues[1]*sf,maxValues[2]*sf};
-                    gsl_matrix* columnarXyRotMat = gsl_matrix_calloc(3,3);
-                    gsl_matrix* peripodialXyRotMat = gsl_matrix_calloc(3,3);
-                    gsl_matrix_set_identity(columnarXyRotMat);
-                    gsl_matrix_set_identity(peripodialXyRotMat);
-					//growing the shape
-                    if ( currGF->applyToColumnarLayer){
-						if ((*itElement)->tissueType == 0){ //columnar layer, grow directly
-							(*itElement)->updateGrowthRate(dt,growthscale[0],growthscale[1],growthscale[2],columnarXyRotMat);
-						}
-						else if ((*itElement)->tissueType == 2){ //Linker zone, need to weight the growth
-							double weight = (*itElement)->getColumnarness();
-							(*itElement)->updateGrowthRate(dt, weight*growthscale[0],weight*growthscale[1],weight*growthscale[2],columnarXyRotMat);
-						}
-                    }
-                    if ( currGF->applyToPeripodialMembrane){
-						if ((*itElement)->tissueType == 1){ //peripodial membrane, grow directly
-							(*itElement)->updateGrowthRate(dt,growthscale[0],growthscale[1],growthscale[2],peripodialXyRotMat);
-						}
-						else if ((*itElement)->tissueType == 2){ //Linker zone, need to weight the growth
-							double weight = (*itElement)->getPeripodialness();
-							(*itElement)->updateGrowthRate(dt,weight*growthscale[0],weight*growthscale[1],weight*growthscale[2],peripodialXyRotMat);
-						}
-					}
-                    gsl_matrix_free(columnarXyRotMat);
-                    gsl_matrix_free(peripodialXyRotMat);
-
+			double* Elementcentre = new double[3];
+			Elementcentre = (*itElement)->getCentre();
+			//the distance is calculated in the x-y projection
+			double d[2] = {centre[0] - Elementcentre[0], centre[1] - Elementcentre[1]};
+			double dmag2 = d[0]*d[0] + d[1]*d[1];
+			if (dmag2 > innerRadius2 && dmag2 < outerRadius2){
+				//the element is within the growth zone.
+				float distance = pow(dmag2,0.5);
+				//calculating the growth rate: as a fraction increase within this time point
+				double sf = (1.0 - (distance - innerRadius) / (outerRadius - innerRadius) );
+				double growthscale[3] = {maxValues[0]*sf,maxValues[1]*sf,maxValues[2]*sf};
+				gsl_matrix_set_identity(columnarFgIncrement);
+				gsl_matrix_set_identity(peripodialFgIncrement);
+				if (currGF->applyToColumnarLayer){
+					(*itElement)->calculateFgFromRates(dt, growthscale[0],growthscale[1],growthscale[2], currGF->getShearAngleRotationMatrix(), columnarFgIncrement, 0);
 				}
-				delete[] Elementcentre;
+				if (currGF->applyToPeripodialMembrane){
+					(*itElement)->calculateFgFromRates(dt, growthscale[0],growthscale[1],growthscale[2], currGF->getShearAngleRotationMatrix(), peripodialFgIncrement, 1);
+				}
+				(*itElement)->updateGrowthIncrement(columnarFgIncrement,peripodialFgIncrement);
 			}
+			delete[] Elementcentre;
 		}
 		delete[] maxValues;
 	}
 }
 
-
 void Simulation::calculateGrowthGridBased(GrowthFunctionBase* currGF){
 	int nGridX = currGF->getGridX();
 	int nGridY = currGF->getGridY();
 	float simTime = dt*timestep;
-	//cout<<"calculating growth grid based, initTime: "<<currGF->initTime<<" endTime: "<< currGF->endTime<<" simTime: "<<simTime<<endl;
 	if(simTime >= currGF->initTime && simTime < currGF->endTime ){
+		gsl_matrix* columnarFgIncrement = gsl_matrix_calloc(3,3);
+		gsl_matrix* peripodialFgIncrement = gsl_matrix_calloc(3,3);
 		vector<ShapeBase*>::iterator itElement;
 		for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-			//cout<<"calculating the element: "<<(*itElement)->Id<<endl;
-			if ((currGF->applyToColumnarLayer && (*itElement)->tissueType == 0) || (currGF->applyToPeripodialMembrane && (*itElement)->tissueType == 1) || (*itElement)->tissueType == 2){
-				double* columnarReletivePos = new double[2];
-				double* peripodialRelativePos = new double[2];
-				int columnarIndexX = 0.0, peripodialIndexX = 0.0, columnarIndexY = 0.0, peripodialIndexY = 0.0;
-				double columnarFracX = 1.0,  peripodialFracX = 1.0, columnarFracY = 1.0, peripodialFracY = 1.0;
-				//normalising the element centre position with bounding box
-				if ((*itElement)->tissueType == 0){//columnar layer element
-					(*itElement)->getRelativePosInColumnarBoundingBox(columnarReletivePos);
-					(*itElement)->convertRelativePosToGridIndex(columnarReletivePos, columnarIndexX, columnarIndexY, columnarFracX, columnarFracY, nGridX, nGridY);
-					//cout<<"columnarReletivePos: "<<columnarReletivePos[0]<<" "<<columnarReletivePos[1]<<endl;
-				}
-				else if((*itElement)->tissueType == 1){// peripodial layer element
-					(*itElement)->getRelativePosInPeripodialBoundingBox(peripodialRelativePos);
-					(*itElement)->convertRelativePosToGridIndex(peripodialRelativePos, peripodialIndexX,peripodialIndexY, peripodialFracX, peripodialFracY, nGridX, nGridY);
-					//cout<<"peripodialRelativePos: "<<peripodialRelativePos[0]<<" "<<peripodialRelativePos[1]<<endl;
-				}
-				else {
-					(*itElement)->getRelativePosInColumnarBoundingBox(columnarReletivePos);
-					(*itElement)->getRelativePosInPeripodialBoundingBox(peripodialRelativePos);
-					(*itElement)->convertRelativePosToGridIndex(columnarReletivePos, columnarIndexX, columnarIndexY, columnarFracX, columnarFracY, nGridX, nGridY);
-					(*itElement)->convertRelativePosToGridIndex(peripodialRelativePos, peripodialIndexX,peripodialIndexY, peripodialFracX, peripodialFracY, nGridX, nGridY);
-					//cout<<"columnarReletivePos: "<<columnarReletivePos[0]<<" "<<columnarReletivePos[1]<<endl;
-					//cout<<"peripodialRelativePos: "<<peripodialRelativePos[0]<<" "<<peripodialRelativePos[1]<<endl;
-				}
-				//cout<<"The grid size: "<<nGridX<<" "<<nGridY<<endl;
-				//cout<<"The indices  : cX: "<<columnarIndexX<<" pX: "<<peripodialIndexX<<" cY: "<<columnarIndexY<<" pY: "<<peripodialIndexY<<endl;
-				//cout<<"The fractions: cX "<<columnarFracX<<" pX: "<<peripodialFracX<<" cY: "<<columnarFracY<<" pY: "<<peripodialFracY<<endl;
-
-                double growthYmid[2][3]= {{0.0,0.0,0.0},{0.0,0.0,0.0}};
-                double xyShearRateYmid[2] {0.0,0.0};
-                double columnarGrowthscale[3] = {0.0,0.0,0.0}, peripodialGrowthscale[3] = {0.0,0.0,0.0};
-                double columnarXyAngle = 0.0, peripodialXyAngle = 0.0;
-                gsl_matrix* columnarXyRotMat = gsl_matrix_calloc(3,3);
-                gsl_matrix* peripodialXyRotMat = gsl_matrix_calloc(3,3);
-                gsl_matrix_set_identity(columnarXyRotMat);
-                gsl_matrix_set_identity(peripodialXyRotMat);
-				//gsl_matrix* growthYMid0 = gsl_matrix_calloc(3,3);
-				//gsl_matrix* growthYMid1 = gsl_matrix_calloc(3,3);
-
-
-				if (currGF->applyToColumnarLayer){
-					//aa xyShearRateYmid[0] = currGF->getXyShearAngleMatrixElement(columnarIndexX,columnarIndexY)*(1.0-columnarFracX) + currGF->getXyShearAngleMatrixElement(columnarIndexX+1,columnarIndexY)*columnarFracX;
-					//aa xyShearRateYmid[1] = currGF->getXyShearAngleMatrixElement(columnarIndexX,columnarIndexY+1)*(1.0-columnarFracX) + currGF->getXyShearAngleMatrixElement(columnarIndexX+1,columnarIndexY+1)*columnarFracX;
-					//aa columnarXyAngle = xyShearRateYmid[0]*(1.0-columnarFracY) + xyShearRateYmid[1]*columnarFracY;
-					for (int axis = 0; axis<3; ++axis){
-						growthYmid[0][axis] = currGF->getGrowthMatrixElement(columnarIndexX,columnarIndexY,axis)*(1.0-columnarFracX) + currGF->getGrowthMatrixElement(columnarIndexX+1,columnarIndexY,axis)*columnarFracX;
-						//cout<<"growthYmid[0]["<<axis<<"]: "<<growthYmid[0][axis]<<endl;
-						growthYmid[1][axis] = currGF->getGrowthMatrixElement(columnarIndexX,columnarIndexY+1,axis)*(1.0-columnarFracX) + currGF->getGrowthMatrixElement(columnarIndexX+1,columnarIndexY+1,axis)*columnarFracX;
-						//cout<<"growthYmid[1]["<<axis<<"]: "<<growthYmid[1][axis]<<endl;
-						columnarGrowthscale[axis] = growthYmid[0][axis]*(1.0-columnarFracY) + growthYmid[1][axis]*columnarFracY;
-						//cout<<"columnarGrowthscale["<<axis<<"]: "<<columnarGrowthscale[axis]<<endl;
-					}
-
-					double c = cos(columnarXyAngle);
-					double s = sin(columnarXyAngle);
-					gsl_matrix_set(columnarXyRotMat,0,0,  c );
-					gsl_matrix_set(columnarXyRotMat,0,1, -1.0*s);
-					gsl_matrix_set(columnarXyRotMat,0,2,  0.0);
-					gsl_matrix_set(columnarXyRotMat,1,0,  s);
-					gsl_matrix_set(columnarXyRotMat,1,1,  c);
-					gsl_matrix_set(columnarXyRotMat,1,2,  0.0);
-					gsl_matrix_set(columnarXyRotMat,2,0,  0.0);
-					gsl_matrix_set(columnarXyRotMat,2,1,  0.0);
-					gsl_matrix_set(columnarXyRotMat,2,2,  1.0);
-				}
-				if (currGF->applyToPeripodialMembrane){
-					xyShearRateYmid[0] = currGF->getXyShearAngleMatrixElement(peripodialIndexX,peripodialIndexY)*(1.0-peripodialFracX) + currGF->getXyShearAngleMatrixElement(peripodialIndexX+1,peripodialIndexY)*peripodialFracX;
-					xyShearRateYmid[1] = currGF->getXyShearAngleMatrixElement(peripodialIndexY,peripodialIndexY+1)*(1.0-columnarFracX) + currGF->getXyShearAngleMatrixElement(peripodialIndexX+1,peripodialIndexY+1)*peripodialFracX;
-					peripodialXyAngle = xyShearRateYmid[0]*(1.0-peripodialFracY) + xyShearRateYmid[1]*peripodialFracY;
-					for (int axis = 0; axis<3; ++axis){
-						growthYmid[0][axis] = currGF->getGrowthMatrixElement(peripodialIndexX,peripodialIndexY,axis)*(1.0-peripodialFracX) + currGF->getGrowthMatrixElement(peripodialIndexX+1,peripodialIndexY,axis)*peripodialFracX;
-						//cout<<"growthYmid[0]["<<axis<<"]: "<<growthYmid[0][axis]<<endl;
-						growthYmid[1][axis] = currGF->getGrowthMatrixElement(peripodialIndexX,peripodialIndexY+1,axis)*(1.0-peripodialFracX) + currGF->getGrowthMatrixElement(peripodialIndexX+1,peripodialIndexY+1,axis)*peripodialFracX;
-						//cout<<"growthYmid[1]["<<axis<<"]: "<<growthYmid[1][axis]<<endl;
-						peripodialGrowthscale[axis] = growthYmid[0][axis]*(1.0-peripodialFracY) + growthYmid[1][axis]*peripodialFracY;
-						//cout<<"peripodialGrowthscale["<<axis<<"]: "<<peripodialGrowthscale[axis]<<endl;
-					}
-					double c = cos(peripodialXyAngle);
-					double s = sin(peripodialXyAngle);
-					gsl_matrix_set(peripodialXyRotMat,0,0,  c );
-					gsl_matrix_set(peripodialXyRotMat,0,1, -1.0*s);
-					gsl_matrix_set(peripodialXyRotMat,0,2,  0.0);
-					gsl_matrix_set(peripodialXyRotMat,1,0,  s);
-					gsl_matrix_set(peripodialXyRotMat,1,1,  c);
-					gsl_matrix_set(peripodialXyRotMat,1,2,  0.0);
-					gsl_matrix_set(peripodialXyRotMat,2,0,  0.0);
-					gsl_matrix_set(peripodialXyRotMat,2,1,  0.0);
-					gsl_matrix_set(peripodialXyRotMat,2,2,  1.0);
-				}
-
-				//growing the shape
-				//cout<<"peripodialGrowthscale: "<<peripodialGrowthscale[0]<<" "<<peripodialGrowthscale[1]<<" "<<peripodialGrowthscale[2]<<endl;
-				//cout<<"columnarGrowthscale: "<<columnarGrowthscale[0]<<" "<<columnarGrowthscale[1]<<" "<<columnarGrowthscale[2]<<endl;
-
-				if ( currGF->applyToColumnarLayer){
-					if ((*itElement)->tissueType == 0){ //columnar layer, grow directly
-						(*itElement)->updateGrowthRate(dt,columnarGrowthscale[0],columnarGrowthscale[1],columnarGrowthscale[2],columnarXyRotMat);
-					}
-					else if ((*itElement)->tissueType == 2){ //Linker zone, need to weight the growth
-						double weight = (*itElement)->getColumnarness();
-						(*itElement)->updateGrowthRate(dt, weight*columnarGrowthscale[0],weight*columnarGrowthscale[1],weight*columnarGrowthscale[2],columnarXyRotMat);
-					}
-				}
-				if ( currGF->applyToPeripodialMembrane){
-					if ((*itElement)->tissueType == 1){ //peripodial membrane, grow directly
-						(*itElement)->updateGrowthRate(dt,peripodialGrowthscale[0],peripodialGrowthscale[1],peripodialGrowthscale[2],peripodialXyRotMat);
-					}
-					else if ((*itElement)->tissueType == 2){ //Linker zone, need to weight the growth
-						double weight = (*itElement)->getPeripodialness();
-						(*itElement)->updateGrowthRate(dt, weight*peripodialGrowthscale[0],weight*peripodialGrowthscale[1],weight*peripodialGrowthscale[2], peripodialXyRotMat);
-					}
-				}
-				delete[] columnarReletivePos;
-				delete[] peripodialRelativePos;
-                gsl_matrix_free(columnarXyRotMat);
-                gsl_matrix_free(peripodialXyRotMat);
+			gsl_matrix_set_identity(columnarFgIncrement);
+			gsl_matrix_set_identity(peripodialFgIncrement);
+			double* columnarReletivePos = new double[2];
+			double* peripodialRelativePos = new double[2];
+			int columnarIndexX = 0.0, peripodialIndexX = 0.0, columnarIndexY = 0.0, peripodialIndexY = 0.0;
+			double columnarFracX = 1.0,  peripodialFracX = 1.0, columnarFracY = 1.0, peripodialFracY = 1.0;
+			//(*itElement)->getTissuePositionWeigths(columnarnessWeight, peripodialnessWeight);
+			(*itElement)->getRelativePositionInTissueInGridIndex(nGridX, nGridY, columnarReletivePos, peripodialRelativePos,columnarIndexX, peripodialIndexX, columnarIndexY, peripodialIndexY,columnarFracX,  peripodialFracX, columnarFracY, peripodialFracY);
+			if (currGF->applyToColumnarLayer){
+				(*itElement)->calculateFgFromGridCorners(dt, currGF, columnarFgIncrement, 0, columnarIndexX,  columnarIndexY, columnarFracX, columnarFracY);
 			}
+			if (currGF->applyToPeripodialMembrane){
+				(*itElement)->calculateFgFromGridCorners(dt, currGF, peripodialFgIncrement, 1, peripodialIndexX,  peripodialIndexY, peripodialFracX, peripodialFracY);
+			}
+			(*itElement)->updateGrowthIncrement(columnarFgIncrement,peripodialFgIncrement);
+    		delete[] columnarReletivePos;
+    		delete[] peripodialRelativePos;
 		}
+		gsl_matrix_free(columnarFgIncrement);
+		gsl_matrix_free(peripodialFgIncrement);
 	}
-	//cout<<"Finished growth rate calculation"<<endl;
 }
 
 void Simulation::TissueAxisPositionDisplay(){

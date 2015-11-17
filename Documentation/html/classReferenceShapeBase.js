@@ -1,8 +1,7 @@
 var classReferenceShapeBase =
 [
-    [ "ReferenceShapeBase", "classReferenceShapeBase.html#af869879b4c059d8946008f50055f49a0", null ],
+    [ "ReferenceShapeBase", "classReferenceShapeBase.html#a3d27b5bf4c591a5973b466d2af08a118", null ],
     [ "~ReferenceShapeBase", "classReferenceShapeBase.html#addf60ebee57a9d3b0e345b963901e3b5", null ],
-    [ "getShapeType", "classReferenceShapeBase.html#a88841b8e87bfec65991d55dfe565ceb7", null ],
     [ "setNodeNumber", "classReferenceShapeBase.html#a027db08b5e580286448380aa21902b33", null ],
     [ "setShapeType", "classReferenceShapeBase.html#ad893cb0986899d77de34ce5e565ebb97", null ],
     [ "BasalArea", "classReferenceShapeBase.html#a214b89b970efa7a290dbe1533cf237ea", null ],
