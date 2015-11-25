@@ -18,8 +18,9 @@ Simulation::Simulation(){
 	reachedEndOfSaveFile = false;
 	AddPeripodialMembrane = false;
 	lumenHeight = -20;
-	columnarBoundingBoxSize[0]=1000.0; columnarBoundingBoxSize[1]=1000.0; columnarBoundingBoxSize[2]=1000.0;
-	peripodialBoundingBoxSize[0]=1000.0; peripodialBoundingBoxSize[1]=1000.0; peripodialBoundingBoxSize[2]=1000.0;
+	boundingBoxSize[0]=1000.0; boundingBoxSize[1]=1000.0; boundingBoxSize[2]=1000.0;
+	//columnarBoundingBoxSize[0]=1000.0; columnarBoundingBoxSize[1]=1000.0; columnarBoundingBoxSize[2]=1000.0;
+	//peripodialBoundingBoxSize[0]=1000.0; peripodialBoundingBoxSize[1]=1000.0; peripodialBoundingBoxSize[2]=1000.0;
 	ContinueFromSave = false;
     growthRotationUpdateFrequency = 60.0/dt;
     nElements = 0;
@@ -142,21 +143,16 @@ void Simulation::setDefaultParameters(){
 	effectLimitsInZ[0] = pipetteCentre[2] - pipetteDepth;
 	effectLimitsInZ[1] = pipetteCentre[2] + pipetteDepth;
 
-	columnarBoundingBox[0][0] =  1000.0;	//left x
-	columnarBoundingBox[0][1] =  1000.0;	//low y
-	columnarBoundingBox[0][2] =  1000.0;	//bottom z
-	columnarBoundingBox[1][0] = -1000.0;	//right x
-	columnarBoundingBox[1][1] = -1000.0;	//high y
-	columnarBoundingBox[1][2] = -1000.0;	//top z
-	peripodialBoundingBox[0][0] =  1000.0;	//left x
-	peripodialBoundingBox[0][1] =  1000.0;	//low y
-	peripodialBoundingBox[0][2] =  1000.0;	//bottom z
-	peripodialBoundingBox[1][0] = -1000.0;	//right x
-	peripodialBoundingBox[1][1] = -1000.0;	//high y
-	peripodialBoundingBox[1][2] = -1000.0;	//top z
+	boundingBox[0][0] =  1000.0;	//left x
+	boundingBox[0][1] =  1000.0;	//low y
+	boundingBox[0][2] =  1000.0;	//bottom z
+	boundingBox[1][0] = -1000.0;	//right x
+	boundingBox[1][1] = -1000.0;	//high y
+	boundingBox[1][2] = -1000.0;	//top z
 
 	addCurvatureToTissue = false;
 	tissueCurvatureDepth = 0.0;
+	symmetricY = false;
 }
 
 bool Simulation::readExecutableInputs(int argc, char **argv){
@@ -322,10 +318,11 @@ bool Simulation::readFinalSimulationStep(){
 	clearLaserAblatedSites();
     calculateShapeFunctionDerivatives();
 	updateElementPositions();
-	calculateColumnarLayerBoundingBox();
-	if (AddPeripodialMembrane){
-		calculatePeripodialBoundingBox();
-	}
+	calculateBoundingBox();
+	//calculateColumnarLayerBoundingBox();
+	//if (AddPeripodialMembrane){
+	//	calculatePeripodialBoundingBox();
+	//}
 	//bring the time step and data save stime steps to the main modelinput:
 	dataSaveInterval = dataSaveIntervalCurrentSim;
 	dt = timeStepCurrentSim;
@@ -411,14 +408,16 @@ bool Simulation::initiateSystem(){
 	//	Nodes[i]->displayConnectedElementWeights();
 	//}
     alignTissueDVToXPositive();
-    calculateColumnarLayerBoundingBox();
-	if (AddPeripodialMembrane){
-		calculatePeripodialBoundingBox();
-	}
+    //alignTissueAPToXYPlane();
+    calculateBoundingBox();
+    //calculateColumnarLayerBoundingBox();
+	//if (AddPeripodialMembrane){
+	//	calculatePeripodialBoundingBox();
+	//}
     calculateDVDistance();
     vector<ShapeBase*>::iterator itElement;
     for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-    	(*itElement)->calculateRelativePosInBoundingBox(columnarBoundingBox[0][0],columnarBoundingBox[0][1],columnarBoundingBoxSize[0],columnarBoundingBoxSize[1], peripodialBoundingBox[0][0],peripodialBoundingBox[0][1],peripodialBoundingBoxSize[0],peripodialBoundingBoxSize[1]);
+    	(*itElement)->calculateRelativePosInBoundingBox(boundingBox[0][0],boundingBox[0][1],boundingBoxSize[0],boundingBoxSize[1]);
     }
 	if (stretcherAttached){
 		setStretch();
@@ -426,6 +425,10 @@ bool Simulation::initiateSystem(){
     cout<<"setting the pipette"<<endl;
 	if(PipetteSuction){
 		setupPipetteExperiment();
+	}
+
+	if (symmetricY){
+		setupYsymmetricity();
 	}
 	if (ContinueFromSave){
 		cout<<"Reading Final SimulationStep: "<<endl;
@@ -581,8 +584,9 @@ void Simulation::writeSimulationSummary(){
 	saveFileSimulationSummary<<dataSaveInterval*dt<<endl;
 	saveFileSimulationSummary<<"ModelinputName:  ";
 	saveFileSimulationSummary<<ModInp->parameterFileName<<endl;
-	saveFileSimulationSummary<<"Mesh Type:  ";
+	saveFileSimulationSummary<<"Mesh_Type:  ";
 	saveFileSimulationSummary<<MeshType<<endl;
+	saveFileSimulationSummary<<"Symmetricity-y: "<<symmetricY<<endl;
 	writeMeshFileSummary();
 	writeGrowthRatesSummary();
 	writeMyosinSummary();
@@ -803,6 +807,39 @@ bool Simulation::readSystemSummaryFromSave(){
 	}
 	saveFileToDisplaySimSum >> dummydouble;
 	dataSaveInterval =  (int) ceil(dummydouble/dt);
+
+
+	if(saveFileToDisplaySimSum.eof()){
+		cerr<<"reached the end of summary file, expecting: ModelinputName:"<<endl;
+		return false;
+	}
+	saveFileToDisplaySimSum >> dummystring; //reading "ModelinputName: "
+	if(saveFileToDisplaySimSum.eof()){
+		cerr<<"reached the end of summary file, expecting name of the model input file"<<endl;
+		return false;
+	}
+	saveFileToDisplaySimSum >> dummystring; //reading the model input file
+	if(saveFileToDisplaySimSum.eof()){
+		cerr<<"reached the end of summary file, expecting: Mesh_Type:"<<endl;
+		return false;
+	}
+	saveFileToDisplaySimSum >> dummystring; //reading "Mesh_Type: "
+	if(saveFileToDisplaySimSum.eof()){
+		cerr<<"reached the end of summary file, expecting: the mesh type(int)"<<endl;
+		return false;
+	}
+	int dummyint;
+	saveFileToDisplaySimSum >> dummyint; //reading he mesh type
+	if(saveFileToDisplaySimSum.eof()){
+		cerr<<"reached the end of summary file, expecting: Symmetricity-y:"<<endl;
+		return false;
+	}
+	saveFileToDisplaySimSum >> dummystring; //reading "Symmetricity-y: "
+	if(saveFileToDisplaySimSum.eof()){
+		cerr<<"reached the end of summary file, expecting: symmetricity boolean:"<<endl;
+		return false;
+	}
+	saveFileToDisplaySimSum >> symmetricY;
 	return true;
 }
 
@@ -1206,10 +1243,11 @@ void Simulation::updateOneStepFromSave(){
 	assignNodeMasses();
 	assignConnectedElementsAndWeightsToNodes();
 	clearLaserAblatedSites();
-	calculateColumnarLayerBoundingBox();
-	if (AddPeripodialMembrane){
-		calculatePeripodialBoundingBox();
-	}
+	calculateBoundingBox();
+	//calculateColumnarLayerBoundingBox();
+	//if (AddPeripodialMembrane){
+	//	calculatePeripodialBoundingBox();
+	//}
 	//skipping the footer:
 	string currline2;
 	getline(saveFileToDisplayMesh,currline2);
@@ -2240,6 +2278,32 @@ void Simulation::addNodesForPeripodialOnColumnarCircumference (vector< vector<in
 		delete pos;
 	}
 }
+void Simulation::calculateNewNodePosForPeripodialNodeAddition(int nodeId0, int nodeId1, int nodeId2, double* pos, double sideThickness){
+	cout<<"nodeIDs: "<<nodeId0<<" "<<nodeId1<<" "<<nodeId2<<" sideThickness: "<<sideThickness<<endl;
+	double* vec1;
+	vec1 = new double[3];
+	double* vec2;
+	vec2 = new double[3];
+	for (int j=0; j<Nodes[nodeId0]->nDim; j++){
+		vec1[j] = (Nodes[nodeId0]->Position[j] - Nodes[nodeId1]->Position[j]);
+		vec2[j] = (Nodes[nodeId0]->Position[j] - Nodes[nodeId2]->Position[j]);
+	}
+	Elements[0]->normaliseVector3D(vec1);
+	Elements[0]->normaliseVector3D(vec2);
+	vec1[0] += vec2[0];
+	vec1[1] += vec2[1];
+	vec1[2] += vec2[2];
+	Elements[0]->normaliseVector3D(vec1);
+	//The list is sorted counter-cock-wise, to point out, I will rotate normalised vector v0 -90 degrees on z axis:
+	// (x,y,z) -> (y,-x,z);
+	// then I will add this vector to the calculated mid point to gt the new node's position.
+	pos[0] = Nodes[nodeId0]->Position[0] + vec1[0]*sideThickness;
+	pos[1] = Nodes[nodeId0]->Position[1] + vec1[1]*sideThickness;
+	pos[2] = Nodes[nodeId0]->Position[2];
+	delete[] vec1;
+	delete[] vec2;
+}
+
 
 void Simulation::calculateNewNodePosForPeripodialNodeAddition(int nodeId0, int nodeId1, double* pos, double sideThickness){
 	double* vec0;
@@ -2250,7 +2314,7 @@ void Simulation::calculateNewNodePosForPeripodialNodeAddition(int nodeId0, int n
 		midpoint[j] = Nodes[nodeId0]->Position[j] + vec0[j];
 	}
 	Elements[0]->normaliseVector3D(vec0);
-	//The list is sorted counter-cock-wise, to point out, I will roate normalised vector v0 -90 degrees on z axis:
+	//The list is sorted counter-cock-wise, to point out, I will rotate normalised vector v0 -90 degrees on z axis:
 	// (x,y,z) -> (y,-x,z);
 	// then I will add this vector to the calculated mid point to gt the new node's position.
 	pos[0] = midpoint[0] + vec0[1]*sideThickness;
@@ -2264,13 +2328,14 @@ void Simulation::addNodesForPeripodialOnOuterCircumference (vector< vector<int> 
 	double avrSide=0.0, dummy =0.0;
 	getAverageSideLength(dummy,avrSide);	//first term will get you the average side length of the peripodial membrane elements, second is the columnar elements
 	if (avrSide/peripodialSideConnectionThickness > 5 || avrSide/peripodialSideConnectionThickness< 0.2 ){
-		cerr<<"WARNING, the lateral connection thickness between the peripodial membrane and the columnar layer is too different than aerage alament size (more than 5 fold diference)"<<endl;
+		cerr<<"WARNING, the lateral connection thickness between the peripodial membrane and the columnar layer is too different than average eleent size (more than 5 fold diference)"<<endl;
 	}
 	//Now I need the average side of an element, to add new nodes accordingly:
 	int nCircumference = ColumnarBasedNodeArray.size();
 	for (int i=0; i<nCircumference; ++i){
 		//cout<<"at node in the list: "<<i<<endl;
-		int nodeId0 = ColumnarBasedNodeArray[i][0];
+		//adding 2 point based node:
+/*		int nodeId0 = ColumnarBasedNodeArray[i][0];
 		int nodeId1;
 		if( i == nCircumference - 1){
 			nodeId1 = ColumnarBasedNodeArray[0][0];
@@ -2282,6 +2347,29 @@ void Simulation::addNodesForPeripodialOnOuterCircumference (vector< vector<int> 
 		calculateNewNodePosForPeripodialNodeAddition(nodeId0, nodeId1, pos, peripodialSideConnectionThickness);
 		//cout<<" calculated pos : "<<pos[0] <<" "<<pos[1]<<" "<<pos[2]<<endl;
 		//Adding the array of new nodes:
+*/
+		//adding 3 point based node:
+		int nodeId0 = ColumnarBasedNodeArray[i][0];
+		int nodeId1;
+		int nodeId2;
+		if( i == nCircumference - 1){
+			nodeId1 = ColumnarBasedNodeArray[0][0];
+		}
+		else{
+			nodeId1 = ColumnarBasedNodeArray[i+1][0];
+		}
+		if ( i == 0 ){
+			nodeId2 = ColumnarBasedNodeArray[nCircumference-1][0];
+		}
+		else{
+			nodeId2 = ColumnarBasedNodeArray[i-1][0];
+		}
+		double* pos = new double[3];
+		calculateNewNodePosForPeripodialNodeAddition(nodeId0, nodeId1, nodeId2, pos, peripodialSideConnectionThickness);
+
+		//cout<<" calculated pos : "<<pos[0] <<" "<<pos[1]<<" "<<pos[2]<<endl;
+		//Adding the array of new nodes:
+
 		//adding the base:
 		int newNodeId = Nodes.size();
 		Node* tmp_nd = new Node(newNodeId, 3, pos, 0, 2); //Tissue placement basal (0), tissue type is linker zone (2)
@@ -2603,6 +2691,7 @@ void Simulation::checkForExperimentalSetupsAfterIteration(){
 
 void Simulation::runOneStep(){
     cout<<"entered run one step"<<endl;
+    //ablateSpcific();
     manualPerturbationToInitialSetup(false,false); //bool deform, bool rotate
     resetForces();
     int freq = 10.0/dt ;
@@ -2610,17 +2699,17 @@ void Simulation::runOneStep(){
     if ((timestep - 1)% freq  == 0){
         cout<<"At time -- "<<dt*timestep<<" sec ("<<dt*timestep/3600<<" hours - "<<timestep<<" timesteps)"<<endl;
         alignTissueDVToXPositive();
-        //bakeTissue();
         //alignTissueAPToXYPlane();
-        calculateColumnarLayerBoundingBox();
+        calculateBoundingBox();
+        //calculateColumnarLayerBoundingBox();
         //calculateApicalSize();
-    	if (AddPeripodialMembrane){
-    		calculatePeripodialBoundingBox();
-    	}
+    	//if (AddPeripodialMembrane){
+    	//	calculatePeripodialBoundingBox();
+    	//}
         calculateDVDistance();
         vector<ShapeBase*>::iterator itElement;
         for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-        	(*itElement)->calculateRelativePosInBoundingBox(columnarBoundingBox[0][0],columnarBoundingBox[0][1],columnarBoundingBoxSize[0],columnarBoundingBoxSize[1], peripodialBoundingBox[0][0],peripodialBoundingBox[0][1],peripodialBoundingBoxSize[0],peripodialBoundingBoxSize[1]);
+        	(*itElement)->calculateRelativePosInBoundingBox(boundingBox[0][0],boundingBox[0][1],boundingBoxSize[0],boundingBoxSize[1]);
         }
 	}
     checkForExperimentalSetupsBeforeIteration();
@@ -2652,16 +2741,21 @@ void Simulation::runOneStep(){
     calculateMyosinForces();
     updateStepNR();
     processDisplayDataAndSave();
-    cout<<"finalised run one step"<<endl;
-    calculateColumnarLayerBoundingBox();
-	if (AddPeripodialMembrane){
-		calculatePeripodialBoundingBox();
-	}
+    calculateBoundingBox();
+    //calculateColumnarLayerBoundingBox();
+	//if (AddPeripodialMembrane){
+	//	calculatePeripodialBoundingBox();
+	//}
     //cout<<" step: "<<timestep<<" Pressure: "<<SuctionPressure[2]<<" Pa, maximum z-height: "<<boundingBox[1][2]<<" L/a: "<<(boundingBox[1][2]-50)/(2.0*pipetteRadius)<<endl;
     timestep++;
     //for (int i=0; i<nNodes; ++i){
     //	cout<<" Nodes["<<i<<"]->Position[0]="<<Nodes[i]->Position[0]<<"; Nodes["<<i<<"]->Position[1]="<<Nodes[i]->Position[1]<<";  Nodes["<<i<<"]->Position[2]="<<Nodes[i]->Position[2]<<"; "<<endl;
     //}
+	//cout<<"Element: 38"<<endl;
+	//Elements[38]->displayPositions();
+	//cout<<"Element: 39"<<endl;
+	//Elements[39]->displayPositions();
+
 }
 
 void Simulation::wrapUpAtTheEndOfSimulation(){
@@ -2783,13 +2877,14 @@ void Simulation::updateStepNR(){
         //Elements[0]->displayMatrix(mviscdt,"mviscdt");
         //Elements[0]->displayMatrix(un,"un");
         //Elements[0]->displayMatrix(uk,"uk");
+        //cout<<"solving for deltaU"<<endl;
         solveForDeltaU(K,gSum,deltaU);
+        //cout<<"checking convergence"<<endl;
         converged = checkConvergenceViaDeltaU(deltaU);
         //Elements[0]->displayMatrix(deltaU,"deltaU");
         updateUkInNR(uk,deltaU);
         updateElementPositionsinNR(uk);
         updateNodePositionsNR(uk);
-        //alignTissueDVToXPositive();
         iteratorK ++;
         //Elements[0]->displayMatrix(deltaU,"MovementInIteration");
         //Elements[0]->displayMatrix(uk,"newPosiitons");
@@ -3308,12 +3403,18 @@ void Simulation::calculateImplicitKElastic(gsl_matrix* K){
     //cout<<"calculateImplicitKElastic for thw whole system"<<endl;
     vector<ShapeBase*>::iterator itElement;
     for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-    	(*itElement)->calculateImplicitKElastic();
+    	if (!(*itElement)->IsAblated){
+    		(*itElement)->calculateImplicitKElastic();
+    	}
     }
     //writing all elements K values into big K matrix:
     for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-    	(*itElement)->writeKelasticToMainKatrix(K);
+    	if (!(*itElement)->IsAblated){
+    		(*itElement)->writeKelasticToMainKatrix(K);
+    	}
     }
+   //Elements[0]->displayMatrix(K,"KafterElastic");
+   // Elements[0]->displayMatrix(K,"KafterFixingForSymmetry");
 }
 
 void Simulation::calculateElasticForcesForNR(gsl_matrix* ge){
@@ -3324,8 +3425,8 @@ void Simulation::calculateElasticForcesForNR(gsl_matrix* ge){
         }
     }
     //now all the forces are written on SysyemForces
-    //I will add them into ge, this step can be made faster by separating calculate forces function into two,
-    //and filling up either ge or System forces depending on hte solution method:
+    //Now I will add the forces into ge, this step can be made faster by separating calculate forces function into two,
+    //and filling up either ge or System forces depending on the solution method:
     for (int i = 0; i< nNodes; ++i){
         for ( int j=0; j<3; j++){
             gsl_matrix_set(ge, 3*i+j,0,SystemForces[i][j]);
@@ -3335,7 +3436,9 @@ void Simulation::calculateElasticForcesForNR(gsl_matrix* ge){
 }
 
 void Simulation::calculateViscousForcesForNR(gsl_matrix* gv, gsl_matrix* mviscdt, gsl_matrix* uk, gsl_matrix* un){
-    int dim  = 3;
+    //the mass is already updated for symmetricity boundary nodes, and the viscous forces will be calculated correctly,
+	//as mvisdt is already accounting for the doubling of mass
+	int dim  = 3;
     gsl_matrix* displacement = gsl_matrix_calloc(dim*nNodes,1);
     Elements[0]->createMatrixCopy(displacement,un);
     gsl_matrix_sub(displacement,uk);
@@ -3357,8 +3460,8 @@ void Simulation::constructLumpedMassViscosityDtMatrix(gsl_matrix* mviscdt){
         for (int j=0; j<3; ++j){
             gsl_matrix_set(mviscdt,3*i+j,3*i+j,matrixValue);
         }
+        //cout<<" Node "<<i<<" - mass: "<<Nodes[i]->mass<<" visc: "<<Nodes[i]->Viscosity<<" matrixvalues: "<<gsl_matrix_get(mviscdt,3*i,3*i)<<" "<<gsl_matrix_get(mviscdt,3*i+1,3*i+1)<<" "<<gsl_matrix_get(mviscdt,3*i+2,3*i+2)<<endl;
     }
-    //cout<<" Node 0 - mass: "<<Nodes[0]->mass<<" visc: "<<Nodes[0]->Viscosity<<" matrixvalue: "<<gsl_matrix_get(mviscdt,0,0)<<endl;
 }
 
 bool Simulation::checkConvergenceViaDeltaU(gsl_vector* deltaU){
@@ -3895,6 +3998,41 @@ void Simulation::calculateApicalSize(){
 	outputFile<<"At time: "<<dt*timestep<<" apical bounding box size: "<<DV<<" "<<AP<<endl;
 }
 
+void Simulation::calculateBoundingBox(){
+	boundingBox[0][0] =  100000.0;	//lower left x
+	boundingBox[0][1] =  100000.0;	//lower left y
+	boundingBox[0][2] =  100000.0;	//lower z
+	boundingBox[1][0] = -100000.0;	//upper right x
+	boundingBox[1][1] = -100000.0;	//upper right y
+	boundingBox[1][2] = -100000.0;	//upper z
+	bool found[2][3] = {{false,false,false},{false,false,false}};
+	vector<Node*>::iterator itNode;
+	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+		//if (!(*itNode)->allOwnersAblated){
+			//There is at least one element owning this node that is not ablated
+			for (int i=0; i<(*itNode)->nDim; ++i){
+				if ( (*itNode)->Position[i] < boundingBox[0][i] ){
+					boundingBox[0][i] = (*itNode)->Position[i];
+					found[0][i] = true;
+				}
+				else if((*itNode)->Position[i]>boundingBox[1][i]){
+					boundingBox[1][i] = (*itNode)->Position[i];
+					found[1][i] = true;
+				}
+			}
+		//}
+	}
+	if (symmetricY){
+		boundingBox[0][1] = (-1.0)*boundingBox[1][1]; //if there is Y symmetricity, then the bounding box is extended to double the size in y
+	}
+	for (int i=0; i<3; ++i){
+		boundingBoxSize[i] = boundingBox[1][i] - boundingBox[0][i];
+	}
+	if (!found[0][0] && !found[0][1] && !found[0][2] && !found[1][0] && !found[1][1] && !found[1][2]){
+		cerr<<" error in bounding box calculation! Found? :"<<found[0][0]<<" "<<found[0][1]<<" "<<found[0][2]<<" "<<found[1][0]<<" "<<found[1][1]<<" "<<found[1][2]<<endl;
+	}
+}
+/*
 void Simulation::calculateColumnarLayerBoundingBox(){
 	columnarBoundingBox[0][0] =  100000.0;	//lower left x
 	columnarBoundingBox[0][1] =  100000.0;	//lower left y
@@ -3956,7 +4094,7 @@ void Simulation::calculatePeripodialBoundingBox(){
 		cerr<<" error in bounding box calculation! Found? :"<<found[0][0]<<" "<<found[0][1]<<" "<<found[0][2]<<" "<<found[1][0]<<" "<<found[1][1]<<" "<<found[1][2]<<endl;
 	}
 }
-
+*/
 void Simulation::saveStep(){
 	outputFile<<"Saving step: "<< timestep<<" this is :"<<timestep*dt<<" sec ("<<timestep*dt/3600<<" hr )"<<endl;
 	writeSaveFileStepHeader();
@@ -4170,12 +4308,13 @@ void Simulation::updateEquilibriumMyosinsFromInputSignal(MyosinFunction* currMF)
 				//calculating the grid indices:
 				double* ReletivePos = new double[2];
 				//normalising the element centre position with bounding box
-				if ((*itElement)->tissueType == 0){
+				(*itElement)->getRelativePosInBoundingBox(ReletivePos);
+				/*if ((*itElement)->tissueType == 0){
 					(*itElement)->getRelativePosInColumnarBoundingBox(ReletivePos);
 				}
 				else{
 					(*itElement)->getRelativePosInPeripodialBoundingBox(ReletivePos);
-				}
+				}*/
 				int indexX, indexY;
 				double fracX, fracY;
 				(*itElement)->convertRelativePosToGridIndex(ReletivePos, indexX, indexY, fracX, fracY, nGridX, nGridY);
@@ -4368,21 +4507,19 @@ void Simulation::calculateGrowthGridBased(GrowthFunctionBase* currGF){
 		for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 			gsl_matrix_set_identity(columnarFgIncrement);
 			gsl_matrix_set_identity(peripodialFgIncrement);
-			double* columnarReletivePos = new double[2];
-			double* peripodialRelativePos = new double[2];
-			int columnarIndexX = 0.0, peripodialIndexX = 0.0, columnarIndexY = 0.0, peripodialIndexY = 0.0;
-			double columnarFracX = 1.0,  peripodialFracX = 1.0, columnarFracY = 1.0, peripodialFracY = 1.0;
+			double* reletivePos = new double[2];
+			int IndexX = 0.0, IndexY = 0.0;
+			double FracX = 1.0,  FracY = 1.0;
 			//(*itElement)->getTissuePositionWeigths(columnarnessWeight, peripodialnessWeight);
-			(*itElement)->getRelativePositionInTissueInGridIndex(nGridX, nGridY, columnarReletivePos, peripodialRelativePos,columnarIndexX, peripodialIndexX, columnarIndexY, peripodialIndexY,columnarFracX,  peripodialFracX, columnarFracY, peripodialFracY);
+			(*itElement)->getRelativePositionInTissueInGridIndex(nGridX, nGridY, reletivePos, IndexX, IndexY, FracX, FracY);
 			if (currGF->applyToColumnarLayer){
-				(*itElement)->calculateFgFromGridCorners(dt, currGF, columnarFgIncrement, 0, columnarIndexX,  columnarIndexY, columnarFracX, columnarFracY);
+				(*itElement)->calculateFgFromGridCorners(dt, currGF, columnarFgIncrement, 0, IndexX,  IndexY, FracX, FracY); 	//sourceTissue is 0 for columnar Layer
 			}
 			if (currGF->applyToPeripodialMembrane){
-				(*itElement)->calculateFgFromGridCorners(dt, currGF, peripodialFgIncrement, 1, peripodialIndexX,  peripodialIndexY, peripodialFracX, peripodialFracY);
+				(*itElement)->calculateFgFromGridCorners(dt, currGF, peripodialFgIncrement, 1, IndexX,  IndexY, FracX, FracY); 	//sourceTissue is 1 for peripodial membrane
 			}
 			(*itElement)->updateGrowthIncrement(columnarFgIncrement,peripodialFgIncrement);
-    		delete[] columnarReletivePos;
-    		delete[] peripodialRelativePos;
+    		delete[] reletivePos;
 		}
 		gsl_matrix_free(columnarFgIncrement);
 		gsl_matrix_free(peripodialFgIncrement);
@@ -4748,8 +4885,6 @@ void Simulation::laserAblate(double OriginX, double OriginY, double Radius){
 
 }
 
-
-
 void Simulation::updateElementVolumesAndTissuePlacements(){
 	vector<ShapeBase*>::iterator itElement;
 	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
@@ -4779,4 +4914,70 @@ void Simulation::clearLaserAblatedSites(){
 			Nodes[i]->mass = 0.1;
 		}
 	}
+}
+
+void Simulation::setupYsymmetricity(){
+	double yLimPos = 0.1;
+	double yLimNeg = (-1.0)*yLimPos;
+	vector <int> AblatedNodes;
+	for (int i=0; i<nNodes; ++i){
+		if (Nodes[i]->Position[1]< yLimPos){
+			if (Nodes[i]->Position[1] > yLimNeg){
+				symmetricYBoundaryNodes.push_back(Nodes[i]);
+				fixY(Nodes[i]);
+			}
+			else{
+				AblatedNodes.push_back(i);
+				fixAllD(Nodes[i]);
+				//setSymmetricNode(Nodes[i],yLimPos);
+			}
+		}
+	}
+	int nAN = AblatedNodes.size();
+	//fix the position of all ablated nodes for effective Newton Rapson calculation:
+	vector<ShapeBase*>::iterator itElement;
+	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		if(!(*itElement)->IsAblated){
+			for (int j =0; j<nAN; ++j){
+				bool IsAblatedNow = (*itElement)->DoesPointBelogToMe(AblatedNodes[j]);
+				if (IsAblatedNow){
+					(*itElement)->removeMassFromNodes(Nodes);
+					(*itElement)->IsAblated = true;
+					break;
+				}
+			}
+		}
+	}
+}
+
+void Simulation::ablateSpcific(){
+	vector <int> AblatedNodes;
+	for (int i=0; i<nNodes; ++i){
+		fixAllD(Nodes[i]);
+	}
+	int nAN = AblatedNodes.size();
+	//fix the position of all ablated nodes for effective Newton Rapson calculation:
+	vector<ShapeBase*>::iterator itElement;
+	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		double* c = new double[3];
+		c = (*itElement)->getCentre();
+		//if ((*itElement)->Id != 38 && (*itElement)->Id != 39 /*&& (*itElement)->Id != 30 && (*itElement)->Id != 41*/){
+		if (c[0]<20 || c[1] >10 || c[1]<-10){
+			(*itElement)->removeMassFromNodes(Nodes);
+			(*itElement)->IsAblated = true;
+		}
+		else{
+			for (int i=1; i<nNodes; ++i){
+				if ((*itElement)->DoesPointBelogToMe(i)){
+					Nodes[i]->FixedPos[0]= false;
+					Nodes[i]->FixedPos[1]= false;
+					Nodes[i]->FixedPos[2]= false;
+				}
+			}
+		}
+		delete[] c;
+	}
+	Nodes[1]->FixedPos[2]= true;
+	Nodes[18]->FixedPos[1]= true;
+	Nodes[18]->FixedPos[2]= true;
 }

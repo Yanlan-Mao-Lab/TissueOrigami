@@ -46,8 +46,9 @@ protected:
 	double  peripodialGrowthWeight;	///< The fraction defining how close to the peripodial membrane the element is. 0.0 for columnar layer, 1.0 for peripodial membrane elements, and scaled according to position in the elements surrounding the lumen.
 	double* ShapeChangeRate;		///< Shape change rate of the elements, only orthagonal shape changes are allowed (x, y, z). Shape changes will be scaled to conserve volume, thus three values will not be independent.
     bool    rotatedGrowth;			///< The boolean stating if the element has rotated from the growth axis, hence the calculated growth requires further rotation to follow tissue axes.
-	double* columnarRelativePosInBoundingBox;	///< The relative position on x-y plane, within the bounding box of the columnar layer (x,y).
-	double* peripodialRelativePosInBoundingBox; ///< The relative position on x-y plane, within the bounding box of the peripodial membrane layer (x,y).
+    double* relativePosInBoundingBox;  ///< The relative position on x-y plane, within the bounding box of the tissue(x,y).
+    //double* columnarRelativePosInBoundingBox;	///< The relative position on x-y plane, within the bounding box of the columnar layer (x,y).
+	//double* peripodialRelativePosInBoundingBox; ///< The relative position on x-y plane, within the bounding box of the peripodial membrane layer (x,y).
     gsl_matrix **ShapeFuncDerivatives;
     gsl_matrix **ShapeFuncDerStacks;
     gsl_matrix **InvdXdes;
@@ -138,7 +139,10 @@ public:
 	int 	tissuePlacement; //1 -> apical, 0 -> basal, 2->middle, 3 -> lateral
 	int 	tissueType;	///< The tissue type is 0 for columnar layer, 1 for peripodial membrane, and 2 for linker zone
 	bool	IsAblated;
+	bool	atSymetricityBoundary;
 	bool	IsClippedInDisplay;
+	bool 	IsXSymmetricClippedInDisplay;
+	bool	IsYSymmetricClippedInDisplay;
 	double 	CurrShapeChangeToAdd[3];
 	double* ApicalNormalForPacking;
 	double* BasalNormalForPacking;
@@ -157,15 +161,17 @@ public:
 	double* getCentre();
 	double	getPeripodialness();
 	double	getColumnarness();
-	void	getRelativePositionInTissueInGridIndex(int nGridX, int nGridY, double*columnarReletivePos, double* peripodialRelativePos, int& columnarIndexX, int& peripodialIndexX, int& columnarIndexY, int& peripodialIndexY, double& columnarFracX, double& peripodialFracX, double& columnarFracY, double& peripodialFracY);
+	void	getRelativePositionInTissueInGridIndex(int nGridX, int nGridY, double* reletivePos, int& IndexX, int& IndexY, double& FracX, double& FracY);
 	bool 	isGrowthRateApplicable(int sourceTissue, double& weight);
 	void 	calculateFgFromRates(double dt, double x, double y, double z, gsl_matrix* rotMat, gsl_matrix* increment, int sourceTissue);
 	void 	calculateFgFromGridCorners(double dt, GrowthFunctionBase* currGF, gsl_matrix* increment, int sourceTissue, int IndexX, int IndexY, double FracX, double dFracY);
 	void 	updateGrowthIncrement(gsl_matrix* columnar, gsl_matrix* peripodial);
-	void	calculateRelativePosInBoundingBox(double columnarBoundingBoxXMin, double columnarBoundingBoxYMin, double columnarBoundingBoxLength, double columnarBoundingBoxWidth, double peipodialBoundingBoxXMin, double peipodialBoundingBoxYMin, double peipodialBoundingBoxLength, double peipodialBoundingBoxWidth);
+	void	calculateRelativePosInBoundingBox(double boundingBoxXMin, double boundingBoxYMin, double boundingBoxLength, double boundingBoxWidth);
+	//void	calculateRelativePosInBoundingBox(double columnarBoundingBoxXMin, double columnarBoundingBoxYMin, double columnarBoundingBoxLength, double columnarBoundingBoxWidth, double peipodialBoundingBoxXMin, double peipodialBoundingBoxYMin, double peipodialBoundingBoxLength, double peipodialBoundingBoxWidth);
 	void	displayRelativePosInBoundingBox();
-	void	getRelativePosInColumnarBoundingBox(double* relativePos);
-	void	getRelativePosInPeripodialBoundingBox(double* relativePos);
+	void	getRelativePosInBoundingBox(double* relativePos);
+	//void	getRelativePosInColumnarBoundingBox(double* relativePos);
+	//void	getRelativePosInPeripodialBoundingBox(double* relativePos);
 	void 	convertRelativePosToGridIndex(double* relpos, int& indexX, int &indexY, double &fracX, double &fracY, int nGridX, int nGridY);
 	void 	getStrain(int type, float &StrainMag);
 	void 	getNodeBasedPysProp(int type, int NodeNo, vector<Node*>& Nodes, float& PysPropMag);

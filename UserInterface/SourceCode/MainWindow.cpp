@@ -388,7 +388,7 @@ void MainWindow::setDisplayPreferences(QGridLayout *ProjectDisplayOptionsGrid){
 	connect(DisplayPreferencesCheckBoxes[7] , SIGNAL(stateChanged(int)),this,SLOT(updateBoundingBoxCheckBox(int)));
 	//draw net forces checkbox
 	DisplayPreferencesCheckBoxes[8] = new QCheckBox("Myosin");
-	DisplayPreferencesCheckBoxes[8]->setChecked(true);
+	DisplayPreferencesCheckBoxes[8]->setChecked(false);
 	connect(DisplayPreferencesCheckBoxes[8] , SIGNAL(stateChanged(int)),this,SLOT(updateMyosinCheckBox(int)));
 
     ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[0],3,0,1,2,Qt::AlignLeft);  // display pipette
@@ -405,34 +405,20 @@ void MainWindow::setDisplayPreferences(QGridLayout *ProjectDisplayOptionsGrid){
 
 
 void  MainWindow::xClipChange(int k){
-	if (Sim01->AddPeripodialMembrane){
-		MainGLWidget->xClip = Sim01->peripodialBoundingBox[0][0] +( ( Sim01->peripodialBoundingBox[1][0] - Sim01->peripodialBoundingBox[0][0] ) * (double) (k+10)/100.0 );
-	}
-	else{
-		MainGLWidget->xClip = Sim01->columnarBoundingBox[0][0] +( ( Sim01->columnarBoundingBox[1][0] - Sim01->columnarBoundingBox[0][0] ) * (double) (k+10)/100.0 );
-	}
+
+	MainGLWidget->xClip = Sim01->boundingBox[0][0] +( ( Sim01->boundingBox[1][0] - Sim01->boundingBox[0][0] ) * (double) (k+10)/100.0 );
 	MainGLWidget->updateClipping();
 	//cout<<"x:" <<k<<" "<<MainGLWidget->xClip<<endl;
 }
 
 void  MainWindow::yClipChange(int k){
-	if (Sim01->AddPeripodialMembrane){
-		MainGLWidget->yClip = Sim01->peripodialBoundingBox[0][1] +( ( Sim01->peripodialBoundingBox[1][1] - Sim01->peripodialBoundingBox[0][1] ) * (double) (90.0 - k)/100.0 );
-	}
-	else{
-		MainGLWidget->yClip = Sim01->columnarBoundingBox[0][1] +( ( Sim01->columnarBoundingBox[1][1] - Sim01->columnarBoundingBox[0][1] ) * (double) (90-k)/100.0 );
-	}
+	MainGLWidget->yClip = Sim01->boundingBox[0][1] +( ( Sim01->boundingBox[1][1] - Sim01->boundingBox[0][1] ) * (double) (90-k)/100.0 );
 	MainGLWidget->updateClipping();
 	//cout<<"y:" <<k<<" "<<MainGLWidget->yClip<<endl;
 }
 
 void  MainWindow::zClipChange(int k){
-	if (Sim01->AddPeripodialMembrane){
-		MainGLWidget->zClip = Sim01->peripodialBoundingBox[0][2] +( ( Sim01->peripodialBoundingBox[1][2] - Sim01->peripodialBoundingBox[0][2] ) * (double) (k+10)/100.0 );
-	}
-	else{
-		MainGLWidget->zClip = Sim01->columnarBoundingBox[0][2] +( ( Sim01->columnarBoundingBox[1][2] - Sim01->columnarBoundingBox[0][2] ) * (double) (k+10)/100.0 );
-	}
+	MainGLWidget->zClip = Sim01->boundingBox[0][2] +( ( Sim01->boundingBox[1][2] - Sim01->boundingBox[0][2] ) * (double) (k+10)/100.0 );
 	MainGLWidget->updateClipping();
 	//cout<<"z:" <<k<<" "<<MainGLWidget->zClip<<endl;
 }

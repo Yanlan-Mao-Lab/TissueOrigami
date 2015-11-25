@@ -543,9 +543,17 @@ bool ModelInputObject::readMeshParameters(ifstream& file){
 	}
 	else if ( Sim->MeshType == 4){
 		bool Success  = readMeshType4(file);
-			if (!Success){
+		if (!Success){
 			return false;
 		}
+	}
+	file >> currHeader;
+	if(currHeader == "symmetricInY(bool):"){
+		file >> Sim->symmetricY;
+	}
+	else{
+		cerr<<"Error in reading mesh type, curr string: "<<currHeader<<", should have been: symmetricInY(bool):" <<endl;
+		return false;
 	}
 	return true;
 }

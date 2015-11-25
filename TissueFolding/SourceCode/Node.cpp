@@ -32,6 +32,8 @@ Node::Node(int id, int dim, double* pos, int tissuePos, int tissueType){
 	mass = 0.0;
 	surface = 0.0;
     zProjectedArea = 0.0;
+    symmetricEquivalentId = -1000;
+   // allOwnersAblated = false;
 }
 
 Node::~Node(){

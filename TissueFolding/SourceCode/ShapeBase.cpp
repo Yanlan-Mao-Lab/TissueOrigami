@@ -176,22 +176,10 @@ double ShapeBase::getColumnarness(){
 }
 
 
-void ShapeBase::getRelativePositionInTissueInGridIndex(int nGridX, int nGridY, double* columnarReletivePos, double* peripodialRelativePos, int& columnarIndexX, int& peripodialIndexX, int& columnarIndexY, int& peripodialIndexY, double& columnarFracX, double& peripodialFracX, double& columnarFracY, double& peripodialFracY){
+void ShapeBase::getRelativePositionInTissueInGridIndex(int nGridX, int nGridY, double* reletivePos, int& IndexX, int& IndexY, double& FracX, double& FracY){
 	//cout<<"inside getRelativePositionInTissueInGridIndex"<<endl;
-	if (tissueType == 0){//columnar layer element
-		getRelativePosInColumnarBoundingBox(columnarReletivePos);
-		convertRelativePosToGridIndex(columnarReletivePos, columnarIndexX, columnarIndexY, columnarFracX, columnarFracY, nGridX, nGridY);
-	}
-	else if(tissueType == 1){// peripodial layer element
-		getRelativePosInPeripodialBoundingBox(peripodialRelativePos);
-		convertRelativePosToGridIndex(peripodialRelativePos, peripodialIndexX,peripodialIndexY, peripodialFracX, peripodialFracY, nGridX, nGridY);
-	}
-	else {
-		getRelativePosInColumnarBoundingBox(columnarReletivePos);
-		getRelativePosInPeripodialBoundingBox(peripodialRelativePos);
-		convertRelativePosToGridIndex(columnarReletivePos, columnarIndexX, columnarIndexY, columnarFracX, columnarFracY, nGridX, nGridY);
-		convertRelativePosToGridIndex(peripodialRelativePos, peripodialIndexX,peripodialIndexY, peripodialFracX, peripodialFracY, nGridX, nGridY);
-	}
+	getRelativePosInBoundingBox(reletivePos);
+	convertRelativePosToGridIndex(reletivePos, IndexX, IndexY, FracX, FracY, nGridX, nGridY);
 }
 
 bool ShapeBase::isGrowthRateApplicable( int sourceTissue, double& weight){
@@ -296,92 +284,92 @@ void ShapeBase::calculateFgFromGridCorners(double dt, GrowthFunctionBase* currGF
 	}
 }*/
 
+
 void ShapeBase::calculateFgFromGridCorners(double dt, GrowthFunctionBase* currGF, gsl_matrix* increment, int sourceTissue,  int IndexX, int IndexY, double FracX, double FracY){
 	double tissueWeight;
 	bool continueCalaculation = isGrowthRateApplicable(sourceTissue,tissueWeight);
 	if (continueCalaculation){
-		double growth0[3], growth1[3], growth2[3], growth3[3];
-		double angle0 = 0.0, angle1 = 0.0, angle2 = 0.0, angle3 = 0.0;
-		gsl_matrix* rotMat  = gsl_matrix_calloc(3,3);
-		gsl_matrix* rotMatT = gsl_matrix_calloc(3,3);
+		double *growth0, *growth1, *growth2, *growth3;
+		growth0 = new double[3];
+		growth1 = new double[3];
+		growth2 = new double[3];
+		growth3 = new double[3];
+		double *angles;
+		angles = new double[4];
+		bool *angleEliminated;
+		angleEliminated = new bool[4];
+		currGF->getGrowthProfileAt4Corners(IndexX, IndexY, growth0, growth1, growth2, growth3, angles, angleEliminated);
+		//calculating the fraction eliminated:
+		double FracEliminated = 0.0;
+		if (angleEliminated[0]){ FracEliminated += (1.0-FracX)*(1.0-FracY);	}
+		if (angleEliminated[1]){ FracEliminated += FracX*(1.0-FracY);		}
+		if (angleEliminated[2]){ FracEliminated += (1.0-FracX)*FracY;		}
+		if (angleEliminated[3]){ FracEliminated += FracX*FracY;				}
 		double growth[3];
 		double angle;
-		for (int axis =0; axis<3; axis++){
-			growth0[axis] = currGF->getGrowthMatrixElement(IndexX,IndexY,axis)*tissueWeight*(1.0-FracX)*(1.0-FracY);
-			growth1[axis] = currGF->getGrowthMatrixElement(IndexX+1,IndexY,axis)*tissueWeight*FracX*(1.0-FracY);
-			growth2[axis] = currGF->getGrowthMatrixElement(IndexX,IndexY+1,axis)*tissueWeight*(1.0-FracX)*FracY;
-			growth3[axis] = currGF->getGrowthMatrixElement(IndexX+1,IndexY+1,axis)*tissueWeight*FracX*FracY;
-			growth[axis] = growth0[axis]+growth1[axis]+growth2[axis]+growth3[axis];
-			gsl_matrix_set(increment,axis,axis,exp(growth[axis]*dt));
-		}
-		//Not summing aspect ratios close to one:
-		//I want the sum of fractions that are not added in:
-		double FracEliminated = 0.0;
-		if (currGF->isAspectRatioOverOne(IndexX,IndexY)){
-			angle0 = currGF->getXyShearAngleMatrixElement(IndexX,IndexY)*(1.0-FracX)*(1.0-FracY);
-		} else {
-			FracEliminated += (1.0-FracX)*(1.0-FracY);
-		}
-		if (currGF->isAspectRatioOverOne(IndexX+1,IndexY)){
-			angle1 = currGF->getXyShearAngleMatrixElement(IndexX+1,IndexY)*FracX*(1.0-FracY);
-		} else {
-			FracEliminated += FracX*(1.0-FracY);
-		}
-		if (currGF->isAspectRatioOverOne(IndexX,IndexY+1)){
-			angle2 = currGF->getXyShearAngleMatrixElement(IndexX,IndexY+1)*(1.0-FracX)*FracY;
-		} else {
-			FracEliminated += (1.0-FracX)*FracY;
-		}
-		if (currGF->isAspectRatioOverOne(IndexX+1,IndexY+1)){
-			angle3 = currGF->getXyShearAngleMatrixElement(IndexX+1,IndexY+1)*FracX*FracY;
-		} else {
-			FracEliminated += FracX*FracY;
-		}
-		angle = angle0+angle1+angle2+angle3;
+		//Take the average of angles:
+		angle = angles[0]*(1.0-FracX)*(1.0-FracY)+angles[1]*FracX*(1.0-FracY)+angles[2]*(1.0-FracX)*FracY+angles[3]*FracX*FracY;
 		if (FracEliminated>0){
 			if (FracEliminated >= 0.9999999){
-				angle = 0.0;
+				angle = 0.0; //if all the angles should be eliminated because all corners have low aspect ratio, then angle is arbitrary, selected as zero
 			}
 			else{
 				angle /= (1.0-FracEliminated); //normalising the sum to the eliminated averaging
 			}
 		}
-		/*if (Id == 6 || Id == 7){
-			cout<<"Id: "<<Id<<endl;
-			cout<<" angles: "<<angle0<<" "<<angle1<<" "<<angle2<<" "<<angle3<<endl;
-			cout<<" angles: "<<angle<<endl;
-			cout<<" growth0: "<<growth0[0]<<" "<<growth0[1]<<" "<<growth0[2]<<endl;
-			cout<<" growth1: "<<growth1[0]<<" "<<growth1[1]<<" "<<growth1[2]<<endl;
-			cout<<" growth2: "<<growth2[0]<<" "<<growth2[1]<<" "<<growth2[2]<<endl;
-			cout<<" growth3: "<<growth3[0]<<" "<<growth3[1]<<" "<<growth3[2]<<endl;
-			cout<<" growth:  "<<growth[0]<<" "<<growth[1]<<" "<<growth[2]<<endl;
+		//Take the average of growths:
+		for (int axis =0; axis<3; axis++){
+			growth[axis]  = growth0[axis]*(1.0-FracX)*(1.0-FracY)+growth1[axis]*FracX*(1.0-FracY)+growth2[axis]*(1.0-FracX)*FracY+growth3[axis]*FracX*FracY;
+			growth[axis] *= tissueWeight;
+			gsl_matrix_set(increment,axis,axis,exp(growth[axis]*dt));
+		}
+		//Rotate the growth if the angel is not zero:
+		if (angle != 0.0){
+			gsl_matrix* rotMat  = gsl_matrix_calloc(3,3);
+			gsl_matrix* rotMatT = gsl_matrix_calloc(3,3);
+			double c = cos(angle);
+			double s = sin(angle);
+			gsl_matrix_set(rotMat,0,0,  c );
+			gsl_matrix_set(rotMat,0,1, -1.0*s);
+			gsl_matrix_set(rotMat,0,2,  0.0);
+			gsl_matrix_set(rotMat,1,0,  s);
+			gsl_matrix_set(rotMat,1,1,  c);
+			gsl_matrix_set(rotMat,1,2,  0.0);
+			gsl_matrix_set(rotMat,2,0,  0.0);
+			gsl_matrix_set(rotMat,2,1,  0.0);
+			gsl_matrix_set(rotMat,2,2,  1.0);
+			gsl_matrix* temp = gsl_matrix_calloc(nDim,nDim);
+			gsl_matrix_transpose_memcpy(rotMatT,rotMat);
+
+			gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, rotMat, increment, 0.0, temp);
+			gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, temp, rotMatT, 0.0, increment);
+			gsl_matrix_free(temp);
+			gsl_matrix_free(rotMat);
+			gsl_matrix_free(rotMatT);
+		}
+		/*if (Id == 43 || Id == 1 || Id == 195 || Id == 152 || Id == 48 || Id == 71){
+			cout<<"Element: "<<Id<<endl;
+			cout<<"	angle: "<<angle<<" in degrees: "<<angle*180.0/M_PI<<" growth: "<<growth[0]<<" "<<growth[1]<<" "<<growth[2]<<endl;
+			cout<<"	pos base:  "<<Positions[0][0]<<" "<<Positions[0][1]<<" "<<Positions[0][2]<<endl;
+			cout<<"	        :  "<<Positions[1][0]<<" "<<Positions[1][1]<<" "<<Positions[1][2]<<endl;
+			cout<<"	        :  "<<Positions[2][0]<<" "<<Positions[2][1]<<" "<<Positions[2][2]<<endl;
+			cout<<"	grid values: "<<IndexX<<" "<<IndexY<<" "<<FracX<<" "<<FracY<<endl;
+			cout<<"	relative pos: "<<relativePosInBoundingBox[0]<<" "<<relativePosInBoundingBox[1]<<endl;
+			cout<<" FracEliminated: "<<FracEliminated<<endl;
+			cout<<" angles: ";
+			for (int i=0; i<4; ++i){cout<<angles[i]<<" ";}
+			cout<<endl<<" angleEliminated: ";
+			for (int i=0; i<4; ++i){cout<<angleEliminated[i]<<" ";}
+			cout<<endl;
+			displayMatrix(increment,"currIncrement");
 		}*/
-
-		double c = cos(angle);
-		double s = sin(angle);
-		gsl_matrix_set(rotMat,0,0,  c );
-		gsl_matrix_set(rotMat,0,1, -1.0*s);
-		gsl_matrix_set(rotMat,0,2,  0.0);
-		gsl_matrix_set(rotMat,1,0,  s);
-		gsl_matrix_set(rotMat,1,1,  c);
-		gsl_matrix_set(rotMat,1,2,  0.0);
-		gsl_matrix_set(rotMat,2,0,  0.0);
-		gsl_matrix_set(rotMat,2,1,  0.0);
-		gsl_matrix_set(rotMat,2,2,  1.0);
-		gsl_matrix* temp = gsl_matrix_calloc(nDim,nDim);
-		gsl_matrix_transpose_memcpy(rotMatT,rotMat);
-
-		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, rotMat, increment, 0.0, temp);
-		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, temp, rotMatT, 0.0, increment);
-		gsl_matrix_free(temp);
-		gsl_matrix_free(rotMat);
-		gsl_matrix_free(rotMatT);
 	}
 	else{
 		gsl_matrix_set_identity(increment);
 	}
 }
-void ShapeBase::updateGrowthIncrement(gsl_matrix* columnar, gsl_matrix* peripodial){
+
+void ShapeBase::updateGrowthIncrement(gsl_matrix* columnar, gsl_matrix* peripodial ){
 	gsl_matrix* temp = gsl_matrix_calloc(nDim,nDim);
 	if (tissueType == 0){//columnar layer element, no peripodial application necessary
 		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, columnar, growthIncrement, 0.0, temp);
@@ -400,8 +388,12 @@ void ShapeBase::updateGrowthIncrement(gsl_matrix* columnar, gsl_matrix* peripodi
 		GrowthRate[i] = gsl_matrix_get(growthIncrement,i,i);
 	}
 	gsl_matrix_free(temp);
+	//if (Id == 38 || Id == 39){
+	//	cout<<"Element: "<<Id<<endl;
+	//	displayMatrix(growthIncrement,"growthIncrement");
+	//}
 }
-
+/*
 void ShapeBase::getRelativePosInColumnarBoundingBox(double* relativePos){
 	relativePos[0] =  columnarRelativePosInBoundingBox[0];
 	relativePos[1] =  columnarRelativePosInBoundingBox[1];
@@ -410,6 +402,11 @@ void ShapeBase::getRelativePosInColumnarBoundingBox(double* relativePos){
 void ShapeBase::getRelativePosInPeripodialBoundingBox(double* relativePos){
 	relativePos[0] =  peripodialRelativePosInBoundingBox[0];
 	relativePos[1] =  peripodialRelativePosInBoundingBox[1];
+}*/
+
+void ShapeBase::getRelativePosInBoundingBox(double* relativePos){
+	relativePos[0] =  relativePosInBoundingBox[0];
+	relativePos[1] =  relativePosInBoundingBox[1];
 }
 
 void ShapeBase::convertRelativePosToGridIndex(double* relpos, int& indexX, int &indexY, double &fracX, double &fracY, int nGridX, int nGridY){
@@ -904,6 +901,12 @@ bool 	ShapeBase::calculate3DRotMatFromF(gsl_matrix* rotMat){
     return false; //none of the off - diagonal terms of the matrix are above the threshold, the current rotation is only niumerical error.
 }
 
+void 	ShapeBase::calculateRelativePosInBoundingBox(double boundingBoxXMin, double boundingBoxYMin, double boundingBoxLength, double boundingBoxWidth){
+	relativePosInBoundingBox = getCentre();
+	relativePosInBoundingBox[0] = (relativePosInBoundingBox[0] -boundingBoxXMin) / boundingBoxLength;
+	relativePosInBoundingBox[1] = (relativePosInBoundingBox[1] - boundingBoxYMin) / boundingBoxWidth;
+}
+/*
 void 	ShapeBase::calculateRelativePosInBoundingBox(double columnarBoundingBoxXMin, double columnarBoundingBoxYMin, double columnarBoundingBoxLength, double columnarBoundingBoxWidth, double peripodialBoundingBoxXMin, double peripodialBoundingBoxYMin, double peripodialBoundingBoxLength, double peripodialBoundingBoxWidth){
 	columnarRelativePosInBoundingBox = getCentre();
 	if (tissueType != 0){ //the tissue is not columnar, so there is peripodial membrane
@@ -924,17 +927,9 @@ void 	ShapeBase::calculateRelativePosInBoundingBox(double columnarBoundingBoxXMi
 	//cout<<" a: "<< a[0]<<" "<<a[1]<<endl;
 	//delete[] a;
 }
-
+*/
 void 	ShapeBase::displayRelativePosInBoundingBox(){
-	if (tissueType == 0){
-		cout<<"Element: "<<Id<<"  rel Pos from element columnar: "<<columnarRelativePosInBoundingBox[0]<<" "<<columnarRelativePosInBoundingBox[1]<<endl;
-	}
-	else if (tissueType == 1){
-		cout<<"Element: "<<Id<<"  rel Pos from element peripodial: "<<peripodialRelativePosInBoundingBox[0]<<" "<<peripodialRelativePosInBoundingBox[1]<<endl;
-	}
-	else{
-		cout<<"Element: "<<Id<<"  rel Pos from element columnar: "<<columnarRelativePosInBoundingBox[0]<<" "<<columnarRelativePosInBoundingBox[1]<<" peripodial: "<<peripodialRelativePosInBoundingBox[0]<<" "<<peripodialRelativePosInBoundingBox[1]<<endl;
-	}
+		cout<<"Element: "<<Id<<"  relative position in the tissue bounding box: "<<relativePosInBoundingBox[0]<<" "<<relativePosInBoundingBox[1]<<endl;
 }
 
 bool 	ShapeBase::checkPackingToThisNodeViaState(int ColumnarLayerDiscretisationLayers, Node* NodePointer){
@@ -1345,10 +1340,11 @@ void ShapeBase::calculateImplicitKElastic(){
         calculateElasticKIntegral2(currK,iter);
         gsl_matrix_scale(currK,weights[iter]);
         gsl_matrix_add(TriPointKe, currK);
-    }
-    //cout<<"Element: "<<Id<<endl;
-    //displayMatrix(TriPointKe,"TriPointKe0");
-
+    }/*
+    if (Id == 1 || Id == 2){
+    	cout<<"Element: "<<Id<<endl;
+    	displayMatrix(TriPointKe,"TriPointKe0");
+    }*/
 
 /*
     gsl_matrix* disp = gsl_matrix_calloc(18,1);
@@ -2114,6 +2110,7 @@ void 	ShapeBase:: assignVolumesToNodes(vector <Node*>& Nodes){
         Nodes[NodeIds[i]]->mass += VolumePerNode;
 	}
 }
+
 void 	ShapeBase:: assignSurfaceAreaToNodes(vector <Node*>& Nodes){
     double multiplier = 1.0;
     if (ShapeType ==1 ){ multiplier = 0.5;}
@@ -2206,7 +2203,15 @@ void 	ShapeBase::removeMassFromNodes(vector <Node*>& Nodes){
 
 void 	ShapeBase::checkDisplayClipping(double xClip, double yClip, double zClip){
 	IsClippedInDisplay=false;
+	IsXSymmetricClippedInDisplay=false;
+	IsYSymmetricClippedInDisplay=false;
 	for (int j=0; j<nNodes; ++j){
+		 if((-1.0)*Positions[j][0]>xClip){
+			 IsXSymmetricClippedInDisplay = true;
+		 }
+		 if((-1.0)*Positions[j][1]<yClip){
+			 IsYSymmetricClippedInDisplay = true;
+		 }
 		 if(Positions[j][0]>xClip){
 			 IsClippedInDisplay = true;
 			 return;

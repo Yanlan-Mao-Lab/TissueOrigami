@@ -273,6 +273,11 @@ public:
 	double **xyShearAngleMatrix; ///<The matrix of xy shear rate (rad/sec). It is a matrix of doubles at each grid point. he dimensions of the matrix are equal to (GridBasedGrowthFunction::nGridX, GridBasedGrowthFunction::nGridY), and set in constructor of the GridBasedGrowthFunction.
 	gsl_matrix*** xyShearRotationsMatrix;
 	bool** aspectRatioOverThresoldMatrix;
+
+	double****	compatibleGrowths;
+	double***	compatibleAngles;
+	bool***		compatibleAngleEliminated;
+
 	GridBasedGrowthFunction(int id, int type, float initTime, float endTime, bool applyToColumnarLayer, bool applyToPeripodialMembrane, int nX, int nY, double*** GrowthMat, double** AngleMat) : GrowthFunctionBase(id, type, initTime, endTime, applyToColumnarLayer, applyToPeripodialMembrane){
 		/**
 		 *  The first six parameters will be directed to the parent constructor, GrowthFunctionBase#GrowthFunctionBase. \n
@@ -286,10 +291,19 @@ public:
 		GrowthMatrix = new double**[(const int) nGridX];
 		xyShearAngleMatrix  = new double*[(const int) nGridX];
 		aspectRatioOverThresoldMatrix = new bool*[(const int) nGridX];
+
+		compatibleAngleEliminated 	= new bool**[(const int) nGridX];
+		compatibleAngles 	 		= new double**[(const int) nGridX];
+		compatibleGrowths  			= new double***[(const int) nGridX];
+
+
 		for (int i=0; i<nGridX; ++i){
 			GrowthMatrix[i] = new double*[(const int) nGridY];
 			xyShearAngleMatrix[i] = new double[(const int) nGridY];
 			aspectRatioOverThresoldMatrix[i] = new bool[(const int) nGridY];
+			compatibleAngleEliminated[i] 	= new bool*[(const int) nGridY];
+			compatibleAngles[i] 	 		= new double*[(const int) nGridY];
+			compatibleGrowths[i]  			= new double**[(const int) nGridY];
 			for (int j=0; j<nGridY; ++j){
 				GrowthMatrix[i][j] = new double[3];
 				xyShearAngleMatrix[i][j] = AngleMat[i][j]*M_PI/180.0; //converting to radians
@@ -297,7 +311,20 @@ public:
 				for (int k=0; k<3; ++k){
 					GrowthMatrix[i][j][k] = GrowthMat[i][j][k];
 				}
-				//cout<<" [i][j]: ["<<i<<"]["<<j<<"], Growth_x&y: "<<GrowthMatrix[i][j][0]<<" "<<GrowthMatrix[i][j][1]<<endl;
+				cout<<"set the growth matrix for: "<<i<<" "<<j<<endl;
+				compatibleAngleEliminated[i][j] = new bool[4];	//booleans stating if the angle will be added in compatible averaging in for 4 corners
+				compatibleAngles[i][j] 			= new double[4];		//angles compatible for averaging in for 4 corners
+				compatibleGrowths[i][j]			= new double*[4];		//growth rates [rx,ry,rz] compatible for averaging in for 4 corners
+				for (int k=0; k<4; ++k){
+					cout<<"set default values of  compatibleAngleEliminated for: "<<i<<" "<<j<<" "<<k<<endl;
+					compatibleAngleEliminated[i][j][k] = false;	//by default all angles are added
+					compatibleAngles[i][j][k] = 0.0;			//by default all angles are zero
+					compatibleGrowths[i][j][k]= new double[3];	//growth rates [rx,ry,rz] at index point [i][j], for corner [k]
+					for (int l=0; l<3; ++l){
+						compatibleGrowths[i][j][k][l] = 0.0;
+					}
+				}
+				cout<<" [i][j]: ["<<i<<"]["<<j<<"], Growth_x&y: "<<GrowthMatrix[i][j][0]<<" "<<GrowthMatrix[i][j][1]<<endl;
 				double AR = GrowthMatrix[i][j][0] / GrowthMatrix[i][j][1];
 				if (AR < 1.0){
 					AR = 1/AR;
@@ -329,6 +356,8 @@ public:
 				gsl_matrix_set(xyShearRotationsMatrix[i][j],2,2,  1.0);
 			}
 		}
+		//now I want to fill up growth matrix for corners:
+		preCalculateAnglesForCompatibleAveraging();
 	} ///< The constructor of GridBasedGrowthFunction
 
 	~GridBasedGrowthFunction(){
@@ -377,14 +406,146 @@ public:
 	gsl_matrix* getXyShearRotationsMatrixElement(int i, int j){
 		return xyShearRotationsMatrix[i][j];
 	}///< This function returns the xyShear rotation matrix at grid point [i]\[j\] (in dimensions GridBasedGrowthFunction#nGridX, GridBasedGrowthFunction#nGridY).
+
 	bool isAspectRatioOverOne(int i, int j){
 		return aspectRatioOverThresoldMatrix[i][j];
 	}
+
 	void setGrowthMatrixElement(double ex, double ey, double ez, int i, int j){
 		GrowthMatrix[i][j][0] = ex;
 		GrowthMatrix[i][j][1] = ey;
 		GrowthMatrix[i][j][2] = ez;
 	}///< This function sets the growth rate at grid point [i]\[j\] (in dimensions GridBasedGrowthFunction#nGridX, GridBasedGrowthFunction#nGridY), to the growth rate [ex, ey, ez] in the format [ DV axis (x), AP axis (y), and AB axis (z)].
+
+	void preCalculateAnglesForCompatibleAveraging(){
+		for (int IndexX = 0; IndexX<nGridX-1; ++IndexX){
+			for (int IndexY = 0; IndexY<nGridY-1; ++IndexY){
+				//read the growth rates at four corners for this grid point:
+				double growth0[3] = {0.0,0.0,0.0};
+				double growth1[3] = {0.0,0.0,0.0};
+				double growth2[3] = {0.0,0.0,0.0};
+				double growth3[3] = {0.0,0.0,0.0};
+				for (int axis =0; axis<3; axis++){
+					growth0[axis] = getGrowthMatrixElement(IndexX,IndexY,axis);
+					growth1[axis] = getGrowthMatrixElement(IndexX+1,IndexY,axis);
+					growth2[axis] = getGrowthMatrixElement(IndexX,IndexY+1,axis);
+					growth3[axis] = getGrowthMatrixElement(IndexX+1,IndexY+1,axis);
+				}
+				//now reading the angles:
+				double angles[4] = {0.0,0.0,0.0,0.0};
+				//Not summing aspect ratios close to one:
+				//and recording the eliminated angles for ease of use later on:
+				bool AngleEliminated[4] = {false, false, false, false};
+				if (isAspectRatioOverOne( IndexX,   IndexY))   {angles[0] = getXyShearAngleMatrixElement(IndexX  , IndexY);  }
+				else {AngleEliminated[0] = true;}
+				if (isAspectRatioOverOne( IndexX+1, IndexY))   {angles[1] = getXyShearAngleMatrixElement(IndexX+1, IndexY);  }
+				else {AngleEliminated[1] = true;}
+				if (isAspectRatioOverOne( IndexX,   IndexY+1)) {angles[2] = getXyShearAngleMatrixElement(IndexX,   IndexY+1);}
+				else {AngleEliminated[2] = true;}
+				if (isAspectRatioOverOne( IndexX+1, IndexY+1)) {angles[3] = getXyShearAngleMatrixElement(IndexX+1, IndexY+1);}
+				else {AngleEliminated[3] = true;}
+				//bring all angles in the interval 0 - 180:
+				for (int i=0; i<4; ++i){
+					while (angles[i]<0){angles[i] += M_PI;}
+					while (angles[i]>M_PI){angles[i] -= M_PI;}
+				}
+				//now I am bringing the angles to the vicinity of each other:
+				//selecting the base angle, the first one that was not eliminated will do:
+				bool angleSelected = false;
+				int selectedIndice = 3;
+				double tet = 0;
+				for (int i=0; i<4; ++i){
+					if(!AngleEliminated[i] && !angleSelected){
+						tet = angles[i];
+					}
+					if (angleSelected){
+						selectedIndice = i;
+						break;
+					}
+				}
+				//selected the first angle, now bring all the rest near this one:
+				//I keep a record if I need to flip the growths:
+				bool flipGrowth[4] = {false, false, false, false};
+				for (int i=selectedIndice; i<4; ++i){
+					double dtet = tet - angles[i];
+					if (dtet<0){
+						//selected tetha is larger than this angle:
+						if (dtet >= M_PI/4.0 && dtet < M_PI/2.0 ){
+							angles[i] = angles[i] - M_PI/2.0;
+							flipGrowth[i] = true;
+						}
+						else if (dtet >= M_PI/2.0){
+							angles[i] = angles[i] - M_PI;
+							if (angles[i] <= tet - M_PI/4.0 ){
+								angles[i] = angles[i] + M_PI/2.0;
+								flipGrowth[i] = true;
+							}
+						}
+					}
+					else{
+						//selected tetha is smaller than this angle:
+						if (dtet <= -M_PI/4.0 && dtet > -M_PI/2.0 ){
+							angles[i] = angles[i] + M_PI/2.0;
+							flipGrowth[i] = true;
+						}
+						else if (dtet <= -M_PI/2.0){
+							angles[i] = angles[i] + M_PI;
+							if (angles[i] > tet + M_PI/4.0 ){
+								angles[i] = angles[i] - M_PI/2.0;
+								flipGrowth[i] = true;
+							}
+						}
+					}
+				}
+				//all angles are brought to the vicinity of the selected base angle;
+				//flipping the growth where necessary:
+				if (flipGrowth[0]){
+					double x = growth0[0];
+					growth0[0] = growth0[1];
+					growth0[1] = x;
+				}
+				if (flipGrowth[1]){
+					double x = growth1[0];
+					growth1[0] = growth1[1];
+					growth1[1] = x;
+				}
+				if (flipGrowth[2]){
+					double x = growth2[0];
+					growth2[0] = growth2[1];
+					growth2[1] = x;
+				}
+				if (flipGrowth[3]){
+					double x = growth3[0];
+					growth3[0] = growth3[1];
+					growth3[1] = x;
+				}
+				for (int axis=0; axis<3; ++axis){
+					compatibleGrowths[IndexX][IndexY][0][axis]= growth0[axis];
+					compatibleGrowths[IndexX][IndexY][1][axis]= growth1[axis];
+					compatibleGrowths[IndexX][IndexY][2][axis]= growth2[axis];
+					compatibleGrowths[IndexX][IndexY][3][axis]= growth3[axis];
+				}
+				for (int i=0; i<4; ++i){
+					compatibleAngles[IndexX][IndexY][i] =  angles[i];
+					compatibleAngleEliminated[IndexX][IndexY][i] = AngleEliminated[i];
+					cout<<"Index: "<<IndexX<<" "<<IndexY<<" i: "<<i<<" AngleEliminated "<<AngleEliminated[i]<<endl;
+				}
+			} // end of loop over IndexY
+		} //end of loop over IndexX
+	}
+
+	void getGrowthProfileAt4Corners(int IndexX, int IndexY, double *growth0, double *growth1, double *growth2, double *growth3, double *angles, bool *anglesEliminated){
+		for (int i=0; i<3; ++i){
+			growth0[i] = compatibleGrowths[IndexX][IndexY][0][i];
+			growth1[i] = compatibleGrowths[IndexX][IndexY][1][i];
+			growth2[i] = compatibleGrowths[IndexX][IndexY][2][i];
+			growth3[i] = compatibleGrowths[IndexX][IndexY][3][i];
+		}
+		for (int i=0; i<4; ++i){
+			angles[i]  = compatibleAngles[IndexX][IndexY][i];
+			anglesEliminated[i] = compatibleAngleEliminated[IndexX][IndexY][i];
+		}
+	}
 
 	void writeSummary(ofstream &saveFileSimulationSummary,double dt){
 		/**

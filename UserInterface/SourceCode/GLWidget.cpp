@@ -74,7 +74,7 @@ using namespace std;
   	 drawNetForces = false;
   	 drawPackingForces = false;
      drawVelocities = false;
-     drawMyosinForces = true;
+     drawMyosinForces = false;
      drawPeripodialMembrane = true;
      drawColumnar = true;
      ManualNodeSelection = false;
@@ -242,6 +242,21 @@ using namespace std;
 	 return drawthisElement;
  }
 
+ bool GLWidget::checkIfDrawingElementSymmetric(int i, bool symmetricX, bool symmetricY){
+	 bool drawthisElement = true;
+	 if (symmetricX){
+		 if (Sim01->Elements[i]->IsXSymmetricClippedInDisplay){
+			 drawthisElement = false;
+		 }
+	 }
+	 if (symmetricY){
+		 if (Sim01->Elements[i]->IsYSymmetricClippedInDisplay){
+			 drawthisElement = false;
+		 }
+	 }
+	 return drawthisElement;
+ }
+
  bool GLWidget::checkIfDrawingNode(int i){
  	 bool drawthisNode = true;
  	 if (!drawPeripodialMembrane && ( Sim01->Nodes[i]->tissueType == 1 || Sim01->Nodes[i]->tissueType == 2 )){	//I am NOT drawing peripodial membrane and this node is either a peripodial or a linker node
@@ -262,7 +277,13 @@ using namespace std;
 				drawPrismForPicking(i);
 			 }
 			 else{
-				 drawPrism(i);
+				 drawPrism(i, false, false);
+				 if (Sim01->symmetricY){
+					 bool drawCurrentElementSymmetric = checkIfDrawingElementSymmetric(i, false, true); //Id, symmetricX, symmetricY
+					 if (drawCurrentElementSymmetric){
+						 drawPrism(i, false, true); //Id, symmetricX, symmetricY
+					 }
+				 }
 			 }
 		 }
 		 else if (ShapeType == 4 ){
@@ -496,9 +517,15 @@ void GLWidget::highlightNode(int i){
 	return NodeColours;
  }
 
-
- void GLWidget::drawPrism(int i){
-	 //Drawing the surfaces
+ void GLWidget::drawPrism(int i, bool symmetricX, bool symmetricY){
+	float xMultiplier = 1.0, yMultiplier = 1.0;
+	if (symmetricX){
+		xMultiplier = -1.0;
+	}
+	if (symmetricY){
+		yMultiplier = -1.0;
+	}
+	//Drawing the surfaces
 	const int nTriangle = 8; //top + bottom + 2 for each side.
 	int TriangleConnectivity[nTriangle][3] = {{0,1,2},{3,4,5},{0,2,3},{2,3,5},{0,1,3},{1,3,4},{1,2,5},{1,5,4}};
 	const int nLineStrip = 12;
@@ -513,8 +540,8 @@ void GLWidget::highlightNode(int i){
 			for (int k =0; k<3; ++k){
 				int pointId = TriangleConnectivity[j][k];
 				glColor3f(NodeColours[pointId][0],NodeColours[pointId][1],NodeColours[pointId][2]);
-				float x = Sim01->Elements[i]->Positions[pointId][0];
-				float y = Sim01->Elements[i]->Positions[pointId][1];
+				float x = xMultiplier * Sim01->Elements[i]->Positions[pointId][0];
+				float y = yMultiplier * Sim01->Elements[i]->Positions[pointId][1];
 				float z = Sim01->Elements[i]->Positions[pointId][2];
 				//cout<<"triangle : "<<j<<" point: "<<k<<" position : "<<x<<" y "<<y<<" z "<<z<<" colour: "<<NodeColours[pointId][0]<<" "<<NodeColours[pointId][1]<<" "<<NodeColours[pointId][2]<<endl;
 				glVertex3f( x, y, z);
@@ -531,8 +558,8 @@ void GLWidget::highlightNode(int i){
 	glBegin(GL_LINE_STRIP);
 		for (int j =0; j<nLineStrip;++j){
 			int pointId = BorderConnectivity[j];
-			float x = Sim01->Elements[i]->Positions[pointId][0];
-			float y = Sim01->Elements[i]->Positions[pointId][1];
+			float x = xMultiplier * Sim01->Elements[i]->Positions[pointId][0];
+			float y = yMultiplier * Sim01->Elements[i]->Positions[pointId][1];
 			float z = Sim01->Elements[i]->Positions[pointId][2];
 			glVertex3f( x, y, z);
 		}
@@ -1630,47 +1657,34 @@ bool GLWidget::findNode(int i){
 		 //glLineStipple(1, 0x3F07);
 		 //glEnable(GL_LINE_STIPPLE);
 		 double boundingBox[3][3] = {{0.0,0.0,0.0}, {0.0,0.0,0.0}, {0.0,0.0,0.0}};
-		 for (int i =0; i<2; i++){
-			 if (i == 0){
-				 //drawing columnar:
-				 glColor3f(1.0,0.0,1.0);
-				 for (int k=0; k<3; ++k){
-					 for (int l=0; l<3; l++){
-						 boundingBox[k][l] = Sim01->columnarBoundingBox[k][l];
-					 }
-				 }
+		 //drawing columnar:
+		 glColor3f(1.0,0.0,1.0);
+		 for (int k=0; k<3; ++k){
+			 for (int l=0; l<3; l++){
+				 boundingBox[k][l] = Sim01->boundingBox[k][l];
 			 }
-			 if (i == 1 && Sim01->AddPeripodialMembrane){
-				 //drawing columnar:
-				 glColor3f(0.5,0.0,0.5);
-				 for (int k=0; k<3; ++k){
-					 for (int l=0; l<3; l++){
-						 boundingBox[k][l] = Sim01->peripodialBoundingBox[k][l];
-					 }
-				 }
-			 }
-			 glBegin(GL_LINE_LOOP);
-					glVertex3f(boundingBox[0][0],boundingBox[0][1],boundingBox[0][2]);
-					glVertex3f(boundingBox[1][0],boundingBox[0][1],boundingBox[0][2]);
-					glVertex3f(boundingBox[1][0],boundingBox[1][1],boundingBox[0][2]);
-					glVertex3f(boundingBox[0][0],boundingBox[1][1],boundingBox[0][2]);
-					glVertex3f(boundingBox[0][0],boundingBox[0][1],boundingBox[0][2]);
-					glVertex3f(boundingBox[0][0],boundingBox[0][1],boundingBox[1][2]);
-					glVertex3f(boundingBox[1][0],boundingBox[0][1],boundingBox[1][2]);
-					glVertex3f(boundingBox[1][0],boundingBox[1][1],boundingBox[1][2]);
-					glVertex3f(boundingBox[0][0],boundingBox[1][1],boundingBox[1][2]);
-					glVertex3f(boundingBox[0][0],boundingBox[0][1],boundingBox[1][2]);
-			 glEnd();
-			 glBegin(GL_LINES);
-				glVertex3f(boundingBox[1][0],boundingBox[0][1],boundingBox[0][2]);
-				glVertex3f(boundingBox[1][0],boundingBox[0][1],boundingBox[1][2]);
-				glVertex3f(boundingBox[1][0],boundingBox[1][1],boundingBox[0][2]);
-				glVertex3f(boundingBox[1][0],boundingBox[1][1],boundingBox[1][2]);
-				glVertex3f(boundingBox[0][0],boundingBox[1][1],boundingBox[0][2]);
-				glVertex3f(boundingBox[0][0],boundingBox[1][1],boundingBox[1][2]);
-			 glEnd();
-			 //glDisable(GL_LINE_STIPPLE);
 		 }
+		 glBegin(GL_LINE_LOOP);
+				glVertex3f(boundingBox[0][0],boundingBox[0][1],boundingBox[0][2]);
+				glVertex3f(boundingBox[1][0],boundingBox[0][1],boundingBox[0][2]);
+				glVertex3f(boundingBox[1][0],boundingBox[1][1],boundingBox[0][2]);
+				glVertex3f(boundingBox[0][0],boundingBox[1][1],boundingBox[0][2]);
+				glVertex3f(boundingBox[0][0],boundingBox[0][1],boundingBox[0][2]);
+				glVertex3f(boundingBox[0][0],boundingBox[0][1],boundingBox[1][2]);
+				glVertex3f(boundingBox[1][0],boundingBox[0][1],boundingBox[1][2]);
+				glVertex3f(boundingBox[1][0],boundingBox[1][1],boundingBox[1][2]);
+				glVertex3f(boundingBox[0][0],boundingBox[1][1],boundingBox[1][2]);
+				glVertex3f(boundingBox[0][0],boundingBox[0][1],boundingBox[1][2]);
+		 glEnd();
+		 glBegin(GL_LINES);
+			glVertex3f(boundingBox[1][0],boundingBox[0][1],boundingBox[0][2]);
+			glVertex3f(boundingBox[1][0],boundingBox[0][1],boundingBox[1][2]);
+			glVertex3f(boundingBox[1][0],boundingBox[1][1],boundingBox[0][2]);
+			glVertex3f(boundingBox[1][0],boundingBox[1][1],boundingBox[1][2]);
+			glVertex3f(boundingBox[0][0],boundingBox[1][1],boundingBox[0][2]);
+			glVertex3f(boundingBox[0][0],boundingBox[1][1],boundingBox[1][2]);
+		 glEnd();
+		 //glDisable(GL_LINE_STIPPLE);
 	 }
  }
 

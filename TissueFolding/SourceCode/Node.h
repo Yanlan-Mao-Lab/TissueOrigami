@@ -30,7 +30,8 @@ public:
    	vector <int> 	immediateNeigs;				///< The list of Id's for immediate neighbours of the node, i.e. the nodes that are shared by the elements that utilise the owner of this parameter.
 	vector <int> 	connectedElementIds;		///< The list of Id's for elements that are utilising this node.
 	vector <double>	connectedElementWeights;	///< The list of weights (normalised mass) for elements that are utilising this node, order is linked to Node#connectedElementIds.
-
+	int 			symmetricEquivalentId;		///< The id of the node that this node will move symmetrically in y, if the tissue is symmetric and only half is simulated.
+	//bool 			allOwnersAblated;			///< Boolean stating if the node is ablated. The node is ablated if all the elements making use of the node are ablated.
 	void setViscosity(double ApicalVisc,double BasalVisc, double PeripodialViscosity); ///< The function to set the viscosity of the node.
 	bool checkIfNeighbour(int IdToCheck); 				///< The function to check if the node with input Id (IdToCheck) is an immediate neighbour of the owner node
 	bool checkIfNodeHasPacking();						///< The function to check if the node is eligible for packing.

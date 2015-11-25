@@ -87,12 +87,13 @@ using namespace std;
 
      //Element drawing functions
      bool checkIfDrawingElement(int i);
+     bool checkIfDrawingElementSymmetric(int i, bool symmetricX, bool symmetricY);
      bool checkIfDrawingNode(int i);
      void drawElement(int i, bool picking);
      void highlightElement(int i);
      void highlightNode(int i);
      void drawReferenceElement(int i);
-     void drawPrism(int i);
+     void drawPrism(int i, bool symmetricX, bool symmetricY);
      void drawTriangle(int i);
      void drawPrismForPicking(int i);
      void drawTriangleForPicking(int i);

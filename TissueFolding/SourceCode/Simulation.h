@@ -44,10 +44,12 @@ private:
 	int dorsalTipIndex,ventralTipIndex,anteriorTipIndex,posteriorTipIndex;
 	double StretchDistanceStep;
 	bool recordForcesOnFixedNodes;
-	double columnarBoundingBoxSize[3];
-	double peripodialBoundingBoxSize[3];
+	double boundingBoxSize[3];
+	//double columnarBoundingBoxSize[3];
+	//double peripodialBoundingBoxSize[3];
 	bool ContinueFromSave;
     int growthRotationUpdateFrequency;
+    vector <Node*> symmetricYBoundaryNodes;
 
 	bool readModeOfSim(int& i, int argc, char **argv);
 	bool readParameters(int& i, int argc, char **argv);
@@ -101,6 +103,7 @@ private:
 	void calculateDiscretisationLayers(double &hColumnar, int& LumenHeightDiscretisationLayers, double &hLumen, double &peripodialHeight, int& peripodialHeightDiscretisationLayers, double& hPeripodial);
 	void fillColumnarBasedNodeList(vector< vector<int> > &ColumnarBasedNodeArray, vector <int> &ColumnarCircumferencialNodeList);
 	void calculateNewNodePosForPeripodialNodeAddition(int nodeId0, int nodeId1, double* pos, double sideThickness);
+	void calculateNewNodePosForPeripodialNodeAddition(int nodeId0, int nodeId1, int nodeId2, double* pos, double sideThickness);
 	void addNodesForPeripodialOnOuterCircumference (vector< vector<int> > &ColumnarBasedNodeArray, vector< vector<int> > &OuterNodeArray, double hColumnar, int LumenHeightDiscretisationLayers, double hLumen, int peripodialHeightDiscretisationLayers, double hPeripodial);
 	void addNodesForPeripodialOnColumnarCircumference (vector< vector<int> > &ColumnarBasedNodeArray, int LumenHeightDiscretisationLayers, double hLumen, int peripodialHeightDiscretisationLayers, double hPeripodial);
 	void addLateralPeripodialElements(int LumenHeightDiscretisationLayers, int peripodialHeightDiscretisationLayers, vector< vector<int> > &ColumnarBasedNodeArray, vector< vector<int> > &OuterNodeArray);
@@ -179,6 +182,10 @@ private:
 	void clearLaserAblatedSites();
     void manualPerturbationToInitialSetup(bool deform, bool rotate);
     void addCurvatureToColumnar(double h);
+    void setupYsymmetricity();
+    void ablateSpcific();
+    //void setSymmetricNode(Node* currNode, double yLimPos);
+
 
 public:
 
@@ -241,6 +248,7 @@ public:
 	double** FixedNodeForces;
 	double SystemCentre[3];
 	bool AddPeripodialMembrane;
+    bool symmetricY;
 	bool stretcherAttached;
 	vector <int> leftClampBorder;
 	vector <int> rightClampBorder;
@@ -265,8 +273,9 @@ public:
 	vector <double*> NodesToDraw;
 	double TissueHeight;
 	int TissueHeightDiscretisationLayers;
-	double columnarBoundingBox[2][3];
-	double peripodialBoundingBox[2][3];
+	double boundingBox[2][3];
+	//double columnarBoundingBox[2][3];
+	//double peripodialBoundingBox[2][3];
 
 	Simulation();
 	~Simulation();
@@ -277,8 +286,9 @@ public:
 	void cleanMatrixUpdateData();
 	void resetForces();
 	void calculateApicalSize();
-	void calculateColumnarLayerBoundingBox();
-	void calculatePeripodialBoundingBox();
+	void calculateBoundingBox();
+	//void calculateColumnarLayerBoundingBox();
+	//void calculatePeripodialBoundingBox();
     void calculateZProjectedAreas();
     void correctzProjectedAreaForMidNodes();
     void clearProjectedAreas();
