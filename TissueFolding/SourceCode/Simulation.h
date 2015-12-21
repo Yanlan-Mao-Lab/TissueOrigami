@@ -96,6 +96,8 @@ private:
 	bool initiateMesh(int MeshType);
 	bool generateColumnarCircumferenceNodeList(vector <int> &ColumnarCircumferencialNodeList);
 	void sortColumnarCircumferenceNodeList(vector <int> &ColumnarCircumferencialNodeList);
+	void clearCircumferenceDataFromSymmetricityLine();
+	//void removeSymmetryBorderFromColumnarCircumferenceNodeList(vector <int> &ColumnarCircumferencialNodeList);
 	void getAverageSideLength(double& periAverageSideLength, double& colAverageSideLength);
 	bool isColumnarLayer3D();
 	bool calculateTissueHeight();
@@ -181,6 +183,7 @@ private:
 	void clearNodeMassLists();
 	void clearLaserAblatedSites();
     void manualPerturbationToInitialSetup(bool deform, bool rotate);
+    void pokeElement(int elementId, double dx, double dy, double dz);
     void addCurvatureToColumnar(double h);
     void setupYsymmetricity();
     void ablateSpcific();
@@ -245,6 +248,8 @@ public:
 	int nNodes;
 	double** SystemForces;
 	double** PackingForces;
+	double** PackingForcesPreviousStep;
+	double** PackingForcesTwoStepsAgoStep;
 	double** FixedNodeForces;
 	double SystemCentre[3];
 	bool AddPeripodialMembrane;
@@ -274,6 +279,8 @@ public:
 	double TissueHeight;
 	int TissueHeightDiscretisationLayers;
 	double boundingBox[2][3];
+	vector <int> pacingNodeCouples0;
+	vector <int> pacingNodeCouples1;
 	//double columnarBoundingBox[2][3];
 	//double peripodialBoundingBox[2][3];
 
@@ -284,7 +291,7 @@ public:
 	void calculateSystemCentre();
 	//void cleanGrowthData();
 	void cleanMatrixUpdateData();
-	void resetForces();
+	void resetForces(bool resetPacking);
 	void calculateApicalSize();
 	void calculateBoundingBox();
 	//void calculateColumnarLayerBoundingBox();
@@ -319,9 +326,17 @@ public:
     void calcutateFixedK(gsl_matrix* K, gsl_vector* g);
     void smallStrainrunOneStep();
     void packToPipetteWall();
-    void calculatePacking(double PeriThreshold, double ColThreshold);
+    void calculatePacking2(double PeriThreshold, double ColThreshold);
+    void addToEdgeList(Node* nodePointer, ShapeBase* elementPointer, vector <int> & edgeNodeData0, vector <int> & edgeNodeData1);
+    bool checkIfPointIsOnEdge(int node0, int node1, double x, double y, double z, double& vx, double& vy, double& vz);
+   	void detectPacingNodes();
+    void calculatePacking();
+    void calculatePackingImplicit();
+    void calculatePackingK(gsl_matrix* K);
+    void calculatePackingNumerical(gsl_matrix* K);
+    void addPackingForces(gsl_matrix* gExt);
 	void checkPackingToPipette(bool& packsToPip, double* pos, double* pipF,double mass, int id);
-	void getNormalAndCornerPosForPacking(Node* NodePointer, ShapeBase* ElementPointer, double* normalForPacking,double* posCorner, bool& bothperipodial);
+	void getNormalAndCornerPosForPacking(Node* NodePointer, ShapeBase* ElementPointer, double* normalForPacking,double* posCorner);
 	void getApicalNormalAndCornerPosForPacking(ShapeBase* ElementPointer, double* normalForPacking,double* posCorner);
 	void getBasalNormalAndCornerPosForPacking(ShapeBase* ElementPointer, double* normalForPacking,double* posCorner);
 	inline void CapPackingForce(double& Fmag);
@@ -341,6 +356,8 @@ public:
 	void calculateTiltedElementPositionOnBase(ShapeBase* currElement);
 	void calculateBaseElementsFinalPosition(int Id,double DVGrowth, double APGrowth, double ABGrowth);
 	void calculateCurrentElementsFinalPosition(ShapeBase* currElement);
+	void fixNode0InPosition(double x, double y, double z);
+
 
 };
 

@@ -744,33 +744,79 @@ double Prism::getElementHeight(){
 }
 
 
-void Prism::AddPackingToSurface(int tissueplacement, double Fx, double Fy,double Fz, double **SystemForces,  double **PackingForces, vector<Node*> &Nodes){
+void Prism::AddPackingToSurface(int tissueplacementOfPackingNode, double Fx, double Fy,double Fz, double **PackingForces, vector<Node*> &Nodes, bool& allCornersFixedX, bool& allCornersFixedY, bool& allCornersFixedZ){
 	int Id0, Id1, Id2;
-	if (tissueplacement == 0){//basal surface:
-		Id0 = 0;
-		Id1 = 1;
-		Id2 = 2;
+	if (tissueplacementOfPackingNode == 0){//basal node, packing to basal surface:
+		if (tissueType == 0){ //element is columnar, basal surface is bottom
+			Id0 = 0;
+			Id1 = 1;
+			Id2 = 2;
+		}
+		else {//element is peripodial, basal surface is top
+			Id0 = 3;
+			Id1 = 4;
+			Id2 = 5;
+		}
 	}
-	if (tissueplacement == 1){//apical surface:
-		Id0 = 3;
-		Id1 = 4;
-		Id2 = 5;
+	if (tissueplacementOfPackingNode == 1){//apical node, packing to apical surface:
+		if (tissueType == 0){ //element is columnar, apical surface is top
+			Id0 = 3;
+			Id1 = 4;
+			Id2 = 5;
+		}
+		else {//element is peripodial, apical surface is bottom
+			Id0 = 0;
+			Id1 = 1;
+			Id2 = 2;
+		}
 	}
 	double F[3];
-	F[0] = Fx / 3.0;
-	F[1] = Fy / 3.0;
-	F[2] = Fz / 3.0;
+	//F[0] = Fx / 3.0;
+	//F[1] = Fy / 3.0;
+	//F[2] = Fz / 3.0;
+	//checking how many corners are fixed
+	int numberOfNonFixedCorners[3] = {0,0,0};
 	for(int j=0; j<nDim; ++j){
 		if (!Nodes[NodeIds[Id0]]->FixedPos[j]){
-			SystemForces[NodeIds[Id0]][j] -= F[j];
+			numberOfNonFixedCorners[j]++;
+		}
+		if (!Nodes[NodeIds[Id1]]->FixedPos[j]){
+			numberOfNonFixedCorners[j]++;
+		}
+		if (!Nodes[NodeIds[Id2]]->FixedPos[j]){
+			numberOfNonFixedCorners[j]++;
+		}
+	}
+	if (numberOfNonFixedCorners[0] == 0){
+		allCornersFixedX = true;
+		F[0] = 0.0;
+	}
+	else{
+		F[0] = Fx / numberOfNonFixedCorners[0];
+	}
+	if (numberOfNonFixedCorners[1] == 0){
+		allCornersFixedY = true;
+		F[1] = 0.0;
+	}
+	else{
+		F[1] = Fy / numberOfNonFixedCorners[1];
+	}
+	if (numberOfNonFixedCorners[2] == 0){
+		allCornersFixedZ = true;
+		F[2] = 0.0;
+	}
+	else{
+		F[2] = Fz / numberOfNonFixedCorners[2];
+	}
+
+	for(int j=0; j<nDim; ++j){
+		if (!Nodes[NodeIds[Id0]]->FixedPos[j]){
             PackingForces[NodeIds[Id0]][j] -= F[j];
 		}
 		if (!Nodes[NodeIds[Id1]]->FixedPos[j]){
-			SystemForces[NodeIds[Id1]][j] -= F[j];
 			PackingForces[NodeIds[Id1]][j] -= F[j];
 		}
 		if (!Nodes[NodeIds[Id2]]->FixedPos[j]){
-			SystemForces[NodeIds[Id2]][j] -= F[j];
 			PackingForces[NodeIds[Id2]][j] -= F[j];
 		}
 	}
@@ -778,90 +824,128 @@ void Prism::AddPackingToSurface(int tissueplacement, double Fx, double Fy,double
 
 
 
-void Prism::calculateNormalForPacking(int tissuePlacement){
+void Prism::calculateNormalForPacking(int tissuePlacementOfNormal){
 	double * u;
 	u = new double[3];
 	double * v;
 	v = new double[3];
-	if (tissuePlacement == 1 ){ //calculating apical packing
+	int index0,index1, index2,index4,index5;
+	if (tissuePlacementOfNormal == 1 ){ //calculating apical packing
+		if (tissueType == 0){ //columnar layer, apical indexes should be 4&5 (use 3 as a corner)
+			index0 = 3;
+			index1 = 4;
+			index2 = 5;
+			index4 = 0;
+			index5 = 3;
+		}
+		else{//peripodial membrane, apical indexes should be 1&2 (use 0 as a corner)
+			index0 = 0;
+			index1 = 1;
+			index2 = 2;
+			index4 = 3;
+			index5 = 0;
+		}
 		for (int i=0; i<nDim; ++i){
-			u[i] = Positions[4][i] - Positions[3][i];
-			v[i] = Positions[5][i] - Positions[3][i];
+			u[i] = Positions[index1][i] - Positions[index0][i];
+			v[i] = Positions[index2][i] - Positions[index0][i];
 			ApicalNormalForPacking[i] = 0.0;
 		}
 		crossProduct3D(u,v,ApicalNormalForPacking);
 		normaliseVector3D(ApicalNormalForPacking);
-	}
-	else if (tissuePlacement == 0 ){ //calculating basal packing
 		for (int i=0; i<nDim; ++i){
-			u[i] = Positions[1][i] - Positions[0][i];
-			v[i] = Positions[2][i] - Positions[0][i];
-			BasalNormalForPacking[i] = 0.0;
+			u[i] = Positions[index5][i] - Positions[index4][i];
 		}
-		crossProduct3D(u,v,BasalNormalForPacking);
-		normaliseVector3D(BasalNormalForPacking);
-	}
-	//cerr<<"	Element: "<<Id<<"	u: "<<u[0]<<" "<<u[1]<<" "<<u[2]<<" v: "<<v[0]<<" "<<v[1]<<" "<<v[2]<<endl;
-	//cerr<<"		normal before normalisation: "<<normal[0]<<" "<<normal[1]<<" "<<normal[2]<<endl;
-	//cerr<<"		normal after normalisation: "<<normalForPacking[0]<<" "<<normalForPacking[1]<<" "<<normalForPacking[2]<<endl;
-	for (int i=0; i<nDim; ++i){
-		u[i] = Positions[0][i] - Positions[3][i];
-	}
-	//cerr<<"		vector to basal: "<<u[0]<<" "<<u[1]<<" "<<u[2]<<endl;
-	double  dot;
-	if (tissuePlacement == 1 ){ //calculating apical packing
+		//cerr<<"		vector to basal: "<<u[0]<<" "<<u[1]<<" "<<u[2]<<endl;
+		double  dot;
 		dot = dotProduct3D(u,ApicalNormalForPacking);
-		if (dot>0){
+		if (dot<0){
 			for (int i=0; i<nDim; ++i){
 				ApicalNormalForPacking[i] *=(-1.0);
 			}
 		}
 		ApicalNormalForPackingUpToDate = true;
 	}
-	else if (tissuePlacement == 0 ){ //calculating basal packing
+	else if (tissuePlacementOfNormal == 0 ){ //calculating basal packing
+		int index0,index1, index2;
+		if (tissueType == 0){ //columnar layer, basal indexes should be 1&2 (use 0 as a corner)
+			index0 = 0;
+			index1 = 1;
+			index2 = 2;
+			index4 = 3;
+			index5 = 0;
+		}
+		else{//peripodial membrane, basal indexes should be 4&5 (use 3 as a corner)
+			index0 = 3;
+			index1 = 4;
+			index2 = 5;
+			index4 = 0;
+			index5 = 3;
+		}
+		for (int i=0; i<nDim; ++i){
+			u[i] = Positions[index1][i] - Positions[index0][i];
+			v[i] = Positions[index2][i] - Positions[index0][i];
+			BasalNormalForPacking[i] = 0.0;
+		}
+		crossProduct3D(u,v,BasalNormalForPacking);
+		normaliseVector3D(BasalNormalForPacking);
+		for (int i=0; i<nDim; ++i){
+			u[i] = Positions[index5][i] - Positions[index4][i];
+		}
+		//cerr<<"		vector to basal: "<<u[0]<<" "<<u[1]<<" "<<u[2]<<endl;
+		double  dot;
 		dot = dotProduct3D(u,BasalNormalForPacking);
-		if (dot>0){
+		if (dot<0){
 			for (int i=0; i<nDim; ++i){
 				BasalNormalForPacking[i] *=(-1.0);
 			}
 		}
 		BasalNormalForPackingUpToDate = true;
 	}
+	//cerr<<"	Element: "<<Id<<"	u: "<<u[0]<<" "<<u[1]<<" "<<u[2]<<" v: "<<v[0]<<" "<<v[1]<<" "<<v[2]<<endl;
+	//cerr<<"		normal before normalisation: "<<normal[0]<<" "<<normal[1]<<" "<<normal[2]<<endl;
+	//cerr<<"		normal after normalisation: "<<normalForPacking[0]<<" "<<normalForPacking[1]<<" "<<normalForPacking[2]<<endl;
 	delete[] v;
 	delete[] u;
 }
 
 
-bool Prism::IsPointCloseEnoughForPacking(double* Pos,  float Peripodialthreshold, float Columnarthreshold, int TissuePlacementOfPackingNode, int TissueTypeOfPackingNode){
-	float threshold = 1000.0;
-	if (tissueType == 1){ //element is on the peripodial membrane, use the distance threshold of the peripodial membrane
-		threshold = Peripodialthreshold;
-	}
-	else{
-		threshold = Columnarthreshold;
-	}
+bool Prism::IsPointCloseEnoughForPacking(double* Pos,  float threshold, int TissuePlacementOfPackingNode, int TissueTypeOfPackingNode){
 	int initial =0, final = 6;
-	//check against all the nodes if tissue type of the node is peripodial, only check against the necessary side if node is on the columnar layer
-	if (TissueTypeOfPackingNode == 0){  //node is on the columnar layer;
-		if (TissuePlacementOfPackingNode == 0){
-			//tissue placement of the node is basal, should check it against basal nodes only
+	if (TissuePlacementOfPackingNode == 0){
+		//tissue placement of the node is basal, should check it against basal surface nodes only
+		if(tissueType == 0){ //element is columnar, the basal nodes are nodes 0-2:
 			final = 3;
 		}
-		else if (TissuePlacementOfPackingNode == 1){
-			//tissue placement of the node is apical, should check it against basal nodes only
+		else{
+			//element is peripodial, the basal nodes are 3-5
 			initial = 3;
 		}
 	}
-	float dmin = 2.0*threshold;
-	float dminNeg = (-2.0)*threshold;
+	else if (TissuePlacementOfPackingNode == 1){
+		//tissue placement of the node is apical, should check it against apical surface nodes  only
+		if(tissueType == 0){ //element is columnar, the apical nodes are nodes 3-5:
+			initial = 3;
+		}
+		else{
+			//element is peripodial, the  the apical nodes are nodes 0-2:
+			final = 3;
+		}
+	}
+	//cout<<" initial : "<<initial<<" final: "<<final<<endl;
+	float dmin = threshold;
+	float dminNeg = (-1.0)*threshold;
 	for (int i=initial; i<final; ++i){
+		//cout<<"	checking against node: "<<NodeIds[i]<<endl;
 		float dx =100.0, dy = 100.0, dz = 100.0;
 		dx = Pos[0]-Positions[i][0];
-		dy = Pos[1]-Positions[i][1];
-		dz = Pos[2]-Positions[i][2];
-		if ((dx >0 && dx < dmin) || (dx <0 && dx >dminNeg)){
-			if ((dy >0 && dy < dmin) || (dy <0 && dy >dminNeg)){
-				if ((dz >0 && dz < dmin) || (dz <0 && dz >dminNeg)){
+		//cout<<" dx: "<<dx<<endl;
+		if ((dx >=0 && dx < dmin) || (dx <=0 && dx >dminNeg)){
+			dy = Pos[1]-Positions[i][1];
+			//cout<<" dy: "<<dy<<endl;
+			if ((dy >=0 && dy < dmin) || (dy <=0 && dy >dminNeg)){
+				dz = Pos[2]-Positions[i][2];
+				//cout<<" dz: "<<dz<<endl;
+				if ((dz >=0 && dz < dmin) || (dz <=0 && dz >dminNeg)){
 					return true;
 				}
 			}
@@ -871,30 +955,67 @@ bool Prism::IsPointCloseEnoughForPacking(double* Pos,  float Peripodialthreshold
 }
 
 void  Prism::getApicalNodePos(double* posCorner){
-	posCorner[0] = Positions[3][0];
-	posCorner[1] = Positions[3][1];
-	posCorner[2] = Positions[3][2];
+	if (tissueType == 0){//columnar element, apical surface is the top nodes
+		posCorner[0] = Positions[3][0];
+		posCorner[1] = Positions[3][1];
+		posCorner[2] = Positions[3][2];
+	}
+	else{
+		//peripodial element, apical surface is the bottom nodes
+		//the linker elements never reach this question
+		posCorner[0] = Positions[0][0];
+		posCorner[1] = Positions[0][1];
+		posCorner[2] = Positions[0][2];
+
+	}
 }
 
 void  Prism::getBasalNodePos(double* posCorner){
-	posCorner[0] = Positions[0][0];
-	posCorner[1] = Positions[0][1];
-	posCorner[2] = Positions[0][2];
+	if (tissueType == 0){//columnar element, basal surface is the bottom nodes
+		posCorner[0] = Positions[0][0];
+		posCorner[1] = Positions[0][1];
+		posCorner[2] = Positions[0][2];
+	}
+	else{
+		//peripodial element, basal surface is the top nodes
+		//the linker elements never reach this question
+		posCorner[0] = Positions[3][0];
+		posCorner[1] = Positions[3][1];
+		posCorner[2] = Positions[3][2];
+
+	}
 }
 
-bool  Prism::IspointInsideTriangle(int tissueplacement,double x, double y,double z){
+bool  Prism::IspointInsideTriangle(int tissueplacementOfPackingNode,double x, double y,double z){
+	double zeroThreshold = 10-10;
+	double zeroThresholdNeg = (-1.0)*zeroThreshold;
+	double threshold = 5;
 	bool isInside = false;
 	//Using Barycentric coordinates:
 	int  E0Index = -1, E1Index = -1, E2Index = -1;
-	if (tissueplacement ==0 ){ //checking basal surface
-		E0Index = 0;
-		E1Index = 1;
-		E2Index = 2;
+	if (tissueplacementOfPackingNode == 0 ){ //checking basal surface,
+		if (tissueType == 0){ //element is columnar
+			E0Index = 0;
+			E1Index = 1;
+			E2Index = 2;
+		}
+		else{//element is periodial:
+			E0Index = 3;
+			E1Index = 4;
+			E2Index = 5;
+		}
 	}
-	else if (tissueplacement == 1 ){ //checking apical surface
-		E0Index = 3;
-		E1Index = 4;
-		E2Index = 5;
+	else if (tissueplacementOfPackingNode == 1 ){ //checking apical surface
+		if (tissueType == 0){ //element is columnar
+			E0Index = 3;
+			E1Index = 4;
+			E2Index = 5;
+		}
+		else{//element is periodial:
+			E0Index = 0;
+			E1Index = 1;
+			E2Index = 2;
+		}
 	}
 	double *E0E1 = new double[3];
 	double *E0E2 = new double[3];
@@ -905,65 +1026,101 @@ bool  Prism::IspointInsideTriangle(int tissueplacement,double x, double y,double
 	//cout<<"	"<<Positions[E2Index][0]<<" "<<Positions[E2Index][1]<<" "<<Positions[E2Index][2]<<endl;
 	//cout<<" point: "<<x<<" "<<y<<" "<<z<<endl;
 
-	for (int i=0; i<3; ++i){
-		E0E1[i]=Positions[E1Index][i] - Positions[E0Index][i];
-		E0E2[i]=Positions[E2Index][i] - Positions[E0Index][i];
+	//is the projection near one of the corners?
+	/*double dx,dy,dz,d2;
+	dx = Positions[E0Index][0] == x;
+	dy = Positions[E0Index][1] == y;
+	dz = Positions[E0Index][2] == z;
+	d2 = dx*dx + dy*dy+dz*dz;
+	if (d2 < threshold*threshold){
+		//projection of the node is on top of node with index : E0Index
+		isInside =  true;
 	}
-	double *CrossPMain = new double [3];
-	crossProduct3D(E0E1,E0E2,CrossPMain);
-	double DoubleArea = calculateMagnitudeVector3D(CrossPMain);
-	double alpha =0.0, beta = 0.0, gamma = 0.0;
-	double *PE1 = new double[3];
-	PE1[0] = Positions[E1Index][0] - x;
-	PE1[1] = Positions[E1Index][1] - y;
-	PE1[2] = Positions[E1Index][2] - z;
-	double *PE2 = new double[3];
-	PE2[0] = Positions[E2Index][0] - x;
-	PE2[1] = Positions[E2Index][1] - y;
-	PE2[2] = Positions[E2Index][2] - z;
-	double *CrossP = new double [3];
-	crossProduct3D(PE1,PE2,CrossP);
-	//the vectors should look at te same direction:
-	double dotp = dotProduct3D(CrossP,CrossPMain);
-	//cout<<"dotp for alpha:  "<<dotp<<" ";
-	if (dotp>0){
-		alpha = calculateMagnitudeVector3D(CrossP);
-		alpha /= DoubleArea;
-		//cout<<" alpha: "<<alpha<<" ";
-		if (alpha >-1E-10 && alpha <= 1.0+1E-10){
-			double *PE0 = new double[3];
-			PE0[0] = Positions[E0Index][0] - x;
-			PE0[1] = Positions[E0Index][1] - y;
-			PE0[2] = Positions[E0Index][2] - z;
-			crossProduct3D(PE2,PE0,CrossP);
-			dotp = dotProduct3D(CrossP,CrossPMain);
-			//cout<<"dotp for beta:  "<<dotp<<" ";
-			if (dotp>0){
-				beta = calculateMagnitudeVector3D(CrossP);
-				beta /= DoubleArea;
-				//cout<<" beta: "<<beta<<" ";
-				if (beta >-1E-10 && beta <= 1.0+1E-10){
-					gamma = 1 - alpha - beta;
-					//cout<<" gamma: "<<gamma<<" ";
-					crossProduct3D(PE1,PE0,CrossP);
-					if (gamma >-1E-10 && gamma <1.0+1E-10){
-						isInside =  true;
+	if (!isInside ){
+		dx = Positions[E1Index][0] == x;
+		dy = Positions[E1Index][1] == y;
+		dz = Positions[E1Index][2] == z;
+		d2 = dx*dx + dy*dy + dz*dz;
+		if (d2 < threshold*threshold){
+			//projection of the node is on top of node with index : E0Index
+			isInside =  true;
+		}
+	}
+	if (!isInside ){
+		dx = Positions[E2Index][0] == x;
+		dy = Positions[E2Index][1] == y;
+		dz = Positions[E2Index][2] == z;
+		d2 = dx*dx + dy*dy + dz*dz;
+		if (d2 < threshold*threshold){
+			//projection of the node is on top of node with index : E0Index
+			isInside =  true;
+		}
+	}
+	//is the projection near one of the edges?
+	if (!isInside ){
+		//Check corner proximity
+	}*/
+	if (!isInside ){
+		for (int i=0; i<3; ++i){
+			E0E1[i]=Positions[E1Index][i] - Positions[E0Index][i];
+			E0E2[i]=Positions[E2Index][i] - Positions[E0Index][i];
+		}
+		double *CrossPMain = new double [3];
+		crossProduct3D(E0E1,E0E2,CrossPMain);
+		double DoubleArea = calculateMagnitudeVector3D(CrossPMain);
+		double alpha =0.0, beta = 0.0, gamma = 0.0;
+		double *PE1 = new double[3];
+		PE1[0] = Positions[E1Index][0] - x;
+		PE1[1] = Positions[E1Index][1] - y;
+		PE1[2] = Positions[E1Index][2] - z;
+		double *PE2 = new double[3];
+		PE2[0] = Positions[E2Index][0] - x;
+		PE2[1] = Positions[E2Index][1] - y;
+		PE2[2] = Positions[E2Index][2] - z;
+		double *CrossP = new double [3];
+		crossProduct3D(PE1,PE2,CrossP);
+		//the vectors should look at te same direction:
+		double dotp = dotProduct3D(CrossP,CrossPMain);
+		//cout<<"dotp for alpha:  "<<dotp<<" ";
+		if (dotp>0){
+			alpha = calculateMagnitudeVector3D(CrossP);
+			alpha /= DoubleArea;
+			//cout<<" alpha: "<<alpha<<" ";
+			if (alpha >-1E-10 && alpha <= 1.0+1E-10){
+				double *PE0 = new double[3];
+				PE0[0] = Positions[E0Index][0] - x;
+				PE0[1] = Positions[E0Index][1] - y;
+				PE0[2] = Positions[E0Index][2] - z;
+				crossProduct3D(PE2,PE0,CrossP);
+				dotp = dotProduct3D(CrossP,CrossPMain);
+				//cout<<"dotp for beta:  "<<dotp<<" ";
+				if (dotp>0){
+					beta = calculateMagnitudeVector3D(CrossP);
+					beta /= DoubleArea;
+					//cout<<" beta: "<<beta<<" ";
+					if (beta >-1E-10 && beta <= 1.0+1E-10){
+						gamma = 1 - alpha - beta;
+						//cout<<" gamma: "<<gamma<<" ";
+						crossProduct3D(PE1,PE0,CrossP);
+						if (gamma >-1E-10 && gamma <1.0+1E-10){
+							isInside =  true;
+						}
 					}
 				}
+				delete[] PE0;
 			}
-			delete[] PE0;
+			//cout<<endl;
 		}
-		//cout<<endl;
+		delete[] CrossPMain;
+		delete[] CrossP;
+		delete[] PE1;
+		delete[] PE2;
 	}
-
 	delete[] E0E1;
 	delete[] E0E2;
-	delete[] CrossPMain;
-	delete[] CrossP;
-	delete[] PE1;
-	delete[] PE2;
 	return isInside;
 }
+
 void  	Prism::calculateMyosinForces(double forcePerMyoMolecule){
 	if (cMyoUniform[0]>0){
 		calculateApicalArea();

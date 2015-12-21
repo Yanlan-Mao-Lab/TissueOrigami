@@ -53,9 +53,9 @@ public:
 	int getCorrecpondingApical(int currNodeId);
 	bool IsThisNodeMyBasal(int currNodeId);
 	double getElementHeight();
-	void AddPackingToSurface(int tissueplacement, double Fx, double Fy,double Fz, double **SystemForces,  double **PackingForces,vector<Node*> &Nodes);
-	bool IsPointCloseEnoughForPacking(double* Pos,  float Peripodialthreshold, float Columnarthreshold, int TissuePlacementOfPackingNode, int TissueTypeOfPackingNode);
-	void calculateNormalForPacking(int tissuePlacement);
+	void AddPackingToSurface(int tissueplacementOfPackingNode, double Fx, double Fy,double Fz,  double **PackingForces,vector<Node*> &Nodes, bool& allCornersFixedX, bool& allCornersFixedY, bool& allCornersFixedZ);
+	bool IsPointCloseEnoughForPacking(double* Pos,  float threshold, int TissuePlacementOfPackingNode, int TissueTypeOfPackingNode);
+	void calculateNormalForPacking(int tissuePlacementOfNormal);
 	void calculateApicalArea();
 	void calculateBasalArea();
 	void calculateMyosinForces(double forcePerMyoMolecule);

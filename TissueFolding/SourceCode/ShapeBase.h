@@ -156,6 +156,7 @@ public:
 	int 	getShapeType();
 	int 	getNodeNumber();
 	int* 	getNodeIds();
+	int		getNodeId(int i);
 	int 	getDim();
 	int* 	getIdentifierColour();
 	double* getCentre();
@@ -263,9 +264,9 @@ public:
 	virtual int getCorrecpondingApical(int currNodeId){return ParentErrorMessage("getCorrecpondingApical", -100);};
 	virtual bool IsThisNodeMyBasal(int currNodeId){return ParentErrorMessage("IsThisNodeMyBasal", false);};
 	virtual double getElementHeight(){return ParentErrorMessage("getElementHeight", 0.0);};
-	virtual bool IsPointCloseEnoughForPacking(double* Pos,  float Peripodialthreshold, float Columnarthreshold, int TissuePlacementOfPackingNode, int TissueTypeOfPackingNode){return ParentErrorMessage("IsPointCloseEnoughForPacking", false);};
-	virtual void calculateNormalForPacking(int tissuePlacement){ParentErrorMessage("calculateNormalForPacking");};
-	virtual void AddPackingToSurface(int tissueplacement, double Fx, double Fy,double Fz, double **SystemForces, double **PackingForces, vector<Node*> &Nodes){ParentErrorMessage("AddPackingToApicalSurface");};
+	virtual bool IsPointCloseEnoughForPacking(double* Pos,  float threshold, int TissuePlacementOfPackingNode, int TissueTypeOfPackingNode){return ParentErrorMessage("IsPointCloseEnoughForPacking", false);};
+	virtual void calculateNormalForPacking(int tissuePlacementOfNormal){ParentErrorMessage("calculateNormalForPacking");};
+	virtual void AddPackingToSurface(int tissueplacement, double Fx, double Fy,double Fz, double **PackingForces, vector<Node*> &Nodes, bool& allCornersFixedX, bool& allCornersFixedY, bool& allCornersFixedZ){ParentErrorMessage("AddPackingToApicalSurface");};
 	virtual void getApicalNodePos(double* posCorner){ParentErrorMessage("getApicalNodePos");};
 	virtual void getBasalNodePos(double* posCorner){ParentErrorMessage("getBasalNodePos");};
 	virtual bool IspointInsideTriangle(int tissueplacement, double x, double y,double z){return ParentErrorMessage("IspointInsideTriangle",false );};

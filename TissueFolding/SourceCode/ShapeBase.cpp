@@ -78,6 +78,10 @@ int* 	ShapeBase::getNodeIds(){
 	return NodeIds;
 }
 
+int		ShapeBase::getNodeId(int i){
+	return NodeIds[i];
+}
+
 int 	ShapeBase::getDim(){
 	return nDim;
 }
@@ -789,6 +793,7 @@ void 	ShapeBase::growShapeByFg(double dt){
     //freeing matrices allocated in this function
     gsl_matrix_free(temp1);
     gsl_matrix_free(tmpFgForInversion);
+	//if (Id == 38) {displayMatrix(Fg,"element38Fg");}
 }
 
 
@@ -937,6 +942,10 @@ bool 	ShapeBase::checkPackingToThisNodeViaState(int ColumnarLayerDiscretisationL
 		//if the element is ablated, do not pack against it
 		return false;
 	}
+	if (tissueType == 2){
+		//the element is on the lateral section of the tissue, linking peripodial to columnar, no packing on this element
+		return false;
+	}
 	if(ColumnarLayerDiscretisationLayers>1){
 		//If the columnar layer is discretised into multiple layers, the apical elements should be checked against apical nodes,
 		// and basal nodes should be checked against basal elements. The midline elements should not have packing, BUT on  a single layer tissue, all is midline, therefore
@@ -944,21 +953,9 @@ bool 	ShapeBase::checkPackingToThisNodeViaState(int ColumnarLayerDiscretisationL
 		if (tissuePlacement == 2){	//tissue placement of the element is midline in a multi-layered columnar layer, it should not pack to anything
 			return false;
 		}
-		if (NodePointer->tissuePlacement == 1){
-			//node is apical, should pack to apical elements of the columnar layer only - and all of the peripodial membrane
-			if (tissueType == 0 && tissuePlacement == 1){ //tissue type of the element is columnar, tissue placement is basal
-				return false;
-			}
-		}
-		else if (NodePointer->tissuePlacement == 0){
-			//node is basal, should pack to apical elements of the columnar layer only - and all of the peripodial membrane
-			//BUT, all peripodial membrane nodes are put in as basal nodes, the node itself can be on the peripodial membrane,
-			//in which case, it should pack to the element regardless (midline elemetns are already eliminated above)
-			if (NodePointer->tissueType == 0){  //tissue type of the node is columnar
-				if (tissueType == 0 && tissuePlacement == 0){ //tissue type of the element is columnar, tissue placement is apical
-					return false;
-				}
-			}
+		if (NodePointer->tissuePlacement != tissuePlacement == 1){
+			//apical nodes pack to apical elements and basal nodes pack to basal elements only
+			return false;
 		}
 	}
 	//The node and element are positioned correctly to be able to pack, then does the element belong to the node?
@@ -1115,6 +1112,10 @@ void	ShapeBase::calculateForces3D(double **SystemForces, vector <Node*>& Nodes, 
     //displayMatrix(TriPointg,"TriPointg");
     //cout<<"Element Id: "<<Id<<"Forces on node 351: "<<SystemForces[351][0]<<" "<<SystemForces[351][1]<<" "<<SystemForces[351][2]<<endl;
     //Now put the forces in world coordinates into system forces, in forces per volume format
+    //if (Id == 0 || Id == 38){
+    //	cout<<" Element: "<<Id<<endl;
+    //	displayMatrix(TriPointg,"TriPointg");
+    //}
     int counter = 0;
     for (int i = 0; i<nNodes; ++i){
         for (int j = 0; j<nDim; ++j){
@@ -2177,6 +2178,9 @@ void 	ShapeBase:: assignElementToConnectedNodes(vector <Node*>& Nodes){
 		Nodes[NodeIds[i]]->connectedElementIds.push_back(Id);
 		double weightfFraction = (ReferenceShape->Volume/nNodes)/Nodes[NodeIds[i]]->mass;
 		Nodes[NodeIds[i]]->connectedElementWeights.push_back(weightfFraction);
+		if(tissueType == 2){
+			Nodes[NodeIds[i]]->hasLateralElementOwner = true;
+		}
 	}
 }
 

@@ -311,12 +311,12 @@ public:
 				for (int k=0; k<3; ++k){
 					GrowthMatrix[i][j][k] = GrowthMat[i][j][k];
 				}
-				cout<<"set the growth matrix for: "<<i<<" "<<j<<endl;
+				//cout<<"set the growth matrix for: "<<i<<" "<<j<<endl;
 				compatibleAngleEliminated[i][j] = new bool[4];	//booleans stating if the angle will be added in compatible averaging in for 4 corners
 				compatibleAngles[i][j] 			= new double[4];		//angles compatible for averaging in for 4 corners
 				compatibleGrowths[i][j]			= new double*[4];		//growth rates [rx,ry,rz] compatible for averaging in for 4 corners
 				for (int k=0; k<4; ++k){
-					cout<<"set default values of  compatibleAngleEliminated for: "<<i<<" "<<j<<" "<<k<<endl;
+					//cout<<"set default values of  compatibleAngleEliminated for: "<<i<<" "<<j<<" "<<k<<endl;
 					compatibleAngleEliminated[i][j][k] = false;	//by default all angles are added
 					compatibleAngles[i][j][k] = 0.0;			//by default all angles are zero
 					compatibleGrowths[i][j][k]= new double[3];	//growth rates [rx,ry,rz] at index point [i][j], for corner [k]
@@ -324,7 +324,7 @@ public:
 						compatibleGrowths[i][j][k][l] = 0.0;
 					}
 				}
-				cout<<" [i][j]: ["<<i<<"]["<<j<<"], Growth_x&y: "<<GrowthMatrix[i][j][0]<<" "<<GrowthMatrix[i][j][1]<<endl;
+				//cout<<" [i][j]: ["<<i<<"]["<<j<<"], Growth_x&y: "<<GrowthMatrix[i][j][0]<<" "<<GrowthMatrix[i][j][1]<<endl;
 				double AR = GrowthMatrix[i][j][0] / GrowthMatrix[i][j][1];
 				if (AR < 1.0){
 					AR = 1/AR;
@@ -528,7 +528,7 @@ public:
 				for (int i=0; i<4; ++i){
 					compatibleAngles[IndexX][IndexY][i] =  angles[i];
 					compatibleAngleEliminated[IndexX][IndexY][i] = AngleEliminated[i];
-					cout<<"Index: "<<IndexX<<" "<<IndexY<<" i: "<<i<<" AngleEliminated "<<AngleEliminated[i]<<endl;
+					//cout<<"Index: "<<IndexX<<" "<<IndexY<<" i: "<<i<<" AngleEliminated "<<AngleEliminated[i]<<endl;
 				}
 			} // end of loop over IndexY
 		} //end of loop over IndexX

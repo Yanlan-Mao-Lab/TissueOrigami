@@ -33,6 +33,8 @@ Node::Node(int id, int dim, double* pos, int tissuePos, int tissueType){
 	surface = 0.0;
     zProjectedArea = 0.0;
     symmetricEquivalentId = -1000;
+    hasLateralElementOwner = false;
+    atSymmetricityBorder = false;
    // allOwnersAblated = false;
 }
 
@@ -100,10 +102,13 @@ bool Node::checkIfNodeHasPacking(){
 	 *  they would need to penetrate through the apical or basal surface of the tissue to reach this node.
 	 *
 	 */
-	if (tissuePlacement == 2){	//Node is midline node (neither apical nor basal)
+	if (hasLateralElementOwner){ //if the node is owned by any lateral element connecitng peripodial to columnar layers, then it is not affected by packing
 		return false;
 	}
-	return true;
+	if (tissuePlacement == 0 || tissuePlacement == 1){	//Node is apical or basal)
+		return true;
+	}
+	return false;
 }
 
 void Node::getCurrentPosition(double* pos){

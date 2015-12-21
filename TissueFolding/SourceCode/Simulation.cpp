@@ -42,10 +42,14 @@ Simulation::~Simulation(){
 	for (int j=0;j<nNodes;++j){
 		delete[] SystemForces[j];
 		delete[] PackingForces[j];
+		delete[] PackingForcesPreviousStep[j];
+		delete[] PackingForcesTwoStepsAgoStep[j];
 		delete[] FixedNodeForces[j];
 	}
 	delete[] SystemForces;
     delete[] PackingForces;
+    delete[] PackingForcesPreviousStep;
+    delete[] PackingForcesTwoStepsAgoStep;
     delete[] FixedNodeForces;
     cout<<"deleting elements"<<endl;
 	while(!Elements.empty()){
@@ -383,6 +387,9 @@ bool Simulation::initiateSystem(){
 		return Success;
 	}
 	if (AddPeripodialMembrane){
+		 if (symmetricY){
+			 clearCircumferenceDataFromSymmetricityLine();
+		}
 		Success = addPeripodialMembraneToTissue();
 	}
 	if (addCurvatureToTissue){
@@ -1057,19 +1064,27 @@ void Simulation::reInitiateSystemForces(int oldSize){
 	for (int j=0;j<oldSize;++j){
 		delete[] SystemForces[j];
 		delete[] PackingForces[j];
+		delete[] PackingForcesPreviousStep[j];
+		delete[] PackingForcesTwoStepsAgoStep[j];
 		delete[] FixedNodeForces[j];
 	}
 	delete[] SystemForces;
 	delete[] PackingForces;
+	delete[] PackingForcesPreviousStep;
+	delete[] PackingForcesTwoStepsAgoStep;
 	delete[] FixedNodeForces;
 	//reinitiating with the new size:
 	const int n = nNodes;
 	SystemForces = new double*[n];
 	PackingForces = new double*[n];
+	PackingForcesPreviousStep = new double*[n];
+	PackingForcesTwoStepsAgoStep = new double*[n];
 	FixedNodeForces = new double*[n];
 	for (int j=0;j<n;++j){
 		SystemForces[j] = new double[3];
 		PackingForces[j] = new double[3];
+		PackingForcesPreviousStep[j] = new double[3];
+		PackingForcesTwoStepsAgoStep[j] = new double[3];
 		FixedNodeForces[j] = new double[3];
 		SystemForces[j][0]=0.0;
 		SystemForces[j][1]=0.0;
@@ -1077,6 +1092,12 @@ void Simulation::reInitiateSystemForces(int oldSize){
 		PackingForces[j][0]=0.0;
 		PackingForces[j][1]=0.0;
 		PackingForces[j][2]=0.0;
+		PackingForcesPreviousStep[j][0] = 0.0;
+		PackingForcesPreviousStep[j][1] = 0.0;
+		PackingForcesPreviousStep[j][2] = 0.0;
+		PackingForcesTwoStepsAgoStep[j][0] = 0.0;
+		PackingForcesTwoStepsAgoStep[j][1] = 0.0;
+		PackingForcesTwoStepsAgoStep[j][2] = 0.0;
 		FixedNodeForces[j][0] = 0.0;
 		FixedNodeForces[j][1] = 0.0;
 		FixedNodeForces[j][2] = 0.0;
@@ -1513,6 +1534,89 @@ bool Simulation::generateColumnarCircumferenceNodeList(	vector <int> &ColumnarCi
 	return true;
 }
 
+void Simulation::clearCircumferenceDataFromSymmetricityLine(){
+	//I will take out anything that was at the border of symmetry, but I need the nodes at the tips. So find the x tips first:
+	double xTipPos = -1000, xTipNeg = 1000;
+	vector<Node*>::iterator itNode;
+	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+		if ((*itNode)->Position[0] > xTipPos ){
+			xTipPos = (*itNode)->Position[0];
+		}
+		if ((*itNode)->Position[0] < xTipNeg ){
+			xTipNeg = (*itNode)->Position[0];
+		}
+	}
+	double yLimPos = 0.1;
+	double yLimNeg = (-1.0)*yLimPos;
+	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+		double x = (*itNode)->Position[0];
+		double y = (*itNode)->Position[1];
+		if ( y < yLimPos){
+			if ( y  > yLimNeg){
+				(*itNode)->atSymmetricityBorder = true;
+				fixY((*itNode));
+				//the node is indeed at the border, BUT, I will remove it only if it is not at the tip:
+				bool atTip = false;
+				if ( x < xTipPos+yLimPos && x >xTipPos+yLimNeg){
+					atTip = true;
+				}
+				if ( x > xTipNeg+yLimNeg && x < xTipNeg+yLimPos){
+					atTip = true;
+				}
+				if (!atTip){
+					//removing node from list:
+					(*itNode)->atCircumference = false;
+
+				}
+			}
+		}
+	}
+}
+/*
+void Simulation::removeSymmetryBorderFromColumnarCircumferenceNodeList(vector <int> &ColumnarCircumferencialNodeList){
+	//I will take out anything that was at the border of symmetry, but I need the nodes at the tips. So find the x tips first:
+	double xTipPos = -1000, xTipNeg = 1000;
+	vector<Node*>::iterator itNode;
+	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+		if ((*itNode)->Position[0] > xTipPos ){
+			xTipPos = (*itNode)->Position[0];
+		}
+		if ((*itNode)->Position[0] < xTipNeg ){
+			xTipNeg = (*itNode)->Position[0];
+		}
+	}
+	double yLimPos = 0.1;
+	double yLimNeg = (-1.0)*yLimPos;
+	int n = ColumnarCircumferencialNodeList.size();
+	int i=0;
+	while (i<n){
+		double x = Nodes[ColumnarCircumferencialNodeList[i]]->Position[0];
+		double y = Nodes[ColumnarCircumferencialNodeList[i]]->Position[1];
+		if ( y < yLimPos){
+			if ( y  > yLimNeg){
+				Nodes[ColumnarCircumferencialNodeList[i]]->atSymmetricityBorder = true;
+				fixY(Nodes[ColumnarCircumferencialNodeList[i]]);
+				//the node is indeed at the border, BUT, I will remove it only if it is not at the tip:
+				bool atTip = false;
+				if ( x < xTipPos+yLimPos && x >xTipPos+yLimNeg){
+					atTip = true;
+				}
+				if ( x > xTipNeg+yLimNeg && x < xTipNeg+yLimPos){
+					atTip = true;
+				}
+				if (!atTip){
+					//removing node from list:
+					ColumnarCircumferencialNodeList.erase (ColumnarCircumferencialNodeList.begin()+i);
+					Nodes[ColumnarCircumferencialNodeList[i]]->atCircumference = false;
+					n--;
+					i--;
+				}
+			}
+		}
+		i++;
+	}
+}
+*/
 void Simulation::sortColumnarCircumferenceNodeList(vector <int> &ColumnarCircumferencialNodeList){
 	//ordering the circumferencial nodes of the basal surface in clockwise rotation
 	int n = ColumnarCircumferencialNodeList.size();
@@ -1727,12 +1831,15 @@ void Simulation::initiateSystemForces(){
 	//n nodes
 	SystemForces = new double*[n];
 	PackingForces = new double*[n];
+	PackingForcesPreviousStep = new double*[n];
+	PackingForcesTwoStepsAgoStep = new double*[n];
 	FixedNodeForces = new double*[n];
-
 	for (int j=0;j<n;++j){
 		//3 dimensions
 		SystemForces[j] = new double[3];
 		PackingForces[j] = new double[3];
+		PackingForcesPreviousStep[j] = new double[3];
+		PackingForcesTwoStepsAgoStep[j] = new double[3];
 		FixedNodeForces[j] = new double[3];
 		SystemForces[j][0]=0.0;
 		SystemForces[j][1]=0.0;
@@ -1740,6 +1847,12 @@ void Simulation::initiateSystemForces(){
 		PackingForces[j][0]=0.0;
 		PackingForces[j][1]=0.0;
 		PackingForces[j][2]=0.0;
+		PackingForcesPreviousStep[j][0]=0.0;
+		PackingForcesPreviousStep[j][1]=0.0;
+		PackingForcesPreviousStep[j][2]=0.0;
+		PackingForcesTwoStepsAgoStep[j][0]=0.0;
+		PackingForcesTwoStepsAgoStep[j][1]=0.0;
+		PackingForcesTwoStepsAgoStep[j][2]=0.0;
 		FixedNodeForces[j][0] = 0.0;
 		FixedNodeForces[j][1] = 0.0;
 		FixedNodeForces[j][2] = 0.0;
@@ -2079,25 +2192,54 @@ void Simulation::checkForZeroViscosity(){
         //Nodes[4]->FixedPos[2] = true;
 
         */
-        Nodes[ventralTipIndex]->FixedPos[0] = true;
-        Nodes[ventralTipIndex]->FixedPos[1] = true;
-        Nodes[ventralTipIndex]->FixedPos[2] = true;
+         if (!symmetricY){
+        	Nodes[ventralTipIndex]->FixedPos[0] = true;
+			Nodes[ventralTipIndex]->FixedPos[1] = true;
+			Nodes[ventralTipIndex]->FixedPos[2] = true;
 
-        Nodes[dorsalTipIndex]->FixedPos[1] = true;
-        Nodes[dorsalTipIndex]->FixedPos[2] = true;
-        if (dorsalTipIndex != 1 && 	ventralTipIndex!= 1 ){
-        	Nodes[1]->FixedPos[2] = true;
+			Nodes[dorsalTipIndex]->FixedPos[1] = true;
+			Nodes[dorsalTipIndex]->FixedPos[2] = true;
+
+        	//if there is symmetricity, then the mid-line nodes will be fixed in y, and I do not need to fix the third node.
+        	// in fact, fixing the position of hte third node in z will cause problems.
+			if (dorsalTipIndex != 1 && 	ventralTipIndex!= 1 ){
+				Nodes[1]->FixedPos[2] = true;
+			}
+			else if (dorsalTipIndex != 2 && 	ventralTipIndex!= 2 ){
+				Nodes[2]->FixedPos[2] = true;
+			}
+			else if (dorsalTipIndex != 3 && 	ventralTipIndex!= 3 ){
+				Nodes[3]->FixedPos[2] = true;
+			}
         }
-        else if (dorsalTipIndex != 2 && 	ventralTipIndex!= 2 ){
-        	Nodes[2]->FixedPos[2] = true;
-        }
-        else if (dorsalTipIndex != 3 && 	ventralTipIndex!= 3 ){
-        	Nodes[3]->FixedPos[2] = true;
-        }
+        else{
+        	Nodes[ventralTipIndex]->FixedPos[0] = true;
+			Nodes[ventralTipIndex]->FixedPos[1] = true;
+			Nodes[ventralTipIndex]->FixedPos[2] = true;
 
 
+			vector<ShapeBase*>::iterator itElement;
+			bool foundElement = false;
+			int apicalId = 0;
+			//find the apical node corresponding to the basal ventral tip:
+			for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+				bool IsBasalOwner = (*itElement)->IsThisNodeMyBasal(ventralTipIndex);
+				if (IsBasalOwner){
+					foundElement = true;
+					apicalId = (*itElement)->getCorrecpondingApical(ventralTipIndex); //have the next node
+					break;
+				}
+			}
+			if (foundElement){
+				Nodes[apicalId]->FixedPos[2] = true;
+			}
+			else{
+				cerr<<"Cannot run zero viscosity simulation, could not find the apical node corresponding to the basal ventral tip, run simulation at your own risk!"<<endl;
+			}
+        }
     }
 }
+
 void Simulation::addCurvatureToColumnar(double h){
 	//find the tips:
 	double l1 = -1000, l2 = 1000, l3 = -1000;
@@ -2125,7 +2267,18 @@ void Simulation::addCurvatureToColumnar(double h){
 		}
 		double value = (1 - x*x/a/a - y*y/c/c);
 		if (value>0){
-			(*itNode)->Position[2] += pow((1 - x*x/a/a - y*y/c/c)*h*h,0.5);
+			double offset = pow((1 - x*x/a/a - y*y/c/c)*h*h,0.5);
+			if (h<0){
+				offset *= (-1.0);
+			}
+			if (AddPeripodialMembrane){
+				//there is peripodial membrane, any node above the mid-line of the lumen should be curved in the opposite direction of the columnar layer:
+				double heightThreshold = TissueHeight + lumenHeight/2.0;
+				if ((*itNode)->Position[2] > heightThreshold) {
+					offset *= (-1.0);
+				}
+			}
+			(*itNode)->Position[2] -= offset;
 		}
 	}
 
@@ -2133,6 +2286,22 @@ void Simulation::addCurvatureToColumnar(double h){
 	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 		(*itElement)->updatePositions(Nodes);
 		(*itElement)->updateReferencePositionsToCurentShape();
+	}
+}
+
+void Simulation::fixNode0InPosition(double x, double y, double z){
+	double dx = Nodes[0]->Position[0]-x;
+	double dy = Nodes[0]->Position[1]-y;
+	double dz = Nodes[0]->Position[2]-z;
+	vector<Node*>::iterator itNode;
+	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+		(*itNode)->Position[0] -=dx;
+		(*itNode)->Position[1] -=dy;
+		(*itNode)->Position[2] -=dz;
+	}
+	vector<ShapeBase*>::iterator itElement;
+	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		(*itElement)->updatePositions(Nodes);
 	}
 }
 
@@ -2282,26 +2451,39 @@ void Simulation::calculateNewNodePosForPeripodialNodeAddition(int nodeId0, int n
 	cout<<"nodeIDs: "<<nodeId0<<" "<<nodeId1<<" "<<nodeId2<<" sideThickness: "<<sideThickness<<endl;
 	double* vec1;
 	vec1 = new double[3];
-	double* vec2;
-	vec2 = new double[3];
-	for (int j=0; j<Nodes[nodeId0]->nDim; j++){
-		vec1[j] = (Nodes[nodeId0]->Position[j] - Nodes[nodeId1]->Position[j]);
-		vec2[j] = (Nodes[nodeId0]->Position[j] - Nodes[nodeId2]->Position[j]);
+	if (symmetricY && nodeId1 == -100){
+		vec1[0] = -1.0;
+		vec1[1] =  0.0;
+		vec1[2] =  0.0;
 	}
-	Elements[0]->normaliseVector3D(vec1);
-	Elements[0]->normaliseVector3D(vec2);
-	vec1[0] += vec2[0];
-	vec1[1] += vec2[1];
-	vec1[2] += vec2[2];
-	Elements[0]->normaliseVector3D(vec1);
-	//The list is sorted counter-cock-wise, to point out, I will rotate normalised vector v0 -90 degrees on z axis:
-	// (x,y,z) -> (y,-x,z);
-	// then I will add this vector to the calculated mid point to gt the new node's position.
+	else if (symmetricY && nodeId2 == -100){
+		vec1[0] =  1.0;
+		vec1[1] =  0.0;
+		vec1[2] =  0.0;
+	}
+	else{
+		double* vec2;
+		vec2 = new double[3];
+		for (int j=0; j<Nodes[nodeId0]->nDim; j++){
+			vec1[j] = (Nodes[nodeId0]->Position[j] - Nodes[nodeId1]->Position[j]);
+			vec2[j] = (Nodes[nodeId0]->Position[j] - Nodes[nodeId2]->Position[j]);
+		}
+		Elements[0]->normaliseVector3D(vec1);
+		Elements[0]->normaliseVector3D(vec2);
+		vec1[0] += vec2[0];
+		vec1[1] += vec2[1];
+		vec1[2] += vec2[2];
+		Elements[0]->normaliseVector3D(vec1);
+		//The list is sorted counter-cock-wise, to point out, I will rotate normalised vector v0 -90 degrees on z axis:
+		// (x,y,z) -> (y,-x,z);
+		// then I will add this vector to the calculated mid point to gt the new node's position.
+		delete[] vec2;
+	}
 	pos[0] = Nodes[nodeId0]->Position[0] + vec1[0]*sideThickness;
 	pos[1] = Nodes[nodeId0]->Position[1] + vec1[1]*sideThickness;
 	pos[2] = Nodes[nodeId0]->Position[2];
 	delete[] vec1;
-	delete[] vec2;
+
 }
 
 
@@ -2332,6 +2514,7 @@ void Simulation::addNodesForPeripodialOnOuterCircumference (vector< vector<int> 
 	}
 	//Now I need the average side of an element, to add new nodes accordingly:
 	int nCircumference = ColumnarBasedNodeArray.size();
+
 	for (int i=0; i<nCircumference; ++i){
 		//cout<<"at node in the list: "<<i<<endl;
 		//adding 2 point based node:
@@ -2353,13 +2536,29 @@ void Simulation::addNodesForPeripodialOnOuterCircumference (vector< vector<int> 
 		int nodeId1;
 		int nodeId2;
 		if( i == nCircumference - 1){
-			nodeId1 = ColumnarBasedNodeArray[0][0];
+			if (symmetricY){
+				//the node is the end tip of a tissue with symmetric y. I should not connect it in a loop, it should add
+				// the node to +x direction.
+				// the node position calculation function will catch this as a flag, and will not calculate
+				nodeId1 = -100;
+			}
+			else{
+				nodeId1 = ColumnarBasedNodeArray[0][0];
+			}
 		}
 		else{
 			nodeId1 = ColumnarBasedNodeArray[i+1][0];
 		}
 		if ( i == 0 ){
-			nodeId2 = ColumnarBasedNodeArray[nCircumference-1][0];
+			if (symmetricY){
+				//the node is the beginning tip of a tissue with symmetric y. I should not connect it in a loop, it should add
+				// the node to -x direction.
+				// the node position calculation function will catch this as a flag, and will not calculate
+				nodeId2 = -100;
+			}
+			else{
+				nodeId2 = ColumnarBasedNodeArray[nCircumference-1][0];
+			}
 		}
 		else{
 			nodeId2 = ColumnarBasedNodeArray[i-1][0];
@@ -2419,7 +2618,12 @@ void Simulation::addLateralPeripodialElements(int LumenHeightDiscretisationLayer
 	int totalLayers = TissueHeightDiscretisationLayers+LumenHeightDiscretisationLayers+peripodialHeightDiscretisationLayers;
 	double peripodialnessFractionStep = 1.0 / (double) (LumenHeightDiscretisationLayers+1.0); //this is the step increment in periopdiallness weight at each element of lumen side. If there is 1 layer, it should be 50% peripodial, 50% columnar etc, if there are two, it should be 33%, 2x33% etc.
 	int nCircumference = ColumnarBasedNodeArray.size();
-	for (int i=0;i<nCircumference; ++i){
+	int nLoop = nCircumference;
+	if (symmetricY){
+		//in symmetric setup, the last node is not connected to the first node, we simply ignore that step
+		nLoop--;
+	}
+	for (int i=0;i<nLoop; ++i){
     	for (int j=0;j<totalLayers; ++j){
     		//calculating the fraction of peripodialness these two elements should have:
     		//counting which layer in the lumen they are:
@@ -2485,7 +2689,7 @@ void Simulation::addNodesForPeripodialOnCap(vector< vector<int> > &ColumnarBased
 				int lumenCapLayer =  TissueHeightDiscretisationLayers+LumenHeightDiscretisationLayers;
 				for (int j=0; j<nCircumference; ++j){
 					if(Nodes[i]->Id == ColumnarBasedNodeArray[j][TissueHeightDiscretisationLayers]){
-						//found the current node on hte existing list
+						//found the current node on the existing list
 						PeripodialCapNodeArray[j].push_back(ColumnarBasedNodeArray[j][TissueHeightDiscretisationLayers]);
 						int n = ColumnarBasedNodeArray[j].size();
 						for (int k=lumenCapLayer; k<n; ++k ){
@@ -2554,6 +2758,7 @@ void Simulation::addCapPeripodialElements( vector< vector<int> > &TriangleList, 
 	for (int i=0; i<nTri; ++i){
 		int indiceTri0Corner0, indiceTri0Corner1,indiceTri0Corner2;
 		int n = PeripodialCapNodeArray.size();
+		//cout<<"size of the peripodial cap node array: "<<n<<endl;
 		bool found0 = false, found1 = false, found2 = false;
 		for (int j =0; j<n; ++j){
 		   if (TriangleList[i][0] == PeripodialCapNodeArray[j][0]){
@@ -2692,8 +2897,11 @@ void Simulation::checkForExperimentalSetupsAfterIteration(){
 void Simulation::runOneStep(){
     cout<<"entered run one step"<<endl;
     //ablateSpcific();
+    if (dt*timestep == -16*3600) {
+    	pokeElement(31,0,0,-0.1);pokeElement(34,0,0,-0.1);
+    }
     manualPerturbationToInitialSetup(false,false); //bool deform, bool rotate
-    resetForces();
+    resetForces(true); // reset the packing forces together with all the rest of the forces here
     int freq = 10.0/dt ;
     if (freq <1 ){freq =1;}
     if ((timestep - 1)% freq  == 0){
@@ -2739,6 +2947,8 @@ void Simulation::runOneStep(){
     updateNodeMasses();
     updateElementToConnectedNodes(Nodes);
     calculateMyosinForces();
+	//calculatePacking();
+    detectPacingNodes();
     updateStepNR();
     processDisplayDataAndSave();
     calculateBoundingBox();
@@ -2811,12 +3021,12 @@ void Simulation::updateStepNR(){
         cout<<"iteration: "<<iteratorK<<endl;
         //Elements[0]->displayMatrix(Elements[0]->TriPointF,"Element0TriPointF");
         //cout<<"Element 0 BasalArea: "<<Elements[0]->ReferenceShape->BasalArea<<endl;
-        resetForces();
+        resetForces(true);	//do not reset packing forces
+        //cout<<"after reset forces"<<endl;
         gsl_matrix_set_zero(ge);
         gsl_matrix_set_zero(gv);
         gsl_matrix_set_zero(K);
         gsl_vector_set_zero(gSum);
-
         //Elements[0]->displayMatrix(gExt,"gExt");
         //cout<<"calculating elastic forces"<<endl;
         calculateElasticForcesForNR(ge);
@@ -2826,6 +3036,10 @@ void Simulation::updateStepNR(){
         //calculateImplucitKElasticNumerical(K, ge);
         calculateImplucitKViscous(K,mviscdt);
         //calculateImplucitKViscousNumerical(mviscdt,un,uk);
+        calculatePackingImplicit();
+        calculatePackingNumerical(K);
+        //calculatePackingK(K);
+        //cout<<" after packing"<<endl;
         for (int i=0; i<dim*nNodes; ++i){
             gsl_vector_set(gSum,i,gsl_matrix_get(ge,i,0)+gsl_matrix_get(gv,i,0));
         }
@@ -2836,6 +3050,15 @@ void Simulation::updateStepNR(){
 			addPipetteForces(gExt);
 		}
 		addMyosinForces(gExt);
+		addPackingForces(gExt);
+
+	    //pushing node 78 down, node 216 up by 2000:
+		/*if (timestep ==0 ){
+			double zForce = gsl_matrix_get(gExt,3*78+2,0);
+			gsl_matrix_set(gExt,3*78+2,0,zForce - 2000.0);
+			zForce = gsl_matrix_get(gExt,3*216+2,0);
+			gsl_matrix_set(gExt,3*216+2,0,zForce + 2000.0);
+		}*/
         for (int i=0; i<dim*nNodes; ++i){
             gsl_vector_set(gSum,i,gsl_vector_get(gSum,i)+gsl_matrix_get(gExt,i,0));
         }
@@ -2844,9 +3067,9 @@ void Simulation::updateStepNR(){
         //double F = 5.509e+04 ;
         double F = 0 ;
         const int nNodesToPush = 1;
-        int NodesToPush[nNodesToPush] = {5};
-        int AxesToPush[nNodesToPush] = {0};
-        double ForceDir[nNodesToPush] = {1};
+        int NodesToPush[nNodesToPush] = {0};
+        int AxesToPush[nNodesToPush] = {2};
+        double ForceDir[nNodesToPush] = {-1};
         for(int jj = 0; jj<nNodesToPush; ++jj){
             double value = gsl_vector_get(gSum,NodesToPush[jj]*dim+AxesToPush[jj]);
             value += F*ForceDir[jj];
@@ -2866,13 +3089,18 @@ void Simulation::updateStepNR(){
         }*/
         //Finalised adding external forces
         calcutateFixedK(K,gSum);
-        //converged = checkConvergenceViaForce(gSum);
+        converged = checkConvergenceViaForce(gSum);
         if (converged){
             break;
         }
         //Elements[0]->displayMatrix(K,"K");
         //Elements[0]->displayMatrix(ge,"ElasticForces");
         //Elements[0]->displayMatrix(gv,"ViscousForces");
+        //for (int aa= 116; aa<120; ++aa){
+        //	cout<<"viscous forces on node: "<<aa<<" "<<gsl_matrix_get(gv, 3*aa,0)<<" "<<gsl_matrix_get(gv, 3*aa+1,0)<<" "<<gsl_matrix_get(gv, 3*aa+2,0)<<endl;
+        //	cout<<"elastic forces on node: "<<aa<<" "<<gsl_matrix_get(ge, 3*aa,0)<<" "<<gsl_matrix_get(ge, 3*aa+1,0)<<" "<<gsl_matrix_get(ge, 3*aa+2,0)<<endl;
+        //	cout<<"total forces on node  : "<<aa<<" "<<gsl_vector_get(gSum, 3*aa)<<" "<<gsl_vector_get(gSum, 3*aa+1)<<" "<<gsl_vector_get(gSum, 3*aa+2)<<endl;
+        //}
         //Elements[0]->displayMatrix(gSum,"TotalForces");
         //Elements[0]->displayMatrix(mviscdt,"mviscdt");
         //Elements[0]->displayMatrix(un,"un");
@@ -2892,8 +3120,25 @@ void Simulation::updateStepNR(){
             cerr<<"Error: did not converge!!!"<<endl;
             converged = true;
         }
-        //cout<<"Node 0 position: "<<Nodes[0]->Position[0]<<" "<<Nodes[0]->Position[1]<<" "<<Nodes[0]->Position[2]<<endl;
+        //cout<<"Iteration" <<iteratorK-1<<" forces on Node[0] : "<<SystemForces[0][0]<<" "<<SystemForces[0][1]<<" "<<SystemForces[0][2]<<endl;
+        //if(nNodes>73){
+       // 	cout<<"Iteration" <<iteratorK-1<<" forces on Node[73]: "<<SystemForces[73][0]<<" "<<SystemForces[73][1]<<" "<<SystemForces[73][2]<<endl;
+       //     cout<<"Iteration" <<iteratorK-1<<" sum of forces     : "<<SystemForces[0][0]+SystemForces[73][0]<<" "<<SystemForces[0][1]+SystemForces[73][1]<<" "<<SystemForces[0][2]+SystemForces[73][2]<<endl;
+       // }
+       // else{
+       //     cout<<"Iteration" <<iteratorK-1<<" forces on Node[43]: "<<SystemForces[43][0]<<" "<<SystemForces[43][1]<<" "<<SystemForces[43][2]<<endl;
+       //     cout<<"Iteration" <<iteratorK-1<<" sum of forces     : "<<SystemForces[0][0]+SystemForces[43][0]<<" "<<SystemForces[0][1]+SystemForces[43][1]<<" "<<SystemForces[0][2]+SystemForces[43][2]<<endl;
+       // }s
     }
+   // cout<<"Final forces on Node[0]: "<<SystemForces[0][0]<<" "<<SystemForces[0][1]<<" "<<SystemForces[0][2]<<endl;
+   // if(nNodes>73){
+    //	cout<<"Final forces on Node[73]: "<<SystemForces[73][0]<<" "<<SystemForces[73][1]<<" "<<SystemForces[73][2]<<endl;
+   // }
+   // else{
+   //     cout<<"Final forces on Node[43]: "<<SystemForces[43][0]<<" "<<SystemForces[43][1]<<" "<<SystemForces[43][2]<<endl;
+   // }
+
+
     checkForExperimentalSetupsAfterIteration();
     //Now the calculation is converged, I update the node positions with the latest positions uk:
     updateNodePositionsNR(uk);
@@ -2907,6 +3152,7 @@ void Simulation::updateStepNR(){
     gsl_matrix_free(uk);
     gsl_vector_free(deltaU);
     gsl_matrix_free(K);
+    cout<<"finished run one step"<<endl;
 }
 
 void Simulation::calculateImplucitKElasticNumerical(gsl_matrix* K, gsl_matrix* geNoPerturbation){
@@ -2920,7 +3166,7 @@ void Simulation::calculateImplucitKElasticNumerical(gsl_matrix* K, gsl_matrix* g
         for (int j=0; j<dim; j++){
             gsl_matrix_set_zero(geWithPerturbation);
             gsl_matrix_set_zero(geDiff);
-            resetForces();            
+            resetForces(false);  //do not reset packing forces
             Elements[0]->Positions[i][j] += perturbation;
             calculateElasticForcesForNR(geWithPerturbation);
             for(int k=0; k<nNodes*dim; ++k){
@@ -3062,6 +3308,11 @@ void Simulation::updateUkInNR(gsl_matrix* uk, gsl_vector* deltaU){
         double newValue = gsl_matrix_get(uk,i,0)+gsl_vector_get(deltaU,i);
         gsl_matrix_set(uk,i,0,newValue);
     }
+    //deltU for node 0 z: 0*3 + 3  = 3 -> index 2
+    //deltaU for node 48 z: 43*3 +3 = 132 -> index 131
+    double value0 = gsl_vector_get(deltaU,2);
+    double value43 = gsl_vector_get(deltaU,131);
+    //cout<<" within iteration, displacement of node 0z: "<<value0<<" displacement of node 43z: "<<value43<<" sum: "<<value0+value43<<endl;
 }
 
 void Simulation::solveForDeltaU(gsl_matrix* K, gsl_vector* g, gsl_vector* deltaU){
@@ -3315,7 +3566,7 @@ int Simulation::solveWithPardiso(double* a, double*b, int* ia, int* ja, gsl_vect
 /* -------------------------------------------------------------------- */
 
 	phase = 33;
-
+	//iparm[4]  = 61;	 /*changing the precision of convergence with pre-conditioning, not sure what it does, I added as trial, but did not change anything */
 	iparm[7]  = 1;       /* Max numbers of iterative refinement steps. */
 	iparm[11] = 1;       /* Solving with transpose matrix. */
 
@@ -3364,7 +3615,7 @@ int Simulation::solveWithPardiso(double* a, double*b, int* ia, int* ja, gsl_vect
 }
 
 void Simulation::constructiaForPardiso(gsl_matrix* K, int* ia, const int nmult, vector<int> &ja_vec, vector<double> &a_vec){
-    double negThreshold = -1E-14, posThreshold = 1E-14;
+    double negThreshold = -1E-13, posThreshold = 1E-13;
     //count how many elements there are on K matrix and fill up ia:
     int counter = 0;
     for (int i =0; i<nmult; ++i){
@@ -3397,6 +3648,263 @@ void Simulation::writeginPardisoFormat(gsl_vector* g, double* b, const int n){
     for (int i=0; i<n; ++i){
         b[i] = gsl_vector_get(g,i);
     }
+}
+
+void Simulation::calculatePackingImplicit(){
+	int n = pacingNodeCouples0.size();
+	for(int i = 0 ; i<n; ++i){
+		int id0 = pacingNodeCouples0[i];
+		int id1 = pacingNodeCouples1[i];
+		double multiplier = 1;
+		double p = 2; //the power of the division (d/t);
+		double threshold = 6.0; //packing threshold;
+		double dz = Nodes[id0]->Position[2] - Nodes[id1]->Position[2];
+
+		double averageMass = 0.5 *( Nodes[id0]->mass + Nodes[id1]->mass );
+		double c = multiplier * averageMass;
+		double Fmag = c * (1 - pow(dz/threshold,p));
+
+		PackingForces[id0][2] -= Fmag ;
+		PackingForces[id1][2] += Fmag ;
+		//cout<<" packing force mag: "<<Fmag <<endl;
+		//cout<<" node0("<<id0<<") pos: "<<Nodes[id0]->Position[0]<<" "<<Nodes[id0]->Position[1]<<" "<<Nodes[id0]->Position[2]<<endl;
+		//cout<<" node1("<<id1<<") pos: "<<Nodes[id1]->Position[0]<<" "<<Nodes[id1]->Position[1]<<" "<<Nodes[id1]->Position[2]<<endl;
+		//cout<<" dx, dy, dz: "<<dx<<" "<<dy<<" "<<dz<<" d: "<<d<<endl;
+		//cout<<" packing force: "<<0 <<" "<<0<<" "<<Fmag<<endl;
+		//cout<<" aveerage mass: "<<averageMass<<" dz: "<<dz<<endl;
+	}
+}
+
+void Simulation::calculatePackingNumerical(gsl_matrix* K){
+	int n = pacingNodeCouples0.size();
+	for(int i = 0 ; i<n; ++i){
+		int id0 = pacingNodeCouples0[i];
+		int id1 = pacingNodeCouples1[i];
+		double averageMass = 0.5 *( Nodes[id0]->mass + Nodes[id1]->mass );
+		double multiplier = 1;
+		double c = multiplier * averageMass;
+		double p = 2; //the power of the division (d/t);
+		double threshold = 6.0; //packing threshold;
+
+		double perturbation = 0.0000001;
+		double dz = Nodes[id0]->Position[2] - Nodes[id1]->Position[2];
+		double Fmag = c * (1 - pow(dz/threshold,p));
+		double F0[3] = {0, 0, Fmag};
+		
+		dz += perturbation;
+		Fmag = c * (1 - pow(dz/threshold,p));
+		double F3[3] = {0 , 0 , Fmag};
+
+		double dgczz = (F3[2]-F0[2])/ perturbation;
+
+		//cout<<"dgczz: "<<dgczz<<endl;//" dgcxy: "<<dgcxy<<" dgcyx: "<<dgcyx<<" c: "<<c<<endl;
+		//cout<<"K matrix "<<3*id0+2<<" , "<<3*id0+2<<" : "<<gsl_matrix_get(K,3*id0+2,3*id0+2)<<endl;
+		double value = gsl_matrix_get(K,3*id0+2,3*id0+2);
+		value += dgczz;
+		gsl_matrix_set(K,3*id0+2,3*id0+2,value);
+		//cout<<"K matrix "<<3*id0+2<<" , "<<3*id0+2<<" : "<<gsl_matrix_get(K,3*id0+2,3*id0+2)<<endl;
+		//cout<<"K matrix "<<3*id0+2<<" , "<<3*id1+2<<" : "<<gsl_matrix_get(K,3*id0+2,3*id1+2)<<endl;
+		value = gsl_matrix_get(K,3*id0+2,3*id1+2);
+		value -= dgczz;
+		gsl_matrix_set(K,3*id0+2,3*id1+2,value);
+		//cout<<"K matrix "<<3*id0+2<<" , "<<3*id1+2<<" : "<<gsl_matrix_get(K,3*id0+2,3*id1+2)<<endl;
+
+		value = gsl_matrix_get(K,3*id1+2,3*id1+2);
+		value += dgczz;
+		gsl_matrix_set(K,3*id1+2,3*id1+2,value);
+
+		value = gsl_matrix_get(K,3*id1+2,3*id0+2);
+		value -= dgczz;
+		gsl_matrix_set(K,3*id1+2,3*id0+2,value);
+
+		/*
+		double value = gsl_matrix_get(K,3*id0,3*id0);
+		value +=dgcxx;
+		gsl_matrix_set(K,3*id0,3*id0,value);
+		//y_i y_i
+		value = gsl_matrix_get(K,3*id0+1,3*id0+1);
+		value +=dgcyy;
+		gsl_matrix_set(K,3*id0+1,3*id0+1,value);
+		//z_i z_i
+		value = gsl_matrix_get(K,3*id0+2,3*id0+2);
+		value +=dgczz;
+		cout<<"K matrix 92,92: "<<gsl_matrix_get(K,92,92)<<endl;
+		gsl_matrix_set(K,3*id0+2,3*id0+2,value);
+		cout<<"K matrix 92,92: "<<gsl_matrix_get(K,92,92)<<endl;
+		//x_i y_i  
+		value = gsl_matrix_get(K,3*id0,3*id0+1);
+		value +=dgcxy;
+		gsl_matrix_set(K,3*id0,3*id0+1,value);
+		//y_i x_i
+		value = gsl_matrix_get(K,3*id0+1,3*id0);
+		value +=dgcyx;
+		gsl_matrix_set(K,3*id0+1,3*id0,value);
+		//x_i z_i  
+		value = gsl_matrix_get(K,3*id0,3*id0+2);
+		value +=dgcxz;
+		gsl_matrix_set(K,3*id0,3*id0+2,value);
+		//z_i x_i
+		value = gsl_matrix_get(K,3*id0+2,3*id0);
+		value +=dgczx;
+		gsl_matrix_set(K,3*id0+2,3*id0,value);
+		//y_i z_i  
+		value = gsl_matrix_get(K,3*id0+1,3*id0+2);
+		value +=dgcyz;
+		gsl_matrix_set(K,3*id0+1,3*id0+2,value);
+		//z_i y_i
+		value = gsl_matrix_get(K,3*id0+2,3*id0+1);
+		value +=dgczy;
+		gsl_matrix_set(K,3*id0+2,3*id0+1,value);
+
+		cout<<"K matrix 92,92: before adding to slave "<<gsl_matrix_get(K,92,92)<<endl;
+		//add the negative values to the slave:
+		//x_i x_slave
+		value = gsl_matrix_get(K,3*id0,3*id1);
+		value -=dgcxx;
+		gsl_matrix_set(K,3*id0,3*id1,value);
+		//y_i y_slave
+		value = gsl_matrix_get(K,3*id0+1,3*id1+1);
+		value -=dgcyy;
+		gsl_matrix_set(K,3*id0+1,3*id1+1,value);
+		//z_i z_slave
+		value = gsl_matrix_get(K,3*id0+2,3*id1+2);
+		value -=dgczz;
+		gsl_matrix_set(K,3*id0+2,3*id1+2,value);
+		//x_i y_slave  
+		value = gsl_matrix_get(K,3*id0,3*id1+1);
+		value -=dgcxy;
+		gsl_matrix_set(K,3*id0,3*id1+1,value);
+		//y_i x_slave
+		value = gsl_matrix_get(K,3*id0+1,3*id1);
+		value -=dgcyx;
+		gsl_matrix_set(K,3*id0+1,3*id1,value);
+		//x_i z_slave  
+		value = gsl_matrix_get(K,3*id0,3*id1+2);
+		value -=dgcxz;
+		gsl_matrix_set(K,3*id0,3*id1+2,value);
+		//z_i x_slave
+		value = gsl_matrix_get(K,3*id0+2,3*id1);
+		value -=dgczx;
+		gsl_matrix_set(K,3*id0+2,3*id1,value);
+		//y_i z_slave  
+		value = gsl_matrix_get(K,3*id0+1,3*id1+2);
+		value -=dgcyz;
+		gsl_matrix_set(K,3*id0+1,3*id1+2,value);
+		//z_i y_slave
+		value = gsl_matrix_get(K,3*id0+2,3*id1+1);
+		value -=dgczy;
+		gsl_matrix_set(K,3*id0+2,3*id1+1,value);
+*/
+	}
+}
+
+void Simulation::calculatePackingK(gsl_matrix* K){
+	int n = pacingNodeCouples0.size();
+	for(int i = 0 ; i<n; ++i){
+		 int id0 = pacingNodeCouples0[i];
+		 int id1 = pacingNodeCouples1[i];
+		 double multiplier = 1.0;
+		 double p = 0.3; //the power of the division (d/t);
+		 double threshold = 10.0; //packing threshold;
+		 double tp = pow(threshold,p);
+
+		 double dx = Nodes[id0]->Position[0] - Nodes[id1]->Position[0];
+		 double dy = Nodes[id0]->Position[1] - Nodes[id1]->Position[1];
+		 double dz = Nodes[id0]->Position[2] - Nodes[id1]->Position[2];
+		 double d = dx*dx + dy*dy + dz*dz;  //distance between the two nodes at current itertion
+		 d = pow(d,0.5);
+		 double averageMass = 0.5 *( Nodes[id0]->mass + Nodes[id1]->mass );
+		 double c = multiplier * averageMass;
+		 //cout<<"C: "<<c<<endl;
+		 double dp = pow(d,p);
+
+		 double ddx = dx / d;
+		 double ddy = dy / d;
+		 double ddz = dz / d;
+
+		 //double dgcxx = ( -1.0 * c /tp *p *dp /d * ddx) * dx/d + (c * (1 - dp/tp)) * ( 1.0 / d - dx /d/d * ddx );
+		 //double dgcxy = ( -1.0 * c /tp *p *dp /d * ddy) * dx/d - (c * (1 - dp/tp)) * dx /d/d * ddy;
+		 //double dgcxz = ( -1.0 * c /tp *p *dp /d * ddz) * dx/d - (c * (1 - dp/tp)) * dx /d/d * ddz;
+		 //double dgcyy = ( -1.0 * c /tp *p *dp /d * ddy) * dy/d + (c * (1 - dp/tp)) * (1.0 / d - dy /d/d * ddy);
+		 //double dgcyz = ( -1.0 * c /tp *p *dp /d * ddz) * dy/d - (c * (1 - dp/tp)) * dy /d/d * ddz;
+		 //double dgczz = ( -1.0 * c /tp *p *dp /d * ddz) * dz/d + (c * (1 - dp/tp)) * (1.0 / d - dz /d/d * ddz);
+
+		 double dgcxx = (-1.0 * c/d/d * ddx - (p-1)/tp*dp/d/d*ddx) * dx + c/d*(1.0 + dp/tp);
+		 double dgcxy = (-1.0 * c/d/d * ddy - (p-1)/tp*dp/d/d*ddy) * dx;
+		 double dgcxz = (-1.0 * c/d/d * ddz - (p-1)/tp*dp/d/d*ddz) * dx;
+		 double dgcyy = (-1.0 * c/d/d * ddy - (p-1)/tp*dp/d/d*ddy) * dy + c/d*(1.0 + dp/tp);
+		 double dgcyz = (-1.0 * c/d/d * ddz - (p-1)/tp*dp/d/d*ddz) * dy;
+		 double dgczz = (-1.0 * c/d/d * ddz - (p-1)/tp*dp/d/d*ddz) * dz + c/d*(1.0 + dp/tp);
+		 // cout<<"dgcxx: "<<dgcxx<<" dgcyy: "<<dgcyy<<" dgcxy: "<<dgcxy<<endl;
+		 //x_i x_i
+		 double value = gsl_matrix_get(K,3*id0,3*id0);
+		 value +=dgcxx;
+		 gsl_matrix_set(K,3*id0,3*id0,value);
+		 //y_i y_i
+		 value = gsl_matrix_get(K,3*id0+1,3*id0+1);
+		 value +=dgcyy;
+		 gsl_matrix_set(K,3*id0+1,3*id0+1,value);
+		 //z_i z_i
+		 value = gsl_matrix_get(K,3*id0+2,3*id0+2);
+		 value +=dgczz;
+		 gsl_matrix_set(K,3*id0+2,3*id0+2,value);
+		 //x_i y_i  && y_i x_i
+		 value = gsl_matrix_get(K,3*id0,3*id0+1);
+		 value +=dgcxy;
+		 gsl_matrix_set(K,3*id0,3*id0+1,value);
+		 value = gsl_matrix_get(K,3*id0+1,3*id0);
+		 value +=dgcxy;
+		 gsl_matrix_set(K,3*id0+1,3*id0,value);
+		 //x_i z_i  && z_i x_i
+		 value = gsl_matrix_get(K,3*id0,3*id0+2);
+		 value +=dgcxz;
+		 gsl_matrix_set(K,3*id0,3*id0+2,value);
+		 value = gsl_matrix_get(K,3*id0+2,3*id0);
+		 value +=dgcxz;
+		 gsl_matrix_set(K,3*id0+2,3*id0,value);
+		 //y_i z_i  && z_i y_i
+		 value = gsl_matrix_get(K,3*id0+1,3*id0+2);
+		 value +=dgcyz;
+		 gsl_matrix_set(K,3*id0+1,3*id0+2,value);
+		 value = gsl_matrix_get(K,3*id0+2,3*id0+1);
+		 value +=dgcyz;
+		 gsl_matrix_set(K,3*id0+2,3*id0+1,value);
+
+		 //add the negative values to the slave:
+		 //x_i x_slave
+		 value = gsl_matrix_get(K,3*id0,3*id1);
+		 value -=dgcxx;
+		 gsl_matrix_set(K,3*id0,3*id1,value);
+		 //y_i y_slave
+		 value = gsl_matrix_get(K,3*id0+1,3*id1+1);
+		 value -=dgcyy;
+		 gsl_matrix_set(K,3*id0+1,3*id0+1,value);
+		 //z_i z_slave
+		 value = gsl_matrix_get(K,3*id0+2,3*id1+2);
+		 value -=dgczz;
+		 gsl_matrix_set(K,3*id0+2,3*id0+2,value);
+		 //x_i y_slave  && y_i x_slave
+		 value = gsl_matrix_get(K,3*id0,3*id1+1);
+		 value -=dgcxy;
+		 gsl_matrix_set(K,3*id0,3*id1+1,value);
+		 value = gsl_matrix_get(K,3*id0+1,3*id1);
+		 value -=dgcxy;
+		 gsl_matrix_set(K,3*id0+1,3*id1,value);
+		 //x_i z_slave  && z_i x_slave
+		 value = gsl_matrix_get(K,3*id0,3*id1+2);
+		 value -=dgcxz;
+		 gsl_matrix_set(K,3*id0,3*id1+2,value);
+		 value = gsl_matrix_get(K,3*id0+2,3*id1);
+		 value -=dgcxz;
+		 gsl_matrix_set(K,3*id0+2,3*id1,value);
+		 //y_i z_slave  && z_i y_slave
+		 value = gsl_matrix_get(K,3*id0+1,3*id1+2);
+		 value -=dgcyz;
+		 gsl_matrix_set(K,3*id0+1,3*id1+2,value);
+		 value = gsl_matrix_get(K,3*id0+2,3*id1+1);
+		 value -=dgcyz;
+		 gsl_matrix_set(K,3*id0+2,3*id1+1,value);
+	}
 }
 
 void Simulation::calculateImplicitKElastic(gsl_matrix* K){
@@ -3560,51 +4068,19 @@ void Simulation::getBasalNormalAndCornerPosForPacking(ShapeBase* ElementPointer,
 	ElementPointer->getBasalNodePos(posCorner);
 }
 
-void Simulation::getNormalAndCornerPosForPacking(Node* NodePointer, ShapeBase* ElementPointer, double* normalForPacking,double* posCorner, bool& bothperipodial){
-	if (NodePointer->tissueType == 1 && NodePointer->tissueType == 1){
-		//both element and the node are on the peripodial membrane
-		//I will update the normal of the element here, and flag the interaction to be between two peripodial membrane entities.
-		//This will mean, they will push away from each other, regardless of direction.
-		//The flag will be checked to reverse the normal direction in case the dot product is negative. I am not doing it here
-		//as it will be a duplicate calculation.
+void Simulation::getNormalAndCornerPosForPacking(Node* NodePointer, ShapeBase* ElementPointer, double* normalForPacking,double* posCorner){
+	if (NodePointer->tissuePlacement == 1){
+		//node is apical, should pack to apical nodes only
 		getApicalNormalAndCornerPosForPacking(ElementPointer, normalForPacking, posCorner);
-		bothperipodial = true;
 	}
-	else if (NodePointer->tissueType == 0 ){
-		//the node is on the columnar layer. apical nodes should pack apically and basal nodes should pack basally, the element will give the correct vectors
-		//even if it is on peripodial membrane
-		if (NodePointer->tissuePlacement == 1){  //node is apical, should pack to apical nodes only
-			getApicalNormalAndCornerPosForPacking(ElementPointer, normalForPacking, posCorner);
-		}
-		else if (NodePointer->tissuePlacement == 0){ //node is basal, should pack to apical nodes only
-			getBasalNormalAndCornerPosForPacking(ElementPointer, normalForPacking, posCorner);
-		}
-	}
-	else if (ElementPointer->tissueType == 0 && NodePointer->tissueType == 1){
-		//Element is on the columnar layer and the node is on the peripodial membrane
-		//if the tissue has multiple discretisation layers, the peripodial node should be pushed out of the tissue side the elemnt belongs to
-		//(if the element is apical, push it out towards the apical surface and vice versa.
-		if (TissueHeightDiscretisationLayers>1){
-			if (ElementPointer->tissuePlacement == 0 ){ //element is basal:
-				getBasalNormalAndCornerPosForPacking(ElementPointer, normalForPacking, posCorner);
-			}
-			else if (ElementPointer->tissuePlacement == 1 ){//element is apical:
-				getApicalNormalAndCornerPosForPacking(ElementPointer, normalForPacking, posCorner);
-			}
-			else{cerr<<"Element has error in tissue placement, packing, Element id: "<<ElementPointer->Id<<endl;}
-		}
-		else{
-			//tissue does not have multiple layers, I will push out from the apical surface
-			//if your tissue is complicated enough to have wrapping around peripodial membrane,
-			//it will have flips with a single layer of columnar elements anyway.
-			//USE multi-layer discretisation for columnar layer if you have packing issues.
-			getApicalNormalAndCornerPosForPacking(ElementPointer, normalForPacking, posCorner);
-		}
+	else if (NodePointer->tissuePlacement == 0){
+		//node is basal, should pack to basal nodes only
+		getBasalNormalAndCornerPosForPacking(ElementPointer, normalForPacking, posCorner);
 	}
 }
 
 inline void Simulation::CapPackingForce(double& Fmag){
-	double Fcap = 1e4;
+	double Fcap = 1e2;
 	if (Fmag > Fcap){
 		Fmag = Fcap;
 	}
@@ -3683,7 +4159,524 @@ void Simulation::checkPackingToPipette(bool& packsToPip, double* pos, double* pi
 	}
 }
 
-void Simulation::calculatePacking(double PeriThreshold, double ColThreshold){
+void Simulation::detectPacingNodes(){
+	double threshold = 5;	 //packing forces start at 4 microns - keep this lower than the force threshold!!
+	double t2 = threshold*threshold;	//threshold square for rapid calculation
+
+	pacingNodeCouples0.empty();
+	pacingNodeCouples1.empty();
+	vector<Node*>::iterator itNode;
+	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+		bool NodeHasPacking = (*itNode)->checkIfNodeHasPacking();
+		if (NodeHasPacking){
+			double* pos;
+			pos = new double[3];
+			(*itNode)->getCurrentPosition(pos);
+			vector<Node*>::iterator itNodeSlave;
+			for (itNodeSlave=itNode+1; itNodeSlave<Nodes.end(); ++itNodeSlave){
+				bool nodesOnSeperateSurfaces = (*itNodeSlave)->tissueType != (*itNode)->tissueType;
+				bool SlaveNodeHasPacking = (*itNodeSlave)->checkIfNodeHasPacking();
+				if (SlaveNodeHasPacking && nodesOnSeperateSurfaces){
+					if ((*itNode)->tissuePlacement == (*itNodeSlave)->tissuePlacement){
+						//nodes can pack, are they connected?
+						bool neigbours = false;
+						int n = (*itNode)->immediateNeigs.size();
+						for (int i= 0; i<n; ++i){
+							if ((*itNode)->immediateNeigs[i] ==(*itNodeSlave)->Id ){
+								neigbours = true;
+								break;
+							}
+						}
+						if (!neigbours){
+							//the nodes can potentially pack, are they close enough?
+							double* posSlave;
+							posSlave = new double[3];
+							(*itNodeSlave)->getCurrentPosition(posSlave);
+							double dx = pos[0] - posSlave[0];
+							double dy = pos[1] - posSlave[1];
+							double dz = pos[2] - posSlave[2];
+							double d2 = dx*dx + dy*dy + dz*dz;
+							if (d2<t2){
+								//close enough for packing , add to list:
+								pacingNodeCouples0.push_back((*itNode)->Id);
+								pacingNodeCouples1.push_back((*itNodeSlave)->Id);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	int n = pacingNodeCouples0.size();
+	for (int i=0;i<n;++i){
+		cout<<" packing nodes: "<<pacingNodeCouples0[i]<<" "<<pacingNodeCouples1[i]<<endl;
+	}
+}
+
+void Simulation::calculatePacking(){
+	//cout<<"in calculate packing: "<<endl;
+	double multiplier = 0.3; //just a term to scale the forces down
+	double thresholdForNodeDetection = 20; //check every node within 5 microns of distance;
+	double threshold = 10;	 //packing forces start at 2 microns
+	double thresholdNeg = (-1.0)*threshold;
+	double t2 = threshold*threshold;	//threshold square for rapid calculation
+	vector<Node*>::iterator itNode;
+	vector<ShapeBase*>::iterator itEle;
+	//resetting all the normal update flags
+	for (itEle=Elements.begin(); itEle<Elements.end(); ++itEle){
+		(*itEle)->ApicalNormalForPackingUpToDate = false;
+		(*itEle)->BasalNormalForPackingUpToDate = false;
+	}
+	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+		/*double sumPack[3] = {0,0,0};
+		for (int pp=0; pp<nNodes; ++pp){
+			sumPack[0] += PackingForces[pp][0];
+			sumPack[1] += PackingForces[pp][1];
+			sumPack[2] += PackingForces[pp][2];
+		}
+		cout<<"checking node: "<<(*itNode)->Id<<" sum of Packing forces: "<<sumPack[0]<<" "<<sumPack[1]<<" "<<sumPack[2]<<endl;
+		*/
+		//if ((*itNode)->Id == 60) {cout<<" checking node : "<<(*itNode)->Id<<endl;}
+		bool NodeHasPacking = (*itNode)->checkIfNodeHasPacking();
+		if (NodeHasPacking){
+			//cout<<"	node has packing"<<endl;
+			double* pos;
+			pos = new double[3];
+			(*itNode)->getCurrentPosition(pos);
+			vector <int> edgeNodeData0, edgeNodeData1;
+			vector <double> edgeNormalDataX, edgeNormalDataY, edgeNormalDataZ;
+			bool pushedBySurface = false;
+			bool pushedByEdge = false;
+			for (itEle=Elements.begin(); itEle<Elements.end(); ++itEle){
+				//excluding elements that own this element
+				//if ((*itNode)->Id == 60 && ( (*itEle)->Id == 184 ||  (*itEle)->Id == 195 ) ) {cout<<" checking 1st to element  : "<<(*itEle)->Id<<endl;}
+				bool PackingToThisElement =  (*itEle)->checkPackingToThisNodeViaState(TissueHeightDiscretisationLayers, (*itNode));
+				if (PackingToThisElement){
+					//cout<<"	node may pack to element: "<<(*itEle)->Id<<endl;
+					//the node does not belong to the element, and placed correctly. Lets have a preliminary distance check:
+					//if ((*itNode)->Id == 60 && ( (*itEle)->Id == 184 ||  (*itEle)->Id == 195 ) ) {cout<<" checking 2nd to element  : "<<(*itEle)->Id<<endl;}
+					PackingToThisElement = (*itEle)->IsPointCloseEnoughForPacking((*itNode)->Position, thresholdForNodeDetection,(*itNode)->tissuePlacement, (*itNode)->tissueType);
+				}
+				if (PackingToThisElement){
+					//if ((*itNode)->Id == 60 && ( (*itEle)->Id == 184 ||  (*itEle)->Id == 195 ) ) {cout<<" continuing packing to element  : "<<(*itEle)->Id<<endl;}
+					//cout<<"	node can pack to element: "<<(*itEle)->Id<<endl;
+					//all positions and stated are correct, this node can pack to this element
+					double* normalForPacking;
+					normalForPacking = new double[3];
+					normalForPacking[0]=0.0;normalForPacking[1]=0.0;normalForPacking[2]=0.0;
+					double* posCorner;
+					posCorner = new double[3];
+					//getting the normal to the element surface in the direction of the pushing force, and one corner of the surface
+					getNormalAndCornerPosForPacking((*itNode),(*itEle),normalForPacking,posCorner);
+					double dInNormalDir = 0.0;
+					//if ((*itNode)->Id == 78 ) {cout<<" checking distance to surface for  : "<<(*itEle)->Id<<endl;}
+					for (int i=0; i<3; ++i){
+						dInNormalDir += (pos[i] - posCorner[i])*normalForPacking[i];
+					}
+					//cout<<"	distance to surface in direction of normal: "<<dInNormalDir<<endl;
+					if ((dInNormalDir > 0 && dInNormalDir < threshold) || (dInNormalDir < 0 && dInNormalDir > thresholdNeg)){
+						//if the edge is not composed of any of my neigs, then add to list:
+						addToEdgeList((*itNode), (*itEle), edgeNodeData0, edgeNodeData1);
+						edgeNormalDataX.push_back(normalForPacking[0]);
+						edgeNormalDataY.push_back(normalForPacking[1]);
+						edgeNormalDataZ.push_back(normalForPacking[2]);
+						//if ((*itNode)->Id == 60 && ( (*itEle)->Id == 184 ||  (*itEle)->Id == 195 ) ) {cout<<" checking projection to surface for  : "<<(*itEle)->Id<<endl;}
+						//the node is close enough in the direction of the normal, now I should check if the projection falls within hte triangle:
+						double projectedPoint[3];
+						for (int i=0; i<3; ++i){
+							projectedPoint[i] = pos[i] - dInNormalDir*normalForPacking[i];
+						}
+						//cout<<"	pos: " <<pos[0]<<" "<<pos[1]<<" "<<pos[2]<<endl;
+						//cout<<"	normalForPacking: "<<normalForPacking[0]<<" "<<normalForPacking[1]<<" "<<normalForPacking[2]<<endl;
+						//cout<<"	projected point: "<<projectedPoint[0]<<" "<<projectedPoint[1]<<" "<<projectedPoint[2]<<endl;
+						bool pointInsideTriangle = (*itEle)->IspointInsideTriangle((*itNode)->tissuePlacement,projectedPoint[0],projectedPoint[1],projectedPoint[2]);
+						//cout<<"	pointInsideTriangle: "<<pointInsideTriangle<<endl;
+						if (pointInsideTriangle){
+							//if ((*itNode)->Id == 60 && ( (*itEle)->Id == 184 ||  (*itEle)->Id == 195 ) ) {cout<<" calculating force for  : "<<(*itEle)->Id<<endl;}
+							//the point is within packing distance, calculate packing force now:
+							//if dInNormalDir is negative, then the node penetrated the surface
+							// if this is the case, I do not calculate force via distance, I set distance to zero:
+							float d2;
+							if (dInNormalDir<0){
+								d2=0;
+							}
+							else{
+								d2 = dInNormalDir*dInNormalDir;
+							}
+							double averageMass = 0.5*((*itEle)->VolumePerNode + (*itNode)->mass);
+							//double Fmag = averageMass* multiplier * (1.0/d2 - 1.0/t2);
+							//double Fmag = averageMass* multiplier * (1.0 - (d2/t2));
+							double Fmag = averageMass* multiplier * (1.0 - pow((d2/t2),0.5));
+							//cout<<"	Fmag before capping: "<<Fmag<<endl;
+							CapPackingForce(Fmag);
+							//cout<<"	Fmag after capping: "<<Fmag<<endl;
+							double F[3] = {Fmag*normalForPacking[0],  Fmag*normalForPacking[1], Fmag*normalForPacking[2]};
+							//cout<<" packing force: "<<F[0]<<" "<<F[1]<<" "<<F[2]<<endl;
+							//if (PackingForces[126][2]> 0 ){
+							//	cout<<" force on 126 became non-zero via node, node Id: "<<(*itNode)->Id<<" prisim: "<<(*itEle)->Id<<endl;
+							//}
+							for(int i=0; i<3; ++i){
+								if ((*itNode)->FixedPos[i]){
+									F[i] = 0.0;
+									//if the node is fixed on  a certain axis, then do not reflect the force on the surface
+								}
+							}
+							bool allCornersFixed[3] = {false,false,false};
+							(*itEle)->AddPackingToSurface((*itNode)->tissuePlacement, F[0],F[1],F[2], PackingForces, Nodes, allCornersFixed[0], allCornersFixed[1], allCornersFixed[2]);
+							for(int i=0; i<3; ++i){
+								if (!allCornersFixed[i] && !(*itNode)->FixedPos[i]){
+									//only adding the force if I could reflect it on a surface and the node is not fixed (already made it zero above, keeping here as a reminder
+									PackingForces[(*itNode)->Id][i] += F[i];
+								}
+							}
+
+							//if (PackingForces[126][2]> 0 ){
+							///	cout<<" force on 126 is non-zero after surface addition, node Id: "<<(*itNode)->Id<<" node tissue placement: "<<(*itNode)->tissuePlacement<<" has lateral owner? "<<(*itNode)->hasLateralElementOwner<<" prisim: "<<(*itEle)->Id<<" element tissue type: "<<(*itEle)->tissueType<<endl;
+							//}
+							pushedBySurface = true;
+						}
+					}
+				}
+			}
+			int closestNode  = -1000;
+			double currMinDist2 = 1000;
+			double closestNodeVec[3];
+			if (!pushedBySurface){
+				//find closest node, if any edge is closer than the node, it will pack:
+				int n = edgeNodeData0.size();
+				bool isNodeChecked[(const int) n];
+				bool isEdgeChecked[(const int) n];
+				for( int i = 0; i<n; ++i){
+					isNodeChecked[i] = false;
+					isEdgeChecked[i] = false;
+				}
+				for( int i = 0; i<n; ++i){
+					bool isNeig = (*itNode)->checkIfNeighbour(edgeNodeData0[i]);
+					if (isNeig){
+						isNodeChecked[i] = true;
+						isEdgeChecked[i] = true;
+					}
+					else{
+						//check the other end of the edge:
+						isNeig = (*itNode)->checkIfNeighbour(edgeNodeData1[i]);
+						if (isNeig){
+								isEdgeChecked[i] = true;
+						}
+					}
+				}
+				//clear all the nodes and corresponding edges that are my immeditate neigs:
+
+				for (int i=0; i<n; ++i){
+					//looping over the nodes
+					if (!isNodeChecked[i]){ //do not double check the node if it has been checked previously
+						int node0 = edgeNodeData0[i];
+						//go over all nodes in the list (after this one) and mark all same id as checked:
+						for (int j=i; j<n; ++j){
+							if (edgeNodeData0[i] == edgeNodeData0[j]){
+								isNodeChecked[j] = true;
+							}
+						}
+						//calculate distace:
+						double dx = (*itNode)->Position[0] - Nodes[node0]->Position[0];
+						double dy = (*itNode)->Position[1] - Nodes[node0]->Position[1];
+						double dz = (*itNode)->Position[2] - Nodes[node0]->Position[2];
+						double d2 = dx*dx +  dy*dy  + dz*dz ;
+						if (d2 < currMinDist2){
+							currMinDist2 = d2;
+							closestNode = node0;
+							closestNodeVec[0] = dx;
+							closestNodeVec[1] = dy;
+							closestNodeVec[2] = dz;
+						}
+					}
+				}
+				//found closest node
+				//if ((*itNode)->Id == 78 ) {cout<<" checking edge packing for node : "<<(*itNode)->Id<<endl;}
+				//the node have not been pushed by nay of the surfaces, I need to check if it is being pushed by edges:
+				n = edgeNormalDataX.size();
+				for (int i=0; i<n; ++i){
+					//looping over the normals vectors
+					for (int j =0; j<3; ++j){
+						//three node couples recorded for each node data point
+						if (!isEdgeChecked[3*i+j]){ //do not double check the edge if it has been checked previously
+							double normal1[3] = {0.0,0.0,1.0};
+							int node0 = edgeNodeData0[3*i+j];
+							int node1 = edgeNodeData1[3*i+j];
+							double normal0[3] = {edgeNormalDataX[i],edgeNormalDataY[i],edgeNormalDataZ[i]};
+							bool secondNormalFound = false;
+							isEdgeChecked[3*i+j] = true;
+							//I need to start looing at the nodes that are after this triplet, to find the second occurace of this edge:
+							for (int k=i+1; k<n; ++k){
+								if (!isEdgeChecked[3*k] && (edgeNodeData0[3*k] == node0 || edgeNodeData0[3*k] == node1)){
+									if (edgeNodeData1[3*k] == node0 || edgeNodeData1[3*k] == node1){
+										normal1[0] = edgeNormalDataX[k];
+										normal1[1] = edgeNormalDataY[k];
+										normal1[2] = edgeNormalDataZ[k];
+										isEdgeChecked[3*k] = true;
+										secondNormalFound = true;
+										break;
+									}
+								}
+								if (!isEdgeChecked[3*k+1] && (edgeNodeData0[3*k+1] == node0 || edgeNodeData0[3*k+1] == node1)){
+									if (edgeNodeData1[3*k+1] == node0 || edgeNodeData1[3*k+1] == node1){
+										normal1[0] = edgeNormalDataX[k];
+										normal1[1] = edgeNormalDataY[k];
+										normal1[2] = edgeNormalDataZ[k];
+										isEdgeChecked[3*k+1] = true;
+										secondNormalFound = true;
+										break;
+									}
+								}
+								if (!isEdgeChecked[3*k+2] && (edgeNodeData0[3*k+2] == node0 || edgeNodeData0[3*k+2] == node1)){
+									if (edgeNodeData1[3*k+2] == node0 || edgeNodeData1[3*k+2] == node1){
+										normal1[0] = edgeNormalDataX[k];
+										normal1[1] = edgeNormalDataY[k];
+										normal1[2] = edgeNormalDataZ[k];
+										isEdgeChecked[3*k+2] = true;
+										secondNormalFound = true;
+										break;
+									}
+								}
+							}
+							if (!secondNormalFound){
+								//the edge is recorded only once, the second time is not recorded.
+								//the edge is either on the edge of the tissue, or it is at the symmetricity border
+								normal1[0] = normal0[0];
+								normal1[2] = normal0[2];
+								if (Nodes[node0]->atSymmetricityBorder && Nodes[node1]->atSymmetricityBorder){
+									normal1[1] = (-1.0)*normal0[1];
+								}
+								else{
+									normal1[1] = normal0[1];
+								}
+							}
+							//if ((*itNode)->Id == 78 ) {
+							//	cout<<" checking edge couple : "<<node0<<" "<<node1<<endl;
+							//	cout<<"normals: "<<normal0[0]<<" "<<normal0[1]<<" "<<normal0[2]<<" / "<<normal1[0]<<" "<<normal1[1]<<" "<<normal1[2]<<endl;
+							//}
+							//now I have normals from both sides for this edge
+							double v[3]; //vector from the edge to the point;
+							bool isPointOnEdge = checkIfPointIsOnEdge(node0, node1, pos[0], pos[1], pos[2], v[0], v[1], v[2]);
+							//if ((*itNode)->Id == 78 ) {
+							//	cout<<" is point on the edge? : "<<isPointOnEdge<<endl;
+							//}
+							if (isPointOnEdge){
+								double d2 = v[0]*v[0] +  v[1]*v[1] +  v[2]*v[2];
+								//if ((*itNode)->Id == 78 ) {
+								//	cout<<" point on the edge, distance squared is : "<<d2<<endl;
+								//}
+								if (d2 < t2 && d2 <currMinDist2){ // the edge is close enough to pack, and is also closer than the closest node:
+									//if ((*itNode)->Id == 78 ) {
+									//	cout<<"distance was close enough, nodes were: "<<node0<<" "<<node1<<endl;
+									//}
+									double d = pow(d2,0.5);
+									v[0] /= d;
+									v[1] /= d;
+									v[2] /= d;
+									//check if the direction is correct:
+									double dot = (normal0[0] + normal1[0])*v[0] + (normal0[1] + normal1[1])*v[1] + (normal0[2] + normal1[2])*v[2];
+									if (dot < 0 ){
+										//point penetrated into the elemetns, the pushing force should be inverted:
+										v[0] *= (-1.0);
+										v[1] *= (-1.0);
+										v[2] *= (-1.0);
+									}
+									//point close enough for packing:
+									double averageMass = 1.0/3.0 *( (*itNode)->mass + Nodes[node0]->mass + Nodes[node1]->mass );
+									//double Fmag = averageMass* multiplier * (1.0 - (d2/t2));
+									double Fmag = averageMass* multiplier * (1.0 - pow((d2/t2),0.5));
+									CapPackingForce(Fmag);
+									double F[3] = {Fmag*v[0],  Fmag*v[1], Fmag*v[2]};
+									//cout<<" packing force: "<<F[0]<<" "<<F[1]<<" "<<F[2]<<endl;
+									for(int i=0; i<3; ++i){
+										/*if (!(*itNode)->FixedPos[i]){
+											PackingForces[(*itNode)->Id][i] += F[i];
+										}
+										//add to the edges
+										if (!Nodes[node0]->FixedPos[i]){
+											PackingForces[node0][i] -= 0.5*F[i];
+										}
+										if (!Nodes[node1]->FixedPos[i]){
+											PackingForces[node1][i] -= 0.5*F[i];
+										}*/
+										if (!(*itNode)->FixedPos[i]){
+											//the node being checked for packing is not fixed on this axis, may add forces:
+											bool edgesFixed[2] = {Nodes[node0]->FixedPos[i], Nodes[node1]->FixedPos[i]};
+											if (!edgesFixed[0] && !edgesFixed[1]){
+												//both edges  are not fixed, add forces normally:
+												PackingForces[(*itNode)->Id][i] += F[i];
+												PackingForces[node0][i] -= 0.5*F[i];
+												PackingForces[node1][i] -= 0.5*F[i];
+											}
+											else if(!edgesFixed[0] || !edgesFixed[1]){
+												//at least one of the edges are not fixed, find which one, and add all the force on it:
+												PackingForces[(*itNode)->Id][i] += F[i];
+												if (!edgesFixed[0]){
+													PackingForces[node0][i] -= F[i];
+												}else {
+													PackingForces[node1][i] -= F[i];
+												}
+											}
+											//the other condition is that both edges are fixed, and the node should not be applying force in that direction
+										}
+									}
+									pushedByEdge = true;
+								}
+							}
+						}
+					}
+				}
+			}
+			//if ((*itNode)->Id == 78 ) {
+			//	cout<<" pushedByEdge? : "<<pushedByEdge<<endl;
+			//}
+			if(!pushedBySurface && !pushedByEdge){
+				//if ((*itNode)->Id == 78 ) {cout<<" checking node based packing for node : "<<(*itNode)->Id<<endl;}
+				//checking point to point:
+				if (currMinDist2 < t2 ){
+					//if ((*itNode)->Id == 211 ) {
+					//	cout<<" node 211 is packing to node : "<<closestNode<<endl;
+					//}
+					double d = pow(currMinDist2,0.5);
+					closestNodeVec[0] /= d;
+					closestNodeVec[1] /= d;
+					closestNodeVec[2] /= d;
+					//point close enough for packing:
+					double averageMass = 1.0/2.0 *( (*itNode)->mass + Nodes[closestNode]->mass );
+					//double Fmag = averageMass* multiplier * (1.0 - (currMinDist2/t2));
+					double Fmag = averageMass* multiplier * (1.0 - pow((currMinDist2/t2),0.5));
+					CapPackingForce(Fmag);
+					double F[3] = {Fmag*closestNodeVec[0],  Fmag*closestNodeVec[1], Fmag*closestNodeVec[2]};
+							//cout<<" packing force: "<<F[0]<<" "<<F[1]<<" "<<F[2]<<endl;
+					for(int i=0; i<3; ++i){
+						//if (!(*itNode)->FixedPos[i]){
+						//	PackingForces[(*itNode)->Id][i] += F[i];
+						//}
+						//add to the edges
+						//if (!Nodes[closestNode]->FixedPos[i]){
+						//	PackingForces[closestNode][i] -= F[i];
+						//}
+						//if both the packing node and the corresponding node are not fixed:
+						if (!(*itNode)->FixedPos[i] && !Nodes[closestNode]->FixedPos[i]){
+							PackingForces[closestNode][i] -= F[i];
+						}
+					}
+				}
+			}
+			if ((*itNode)->Id == 211 ) {cout<<"node 211: packing to surf: "<<pushedBySurface<<" packing to edge: "<<pushedByEdge<<endl;}
+		}
+	}
+}
+
+bool Simulation::checkIfPointIsOnEdge(int node0, int node1, double x, double y, double z, double& vx, double& vy, double& vz){
+	double vec0[3] = {Nodes[node1]->Position[0] - Nodes[node0]->Position[0], Nodes[node1]->Position[1] - Nodes[node0]->Position[1], Nodes[node1]->Position[2]- Nodes[node0]->Position[2]};
+	double vec1[3] = {x - Nodes[node0]->Position[0], y - Nodes[node0]->Position[1], z- Nodes[node0]->Position[2]};
+	//if ((node0 == 202 || node0 == 220) && (node1==202 || node1 == 220) ){
+	//	cout<<"vec of edge: "<<vec0[0]<<" "<<vec0[1]<<" "<<vec0[2]<<" vec from "<<node0<<" to curr node: " <<vec1[0]<<" "<<vec1[1]<<" "<<vec1[2]<<endl;
+	//}
+	//get length of edge and normalise edge vector
+	double v0Mag = pow(vec0[0]*vec0[0] + vec0[1]*vec0[1]+vec0[2]*vec0[2],0.5);
+	vec0[0] /= v0Mag;
+	vec0[1] /= v0Mag;
+	vec0[2] /= v0Mag;
+	//if ((node0 == 202 || node0 == 220) && (node1==202 || node1 == 220) ){
+	//	cout<<"vec of edge ("<<node0<<" - "<<node1<<") after normalisaiton: "<<vec0[0]<<" "<<vec0[1]<<" "<<vec0[1]<<" mag was:  "<<v0Mag<<endl;
+	//}
+	//dot product of normalised vec0 and vec1 should be positive, and should be smaller than the length of vec0:
+	double dot = vec0[0]*vec1[0] + vec0[1]*vec1[1] + vec0[2]*vec1[2];
+	//if ((node0 == 202 || node0 == 220) && (node1==202 || node1 == 220) ){
+	//	cout<<"dotp: "<<dot<<endl;
+	//}
+	if (dot > 0 && dot < v0Mag){
+		//the point falls within the edge,
+		//now record the normal vector from edge to point:
+		vx = vec1[0] - vec0[0]*dot;
+		vy = vec1[1] - vec0[1]*dot;
+		vz = vec1[2] - vec0[2]*dot;
+		return true;
+	}
+	vx = 0.0;
+	vy = 0.0;
+	vz = 0.0;
+	return false;
+}
+
+void Simulation::addToEdgeList(Node* nodePointer, ShapeBase* elementPointer, vector <int> & edgeNodeData0, vector <int> & edgeNodeData1 ){
+	int  E0Index = -1, E1Index = -1, E2Index = -1;
+	if (nodePointer->tissuePlacement == 0 ){ //checking basal surface,
+		if (elementPointer->tissueType == 0){ //element is columnar
+			E0Index = 0;
+			E1Index = 1;
+			E2Index = 2;
+		}
+		else{//element is periodial:
+			E0Index = 3;
+			E1Index = 4;
+			E2Index = 5;
+		}
+	}
+	else if (nodePointer->tissuePlacement  == 1 ){ //checking apical surface
+		if (elementPointer->tissueType == 0){ //element is columnar
+			E0Index = 3;
+			E1Index = 4;
+			E2Index = 5;
+		}
+		else{//element is periodial:
+			E0Index = 0;
+			E1Index = 1;
+			E2Index = 2;
+		}
+	}
+
+	edgeNodeData0.push_back(elementPointer->getNodeId(E0Index));
+	edgeNodeData1.push_back(elementPointer->getNodeId(E1Index));
+	edgeNodeData0.push_back(elementPointer->getNodeId(E0Index));
+	edgeNodeData1.push_back(elementPointer->getNodeId(E2Index));
+	edgeNodeData0.push_back(elementPointer->getNodeId(E1Index));
+	edgeNodeData1.push_back(elementPointer->getNodeId(E2Index));
+}
+
+void Simulation::addPackingForces(gsl_matrix* gExt){
+	double sumPack[3] = {0.0,0.0,0.0};
+	double sumPackPre[3] = {0.0,0.0,0.0};
+	double sumAv[3] = {0.0,0.0,0.0};
+	double sumgExt[3] = {0.0,0.0,0.0};
+
+	for (int j=0; j<nNodes; ++j){
+		//double Fx = 0.333* ( PackingForces[j][0] + PackingForcesPreviousStep[j][0] + PackingForcesTwoStepsAgoStep[j][0] );
+		//double Fy = 0.333* ( PackingForces[j][1] + PackingForcesPreviousStep[j][1] + PackingForcesTwoStepsAgoStep[j][1] );
+		//double Fz = 0.333* ( PackingForces[j][2] + PackingForcesPreviousStep[j][2] + PackingForcesTwoStepsAgoStep[j][2] );
+		double Fx = PackingForces[j][0];
+		double Fy = PackingForces[j][1];
+		double Fz = PackingForces[j][2];
+		
+		sumPack[0] += PackingForces[j][0];
+		sumPackPre[0] += PackingForcesPreviousStep[j][0];
+		sumAv[0] += Fx;
+		sumPack[1] += PackingForces[j][1];
+		sumPackPre[1] += PackingForcesPreviousStep[j][1];
+		sumAv[1] += Fy;
+		sumPack[2] += PackingForces[j][2];
+		sumPackPre[2] += PackingForcesPreviousStep[j][2];
+		sumAv[2] += Fz;
+
+		int indice = j*3;
+		Fx += gsl_matrix_get(gExt,indice,0);
+		gsl_matrix_set(gExt,indice,0,Fx);
+		Fy += gsl_matrix_get(gExt,indice+1,0);
+		gsl_matrix_set(gExt,indice+1,0,Fy);
+		Fz += gsl_matrix_get(gExt,indice+2,0);
+		gsl_matrix_set(gExt,indice+2,0,Fz);
+		sumgExt[0] += gsl_matrix_get(gExt,indice,0);
+		sumgExt[1] += gsl_matrix_get(gExt,indice+1,0);
+		sumgExt[2] += gsl_matrix_get(gExt,indice+2,0);
+	}
+	cout<<" sum pack: "<<sumPack[0]<<" "<<sumPack[1]<<" "<<sumPack[2]<<" sumPre: "<<sumPackPre[0]<<" "<<sumPackPre[1]<<" "<<sumPackPre[2]<<" sum Av: "<<sumAv[0]<<" "<<sumAv[1]<<" "<<sumAv[2]<<endl;
+	cout<<" sum gExt: "<<sumgExt[0]<<" "<<sumgExt[1]<<" "<<sumgExt[2]<<endl;
+}
+
+/*
+void Simulation::calculatePacking2(double PeriThreshold, double ColThreshold){
 	//cout<<"inside calculate packing"<<endl;
 	double multiplier = 0.05; //just a term to scale the forces down
 	double threshold = 5;	 //packing forces start at 3 microns
@@ -3830,6 +4823,7 @@ void Simulation::calculatePacking(double PeriThreshold, double ColThreshold){
 	}
 	//cout<<"finalised calculate packing"<<endl;
 }
+*/
 
 void Simulation::updateElementPositions(){
 	vector<ShapeBase*>::iterator itElement;
@@ -3957,20 +4951,26 @@ void Simulation::calculateDVDistance(){
 	//outputFile<<"time: "<<timestep * dt<<" DV distance is: "<<dmag<<endl;
 }
 
-void Simulation::resetForces(){
+void Simulation::resetForces(bool resetPacking){
 	int dim = 3;
 	//n nodes
 	for (int j=0;j<nNodes;++j){
 		//3 dimensions
 		for (int k=0;k<dim;++k){
 			SystemForces[j][k]=0.0;
+			//packing forces should be reset at the beginning of the step, but not during NR iterations
+			if (resetPacking){
+				//PackingForcesTwoStepsAgoStep[j][k] = PackingForcesPreviousStep[j][k];
+				//PackingForcesPreviousStep[j][k] = PackingForces[j][k];
+				PackingForces[j][k]=0.0;
+			}
 			if (recordForcesOnFixedNodes){
 				FixedNodeForces[j][k]=0.0;
 			}
-			//PackingForces[j][k]=0.0;
 		}
 	}
 }
+
 
 void Simulation::calculateApicalSize(){
 	double sizeLim[2][2] = {{0.0,0.0},{0.0,0.0}};
@@ -4924,6 +5924,7 @@ void Simulation::setupYsymmetricity(){
 		if (Nodes[i]->Position[1]< yLimPos){
 			if (Nodes[i]->Position[1] > yLimNeg){
 				symmetricYBoundaryNodes.push_back(Nodes[i]);
+				Nodes[i]->atSymmetricityBorder = true;
 				fixY(Nodes[i]);
 			}
 			else{
@@ -4980,4 +5981,19 @@ void Simulation::ablateSpcific(){
 	Nodes[1]->FixedPos[2]= true;
 	Nodes[18]->FixedPos[1]= true;
 	Nodes[18]->FixedPos[2]= true;
+}
+
+void Simulation::pokeElement(int elementId, double dx, double dy, double dz){
+	cout<<" poking element: "<<elementId<<endl;
+	int* nodeIds = Elements[elementId]->getNodeIds();
+	int nNodes= Elements[elementId]->getNodeNumber();
+	for (int j=0; j<nNodes; ++j){
+		Nodes[nodeIds[j]]->Position[0] += dx;
+		Nodes[nodeIds[j]]->Position[1] += dy;
+		Nodes[nodeIds[j]]->Position[2] += dz;
+	}
+	vector<ShapeBase*>::iterator itElement;
+	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		(*itElement)->updatePositions(Nodes);
+    }
 }
