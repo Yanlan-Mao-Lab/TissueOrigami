@@ -54,6 +54,7 @@ public:
 	bool IsThisNodeMyBasal(int currNodeId);
 	double getElementHeight();
 	void AddPackingToSurface(int tissueplacementOfPackingNode, double Fx, double Fy,double Fz,  double **PackingForces,vector<Node*> &Nodes, bool& allCornersFixedX, bool& allCornersFixedY, bool& allCornersFixedZ);
+	void getRelevantNodesForPacking(int TissuePlacementOfPackingNode, int TissueTypeOfPackingNode, int& id1, int& id2, int& id3);
 	bool IsPointCloseEnoughForPacking(double* Pos,  float threshold, int TissuePlacementOfPackingNode, int TissueTypeOfPackingNode);
 	void calculateNormalForPacking(int tissuePlacementOfNormal);
 	void calculateApicalArea();

@@ -117,6 +117,12 @@ bool ModelInputObject::readParameters(){
 				 */
 				Success  = readShapeChangeOptions(parametersFile);
 			}
+			else if (currParameterHeader == "PlasticDeformationOptions:"){
+				/**
+				* Plastic deformation options through the private function ModelInputObject#readPlasticDeformationOptions
+				*/
+				Success  = readPlasticDeformationOptions(parametersFile);
+			}
 			else if (currParameterHeader == "MyosinOptions:"){
 				/**
 				 * Myosin concentrations and related parameters of the simulation through the private function ModelInputObject#readMyosinOptions
@@ -631,6 +637,85 @@ bool ModelInputObject::readManupulationParamters(ifstream& file){
 		cerr<<"Error in reading manipulations options, curr string: "<<currHeader<<", should have been: CurvatureDepthAtCentre(double-microns):" <<endl;
 		return false;
 	}
+	file >> currHeader;
+	if(currHeader == "AddSoftPeriphery(bool):"){
+		file >>Sim->softPeriphery;
+	}
+	else{
+		cerr<<"Error in reading manipulations options, curr string: "<<currHeader<<", should have been: AddSoftPeriphery(bool):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "SoftPeripheryRange(double-microns):"){
+		file >>Sim->softDebth;
+	}
+	else{
+		cerr<<"Error in reading manipulations options, curr string: "<<currHeader<<", should have been: SoftPeripheryRange(double-microns):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "SoftnessFraction(double-fraction):"){
+		file >>Sim->softnessFraction;
+	}
+	else{
+		cerr<<"Error in reading manipulations options, curr string: "<<currHeader<<", should have been: SoftnessFraction(double-fraction):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "ApplyToApicalSurface(bool):"){
+		file >>Sim->softPeripheryBooleans[0];
+	}
+	else{
+		cerr<<"Error in reading manipulations options, curr string: "<<currHeader<<", should have been: ApplyToApicalSurface(bool):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "ApplyToBasalSurface(bool):"){
+		file >>Sim->softPeripheryBooleans[1];
+	}
+	else{
+		cerr<<"Error in reading manipulations options, curr string: "<<currHeader<<", should have been: ApplyToBasalSurface(bool):" <<endl;
+		return false;
+	}	file >> currHeader;
+	if(currHeader == "ApplyToColumnarLayer(bool):"){
+		file >>Sim->softPeripheryBooleans[2];
+	}
+	else{
+		cerr<<"Error in reading manipulations options, curr string: "<<currHeader<<", should have been: ApplyToColumnarLayer(bool):" <<endl;
+		return false;
+	}	file >> currHeader;
+	if(currHeader == "ApplyToPeripodialMembrane(bool):"){
+		file >>Sim->softPeripheryBooleans[3];
+	}
+	else{
+		cerr<<"Error in reading manipulations options, curr string: "<<currHeader<<", should have been: ApplyToPeripodialMembrane(bool):" <<endl;
+		return false;
+	}
+	//Reading Random Force Parameters
+	file >> currHeader;
+	if(currHeader == "AddRandomForce(bool):"){
+		file >>Sim->addingRandomForces;
+	}
+	else{
+		cerr<<"Error in reading manipulations options, curr string: "<<currHeader<<", should have been: AddRandomForce(bool):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "RandomForceMean(double):"){
+		file >>Sim->randomForceMean;
+	}
+	else{
+		cerr<<"Error in reading manipulations options, curr string: "<<currHeader<<", should have been: RandomForceMean(double):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "RandomForceVar(double):"){
+		file >>Sim->randomForceVar;
+	}
+	else{
+		cerr<<"Error in reading manipulations options, curr string: "<<currHeader<<", should have been: RandomForceVar(double):" <<endl;
+		return false;
+	}
 	return true;
 }
 
@@ -771,14 +856,21 @@ bool ModelInputObject::readPeripodialMembraneParameters(ifstream& file){
 		return false;
 	}
 	file >> currHeader;
-	if(currHeader == "PeripodialMembraneViscosity:"){
-		file >>Sim->PeripodialViscosity;
+	if(currHeader == "PeripodialMembraneApicalViscosity:"){
+		file >>Sim->PeripodialApicalVisc;
 	}
 	else{
-		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: PeripodialMembraneViscosity:" <<endl;
+		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: PeripodialMembraneApicalViscosity:" <<endl;
 		return false;
 	}
-
+	file >> currHeader;
+	if(currHeader == "PeripodialMembraneBasalViscosity:"){
+		file >>Sim->PeripodialBasalVisc;
+	}
+	else{
+		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: PeripodialMembraneBasalViscosity:" <<endl;
+		return false;
+	}
 	return true;
 }
 
@@ -982,6 +1074,35 @@ bool ModelInputObject::readShapeChangeOptions(ifstream& file){
 			cerr<<"Error in reading shape change type, please enter a valid type: {1}, current type: "<<type<<endl;
 			return false;
 		}
+	}
+	return true;
+}
+
+bool ModelInputObject::readPlasticDeformationOptions(ifstream& file){
+	string currHeader;
+	file >> currHeader;
+	if(currHeader == "ThereIsPlasticDeformation(bool):"){
+		file >> Sim->thereIsPlasticDeformation;
+	}
+	else{
+		cerr<<"Error in reading plastic deformation options, curr string: "<<currHeader<<", should have been: ThereIsPlasticDeformation(bool):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "VolumeConserved(bool):"){
+		file >> Sim->volumeConservedInPlasticDeformation;
+	}
+	else{
+		cerr<<"Error in reading plastic deformation options, curr string: "<<currHeader<<", should have been: VolumeConserved(bool):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "DeformationRate(FractionPerHour):"){
+		file >> Sim->plasticDeformationRate;
+	}
+	else{
+		cerr<<"Error in reading plastic deformation options, curr string: "<<currHeader<<", should have been: DeformationRate(FractionPerHour):" <<endl;
+		return false;
 	}
 	return true;
 }

@@ -34,7 +34,7 @@ public:
 	bool			hasLateralElementOwner;		///< The boolean stating if any lateral element uses this node
 	bool			atSymmetricityBorder;		///< The boolean stating if the node is at the border of symmetricity
 	//bool 			allOwnersAblated;			///< Boolean stating if the node is ablated. The node is ablated if all the elements making use of the node are ablated.
-	void setViscosity(double ApicalVisc,double BasalVisc, double PeripodialViscosity); ///< The function to set the viscosity of the node.
+	void setViscosity(double ApicalVisc,double BasalVisc, double PeripodialApicalVisc, double PeripodialBasalVisc);///< The function to set the viscosity of the node.
 	bool checkIfNeighbour(int IdToCheck); 				///< The function to check if the node with input Id (IdToCheck) is an immediate neighbour of the owner node
 	bool checkIfNodeHasPacking();						///< The function to check if the node is eligible for packing.
 	void getCurrentPosition(double* pos);				///< return the current position of the node

@@ -39,7 +39,7 @@ class MainWindow : public QMainWindow
     Simulation* Sim01;
 
 public slots:
-    void SelectedItemChange();
+    void 	SelectedItemChange();
     void	manualNodeSelection(const QString &);
     void 	manualElementSelection(const QString &);
     void 	ManualElementSelectionReset();
@@ -62,6 +62,11 @@ public slots:
     void  	updateColumnarLayerDisplayCheckBox(int s);
     void  	updateBoundingBoxCheckBox(int s);
     void  	updateOrthagonalPerspectiveViewToggle();
+    void  	updateToTopView();
+    void  	updateToFrontView();
+    void  	updateToSideView();
+    void  	updateToPerspectiveView();
+    void  	updateDrawSymmetricityViewToggle();
     void 	xClipChange(int);
     void 	yClipChange(int);
     void 	zClipChange(int);
@@ -84,6 +89,7 @@ public slots:
     void setMyosinComboBox(QGridLayout *DisplayOptionsGrid);
     void setPysPropDisplayMenu(QGridLayout *DisplayOptionsGrid);
     void setDisplayPreferences(QGridLayout *SelectionDisplayGrid);
+    void updateTimeText();
     void takeScreenshot();
     QWidget		*CentralWidget;
     QLineEdit 	*NameBox;
@@ -106,7 +112,14 @@ public slots:
     QComboBox 		*MyosinComboBox;
     QLabel			*SimTime;
     QPushButton		*PerspectiveButton;
+    QPushButton		*TopViewButton;
+    QPushButton		*FrontViewButton;
+    QPushButton		*SideViewButton;
+    QPushButton		*PerspectiveViewButton;
+    QPushButton		*SymmetricityDisplayButton;
     QSlider			*ClippingSliders[3];
+    QLineEdit 		*TimeBox;
+    QLabel 			*TimeTitle;
     //MacOS version:
     std::clock_t    simulationStartClock;
     bool            displayedSimulationLength;

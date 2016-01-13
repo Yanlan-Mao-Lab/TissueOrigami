@@ -27,19 +27,23 @@ private:
 	ofstream saveFileVelocities;
 	ofstream saveFileForces;
 	ofstream saveFileProteins;
+	ofstream saveFilePacking;
 	ofstream saveFileSimulationSummary;
 	ifstream saveFileToDisplayMesh;
 	ifstream saveFileToDisplayTenComp;
     ifstream saveFileToDisplayGrowth;
 	ifstream saveFileToDisplayForce;
 	ifstream saveFileToDisplayProteins;
+	ifstream saveFileToDisplayPacking;
 	ifstream saveFileToDisplayVel;
 	ifstream saveFileToDisplaySimSum;
+
 	bool TensionCompressionSaved;
     bool GrowthSaved;
 	bool ForcesSaved;
 	bool VelocitiesSaved;
 	bool ProteinsSaved;
+	bool PackingSaved;
 	int	 nCircumferencialNodes;
 	int dorsalTipIndex,ventralTipIndex,anteriorTipIndex,posteriorTipIndex;
 	double StretchDistanceStep;
@@ -79,6 +83,7 @@ private:
 	void updateTensionCompressionFromSave();
     void updateGrowthFromSave();
     void updateProteinsFromSave();
+    void updatePackingFromSave();
 	void readTensionCompressionToContinueFromSave();
     void readGrowthToContinueFromSave();
     void readProteinsToContinueFromSave();
@@ -101,7 +106,8 @@ private:
 	void getAverageSideLength(double& periAverageSideLength, double& colAverageSideLength);
 	bool isColumnarLayer3D();
 	bool calculateTissueHeight();
-	bool addPeripodialMembraneToTissue();
+	bool addStraightPeripodialMembraneToTissue();
+	bool addCurvedPeripodialMembraneToTissue();
 	void calculateDiscretisationLayers(double &hColumnar, int& LumenHeightDiscretisationLayers, double &hLumen, double &peripodialHeight, int& peripodialHeightDiscretisationLayers, double& hPeripodial);
 	void fillColumnarBasedNodeList(vector< vector<int> > &ColumnarBasedNodeArray, vector <int> &ColumnarCircumferencialNodeList);
 	void calculateNewNodePosForPeripodialNodeAddition(int nodeId0, int nodeId1, double* pos, double sideThickness);
@@ -152,6 +158,7 @@ private:
 	void writeTensionCompression();
     void writeGrowth();
 	void writeForces();
+	void writePacking();
 	void writeVelocities();
 	void writeProteins();
 	void calculateMyosinForces();
@@ -185,8 +192,10 @@ private:
     void manualPerturbationToInitialSetup(bool deform, bool rotate);
     void pokeElement(int elementId, double dx, double dy, double dz);
     void addCurvatureToColumnar(double h);
+    void addSoftPeriphery(double* fractions);
     void setupYsymmetricity();
     void ablateSpcific();
+
     //void setSymmetricNode(Node* currNode, double yLimPos);
 
 
@@ -222,7 +231,8 @@ public:
 	bool BasalNodeFix[3];
 	bool CircumferentialNodeFix[3][3]; //row 0: apical circumferece x,y,z ; row 1: basal circumference x,y,z; row 2: all circumference x,y,z
 	double PeripodialElasticity;
-	double PeripodialViscosity;
+	double PeripodialApicalVisc;
+	double PeripodialBasalVisc;
 	double PeripodialThicnessScale;
 	double PeripodialLateralThicnessScale; //the thickness of the side region linking two layers, as a fraction of tissue thickness
 	double lumenHeight;
@@ -235,11 +245,14 @@ public:
 	int nShapeChangeFunctions;
 	vector<GrowthFunctionBase*> ShapeChangeFunctions;
 
+	bool thereIsPlasticDeformation;
+	bool volumeConservedInPlasticDeformation;
+	double plasticDeformationRate;
+
 	int nMyosinFunctions;
 	vector<MyosinFunction*> myosinFunctions;
 	double kMyo;
 	double forcePerMyoMolecule;
-
 	bool addCurvatureToTissue;
 	double tissueCurvatureDepth;
 	vector <Node*> Nodes;
@@ -251,9 +264,13 @@ public:
 	double** PackingForcesPreviousStep;
 	double** PackingForcesTwoStepsAgoStep;
 	double** FixedNodeForces;
+	vector <double> randomForces;
+	double randomForceMean;
+	double randomForceVar;
 	double SystemCentre[3];
 	bool AddPeripodialMembrane;
     bool symmetricY;
+    bool addingRandomForces;
 	bool stretcherAttached;
 	vector <int> leftClampBorder;
 	vector <int> rightClampBorder;
@@ -281,9 +298,46 @@ public:
 	double boundingBox[2][3];
 	vector <int> pacingNodeCouples0;
 	vector <int> pacingNodeCouples1;
-	//double columnarBoundingBox[2][3];
-	//double peripodialBoundingBox[2][3];
+	vector <int> pacingNodeSurfaceList0; // this is the id of the base node that is packing
+	vector <int> pacingNodeSurfaceList1; // lists 1 to 3 are the edges of the triangle
+	vector <int> pacingNodeSurfaceList2;
+	vector <int> pacingNodeSurfaceList3;
+	vector <int> pacingNodeEdgeList0; // this is the id of the base node that is packing
+	vector <int> pacingNodeEdgeList1; // lists 1 to 2 are the nodes of the packing edge
+	vector <int> pacingNodeEdgeList2;
+	vector <int> pacingNodePointList0; // this is the id of the base node that is packing
+	vector <int> pacingNodePointList1; // list 1 is the packing node
 
+	vector <int> initialSignsSurfacex;
+	vector <int> initialSignsSurfacey;
+	vector <int> initialSignsSurfacez;
+	vector <int> initialSignsEdgex;
+	vector <int> initialSignsEdgey;
+	vector <int> initialSignsEdgez;
+	vector <int> initialSignsPointx;
+	vector <int> initialSignsPointy;
+	vector <int> initialSignsPointz;
+
+	vector <double> initialWeightSurfacex;
+	vector <double> initialWeightSurfacey;
+	vector <double> initialWeightSurfacez;
+	vector <double> initialWeightEdgex;
+	vector <double> initialWeightEdgey;
+	vector <double> initialWeightEdgez;
+	vector <double> initialWeightPointx;
+	vector <double> initialWeightPointy;
+	vector <double> initialWeightPointz;
+
+	double packingDetectionThreshold;
+	double packingThreshold;
+	//soft periphery parameters:
+	bool 	softPeriphery;
+	double 	softDebth;
+	double 	softnessFraction;
+	bool 	softPeripheryBooleans[4]; //  [applyToApical]  [applyToBasal]  [applyToColumnar]  [applyToPeripodial]
+
+
+	vector <double> drawingPointsX, drawingPointsY, drawingPointsZ;
 	Simulation();
 	~Simulation();
 	bool readExecutableInputs(int argc, char **argv);
@@ -304,6 +358,7 @@ public:
     void checkForExperimentalSetupsAfterIteration();
 	//void bakeTissue();
     void runOneStep();
+    void updatePlasticDeformation();
     void updateStepNR();
     void constructUnMatrix(gsl_matrix* un);
     void constructLumpedMassViscosityDtMatrix(gsl_matrix* mviscdt);
@@ -324,16 +379,25 @@ public:
     bool checkConvergenceViaForce(gsl_vector* gSum);
     void updateNodePositionsNR(gsl_matrix* uk);
     void calcutateFixedK(gsl_matrix* K, gsl_vector* g);
+    void calculateRandomForces();
+    void addRandomForces(gsl_matrix* gExt);
     void smallStrainrunOneStep();
     void packToPipetteWall();
     void calculatePacking2(double PeriThreshold, double ColThreshold);
     void addToEdgeList(Node* nodePointer, ShapeBase* elementPointer, vector <int> & edgeNodeData0, vector <int> & edgeNodeData1);
     bool checkIfPointIsOnEdge(int node0, int node1, double x, double y, double z, double& vx, double& vy, double& vz);
    	void detectPacingNodes();
+   	void detectPacingCombinations();
+   	void cleanUpPacingCombinations();
     void calculatePacking();
     void calculatePackingImplicit();
     void calculatePackingK(gsl_matrix* K);
     void calculatePackingNumerical(gsl_matrix* K);
+    void calculatePackingImplicit3D();
+    void calculatePackingNumerical3D(gsl_matrix* K);
+    void calculatePackingImplicit3DnotWorking();
+    void calculatePackingNumerical3DnotWorking(gsl_matrix* K);
+    void addValueToMatrix(gsl_matrix* K, int i, int j, double value);
     void addPackingForces(gsl_matrix* gExt);
 	void checkPackingToPipette(bool& packsToPip, double* pos, double* pipF,double mass, int id);
 	void getNormalAndCornerPosForPacking(Node* NodePointer, ShapeBase* ElementPointer, double* normalForPacking,double* posCorner);

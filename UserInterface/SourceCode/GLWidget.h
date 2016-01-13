@@ -33,6 +33,11 @@ using namespace std;
      void 		manualElementSelection(int i);
      void 		manualNodeSelection(int i);
      void		updateClipping();
+     void		updateToTopView();
+     void		updateToFrontView();
+     void		updateToSideView();
+     void		updateToPerspectiveView();
+     void		drawPointsForDisplay();
      bool 		ItemSelected;
      string 	SelectedItemName;
      int 		SelectedItemIndex;
@@ -61,6 +66,7 @@ using namespace std;
      bool		displayBoundingBox;
      bool       displayPipette;
      double  	xClip, yClip, zClip;
+     bool 		drawSymmetricity;
 
  signals:
  	 void SelectedItemChanged();
@@ -69,39 +75,40 @@ using namespace std;
 
  protected:
      void initializeGL();
-     void paintGL();
-     void resizeGL(int width, int height);
-     void mousePressEvent(QMouseEvent *event);
-     void mouseReleaseEvent(QMouseEvent *event);
-     void mouseMoveEvent(QMouseEvent *event);
-     void wheelEvent(QWheelEvent *event);
-     void ObjectSelection(QPoint LastPos);
-     void resetItemSelectionInfo(int source);
-     void findElement();
-     bool findElement(int i);
-     bool findNode(int i);
-     void getColourOfPoint(QPoint LastPos);
-     void drawForPicking ();
-     void generate3DObject();
-     void initialiseNodeColourList();
+     void 	paintGL();
+     void 	resizeGL(int width, int height);
+     void 	mousePressEvent(QMouseEvent *event);
+     void 	mouseReleaseEvent(QMouseEvent *event);
+     void 	mouseMoveEvent(QMouseEvent *event);
+     void 	wheelEvent(QWheelEvent *event);
+     void 	ObjectSelection(QPoint LastPos);
+     void 	resetItemSelectionInfo(int source);
+     void 	findElement();
+     bool 	findElement(int i);
+     bool 	findNode(int i);
+     void 	getColourOfPoint(QPoint LastPos);
+     void 	drawForPicking ();
+     void 	generate3DObject();
+     void 	initialiseNodeColourList();
 
      //Element drawing functions
-     bool checkIfDrawingElement(int i);
-     bool checkIfDrawingElementSymmetric(int i, bool symmetricX, bool symmetricY);
-     bool checkIfDrawingNode(int i);
-     void drawElement(int i, bool picking);
-     void highlightElement(int i);
-     void highlightNode(int i);
-     void drawReferenceElement(int i);
-     void drawPrism(int i, bool symmetricX, bool symmetricY);
-     void drawTriangle(int i);
-     void drawPrismForPicking(int i);
-     void drawTriangleForPicking(int i);
-     void drawReferencePrism(int i);
-     void drawReferenceTriangle(int i);
-     void highlightPrism(int i);
-     void highlightTriangle(int i);
-     void fillItemSelectionInfo(int i);
+     bool 	checkIfDrawingElement(int i);
+     bool 	checkIfDrawingElementSymmetric(int i, bool symmetricX, bool symmetricY);
+     bool 	checkIfDrawingNode(int i);
+     void 	drawElement(int i, bool picking);
+     void 	highlightElement(int i);
+     void 	highlightNode(int i);
+     void 	drawReferenceElement(int i);
+     void 	drawPrism(int i, bool symmetricX, bool symmetricY);
+     void 	drawTriangle(int i);
+     void 	drawPrismForPicking(int i);
+     void 	drawTriangleForPicking(int i);
+     void 	drawReferencePrism(int i);
+     void 	drawReferenceTriangle(int i);
+     void 	highlightPrism(int i);
+     void 	highlightTriangle(int i);
+     void 	fillItemSelectionInfo(int i);
+
 
 
  private:

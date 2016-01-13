@@ -90,6 +90,7 @@ using namespace std;
      xClip = 1000.0;
      yClip = 1000.0;
      zClip = 1000.0;
+     drawSymmetricity = true;
      cout<<"gl initiated"<<endl;
  }
 
@@ -115,7 +116,7 @@ using namespace std;
      GLfloat LineRange[2];
      glGetFloatv(GL_LINE_WIDTH_RANGE,LineRange);
      ReferenceLineThickness = (LineRange[1]-LineRange[0])/2.0;
-     MainShapeLineThickness = (LineRange[1]-LineRange[0])/5.0;
+     MainShapeLineThickness = (LineRange[1]-LineRange[0])/3.0;
      initialiseNodeColourList();
      DisplayStrains = false;
      glTranslatef( obj_pos[0], obj_pos[1], -obj_pos[2] );
@@ -168,7 +169,6 @@ using namespace std;
 	 glMultMatrixf(MatRot);
 	 glTranslatef( -Sim01->SystemCentre[0], -Sim01->SystemCentre[1], Sim01->SystemCentre[2]);
 
-
 	 if (ItemSelected){
 		 drawReferenceElement(SelectedItemIndex);
 		 highlightElement(SelectedItemIndex);
@@ -186,6 +186,7 @@ using namespace std;
 	 drawMyosin();
 	 drawBoundingBox();
      drawPipette();
+     drawPointsForDisplay();
 
 /*
 	glColor3f(0.8,0,0);
@@ -208,7 +209,7 @@ using namespace std;
 	}
 */
 
-	 DisplayFixedNodes= true;
+	 DisplayFixedNodes= false;
 	 if (DisplayFixedNodes){
 		 drawFixedNodes();
 	 }
@@ -244,6 +245,9 @@ using namespace std;
 
  bool GLWidget::checkIfDrawingElementSymmetric(int i, bool symmetricX, bool symmetricY){
 	 bool drawthisElement = true;
+	 if (!drawSymmetricity){
+		 return drawSymmetricity;
+	 }
 	 if (symmetricX){
 		 if (Sim01->Elements[i]->IsXSymmetricClippedInDisplay){
 			 drawthisElement = false;
@@ -609,7 +613,7 @@ void GLWidget::highlightNode(int i){
   }
 
  void GLWidget::getForceColour(float* OutputColour, float Data){
-	 double scale2[2] = {0,1000.0};
+	 double scale2[2] = {0,100.0};
 	 double r = (Data- scale2[0])/(scale2[1]-scale2[0]);
 	 //OutputColour[0] = r;
 	 //OutputColour[1] = 0.0;
@@ -1540,6 +1544,61 @@ bool GLWidget::findNode(int i){
 
  void GLWidget::drawPackForces(){
 	 if (drawPackingForces){
+		 //draw the connectivity list:
+         glColor3f(0.0,0.0,0.6);
+         glLineWidth(ReferenceLineThickness);
+		 int nPack = Sim01->pacingNodeCouples0.size();
+		 for (int aa=0; aa<nPack; ++aa){
+			 int id0 = Sim01->pacingNodeCouples0[aa];
+			 int id1 = Sim01->pacingNodeCouples1[aa];
+			 glBegin(GL_LINES);
+				glVertex3f(Sim01->Nodes[id0]->Position[0],Sim01->Nodes[id0]->Position[1],Sim01->Nodes[id0]->Position[2]);
+				glVertex3f(Sim01->Nodes[id1]->Position[0],Sim01->Nodes[id1]->Position[1],Sim01->Nodes[id1]->Position[2]);
+			 glEnd();
+		 }
+		 glColor3f(0.0,0.0,0.6);
+		 glLineWidth(ReferenceLineThickness);
+
+		 nPack = Sim01->pacingNodeSurfaceList0.size();
+		 for (int aa=0; aa<nPack; ++aa){
+			 int id0 = Sim01->pacingNodeSurfaceList0[aa];
+			 int id1 = Sim01->pacingNodeSurfaceList1[aa];
+			 int id2 = Sim01->pacingNodeSurfaceList2[aa];
+			 int id3 = Sim01->pacingNodeSurfaceList3[aa];
+			 double px = (Sim01->Nodes[id1]->Position[0] + Sim01->Nodes[id2]->Position[0] + Sim01->Nodes[id3]->Position[0])/3.0;
+			 double py = (Sim01->Nodes[id1]->Position[1] + Sim01->Nodes[id2]->Position[1] + Sim01->Nodes[id3]->Position[1])/3.0;
+			 double pz = (Sim01->Nodes[id1]->Position[2] + Sim01->Nodes[id2]->Position[2] + Sim01->Nodes[id3]->Position[2])/3.0;
+			 glBegin(GL_LINES);
+				glVertex3f(Sim01->Nodes[id0]->Position[0],Sim01->Nodes[id0]->Position[1],Sim01->Nodes[id0]->Position[2]);
+				glVertex3f(px,py,pz);
+			 glEnd();
+		 }
+		 nPack = Sim01->pacingNodeEdgeList0.size();
+		 for (int aa=0; aa<nPack; ++aa){
+			 int id0 = Sim01->pacingNodeEdgeList0[aa];
+			 int id1 = Sim01->pacingNodeEdgeList1[aa];
+			 int id2 = Sim01->pacingNodeEdgeList2[aa];
+			 double px = (Sim01->Nodes[id1]->Position[0] + Sim01->Nodes[id2]->Position[0])/2.0;
+			 double py = (Sim01->Nodes[id1]->Position[1] + Sim01->Nodes[id2]->Position[1])/2.0;
+			 double pz = (Sim01->Nodes[id1]->Position[2] + Sim01->Nodes[id2]->Position[2])/2.0;
+			 glBegin(GL_LINES);
+				glVertex3f(Sim01->Nodes[id0]->Position[0],Sim01->Nodes[id0]->Position[1],Sim01->Nodes[id0]->Position[2]);
+				glVertex3f(px,py,pz);
+			 glEnd();
+		 }
+		 nPack = Sim01->pacingNodePointList0.size();
+		 for (int aa=0; aa<nPack; ++aa){
+			 int id0 = Sim01->pacingNodePointList0[aa];
+			 int id1 = Sim01->pacingNodePointList1[aa];
+			 double px = Sim01->Nodes[id1]->Position[0] ;
+			 double py = Sim01->Nodes[id1]->Position[1];
+			 double pz = Sim01->Nodes[id1]->Position[2];
+			 glBegin(GL_LINES);
+				glVertex3f(Sim01->Nodes[id0]->Position[0],Sim01->Nodes[id0]->Position[1],Sim01->Nodes[id0]->Position[2]);
+				glVertex3f(px,py,pz);
+			 glEnd();
+		 }
+		 //draw arrows:
 		 double threshold2 = 1E-16;
 		 double minlength = 0.3, maxlength = 2;
 		 double minlength2 = minlength*minlength, maxlength2 = maxlength*maxlength;
@@ -1763,5 +1822,90 @@ bool GLWidget::findNode(int i){
 	glEnd();
  }
 
+ void GLWidget::updateToTopView(){
+	 //MatRot[0]  = 1.0; MatRot[1]  = 0.0; MatRot[2]  = 0.0; MatRot[3]  = 0.0;
+	 //MatRot[4]  = 0.0; MatRot[5]  = 1.0; MatRot[6]  = 0.0; MatRot[7]  = 0.0;
+	 //MatRot[8]  = 0.0; MatRot[9]  = 0.0; MatRot[10] = 1.0; MatRot[11] = 0.0;
+	 //MatRot[12] = 0.0; MatRot[13] = 0.0; MatRot[14] = 0.0; MatRot[15] = 1.0;
+	 Qcurr[0] = 1;
+	 Qcurr[1] = 0;
+	 Qcurr[2] = 0;
+	 Qcurr[3] = 0;
+	 normaliseCurrentRotationAngle(Qcurr);
+	 rotateMatrix();
+	 Qlast[0] = Qcurr[0];
+	 Qlast[1] = Qcurr[1];
+	 Qlast[2] = Qcurr[2];
+	 Qlast[3] = Qcurr[3];
+ }
 
+ void GLWidget::updateToFrontView(){
+	 //MatRot[0]  = 1.0; MatRot[1]  = 0.0; MatRot[2]  = 0.0; MatRot[3]  = 0.0;
+	 //MatRot[4]  = 0.0; MatRot[5]  = 0.0; MatRot[6]  = -1.0; MatRot[7]  = 0.0;
+	 //MatRot[8]  = 0.0; MatRot[9]  = 1.0; MatRot[10] = 0.0; MatRot[11] = 0.0;
+	 //MatRot[12] = 0.0; MatRot[13] = 0.0; MatRot[14] = 0.0; MatRot[15] = 1.0;
+	 Qcurr[0] = 0.707106;
+	 Qcurr[1] = -0.707106;
+	 Qcurr[2] = 0;
+	 Qcurr[3] = 0;
+	 normaliseCurrentRotationAngle(Qcurr);
+	 rotateMatrix();
+	 Qlast[0] = Qcurr[0];
+	 Qlast[1] = Qcurr[1];
+	 Qlast[2] = Qcurr[2];
+	 Qlast[3] = Qcurr[3];
+ }
+ void GLWidget::updateToSideView(){
+	 Qcurr[0] =  0.5;
+	 Qcurr[1] = -0.5;
+	 Qcurr[2] = -0.5;
+	 Qcurr[3] = -0.5;
+	 normaliseCurrentRotationAngle(Qcurr);
+	 rotateMatrix();
+	 Qlast[0] = Qcurr[0];
+	 Qlast[1] = Qcurr[1];
+	 Qlast[2] = Qcurr[2];
+	 Qlast[3] = Qcurr[3];
+
+ }
+
+ void GLWidget::updateToPerspectiveView(){
+	 Qcurr[0] =  0.839833 ;
+	 Qcurr[1] = -0.522297 ;
+	 Qcurr[2] = -0.013206;
+	 Qcurr[3] = -0.147352;
+	 normaliseCurrentRotationAngle(Qcurr);
+	 rotateMatrix();
+	 //cout<<"Qcurr: "<<Qcurr[0]<<" "<<Qcurr[1]<<" "<<Qcurr[2]<<" "<<Qcurr[3]<<endl;
+	 //cout<<"Qlast: "<<Qlast[0]<<" "<<Qlast[1]<<" "<<Qlast[2]<<" "<<Qlast[3]<<endl;
+ }
+
+ void GLWidget:: drawPointsForDisplay(){
+ 	int n = Sim01->drawingPointsX.size();
+ 	for (int i= 0; i<n; ++i){
+ 		float markerSize = 1.0;
+ 		double x = Sim01->drawingPointsX[i];
+ 		double y = Sim01->drawingPointsY[i];
+ 		double z[3] = {Sim01->drawingPointsZ[i]-markerSize,Sim01->drawingPointsZ[i]+markerSize,Sim01->drawingPointsZ[i]};
+ 		glColor3f(0.8,0.8,0.0);
+ 		glBegin(GL_TRIANGLES);
+ 			for (int k =0; k<2; ++k){glVertex3f( x, y, z[k]);}
+ 			glVertex3f( x+markerSize, y, z[2]);
+ 			for (int k =0; k<2; ++k){glVertex3f( x, y, z[k]);}
+ 			glVertex3f( x-markerSize, y, z[2]);
+ 			for (int k =0; k<2; ++k){glVertex3f( x, y, z[k]);}
+ 			glVertex3f( x, y+markerSize, z[2]);
+ 			for (int k =0; k<2; ++k){glVertex3f( x, y, z[k]);}
+ 			glVertex3f( x, y-markerSize, z[2]);
+ 			for (int k =0; k<2; ++k){glVertex3f( x, y, z[k]);}
+ 			glVertex3f( x+markerSize, y+markerSize, z[2]);
+ 			for (int k =0; k<2; ++k){glVertex3f( x, y, z[k]);}
+ 			glVertex3f( x+markerSize, y-markerSize, z[2]);
+ 			for (int k =0; k<2; ++k){glVertex3f( x, y, z[k]);}
+ 			glVertex3f( x-markerSize, y+markerSize, z[2]);
+ 			for (int k =0; k<2; ++k){glVertex3f( x, y, z[k]);}
+ 			glVertex3f( x-markerSize, y-markerSize, z[2]);
+ 		glEnd();
+ 	}
+ }
 

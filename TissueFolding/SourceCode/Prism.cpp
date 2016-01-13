@@ -120,6 +120,10 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
     gsl_matrix_set_identity(Fsc);
     InvFsc = gsl_matrix_calloc(3,3);
     gsl_matrix_set_identity(InvFsc);
+    Fplastic  = gsl_matrix_calloc(3,3);
+    gsl_matrix_set_identity(Fplastic);
+    invFplastic  = gsl_matrix_calloc(3,3);
+    gsl_matrix_set_identity(invFplastic);
     growthIncrement = gsl_matrix_calloc(3,3);
     gsl_matrix_set_identity(growthIncrement);
     TriPointF = gsl_matrix_calloc(3,3);
@@ -163,6 +167,8 @@ Prism::~Prism(){
     gsl_matrix_free(InvFg);
     gsl_matrix_free(Fsc);
     gsl_matrix_free(InvFsc);
+    gsl_matrix_free(Fplastic);
+    gsl_matrix_free(invFplastic);
     gsl_matrix_free(TriPointF);
     gsl_matrix_free(Strain);
     gsl_matrix_free(TriPointKe);
@@ -189,6 +195,8 @@ Prism::~Prism(){
     delete[] invJShapeFuncDerStack;
     delete[] invJShapeFuncDerStackwithFe;
     delete[] elasticStress;
+    delete[] Fplastic;
+    delete[] invFplastic;
 }
 
 void Prism::setCoeffMat(){
@@ -461,7 +469,8 @@ void Prism::calculateCurrTriPointFForRotation(gsl_matrix *currF,int pointNo){
 void Prism::calculateCurrNodalForces(gsl_matrix *currg, gsl_matrix *currF, int pointNo){
     const int n = nNodes;
     const int dim = nDim;
-    gsl_matrix* currFscFe = gsl_matrix_alloc(dim,dim);
+    gsl_matrix* currFeFpFsc = gsl_matrix_alloc(dim,dim);
+    gsl_matrix* currFeFp = gsl_matrix_alloc(dim,dim);
     gsl_matrix* currFe = gsl_matrix_alloc(dim,dim);
     gsl_matrix* CurrShape = gsl_matrix_alloc(n,dim);
 
@@ -484,8 +493,10 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currg, gsl_matrix *currF, int p
 
 
     //calculating Fe:
-    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currF, InvFg, 0.0, currFscFe);	///< Removing growth
-    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currFscFe, InvFsc, 0.0, currFe);	///< Removing shape change
+    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currF, InvFg, 0.0, currFeFpFsc);	///< Removing growth
+    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currFeFpFsc, InvFsc, 0.0, currFeFp);	///< Removing shape change
+    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currFeFp, invFplastic, 0.0, currFe);	///< Removing shape change
+
 
 	gsl_matrix* currFeT = gsl_matrix_alloc(dim, dim);
     gsl_matrix_transpose_memcpy(currFeT,currFe);
@@ -499,10 +510,9 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currg, gsl_matrix *currF, int p
     //calculating stress (stress = detFe^-1 Fe S Fe^T):
     gsl_matrix_set_zero(elasticStress[pointNo]);
     gsl_matrix* compactStress  = calculateCompactStressForNodalForces(currFe,S,currFeT, elasticStress[pointNo]);
-    //displayMatrix(E,"E");
+
     //cout<<"pointNo: "<<pointNo<<endl;
     //displayMatrix(compactStress,"compactStress");
-    //displayMatrix(currFe,"Fe");
     //displayMatrix(S,"S");
     //Now from stress, I will calculate nodal forces via B.
     //Calculating the inverse Jacobian stack matrix:
@@ -551,7 +561,8 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currg, gsl_matrix *currF, int p
 
     //freeing the matrices allocated in this function
     gsl_matrix_free(currFeT);
-    gsl_matrix_free(currFscFe);
+    gsl_matrix_free(currFeFp);
+    gsl_matrix_free(currFeFpFsc);
     gsl_matrix_free(E);
     gsl_matrix_free(S);
     gsl_matrix_free(compactStress);
@@ -908,6 +919,37 @@ void Prism::calculateNormalForPacking(int tissuePlacementOfNormal){
 	delete[] u;
 }
 
+
+void Prism::getRelevantNodesForPacking(int TissuePlacementOfPackingNode, int TissueTypeOfPackingNode, int& id1, int& id2, int& id3){
+	if (TissuePlacementOfPackingNode == 0){
+		//tissue placement of the node is basal, should check it against basal surface nodes only
+		if(tissueType == 0){ //element is columnar, the basal nodes are nodes 0-2:
+			id1 = NodeIds[0];
+			id2 = NodeIds[1];
+			id3 = NodeIds[2];
+		}
+		else{
+			//element is peripodial, the basal nodes are 3-5
+			id1 = NodeIds[3];
+			id2 = NodeIds[4];
+			id3 = NodeIds[5];
+		}
+	}
+	else if (TissuePlacementOfPackingNode == 1){
+		//tissue placement of the node is apical, should check it against apical surface nodes  only
+		if(tissueType == 0){ //element is columnar, the apical nodes are nodes 3-5:
+			id1 = NodeIds[3];
+			id2 = NodeIds[4];
+			id3 = NodeIds[5];
+		}
+		else{
+			//element is peripodial, the  the apical nodes are nodes 0-2:
+			id1 = NodeIds[0];
+			id2 = NodeIds[1];
+			id3 = NodeIds[2];
+		}
+	}
+}
 
 bool Prism::IsPointCloseEnoughForPacking(double* Pos,  float threshold, int TissuePlacementOfPackingNode, int TissueTypeOfPackingNode){
 	int initial =0, final = 6;

@@ -796,6 +796,41 @@ void 	ShapeBase::growShapeByFg(double dt){
 	//if (Id == 38) {displayMatrix(Fg,"element38Fg");}
 }
 
+void	ShapeBase::calculatePlasticDeformation(bool volumeConserved, double rate){
+	gsl_matrix* TriPointFe = gsl_matrix_calloc(3,3);
+	gsl_matrix* FplasticIncrement = gsl_matrix_calloc(3,3);
+    gsl_matrix_set_identity(FplasticIncrement);
+    gsl_matrix_set_identity(TriPointFe);
+	double weights[3] = {1.0/3.0,1.0/3.0,1.0/3.0};
+	for (int iter =0; iter<3;++iter){
+		gsl_matrix* currFe =  gsl_matrix_calloc(3,3);
+		createMatrixCopy(currFe,FeMatrices[iter]);
+		gsl_matrix_scale(currFe,weights[iter]);
+		gsl_matrix_add(TriPointFe, currFe);
+	}
+	gsl_matrix_scale(TriPointFe,rate);
+	gsl_matrix_set(FplasticIncrement,0,0, gsl_matrix_get(TriPointFe,0,0));
+	gsl_matrix_set(FplasticIncrement,1,1, gsl_matrix_get(TriPointFe,1,1));
+	gsl_matrix_set(FplasticIncrement,2,2, gsl_matrix_get(TriPointFe,2,2));
+	gsl_matrix* temp = gsl_matrix_calloc(3,3);
+    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, FplasticIncrement, Fplastic, 0.0, temp);
+    gsl_matrix_memcpy(Fplastic, temp);
+	if (volumeConserved){
+		//need to write volume conservation here;
+		double oneOverDetFplastic = 1.0/determinant3by3Matrix(Fplastic);
+		gsl_matrix_scale(Fplastic,oneOverDetFplastic);
+	}
+	gsl_matrix * tmpFplasticForInversion = gsl_matrix_calloc(3,3);
+	createMatrixCopy(tmpFplasticForInversion,Fplastic);
+	bool inverted = InvertMatrix(tmpFplasticForInversion, invFplastic);
+	if (!inverted){
+		cerr<<"Fplastic not inverted!!"<<endl;
+	}
+	gsl_matrix_free(FplasticIncrement);
+    gsl_matrix_free(TriPointFe);
+    gsl_matrix_free(temp);
+    gsl_matrix_free(tmpFplasticForInversion);
+}
 
 void 	ShapeBase::CalculateGrowthRotationByF(){
     gsl_matrix* rotMat = gsl_matrix_alloc(3,3);
@@ -837,7 +872,7 @@ bool 	ShapeBase::disassembleRotationMatrixForZ(gsl_matrix* rotMat){
     //                          r31 r32 r33]
     //The rotations in X, Y and Z are calculated as follows:
     // tethaX = atan2(r32,r33);
-    // tethaY = atan2(-r31, sqrt(r32 * r32 + r33 * r33)
+    // tethaY = atan2(-r31, sqrt(r32 * r32 + r33 * r33))
     // tethaZ = atan2(r21,r11)
     // then Rx = [ 1              0              0
     //             0              cos(tethaX)   -sin(tethaX)

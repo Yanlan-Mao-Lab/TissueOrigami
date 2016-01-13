@@ -53,7 +53,8 @@ SOURCES       = SourceCode/main.cpp \
 		../TissueFolding/SourceCode/ShapeBase.cpp \
 		../TissueFolding/SourceCode/Simulation.cpp \
 		../TissueFolding/SourceCode/Node.cpp \
-		../TissueFolding/SourceCode/ModelInputObject.cpp moc_MainWindow.cpp \
+		../TissueFolding/SourceCode/ModelInputObject.cpp \
+		../TissueFolding/SourceCode/RandomGenerator.cpp moc_MainWindow.cpp \
 		moc_GLWidget.cpp
 OBJECTS       = main.o \
 		MainWindow.o \
@@ -64,6 +65,7 @@ OBJECTS       = main.o \
 		Simulation.o \
 		Node.o \
 		ModelInputObject.o \
+		RandomGenerator.o \
 		moc_MainWindow.o \
 		moc_GLWidget.o
 DIST          = /opt/Qt5.2.1/5.2.1/gcc_64/mkspecs/features/spec_pre.prf \
@@ -425,7 +427,7 @@ qmake_all: FORCE
 
 dist: 
 	@test -d .tmp/TissueFoldingUI1.0.0 || mkdir -p .tmp/TissueFoldingUI1.0.0
-	$(COPY_FILE) --parents $(SOURCES) $(DIST) .tmp/TissueFoldingUI1.0.0/ && $(COPY_FILE) --parents SourceCode/MainWindow.h SourceCode/GLWidget.h ../TissueFolding/SourceCode/GrowthFunctionBase.h ../TissueFolding/SourceCode/GrowthFunctionTypes.h ../TissueFolding/SourceCode/ModelInputObject.h ../TissueFolding/SourceCode/Node.h ../TissueFolding/SourceCode/Prism.h ../TissueFolding/SourceCode/ReferenceShapeBase.h ../TissueFolding/SourceCode/ShapeBase.h ../TissueFolding/SourceCode/Simulation.h .tmp/TissueFoldingUI1.0.0/ && $(COPY_FILE) --parents SourceCode/main.cpp SourceCode/MainWindow.cpp SourceCode/GLWidget.cpp ../TissueFolding/SourceCode/Prism.cpp ../TissueFolding/SourceCode/ReferenceShapeBase.cpp ../TissueFolding/SourceCode/ShapeBase.cpp ../TissueFolding/SourceCode/Simulation.cpp ../TissueFolding/SourceCode/Node.cpp ../TissueFolding/SourceCode/ModelInputObject.cpp .tmp/TissueFoldingUI1.0.0/ && (cd `dirname .tmp/TissueFoldingUI1.0.0` && $(TAR) TissueFoldingUI1.0.0.tar TissueFoldingUI1.0.0 && $(COMPRESS) TissueFoldingUI1.0.0.tar) && $(MOVE) `dirname .tmp/TissueFoldingUI1.0.0`/TissueFoldingUI1.0.0.tar.gz . && $(DEL_FILE) -r .tmp/TissueFoldingUI1.0.0
+	$(COPY_FILE) --parents $(SOURCES) $(DIST) .tmp/TissueFoldingUI1.0.0/ && $(COPY_FILE) --parents SourceCode/MainWindow.h SourceCode/GLWidget.h ../TissueFolding/SourceCode/GrowthFunctionBase.h ../TissueFolding/SourceCode/GrowthFunctionTypes.h ../TissueFolding/SourceCode/ModelInputObject.h ../TissueFolding/SourceCode/MyosinFunction.h ../TissueFolding/SourceCode/Node.h ../TissueFolding/SourceCode/Prism.h ../TissueFolding/SourceCode/RandomGenerator.h ../TissueFolding/SourceCode/ReferenceShapeBase.h ../TissueFolding/SourceCode/ShapeBase.h ../TissueFolding/SourceCode/Simulation.h .tmp/TissueFoldingUI1.0.0/ && $(COPY_FILE) --parents SourceCode/main.cpp SourceCode/MainWindow.cpp SourceCode/GLWidget.cpp ../TissueFolding/SourceCode/Prism.cpp ../TissueFolding/SourceCode/ReferenceShapeBase.cpp ../TissueFolding/SourceCode/ShapeBase.cpp ../TissueFolding/SourceCode/Simulation.cpp ../TissueFolding/SourceCode/Node.cpp ../TissueFolding/SourceCode/ModelInputObject.cpp ../TissueFolding/SourceCode/RandomGenerator.cpp .tmp/TissueFoldingUI1.0.0/ && (cd `dirname .tmp/TissueFoldingUI1.0.0` && $(TAR) TissueFoldingUI1.0.0.tar TissueFoldingUI1.0.0 && $(COMPRESS) TissueFoldingUI1.0.0.tar) && $(MOVE) `dirname .tmp/TissueFoldingUI1.0.0`/TissueFoldingUI1.0.0.tar.gz . && $(DEL_FILE) -r .tmp/TissueFoldingUI1.0.0
 
 
 clean:compiler_clean 
@@ -899,6 +901,7 @@ moc_MainWindow.cpp: /opt/Qt5.2.1/5.2.1/gcc_64/include/QtGui/QtGui \
 		../TissueFolding/SourceCode/ReferenceShapeBase.h \
 		../TissueFolding/SourceCode/GrowthFunctionBase.h \
 		../TissueFolding/SourceCode/GrowthFunctionTypes.h \
+		../TissueFolding/SourceCode/MyosinFunction.h \
 		SourceCode/MainWindow.h
 	/opt/Qt5.2.1/5.2.1/gcc_64/bin/moc $(DEFINES) $(INCPATH) SourceCode/MainWindow.h -o moc_MainWindow.cpp
 
@@ -1357,6 +1360,7 @@ moc_GLWidget.cpp: /opt/Qt5.2.1/5.2.1/gcc_64/include/QtOpenGL/QGLWidget \
 		../TissueFolding/SourceCode/ReferenceShapeBase.h \
 		../TissueFolding/SourceCode/GrowthFunctionBase.h \
 		../TissueFolding/SourceCode/GrowthFunctionTypes.h \
+		../TissueFolding/SourceCode/MyosinFunction.h \
 		SourceCode/GLWidget.h
 	/opt/Qt5.2.1/5.2.1/gcc_64/bin/moc $(DEFINES) $(INCPATH) SourceCode/GLWidget.h -o moc_GLWidget.cpp
 
@@ -1823,6 +1827,7 @@ main.o: SourceCode/main.cpp /opt/Qt5.2.1/5.2.1/gcc_64/include/QtWidgets/QGraphic
 		../TissueFolding/SourceCode/ReferenceShapeBase.h \
 		../TissueFolding/SourceCode/GrowthFunctionBase.h \
 		../TissueFolding/SourceCode/GrowthFunctionTypes.h \
+		../TissueFolding/SourceCode/MyosinFunction.h \
 		SourceCode/GLWidget.h \
 		/opt/Qt5.2.1/5.2.1/gcc_64/include/QtOpenGL/QGLWidget \
 		/opt/Qt5.2.1/5.2.1/gcc_64/include/QtOpenGL/qgl.h \
@@ -2289,6 +2294,7 @@ MainWindow.o: SourceCode/MainWindow.cpp /opt/Qt5.2.1/5.2.1/gcc_64/include/QtGui/
 		../TissueFolding/SourceCode/ReferenceShapeBase.h \
 		../TissueFolding/SourceCode/GrowthFunctionBase.h \
 		../TissueFolding/SourceCode/GrowthFunctionTypes.h \
+		../TissueFolding/SourceCode/MyosinFunction.h \
 		SourceCode/GLWidget.h \
 		/opt/Qt5.2.1/5.2.1/gcc_64/include/QtOpenGL/QGLWidget \
 		/opt/Qt5.2.1/5.2.1/gcc_64/include/QtOpenGL/qgl.h \
@@ -2760,7 +2766,8 @@ GLWidget.o: SourceCode/GLWidget.cpp /opt/Qt5.2.1/5.2.1/gcc_64/include/QtGui/QtGu
 		../TissueFolding/SourceCode/Node.h \
 		../TissueFolding/SourceCode/ReferenceShapeBase.h \
 		../TissueFolding/SourceCode/GrowthFunctionBase.h \
-		../TissueFolding/SourceCode/GrowthFunctionTypes.h
+		../TissueFolding/SourceCode/GrowthFunctionTypes.h \
+		../TissueFolding/SourceCode/MyosinFunction.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o GLWidget.o SourceCode/GLWidget.cpp
 
 Prism.o: ../TissueFolding/SourceCode/Prism.cpp ../TissueFolding/SourceCode/Prism.h \
@@ -2788,7 +2795,9 @@ Simulation.o: ../TissueFolding/SourceCode/Simulation.cpp ../TissueFolding/Source
 		../TissueFolding/SourceCode/ReferenceShapeBase.h \
 		../TissueFolding/SourceCode/GrowthFunctionBase.h \
 		../TissueFolding/SourceCode/GrowthFunctionTypes.h \
-		../TissueFolding/SourceCode/Prism.h
+		../TissueFolding/SourceCode/MyosinFunction.h \
+		../TissueFolding/SourceCode/Prism.h \
+		../TissueFolding/SourceCode/RandomGenerator.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o Simulation.o ../TissueFolding/SourceCode/Simulation.cpp
 
 Node.o: ../TissueFolding/SourceCode/Node.cpp ../TissueFolding/SourceCode/Node.h
@@ -2800,8 +2809,12 @@ ModelInputObject.o: ../TissueFolding/SourceCode/ModelInputObject.cpp ../TissueFo
 		../TissueFolding/SourceCode/Node.h \
 		../TissueFolding/SourceCode/ReferenceShapeBase.h \
 		../TissueFolding/SourceCode/GrowthFunctionBase.h \
-		../TissueFolding/SourceCode/GrowthFunctionTypes.h
+		../TissueFolding/SourceCode/GrowthFunctionTypes.h \
+		../TissueFolding/SourceCode/MyosinFunction.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ModelInputObject.o ../TissueFolding/SourceCode/ModelInputObject.cpp
+
+RandomGenerator.o: ../TissueFolding/SourceCode/RandomGenerator.cpp ../TissueFolding/SourceCode/RandomGenerator.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o RandomGenerator.o ../TissueFolding/SourceCode/RandomGenerator.cpp
 
 moc_MainWindow.o: moc_MainWindow.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_MainWindow.o moc_MainWindow.cpp
@@ -2832,13 +2845,16 @@ install_sources: first FORCE
 	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/Simulation.cpp $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
 	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/Node.cpp $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
 	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/ModelInputObject.cpp $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
+	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/RandomGenerator.cpp $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
 	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/UserInterface/SourceCode/MainWindow.h $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
 	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/UserInterface/SourceCode/GLWidget.h $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
 	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/GrowthFunctionBase.h $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
 	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/GrowthFunctionTypes.h $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
 	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/ModelInputObject.h $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
+	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/MyosinFunction.h $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
 	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/Node.h $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
 	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/Prism.h $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
+	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/RandomGenerator.h $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
 	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/ReferenceShapeBase.h $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
 	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/ShapeBase.h $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
 	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/Simulation.h $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
@@ -2849,13 +2865,16 @@ uninstall_sources: FORCE
 	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/Simulation.h
 	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/ShapeBase.h
 	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/ReferenceShapeBase.h
+	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/RandomGenerator.h
 	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/Prism.h
 	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/Node.h
+	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/MyosinFunction.h
 	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/ModelInputObject.h
 	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/GrowthFunctionTypes.h
 	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/GrowthFunctionBase.h
 	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/GLWidget.h
 	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/MainWindow.h
+	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/RandomGenerator.cpp
 	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/ModelInputObject.cpp
 	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/Node.cpp
 	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/Simulation.cpp

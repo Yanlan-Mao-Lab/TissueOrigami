@@ -81,12 +81,15 @@ void MainWindow::generateControlPanel(){
 	setUpViewOptionsGrid(ViewOptionsGrid);
 	ControlPanelMainHBox->addLayout(ViewOptionsGrid,Qt::AlignBottom);
 
+
 	//Generating the quit button:
+	QHBoxLayout *BottomLineBox = new QHBoxLayout; // the bottom line will include quit button only for now
 	QPushButton	*QuitButton = new QPushButton("Quit",this);
 	QuitButton->setFixedWidth(100);
 	//Connecting the quit button to close slot of main window, this will call the destructor.
 	connect(QuitButton, SIGNAL(clicked()), this,SLOT(close()));
-	ControlPanelMainHBox->addWidget(QuitButton,0,Qt::AlignBottom| Qt::AlignRight);
+	BottomLineBox->addWidget(QuitButton,Qt::AlignBottom| Qt::AlignRight);
+	ControlPanelMainHBox->addLayout(BottomLineBox,Qt::AlignBottom);
 
     //Adding the control panel vertical box to the main grid of the main window.
 	MainGrid->addLayout(ControlPanelMainHBox,0,1,Qt::AlignLeft);
@@ -105,6 +108,11 @@ void MainWindow::setUpGLWidget(){
 	//cerr<<"From MainGLWIDGET: Element list size: "<<MainGLWidget->Sim01->Elements.size()<<endl;
 	//MainGrid->setStyleSheet("border: 1px solid red");
 	MainGrid->addWidget(MainGLWidget,0,0,Qt::AlignLeft);
+	//setting up time display:
+	QFont boldFont("SansSerif", 9, QFont::Bold,true);
+	TimeTitle = new QLabel("Simulation Time: 0 hr");
+	TimeTitle->setFont(boldFont);
+	MainGrid->addWidget(TimeTitle,0,0,Qt::AlignBottom| Qt::AlignRight);
 	MainGrid->setColumnStretch(0,10);
 }
 
@@ -201,8 +209,31 @@ void MainWindow::setUpViewOptionsGrid(QGridLayout *ViewOptionsGrid){
 	//Connecting the button to toggle function
 	connect(PerspectiveButton, SIGNAL(clicked()), this,SLOT(updateOrthagonalPerspectiveViewToggle()));
 	ViewOptionsGrid->addWidget(PerspectiveButton,4,0,1,1);
-
-
+	//Add button to switch to top view:
+	TopViewButton = new QPushButton("Top \n View",this);
+	connect(TopViewButton, SIGNAL(clicked()), this,SLOT(updateToTopView()));
+	TopViewButton->setFixedWidth(60);
+	ViewOptionsGrid->addWidget(TopViewButton,4,1,1,1);
+	//Add button to switch to front view:
+	FrontViewButton = new QPushButton("Front \n View",this);
+	connect(FrontViewButton, SIGNAL(clicked()), this,SLOT(updateToFrontView()));
+	FrontViewButton->setFixedWidth(60);
+	ViewOptionsGrid->addWidget(FrontViewButton,4,2,1,1);
+	//Add button to switch to side view:
+	SideViewButton = new QPushButton("Side \n View",this);
+	connect(SideViewButton, SIGNAL(clicked()), this,SLOT(updateToSideView()));
+	SideViewButton->setFixedWidth(60);
+	ViewOptionsGrid->addWidget(SideViewButton,4,3,1,1);
+	//Add button to switch symmetricity view:
+	SymmetricityDisplayButton = new QPushButton("Hide \n Symmetric",this);
+	connect(SymmetricityDisplayButton, SIGNAL(clicked()), this,SLOT(updateDrawSymmetricityViewToggle()));
+	SideViewButton->setFixedWidth(60);
+	ViewOptionsGrid->addWidget(SymmetricityDisplayButton,4,4,1,1);
+	//Add button to perspective view:
+	PerspectiveViewButton = new QPushButton("Perspective \n View",this);
+	connect(PerspectiveViewButton, SIGNAL(clicked()), this,SLOT(updateToPerspectiveView()));
+	PerspectiveViewButton->setFixedWidth(60);
+	ViewOptionsGrid->addWidget(PerspectiveViewButton,3,4,1,1);
 }
 
 void MainWindow::setMyosinComboBox(QGridLayout *ProjectDisplayOptionsGrid){
@@ -436,6 +467,35 @@ void  MainWindow::updateOrthagonalPerspectiveViewToggle(){
 	}
 }
 
+void  MainWindow::updateDrawSymmetricityViewToggle(){
+	//cout<<"button clicked, perspevctiveView: "<<MainGLWidget->PerspectiveView<<endl;
+	if (MainGLWidget->drawSymmetricity){
+		//the view was perspective, toggling to orthagonal, and changing the text in button for future toggle choice:
+		MainGLWidget->drawSymmetricity = false;
+		SymmetricityDisplayButton->setText("Show \n Symmetric");
+	}
+	else{
+		MainGLWidget->drawSymmetricity = true;
+		SymmetricityDisplayButton->setText("Hide \n Symmetric");
+	}
+}
+
+void  MainWindow::updateToTopView(){
+	MainGLWidget->updateToTopView();
+}
+
+void  MainWindow::updateToFrontView(){
+	MainGLWidget->updateToFrontView();
+}
+
+void  MainWindow::updateToSideView(){
+	MainGLWidget->updateToSideView();
+}
+
+void  MainWindow::updateToPerspectiveView(){
+	MainGLWidget->updateToPerspectiveView();
+}
+
 void  MainWindow::updateNetForceCheckBox(int s){
 	if ( s == 2 )
 		MainGLWidget->drawNetForces = true;
@@ -608,6 +668,15 @@ void MainWindow::updatePysPropSpinBoxes(double d){
 	//MainGLWidget->update();
 }
 
+void MainWindow::updateTimeText(){
+	double time = Sim01->timestep*Sim01->dt;
+	//round to two digits:
+	QString timeStringInSec = QString::number(time);
+	QString timeStringInHr = QString::number(time/3600.0, 'f', 2);
+	timeStringInSec = "Simulation Time: " + timeStringInHr + " hr ( "+ timeStringInSec + " sec, " + QString::number(Sim01->timestep) + " steps )"; ;
+	TimeTitle->setText(timeStringInSec);
+}
+
 void MainWindow::SelectedItemChange(){
 	//cerr<<"Main window saw the selection change"<<endl;
     QString tmpstring = QString::fromStdString(MainGLWidget->SelectedItemName);
@@ -670,7 +739,11 @@ void MainWindow::timerSimulationStep(){
 	if (Sim01->DisplaySave){
 		if(!Sim01->reachedEndOfSaveFile){
 			Sim01->updateOneStepFromSave();
-            QTime dieTime= QTime::currentTime().addSecs(1);
+			Sim01->fixNode0InPosition(34,0,0);
+			updateTimeText();
+			//cout<<" step: "<<Sim01->timestep<<"Node[0] pos: "<<Sim01->Nodes[0]->Position[0]<<" "<<Sim01->Nodes[0]->Position[1]<<" "<<Sim01->Nodes[0]->Position[2]<<endl;
+			//cout<<" step: "<<Sim01->timestep<<"Node[43] pos: "<<Sim01->Nodes[43]->Position[0]<<" "<<Sim01->Nodes[43]->Position[1]<<" "<<Sim01->Nodes[43]->Position[2]<<endl;
+			QTime dieTime= QTime::currentTime().addSecs(1);
             while( QTime::currentTime() < dieTime ){
 			    QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
             }
@@ -687,6 +760,9 @@ void MainWindow::timerSimulationStep(){
 			//cout<<"calling runonestep"<<endl;
 			//cout<<"dataSaveInterval before calling a step: " <<Sim01->dataSaveInterval<<endl;
 			Sim01->runOneStep();
+			updateTimeText();
+			//cout<<" step: "<<Sim01->timestep<<"Node[0] pos: "<<Sim01->Nodes[0]->Position[0]<<" "<<Sim01->Nodes[0]->Position[1]<<" "<<Sim01->Nodes[0]->Position[2]<<endl;
+			//cout<<" step: "<<Sim01->timestep<<"Node[43] pos: "<<Sim01->Nodes[43]->Position[0]<<" "<<Sim01->Nodes[43]->Position[1]<<" "<<Sim01->Nodes[43]->Position[2]<<endl;
 			bool slowsteps = false;
 			if (slowsteps){
 				QTime dieTime= QTime::currentTime().addSecs(3);

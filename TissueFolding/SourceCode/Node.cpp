@@ -56,27 +56,34 @@ Node::~Node(){
 }
 
 
-void Node::setViscosity(double ApicalVisc,double BasalVisc, double PeripodialVisc){
+void Node::setViscosity(double ApicalVisc,double BasalVisc, double PeripodialApicalVisc, double PeripodialBasalVisc){
 	/**
 	 *  This node will take in the apical columnar layer, basal columnar layer, and peripodial membrane viscosities of the tissue as inputs, respectively.
-	 *  The viscosity of the node will be assigned via its Node#tissuePlacement and Node#tissueType. The peripodial membrane is a 2D structure, and will
-	 *  not need to have the distinction between the apical and basal surfaces. On the columnar layer, nodes that are in the mid-zone of the tissue (neither on the
+	 *  The viscosity of the node will be assigned via its Node#tissuePlacement and Node#tissueType. On the columnar layer, nodes that are in the mid-zone of the tissue (neither on the
 	 *  apical nor on the basal surface, will take the average of the two values.
 	 */
-	if (tissueType == 1) {	//Peripodial Membrane node
-		Viscosity = PeripodialVisc;
+	double apicalV, basalV;
+	if (tissueType == 0){		//Columnar layer  node
+		apicalV = ApicalVisc;
+		basalV  = BasalVisc;
 	}
-	else{
-		if (tissuePlacement ==0){
-			Viscosity = BasalVisc;
-		}
-		else if (tissuePlacement ==1){
-			Viscosity = ApicalVisc;
-		}
-		else if (tissuePlacement == 2 || tissuePlacement == 3){
-			//middle or lateral node
-			Viscosity = (ApicalVisc + BasalVisc) /2.0;
-		}
+	else if (tissueType == 1) {	//Peripodial Membrane node
+		apicalV = PeripodialApicalVisc;
+		basalV  = PeripodialBasalVisc;
+	}
+	else { //linker zone
+		apicalV = 0.5*(ApicalVisc + PeripodialApicalVisc);
+		basalV  = 0.5*(BasalVisc + PeripodialBasalVisc);
+	}
+	if (tissuePlacement ==0){
+		Viscosity = basalV;
+	}
+	else if (tissuePlacement ==1){
+		Viscosity = apicalV;
+	}
+	else if (tissuePlacement == 2 || tissuePlacement == 3){
+		//middle or lateral node
+		Viscosity = (apicalV + basalV) /2.0;
 	}
 }
 

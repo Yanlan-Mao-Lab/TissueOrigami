@@ -56,6 +56,8 @@ protected:
     gsl_matrix **Bmatrices;
     gsl_matrix **CMatrices;
     gsl_matrix **FeMatrices;
+    gsl_matrix *Fplastic;
+    gsl_matrix *invFplastic;
     gsl_matrix **invJShapeFuncDerStack;
     gsl_matrix **invJShapeFuncDerStackwithFe;
     gsl_matrix **elasticStress;
@@ -258,12 +260,14 @@ public:
 	void 	calculateTriPointFForRatation();
     void 	growShapeByFg(double dt);
     void 	changeShapeByFsc(double dt);
+    void	calculatePlasticDeformation(bool volumeConserved, double rate);
 
 	virtual double getApicalSideLengthAverage(){return ParentErrorMessage("getApicalSideLengthAverage",0.0);};
 	virtual void getApicalTriangles(vector <int> &ApicalTriangles){ParentErrorMessage("getApicalTriangles");};
 	virtual int getCorrecpondingApical(int currNodeId){return ParentErrorMessage("getCorrecpondingApical", -100);};
 	virtual bool IsThisNodeMyBasal(int currNodeId){return ParentErrorMessage("IsThisNodeMyBasal", false);};
 	virtual double getElementHeight(){return ParentErrorMessage("getElementHeight", 0.0);};
+	virtual void getRelevantNodesForPacking(int TissuePlacementOfPackingNode, int TissueTypeOfPackingNode, int& id1, int& id2, int& id3){return ParentErrorMessage("getRelevantNodesForPacking");}
 	virtual bool IsPointCloseEnoughForPacking(double* Pos,  float threshold, int TissuePlacementOfPackingNode, int TissueTypeOfPackingNode){return ParentErrorMessage("IsPointCloseEnoughForPacking", false);};
 	virtual void calculateNormalForPacking(int tissuePlacementOfNormal){ParentErrorMessage("calculateNormalForPacking");};
 	virtual void AddPackingToSurface(int tissueplacement, double Fx, double Fy,double Fz, double **PackingForces, vector<Node*> &Nodes, bool& allCornersFixedX, bool& allCornersFixedY, bool& allCornersFixedZ){ParentErrorMessage("AddPackingToApicalSurface");};
