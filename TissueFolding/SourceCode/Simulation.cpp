@@ -7027,6 +7027,11 @@ void Simulation::calculateGrowthGridBased(GrowthFunctionBase* currGF){
 			}
 			(*itElement)->updateGrowthIncrement(columnarFgIncrement,peripodialFgIncrement);
     		delete[] reletivePos;
+    		if ((*itElement)->Id == 176){
+    			cout<<" the index for element 176 is: "<<IndexX<<" "<<IndexY<<" fracX "<< FracX<<" fracY "<< FracY<<endl;
+    			(*itElement)->displayMatrix(columnarFgIncrement,"columnarFgIncrement");
+    			(*itElement)->displayMatrix(peripodialFgIncrement,"peripodialFgIncrement");
+    		}
 		}
 		gsl_matrix_free(columnarFgIncrement);
 		gsl_matrix_free(peripodialFgIncrement);

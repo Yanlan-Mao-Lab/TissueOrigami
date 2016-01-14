@@ -326,6 +326,12 @@ public:
 				}
 				//cout<<" [i][j]: ["<<i<<"]["<<j<<"], Growth_x&y: "<<GrowthMatrix[i][j][0]<<" "<<GrowthMatrix[i][j][1]<<endl;
 				double AR = GrowthMatrix[i][j][0] / GrowthMatrix[i][j][1];
+				if (AR < 0 ){
+					//some of the growth rates have higher aspect ratio than their nuclei count, for instance, an aspect ratio of 5 with nuclei count 4
+					//then the tissue actually needs to actively shring in one direction while growing in the other.
+					//this will lead to a negative aspect ratio, and this extremely high aspect ratio would be eliminated by the threshold, as it would be less than the positive threshold.
+					AR *=-1.0;
+				}
 				if (AR < 1.0){
 					AR = 1/AR;
 				}
@@ -444,10 +450,17 @@ public:
 				else {AngleEliminated[2] = true;}
 				if (isAspectRatioOverOne( IndexX+1, IndexY+1)) {angles[3] = getXyShearAngleMatrixElement(IndexX+1, IndexY+1);}
 				else {AngleEliminated[3] = true;}
+				if ( IndexX == 8  && IndexY ==3){
+					cout<<" angles eliminated: "<<AngleEliminated[0]<<" "<<AngleEliminated[1]<<" "<<AngleEliminated[2]<<" "<<AngleEliminated[3]<<endl;
+					cout<<" angles prior to correction: "<<angles[0]<<" "<<angles[1]<<" "<<angles[2]<<" "<<angles[3]<<endl;
+				}
 				//bring all angles in the interval 0 - 180:
 				for (int i=0; i<4; ++i){
 					while (angles[i]<0){angles[i] += M_PI;}
 					while (angles[i]>M_PI){angles[i] -= M_PI;}
+				}
+				if ( IndexX == 8  && IndexY ==3){
+					cout<<" angles after interval correction: "<<angles[0]<<" "<<angles[1]<<" "<<angles[2]<<" "<<angles[3]<<endl;
 				}
 				//now I am bringing the angles to the vicinity of each other:
 				//selecting the base angle, the first one that was not eliminated will do:
@@ -457,43 +470,72 @@ public:
 				for (int i=0; i<4; ++i){
 					if(!AngleEliminated[i] && !angleSelected){
 						tet = angles[i];
+						angleSelected = true;
 					}
 					if (angleSelected){
 						selectedIndice = i;
 						break;
 					}
 				}
+				if ( IndexX == 8  && IndexY ==3){
+					cout<<" selected indice: "<<selectedIndice<<" tet: "<<tet<<endl;
+				}
 				//selected the first angle, now bring all the rest near this one:
 				//I keep a record if I need to flip the growths:
 				bool flipGrowth[4] = {false, false, false, false};
 				for (int i=selectedIndice; i<4; ++i){
-					double dtet = tet - angles[i];
-					if (dtet<0){
+					double dtet = angles[i] - tet; // angle from selected angle (tet) to current angle (angles[i]).
+					if ( IndexX == 8  && IndexY ==3){
+						cout<<" correcting angle : "<<i<<" dtet: "<<dtet<<endl;
+					}
+					if (dtet>0){
 						//selected tetha is larger than this angle:
-						if (dtet >= M_PI/4.0 && dtet < M_PI/2.0 ){
+						if (dtet >= M_PI/4.0 && dtet < 3.0*M_PI/4.0 ){
+							//the difference is between 45-135 degrees, I flip the growth, and rotate angle -90 degrees.
+							//The difference comes to the interval (-45) - 45
 							angles[i] = angles[i] - M_PI/2.0;
 							flipGrowth[i] = true;
 						}
-						else if (dtet >= M_PI/2.0){
+						else if (dtet >= 3.0*M_PI/4.0 && dtet< 5.0*M_PI/4.0 ){
+							//the difference is between 135-225 degrees, I only need to rotate -180 degrees,
+							//no flip necessary, the angle will fall into the interval (-45) - 45
 							angles[i] = angles[i] - M_PI;
-							if (angles[i] <= tet - M_PI/4.0 ){
-								angles[i] = angles[i] + M_PI/2.0;
-								flipGrowth[i] = true;
-							}
+						}
+						else if (dtet >= 5.0*M_PI/4.0 && dtet< 7.0*M_PI/4.0){
+							//the difference is between 225 and 315 degrees, I need to rotate and flip as in the first case.
+							//I need to rotate by -270 degrees to bring to the interval (-45) - 45
+							angles[i] = angles[i] - 6.0*M_PI/4.0;
+							flipGrowth[i] = true;
+						}
+						else if (dtet >= 7.0*M_PI/4.0){
+							//the difference is higher than 315 degrees. I need to rotate the angle by -360 degrees, and
+							//the difference will come into (-45) - 0 (as it cannot be higher than 360. No need to flip
+							angles[i] = angles[i] - 2.0*M_PI;
 						}
 					}
-					else{
+					else if (dtet<0){
 						//selected tetha is smaller than this angle:
-						if (dtet <= -M_PI/4.0 && dtet > -M_PI/2.0 ){
+						if (dtet <= -M_PI/4.0 && dtet > -3.0*M_PI/4.0 ){
+							//the difference is between (-45)- (-135) degrees, I flip the growth, and rotate angle +90 degrees.
+							//The difference comes to the interval (-45) - 45
 							angles[i] = angles[i] + M_PI/2.0;
 							flipGrowth[i] = true;
 						}
-						else if (dtet <= -M_PI/2.0){
+						else if (dtet <= -3.0*M_PI/4.0 && dtet > -5.0*M_PI/4.0 ){
+							//the difference is between (-135) - (-225) degrees, I only need to rotate +180 degrees,
+							//no flip necessary, the angle will fall into the interval (-45) - 45
 							angles[i] = angles[i] + M_PI;
-							if (angles[i] > tet + M_PI/4.0 ){
-								angles[i] = angles[i] - M_PI/2.0;
-								flipGrowth[i] = true;
-							}
+						}
+						else if (dtet <= -5.0*M_PI/4.0 && dtet > -7.0*M_PI/4.0){
+							//the difference is between (-225) and (-315) degrees, I need to rotate and flip as in the first case.
+							//I need to rotate by +270 degrees to bring to the interval (-45) - 45
+							angles[i] = angles[i] + 6.0*M_PI/4.0;
+							flipGrowth[i] = true;
+						}
+						else if (dtet <= -7.0*M_PI/4.0){
+							//the difference is less than (-315) degrees. I need to rotate the angle by +360 degrees, and
+							//the difference will come into 0 - 45 (as it cannot be lower than (-360). No need to flip
+							angles[i] = angles[i] + 2.0*M_PI;
 						}
 					}
 				}

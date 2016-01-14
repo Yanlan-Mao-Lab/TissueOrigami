@@ -351,8 +351,15 @@ void ShapeBase::calculateFgFromGridCorners(double dt, GrowthFunctionBase* currGF
 			gsl_matrix_free(rotMat);
 			gsl_matrix_free(rotMatT);
 		}
-		/*if (Id == 43 || Id == 1 || Id == 195 || Id == 152 || Id == 48 || Id == 71){
+		if ( Id == 176 ) {//|| Id == 1 || Id == 195 || Id == 152 || Id == 48 || Id == 71){
 			cout<<"Element: "<<Id<<endl;
+			cout<<" growth0: "<<growth0[0]<<" "<<growth0[1]<<" "<<growth0[2]<<endl;
+			cout<<" growth1: "<<growth1[0]<<" "<<growth1[1]<<" "<<growth1[2]<<endl;
+			cout<<" growth2: "<<growth2[0]<<" "<<growth2[1]<<" "<<growth2[2]<<endl;
+			cout<<" growth3: "<<growth3[0]<<" "<<growth3[1]<<" "<<growth3[2]<<endl;
+			cout<<" angles: "<<angles[0]<<" "<<angles[1]<<" "<<angles[2]<<" "<<angles[3]<<endl;
+			cout<<" angleEliminated: "<<angleEliminated[0]<<" "<<angleEliminated[1]<<" "<<angleEliminated[2]<<" "<<angleEliminated[3]<<endl;
+
 			cout<<"	angle: "<<angle<<" in degrees: "<<angle*180.0/M_PI<<" growth: "<<growth[0]<<" "<<growth[1]<<" "<<growth[2]<<endl;
 			cout<<"	pos base:  "<<Positions[0][0]<<" "<<Positions[0][1]<<" "<<Positions[0][2]<<endl;
 			cout<<"	        :  "<<Positions[1][0]<<" "<<Positions[1][1]<<" "<<Positions[1][2]<<endl;
@@ -366,7 +373,7 @@ void ShapeBase::calculateFgFromGridCorners(double dt, GrowthFunctionBase* currGF
 			for (int i=0; i<4; ++i){cout<<angleEliminated[i]<<" ";}
 			cout<<endl;
 			displayMatrix(increment,"currIncrement");
-		}*/
+		}
 	}
 	else{
 		gsl_matrix_set_identity(increment);

@@ -4,7 +4,7 @@ InputMeshParameters:
   symmetricInY(bool): 1
 
 PeripodialMembraneParameters:
-  AddPeripodialMembrane: 0
+  AddPeripodialMembrane: 1
   PeripodialMembraneThickness(fractionOfTissueHeight): 0.45
   PeripodialMembraneLateralThickness(fractionOfTissueHeight): 0.5
   LumenHeightScale(fractionOfTissueHeight): 0.25
@@ -34,12 +34,12 @@ Manipulations:
   RandomForceVar(double): 1E-5
  
 TimeParameters:
-  TimeStep(sec): 600
+  TimeStep(sec): 1800
   SimulationLength(sec):  147600
 
 PysicalProperties:
   YoungsModulusApical: 1000.0	YoungsModulusBasal: 1000.0	YoungsModulusMid: 1000.0	Noise(%-int): 0
-  PoissonsRatio: 0.0		Noise(%-int): 0
+  PoissonsRatio: 0.3		Noise(%-int): 0
   ApicalViscosity: 0.0 	Noise(%-int): 0
   BasalViscosity: 0.0
 
@@ -89,21 +89,21 @@ GrowthOptions:
   InitialTime(sec): 0
   FinalTime(sec):  57600
   ApplyToColumnarLayer(bool): 0
-  ApplyToPeripodialMembrane(bool): 0
+  ApplyToPeripodialMembrane(bool): 1
   Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/GrowthRatePeripodial-fromAngles-48-72-manualNucleiCount
 
   GrowthFunctionType(int-seeDocumentation): 3
   InitialTime(sec):  57600
   FinalTime(sec):  144000
-  ApplyToColumnarLayer(bool): 0
+  ApplyToColumnarLayer(bool): 1
   ApplyToPeripodialMembrane(bool): 0
   Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/GrowthRateDiscProper-fromAngles-64-88-manualNucleiCount
 
   GrowthFunctionType(int-seeDocumentation): 3
   InitialTime(sec): 57600
   FinalTime(sec):  144000
-  ApplyToColumnarLayer(bool): 1
-  ApplyToPeripodialMembrane(bool): 0
+  ApplyToColumnarLayer(bool): 0
+  ApplyToPeripodialMembrane(bool): 1
   Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/GrowthRatePeripodial-fromAngles-64-88-manualNucleiCount
 
 ShapeChangeOptions:
@@ -116,7 +116,7 @@ ShapeChangeOptions:
   MaxValue(fractionPerHour): 0.2888
 
 PlasticDeformationOptions:
-  ThereIsPlasticDeformation(bool): 1
+  ThereIsPlasticDeformation(bool): 0
   VolumeConserved(bool): 1
   DeformationRate(FractionPerHour): 0.5
 
