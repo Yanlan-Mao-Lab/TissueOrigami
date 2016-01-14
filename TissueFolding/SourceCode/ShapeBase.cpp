@@ -800,7 +800,7 @@ void	ShapeBase::calculatePlasticDeformation(bool volumeConserved, double rate){
 	gsl_matrix* TriPointFe = gsl_matrix_calloc(3,3);
 	gsl_matrix* FplasticIncrement = gsl_matrix_calloc(3,3);
     gsl_matrix_set_identity(FplasticIncrement);
-    gsl_matrix_set_identity(TriPointFe);
+    //gsl_matrix_set_identity(TriPointFe);
 	double weights[3] = {1.0/3.0,1.0/3.0,1.0/3.0};
 	for (int iter =0; iter<3;++iter){
 		gsl_matrix* currFe =  gsl_matrix_calloc(3,3);
@@ -808,18 +808,21 @@ void	ShapeBase::calculatePlasticDeformation(bool volumeConserved, double rate){
 		gsl_matrix_scale(currFe,weights[iter]);
 		gsl_matrix_add(TriPointFe, currFe);
 	}
-	gsl_matrix_scale(TriPointFe,rate);
-	gsl_matrix_set(FplasticIncrement,0,0, gsl_matrix_get(TriPointFe,0,0));
-	gsl_matrix_set(FplasticIncrement,1,1, gsl_matrix_get(TriPointFe,1,1));
-	gsl_matrix_set(FplasticIncrement,2,2, gsl_matrix_get(TriPointFe,2,2));
+	double p[3] = {gsl_matrix_get(TriPointFe,0,0),gsl_matrix_get(TriPointFe,1,1),gsl_matrix_get(TriPointFe,2,2)};
+	for (int i=0;i<3;++i){
+		p[i] -= 1.0;
+		p[i] *= rate;
+		p[i] += 1.0;
+		gsl_matrix_set(FplasticIncrement,i,i,p[i]);
+	}
+	if (volumeConserved){
+		double det = determinant3by3Matrix(FplasticIncrement);
+		double scale = 1.0/pow (det,1.0/3.0);
+		gsl_matrix_scale(FplasticIncrement,scale);
+	}
 	gsl_matrix* temp = gsl_matrix_calloc(3,3);
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, FplasticIncrement, Fplastic, 0.0, temp);
     gsl_matrix_memcpy(Fplastic, temp);
-	if (volumeConserved){
-		//need to write volume conservation here;
-		double oneOverDetFplastic = 1.0/determinant3by3Matrix(Fplastic);
-		gsl_matrix_scale(Fplastic,oneOverDetFplastic);
-	}
 	gsl_matrix * tmpFplasticForInversion = gsl_matrix_calloc(3,3);
 	createMatrixCopy(tmpFplasticForInversion,Fplastic);
 	bool inverted = InvertMatrix(tmpFplasticForInversion, invFplastic);
