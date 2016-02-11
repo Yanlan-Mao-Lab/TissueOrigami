@@ -185,6 +185,16 @@ bool ModelInputObject::readGrowthOptions(ifstream& file){
 		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: NumberofGrowthFunctions(int):" <<endl;
 		return false;
 	}
+	file >> currHeader;
+	if(currHeader == "GridGrowthsPinnedOnInitialMesh(bool):"){
+		bool tmpBool;
+		file >> tmpBool;
+		Sim->GridGrowthsPinnedOnInitialMesh = tmpBool;
+	}
+	else{
+		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: GridGrowthsPinnedOnInitialMesh(bool):" <<endl;
+		return false;
+	}
 	for (int i = 0; i<n; ++i){
 		file >> currHeader;
 		int type;

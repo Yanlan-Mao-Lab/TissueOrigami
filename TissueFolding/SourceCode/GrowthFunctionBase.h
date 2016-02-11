@@ -3,6 +3,8 @@
 
 #include <stdio.h>
 #include <iostream>
+#include <gsl/gsl_linalg.h>
+#include <gsl/gsl_blas.h>
 //#include <vector>
 using namespace std;
 

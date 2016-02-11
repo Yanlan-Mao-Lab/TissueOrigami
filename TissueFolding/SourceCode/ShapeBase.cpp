@@ -180,10 +180,20 @@ double ShapeBase::getColumnarness(){
 }
 
 
-void ShapeBase::getRelativePositionInTissueInGridIndex(int nGridX, int nGridY, double* reletivePos, int& IndexX, int& IndexY, double& FracX, double& FracY){
+void ShapeBase::getRelativePositionInTissueInGridIndex(int nGridX, int nGridY , int& IndexX, int& IndexY, double& FracX, double& FracY){
 	//cout<<"inside getRelativePositionInTissueInGridIndex"<<endl;
+	double* reletivePos = new double[2];
 	getRelativePosInBoundingBox(reletivePos);
 	convertRelativePosToGridIndex(reletivePos, IndexX, IndexY, FracX, FracY, nGridX, nGridY);
+	delete[] reletivePos;
+}
+
+void ShapeBase::getInitialRelativePositionInTissueInGridIndex(int nGridX, int nGridY, int& IndexX, int& IndexY, double& FracX, double& FracY){
+	double* reletivePos = new double[2];
+	getInitialRelativePosInBoundingBox(reletivePos);
+	convertRelativePosToGridIndex(reletivePos, IndexX, IndexY, FracX, FracY, nGridX, nGridY);
+	delete[] reletivePos;
+
 }
 
 bool ShapeBase::isGrowthRateApplicable( int sourceTissue, double& weight){
@@ -351,7 +361,7 @@ void ShapeBase::calculateFgFromGridCorners(double dt, GrowthFunctionBase* currGF
 			gsl_matrix_free(rotMat);
 			gsl_matrix_free(rotMatT);
 		}
-		if ( Id == 176 ) {//|| Id == 1 || Id == 195 || Id == 152 || Id == 48 || Id == 71){
+		/*if ( Id == 176 ) {//|| Id == 1 || Id == 195 || Id == 152 || Id == 48 || Id == 71){
 			cout<<"Element: "<<Id<<endl;
 			cout<<" growth0: "<<growth0[0]<<" "<<growth0[1]<<" "<<growth0[2]<<endl;
 			cout<<" growth1: "<<growth1[0]<<" "<<growth1[1]<<" "<<growth1[2]<<endl;
@@ -373,7 +383,7 @@ void ShapeBase::calculateFgFromGridCorners(double dt, GrowthFunctionBase* currGF
 			for (int i=0; i<4; ++i){cout<<angleEliminated[i]<<" ";}
 			cout<<endl;
 			displayMatrix(increment,"currIncrement");
-		}
+		}*/
 	}
 	else{
 		gsl_matrix_set_identity(increment);
@@ -418,6 +428,16 @@ void ShapeBase::getRelativePosInPeripodialBoundingBox(double* relativePos){
 void ShapeBase::getRelativePosInBoundingBox(double* relativePos){
 	relativePos[0] =  relativePosInBoundingBox[0];
 	relativePos[1] =  relativePosInBoundingBox[1];
+}
+
+void ShapeBase::setInitialRelativePosInBoundingBox(){
+	initialRelativePosInBoundingBox[0] = relativePosInBoundingBox[0];
+	initialRelativePosInBoundingBox[1] = relativePosInBoundingBox[1];
+}
+
+void ShapeBase::getInitialRelativePosInBoundingBox(double* relativePos){
+	relativePos[0] =  initialRelativePosInBoundingBox[0];
+	relativePos[1] =  initialRelativePosInBoundingBox[1];
 }
 
 void ShapeBase::convertRelativePosToGridIndex(double* relpos, int& indexX, int &indexY, double &fracX, double &fracY, int nGridX, int nGridY){
@@ -532,7 +552,7 @@ void 	ShapeBase::setTissueType(vector<Node*>& Nodes){
 		tissueType = 2;
 	}
 	else if (hasPeripodialNode){
-		//ASK LINKER ZONE BEFORE THIS, SOME LINKER ELEMENTS CAN HAVE LINKER NODES, NO COLUMNAR ELEMENT OR PERIPODIAL ELEMENT SHOULD HAVE A LINKER NODE
+		//ASK LINKER ZONE BEFORE THIS, SOME LINKER ELEMENTS CAN HAVE LINKER NODES AND OTHER TISSUE NODES, NO COLUMNAR ELEMENT OR PERIPODIAL ELEMENT SHOULD HAVE A LINKER NODE
 		tissueType = 1;
 		setGrowthWeightsViaTissuePlacement( 1.0);//default is set to be columnar, I will not set this for linkers, as they are set in the initiation of peripodial membrane
 	}
@@ -679,13 +699,28 @@ void 	ShapeBase::getStrain(int type, float &StrainMag){
 		StrainMag /= 3;
 	}
 	else if (type == 1){
+		//DV
         StrainMag = gsl_matrix_get(Strain,0,0);
 	}
 	else if (type == 2){
+		//AP
         StrainMag = gsl_matrix_get(Strain,1,0);
 	}
 	else if (type == 3){
+		//AB
         StrainMag = gsl_matrix_get(Strain,2,0);
+	}
+	else if (type == 4){
+		//xy
+        StrainMag = gsl_matrix_get(Strain,3,0);
+	}
+	else if (type == 5){
+		//yz
+        StrainMag = gsl_matrix_get(Strain,4,0);
+	}
+	else if (type == 3){
+		//xz
+        StrainMag = gsl_matrix_get(Strain,5,0);
 	}
 	else{
 		return;
@@ -931,6 +966,7 @@ bool 	ShapeBase::calculate3DRotMatFromF(gsl_matrix* rotMat){
     double det = determinant3by3Matrix(rotMat);
     if (det<0){
         cout<<"Error! Flipped element, Id: "<<Id<<endl;
+        isFlipped = true;
     }
     gsl_matrix_free (Sgsl);
     gsl_matrix_free (V);
@@ -948,7 +984,7 @@ bool 	ShapeBase::calculate3DRotMatFromF(gsl_matrix* rotMat){
             }
         }
     }
-    return false; //none of the off - diagonal terms of the matrix are above the threshold, the current rotation is only niumerical error.
+    return false; //none of the off - diagonal terms of the matrix are above the threshold, the current rotation is only numerical error.
 }
 
 void 	ShapeBase::calculateRelativePosInBoundingBox(double boundingBoxXMin, double boundingBoxYMin, double boundingBoxLength, double boundingBoxWidth){

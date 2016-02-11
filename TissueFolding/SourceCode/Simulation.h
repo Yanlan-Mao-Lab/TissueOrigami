@@ -99,12 +99,15 @@ private:
 	bool initiateMesh(int MeshType, int Row, int Column, float SideLength, float zHeight);
 	bool initiateMesh(int MeshType, string inputtype, float SideLength, float zHeight );
 	bool initiateMesh(int MeshType);
+	bool readInTissueWeights();
+	bool checkIfTissueWeightsRecorded();
 	bool generateColumnarCircumferenceNodeList(vector <int> &ColumnarCircumferencialNodeList);
 	void sortColumnarCircumferenceNodeList(vector <int> &ColumnarCircumferencialNodeList);
 	void clearCircumferenceDataFromSymmetricityLine();
 	//void removeSymmetryBorderFromColumnarCircumferenceNodeList(vector <int> &ColumnarCircumferencialNodeList);
 	void getAverageSideLength(double& periAverageSideLength, double& colAverageSideLength);
 	bool isColumnarLayer3D();
+	bool checkIfThereIsPeripodialMembrane();
 	bool calculateTissueHeight();
 	bool addStraightPeripodialMembraneToTissue();
 	bool addCurvedPeripodialMembraneToTissue();
@@ -238,6 +241,7 @@ public:
 	double lumenHeight;
 	double lumenHeightScale;
 	int nGrowthFunctions;
+	bool GridGrowthsPinnedOnInitialMesh;
 
 	vector <double***> GrowthMatrices;
 	vector<GrowthFunctionBase*> GrowthFunctions;
@@ -261,13 +265,15 @@ public:
 	int nNodes;
 	double** SystemForces;
 	double** PackingForces;
-	double** PackingForcesPreviousStep;
-	double** PackingForcesTwoStepsAgoStep;
+	//double** PackingForcesPreviousStep;
+	//double** PackingForcesTwoStepsAgoStep;
 	double** FixedNodeForces;
 	vector <double> randomForces;
 	double randomForceMean;
 	double randomForceVar;
 	double SystemCentre[3];
+	bool needPeripodialforInputConsistency;
+	bool thereIsPeripodialMembrane;
 	bool AddPeripodialMembrane;
     bool symmetricY;
     bool addingRandomForces;
@@ -357,7 +363,7 @@ public:
     void checkForExperimentalSetupsWithinIteration();
     void checkForExperimentalSetupsAfterIteration();
 	//void bakeTissue();
-    void runOneStep();
+    bool runOneStep();
     void updatePlasticDeformation();
     void updateStepNR();
     void constructUnMatrix(gsl_matrix* un);
@@ -411,6 +417,7 @@ public:
 	void updateOneStepFromSave();
 	void alignTissueDVToXPositive();
 	void alignTissueAPToXYPlane();
+	bool checkFlip();
 	void wrapUpAtTheEndOfSimulation();
 	void writeRelaxedMeshFromCurrentState();
 	void calculateDVDistance();

@@ -255,20 +255,23 @@ void MainWindow::setStrainDisplayMenu(QGridLayout *ProjectDisplayOptionsGrid){
 	StrainComboBox->addItem("Strain in DV");
 	StrainComboBox->addItem("Strain in AP");
 	StrainComboBox->addItem("Strain in AB");
+	StrainComboBox->addItem("Shear in xy");
+	StrainComboBox->addItem("Shear in yz");
+	StrainComboBox->addItem("Shear in xz");
 	StrainComboBox->setEnabled(false);
 	connect(StrainComboBox , SIGNAL(currentIndexChanged(int)),this,SLOT(updateStrain(int)));
 
     StrainSpinBoxes[0] = new  QDoubleSpinBox();
     StrainSpinBoxes[1] = new  QDoubleSpinBox();
     StrainSpinBoxes[0]->setRange( -1.0, -0.00 );
-    StrainSpinBoxes[0]->setSingleStep( 0.001 );
-    StrainSpinBoxes[0]->setValue ( -0.04 );
+    StrainSpinBoxes[0]->setSingleStep( 0.005 );
+    StrainSpinBoxes[0]->setValue ( -0.1 );
     StrainSpinBoxes[0]->setDecimals(5);
     StrainSpinBoxes[0]->setEnabled(false);
     StrainSpinBoxes[1]->setRange( 0.0, 1.0 );
-    StrainSpinBoxes[1]->setSingleStep( 0.001 );
-    StrainSpinBoxes[1]->setValue( 0.04 );
-    StrainSpinBoxes[1]->setDecimals(5);
+    StrainSpinBoxes[1]->setSingleStep( 0.005 );
+    StrainSpinBoxes[1]->setValue( 0.1 );
+    StrainSpinBoxes[1]->setDecimals(3);
     StrainSpinBoxes[1]->setEnabled(false);
     connect(StrainSpinBoxes[0], SIGNAL(valueChanged (double)), this, SLOT(updateStrainSpinBoxes(double)));
     connect(StrainSpinBoxes[1], SIGNAL(valueChanged (double)), this, SLOT(updateStrainSpinBoxes(double)));
@@ -759,7 +762,7 @@ void MainWindow::timerSimulationStep(){
 		if (Sim01->timestep < Sim01->SimLength){
 			//cout<<"calling runonestep"<<endl;
 			//cout<<"dataSaveInterval before calling a step: " <<Sim01->dataSaveInterval<<endl;
-			Sim01->runOneStep();
+			bool Success = Sim01->runOneStep();
 			updateTimeText();
 			//cout<<" step: "<<Sim01->timestep<<"Node[0] pos: "<<Sim01->Nodes[0]->Position[0]<<" "<<Sim01->Nodes[0]->Position[1]<<" "<<Sim01->Nodes[0]->Position[2]<<endl;
 			//cout<<" step: "<<Sim01->timestep<<"Node[43] pos: "<<Sim01->Nodes[43]->Position[0]<<" "<<Sim01->Nodes[43]->Position[1]<<" "<<Sim01->Nodes[43]->Position[2]<<endl;
@@ -772,6 +775,10 @@ void MainWindow::timerSimulationStep(){
 			}
 			if (Sim01->saveImages && Sim01->timestep%Sim01->imageSaveInterval == 0){
 				takeScreenshot();
+			}
+			if (Success == false ){
+				//there is a flipped element, I am not continuing simulation
+				Sim01->timestep = 2*Sim01->SimLength;
 			}
 		}
         else if(!displayedSimulationLength){

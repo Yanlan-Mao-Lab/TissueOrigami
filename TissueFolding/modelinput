@@ -1,10 +1,10 @@
 InputMeshParameters:
   MeshInputMode(int-seeDocumentation): 4
-  MeshFile(full-path):   /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Wind48hrSymY_03.mesh 
+  MeshFile(full-path):   /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Exp48hr_05.mesh
   symmetricInY(bool): 1
 
 PeripodialMembraneParameters:
-  AddPeripodialMembrane: 1
+  AddPeripodialMembrane: 0
   PeripodialMembraneThickness(fractionOfTissueHeight): 0.45
   PeripodialMembraneLateralThickness(fractionOfTissueHeight): 0.5
   LumenHeightScale(fractionOfTissueHeight): 0.25
@@ -21,21 +21,21 @@ NodeFixingOptions:
 
 Manipulations:
   AddCurvature(bool): 1
-  CurvatureDepthAtCentre(double-microns): 2.0
+  CurvatureDepthAtCentre(double-microns): -2.0
   AddSoftPeriphery(bool): 0
   SoftPeripheryRange(double-microns): 30.0
-  SoftnessFraction(double-fraction): 0.6
-  ApplyToApicalSurface(bool): 0
+  SoftnessFraction(double-fraction): 0.1
+  ApplyToApicalSurface(bool): 1
   ApplyToBasalSurface(bool): 0
-  ApplyToColumnarLayer(bool): 0
-  ApplyToPeripodialMembrane(bool): 0
+  ApplyToColumnarLayer(bool): 1
+  ApplyToPeripodialMembrane(bool): 1
   AddRandomForce(bool): 0
   RandomForceMean(double): 0.0
   RandomForceVar(double): 1E-5
  
 TimeParameters:
-  TimeStep(sec): 1800
-  SimulationLength(sec):  147600
+  TimeStep(sec): 1200
+  SimulationLength(sec):  147000
 
 PysicalProperties:
   YoungsModulusApical: 1000.0	YoungsModulusBasal: 1000.0	YoungsModulusMid: 1000.0	Noise(%-int): 0
@@ -50,61 +50,72 @@ SaveOptions:
   DataSaveInterval(sec):  1
 
 GrowthOptions:
-  NumberofGrowthFunctions(int): 7
-  GrowthFunctionType(int-seeDocumentation): 1
+  NumberofGrowthFunctions(int): 8
+  GridGrowthsPinnedOnInitialMesh(bool):	0
+  GrowthFunctionType(int-seeDocumentation): 2
   InitialTime(sec): 0
-  FinalTime(sec):  3600
+  FinalTime(sec):  86400
   ApplyToColumnarLayer(bool): 0
   ApplyToPeripodialMembrane(bool): 0
-  MaxValue(fractionPerHour-DV,AP,AB): 0.038179 0.0 0.0 
+  Centre:  -4.0 25.0
+  InnerRadius: 0.0
+  OuterRadius:  18.0
+  MaxValue(fractionPerHour-DV,AP,AB): 0.038262 0.033788 0.0 
   Angle(degrees): 0
 
   GrowthFunctionType(int-seeDocumentation): 1
-  InitialTime(sec): 1000000
+  InitialTime(sec): 100000
   FinalTime(sec):  86400
   ApplyToColumnarLayer(bool): 0
   ApplyToPeripodialMembrane(bool): 0
   MaxValue(fractionPerHour-DV,AP,AB): 0.0 0.69314718 0.0 
-  Angle(degrees): 20
+  Angle(degrees): 0
 
   GrowthFunctionType(int-seeDocumentation): 2
-  InitialTime(sec): 0
-  FinalTime(sec):  3600
+  InitialTime(sec): 10000
+  FinalTime(sec):  86400
   ApplyToColumnarLayer(bool): 0
   ApplyToPeripodialMembrane(bool): 0
-  Centre:  0.0 0.0
+  Centre:  9.0 0.0
   InnerRadius: 0.0
   OuterRadius:  20.0
-  MaxValue(fractionPerHour-DV,AP,AB): 0.038179 0.038179 0.0 
+  MaxValue(fractionPerHour-DV,AP,AB): 0.038262 0.033788 0.0 
   Angle(degrees): 0
 
   GrowthFunctionType(int-seeDocumentation): 3
   InitialTime(sec):  0
-  FinalTime(sec):  57600
+  FinalTime(sec):  86400
+  ApplyToColumnarLayer(bool): 0
+  ApplyToPeripodialMembrane(bool): 0
+  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/HalfTissue_Uniform
+
+  GrowthFunctionType(int-seeDocumentation): 3
+  InitialTime(sec):  0
+  FinalTime(sec):  86400
   ApplyToColumnarLayer(bool): 1
   ApplyToPeripodialMembrane(bool): 0
-  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/GrowthRateDiscProper-fromAngles-48-72-manualNucleiCount
+  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/Col_48-72_7-0
 
   GrowthFunctionType(int-seeDocumentation): 3
-  InitialTime(sec): 0
-  FinalTime(sec):  57600
+  InitialTime(sec):  0
+  FinalTime(sec):  86400
   ApplyToColumnarLayer(bool): 0
   ApplyToPeripodialMembrane(bool): 1
-  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/GrowthRatePeripodial-fromAngles-48-72-manualNucleiCount
+  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/Per_48-72_5-0
 
   GrowthFunctionType(int-seeDocumentation): 3
-  InitialTime(sec):  57600
+  InitialTime(sec):  86400
   FinalTime(sec):  144000
   ApplyToColumnarLayer(bool): 1
   ApplyToPeripodialMembrane(bool): 0
-  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/GrowthRateDiscProper-fromAngles-64-88-manualNucleiCount
+  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/Col_64-88_7-0
 
   GrowthFunctionType(int-seeDocumentation): 3
-  InitialTime(sec): 57600
+  InitialTime(sec): 86400
   FinalTime(sec):  144000
   ApplyToColumnarLayer(bool): 0
   ApplyToPeripodialMembrane(bool): 1
-  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/GrowthRatePeripodial-fromAngles-64-88-manualNucleiCount
+  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/Per_64-88_5-0
 
 ShapeChangeOptions:
   NumberofShapeChangeFunctions(int): 1
@@ -118,7 +129,7 @@ ShapeChangeOptions:
 PlasticDeformationOptions:
   ThereIsPlasticDeformation(bool): 0
   VolumeConserved(bool): 1
-  DeformationRate(FractionPerHour): 0.5
+  DeformationRate(FractionPerHour): 0.2
 
 MyosinOptions:
   NumberofMyosinFunctions(int): 2

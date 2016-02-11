@@ -27,6 +27,7 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
 	ApicalNormalForPacking =  new double[3];
 	BasalNormalForPacking =  new double[3];
 	relativePosInBoundingBox = new double[3];
+	initialRelativePosInBoundingBox = new double[3];
 	//columnarRelativePosInBoundingBox = new double[3];
 	//peripodialRelativePosInBoundingBox = new double[3];
 
@@ -52,6 +53,7 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
 		ApicalNormalForPacking[i] = 0;
 		BasalNormalForPacking[i] = 0;
 		relativePosInBoundingBox[i] = 0;
+		initialRelativePosInBoundingBox[i] = 0;
 		//columnarRelativePosInBoundingBox[i] =0;
 		//peripodialRelativePosInBoundingBox[i] =0;
 	}
@@ -60,6 +62,7 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
 	//CurrShapeChangeStrainsUpToDate = false;
 	//CurrGrowthStrainsUpToDate = false;
 	//IsGrowing = false;
+	isFlipped = false;
 	IsChangingShape = false;
 	//GrewInThePast = false;
 	//ChangedShapeInThePast = false;
@@ -150,6 +153,7 @@ Prism::~Prism(){
 	}
     delete[] Positions;
 	delete[] relativePosInBoundingBox;
+	delete[] initialRelativePosInBoundingBox;
     //delete[] columnarRelativePosInBoundingBox;
 	//delete[] peripodialRelativePosInBoundingBox;
     delete[] NodeIds;

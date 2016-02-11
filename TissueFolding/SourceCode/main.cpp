@@ -24,10 +24,17 @@ int main(int argc, char * argv[])
 	}
 	else{
 		Sim01->initiateSystem();
+		int n = Sim01->Elements.size();
+		for (int i=0; i<n; ++i){
+			Sim01->Elements[i]->updatePositions(Sim01->Nodes);
+		}
 		cout<<"Initiating simulation in the background"<<endl;
 		while (Sim01->timestep < Sim01->SimLength){
 			//cout<<"running step: "<<Sim01.timestep<<", this is time: "<<Sim01.timestep*Sim01.dt<<" sec"<<endl;
-			Sim01->runOneStep();
+			bool Success = Sim01->runOneStep();
+			if (Success == false ){
+				break;
+			}
 		}
 		Sim01->wrapUpAtTheEndOfSimulation();
 		Sim01->writeRelaxedMeshFromCurrentState();

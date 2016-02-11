@@ -19,6 +19,8 @@ Simulation::Simulation(){
 	timestep = 0;
 	reachedEndOfSaveFile = false;
 	AddPeripodialMembrane = false;
+	thereIsPeripodialMembrane = false;
+	needPeripodialforInputConsistency = false;
 	lumenHeight = -20;
 	boundingBoxSize[0]=1000.0; boundingBoxSize[1]=1000.0; boundingBoxSize[2]=1000.0;
 	//columnarBoundingBoxSize[0]=1000.0; columnarBoundingBoxSize[1]=1000.0; columnarBoundingBoxSize[2]=1000.0;
@@ -110,6 +112,7 @@ void Simulation::setDefaultParameters(){
 		}
 	}
 	nGrowthFunctions = 0;
+	GridGrowthsPinnedOnInitialMesh = false;
 	nShapeChangeFunctions = 0;
 	TensionCompressionSaved = true;
     GrowthSaved = true;
@@ -345,7 +348,7 @@ bool Simulation::readFinalSimulationStep(){
 	updateElementPositions();
 	calculateBoundingBox();
 	//calculateColumnarLayerBoundingBox();
-	//if (AddPeripodialMembrane){
+	//if (thereIsPeripodialMembrane){
 	//	calculatePeripodialBoundingBox();
 	//}
 	//bring the time step and data save stime steps to the main modelinput:
@@ -377,8 +380,8 @@ bool Simulation::checkInputConsistency(){
 	if (AddPeripodialMembrane == false){
 		for (int i=0; i<nGrowthFunctions; ++i){
 			if(GrowthFunctions[i]->applyToPeripodialMembrane){
-				cerr<<"There is no peripodial membrane, while growth function "<<i<<" is applicable to peropodial membrane"<<endl;
-				return false;
+				cerr<<"There is no peripodial membrane, while growth function "<<i<<" is applicable to peropodial membrane, further checks needed"<<endl;
+				needPeripodialforInputConsistency = true;
 			}
 		}
 	}
@@ -403,26 +406,43 @@ bool Simulation::initiateSystem(){
 	if (!Success){
 		return Success;
 	}
+	Success = checkIfThereIsPeripodialMembrane();
 	Success = calculateTissueHeight(); //Calculating how many layers the columnar layer has, and what the actual height is.
 	if (!Success){
 		return Success;
 	}
+	if (symmetricY){
+		 clearCircumferenceDataFromSymmetricityLine();
+	}
 	if (AddPeripodialMembrane){
-		 if (symmetricY){
-			 clearCircumferenceDataFromSymmetricityLine();
+		if (thereIsPeripodialMembrane){
+			Success = false;
+			cerr<<"Error-there is already peripodial membrane added to the mesh, but modelinput file asks to add another"<<endl;
 		}
-		//Success = addCurvedPeripodialMembraneToTissue();
-		Success = addStraightPeripodialMembraneToTissue();
+		else{
+			//Success = addCurvedPeripodialMembraneToTissue();
+			Success = addStraightPeripodialMembraneToTissue();
+			if (Success){
+				thereIsPeripodialMembrane = true;
+			}
+		}
+	}
+	if (needPeripodialforInputConsistency){
+		if (!thereIsPeripodialMembrane){
+			cerr<<"There is no peripodial membrane but at least one growth function desires one"<<endl;
+			Success = false;
+		}
 	}
 	if (addCurvatureToTissue){
 		addCurvatureToColumnar(tissueCurvatureDepth);
 	}
+	fillInNodeNeighbourhood();
 	checkForNodeFixing();
 	assignTips();
 	if (!Success){
 		return Success;
 	}
-	fillInNodeNeighbourhood();
+
 	initiateSystemForces();
 	calculateSystemCentre();
 	assignPhysicalParameters();
@@ -431,22 +451,14 @@ bool Simulation::initiateSystem(){
     calculateShapeFunctionDerivatives();
 	assignNodeMasses();
 	assignConnectedElementsAndWeightsToNodes();
-	//for (int i=0; i<nNodes;++i){
-	//	cout<<"Node: "<<i<<endl;
-	//	Nodes[i]->displayConnectedElementIds();
-	//	Nodes[i]->displayConnectedElementWeights();
-	//}
     alignTissueDVToXPositive();
     //alignTissueAPToXYPlane();
     calculateBoundingBox();
-    //calculateColumnarLayerBoundingBox();
-	//if (AddPeripodialMembrane){
-	//	calculatePeripodialBoundingBox();
-	//}
     calculateDVDistance();
     vector<ShapeBase*>::iterator itElement;
     for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
     	(*itElement)->calculateRelativePosInBoundingBox(boundingBox[0][0],boundingBox[0][1],boundingBoxSize[0],boundingBoxSize[1]);
+    	(*itElement)->setInitialRelativePosInBoundingBox();
     }
 	if (stretcherAttached){
 		setStretch();
@@ -1342,7 +1354,7 @@ void Simulation::updateOneStepFromSave(){
 	clearLaserAblatedSites();
 	calculateBoundingBox();
 	//calculateColumnarLayerBoundingBox();
-	//if (AddPeripodialMembrane){
+	//if (thereIsPeripodialMembrane){
 	//	calculatePeripodialBoundingBox();
 	//}
 	//skipping the footer:
@@ -1583,6 +1595,10 @@ bool Simulation::initiateMesh(int MeshType){
 		}
 		initiateNodesFromMeshInput();
 		initiateElementsFromMeshInput();
+		bool areTissueWeightsRecorded = checkIfTissueWeightsRecorded();
+		if (areTissueWeightsRecorded){
+			readInTissueWeights();
+		}
 		//addCurvatureToColumnar(5.0);
 		saveFileToDisplayMesh.close();
 	}
@@ -1591,6 +1607,21 @@ bool Simulation::initiateMesh(int MeshType){
 		return false;
 	}
 	return true;
+}
+
+bool Simulation::checkIfTissueWeightsRecorded(){
+	bool tissueWeightsRecorded;
+	saveFileToDisplayMesh >> tissueWeightsRecorded;
+	return tissueWeightsRecorded;
+}
+
+bool Simulation::readInTissueWeights(){
+	vector<ShapeBase*>::iterator itEle;
+	double wPeri;
+	for (itEle=Elements.begin(); itEle<Elements.end(); ++itEle){
+		saveFileToDisplayMesh >> wPeri;
+		(*itEle)->setGrowthWeightsViaTissuePlacement(wPeri); //peripodialness weight is recorded
+	}
 }
 
 bool Simulation::generateColumnarCircumferenceNodeList(	vector <int> &ColumnarCircumferencialNodeList){
@@ -1605,6 +1636,7 @@ bool Simulation::generateColumnarCircumferenceNodeList(	vector <int> &ColumnarCi
 	if (n<=0){
 		cerr<<"No circumferncial nodes indicated! Cannot generate PeripodialMembrane"<<endl;
 		AddPeripodialMembrane = false;
+		thereIsPeripodialMembrane = false;
 		return false;
 	}
 	return true;
@@ -1642,7 +1674,6 @@ void Simulation::clearCircumferenceDataFromSymmetricityLine(){
 				if (!atTip){
 					//removing node from list:
 					(*itNode)->atCircumference = false;
-
 				}
 			}
 		}
@@ -1770,7 +1801,7 @@ bool Simulation::calculateTissueHeight(){
 		vector<Node*>::iterator itNode;
 		bool foundNode = false;
 		for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-			if((*itNode)->tissuePlacement == 0){ //Node is basal
+			if((*itNode)->tissueType == 0 && (*itNode)->tissuePlacement == 0){ //Columnar node is basal
 				foundNode = true;
 				break;
 			}
@@ -1807,6 +1838,31 @@ bool Simulation::calculateTissueHeight(){
 			cout<<"The coulmanr layer is 2D, but the tissue height of the elements is not assigned properly, cannot obtain TissueHeight"<<endl;
 			return false;
 		}
+	}
+	if (thereIsPeripodialMembrane){
+		double columnarTop = -1000.0, peripodialbottom = 1000.0;
+		vector<Node*>::iterator itNode;
+		for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+			if ((*itNode)->tissueType == 0 ){
+				//columnar node
+				if ((*itNode)->tissuePlacement == 1){
+					//apical node:
+					if((*itNode)->Position[2]> columnarTop){
+						columnarTop = (*itNode)->Position[2];
+					}
+				}
+			}
+			else if ((*itNode)->tissueType == 1 ){
+				//peripodial node
+				if ((*itNode)->tissuePlacement == 0){
+					//basal node:
+					if((*itNode)->Position[2]< peripodialbottom){
+						peripodialbottom = (*itNode)->Position[2];
+					}
+				}
+			}
+		}
+		lumenHeight = columnarTop - peripodialbottom;
 	}
 	return true;
 }
@@ -2060,24 +2116,40 @@ void Simulation::checkForNodeFixing(){
 		vector<Node*>::iterator itNode;
 		for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
 			if ( (*itNode)->atCircumference){
-				//Node is at the circumference, now checking for all possibilities:
-				// if i == 0 , I am checking for apical circumference
-				// if i == 1 , I am checking for basal  circumference
-				// if i == 2 , I am checking for all    circumference
-				for (int i=0;i<3; ++i){
-					if ( (i == 0 && (*itNode)->tissuePlacement == 1 ) ||  //tissuePlacement == 1 is apical
-						 (i == 1 && (*itNode)->tissuePlacement == 0 ) ||  //tissuePlacement == 0 is basal
-						 (i == 2)){										  //tissuePlacement is irrelevant, fixing all
-
-						//The node is at circumference; if
-						if (CircumferentialNodeFix[i][0]){
-							fixX((*itNode));
+				//The node is at circumference, I would like to fix only the columnar side,
+				bool doNotFix = false;
+				if ((*itNode)->tissueType == 1){ //the node is peripodial, no not fix this node
+					doNotFix = true;
+				}
+				else if ((*itNode)->tissueType == 2){ //the node is linker (as will be the case for all circumference)
+					//I will check if any of its neigs are peripodial:
+					int nNeig = (*itNode)->immediateNeigs.size();
+					for (int k = 0; k<nNeig; ++k){
+						if (Nodes[(*itNode)->immediateNeigs[k]]->tissueType == 1){
+							doNotFix = true;
+							break;
 						}
-						if (CircumferentialNodeFix[i][1]){
-							fixY((*itNode));
-						}
-						if (CircumferentialNodeFix[i][2]){
-							fixZ((*itNode));
+					}
+				}
+				if (!doNotFix){
+					//Node is at the circumference, now checking for all possibilities:
+					// if i == 0 , I am checking for apical circumference
+					// if i == 1 , I am checking for basal  circumference
+					// if i == 2 , I am checking for all    circumference
+					for (int i=0;i<3; ++i){
+						if ( (i == 0 && (*itNode)->tissuePlacement == 1 ) ||  //tissuePlacement == 1 is apical
+							 (i == 1 && (*itNode)->tissuePlacement == 0 ) ||  //tissuePlacement == 0 is basal
+							 (i == 2)){										  //tissuePlacement is irrelevant, fixing all
+							//The node is at circumference; if
+							if (CircumferentialNodeFix[i][0]){
+								fixX((*itNode));
+							}
+							if (CircumferentialNodeFix[i][1]){
+								fixY((*itNode));
+							}
+							if (CircumferentialNodeFix[i][2]){
+								fixZ((*itNode));
+							}
 						}
 					}
 				}
@@ -2357,51 +2429,109 @@ void Simulation::checkForZeroViscosity(){
         //Nodes[4]->FixedPos[2] = true;
 
         */
-         if (!symmetricY){
-        	Nodes[ventralTipIndex]->FixedPos[0] = true;
-			Nodes[ventralTipIndex]->FixedPos[1] = true;
-			Nodes[ventralTipIndex]->FixedPos[2] = true;
-
-			Nodes[dorsalTipIndex]->FixedPos[1] = true;
-			Nodes[dorsalTipIndex]->FixedPos[2] = true;
-
-        	//if there is symmetricity, then the mid-line nodes will be fixed in y, and I do not need to fix the third node.
-        	// in fact, fixing the position of hte third node in z will cause problems.
-			if (dorsalTipIndex != 1 && 	ventralTipIndex!= 1 ){
-				Nodes[1]->FixedPos[2] = true;
+        if (!symmetricY){
+        	//TO DO!! In the node fixing options, there should be at least 2 different axes fixed.
+        	//If there are any node fixes, on the surfaces in z, then I do not need to do fix z:
+        	bool sufficientXFix = false;
+        	bool sufficientYFix = false;
+        	bool sufficientZFix = false;
+        	for (int a=0; a<3; ++a){
+        		sufficientXFix = sufficientXFix || CircumferentialNodeFix[a][0];
+        		sufficientYFix = sufficientYFix || CircumferentialNodeFix[a][1];
+        		sufficientZFix = sufficientZFix || CircumferentialNodeFix[a][2];
+        	}
+			//if there are no z fixe on the circumferenece, check the whole surfaces:
+        	if (!sufficientXFix){
+        		 sufficientXFix = sufficientXFix || BasalNodeFix[0] ;
+				sufficientXFix = sufficientXFix || ApicalNodeFix[0] ;
 			}
-			else if (dorsalTipIndex != 2 && 	ventralTipIndex!= 2 ){
-				Nodes[2]->FixedPos[2] = true;
+        	if (!sufficientYFix){
+        		sufficientYFix = sufficientYFix || BasalNodeFix[1] ;
+        		sufficientYFix = sufficientYFix || ApicalNodeFix[1] ;
+        	}
+        	if (!sufficientZFix){
+				sufficientZFix = sufficientZFix || BasalNodeFix[2];
+				sufficientZFix = sufficientZFix || ApicalNodeFix[2];
 			}
-			else if (dorsalTipIndex != 3 && 	ventralTipIndex!= 3 ){
-				Nodes[3]->FixedPos[2] = true;
+
+        	if (!sufficientXFix){
+        		Nodes[ventralTipIndex]->FixedPos[0] = true;
+        	}
+        	if (!sufficientYFix){
+        		Nodes[ventralTipIndex]->FixedPos[1] = true;
+        	}
+        	if (!sufficientZFix){
+        		Nodes[ventralTipIndex]->FixedPos[2] = true;
+        	}
+        	if (!sufficientYFix){
+        		Nodes[dorsalTipIndex]->FixedPos[1] = true;
+        	}
+			if (!sufficientZFix){
+				Nodes[dorsalTipIndex]->FixedPos[2] = true;
+			}
+			if (!sufficientZFix){
+				//if there is symmetricity, then the mid-line nodes will be fixed in y, and I do not need to fix the third node.
+				// in fact, fixing the position of the third node in z will cause problems.
+				if (dorsalTipIndex != 1 && 	ventralTipIndex!= 1 ){
+					Nodes[1]->FixedPos[2] = true;
+				}
+				else if (dorsalTipIndex != 2 && ventralTipIndex!= 2 ){
+					Nodes[2]->FixedPos[2] = true;
+				}
+				else if (dorsalTipIndex != 3 && ventralTipIndex!= 3 ){
+					Nodes[3]->FixedPos[2] = true;
+				}
 			}
         }
         else{
-        	Nodes[ventralTipIndex]->FixedPos[0] = true;
+        	//There is symmetricity, then there is y fix, if there are any node fixes, on the surfaces in z, then I do not need to do fix z:
+        	bool sufficientZFix = false;
+        	for (int a=0; a<3; ++a){
+        		sufficientZFix = sufficientZFix || CircumferentialNodeFix[a][2];
+			}
+        	//if there are no z fixe on the circumferenece, check the whole surfaces:
+			if (!sufficientZFix){
+				sufficientZFix = sufficientZFix || BasalNodeFix[2];
+				sufficientZFix = sufficientZFix || ApicalNodeFix[2];
+			}
+        	bool sufficientXFix = false;
+			for (int a=0; a<3; ++a){
+				sufficientXFix = sufficientXFix || CircumferentialNodeFix[a][0] ;
+			}
+			//if there are no x fixes on the circumferenece, check the whole surfaces:
+			if (!sufficientXFix){
+				sufficientXFix = sufficientXFix || BasalNodeFix[0] ;
+				sufficientXFix = sufficientXFix || ApicalNodeFix[0] ;
+			}
+			//there is no circumference or surface fixing of suffieint nature, then I should fix the nodes:
+			if (!sufficientXFix){
+              	Nodes[ventralTipIndex]->FixedPos[0] = true;
+			}
 			Nodes[ventralTipIndex]->FixedPos[1] = true;
-			Nodes[ventralTipIndex]->FixedPos[2] = true;
+			if (!sufficientZFix){
+				Nodes[ventralTipIndex]->FixedPos[2] = true;
+				Nodes[dorsalTipIndex]->FixedPos[2] = true;
+			}
 
-			Nodes[dorsalTipIndex]->FixedPos[2] = true;
 /*
-			vector<ShapeBase*>::iterator itElement;
-			bool foundElement = false;
-			int apicalId = 0;
-			//find the apical node corresponding to the basal ventral tip:
-			for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-				bool IsBasalOwner = (*itElement)->IsThisNodeMyBasal(ventralTipIndex);
-				if (IsBasalOwner){
-					foundElement = true;
-					apicalId = (*itElement)->getCorrecpondingApical(ventralTipIndex); //have the next node
-					break;
+				vector<ShapeBase*>::iterator itElement;
+				bool foundElement = false;
+				int apicalId = 0;
+				//find the apical node corresponding to the basal ventral tip:
+				for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+					bool IsBasalOwner = (*itElement)->IsThisNodeMyBasal(ventralTipIndex);
+					if (IsBasalOwner){
+						foundElement = true;
+						apicalId = (*itElement)->getCorrecpondingApical(ventralTipIndex); //have the next node
+						break;
+					}
 				}
-			}
-			if (foundElement){
-				Nodes[apicalId]->FixedPos[2] = true;
-			}
-			else{
-				cerr<<"Cannot run zero viscosity simulation, could not find the apical node corresponding to the basal ventral tip, run simulation at your own risk!"<<endl;
-			}
+				if (foundElement){
+					Nodes[apicalId]->FixedPos[2] = true;
+				}
+				else{
+					cerr<<"Cannot run zero viscosity simulation, could not find the apical node corresponding to the basal ventral tip, run simulation at your own risk!"<<endl;
+				}
 */
         }
     }
@@ -2438,11 +2568,16 @@ void Simulation::addCurvatureToColumnar(double h){
 			if (h<0){
 				offset *= (-1.0);
 			}
-			if (AddPeripodialMembrane){
+			if (thereIsPeripodialMembrane){
 				//there is peripodial membrane, any node above the mid-line of the lumen should be curved in the opposite direction of the columnar layer:
+				//But I have a direction choice, if the columnar is curving down, the peripodial shoudl curve up
+				//If the columnar is curing up, the peripodial should still curve up!
+
 				double heightThreshold = TissueHeight + lumenHeight/2.0;
 				if ((*itNode)->Position[2] > heightThreshold) {
-					offset *= (-1.0);
+					if (offset > 0){
+						offset *= (-1.0);
+					}
 				}
 			}
 			(*itNode)->Position[2] -= offset;
@@ -2640,10 +2775,44 @@ void Simulation::calculateNewNodePosForPeripodialNodeAddition(int nodeId0, int n
 		vec1[0] += vec2[0];
 		vec1[1] += vec2[1];
 		vec1[2] += vec2[2];
-		Elements[0]->normaliseVector3D(vec1);
-		//The list is sorted counter-cock-wise, to point out, I will rotate normalised vector v0 -90 degrees on z axis:
-		// (x,y,z) -> (y,-x,z);
-		// then I will add this vector to the calculated mid point to gt the new node's position.
+		double vec1Mag2 = vec1[0]*vec1[0] + vec1[1]*vec1[1] + vec1[2]*vec1[2];
+		if (vec1Mag2 < 1E-5){
+			//the two nodes are linear, the resulting vector is of zero length.
+			//I will rotate one of the vectors 90 degrees and it will be pointing in the correct orientation, the actual direction can be fixed in the below loop:
+			//this vector is already normalised, I am skipping the normalisation step
+			vec1[0] = -1.0*vec2[1];
+			vec1[1] = vec2[0];
+		}
+		else{
+			Elements[0]->normaliseVector3D(vec1);
+		}
+		//now I have the vector to point out from the base node 0. BUT, this will point outwards only if the tissue curvature is convex at all points
+		//I need to check if it actually is pointing out, as the experimentally driven tissues can be concave at points.
+		//the cross produc of vec[2] and the vector to the cell centre should have the opposite sign with the corss product of my orientation vector and vector 2.
+		double* vecCentre;
+		vecCentre = new double[3];
+		vecCentre[0] =  SystemCentre[0] - Nodes[nodeId0]->Position[0];
+		vecCentre[1] =  SystemCentre[1] - Nodes[nodeId0]->Position[1];
+		vecCentre[2] =  SystemCentre[2] - Nodes[nodeId0]->Position[2];
+		Elements[0]->normaliseVector3D(vecCentre);
+		double* cross1;
+		cross1 = new double[3];
+		Elements[0]->crossProduct3D(vec2,vecCentre,cross1);
+		Elements[0]->normaliseVector3D(cross1);
+		double* cross2;
+		cross2 = new double[3];
+		Elements[0]->crossProduct3D(vec2,vec1,cross2);
+		Elements[0]->normaliseVector3D(cross2);
+		double dotp = Elements[0]->dotProduct3D(cross1,cross2);
+		if (dotp >0 ){
+			//the vectors are pointing to the same direction! Need to rotate vec1 180 degrees:
+			vec1[0] *= -1.0;
+			vec1[1] *= -1.0;
+			vec1[2] *= -1.0;
+		}
+		delete[] vecCentre;
+		delete[] cross1;
+		delete[] cross2;
 		delete[] vec2;
 	}
 	pos[0] = Nodes[nodeId0]->Position[0] + vec1[0]*sideThickness;
@@ -2677,7 +2846,7 @@ void Simulation::addNodesForPeripodialOnOuterCircumference (vector< vector<int> 
 	double avrSide=0.0, dummy =0.0;
 	getAverageSideLength(dummy,avrSide);	//first term will get you the average side length of the peripodial membrane elements, second is the columnar elements
 	if (avrSide/peripodialSideConnectionThickness > 5 || avrSide/peripodialSideConnectionThickness< 0.2 ){
-		cerr<<"WARNING, the lateral connection thickness between the peripodial membrane and the columnar layer is too different than average eleent size (more than 5 fold diference)"<<endl;
+		cerr<<"WARNING, the lateral connection thickness between the peripodial membrane and the columnar layer is too different than average element size (more than 5 fold diference)"<<endl;
 	}
 	//Now I need the average side of an element, to add new nodes accordingly:
 	int nCircumference = ColumnarBasedNodeArray.size();
@@ -3140,6 +3309,17 @@ bool Simulation::addCurvedPeripodialMembraneToTissue(){
 	return Success;
 }
 
+bool Simulation::checkIfThereIsPeripodialMembrane(){
+	bool Success = true;
+	vector<Node*>::iterator itNode;
+	for(itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+		if ((*itNode)->tissueType == 1){
+			thereIsPeripodialMembrane = true;
+		}
+	}
+	return Success;
+}
+
 bool Simulation::addStraightPeripodialMembraneToTissue(){
     //cout<<"adding peripodial membrane from scratch" <<endl;
 	bool Success = true;
@@ -3210,8 +3390,9 @@ void Simulation::checkForExperimentalSetupsAfterIteration(){
 }
 
 
-void Simulation::runOneStep(){
-    cout<<"entered run one step"<<endl;
+bool Simulation::runOneStep(){
+    bool Success = true;
+	cout<<"entered run one step"<<endl;
     //ablateSpcific();
     if (dt*timestep == -16*3600) {
     	pokeElement(31,0,0,-0.1);pokeElement(34,0,0,-0.1);
@@ -3272,11 +3453,13 @@ void Simulation::runOneStep(){
     calculateBoundingBox();
 
     //calculateColumnarLayerBoundingBox();
-	//if (AddPeripodialMembrane){
+	//if (thereIsPeripodialMembrane){
 	//	calculatePeripodialBoundingBox();
 	//}
     //cout<<" step: "<<timestep<<" Pressure: "<<SuctionPressure[2]<<" Pa, maximum z-height: "<<boundingBox[1][2]<<" L/a: "<<(boundingBox[1][2]-50)/(2.0*pipetteRadius)<<endl;
+    Success = checkFlip();
     timestep++;
+    return Success;
     //for (int i=0; i<nNodes; ++i){
     //	cout<<" Nodes["<<i<<"]->Position[0]="<<Nodes[i]->Position[0]<<"; Nodes["<<i<<"]->Position[1]="<<Nodes[i]->Position[1]<<";  Nodes["<<i<<"]->Position[2]="<<Nodes[i]->Position[2]<<"; "<<endl;
     //}
@@ -3286,6 +3469,17 @@ void Simulation::runOneStep(){
 	//Elements[39]->displayPositions();
 }
 
+bool Simulation::checkFlip(){
+	vector<ShapeBase*>::iterator itElement;
+	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		if ((*itElement)->isFlipped){
+			//there is a flipped element:
+			outputFile<<"There is A flipped element: "<<(*itElement)->Id<<endl;
+			return false;
+		}
+	}
+	return true;
+}
 void Simulation::wrapUpAtTheEndOfSimulation(){
     alignTissueDVToXPositive();
     //alignTissueAPToXYPlane();
@@ -3377,11 +3571,15 @@ void Simulation::updateStepNR(){
 			calculateZProjectedAreas();
 			addPipetteForces(gExt);
 		}
+		//cout<<"after pipette"<<endl;
 		addMyosinForces(gExt);
+		//cout<<"after myosin"<<endl;
 		addPackingForces(gExt);
+		//cout<<"after packing forces addition"<<endl;
 		if (addingRandomForces){
 			addRandomForces(gExt);
 		}
+		//cout<<"after random forces addition"<<endl;
 	    //pushing node 78 down, node 216 up by 2000:
 		/*if (timestep ==0 ){
 			double zForce = gsl_matrix_get(gExt,3*78+2,0);
@@ -3393,6 +3591,7 @@ void Simulation::updateStepNR(){
             gsl_vector_set(gSum,i,gsl_vector_get(gSum,i)+gsl_matrix_get(gExt,i,0));
         }
         checkForExperimentalSetupsWithinIteration();
+        //cout<<"after checkForExperimentalSetupsWithinIteration"<<endl;
         //Adding external forces:
         //double F = 5.509e+04 ;
         double F = 0 ;
@@ -3418,7 +3617,9 @@ void Simulation::updateStepNR(){
             }
         }*/
         //Finalised adding external forces
+        //cout<<"calculating fixed K"<<endl;
         calcutateFixedK(K,gSum);
+        //cout<<"checking convergence with forces"<<endl;
         converged = checkConvergenceViaForce(gSum);
         if (converged){
             break;
@@ -5630,7 +5831,7 @@ void Simulation::detectPacingNodes(){
 	double periAverageSideLength = 0,colAverageSideLength = 0;
 	getAverageSideLength(periAverageSideLength, colAverageSideLength);
 
-	if (AddPeripodialMembrane){
+	if (thereIsPeripodialMembrane){
 		colAverageSideLength = (periAverageSideLength+colAverageSideLength)/2.0;
 	}
 	packingThreshold = 0.6*colAverageSideLength;
@@ -6115,11 +6316,12 @@ void Simulation::addToEdgeList(Node* nodePointer, ShapeBase* elementPointer, vec
 
 void Simulation::addPackingForces(gsl_matrix* gExt){
 	double sumPack[3] = {0.0,0.0,0.0};
-	double sumPackPre[3] = {0.0,0.0,0.0};
+	//double sumPackPre[3] = {0.0,0.0,0.0};
 	double sumAv[3] = {0.0,0.0,0.0};
 	double sumgExt[3] = {0.0,0.0,0.0};
-
+	//cout<<"in add packing forces"<<endl;
 	for (int j=0; j<nNodes; ++j){
+		//cout<<"calculating node: "<<j<<" of "<<nNodes<<endl;
 		//double Fx = 0.333* ( PackingForces[j][0] + PackingForcesPreviousStep[j][0] + PackingForcesTwoStepsAgoStep[j][0] );
 		//double Fy = 0.333* ( PackingForces[j][1] + PackingForcesPreviousStep[j][1] + PackingForcesTwoStepsAgoStep[j][1] );
 		//double Fz = 0.333* ( PackingForces[j][2] + PackingForcesPreviousStep[j][2] + PackingForcesTwoStepsAgoStep[j][2] );
@@ -6128,15 +6330,15 @@ void Simulation::addPackingForces(gsl_matrix* gExt){
 		double Fz = PackingForces[j][2];
 		//cout<<"node: "<<j<<" packing force: "<<PackingForces[j][0]<<" "<<PackingForces[j][1]<<" "<<PackingForces[j][2]<<endl;
 		sumPack[0] += PackingForces[j][0];
-		sumPackPre[0] += PackingForcesPreviousStep[j][0];
+		//sumPackPre[0] += PackingForcesPreviousStep[j][0];
 		sumAv[0] += Fx;
 		sumPack[1] += PackingForces[j][1];
-		sumPackPre[1] += PackingForcesPreviousStep[j][1];
+		//sumPackPre[1] += PackingForcesPreviousStep[j][1];
 		sumAv[1] += Fy;
 		sumPack[2] += PackingForces[j][2];
-		sumPackPre[2] += PackingForcesPreviousStep[j][2];
+		//sumPackPre[2] += PackingForcesPreviousStep[j][2];
 		sumAv[2] += Fz;
-
+		//cout<<"node: "<<j<<" after summation"<<endl;
 		int indice = j*3;
 		Fx += gsl_matrix_get(gExt,indice,0);
 		gsl_matrix_set(gExt,indice,0,Fx);
@@ -6495,6 +6697,7 @@ void Simulation::calculateBoundingBox(){
 	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
 		//if (!(*itNode)->allOwnersAblated){
 			//There is at least one element owning this node that is not ablated
+		if ((*itNode)->tissueType == 0 || (*itNode)->tissueType==1) {	//only consider peripodial or columnar nodes, not the linkers
 			for (int i=0; i<(*itNode)->nDim; ++i){
 				if ( (*itNode)->Position[i] < boundingBox[0][i] ){
 					boundingBox[0][i] = (*itNode)->Position[i];
@@ -6505,6 +6708,7 @@ void Simulation::calculateBoundingBox(){
 					found[1][i] = true;
 				}
 			}
+		}
 		//}
 	}
 	if (symmetricY){
@@ -7014,11 +7218,16 @@ void Simulation::calculateGrowthGridBased(GrowthFunctionBase* currGF){
 		for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 			gsl_matrix_set_identity(columnarFgIncrement);
 			gsl_matrix_set_identity(peripodialFgIncrement);
-			double* reletivePos = new double[2];
+
 			int IndexX = 0.0, IndexY = 0.0;
 			double FracX = 1.0,  FracY = 1.0;
 			//(*itElement)->getTissuePositionWeigths(columnarnessWeight, peripodialnessWeight);
-			(*itElement)->getRelativePositionInTissueInGridIndex(nGridX, nGridY, reletivePos, IndexX, IndexY, FracX, FracY);
+			if (GridGrowthsPinnedOnInitialMesh){
+				(*itElement)->getInitialRelativePositionInTissueInGridIndex(nGridX, nGridY, IndexX, IndexY, FracX, FracY);
+			}
+			else{
+				(*itElement)->getRelativePositionInTissueInGridIndex(nGridX, nGridY, IndexX, IndexY, FracX, FracY);
+			}
 			if (currGF->applyToColumnarLayer){
 				(*itElement)->calculateFgFromGridCorners(dt, currGF, columnarFgIncrement, 0, IndexX,  IndexY, FracX, FracY); 	//sourceTissue is 0 for columnar Layer
 			}
@@ -7026,12 +7235,11 @@ void Simulation::calculateGrowthGridBased(GrowthFunctionBase* currGF){
 				(*itElement)->calculateFgFromGridCorners(dt, currGF, peripodialFgIncrement, 1, IndexX,  IndexY, FracX, FracY); 	//sourceTissue is 1 for peripodial membrane
 			}
 			(*itElement)->updateGrowthIncrement(columnarFgIncrement,peripodialFgIncrement);
-    		delete[] reletivePos;
-    		if ((*itElement)->Id == 176){
-    			cout<<" the index for element 176 is: "<<IndexX<<" "<<IndexY<<" fracX "<< FracX<<" fracY "<< FracY<<endl;
-    			(*itElement)->displayMatrix(columnarFgIncrement,"columnarFgIncrement");
-    			(*itElement)->displayMatrix(peripodialFgIncrement,"peripodialFgIncrement");
-    		}
+    		//if ((*itElement)->Id == 176){
+    			//cout<<" the index for element 176 is: "<<IndexX<<" "<<IndexY<<" fracX "<< FracX<<" fracY "<< FracY<<endl;
+    			//(*itElement)->displayMatrix(columnarFgIncrement,"columnarFgIncrement");
+    			//(*itElement)->displayMatrix(peripodialFgIncrement,"peripodialFgIncrement");
+    		//}
 		}
 		gsl_matrix_free(columnarFgIncrement);
 		gsl_matrix_free(peripodialFgIncrement);

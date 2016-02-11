@@ -47,6 +47,7 @@ protected:
 	double* ShapeChangeRate;		///< Shape change rate of the elements, only orthagonal shape changes are allowed (x, y, z). Shape changes will be scaled to conserve volume, thus three values will not be independent.
     bool    rotatedGrowth;			///< The boolean stating if the element has rotated from the growth axis, hence the calculated growth requires further rotation to follow tissue axes.
     double* relativePosInBoundingBox;  ///< The relative position on x-y plane, within the bounding box of the tissue(x,y).
+    double* initialRelativePosInBoundingBox; ///< The relative position on x-y plane, within the bounding box of the tissue(x,y) at the beginning of simulation. This is used when growth rates are pinned to the initial structure of the tissue.
     //double* columnarRelativePosInBoundingBox;	///< The relative position on x-y plane, within the bounding box of the columnar layer (x,y).
 	//double* peripodialRelativePosInBoundingBox; ///< The relative position on x-y plane, within the bounding box of the peripodial membrane layer (x,y).
     gsl_matrix **ShapeFuncDerivatives;
@@ -87,7 +88,7 @@ protected:
 
     int 	determinant_sign(boost::numeric::ublas::permutation_matrix<std::size_t>& pm);
 
-	double  dotProduct3D(double* u, double* v);
+
 	void 	updateNodeIdsFromSave(ifstream& file);
 	void 	updateReferencePositionMatrixFromSave(ifstream& file);
 	virtual void calculateReferenceVolume(){ParentErrorMessage("calculateReferenceVolume");};
@@ -124,7 +125,7 @@ protected:
     gsl_matrix* TriPointKe;
 
 public:
-     int 	Id;
+    int 	Id;
 	int		ShapeDim;
 	int* 	NodeIds;
 	virtual ~ShapeBase(){
@@ -135,6 +136,7 @@ public:
     gsl_matrix* Strain;
 
     //bool 	IsGrowing;
+    bool 	isFlipped;
 	bool 	IsChangingShape;
 	bool	ApicalNormalForPackingUpToDate;
 	bool	BasalNormalForPackingUpToDate;
@@ -164,7 +166,8 @@ public:
 	double* getCentre();
 	double	getPeripodialness();
 	double	getColumnarness();
-	void	getRelativePositionInTissueInGridIndex(int nGridX, int nGridY, double* reletivePos, int& IndexX, int& IndexY, double& FracX, double& FracY);
+	void	getRelativePositionInTissueInGridIndex(int nGridX, int nGridY, int& IndexX, int& IndexY, double& FracX, double& FracY);
+	void	getInitialRelativePositionInTissueInGridIndex(int nGridX, int nGridY, int& IndexX, int& IndexY, double& FracX, double& FracY);
 	bool 	isGrowthRateApplicable(int sourceTissue, double& weight);
 	void 	calculateFgFromRates(double dt, double x, double y, double z, gsl_matrix* rotMat, gsl_matrix* increment, int sourceTissue);
 	void 	calculateFgFromGridCorners(double dt, GrowthFunctionBase* currGF, gsl_matrix* increment, int sourceTissue, int IndexX, int IndexY, double FracX, double dFracY);
@@ -173,6 +176,8 @@ public:
 	//void	calculateRelativePosInBoundingBox(double columnarBoundingBoxXMin, double columnarBoundingBoxYMin, double columnarBoundingBoxLength, double columnarBoundingBoxWidth, double peipodialBoundingBoxXMin, double peipodialBoundingBoxYMin, double peipodialBoundingBoxLength, double peipodialBoundingBoxWidth);
 	void	displayRelativePosInBoundingBox();
 	void	getRelativePosInBoundingBox(double* relativePos);
+	void	setInitialRelativePosInBoundingBox();
+	void	getInitialRelativePosInBoundingBox(double* relativePos);
 	//void	getRelativePosInColumnarBoundingBox(double* relativePos);
 	//void	getRelativePosInPeripodialBoundingBox(double* relativePos);
 	void 	convertRelativePosToGridIndex(double* relpos, int& indexX, int &indexY, double &fracX, double &fracY, int nGridX, int nGridY);
@@ -297,6 +302,7 @@ public:
 	void 	updateReferencePositionMatrixFromMeshInput(ifstream& file);
 	void	fillNodeNeighbourhood(vector<Node*>& Nodes);
 	void 	checkDisplayClipping(double xClip, double yClip, double zClip);
+	double  dotProduct3D(double* u, double* v);
 	void	crossProduct3D(double* u, double* v, double* cross);
 	void	crossProduct3D(gsl_vector* u, gsl_vector* v, gsl_vector* cross);
 	void	alignGrowthCalculationOnReference();
