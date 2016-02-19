@@ -6697,7 +6697,7 @@ void Simulation::calculateBoundingBox(){
 	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
 		//if (!(*itNode)->allOwnersAblated){
 			//There is at least one element owning this node that is not ablated
-		if ((*itNode)->tissueType == 0 || (*itNode)->tissueType==1) {	//only consider peripodial or columnar nodes, not the linkers
+		//if ((*itNode)->tissueType == 0 || (*itNode)->tissueType==1) {	//only consider peripodial or columnar nodes, not the linkers
 			for (int i=0; i<(*itNode)->nDim; ++i){
 				if ( (*itNode)->Position[i] < boundingBox[0][i] ){
 					boundingBox[0][i] = (*itNode)->Position[i];
@@ -6708,7 +6708,7 @@ void Simulation::calculateBoundingBox(){
 					found[1][i] = true;
 				}
 			}
-		}
+		//}
 		//}
 	}
 	if (symmetricY){
@@ -7000,57 +7000,62 @@ void Simulation::updateEquilibriumMyosinsFromInputSignal(MyosinFunction* currMF)
 	int nGridY = currMF->getGridY();
 	vector<ShapeBase*>::iterator itElement;
 	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		if ((currMF->applyToColumnarLayer && (*itElement)->tissueType == 0) || (currMF->applyToPeripodialMembrane && (*itElement)->tissueType == 1) || (*itElement)->tissueType == 2){
-			if (currMF->manualStripes){
-				//Here, I need to check if all the nodes of the element fall into the stripeof myosin upregulations.
-				//double stripeSize1, stripeSize2;
-				//double initialPoint, endPoint;
-				bool inActiveZone = (*itElement)->calculateIfInsideActiveStripe(currMF->initialPoint,currMF->endPoint,currMF->stripeSize1,currMF->stripeSize2);
-				if (inActiveZone){
-					if (currMF->isPolarised){
-						(*itElement)->updateUnipolarEquilibriumMyosinConcentration(currMF->isApical,currMF->manualCMyoEq, currMF->manualOrientation[0], currMF->manualOrientation[1]);
+		if ((currMF->applyToColumnarLayer && (*itElement)->tissueType == 0) || (currMF->applyToPeripodialMembrane && (*itElement)->tissueType == 1) ){//|| (*itElement)->tissueType == 2){
+			if ((*itElement)->spansWholeTissue || (currMF->isApical && (*itElement)->tissuePlacement == 1) || (!currMF->isApical && (*itElement)->tissuePlacement == 0)){
+				// 1) The element spans the whole tissue therefore both apical and basal responses should be applied
+				// 2) The myosin response is applicable to apical surface, and the tissue placement of the element is apical,
+				// 3) The myosin response is applicable to basal surface, and the tissue placement of the lement is basal.
+				if (currMF->manualStripes){
+					//Here, I need to check if all the nodes of the element fall into the stripe of myosin up-regulations.
+					//double stripeSize1, stripeSize2;
+					//double initialPoint, endPoint;
+					bool inActiveZone = (*itElement)->calculateIfInsideActiveStripe(currMF->initialPoint,currMF->endPoint,currMF->stripeSize1,currMF->stripeSize2);
+					if (inActiveZone){
+						if (currMF->isPolarised){
+							(*itElement)->updateUnipolarEquilibriumMyosinConcentration(currMF->isApical,currMF->manualCMyoEq, currMF->manualOrientation[0], currMF->manualOrientation[1]);
+						}
+						else{
+							(*itElement)->updateUniformEquilibriumMyosinConcentration(currMF->isApical, currMF->manualCMyoEq);
+						}
 					}
-					else{
-						(*itElement)->updateUniformEquilibriumMyosinConcentration(currMF->isApical, currMF->manualCMyoEq);
-					}
-				}
-			}
-			else{
-				//calculating the grid indices:
-				double* ReletivePos = new double[2];
-				//normalising the element centre position with bounding box
-				(*itElement)->getRelativePosInBoundingBox(ReletivePos);
-				/*if ((*itElement)->tissueType == 0){
-					(*itElement)->getRelativePosInColumnarBoundingBox(ReletivePos);
 				}
 				else{
-					(*itElement)->getRelativePosInPeripodialBoundingBox(ReletivePos);
-				}*/
-				int indexX, indexY;
-				double fracX, fracY;
-				(*itElement)->convertRelativePosToGridIndex(ReletivePos, indexX, indexY, fracX, fracY, nGridX, nGridY);
-				//reading the equilibrium myosin value
-				double cEqYmid[2]= {0.0,0.0};
-				double cEq;
-				cEqYmid[0] = currMF->getEquilibriumMyoMatrixElement(indexX,indexY)*(1.0-fracX) + currMF->getEquilibriumMyoMatrixElement(indexX+1,indexY)*fracX;
-				cEqYmid[1] = currMF->getEquilibriumMyoMatrixElement(indexX,indexY+1)*(1.0-fracX) + currMF->getEquilibriumMyoMatrixElement(indexX+1,indexY+1)*fracX;
-				cEq = cEqYmid[0]*(1.0-fracY) + cEqYmid[1]*fracY;
-				if (currMF->isPolarised){
-					//If the function is polarised, reading the orientation
-					double orientation[2];
-					for (int axis=0; axis<2; ++axis){
-						cEqYmid[0] = currMF->getOrientationMatrixElement(indexX,indexY,axis)*(1.0-fracX) + currMF->getOrientationMatrixElement(indexX+1,indexY,axis)*fracX;
-						cEqYmid[1] = currMF->getOrientationMatrixElement(indexX,indexY+1,axis)*(1.0-fracX) + currMF->getOrientationMatrixElement(indexX+1,indexY+1,axis)*fracX;
-						orientation[axis] = cEqYmid[0]*(1.0-fracY) + cEqYmid[1]*fracY;
+					//calculating the grid indices:
+					double* ReletivePos = new double[2];
+					//normalising the element centre position with bounding box
+					(*itElement)->getRelativePosInBoundingBox(ReletivePos);
+					/*if ((*itElement)->tissueType == 0){
+						(*itElement)->getRelativePosInColumnarBoundingBox(ReletivePos);
+					}
+					else{
+						(*itElement)->getRelativePosInPeripodialBoundingBox(ReletivePos);
+					}*/
+					int indexX, indexY;
+					double fracX, fracY;
+					(*itElement)->convertRelativePosToGridIndex(ReletivePos, indexX, indexY, fracX, fracY, nGridX, nGridY);
+					//reading the equilibrium myosin value
+					double cEqYmid[2]= {0.0,0.0};
+					double cEq;
+					cEqYmid[0] = currMF->getEquilibriumMyoMatrixElement(indexX,indexY)*(1.0-fracX) + currMF->getEquilibriumMyoMatrixElement(indexX+1,indexY)*fracX;
+					cEqYmid[1] = currMF->getEquilibriumMyoMatrixElement(indexX,indexY+1)*(1.0-fracX) + currMF->getEquilibriumMyoMatrixElement(indexX+1,indexY+1)*fracX;
+					cEq = cEqYmid[0]*(1.0-fracY) + cEqYmid[1]*fracY;
+					if (currMF->isPolarised){
+						//If the function is polarised, reading the orientation
+						double orientation[2];
+						for (int axis=0; axis<2; ++axis){
+							cEqYmid[0] = currMF->getOrientationMatrixElement(indexX,indexY,axis)*(1.0-fracX) + currMF->getOrientationMatrixElement(indexX+1,indexY,axis)*fracX;
+							cEqYmid[1] = currMF->getOrientationMatrixElement(indexX,indexY+1,axis)*(1.0-fracX) + currMF->getOrientationMatrixElement(indexX+1,indexY+1,axis)*fracX;
+							orientation[axis] = cEqYmid[0]*(1.0-fracY) + cEqYmid[1]*fracY;
 					}
 					//updating the values of the shape for polarised myosin:
 					(*itElement)->updateUnipolarEquilibriumMyosinConcentration(currMF->isApical, cEq, orientation[0], orientation[1]);
+					}
+					else{
+						//updating the values of the shape for uniform contractile:
+						(*itElement)->updateUniformEquilibriumMyosinConcentration(currMF->isApical, cEq);
+					}
+					delete[] ReletivePos;
 				}
-				else{
-					//updating the values of the shape for uniform contractile:
-					(*itElement)->updateUniformEquilibriumMyosinConcentration(currMF->isApical, cEq);
-				}
-				delete[] ReletivePos;
 			}
 		}
 	}

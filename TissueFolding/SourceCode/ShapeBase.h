@@ -142,6 +142,7 @@ public:
 	bool	BasalNormalForPackingUpToDate;
 	int 	tissuePlacement; //1 -> apical, 0 -> basal, 2->middle, 3 -> lateral
 	int 	tissueType;	///< The tissue type is 0 for columnar layer, 1 for peripodial membrane, and 2 for linker zone
+	bool	spansWholeTissue; ///< Boolean staing is the element spans the whole tissue. This is used to identify mid-layer tagged tissues (tissuePlacement = 2), that should still have apical abd basal responses (such as myosin).
 	bool	IsAblated;
 	bool	atSymetricityBoundary;
 	bool	IsClippedInDisplay;

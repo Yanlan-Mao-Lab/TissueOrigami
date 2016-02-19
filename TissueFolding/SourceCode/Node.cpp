@@ -82,8 +82,8 @@ void Node::setViscosity(double ApicalVisc,double BasalVisc, double PeripodialApi
 		Viscosity = apicalV;
 	}
 	else if (tissuePlacement == 2 || tissuePlacement == 3){
-		//middle or lateral node
-		Viscosity = (apicalV + basalV) /2.0;
+		//middle or lateral node are equal to apical
+		Viscosity = apicalV;//(apicalV + basalV) /2.0;
 	}
 }
 

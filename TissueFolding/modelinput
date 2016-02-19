@@ -20,7 +20,7 @@ NodeFixingOptions:
   CircumferenceFix(bool-x,y,z): 0 0 0
 
 Manipulations:
-  AddCurvature(bool): 1
+  AddCurvature(bool): 0
   CurvatureDepthAtCentre(double-microns): -2.0
   AddSoftPeriphery(bool): 0
   SoftPeripheryRange(double-microns): 30.0
@@ -34,17 +34,17 @@ Manipulations:
   RandomForceVar(double): 1E-5
  
 TimeParameters:
-  TimeStep(sec): 1200
+  TimeStep(sec): 600
   SimulationLength(sec):  147000
 
 PysicalProperties:
   YoungsModulusApical: 1000.0	YoungsModulusBasal: 1000.0	YoungsModulusMid: 1000.0	Noise(%-int): 0
-  PoissonsRatio: 0.3		Noise(%-int): 0
+  PoissonsRatio: 0.45		Noise(%-int): 0
   ApicalViscosity: 0.0 	Noise(%-int): 0
   BasalViscosity: 0.0
 
 SaveOptions:
-  SaveImages(bool): 1
+  SaveImages(bool): 0
   SaveData(bool):   1
   ImageSaveInterval(sec): 1
   DataSaveInterval(sec):  1
@@ -94,14 +94,14 @@ GrowthOptions:
   FinalTime(sec):  86400
   ApplyToColumnarLayer(bool): 1
   ApplyToPeripodialMembrane(bool): 0
-  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/Col_48-72_7-0
+  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/Col_48-72_8-3
 
   GrowthFunctionType(int-seeDocumentation): 3
   InitialTime(sec):  0
   FinalTime(sec):  86400
   ApplyToColumnarLayer(bool): 0
   ApplyToPeripodialMembrane(bool): 1
-  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/Per_48-72_5-0
+  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/Rate70_Per_48-72_7-0
 
   GrowthFunctionType(int-seeDocumentation): 3
   InitialTime(sec):  86400
@@ -115,7 +115,7 @@ GrowthOptions:
   FinalTime(sec):  144000
   ApplyToColumnarLayer(bool): 0
   ApplyToPeripodialMembrane(bool): 1
-  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/Per_64-88_5-0
+  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/Rate70_Per_64-88_5-0
 
 ShapeChangeOptions:
   NumberofShapeChangeFunctions(int): 1
@@ -134,27 +134,28 @@ PlasticDeformationOptions:
 MyosinOptions:
   NumberofMyosinFunctions(int): 2
   MyosinDiffusionRate(double-1/sec): 0.09873
-  ForcePerMyosinMolecule(double):  1.0
-  InitialTime(sec):   1000000000
+  ForcePerMyosinMolecule(double):  2.0
+
+  InitialTime(sec):   10000000
   ApplyToColumnarLayer(bool): 0
   ApplyToPeripodialMembrane(bool): 0
-  isApical(bool): 1
-  isPolarised(bool): 1
+  isApical(bool): 0
+  isPolarised(bool): 0
   ManualStripes(bool): 1
   StripeSizes(micron-0forNoGap): 10 0
   LowerEndPoint(micron): -50.0
   UpperEndPoint(micron):  50.0
-  EquilibriumMyosinLevel(double): 5.0
-  MyosinOrientation(degrees): 90.0
+  EquilibriumMyosinLevel(double): 100.0
+  MyosinOrientation(degrees): 0.0
 
-  InitialTime(sec):   1000000
-  ApplyToColumnarLayer(bool): 0
+  InitialTime(sec):   0
+  ApplyToColumnarLayer(bool): 1
   ApplyToPeripodialMembrane(bool): 0
-  isApical(bool): 1
+  isApical(bool): 0
   isPolarised(bool): 0
   ManualStripes(bool): 0
-  EquilibriumConcentrationFilename(full-path): /home/melda/Documents/TissueFolding/ToolBox/MyosinLevels/EquilibriumMyosin01
-  OrientationAngleFilename(full-path): /home/melda/Documents/TissueFolding/ToolBox/MyosinLevels/MyosinAngle01
+  EquilibriumConcentrationFilename(full-path): /home/melda/Documents/TissueFolding/ToolBox/MyosinLevels/EquilibriumMyosinUniform
+  OrientationAngleFilename(full-path): /home/melda/Documents/TissueFolding/ToolBox/MyosinLevels/MyosinAngle0
 
 Stretcher:
   StretcherAttached(bool): 0

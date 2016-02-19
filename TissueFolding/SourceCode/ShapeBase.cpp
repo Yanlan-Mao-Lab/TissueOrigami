@@ -495,6 +495,7 @@ void 	ShapeBase::setTissuePlacement(vector<Node*>& Nodes){
 	bool hasApicalNode = false;
 	bool hasBasalNode = false;
 	bool hasLateralNode = false;
+	spansWholeTissue = false;
 	for (int i = 0; i<nNodes; ++i){
 		if (Nodes[NodeIds[i]]->tissuePlacement == 1){
 			hasApicalNode = true;
@@ -514,6 +515,7 @@ void 	ShapeBase::setTissuePlacement(vector<Node*>& Nodes){
 			if (hasBasalNode){
 				//the element spans through the whole tissue, the mid-line value should be used
 				tissuePlacement = 2;
+				spansWholeTissue = true;
 			}
 			else{
 				//the element has only apical and midline nodes, it is apical
@@ -1909,6 +1911,7 @@ void	ShapeBase::updateUniformEquilibriumMyosinConcentration(bool isApical, doubl
 	else{
 		cMyoUniformEq[1] = cEqUniform;
 	}
+	//cout<<"Element: "<<Id<<" eq upon signal: "<<cMyoUniformEq[0]<<" "<<cMyoUniformEq[1]<<endl;
 }
 
 void	ShapeBase::updateUnipolarEquilibriumMyosinConcentration(bool isApical, double cEqUnipolar, double orientationX, double orientationY){
@@ -1985,6 +1988,7 @@ void	ShapeBase::updateMyosinConcentration(double dt, double kMyo){
 			cMyoUnipolar[1] = cFinal[2];
 		}
 	}
+	//cout<<" Element: "<<Id<<" uniform myo:  "<<cMyoUniform[0]<<" "<<cMyoUniform[1]<<" eq: "<<cMyoUniform[0]<<" "<<cMyoUniform[1]<<endl;
 }
 
 void 	ShapeBase::setShapeChangeRate(double x, double y, double z, double xy, double yz, double xz){

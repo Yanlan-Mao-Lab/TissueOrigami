@@ -42,14 +42,14 @@ using namespace std;
      DisplayStrains = true;
      DisplayPysProp = false;
      //current ranges:
-     DisplayPysPropRange[0][0] = 0.0; DisplayPysPropRange[0][1] = 100.0; 	//viscosity
+     DisplayPysPropRange[0][0] = 1000.0; DisplayPysPropRange[0][1] = 10000.0; 	//viscosity
      DisplayPysPropRange[1][0] = 100.0; DisplayPysPropRange[1][1] = 5000.0; //Young's modulus
      DisplayPysPropRange[2][0] = 0.0; DisplayPysPropRange[2][1] = 0.5; 		//Poisson's ratio
      DisplayPysPropRange[3][0] = 0.0; DisplayPysPropRange[3][1] = 10; 		//growth
      DisplayPysPropRange[4][0] = -1.0; DisplayPysPropRange[4][1] = 10.0; 	//shape change
      //the minimum and maximum they can get:
-     DisplayPysPropBounds[0][0] = 0.0; DisplayPysPropBounds[0][1] = 50.0;
-     DisplayPysPropBounds[0][2] = 51.0; DisplayPysPropBounds[0][3] = 250.0;
+     DisplayPysPropBounds[0][0] = 0.0; DisplayPysPropBounds[0][1] = 1000.0;
+     DisplayPysPropBounds[0][2] = 100.0; DisplayPysPropBounds[0][3] = 10000.0;
      DisplayPysPropBounds[1][0] = 1.0; DisplayPysPropBounds[1][1] = 50.0;
      DisplayPysPropBounds[1][2] = 51.0; DisplayPysPropBounds[1][3] = 10000.0;
      DisplayPysPropBounds[2][0] = 0.0; DisplayPysPropBounds[2][1] = 0.1;

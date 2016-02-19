@@ -403,7 +403,7 @@ void MainWindow::setDisplayPreferences(QGridLayout *ProjectDisplayOptionsGrid){
 	DisplayPreferencesCheckBoxes[2] = new QCheckBox("Velocities");
 	DisplayPreferencesCheckBoxes[2]->setChecked(false);
 	connect(DisplayPreferencesCheckBoxes[2] , SIGNAL(stateChanged(int)),this,SLOT(updateVelocityCheckBox(int)));
-	DisplayPreferencesCheckBoxes[3] = new QCheckBox("ScaleBar");
+	DisplayPreferencesCheckBoxes[3] = new QCheckBox("ScaleCube");
 	DisplayPreferencesCheckBoxes[3]->setChecked(false);
 	connect(DisplayPreferencesCheckBoxes[3] , SIGNAL(stateChanged(int)),this,SLOT(updateScaleBarCheckBox(int)));
 	DisplayPreferencesCheckBoxes[4] = new QCheckBox("Display Peripodial Membrane");
@@ -741,7 +741,14 @@ void MainWindow::timerSimulationStep(){
     //}
 	if (Sim01->DisplaySave){
 		if(!Sim01->reachedEndOfSaveFile){
+
 			Sim01->updateOneStepFromSave();
+			Sim01->updateOneStepFromSave();
+			Sim01->updateOneStepFromSave();
+			Sim01->updateOneStepFromSave();
+			Sim01->updateOneStepFromSave();
+			Sim01->updateOneStepFromSave();
+
 			Sim01->fixNode0InPosition(34,0,0);
 			updateTimeText();
 			//cout<<" step: "<<Sim01->timestep<<"Node[0] pos: "<<Sim01->Nodes[0]->Position[0]<<" "<<Sim01->Nodes[0]->Position[1]<<" "<<Sim01->Nodes[0]->Position[2]<<endl;
