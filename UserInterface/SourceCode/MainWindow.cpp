@@ -292,7 +292,7 @@ void MainWindow::setPysPropDisplayMenu(QGridLayout *ProjectDisplayOptionsGrid){
 	PysPropComboBox->addItem("Viscosity");
 	PysPropComboBox->addItem("Young Modulus");
 	PysPropComboBox->addItem("Poisson Ratio");
-	PysPropComboBox->addItem("Growth (% per hour)");
+	PysPropComboBox->addItem("Planar (xy) Growth (% per hour)");
 	PysPropComboBox->addItem("ShapeChangeRate_z");
 	PysPropComboBox->setEnabled(false);
 	connect(PysPropComboBox , SIGNAL(currentIndexChanged(int)),this,SLOT(updatePysProp(int)));
@@ -748,6 +748,10 @@ void MainWindow::timerSimulationStep(){
 			Sim01->updateOneStepFromSave();
 			Sim01->updateOneStepFromSave();
 			Sim01->updateOneStepFromSave();
+			Sim01->updateOneStepFromSave();
+			Sim01->updateOneStepFromSave();
+			Sim01->updateOneStepFromSave();
+			Sim01->updateOneStepFromSave();
 
 			Sim01->fixNode0InPosition(34,0,0);
 			updateTimeText();
@@ -767,7 +771,6 @@ void MainWindow::timerSimulationStep(){
 	}
 	else{
 		if (Sim01->timestep < Sim01->SimLength){
-			//cout<<"calling runonestep"<<endl;
 			//cout<<"dataSaveInterval before calling a step: " <<Sim01->dataSaveInterval<<endl;
 			bool Success = Sim01->runOneStep();
 			updateTimeText();
@@ -789,12 +792,13 @@ void MainWindow::timerSimulationStep(){
 			}
 		}
         else if(!displayedSimulationLength){
-            displayedSimulationLength = true;
+        	displayedSimulationLength = true;
             Sim01->wrapUpAtTheEndOfSimulation();
             Sim01->writeRelaxedMeshFromCurrentState();
+            //Sim01->writeMeshRemovingAblatedRegions();
             double duration = ( std::clock() - simulationStartClock ) / (double) CLOCKS_PER_SEC;
-            cout<<"Simulation length in seconds: "<< duration <<endl;
-            //close();
+            cout<<"Simulation duration: "<<duration<<" sec"<<endl;
+            close();
         }
     }
     MainGLWidget->update();

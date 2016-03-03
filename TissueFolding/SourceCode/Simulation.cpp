@@ -104,11 +104,11 @@ void Simulation::setDefaultParameters(){
 	Column = Row-2;
 	SideLength=1.0;
 	zHeight = 2.0;
-	for (int i=0; i<3; ++i){
-		ApicalNodeFix[i]= false;
-		BasalNodeFix[i]= false;
+	for (int i=0; i<5; ++i){
 		for (int j=0; j<3; j++){
 			CircumferentialNodeFix[i][j]= false;
+			ApicalNodeFix[j]= false;
+			BasalNodeFix[j]= false;
 		}
 	}
 	nGrowthFunctions = 0;
@@ -181,6 +181,17 @@ void Simulation::setDefaultParameters(){
 	thereIsPlasticDeformation = false;
 	volumeConservedInPlasticDeformation = false;
 	plasticDeformationRate = 0.0;
+
+	kMyo = 0.09873;
+	forcePerMyoMolecule = 1.0;
+	thereIsMyosinFeedback = false;
+	MyosinFeedbackCap = 0.0;
+
+	BaseLinkerZoneParametersOnPeripodialness = true;
+	LinkerZoneApicalElasticity = 0.0;
+	LinkerZoneBasalYoungsModulus = 0.0;
+	LinkerZoneApicalViscosity = ApicalVisc;
+	LinkerZoneBasalVisc = BasalVisc;
 }
 
 bool Simulation::readExecutableInputs(int argc, char **argv){
@@ -406,13 +417,13 @@ bool Simulation::initiateSystem(){
 	if (!Success){
 		return Success;
 	}
+	if (symmetricY){
+		 clearCircumferenceDataFromSymmetricityLine();
+	}
 	Success = checkIfThereIsPeripodialMembrane();
 	Success = calculateTissueHeight(); //Calculating how many layers the columnar layer has, and what the actual height is.
 	if (!Success){
 		return Success;
-	}
-	if (symmetricY){
-		 clearCircumferenceDataFromSymmetricityLine();
 	}
 	if (AddPeripodialMembrane){
 		if (thereIsPeripodialMembrane){
@@ -1158,6 +1169,14 @@ void Simulation::updateForcesFromSave(){
 		saveFileToDisplayForce.read((char*) &SystemForces[i][1], sizeof SystemForces[i][1]);
 		saveFileToDisplayForce.read((char*) &SystemForces[i][2], sizeof SystemForces[i][2]);
 	}
+	for (int i=0;i<nElements;++i){
+		int n = Elements[i]->getNodeNumber();
+		for (int j=0; j<n; ++j){
+			saveFileToDisplayForce.read((char*) &Elements[i]->MyoForce[j][0], sizeof &Elements[i]->MyoForce[j][0]);
+			saveFileToDisplayForce.read((char*) &Elements[i]->MyoForce[j][1], sizeof &Elements[i]->MyoForce[j][1]);
+			saveFileToDisplayForce.read((char*) &Elements[i]->MyoForce[j][2], sizeof &Elements[i]->MyoForce[j][2]);
+		}
+	}
 }
 
 void Simulation::updateVelocitiesFromSave(){
@@ -1595,10 +1614,12 @@ bool Simulation::initiateMesh(int MeshType){
 		}
 		initiateNodesFromMeshInput();
 		initiateElementsFromMeshInput();
+		cout<<" nNodes: "<<nNodes<<" nEle: "<<nElements<<endl;
 		bool areTissueWeightsRecorded = checkIfTissueWeightsRecorded();
 		if (areTissueWeightsRecorded){
 			readInTissueWeights();
 		}
+		cout<<" read in tissue weights"<<endl;
 		//addCurvatureToColumnar(5.0);
 		saveFileToDisplayMesh.close();
 	}
@@ -2100,13 +2121,49 @@ void Simulation::initiateNodesByRowAndColumn(int Row, int Column, float SideLeng
 	delete[] pos;
 }
 
+void Simulation::setLinkerCircumference(){
+	//First find the node that is further back on
+	vector<Node*>::iterator itNode;
+	double maxX = -100, ZofTip = -100;
+	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+		if ((*itNode)->tissueType == 2){
+			//The node is linker, is the x position higher than already recorded?
+			if ((*itNode)->Position[0]> maxX){
+				maxX  = (*itNode)->Position[0];
+				ZofTip = (*itNode)->Position[2];
+			}
+		}
+	}
+	double thres = 0.2;
+	//cout<<"Setting circumference, maxX: "<<maxX<<" Z of tip: "<<ZofTip<<endl;
+	//Now I have the maxX, and the corresponding z height.
+	//Declare all linkers at the basal/or apical surface are the circumferential nodes:
+	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+		if ((*itNode)->tissueType == 2){
+			//The node is linker, if it is apical or basal, it can be circumferntial:
+			if ( (*itNode)->tissuePlacement == 0 || (*itNode)->tissuePlacement == 1 ){
+				//The node is linker, if it is in the range of the height of the tip then it is circumferential
+				if ( (*itNode)->Position[2] < ZofTip+thres && (*itNode)->Position[2] > ZofTip-thres ){
+					(*itNode)->atCircumference = true;
+				}
+			}
+
+		}
+	}
+}
+
 void Simulation::checkForNodeFixing(){
 	//Are there any circumferential node fixing options enabled:
 	bool thereIsCircumFix = false;
-	for (int i=0;i<3; ++i){
-		for (int j=0;j<3; ++j){
-			if (CircumferentialNodeFix[i][j] == true){
-				thereIsCircumFix = true;
+	if (!thereIsCircumFix){
+		for (int i=0;i<5; ++i){
+			for (int j=0;j<3; ++j){
+				if (CircumferentialNodeFix[i][j] == true){
+					thereIsCircumFix = true;
+					break;
+				}
+			}
+			if (thereIsCircumFix){
 				break;
 			}
 		}
@@ -2116,12 +2173,13 @@ void Simulation::checkForNodeFixing(){
 		vector<Node*>::iterator itNode;
 		for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
 			if ( (*itNode)->atCircumference){
+				//cout<<"Node "<<(*itNode)->Id<<" at circumference"<<endl;
 				//The node is at circumference, I would like to fix only the columnar side,
 				bool doNotFix = false;
 				if ((*itNode)->tissueType == 1){ //the node is peripodial, no not fix this node
 					doNotFix = true;
 				}
-				else if ((*itNode)->tissueType == 2){ //the node is linker (as will be the case for all circumference)
+				/*else if ((*itNode)->tissueType == 2){ //the node is linker (as will be the case for all circumference)
 					//I will check if any of its neigs are peripodial:
 					int nNeig = (*itNode)->immediateNeigs.size();
 					for (int k = 0; k<nNeig; ++k){
@@ -2130,16 +2188,21 @@ void Simulation::checkForNodeFixing(){
 							break;
 						}
 					}
-				}
+				}*/
 				if (!doNotFix){
+					//cout<<"Node "<<(*itNode)->Id<<" in fix options"<<endl;
 					//Node is at the circumference, now checking for all possibilities:
 					// if i == 0 , I am checking for apical circumference
 					// if i == 1 , I am checking for basal  circumference
-					// if i == 2 , I am checking for all    circumference
-					for (int i=0;i<3; ++i){
+					// if i == 2 , I am checking for the linker apical circumference
+					// if i == 3 , I am checking for the linker basal circumference
+					// if i == 4 , I am checking for all    circumference
+					for (int i=0;i<5; ++i){
 						if ( (i == 0 && (*itNode)->tissuePlacement == 1 ) ||  //tissuePlacement == 1 is apical
 							 (i == 1 && (*itNode)->tissuePlacement == 0 ) ||  //tissuePlacement == 0 is basal
-							 (i == 2)){										  //tissuePlacement is irrelevant, fixing all
+							 (i == 2 && (*itNode)->tissueType == 2 && (*itNode)->tissuePlacement == 1 ) ||  //tissuePlacement == 1 is apical
+							 (i == 3 && (*itNode)->tissueType == 2 && (*itNode)->tissuePlacement == 0 ) ||  //tissuePlacement == 0 is basal
+							 (i == 4)){										  //tissuePlacement is irrelevant, fixing all
 							//The node is at circumference; if
 							if (CircumferentialNodeFix[i][0]){
 								fixX((*itNode));
@@ -2377,27 +2440,46 @@ void Simulation::assignPhysicalParameters(){
 			double currE = fractions[(*itElement)->Id] * PeripodialElasticity*(1 + noise1/100.0);
 			(*itElement)->setElasticProperties(currE,currE,currE,poisson*(1 + noise2/100));
 		}
-		else if ((*itElement)->tissueType ==2 ){ //Element is on the linker Zone, I will weight the values:
-			double currPeripodialE 	= fractions[(*itElement)->Id] * PeripodialElasticity * (1 + noise1/100.0);
-			double currEApical 		= fractions[(*itElement)->Id] * EApical * (1 + noise1/100.0);
-			double currEBasal 		= fractions[(*itElement)->Id] * EBasal * (1 + noise1/100.0);
-			double currEMid 		= fractions[(*itElement)->Id] * EMid * (1 + noise1/100.0);
-			double periWeight 		= (*itElement)->getPeripodialness();
-			double colWeight = (*itElement)->getColumnarness();
-			currEApical = colWeight * currEApical + periWeight * currPeripodialE;
-			currEBasal  = colWeight * currEBasal  + periWeight * currPeripodialE;
-			currEMid    = colWeight * currEMid    + periWeight * currPeripodialE;
-			(*itElement)->setElasticProperties(currEApical,currEBasal,currEMid,poisson*(1 + noise2/100));
+		else if ((*itElement)->tissueType == 2 ){ //Element is on the linker Zone,
+			if (BaseLinkerZoneParametersOnPeripodialness){
+				//I will weight the values:
+				double currPeripodialE 	= fractions[(*itElement)->Id] * PeripodialElasticity * (1 + noise1/100.0);
+				double currEApical 		= fractions[(*itElement)->Id] * EApical * (1 + noise1/100.0);
+				double currEBasal 		= fractions[(*itElement)->Id] * EBasal * (1 + noise1/100.0);
+				double currEMid 		= fractions[(*itElement)->Id] * EMid * (1 + noise1/100.0);
+				double periWeight 		= (*itElement)->getPeripodialness();
+				double colWeight = (*itElement)->getColumnarness();
+				currEApical = colWeight * currEApical + periWeight * currPeripodialE;
+				currEBasal  = colWeight * currEBasal  + periWeight * currPeripodialE;
+				currEMid    = colWeight * currEMid    + periWeight * currPeripodialE;
+				(*itElement)->setElasticProperties(currEApical,currEBasal,currEMid,poisson*(1 + noise2/100));
+
+			}
+			else{
+				//I have the inputs provided:
+				double currEApical 	= fractions[(*itElement)->Id] * LinkerZoneApicalElasticity*(1 + noise1/100.0);
+				double currEBasal	= fractions[(*itElement)->Id] * LinkerZoneBasalYoungsModulus*(1 + noise1/100.0);
+				double currEMid		= fractions[(*itElement)->Id] * 0.5 * (LinkerZoneApicalElasticity+LinkerZoneBasalYoungsModulus)*(1 + noise1/100.0);
+				(*itElement)->setElasticProperties(currEApical,currEBasal,currEMid,poisson*(1 + noise2/100));
+			}
 		}
 	}
-
 	vector<Node*>::iterator itNode;
 	for(itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
 		double r = (rand() % 200) / 100.0;
 		r = r - 1.0;
 		float noise3 = r*noiseOnPysProp[1];
 		noise3 = (1 + noise3/100.0);
-		(*itNode)->setViscosity(ApicalVisc*noise3, BasalVisc*noise3, PeripodialApicalVisc*noise3, PeripodialBasalVisc*noise3);
+		if ((*itNode)->tissueType == 2){ //linker, the viscosity can be averaged, or based on indivudual set of parameters:
+			if (BaseLinkerZoneParametersOnPeripodialness){
+				(*itNode)->setViscosity(ApicalVisc*noise3, BasalVisc*noise3, PeripodialApicalVisc*noise3, PeripodialBasalVisc*noise3);
+			}
+			else{
+				(*itNode)->setViscosity(LinkerZoneApicalViscosity*noise3, LinkerZoneBasalVisc*noise3, LinkerZoneApicalViscosity*noise3, LinkerZoneBasalVisc*noise3);
+			}
+		}else{
+			(*itNode)->setViscosity(ApicalVisc*noise3, BasalVisc*noise3, PeripodialApicalVisc*noise3, PeripodialBasalVisc*noise3);
+		}
 	}
 	delete[] fractions;
 }
@@ -2608,7 +2690,16 @@ void Simulation::fixNode0InPosition(double x, double y, double z){
 }
 
 void Simulation::manualPerturbationToInitialSetup(bool deform, bool rotate){
-    if(timestep==0){
+	if(timestep==0){
+		//laserAblateTissueType(1);
+		vector<Node*>::iterator itNode1;
+		/*for (itNode1=Nodes.begin(); itNode1<Nodes.end(); ++itNode1){
+			if ( (*itNode1)->tissueType == 2 && (*itNode1)->tissuePlacement == 0 && (*itNode1)->Position[2]>14.0 && (*itNode1)->Position[2]<14.2 ){ //basal node
+				(*itNode1)->FixedPos[2] = true;
+			}
+		}*/
+
+		//laserAblate(0.0, 0.0, 5.0);
         double scaleX = 1.0;
         double scaleY = 1.0;
         double scaleZ = 1.0;
@@ -3142,7 +3233,7 @@ void Simulation::correctCircumferentialNodeAssignment(vector< vector<int> > Oute
 			(*itNode)->atCircumference = false;
 		}
 	}
-	//I have a list of the Ids fot the OuterNodes I have added, changeing their circumferential node flags to true:
+	//I have a list of the Ids fot the OuterNodes I have added, changing their circumferential node flags to true:
 	int n0 = OuterNodeArray.size();
 	for (int i =0 ; i<n0; ++i){
 		int n1 = OuterNodeArray[i].size();
@@ -3315,6 +3406,11 @@ bool Simulation::checkIfThereIsPeripodialMembrane(){
 	for(itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
 		if ((*itNode)->tissueType == 1){
 			thereIsPeripodialMembrane = true;
+			//I have not added the peripodial membrane as yet,
+			//if there is one, it came from the input mesh
+			//Then I want to set up the circumferencial input properly.
+			setLinkerCircumference();
+			break;
 		}
 	}
 	return Success;
@@ -3428,8 +3524,7 @@ bool Simulation::runOneStep(){
         	calculateShapeChange();
         }
     }
-    vector<ShapeBase*>::iterator itElement;
-    for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+    for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
         if (!(*itElement)->IsAblated){
         	(*itElement)->growShapeByFg(dt);
         	//(*itElement)->defineFgByGrowthTemplate();
@@ -3515,7 +3610,9 @@ void Simulation::updatePlasticDeformation(){
 	double rate = plasticDeformationRate/3600.0*dt; //convert from per hour to per sec
 	vector<ShapeBase*>::iterator itElement;
 	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		(*itElement)->calculatePlasticDeformation(volumeConservedInPlasticDeformation,rate );
+		if (!(*itElement)->IsAblated){
+			(*itElement)->calculatePlasticDeformation(volumeConservedInPlasticDeformation,rate );
+		}
 	}
 }
 
@@ -3562,6 +3659,17 @@ void Simulation::updateStepNR(){
         //cout<<"calculated numerival packing K"<<endl;
         //calculatePackingK(K);
         //cout<<" after packing"<<endl;
+        //Now I will check if there are any nodes with zero mass, then I will be able to fill in the zero K matrix with identity if necessary.
+        int nAblatedNode = AblatedNodes.size();
+        for (int a = 0; a<nAblatedNode; ++a){
+        	int NodeId = AblatedNodes[a]*3;
+        	for (int aa= 0; aa<3; ++aa){
+				double Kdiagonal = gsl_matrix_get(K,NodeId+aa,NodeId+aa);
+				if (Kdiagonal == 0){
+					gsl_matrix_set(K,NodeId+aa,NodeId+aa,1);
+				}
+        	}
+        }
         for (int i=0; i<dim*nNodes; ++i){
             gsl_vector_set(gSum,i,gsl_matrix_get(ge,i,0)+gsl_matrix_get(gv,i,0));
         }
@@ -5268,15 +5376,13 @@ void Simulation::calculateImplicitKElastic(gsl_matrix* K){
     //cout<<"calculateImplicitKElastic for thw whole system"<<endl;
     vector<ShapeBase*>::iterator itElement;
     for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-    	if (!(*itElement)->IsAblated){
-    		(*itElement)->calculateImplicitKElastic();
-    	}
+    	//if element is ablated, the matrix will be set to identity here:
+    	(*itElement)->calculateImplicitKElastic();
     }
     //writing all elements K values into big K matrix:
     for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-    	if (!(*itElement)->IsAblated){
-    		(*itElement)->writeKelasticToMainKatrix(K);
-    	}
+    	//if element is ablated, current elemental K matrix will be identity
+    	(*itElement)->writeKelasticToMainKatrix(K);
     }
    //Elements[0]->displayMatrix(K,"KafterElastic");
    // Elements[0]->displayMatrix(K,"KafterFixingForSymmetry");
@@ -5388,12 +5494,14 @@ void Simulation::updateNodeMasses(){
 void 	Simulation:: updateElementToConnectedNodes(vector <Node*>& Nodes){
 	vector<Node*>::iterator itNode;
 	for(itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-	    int n = (*itNode)->connectedElementIds.size();
-        for (int i=0; i<n; ++i){
-            //if(!Elements[Nodes[j]->connectedElementIds[i]] -> IsAblated){
-        	(*itNode)->connectedElementWeights[i] = Elements[(*itNode)->connectedElementIds[i]]->VolumePerNode/(*itNode)->mass;
-            //}
-        }
+	    if ((*itNode)->mass > 0){//an ablated node will have this as zero
+			int n = (*itNode)->connectedElementIds.size();
+			for (int i=0; i<n; ++i){
+				//if(!Elements[Nodes[j]->connectedElementIds[i]] -> IsAblated){
+				(*itNode)->connectedElementWeights[i] = Elements[(*itNode)->connectedElementIds[i]]->VolumePerNode/(*itNode)->mass;
+				//}
+			}
+	    }
     }
 }
 
@@ -6910,10 +7018,20 @@ void Simulation::writeGrowth(){
 
 
 void Simulation::writeForces(){
+	//Write system forces first, on a nodal basis
 	for (int i=0;i<nNodes;++i){
 		saveFileForces.write((char*) &SystemForces[i][0], sizeof SystemForces[i][0]);
 		saveFileForces.write((char*) &SystemForces[i][1], sizeof SystemForces[i][1]);
 		saveFileForces.write((char*) &SystemForces[i][2], sizeof SystemForces[i][2]);
+	}
+	//Then write myosin forces
+	for (int i=0;i<nElements;++i){
+		int n=Elements[i]->getNodeNumber();
+		for (int j=0; j<6; ++j){
+			saveFileForces.write((char*) &Elements[i]->MyoForce[j][0], sizeof Elements[i]->MyoForce[j][0]);
+			saveFileForces.write((char*) &Elements[i]->MyoForce[j][1], sizeof Elements[i]->MyoForce[j][1]);
+			saveFileForces.write((char*) &Elements[i]->MyoForce[j][2], sizeof Elements[i]->MyoForce[j][2]);
+		}
 	}
 	saveFileForces.flush();
 }
@@ -6973,7 +7091,7 @@ void Simulation::calculateMyosinForces(){
 	cleanUpMyosinForces();
 	vector<ShapeBase*>::iterator itElement;
 	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		(*itElement)->updateMyosinConcentration(dt, kMyo);
+		(*itElement)->updateMyosinConcentration(dt, kMyo, thereIsMyosinFeedback, MyosinFeedbackCap);
 		(*itElement)->calculateMyosinForces(forcePerMyoMolecule);
 	}
 }
@@ -7573,6 +7691,42 @@ void Simulation::packToPipetteWall(){
 	}
 }
 
+void Simulation::laserAblateTissueType(int ablationType){
+	vector <int> AblatedElements;
+	for (int i=0; i<nNodes; ++i){
+		if (Nodes[i]->tissueType == ablationType && !Nodes[i]->hasLateralElementOwner){
+			//I want to ablate a whole tisse type, such as ablating the disc proper at the beginning of simulation.
+			//BUT, I want the nodes that are owned by the linker nodes to stay intact. Otherwise, I will loose part of the unintended tissue.
+			AblatedNodes.push_back(i);
+		}
+		else if (Nodes[i]->Position[2] > 14.25){//I do not want any node above 14.25;
+			AblatedNodes.push_back(i);
+		}
+	}
+
+	int nAN = AblatedNodes.size();
+	vector<ShapeBase*>::iterator itElement;
+	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		if(!(*itElement)->IsAblated){
+			for (int j =0; j<nAN; ++j){
+				bool IsAblatedNow = (*itElement)->DoesPointBelogToMe(AblatedNodes[j]);
+				if (IsAblatedNow){
+					(*itElement)->removeMassFromNodes(Nodes);
+					(*itElement)->IsAblated = true;
+					//cerr<<"Ablating element:" <<Elements[i]->Id<<endl;
+					break;
+				}
+			}
+		}
+	}
+	//some nodes are left with zero mass, which will cause problems in later calculations:
+	for (int i=0; i<nNodes; ++i){
+		if (Nodes[i]->mass <=0){
+			Nodes[i]->mass = 0.1;
+		}
+	}
+}
+
 void Simulation::laserAblate(double OriginX, double OriginY, double Radius){
 	vector <int> AblatedNodes;
 	vector <int> AblatedElements;
@@ -7595,7 +7749,7 @@ void Simulation::laserAblate(double OriginX, double OriginY, double Radius){
 				if (IsAblatedNow){
 					(*itElement)->removeMassFromNodes(Nodes);
 					(*itElement)->IsAblated = true;
-					//cerr<<"Ablating element:" <<Elements[i]->Id<<endl;
+					cerr<<"Ablating element:" <<(*itElement)->Id<<endl;
 					break;
 				}
 			}
@@ -7723,3 +7877,78 @@ void Simulation::pokeElement(int elementId, double dx, double dy, double dz){
     }
 }
 
+void Simulation::writeMeshRemovingAblatedRegions(){
+	cout<<"writing non-ablated mesh"<<endl;
+	int nonAblatedNodeMap[( const int ) nNodes];
+	int nNonAblatedNode = 0;
+	for (int i=0; i<nNodes; ++i){
+		nonAblatedNodeMap[i] = -10;
+		if (Nodes[i]->mass > 0){
+			nonAblatedNodeMap[i] = nNonAblatedNode;
+			nNonAblatedNode++;
+		}
+	}
+	cout<<"got non-ablated node number and map "<<endl;
+	int nNonAblatedElements = 0;
+	for (int i=0; i<nElements; ++i){
+		if (!Elements[i]->IsAblated){
+			nNonAblatedElements++;
+		}
+	}
+	cout<<"opening file"<<endl;
+	string meshSaveString = saveDirectory +"/MeshFromNonAblated.mesh";
+	const char* name_meshSaveString = meshSaveString.c_str();;
+	ofstream file;
+	file.open(name_meshSaveString, ofstream::out);
+	file<<nNonAblatedNode;
+	file<<endl;
+	for (int i=0; i<nNodes; ++i){
+		if (Nodes[i]->mass > 0){
+			file << Nodes[i]->Position[0];
+			file<<" \t";
+			file << Nodes[i]->Position[1];
+			file<<" \t";
+			file << Nodes[i]->Position[2];
+			file<<" \t";
+			file << Nodes[i]->tissuePlacement;
+			file<<" \t";
+			file << Nodes[i]->tissueType;
+			file<<" \t";
+			file << Nodes[i]->atCircumference;
+			file << endl;
+		}
+	}
+	file<<nNonAblatedElements;
+	file<<endl;
+	for (int i=0; i<nElements; ++i){
+		if (!Elements[i]->IsAblated){
+			file<< Elements[i]->getShapeType();
+			file<<" \t";
+			const int n = Elements[i]->getNodeNumber();
+			int* NodeIds;
+			NodeIds = new int[n];
+			NodeIds = Elements[i]->getNodeIds();
+			for (int j=0; j<n; ++j){
+				file<< nonAblatedNodeMap[NodeIds[j]];
+				file<<" \t";
+			}
+			int dim  = Elements[i]->getDim();
+			double** refPos = Elements[i]->getReferencePos();
+			for (int j = 0; j<6; ++j ){
+				for (int k = 0; k<dim; ++k ){
+					file.precision(5);file.width(12);
+					file<<refPos[j][k];
+				}
+			}
+			file << endl;
+		}
+	}
+	//recording tissue weights
+	file <<1<<endl;
+	for (int i=0; i<nElements; ++i){
+			if (!Elements[i]->IsAblated){
+				file <<Elements[i]->getPeripodialness() << endl;
+			}
+	}
+	file.close();
+}

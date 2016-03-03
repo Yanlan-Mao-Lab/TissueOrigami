@@ -27,7 +27,7 @@ public:
 	double 			mass;					///< The mass of the node, calculated via the elements that use the node as a vertex
 	double 			surface;				///< The surface of the node, calculated via apical or basal elements. Lateral surfaces are not included
     double  		zProjectedArea;         ///< The surface of the node, as projected in Z, calculated from apical or pasal surfces of elements, lateral surfaces are not included.
-   	vector <int> 	immediateNeigs;				///< The list of Id's for immediate neighbours of the node, i.e. the nodes that are shared by the elements that utilise the owner of this parameter.
+   	vector <int> 	immediateNeigs;				///< The list of Id's for immediate neighbours of the node, i.e. the nodes that are shared by the elements that utilise the owner of this node.
 	vector <int> 	connectedElementIds;		///< The list of Id's for elements that are utilising this node.
 	vector <double>	connectedElementWeights;	///< The list of weights (normalised mass) for elements that are utilising this node, order is linked to Node#connectedElementIds.
 	int 			symmetricEquivalentId;		///< The id of the node that this node will move symmetrically in y, if the tissue is symmetric and only half is simulated.

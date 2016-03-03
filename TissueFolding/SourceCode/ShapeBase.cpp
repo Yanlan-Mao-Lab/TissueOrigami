@@ -335,6 +335,10 @@ void ShapeBase::calculateFgFromGridCorners(double dt, GrowthFunctionBase* currGF
 		for (int axis =0; axis<3; axis++){
 			growth[axis]  = growth0[axis]*(1.0-FracX)*(1.0-FracY)+growth1[axis]*FracX*(1.0-FracY)+growth2[axis]*(1.0-FracX)*FracY+growth3[axis]*FracX*FracY;
 			growth[axis] *= tissueWeight;
+			//if (tissuePlacement == 0){
+				//Prevented basal element z growth! Correct this later!!!
+				//growth[2] = 0;
+			//}
 			gsl_matrix_set(increment,axis,axis,exp(growth[axis]*dt));
 		}
 		//Rotate the growth if the angel is not zero:
@@ -747,7 +751,8 @@ void 	ShapeBase::getPysProp(int type, float &PysPropMag, double dt){
 		double* growth;
 		growth = getGrowthRate();
         double timescale = 60.0*60.0; //reporting per hour
-        for (int i =0 ; i< nDim ; ++i){
+        for (int i =0 ; i< nDim-1 ; ++i){ //reporting only x & y
+        //for (int i =0 ; i< nDim ; ++i){
 			//growth is in form exp(r*dt), get r first, then adjust the time scale, and report the exponential form still:
 			//And I want to rate of volumetric growth, that is x*y*z
 			double value = exp(log(growth[i])/dt*timescale);
@@ -1413,17 +1418,23 @@ void ShapeBase::calculateImplicitKElastic(){
     //cout<<"calculating implicit K elastic for element: "<<Id<<endl;
     int dim = nDim;
     int n = nNodes;
-    //calculating K in a 3 point gaussian:
-    gsl_matrix* currK = gsl_matrix_calloc(dim*n,dim*n);
-    gsl_matrix_set_zero(TriPointKe);
-    double weights[3] = {1.0/3.0,1.0/3.0,1.0/3.0};
-    for (int iter =0; iter<3;++iter){
-        gsl_matrix_set_zero(currK);
-        //cout<<"Calculating gauss point: "<<iter<<endl;
-        calculateElasticKIntegral1(currK,iter);
-        calculateElasticKIntegral2(currK,iter);
-        gsl_matrix_scale(currK,weights[iter]);
-        gsl_matrix_add(TriPointKe, currK);
+    if (IsAblated){
+    	gsl_matrix_set_zero(TriPointKe);
+    }
+    else{
+    	//calculating K in a 3 point gaussian:
+		gsl_matrix* currK = gsl_matrix_calloc(dim*n,dim*n);
+		gsl_matrix_set_zero(TriPointKe);
+		double weights[3] = {1.0/3.0,1.0/3.0,1.0/3.0};
+		for (int iter =0; iter<3;++iter){
+			gsl_matrix_set_zero(currK);
+			//cout<<"Calculating gauss point: "<<iter<<endl;
+			calculateElasticKIntegral1(currK,iter);
+			calculateElasticKIntegral2(currK,iter);
+			gsl_matrix_scale(currK,weights[iter]);
+			gsl_matrix_add(TriPointKe, currK);
+		}
+	    gsl_matrix_free(currK);
     }/*
     if (Id == 1 || Id == 2){
     	cout<<"Element: "<<Id<<endl;
@@ -1448,7 +1459,6 @@ void ShapeBase::calculateImplicitKElastic(){
     displayMatrix(sigmacurr,"sigmacurr");
 
 */
-    gsl_matrix_free(currK);
 }
 
 void ShapeBase::writeKelasticToMainKatrix(gsl_matrix* Ke){
@@ -1925,7 +1935,157 @@ void	ShapeBase::updateUnipolarEquilibriumMyosinConcentration(bool isApical, doub
 	gsl_matrix_set(myoPolarityDir,indice,2,0.0);
 }
 
-void	ShapeBase::updateMyosinConcentration(double dt, double kMyo){
+void 	ShapeBase::calculatePrincipalStrainAxesOnXYPlane(double& e1, double &e2, double& tet){
+	//principal strains:
+	//e1,e2 = (exx + eyy) /2  +- sqrt( ( (exx - eyy)/2 ) ^2 + exy ^2)
+	//extension is taken to be positive, therefore the most extended axis will be e1.
+	//angle of the strains (direction of e1):
+	// tan (2*tetha) = (2 exy ) / ( exx - eyy )
+	double exx = gsl_matrix_get(Strain,0,0);
+	double eyy = gsl_matrix_get(Strain,1,0);
+	double exy = gsl_matrix_get(Strain,3,0)/2.0;
+	double difference = (exx - eyy)/2.0;
+	//double sumTerm = (exx + eyy) /2.0 ;
+	//double sqrootTerm = pow ( difference*difference +  exy*exy, 0.5);
+	//e1 = sumTerm + sqrootTerm;
+	//e2 = sumTerm - sqrootTerm;
+	double tan2Tet = exy/difference;
+	tet = atan2(exy,difference)/2.0;
+	//tet = atan(tan2Tet)/2;
+	//I can calculate e1 and e2, but I will not know which direction they
+	//correspond to, I should instead, calculate the rotation from a quaternian,
+	//and therefore obtain the main strain direction:
+	double c = cos(tet);
+	double s = sin(tet);
+	gsl_matrix* Rot = gsl_matrix_calloc(2,2);
+	gsl_matrix* RotT = gsl_matrix_calloc(2,2);
+	gsl_matrix* tmp = gsl_matrix_calloc(2,2);
+	gsl_matrix* newStrain = gsl_matrix_calloc(2,2);
+	gsl_matrix_set(Rot,0,0,c);
+	gsl_matrix_set(Rot,0,1,s);
+	gsl_matrix_set(Rot,1,0,(-1.0)*s);
+	gsl_matrix_set(Rot,1,1,c);
+	gsl_matrix_set(RotT,0,0,c);
+	gsl_matrix_set(RotT,1,0,s);
+	gsl_matrix_set(RotT,0,1,(-1.0)*s);
+	gsl_matrix_set(RotT,1,1,c);
+	gsl_matrix_set(newStrain,0,0,exx);
+	gsl_matrix_set(newStrain,0,1,exy);
+	gsl_matrix_set(newStrain,1,0,exy);
+	gsl_matrix_set(newStrain,1,1,eyy);
+	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, Rot, newStrain, 0.0, tmp);
+	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, tmp, RotT, 0.0, newStrain);
+	e1 = gsl_matrix_get(newStrain,0,0);
+	e2 = gsl_matrix_get(newStrain,1,1);
+	//cout<<"Id: "<<Id<<" tan2Tet "<<tan2Tet<<" 2Tet "<<atan2(exy,difference)<<" tet: "<<tet;
+	if (e2>e1){
+		//the main strain is in the direction perpendicular to the calculated angle.
+		double tmp = e1;
+		e1 = e2;
+		e2 = tmp;
+		tet = tet + M_PI/2.0;
+	}
+	//cout<<"after correction tet: "<<tet<<endl;
+	//displayMatrix(Strain, "strain");
+	//displayMatrix(newStrain, "newStrain");
+	gsl_matrix_free(Rot);
+	gsl_matrix_free(RotT);
+	gsl_matrix_free(newStrain);
+	gsl_matrix_free(tmp);
+
+}
+
+bool	ShapeBase::checkIfXYPlaneStrainAboveThreshold(double thres){
+	double exx = gsl_matrix_get(Strain,0,0);
+	double eyy = gsl_matrix_get(Strain,1,0);
+	double exy = gsl_matrix_get(Strain,3,0)/2.0;
+	double thresSquared = thres*thres;
+	double diff= exx - eyy;
+	if (diff*diff > thresSquared){
+		return true;
+	}
+	if (exy*exy > thresSquared){
+		return true;
+	}
+	return false;
+}
+
+void	ShapeBase::updateEquilibriumMyoWithFeedback(double MyosinFeedbackCap){
+	if (tissueType == 0 || tissueType == 1){
+		//the feedback is applied only in peripodial membrane or the disc proper.
+		//Linker zones are not affected.
+		if (spansWholeTissue || tissuePlacement == 1){
+			//The feedback is only on the apical surface of the tissue:
+			//This feedback does not focus on the aspect ratio of the tissue.
+			//Only stretch in one direction can result in myosin feedback.
+			//If the tissue is under compression, with a high aspect ratio, there will be no feedback.
+			double e1 = 0.0, e2 = 0.0, tet = 0.0;
+			bool calculatePrincipalStrainDirection = checkIfXYPlaneStrainAboveThreshold(1E-5);
+			if (calculatePrincipalStrainDirection){
+				calculatePrincipalStrainAxesOnXYPlane(e1, e2, tet);
+				double lowThres = 0.05;
+				double upThres = 0.2;
+				if(e1<lowThres){
+					cMyoUnipolarEq[0] = 0.0;
+				}else {
+					//calculate concentration:
+					if (e1>upThres){
+						cMyoUnipolarEq[0] = MyosinFeedbackCap;
+					}
+					else{
+						cMyoUnipolarEq[0] = e1*1000.0;
+					}
+					//give the current direction:
+					gsl_matrix_set(myoPolarityDir,0,0,cos(tet));
+					gsl_matrix_set(myoPolarityDir,0,1,sin(tet));
+					gsl_matrix_set(myoPolarityDir,0,2,0.0);
+					//cout<<"Element: "<<Id<<" e1: "<<e1<<" e2 "<<e2 <<" tet: "<<tet<<" cmyo: "<<cMyoUnipolarEq[0]<<endl;
+					//displayMatrix(Strain, "strain");
+					//displayMatrix(myoPolarityDir, "myoPolarityDir");
+				}
+			}
+		}
+
+
+		/*double exx = gsl_matrix_get(Strain,0,0);
+		double eyy = gsl_matrix_get(Strain,1,0);
+		double feedbackStrain = 0.0;
+		int directionIndex = 0; //by default the myosin response is in x
+		if (eyy > exx){
+			//if the stretch is higher in yy, then change the direction
+			//and assign the strain to be used in feedback calculation.
+			directionIndex = 1;
+			feedbackStrain = eyy;
+		}
+		else{
+			feedbackStrain = exx;
+		}
+
+		if(feedbackStrain<lowThres){
+			cMyoUnipolarEq[0] = 0.0;
+		}else if (feedbackStrain>upThres){
+			cMyoUnipolarEq[0] = MyosinFeedbackCap;
+			//reset direction:
+			gsl_matrix_set(myoPolarityDir,0,0,0);
+			gsl_matrix_set(myoPolarityDir,0,1,0.0);
+			gsl_matrix_set(myoPolarityDir,0,2,0.0);
+			//give the current direction:
+			gsl_matrix_set(myoPolarityDir,0,directionIndex,1.0);
+		}
+		else{
+			cMyoUnipolarEq[0] = feedbackStrain*1000.0;
+			//reset direction:
+			gsl_matrix_set(myoPolarityDir,0,0,0);
+			gsl_matrix_set(myoPolarityDir,0,1,0.0);
+			gsl_matrix_set(myoPolarityDir,0,2,0.0);
+			//give the current direction:
+			gsl_matrix_set(myoPolarityDir,0,directionIndex,1.0);
+		}*/
+
+	}
+}
+
+void	ShapeBase::updateMyosinConcentration(double dt, double kMyo, bool thereIsMyosinFeedback, double MyosinFeedbackCap){
 	double thresholdValue = 1E-8, thresholdFraction= 0.01;
 	//the value of kMyo is taken form my thesis
 	double currMyoDt[3] = {dt,dt*2.0,dt/2.0};
@@ -1934,20 +2094,24 @@ void	ShapeBase::updateMyosinConcentration(double dt, double kMyo){
 	//second is with currTimeStep*2 and
 	//third is with 0.5 currTimeStep;
 	double cInitial, cEq;
+	//0 for any polarity below
+	if (thereIsMyosinFeedback){
+		updateEquilibriumMyoWithFeedback(MyosinFeedbackCap);
+	}
 	for (int myoIter =0; myoIter<4; myoIter++){
-		if (myoIter == 0){
+		if (myoIter == 0){ //apical uniform
 			cInitial = cMyoUniform[0];
 			cEq = cMyoUniformEq[0];
 		}
-		else if (myoIter == 1){
+		else if (myoIter == 1){//basal uniform
 			cInitial = cMyoUniform[1];
 			cEq = cMyoUniformEq[1];
 		}
-		else if (myoIter == 2){
+		else if (myoIter == 2){//apical polar
 			cInitial = cMyoUnipolar[0];
 			cEq = cMyoUnipolarEq[0];
 		}
-		else if (myoIter == 3){
+		else if (myoIter == 3){//basal polar
 			cInitial = cMyoUnipolar[1];
 			cEq = cMyoUnipolarEq[1];
 		}
@@ -2271,7 +2435,7 @@ void 	ShapeBase:: assignElementToConnectedNodes(vector <Node*>& Nodes){
 
 void 	ShapeBase::removeMassFromNodes(vector <Node*>& Nodes){
 	for (int i=0; i<nNodes; i++){
-			Nodes[NodeIds[i]]->mass -=ReferenceShape->Volume/nNodes;
+			Nodes[NodeIds[i]]->mass -= VolumePerNode;
 			//updating the weight fractions of the elements on the node due to elimination of the ablated element:
 			int n = Nodes[NodeIds[i]]->connectedElementIds.size();
 			double scaler = 1.0;

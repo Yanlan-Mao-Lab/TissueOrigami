@@ -209,7 +209,7 @@ using namespace std;
 	}
 */
 
-	 DisplayFixedNodes= false;
+	 DisplayFixedNodes= true;
 	 if (DisplayFixedNodes){
 		 drawFixedNodes();
 	 }
@@ -493,7 +493,7 @@ void GLWidget::highlightNode(int i){
 	for (int j = 0; j<n; j++){
 		NodeColours[j] = new float[3];
 		if(drawMyosinForces && !DisplayStrains && !DisplayPysProp){
-			//Myosin is drawn on an element basis, for ease of following the loacl distribution.
+			// Myosin is drawn on an element basis, for ease of following the local distribution.
 			// deactivate this if clause to display myosin levels in a nodal basis (smoothing).
 			// you will also need to activate the clause in function constructNodeColourList.
 			float* currColour;
@@ -635,7 +635,7 @@ void GLWidget::highlightNode(int i){
  }
 
  void GLWidget::getConcentrationColour(float* OutputColour, float concentration){
-	 double scale2[2] = {0,15.0};
+	 double scale2[2] = {0,200.0};
 	 double g = (concentration- scale2[0])/(scale2[1]-scale2[0]);
 	 OutputColour[0] = 1.0-g;
 	 OutputColour[1] = 1.0;

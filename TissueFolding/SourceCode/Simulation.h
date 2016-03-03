@@ -55,6 +55,8 @@ private:
     int growthRotationUpdateFrequency;
     vector <Node*> symmetricYBoundaryNodes;
 
+    vector <int> AblatedNodes;
+
 	bool readModeOfSim(int& i, int argc, char **argv);
 	bool readParameters(int& i, int argc, char **argv);
 	bool readOutputDirectory(int& i, int argc, char **argv);
@@ -108,6 +110,7 @@ private:
 	void getAverageSideLength(double& periAverageSideLength, double& colAverageSideLength);
 	bool isColumnarLayer3D();
 	bool checkIfThereIsPeripodialMembrane();
+	void setLinkerCircumference();
 	bool calculateTissueHeight();
 	bool addStraightPeripodialMembraneToTissue();
 	bool addCurvedPeripodialMembraneToTissue();
@@ -188,6 +191,7 @@ private:
     void addPipetteForces(gsl_matrix *gExt);
     void addMyosinForces(gsl_matrix* gExt);
 	void laserAblate(double OriginX, double OriginY, double Radius);
+	void laserAblateTissueType(int ablationType);
 	void fillInNodeNeighbourhood();
 	void updateElementVolumesAndTissuePlacements();
 	void clearNodeMassLists();
@@ -232,7 +236,7 @@ public:
 	float zHeight;
 	bool ApicalNodeFix[3];
 	bool BasalNodeFix[3];
-	bool CircumferentialNodeFix[3][3]; //row 0: apical circumferece x,y,z ; row 1: basal circumference x,y,z; row 2: all circumference x,y,z
+	bool CircumferentialNodeFix[5][3]; //row 0: apical circumferece x,y,z ; row 1: basal circumference x,y,z; row 2: linker apical circumference x,y,z, row 3: linker basal circumference x,y,z, row 4: all circumference x,y,z
 	double PeripodialElasticity;
 	double PeripodialApicalVisc;
 	double PeripodialBasalVisc;
@@ -240,6 +244,13 @@ public:
 	double PeripodialLateralThicnessScale; //the thickness of the side region linking two layers, as a fraction of tissue thickness
 	double lumenHeight;
 	double lumenHeightScale;
+	//linker zone parameters
+	bool BaseLinkerZoneParametersOnPeripodialness;
+	double LinkerZoneApicalElasticity;
+	double LinkerZoneBasalYoungsModulus;
+	double LinkerZoneApicalViscosity;
+	double LinkerZoneBasalVisc;
+
 	int nGrowthFunctions;
 	bool GridGrowthsPinnedOnInitialMesh;
 
@@ -257,6 +268,8 @@ public:
 	vector<MyosinFunction*> myosinFunctions;
 	double kMyo;
 	double forcePerMyoMolecule;
+	bool thereIsMyosinFeedback;
+	double MyosinFeedbackCap;
 	bool addCurvatureToTissue;
 	double tissueCurvatureDepth;
 	vector <Node*> Nodes;
@@ -420,6 +433,7 @@ public:
 	bool checkFlip();
 	void wrapUpAtTheEndOfSimulation();
 	void writeRelaxedMeshFromCurrentState();
+	void writeMeshRemovingAblatedRegions();
 	void calculateDVDistance();
 	void TissueAxisPositionDisplay();
 	void coordinateDisplay();

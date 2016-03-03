@@ -75,6 +75,12 @@ bool ModelInputObject::readParameters(){
 				 */
 				Success  = readPeripodialMembraneParameters(parametersFile);
 			}
+			else if(currParameterHeader == "LinkerZoneParameters:"){
+				/**
+				 * Linker zone physical properties through the private function ModelInputObject#readLinkerZoneParameters
+				 */
+				Success  = readLinkerZoneParameters(parametersFile);
+			}
 			else if(currParameterHeader == "NodeFixingOptions:"){
 				/**
 				 * Inputs relating to fixing the nodes of the tissue through the private function ModelInputObject#readNodeFixingParameters
@@ -617,10 +623,30 @@ bool ModelInputObject::readNodeFixingParameters(ifstream& file){
 		return false;
 	}
 	file >> currHeader;
-	if(currHeader == "CircumferenceFix(bool-x,y,z):"){
+	if(currHeader == "LinkerApicalCircumferenceFix(bool-x,y,z):"){
 		file >>Sim->CircumferentialNodeFix[2][0];
 		file >>Sim->CircumferentialNodeFix[2][1];
 		file >>Sim->CircumferentialNodeFix[2][2];
+	}
+	else{
+		cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: LinkerApicalCircumferenceFix(bool-x,y,z):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "LinkerBasalCircumferenceFix(bool-x,y,z):"){
+		file >>Sim->CircumferentialNodeFix[3][0];
+		file >>Sim->CircumferentialNodeFix[3][1];
+		file >>Sim->CircumferentialNodeFix[3][2];
+	}
+	else{
+		cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: LinkerBasalCircumferenceFix(bool-x,y,z):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "CircumferenceFix(bool-x,y,z):"){
+		file >>Sim->CircumferentialNodeFix[4][0];
+		file >>Sim->CircumferentialNodeFix[4][1];
+		file >>Sim->CircumferentialNodeFix[4][2];
 	}
 	else{
 		cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: CircumferenceFix(bool-x,y,z):" <<endl;
@@ -884,6 +910,51 @@ bool ModelInputObject::readPeripodialMembraneParameters(ifstream& file){
 	return true;
 }
 
+bool ModelInputObject::readLinkerZoneParameters(ifstream& file){
+	string currHeader;
+	file >> currHeader;
+	if(currHeader == "BaseOnPeripodialness(bool):"){
+		file >>Sim->BaseLinkerZoneParametersOnPeripodialness;
+	}
+	else{
+		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: BaseOnPeripodialness(bool):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "LinkerZoneApicalYoungsModulus:"){
+		file >>Sim->LinkerZoneApicalElasticity;
+	}
+	else{
+		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: LinkerZoneApicalYoungsModulus:" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "LinkerZoneBasalYoungsModulus:"){
+		file >>Sim->LinkerZoneBasalYoungsModulus;
+	}
+	else{
+		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: LinkerZoneBasalYoungsModulus:" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "LinkerZoneApicalViscosity:"){
+		file >>Sim->LinkerZoneApicalViscosity;
+	}
+	else{
+		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: LinkerZoneApicalViscosity:" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "LinkerZoneBasalViscosity:"){
+		file >>Sim->LinkerZoneBasalVisc;
+	}
+	else{
+		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: LinkerZoneBasalViscosity:" <<endl;
+		return false;
+	}
+	return true;
+}
+
 bool ModelInputObject::readTimeParameters(ifstream& file){
 	string currHeader;
 
@@ -1119,19 +1190,9 @@ bool ModelInputObject::readPlasticDeformationOptions(ifstream& file){
 
 bool ModelInputObject::readMyosinOptions(ifstream& file){
 	string currHeader;
-	file >> currHeader;
-	int n;
-	cout<<"entered read myosin concentration options, current header: "<<currHeader<<endl;
-	if(currHeader == "NumberofMyosinFunctions(int):"){
-		file >> n;
-		Sim->nMyosinFunctions = n;
-	}
-	else{
-		cerr<<"Error in reading myosin concentration options, curr string: "<<currHeader<<", should have been: NumberofMyosinFunctions(int):" <<endl;
-		return false;
-	}
 	//regardless of how many myosin functions I have, I need the diffusion constant and the force per myosin molecule
 	file >> currHeader;
+	cout<<"entered read myosin concentration options, current header: "<<currHeader<<endl;
 	if(currHeader == "MyosinDiffusionRate(double-1/sec):"){
 		file >> Sim->kMyo ;
 	}
@@ -1145,6 +1206,33 @@ bool ModelInputObject::readMyosinOptions(ifstream& file){
 	}
 	else{
 		cerr<<"Error in reading force per myosin molecule, curr string: "<<currHeader<<", should have been: ForcePerMyosinMolecule(double):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "ThereIsMyosinFeedback(bool):"){
+		file >> Sim->thereIsMyosinFeedback;
+	}
+	else{
+		cerr<<"Error in reading force per myosin molecule, curr string: "<<currHeader<<", should have been: ThereIsMyosinFeedback(bool):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "MyosinFeedbackCap:"){
+		file >> Sim->MyosinFeedbackCap;
+	}
+	else{
+		cerr<<"Error in reading force per myosin molecule, curr string: "<<currHeader<<", should have been: MyosinFeedbackCap:" <<endl;
+		return false;
+	}
+	//Reading number of myosin funcitons as input
+	file >> currHeader;
+	int n;
+	if(currHeader == "NumberofMyosinFunctions(int):"){
+		file >> n;
+		Sim->nMyosinFunctions = n;
+	}
+	else{
+		cerr<<"Error in reading myosin concentration options, curr string: "<<currHeader<<", should have been: NumberofMyosinFunctions(int):" <<endl;
 		return false;
 	}
 	//now I can read the myosin parameters

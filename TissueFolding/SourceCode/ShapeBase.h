@@ -219,7 +219,10 @@ public:
 	void 	cleanMyosinForce();
 	void	updateUniformEquilibriumMyosinConcentration(bool isApical, double cEqUniform);
 	void	updateUnipolarEquilibriumMyosinConcentration(bool isApical, double cEqUnipolar, double orientationX, double orientationY);
-	void	updateMyosinConcentration(double dt, double kMyo);
+	void	updateMyosinConcentration(double dt, double kMyo, bool thereIsMyosinFeedback, double MyosinFeedbackCap);
+	void 	calculatePrincipalStrainAxesOnXYPlane(double& e1, double &e2, double& tet);
+	void	updateEquilibriumMyoWithFeedback(double MyosinFeedbackCap);
+	bool	checkIfXYPlaneStrainAboveThreshold(double thres);
 	bool 	calculateIfInsideActiveStripe(double initialPoint,double endPoint, double stripeSize1, double stripeSize2);
 	double	getCmyosinUniformForNode (int TissuePlacement);
 	double	getCmyosinUnipolarForNode (int TissuePlacement);

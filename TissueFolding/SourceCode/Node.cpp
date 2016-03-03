@@ -109,6 +109,9 @@ bool Node::checkIfNodeHasPacking(){
 	 *  they would need to penetrate through the apical or basal surface of the tissue to reach this node.
 	 *
 	 */
+	if (mass == 0){ //IF the node does not have any mass, ot means it is ablated, and it should not pack
+		return false;
+	}
 	if (hasLateralElementOwner){ //if the node is owned by any lateral element connecitng peripodial to columnar layers, then it is not affected by packing
 		return false;
 	}

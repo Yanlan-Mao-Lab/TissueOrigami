@@ -23,6 +23,7 @@ private:
 	bool readSaveOptions(ifstream &file);					///< This function reads the save options of the simulation from file.
 	bool readMeshParameters(ifstream& file);				///< This function reads the mesh structure related parameters of the tissue from file.
 	bool readPeripodialMembraneParameters(ifstream& file);	///< This function reads the peripodial membrane related parameters of the tissue from file.
+	bool readLinkerZoneParameters(ifstream& file);			///< This function reads the linker zone related parameters of the tissue from file.
 	bool readNodeFixingParameters(ifstream& file);			///< This function reads the inputs relating to fixing the nodes of the tissue from file.
 	bool readManupulationParamters(ifstream& file);			///< This function reads the inputs relating to manipulations made on the tissue after mesh read.
 	bool readTimeParameters(ifstream &file);				///< This function reads the time related parameters of the simulation from file.
