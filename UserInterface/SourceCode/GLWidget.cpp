@@ -19,9 +19,9 @@ using namespace std;
  GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
  {
 	 //cout<<"initiating gl widget"<<endl;
-	 obj_pos[0] = 100.0f;
+	 obj_pos[0] = 10.0f;
 	 obj_pos[1] =  4.0f;
-     obj_pos[2] =  250.0f;//250.0f;
+     obj_pos[2] =  70.0f;//250.0f;
 	 MatRot[0]  = 1.0; MatRot[1]  = 0.0; MatRot[2]  = 0.0; MatRot[3]  = 0.0;
 	 MatRot[4]  = 0.0; MatRot[5]  = 1.0; MatRot[6]  = 0.0; MatRot[7]  = 0.0;
 	 MatRot[8]  = 0.0; MatRot[9]  = 0.0; MatRot[10] = 1.0; MatRot[11] = 0.0;
@@ -74,7 +74,7 @@ using namespace std;
   	 drawNetForces = false;
   	 drawPackingForces = false;
      drawVelocities = false;
-     drawMyosinForces = false;
+     drawMyosinForces = true;
      drawPeripodialMembrane = true;
      drawColumnar = true;
      ManualNodeSelection = false;
@@ -501,9 +501,11 @@ void GLWidget::highlightNode(int i){
 			float cMyoMag;
 			if (MyosinToDisplay == 0){
 				cMyoMag = Sim01->Elements[i]->getCmyosinUniformForNode(Sim01->Nodes[NodeIds[j]]->tissuePlacement);
+				//if (cMyoMag> 1){cout<<" Element: "<<i<<" myo uniform: "<<cMyoMag<<endl;}
 			}
 			else if (MyosinToDisplay == 1){
 				cMyoMag = Sim01->Elements[i]->getCmyosinUnipolarForNode(Sim01->Nodes[NodeIds[j]]->tissuePlacement);
+				//if (cMyoMag> 1){cout<<" Element: "<<i<<" myo polar: "<<cMyoMag<<endl;}
 			}
 			getConcentrationColour(currColour,cMyoMag);
 			NodeColours[j][0]=currColour[0];
@@ -635,8 +637,9 @@ void GLWidget::highlightNode(int i){
  }
 
  void GLWidget::getConcentrationColour(float* OutputColour, float concentration){
-	 double scale2[2] = {0,200.0};
+	 double scale2[2] = {50,200.0};
 	 double g = (concentration- scale2[0])/(scale2[1]-scale2[0]);
+	 if (g<0) {g=0;}
 	 OutputColour[0] = 1.0-g;
 	 OutputColour[1] = 1.0;
 	 OutputColour[2] = 0.8*(1.0-g);

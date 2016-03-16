@@ -4,7 +4,7 @@
 #the commands on the header of the Makefile
 
 
-#the line necessary for the compilation of non-visual interface model is below. This hsould be in the makefile inside TissueFolding/Debug/:
+#the line necessary for the compilation of non-visual interface model is below. This should be in the makefile inside TissueFolding/Debug/:
 #g++ -L/usr/include/  -L/opt/Qt5.2.1/5.2.1/gcc_64/lib  -o "TissueFolding" $(OBJS) $(USER_OBJS) $(LIBS) -lgsl  -lgslcblas -lpardiso500-GNU461-X86-64 -fopenmp -llapack -lpthread
 	
 

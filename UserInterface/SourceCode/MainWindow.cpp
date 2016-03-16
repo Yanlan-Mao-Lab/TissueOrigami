@@ -743,15 +743,9 @@ void MainWindow::timerSimulationStep(){
 		if(!Sim01->reachedEndOfSaveFile){
 
 			Sim01->updateOneStepFromSave();
-			Sim01->updateOneStepFromSave();
-			Sim01->updateOneStepFromSave();
-			Sim01->updateOneStepFromSave();
-			Sim01->updateOneStepFromSave();
-			Sim01->updateOneStepFromSave();
-			Sim01->updateOneStepFromSave();
-			Sim01->updateOneStepFromSave();
-			Sim01->updateOneStepFromSave();
-			Sim01->updateOneStepFromSave();
+			for (int a = 0; a<20; a++){
+				Sim01->updateOneStepFromSave();
+			}
 
 			Sim01->fixNode0InPosition(34,0,0);
 			updateTimeText();
@@ -798,7 +792,7 @@ void MainWindow::timerSimulationStep(){
             //Sim01->writeMeshRemovingAblatedRegions();
             double duration = ( std::clock() - simulationStartClock ) / (double) CLOCKS_PER_SEC;
             cout<<"Simulation duration: "<<duration<<" sec"<<endl;
-            close();
+            //close();
         }
     }
     MainGLWidget->update();

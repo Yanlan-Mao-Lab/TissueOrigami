@@ -95,7 +95,6 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
     detdXdes = new double[3];
     Bmatrices = new gsl_matrix*[3];
     FeMatrices = new gsl_matrix*[3];
-    CMatrices = new gsl_matrix*[3];
     detFs = new double[3];
     invJShapeFuncDerStack = new gsl_matrix*[3];
     invJShapeFuncDerStackwithFe  = new gsl_matrix*[3];
@@ -107,7 +106,6 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
         detdXdes[i] = 0.0;
         Bmatrices[i] = gsl_matrix_calloc(nNodes,nDim*nNodes);
         FeMatrices[i] = gsl_matrix_calloc(3,3);
-        CMatrices[i] = gsl_matrix_calloc(6,6);
         invJShapeFuncDerStack[i] = gsl_matrix_calloc(nDim*nDim, nDim*nNodes);
         invJShapeFuncDerStackwithFe[i] = gsl_matrix_calloc(nDim*nDim, nDim*nNodes);
         elasticStress[i] = gsl_matrix_calloc(3,3);
@@ -131,7 +129,7 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
     gsl_matrix_set_identity(growthIncrement);
     TriPointF = gsl_matrix_calloc(3,3);
     TriPointKe = gsl_matrix_calloc(nDim*nNodes,nDim*nNodes);
-
+    ElementalSystemForces = gsl_matrix_calloc(nNodes,nDim);
 	RotatedElement = false;    
 
 	CurrShapeChangeToAdd[0] = 0;
@@ -183,7 +181,6 @@ Prism::~Prism(){
         gsl_matrix_free (InvdXdes[i]);
         gsl_matrix_free (Bmatrices[i]);
         gsl_matrix_free (FeMatrices[i]);
-        gsl_matrix_free (CMatrices[i]);
         gsl_matrix_free (invJShapeFuncDerStack[i]);
         gsl_matrix_free (invJShapeFuncDerStackwithFe[i]);
         gsl_matrix_free (elasticStress[i]);
@@ -194,7 +191,6 @@ Prism::~Prism(){
     delete[] detdXdes;
     delete[] Bmatrices;
     delete[] FeMatrices;
-    delete[] CMatrices;
     delete[] detFs;
     delete[] invJShapeFuncDerStack;
     delete[] invJShapeFuncDerStackwithFe;
@@ -356,15 +352,18 @@ void  Prism::setElasticProperties(double EApical, double EBasal, double EMid, do
     gsl_matrix_set(D,5,5,  multiplier*(1-2*v)/2);
 	
     //calculating 4th order tensor D
+    // lambda is Lame s first parameter and mu is the shear modulus .
     double Idouble[3][3] = {{1.0,0.0,0.0} , {0.0,1.0,0.0}, {0.0,0.0,1.0}};
-    for (int I = 0; I<nDim; ++I){
-        for (int J = 0; J<nDim; ++J){
-            for (int K = 0; K<nDim; ++K){
-                for (int L = 0; L<nDim; ++L){
-                    D81[I][J][K][L] = lambda*Idouble[K][L]*Idouble[I][J] + mu * ( Idouble[I][K]*Idouble[J][L] + Idouble[I][L]*Idouble[J][K] );
-                }
-            }
-        }
+    for (int pointNo = 0; pointNo<3; pointNo++){
+		for (int I = 0; I<nDim; ++I){
+			for (int J = 0; J<nDim; ++J){
+				for (int K = 0; K<nDim; ++K){
+					for (int L = 0; L<nDim; ++L){
+						D81[pointNo][I][J][K][L] = lambda*Idouble[K][L]*Idouble[I][J] + mu * ( Idouble[I][K]*Idouble[J][L] + Idouble[I][L]*Idouble[J][K] );
+					}
+				}
+			}
+		}
     }
     //cout<<" Element: "<<Id<<" E : "<<E<<" v: "<<v<<" lambda: "<<lambda<< " mu: "<<mu<<endl;
 }
@@ -495,7 +494,6 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currg, gsl_matrix *currF, int p
     //calculating F:
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, Jacobian, InvdXde, 0.0, currF);
 
-
     //calculating Fe:
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currF, InvFg, 0.0, currFeFpFsc);	///< Removing growth
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currFeFpFsc, InvFsc, 0.0, currFeFp);	///< Removing shape change
@@ -505,19 +503,43 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currg, gsl_matrix *currF, int p
 	gsl_matrix* currFeT = gsl_matrix_alloc(dim, dim);
     gsl_matrix_transpose_memcpy(currFeT,currFe);
     createMatrixCopy(FeMatrices[pointNo], currFe); // storing Fe for use in implicit elastic K calculation.
-    //calculating E (E = 1/2 *(Fe^T*Fe-I):
-    gsl_matrix* E = calculateEForNodalForces(currFe,currFeT);
-
-    //calculating S: (S = D:E)
-    gsl_matrix* S = calculateSForNodalForces(E);
-
+    bool KirshoffMaterial = false;
+    bool neoHookeanMaterial = !KirshoffMaterial;
+    gsl_matrix* E ;
+    gsl_matrix* S;
+    gsl_matrix* C = calculateCauchyGreenDeformationTensor(currFe,currFeT);
+    double detFe = determinant3by3Matrix(currFe);
+    double lnJ = log(detFe);
+    if (KirshoffMaterial){
+    	//calculating E (E = 1/2 *(Fe^T*Fe-I):
+    	E = calculateEForNodalForcesKirshoff(C);
+    	//calculating S: (S = D:E)
+    	S = calculateSForNodalForcesKirshoff(E);
+    }else if (neoHookeanMaterial){
+    	gsl_matrix * tmpCforInversion =  gsl_matrix_calloc(nDim,nDim);
+		gsl_matrix* InvC = gsl_matrix_calloc(nDim,nDim);
+		createMatrixCopy(tmpCforInversion,C);
+		bool inverted = InvertMatrix(tmpCforInversion, InvC);
+		if (!inverted){
+			cerr<<"C not inverted!!"<<endl;
+		}
+    	S = calculateSForNodalForcesNeoHookean(InvC,lnJ);
+    	updateLagrangianElasticityTensorNeoHookean(InvC,lnJ,pointNo);;
+    	//I would like to keep a record of strains, therefore I am repeating this calculation here,
+    	//it does not contribute to force calculation
+    	E = calculateEForNodalForcesKirshoff(C);
+    	gsl_matrix_set_zero(Strain);
+		gsl_matrix_set(Strain,0,0, gsl_matrix_get(E,0,0));
+		gsl_matrix_set(Strain,1,0, gsl_matrix_get(E,1,1));
+		gsl_matrix_set(Strain,2,0, gsl_matrix_get(E,2,2));
+		gsl_matrix_set(Strain,3,0, 2.0*gsl_matrix_get(E,0,1));
+		gsl_matrix_set(Strain,4,0, 2.0*gsl_matrix_get(E,2,1));
+		gsl_matrix_set(Strain,5,0, 2.0*gsl_matrix_get(E,0,2));
+    }
     //calculating stress (stress = detFe^-1 Fe S Fe^T):
     gsl_matrix_set_zero(elasticStress[pointNo]);
-    gsl_matrix* compactStress  = calculateCompactStressForNodalForces(currFe,S,currFeT, elasticStress[pointNo]);
+    gsl_matrix* compactStress  = calculateCompactStressForNodalForces(detFe, currFe,S,currFeT, elasticStress[pointNo]);
 
-    //cout<<"pointNo: "<<pointNo<<endl;
-    //displayMatrix(compactStress,"compactStress");
-    //displayMatrix(S,"S");
     //Now from stress, I will calculate nodal forces via B.
     //Calculating the inverse Jacobian stack matrix:
     gsl_matrix* InvJacobianStack = calculateInverseJacobianStackForNodalForces(Jacobian);
@@ -534,39 +556,11 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currg, gsl_matrix *currF, int p
     gsl_matrix_scale(currBT,detdXdes[pointNo]);
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currBT, compactStress,0.0, currg);
 
-/*
-    gsl_matrix* C = CMatrices[pointNo];
-    calculateCMatrix(pointNo);
-    gsl_matrix* tmp1 = gsl_matrix_calloc(3,3);
-    gsl_matrix* InvFe = gsl_matrix_calloc(nDim,nDim);
-    gsl_matrix* tmpFeForInversion = gsl_matrix_calloc(nDim,nDim);
-    createMatrixCopy(tmpFeForInversion,currFe);
-    bool inverted = InvertMatrix(tmpFeForInversion, InvFe);
-    gsl_matrix* InvFeT = gsl_matrix_calloc(nDim,nDim);
-    gsl_matrix_transpose_memcpy(InvFeT,InvFe);
-    gsl_matrix* b = gsl_matrix_calloc(nDim,nDim);
-    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, InvFeT, E,0.0, tmp1);
-    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, tmp1, InvFe,0.0, b);
-    gsl_matrix* bVoigt = gsl_matrix_calloc(6,1);
-    gsl_matrix_set(bVoigt,0,0, gsl_matrix_get(b,0,0));
-    gsl_matrix_set(bVoigt,1,0, gsl_matrix_get(b,1,1));
-    gsl_matrix_set(bVoigt,2,0, gsl_matrix_get(b,2,2));
-    gsl_matrix_set(bVoigt,3,0, 2.0*gsl_matrix_get(b,0,1));
-    gsl_matrix_set(bVoigt,4,0, 2.0*gsl_matrix_get(b,2,1));
-    gsl_matrix_set(bVoigt,5,0, 2.0*gsl_matrix_get(b,0,2));
-    gsl_matrix* sigma2 = gsl_matrix_calloc(6,1);
-    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, C, bVoigt,0.0, sigma2);
-
-    displayMatrix(sigma2,"sigma2");
-    displayMatrix(compactStress,"compactStress");
-*/
-    //cout<<"Element: "<<Id<<endl;
-    //displayMatrix(currFe,"currFe");
-
     //freeing the matrices allocated in this function
     gsl_matrix_free(currFeT);
     gsl_matrix_free(currFeFp);
     gsl_matrix_free(currFeFpFsc);
+    gsl_matrix_free(C);
     gsl_matrix_free(E);
     gsl_matrix_free(S);
     gsl_matrix_free(compactStress);
@@ -1289,7 +1283,7 @@ void 	Prism::distributeMyosinForce(bool isIsotropic, bool apical, double forcePe
 	gsl_vector_free(vec0);
 	gsl_vector_free(vec1);
 	gsl_vector_free(vec2);
-	/*cout<<" Element: "<<Id<<" Myoforces: "<<endl;
+	/*cout<<" Element: "<<Id<<" forcemag: "<<forcemag<<" Myoforces: "<<endl;
 	//double sum[3] = {0,0,0};
 	for (int i=0; i<6; i++){
 		for (int j=0; j<3; j++){
@@ -1299,8 +1293,10 @@ void 	Prism::distributeMyosinForce(bool isIsotropic, bool apical, double forcePe
 		cout<<endl;
 	}
 	cout<<endl;
+	displayMatrix(myoPolarityDir,"myoPolarityDir");
+	*/
 	//cout<<"sum: "<<sum[0]<<" "<<sum[1]<<" "<<sum[2]<<endl;
-	 */
+
 
 }
 

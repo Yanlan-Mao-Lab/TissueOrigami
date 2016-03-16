@@ -1,6 +1,6 @@
 InputMeshParameters:
   MeshInputMode(int-seeDocumentation): 4
-  MeshFile(full-path):   /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Exp48hr-noPeri_04.mesh
+  MeshFile(full-path):   /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Exp48hr-noCap_08.mesh
   symmetricInY(bool): 1
 
 PeripodialMembraneParameters:
@@ -9,15 +9,15 @@ PeripodialMembraneParameters:
   PeripodialMembraneLateralThickness(fractionOfTissueHeight): 0.5
   LumenHeightScale(fractionOfTissueHeight): 0.25
   PeripodialMembraneYoungsModulus: 1000.0
-  PeripodialMembraneApicalViscosity: 100.0
-  PeripodialMembraneBasalViscosity: 100.0
+  PeripodialMembraneApicalViscosity: 1000.0
+  PeripodialMembraneBasalViscosity: 10000.0
 
 LinkerZoneParameters:
   BaseOnPeripodialness(bool): 0
-  LinkerZoneApicalYoungsModulus: 100
-  LinkerZoneBasalYoungsModulus: 500
-  LinkerZoneApicalViscosity: 100.0
-  LinkerZoneBasalViscosity: 100.0
+  LinkerZoneApicalYoungsModulus: 1000
+  LinkerZoneBasalYoungsModulus: 1000
+  LinkerZoneApicalViscosity: 1000.0
+  LinkerZoneBasalViscosity: 10000.0
 
 NodeFixingOptions:
   ApicalSurfaceFix(bool-x,y,z): 0 0 0
@@ -43,13 +43,13 @@ Manipulations:
   RandomForceVar(double): 1E-5
  
 TimeParameters:
-  TimeStep(sec): 3600
-  SimulationLength(sec):  7200
+  TimeStep(sec): 30
+  SimulationLength(sec):  176400
 
 PysicalProperties:
-  YoungsModulusApical: 1000.0	YoungsModulusBasal: 4000.0	YoungsModulusMid: 1000.0	Noise(%-int): 0
+  YoungsModulusApical: 1000.0	YoungsModulusBasal: 1000.0	YoungsModulusMid: 1000.0	Noise(%-int): 0
   PoissonsRatio: 0.45		Noise(%-int): 0
-  ApicalViscosity: 100.0 	Noise(%-int): 0
+  ApicalViscosity: 1000.0 	Noise(%-int): 0
   BasalViscosity: 10000.0
 
 SaveOptions:
@@ -114,7 +114,7 @@ GrowthOptions:
 
   GrowthFunctionType(int-seeDocumentation): 3
   InitialTime(sec):  86400
-  FinalTime(sec):  144000
+  FinalTime(sec):  172800
   ApplyToColumnarLayer(bool): 1
   ApplyToPeripodialMembrane(bool): 0
   Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/Col_64-88_1-0
@@ -172,10 +172,10 @@ Stretcher:
   StretcherAttached(bool): 0
   ClampedOnDV(bool): 0
   InitialTime(sec): 0
-  FinalTime(sec): 3600
-  DVClampMin: -18
-  DVClampMax: +18
-  MaxStrain: 0.1
+  FinalTime(sec): 120
+  DVClampMin: -16
+  DVClampMax: +16
+  MaxStrain: 0.8
 
 Pipette_Aspiration:
   PipetteAspitarionActive(bool): 0

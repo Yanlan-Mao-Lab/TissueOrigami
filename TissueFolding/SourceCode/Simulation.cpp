@@ -340,7 +340,7 @@ bool Simulation::readFinalSimulationStep(){
 		else{
 			timestep = timestep + dataSaveInterval;
 		}
-		cout<<"read time point: "<<timestep<<" this is "<<timestep*dt<<" sec"<<endl;
+		cout<<"read time point: "<<timestep<<" this is "<<timestep*dt<<" sec, dataSaveInterval is : "<<dataSaveInterval<<" dataSaveIntervalCurrentSim: "<<dataSaveIntervalCurrentSim<<endl;
 		//skipping the footer:
 		getline(saveFileToDisplayMesh,currline);
 		while (currline.empty() && !saveFileToDisplayMesh.eof()){
@@ -358,6 +358,7 @@ bool Simulation::readFinalSimulationStep(){
     calculateShapeFunctionDerivatives();
 	updateElementPositions();
 	calculateBoundingBox();
+	bringMyosinStimuliUpToDate();
 	//calculateColumnarLayerBoundingBox();
 	//if (thereIsPeripodialMembrane){
 	//	calculatePeripodialBoundingBox();
@@ -3644,13 +3645,15 @@ void Simulation::updateStepNR(){
         gsl_matrix_set_zero(gv);
         gsl_matrix_set_zero(K);
         gsl_vector_set_zero(gSum);
-        //Elements[0]->displayMatrix(gExt,"gExt");
-        //cout<<"calculating elastic forces"<<endl;
-        calculateElasticForcesForNR(ge);
-        //cout<<"calculating viscous forces"<<endl;
-        calculateViscousForcesForNR(gv,mviscdt,uk,un);
-        calculateImplicitKElastic(K);
+
+        calculateElasticForcesAndImplicitKelasticForNR();
         //calculateImplucitKElasticNumerical(K, ge);
+
+		//Writing elastic Forces and elastic Ke:
+		writeElasticForcesToge(ge);
+		writeImplicitElementalKElasticToKe(K);
+
+        calculateViscousForcesForNR(gv,mviscdt,uk,un);
         calculateImplucitKViscous(K,mviscdt);
         //calculateImplucitKViscousNumerical(mviscdt,un,uk);
         calculatePackingImplicit3D();
@@ -3659,6 +3662,8 @@ void Simulation::updateStepNR(){
         //cout<<"calculated numerival packing K"<<endl;
         //calculatePackingK(K);
         //cout<<" after packing"<<endl;
+
+
         //Now I will check if there are any nodes with zero mass, then I will be able to fill in the zero K matrix with identity if necessary.
         int nAblatedNode = AblatedNodes.size();
         for (int a = 0; a<nAblatedNode; ++a){
@@ -3727,6 +3732,22 @@ void Simulation::updateStepNR(){
         //Finalised adding external forces
         //cout<<"calculating fixed K"<<endl;
         calcutateFixedK(K,gSum);
+        /*gsl_vector* gtmp = gsl_vector_calloc(dim*nNodes);
+        for (int pp =0; pp<dim*nNodes; ++pp){
+        	gsl_vector_set(gtmp,pp,gsl_matrix_get(ge,pp,0));
+        }
+        double normge =  gsl_blas_dnrm2 (gtmp);
+        for (int pp =0; pp<dim*nNodes; ++pp){
+        	gsl_vector_set(gtmp,pp,gsl_matrix_get(gv,pp,0));
+        }
+        double normgv =  gsl_blas_dnrm2 (gtmp);
+        for (int pp =0; pp<dim*nNodes; ++pp){
+        	gsl_vector_set(gtmp,pp,gsl_matrix_get(gExt,pp,0));
+		}
+        double normgExt =  gsl_blas_dnrm2 (gtmp);
+        //cout<<"norms - ge: "<<normge<<" gv: "<<normgv<<" gExt: "<<normgExt<<endl;
+        */
+
         //cout<<"checking convergence with forces"<<endl;
         converged = checkConvergenceViaForce(gSum);
         if (converged){
@@ -3734,6 +3755,7 @@ void Simulation::updateStepNR(){
         }
         //Elements[0]->displayMatrix(K,"K");
         //Elements[0]->displayMatrix(ge,"ElasticForces");
+
         //Elements[0]->displayMatrix(gv,"ViscousForces");
         //for (int aa= 116; aa<120; ++aa){
         //	cout<<"viscous forces on node: "<<aa<<" "<<gsl_matrix_get(gv, 3*aa,0)<<" "<<gsl_matrix_get(gv, 3*aa+1,0)<<" "<<gsl_matrix_get(gv, 3*aa+2,0)<<endl;
@@ -3755,7 +3777,7 @@ void Simulation::updateStepNR(){
         iteratorK ++;
         //Elements[0]->displayMatrix(deltaU,"MovementInIteration");
         //Elements[0]->displayMatrix(uk,"newPosiitons");
-        if (iteratorK > 1000){
+        if (iteratorK > 100){
             cerr<<"Error: did not converge!!!"<<endl;
             converged = true;
         }
@@ -3826,8 +3848,11 @@ void Simulation::addRandomForces(gsl_matrix* gExt){
 			gsl_matrix_set(gExt,j,0,F);
 		}
 }
-
+/*
 void Simulation::calculateImplucitKElasticNumerical(gsl_matrix* K, gsl_matrix* geNoPerturbation){
+//This function is leftover from the days when every element would write onto ge directly,
+//It needs to be adapted for the bulk calculatio + writing into ge format, simple adaptation but not carried out as yet.
+
     int dim = 3;
     double perturbation = 1E-6;
     gsl_matrix* KPerturbed = gsl_matrix_calloc(nNodes*dim,nNodes*dim);
@@ -3872,7 +3897,7 @@ void Simulation::calculateImplucitKElasticNumerical(gsl_matrix* K, gsl_matrix* g
     gsl_matrix_free(geWithPerturbation);
     gsl_matrix_free(geDiff);
 }
-
+*/
 void Simulation::calcutateFixedK(gsl_matrix* K, gsl_vector* g){
     int dim = 3;
     int Ksize = K->size1;
@@ -5372,38 +5397,82 @@ void Simulation::calculatePackingK(gsl_matrix* K){
 	}
 }
 
-void Simulation::calculateImplicitKElastic(gsl_matrix* K){
+void Simulation::calculateElasticForcesAndImplicitKelasticForNR(){
+	//calculateElasticForcesForNR(); 	//replaced by first part of for loop below
+    //calculateImplicitKElastic();		//replaced by second part of for loop below
+//    omp_set_num_threads(4);
+//#pragma omp parallel for
+//    for (int a =0; a<2; ++a){
+//    	int initialpoint = 0;
+//    	int breakpoint =  nElements/2;
+//    	if (a == 1){
+//    		initialpoint = breakpoint;
+//    		breakpoint = nElements;
+//    	}
+		for(vector<ShapeBase*>::iterator  itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+    	//for(vector<ShapeBase*>::iterator  itElement=Elements.begin()+ initialpoint; itElement<Elements.begin()+breakpoint; ++itElement){
+			//int nThreads = omp_get_thread_num();
+			//cout<<" omp threads: "<<nThreads<<endl;
+			//replacing calculateElasticForcesForNR function, exactly the same content:
+			if (!(*itElement)->IsAblated){
+				(*itElement)->calculateForces(Nodes, recordForcesOnFixedNodes, FixedNodeForces, outputFile);
+			}
+			//replacing calculateImplicitKElastic function, exactly the same content:
+			(*itElement)->calculateImplicitKElastic();
+	   }
+//	}
+}
+
+void Simulation::calculateImplicitKElastic(){
     //cout<<"calculateImplicitKElastic for thw whole system"<<endl;
-    vector<ShapeBase*>::iterator itElement;
-    for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+    for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
     	//if element is ablated, the matrix will be set to identity here:
     	(*itElement)->calculateImplicitKElastic();
-    }
-    //writing all elements K values into big K matrix:
-    for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-    	//if element is ablated, current elemental K matrix will be identity
-    	(*itElement)->writeKelasticToMainKatrix(K);
     }
    //Elements[0]->displayMatrix(K,"KafterElastic");
    // Elements[0]->displayMatrix(K,"KafterFixingForSymmetry");
 }
 
-void Simulation::calculateElasticForcesForNR(gsl_matrix* ge){
-    vector<ShapeBase*>::iterator itElement;
-    for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+void Simulation::writeImplicitElementalKElasticToKe(gsl_matrix* K){
+    //writing all elements K values into big K matrix:
+    for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+    	//if element is ablated, current elemental K matrix will be identity
+    	(*itElement)->writeKelasticToMainKatrix(K);
+    }
+}
+
+
+void Simulation::calculateElasticForcesForNR(){
+    for(vector<ShapeBase*>::iterator  itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
         if (!(*itElement)->IsAblated){
-        	(*itElement)->calculateForces(SystemForces, Nodes, recordForcesOnFixedNodes, FixedNodeForces, outputFile);
+        	(*itElement)->calculateForces(Nodes, recordForcesOnFixedNodes, FixedNodeForces, outputFile);
         }
     }
     //now all the forces are written on SysyemForces
     //Now I will add the forces into ge, this step can be made faster by separating calculate forces function into two,
     //and filling up either ge or System forces depending on the solution method:
-    for (int i = 0; i< nNodes; ++i){
+    /*for (int i = 0; i< nNodes; ++i){
         for ( int j=0; j<3; j++){
             gsl_matrix_set(ge, 3*i+j,0,SystemForces[i][j]);
         }
-    }
+    }*/
     //cout<<"finalised elastic force calculation of the system"<<endl;
+}
+
+void Simulation::writeElasticForcesToge(gsl_matrix* ge){
+    for(vector<ShapeBase*>::iterator  itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+        if (!(*itElement)->IsAblated){
+        	(*itElement)->writeElasticForcesToge(ge,SystemForces,Nodes);
+        }
+    }
+    //now all the forces are written on SysyemForces
+    //Now I will add the forces into ge, this step can be made faster by separating calculate forces function into two,
+    //and filling up either ge or System forces depending on the solution method:
+    /*for (int i = 0; i< nNodes; ++i){
+        for ( int j=0; j<3; j++){
+            gsl_matrix_set(ge, 3*i+j,0,SystemForces[i][j]);
+        }
+    }*/
 }
 
 void Simulation::calculateViscousForcesForNR(gsl_matrix* gv, gsl_matrix* mviscdt, gsl_matrix* uk, gsl_matrix* un){
@@ -6829,6 +6898,18 @@ void Simulation::calculateBoundingBox(){
 		cerr<<" error in bounding box calculation! Found? :"<<found[0][0]<<" "<<found[0][1]<<" "<<found[0][2]<<" "<<found[1][0]<<" "<<found[1][1]<<" "<<found[1][2]<<endl;
 	}
 }
+
+
+void Simulation::bringMyosinStimuliUpToDate(){
+	//need to go throug all myosin functions and apply them to here:
+	//for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+	//	(*itElement)->bringMyosinStimuliUpToDate();
+	//}
+	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		(*itElement)->adjustCMyosinFromSave();
+	}
+}
+
 /*
 void Simulation::calculateColumnarLayerBoundingBox(){
 	columnarBoundingBox[0][0] =  100000.0;	//lower left x
@@ -7471,14 +7552,16 @@ void Simulation::setUpClampBorders(vector<int>& clampedNodeIds){
 					lastNodeWasClamped = true;
 					//check if node is recorded:
 					bool alreadyRecorded = false;
-					for (int m=0; m<leftClampBorder.size(); m++){
+					int nLeftClamp = leftClampBorder.size();
+					for (int m=0; m<nLeftClamp; m++){
 						if (leftClampBorder[m] == nodeIds[j]){
 							alreadyRecorded = true;
 							break;
 						}
 					}
 					if (!alreadyRecorded){
-						for (int m=0; m<rightClampBorder.size(); m++){
+						int nRightClamp = rightClampBorder.size();
+						for (int m=0; m<nRightClamp; m++){
 							if (rightClampBorder[m] == nodeIds[j]){
 								alreadyRecorded = true;
 								break;
@@ -7500,24 +7583,26 @@ void Simulation::setUpClampBorders(vector<int>& clampedNodeIds){
 		}
 		if (hasClampedNode && hasNonClampedNode){
 			cout<<" Element "<<(*itElement)->Id<<" is at the border"<<endl;
+			int nClamp = clampedBorderNodes.size();
 			if(leftHandSide){
 				cout<<"Element is on left hand side"<<endl;
-				for (int k=0; k<clampedBorderNodes.size(); k++){
+				for (int k=0; k<nClamp; k++){
 					leftClampBorder.push_back(clampedBorderNodes[k]);
 				}
 			}
 			else {
 				cout<<"Element is on right hand side"<<endl;
-				for (int k=0; k<clampedBorderNodes.size(); k++){
+				for (int k=0; k<nClamp; k++){
 					rightClampBorder.push_back(clampedBorderNodes[k]);
 				}
 			}
 		}
-	}
-	for (int k=0; k<leftClampBorder.size(); k++){
+	}int nLeftClamp = leftClampBorder.size();
+	for (int k=0; k<nLeftClamp; k++){
 		cout<<"left clamp border nodes: "<<leftClampBorder[k]<<endl;
 	}
-	for (int k=0; k<rightClampBorder.size(); k++){
+	int nRightClamp = rightClampBorder.size();
+	for (int k=0; k<nRightClamp; k++){
 		cout<<"right clamp border nodes: "<<rightClampBorder[k]<<endl;
 	}
 }
@@ -7528,12 +7613,14 @@ void Simulation::recordForcesOnClampBorders(){
 			leftClampForces[i] = 0.0;
 			rightClampForces[i] = 0.0;
 		}
-		for (int k=0; k<leftClampBorder.size(); k++){
+		int nLeftClamp = leftClampBorder.size();
+		for (int k=0; k<nLeftClamp; k++){
 			for (int j=0; j<3; ++j){
 				leftClampForces[j] += FixedNodeForces[leftClampBorder[k]][j];
 			}
 		}
-		for (int k=0; k<rightClampBorder.size(); k++){
+		int nRightClamp = rightClampBorder.size();
+		for (int k=0; k<nRightClamp; k++){
 			for (int j=0; j<3; ++j){
 				rightClampForces[j] += FixedNodeForces[rightClampBorder[k]][j];
 			}
@@ -7597,7 +7684,6 @@ void Simulation::addMyosinForces(gsl_matrix* gExt){
 	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 	    int* nodeIds = (*itElement)->getNodeIds();
 	    int nNodes= (*itElement)->getNodeNumber();
-	    double sumMyo[3] = {0.0,0.0,0.0};
 	    for (int j=0; j<nNodes; ++j){
 			double Fx = (*itElement)->MyoForce[j][0];
 			double Fy = (*itElement)->MyoForce[j][1];
@@ -7835,7 +7921,7 @@ void Simulation::ablateSpcific(){
 	for (int i=0; i<nNodes; ++i){
 		fixAllD(Nodes[i]);
 	}
-	int nAN = AblatedNodes.size();
+	//int nAN = AblatedNodes.size();
 	//fix the position of all ablated nodes for effective Newton Rapson calculation:
 	vector<ShapeBase*>::iterator itElement;
 	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){

@@ -14,6 +14,8 @@
 #include "GrowthFunctionTypes.h"
 #include "MyosinFunction.h"
 
+#include <omp.h>
+
 class ModelInputObject;
 using namespace std;
 
@@ -381,12 +383,15 @@ public:
     void updateStepNR();
     void constructUnMatrix(gsl_matrix* un);
     void constructLumpedMassViscosityDtMatrix(gsl_matrix* mviscdt);
-    void calculateElasticForcesForNR(gsl_matrix* ge);
+    void calculateElasticForcesAndImplicitKelasticForNR();
+    void calculateElasticForcesForNR();
+    void writeElasticForcesToge(gsl_matrix* ge);
     void calculateViscousForcesForNR(gsl_matrix* gv, gsl_matrix* mviscdt, gsl_matrix* uk, gsl_matrix* un);
-    void calculateImplicitKElastic(gsl_matrix* K);
+    void calculateImplicitKElastic();
+    void writeImplicitElementalKElasticToKe(gsl_matrix* K);
     void calculateImplucitKViscous(gsl_matrix* K, gsl_matrix*  mviscdt);
     void calculateImplucitKViscousNumerical(gsl_matrix*  mviscdt, gsl_matrix*  un, gsl_matrix* uk);
-    void calculateImplucitKElasticNumerical(gsl_matrix* K,gsl_matrix* geNoPerturbation);
+    //void calculateImplucitKElasticNumerical(gsl_matrix* K,gsl_matrix* geNoPerturbation);
     void solveForDeltaU(gsl_matrix* K, gsl_vector* g, gsl_vector *deltaU);
     void constructiaForPardiso(gsl_matrix* K, int* ia, const int nmult, vector<int> &ja_vec, vector<double> &a_vec);
     void writeKinPardisoFormat(const int nNonzero, vector<int> &ja_vec, vector<double> &a_vec, int* ja, double* a);
@@ -423,6 +428,7 @@ public:
 	void getApicalNormalAndCornerPosForPacking(ShapeBase* ElementPointer, double* normalForPacking,double* posCorner);
 	void getBasalNormalAndCornerPosForPacking(ShapeBase* ElementPointer, double* normalForPacking,double* posCorner);
 	inline void CapPackingForce(double& Fmag);
+	void bringMyosinStimuliUpToDate();
 	void redistributePeripodialMembraneForces(int RKId);
 	void updateElementPositions();
 	void updateElementPositionsSingle(int i );

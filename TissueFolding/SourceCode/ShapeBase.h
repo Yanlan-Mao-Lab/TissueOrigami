@@ -50,19 +50,19 @@ protected:
     double* initialRelativePosInBoundingBox; ///< The relative position on x-y plane, within the bounding box of the tissue(x,y) at the beginning of simulation. This is used when growth rates are pinned to the initial structure of the tissue.
     //double* columnarRelativePosInBoundingBox;	///< The relative position on x-y plane, within the bounding box of the columnar layer (x,y).
 	//double* peripodialRelativePosInBoundingBox; ///< The relative position on x-y plane, within the bounding box of the peripodial membrane layer (x,y).
-    gsl_matrix **ShapeFuncDerivatives;
-    gsl_matrix **ShapeFuncDerStacks;
-    gsl_matrix **InvdXdes;
-    double* detdXdes;
-    gsl_matrix **Bmatrices;
-    gsl_matrix **CMatrices;
-    gsl_matrix **FeMatrices;
-    gsl_matrix *Fplastic;
-    gsl_matrix *invFplastic;
-    gsl_matrix **invJShapeFuncDerStack;
-    gsl_matrix **invJShapeFuncDerStackwithFe;
+    gsl_matrix **ShapeFuncDerivatives;		///< The array of matrices for shape function derivatives. The array stores a ShapeBase#nDim by ShapeBase#nNodes matrix for each gauss point (there are 3 Gauss points for prisms).
+    gsl_matrix **ShapeFuncDerStacks;		///< The array of matrices of shape function derivatives in stacked format for ease of matrix operations. The array stores a (ShapeBase#nDim * ShapeBase#nDim) by (ShapeBase#nDim * ShapeBase#nNodes) matrix for each gauss point (there are 3 Gauss points for prisms).
+    gsl_matrix **InvdXdes;					///< The array stores inverse of the matrix for derivatives of world coordinates with respect to barycentric coordinates (dX / de). The array stores an ShapeBase#nDim by ShapeBase#nDim  matrix for each gauss point (there are 3 Gauss points for prisms).
+    double* detdXdes;						///< The array stores the determinants of the matrices for derivatives of world coordinates with respect to barycentric coordinates (dX / de). The array stores a double value for each gauss point (there are 3 Gauss points for prisms).
+    gsl_matrix **Bmatrices;					///< The array stores the B matrix for the calculation of stiffness matrix, see for ShapeBase#calculateBTforNodalForces calculation. The array stores an ShapeBase#nNodes by (ShapeBase#nDim*ShapeBase#nNodes)  matrix for each Gauss point (there are 3 Gauss points for prisms).
+    gsl_matrix **FeMatrices;				///< The array stores the elastic part of the deformation matrix. The array stores an ShapeBase#nDim by ShapeBase#nDim  matrix for each Gauss point (there are 3 Gauss points for prisms).
+    gsl_matrix *Fplastic;					///< The array stores the plastic part of the deformation matrix. The array stores an ShapeBase#nDim by ShapeBase#nDim  matrix for each Gauss point (there are 3 Gauss points for prisms).
+    gsl_matrix *invFplastic;				///< The array stores inverses of the plastic part of the deformation matrix, in same structure as ShapeBase#Fplastic.
+    gsl_matrix **invJShapeFuncDerStack;		///< The array stores the shape function derivatives multiplied by the inverse Jacobian stack, for each Gauss point. See ShapeBase#calculateBTforNodalForces for calculation.
+    gsl_matrix **invJShapeFuncDerStackwithFe;	///< See ShapeBase#calculateInvJShFuncDerSWithFe for calculation.
     gsl_matrix **elasticStress;
 	gsl_matrix* TriPointF;
+	gsl_matrix* ElementalSystemForces;
     double* detFs;
 
     double ZProjectedBasalArea,ZProjectedApicalArea;
@@ -93,15 +93,17 @@ protected:
 	void 	updateReferencePositionMatrixFromSave(ifstream& file);
 	virtual void calculateReferenceVolume(){ParentErrorMessage("calculateReferenceVolume");};
 	bool 	calculateGrowthStrainsRotMat(double* v);
-	void	calculateForces3D(double **SystemForces, vector <Node*>& Nodes,  bool recordForcesOnFixedNodes, double **FixedNodeForces, ofstream& outputFile);
-	gsl_matrix* calculateEForNodalForces(gsl_matrix* F, gsl_matrix* Fe);
-    gsl_matrix* calculateSForNodalForces(gsl_matrix* E);
-    gsl_matrix* calculateCompactStressForNodalForces(gsl_matrix* Fe, gsl_matrix* S, gsl_matrix* FeT, gsl_matrix *Stress);
+	void	calculateForces3D(vector <Node*>& Nodes,  bool recordForcesOnFixedNodes, double **FixedNodeForces, ofstream& outputFile);
+	gsl_matrix* calculateEForNodalForcesKirshoff(gsl_matrix* C);
+	gsl_matrix* calculateCauchyGreenDeformationTensor(gsl_matrix* Fe, gsl_matrix* FeT);
+	gsl_matrix* calculateSForNodalForcesKirshoff(gsl_matrix* E);
+	gsl_matrix* calculateSForNodalForcesNeoHookean(gsl_matrix* invC, double lnJ);
+	void updateLagrangianElasticityTensorNeoHookean(gsl_matrix* invC,double lnJ, int pointNo);
+	gsl_matrix* calculateCompactStressForNodalForces(double detFe,gsl_matrix* Fe, gsl_matrix* S, gsl_matrix* FeT, gsl_matrix *Stress);
     gsl_matrix* calculateInverseJacobianStackForNodalForces(gsl_matrix* Jacobian);
     gsl_matrix* calculateBTforNodalForces(gsl_matrix* InvJacobianStack, gsl_matrix* ShapeFuncDerStack, gsl_matrix *B, gsl_matrix* invJShFuncDerS);
     gsl_matrix* calculateInvJShFuncDerSWithFe(gsl_matrix * currFe, gsl_matrix * InvDXde, gsl_matrix* ShapeFuncDerStack, gsl_matrix *invJShFuncDerSWithF);
 
-    void	calculateCMatrix(int pointNo);
     void    consturctBaTBb(gsl_matrix* B, gsl_matrix* BaT, gsl_matrix* Bb, int a, int b);
     void    calculateElasticKIntegral1(gsl_matrix* currK,int pointNo);
     void	calculateElasticKIntegral2(gsl_matrix* currK,int pointNo);
@@ -111,7 +113,7 @@ protected:
 
     gsl_matrix* D;
     gsl_matrix* CoeffMat;
-    double D81[4][4][4][4];
+    double D81[3][4][4][4][4];
 
     //boost::numeric::ublas::vector<double> Forces;
 
@@ -209,19 +211,23 @@ public:
     virtual void calculateCurrNodalForces(gsl_matrix *gslcurrg, gsl_matrix *gslcurrF, int pointNo){ParentErrorMessage("calculateCurrNodalForces");};
     virtual void calculateCurrTriPointFForRotation(gsl_matrix *currF,int pointNo){ParentErrorMessage("calculateCurrTriPointFForRotation");};
 
+	void	writeElasticForcesToge(gsl_matrix* ge, double **SystemForces, vector <Node*>& Nodes);
+
     virtual void calculateApicalArea(){ParentErrorMessage("calculateApicalArea");};
     virtual void calculateBasalArea(){ParentErrorMessage("calculateBasalArea");};
 
-    void 	calculateForces(double **SystemForces,  vector <Node*>& Nodes, bool recordForcesOnFixedNodes, double** FixedNodeForces,  ofstream& outputFile);
+    void 	calculateForces(vector <Node*>& Nodes, bool recordForcesOnFixedNodes, double** FixedNodeForces,  ofstream& outputFile);
     void 	updatePositions(vector<Node*>& Nodes);
 	void	updateReferencePositionsToCurentShape();
     void 	setGrowthRate(double dt, double x, double y, double z);
 	void 	cleanMyosinForce();
 	void	updateUniformEquilibriumMyosinConcentration(bool isApical, double cEqUniform);
 	void	updateUnipolarEquilibriumMyosinConcentration(bool isApical, double cEqUnipolar, double orientationX, double orientationY);
+	void	adjustCMyosinFromSave();
 	void	updateMyosinConcentration(double dt, double kMyo, bool thereIsMyosinFeedback, double MyosinFeedbackCap);
 	void 	calculatePrincipalStrainAxesOnXYPlane(double& e1, double &e2, double& tet);
-	void	updateEquilibriumMyoWithFeedback(double MyosinFeedbackCap);
+	void	updateEquilibriumMyoWithFeedbackFromZero(double MyosinFeedbackCap);
+	void	updateEquilibriumMyoWithFeedbackFromFixedTotal(double totalMyosinLevel);
 	bool	checkIfXYPlaneStrainAboveThreshold(double thres);
 	bool 	calculateIfInsideActiveStripe(double initialPoint,double endPoint, double stripeSize1, double stripeSize2);
 	double	getCmyosinUniformForNode (int TissuePlacement);

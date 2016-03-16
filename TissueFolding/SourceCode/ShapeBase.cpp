@@ -1169,19 +1169,46 @@ void  ShapeBase::rotateReferenceElementByRotationMatrix(double* rotMat){
 	}
 }
 
-void	ShapeBase::calculateForces(double **SystemForces, vector <Node*>& Nodes, bool recordForcesOnFixedNodes, double **FixedNodeForces, ofstream& outputFile){
+void	ShapeBase::calculateForces(vector <Node*>& Nodes, bool recordForcesOnFixedNodes, double **FixedNodeForces, ofstream& outputFile){
     if (ShapeDim == 3){		//3D element
-        calculateForces3D(SystemForces, Nodes, recordForcesOnFixedNodes, FixedNodeForces, outputFile);
+        calculateForces3D(Nodes, recordForcesOnFixedNodes, FixedNodeForces, outputFile);
     }
 }
 
-void	ShapeBase::calculateForces3D(double **SystemForces, vector <Node*>& Nodes,  bool recordForcesOnFixedNodes, double **FixedNodeForces, ofstream& outputFile){
+void ShapeBase::writeElasticForcesToge(gsl_matrix* ge, double** SystemForces, vector <Node*>& Nodes){
+    //now all the forces are written on SysyemForces
+    //Now I will add the forces into ge, this step can be made faster by separating calculate forces function into two,
+    //and filling up either ge or System forces depending on the solution method:
+	for (int i = 0; i< nNodes; ++i){
+        for ( int j=0; j<nDim; j++){
+        	int indexI = nDim*NodeIds[i]+j;
+        	double elementalvalue = gsl_matrix_get(ElementalSystemForces,i,j);
+        	double matrixValue = gsl_matrix_get(ge,indexI,0);
+            gsl_matrix_set(ge, indexI,0,matrixValue+ elementalvalue);
+        }
+    }
+    int counter = 0;
+    for (int i = 0; i<nNodes; ++i){
+        for (int j = 0; j<nDim; ++j){
+            if (!Nodes[NodeIds[i]]->FixedPos[j]){
+                SystemForces[NodeIds[i]][j] = SystemForces[NodeIds[i]][j] + gsl_matrix_get(ElementalSystemForces,i,j);
+            }
+            /*else if(recordForcesOnFixedNodes){
+                FixedNodeForces[NodeIds[i]][j] = FixedNodeForces[NodeIds[i]][j] - gsl_matrix_get(TriPointg,counter,0);
+            }*/
+            counter++;
+        }
+    }
+}
+
+void	ShapeBase::calculateForces3D(vector <Node*>& Nodes,  bool recordForcesOnFixedNodes, double **FixedNodeForces, ofstream& outputFile){
     int dim = nDim;
     int n = nNodes;
     //calculating F and B in a 3 point gaussian:
 
     gsl_matrix* TriPointg  = gsl_matrix_calloc(dim*n,1);
     gsl_matrix_set_zero(TriPointF);
+    gsl_matrix_set_zero(ElementalSystemForces);
     gsl_matrix* currg = gsl_matrix_calloc(dim*n,1);
     gsl_matrix* currF = gsl_matrix_calloc(dim,dim);
     //The point order is established in shape function derivative calculation!
@@ -1197,13 +1224,23 @@ void	ShapeBase::calculateForces3D(double **SystemForces, vector <Node*>& Nodes, 
         gsl_matrix_add(TriPointF, currF);
         //displayMatrix(currg,"currg");
     }
-    //displayMatrix(TriPointg,"TriPointg");
-    //cout<<"Element Id: "<<Id<<"Forces on node 351: "<<SystemForces[351][0]<<" "<<SystemForces[351][1]<<" "<<SystemForces[351][2]<<endl;
-    //Now put the forces in world coordinates into system forces, in forces per volume format
-    //if (Id == 0 || Id == 38){
-    //	cout<<" Element: "<<Id<<endl;
-    //	displayMatrix(TriPointg,"TriPointg");
-    //}
+    int counter = 0;
+    for (int i = 0; i<nNodes; ++i){
+            for (int j = 0; j<nDim; ++j){
+            	if (!Nodes[NodeIds[i]]->FixedPos[j]){
+            		double value = gsl_matrix_get(ElementalSystemForces,i,j);
+            		value -= gsl_matrix_get(TriPointg,counter,0);
+            		gsl_matrix_set(ElementalSystemForces,i,j,value);
+				}
+				/*else if(recordForcesOnFixedNodes){
+					FixedNodeForces[NodeIds[i]][j] = FixedNodeForces[NodeIds[i]][j] - gsl_matrix_get(TriPointg,counter,0);
+				}*/
+				counter++;
+            }
+    }
+    //cout<<"Element: "<<Id<<endl;
+    //displayMatrix(ElementalSystemForces,"ElementalSystemForces");
+/*
     int counter = 0;
     for (int i = 0; i<nNodes; ++i){
         for (int j = 0; j<nDim; ++j){
@@ -1216,13 +1253,7 @@ void	ShapeBase::calculateForces3D(double **SystemForces, vector <Node*>& Nodes, 
             counter++;
         }
     }
-    /*cout<<"SystemForces " <<endl;
-    for (int i = 0; i<nNodes; ++i){
-        for (int j = 0; j<nDim; ++j){
-            cout<<SystemForces[NodeIds[i]][j]<<" ";
-        }
-        cout<<endl;
-    }*/
+*/
     //freeing matrices allocated in this function
     gsl_matrix_free(TriPointg);
     gsl_matrix_free(currg);
@@ -1231,29 +1262,27 @@ void	ShapeBase::calculateForces3D(double **SystemForces, vector <Node*>& Nodes, 
     //displayMatrix(Fg, "Fg");
 }
 
-gsl_matrix* ShapeBase::calculateEForNodalForces(gsl_matrix* Fe, gsl_matrix* FeT){
-    //calculating E (E = 1/2 *(Fe^T*Fe-I):
-    gsl_matrix * E =  gsl_matrix_alloc(nDim, nDim);
-    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, FeT, Fe,0.0, E);
-    gsl_matrix * I = gsl_matrix_alloc(nDim, nDim);
-    gsl_matrix_set_identity(I);
-    gsl_matrix_sub(E,I);
-    gsl_matrix_scale(E, 0.5);
 
-    /*
-    gsl_matrix * E =  gsl_matrix_calloc(nDim, nDim);
-    gsl_matrix_add(E,Fe);
-    gsl_matrix_add(E,FeT);
-    gsl_matrix_scale(E, 0.5);
+gsl_matrix* ShapeBase::calculateCauchyGreenDeformationTensor(gsl_matrix* Fe, gsl_matrix* FeT){
+	//calculating C (C = (Fe^T*Fe):
+	gsl_matrix * C =  gsl_matrix_alloc(nDim, nDim);
+	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, FeT, Fe,0.0, C);
+	return C;
+}
+
+gsl_matrix* ShapeBase::calculateEForNodalForcesKirshoff(gsl_matrix* C){
+    //calculating E ( E = 1/2 *(Fe^T*Fe-I) ; E = 1/2 *(C-I):):
+    gsl_matrix * E =  gsl_matrix_alloc(nDim, nDim);
+	createMatrixCopy(E,C);
     gsl_matrix * I = gsl_matrix_alloc(nDim, nDim);
     gsl_matrix_set_identity(I);
     gsl_matrix_sub(E,I);
-*/
+    gsl_matrix_scale(E, 0.5);
     gsl_matrix_free(I);
     return E;
 }
 
-gsl_matrix* ShapeBase::calculateSForNodalForces(gsl_matrix* E){
+gsl_matrix* ShapeBase::calculateSForNodalForcesKirshoff(gsl_matrix* E){
     //calculating S: (S = D:E)
     gsl_matrix_set_zero(Strain);
     gsl_matrix* compactS = gsl_matrix_calloc(6,1);
@@ -1276,43 +1305,45 @@ gsl_matrix* ShapeBase::calculateSForNodalForces(gsl_matrix* E){
     gsl_matrix_set(S,2,1,gsl_matrix_get(compactS,4,0));
     gsl_matrix_set(S,0,2,gsl_matrix_get(compactS,5,0));
 
-    //displayMatrix(D,"D");
-    //displayMatrix(E,"E");
-    //displayMatrix(S, "S");
-    //displayMatrix(Strain,"Strain");
     gsl_matrix_free(compactS);
-/*
-    double Idouble[3][3] = {{1.0,0.0,0.0} , {0.0,1.0,0.0}, {0.0,0.0,1.0}};
-    double D81[3][3][3][3];
-    for (int I = 0; I<3; ++I){
-        for (int J = 0; J<3; ++J){
-            for (int K = 0; K<3; ++K){
-                for (int L = 0; L<3; ++L){
-                    D81[I][J][K][L]=lambda*Idouble[K][L]*Idouble[I][J] + mu * (Idouble[I][K]*Idouble[J][L] + Idouble[I][L]*Idouble[J][K] );
-                 }
-            }
-        }
-    }
+    return S;
+}
 
-    gsl_matrix * S2 =  gsl_matrix_calloc(nDim, nDim);
-    for (int I = 0; I<3; ++I){
-        for (int J = 0; J<3; ++J){
-            for (int K = 0; K<3; ++K){
-                for (int L = 0; L<3; ++L){
-                    double value = gsl_matrix_get(S2,I,J);
-                    value += D81[I][J][K][L]*gsl_matrix_get(E,K,L);
-                    gsl_matrix_set(S2,I,J,value);
+gsl_matrix* ShapeBase::calculateSForNodalForcesNeoHookean(gsl_matrix* invC, double lnJ){
+	//S = mu (I - C^-1) + lambda (lnJ) C^-1
+	gsl_matrix * S =  gsl_matrix_alloc(nDim, nDim);
+	createMatrixCopy(S,invC);
+	//displayMatrix(S,"S1");
+	gsl_matrix * I = gsl_matrix_alloc(nDim, nDim);
+	gsl_matrix_set_identity(I);
+    gsl_matrix_sub(I,invC);  //(I - C^-1)
+    gsl_matrix_scale(I, mu); // mu (I - C^-1)
+    gsl_matrix_scale(S, lambda*lnJ); //lambda (lnJ) C^-1
+    gsl_matrix_add(S,I); // mu (I - C^-1) + lambda (lnJ) C^-1
+	return S;
+}
+
+void ShapeBase::updateLagrangianElasticityTensorNeoHookean(gsl_matrix* invC, double lnJ, int pointNo){
+	//calculating 4th order tensor C, for convenience the matrix D81 is used for both Kirshoff materials and neo-Hookean materials in the code.
+	//The documentation lists  Lagrangian Elasticity Tensor with C for neo-Hookean, and with D for Kirshoff materials.
+    //lambda is Lame s first parameter and mu is the shear modulus .
+	double multiplier = 2*(mu - lambda*lnJ);
+	for (int I = 0; I<nDim; ++I){
+        for (int J = 0; J<nDim; ++J){
+            for (int K = 0; K<nDim; ++K){
+                for (int L = 0; L<nDim; ++L){
+                	double Iijkl = 0.5* (gsl_matrix_get(invC,I,K)*gsl_matrix_get(invC,J,L) + gsl_matrix_get(invC,I,L)*gsl_matrix_get(invC,J,K));
+                    D81[pointNo][I][J][K][L] = lambda*gsl_matrix_get(invC,I,J)*gsl_matrix_get(invC,K,L) + multiplier * Iijkl;
+                	//D81[I][J][K][L] = lambda*gsl_matrix_get(invC,I,J)*gsl_matrix_get(invC,K,L) + multiplier * gsl_matrix_get(invC,I,K)*gsl_matrix_get(invC,J,L);
                 }
             }
         }
     }
-    displayMatrix(S2,"S2");*/
-    return S;
 }
 
-gsl_matrix* ShapeBase::calculateCompactStressForNodalForces(gsl_matrix* Fe, gsl_matrix* S, gsl_matrix* FeT, gsl_matrix* Stress){
+gsl_matrix* ShapeBase::calculateCompactStressForNodalForces(double detFe, gsl_matrix* Fe, gsl_matrix* S, gsl_matrix* FeT, gsl_matrix* Stress){
     //calculating stress (stress = detFe^-1 Fe S Fe^T):
-    double detFe = determinant3by3Matrix(Fe);
+    //double detFe = determinant3by3Matrix(Fe);
     gsl_matrix * tmpMat1 =  gsl_matrix_calloc(nDim, nDim);
     //cout<<"detFe: "<<detFe<<endl;
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, Fe, S,0.0, tmpMat1);
@@ -1434,8 +1465,16 @@ void ShapeBase::calculateImplicitKElastic(){
 			gsl_matrix_scale(currK,weights[iter]);
 			gsl_matrix_add(TriPointKe, currK);
 		}
+		/*if (Id == 0){
+			displayMatrix(currK,"currK");
+
+		}*/
 	    gsl_matrix_free(currK);
-    }/*
+    }
+    /*if (Id == 0){
+		displayMatrix(TriPointKe,"TriPointKe");
+
+	}
     if (Id == 1 || Id == 2){
     	cout<<"Element: "<<Id<<endl;
     	displayMatrix(TriPointKe,"TriPointKe0");
@@ -1470,7 +1509,8 @@ void ShapeBase::writeKelasticToMainKatrix(gsl_matrix* Ke){
             NodeId2 *= nDim;
             for (int i=0; i<nDim; ++i){
                 for (int j=0; j<nDim; ++j){
-                    double valueij = gsl_matrix_get(Ke,NodeId1+i,NodeId2+j) + gsl_matrix_get(TriPointKe,a*nDim+i,b*nDim+j);
+                    double valueij = gsl_matrix_get(Ke,NodeId1+i,NodeId2+j);
+					valueij	+= gsl_matrix_get(TriPointKe,a*nDim+i,b*nDim+j);
                     gsl_matrix_set(Ke,NodeId1+i,NodeId2+j,valueij);
                 }
             }
@@ -1478,137 +1518,7 @@ void ShapeBase::writeKelasticToMainKatrix(gsl_matrix* Ke){
     }
 }
 
-void	ShapeBase::calculateCMatrix(int pointNo){
-    gsl_matrix* C = CMatrices[pointNo];
-    gsl_matrix* Fe = FeMatrices[pointNo];
-    double detFe = determinant3by3Matrix(Fe);
-    double Idouble[3][3] = {{1.0,0.0,0.0} , {0.0,1.0,0.0}, {0.0,0.0,1.0}};
-    double D81[3][3][3][3];
-    double C81[3][3][3][3];
-    for (int I = 0; I<3; ++I){
-        for (int J = 0; J<3; ++J){
-            for (int K = 0; K<3; ++K){
-                for (int L = 0; L<3; ++L){
-                    D81[I][J][K][L] = lambda*Idouble[K][L]*Idouble[I][J] + mu * (Idouble[I][K]*Idouble[J][L] + Idouble[I][L]*Idouble[J][K] );
-                    C81[I][J][K][L] = 0.0;
-                }
-            }
-        }
-    }
-/*
-    gsl_matrix* DD = gsl_matrix_calloc(6,6);
-    gsl_matrix_set(DD,0,0, D81[0][0][0][0]);
-    gsl_matrix_set(DD,0,1, D81[0][0][1][1]);
-    gsl_matrix_set(DD,0,2, D81[0][0][2][2]);
-    gsl_matrix_set(DD,0,3, 0.5*(D81[0][0][0][1] + D81[0][0][1][0]));
-    gsl_matrix_set(DD,0,4, 0.5*(D81[0][0][0][2] + D81[0][0][2][0]));
-    gsl_matrix_set(DD,0,5, 0.5*(D81[0][0][1][2] + D81[0][0][2][1]));
 
-    gsl_matrix_set(DD,1,1, D81[1][1][1][1]);
-    gsl_matrix_set(DD,1,2, D81[1][1][2][2]);
-    gsl_matrix_set(DD,1,3, 0.5*(D81[1][1][0][1] + D81[1][1][1][0]));
-    gsl_matrix_set(DD,1,4, 0.5*(D81[1][1][0][2] + D81[1][1][2][0]));
-    gsl_matrix_set(DD,1,5, 0.5*(D81[1][1][1][2] + D81[1][1][2][1]));
-
-    gsl_matrix_set(DD,2,2, D81[2][2][2][2]);
-    gsl_matrix_set(DD,2,3, 0.5*(D81[2][2][0][1] + D81[2][2][1][0]));
-    gsl_matrix_set(DD,2,4, 0.5*(D81[2][2][0][2] + D81[2][2][2][0]));
-    gsl_matrix_set(DD,2,5, 0.5*(D81[2][2][1][2] + D81[2][2][2][1]));
-
-    gsl_matrix_set(DD,3,3, 0.5*(D81[0][1][0][1] + D81[0][1][1][0]));
-    gsl_matrix_set(DD,3,4, 0.5*(D81[0][1][0][2] + D81[0][1][2][0]));
-    gsl_matrix_set(DD,3,5, 0.5*(D81[0][1][1][2] + D81[1][1][2][1]));
-
-    gsl_matrix_set(DD,4,4, 0.5*(D81[0][2][0][2] + D81[0][2][2][0]));
-    gsl_matrix_set(DD,4,5, 0.5*(D81[0][2][1][2] + D81[0][2][2][1]));
-
-    gsl_matrix_set(DD,5,5, 0.5*(D81[1][2][1][2] + D81[1][2][2][1]));
-
-    displayMatrix(DD,"DD");
-    cout<<"lambda: "<<lambda<<" mu: "<<mu<<endl;*/
-
-
-
-    for (int i = 0; i<3; ++i){
-        for (int j = 0; j<3; ++j){
-            for (int k = 0; k<3; ++k){
-                for (int l = 0; l<3; ++l){
-                    //sum over D(I,J,K,L)
-                    for (int I = 0; I<3; ++I){
-                        for (int J = 0; J<3; ++J){
-                            for (int K = 0; K<3; ++K){
-                                for (int L = 0; L<3; ++L){
-                                    C81[i][j][k][l] += gsl_matrix_get(Fe,i,I)*gsl_matrix_get(Fe,j,J)*gsl_matrix_get(Fe,k,K)*gsl_matrix_get(Fe,l,L)*D81[I][J][K][L];
-                                }
-                            }
-                        }
-                    }
-                    C81[i][j][k][l] /= detFe;
-                    //cout<<"C["<<i<<"]["<<j<<"]["<<k<<"]["<<l<<"]["<<"]: "<<C81[i][j][k][l]<<endl;
-                }
-            }
-        }
-    }
-    gsl_matrix_set_zero(C);
-    gsl_matrix_set(C,0,0, C81[0][0][0][0]);
-    gsl_matrix_set(C,0,1, C81[0][0][1][1]);
-    gsl_matrix_set(C,0,2, C81[0][0][2][2]);
-    gsl_matrix_set(C,0,3, 0.5*(C81[0][0][0][1] + C81[0][0][1][0]));
-    gsl_matrix_set(C,0,4, 0.5*(C81[0][0][0][2] + C81[0][0][2][0]));
-    gsl_matrix_set(C,0,5, 0.5*(C81[0][0][1][2] + C81[0][0][2][1]));
-
-    gsl_matrix_set(C,1,1, C81[1][1][1][1]);
-    gsl_matrix_set(C,1,2, C81[1][1][2][2]);
-    gsl_matrix_set(C,1,3, 0.5*(C81[1][1][0][1] + C81[1][1][1][0]));
-    gsl_matrix_set(C,1,4, 0.5*(C81[1][1][0][2] + C81[1][1][2][0]));
-    gsl_matrix_set(C,1,5, 0.5*(C81[1][1][1][2] + C81[1][1][2][1]));
-
-    gsl_matrix_set(C,2,2, C81[2][2][2][2]);
-    gsl_matrix_set(C,2,3, 0.5*(C81[2][2][0][1] + C81[2][2][1][0]));
-    gsl_matrix_set(C,2,4, 0.5*(C81[2][2][0][2] + C81[2][2][2][0]));
-    gsl_matrix_set(C,2,5, 0.5*(C81[2][2][1][2] + C81[2][2][2][1]));
-
-    gsl_matrix_set(C,3,3, 0.5*(C81[0][1][0][1] + C81[0][1][1][0]));
-    gsl_matrix_set(C,3,4, 0.5*(C81[0][1][0][2] + C81[0][1][2][0]));
-    gsl_matrix_set(C,3,5, 0.5*(C81[0][1][1][2] + C81[0][1][2][1]));
-
-    gsl_matrix_set(C,4,4, 0.5*(C81[0][2][0][2] + C81[0][2][2][0]));
-    gsl_matrix_set(C,4,5, 0.5*(C81[0][2][1][2] + C81[0][2][2][1]));
-
-    gsl_matrix_set(C,5,5, 0.5*(C81[1][2][1][2] + C81[1][2][2][1]));
-
-    //Swapping positions of 4 and 5:
-    //record Rows 4 and 5 of C matirx into a smaller matrix
-    double CCol45 [6][2];
-    for (int i=0;i<6; ++i){
-        for (int j=0;j<2; ++j){
-            CCol45[i][j] = gsl_matrix_get(C,i,j+4);
-        }
-    }
-    //Now swap
-    for (int i=0;i<6; ++i){
-        gsl_matrix_set(C,i,4, CCol45[i][1]);
-        gsl_matrix_set(C,i,5, CCol45[i][0]);
-    }
-    //Now swap rows - :
-    double CRow45 [2][6];
-    for (int i=0;i<6; ++i){
-       CRow45[0][i] = gsl_matrix_get(C,4,i);
-       CRow45[1][i] = gsl_matrix_get(C,5,i);
-    }
-    //Now swap
-    for (int i=0;i<6; ++i){
-        gsl_matrix_set(C,4,i, CRow45[1][i]);
-        gsl_matrix_set(C,5,i, CRow45[0][i]);
-    }
-    //filling the symmetry:
-    for (int i=0; i<6; ++i){
-        for (int j=i+1; j<6; ++j){
-            gsl_matrix_set(C,j,i,gsl_matrix_get(C,i,j));
-        }
-    }
-    //displayMatrix(C,"Cmatrix");
-}
 
 void	ShapeBase::calculateForceFromStress(int nodeId, gsl_matrix* Externalstress, gsl_matrix *ExternalNodalForces){
     gsl_matrix_set_zero(ExternalNodalForces);
@@ -1669,7 +1579,7 @@ void	ShapeBase::calculateElasticKIntegral1(gsl_matrix* currK,int pointNo){
                                 for (int J=0; J<nDim; ++J){
                                     for (int K=0; K<nDim; ++K){
                                         for (int L=0; L<nDim; ++L){
-                                            value += (gsl_matrix_get(Fe,i,I)*gsl_matrix_get(Fe,j,J)*gsl_matrix_get(Fe,k,K)*gsl_matrix_get(Fe,l,L)*D81[I][J][K][L]*DNb[l]*DNa[j]);
+                                            value += (gsl_matrix_get(Fe,i,I)*gsl_matrix_get(Fe,j,J)*gsl_matrix_get(Fe,k,K)*gsl_matrix_get(Fe,l,L)*D81[pointNo][I][J][K][L]*DNb[l]*DNa[j]);
                                         }
                                     }
                                 }
@@ -1999,6 +1909,7 @@ bool	ShapeBase::checkIfXYPlaneStrainAboveThreshold(double thres){
 	double exx = gsl_matrix_get(Strain,0,0);
 	double eyy = gsl_matrix_get(Strain,1,0);
 	double exy = gsl_matrix_get(Strain,3,0)/2.0;
+	//cout<<"Element: "<<Id<<" exx, eyy, exy: "<<exx<<" "<<eyy<<" "<<exy<<endl;
 	double thresSquared = thres*thres;
 	double diff= exx - eyy;
 	if (diff*diff > thresSquared){
@@ -2010,8 +1921,9 @@ bool	ShapeBase::checkIfXYPlaneStrainAboveThreshold(double thres){
 	return false;
 }
 
-void	ShapeBase::updateEquilibriumMyoWithFeedback(double MyosinFeedbackCap){
-	if (tissueType == 0 || tissueType == 1){
+
+void	ShapeBase::updateEquilibriumMyoWithFeedbackFromZero(double MyosinFeedbackCap){
+	if (tissueType == 0 ){//|| tissueType == 1){
 		//the feedback is applied only in peripodial membrane or the disc proper.
 		//Linker zones are not affected.
 		if (spansWholeTissue || tissuePlacement == 1){
@@ -2045,8 +1957,6 @@ void	ShapeBase::updateEquilibriumMyoWithFeedback(double MyosinFeedbackCap){
 				}
 			}
 		}
-
-
 		/*double exx = gsl_matrix_get(Strain,0,0);
 		double eyy = gsl_matrix_get(Strain,1,0);
 		double feedbackStrain = 0.0;
@@ -2085,6 +1995,56 @@ void	ShapeBase::updateEquilibriumMyoWithFeedback(double MyosinFeedbackCap){
 	}
 }
 
+void	ShapeBase::updateEquilibriumMyoWithFeedbackFromFixedTotal(double totalMyosinLevel){
+	if (tissueType == 0 ){//|| tissueType == 1){
+		//the feedback is applied only in the disc proper.
+		//Linker zones are not affected.
+		if (spansWholeTissue || tissuePlacement == 1){
+			//The feedback is only on the apical surface of the tissue:
+			//This feedback does not focus on the aspect ratio of the tissue.
+			//Only stretch in one direction can result in myosin feedback.
+			//If the tissue is under compression, with a high aspect ratio, there will be no feedback.
+			double e1 = 0.0, e2 = 0.0, tet = 0.0;
+			bool calculatePrincipalStrainDirection = checkIfXYPlaneStrainAboveThreshold(1E-5);
+			if (calculatePrincipalStrainDirection){
+				calculatePrincipalStrainAxesOnXYPlane(e1, e2, tet);
+				//The experimental curve between strain and the ratio of polarised to non-polar myosin:
+				//Y = 0.6164* X + 1.038
+				//X = strain ( 50% strain is 0.5, defined in engineering strain terms),
+				//Y = ratio of polar/uniform myo
+				//The strain in the model is Green strain, I need to do the conversion:
+				//Exx = ((1+exx)^2 - 1);
+				//Then the formulation is:
+				// Y = 0.6164 * ( (2*Exx +1)^0.5 - 1 ) + 1.038
+				//In the experiments, the strain is applied by the stretcher, in one direction only.
+				//In the model, this should be the residual strain, as is the difference of the strains
+				//of the major and minor axis, as long as, e1 is positive (there is stretch)
+				if (e1>0){
+					//there is stretch
+					double eEffectiveGreen = e1 - e2; //eEffective (eEffective = e1 - e2), is the difference between strains of major and minor axes.
+					double eEffectiveEngineering = pow(2*eEffectiveGreen +1 , 0.5) - 1;
+					double ratioOfPolarToUniformMyo = 0.6164*eEffectiveEngineering + 1.038;
+					cMyoUniformEq[0] = totalMyosinLevel / (1+ratioOfPolarToUniformMyo);
+					cMyoUnipolarEq[0] = totalMyosinLevel - cMyoUniformEq[0];
+					//give the current direction:
+					gsl_matrix_set(myoPolarityDir,0,0,cos(tet));
+					gsl_matrix_set(myoPolarityDir,0,1,sin(tet));
+					gsl_matrix_set(myoPolarityDir,0,2,0.0);
+					//cout<<"Element: "<<Id<<" e1: "<<e1<<" e2 "<<e2 <<" tet: "<<tet<<" cmyo: "<<cMyoUnipolarEq[0]<<endl;
+					//displayMatrix(Strain, "strain");
+					//displayMatrix(myoPolarityDir, "myoPolarityDir");
+				}
+			}
+			else{
+				cMyoUnipolarEq[0] = 0.0;
+				cMyoUniformEq[0] = totalMyosinLevel;
+			}
+			//cout<<" element: "<<Id<< " e1, e2: "<<e1<<" "<<e2<<" uniform: "<<cMyoUniformEq[0]<<" polar: "<<cMyoUnipolarEq[0]<<endl;
+		}
+
+	}
+}
+
 void	ShapeBase::updateMyosinConcentration(double dt, double kMyo, bool thereIsMyosinFeedback, double MyosinFeedbackCap){
 	double thresholdValue = 1E-8, thresholdFraction= 0.01;
 	//the value of kMyo is taken form my thesis
@@ -2096,7 +2056,8 @@ void	ShapeBase::updateMyosinConcentration(double dt, double kMyo, bool thereIsMy
 	double cInitial, cEq;
 	//0 for any polarity below
 	if (thereIsMyosinFeedback){
-		updateEquilibriumMyoWithFeedback(MyosinFeedbackCap);
+		//updateEquilibriumMyoWithFeedbackFromZero(MyosinFeedbackCap); // this function adds in polarised myosin to the tissue, independent of the uniform myosin levels
+		updateEquilibriumMyoWithFeedbackFromFixedTotal(MyosinFeedbackCap); //this function redistributes a total pool of myosin in between uniform and polarised myosin levels
 	}
 	for (int myoIter =0; myoIter<4; myoIter++){
 		if (myoIter == 0){ //apical uniform
@@ -2152,7 +2113,18 @@ void	ShapeBase::updateMyosinConcentration(double dt, double kMyo, bool thereIsMy
 			cMyoUnipolar[1] = cFinal[2];
 		}
 	}
-	//cout<<" Element: "<<Id<<" uniform myo:  "<<cMyoUniform[0]<<" "<<cMyoUniform[1]<<" eq: "<<cMyoUniform[0]<<" "<<cMyoUniform[1]<<endl;
+	//if (cMyoUnipolar[0] > 0 || cMyoUnipolar[1]>0){
+		//cout<<" Element: "<<Id<<" unipolar myo:  "<<cMyoUnipolar[0]<<" "<<cMyoUnipolar[1]<<" eq: "<<cMyoUnipolarEq[0]<<" "<<cMyoUnipolarEq[1]<<" polarity dir: "<<endl;
+		//displayMatrix(myoPolarityDir,"myoPolarityDir");
+		//cout<<" Element: "<<Id<<" uniform myo:  "<<cMyoUniform[0]<<" "<<cMyoUniform[1]<<" eq: "<<cMyoUniformEq[0]<<" "<<cMyoUniformEq[1]<<endl;
+	//}
+}
+
+void ShapeBase::adjustCMyosinFromSave(){
+	//if (cMyoUnipolarEq[0] < 1E-5){cMyoUnipolar[0] = 0.0;}
+	//if (cMyoUnipolarEq[1] < 1E-5){cMyoUnipolar[1] = 0.0;}
+	cMyoUnipolar[0] = 0.0;
+	cMyoUnipolar[1] = 0.0;
 }
 
 void 	ShapeBase::setShapeChangeRate(double x, double y, double z, double xy, double yz, double xz){
