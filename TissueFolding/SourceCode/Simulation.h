@@ -143,14 +143,14 @@ private:
     void updateNodeMasses();
     void updateElementToConnectedNodes(vector <Node*>& Nodes);
 	void assignConnectedElementsAndWeightsToNodes();
-	void fixAllD(int i);
-	void fixAllD(Node* currNode);
-	void fixX(int i);
-	void fixX(Node* currNode);
-	void fixY(int i);
-	void fixY(Node* currNode);
-	void fixZ(int i);
-	void fixZ(Node* currNode);
+	void fixAllD(int i, bool fixWithViscosity);
+	void fixAllD(Node* currNode, bool fixWithViscosity);
+	void fixX(int i, bool fixWithViscosity);
+	void fixX(Node* currNode, bool fixWithViscosity);
+	void fixY(int i, bool fixWithViscosity);
+	void fixY(Node* currNode, bool fixWithViscosity);
+	void fixZ(int i, bool fixWithViscosity);
+	void fixZ(Node* currNode, bool fixWithViscosity);
 	void zeroForcesOnNode(int i);
     void processDisplayDataAndSave();
 	//void updateDisplaySaveValuesFromRK();
@@ -236,6 +236,8 @@ public:
 	int Column;
 	float SideLength;
 	float zHeight;
+	bool fixWithViscosity;
+	double fixingViscosity[3];
 	bool ApicalNodeFix[3];
 	bool BasalNodeFix[3];
 	bool CircumferentialNodeFix[5][3]; //row 0: apical circumferece x,y,z ; row 1: basal circumference x,y,z; row 2: linker apical circumference x,y,z, row 3: linker basal circumference x,y,z, row 4: all circumference x,y,z

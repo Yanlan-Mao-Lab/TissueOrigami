@@ -583,6 +583,24 @@ bool ModelInputObject::readMeshParameters(ifstream& file){
 bool ModelInputObject::readNodeFixingParameters(ifstream& file){
 	string currHeader;
 	file >> currHeader;
+	if(currHeader == "FixWithHighViscosity(bool):"){
+		file >>Sim->fixWithViscosity;
+	}
+	else{
+		cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: FixWithHighViscosity(bool):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "FixVis(x,y,z):"){
+		file >>Sim->fixingViscosity[0];
+		file >>Sim->fixingViscosity[1];
+		file >>Sim->fixingViscosity[2];
+	}
+	else{
+		cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: FixVis(x,y,z):" <<endl;
+		return false;
+	}
+	file >> currHeader;
 	if(currHeader == "ApicalSurfaceFix(bool-x,y,z):"){
 		file >>Sim->ApicalNodeFix[0];
 		file >>Sim->ApicalNodeFix[1];

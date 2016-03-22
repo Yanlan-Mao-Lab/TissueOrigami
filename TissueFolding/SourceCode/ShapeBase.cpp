@@ -736,7 +736,7 @@ void 	ShapeBase::getStrain(int type, float &StrainMag){
 void 	ShapeBase::getNodeBasedPysProp(int type, int NodeNo, vector<Node*>& Nodes, float& PysPropMag){
 	PysPropMag = 0.0;
 	if (type == 0){
-		PysPropMag = Nodes[NodeIds[NodeNo]] -> Viscosity;
+		PysPropMag = Nodes[NodeIds[NodeNo]] -> Viscosity[2];
 	}
 }
 

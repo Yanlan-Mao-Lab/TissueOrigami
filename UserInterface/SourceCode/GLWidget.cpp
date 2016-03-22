@@ -74,7 +74,7 @@ using namespace std;
   	 drawNetForces = false;
   	 drawPackingForces = false;
      drawVelocities = false;
-     drawMyosinForces = true;
+     drawMyosinForces = false;
      drawPeripodialMembrane = true;
      drawColumnar = true;
      ManualNodeSelection = false;
@@ -392,7 +392,7 @@ void GLWidget::highlightNode(int i){
 				//PysPropColour = new float[3];
 				//If the physical property is viscosity, then get the colour directly
 				if (PysPropToDisplay == 0){
-					PysPropMag = (*itNode)->Viscosity;
+					PysPropMag = (*itNode)->Viscosity[2];
 				}
 				else{
 					int nConnectedElements = (*itNode)->connectedElementIds.size();
@@ -637,7 +637,7 @@ void GLWidget::highlightNode(int i){
  }
 
  void GLWidget::getConcentrationColour(float* OutputColour, float concentration){
-	 double scale2[2] = {50,200.0};
+	 double scale2[2] = {20,100.0};
 	 double g = (concentration- scale2[0])/(scale2[1]-scale2[0]);
 	 if (g<0) {g=0;}
 	 OutputColour[0] = 1.0-g;

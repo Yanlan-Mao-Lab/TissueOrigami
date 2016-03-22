@@ -1,6 +1,6 @@
 InputMeshParameters:
   MeshInputMode(int-seeDocumentation): 4
-  MeshFile(full-path):   /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Exp48hr-noCap_08.mesh
+  MeshFile(full-path):   /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Exp48hr-noPeri_06.mesh
   symmetricInY(bool): 1
 
 PeripodialMembraneParameters:
@@ -9,31 +9,33 @@ PeripodialMembraneParameters:
   PeripodialMembraneLateralThickness(fractionOfTissueHeight): 0.5
   LumenHeightScale(fractionOfTissueHeight): 0.25
   PeripodialMembraneYoungsModulus: 1000.0
-  PeripodialMembraneApicalViscosity: 1000.0
-  PeripodialMembraneBasalViscosity: 10000.0
+  PeripodialMembraneApicalViscosity: 250.0
+  PeripodialMembraneBasalViscosity: 500.0
 
 LinkerZoneParameters:
   BaseOnPeripodialness(bool): 0
   LinkerZoneApicalYoungsModulus: 1000
   LinkerZoneBasalYoungsModulus: 1000
   LinkerZoneApicalViscosity: 1000.0
-  LinkerZoneBasalViscosity: 10000.0
+  LinkerZoneBasalViscosity: 1500.0
 
 NodeFixingOptions:
+  FixWithHighViscosity(bool): 1
+    FixVis(x,y,z): 10000   10000  10000
   ApicalSurfaceFix(bool-x,y,z): 0 0 0
   BasalSurfaceFix(bool-x,y,z): 0 0 0
   ApicalCircumferenceFix(bool-x,y,z): 0 0 0
   BasalCircumferenceFix(bool-x,y,z): 0 0 0
   LinkerApicalCircumferenceFix(bool-x,y,z): 0 0 0
-  LinkerBasalCircumferenceFix(bool-x,y,z): 0 0 1
-  CircumferenceFix(bool-x,y,z): 0 0 0
+  LinkerBasalCircumferenceFix(bool-x,y,z): 0 0 0
+  CircumferenceFix(bool-x,y,z): 0 0 1
 
 Manipulations:
   AddCurvature(bool): 0
   CurvatureDepthAtCentre(double-microns): -2.0
-  AddSoftPeriphery(bool): 0
-  SoftPeripheryRange(double-microns): 30.0
-  SoftnessFraction(double-fraction): 0.1
+  AddSoftPeriphery(bool): 1
+  SoftPeripheryRange(double-microns): 10.0
+  SoftnessFraction(double-fraction): 0.2
   ApplyToApicalSurface(bool): 1
   ApplyToBasalSurface(bool): 0
   ApplyToColumnarLayer(bool): 1
@@ -43,14 +45,14 @@ Manipulations:
   RandomForceVar(double): 1E-5
  
 TimeParameters:
-  TimeStep(sec): 30
-  SimulationLength(sec):  176400
+  TimeStep(sec): 3
+  SimulationLength(sec):  3
 
 PysicalProperties:
-  YoungsModulusApical: 1000.0	YoungsModulusBasal: 1000.0	YoungsModulusMid: 1000.0	Noise(%-int): 0
+  YoungsModulusApical: 4000.0	YoungsModulusBasal: 1000.0	YoungsModulusMid: 1000.0	Noise(%-int): 0
   PoissonsRatio: 0.45		Noise(%-int): 0
-  ApicalViscosity: 1000.0 	Noise(%-int): 0
-  BasalViscosity: 10000.0
+  ApicalViscosity: 2000.0 	Noise(%-int): 0
+  BasalViscosity: 2500.0
 
 SaveOptions:
   SaveImages(bool): 1
@@ -103,7 +105,7 @@ GrowthOptions:
   FinalTime(sec):  86400
   ApplyToColumnarLayer(bool): 1
   ApplyToPeripodialMembrane(bool): 0
-  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/Col_48-72_8-0
+  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/Col_48-72_8-3
 
   GrowthFunctionType(int-seeDocumentation): 3
   InitialTime(sec):  0
@@ -117,7 +119,7 @@ GrowthOptions:
   FinalTime(sec):  172800
   ApplyToColumnarLayer(bool): 1
   ApplyToPeripodialMembrane(bool): 0
-  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/Col_64-88_1-0
+  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/Col_64-88_7-0
 
   GrowthFunctionType(int-seeDocumentation): 3
   InitialTime(sec):  86400
@@ -143,8 +145,8 @@ PlasticDeformationOptions:
 MyosinOptions:
   MyosinDiffusionRate(double-1/sec): 0.09873
   ForcePerMyosinMolecule(double):  1.0
-  ThereIsMyosinFeedback(bool): 1
-  MyosinFeedbackCap: 200
+  ThereIsMyosinFeedback(bool): 0
+  MyosinFeedbackCap: 300
   NumberofMyosinFunctions(int): 2
 
   InitialTime(sec):   0

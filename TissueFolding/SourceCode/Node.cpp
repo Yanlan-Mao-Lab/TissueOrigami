@@ -24,8 +24,11 @@ Node::Node(int id, int dim, double* pos, int tissuePos, int tissueType){
 	FixedPos = new bool[3];
 	for (int i=0; i<3; ++i){
 		FixedPos[i] = false;
+		viscositySetInFixing[i] = false;
 	}
-	Viscosity = -10.0;
+	Viscosity[0] = -10.0;
+	Viscosity[1] = -10.0;
+	Viscosity[2] = -10.0;
 	tissuePlacement = tissuePos;
 	this->tissueType = tissueType;
 	atCircumference = false;
@@ -76,14 +79,22 @@ void Node::setViscosity(double ApicalVisc,double BasalVisc, double PeripodialApi
 		basalV  = 0.5*(BasalVisc + PeripodialBasalVisc);
 	}
 	if (tissuePlacement ==0){
-		Viscosity = basalV;
+		if (!viscositySetInFixing[0]){Viscosity[0] = basalV;}
+		if (!viscositySetInFixing[1]){Viscosity[1] = basalV;}
+		if (!viscositySetInFixing[2]){Viscosity[2] = basalV;}
 	}
 	else if (tissuePlacement ==1){
-		Viscosity = apicalV;
+		if (!viscositySetInFixing[0]){Viscosity[0] = apicalV;}
+		if (!viscositySetInFixing[1]){Viscosity[1] = apicalV;}
+		if (!viscositySetInFixing[2]){Viscosity[2] = apicalV;}
 	}
 	else if (tissuePlacement == 2 || tissuePlacement == 3){
-		//middle or lateral node are equal to apical
-		Viscosity = apicalV;//(apicalV + basalV) /2.0;
+		//middle or lateral node are equal to he minimum of apical and basal values
+		double minV = apicalV;
+		if (basalV < apicalV){minV = basalV;};
+		if (!viscositySetInFixing[0]){Viscosity[0] = minV;}//(apicalV + basalV) /2.0;
+		if (!viscositySetInFixing[2]){Viscosity[1] = minV;}//(apicalV + basalV) /2.0;
+		if (!viscositySetInFixing[2]){Viscosity[2] = minV;}//(apicalV + basalV) /2.0;
 	}
 }
 

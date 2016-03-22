@@ -309,7 +309,15 @@ public:
 				xyShearAngleMatrix[i][j] = AngleMat[i][j]*M_PI/180.0; //converting to radians
 				aspectRatioOverThresoldMatrix[i][j] = true; //setting all aspect ratios to be over threshold
 				for (int k=0; k<3; ++k){
-					GrowthMatrix[i][j][k] = GrowthMat[i][j][k];
+					//double scaleGrowth[3] = {1.427,2.806,1.0};
+					double scaleGrowth[3] = {1.0,1.0,1.0};
+					//the experimental size at 72 hours should be 210 - 130.
+					//The model results in a size of 160 - 70
+					//The experimental tissue size at 48 hours is 84 - 46
+					//I will scale the rates to give the experimental size:
+					//rx' / rx = ln(210/84)/ln(160/84) = 1.427
+					//ry' / ry = ln(130/46)/ln(70/46) = 2.806
+					GrowthMatrix[i][j][k] = scaleGrowth[k]*GrowthMat[i][j][k];
 				}
 				//cout<<"set the growth matrix for: "<<i<<" "<<j<<endl;
 				compatibleAngleEliminated[i][j] = new bool[4];	//booleans stating if the angle will be added in compatible averaging in for 4 corners

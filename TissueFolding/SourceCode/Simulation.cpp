@@ -104,11 +104,13 @@ void Simulation::setDefaultParameters(){
 	Column = Row-2;
 	SideLength=1.0;
 	zHeight = 2.0;
+	fixWithViscosity = false;
 	for (int i=0; i<5; ++i){
 		for (int j=0; j<3; j++){
-			CircumferentialNodeFix[i][j]= false;
-			ApicalNodeFix[j]= false;
-			BasalNodeFix[j]= false;
+			CircumferentialNodeFix[i][j] = false;
+			ApicalNodeFix[j] = false;
+			BasalNodeFix[j] = false;
+			fixingViscosity[j] = 0;
 		}
 	}
 	nGrowthFunctions = 0;
@@ -1684,7 +1686,7 @@ void Simulation::clearCircumferenceDataFromSymmetricityLine(){
 		if ( y < yLimPos){
 			if ( y  > yLimNeg){
 				(*itNode)->atSymmetricityBorder = true;
-				fixY((*itNode));
+				fixY((*itNode),false); //this is for symmetricity, the fixing has to be hard fixing, not with viscosity under any condition
 				//the node is indeed at the border, BUT, I will remove it only if it is not at the tip:
 				bool atTip = false;
 				if ( x < xTipPos+yLimPos && x >xTipPos+yLimNeg){
@@ -1905,63 +1907,112 @@ void Simulation::calculateShapeFunctionDerivatives(){
     }
 }
 
-void Simulation::fixAllD(Node* currNode){
+void Simulation::fixAllD(Node* currNode, bool fixWithViscosity){
 	for (int j =0 ; j<currNode->nDim; ++j){
-		currNode->FixedPos[j]=true;
-	}
-}
-void Simulation::fixAllD(int i){
-	for (int j =0 ; j<Nodes[i]->nDim; ++j){
-		Nodes[i]->FixedPos[j]=true;
+		if(fixWithViscosity){
+			currNode->Viscosity[j] = fixingViscosity[j];
+			currNode->viscositySetInFixing[j] = true;
+		}
+		else{
+			currNode->FixedPos[j]=true;
+		}
 	}
 }
 
-void Simulation::fixX(Node* currNode){
+void Simulation::fixAllD(int i, bool fixWithViscosity){
+	for (int j =0 ; j<Nodes[i]->nDim; ++j){
+		if(fixWithViscosity){
+			Nodes[i]->Viscosity[j] = fixingViscosity[j];
+			Nodes[i]->viscositySetInFixing[j] = true;
+		}
+		else{
+			Nodes[i]->FixedPos[j]=true;
+		}
+	}
+}
+
+void Simulation::fixX(Node* currNode, bool fixWithViscosity){
 	if(currNode->nDim>0){
-		currNode->FixedPos[0]=true;
+		if(fixWithViscosity){
+			currNode->Viscosity[0] = fixingViscosity[0];
+			currNode->viscositySetInFixing[0] = true;
+		}
+		else{
+			currNode->FixedPos[0]=true;
+		}
 	}
 	else{
 		cerr<<"ERROR: Node : "<<currNode->Id<<" does not have x-dimension"<<endl;
 	}
 }
-void Simulation::fixX(int i){
+void Simulation::fixX(int i, bool fixWithViscosity){
 	if(Nodes[i]->nDim>0){
-		Nodes[i]->FixedPos[0]=true;
+		if(fixWithViscosity){
+			Nodes[i]->Viscosity[0] = fixingViscosity[0];
+			Nodes[i]->viscositySetInFixing[0] = true;
+		}
+		else{
+			Nodes[i]->FixedPos[0]=true;
+		}
 	}
 	else{
 		cerr<<"ERROR: Node : "<<Nodes[i]->Id<<" does not have x-dimension"<<endl;
 	}
 }
 
-void Simulation::fixY(Node* currNode){
+void Simulation::fixY(Node* currNode, bool fixWithViscosity){
 	if(currNode->nDim>1){
-		currNode->FixedPos[1]=true;
+		if(fixWithViscosity){
+			currNode->Viscosity[1] = fixingViscosity[1];
+			currNode->viscositySetInFixing[1] = true;
+		}
+		else{
+			currNode->FixedPos[1]=true;
+		}
 	}
 	else{
 		cerr<<"ERROR: Node : "<<currNode->Id<<" does not have y-dimension"<<endl;
 	}
 }
-void Simulation::fixY(int i){
+void Simulation::fixY(int i, bool fixWithViscosity){
 	if(Nodes[i]->nDim>1){
-		Nodes[i]->FixedPos[1]=true;
+		if(fixWithViscosity){
+			Nodes[i]->Viscosity[1] = fixingViscosity[1];
+			Nodes[i]->viscositySetInFixing[1] = true;
+		}
+		else{
+			Nodes[i]->FixedPos[1]=true;
+		}
 	}
 	else{
 		cerr<<"ERROR: Node : "<<Nodes[i]->Id<<" does not have y-dimension"<<endl;
 	}
 }
 
-void Simulation::fixZ(Node* currNode){
+void Simulation::fixZ(Node* currNode, bool fixWithViscosity){
 	if(currNode->nDim>2){
-		currNode->FixedPos[2]=true;
+		if(fixWithViscosity){
+			currNode->Viscosity[2] = fixingViscosity[2];
+			currNode->viscositySetInFixing[2] = true;
+		}
+		else{
+			currNode->FixedPos[2]=true;
+		}
 	}
 	else{
 		cerr<<"ERROR: Node : "<<currNode->Id<<" does not have z-dimension"<<endl;
 	}
 }
 
-void Simulation::fixZ(int i){
+void Simulation::fixZ(int i, bool fixWithViscosity){
 	if(Nodes[i]->nDim>2){
-		Nodes[i]->FixedPos[2]=true;
+		if(fixWithViscosity){
+			Nodes[i]->Viscosity[2] = fixingViscosity[2];
+			Nodes[i]->viscositySetInFixing[2] = true;
+		}
+		else{
+			Nodes[i]->FixedPos[2]=true;
+		}
 	}
 	else{
 		cerr<<"ERROR: Node : "<<Nodes[i]->Id<<" does not have z-dimension"<<endl;
@@ -2055,9 +2106,9 @@ void Simulation::initiateSinglePrismElement(){
 	Elements.push_back(PrismPnt01);
 	nElements = Elements.size();
 	currElementId++;
-	fixZ(0);
-	fixZ(1);
-	fixZ(2);
+	fixZ(0, fixWithViscosity);
+	fixZ(1, fixWithViscosity);
+	fixZ(2, fixWithViscosity);
 }
 
 
@@ -2206,13 +2257,13 @@ void Simulation::checkForNodeFixing(){
 							 (i == 4)){										  //tissuePlacement is irrelevant, fixing all
 							//The node is at circumference; if
 							if (CircumferentialNodeFix[i][0]){
-								fixX((*itNode));
+								fixX((*itNode),fixWithViscosity);
 							}
 							if (CircumferentialNodeFix[i][1]){
-								fixY((*itNode));
+								fixY((*itNode),fixWithViscosity);
 							}
 							if (CircumferentialNodeFix[i][2]){
-								fixZ((*itNode));
+								fixZ((*itNode),fixWithViscosity);
 							}
 						}
 					}
@@ -2225,13 +2276,13 @@ void Simulation::checkForNodeFixing(){
 		for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
 			if ( (*itNode)->tissuePlacement == 0){
 				if (BasalNodeFix[0]){
-					fixX((*itNode));
+					fixX((*itNode), fixWithViscosity);
 				}
 				if (BasalNodeFix[1]){
-					fixY((*itNode));
+					fixY((*itNode), fixWithViscosity);
 				}
 				if (BasalNodeFix[2]){
-					fixZ((*itNode));
+					fixZ((*itNode), fixWithViscosity);
 				}
 			}
 		}
@@ -2241,13 +2292,13 @@ void Simulation::checkForNodeFixing(){
 		for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
 			if ( (*itNode)->tissuePlacement == 1){
 				if (ApicalNodeFix[0]){
-					fixX((*itNode));
+					fixX((*itNode), fixWithViscosity);
 				}
 				if (ApicalNodeFix[1]){
-					fixY((*itNode));
+					fixY((*itNode), fixWithViscosity);
 				}
 				if (ApicalNodeFix[2]){
-					fixZ((*itNode));
+					fixZ((*itNode), fixWithViscosity);
 				}
 			}
 		}
@@ -2693,13 +2744,6 @@ void Simulation::fixNode0InPosition(double x, double y, double z){
 void Simulation::manualPerturbationToInitialSetup(bool deform, bool rotate){
 	if(timestep==0){
 		//laserAblateTissueType(1);
-		vector<Node*>::iterator itNode1;
-		/*for (itNode1=Nodes.begin(); itNode1<Nodes.end(); ++itNode1){
-			if ( (*itNode1)->tissueType == 2 && (*itNode1)->tissuePlacement == 0 && (*itNode1)->Position[2]>14.0 && (*itNode1)->Position[2]<14.2 ){ //basal node
-				(*itNode1)->FixedPos[2] = true;
-			}
-		}*/
-
 		//laserAblate(0.0, 0.0, 5.0);
         double scaleX = 1.0;
         double scaleY = 1.0;
@@ -2710,8 +2754,7 @@ void Simulation::manualPerturbationToInitialSetup(bool deform, bool rotate){
         double tetY = 0 *PI/180.0;
         double tetZ = 0 *PI/180.0;
         if(deform){
-        	vector<Node*>::iterator itNode;
-        	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+        	for (vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
         		(*itNode)->Position[0] *=scaleX;
         		(*itNode)->Position[1] *=scaleY;
                 (*itNode)->Position[2] *=scaleZ;
@@ -2732,8 +2775,7 @@ void Simulation::manualPerturbationToInitialSetup(bool deform, bool rotate){
                     R[j][k] = Rx[j][k];
                 }
             }
-        	vector<Node*>::iterator itNode;
-        	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+        	for (vector<Node*>::iterator  itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
                 double x = (*itNode)->Position[0]*R[0][0] + (*itNode)->Position[1]*R[0][1] + (*itNode)->Position[2]*R[0][2];
                 double y = (*itNode)->Position[0]*R[1][0] + (*itNode)->Position[1]*R[1][1] + (*itNode)->Position[2]*R[1][2];
                 double z = (*itNode)->Position[0]*R[2][0] + (*itNode)->Position[1]*R[2][1] + (*itNode)->Position[2]*R[2][2];
@@ -2742,8 +2784,7 @@ void Simulation::manualPerturbationToInitialSetup(bool deform, bool rotate){
                 (*itNode)->Position[2]=z;
             }
         }
-    	vector<ShapeBase*>::iterator itElement;
-    	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+    	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
     		(*itElement)->updatePositions(Nodes);
         }
     }
@@ -3770,6 +3811,13 @@ void Simulation::updateStepNR(){
         solveForDeltaU(K,gSum,deltaU);
         //cout<<"checking convergence"<<endl;
         converged = checkConvergenceViaDeltaU(deltaU);
+        /*if (converged){
+        	for (int nN =0; nN< Nodes.size(); nN++){
+        		if(Nodes[nN]->FixedPos[2]){
+        			outputFile<<"timestep: "<<timestep<<" node "<<nN<<" zForce: "<<gsl_vector_get(gSum, 3*nN+2)<<endl;
+        		}
+        	}
+        }*/
         //Elements[0]->displayMatrix(deltaU,"deltaU");
         updateUkInNR(uk,deltaU);
         updateElementPositionsinNR(uk);
@@ -3960,8 +4008,8 @@ void Simulation::calculateImplucitKViscousNumerical(gsl_matrix*  mviscdt, gsl_ma
             double d1 = gsl_matrix_get(un,k,0) - gsl_matrix_get(ukepsilon,k,0);
             double v0 = d0 / dt;
             double v1 = d1 / dt;
-            double F0 = Nodes[i]->mass*Nodes[i]->Viscosity*v0;
-            double F1 = Nodes[i]->mass*Nodes[i]->Viscosity*v1;
+            double F0 = Nodes[i]->mass*Nodes[i]->Viscosity[j]*v0;
+            double F1 = Nodes[i]->mass*Nodes[i]->Viscosity[j]*v1;
             gsl_matrix_set(ViscousForces0,k,0,F0);
             gsl_matrix_set(ViscousForces1,k,0,F1);
         }
@@ -5496,8 +5544,9 @@ void Simulation::constructUnMatrix(gsl_matrix* un){
 
 void Simulation::constructLumpedMassViscosityDtMatrix(gsl_matrix* mviscdt){
     for (int i = 0; i<nNodes; ++i ){
-        double matrixValue = Nodes[i]->mass*Nodes[i]->Viscosity / dt;
+        //double matrixValue = Nodes[i]->mass*Nodes[i]->Viscosity / dt;
         for (int j=0; j<3; ++j){
+        	double matrixValue = Nodes[i]->mass*Nodes[i]->Viscosity[j] / dt;
             gsl_matrix_set(mviscdt,3*i+j,3*i+j,matrixValue);
         }
         //cout<<" Node "<<i<<" - mass: "<<Nodes[i]->mass<<" visc: "<<Nodes[i]->Viscosity<<" matrixvalues: "<<gsl_matrix_get(mviscdt,3*i,3*i)<<" "<<gsl_matrix_get(mviscdt,3*i+1,3*i+1)<<" "<<gsl_matrix_get(mviscdt,3*i+2,3*i+2)<<endl;
@@ -7665,7 +7714,7 @@ void Simulation::setupPipetteExperiment(){
 		for (int i=0; i<nNodes; ++i){
 			//fix basal nodes of columnar layer:
 			if(Nodes[i]->tissuePlacement == 0 && Nodes[i]->tissueType == 0) {
-				fixAllD(i);
+				fixAllD(i, false); //this is fixing with adhesives, should be a hard fix at all times
 			}
 		}
 	}
@@ -7673,7 +7722,7 @@ void Simulation::setupPipetteExperiment(){
 		for (int i=0; i<nNodes; ++i){
 			//fix apical nodes and all peripodial membrane nodes:
 			if(Nodes[i]->tissuePlacement == 1 || Nodes[i]->tissueType == 1) {
-				fixAllD(i);
+				fixAllD(i, false); //this is fixing with adhesives, should be a hard fix at all times
 			}
 		}
 	}
@@ -7890,11 +7939,11 @@ void Simulation::setupYsymmetricity(){
 			if (Nodes[i]->Position[1] > yLimNeg){
 				symmetricYBoundaryNodes.push_back(Nodes[i]);
 				Nodes[i]->atSymmetricityBorder = true;
-				fixY(Nodes[i]);
+				fixY(Nodes[i],false); //this is for symmetricity, the fixing has to be hard fixing, not with viscosity under any condition
 			}
 			else{
 				AblatedNodes.push_back(i);
-				fixAllD(Nodes[i]);
+				fixAllD(Nodes[i], false); //this is fixing for ablated nodes, no need for calculations
 				//setSymmetricNode(Nodes[i],yLimPos);
 			}
 		}
@@ -7919,7 +7968,7 @@ void Simulation::setupYsymmetricity(){
 void Simulation::ablateSpcific(){
 	vector <int> AblatedNodes;
 	for (int i=0; i<nNodes; ++i){
-		fixAllD(Nodes[i]);
+		fixAllD(Nodes[i],  false); //this is fixing for ablated nodes, no need for calculations);
 	}
 	//int nAN = AblatedNodes.size();
 	//fix the position of all ablated nodes for effective Newton Rapson calculation:
