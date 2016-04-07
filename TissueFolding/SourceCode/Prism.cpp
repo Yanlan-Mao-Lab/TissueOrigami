@@ -498,8 +498,10 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currg, gsl_matrix *currF, int p
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currF, InvFg, 0.0, currFeFpFsc);	///< Removing growth
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currFeFpFsc, InvFsc, 0.0, currFeFp);	///< Removing shape change
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currFeFp, invFplastic, 0.0, currFe);	///< Removing shape change
-
-
+    //if (Id == 0){
+    //	displayMatrix(currFe,"Element0-currFe");
+    //	displayMatrix(InvFg,"Element0-InvFg");
+    //}
 	gsl_matrix* currFeT = gsl_matrix_alloc(dim, dim);
     gsl_matrix_transpose_memcpy(currFeT,currFe);
     createMatrixCopy(FeMatrices[pointNo], currFe); // storing Fe for use in implicit elastic K calculation.

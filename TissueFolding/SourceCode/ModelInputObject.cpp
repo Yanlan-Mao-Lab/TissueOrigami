@@ -570,6 +570,14 @@ bool ModelInputObject::readMeshParameters(ifstream& file){
 		}
 	}
 	file >> currHeader;
+	if(currHeader == "symmetricInX(bool):"){
+		file >> Sim->symmetricX;
+	}
+	else{
+		cerr<<"Error in reading mesh type, curr string: "<<currHeader<<", should have been: symmetricInX(bool):" <<endl;
+		return false;
+	}
+	file >> currHeader;
 	if(currHeader == "symmetricInY(bool):"){
 		file >> Sim->symmetricY;
 	}

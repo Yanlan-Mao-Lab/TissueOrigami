@@ -55,8 +55,8 @@ private:
 	//double peripodialBoundingBoxSize[3];
 	bool ContinueFromSave;
     int growthRotationUpdateFrequency;
-    vector <Node*> symmetricYBoundaryNodes;
-
+    //vector <Node*> symmetricYBoundaryNodes;
+    //vector <Node*> symmetricXBoundaryNodes;
     vector <int> AblatedNodes;
 
 	bool readModeOfSim(int& i, int argc, char **argv);
@@ -127,7 +127,7 @@ private:
 	void constructTriangleCornerListOfApicalSurface( vector< vector<int> > &TriangleList);
 	void addCapPeripodialElements( vector< vector<int> > &TriangleList, vector< vector<int> > &PeripodialCapNodeArray, int peripodialHeightDiscretisationLayers);
 	void correctCircumferentialNodeAssignment(vector< vector<int> > OuterNodeArray);
-	void assignTips();
+
 
 	void initiateSinglePrismNodes(float zHeight);
 	void initiateSinglePrismElement();
@@ -203,6 +203,7 @@ private:
     void addCurvatureToColumnar(double h);
     void addSoftPeriphery(double* fractions);
     void setupYsymmetricity();
+    void setupXsymmetricity();
     void ablateSpcific();
 
     //void setSymmetricNode(Node* currNode, double yLimPos);
@@ -293,6 +294,7 @@ public:
 	bool thereIsPeripodialMembrane;
 	bool AddPeripodialMembrane;
     bool symmetricY;
+    bool symmetricX;
     bool addingRandomForces;
 	bool stretcherAttached;
 	vector <int> leftClampBorder;
@@ -363,6 +365,7 @@ public:
 	vector <double> drawingPointsX, drawingPointsY, drawingPointsZ;
 	Simulation();
 	~Simulation();
+	void assignTips();
 	bool readExecutableInputs(int argc, char **argv);
 	bool initiateSystem();
 	void calculateSystemCentre();

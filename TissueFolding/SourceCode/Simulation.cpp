@@ -166,6 +166,7 @@ void Simulation::setDefaultParameters(){
 	addCurvatureToTissue = false;
 	tissueCurvatureDepth = 0.0;
 	symmetricY = false;
+	symmetricX = false;
 	addingRandomForces = false;
 	randomForceMean = 0.0;
 	randomForceVar = 0.0;
@@ -420,7 +421,7 @@ bool Simulation::initiateSystem(){
 	if (!Success){
 		return Success;
 	}
-	if (symmetricY){
+	if (symmetricY || symmetricX){
 		 clearCircumferenceDataFromSymmetricityLine();
 	}
 	Success = checkIfThereIsPeripodialMembrane();
@@ -484,6 +485,9 @@ bool Simulation::initiateSystem(){
 
 	if (symmetricY){
 		setupYsymmetricity();
+	}
+	if (symmetricX){
+		setupXsymmetricity();
 	}
 	if (ContinueFromSave){
 		cout<<"Reading Final SimulationStep: "<<endl;
@@ -652,7 +656,7 @@ void Simulation::writeSimulationSummary(){
 	saveFileSimulationSummary<<ModInp->parameterFileName<<endl;
 	saveFileSimulationSummary<<"Mesh_Type:  ";
 	saveFileSimulationSummary<<MeshType<<endl;
-	saveFileSimulationSummary<<"Symmetricity-y: "<<symmetricY<<endl;
+	saveFileSimulationSummary<<"Symmetricity-x: "<<symmetricX<<" Symmetricity-y: "<<symmetricY<<endl;
 	writeMeshFileSummary();
 	writeGrowthRatesSummary();
 	writeMyosinSummary();
@@ -898,17 +902,28 @@ bool Simulation::readSystemSummaryFromSave(){
 		return false;
 	}
 	int dummyint;
-	saveFileToDisplaySimSum >> dummyint; //reading he mesh type
+	saveFileToDisplaySimSum >> dummyint; //reading the mesh type
+	if(saveFileToDisplaySimSum.eof()){
+		cerr<<"reached the end of summary file, expecting: Symmetricity-x:"<<endl;
+		return false;
+	}
+	saveFileToDisplaySimSum >> dummystring; //reading "Symmetricity-x: "
+	if(saveFileToDisplaySimSum.eof()){
+		cerr<<"reached the end of summary file, expecting: symmetricitX boolean:"<<endl;
+		return false;
+	}
+	saveFileToDisplaySimSum >> symmetricX;
 	if(saveFileToDisplaySimSum.eof()){
 		cerr<<"reached the end of summary file, expecting: Symmetricity-y:"<<endl;
 		return false;
 	}
 	saveFileToDisplaySimSum >> dummystring; //reading "Symmetricity-y: "
 	if(saveFileToDisplaySimSum.eof()){
-		cerr<<"reached the end of summary file, expecting: symmetricity boolean:"<<endl;
+		cerr<<"reached the end of summary file, expecting: symmetricitY boolean:"<<endl;
 		return false;
 	}
 	saveFileToDisplaySimSum >> symmetricY;
+	cout<<"read the summary, symmetricity data: "<<symmetricX<<" "<<symmetricY<<endl;
 	return true;
 }
 
@@ -1365,10 +1380,10 @@ void Simulation::updateOneStepFromSave(){
 	if(ProteinsSaved){
 		updateProteinsFromSave();
 	}
-	cout<<"trying to update packing from save, PackingSaved: "<<PackingSaved<<endl;
+	//cout<<"trying to update packing from save, PackingSaved: "<<PackingSaved<<endl;
 	if (PackingSaved){
 		updatePackingFromSave();
-		cout<<"updated packing, the size of packing couples: "<<pacingNodeCouples0.size()<<endl;
+		//cout<<"updated packing, the size of packing couples: "<<pacingNodeCouples0.size()<<endl;
 	}
 	clearNodeMassLists();
 	assignNodeMasses();
@@ -1668,39 +1683,77 @@ bool Simulation::generateColumnarCircumferenceNodeList(	vector <int> &ColumnarCi
 
 void Simulation::clearCircumferenceDataFromSymmetricityLine(){
 	//I will take out anything that was at the border of symmetry, but I need the nodes at the tips. So find the x tips first:
-	double xTipPos = -1000, xTipNeg = 1000;
-	vector<Node*>::iterator itNode;
-	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-		if ((*itNode)->Position[0] > xTipPos ){
-			xTipPos = (*itNode)->Position[0];
+	if (symmetricY){
+		double xTipPos = -1000, xTipNeg = 1000;
+		vector<Node*>::iterator itNode;
+		for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+			if ((*itNode)->Position[0] > xTipPos ){
+				xTipPos = (*itNode)->Position[0];
+			}
+			if ((*itNode)->Position[0] < xTipNeg ){
+				xTipNeg = (*itNode)->Position[0];
+			}
 		}
-		if ((*itNode)->Position[0] < xTipNeg ){
-			xTipNeg = (*itNode)->Position[0];
-		}
-	}
-	double yLimPos = 0.1;
-	double yLimNeg = (-1.0)*yLimPos;
-	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-		double x = (*itNode)->Position[0];
-		double y = (*itNode)->Position[1];
-		if ( y < yLimPos){
-			if ( y  > yLimNeg){
-				(*itNode)->atSymmetricityBorder = true;
-				fixY((*itNode),false); //this is for symmetricity, the fixing has to be hard fixing, not with viscosity under any condition
-				//the node is indeed at the border, BUT, I will remove it only if it is not at the tip:
-				bool atTip = false;
-				if ( x < xTipPos+yLimPos && x >xTipPos+yLimNeg){
-					atTip = true;
-				}
-				if ( x > xTipNeg+yLimNeg && x < xTipNeg+yLimPos){
-					atTip = true;
-				}
-				if (!atTip){
-					//removing node from list:
-					(*itNode)->atCircumference = false;
+		double yLimPos = 0.1;
+		double yLimNeg = (-1.0)*yLimPos;
+		for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+			double x = (*itNode)->Position[0];
+			double y = (*itNode)->Position[1];
+			if ( y < yLimPos){
+				if ( y  > yLimNeg){
+					(*itNode)->atSymmetricityBorder = true;
+					fixY((*itNode),false); //this is for symmetricity, the fixing has to be hard fixing, not with viscosity under any condition
+					//the node is indeed at the border, BUT, I will remove it only if it is not at the tip:
+					bool atTip = false;
+					if ( x < xTipPos+yLimPos && x >xTipPos+yLimNeg){
+						atTip = true;
+					}
+					if ( x > xTipNeg+yLimNeg && x < xTipNeg+yLimPos){
+						atTip = true;
+					}
+					if (!atTip){
+						//removing node from list:
+						(*itNode)->atCircumference = false;
+					}
 				}
 			}
 		}
+	}
+	if (symmetricX){
+		double yTipPos = -1000, yTipNeg = 1000;
+		for (vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+			if ((*itNode)->Position[0] > yTipPos ){
+				yTipPos = (*itNode)->Position[1];
+			}
+			if ((*itNode)->Position[0] < yTipNeg ){
+				yTipNeg = (*itNode)->Position[1];
+			}
+		}
+		double xLimPos = 0.1;
+		double xLimNeg = (-1.0)*xLimPos;
+		for (vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+			double x = (*itNode)->Position[0];
+			double y = (*itNode)->Position[1];
+			if ( x < xLimPos){
+				if ( x  > xLimNeg){
+					(*itNode)->atSymmetricityBorder = true;
+					fixX((*itNode),false); //this is for symmetricity, the fixing has to be hard fixing, not with viscosity under any condition
+					//the node is indeed at the border, BUT, I will remove it only if it is not at the tip:
+					bool atTip = false;
+					if ( y < yTipPos+xLimPos && y >yTipPos+xLimNeg){
+						atTip = true;
+					}
+					if ( y > yTipNeg+xLimNeg && y < yTipNeg+xLimPos){
+						atTip = true;
+					}
+					if (!atTip){
+						//removing node from list:
+						(*itNode)->atCircumference = false;
+					}
+				}
+			}
+		}
+
 	}
 }
 /*
@@ -2677,16 +2730,20 @@ void Simulation::addCurvatureToColumnar(double h){
 	vector<Node*>::iterator itNode;
 	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
 		if ((*itNode)->Position[0] > l1 ){
-			l1 = (*itNode)->Position[0];
+			l1 = (*itNode)->Position[0]; //displacement from origin to positive x tip
 		}
 		if ((*itNode)->Position[0] < l2 ){
-			l2 = (*itNode)->Position[0];
+			l2 = (*itNode)->Position[0]; //displacement from origin to negative x tip
 		}
 		if ((*itNode)->Position[1] > l3 ){
-			l3 = (*itNode)->Position[1];
+			l3 = (*itNode)->Position[1];	//displacement from origin to positive y tip
 		}
 	}
-	l2 *= -1.0;
+	if (symmetricX){
+		l2 = (-1.0)*l1;	//if there is symmetricity in x, then the negative tip will be at zero. This is not correct and the symmetricity should mean the negative displacement will be -l1
+	}
+	l2 *= -1.0;	//converting the displacement to distance, this is the only negative tip, the rest are already positive
+	cout<<"l1: "<<l1 <<" l2: "<<l2<<" l3: "<<l3<<endl;
 	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
 		double x = (*itNode)->Position[0];
 		double y = (*itNode)->Position[1];
@@ -2702,9 +2759,9 @@ void Simulation::addCurvatureToColumnar(double h){
 			if (h<0){
 				offset *= (-1.0);
 			}
-			if (thereIsPeripodialMembrane){
+			if (thereIsPeripodialMembrane && (*itNode)->tissueType != 0){ //node is not columnar
 				//there is peripodial membrane, any node above the mid-line of the lumen should be curved in the opposite direction of the columnar layer:
-				//But I have a direction choice, if the columnar is curving down, the peripodial shoudl curve up
+				//But I have a direction choice, if the columnar is curving down, the peripodial shoul curve up
 				//If the columnar is curing up, the peripodial should still curve up!
 
 				double heightThreshold = TissueHeight + lumenHeight/2.0;
@@ -2715,6 +2772,10 @@ void Simulation::addCurvatureToColumnar(double h){
 				}
 			}
 			(*itNode)->Position[2] -= offset;
+			if((*itNode)->Id ==8){
+				cout<<" a: "<<a<<" c: "<<c<<" x "<<x<<" y "<< y<<" z "<<z<<" value: "<<value<<" offset: "<<offset<<endl;
+				cout<<"Node[8] position: "<<(*itNode)->Position[0]<<" "<<(*itNode)->Position[1]<<" "<<(*itNode)->Position[2]<<endl;
+			}
 		}
 	}
 
@@ -2745,14 +2806,14 @@ void Simulation::manualPerturbationToInitialSetup(bool deform, bool rotate){
 	if(timestep==0){
 		//laserAblateTissueType(1);
 		//laserAblate(0.0, 0.0, 5.0);
-        double scaleX = 1.0;
+        double scaleX = 2.0;
         double scaleY = 1.0;
         double scaleZ = 1.0;
 
         double PI = 3.14159265359;
-        double tetX = 45 *PI/180.0;
+        double tetX = 0 *PI/180.0;
         double tetY = 0 *PI/180.0;
-        double tetZ = 0 *PI/180.0;
+        double tetZ = 45 *PI/180.0;
         if(deform){
         	for (vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
         		(*itNode)->Position[0] *=scaleX;
@@ -2772,7 +2833,7 @@ void Simulation::manualPerturbationToInitialSetup(bool deform, bool rotate){
             double Rz[3][3] = {{c,-s,0},{s,c,0},{0,0,1}};
             for (int j =0; j<3;++j){
                 for(int k=0; k<3;++k){
-                    R[j][k] = Rx[j][k];
+                    R[j][k] = Rz[j][k];
                 }
             }
         	for (vector<Node*>::iterator  itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
@@ -3790,7 +3851,7 @@ void Simulation::updateStepNR(){
         */
 
         //cout<<"checking convergence with forces"<<endl;
-        converged = checkConvergenceViaForce(gSum);
+        //converged = checkConvergenceViaForce(gSum);
         if (converged){
             break;
         }
@@ -6766,44 +6827,83 @@ void Simulation::assignTips(){
 		//cout<<"DV Tip node indexes: "<<dorsalTipIndex<<" "<<ventralTipIndex<<endl;
 		//cout<<"AP Tip node indexes: "<<anteriorTipIndex<<" "<<posteriorTipIndex<<endl;
 	}
-	//cout<<"DV Tip node indexes: "<<dorsalTipIndex<<" "<<ventralTipIndex<<endl;
+	//I have identified the tips assuming the tissue is represented in full.
+	//If there is symmetry in the input, then I will need to correct this.
+	//In the case of x symmetry, the minimum x will be correct in DV, but not the maximum x.
+	//In the case of y symmetry, the maximum y will be correct in AP. but not the minimum.
+	if (symmetricX){
+		double delta = 0.02;
+		//the ventralTipIndex is correct, it is at the minimum of x axis. The dorsalTipIndex is at x=0. but there are a series of nodes at x=0,
+		//and the selected one should be at y=0 too.
+		for (int i =0; i<nNodes; ++i){
+				if (Nodes[i]->tissuePlacement == 0 && Nodes[i]->tissueType == 0 ) { //taking the basal nodes of the columnar layer only
+					if (Nodes[i]->Position[0]< delta &&  Nodes[i]->Position[0]> -delta){
+						//this node is at x = 0, is it at y = 0 too?
+						if (Nodes[i]->Position[1]< delta &&  Nodes[i]->Position[1]> -delta){
+							dorsalTipIndex = i;
+							break;
+						}
+					}
+				}
+		}
+	}
+	if (symmetricY){
+		double delta = 0.02;
+		//the posteriorTipIndex is correct, it is at the maximum of y axis. The anteriorTipIndex is at y=0. but there are a series of nodes at y=0,
+		//and the selected one should be at x=0 too.
+		for (int i =0; i<nNodes; ++i){
+				if (Nodes[i]->tissuePlacement == 0 && Nodes[i]->tissueType == 0 ) { //taking the basal nodes of the columnar layer only
+					if (Nodes[i]->Position[1]< delta &&  Nodes[i]->Position[1]> -delta){
+						//this node is at x = 0, is it at y = 0 too?
+						if (Nodes[i]->Position[0]< delta &&  Nodes[i]->Position[0]> -delta){
+							anteriorTipIndex = i;
+							break;
+						}
+					}
+				}
+		}
+	}
+	cout<<"Tip node indexes - dorsalTipIndex: "<<dorsalTipIndex<<" ventralTipIndex: "<<ventralTipIndex<<endl;
+	cout<<"Tip node indexes - anteriorTipIndex: "<<anteriorTipIndex<<" posteriorTipIndex: "<<posteriorTipIndex<<endl;
 }
 
 void Simulation::alignTissueDVToXPositive(){
-	double* u = new double[3];
-	double* v = new double[3];
-	//For simulations with no viscosity, the position of Dorsal tip is fixed, Ventral tip is fixed in y and z, another node is fixed in z
-	for (int i=0;i<3;++i){
-		u[i] = Nodes[ventralTipIndex]->Position[i] - Nodes[dorsalTipIndex]->Position[i];
-	}
-	Elements[0]->normaliseVector3D(u);
-	v[0]=1;v[1]=0;v[2]=0;
-	double c, s;
-	Elements[0]->calculateRotationAngleSinCos(u,v,c,s);
-	double *rotAx;
-	rotAx = new double[3];
-	double *rotMat;
-	rotMat = new double[9]; //matrix is written in one row
-	Elements[0]->calculateRotationAxis(u,v,rotAx,c);	//calculating the rotation axis that is perpendicular to both u and v
-	Elements[0]->constructRotationMatrix(c,s,rotAx,rotMat);
-	for(int i=1;i<nNodes;++i){
-		for(int j = 0; j< Nodes[i]->nDim; ++j){
-			u[j] = Nodes[i]->Position[j] - Nodes[0]->Position[j];
+	if (!symmetricX){
+		double* u = new double[3];
+		double* v = new double[3];
+		//For simulations with no viscosity, the position of Dorsal tip is fixed, Ventral tip is fixed in y and z, another node is fixed in z
+		for (int i=0;i<3;++i){
+			u[i] = Nodes[ventralTipIndex]->Position[i] - Nodes[dorsalTipIndex]->Position[i];
 		}
-		Elements[0]->rotateVectorByRotationMatrix(u,rotMat);
+		Elements[0]->normaliseVector3D(u);
+		v[0]=1;v[1]=0;v[2]=0;
+		double c, s;
+		Elements[0]->calculateRotationAngleSinCos(u,v,c,s);
+		double *rotAx;
+		rotAx = new double[3];
+		double *rotMat;
+		rotMat = new double[9]; //matrix is written in one row
+		Elements[0]->calculateRotationAxis(u,v,rotAx,c);	//calculating the rotation axis that is perpendicular to both u and v
+		Elements[0]->constructRotationMatrix(c,s,rotAx,rotMat);
+		for(int i=1;i<nNodes;++i){
+			for(int j = 0; j< Nodes[i]->nDim; ++j){
+				u[j] = Nodes[i]->Position[j] - Nodes[0]->Position[j];
+			}
+			Elements[0]->rotateVectorByRotationMatrix(u,rotMat);
 
-		for(int j = 0; j< Nodes[i]->nDim; ++j){
-			Nodes[i]->Position[j] = u[j] + Nodes[0]->Position[j];
+			for(int j = 0; j< Nodes[i]->nDim; ++j){
+				Nodes[i]->Position[j] = u[j] + Nodes[0]->Position[j];
+			}
 		}
+		vector<ShapeBase*>::iterator itElement;
+		for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+			(*itElement)->updatePositions(Nodes);
+		}
+		delete[] rotAx;
+		delete[] rotMat;
+		delete[] u;
+		delete[] v;
 	}
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		(*itElement)->updatePositions(Nodes);
-	}
-	delete[] rotAx;
-	delete[] rotMat;
-	delete[] u;
-	delete[] v;
 }
 
 
@@ -6846,22 +6946,39 @@ void Simulation::alignTissueAPToXYPlane(){
 
 void Simulation::calculateDVDistance(){
 	double d[3];
-	for (int i=0;i<3;++i){
-		d[i] = Nodes[dorsalTipIndex]->Position[i] - Nodes[ventralTipIndex]->Position[i];
-		d[i] *=d[i];
-
+	if (symmetricX){
+		for (int i=0;i<3;++i){
+			d[i] = Nodes[ventralTipIndex]->Position[i];
+			d[i] *=d[i];
+		}
+	}
+	else{
+		for (int i=0;i<3;++i){
+			d[i] = Nodes[dorsalTipIndex]->Position[i] - Nodes[ventralTipIndex]->Position[i];
+			d[i] *=d[i];
+		}
 	}
 	double dmag = d[0]+d[1]+d[2];
 	dmag = pow(dmag,0.5);
 	outputFile<<"time: "<<timestep * dt<<" DV distance is: "<<dmag<<" ";
-	for (int i=0;i<3;++i){
-		d[i] = Nodes[anteriorTipIndex]->Position[i] - Nodes[posteriorTipIndex]->Position[i];
-		d[i] *=d[i];
+	cout<<"time: "<<timestep * dt<<" DV distance is: "<<dmag<<" ";
+	if (symmetricY){
+		for (int i=0;i<3;++i){
+			d[i] = Nodes[posteriorTipIndex]->Position[i];
+			d[i] *=d[i];
+		}
+	}
+	else{
+		for (int i=0;i<3;++i){
+			d[i] = Nodes[anteriorTipIndex]->Position[i] - Nodes[posteriorTipIndex]->Position[i];
+			d[i] *=d[i];
+		}
 	}
 	dmag = d[0]+d[1]+d[2];
 	dmag = pow(dmag,0.5);
 	outputFile<<" AP distance is: "<<dmag<<endl;
-
+	cout<<" AP distance is: "<<dmag<<endl;
+	//cout<<"TIPS: "<<dorsalTipIndex<<" "<<ventralTipIndex<<" "<<anteriorTipIndex<<" "<<posteriorTipIndex<<endl;
 }
 
 void Simulation::resetForces(bool resetPacking){
@@ -6937,9 +7054,12 @@ void Simulation::calculateBoundingBox(){
 		//}
 		//}
 	}
+	cout<<"calculating bounding box, symmetricity x & y: "<<symmetricX<<" "<<symmetricY<<endl;
+	cout<<"bounding box before update: "<<boundingBox[0][0]<<" "<<boundingBox[0][1]<<" "<<boundingBox[1][0]<<" "<<boundingBox[1][1]<<endl;
 	if (symmetricY){
 		boundingBox[0][1] = (-1.0)*boundingBox[1][1]; //if there is Y symmetricity, then the bounding box is extended to double the size in y
 	}
+	cout<<"bounding box after update: "<<boundingBox[0][0]<<" "<<boundingBox[0][1]<<" "<<boundingBox[1][0]<<" "<<boundingBox[1][1]<<endl;
 	for (int i=0; i<3; ++i){
 		boundingBoxSize[i] = boundingBox[1][i] - boundingBox[0][i];
 	}
@@ -7937,9 +8057,44 @@ void Simulation::setupYsymmetricity(){
 	for (int i=0; i<nNodes; ++i){
 		if (Nodes[i]->Position[1]< yLimPos){
 			if (Nodes[i]->Position[1] > yLimNeg){
-				symmetricYBoundaryNodes.push_back(Nodes[i]);
+				//symmetricYBoundaryNodes.push_back(Nodes[i]);
 				Nodes[i]->atSymmetricityBorder = true;
 				fixY(Nodes[i],false); //this is for symmetricity, the fixing has to be hard fixing, not with viscosity under any condition
+			}
+			else{
+				AblatedNodes.push_back(i);
+				fixAllD(Nodes[i], false); //this is fixing for ablated nodes, no need for calculations
+				//setSymmetricNode(Nodes[i],yLimPos);
+			}
+		}
+	}
+	int nAN = AblatedNodes.size();
+	//fix the position of all ablated nodes for effective Newton Rapson calculation:
+	vector<ShapeBase*>::iterator itElement;
+	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		if(!(*itElement)->IsAblated){
+			for (int j =0; j<nAN; ++j){
+				bool IsAblatedNow = (*itElement)->DoesPointBelogToMe(AblatedNodes[j]);
+				if (IsAblatedNow){
+					(*itElement)->removeMassFromNodes(Nodes);
+					(*itElement)->IsAblated = true;
+					break;
+				}
+			}
+		}
+	}
+}
+
+void Simulation::setupXsymmetricity(){
+	double xLimPos = 0.1;
+	double xLimNeg = (-1.0)*xLimPos;
+	vector <int> AblatedNodes;
+	for (int i=0; i<nNodes; ++i){
+		if (Nodes[i]->Position[0]< xLimPos){
+			if (Nodes[i]->Position[0] > xLimNeg){
+				//symmetricXBoundaryNodes.push_back(Nodes[i]);
+				Nodes[i]->atSymmetricityBorder = true;
+				fixX(Nodes[i],false); //this is for symmetricity, the fixing has to be hard fixing, not with viscosity under any condition
 			}
 			else{
 				AblatedNodes.push_back(i);
