@@ -122,7 +122,9 @@ void ShapeBase::getPos(gsl_matrix* Pos){
         }
     }
 }
-
+double 	ShapeBase::getInternalViscosity(){
+	return internalViscosity;
+}
 double 	ShapeBase::getYoungModulus(){
 	return E;
 }
@@ -598,6 +600,29 @@ void ShapeBase::setFg(gsl_matrix* currFg){
     gsl_matrix_free(tmpFgForInversion);
 }
 
+void ShapeBase::setViscosity(double viscosityApical,double viscosityBasal, double viscosityMid){
+	this -> internalViscosity = viscosityMid;
+	if (tissuePlacement == 0 ){
+		this -> internalViscosity = viscosityBasal;
+	}
+	else if(tissuePlacement == 1 ){
+		this -> internalViscosity = viscosityApical;
+	}
+	if (Id>754 && Id<769){
+		cout<<"element: "<<Id<<" tissue placement: "<<tissuePlacement<<" internal viscosity: "<<internalViscosity<<endl;
+	}
+}
+
+void ShapeBase::setViscosity(double viscosityApical,double viscosityBasal){
+	this -> internalViscosity = 0.5*(viscosityApical+viscosityBasal);
+	if (tissuePlacement == 0 ){
+		this -> internalViscosity = viscosityBasal;
+	}
+	else if(tissuePlacement == 1 ){
+		this -> internalViscosity = viscosityApical;
+	}
+}
+
 void 	ShapeBase::updateShapeFromSave(ifstream& file){
 	file >> IsAblated;
 	updateNodeIdsFromSave(file);
@@ -736,18 +761,21 @@ void 	ShapeBase::getStrain(int type, float &StrainMag){
 void 	ShapeBase::getNodeBasedPysProp(int type, int NodeNo, vector<Node*>& Nodes, float& PysPropMag){
 	PysPropMag = 0.0;
 	if (type == 0){
-		PysPropMag = Nodes[NodeIds[NodeNo]] -> Viscosity[2];
+		PysPropMag = Nodes[NodeIds[NodeNo]] -> externalViscosity[2];
 	}
 }
 
 void 	ShapeBase::getPysProp(int type, float &PysPropMag, double dt){
-	if (type ==1){
+	if (type == 1){
+		PysPropMag = getInternalViscosity();
+	}
+	else if (type == 2){
 		PysPropMag = getYoungModulus();
 	}
-	else if (type == 2 ){
+	else if (type == 3 ){
 		PysPropMag = getPoissonRatio();
 	}
-	else if (type ==3){
+	else if (type == 4){
 		double* growth;
 		growth = getGrowthRate();
         double timescale = 60.0*60.0; //reporting per hour
@@ -762,7 +790,7 @@ void 	ShapeBase::getPysProp(int type, float &PysPropMag, double dt){
         PysPropMag -= 1.0;
         PysPropMag *= 100.0;
 	}
-	else if (type ==4){
+	else if (type == 5){
 		double* shapechange;
 		shapechange = getShapeChangeRate();
 		PysPropMag = shapechange[2];
@@ -1689,15 +1717,24 @@ void	ShapeBase::updateReferencePositionsToCurentShape(){
 	}
 }
 
-void 	ShapeBase::setGrowthRate(double dt, double x, double y, double z){
-	GrowthRate[0] = exp(x*dt);
-	GrowthRate[1] = exp(y*dt);
-	GrowthRate[2] = exp(z*dt);
+void 	ShapeBase::setGrowthRate(double dt, double rx, double ry, double rz){
+	GrowthRate[0] = exp(rx*dt);
+	GrowthRate[1] = exp(ry*dt);
+	GrowthRate[2] = exp(rz*dt);
+	//if (Id ==0) {displayMatrix(growthIncrement, "Element0growthIncrement_initialSetting");}
+}
+
+void 	ShapeBase::setGrowthRateExpFromInput(double x, double y, double z){
+	GrowthRate[0] = x;
+	GrowthRate[1] = y;
+	GrowthRate[2] = z;
+}
+
+void 	ShapeBase::updateGrowthIncrementFromRate(){
 	gsl_matrix_set_identity(growthIncrement);
 	gsl_matrix_set(growthIncrement,0,0,GrowthRate[0]);
 	gsl_matrix_set(growthIncrement,1,1,GrowthRate[1]);
 	gsl_matrix_set(growthIncrement,2,2,GrowthRate[2]);
-	//if (Id ==0) {displayMatrix(growthIncrement, "Element0growthIncrement_initialSetting");}
 }
 
 void 	ShapeBase::cleanMyosinForce(){

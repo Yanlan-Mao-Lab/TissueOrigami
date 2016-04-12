@@ -118,6 +118,7 @@ protected:
     //boost::numeric::ublas::vector<double> Forces;
 
 	double E, v;
+	double internalViscosity;
     double lambda, mu;
     gsl_matrix* Fg;			///< Growth matrix
     gsl_matrix* InvFg;		///< Inverse of growth matrix
@@ -187,7 +188,8 @@ public:
 	void 	getStrain(int type, float &StrainMag);
 	void 	getNodeBasedPysProp(int type, int NodeNo, vector<Node*>& Nodes, float& PysPropMag);
     void 	getPysProp(int type, float &PysPropMag, double dt);
-	double 	getYoungModulus();
+    double getInternalViscosity();
+    double 	getYoungModulus();
 	double 	getPoissonRatio();
 	double* getGrowthRate();
 	double* getShapeChangeRate();
@@ -202,7 +204,9 @@ public:
     void    setFg(gsl_matrix* currFg);
 	void 	setGrowthWeightsViaTissuePlacement (double periWeight);
     virtual void setElasticProperties(double EApical,double EBasal, double EMid,double v){ParentErrorMessage("setElasticProperties");};
-	virtual void calculateBasalNormal(double * normal){ParentErrorMessage("calculateBasalNormal");};
+    void 	setViscosity(double viscosityApical,double viscosityBasal, double viscosityMid);
+    void 	setViscosity(double viscosityApical,double viscosityBasal);
+    virtual void calculateBasalNormal(double * normal){ParentErrorMessage("calculateBasalNormal");};
 	virtual void AlignReferenceBaseNormalToZ(){ParentErrorMessage("AlignReferenceBaseNormalToZ");};
 	void 	calculateCurrentGrowthIncrement(gsl_matrix* resultingGrowthIncrement, double dt, double growthx, double growthy, double growthz, gsl_matrix* ShearAngleRotationMatrix);
 	void 	updateShapeChangeRate(double x, double y, double z, double xy, double yz, double xz);
@@ -219,7 +223,9 @@ public:
     void 	calculateForces(vector <Node*>& Nodes, bool recordForcesOnFixedNodes, double** FixedNodeForces,  ofstream& outputFile);
     void 	updatePositions(vector<Node*>& Nodes);
 	void	updateReferencePositionsToCurentShape();
-    void 	setGrowthRate(double dt, double x, double y, double z);
+    void 	setGrowthRate(double dt, double rx, double ry, double rz);
+    void 	setGrowthRateExpFromInput(double x, double y, double z);
+    void 	updateGrowthIncrementFromRate();
 	void 	cleanMyosinForce();
 	void	updateUniformEquilibriumMyosinConcentration(bool isApical, double cEqUniform);
 	void	updateUnipolarEquilibriumMyosinConcentration(bool isApical, double cEqUnipolar, double orientationX, double orientationY);

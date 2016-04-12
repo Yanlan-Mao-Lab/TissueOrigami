@@ -27,6 +27,7 @@ private:
 	ofstream saveFileMesh;
 	ofstream saveFileTensionCompression;
     ofstream saveFileGrowth;
+    ofstream saveFileGrowthRate;
 	ofstream saveFileVelocities;
 	ofstream saveFileForces;
 	ofstream saveFileProteins;
@@ -35,6 +36,7 @@ private:
 	ifstream saveFileToDisplayMesh;
 	ifstream saveFileToDisplayTenComp;
     ifstream saveFileToDisplayGrowth;
+    ifstream saveFileToDisplayGrowthRate;
 	ifstream saveFileToDisplayForce;
 	ifstream saveFileToDisplayProteins;
 	ifstream saveFileToDisplayPacking;
@@ -43,6 +45,7 @@ private:
 
 	bool TensionCompressionSaved;
     bool GrowthSaved;
+    bool GrowthRateSaved;
 	bool ForcesSaved;
 	bool VelocitiesSaved;
 	bool ProteinsSaved;
@@ -87,10 +90,12 @@ private:
 	void updateForcesFromSave();
 	void updateTensionCompressionFromSave();
     void updateGrowthFromSave();
+    void updateGrowthRateFromSave();
     void updateProteinsFromSave();
     void updatePackingFromSave();
 	void readTensionCompressionToContinueFromSave();
     void readGrowthToContinueFromSave();
+    void readGrowthRateToContinueFromSave();
     void readProteinsToContinueFromSave();
 	void updateVelocitiesFromSave();
 	bool readFinalSimulationStep();
@@ -137,7 +142,7 @@ private:
 	void checkForNodeFixing();
 	void initiateElementsByRowAndColumn(int Row, int Column);
 	void assignPhysicalParameters();
-	void checkForZeroViscosity();
+	void checkForZeroExternalViscosity();
 	void calculateStiffnessMatrices();
     void calculateShapeFunctionDerivatives();
     void assignNodeMasses();
@@ -230,22 +235,32 @@ public:
 	int dataSaveInterval;
 	double EApical,EBasal,EMid;
 	double poisson;
-	double ApicalVisc, BasalVisc;
-	bool zeroViscosity;
+	double discProperApicalViscosity;
+	double discProperBasalViscosity;
+	double discProperMidlineViscosity;
 	int noiseOnPysProp[4];
+	bool zeroExternalViscosity;
+	double externalViscosityDPApical;
+	double externalViscosityDPBasal;
+	double externalViscosityPMApical;
+	double externalViscosityPMBasal;
+	double externalViscosityLZApical;
+	double externalViscosityLZBasal;
 	int MeshType;
 	int Row;
 	int Column;
 	float SideLength;
 	float zHeight;
-	bool fixWithViscosity;
-	double fixingViscosity[3];
+	bool fixWithExternalViscosity;
+	double fixingExternalViscosity[3];
 	bool ApicalNodeFix[3];
 	bool BasalNodeFix[3];
 	bool CircumferentialNodeFix[5][3]; //row 0: apical circumferece x,y,z ; row 1: basal circumference x,y,z; row 2: linker apical circumference x,y,z, row 3: linker basal circumference x,y,z, row 4: all circumference x,y,z
 	double PeripodialElasticity;
-	double PeripodialApicalVisc;
-	double PeripodialBasalVisc;
+	double peripodialApicalViscosity;
+	double peripodialBasalViscosity;
+	double peripodialMidlineViscosity;
+	double currViscMidline;
 	double PeripodialThicnessScale;
 	double PeripodialLateralThicnessScale; //the thickness of the side region linking two layers, as a fraction of tissue thickness
 	double lumenHeight;
@@ -254,8 +269,9 @@ public:
 	bool BaseLinkerZoneParametersOnPeripodialness;
 	double LinkerZoneApicalElasticity;
 	double LinkerZoneBasalYoungsModulus;
-	double LinkerZoneApicalViscosity;
-	double LinkerZoneBasalVisc;
+	double linkerZoneApicalViscosity;
+	double linkerZoneBasalViscosity;
+	double linkerZoneMidlineViscosity;
 
 	int nGrowthFunctions;
 	bool GridGrowthsPinnedOnInitialMesh;
@@ -388,7 +404,7 @@ public:
     void updatePlasticDeformation();
     void updateStepNR();
     void constructUnMatrix(gsl_matrix* un);
-    void constructLumpedMassViscosityDtMatrix(gsl_matrix* mviscdt);
+    void constructLumpedMassExternalViscosityDtMatrix(gsl_matrix* mviscdt);
     void calculateElasticForcesAndImplicitKelasticForNR();
     void calculateElasticForcesForNR();
     void writeElasticForcesToge(gsl_matrix* ge);
@@ -396,7 +412,6 @@ public:
     void calculateImplicitKElastic();
     void writeImplicitElementalKElasticToKe(gsl_matrix* K);
     void calculateImplucitKViscous(gsl_matrix* K, gsl_matrix*  mviscdt);
-    void calculateImplucitKViscousNumerical(gsl_matrix*  mviscdt, gsl_matrix*  un, gsl_matrix* uk);
     //void calculateImplucitKElasticNumerical(gsl_matrix* K,gsl_matrix* geNoPerturbation);
     void solveForDeltaU(gsl_matrix* K, gsl_vector* g, gsl_vector *deltaU);
     void constructiaForPardiso(gsl_matrix* K, int* ia, const int nmult, vector<int> &ja_vec, vector<double> &a_vec);

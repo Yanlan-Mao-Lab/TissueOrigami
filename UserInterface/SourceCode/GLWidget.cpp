@@ -19,9 +19,9 @@ using namespace std;
  GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
  {
 	 //cout<<"initiating gl widget"<<endl;
-	 obj_pos[0] = 10.0f;
-	 obj_pos[1] =  4.0f;
-     obj_pos[2] =  70.0f;//250.0f;
+	 obj_pos[0] = 130.0f;
+	 obj_pos[1] =  -150.0f;
+     obj_pos[2] =  270.0f;//250.0f;
 	 MatRot[0]  = 1.0; MatRot[1]  = 0.0; MatRot[2]  = 0.0; MatRot[3]  = 0.0;
 	 MatRot[4]  = 0.0; MatRot[5]  = 1.0; MatRot[6]  = 0.0; MatRot[7]  = 0.0;
 	 MatRot[8]  = 0.0; MatRot[9]  = 0.0; MatRot[10] = 1.0; MatRot[11] = 0.0;
@@ -42,33 +42,38 @@ using namespace std;
      DisplayStrains = true;
      DisplayPysProp = false;
      //current ranges:
-     DisplayPysPropRange[0][0] = 1000.0; DisplayPysPropRange[0][1] = 10000.0; 	//viscosity
-     DisplayPysPropRange[1][0] = 100.0; DisplayPysPropRange[1][1] = 5000.0; //Young's modulus
-     DisplayPysPropRange[2][0] = 0.0; DisplayPysPropRange[2][1] = 0.5; 		//Poisson's ratio
-     DisplayPysPropRange[3][0] = 0.0; DisplayPysPropRange[3][1] = 10; 		//growth
-     DisplayPysPropRange[4][0] = -1.0; DisplayPysPropRange[4][1] = 10.0; 	//shape change
+     DisplayPysPropRange[0][0] = 1000.0; DisplayPysPropRange[0][1] = 10000.0; 	//External Viscosity
+     DisplayPysPropRange[1][0] = 1000.0; DisplayPysPropRange[1][1] = 10000.0; 	//Internal Viscosity
+     DisplayPysPropRange[2][0] = 1000.0; DisplayPysPropRange[2][1] = 5000.0; //Young's modulus
+     DisplayPysPropRange[3][0] = 0.0; DisplayPysPropRange[3][1] = 0.5; 		//Poisson's ratio
+     DisplayPysPropRange[4][0] = 0.0; DisplayPysPropRange[4][1] = 10; 		//xy-planar growth
+     DisplayPysPropRange[5][0] = -1.0; DisplayPysPropRange[5][1] = 10.0; 	//shape change
      //the minimum and maximum they can get:
-     DisplayPysPropBounds[0][0] = 0.0; DisplayPysPropBounds[0][1] = 1000.0;
-     DisplayPysPropBounds[0][2] = 100.0; DisplayPysPropBounds[0][3] = 10000.0;
-     DisplayPysPropBounds[1][0] = 1.0; DisplayPysPropBounds[1][1] = 50.0;
-     DisplayPysPropBounds[1][2] = 51.0; DisplayPysPropBounds[1][3] = 10000.0;
-     DisplayPysPropBounds[2][0] = 0.0; DisplayPysPropBounds[2][1] = 0.1;
-     DisplayPysPropBounds[2][2] = 0.11; DisplayPysPropBounds[2][3] = 0.5;
-     DisplayPysPropBounds[3][0] = 0.0; DisplayPysPropBounds[3][1] = 10;
-     DisplayPysPropBounds[3][2] = 5; DisplayPysPropBounds[3][3] = 50;
-     DisplayPysPropBounds[4][0] = -6.0; DisplayPysPropBounds[4][1] = 0.0;
-     DisplayPysPropBounds[4][2] = 0.0; DisplayPysPropBounds[4][3] = 6.0;
+     DisplayPysPropBounds[0][0] = 0.0; DisplayPysPropBounds[0][1] = 1000.0;     //External Viscosity - lower limit, min max range
+     DisplayPysPropBounds[0][2] = 100.0; DisplayPysPropBounds[0][3] = 10000.0;  //External Viscosity - upper limit, min max range
+     DisplayPysPropBounds[1][0] = 0.0; DisplayPysPropBounds[1][1] = 1000.0;     //Internal Viscosity - lower limit, min max range
+     DisplayPysPropBounds[1][2] = 100.0; DisplayPysPropBounds[1][3] = 10000.0;  //Internal Viscosity - upper limit, min max range
+     DisplayPysPropBounds[2][0] = 1.0; DisplayPysPropBounds[2][1] = 1000.0; 		//Young's modulus - lower limit, min max range
+     DisplayPysPropBounds[2][2] = 51.0; DisplayPysPropBounds[2][3] = 10000.0;  	//Young's modulus - upper limit, min max range
+     DisplayPysPropBounds[3][0] = 0.0; DisplayPysPropBounds[3][1] = 0.1; 		//Poisson's ratio - lower limit, min max range
+     DisplayPysPropBounds[3][2] = 0.11; DisplayPysPropBounds[3][3] = 0.5; 		//Poisson's ratio - upper limit, min max range
+     DisplayPysPropBounds[4][0] = 0.0; DisplayPysPropBounds[4][1] = 10; 		//xy-planar growth - lower limit, min max range
+     DisplayPysPropBounds[4][2] = 5; DisplayPysPropBounds[4][3] = 50; 			//xy-planar growth - upper limit, min max range
+     DisplayPysPropBounds[5][0] = -6.0; DisplayPysPropBounds[5][1] = 0.0;		//shape change - lower limit, min max range
+     DisplayPysPropBounds[5][2] = 0.0; DisplayPysPropBounds[5][3] = 6.0;		//shape change - upper limit, min max range
      //the decimals to display:
      DisplayPysPropDecimals[0] = 0;
      DisplayPysPropDecimals[1] = 0;
-	 DisplayPysPropDecimals[2] = 2;
-	 DisplayPysPropDecimals[3] = 0;
-	 DisplayPysPropDecimals[4] = 2;
+     DisplayPysPropDecimals[2] = 0;
+	 DisplayPysPropDecimals[3] = 2;
+	 DisplayPysPropDecimals[4] = 0;
+	 DisplayPysPropDecimals[5] = 2;
 	 DisplayPysPropSteps[0] = 1;
-	 DisplayPysPropSteps[1] = 10;
-	 DisplayPysPropSteps[2] = 0.05;
-	 DisplayPysPropSteps[3] = 1;
-	 DisplayPysPropSteps[4] = 0.05;
+	 DisplayPysPropSteps[1] = 1;
+	 DisplayPysPropSteps[2] = 10;
+	 DisplayPysPropSteps[3] = 0.05;
+	 DisplayPysPropSteps[4] = 1;
+	 DisplayPysPropSteps[5] = 0.05;
 
   	 setSizePolicy(QSizePolicy ::Expanding , QSizePolicy ::Expanding );
   	 drawNetForces = false;
@@ -282,11 +287,25 @@ using namespace std;
 			 }
 			 else{
 				 drawPrism(i, false, false);
+				 bool drawCurrentElementSymmetric[2] = {false, false};
+				 if (Sim01->symmetricX){
+					 drawCurrentElementSymmetric[0] = checkIfDrawingElementSymmetric(i, true, false); //Id, symmetricX, symmetricY
+				 }
 				 if (Sim01->symmetricY){
-					 bool drawCurrentElementSymmetric = checkIfDrawingElementSymmetric(i, false, true); //Id, symmetricX, symmetricY
-					 if (drawCurrentElementSymmetric){
-						 drawPrism(i, false, true); //Id, symmetricX, symmetricY
-					 }
+					 drawCurrentElementSymmetric[1] = checkIfDrawingElementSymmetric(i, false, true); //Id, symmetricX, symmetricY
+				 }
+				 if (drawCurrentElementSymmetric[0] && drawCurrentElementSymmetric[1]){
+					 //there is symetry in both axes, and the element qualifies for both.
+					 //draw its reflection on x, ony  and on x&y:
+					 drawPrism(i, true, false); //for X,   inputs: Id, symmetricX, symmetricY
+					 drawPrism(i, false, true); //for Y,   inputs: Id, symmetricX, symmetricY
+					 drawPrism(i, true, true);  //for X&Y, inputs: Id, symmetricX, symmetricY
+				 }
+				 else if(drawCurrentElementSymmetric[0]){
+					 drawPrism(i, true, false); //for X,   inputs: Id, symmetricX, symmetricY
+				 }
+				 else if(drawCurrentElementSymmetric[1]){
+					 drawPrism(i, false, true); //for Y,   inputs: Id, symmetricX, symmetricY
 				 }
 			 }
 		 }
@@ -390,15 +409,15 @@ void GLWidget::highlightNode(int i){
 				float PysPropMag = 0.0;
 				//float* PysPropColour;
 				//PysPropColour = new float[3];
-				//If the physical property is viscosity, then get the colour directly
+				//If the physical property is external viscosity, then get the colour directly
 				if (PysPropToDisplay == 0){
-					PysPropMag = (*itNode)->Viscosity[2];
+					PysPropMag = (*itNode)->externalViscosity[2];
 				}
 				else{
 					int nConnectedElements = (*itNode)->connectedElementIds.size();
 					for (int i=0;i<nConnectedElements; ++i){
 						float TmpPysPropMag = 0.0;
-						if ( PysPropToDisplay == 3 ){
+						if ( PysPropToDisplay == 4 ){
 							//Growth is multiplicative, base should be 1.0:
 							TmpPysPropMag = 1.0;
 						}
@@ -699,7 +718,7 @@ void GLWidget::highlightNode(int i){
 		 b = 1.0 - d*(1-minB)/(segment/2.0);
 	 }
 	 //invert the display from blue to red for growth!:
-	 if (DisplayPysProp &&  PysPropToDisplay==3){
+	 if (DisplayPysProp &&  PysPropToDisplay==4){
 		 double tmpred = r;
 		 r=b;
 		 b=tmpred;

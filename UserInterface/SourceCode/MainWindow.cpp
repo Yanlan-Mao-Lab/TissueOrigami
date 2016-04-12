@@ -289,7 +289,8 @@ void MainWindow::setPysPropDisplayMenu(QGridLayout *ProjectDisplayOptionsGrid){
 	connect(DisplayCheckBoxes[1] , SIGNAL(stateChanged(int)),this,SLOT(updatePysCheckBox(int)));
 
 	PysPropComboBox = new QComboBox();
-	PysPropComboBox->addItem("Viscosity");
+	PysPropComboBox->addItem("External Viscosity");
+	PysPropComboBox->addItem("Internal Viscosity");
 	PysPropComboBox->addItem("Young Modulus");
 	PysPropComboBox->addItem("Poisson Ratio");
 	PysPropComboBox->addItem("Planar (xy) Growth (% per hour)");
@@ -739,15 +740,23 @@ void MainWindow::timerSimulationStep(){
     //for (int j=0; j<3; ++j){
     //    cout<<"Node 2025 at circmference: "<<Sim01->Nodes[2025]->atCircumference<<" fixed pos "<<j<<" "<<Sim01->Nodes[2025]->FixedPos[j]<<endl;
     //}
+	bool automatedSave = false;
 	if (Sim01->DisplaySave){
+		if (Sim01->timestep == 0 && automatedSave){
+			Sim01->assignTips();
+			MainGLWidget->updateToPerspectiveView(); //display tissue from the tilted view
+			MainGLWidget->drawSymmetricity = false; //hide symmetric
+			MainGLWidget->PerspectiveView = false; //switch to orthogoanal view type.
+		}
 		if(!Sim01->reachedEndOfSaveFile){
-
 			Sim01->updateOneStepFromSave();
-			for (int a = 0; a<20; a++){
+			Sim01->calculateDVDistance();
+			for (int a = 0; a<5; a++){
 				Sim01->updateOneStepFromSave();
+				Sim01->calculateDVDistance();
 			}
 
-			Sim01->fixNode0InPosition(34,0,0);
+			Sim01->fixNode0InPosition(36,0,0);
 			updateTimeText();
 			//cout<<" step: "<<Sim01->timestep<<"Node[0] pos: "<<Sim01->Nodes[0]->Position[0]<<" "<<Sim01->Nodes[0]->Position[1]<<" "<<Sim01->Nodes[0]->Position[2]<<endl;
 			//cout<<" step: "<<Sim01->timestep<<"Node[43] pos: "<<Sim01->Nodes[43]->Position[0]<<" "<<Sim01->Nodes[43]->Position[1]<<" "<<Sim01->Nodes[43]->Position[2]<<endl;
@@ -761,6 +770,11 @@ void MainWindow::timerSimulationStep(){
 			//spitting coordinates:
 			//Sim01->CoordinateDisplay();
 			//Sim01->TissueAxisPositionDisplay();
+		}
+		else{
+			if (automatedSave){
+				close();
+			}
 		}
 	}
 	else{

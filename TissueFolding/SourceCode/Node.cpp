@@ -24,11 +24,11 @@ Node::Node(int id, int dim, double* pos, int tissuePos, int tissueType){
 	FixedPos = new bool[3];
 	for (int i=0; i<3; ++i){
 		FixedPos[i] = false;
-		viscositySetInFixing[i] = false;
+		externalViscositySetInFixing[i] = false;
 	}
-	Viscosity[0] = -10.0;
-	Viscosity[1] = -10.0;
-	Viscosity[2] = -10.0;
+	externalViscosity[0] = -10.0;
+	externalViscosity[1] = -10.0;
+	externalViscosity[2] = -10.0;
 	tissuePlacement = tissuePos;
 	this->tissueType = tissueType;
 	atCircumference = false;
@@ -58,14 +58,39 @@ Node::~Node(){
 	//cout<<"finalised the destructor for node class"<<endl;
 }
 
-
-void Node::setViscosity(double ApicalVisc,double BasalVisc, double PeripodialApicalVisc, double PeripodialBasalVisc){
+void Node::setExternalViscosity(double ApicalVisc,double BasalVisc){
 	/**
-	 *  This node will take in the apical columnar layer, basal columnar layer, and peripodial membrane viscosities of the tissue as inputs, respectively.
-	 *  The viscosity of the node will be assigned via its Node#tissuePlacement and Node#tissueType. On the columnar layer, nodes that are in the mid-zone of the tissue (neither on the
+	 *  This node will take in the apical and basal external viscosities of the tissue as inputs, respectively.
+	 *  The external viscosity of the node will be assigned via its Node#tissuePlacement and Node#tissueType. On the columnar layer, nodes that are in the mid-zone of the tissue (neither on the
 	 *  apical nor on the basal surface, will take the average of the two values.
 	 */
-	double apicalV, basalV;
+	if (tissuePlacement ==0){
+		if (!externalViscositySetInFixing[0]){externalViscosity[0] = BasalVisc;}
+		if (!externalViscositySetInFixing[1]){externalViscosity[1] = BasalVisc;}
+		if (!externalViscositySetInFixing[2]){externalViscosity[2] = BasalVisc;}
+	}
+	else if (tissuePlacement ==1){
+		if (!externalViscositySetInFixing[0]){externalViscosity[0] = ApicalVisc;}
+		if (!externalViscositySetInFixing[1]){externalViscosity[1] = ApicalVisc;}
+		if (!externalViscositySetInFixing[2]){externalViscosity[2] = ApicalVisc;}
+	}
+	else if (tissuePlacement == 2 || tissuePlacement == 3){
+		//middle or lateral node are equal to the minimum of apical and basal values
+		double minV = ApicalVisc;
+		if (BasalVisc < ApicalVisc){minV = BasalVisc;};
+		if (!externalViscositySetInFixing[0]){externalViscosity[0] = minV;}//(apicalV + basalV) /2.0;
+		if (!externalViscositySetInFixing[2]){externalViscosity[1] = minV;}//(apicalV + basalV) /2.0;
+		if (!externalViscositySetInFixing[2]){externalViscosity[2] = minV;}//(apicalV + basalV) /2.0;
+	}
+}
+
+//void Node::setExternalViscosity(double ApicalVisc,double BasalVisc, double PeripodialApicalVisc, double PeripodialBasalVisc){
+	/**
+	 *  This node will take in the apical columnar layer, basal columnar layer, and peripodial membrane viscosities of the tissue as inputs, respectively.
+	 *  The external viscosity of the node will be assigned via its Node#tissuePlacement and Node#tissueType. On the columnar layer, nodes that are in the mid-zone of the tissue (neither on the
+	 *  apical nor on the basal surface, will take the average of the two values.
+	 */
+	/*double apicalV, basalV;
 	if (tissueType == 0){		//Columnar layer  node
 		apicalV = ApicalVisc;
 		basalV  = BasalVisc;
@@ -79,24 +104,24 @@ void Node::setViscosity(double ApicalVisc,double BasalVisc, double PeripodialApi
 		basalV  = 0.5*(BasalVisc + PeripodialBasalVisc);
 	}
 	if (tissuePlacement ==0){
-		if (!viscositySetInFixing[0]){Viscosity[0] = basalV;}
-		if (!viscositySetInFixing[1]){Viscosity[1] = basalV;}
-		if (!viscositySetInFixing[2]){Viscosity[2] = basalV;}
+		if (!externalViscositySetInFixing[0]){externalViscosity[0] = basalV;}
+		if (!externalViscositySetInFixing[1]){externalViscosity[1] = basalV;}
+		if (!externalViscositySetInFixing[2]){externalViscosity[2] = basalV;}
 	}
 	else if (tissuePlacement ==1){
-		if (!viscositySetInFixing[0]){Viscosity[0] = apicalV;}
-		if (!viscositySetInFixing[1]){Viscosity[1] = apicalV;}
-		if (!viscositySetInFixing[2]){Viscosity[2] = apicalV;}
+		if (!externalViscositySetInFixing[0]){externalViscosity[0] = apicalV;}
+		if (!externalViscositySetInFixing[1]){externalViscosity[1] = apicalV;}
+		if (!externalViscositySetInFixing[2]){externalViscosity[2] = apicalV;}
 	}
 	else if (tissuePlacement == 2 || tissuePlacement == 3){
-		//middle or lateral node are equal to he minimum of apical and basal values
+		//middle or lateral node are equal to the minimum of apical and basal values
 		double minV = apicalV;
 		if (basalV < apicalV){minV = basalV;};
-		if (!viscositySetInFixing[0]){Viscosity[0] = minV;}//(apicalV + basalV) /2.0;
-		if (!viscositySetInFixing[2]){Viscosity[1] = minV;}//(apicalV + basalV) /2.0;
-		if (!viscositySetInFixing[2]){Viscosity[2] = minV;}//(apicalV + basalV) /2.0;
+		if (!externalViscositySetInFixing[0]){externalViscosity[0] = minV;}//(apicalV + basalV) /2.0;
+		if (!externalViscositySetInFixing[2]){externalViscosity[1] = minV;}//(apicalV + basalV) /2.0;
+		if (!externalViscositySetInFixing[2]){externalViscosity[2] = minV;}//(apicalV + basalV) /2.0;
 	}
-}
+}*/
 
 bool Node::checkIfNeighbour(int IdToCheck){
 	/**

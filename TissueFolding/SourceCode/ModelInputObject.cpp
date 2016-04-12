@@ -87,6 +87,12 @@ bool ModelInputObject::readParameters(){
 				 */
 				Success  = readNodeFixingParameters(parametersFile);
 			}
+			else if(currParameterHeader == "ExternalViscositySetup:"){
+				/**
+				 * Inputs relating to the external viscosity felt by the tissue through private function ModelInputObject#readEternalViscosityParameters
+				 */
+				Success  = readEternalViscosityParameters(parametersFile);
+			}
 			else if(currParameterHeader == "Manipulations:"){
 				/**
 				 * Inputs relating to manual manipulations to tissue after the mesh is read in
@@ -588,11 +594,64 @@ bool ModelInputObject::readMeshParameters(ifstream& file){
 	return true;
 }
 
+bool ModelInputObject::readEternalViscosityParameters(ifstream& file){
+	string currHeader;
+	file >> currHeader;
+	if(currHeader == "DiscProperApicalExternalViscosity:"){
+		file >>Sim->externalViscosityDPApical;
+	}
+	else{
+		cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: DiscProperApicalExternalViscosity:" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "DiscProperBasalExternalViscosity:"){
+		file >>Sim->externalViscosityDPBasal;
+	}
+	else{
+		cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: DiscProperBasalExternalViscosity:" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "PeripodialMembraneApicalExternalViscosity:"){
+		file >>Sim->externalViscosityPMApical;
+	}
+	else{
+		cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: PeripodialMembraneApicalExternalViscosity:" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "PeripodialMembraneBasalExternalViscosity:"){
+		file >>Sim->externalViscosityPMBasal;
+	}
+	else{
+		cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: PeripodialMembraneBasalExternalViscosity:" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "LinkerZoneApicalExternalViscosity:"){
+		file >>Sim->externalViscosityLZApical;
+	}
+	else{
+		cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: LinkerZoneApicalExternalViscosity:" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "LinkerZoneBasalExternalViscosity:"){
+		file >>Sim->externalViscosityLZBasal;
+	}
+	else{
+		cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: LinkerZoneBasalExternalViscosity:" <<endl;
+		return false;
+	}
+	return true;
+}
+
 bool ModelInputObject::readNodeFixingParameters(ifstream& file){
 	string currHeader;
 	file >> currHeader;
-	if(currHeader == "FixWithHighViscosity(bool):"){
-		file >>Sim->fixWithViscosity;
+	if(currHeader == "FixWithHighExternalViscosity(bool):"){
+		file >>Sim->fixWithExternalViscosity;
 	}
 	else{
 		cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: FixWithHighViscosity(bool):" <<endl;
@@ -600,9 +659,9 @@ bool ModelInputObject::readNodeFixingParameters(ifstream& file){
 	}
 	file >> currHeader;
 	if(currHeader == "FixVis(x,y,z):"){
-		file >>Sim->fixingViscosity[0];
-		file >>Sim->fixingViscosity[1];
-		file >>Sim->fixingViscosity[2];
+		file >>Sim->fixingExternalViscosity[0];
+		file >>Sim->fixingExternalViscosity[1];
+		file >>Sim->fixingExternalViscosity[2];
 	}
 	else{
 		cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: FixVis(x,y,z):" <<endl;
@@ -919,7 +978,7 @@ bool ModelInputObject::readPeripodialMembraneParameters(ifstream& file){
 	}
 	file >> currHeader;
 	if(currHeader == "PeripodialMembraneApicalViscosity:"){
-		file >>Sim->PeripodialApicalVisc;
+		file >>Sim->peripodialApicalViscosity;
 	}
 	else{
 		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: PeripodialMembraneApicalViscosity:" <<endl;
@@ -927,10 +986,18 @@ bool ModelInputObject::readPeripodialMembraneParameters(ifstream& file){
 	}
 	file >> currHeader;
 	if(currHeader == "PeripodialMembraneBasalViscosity:"){
-		file >>Sim->PeripodialBasalVisc;
+		file >>Sim->peripodialBasalViscosity;
 	}
 	else{
 		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: PeripodialMembraneBasalViscosity:" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "PeripodialMembraneMidlineViscosity:"){
+		file >>Sim->peripodialMidlineViscosity;
+	}
+	else{
+		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: PeripodialMembraneMidlineViscosity:" <<endl;
 		return false;
 	}
 	return true;
@@ -964,7 +1031,7 @@ bool ModelInputObject::readLinkerZoneParameters(ifstream& file){
 	}
 	file >> currHeader;
 	if(currHeader == "LinkerZoneApicalViscosity:"){
-		file >>Sim->LinkerZoneApicalViscosity;
+		file >>Sim->linkerZoneApicalViscosity;
 	}
 	else{
 		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: LinkerZoneApicalViscosity:" <<endl;
@@ -972,10 +1039,18 @@ bool ModelInputObject::readLinkerZoneParameters(ifstream& file){
 	}
 	file >> currHeader;
 	if(currHeader == "LinkerZoneBasalViscosity:"){
-		file >>Sim->LinkerZoneBasalVisc;
+		file >>Sim->linkerZoneBasalViscosity;
 	}
 	else{
 		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: LinkerZoneBasalViscosity:" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "LinkerZoneMidlineViscosity:"){
+		file >>Sim->linkerZoneMidlineViscosity;
+	}
+	else{
+		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: LinkerZoneMidlineViscosity:" <<endl;
 		return false;
 	}
 	return true;
@@ -1065,7 +1140,7 @@ bool ModelInputObject::readPysicalProperties(ifstream& file){
 
 	file >> currHeader;
 	if(currHeader == "ApicalViscosity:"){
-		file >> Sim->ApicalVisc;
+		file >> Sim->discProperApicalViscosity;
 	}
 	else{
 		cerr<<"Error in reading Apical Viscosity, curr string: "<<currHeader<<" should have been: ApicalViscosity:" <<endl;
@@ -1081,12 +1156,21 @@ bool ModelInputObject::readPysicalProperties(ifstream& file){
 	}
 	file >> currHeader;
 	if(currHeader == "BasalViscosity:"){
-		file >> Sim->BasalVisc;
+		file >> Sim->discProperBasalViscosity;
 	}
 	else{
 		cerr<<"Error in reading Basal Viscosity, curr string: "<<currHeader<<" should have been: BasalViscosity:" <<endl;
 		return false;
 	}
+	file >> currHeader;
+	if(currHeader == "MidLineViscosity:"){
+		file >> Sim->discProperMidlineViscosity;
+	}
+	else{
+		cerr<<"Error in reading Midline Viscosity, curr string: "<<currHeader<<" should have been: MidLineViscosity:" <<endl;
+		return false;
+	}
+
 	return true;
 }
 

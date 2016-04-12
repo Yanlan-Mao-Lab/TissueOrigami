@@ -368,7 +368,6 @@ void  Prism::setElasticProperties(double EApical, double EBasal, double EMid, do
     //cout<<" Element: "<<Id<<" E : "<<E<<" v: "<<v<<" lambda: "<<lambda<< " mu: "<<mu<<endl;
 }
 
-
 void Prism::getCurrRelaxedShape(gsl_matrix* CurrRelaxedShape){
 	for (int i =0; i<nNodes; ++i){
 		for (int j=0; j<nDim; ++j){
