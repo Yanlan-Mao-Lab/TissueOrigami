@@ -13,7 +13,7 @@
 #include "GrowthFunctionBase.h"
 #include "GrowthFunctionTypes.h"
 #include "MyosinFunction.h"
-#include "NewtonRapsonSolver.h"
+#include "NewtonRaphsonSolver.h"
 
 #include <omp.h>
 //test for rici pull
@@ -64,7 +64,7 @@ private:
     //vector <Node*> symmetricXBoundaryNodes;
     vector <int> AblatedNodes;
 
-    NewtonRapsonSolver *NRSolver;
+    NewtonRaphsonSolver *NRSolver;
 
 	bool readModeOfSim(int& i, int argc, char **argv);
 	bool readParameters(int& i, int argc, char **argv);

@@ -517,7 +517,7 @@ bool Simulation::initiateSystem(){
 	nElements = Elements.size();
 	//initiating the NR solver object, that generates the necessary matrices
 	//for solving the tissue dynamics
-    NRSolver = new NewtonRapsonSolver(Nodes[0]->nDim,nNodes);
+    NRSolver = new NewtonRaphsonSolver(Nodes[0]->nDim,nNodes);
 	return Success;
 }
 
@@ -3893,7 +3893,6 @@ void Simulation::calculateNumericalJacobian(bool displayMatricesDuringNumericalC
 }
 
 void Simulation::updateStepNR(){
-    int dim  = 3;
     int iteratorK = 0;
     bool converged = false;
 
@@ -8226,7 +8225,7 @@ void Simulation::setupYsymmetricity(){
 		}
 	}
 	int nAN = AblatedNodes.size();
-	//fix the position of all ablated nodes for effective Newton Rapson calculation:
+	//fix the position of all ablated nodes for effective Newton Raphson calculation:
 	vector<ShapeBase*>::iterator itElement;
 	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 		if(!(*itElement)->IsAblated){
@@ -8261,7 +8260,7 @@ void Simulation::setupXsymmetricity(){
 		}
 	}
 	int nAN = AblatedNodes.size();
-	//fix the position of all ablated nodes for effective Newton Rapson calculation:
+	//fix the position of all ablated nodes for effective Newton Raphson calculation:
 	vector<ShapeBase*>::iterator itElement;
 	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 		if(!(*itElement)->IsAblated){
@@ -8283,7 +8282,7 @@ void Simulation::ablateSpcific(){
 		fixAllD(Nodes[i],  false); //this is fixing for ablated nodes, no need for calculations);
 	}
 	//int nAN = AblatedNodes.size();
-	//fix the position of all ablated nodes for effective Newton Rapson calculation:
+	//fix the position of all ablated nodes for effective Newton Raphson calculation:
 	vector<ShapeBase*>::iterator itElement;
 	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 		double* c = new double[3];

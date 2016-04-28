@@ -1,17 +1,17 @@
 /*
- * NewtonRapsonSolver.cpp
+ * NewtonRaphsonSolver.cpp
  *
  *  Created on: 26 Apr 2016
  *      Author: melda
  */
 
-#include "NewtonRapsonSolver.h"
+#include "NewtonRaphsonSolver.h"
 //#include "Node.h"
 //#include <gsl/gsl_linalg.h>
 
 using namespace std;
 
-NewtonRapsonSolver::NewtonRapsonSolver(int dim, int n){
+NewtonRaphsonSolver::NewtonRaphsonSolver(int dim, int n){
     threshold = 1E-10;
 
 	nDim = dim;
@@ -33,7 +33,7 @@ NewtonRapsonSolver::NewtonRapsonSolver(int dim, int n){
 
 }
 
-NewtonRapsonSolver::~NewtonRapsonSolver(){
+NewtonRaphsonSolver::~NewtonRaphsonSolver(){
     gsl_matrix_free(un);
     gsl_matrix_free(mvisc);
     gsl_matrix_free(mviscPerDt);
@@ -49,7 +49,7 @@ NewtonRapsonSolver::~NewtonRapsonSolver(){
     gsl_matrix_free(Knumerical);
 }
 
-void NewtonRapsonSolver::setMatricesToZeroAtTheBeginningOfIteration(bool thereIsNumericalCalculation){
+void NewtonRaphsonSolver::setMatricesToZeroAtTheBeginningOfIteration(bool thereIsNumericalCalculation){
 	gsl_matrix_set_zero(un);
 	gsl_matrix_set_zero(mvisc);
 	gsl_matrix_set_zero(mviscPerDt);
@@ -73,7 +73,7 @@ void NewtonRapsonSolver::setMatricesToZeroAtTheBeginningOfIteration(bool thereIs
 	}
 }
 
-void NewtonRapsonSolver::setMatricesToZeroInsideIteration(){
+void NewtonRaphsonSolver::setMatricesToZeroInsideIteration(){
 	gsl_matrix_set_zero(ge);
 	gsl_matrix_set_zero(gvInternal);
 	gsl_matrix_set_zero(gvExternal);
@@ -82,7 +82,7 @@ void NewtonRapsonSolver::setMatricesToZeroInsideIteration(){
 }
 
 
-void NewtonRapsonSolver::constructUnMatrix(vector <Node*>& Nodes){
+void NewtonRaphsonSolver::constructUnMatrix(vector <Node*>& Nodes){
     for (int i = 0; i<nNodes; ++i ){
         for (int j=0; j<nDim; ++j){
             gsl_matrix_set(un,3*i+j,0,Nodes[i]->Position[j]);
@@ -90,11 +90,11 @@ void NewtonRapsonSolver::constructUnMatrix(vector <Node*>& Nodes){
     }
 }
 
-void NewtonRapsonSolver::initialteUkMatrix(){
+void NewtonRaphsonSolver::initialteUkMatrix(){
     gsl_matrix_memcpy(uk,un);
 }
 
-void NewtonRapsonSolver::constructLumpedMassExternalViscosityDtMatrix(vector <Node*>& Nodes, double dt){
+void NewtonRaphsonSolver::constructLumpedMassExternalViscosityDtMatrix(vector <Node*>& Nodes, double dt){
     for (int i = 0; i<nNodes; ++i ){
         //double matrixValue = Nodes[i]->mass*Nodes[i]->Viscosity / dt;
         for (int j=0; j<nDim; ++j){
@@ -107,14 +107,14 @@ void NewtonRapsonSolver::constructLumpedMassExternalViscosityDtMatrix(vector <No
     gsl_matrix_scale(mviscPerDt,1/dt);
 }
 
-void NewtonRapsonSolver::calculateDisplacementMatrix(double dt){
+void NewtonRaphsonSolver::calculateDisplacementMatrix(double dt){
 	gsl_matrix_memcpy(displacementPerDt,uk);
 	gsl_matrix_sub(displacementPerDt,un);
 	gsl_matrix_scale(displacementPerDt,1.0/dt);
 
 }
 
-void NewtonRapsonSolver::calcutateFixedK(vector <Node*>& Nodes){
+void NewtonRaphsonSolver::calcutateFixedK(vector <Node*>& Nodes){
     int dim = 3;
     int Ksize = K->size1;
     for(int i=0; i<nNodes; i++){
@@ -134,7 +134,7 @@ void NewtonRapsonSolver::calcutateFixedK(vector <Node*>& Nodes){
     }
 }
 
-void NewtonRapsonSolver::calculateForcesAndJacobianMatrixNR(vector <Node*>& Nodes, vector <ShapeBase*>& Elements, double dt, bool recordForcesOnFixedNodes, double **FixedNodeForces, ofstream& outputFile){
+void NewtonRaphsonSolver::calculateForcesAndJacobianMatrixNR(vector <Node*>& Nodes, vector <ShapeBase*>& Elements, double dt, bool recordForcesOnFixedNodes, double **FixedNodeForces, ofstream& outputFile){
 //    omp_set_num_threads(4);
 //#pragma omp parallel for
 //    for (int a =0; a<2; ++a){
@@ -157,7 +157,7 @@ void NewtonRapsonSolver::calculateForcesAndJacobianMatrixNR(vector <Node*>& Node
 //	}
 }
 
-void NewtonRapsonSolver::writeForcesTogeAndgvInternal(vector <Node*>& Nodes, vector <ShapeBase*>& Elements, double** SystemForces){
+void NewtonRaphsonSolver::writeForcesTogeAndgvInternal(vector <Node*>& Nodes, vector <ShapeBase*>& Elements, double** SystemForces){
     for(vector<ShapeBase*>::iterator  itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
         if (!(*itElement)->IsAblated){
         	(*itElement)->writeInternalForcesTogeAndgv(ge,gvInternal,SystemForces,Nodes);
@@ -165,7 +165,7 @@ void NewtonRapsonSolver::writeForcesTogeAndgvInternal(vector <Node*>& Nodes, vec
     }
 }
 
-void NewtonRapsonSolver::writeImplicitElementalKToJacobian(vector <ShapeBase*>& Elements){
+void NewtonRaphsonSolver::writeImplicitElementalKToJacobian(vector <ShapeBase*>& Elements){
     //writing all elements K values into big K matrix:
     for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
     	//if element is ablated, current elemental K matrix will be identity
@@ -181,7 +181,7 @@ void NewtonRapsonSolver::writeImplicitElementalKToJacobian(vector <ShapeBase*>& 
     }
 }
 
-void NewtonRapsonSolver::calculateExternalViscousForcesForNR(){
+void NewtonRaphsonSolver::calculateExternalViscousForcesForNR(){
     //the mass is already updated for symmetricity boundary nodes, and the viscous forces will be calculated correctly,
 	//as mvisdt is already accounting for the doubling of mass
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, mvisc, displacementPerDt,0.0, gvExternal);
@@ -189,11 +189,11 @@ void NewtonRapsonSolver::calculateExternalViscousForcesForNR(){
     gsl_matrix_scale(gvExternal,-1.0);
 }
 
-void NewtonRapsonSolver::addImplicitKViscousExternalToJacobian(){
+void NewtonRaphsonSolver::addImplicitKViscousExternalToJacobian(){
     gsl_matrix_add(K,mviscPerDt);
 }
 
-void NewtonRapsonSolver::checkJacobianForAblatedNodes(vector <int> & AblatedNodes){
+void NewtonRaphsonSolver::checkJacobianForAblatedNodes(vector <int> & AblatedNodes){
 	int nAblatedNode = AblatedNodes.size();
 	for (int a = 0; a<nAblatedNode; ++a){
 		int NodeId = AblatedNodes[a]*3;
@@ -205,13 +205,13 @@ void NewtonRapsonSolver::checkJacobianForAblatedNodes(vector <int> & AblatedNode
 		}
 	}
 }
-void NewtonRapsonSolver::calculateSumOfInternalForces(){
+void NewtonRaphsonSolver::calculateSumOfInternalForces(){
 	for (int i=0; i<nDim*nNodes; ++i){
 		gsl_vector_set(gSum,i,gsl_matrix_get(ge,i,0)+gsl_matrix_get(gvInternal,i,0)+gsl_matrix_get(gvExternal,i,0));
 	}
 }
 
-void NewtonRapsonSolver::addExernalForces(){
+void NewtonRaphsonSolver::addExernalForces(){
 	//cout<<"after random forces addition"<<endl;
 	for (int i=0; i<nDim*nNodes; ++i){
 		gsl_vector_set(gSum,i,gsl_vector_get(gSum,i)+gsl_matrix_get(gExt,i,0));
@@ -219,7 +219,7 @@ void NewtonRapsonSolver::addExernalForces(){
 }
 
 
-void NewtonRapsonSolver::solveForDeltaU(){
+void NewtonRaphsonSolver::solveForDeltaU(){
     const int nmult  = nDim*nNodes;
 
     int *ia = new int[nmult+1];
@@ -250,7 +250,7 @@ extern "C" void pardiso_chkvec     (int *, int *, double *, int *);
 extern "C" void pardiso_printstats (int *, int *, double *, int *, int *, int *, double *, int *);
 
 
-int NewtonRapsonSolver::solveWithPardiso(double* a, double*b, int* ia, int* ja, const int n_variables){
+int NewtonRaphsonSolver::solveWithPardiso(double* a, double*b, int* ia, int* ja, const int n_variables){
 
     // I am copying my libraries to a different location for this to work:
     // On MAC:
@@ -517,7 +517,7 @@ int NewtonRapsonSolver::solveWithPardiso(double* a, double*b, int* ia, int* ja, 
     return 0;
 }
 
-void NewtonRapsonSolver::constructiaForPardiso(int* ia, const int nmult, vector<int> &ja_vec, vector<double> &a_vec){
+void NewtonRaphsonSolver::constructiaForPardiso(int* ia, const int nmult, vector<int> &ja_vec, vector<double> &a_vec){
     double negThreshold = -1E-13, posThreshold = 1E-13;
     //count how many elements there are on K matrix and fill up ia:
     int counter = 0;
@@ -539,7 +539,7 @@ void NewtonRapsonSolver::constructiaForPardiso(int* ia, const int nmult, vector<
     }
     ia[nmult] = counter;
 }
-void NewtonRapsonSolver::writeKinPardisoFormat(const int nNonzero, vector<int> &ja_vec, vector<double> &a_vec, int* ja, double* a){
+void NewtonRaphsonSolver::writeKinPardisoFormat(const int nNonzero, vector<int> &ja_vec, vector<double> &a_vec, int* ja, double* a){
     //now filling up the int & double arrays for ja, a
     for (int i=0 ; i<nNonzero; ++i){
         ja[i] = ja_vec[i];
@@ -547,13 +547,13 @@ void NewtonRapsonSolver::writeKinPardisoFormat(const int nNonzero, vector<int> &
     }
 }
 
-void NewtonRapsonSolver::writeginPardisoFormat(double* b, const int n){
+void NewtonRaphsonSolver::writeginPardisoFormat(double* b, const int n){
     for (int i=0; i<n; ++i){
         b[i] = gsl_vector_get(gSum,i);
     }
 }
 
-bool NewtonRapsonSolver::checkConvergenceViaDeltaU(){
+bool NewtonRaphsonSolver::checkConvergenceViaDeltaU(){
     bool converged = true;
 
     double d = gsl_blas_dnrm2 (deltaU);
@@ -568,7 +568,7 @@ bool NewtonRapsonSolver::checkConvergenceViaDeltaU(){
     return converged;
 }
 
-bool NewtonRapsonSolver::checkConvergenceViaForce(){
+bool NewtonRaphsonSolver::checkConvergenceViaForce(){
     bool converged = true;
     double d = gsl_blas_dnrm2 (gSum);
     if (d>threshold){
@@ -581,7 +581,7 @@ bool NewtonRapsonSolver::checkConvergenceViaForce(){
     return converged;
 }
 
-void NewtonRapsonSolver::updateUkInIteration(){
+void NewtonRaphsonSolver::updateUkInIteration(){
     int n = uk->size1;
     for (int i=0; i<n;++i){
         double newValue = gsl_matrix_get(uk,i,0)+gsl_vector_get(deltaU,i);
@@ -589,7 +589,7 @@ void NewtonRapsonSolver::updateUkInIteration(){
     }
 }
 
-void NewtonRapsonSolver::calculateDifferenceBetweenNumericalAndAnalyticalJacobian(vector <Node*>& Nodes, bool displayMatricesDuringNumericalCalculation){
+void NewtonRaphsonSolver::calculateDifferenceBetweenNumericalAndAnalyticalJacobian(vector <Node*>& Nodes, bool displayMatricesDuringNumericalCalculation){
 	//The normal K still includes the values for fixed nodes. Should correct the fixed nodes,
 	//then calculate the difference
 	calcutateFixedK(Nodes);
@@ -612,11 +612,11 @@ void NewtonRapsonSolver::calculateDifferenceBetweenNumericalAndAnalyticalJacobia
 	gsl_matrix_free(Kdiff);
 }
 
-void NewtonRapsonSolver::useNumericalJacobianInIteration(){
+void NewtonRaphsonSolver::useNumericalJacobianInIteration(){
 	gsl_matrix_memcpy(K,Knumerical);
 }
 
-void NewtonRapsonSolver::displayMatrix(gsl_matrix* mat, string matname){
+void NewtonRaphsonSolver::displayMatrix(gsl_matrix* mat, string matname){
     int m = mat->size1;
     int n = mat->size2;
     cout<<matname<<": "<<endl;
