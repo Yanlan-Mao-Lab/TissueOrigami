@@ -16,6 +16,7 @@ var hierarchy =
     [ "QMainWindow", null, [
       [ "MainWindow", "classMainWindow.html", null ]
     ] ],
+    [ "RandomGenerator", "classRandomGenerator.html", null ],
     [ "ReferenceShapeBase", "classReferenceShapeBase.html", null ],
     [ "ShapeBase", "classShapeBase.html", [
       [ "Prism", "classPrism.html", null ]

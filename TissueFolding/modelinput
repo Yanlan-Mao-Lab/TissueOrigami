@@ -1,12 +1,12 @@
 InputMeshParameters:
   MeshInputMode(int-seeDocumentation): 4
-  MeshFile(full-path):   /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Exp48hr_06.mesh
+  MeshFile(full-path):   /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Exp48hr-noPeri_04.mesh
   symmetricInX(bool): 0
   symmetricInY(bool): 1
  
 TimeParameters:
-  TimeStep(sec): 600
-  SimulationLength(sec):  600
+  TimeStep(sec): 1
+  SimulationLength(sec):  100
 
 SaveOptions:
   SaveImages(bool): 0
@@ -16,7 +16,7 @@ SaveOptions:
 
 NodeFixingOptions:
   FixWithHighExternalViscosity(bool): 0
-    FixVis(x,y,z): 30000   30000  100000
+    FixVis(x,y,z): 0   0  100000
   ApicalSurfaceFix(bool-x,y,z): 0 0 0
   BasalSurfaceFix(bool-x,y,z): 0 0 0
   ApicalCircumferenceFix(bool-x,y,z): 0 0 0
@@ -26,7 +26,7 @@ NodeFixingOptions:
   CircumferenceFix(bool-x,y,z): 0 0 0
 
 Manipulations:
-  AddCurvature(bool): 1
+  AddCurvature(bool): 0
   CurvatureDepthAtCentre(double-microns): 2.0
   AddSoftPeriphery(bool): 0
   SoftPeripheryRange(double-microns): 10.0
@@ -39,38 +39,38 @@ Manipulations:
   RandomForceMean(double): 0.0
   RandomForceVar(double): 1E-5
 
+PysicalProperties:
+  YoungsModulusApical: 1000.0	YoungsModulusBasal: 1000.0	YoungsModulusMid: 1000.0	Noise(%-int): 0
+  PoissonsRatio: 0.45		Noise(%-int): 0
+  ApicalViscosity:  1000000.0 	Noise(%-int): 0
+  BasalViscosity:   1000000.0
+  MidLineViscosity: 1000000.0
+
 PeripodialMembraneParameters:
   AddPeripodialMembrane: 0
   PeripodialMembraneThickness(fractionOfTissueHeight): 0.45
   PeripodialMembraneLateralThickness(fractionOfTissueHeight): 0.5
   LumenHeightScale(fractionOfTissueHeight): 0.25
   PeripodialMembraneYoungsModulus: 1000.0
-  PeripodialMembraneApicalViscosity: 100.0
-  PeripodialMembraneBasalViscosity: 200.0
-  PeripodialMembraneMidlineViscosity: 300.0
+  PeripodialMembraneApicalViscosity: 0.0
+  PeripodialMembraneBasalViscosity: 0.0
+  PeripodialMembraneMidlineViscosity: 0.0
 
 LinkerZoneParameters:
   BaseOnPeripodialness(bool): 0
   LinkerZoneApicalYoungsModulus: 1000
-  LinkerZoneBasalYoungsModulus: 500
-  LinkerZoneApicalViscosity: 400.0
-  LinkerZoneBasalViscosity: 500.0
-  LinkerZoneMidlineViscosity: 600.0
-
-PysicalProperties:
-  YoungsModulusApical: 1000.0	YoungsModulusBasal: 500.0	YoungsModulusMid: 500.0	Noise(%-int): 0
-  PoissonsRatio: 0.45		Noise(%-int): 0
-  ApicalViscosity: 700.0 	Noise(%-int): 0
-  BasalViscosity: 800.0
-  MidLineViscosity: 900.0
+  LinkerZoneBasalYoungsModulus: 1000
+  LinkerZoneApicalViscosity: 0.0
+  LinkerZoneBasalViscosity: 0.0
+  LinkerZoneMidlineViscosity: 0.0
 
 ExternalViscositySetup:
-  DiscProperApicalExternalViscosity: 1500.0 
-  DiscProperBasalExternalViscosity: 2000.0
-  PeripodialMembraneApicalExternalViscosity: 500.0 
-  PeripodialMembraneBasalExternalViscosity: 200.0 
-  LinkerZoneApicalExternalViscosity: 750.0
-  LinkerZoneBasalExternalViscosity: 1000.0
+  DiscProperApicalExternalViscosity: 0.0 
+  DiscProperBasalExternalViscosity: 0.0 
+  PeripodialMembraneApicalExternalViscosity: 0.0 
+  PeripodialMembraneBasalExternalViscosity: 0.0 
+  LinkerZoneApicalExternalViscosity: 0.0
+  LinkerZoneBasalExternalViscosity: 0.0
 
 GrowthOptions:
   NumberofGrowthFunctions(int): 8
@@ -88,10 +88,10 @@ GrowthOptions:
 
   GrowthFunctionType(int-seeDocumentation): 1
   InitialTime(sec): 0
-  FinalTime(sec):  172800
+  FinalTime(sec):  7200
   ApplyToColumnarLayer(bool): 0
   ApplyToPeripodialMembrane(bool): 0
-  MaxValue(fractionPerHour-DV,AP,AB): 0.03224 0.03224 0.0 
+  MaxValue(fractionPerHour-DV,AP,AB): 0.06 0 0.0 
   Angle(degrees): 0
 
   GrowthFunctionType(int-seeDocumentation): 2
@@ -117,7 +117,7 @@ GrowthOptions:
   FinalTime(sec):  86400
   ApplyToColumnarLayer(bool): 1
   ApplyToPeripodialMembrane(bool): 0
-  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/Col_48-72_8-0
+  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/Col_48-72_1-0
 
   GrowthFunctionType(int-seeDocumentation): 3
   InitialTime(sec):  0
@@ -129,7 +129,7 @@ GrowthOptions:
   GrowthFunctionType(int-seeDocumentation): 3
   InitialTime(sec):  86400
   FinalTime(sec):  172800
-  ApplyToColumnarLayer(bool): 1
+  ApplyToColumnarLayer(bool): 0
   ApplyToPeripodialMembrane(bool): 0
   Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/Col_64-88_7-0
 
@@ -196,7 +196,7 @@ Pipette_Aspiration:
   InitialTime(sec): 0
   FinalTime(sec): 1000
   ApicalSuciton(bool-will_set_up_basal_suction_if_false): 1
-  Centre_Position(x,y,z): 0.0 0.0 21.0
-  Pipette_Radius(micron): 10.0
-  Pipette_Effect_Debth(micron): 8.0
-  Pipette_Suction_Pressure(x,y,z-unit): 0.0 0.0 20.0
+  Centre_Position(x,y,z): 0.0 0.0 102.0
+  Pipette_Radius(micron): 30.0
+  Pipette_Effect_Depth(micron): 8.0
+  Pipette_Suction_Pressure(x,y,z-unit): 0.0 0.0 100.0

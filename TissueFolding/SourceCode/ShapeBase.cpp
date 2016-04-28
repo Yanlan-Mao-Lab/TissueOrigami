@@ -1197,29 +1197,32 @@ void  ShapeBase::rotateReferenceElementByRotationMatrix(double* rotMat){
 	}
 }
 
-void	ShapeBase::calculateForces(vector <Node*>& Nodes, bool recordForcesOnFixedNodes, double **FixedNodeForces, ofstream& outputFile){
+void	ShapeBase::calculateForces(vector <Node*>& Nodes, gsl_matrix* displacementPerDt, bool recordForcesOnFixedNodes, double **FixedNodeForces, ofstream& outputFile){
     if (ShapeDim == 3){		//3D element
-        calculateForces3D(Nodes, recordForcesOnFixedNodes, FixedNodeForces, outputFile);
+        calculateForces3D(Nodes, displacementPerDt, recordForcesOnFixedNodes, FixedNodeForces, outputFile);
     }
 }
 
-void ShapeBase::writeElasticForcesToge(gsl_matrix* ge, double** SystemForces, vector <Node*>& Nodes){
+void ShapeBase::writeInternalForcesTogeAndgv(gsl_matrix* ge, gsl_matrix* gvInternal, double** SystemForces, vector <Node*>& Nodes){
     //now all the forces are written on SysyemForces
     //Now I will add the forces into ge, this step can be made faster by separating calculate forces function into two,
     //and filling up either ge or System forces depending on the solution method:
 	for (int i = 0; i< nNodes; ++i){
         for ( int j=0; j<nDim; j++){
         	int indexI = nDim*NodeIds[i]+j;
-        	double elementalvalue = gsl_matrix_get(ElementalSystemForces,i,j);
+        	double elementalvalue = gsl_matrix_get(ElementalElasticSystemForces,i,j);
         	double matrixValue = gsl_matrix_get(ge,indexI,0);
-            gsl_matrix_set(ge, indexI,0,matrixValue+ elementalvalue);
+            gsl_matrix_set(ge, indexI,0,matrixValue + elementalvalue);
+        	elementalvalue = gsl_matrix_get(ElementalInternalViscousSystemForces,i,j);
+        	matrixValue = gsl_matrix_get(gvInternal,indexI,0);
+            gsl_matrix_set(gvInternal, indexI,0,matrixValue + elementalvalue);
         }
     }
     int counter = 0;
     for (int i = 0; i<nNodes; ++i){
         for (int j = 0; j<nDim; ++j){
             if (!Nodes[NodeIds[i]]->FixedPos[j]){
-                SystemForces[NodeIds[i]][j] = SystemForces[NodeIds[i]][j] + gsl_matrix_get(ElementalSystemForces,i,j);
+                SystemForces[NodeIds[i]][j] = SystemForces[NodeIds[i]][j] + gsl_matrix_get(ElementalElasticSystemForces,i,j) + gsl_matrix_get(ElementalInternalViscousSystemForces,i,j);
             }
             /*else if(recordForcesOnFixedNodes){
                 FixedNodeForces[NodeIds[i]][j] = FixedNodeForces[NodeIds[i]][j] - gsl_matrix_get(TriPointg,counter,0);
@@ -1229,36 +1232,47 @@ void ShapeBase::writeElasticForcesToge(gsl_matrix* ge, double** SystemForces, ve
     }
 }
 
-void	ShapeBase::calculateForces3D(vector <Node*>& Nodes,  bool recordForcesOnFixedNodes, double **FixedNodeForces, ofstream& outputFile){
+
+
+void	ShapeBase::calculateForces3D(vector <Node*>& Nodes,  gsl_matrix* displacementPerDt, bool recordForcesOnFixedNodes, double **FixedNodeForces, ofstream& outputFile){
     int dim = nDim;
     int n = nNodes;
     //calculating F and B in a 3 point gaussian:
 
-    gsl_matrix* TriPointg  = gsl_matrix_calloc(dim*n,1);
+    gsl_matrix* TriPointge  = gsl_matrix_calloc(dim*n,1);
+    gsl_matrix* TriPointgv  = gsl_matrix_calloc(dim*n,1);
     gsl_matrix_set_zero(TriPointF);
-    gsl_matrix_set_zero(ElementalSystemForces);
-    gsl_matrix* currg = gsl_matrix_calloc(dim*n,1);
+    gsl_matrix_set_zero(ElementalElasticSystemForces);
+    gsl_matrix_set_zero(ElementalInternalViscousSystemForces);
+    gsl_matrix* currge = gsl_matrix_calloc(dim*n,1);
+    gsl_matrix* currgv = gsl_matrix_calloc(dim*n,1);
     gsl_matrix* currF = gsl_matrix_calloc(dim,dim);
     //The point order is established in shape function derivative calculation!
     //Make sure the weights fir in with the order - eta zeta nu:
     //double points[3][3]={{1.0/6.0,1.0/6.0,0.0},{2.0/3.0,1.0/6.0,0.0},{1.0/6.0,2.0/3.0,0.0}};
     double weights[3] = {1.0/3.0,1.0/3.0,1.0/3.0};
     for (int iter =0; iter<3;++iter){
-        //cout<<"Calculating gauss point: "<<eta<<" "<<nu<<" "<<zeta<<endl;
-        calculateCurrNodalForces(currg, currF, iter);
-        gsl_matrix_scale(currg,weights[iter]);
-        gsl_matrix_add(TriPointg, currg);
+        //cout<<"Calculating Gauss point: "<<eta<<" "<<nu<<" "<<zeta<<endl;
+    	calculateCurrNodalForces(currge, currgv, currF, displacementPerDt, iter);
+        gsl_matrix_scale(currge,weights[iter]);
+        gsl_matrix_add(TriPointge, currge);
+        gsl_matrix_scale(currgv,weights[iter]);
+        gsl_matrix_add(TriPointgv, currgv);
         gsl_matrix_scale(currF,weights[iter]);
         gsl_matrix_add(TriPointF, currF);
         //displayMatrix(currg,"currg");
+        //if (Id == 0) {displayMatrix(currgv,"currgv");}
     }
     int counter = 0;
     for (int i = 0; i<nNodes; ++i){
             for (int j = 0; j<nDim; ++j){
             	if (!Nodes[NodeIds[i]]->FixedPos[j]){
-            		double value = gsl_matrix_get(ElementalSystemForces,i,j);
-            		value -= gsl_matrix_get(TriPointg,counter,0);
-            		gsl_matrix_set(ElementalSystemForces,i,j,value);
+            		double value = gsl_matrix_get(ElementalElasticSystemForces,i,j);
+            		value -= gsl_matrix_get(TriPointge,counter,0);
+            		gsl_matrix_set(ElementalElasticSystemForces,i,j,value);
+            		value = gsl_matrix_get(ElementalInternalViscousSystemForces,i,j);
+            		value -= gsl_matrix_get(TriPointgv,counter,0);
+            		gsl_matrix_set(ElementalInternalViscousSystemForces,i,j,value);
 				}
 				/*else if(recordForcesOnFixedNodes){
 					FixedNodeForces[NodeIds[i]][j] = FixedNodeForces[NodeIds[i]][j] - gsl_matrix_get(TriPointg,counter,0);
@@ -1267,7 +1281,7 @@ void	ShapeBase::calculateForces3D(vector <Node*>& Nodes,  bool recordForcesOnFix
             }
     }
     //cout<<"Element: "<<Id<<endl;
-    //displayMatrix(ElementalSystemForces,"ElementalSystemForces");
+    //displayMatrix(ElementalElasticSystemForces,"ElementalElasticSystemForces");
 /*
     int counter = 0;
     for (int i = 0; i<nNodes; ++i){
@@ -1283,8 +1297,10 @@ void	ShapeBase::calculateForces3D(vector <Node*>& Nodes,  bool recordForcesOnFix
     }
 */
     //freeing matrices allocated in this function
-    gsl_matrix_free(TriPointg);
-    gsl_matrix_free(currg);
+    gsl_matrix_free(TriPointge);
+    gsl_matrix_free(TriPointgv);
+    gsl_matrix_free(currge);
+    gsl_matrix_free(currgv);
     gsl_matrix_free(currF);
     //cout<<"Element: "<<Id<<endl;
     //displayMatrix(Fg, "Fg");
@@ -1432,7 +1448,6 @@ gsl_matrix* ShapeBase::calculateBTforNodalForces(gsl_matrix* InvJacobianStack, g
     // gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, tmpMat2, ShapeFuncDerStack,0.0, B);
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, InvJacobianStack, ShapeFuncDerStack,0.0, invJShFuncDerS);
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, CoeffMat, invJShFuncDerS,0.0, B);
-    //displayMatrix(B,"B");
     //displayMatrix(InvJacobianStack,"InvJacobianStack");
     //displayMatrix(ShapeFuncDerStack,"ShapeFuncDerStack");
     //displayMatrix(invJShFuncDerS,"invJShFuncDerS");
@@ -1473,6 +1488,212 @@ gsl_matrix* ShapeBase::calculateInverseJacobianStackForNodalForces(gsl_matrix* J
     return InvJacobianStack;
 }
 
+gsl_matrix* ShapeBase::calculateVelocityGradientTensor(gsl_matrix* B, gsl_matrix* displacementPerDt){
+	/**
+	 * Inputs:
+	 * -# The elemental B matrix (6 , ShapeBase#nDim x ShapeBase#nNodes).
+	 * -# The displacement of all nodes of the system, divided by the time
+	 * step (ShapeBase#nDim x Simulation#nNodes, 1).
+	 *
+	 * Output:
+	 * -# Velocity gradient tensor in Voigt notation (6, 1).
+	 *
+	 * This function calculates the velocity gradient tensor from elemental B matrix and elemental displacement.
+	 * The elemental B matrix is composed of a stack of B matrices for each node of the element:
+	 * 	\f{eqnarray*}{
+        	\textbf{B}  &=& \left[ \left[ \textbf{B}_{0} \right] \left[ \textbf{B}_{1} \right] ... \left[ \textbf{B}_{nNode}\right] \right]\\
+						&=& \left[
+		\begin{bmatrix}
+			\partial_x N_0 	& 0 				& 0	\\
+			0 				& \partial_y N_0  	& 0	\\
+			0 				& 0 				& \partial_z N_0 \\
+			\partial_y N_0 	& \partial_x N_0 	& 0\\
+			\partial_z N_0 	& 0 				& \partial_x N_0 \\
+			0 				& \partial_z N_0 	& \partial_y N_0
+		\end{bmatrix}
+
+		\begin{bmatrix}
+			\partial_x N_1 	& 0 				& 0	\\
+			0 				& \partial_y N_1  	& 0	\\
+			0 				& 0 				& \partial_z N_1 \\
+			\partial_y N_1 	& \partial_x N_1 	& 0\\
+			\partial_z N_1 	& 0 				& \partial_x N_1 \\
+			0 				& \partial_z N_1 	& \partial_y N_1
+		\end{bmatrix}
+
+		...
+
+		\begin{bmatrix}
+			\partial_x N_{nNode} 	& 0 					& 0	\\
+			0 						& \partial_y N_{nNode}  & 0	\\
+			0 						& 0 					& \partial_z N_{nNode} \\
+			\partial_y N_{nNode} 	& \partial_x N_{nNode} 	& 0\\
+			\partial_z N_{nNode} 	& 0 					& \partial_x N_{nNode} \\
+			0 						& \partial_z N_{nNode} 	& \partial_y N_{nNode}
+		\end{bmatrix}
+		\right]
+		\f}
+	 * The elemental displacement matrix is extracted from the system displacement matrix via
+	 * the function ShapeBase#constructElementalDisplacementMatrix. The displacement is calculated
+	 * as the displacement of a node from its position at the end of last time step, \f$ u_{n}\f$ to the position
+	 * at the current Newton-Raphson iteration \f$ u_{k}\f$. With the velocities (displacement per time step),
+	 * and the \f$\textbf{B}\f$ matrix, velocity gradient tensor can be calculated through:
+	 * \f{eqnarray*}{
+	 	 	 	 \boldsymbol{l} & = \boldsymbol{B}  \boldsymbol{v_{n+1}}\nonumber \\
+								& = \boldsymbol{B} \frac{{u_{n+1}^{k} - u_{n}}} {\delta t}.
+		\f}
+	 *
+	 * Procedure:
+	 * - construct the ElementalDisplacementMatrix.
+	 */
+	gsl_matrix* elementalDisplacementMatrix = constructElementalDisplacementMatrix(displacementPerDt);
+	/**
+	 * - Allocate the velocity gradient tensor in Voigt notation.
+	 */
+	gsl_matrix* l =  gsl_matrix_calloc(6,1);
+	/**
+	 * - calculate velocity gradient tensor.
+	 */
+    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, B, elementalDisplacementMatrix,0.0, l);
+    /**
+	 * - free allocated memory.
+	 */
+	gsl_matrix_free(elementalDisplacementMatrix);
+	//displayMatrix(l,"l_forForceCalc");
+    /**
+	 * - return velocity gradient tensor.
+	 */
+	return l;
+}
+
+gsl_matrix* ShapeBase::calculateRateOfDeformationTensor(gsl_matrix* l){
+	/**
+	 * Inputs:
+	 * -# The velocity gradient tensor given in Voigt notation (6 x 1).
+	 *
+	 * Output:
+	 * -# Rate of deformation tensor (3 x 3).
+	 *
+	 * This function primarily rearranges the elements of the
+	 * velocity gradient tensor given in Voigt notation, to from the rate of deformation tensor
+	 *
+	 * Procedure:
+	 * - Allocate the memory for rate of deformation tensor
+	 */
+	gsl_matrix* d =  gsl_matrix_calloc(3,3);
+	/**
+	 * - Write the terms of velocity gradient tensor into rate of deformation tensor
+	 */
+	gsl_matrix_set(d,0,0,gsl_matrix_get(l,0,0) );
+	gsl_matrix_set(d,1,1,gsl_matrix_get(l,1,0) );
+	gsl_matrix_set(d,2,2,gsl_matrix_get(l,2,0) );
+	gsl_matrix_set(d,0,1,0.5*gsl_matrix_get(l,3,0));
+	gsl_matrix_set(d,2,1,0.5*gsl_matrix_get(l,4,0));
+	gsl_matrix_set(d,0,2,0.5*gsl_matrix_get(l,5,0));
+	gsl_matrix_set(d,1,0,0.5*gsl_matrix_get(l,3,0));
+	gsl_matrix_set(d,1,2,0.5*gsl_matrix_get(l,4,0));
+	gsl_matrix_set(d,2,0,0.5*gsl_matrix_get(l,5,0));
+	/**
+	 * - Return rate of deformation tensor
+	 */
+	return d;
+}
+
+void ShapeBase::calculateViscousStress(gsl_matrix* d, gsl_matrix* viscousStress){
+	/**
+	 * Inputs:
+	 * -# The rate of deformation matrix (ShapeBase#nDim x ShapeBase#nDim).
+	 * -# the viscous stress of current Gauss point, the result will be written on this matrix
+	 *
+	 * This function will calculate the internal viscous stress of the element using rate of deformation matrix
+	 * and ShapeBase#internalViscosity, \f$\eta\f$ , via:
+	 * \f[\sigma^{v} = \eta  \textbf{d} \f]
+	 *
+	 * Procedure:
+	 * - Copy rate of deformation tensor over to viscous stress tensor.
+	 *
+	 */
+	createMatrixCopy(viscousStress, d);
+	/**
+	 *  - Scale with the internal viscosity to obtain viscous stress tensor
+	 *
+	 */
+	gsl_matrix_scale(viscousStress,internalViscosity);
+}
+
+gsl_matrix* ShapeBase::constructElementalDisplacementMatrix(gsl_matrix* displacement){
+	/**
+	 * Inputs:
+	 * -# The displacement matrix (ShapeBase#nDim x Simulation#nNodes, 1).
+	 *
+	 * This function calculates the elemental displacement matrix from the
+	 * displacement matrix of the whole system, given as input. In
+	 * current usage, under normal circumstances, the input matrix is displacement
+	 * divided by time step. The displacement is calculated by Simulation#calculateDisplacementMatrix
+	 * Both matrices, the displacement matrix of the whole system and the
+	 * elemental displacement matrix are in vector form:
+	 *
+   	    \f$ displacement =
+   	    \begin{bmatrix}
+			\Delta x_{0}\\
+			\Delta y_{0}\\
+			\Delta z_{0}\\
+			... ,\\
+			\Delta x_{N}\\
+			\Delta y_{N}\\
+			\Delta z_{N}
+			\end{bmatrix}
+   	    \f$
+
+	 */
+	gsl_matrix* elementalDisplacementMatrix = gsl_matrix_calloc(nDim*nNodes,1);
+	for (int i=0; i<nNodes; ++i){
+		int index = NodeIds[i];
+		for (int j=0; j<nDim; ++j){
+			double value = gsl_matrix_get(displacement,index*nDim+j,0);
+			gsl_matrix_set(elementalDisplacementMatrix,i*nDim+j,0,value);
+		}
+	}
+	return elementalDisplacementMatrix;
+}
+
+void ShapeBase::calculateViscousForces(gsl_matrix*  gv, gsl_matrix*  BTdetFdetdXde, gsl_matrix* viscousStress){
+	/**
+	 * Inputs:
+	 * -# Elemental matrix for internal viscous forces (ShapeBase#nDim x ShapeBase#nNodes, 1)
+	 * the resulting forces will be written on this matrix
+	 * -# Transpose of elemental B matrix, multiplied by the determinant
+	 * of the deformation gradient, \f$\textbf{F}\f$, and the determinant of \f$ \delta \textbf{X}/\delta \boldsymbol{\xi}\f$
+	 * -#  The viscous stresses calculated in ShapeBase#calculateViscousStress
+	 *
+	 * This function will calculate the elemental viscous forces from viscous stress, via:
+	 * 	\f{eqnarray*}{
+        	\textbf{g}^v &=& \int_{V} \textbf{B}^{T} \sigma^{v} dV \\
+          	  	  	  	 &=& det(\textbf{F})det\left( \frac{\delta \textbf{X} }{\delta \boldsymbol{\xi}} \right) \textbf{B}^{T} \sigma^{v}
+		\f}
+	 * Procedure:
+	 * - Allocate the memory for stress in Voigt notation
+	 * */
+	gsl_matrix * compactStress =  gsl_matrix_calloc(6,1);
+	/**
+	 * - Write stress in Voigt notation
+	 */
+    gsl_matrix_set(compactStress,0,0,gsl_matrix_get(viscousStress,0,0));
+    gsl_matrix_set(compactStress,1,0,gsl_matrix_get(viscousStress,1,1));
+    gsl_matrix_set(compactStress,2,0,gsl_matrix_get(viscousStress,2,2));
+    gsl_matrix_set(compactStress,3,0,gsl_matrix_get(viscousStress,0,1));
+    gsl_matrix_set(compactStress,4,0,gsl_matrix_get(viscousStress,2,1));
+    gsl_matrix_set(compactStress,5,0,gsl_matrix_get(viscousStress,0,2));
+	/**
+	 * - Calculate nodal forces
+	 */
+    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, BTdetFdetdXde, compactStress,0.0, gv);
+	/**
+	 * - Free memory
+	 */
+    gsl_matrix_free(compactStress);
+}
+
 void ShapeBase::calculateImplicitKElastic(){
     //cout<<"calculating implicit K elastic for element: "<<Id<<endl;
     int dim = nDim;
@@ -1481,7 +1702,7 @@ void ShapeBase::calculateImplicitKElastic(){
     	gsl_matrix_set_zero(TriPointKe);
     }
     else{
-    	//calculating K in a 3 point gaussian:
+    	//calculating Kelastic in a 3 point gaussian:
 		gsl_matrix* currK = gsl_matrix_calloc(dim*n,dim*n);
 		gsl_matrix_set_zero(TriPointKe);
 		double weights[3] = {1.0/3.0,1.0/3.0,1.0/3.0};
@@ -1499,36 +1720,76 @@ void ShapeBase::calculateImplicitKElastic(){
 		}*/
 	    gsl_matrix_free(currK);
     }
-    /*if (Id == 0){
-		displayMatrix(TriPointKe,"TriPointKe");
-
-	}
-    if (Id == 1 || Id == 2){
-    	cout<<"Element: "<<Id<<endl;
-    	displayMatrix(TriPointKe,"TriPointKe0");
-    }*/
-
-/*
-    gsl_matrix* disp = gsl_matrix_calloc(18,1);
-    for(int ii =0; ii<6; ++ii){
-        for (int jj=0; jj<3; jj++){
-            gsl_matrix_set(disp,ii*3+jj,0,Positions[ii][jj]-ReferenceShape->Positions[ii][jj]);
-        }
-    }
-    gsl_matrix* B = Bmatrices[0];
-    gsl_matrix* Fe1E = gsl_matrix_calloc(6,1);
-    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, B, disp,0.0, Fe1E);
-    displayMatrix(Fe1E,"Fe1Ecurr");
-    displayMatrix(FeMatrices[0],"Fecurr");
-    gsl_matrix* C = CMatrices[0];
-    gsl_matrix* sigmacurr = gsl_matrix_calloc(6,1);
-    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, C, Fe1E,0.0, sigmacurr);
-    displayMatrix(sigmacurr,"sigmacurr");
-
-*/
 }
 
-void ShapeBase::writeKelasticToMainKatrix(gsl_matrix* Ke){
+void ShapeBase::calculateImplicitKViscous(gsl_matrix* displacementPerDt, double dt){
+	//This is a function called over each element
+	//First function is the function to calculate the sum of all integrals,
+	//each integral calculation will be listed below, individually.
+	//The inputs are:
+	//1) the displacement per dt for all nodes (uk-un)/dt,
+	//2) and is the time step the object has access to all
+	//the necessary matrices to carry out the calculation.
+	int dim = nDim;
+	int n = nNodes;
+	if (IsAblated){
+	    //This is for efficiency, I do not calculate if the
+	    //current element is laser ablated
+		gsl_matrix_set_zero(TriPointKv);
+	}
+	else{
+		//calculating Kviscous in a 3 point gaussian:
+		//assign a temporary matix, 18 x 18 for a prism (6 nodes, 3D).
+		gsl_matrix* currK = gsl_matrix_calloc(dim*n,dim*n);
+		//set the temporary matrix to zero.
+		gsl_matrix_set_zero(TriPointKv);
+		//the weights of the gauss points
+		double weights[3] = {1.0/3.0,1.0/3.0,1.0/3.0};
+		//define the matrices for velocity gradient, and the
+		//term in parentheses in calculation of the first integral.
+		//These will be calculated once per Gauss point for the element.
+		gsl_matrix* velocityGradient = gsl_matrix_calloc(dim,dim);
+		gsl_matrix* paranthesisTermForKv1 =  gsl_matrix_calloc(dim,dim);
+	    //loop over Gauss points
+		for (int iter =0; iter<3;++iter){
+			//set the temporary matrix to zero.
+			gsl_matrix_set_zero(currK);
+			//set the velocity gradient to zero.
+			gsl_matrix_set_zero(velocityGradient);
+			//set the parentheses term for first integral to zero.
+			gsl_matrix_set_zero(paranthesisTermForKv1);
+			//calculate the velocity gradient:
+			calculateVelocityGradient(velocityGradient, displacementPerDt, iter);
+			//calculate ( I / dt - velocityGradient) for first term:
+			gsl_matrix* paranthesisTermForKv1 = gsl_matrix_alloc(nDim,nDim);
+			//set the term to identity:
+			gsl_matrix_set_identity(paranthesisTermForKv1);
+			//divide the term by dt to obtain I/dt:
+			gsl_matrix_scale(paranthesisTermForKv1,1.0/dt);
+			//substract velocity gradient to obtain ( I / dt - velocityGradient):
+			gsl_matrix_sub(paranthesisTermForKv1,velocityGradient);
+			/*if (Id == 0){
+				displayMatrix(velocityGradient,"velocityGradient");
+				displayMatrix(paranthesisTermForKv1,"paranthesisTermForKv1");
+				displayMatrix(viscousStress[iter],"viscousStress");
+			}*/
+			//calculate the first integral:
+			calculateViscousKIntegral1(currK, paranthesisTermForKv1, iter);
+			//calculate the second integral:
+			calculateViscousKIntegral2(currK, iter);
+		    //scaling the resulting temporary matrix with Gauss point weight.
+			gsl_matrix_scale(currK,weights[iter]);
+		    //Adding the temporary matrix to the elemental Kviscous.
+			gsl_matrix_add(TriPointKv, currK);
+		}
+		//free the memory allocated in this function
+		gsl_matrix_free(currK);
+		gsl_matrix_free(velocityGradient);
+		gsl_matrix_free(paranthesisTermForKv1);
+	}
+};
+
+void ShapeBase::writeKelasticToMainKatrix(gsl_matrix* K){
     for (int a=0; a<nNodes; ++a){
         for (int b=0; b<nNodes; ++b){
             int NodeId1 = NodeIds[a];
@@ -1537,16 +1798,32 @@ void ShapeBase::writeKelasticToMainKatrix(gsl_matrix* Ke){
             NodeId2 *= nDim;
             for (int i=0; i<nDim; ++i){
                 for (int j=0; j<nDim; ++j){
-                    double valueij = gsl_matrix_get(Ke,NodeId1+i,NodeId2+j);
+                    double valueij = gsl_matrix_get(K,NodeId1+i,NodeId2+j);
 					valueij	+= gsl_matrix_get(TriPointKe,a*nDim+i,b*nDim+j);
-                    gsl_matrix_set(Ke,NodeId1+i,NodeId2+j,valueij);
+                    gsl_matrix_set(K,NodeId1+i,NodeId2+j,valueij);
                 }
             }
         }
     }
 }
 
-
+void ShapeBase::writeKviscousToMainKatrix(gsl_matrix* K){
+    for (int a=0; a<nNodes; ++a){
+        for (int b=0; b<nNodes; ++b){
+            int NodeId1 = NodeIds[a];
+            int NodeId2 = NodeIds[b];
+            NodeId1 *= nDim;
+            NodeId2 *= nDim;
+            for (int i=0; i<nDim; ++i){
+                for (int j=0; j<nDim; ++j){
+                    double valueij = gsl_matrix_get(K,NodeId1+i,NodeId2+j);
+					valueij	+= gsl_matrix_get(TriPointKv,a*nDim+i,b*nDim+j);
+                    gsl_matrix_set(K,NodeId1+i,NodeId2+j,valueij);
+                }
+            }
+        }
+    }
+}
 
 void	ShapeBase::calculateForceFromStress(int nodeId, gsl_matrix* Externalstress, gsl_matrix *ExternalNodalForces){
     gsl_matrix_set_zero(ExternalNodalForces);
@@ -1573,7 +1850,7 @@ void	ShapeBase::calculateForceFromStress(int nodeId, gsl_matrix* Externalstress,
     }
     //displayMatrix(ExternalNodalForces,"ExternalNodalForces");
 }
-void	ShapeBase::calculateElasticKIntegral1(gsl_matrix* currK,int pointNo){
+void	ShapeBase::calculateElasticKIntegral1(gsl_matrix* currElementalK,int pointNo){
     gsl_matrix * invJShFuncDerS = invJShapeFuncDerStack[pointNo];
     gsl_matrix * invJShFuncDerSWithFe = invJShapeFuncDerStackwithFe[pointNo];
 
@@ -1602,7 +1879,6 @@ void	ShapeBase::calculateElasticKIntegral1(gsl_matrix* currK,int pointNo){
                     //the sum over j,l,I,J,K,L, to get Kab(i,k):
                     for (int j = 0; j<nDim; ++j){
                         for (int l=0; l<nDim; ++l){
-
                             for (int I=0; I<nDim; ++I){
                                 for (int J=0; J<nDim; ++J){
                                     for (int K=0; K<nDim; ++K){
@@ -1624,9 +1900,9 @@ void	ShapeBase::calculateElasticKIntegral1(gsl_matrix* currK,int pointNo){
             //now I have Kab for current gauss point, I need to write in into currK:
             for (int i=0; i<nDim; ++i){
                 for (int j=0; j<nDim; ++j){
-                    double value = gsl_matrix_get(currK,a*nDim+i, b*nDim+j);
+                    double value = gsl_matrix_get(currElementalK,a*nDim+i, b*nDim+j);
                     value += gsl_matrix_get(Keab,i, j);
-                    gsl_matrix_set(currK,a*nDim+i, b*nDim+j,value);
+                    gsl_matrix_set(currElementalK,a*nDim+i, b*nDim+j,value);
                 }
             }
             gsl_matrix_free(Keab);
@@ -1635,7 +1911,7 @@ void	ShapeBase::calculateElasticKIntegral1(gsl_matrix* currK,int pointNo){
 }
 
 
-void	ShapeBase::calculateElasticKIntegral2(gsl_matrix* currK,int pointNo){
+void	ShapeBase::calculateElasticKIntegral2(gsl_matrix* currElementalK,int pointNo){
     gsl_matrix * invJShFuncDerS = invJShapeFuncDerStack[pointNo];
     gsl_matrix * Stress = elasticStress[pointNo];
     double detF = detFs[pointNo];
@@ -1657,8 +1933,8 @@ void	ShapeBase::calculateElasticKIntegral2(gsl_matrix* currK,int pointNo){
             for (int i=0; i<nDim; ++i){
                 int index1 = a*nDim+i;
                 int index2 = b*nDim+i;
-                double addedValue = gsl_matrix_get(currK,index1,index2) + value;//adding the calculated value to current K matirx
-                gsl_matrix_set(currK,index1,index2,addedValue);
+                double addedValue = gsl_matrix_get(currElementalK,index1,index2) + value;//adding the calculated value to current K matirx
+                gsl_matrix_set(currElementalK,index1,index2,addedValue);
             }
             gsl_matrix_free(tmp1);
         }
@@ -1666,6 +1942,212 @@ void	ShapeBase::calculateElasticKIntegral2(gsl_matrix* currK,int pointNo){
     gsl_matrix_free(DNaT);
     gsl_matrix_free(DNb);
     gsl_matrix_free(Keab2);
+}
+
+void ShapeBase::calculateVelocityGradient( gsl_matrix* velocityGradient, gsl_matrix* displacementPerDt, int pointNo){
+	gsl_matrix * invJShFuncDerS = invJShapeFuncDerStack[pointNo];
+	for (int c=0; c<nNodes; ++c){
+		gsl_matrix* delVc = gsl_matrix_calloc(nDim,nDim);
+		//get \DelNc^T
+		gsl_matrix * DNc = gsl_matrix_calloc(nDim,1);
+		for (int i=0;i<nDim;++i){
+			gsl_matrix_set(DNc,i,0,gsl_matrix_get(invJShFuncDerS,i,nDim*c));
+		}
+		//calculate velocity of node c:
+		gsl_matrix* vc = gsl_matrix_calloc(nDim,1);
+		int id = NodeIds[c];
+		gsl_matrix_set(vc,0,0,gsl_matrix_get(displacementPerDt,id*nDim,0));
+		gsl_matrix_set(vc,1,0,gsl_matrix_get(displacementPerDt,id*nDim+1,0));
+		gsl_matrix_set(vc,2,0,gsl_matrix_get(displacementPerDt,id*nDim+2,0));
+		//calculate vc *DNc^T:
+		calculateOuterProduct(vc,DNc,delVc);
+		//add the nodal calculation to velocity gradient:
+		gsl_matrix_add(velocityGradient, delVc);
+		//free memory allocated in this loop:
+		gsl_matrix_free(delVc);
+		gsl_matrix_free(DNc);
+		gsl_matrix_free(vc);
+	}
+	/*if (Id == 0 ){
+		displayMatrix(velocityGradient,"DelV");
+	}*/
+}
+
+void ShapeBase::calculateViscousKIntegral1(gsl_matrix* currElementalK, gsl_matrix* paranthesisTermForKv1, int pointNo){
+//	gsl_matrix * invJShFuncDerS = invJShapeFuncDerStack[pointNo];
+	gsl_matrix* BaT = gsl_matrix_calloc(nDim,6);
+    gsl_matrix* Bb = gsl_matrix_calloc(6,nDim);
+    gsl_matrix* BaTBb = gsl_matrix_calloc(nDim,nDim);
+    gsl_matrix* KvabInt1 = gsl_matrix_calloc(nDim,nDim); //First integral in calculation of Kv for nodes a and b
+    gsl_matrix* B = Bmatrices[pointNo];
+    for (int a=0;a<nNodes;++a){
+    	for (int b=0; b<nNodes; ++b){
+    		consturctBaTBb(B, BaT,Bb,a,b);
+    		//Bb matrix should have the last three rows as 0.5, this matrix stems from the
+    		//"d" matrix, as opposed to viscous stresses, therefore the definition
+    		//should have 0.5 on off diagonal terms, therefore the last three rows of Bb.
+    		for (int i=3; i<6; ++i){
+    			for (int j=0; j<nDim; ++j){
+    				double value = gsl_matrix_get(Bb, i,j);
+    				gsl_matrix_set(Bb,i,j,0.5*value);
+    			}
+    		}
+    		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, BaT, Bb,0.0, BaTBb);
+    		//if (a == 3 && b ==3){
+    		//	displayMatrix(BaTBb,"BaTBb_33");
+    		//}
+    		//the paranthesis term is: ( I / dt - velocityGradient)
+    		//calculate all multiplication: BaT*Bb* (I/dt - \Del v):
+			gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, BaTBb, paranthesisTermForKv1,0.0, KvabInt1);
+			/*if (Id == 0 && a == 3 && b ==3){
+				displayMatrix(BaTBb,"BaTBb_33");
+				displayMatrix(KvabInt1,"KvabInt1_beforeVolumeIntegraiton_33");
+				cout<<"detF: "<<detFs[pointNo]<<" detdXde: "<<detdXdes[pointNo]<<endl;
+			}*/
+			//volume integration:
+    	    gsl_matrix_scale(KvabInt1,detFs[pointNo]);
+    	    gsl_matrix_scale(KvabInt1,detdXdes[pointNo]);
+    	    //scaling by viscosity:
+    	    gsl_matrix_scale(KvabInt1,internalViscosity);
+    	    /*if (Id == 0 && a == 3 && b ==3){
+    	    	displayMatrix(KvabInt1,"KvabInt1_afterVolumeIntegraiton_33");
+    	    }*/
+    	    //Now KabvInt1 is a 3x3 (dim x dim) matrix, while currK is 18 x 18 (dim*n_node x dim*n_nodes)
+    	    //currK is composed of 3x3 Kab matrices placed into the blocks (a,b), with indexing from zero,
+    	    //for a = 1 and b=2, Kab will be placed in the 3x3 block covering indices (3,4,5) x (6,7,8) on K matrix.
+			/*if (a == 3 && b == 3){
+				cout<<"a: "<<a<<" b: "<<b<<endl;
+				displayMatrix(KvabInt1,"KvabInt1");
+			}*/
+    	    for (int i=0; i<nDim; ++i){
+        	    for (int j=0; j<nDim; ++j){
+        	    	int index2 = a*nDim+i;
+        	    	int index1 = b*nDim+j;
+        	    	double value = gsl_matrix_get(KvabInt1,i,j);
+        	    	double addedValue = gsl_matrix_get(currElementalK,index1,index2) + value; //adding the calculated value to current K matrix
+        	    	gsl_matrix_set(currElementalK,index1,index2,addedValue);
+        	    }
+			}
+    	}
+    }
+    //if (Id ==0 ){displayMatrix(KvabInt1,"KvabInt1");}
+    gsl_matrix_free(BaT);
+    gsl_matrix_free(Bb);
+    gsl_matrix_free(BaTBb);
+    gsl_matrix_free(KvabInt1);
+}
+
+void ShapeBase::calculateViscousKIntegral2(gsl_matrix* currElementalK,int pointNo){
+    gsl_matrix * invJShFuncDerS = invJShapeFuncDerStack[pointNo];
+    gsl_matrix * Stress = viscousStress[pointNo];
+    gsl_matrix * DNa = gsl_matrix_calloc(nDim,1);
+    gsl_matrix * DNb = gsl_matrix_calloc(nDim,1);
+    gsl_matrix * KvabInt2 = gsl_matrix_calloc(nDim,nDim);
+    for (int a =0; a<nNodes; ++a){
+        for (int b=0; b<nNodes; ++b){
+            for (int i=0;i<nDim;++i){
+                gsl_matrix_set(DNa,i,0,gsl_matrix_get(invJShFuncDerS,i,nDim*a));
+                gsl_matrix_set(DNb,i,0,gsl_matrix_get(invJShFuncDerS,i,nDim*b));
+            }
+            gsl_matrix* DNaDNbOuterProduct = gsl_matrix_calloc(nDim, nDim);
+            gsl_matrix* DNbDNaOuterProduct = gsl_matrix_calloc(nDim, nDim);
+            calculateOuterProduct(DNa, DNb, DNaDNbOuterProduct);
+            calculateOuterProduct(DNb, DNa, DNbDNaOuterProduct);
+            gsl_matrix* paranthesisTerm = gsl_matrix_calloc(nDim, nDim);
+            gsl_matrix_memcpy(paranthesisTerm,DNaDNbOuterProduct);
+            gsl_matrix_sub(paranthesisTerm,DNbDNaOuterProduct);
+            //gsl_matrix_add(paranthesisTerm,DNbDNaOuterProduct);
+            //gsl_matrix_scale(paranthesisTerm, 0.5);
+			gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, Stress, paranthesisTerm,0.0, KvabInt2);
+			/*if (Id == 0){
+				//displayMatrix(paranthesisTerm,"paranthesisTerm");
+				displayMatrix(Stress,"Stress");
+				//displayMatrix(KvabInt2,"KvabInt2-beforeVolumeIntegration");
+			}*/
+			gsl_matrix_scale(KvabInt2, detFs[pointNo]);
+			gsl_matrix_scale(KvabInt2, detdXdes[pointNo]);
+			/*if (a == 3 && b == 3){
+				cout<<"a: "<<a<<" b: "<<b<<endl;
+				displayMatrix(DNaDNbOuterProduct,"DNaDNbOuterProduct");
+				displayMatrix(DNbDNaOuterProduct,"DNbDNaOuterProduct");
+				displayMatrix(paranthesisTerm,"paranthesisTerm");
+				displayMatrix(Stress,"Stress");
+				cout<<"detFs[pointNo]: "<<detFs[pointNo]<<endl;
+				cout<<"detdXdes[pointNo]: "<<detdXdes[pointNo]<<endl;
+				displayMatrix(KvabInt2,"KvabInt2");
+			}*/
+			for (int i=0; i<nDim; ++i){
+				for (int j=0; j<nDim; ++j){
+					int index2 = a*nDim+i;
+					int index1 = b*nDim+j;
+					double value = gsl_matrix_get(KvabInt2,i,j);
+					double addedValue = gsl_matrix_get(currElementalK,index1,index2) + value; //adding the calculated value to current K matrix
+					gsl_matrix_set(currElementalK,index1,index2,addedValue);
+				}
+			}
+            gsl_matrix_free(DNaDNbOuterProduct);
+            gsl_matrix_free(DNbDNaOuterProduct);
+        }
+    }
+    gsl_matrix_free(DNa);
+    gsl_matrix_free(DNb);
+    gsl_matrix_free(KvabInt2);
+	/*if (Id == 0){
+		displayMatrix(DNa,"DNa");
+		displayMatrix(DNaT,"DNaT");
+		displayMatrix(DNb,"DNb");
+		displayMatrix(DNbT,"DNbT");
+		displayMatrix(DNaDNbT,"DNaDNbT");
+		displayMatrix(DNbDNaT,"DNbDNaT");
+		//displayMatrix(paranthesisTerm,"paranthesisTerm");
+		displayMatrix(Stress,"Stress");
+		displayMatrix(KvabInt2,"KvabInt2-beforeVolumeIntegration");
+	}*/
+}
+
+void	ShapeBase::calculateOuterProduct(gsl_matrix* a, gsl_matrix* b, gsl_matrix* outerProduct){
+	//cout<<"inside outer product"<<endl;
+	int size1 = a->size1;
+	int size2 = a->size2;
+	if ((int) b->size2 != size2){
+		cerr<<"matrix dimension mismatch in outer product calculation"<<endl;
+	}
+	gsl_matrix * bT = gsl_matrix_calloc(size2,size1);
+	gsl_matrix_transpose_memcpy (bT,b);
+	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, a, bT,0.0, outerProduct);
+	gsl_matrix_free(bT);
+	//cout<<"finalised outer product"<<endl;
+}
+
+gsl_matrix*	ShapeBase::calculateSymmetricisedTensorProduct(gsl_matrix* a, gsl_matrix* b){
+	int size1 = a->size1;
+	int size2 = a->size2;
+	if ((int) b->size1 != size1){
+		cerr<<"matrix dimension mismatch in symmetricised outer product calculation"<<endl;
+	}
+	if ((int) b->size2 != size2){
+		cerr<<"matrix dimension mismatch in symmetricised outer product calculation"<<endl;
+	}
+	//generating the transposes:
+	//gsl_matrix * aT = gsl_matrix_calloc(size2,size1);
+	//gsl_matrix * bT = gsl_matrix_calloc(size2,size1);
+	//gsl_matrix_transpose_memcpy (aT,a);
+	//gsl_matrix_transpose_memcpy (bT,b);
+	//calculating individual outer products a x b = a bT
+	gsl_matrix * abOuterProduct = gsl_matrix_calloc(size1,size1);
+	calculateOuterProduct(a,b,abOuterProduct);
+	//gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, a, bT,0.0, abOuterProduct);
+	gsl_matrix * baOuterProduct = gsl_matrix_calloc(size1,size1);
+	calculateOuterProduct(b,a,abOuterProduct);
+	//gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, b, aT,0.0, baOuterProduct);
+	//calculating the averaged contraction term:
+	gsl_matrix * averagedContraction = gsl_matrix_calloc(size1,size1);
+	gsl_matrix_add(averagedContraction,abOuterProduct);
+	gsl_matrix_add(averagedContraction,baOuterProduct);
+	gsl_matrix_scale(averagedContraction,0.5);
+	gsl_matrix_free(abOuterProduct);
+	gsl_matrix_free(baOuterProduct);
+	return averagedContraction;
 }
 
 void ShapeBase::consturctBaTBb(gsl_matrix* B, gsl_matrix* BaT, gsl_matrix* Bb, int a, int b){
@@ -2292,6 +2774,7 @@ double 	ShapeBase::dotProduct3D(double* u, double* v){
 	dot = u[0]*v[0]+u[1]*v[1]+u[2]*v[2];
 	return dot;
 }
+
 
 void 	ShapeBase::displayMatrix(boost::numeric::ublas::matrix<double>& mat, string matname){
 	int m = mat.size1();

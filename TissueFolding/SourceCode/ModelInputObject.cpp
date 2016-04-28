@@ -768,7 +768,7 @@ bool ModelInputObject::readManupulationParamters(ifstream& file){
 	}
 	file >> currHeader;
 	if(currHeader == "SoftPeripheryRange(double-microns):"){
-		file >>Sim->softDebth;
+		file >>Sim->softDepth;
 	}
 	else{
 		cerr<<"Error in reading manipulations options, curr string: "<<currHeader<<", should have been: SoftPeripheryRange(double-microns):" <<endl;
@@ -1771,13 +1771,13 @@ bool ModelInputObject::readPipetteSetup(ifstream& file){
 		return false;
 	}
 	file >> currHeader;
-	if(currHeader == "Pipette_Effect_Debth(micron):"){
+	if(currHeader == "Pipette_Effect_Depth(micron):"){
 		double dummy;
 		file >> dummy;
 		Sim->pipetteDepth = dummy;
 	}
 	else{
-		cerr<<"Error in reading pipette aspiration setup: "<<currHeader<<", should have been: Pipette_Effect_Debth(micron):" <<endl;
+		cerr<<"Error in reading pipette aspiration setup: "<<currHeader<<", should have been: Pipette_Effect_Depth(micron):" <<endl;
 		return false;
 	}
 	file >> currHeader;

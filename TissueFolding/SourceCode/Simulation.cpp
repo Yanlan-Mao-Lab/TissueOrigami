@@ -77,6 +77,7 @@ Simulation::~Simulation(){
 		delete tmp_GF;
         //cerr<<"GrowtFuncitons list size: "<<GrowthFunctions.size()<<endl;
 	}
+    delete NRSolver;
 }
 
 void Simulation::setDefaultParameters(){
@@ -95,7 +96,9 @@ void Simulation::setDefaultParameters(){
 	poisson = 0.3;
 	discProperApicalViscosity = 0.0;
 	discProperBasalViscosity = 0.0;
-	zeroExternalViscosity = true;
+	for (int i=0; i<3; ++i){
+		zeroExternalViscosity[i] = true;
+	}
 	memset(noiseOnPysProp,0,4*sizeof(int));
 	// The default input is a calculated mesh of width 4 elements, each element being 2.0 unit high
 	// and having 1.0 unit sides of the triangles.
@@ -175,7 +178,7 @@ void Simulation::setDefaultParameters(){
 	packingThreshold = 6.0;
 
 	softPeriphery = false;
-	softDebth = 0.0;
+	softDepth = 0.0;
 	softnessFraction = 0.0;
 	softPeripheryBooleans[0] = false; //apical
 	softPeripheryBooleans[1] = false; //basal
@@ -468,7 +471,6 @@ bool Simulation::initiateSystem(){
 	if (!Success){
 		return Success;
 	}
-
 	initiateSystemForces();
 	calculateSystemCentre();
 	assignPhysicalParameters();
@@ -513,6 +515,9 @@ bool Simulation::initiateSystem(){
 	}
 	nNodes = Nodes.size();
 	nElements = Elements.size();
+	//initiating the NR solver object, that generates the necessary matrices
+	//for solving the tissue dynamics
+    NRSolver = new NewtonRapsonSolver(Nodes[0]->nDim,nNodes);
 	return Success;
 }
 
@@ -1765,8 +1770,20 @@ void Simulation::clearCircumferenceDataFromSymmetricityLine(){
 					if ( x < xTipPos+yLimPos && x >xTipPos+yLimNeg){
 						atTip = true;
 					}
-					if ( x > xTipNeg+yLimNeg && x < xTipNeg+yLimPos){
-						atTip = true;
+					if (!symmetricX){
+						//This if clause is checking the x-tip at the negative end.
+						//As described above, the node should still be a circumference node,
+						//if it is at the line of symmetry, but at the tip as well.
+						//BUT, if there is also xSymmetry, this "negative end tip" will
+						//be the tip at the x symmetry line. (If I am modelling a quarter of a circle,
+						//with x and y symmetry, this will point be the centre of the circle.)
+						//Under these conditions, it is not actually at the tip. It should be
+						//removed from circumference node list.
+						//Therefore, I am carrying the atTip? check for the negative end only if
+						//there is no x-symmetry.
+						if ( x > xTipNeg+yLimNeg && x < xTipNeg+yLimPos){
+							atTip = true;
+						}
 					}
 					if (!atTip){
 						//removing node from list:
@@ -1810,7 +1827,6 @@ void Simulation::clearCircumferenceDataFromSymmetricityLine(){
 				}
 			}
 		}
-
 	}
 }
 /*
@@ -2027,6 +2043,7 @@ void Simulation::fixAllD(Node* currNode, bool fixWithViscosity){
 			currNode->FixedPos[j]=true;
 		}
 	}
+	cout<<" fixAllD called on node: "<<currNode->Id<<endl;
 }
 
 void Simulation::fixAllD(int i, bool fixWithViscosity){
@@ -2068,6 +2085,7 @@ void Simulation::fixX(int i, bool fixWithViscosity){
 	else{
 		cerr<<"ERROR: Node : "<<Nodes[i]->Id<<" does not have x-dimension"<<endl;
 	}
+
 }
 
 void Simulation::fixY(Node* currNode, bool fixWithViscosity){
@@ -2084,6 +2102,7 @@ void Simulation::fixY(Node* currNode, bool fixWithViscosity){
 		cerr<<"ERROR: Node : "<<currNode->Id<<" does not have y-dimension"<<endl;
 	}
 }
+
 void Simulation::fixY(int i, bool fixWithViscosity){
 	if(Nodes[i]->nDim>1){
 		if(fixWithViscosity){
@@ -2499,7 +2518,7 @@ void Simulation::calculateSystemCentre(){
 }
 
 void Simulation::addSoftPeriphery(double* fractions){
-	double t2 = softDebth*softDebth;
+	double t2 = softDepth*softDepth;
 	double midlineFraction = 0.0;
 	double currSoftnessFraction = softnessFraction;
 	double tissueTypeMultiplier = 1;
@@ -2562,7 +2581,7 @@ void Simulation::addSoftPeriphery(double* fractions){
 					double d = dx*dx + dy*dy;
 					if (d<t2){
 						d = pow(d,0.5);
-						double f = currSoftnessFraction + (1.0 - currSoftnessFraction)*d/softDebth;
+						double f = currSoftnessFraction + (1.0 - currSoftnessFraction)*d/softDepth;
 						if (f < fractions[(*itElement)->Id]){
 							fractions[(*itElement)->Id] = f;
 						}
@@ -2665,12 +2684,14 @@ void Simulation::assignPhysicalParameters(){
 void Simulation::checkForZeroExternalViscosity(){
 	vector<Node*>::iterator itNode;
 	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-		if ((*itNode)->externalViscosity > 0){
-			zeroExternalViscosity = false;
-			break;
+		for (int i=0; i<3; ++i){
+			if ((*itNode)->externalViscosity[i] > 0){
+				zeroExternalViscosity[i] = false;
+			}
 		}
 	}
-    if (zeroExternalViscosity){
+    if (zeroExternalViscosity[0] || zeroExternalViscosity[1] || zeroExternalViscosity[2]){
+    	//At least one of the dimensions have zero viscosity
     	if(nNodes < 3) {
     		cerr<<"Cannot run zero viscosity simulation with less than 3 nodes, run simulation at your own risk!"<<endl;
     	}
@@ -2696,22 +2717,25 @@ void Simulation::checkForZeroExternalViscosity(){
         	bool sufficientYFix = false;
         	bool sufficientZFix = false;
         	for (int a=0; a<3; ++a){
-        		sufficientXFix = sufficientXFix || CircumferentialNodeFix[a][0];
-        		sufficientYFix = sufficientYFix || CircumferentialNodeFix[a][1];
-        		sufficientZFix = sufficientZFix || CircumferentialNodeFix[a][2];
+        		//if zeroExternalViscosity[0] is false, it means there is already  sufficient x fix
+        		//OR, if I spotted sufficientXFix in previous nodes, it persists,
+        		//OR, there is circumferential fix on x dimension
+        		sufficientXFix = sufficientXFix || !zeroExternalViscosity[0] || CircumferentialNodeFix[a][0];
+        		sufficientYFix = sufficientYFix || !zeroExternalViscosity[1] || CircumferentialNodeFix[a][1];
+        		sufficientZFix = sufficientZFix || !zeroExternalViscosity[2] || CircumferentialNodeFix[a][2];
         	}
-			//if there are no z fixe on the circumferenece, check the whole surfaces:
+			//if there are no z fixe on the circumference, check the whole surfaces:
         	if (!sufficientXFix){
-        		 sufficientXFix = sufficientXFix || BasalNodeFix[0] ;
-				sufficientXFix = sufficientXFix || ApicalNodeFix[0] ;
+        		sufficientXFix = sufficientXFix || !zeroExternalViscosity[0] || BasalNodeFix[0] ;
+				sufficientXFix = sufficientXFix || !zeroExternalViscosity[0] || ApicalNodeFix[0] ;
 			}
         	if (!sufficientYFix){
-        		sufficientYFix = sufficientYFix || BasalNodeFix[1] ;
-        		sufficientYFix = sufficientYFix || ApicalNodeFix[1] ;
+        		sufficientYFix = sufficientYFix || !zeroExternalViscosity[1] || BasalNodeFix[1] ;
+        		sufficientYFix = sufficientYFix || !zeroExternalViscosity[1] || ApicalNodeFix[1] ;
         	}
         	if (!sufficientZFix){
-				sufficientZFix = sufficientZFix || BasalNodeFix[2];
-				sufficientZFix = sufficientZFix || ApicalNodeFix[2];
+				sufficientZFix = sufficientZFix || !zeroExternalViscosity[2] || BasalNodeFix[2];
+				sufficientZFix = sufficientZFix || !zeroExternalViscosity[2] || ApicalNodeFix[2];
 			}
 
         	if (!sufficientXFix){
@@ -2747,21 +2771,21 @@ void Simulation::checkForZeroExternalViscosity(){
         	//There is symmetricity, then there is y fix, if there are any node fixes, on the surfaces in z, then I do not need to do fix z:
         	bool sufficientZFix = false;
         	for (int a=0; a<3; ++a){
-        		sufficientZFix = sufficientZFix || CircumferentialNodeFix[a][2];
+        		sufficientZFix = sufficientZFix || !zeroExternalViscosity[2] || CircumferentialNodeFix[a][2];
 			}
         	//if there are no z fixe on the circumferenece, check the whole surfaces:
 			if (!sufficientZFix){
-				sufficientZFix = sufficientZFix || BasalNodeFix[2];
-				sufficientZFix = sufficientZFix || ApicalNodeFix[2];
+				sufficientZFix = sufficientZFix || !zeroExternalViscosity[2] || BasalNodeFix[2];
+				sufficientZFix = sufficientZFix || !zeroExternalViscosity[2] || ApicalNodeFix[2];
 			}
         	bool sufficientXFix = false;
 			for (int a=0; a<3; ++a){
-				sufficientXFix = sufficientXFix || CircumferentialNodeFix[a][0] ;
+				sufficientXFix = sufficientXFix || !zeroExternalViscosity[0] || CircumferentialNodeFix[a][0] ;
 			}
 			//if there are no x fixes on the circumferenece, check the whole surfaces:
 			if (!sufficientXFix){
-				sufficientXFix = sufficientXFix || BasalNodeFix[0] ;
-				sufficientXFix = sufficientXFix || ApicalNodeFix[0] ;
+				sufficientXFix = sufficientXFix || !zeroExternalViscosity[0] || BasalNodeFix[0] ;
+				sufficientXFix = sufficientXFix || !zeroExternalViscosity[0] || ApicalNodeFix[0] ;
 			}
 			//there is no circumference or surface fixing of suffieint nature, then I should fix the nodes:
 			if (!sufficientXFix){
@@ -2772,7 +2796,7 @@ void Simulation::checkForZeroExternalViscosity(){
 				Nodes[ventralTipIndex]->FixedPos[2] = true;
 				Nodes[dorsalTipIndex]->FixedPos[2] = true;
 			}
-
+			//cout<<"node fixing sufficiency, sufficientXFix: "<<sufficientXFix<<" sufficientZFix: "<<sufficientZFix<<endl;
 /*
 				vector<ShapeBase*>::iterator itElement;
 				bool foundElement = false;
@@ -2877,11 +2901,32 @@ void Simulation::fixNode0InPosition(double x, double y, double z){
 
 void Simulation::manualPerturbationToInitialSetup(bool deform, bool rotate){
 	if(timestep==0){
+		 for (vector<Node*>::iterator  itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+			 if ((*itNode)->Id <3 ){
+				//fixX((*itNode),0);
+				//fixY((*itNode),0);
+			 }
+			/*if ((*itNode)->Id != 3 && (*itNode)->Id != 10){
+				//fixAllD((*itNode),0);
+			}
+			else{
+				//fixZ((*itNode),0);
+				//fixY((*itNode),0);
+				(*itNode)->Position[0] -= 5;
+			}*/
+		}
+		/*cout<<" fixingExternalViscosity: "<<fixingExternalViscosity[0]<<" "<<fixingExternalViscosity[1]<<" "<<fixingExternalViscosity[2]<<endl;
+		for (vector<Node*>::iterator  itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+			cout<<"Node: "<<(*itNode)->Id<<" external visc: "<<(*itNode)->externalViscosity[0]<<" "<<(*itNode)->externalViscosity[1]<<" "<<(*itNode)->externalViscosity[2]<<endl;
+		}
+		for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+			cout<<"Element: "<<(*itElement)->Id<<" internal viscosity: "<<(*itElement)->getInternalViscosity()<<endl;
+		}*/
 		//laserAblateTissueType(1);
 		//laserAblate(0.0, 0.0, 5.0);
-        double scaleX = 2.0;
+        double scaleX = 1.0;
         double scaleY = 1.0;
-        double scaleZ = 1.0;
+        double scaleZ = 2.0;
 
         double PI = 3.14159265359;
         double tetX = 0 *PI/180.0;
@@ -3796,18 +3841,177 @@ void Simulation::updateStepNR(){
     int dim  = 3;
     int iteratorK = 0;
     bool converged = false;
+
+    bool numericalCalculation = false;
+    bool displayMAtricesDuringNumericalCalculation = false;
+    bool useNumericalKIncalculation = false;
+    NRSolver->setMatricesToZeroAtTheBeginningOfIteration(numericalCalculation);
+    NRSolver->constructUnMatrix(Nodes);
+    NRSolver->constructLumpedMassExternalViscosityDtMatrix(Nodes,dt);
+    NRSolver->initialteUkMatrix();
+    while (!converged){
+        cout<<"iteration: "<<iteratorK<<endl;
+        resetForces(true);	//do reset packing forces
+        NRSolver->setMatricesToZeroInsideIteration();
+        //cout<<"after reset forces"<<endl;
+
+        if (numericalCalculation){
+            gsl_matrix_set_zero(NRSolver->Knumerical);
+            NRSolver->calculateDisplacementMatrix(dt);
+			//Trying to see the manual values:
+			resetForces(true); // reset the packing forces together with all the rest of the forces here
+			//No perturbation:
+			gsl_matrix* ge_noPerturb = gsl_matrix_calloc(dim*nNodes,1);
+			gsl_matrix* gvInternal_noPerturb = gsl_matrix_calloc(dim*nNodes,1);
+			NRSolver->calculateForcesAndJacobianMatrixNR(Nodes, Elements, dt, recordForcesOnFixedNodes, FixedNodeForces, outputFile);
+			NRSolver->writeForcesTogeAndgvInternal(Nodes, Elements, SystemForces);
+			gsl_matrix_memcpy(ge_noPerturb, NRSolver->ge);
+			gsl_matrix_memcpy(gvInternal_noPerturb, NRSolver->gvInternal);
+			//perturbation loop:
+			gsl_matrix* uk_original = gsl_matrix_calloc(dim*nNodes,1);
+			gsl_matrix_memcpy(uk_original,NRSolver->uk);
+			for (int i=0; i<nNodes; ++i){
+				for (int j=0; j<3; ++j){
+					resetForces(true); // reset the packing forces together with all the rest of the forces here
+					gsl_matrix_set(NRSolver->uk,i*3+j,0,gsl_matrix_get(NRSolver->uk,i*3+j,0)+1E-6);
+					NRSolver->calculateDisplacementMatrix(dt);
+					Nodes[i]->Position[j] += 1E-6;
+					updateElementPositions();
+					NRSolver->calculateForcesAndJacobianMatrixNR(Nodes, Elements, dt, recordForcesOnFixedNodes, FixedNodeForces, outputFile);
+					gsl_matrix* ge_withPerturb = gsl_matrix_calloc(dim*nNodes,1);
+					gsl_matrix* gvInternal_withPerturb = gsl_matrix_calloc(dim*nNodes,1);
+					NRSolver->writeForcesTogeAndgvInternal(Nodes, Elements, SystemForces);
+					gsl_matrix_memcpy(ge_withPerturb, NRSolver->ge);
+					gsl_matrix_memcpy(gvInternal_withPerturb, NRSolver->gvInternal);
+					//Calculate dg/dx:
+					gsl_matrix_sub(ge_withPerturb,ge_noPerturb);
+					gsl_matrix_sub(gvInternal_withPerturb,gvInternal_noPerturb);
+					gsl_matrix_scale(ge_withPerturb,1.0/1E-6);
+					gsl_matrix_scale(gvInternal_withPerturb,1.0/1E-6);
+					for (int k=0; k<nNodes*3; ++k){
+						double valueElastic =   0;//gsl_matrix_get(ge_withPerturb,k,0);
+						double valueViscous = 	gsl_matrix_get(gvInternal_withPerturb,k,0);
+						double value = valueElastic + valueViscous;
+						value *= -1.0;
+						gsl_matrix_set(NRSolver->K,i*3+j,k,value);
+					}
+					gsl_matrix_memcpy(NRSolver->uk,uk_original);
+					//gsl_matrix_set(uk,i*3+j,0,gsl_matrix_get(uk,i*3+j,0)-1E-6);
+					Nodes[i]->Position[j] -= 1E-6;
+					updateElementPositions();
+				}
+			}
+			NRSolver->calcutateFixedK(Nodes);
+			if (displayMAtricesDuringNumericalCalculation){
+				Elements[0]->displayMatrix(NRSolver->K,"numericalK");
+			}
+			gsl_matrix_memcpy(NRSolver->Knumerical,NRSolver->K);
+			NRSolver->setMatricesToZeroInsideIteration();
+
+        }//end OF NUMERICAL CALCULATION
+
+        NRSolver->calculateDisplacementMatrix(dt);
+		NRSolver->calculateForcesAndJacobianMatrixNR(Nodes, Elements, dt, recordForcesOnFixedNodes, FixedNodeForces, outputFile);
+		//Writing elastic Forces and elastic Ke:
+		NRSolver->writeForcesTogeAndgvInternal(Nodes, Elements, SystemForces);
+		NRSolver->writeImplicitElementalKToJacobian(Elements);
+		if (numericalCalculation){
+			NRSolver->calcutateFixedK(Nodes);
+			if(displayMAtricesDuringNumericalCalculation){
+				Elements[0]->displayMatrix(NRSolver->K,"normalK");
+			}
+		}
+		if (numericalCalculation){
+			gsl_matrix* Kdiff = gsl_matrix_calloc(dim*nNodes,dim*nNodes);
+			double d = 0;
+			for (int i=0; i<dim*nNodes; ++i){
+				for (int j=0; j<dim*nNodes; ++j){
+					double value = gsl_matrix_get(NRSolver->Knumerical,i,j) - gsl_matrix_get(NRSolver->K,i,j);
+					gsl_matrix_set(Kdiff,i,j,value);
+					d += value*value;
+				}
+			}
+			d = pow(d,0.5);
+			if(displayMAtricesDuringNumericalCalculation){
+				Elements[0]->displayMatrix(Kdiff,"differenceKMatrix");
+			}
+			cout<<"norm of difference between numerical and analytical K: "<<d<<endl;
+			if(useNumericalKIncalculation){
+				gsl_matrix_memcpy(NRSolver->K,NRSolver->Knumerical);
+			}
+		}
+
+		NRSolver->calculateExternalViscousForcesForNR();
+		NRSolver->addImplicitKViscousExternalToJacobian();
+        calculatePackingImplicit3D();
+        calculatePackingNumerical3D(NRSolver->K);
+        //Now I will check if there are any nodes with zero mass, then I will be able to fill in the zero K matrix with identity if necessary.
+        NRSolver->checkJacobianForAblatedNodes(AblatedNodes);
+        NRSolver->calculateSumOfInternalForces();
+		if (PipetteSuction && timestep >= PipetteInitialStep && timestep<PipetteEndStep){
+			packToPipetteWall();
+			calculateZProjectedAreas();
+			addPipetteForces(NRSolver->gExt);
+		}
+		addMyosinForces(NRSolver->gExt);
+		addPackingForces(NRSolver->gExt);
+		if (addingRandomForces){
+			addRandomForces(NRSolver->gExt);
+		}
+        NRSolver->addExernalForces();
+
+        checkForExperimentalSetupsWithinIteration();
+        NRSolver->calcutateFixedK(Nodes);
+        //cout<<"checking convergence with forces"<<endl;
+        //converged = NRSolver->checkConvergenceViaForce();
+        if (converged){
+            break;
+        }
+
+        //cout<<"solving for deltaU"<<endl;
+        NRSolver->solveForDeltaU();
+        //cout<<"checking convergence"<<endl;
+        converged = NRSolver->checkConvergenceViaDeltaU();
+        NRSolver->updateUkInIteration();
+        updateElementPositionsinNR(NRSolver->uk);
+        updateNodePositionsNR(NRSolver->uk);
+        iteratorK ++;
+        if (!converged && iteratorK > 20){
+            cerr<<"Error: did not converge!!!"<<endl;
+            converged = true;
+        }
+    }
+    checkForExperimentalSetupsAfterIteration();
+    //Now the calculation is converged, I update the node positions with the latest positions uk:
+    updateNodePositionsNR(NRSolver->uk);
+    //Element positions are already up to date.
+
+    cout<<"finished run one step"<<endl;
+}
+/*
+void Simulation::updateStepNR(){
+    int dim  = 3;
+    int iteratorK = 0;
+    bool converged = false;
     gsl_matrix* un = gsl_matrix_calloc(dim*nNodes,1);
     constructUnMatrix(un);
-    gsl_matrix* mviscdt = gsl_matrix_calloc(dim*nNodes,dim*nNodes);
-    constructLumpedMassExternalViscosityDtMatrix(mviscdt);
+    gsl_matrix* mvisc = gsl_matrix_calloc(dim*nNodes,dim*nNodes);
+    gsl_matrix* mviscPerDt = gsl_matrix_calloc(dim*nNodes,dim*nNodes);
+    constructLumpedMassExternalViscosityDtMatrix(mvisc,mviscPerDt);
     gsl_matrix* ge = gsl_matrix_calloc(dim*nNodes,1);
-    gsl_matrix* gv = gsl_matrix_calloc(dim*nNodes,1);
+    gsl_matrix* gvInternal = gsl_matrix_calloc(dim*nNodes,1);
+    gsl_matrix* gvExternal = gsl_matrix_calloc(dim*nNodes,1);
     gsl_matrix* gExt = gsl_matrix_calloc(dim*nNodes,1);
     gsl_vector* gSum = gsl_vector_calloc(dim*nNodes);
     gsl_matrix* uk = gsl_matrix_calloc(dim*nNodes,1);
+    gsl_matrix* displacementPerDt = gsl_matrix_calloc(dim*nNodes,1);
     gsl_vector* deltaU = gsl_vector_calloc(dim*nNodes);
     Elements[0]->createMatrixCopy(uk,un);
+    //gsl_matrix_set(uk,9,0,gsl_matrix_get(un,2,0)-10); //node 3_x
+    //gsl_matrix_set(uk,30,0,gsl_matrix_get(un,30,0)-10); //node 10_x
     gsl_matrix* K = gsl_matrix_calloc(dim*nNodes,dim*nNodes);
+    gsl_matrix* Knumerical = gsl_matrix_calloc(dim*nNodes,dim*nNodes);
+
     //Elements[0]->displayMatrix(mviscdt,"mviscdt");
     //cout<<" checking for Pipette forces: "<<PipetteSuction<<" Pipette time: "<<PipetteInitialStep<<" "<<PipetteEndStep<<" timestep "<<timestep<<endl;
     while (!converged){
@@ -3817,28 +4021,107 @@ void Simulation::updateStepNR(){
         resetForces(true);	//do reset packing forces
         //cout<<"after reset forces"<<endl;
         gsl_matrix_set_zero(ge);
-        gsl_matrix_set_zero(gv);
+        gsl_matrix_set_zero(gvInternal);
+        gsl_matrix_set_zero(gvExternal);
         gsl_matrix_set_zero(K);
         gsl_vector_set_zero(gSum);
 
-        calculateElasticForcesAndImplicitKelasticForNR();
-        //calculateImplucitKElasticNumerical(K, ge);
+        bool numericalCalculation = false;
+        bool displayMAtricesDuringNumericalCalculation = false;
+        bool useNumericalKIncalculation = false;
+        if (numericalCalculation){
+            gsl_matrix_set_zero(Knumerical);
+    		calculateDisplacementMatrix(uk,un,displacementPerDt);
+			//Trying to see the manual values:
+			resetForces(true); // reset the packing forces together with all the rest of the forces here
+			//No perturbation:
+			gsl_matrix* ge_noPerturb = gsl_matrix_calloc(dim*nNodes,1);
+			gsl_matrix* gvInternal_noPerturb = gsl_matrix_calloc(dim*nNodes,1);
+			calculateForcesAndJacobianMatrixNR(displacementPerDt);
+			writeForcesTogeAndgvInternal(ge_noPerturb,gvInternal_noPerturb);
+			//perturbation loop:
+			gsl_matrix* uk_original = gsl_matrix_calloc(dim*nNodes,1);
+			gsl_matrix_memcpy(uk_original,uk);
+			for (int i=0; i<nNodes; ++i){
+				for (int j=0; j<3; ++j){
+					resetForces(true); // reset the packing forces together with all the rest of the forces here
+					gsl_matrix_set(uk,i*3+j,0,gsl_matrix_get(uk,i*3+j,0)+1E-6);
+					calculateDisplacementMatrix(uk,un,displacementPerDt);
+					Nodes[i]->Position[j] += 1E-6;
+					updateElementPositions();
+					calculateForcesAndJacobianMatrixNR(displacementPerDt);
+					gsl_matrix* ge_withPerturb = gsl_matrix_calloc(dim*nNodes,1);
+					gsl_matrix* gvInternal_withPerturb = gsl_matrix_calloc(dim*nNodes,1);
+					writeForcesTogeAndgvInternal(ge_withPerturb,gvInternal_withPerturb);
+					//Elements[0]->displayMatrix(ge_withPerturb,"ge-withPerturbation");
+					//Elements[0]->displayMatrix(gvInternal_withPerturb,"gvInternal-withPerturbation");
+					//Calculate dg/dx:
+					gsl_matrix_sub(ge_withPerturb,ge_noPerturb);
+					gsl_matrix_sub(gvInternal_withPerturb,gvInternal_noPerturb);
+					gsl_matrix_scale(ge_withPerturb,1.0/1E-6);
+					gsl_matrix_scale(gvInternal_withPerturb,1.0/1E-6);
+					//Elements[0]->displayMatrix(ge_withPerturb,"dgedx");
+					//Elements[0]->displayMatrix(gvInternal_withPerturb,"dgvdx");
+					for (int k=0; k<nNodes*3; ++k){
+						double valueElastic =   0;//gsl_matrix_get(ge_withPerturb,k,0);
+						double valueViscous = 	gsl_matrix_get(gvInternal_withPerturb,k,0);
+						double value = valueElastic + valueViscous;
+						value *= -1.0;
+						gsl_matrix_set(K,i*3+j,k,value);
+					}
+					gsl_matrix_memcpy(uk,uk_original);
+					//gsl_matrix_set(uk,i*3+j,0,gsl_matrix_get(uk,i*3+j,0)-1E-6);
+					Nodes[i]->Position[j] -= 1E-6;
+					updateElementPositions();
+				}
+			}
+	        calcutateFixedK(K,gSum);
+			if (displayMAtricesDuringNumericalCalculation){
+				Elements[0]->displayMatrix(K,"numericalK");
+			}
+			gsl_matrix_memcpy(Knumerical,K);
+	        gsl_matrix_set_zero(ge);
+	        gsl_matrix_set_zero(gvInternal);
+	        gsl_matrix_set_zero(gvExternal);
+	        gsl_matrix_set_zero(K);
+	        gsl_vector_set_zero(gSum);
+        }//end OF NUMERICAL CALCULATION
+
+		calculateDisplacementMatrix(uk,un,displacementPerDt);
+        calculateForcesAndJacobianMatrixNR(displacementPerDt);
 
 		//Writing elastic Forces and elastic Ke:
-		writeElasticForcesToge(ge);
-		writeImplicitElementalKElasticToKe(K);
-
-        calculateViscousForcesForNR(gv,mviscdt,uk,un);
-        calculateImplucitKViscous(K,mviscdt);
-        //calculateImplucitKViscousNumerical(mviscdt,un,uk);
+		writeForcesTogeAndgvInternal(ge,gvInternal);
+		writeImplicitElementalKToJacobian(K);
+		if (numericalCalculation){
+			calcutateFixedK(K,gSum);
+			if(displayMAtricesDuringNumericalCalculation){
+				Elements[0]->displayMatrix(K,"normalK");
+			}
+		}
+		if (numericalCalculation){
+			gsl_matrix* Kdiff = gsl_matrix_calloc(dim*nNodes,dim*nNodes);
+			double d = 0;
+			for (int i=0; i<dim*nNodes; ++i){
+				for (int j=0; j<dim*nNodes; ++j){
+					double value = gsl_matrix_get(Knumerical,i,j) - gsl_matrix_get(K,i,j);
+					gsl_matrix_set(Kdiff,i,j,value);
+					d += value*value;
+				}
+			}
+			d = pow(d,0.5);
+			if(displayMAtricesDuringNumericalCalculation){
+				Elements[0]->displayMatrix(Kdiff,"differenceKMatrix");
+			}
+			cout<<"norm of difference between numerical and analytical K: "<<d<<endl;
+			if(useNumericalKIncalculation){
+				gsl_matrix_memcpy(K,Knumerical);
+			}
+		}
+        calculateExternalViscousForcesForNR(gvExternal,mvisc,displacementPerDt);
+        addImplicitKViscousExternalToJacobian(K,mviscPerDt);
         calculatePackingImplicit3D();
-        //cout<<"calculated implicit packing forces"<<endl;
         calculatePackingNumerical3D(K);
-        //cout<<"calculated numerival packing K"<<endl;
-        //calculatePackingK(K);
-        //cout<<" after packing"<<endl;
-
-
         //Now I will check if there are any nodes with zero mass, then I will be able to fill in the zero K matrix with identity if necessary.
         int nAblatedNode = AblatedNodes.size();
         for (int a = 0; a<nAblatedNode; ++a){
@@ -3851,7 +4134,7 @@ void Simulation::updateStepNR(){
         	}
         }
         for (int i=0; i<dim*nNodes; ++i){
-            gsl_vector_set(gSum,i,gsl_matrix_get(ge,i,0)+gsl_matrix_get(gv,i,0));
+            gsl_vector_set(gSum,i,gsl_matrix_get(ge,i,0)+gsl_matrix_get(gvInternal,i,0)+gsl_matrix_get(gvExternal,i,0));
         }
         gsl_matrix_set_zero(gExt);
 		if (PipetteSuction && timestep >= PipetteInitialStep && timestep<PipetteEndStep){
@@ -3859,145 +4142,56 @@ void Simulation::updateStepNR(){
 			calculateZProjectedAreas();
 			addPipetteForces(gExt);
 		}
-		//cout<<"after pipette"<<endl;
 		addMyosinForces(gExt);
-		//cout<<"after myosin"<<endl;
 		addPackingForces(gExt);
-		//cout<<"after packing forces addition"<<endl;
 		if (addingRandomForces){
 			addRandomForces(gExt);
 		}
 		//cout<<"after random forces addition"<<endl;
-	    //pushing node 78 down, node 216 up by 2000:
-		/*if (timestep ==0 ){
-			double zForce = gsl_matrix_get(gExt,3*78+2,0);
-			gsl_matrix_set(gExt,3*78+2,0,zForce - 2000.0);
-			zForce = gsl_matrix_get(gExt,3*216+2,0);
-			gsl_matrix_set(gExt,3*216+2,0,zForce + 2000.0);
-		}*/
         for (int i=0; i<dim*nNodes; ++i){
             gsl_vector_set(gSum,i,gsl_vector_get(gSum,i)+gsl_matrix_get(gExt,i,0));
         }
         checkForExperimentalSetupsWithinIteration();
-        //cout<<"after checkForExperimentalSetupsWithinIteration"<<endl;
-        //Adding external forces:
-        //double F = 5.509e+04 ;
-        double F = 0 ;
-        const int nNodesToPush = 1;
-        int NodesToPush[nNodesToPush] = {0};
-        int AxesToPush[nNodesToPush] = {2};
-        double ForceDir[nNodesToPush] = {-1};
-        for(int jj = 0; jj<nNodesToPush; ++jj){
-            double value = gsl_vector_get(gSum,NodesToPush[jj]*dim+AxesToPush[jj]);
-            value += F*ForceDir[jj];
-            gsl_vector_set(gSum,NodesToPush[jj]*dim+AxesToPush[jj],value);
-        }
-        //calculating external force with stress on node 0:
-        /*gsl_matrix* Externalstress = gsl_matrix_calloc(6,1);
-        gsl_matrix* ExternalNodalForces = gsl_matrix_calloc(3,1);
-        gsl_matrix_set(Externalstress,2,0,50.0);
-        Elements[0]->calculateForceFromStress(0, Externalstress, ExternalNodalForces);
-        for(int jj = 0; jj<nNodesToPush; ++jj){
-            for (int kk=0; kk<dim; ++kk){
-                double value = gsl_vector_get(gSum,NodesToPush[jj]*dim+kk);
-                value -= gsl_matrix_get(ExternalNodalForces,kk,0);
-                gsl_vector_set(gSum,NodesToPush[jj]*dim+kk,value);
-            }
-        }*/
-        //Finalised adding external forces
-        //cout<<"calculating fixed K"<<endl;
         calcutateFixedK(K,gSum);
-        /*gsl_vector* gtmp = gsl_vector_calloc(dim*nNodes);
-        for (int pp =0; pp<dim*nNodes; ++pp){
-        	gsl_vector_set(gtmp,pp,gsl_matrix_get(ge,pp,0));
-        }
-        double normge =  gsl_blas_dnrm2 (gtmp);
-        for (int pp =0; pp<dim*nNodes; ++pp){
-        	gsl_vector_set(gtmp,pp,gsl_matrix_get(gv,pp,0));
-        }
-        double normgv =  gsl_blas_dnrm2 (gtmp);
-        for (int pp =0; pp<dim*nNodes; ++pp){
-        	gsl_vector_set(gtmp,pp,gsl_matrix_get(gExt,pp,0));
-		}
-        double normgExt =  gsl_blas_dnrm2 (gtmp);
-        //cout<<"norms - ge: "<<normge<<" gv: "<<normgv<<" gExt: "<<normgExt<<endl;
-        */
-
         //cout<<"checking convergence with forces"<<endl;
         //converged = checkConvergenceViaForce(gSum);
         if (converged){
             break;
         }
-        //Elements[0]->displayMatrix(K,"K");
-        //Elements[0]->displayMatrix(ge,"ElasticForces");
-
-        //Elements[0]->displayMatrix(gv,"ViscousForces");
-        //for (int aa= 116; aa<120; ++aa){
-        //	cout<<"viscous forces on node: "<<aa<<" "<<gsl_matrix_get(gv, 3*aa,0)<<" "<<gsl_matrix_get(gv, 3*aa+1,0)<<" "<<gsl_matrix_get(gv, 3*aa+2,0)<<endl;
-        //	cout<<"elastic forces on node: "<<aa<<" "<<gsl_matrix_get(ge, 3*aa,0)<<" "<<gsl_matrix_get(ge, 3*aa+1,0)<<" "<<gsl_matrix_get(ge, 3*aa+2,0)<<endl;
-        //	cout<<"total forces on node  : "<<aa<<" "<<gsl_vector_get(gSum, 3*aa)<<" "<<gsl_vector_get(gSum, 3*aa+1)<<" "<<gsl_vector_get(gSum, 3*aa+2)<<endl;
-        //}
-        //Elements[0]->displayMatrix(gSum,"TotalForces");
-        //Elements[0]->displayMatrix(mviscdt,"mviscdt");
-        //Elements[0]->displayMatrix(un,"un");
-        //Elements[0]->displayMatrix(uk,"uk");
         //cout<<"solving for deltaU"<<endl;
         solveForDeltaU(K,gSum,deltaU);
         //cout<<"checking convergence"<<endl;
         converged = checkConvergenceViaDeltaU(deltaU);
-        /*if (converged){
-        	for (int nN =0; nN< Nodes.size(); nN++){
-        		if(Nodes[nN]->FixedPos[2]){
-        			outputFile<<"timestep: "<<timestep<<" node "<<nN<<" zForce: "<<gsl_vector_get(gSum, 3*nN+2)<<endl;
-        		}
-        	}
-        }*/
-        //Elements[0]->displayMatrix(deltaU,"deltaU");
         updateUkInNR(uk,deltaU);
         updateElementPositionsinNR(uk);
         updateNodePositionsNR(uk);
         iteratorK ++;
-        //Elements[0]->displayMatrix(deltaU,"MovementInIteration");
-        //Elements[0]->displayMatrix(uk,"newPosiitons");
-        if (iteratorK > 100){
+        if (!converged && iteratorK > 20){
             cerr<<"Error: did not converge!!!"<<endl;
             converged = true;
         }
-        //cout<<"Iteration" <<iteratorK-1<<" forces on Node[0] : "<<SystemForces[0][0]<<" "<<SystemForces[0][1]<<" "<<SystemForces[0][2]<<endl;
-        //if(nNodes>73){
-       // 	cout<<"Iteration" <<iteratorK-1<<" forces on Node[73]: "<<SystemForces[73][0]<<" "<<SystemForces[73][1]<<" "<<SystemForces[73][2]<<endl;
-       //     cout<<"Iteration" <<iteratorK-1<<" sum of forces     : "<<SystemForces[0][0]+SystemForces[73][0]<<" "<<SystemForces[0][1]+SystemForces[73][1]<<" "<<SystemForces[0][2]+SystemForces[73][2]<<endl;
-       // }
-       // else{
-       //     cout<<"Iteration" <<iteratorK-1<<" forces on Node[43]: "<<SystemForces[43][0]<<" "<<SystemForces[43][1]<<" "<<SystemForces[43][2]<<endl;
-       //     cout<<"Iteration" <<iteratorK-1<<" sum of forces     : "<<SystemForces[0][0]+SystemForces[43][0]<<" "<<SystemForces[0][1]+SystemForces[43][1]<<" "<<SystemForces[0][2]+SystemForces[43][2]<<endl;
-       // }s
     }
-   // cout<<"Final forces on Node[0]: "<<SystemForces[0][0]<<" "<<SystemForces[0][1]<<" "<<SystemForces[0][2]<<endl;
-   // if(nNodes>73){
-    //	cout<<"Final forces on Node[73]: "<<SystemForces[73][0]<<" "<<SystemForces[73][1]<<" "<<SystemForces[73][2]<<endl;
-   // }
-   // else{
-   //     cout<<"Final forces on Node[43]: "<<SystemForces[43][0]<<" "<<SystemForces[43][1]<<" "<<SystemForces[43][2]<<endl;
-   // }
-
 
     checkForExperimentalSetupsAfterIteration();
     //Now the calculation is converged, I update the node positions with the latest positions uk:
     updateNodePositionsNR(uk);
     //Element positions are already up to date.
     gsl_matrix_free(un);
-    gsl_matrix_free(mviscdt);
+    gsl_matrix_free(displacementPerDt);
+    gsl_matrix_free(mvisc);
+    gsl_matrix_free(mviscPerDt);
     gsl_matrix_free(ge);
-    gsl_matrix_free(gv);
+    gsl_matrix_free(gvInternal);
+    gsl_matrix_free(gvExternal);
     gsl_matrix_free(gExt);
     gsl_vector_free(gSum);
     gsl_matrix_free(uk);
     gsl_vector_free(deltaU);
     gsl_matrix_free(K);
+
     cout<<"finished run one step"<<endl;
 }
-
+*/
 void Simulation::calculateRandomForces(){
 	randomForces.empty();
 	randomForces=RandomGenerator::Obj().getNormRV( randomForceMean,randomForceVar, 3*nNodes );
@@ -4031,67 +4225,9 @@ void Simulation::addRandomForces(gsl_matrix* gExt){
 		}
 }
 /*
-void Simulation::calculateImplucitKElasticNumerical(gsl_matrix* K, gsl_matrix* geNoPerturbation){
-//This function is leftover from the days when every element would write onto ge directly,
-//It needs to be adapted for the bulk calculatio + writing into ge format, simple adaptation but not carried out as yet.
-
-    int dim = 3;
-    double perturbation = 1E-6;
-    gsl_matrix* KPerturbed = gsl_matrix_calloc(nNodes*dim,nNodes*dim);
-    gsl_matrix* geWithPerturbation = gsl_matrix_calloc(nNodes*dim,1);
-    gsl_matrix* geDiff = gsl_matrix_calloc(nNodes*dim,1);
-
-    for (int i =0 ; i<nNodes; i++){
-        for (int j=0; j<dim; j++){
-            gsl_matrix_set_zero(geWithPerturbation);
-            gsl_matrix_set_zero(geDiff);
-            resetForces(false);  //do not reset packing forces
-            Elements[0]->Positions[i][j] += perturbation;
-            calculateElasticForcesForNR(geWithPerturbation);
-            for(int k=0; k<nNodes*dim; ++k){
-                gsl_matrix_set(geDiff,k,0,gsl_matrix_get(geWithPerturbation,k,0));
-            }
-            gsl_matrix_sub(geDiff,geNoPerturbation);
-            for(int k=0; k<nNodes*dim; ++k){
-                double numericalValue = gsl_matrix_get(geNoPerturbation,k,0) - gsl_matrix_get(geWithPerturbation,k,0);
-                numericalValue /= perturbation;
-                gsl_matrix_set(KPerturbed,k,i*dim+j,numericalValue);
-            }
-            //cout<<"Perturbed node: "<<i<<" dimention: "<<j<<endl;
-            //Elements[0]->displayMatrix(geWithPerturbation,"geWithPerturbation");
-            //Elements[0]->displayMatrix(geNoPerturbation,"geNoPerturbation");
-            //Elements[0]->displayMatrix(geDiff,"geWith-NoPerturb");
-            Elements[0]->Positions[i][j] -= perturbation;
-        }
-    }
-    //Elements[0]->displayMatrix(KPerturbed,"KeNumerical");
-    //Elements[0]->displayMatrix(K,"KeAnalytical");
-
-    bool useNumericalK = true;
-    if (useNumericalK){
-        for (int i =0 ; i<nNodes*dim; i++){
-            for (int j =0 ; j<nNodes*dim; j++){
-                gsl_matrix_set(K,i, j, gsl_matrix_get(KPerturbed,i,j));
-            }
-        }
-    }
-    gsl_matrix_free(KPerturbed);
-    gsl_matrix_free(geWithPerturbation);
-    gsl_matrix_free(geDiff);
-}
-*/
 void Simulation::calcutateFixedK(gsl_matrix* K, gsl_vector* g){
     int dim = 3;
     int Ksize = K->size1;
-    //int nFixed = FixedNodes.size();
-    //Elements[0]->displayMatrix(K,"Kinitial");
-    //for (int iter = 0; iter<nFixed; ++iter){
-        //int i = FixedNodes[iter];
-        //bool Xfixed = true;
-        //bool Yfixed = true;
-        //bool Zfixed = true;
-        //if (iter == 1) { Yfixed = false;}
-        //if (iter == 2) { Xfixed = false;Yfixed = false;}
     for(int i=0; i<nNodes; i++){
         for (int j=0; j<dim; ++j){
             //if ( (Xfixed && j == 0) || (Yfixed && j == 1) || (Zfixed && j == 2) ){
@@ -4107,9 +4243,7 @@ void Simulation::calcutateFixedK(gsl_matrix* K, gsl_vector* g){
             }
         }
     }
-    //Elements[0]->displayMatrix(g,"gfixed");
-    //Elements[0]->displayMatrix(K,"Kfixed");
-}
+}*/
 
 void Simulation::updateNodePositionsNR(gsl_matrix* uk){
     int dim = 3;
@@ -4120,11 +4254,11 @@ void Simulation::updateNodePositionsNR(gsl_matrix* uk){
     }
     //cout<<"finised node pos update"<<endl;
 }
-
-void Simulation::calculateImplucitKViscous(gsl_matrix* K, gsl_matrix*  mviscdt){
-    gsl_matrix_add(K,mviscdt);
+/*
+void Simulation::addImplicitKViscousExternalToJacobian(gsl_matrix* K, gsl_matrix*  mviscPerDt){
+    gsl_matrix_add(K,mviscPerDt);
 }
-
+*/
 
 void Simulation::updateElementPositionsinNR(gsl_matrix* uk){
     int dim = 3;
@@ -4142,7 +4276,7 @@ void Simulation::updateElementPositionsinNR(gsl_matrix* uk){
         }
     }
 }
-
+/*
 void Simulation::updateUkInNR(gsl_matrix* uk, gsl_vector* deltaU){
     int n = uk->size1;
     for (int i=0; i<n;++i){
@@ -4152,7 +4286,8 @@ void Simulation::updateUkInNR(gsl_matrix* uk, gsl_vector* deltaU){
     //deltU for node 0 z: 0*3 + 3  = 3 -> index 2
     //deltaU for node 48 z: 43*3 +3 = 132 -> index 131
 }
-
+*/
+/*
 void Simulation::solveForDeltaU(gsl_matrix* K, gsl_vector* g, gsl_vector* deltaU){
     int dim = 3;
     const int nmult  = dim*nNodes;
@@ -4175,9 +4310,11 @@ void Simulation::solveForDeltaU(gsl_matrix* K, gsl_vector* g, gsl_vector* deltaU
     delete[] a;
     delete[] b;
 }
+*/
+/*
 
 #include <math.h>
-/* PARDISO prototype. */
+// PARDISO prototype.
 extern "C" void pardisoinit (void   *, int    *,   int *, int *, double *, int *);
 extern "C" void pardiso     (void   *, int    *,   int *, int *,    int *, int *, double *, int    *,    int *, int *,   int *, int *,   int *, double *, double *, int *, double *);
 extern "C" void pardiso_chkmatrix  (int *, int *, double *, int *, int *, int *);
@@ -4219,40 +4356,40 @@ int Simulation::solveWithPardiso(double* a, double*b, int* ia, int* ja, gsl_vect
 
     int    n = n_variables;
     int    nnz = ia[n];
-    int    mtype = 11;        /* Real symmetric matrix */
+    int    mtype = 11;        // Real unsymmetric matrix //
 
-    /* RHS and solution vectors. */
-    int      nrhs = 1;          /* Number of right hand sides. */
+    // RHS and solution vectors.
+    int      nrhs = 1;          // Number of right hand sides. //
     double   x[n_variables], diag[n_variables];
-    /* Internal solver memory pointer pt,                  */
-    /* 32-bit: int pt[64]; 64-bit: long int pt[64]         */
-    /* or void *pt[64] should be OK on both architectures  */
+    // Internal solver memory pointer pt,                  //
+    // 32-bit: int pt[64]; 64-bit: long int pt[64]         //
+    // or void *pt[64] should be OK on both architectures  //
     void    *pt[64];
 
-    /* Pardiso control parameters. */
+    // Pardiso control parameters. //
     int      iparm[64];
     double   dparm[64];
     int      maxfct, mnum, phase, error, msglvl, solver;
 
     iparm[60] = 1; //use in-core version when there is enough memory, use out of core version when not.
 
-    /* Number of processors. */
+    // Number of processors. //
     int      num_procs;
 
-    /* Auxiliary variables. */
+    // Auxiliary variables. //
     char    *var;
     int      i, k;
 
-    double   ddum;              /* Double dummy */
-    int      idum;              /* Integer dummy. */
+    double   ddum;              // Double dummy
+    int      idum;              // Integer dummy.
 
 
-/* -------------------------------------------------------------------- */
-/* ..  Setup Pardiso control parameters.                                */
-/* -------------------------------------------------------------------- */
+// -------------------------------------------------------------------- //
+// ..  Setup Pardiso control parameters.                                //
+// -------------------------------------------------------------------- //
 
     error = 0;
-    solver = 0; /* use sparse direct solver */
+    solver = 0; // use sparse direct solver
     pardisoinit (pt,  &mtype, &solver, iparm, dparm, &error);
 
     if (error != 0)
@@ -4268,7 +4405,7 @@ int Simulation::solveWithPardiso(double* a, double*b, int* ia, int* ja, gsl_vect
     else
         //printf("[PARDISO]: License check was successful ... \n");
 
-    /* Numbers of processors, value of OMP_NUM_THREADS */
+    // Numbers of processors, value of OMP_NUM_THREADS
     var = getenv("OMP_NUM_THREADS");
     if(var != NULL)
         sscanf( var, "%d", &num_procs );
@@ -4278,19 +4415,19 @@ int Simulation::solveWithPardiso(double* a, double*b, int* ia, int* ja, gsl_vect
     }
     iparm[2]  = num_procs;
 
-    maxfct = 1;		    /* Maximum number of numerical factorizations.  */
-    mnum   = 1;         /* Which factorization to use. */
+    maxfct = 1;		    // Maximum number of numerical factorizations.
+    mnum   = 1;         // Which factorization to use.
 
-    iparm[10] = 0; /* no scaling  */
-    iparm[12] = 0; /* no matching */
+    iparm[10] = 0; // no scaling
+    iparm[12] = 0; // no matching
 
-    msglvl = 0;         /* Print statistical information  */
-    error  = 0;         /* Initialize error flag */
+    msglvl = 0;         // Print statistical information
+    error  = 0;         // Initialize error flag
 
-/* -------------------------------------------------------------------- */
-/* ..  Convert matrix from 0-based C-notation to Fortran 1-based        */
-/*     notation.                                                        */
-/* -------------------------------------------------------------------- */
+// --------------------------------------------------------------------
+// ..  Convert matrix from 0-based C-notation to Fortran 1-based
+//     notation.
+// --------------------------------------------------------------------
     for (i = 0; i < n+1; i++) {
         ia[i] += 1;
     }
@@ -4298,11 +4435,11 @@ int Simulation::solveWithPardiso(double* a, double*b, int* ia, int* ja, gsl_vect
         ja[i] += 1;
     }
 
-/* -------------------------------------------------------------------- */
-/*  .. pardiso_chk_matrix(...)                                          */
-/*     Checks the consistency of the given matrix.                      */
-/*     Use this functionality only for debugging purposes               */
-/* -------------------------------------------------------------------- */
+// -------------------------------------------------------------------- /
+//  .. pardiso_chk_matrix(...)                                          /
+//     Checks the consistency of the given matrix.                      /
+//     Use this functionality only for debugging purposes               /
+// -------------------------------------------------------------------- /
     bool carryOutDebuggingChecks = false;
     if (carryOutDebuggingChecks){
         pardiso_chkmatrix  (&mtype, &n, a, ia, ja, &error);
@@ -4311,12 +4448,12 @@ int Simulation::solveWithPardiso(double* a, double*b, int* ia, int* ja, gsl_vect
             exit(1);
         }
     }
-/* -------------------------------------------------------------------- */
-/* ..  pardiso_chkvec(...)                                              */
-/*     Checks the given vectors for infinite and NaN values             */
-/*     Input parameters (see PARDISO user manual for a description):    */
-/*     Use this functionality only for debugging purposes               */
-/* -------------------------------------------------------------------- */
+// -------------------------------------------------------------------- /
+// ..  pardiso_chkvec(...)                                              /
+//     Checks the given vectors for infinite and NaN values             /
+//     Input parameters (see PARDISO user manual for a description):    /
+//     Use this functionality only for debugging purposes               /
+// -------------------------------------------------------------------- /
 
     if (carryOutDebuggingChecks){
         pardiso_chkvec (&n, &nrhs, b, &error);
@@ -4325,11 +4462,11 @@ int Simulation::solveWithPardiso(double* a, double*b, int* ia, int* ja, gsl_vect
             exit(1);
         }
     }
-/* -------------------------------------------------------------------- */
-/* .. pardiso_printstats(...)                                           */
-/*    prints information on the matrix to STDOUT.                       */
-/*    Use this functionality only for debugging purposes                */
-/* -------------------------------------------------------------------- */
+// -------------------------------------------------------------------- /
+// .. pardiso_printstats(...)                                           /
+//    prints information on the matrix to STDOUT.                       /
+//    Use this functionality only for debugging purposes                /
+// -------------------------------------------------------------------- /
     if (carryOutDebuggingChecks){
         pardiso_printstats (&mtype, &n, a, ia, ja, &nrhs, b, &error);
         if (error != 0) {
@@ -4337,10 +4474,10 @@ int Simulation::solveWithPardiso(double* a, double*b, int* ia, int* ja, gsl_vect
             exit(1);
         }
     }
-/* -------------------------------------------------------------------- */
-/* ..  Reordering and Symbolic Factorization.  This step also allocates */
-/*     all memory that is necessary for the factorization.              */
-/* -------------------------------------------------------------------- */
+// -------------------------------------------------------------------- /
+// ..  Reordering and Symbolic Factorization.  This step also allocates /
+//     all memory that is necessary for the factorization.              /
+// -------------------------------------------------------------------- /
     phase = 11;
     pardiso (pt, &maxfct, &mnum, &mtype, &phase,
              &n, a, ia, ja, &idum, &nrhs,
@@ -4354,11 +4491,11 @@ int Simulation::solveWithPardiso(double* a, double*b, int* ia, int* ja, gsl_vect
     //printf("\nNumber of nonzeros in factors  = %d", iparm[17]);
     //printf("\nNumber of factorization MFLOPS = %d", iparm[18]);
 
-/* -------------------------------------------------------------------- */
-/* ..  Numerical factorization.                                         */
-/* -------------------------------------------------------------------- */
+// -------------------------------------------------------------------- /
+// ..  Numerical factorization.                                         /
+// -------------------------------------------------------------------- /
     phase = 22;
-    iparm[32] = 1; /* compute determinant */
+//    iparm[32] = 1; // compute determinant
 
     pardiso (pt, &maxfct, &mnum, &mtype, &phase,
              &n, a, ia, ja, &idum, &nrhs,
@@ -4370,43 +4507,45 @@ int Simulation::solveWithPardiso(double* a, double*b, int* ia, int* ja, gsl_vect
     }
     //printf("\nFactorization completed ...\n ");
 
-/* -------------------------------------------------------------------- */
-/* ..  Back substitution and iterative refinement.                      */
-/* -------------------------------------------------------------------- */
-   /* phase = 33;
+// -------------------------------------------------------------------- //
+// ..  Back substitution and iterative refinement.                      //
+// -------------------------------------------------------------------- //
 
-    iparm[7] = 1;       // Max numbers of iterative refinement steps.
+// phase = 33;
+//
+//    iparm[7] = 1;       // Max numbers of iterative refinement steps.
+//
+//    pardiso (pt, &maxfct, &mnum, &mtype, &phase,
+//             &n, a, ia, ja, &idum, &nrhs,
+//             iparm, &msglvl, b, x, &error,  dparm);
+//
+//    if (error != 0) {
+//        printf("\nERROR during solution: %d", error);
+//        exit(3);
+//    }
+//    bool displayResult = false;
+//    if (displayResult){
+//        printf("\nSolve completed ... ");
+//        printf("\nThe solution of the system is: ");
+//        for (i = 0; i < n; i++) {
+//           printf("\n x [%d] = % f", i, x[i] );
+//        }
+//        printf ("\n");
+//    }
+//    //Write x into deltaU:
+//    for (int i=0; i<n_variables; ++i){
+//        gsl_vector_set(deltaU,i,x[i]);
+//   }
 
-    pardiso (pt, &maxfct, &mnum, &mtype, &phase,
-             &n, a, ia, ja, &idum, &nrhs,
-             iparm, &msglvl, b, x, &error,  dparm);
 
-    if (error != 0) {
-        printf("\nERROR during solution: %d", error);
-        exit(3);
-    }
-    bool displayResult = false;
-    if (displayResult){
-        printf("\nSolve completed ... ");
-        printf("\nThe solution of the system is: ");
-        for (i = 0; i < n; i++) {
-            printf("\n x [%d] = % f", i, x[i] );
-        }
-        printf ("\n");
-    }
-    //Write x into deltaU:
-    for (int i=0; i<n_variables; ++i){
-        gsl_vector_set(deltaU,i,x[i]);
-    }
-    */
-/* -------------------------------------------------------------------- */
-/* ..  Back substitution with tranposed matrix A^t x=b                  */
-/* -------------------------------------------------------------------- */
+// -------------------------------------------------------------------- /
+// ..  Back substitution with tranposed matrix A^t x=b                  /
+// -------------------------------------------------------------------- /
 
 	phase = 33;
-	//iparm[4]  = 61;	 /*changing the precision of convergence with pre-conditioning, not sure what it does, I added as trial, but did not change anything */
-	iparm[7]  = 1;       /* Max numbers of iterative refinement steps. */
-	iparm[11] = 1;       /* Solving with transpose matrix. */
+	//iparm[4]  = 61;	 //changing the precision of convergence with pre-conditioning, not sure what it does, I added as trial, but did not change anything
+	iparm[7]  = 1;       // Max numbers of iterative refinement steps.
+	iparm[11] = 1;       // Solving with transpose matrix.
 
 	pardiso (pt, &maxfct, &mnum, &mtype, &phase,
 			 &n, a, ia, ja, &idum, &nrhs,
@@ -4431,9 +4570,9 @@ int Simulation::solveWithPardiso(double* a, double*b, int* ia, int* ja, gsl_vect
         gsl_vector_set(deltaU,i,x[i]);
     }
 
-/* -------------------------------------------------------------------- */
-/* ..  Convert matrix back to 0-based C-notation.                       */
-/* -------------------------------------------------------------------- */
+// -------------------------------------------------------------------- /
+// ..  Convert matrix back to 0-based C-notation.                       /
+// -------------------------------------------------------------------- /
     for (i = 0; i < n+1; i++) {
         ia[i] -= 1;
     }
@@ -4441,17 +4580,18 @@ int Simulation::solveWithPardiso(double* a, double*b, int* ia, int* ja, gsl_vect
         ja[i] -= 1;
     }
 
-/* -------------------------------------------------------------------- */
-/* ..  Termination and release of memory.                               */
-/* -------------------------------------------------------------------- */
-    phase = -1;                 /* Release internal memory. */
+// -------------------------------------------------------------------- //
+// ..  Termination and release of memory.                               //
+// -------------------------------------------------------------------- //
+    phase = -1;                 // Release internal memory.
 
     pardiso (pt, &maxfct, &mnum, &mtype, &phase,
              &n, &ddum, ia, ja, &idum, &nrhs,
              iparm, &msglvl, &ddum, &ddum, &error,  dparm);
     return 0;
 }
-
+*/
+/*
 void Simulation::constructiaForPardiso(gsl_matrix* K, int* ia, const int nmult, vector<int> &ja_vec, vector<double> &a_vec){
     double negThreshold = -1E-13, posThreshold = 1E-13;
     //count how many elements there are on K matrix and fill up ia:
@@ -4474,6 +4614,8 @@ void Simulation::constructiaForPardiso(gsl_matrix* K, int* ia, const int nmult, 
     }
     ia[nmult] = counter;
 }
+*/
+/*
 void Simulation::writeKinPardisoFormat(const int nNonzero, vector<int> &ja_vec, vector<double> &a_vec, int* ja, double* a){
     //now filling up the int & double arrays for ja, a
     for (int i=0 ; i<nNonzero; ++i){
@@ -4481,12 +4623,14 @@ void Simulation::writeKinPardisoFormat(const int nNonzero, vector<int> &ja_vec, 
         a[i]  = a_vec [i];
     }
 }
-
+*/
+/*
 void Simulation::writeginPardisoFormat(gsl_vector* g, double* b, const int n){
     for (int i=0; i<n; ++i){
         b[i] = gsl_vector_get(g,i);
     }
 }
+*/
 void Simulation::calculatePackingImplicit3D(){
 	int n = pacingNodeCouples0.size();
 	for(int i = 0 ; i<n; ++i){
@@ -5540,10 +5684,8 @@ void Simulation::calculatePackingK(gsl_matrix* K){
 		 gsl_matrix_set(K,3*id0+2,3*id1+1,value);
 	}
 }
-
-void Simulation::calculateElasticForcesAndImplicitKelasticForNR(){
-	//calculateElasticForcesForNR(); 	//replaced by first part of for loop below
-    //calculateImplicitKElastic();		//replaced by second part of for loop below
+/*
+void Simulation::calculateForcesAndJacobianMatrixNR(gsl_matrix* displacementPerDt){
 //    omp_set_num_threads(4);
 //#pragma omp parallel for
 //    for (int a =0; a<2; ++a){
@@ -5557,16 +5699,18 @@ void Simulation::calculateElasticForcesAndImplicitKelasticForNR(){
     	//for(vector<ShapeBase*>::iterator  itElement=Elements.begin()+ initialpoint; itElement<Elements.begin()+breakpoint; ++itElement){
 			//int nThreads = omp_get_thread_num();
 			//cout<<" omp threads: "<<nThreads<<endl;
-			//replacing calculateElasticForcesForNR function, exactly the same content:
 			if (!(*itElement)->IsAblated){
-				(*itElement)->calculateForces(Nodes, recordForcesOnFixedNodes, FixedNodeForces, outputFile);
+				(*itElement)->calculateForces(Nodes, displacementPerDt, recordForcesOnFixedNodes, FixedNodeForces, outputFile);
 			}
 			//replacing calculateImplicitKElastic function, exactly the same content:
-			(*itElement)->calculateImplicitKElastic();
-	   }
+			(*itElement)->calculateImplicitKElastic(); //This is the stiffness matrix, elastic part of the jacobian matrix
+			(*itElement)->calculateImplicitKViscous(displacementPerDt, dt); //This is the viscous part of jacobian matrix
+		}
 //	}
 }
 
+*/
+/*
 void Simulation::calculateImplicitKElastic(){
     //cout<<"calculateImplicitKElastic for thw whole system"<<endl;
     for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
@@ -5576,60 +5720,51 @@ void Simulation::calculateImplicitKElastic(){
    //Elements[0]->displayMatrix(K,"KafterElastic");
    // Elements[0]->displayMatrix(K,"KafterFixingForSymmetry");
 }
-
-void Simulation::writeImplicitElementalKElasticToKe(gsl_matrix* K){
+*/
+/*
+void Simulation::writeImplicitElementalKToJacobian(gsl_matrix* K){
     //writing all elements K values into big K matrix:
     for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
     	//if element is ablated, current elemental K matrix will be identity
+    	//(*itElement)->writeKelasticToMainKatrix(K);
+    	//activate this for internal viscosity
+    	(*itElement)->writeKviscousToMainKatrix(K);
+    }
+    //Elements[0]->displayMatrix(K,"normalKonlyViscous");
+    for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+    	//if element is ablated, current elemental K matrix will be identity
     	(*itElement)->writeKelasticToMainKatrix(K);
+    	//activate this for internal viscosity
     }
 }
-
-
-void Simulation::calculateElasticForcesForNR(){
+*/
+/*
+void Simulation::writeForcesTogeAndgvInternal(gsl_matrix* ge, gsl_matrix* gvInternal){
     for(vector<ShapeBase*>::iterator  itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
         if (!(*itElement)->IsAblated){
-        	(*itElement)->calculateForces(Nodes, recordForcesOnFixedNodes, FixedNodeForces, outputFile);
+        	(*itElement)->writeInternalForcesTogeAndgv(ge,gvInternal,SystemForces,Nodes);
         }
     }
     //now all the forces are written on SysyemForces
-    //Now I will add the forces into ge, this step can be made faster by separating calculate forces function into two,
-    //and filling up either ge or System forces depending on the solution method:
-    /*for (int i = 0; i< nNodes; ++i){
-        for ( int j=0; j<3; j++){
-            gsl_matrix_set(ge, 3*i+j,0,SystemForces[i][j]);
-        }
-    }*/
-    //cout<<"finalised elastic force calculation of the system"<<endl;
 }
+*/
+/*
+void Simulation::calculateDisplacementMatrix(gsl_matrix* uk, gsl_matrix* un, gsl_matrix* displacementPerDt){
+	//Elements[0]->createMatrixCopy(displacementPerDt,uk);
+	gsl_matrix_memcpy(displacementPerDt,uk);
+	gsl_matrix_sub(displacementPerDt,un);
+	gsl_matrix_scale(displacementPerDt,1.0/dt);
 
-void Simulation::writeElasticForcesToge(gsl_matrix* ge){
-    for(vector<ShapeBase*>::iterator  itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-        if (!(*itElement)->IsAblated){
-        	(*itElement)->writeElasticForcesToge(ge,SystemForces,Nodes);
-        }
-    }
-    //now all the forces are written on SysyemForces
-    //Now I will add the forces into ge, this step can be made faster by separating calculate forces function into two,
-    //and filling up either ge or System forces depending on the solution method:
-    /*for (int i = 0; i< nNodes; ++i){
-        for ( int j=0; j<3; j++){
-            gsl_matrix_set(ge, 3*i+j,0,SystemForces[i][j]);
-        }
-    }*/
 }
-
-void Simulation::calculateViscousForcesForNR(gsl_matrix* gv, gsl_matrix* mviscdt, gsl_matrix* uk, gsl_matrix* un){
+*/
+void Simulation::calculateExternalViscousForcesForNR(gsl_matrix* gvExt, gsl_matrix* mvisc, gsl_matrix* displacementPerDt){
     //the mass is already updated for symmetricity boundary nodes, and the viscous forces will be calculated correctly,
 	//as mvisdt is already accounting for the doubling of mass
-	int dim  = 3;
-    gsl_matrix* displacement = gsl_matrix_calloc(dim*nNodes,1);
-    Elements[0]->createMatrixCopy(displacement,un);
-    gsl_matrix_sub(displacement,uk);
-    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, mviscdt, displacement,0.0, gv);
-    gsl_matrix_free(displacement);
+    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, mvisc, displacementPerDt,0.0, gvExt);
+    //added this line with sign change
+    gsl_matrix_scale(gvExt,-1.0);
 }
-
+/*
 void Simulation::constructUnMatrix(gsl_matrix* un){
     for (int i = 0; i<nNodes; ++i ){
         for (int j=0; j<3; ++j){
@@ -5637,18 +5772,22 @@ void Simulation::constructUnMatrix(gsl_matrix* un){
         }
     }
 }
-
-void Simulation::constructLumpedMassExternalViscosityDtMatrix(gsl_matrix* mviscdt){
+*/
+/*
+void Simulation::constructLumpedMassExternalViscosityDtMatrix(gsl_matrix* mvisc, gsl_matrix* mviscPerDt){
     for (int i = 0; i<nNodes; ++i ){
         //double matrixValue = Nodes[i]->mass*Nodes[i]->Viscosity / dt;
         for (int j=0; j<3; ++j){
-        	double matrixValue = Nodes[i]->mass*Nodes[i]->externalViscosity[j] / dt;
-            gsl_matrix_set(mviscdt,3*i+j,3*i+j,matrixValue);
+        	double matrixValue = Nodes[i]->mass*Nodes[i]->externalViscosity[j];
+            gsl_matrix_set(mvisc,3*i+j,3*i+j,matrixValue);
         }
         //cout<<" Node "<<i<<" - mass: "<<Nodes[i]->mass<<" visc: "<<Nodes[i]->Viscosity<<" matrixvalues: "<<gsl_matrix_get(mviscdt,3*i,3*i)<<" "<<gsl_matrix_get(mviscdt,3*i+1,3*i+1)<<" "<<gsl_matrix_get(mviscdt,3*i+2,3*i+2)<<endl;
     }
+    Elements[0]->createMatrixCopy(mviscPerDt,mvisc);
+    gsl_matrix_scale(mviscPerDt,1/dt);
 }
-
+*/
+/*
 bool Simulation::checkConvergenceViaDeltaU(gsl_vector* deltaU){
     bool converged = true;
     double Threshold = 1E-10;
@@ -5678,7 +5817,7 @@ bool Simulation::checkConvergenceViaForce(gsl_vector* gSum){
     return converged;
 }
 
-
+*/
 void Simulation::processDisplayDataAndSave(){
     //if (displayIsOn && !DisplaySave){
         //The simulation is not displaying a saved setup, it is running and displaying

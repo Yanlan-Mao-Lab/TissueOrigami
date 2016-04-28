@@ -20,7 +20,7 @@ protected:
     void setShapeFunctionDerivativeStack(gsl_matrix* ShapeFuncDer, gsl_matrix* ShapeFuncDerStack);
 	void setCoeffMat();
 	void calculateCurrk(boost::numeric::ublas::matrix<double> &currk, boost::numeric::ublas::matrix<double> &currB, boost::numeric::ublas::matrix<double>& currBE, boost::numeric::ublas::matrix<double> &currBo, double eta, double zeta, double nu);
-    void calculateCurrNodalForces(gsl_matrix *gslcurrg, gsl_matrix *gslcurrF, int pointNo);
+    void calculateCurrNodalForces(gsl_matrix *gslcurrge, gsl_matrix *gslcurrgv, gsl_matrix *gslcurrF, gsl_matrix* displacementPerDt, int pointNo);
     void calculateCurrTriPointFForRotation(gsl_matrix *currF,int pointNo);
     void calculateNormalToBottom();
 	void calculateReferenceNormalToBottom();

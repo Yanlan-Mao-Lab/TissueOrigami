@@ -154,15 +154,18 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>IsThisNodeMyBasal</b>
 <tr class="memitem:a91d08cfcf6bf111f5d9e314499bafd11"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a91d08cfcf6bf111f5d9e314499bafd11"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>getElementHeight</b> ()</td></tr>
 <tr class="separator:a91d08cfcf6bf111f5d9e314499bafd11"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a37ba7c6f45d6b5abbfb0923c0cc72fa9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a37ba7c6f45d6b5abbfb0923c0cc72fa9"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>AddPackingToSurface</b> (int tissueplacement, double Fx, double Fy, double Fz, double **SystemForces, double **PackingForces, vector&lt; <a class="el" href="classNode.html">Node</a> * &gt; &amp;Nodes)</td></tr>
-<tr class="separator:a37ba7c6f45d6b5abbfb0923c0cc72fa9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a523002e7e6487db1a4506b2f0b2b4e04"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a523002e7e6487db1a4506b2f0b2b4e04"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>IsPointCloseEnoughForPacking</b> (double *Pos, float Peripodialthreshold, float Columnarthreshold, int TissuePlacementOfPackingNode, int TissueTypeOfPackingNode)</td></tr>
-<tr class="separator:a523002e7e6487db1a4506b2f0b2b4e04"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adaa9ffb371d07e063e1b280d959a9fe6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adaa9ffb371d07e063e1b280d959a9fe6"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateNormalForPacking</b> (int tissuePlacement)</td></tr>
-<tr class="separator:adaa9ffb371d07e063e1b280d959a9fe6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aea2d84b05534bb2aedcdb49a53eab1ae"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aea2d84b05534bb2aedcdb49a53eab1ae"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>AddPackingToSurface</b> (int tissueplacementOfPackingNode, double Fx, double Fy, double Fz, double **PackingForces, vector&lt; <a class="el" href="classNode.html">Node</a> * &gt; &amp;Nodes, bool &amp;allCornersFixedX, bool &amp;allCornersFixedY, bool &amp;allCornersFixedZ)</td></tr>
+<tr class="separator:aea2d84b05534bb2aedcdb49a53eab1ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa153c49304a9d808af5ea65a40f89128"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa153c49304a9d808af5ea65a40f89128"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>getRelevantNodesForPacking</b> (int TissuePlacementOfPackingNode, int TissueTypeOfPackingNode, int &amp;id1, int &amp;id2, int &amp;id3)</td></tr>
+<tr class="separator:aa153c49304a9d808af5ea65a40f89128"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a45363ee4cc0dddd82ef567846a6bf123"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a45363ee4cc0dddd82ef567846a6bf123"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>IsPointCloseEnoughForPacking</b> (double *Pos, float threshold, int TissuePlacementOfPackingNode, int TissueTypeOfPackingNode)</td></tr>
+<tr class="separator:a45363ee4cc0dddd82ef567846a6bf123"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acb1603367b049392cebfc20b3aaeab87"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acb1603367b049392cebfc20b3aaeab87"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateNormalForPacking</b> (int tissuePlacementOfNormal)</td></tr>
+<tr class="separator:acb1603367b049392cebfc20b3aaeab87"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a67e80515fb1cdf4438b4b7d47334bd2e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a67e80515fb1cdf4438b4b7d47334bd2e"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateApicalArea</b> ()</td></tr>
 <tr class="separator:a67e80515fb1cdf4438b4b7d47334bd2e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -203,6 +206,9 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>getNodeNumber</b> ()</
 <tr class="memitem:a55c283eaee304f9056089987e9b65012 inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a55c283eaee304f9056089987e9b65012"></a>
 int *&#160;</td><td class="memItemRight" valign="bottom"><b>getNodeIds</b> ()</td></tr>
 <tr class="separator:a55c283eaee304f9056089987e9b65012 inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a586ebd517ab4b08eab7685b3c004b800 inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a586ebd517ab4b08eab7685b3c004b800"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>getNodeId</b> (int i)</td></tr>
+<tr class="separator:a586ebd517ab4b08eab7685b3c004b800 inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad60d92b34044153a677a8bfc0a31a5df inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad60d92b34044153a677a8bfc0a31a5df"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>getDim</b> ()</td></tr>
 <tr class="separator:ad60d92b34044153a677a8bfc0a31a5df inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -218,9 +224,12 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>getPeripodialness</
 <tr class="memitem:a44c758ac93865a1e51e63212ebfe2787 inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a44c758ac93865a1e51e63212ebfe2787"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>getColumnarness</b> ()</td></tr>
 <tr class="separator:a44c758ac93865a1e51e63212ebfe2787 inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad88d175251a7604ed47e2b694f111c47 inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad88d175251a7604ed47e2b694f111c47"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>getRelativePositionInTissueInGridIndex</b> (int nGridX, int nGridY, double *columnarReletivePos, double *peripodialRelativePos, int &amp;columnarIndexX, int &amp;peripodialIndexX, int &amp;columnarIndexY, int &amp;peripodialIndexY, double &amp;columnarFracX, double &amp;peripodialFracX, double &amp;columnarFracY, double &amp;peripodialFracY)</td></tr>
-<tr class="separator:ad88d175251a7604ed47e2b694f111c47 inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a13cf955dcc9db425c762053468578d72 inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a13cf955dcc9db425c762053468578d72"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>getRelativePositionInTissueInGridIndex</b> (int nGridX, int nGridY, int &amp;IndexX, int &amp;IndexY, double &amp;FracX, double &amp;FracY)</td></tr>
+<tr class="separator:a13cf955dcc9db425c762053468578d72 inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2e91ece1ff8f6cfa8d8c495a3afc59c5 inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2e91ece1ff8f6cfa8d8c495a3afc59c5"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>getInitialRelativePositionInTissueInGridIndex</b> (int nGridX, int nGridY, int &amp;IndexX, int &amp;IndexY, double &amp;FracX, double &amp;FracY)</td></tr>
+<tr class="separator:a2e91ece1ff8f6cfa8d8c495a3afc59c5 inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7c429bc57f1b16e3e1d4f2bb98360298 inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7c429bc57f1b16e3e1d4f2bb98360298"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>isGrowthRateApplicable</b> (int sourceTissue, double &amp;weight)</td></tr>
 <tr class="separator:a7c429bc57f1b16e3e1d4f2bb98360298 inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -233,18 +242,21 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateFgFromGridCo
 <tr class="memitem:a009b5aed1c546db5e517f9f33f67b066 inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a009b5aed1c546db5e517f9f33f67b066"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>updateGrowthIncrement</b> (gsl_matrix *columnar, gsl_matrix *peripodial)</td></tr>
 <tr class="separator:a009b5aed1c546db5e517f9f33f67b066 inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3d71461730bfc221c8dcf8e4a7e31b3d inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3d71461730bfc221c8dcf8e4a7e31b3d"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateRelativePosInBoundingBox</b> (double columnarBoundingBoxXMin, double columnarBoundingBoxYMin, double columnarBoundingBoxLength, double columnarBoundingBoxWidth, double peipodialBoundingBoxXMin, double peipodialBoundingBoxYMin, double peipodialBoundingBoxLength, double peipodialBoundingBoxWidth)</td></tr>
-<tr class="separator:a3d71461730bfc221c8dcf8e4a7e31b3d inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a04278729ad9cc3238b1966ade0685a3d inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a04278729ad9cc3238b1966ade0685a3d"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateRelativePosInBoundingBox</b> (double boundingBoxXMin, double boundingBoxYMin, double boundingBoxLength, double boundingBoxWidth)</td></tr>
+<tr class="separator:a04278729ad9cc3238b1966ade0685a3d inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae5e17514271f121498ed12cebae3aebe inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae5e17514271f121498ed12cebae3aebe"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>displayRelativePosInBoundingBox</b> ()</td></tr>
 <tr class="separator:ae5e17514271f121498ed12cebae3aebe inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa741d2a88ca8107af26816e467adc8ba inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa741d2a88ca8107af26816e467adc8ba"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>getRelativePosInColumnarBoundingBox</b> (double *relativePos)</td></tr>
-<tr class="separator:aa741d2a88ca8107af26816e467adc8ba inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1c8199f314d271da360831d797f7c070 inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1c8199f314d271da360831d797f7c070"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>getRelativePosInPeripodialBoundingBox</b> (double *relativePos)</td></tr>
-<tr class="separator:a1c8199f314d271da360831d797f7c070 inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0d33afa938cd84b1376806a06769f6b9 inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0d33afa938cd84b1376806a06769f6b9"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>getRelativePosInBoundingBox</b> (double *relativePos)</td></tr>
+<tr class="separator:a0d33afa938cd84b1376806a06769f6b9 inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8c7a7578407be503531bf14af6d004d1 inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8c7a7578407be503531bf14af6d004d1"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>setInitialRelativePosInBoundingBox</b> ()</td></tr>
+<tr class="separator:a8c7a7578407be503531bf14af6d004d1 inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af2e6905d811de3ca73c0971b3fd21225 inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af2e6905d811de3ca73c0971b3fd21225"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>getInitialRelativePosInBoundingBox</b> (double *relativePos)</td></tr>
+<tr class="separator:af2e6905d811de3ca73c0971b3fd21225 inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad34b6e8535ad7a534110f03792f5f5d1 inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad34b6e8535ad7a534110f03792f5f5d1"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>convertRelativePosToGridIndex</b> (double *relpos, int &amp;indexX, int &amp;indexY, double &amp;fracX, double &amp;fracY, int nGridX, int nGridY)</td></tr>
 <tr class="separator:ad34b6e8535ad7a534110f03792f5f5d1 inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -257,6 +269,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>getNodeBasedPysProp</
 <tr class="memitem:abff91451c3465778ed89624d6196f7f6 inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abff91451c3465778ed89624d6196f7f6"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>getPysProp</b> (int type, float &amp;PysPropMag, double dt)</td></tr>
 <tr class="separator:abff91451c3465778ed89624d6196f7f6 inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a51bc2c7303dfaae0687d1d785b077e81 inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a51bc2c7303dfaae0687d1d785b077e81"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>getInternalViscosity</b> ()</td></tr>
+<tr class="separator:a51bc2c7303dfaae0687d1d785b077e81 inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ade96ff86461eaabce716e83fa68bfa19 inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ade96ff86461eaabce716e83fa68bfa19"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>getYoungModulus</b> ()</td></tr>
 <tr class="separator:ade96ff86461eaabce716e83fa68bfa19 inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -299,6 +314,12 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setFg</b> (gsl_matrix
 <tr class="memitem:a38a100fb162232636bf666eb1603f023 inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a38a100fb162232636bf666eb1603f023"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>setGrowthWeightsViaTissuePlacement</b> (double periWeight)</td></tr>
 <tr class="separator:a38a100fb162232636bf666eb1603f023 inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac4e051a82edb9b987edfbd783076e348 inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac4e051a82edb9b987edfbd783076e348"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>setViscosity</b> (double viscosityApical, double viscosityBasal, double viscosityMid)</td></tr>
+<tr class="separator:ac4e051a82edb9b987edfbd783076e348 inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8b6ffc8d699795e4efb867efd065a679 inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8b6ffc8d699795e4efb867efd065a679"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>setViscosity</b> (double viscosityApical, double viscosityBasal)</td></tr>
+<tr class="separator:a8b6ffc8d699795e4efb867efd065a679 inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac2c05f660fb3d68482c8ba751b68b2ed inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac2c05f660fb3d68482c8ba751b68b2ed"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateCurrentGrowthIncrement</b> (gsl_matrix *resultingGrowthIncrement, double dt, double growthx, double growthy, double growthz, gsl_matrix *ShearAngleRotationMatrix)</td></tr>
 <tr class="separator:ac2c05f660fb3d68482c8ba751b68b2ed inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -308,15 +329,27 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>updateShapeChangeRate
 <tr class="memitem:a1162e815f80b1b9d58c69df731702ecb inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1162e815f80b1b9d58c69df731702ecb"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateReferenceStiffnessMatrix</b> ()</td></tr>
 <tr class="separator:a1162e815f80b1b9d58c69df731702ecb inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a075abfd176f835cf41b581f34682785f inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a075abfd176f835cf41b581f34682785f"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateForces</b> (double **SystemForces, vector&lt; <a class="el" href="classNode.html">Node</a> * &gt; &amp;Nodes, bool recordForcesOnFixedNodes, double **FixedNodeForces, ofstream &amp;outputFile)</td></tr>
-<tr class="separator:a075abfd176f835cf41b581f34682785f inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0f3186b2f1bfd0c1f012f4cede1074d6 inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0f3186b2f1bfd0c1f012f4cede1074d6"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>writeInternalForcesTogeAndgv</b> (gsl_matrix *ge, gsl_matrix *gvInternal, double **SystemForces, vector&lt; <a class="el" href="classNode.html">Node</a> * &gt; &amp;Nodes)</td></tr>
+<tr class="separator:a0f3186b2f1bfd0c1f012f4cede1074d6 inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aca8440ce5566af0d0a6a6d981e9784cc inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aca8440ce5566af0d0a6a6d981e9784cc"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateForces</b> (vector&lt; <a class="el" href="classNode.html">Node</a> * &gt; &amp;Nodes, gsl_matrix *displacementPerDt, bool recordForcesOnFixedNodes, double **FixedNodeForces, ofstream &amp;outputFile)</td></tr>
+<tr class="separator:aca8440ce5566af0d0a6a6d981e9784cc inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a990c3d93836d53687b8af49a489dbde4 inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a990c3d93836d53687b8af49a489dbde4"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>updatePositions</b> (vector&lt; <a class="el" href="classNode.html">Node</a> * &gt; &amp;Nodes)</td></tr>
 <tr class="separator:a990c3d93836d53687b8af49a489dbde4 inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a360757aa3950487361874725c1e5ed9e inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a360757aa3950487361874725c1e5ed9e"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>setGrowthRate</b> (double dt, double x, double y, double z)</td></tr>
-<tr class="separator:a360757aa3950487361874725c1e5ed9e inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a67c28a77c275496eaecc88005e097819 inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a67c28a77c275496eaecc88005e097819"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>updateReferencePositionsToCurentShape</b> ()</td></tr>
+<tr class="separator:a67c28a77c275496eaecc88005e097819 inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac06c53088788e3c1461233623f506dbb inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac06c53088788e3c1461233623f506dbb"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>setGrowthRate</b> (double dt, double rx, double ry, double rz)</td></tr>
+<tr class="separator:ac06c53088788e3c1461233623f506dbb inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad463361e0b893ceee62a5c65c4c0e0f6 inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad463361e0b893ceee62a5c65c4c0e0f6"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>setGrowthRateExpFromInput</b> (double x, double y, double z)</td></tr>
+<tr class="separator:ad463361e0b893ceee62a5c65c4c0e0f6 inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad7d7957431a1ae402347efb03ad94d0e inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad7d7957431a1ae402347efb03ad94d0e"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>updateGrowthIncrementFromRate</b> ()</td></tr>
+<tr class="separator:ad7d7957431a1ae402347efb03ad94d0e inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aaf8312bb00ea6178abd9ebb1e8f40099 inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aaf8312bb00ea6178abd9ebb1e8f40099"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>cleanMyosinForce</b> ()</td></tr>
 <tr class="separator:aaf8312bb00ea6178abd9ebb1e8f40099 inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -326,9 +359,24 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>updateUniformEquilibr
 <tr class="memitem:a6e4cc22d01118cf2dcb77276b56edf9d inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6e4cc22d01118cf2dcb77276b56edf9d"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>updateUnipolarEquilibriumMyosinConcentration</b> (bool isApical, double cEqUnipolar, double orientationX, double orientationY)</td></tr>
 <tr class="separator:a6e4cc22d01118cf2dcb77276b56edf9d inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac39db6987b89791e7a0dad1c9f3540f2 inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac39db6987b89791e7a0dad1c9f3540f2"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>updateMyosinConcentration</b> (double dt, double kMyo)</td></tr>
-<tr class="separator:ac39db6987b89791e7a0dad1c9f3540f2 inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae141d5296b5b4ce7ca59b8c217ef2947 inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae141d5296b5b4ce7ca59b8c217ef2947"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>adjustCMyosinFromSave</b> ()</td></tr>
+<tr class="separator:ae141d5296b5b4ce7ca59b8c217ef2947 inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa5af6d7dda5ce1f12bf644d06b1f151c inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa5af6d7dda5ce1f12bf644d06b1f151c"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>updateMyosinConcentration</b> (double dt, double kMyo, bool thereIsMyosinFeedback, double MyosinFeedbackCap)</td></tr>
+<tr class="separator:aa5af6d7dda5ce1f12bf644d06b1f151c inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a52c8bd76ad2d14cab37563fcdeff1b20 inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a52c8bd76ad2d14cab37563fcdeff1b20"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>calculatePrincipalStrainAxesOnXYPlane</b> (double &amp;e1, double &amp;e2, double &amp;tet)</td></tr>
+<tr class="separator:a52c8bd76ad2d14cab37563fcdeff1b20 inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6d50f91e2e243539cfa67b8c0f28612e inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6d50f91e2e243539cfa67b8c0f28612e"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>updateEquilibriumMyoWithFeedbackFromZero</b> (double MyosinFeedbackCap)</td></tr>
+<tr class="separator:a6d50f91e2e243539cfa67b8c0f28612e inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a842a99fa11e8bd7293644ccb0b99ba3a inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a842a99fa11e8bd7293644ccb0b99ba3a"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>updateEquilibriumMyoWithFeedbackFromFixedTotal</b> (double totalMyosinLevel)</td></tr>
+<tr class="separator:a842a99fa11e8bd7293644ccb0b99ba3a inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a61b4685d3e89fae029b56ca3f81fb5d6 inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a61b4685d3e89fae029b56ca3f81fb5d6"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>checkIfXYPlaneStrainAboveThreshold</b> (double thres)</td></tr>
+<tr class="separator:a61b4685d3e89fae029b56ca3f81fb5d6 inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abfb5933433de7f4f6c58734be0faeac2 inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abfb5933433de7f4f6c58734be0faeac2"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>calculateIfInsideActiveStripe</b> (double initialPoint, double endPoint, double stripeSize1, double stripeSize2)</td></tr>
 <tr class="separator:abfb5933433de7f4f6c58734be0faeac2 inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -371,12 +419,18 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>convertPlasticStrainT
 <tr class="memitem:a3c08833714950163efbf15f9b1c26765 inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3c08833714950163efbf15f9b1c26765"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>resetCurrStepShapeChangeData</b> ()</td></tr>
 <tr class="separator:a3c08833714950163efbf15f9b1c26765 inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af6cd6e943b529eca33c92723893bf991 inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af6cd6e943b529eca33c92723893bf991"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>writeKelasticToMainKatrix</b> (gsl_matrix *Ke)</td></tr>
-<tr class="separator:af6cd6e943b529eca33c92723893bf991 inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2bfdde187477364a5a0e2220ea6b2e0e inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2bfdde187477364a5a0e2220ea6b2e0e"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>writeKelasticToMainKatrix</b> (gsl_matrix *K)</td></tr>
+<tr class="separator:a2bfdde187477364a5a0e2220ea6b2e0e inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a388d38c2d6588c7ddf622f1deed53853 inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a388d38c2d6588c7ddf622f1deed53853"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>writeKviscousToMainKatrix</b> (gsl_matrix *K)</td></tr>
+<tr class="separator:a388d38c2d6588c7ddf622f1deed53853 inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a922c41864d4826725cc72089046f818c inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a922c41864d4826725cc72089046f818c"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateImplicitKElastic</b> ()</td></tr>
 <tr class="separator:a922c41864d4826725cc72089046f818c inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac239aba1d2778cd3353bdab964396de8 inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac239aba1d2778cd3353bdab964396de8"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateImplicitKViscous</b> (double dt)</td></tr>
+<tr class="separator:ac239aba1d2778cd3353bdab964396de8 inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6a9f16ddb320974584323d78ca4aec9c inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6a9f16ddb320974584323d78ca4aec9c"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateForceFromStress</b> (int nodeId, gsl_matrix *Externalstress, gsl_matrix *ExternalNodalForces)</td></tr>
 <tr class="separator:a6a9f16ddb320974584323d78ca4aec9c inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -451,6 +505,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>growShapeByFg</b> (do
 <tr class="separator:aa83e1b27ea3a67b958afd06f9095e0de inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5409de18ee9e47af0bb977f4a1e608fb inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#a5409de18ee9e47af0bb977f4a1e608fb">changeShapeByFsc</a> (double dt)</td></tr>
 <tr class="separator:a5409de18ee9e47af0bb977f4a1e608fb inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a35681881a6597bb1c0788ec219a77282 inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a35681881a6597bb1c0788ec219a77282"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>calculatePlasticDeformation</b> (bool volumeConserved, double rate)</td></tr>
+<tr class="separator:a35681881a6597bb1c0788ec219a77282 inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4d7bfb4ed03b7633e02e753a485fbf01 inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4d7bfb4ed03b7633e02e753a485fbf01"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>checkPackingToThisNodeViaState</b> (int ColumnarLayerDiscretisationLAyers, <a class="el" href="classNode.html">Node</a> *NodePointer)</td></tr>
 <tr class="separator:a4d7bfb4ed03b7633e02e753a485fbf01 inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -499,6 +556,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>fillNodeNeighbourhood
 <tr class="memitem:a3a3490f8a96e14e59b82f4de24ce48e2 inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3a3490f8a96e14e59b82f4de24ce48e2"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>checkDisplayClipping</b> (double xClip, double yClip, double zClip)</td></tr>
 <tr class="separator:a3a3490f8a96e14e59b82f4de24ce48e2 inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6b58642f88a23bd984d7af48cbd4f95a inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6b58642f88a23bd984d7af48cbd4f95a"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>dotProduct3D</b> (double *u, double *v)</td></tr>
+<tr class="separator:a6b58642f88a23bd984d7af48cbd4f95a inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab5c4c774227af1d446f80c0ef58044c9 inherit pub_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab5c4c774227af1d446f80c0ef58044c9"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>crossProduct3D</b> (double *u, double *v, double *cross)</td></tr>
 <tr class="separator:ab5c4c774227af1d446f80c0ef58044c9 inherit pub_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -538,8 +598,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setCoeffMat</b> ()</t
 <tr class="memitem:aa433244f86cdf23a611a1adc3391c3f0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa433244f86cdf23a611a1adc3391c3f0"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateCurrk</b> (boost::numeric::ublas::matrix&lt; double &gt; &amp;currk, boost::numeric::ublas::matrix&lt; double &gt; &amp;currB, boost::numeric::ublas::matrix&lt; double &gt; &amp;currBE, boost::numeric::ublas::matrix&lt; double &gt; &amp;currBo, double eta, double zeta, double nu)</td></tr>
 <tr class="separator:aa433244f86cdf23a611a1adc3391c3f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aea47379b3064d866f93508a9337d8f12"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPrism.html#aea47379b3064d866f93508a9337d8f12">calculateCurrNodalForces</a> (gsl_matrix *gslcurrg, gsl_matrix *gslcurrF, int pointNo)</td></tr>
-<tr class="separator:aea47379b3064d866f93508a9337d8f12"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a606fbf422f9d652e0f697ea93dc2e088"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classPrism.html#a606fbf422f9d652e0f697ea93dc2e088">calculateCurrNodalForces</a> (gsl_matrix *gslcurrge, gsl_matrix *gslcurrgv, gsl_matrix *gslcurrF, gsl_matrix *displacementPerDt, int pointNo)</td></tr>
+<tr class="separator:a606fbf422f9d652e0f697ea93dc2e088"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae9403142a217a005a4d588a6e472be27"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae9403142a217a005a4d588a6e472be27"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateCurrTriPointFForRotation</b> (gsl_matrix *currF, int pointNo)</td></tr>
 <tr class="separator:ae9403142a217a005a4d588a6e472be27"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -613,9 +673,6 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>InvertMatrix</b> (gsl
 <tr class="memitem:a82fc62813dedf48bf3074206a26c3dfd inherit pro_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a82fc62813dedf48bf3074206a26c3dfd"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>determinant_sign</b> (boost::numeric::ublas::permutation_matrix&lt; std::size_t &gt; &amp;pm)</td></tr>
 <tr class="separator:a82fc62813dedf48bf3074206a26c3dfd inherit pro_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6b58642f88a23bd984d7af48cbd4f95a inherit pro_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6b58642f88a23bd984d7af48cbd4f95a"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>dotProduct3D</b> (double *u, double *v)</td></tr>
-<tr class="separator:a6b58642f88a23bd984d7af48cbd4f95a inherit pro_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac4c46ba7c9b89a208fafb419097494a5 inherit pro_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac4c46ba7c9b89a208fafb419097494a5"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>updateNodeIdsFromSave</b> (ifstream &amp;file)</td></tr>
 <tr class="separator:ac4c46ba7c9b89a208fafb419097494a5 inherit pro_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -625,18 +682,27 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>updateReferencePositi
 <tr class="memitem:a8bf9c7c8ae6a3195ec9c6b6bdaf847ab inherit pro_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8bf9c7c8ae6a3195ec9c6b6bdaf847ab"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>calculateGrowthStrainsRotMat</b> (double *v)</td></tr>
 <tr class="separator:a8bf9c7c8ae6a3195ec9c6b6bdaf847ab inherit pro_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acbe7dfe60cdac63414879ea0e0d0fc2f inherit pro_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acbe7dfe60cdac63414879ea0e0d0fc2f"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateForces3D</b> (double **SystemForces, vector&lt; <a class="el" href="classNode.html">Node</a> * &gt; &amp;Nodes, bool recordForcesOnFixedNodes, double **FixedNodeForces, ofstream &amp;outputFile)</td></tr>
-<tr class="separator:acbe7dfe60cdac63414879ea0e0d0fc2f inherit pro_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a311e773cb7bf7c410c39026d7183b4ad inherit pro_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a311e773cb7bf7c410c39026d7183b4ad"></a>
-gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>calculateEForNodalForces</b> (gsl_matrix *F, gsl_matrix *Fe)</td></tr>
-<tr class="separator:a311e773cb7bf7c410c39026d7183b4ad inherit pro_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae935864e71abacdb3181d441826bbd39 inherit pro_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae935864e71abacdb3181d441826bbd39"></a>
-gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>calculateSForNodalForces</b> (gsl_matrix *E)</td></tr>
-<tr class="separator:ae935864e71abacdb3181d441826bbd39 inherit pro_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a27269b78017539874f7be9e20973c086 inherit pro_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a27269b78017539874f7be9e20973c086"></a>
-gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>calculateCompactStressForNodalForces</b> (gsl_matrix *Fe, gsl_matrix *S, gsl_matrix *FeT, gsl_matrix *Stress)</td></tr>
-<tr class="separator:a27269b78017539874f7be9e20973c086 inherit pro_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adb3406309c4c0d5ba20cb637ceca6856 inherit pro_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adb3406309c4c0d5ba20cb637ceca6856"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateForces3D</b> (vector&lt; <a class="el" href="classNode.html">Node</a> * &gt; &amp;Nodes, gsl_matrix *displacementPerDt, bool recordForcesOnFixedNodes, double **FixedNodeForces, ofstream &amp;outputFile)</td></tr>
+<tr class="separator:adb3406309c4c0d5ba20cb637ceca6856 inherit pro_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a347fb2687678294a252a12820842cb0d inherit pro_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a347fb2687678294a252a12820842cb0d"></a>
+gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>calculateEForNodalForcesKirshoff</b> (gsl_matrix *C)</td></tr>
+<tr class="separator:a347fb2687678294a252a12820842cb0d inherit pro_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2357b6ab477eceb874b627d5d8894eb9 inherit pro_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2357b6ab477eceb874b627d5d8894eb9"></a>
+gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>calculateCauchyGreenDeformationTensor</b> (gsl_matrix *Fe, gsl_matrix *FeT)</td></tr>
+<tr class="separator:a2357b6ab477eceb874b627d5d8894eb9 inherit pro_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9c79b3bced80eac8af18a0a81d3898ab inherit pro_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9c79b3bced80eac8af18a0a81d3898ab"></a>
+gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>calculateSForNodalForcesKirshoff</b> (gsl_matrix *E)</td></tr>
+<tr class="separator:a9c79b3bced80eac8af18a0a81d3898ab inherit pro_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a697f24754441df216b4245e7eb467b13 inherit pro_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a697f24754441df216b4245e7eb467b13"></a>
+gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>calculateSForNodalForcesNeoHookean</b> (gsl_matrix *invC, double lnJ)</td></tr>
+<tr class="separator:a697f24754441df216b4245e7eb467b13 inherit pro_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a606ddc7f909062e9faae9f4a311ccd8a inherit pro_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a606ddc7f909062e9faae9f4a311ccd8a"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>updateLagrangianElasticityTensorNeoHookean</b> (gsl_matrix *invC, double lnJ, int pointNo)</td></tr>
+<tr class="separator:a606ddc7f909062e9faae9f4a311ccd8a inherit pro_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a54d16f9a6cff5031555c0cbf3892873a inherit pro_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a54d16f9a6cff5031555c0cbf3892873a"></a>
+gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>calculateCompactStressForNodalForces</b> (double detFe, gsl_matrix *Fe, gsl_matrix *S, gsl_matrix *FeT, gsl_matrix *Stress)</td></tr>
+<tr class="separator:a54d16f9a6cff5031555c0cbf3892873a inherit pro_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac9eaa594e8955de91b2f4b0368c85bae inherit pro_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac9eaa594e8955de91b2f4b0368c85bae"></a>
 gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>calculateInverseJacobianStackForNodalForces</b> (gsl_matrix *Jacobian)</td></tr>
 <tr class="separator:ac9eaa594e8955de91b2f4b0368c85bae inherit pro_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -646,18 +712,47 @@ gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>calculateBTfo
 <tr class="memitem:aa9f48481aba22e06b07e6ce665ef58fb inherit pro_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa9f48481aba22e06b07e6ce665ef58fb"></a>
 gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>calculateInvJShFuncDerSWithFe</b> (gsl_matrix *currFe, gsl_matrix *InvDXde, gsl_matrix *ShapeFuncDerStack, gsl_matrix *invJShFuncDerSWithF)</td></tr>
 <tr class="separator:aa9f48481aba22e06b07e6ce665ef58fb inherit pro_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab9e027b7bb9553a0850875c5b94ed4a5 inherit pro_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab9e027b7bb9553a0850875c5b94ed4a5"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateCMatrix</b> (int pointNo)</td></tr>
-<tr class="separator:ab9e027b7bb9553a0850875c5b94ed4a5 inherit pro_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aafb0d14adc7ac116191bcff4a7837e98 inherit pro_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top">gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#aafb0d14adc7ac116191bcff4a7837e98">calculateVelocityGradientTensor</a> (gsl_matrix *B, gsl_matrix *displacementPerDt)</td></tr>
+<tr class="separator:aafb0d14adc7ac116191bcff4a7837e98 inherit pro_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afcdbbe37a746ade52a1af70a9aa12b9f inherit pro_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top">gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#afcdbbe37a746ade52a1af70a9aa12b9f">constructElementalDisplacementMatrix</a> (gsl_matrix *displacement)</td></tr>
+<tr class="memdesc:afcdbbe37a746ade52a1af70a9aa12b9f inherit pro_methods_classShapeBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">The function will assemble elemental node displacement matrix from the input displacement matrix for the whole system.  <a href="#afcdbbe37a746ade52a1af70a9aa12b9f">More...</a><br /></td></tr>
+<tr class="separator:afcdbbe37a746ade52a1af70a9aa12b9f inherit pro_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afbbf191777e8787a0e8307d30ce0aa9d inherit pro_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top">gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#afbbf191777e8787a0e8307d30ce0aa9d">calculateRateOfDeformationTensor</a> (gsl_matrix *l)</td></tr>
+<tr class="memdesc:afbbf191777e8787a0e8307d30ce0aa9d inherit pro_methods_classShapeBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">The function will calculate rate of deformation tensor from velocity gradient tensor.  <a href="#afbbf191777e8787a0e8307d30ce0aa9d">More...</a><br /></td></tr>
+<tr class="separator:afbbf191777e8787a0e8307d30ce0aa9d inherit pro_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a22ffae25fafb0fa584a3a4d0196af7aa inherit pro_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#a22ffae25fafb0fa584a3a4d0196af7aa">calculateViscousStress</a> (gsl_matrix *d, gsl_matrix *<a class="el" href="classShapeBase.html#a95733061efc2a6645fecfe5c0aa1dd93">viscousStress</a>)</td></tr>
+<tr class="memdesc:a22ffae25fafb0fa584a3a4d0196af7aa inherit pro_methods_classShapeBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">The function will calculate internal viscous stress of the element from rate of deformation matrix.  <a href="#a22ffae25fafb0fa584a3a4d0196af7aa">More...</a><br /></td></tr>
+<tr class="separator:a22ffae25fafb0fa584a3a4d0196af7aa inherit pro_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4d10225f251fa1bd8a2e6ffc8feb5326 inherit pro_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#a4d10225f251fa1bd8a2e6ffc8feb5326">calculateViscousForces</a> (gsl_matrix *gv, gsl_matrix *BTdetFdetdXde, gsl_matrix *<a class="el" href="classShapeBase.html#a95733061efc2a6645fecfe5c0aa1dd93">viscousStress</a>)</td></tr>
+<tr class="memdesc:a4d10225f251fa1bd8a2e6ffc8feb5326 inherit pro_methods_classShapeBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">The function will calculate the elemental viscous forces from viscous stress.  <a href="#a4d10225f251fa1bd8a2e6ffc8feb5326">More...</a><br /></td></tr>
+<tr class="separator:a4d10225f251fa1bd8a2e6ffc8feb5326 inherit pro_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7ae9fb15fa6e3f99173841ea910710c1 inherit pro_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7ae9fb15fa6e3f99173841ea910710c1"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>consturctBaTBb</b> (gsl_matrix *B, gsl_matrix *BaT, gsl_matrix *Bb, int a, int b)</td></tr>
 <tr class="separator:a7ae9fb15fa6e3f99173841ea910710c1 inherit pro_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af7556d90ad8fe05eb78a5c2967b75f53 inherit pro_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af7556d90ad8fe05eb78a5c2967b75f53"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateElasticKIntegral1</b> (gsl_matrix *currK, int pointNo)</td></tr>
-<tr class="separator:af7556d90ad8fe05eb78a5c2967b75f53 inherit pro_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2011f33d1b4fd848d46d9faad66e1b7e inherit pro_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2011f33d1b4fd848d46d9faad66e1b7e"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateElasticKIntegral2</b> (gsl_matrix *currK, int pointNo)</td></tr>
-<tr class="separator:a2011f33d1b4fd848d46d9faad66e1b7e inherit pro_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abb02278c3894e00fdbc0cd2e379111ce inherit pro_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abb02278c3894e00fdbc0cd2e379111ce"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateElasticKIntegral1</b> (gsl_matrix *currElementalK, int pointNo)</td></tr>
+<tr class="separator:abb02278c3894e00fdbc0cd2e379111ce inherit pro_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a74a5f7382e5d4038e4396d3f4a198105 inherit pro_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a74a5f7382e5d4038e4396d3f4a198105"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateElasticKIntegral2</b> (gsl_matrix *currElementalK, int pointNo)</td></tr>
+<tr class="separator:a74a5f7382e5d4038e4396d3f4a198105 inherit pro_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2913ab81b03bdad0368f5295fc56912d inherit pro_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2913ab81b03bdad0368f5295fc56912d"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateViscousKIntegral1</b> (gsl_matrix *currElementalK, double dt, int pointNo)</td></tr>
+<tr class="separator:a2913ab81b03bdad0368f5295fc56912d inherit pro_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3f0a1261dc17d4f8b7a47ba458e00cd1 inherit pro_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3f0a1261dc17d4f8b7a47ba458e00cd1"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateViscousKIntegral2To4</b> (gsl_matrix *currElementalK, int pointNo)</td></tr>
+<tr class="separator:a3f0a1261dc17d4f8b7a47ba458e00cd1 inherit pro_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad37ab5ac465d250c7c48d2b55e855f8f inherit pro_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad37ab5ac465d250c7c48d2b55e855f8f"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateKvabInt2</b> (gsl_matrix *KvabInt2, gsl_matrix *DNaT, gsl_matrix *DNb, gsl_matrix *Stress)</td></tr>
+<tr class="separator:ad37ab5ac465d250c7c48d2b55e855f8f inherit pro_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a07e84b37967dd936115bd1adb75a0fd2 inherit pro_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a07e84b37967dd936115bd1adb75a0fd2"></a>
+gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>calculateSymmetricisedTensorProduct</b> (gsl_matrix *a, gsl_matrix *b)</td></tr>
+<tr class="separator:a07e84b37967dd936115bd1adb75a0fd2 inherit pro_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a12635b0325e57f1348aff46c4825ed26 inherit pro_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a12635b0325e57f1348aff46c4825ed26"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateKvabInt3</b> (gsl_matrix *KvabInt3, gsl_matrix *averagedContraction, gsl_matrix *Stress)</td></tr>
+<tr class="separator:a12635b0325e57f1348aff46c4825ed26 inherit pro_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a77bb18dc70d5ec7de80254eee0531238 inherit pro_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a77bb18dc70d5ec7de80254eee0531238"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateKvabInt4</b> (gsl_matrix *KvabInt4, gsl_matrix *averagedContraction, gsl_matrix *Stress)</td></tr>
+<tr class="separator:a77bb18dc70d5ec7de80254eee0531238 inherit pro_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a91a660608ede71c5bfdd1c4956843760 inherit pro_methods_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a91a660608ede71c5bfdd1c4956843760"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>disassembleRotationMatrixForZ</b> (gsl_matrix *rotMat)</td></tr>
 <tr class="separator:a91a660608ede71c5bfdd1c4956843760 inherit pro_methods_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -686,6 +781,9 @@ double **&#160;</td><td class="memItemRight" valign="bottom"><b>Positions</b></t
 <tr class="memitem:a4bda00f80968d836c647afe5f6d1fb36 inherit pub_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4bda00f80968d836c647afe5f6d1fb36"></a>
 gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>Strain</b></td></tr>
 <tr class="separator:a4bda00f80968d836c647afe5f6d1fb36 inherit pub_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3da6d64116b5d73e2bb27d378035df41 inherit pub_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3da6d64116b5d73e2bb27d378035df41"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>isFlipped</b></td></tr>
+<tr class="separator:a3da6d64116b5d73e2bb27d378035df41 inherit pub_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a994acea5e6f2cf92c94f485e7ba5afc9 inherit pub_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a994acea5e6f2cf92c94f485e7ba5afc9"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>IsChangingShape</b></td></tr>
 <tr class="separator:a994acea5e6f2cf92c94f485e7ba5afc9 inherit pub_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -702,12 +800,25 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>tissuePlacement</b></t
 int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#a1d56f7eb3fed744adc268bc4da7a790f">tissueType</a></td></tr>
 <tr class="memdesc:a1d56f7eb3fed744adc268bc4da7a790f inherit pub_attribs_classShapeBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">The tissue type is 0 for columnar layer, 1 for peripodial membrane, and 2 for linker zone. <br /></td></tr>
 <tr class="separator:a1d56f7eb3fed744adc268bc4da7a790f inherit pub_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adafe85bbee6173d2a321408cd8b63db3 inherit pub_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adafe85bbee6173d2a321408cd8b63db3"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#adafe85bbee6173d2a321408cd8b63db3">spansWholeTissue</a></td></tr>
+<tr class="memdesc:adafe85bbee6173d2a321408cd8b63db3 inherit pub_attribs_classShapeBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">Boolean staing is the element spans the whole tissue. This is used to identify mid-layer tagged tissues (tissuePlacement = 2), that should still have apical abd basal responses (such as myosin). <br /></td></tr>
+<tr class="separator:adafe85bbee6173d2a321408cd8b63db3 inherit pub_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4f09d39d079bfe95ea7c25f5d3de6c09 inherit pub_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4f09d39d079bfe95ea7c25f5d3de6c09"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>IsAblated</b></td></tr>
 <tr class="separator:a4f09d39d079bfe95ea7c25f5d3de6c09 inherit pub_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3d15f14d23230682242ed063872617af inherit pub_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3d15f14d23230682242ed063872617af"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>atSymetricityBoundary</b></td></tr>
+<tr class="separator:a3d15f14d23230682242ed063872617af inherit pub_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6f5e25bc9b4376c0aa28aec59af6cf2f inherit pub_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6f5e25bc9b4376c0aa28aec59af6cf2f"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>IsClippedInDisplay</b></td></tr>
 <tr class="separator:a6f5e25bc9b4376c0aa28aec59af6cf2f inherit pub_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad58b945ab4de36d2ab56b8a33fd10c20 inherit pub_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad58b945ab4de36d2ab56b8a33fd10c20"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>IsXSymmetricClippedInDisplay</b></td></tr>
+<tr class="separator:ad58b945ab4de36d2ab56b8a33fd10c20 inherit pub_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab7376a727388707fc2502490701e48a0 inherit pub_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab7376a727388707fc2502490701e48a0"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>IsYSymmetricClippedInDisplay</b></td></tr>
+<tr class="separator:ab7376a727388707fc2502490701e48a0 inherit pub_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3d48903871978d77a77cb77f569975c0 inherit pub_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3d48903871978d77a77cb77f569975c0"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>CurrShapeChangeToAdd</b> [3]</td></tr>
 <tr class="separator:a3d48903871978d77a77cb77f569975c0 inherit pub_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -776,76 +887,113 @@ double *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#aee6a2cd267d49404f5442a48c867860f">rotatedGrowth</a></td></tr>
 <tr class="memdesc:aee6a2cd267d49404f5442a48c867860f inherit pro_attribs_classShapeBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">The boolean stating if the element has rotated from the growth axis, hence the calculated growth requires further rotation to follow tissue axes. <br /></td></tr>
 <tr class="separator:aee6a2cd267d49404f5442a48c867860f inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3a88df07863ecf2a78fbd75543320edd inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3a88df07863ecf2a78fbd75543320edd"></a>
-double *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#a3a88df07863ecf2a78fbd75543320edd">columnarRelativePosInBoundingBox</a></td></tr>
-<tr class="memdesc:a3a88df07863ecf2a78fbd75543320edd inherit pro_attribs_classShapeBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">The relative position on x-y plane, within the bounding box of the columnar layer (x,y). <br /></td></tr>
-<tr class="separator:a3a88df07863ecf2a78fbd75543320edd inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3dfa65871a157645e733a4b01f1c8955 inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3dfa65871a157645e733a4b01f1c8955"></a>
-double *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#a3dfa65871a157645e733a4b01f1c8955">peripodialRelativePosInBoundingBox</a></td></tr>
-<tr class="memdesc:a3dfa65871a157645e733a4b01f1c8955 inherit pro_attribs_classShapeBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">The relative position on x-y plane, within the bounding box of the peripodial membrane layer (x,y). <br /></td></tr>
-<tr class="separator:a3dfa65871a157645e733a4b01f1c8955 inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7a7826fb2ce3b2e666b65d99b00eadea inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7a7826fb2ce3b2e666b65d99b00eadea"></a>
+double *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#a7a7826fb2ce3b2e666b65d99b00eadea">relativePosInBoundingBox</a></td></tr>
+<tr class="memdesc:a7a7826fb2ce3b2e666b65d99b00eadea inherit pro_attribs_classShapeBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">The relative position on x-y plane, within the bounding box of the tissue(x,y). <br /></td></tr>
+<tr class="separator:a7a7826fb2ce3b2e666b65d99b00eadea inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8825955bac10c5deabb9c02cd27577e9 inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8825955bac10c5deabb9c02cd27577e9"></a>
+double *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#a8825955bac10c5deabb9c02cd27577e9">initialRelativePosInBoundingBox</a></td></tr>
+<tr class="memdesc:a8825955bac10c5deabb9c02cd27577e9 inherit pro_attribs_classShapeBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">The relative position on x-y plane, within the bounding box of the tissue(x,y) at the beginning of simulation. This is used when growth rates are pinned to the initial structure of the tissue. <br /></td></tr>
+<tr class="separator:a8825955bac10c5deabb9c02cd27577e9 inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a80a8943320a0cdc871565acded52b239 inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a80a8943320a0cdc871565acded52b239"></a>
-gsl_matrix **&#160;</td><td class="memItemRight" valign="bottom"><b>ShapeFuncDerivatives</b></td></tr>
+gsl_matrix **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#a80a8943320a0cdc871565acded52b239">ShapeFuncDerivatives</a></td></tr>
+<tr class="memdesc:a80a8943320a0cdc871565acded52b239 inherit pro_attribs_classShapeBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">The array of matrices for shape function derivatives. The array stores a <a class="el" href="classShapeBase.html#a250bd3396546342c8104f5b9c180d18f" title="The number of dimensions for the positions of each of the nodes of the element. ">ShapeBase::nDim</a> by <a class="el" href="classShapeBase.html#ae7dd93b58b3281ce90025f83d0f0e976" title="The number of nodes of the element, it is based on ShapeBase::ShapeType. ">ShapeBase::nNodes</a> matrix for each gauss point (there are 3 Gauss points for prisms). <br /></td></tr>
 <tr class="separator:a80a8943320a0cdc871565acded52b239 inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a23deaddf67b09f6fe5470f05385001fe inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a23deaddf67b09f6fe5470f05385001fe"></a>
-gsl_matrix **&#160;</td><td class="memItemRight" valign="bottom"><b>ShapeFuncDerStacks</b></td></tr>
+gsl_matrix **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#a23deaddf67b09f6fe5470f05385001fe">ShapeFuncDerStacks</a></td></tr>
+<tr class="memdesc:a23deaddf67b09f6fe5470f05385001fe inherit pro_attribs_classShapeBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">The array of matrices of shape function derivatives in stacked format for ease of matrix operations. The array stores a (<a class="el" href="classShapeBase.html#a250bd3396546342c8104f5b9c180d18f" title="The number of dimensions for the positions of each of the nodes of the element. ">ShapeBase::nDim</a> * <a class="el" href="classShapeBase.html#a250bd3396546342c8104f5b9c180d18f" title="The number of dimensions for the positions of each of the nodes of the element. ">ShapeBase::nDim</a>) by (<a class="el" href="classShapeBase.html#a250bd3396546342c8104f5b9c180d18f" title="The number of dimensions for the positions of each of the nodes of the element. ">ShapeBase::nDim</a> * <a class="el" href="classShapeBase.html#ae7dd93b58b3281ce90025f83d0f0e976" title="The number of nodes of the element, it is based on ShapeBase::ShapeType. ">ShapeBase::nNodes</a>) matrix for each gauss point (there are 3 Gauss points for prisms). <br /></td></tr>
 <tr class="separator:a23deaddf67b09f6fe5470f05385001fe inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4a5fc631abba61fa2488112a7a674377 inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4a5fc631abba61fa2488112a7a674377"></a>
-gsl_matrix **&#160;</td><td class="memItemRight" valign="bottom"><b>InvdXdes</b></td></tr>
+gsl_matrix **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#a4a5fc631abba61fa2488112a7a674377">InvdXdes</a></td></tr>
+<tr class="memdesc:a4a5fc631abba61fa2488112a7a674377 inherit pro_attribs_classShapeBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">The array stores inverse of the matrix for derivatives of world coordinates with respect to barycentric coordinates (dX / de). The array stores an <a class="el" href="classShapeBase.html#a250bd3396546342c8104f5b9c180d18f" title="The number of dimensions for the positions of each of the nodes of the element. ">ShapeBase::nDim</a> by <a class="el" href="classShapeBase.html#a250bd3396546342c8104f5b9c180d18f" title="The number of dimensions for the positions of each of the nodes of the element. ">ShapeBase::nDim</a> matrix for each gauss point (there are 3 Gauss points for prisms). <br /></td></tr>
 <tr class="separator:a4a5fc631abba61fa2488112a7a674377 inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad1c2ef88314c7e567ca2bdcc6592f5ec inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad1c2ef88314c7e567ca2bdcc6592f5ec"></a>
-double *&#160;</td><td class="memItemRight" valign="bottom"><b>detdXdes</b></td></tr>
+double *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#ad1c2ef88314c7e567ca2bdcc6592f5ec">detdXdes</a></td></tr>
+<tr class="memdesc:ad1c2ef88314c7e567ca2bdcc6592f5ec inherit pro_attribs_classShapeBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">The array stores the determinants of the matrices for derivatives of world coordinates with respect to barycentric coordinates (dX / de). The array stores a double value for each gauss point (there are 3 Gauss points for prisms). <br /></td></tr>
 <tr class="separator:ad1c2ef88314c7e567ca2bdcc6592f5ec inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ace860a66508f503be2a46c351a9358c3 inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ace860a66508f503be2a46c351a9358c3"></a>
-gsl_matrix **&#160;</td><td class="memItemRight" valign="bottom"><b>Bmatrices</b></td></tr>
+gsl_matrix **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#ace860a66508f503be2a46c351a9358c3">Bmatrices</a></td></tr>
+<tr class="memdesc:ace860a66508f503be2a46c351a9358c3 inherit pro_attribs_classShapeBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">The array stores the B matrix for the calculation of stiffness matrix, see for ShapeBase::calculateBTforNodalForces calculation. The array stores an <a class="el" href="classShapeBase.html#ae7dd93b58b3281ce90025f83d0f0e976" title="The number of nodes of the element, it is based on ShapeBase::ShapeType. ">ShapeBase::nNodes</a> by (<a class="el" href="classShapeBase.html#a250bd3396546342c8104f5b9c180d18f" title="The number of dimensions for the positions of each of the nodes of the element. ">ShapeBase::nDim</a>*ShapeBase<a class="el" href="classShapeBase.html#ae7dd93b58b3281ce90025f83d0f0e976" title="The number of nodes of the element, it is based on ShapeBase::ShapeType. ">nNodes</a>) matrix for each Gauss point (there are 3 Gauss points for prisms). <br /></td></tr>
 <tr class="separator:ace860a66508f503be2a46c351a9358c3 inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adbb0a1617e6e0acfbf67038a5aed8366 inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adbb0a1617e6e0acfbf67038a5aed8366"></a>
-gsl_matrix **&#160;</td><td class="memItemRight" valign="bottom"><b>CMatrices</b></td></tr>
-<tr class="separator:adbb0a1617e6e0acfbf67038a5aed8366 inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac3259f3f52ab4d7a514ea987012a6bd6 inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac3259f3f52ab4d7a514ea987012a6bd6"></a>
-gsl_matrix **&#160;</td><td class="memItemRight" valign="bottom"><b>FeMatrices</b></td></tr>
+gsl_matrix **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#ac3259f3f52ab4d7a514ea987012a6bd6">FeMatrices</a></td></tr>
+<tr class="memdesc:ac3259f3f52ab4d7a514ea987012a6bd6 inherit pro_attribs_classShapeBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">The array stores the elastic part of the deformation matrix. The array stores an <a class="el" href="classShapeBase.html#a250bd3396546342c8104f5b9c180d18f" title="The number of dimensions for the positions of each of the nodes of the element. ">ShapeBase::nDim</a> by <a class="el" href="classShapeBase.html#a250bd3396546342c8104f5b9c180d18f" title="The number of dimensions for the positions of each of the nodes of the element. ">ShapeBase::nDim</a> matrix for each Gauss point (there are 3 Gauss points for prisms). <br /></td></tr>
 <tr class="separator:ac3259f3f52ab4d7a514ea987012a6bd6 inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa0dbfe70da6938be7304934d80cb0ddf inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa0dbfe70da6938be7304934d80cb0ddf"></a>
+gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#aa0dbfe70da6938be7304934d80cb0ddf">Fplastic</a></td></tr>
+<tr class="memdesc:aa0dbfe70da6938be7304934d80cb0ddf inherit pro_attribs_classShapeBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">The array stores the plastic part of the deformation matrix. The array stores an <a class="el" href="classShapeBase.html#a250bd3396546342c8104f5b9c180d18f" title="The number of dimensions for the positions of each of the nodes of the element. ">ShapeBase::nDim</a> by <a class="el" href="classShapeBase.html#a250bd3396546342c8104f5b9c180d18f" title="The number of dimensions for the positions of each of the nodes of the element. ">ShapeBase::nDim</a> matrix for each Gauss point (there are 3 Gauss points for prisms). <br /></td></tr>
+<tr class="separator:aa0dbfe70da6938be7304934d80cb0ddf inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaa49d057ee26d805da5befa72c9bbf58 inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aaa49d057ee26d805da5befa72c9bbf58"></a>
+gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#aaa49d057ee26d805da5befa72c9bbf58">invFplastic</a></td></tr>
+<tr class="memdesc:aaa49d057ee26d805da5befa72c9bbf58 inherit pro_attribs_classShapeBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">The array stores inverses of the plastic part of the deformation matrix, in same structure as <a class="el" href="classShapeBase.html#aa0dbfe70da6938be7304934d80cb0ddf" title="The array stores the plastic part of the deformation matrix. The array stores an ShapeBase::nDim by S...">ShapeBase::Fplastic</a>. <br /></td></tr>
+<tr class="separator:aaa49d057ee26d805da5befa72c9bbf58 inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9478b062928ae554c25cd3269cc9e790 inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9478b062928ae554c25cd3269cc9e790"></a>
-gsl_matrix **&#160;</td><td class="memItemRight" valign="bottom"><b>invJShapeFuncDerStack</b></td></tr>
+gsl_matrix **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#a9478b062928ae554c25cd3269cc9e790">invJShapeFuncDerStack</a></td></tr>
+<tr class="memdesc:a9478b062928ae554c25cd3269cc9e790 inherit pro_attribs_classShapeBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">The array stores the shape function derivatives multiplied by the inverse Jacobian stack, for each Gauss point. See ShapeBase::calculateBTforNodalForces for calculation. <br /></td></tr>
 <tr class="separator:a9478b062928ae554c25cd3269cc9e790 inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a490391c781e50cfc7e2f1a0814bb6d25 inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a490391c781e50cfc7e2f1a0814bb6d25"></a>
-gsl_matrix **&#160;</td><td class="memItemRight" valign="bottom"><b>invJShapeFuncDerStackwithFe</b></td></tr>
+gsl_matrix **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#a490391c781e50cfc7e2f1a0814bb6d25">invJShapeFuncDerStackwithFe</a></td></tr>
+<tr class="memdesc:a490391c781e50cfc7e2f1a0814bb6d25 inherit pro_attribs_classShapeBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">See ShapeBase::calculateInvJShFuncDerSWithFe for calculation. <br /></td></tr>
 <tr class="separator:a490391c781e50cfc7e2f1a0814bb6d25 inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acd549e0086d16194ae389ae528969596 inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acd549e0086d16194ae389ae528969596"></a>
-gsl_matrix **&#160;</td><td class="memItemRight" valign="bottom"><b>elasticStress</b></td></tr>
+gsl_matrix **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#acd549e0086d16194ae389ae528969596">elasticStress</a></td></tr>
+<tr class="memdesc:acd549e0086d16194ae389ae528969596 inherit pro_attribs_classShapeBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">The array of matrices for elastic stress of the element. The array stores a 6 by 6 matrix for each Gauss point (there are 3 Gauss points for prisms). <br /></td></tr>
 <tr class="separator:acd549e0086d16194ae389ae528969596 inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a95733061efc2a6645fecfe5c0aa1dd93 inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a95733061efc2a6645fecfe5c0aa1dd93"></a>
+gsl_matrix **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#a95733061efc2a6645fecfe5c0aa1dd93">viscousStress</a></td></tr>
+<tr class="memdesc:a95733061efc2a6645fecfe5c0aa1dd93 inherit pro_attribs_classShapeBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">The array of matrices for internal viscous stress of the element. The array stores a 6 by 6 matrix for each Gauss point (there are 3 Gauss points for prisms). <br /></td></tr>
+<tr class="separator:a95733061efc2a6645fecfe5c0aa1dd93 inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab7ac8f14929ab37e8eae5fcaf93b18a8 inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab7ac8f14929ab37e8eae5fcaf93b18a8"></a>
-gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>TriPointF</b></td></tr>
+gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#ab7ac8f14929ab37e8eae5fcaf93b18a8">TriPointF</a></td></tr>
+<tr class="memdesc:ab7ac8f14929ab37e8eae5fcaf93b18a8 inherit pro_attribs_classShapeBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">The deformation matrix of the element resulting from iteration over all Gauss points. The dimensions of the matrix is <a class="el" href="classShapeBase.html#a250bd3396546342c8104f5b9c180d18f" title="The number of dimensions for the positions of each of the nodes of the element. ">ShapeBase::nDim</a> by <a class="el" href="classShapeBase.html#a250bd3396546342c8104f5b9c180d18f" title="The number of dimensions for the positions of each of the nodes of the element. ">ShapeBase::nDim</a>. <br /></td></tr>
 <tr class="separator:ab7ac8f14929ab37e8eae5fcaf93b18a8 inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a94d201c88c73283f2e9711d1cc038e02 inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a94d201c88c73283f2e9711d1cc038e02"></a>
+gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#a94d201c88c73283f2e9711d1cc038e02">ElementalElasticSystemForces</a></td></tr>
+<tr class="memdesc:a94d201c88c73283f2e9711d1cc038e02 inherit pro_attribs_classShapeBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">The matrix stores the elemental elastic forces. The dimensions of the matrix is <a class="el" href="classShapeBase.html#ae7dd93b58b3281ce90025f83d0f0e976" title="The number of nodes of the element, it is based on ShapeBase::ShapeType. ">ShapeBase::nNodes</a> by <a class="el" href="classShapeBase.html#a250bd3396546342c8104f5b9c180d18f" title="The number of dimensions for the positions of each of the nodes of the element. ">ShapeBase::nDim</a>. <br /></td></tr>
+<tr class="separator:a94d201c88c73283f2e9711d1cc038e02 inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a54b5ebd33ad4ed5739c0431bf0d4346d inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a54b5ebd33ad4ed5739c0431bf0d4346d"></a>
+gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#a54b5ebd33ad4ed5739c0431bf0d4346d">ElementalInternalViscousSystemForces</a></td></tr>
+<tr class="memdesc:a54b5ebd33ad4ed5739c0431bf0d4346d inherit pro_attribs_classShapeBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">The matrix stores the elemental internal viscous forces. The dimensions of the matrix is <a class="el" href="classShapeBase.html#ae7dd93b58b3281ce90025f83d0f0e976" title="The number of nodes of the element, it is based on ShapeBase::ShapeType. ">ShapeBase::nNodes</a> by <a class="el" href="classShapeBase.html#a250bd3396546342c8104f5b9c180d18f" title="The number of dimensions for the positions of each of the nodes of the element. ">ShapeBase::nDim</a>. <br /></td></tr>
+<tr class="separator:a54b5ebd33ad4ed5739c0431bf0d4346d inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab41f6a16647607b1c898eea1c2860367 inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab41f6a16647607b1c898eea1c2860367"></a>
-double *&#160;</td><td class="memItemRight" valign="bottom"><b>detFs</b></td></tr>
+double *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#ab41f6a16647607b1c898eea1c2860367">detFs</a></td></tr>
+<tr class="memdesc:ab41f6a16647607b1c898eea1c2860367 inherit pro_attribs_classShapeBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">The array stores the determinant of the deformation matrix for each Gauss point. <br /></td></tr>
 <tr class="separator:ab41f6a16647607b1c898eea1c2860367 inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a51a8101057e2771172a4716c128705d7 inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a51a8101057e2771172a4716c128705d7"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>ZProjectedBasalArea</b></td></tr>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#a51a8101057e2771172a4716c128705d7">ZProjectedBasalArea</a></td></tr>
+<tr class="memdesc:a51a8101057e2771172a4716c128705d7 inherit pro_attribs_classShapeBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">The z-projected area of the basal surface of the element. <br /></td></tr>
 <tr class="separator:a51a8101057e2771172a4716c128705d7 inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa7043ddacbcd92480cb54467a2777627 inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa7043ddacbcd92480cb54467a2777627"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>ZProjectedApicalArea</b></td></tr>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#aa7043ddacbcd92480cb54467a2777627">ZProjectedApicalArea</a></td></tr>
+<tr class="memdesc:aa7043ddacbcd92480cb54467a2777627 inherit pro_attribs_classShapeBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">The z-projected area of the apical surface of the element. <br /></td></tr>
 <tr class="separator:aa7043ddacbcd92480cb54467a2777627 inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2ae2b0b1dfd0672a39897e780d861254 inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2ae2b0b1dfd0672a39897e780d861254"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>BasalArea</b></td></tr>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#a2ae2b0b1dfd0672a39897e780d861254">BasalArea</a></td></tr>
+<tr class="memdesc:a2ae2b0b1dfd0672a39897e780d861254 inherit pro_attribs_classShapeBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">The area of the basal surface of the element. <br /></td></tr>
 <tr class="separator:a2ae2b0b1dfd0672a39897e780d861254 inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adb4227c13db7e34dd1af182d143af47b inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adb4227c13db7e34dd1af182d143af47b"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>ApicalArea</b></td></tr>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#adb4227c13db7e34dd1af182d143af47b">ApicalArea</a></td></tr>
+<tr class="memdesc:adb4227c13db7e34dd1af182d143af47b inherit pro_attribs_classShapeBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">The area of the apical surface of the element. <br /></td></tr>
 <tr class="separator:adb4227c13db7e34dd1af182d143af47b inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a485e95cb1e7a440e57884d4df5ee1350 inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a485e95cb1e7a440e57884d4df5ee1350"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>cMyoUniform</b> [2]</td></tr>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#a485e95cb1e7a440e57884d4df5ee1350">cMyoUniform</a> [2]</td></tr>
+<tr class="memdesc:a485e95cb1e7a440e57884d4df5ee1350 inherit pro_attribs_classShapeBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">Myosin concentration in the uniformly distributed pool, array of 2: [apical][basal]. <br /></td></tr>
 <tr class="separator:a485e95cb1e7a440e57884d4df5ee1350 inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2a1e584564ef617fa1d18eb591c84a67 inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2a1e584564ef617fa1d18eb591c84a67"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>cMyoUnipolar</b> [2]</td></tr>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#a2a1e584564ef617fa1d18eb591c84a67">cMyoUnipolar</a> [2]</td></tr>
+<tr class="memdesc:a2a1e584564ef617fa1d18eb591c84a67 inherit pro_attribs_classShapeBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">Myosin concentration in the polarised pool, array of 2: [apical][basal]. <br /></td></tr>
 <tr class="separator:a2a1e584564ef617fa1d18eb591c84a67 inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa32b4675de014e09732e7ab89719e679 inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa32b4675de014e09732e7ab89719e679"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>cMyoUniformEq</b> [2]</td></tr>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#aa32b4675de014e09732e7ab89719e679">cMyoUniformEq</a> [2]</td></tr>
+<tr class="memdesc:aa32b4675de014e09732e7ab89719e679 inherit pro_attribs_classShapeBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">The equilibrium level of myosin concentration in uniformly distributed pool, array of 2: [apical][basal]. <br /></td></tr>
 <tr class="separator:aa32b4675de014e09732e7ab89719e679 inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a59c3af9d1dcfe4749d33ba168c5bda53 inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a59c3af9d1dcfe4749d33ba168c5bda53"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>cMyoUnipolarEq</b> [2]</td></tr>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#a59c3af9d1dcfe4749d33ba168c5bda53">cMyoUnipolarEq</a> [2]</td></tr>
+<tr class="memdesc:a59c3af9d1dcfe4749d33ba168c5bda53 inherit pro_attribs_classShapeBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">The equilibrium level of myosin concentration in polarised pool, array of 2: [apical][basal]. <br /></td></tr>
 <tr class="separator:a59c3af9d1dcfe4749d33ba168c5bda53 inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afc91612adf1d146a48767756f38d1152 inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afc91612adf1d146a48767756f38d1152"></a>
-gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>myoPolarityDir</b></td></tr>
+gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classShapeBase.html#afc91612adf1d146a48767756f38d1152">myoPolarityDir</a></td></tr>
+<tr class="memdesc:afc91612adf1d146a48767756f38d1152 inherit pro_attribs_classShapeBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">The orientation of myosin polarity, unit vector in world coordinates. <br /></td></tr>
 <tr class="separator:afc91612adf1d146a48767756f38d1152 inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1878efccfc629e53748e8907386825b0 inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1878efccfc629e53748e8907386825b0"></a>
 gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>D</b></td></tr>
@@ -853,15 +1001,18 @@ gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>D</b></td></t
 <tr class="memitem:a7266beef6c849298c3786a53259bd467 inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7266beef6c849298c3786a53259bd467"></a>
 gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>CoeffMat</b></td></tr>
 <tr class="separator:a7266beef6c849298c3786a53259bd467 inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abafc7c3b44ef3be78d4be880406bbc5f inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abafc7c3b44ef3be78d4be880406bbc5f"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>D81</b> [4][4][4][4]</td></tr>
-<tr class="separator:abafc7c3b44ef3be78d4be880406bbc5f inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a484d12c563c8b75e955a7cceba26094a inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a484d12c563c8b75e955a7cceba26094a"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>D81</b> [3][4][4][4][4]</td></tr>
+<tr class="separator:a484d12c563c8b75e955a7cceba26094a inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6c1a3a0173841d6072a5268978463ff2 inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6c1a3a0173841d6072a5268978463ff2"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>E</b></td></tr>
 <tr class="separator:a6c1a3a0173841d6072a5268978463ff2 inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8b4c2d3bfbc6c9785c5181a56f929151 inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8b4c2d3bfbc6c9785c5181a56f929151"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>v</b></td></tr>
 <tr class="separator:a8b4c2d3bfbc6c9785c5181a56f929151 inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7fd0830ee5d4e64bb68e58aa77736757 inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7fd0830ee5d4e64bb68e58aa77736757"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>internalViscosity</b></td></tr>
+<tr class="separator:a7fd0830ee5d4e64bb68e58aa77736757 inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa16b41d5791fc15531cbee067c502a5d inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa16b41d5791fc15531cbee067c502a5d"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>lambda</b></td></tr>
 <tr class="separator:aa16b41d5791fc15531cbee067c502a5d inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -887,9 +1038,12 @@ gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" hr
 <tr class="memitem:ace20710f27099833509c474b221c25df inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ace20710f27099833509c474b221c25df"></a>
 gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>TriPointKe</b></td></tr>
 <tr class="separator:ace20710f27099833509c474b221c25df inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7fa5b1338e405a2c75c8d010f4153b05 inherit pro_attribs_classShapeBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7fa5b1338e405a2c75c8d010f4153b05"></a>
+gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>TriPointKv</b></td></tr>
+<tr class="separator:a7fa5b1338e405a2c75c8d010f4153b05 inherit pro_attribs_classShapeBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a class="anchor" id="aea47379b3064d866f93508a9337d8f12"></a>
+<a class="anchor" id="a606fbf422f9d652e0f697ea93dc2e088"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -900,13 +1054,25 @@ gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>TriPointKe</b
           <td class="memname">void Prism::calculateCurrNodalForces </td>
           <td>(</td>
           <td class="paramtype">gsl_matrix *&#160;</td>
-          <td class="paramname"><em>gslcurrg</em>, </td>
+          <td class="paramname"><em>gslcurrge</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">gsl_matrix *&#160;</td>
+          <td class="paramname"><em>gslcurrgv</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">gsl_matrix *&#160;</td>
           <td class="paramname"><em>gslcurrF</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">gsl_matrix *&#160;</td>
+          <td class="paramname"><em>displacementPerDt</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -927,6 +1093,7 @@ gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>TriPointKe</b
 </table>
 </div><div class="memdoc">
 <p>&lt; Removing growth</p>
+<p>&lt; Removing shape change</p>
 <p>&lt; Removing shape change </p>
 
 <p>Reimplemented from <a class="el" href="classShapeBase.html">ShapeBase</a>.</p>
@@ -943,7 +1110,7 @@ gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>TriPointKe</b
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="classPrism.html">Prism</a></li>
-    <li class="footer">Generated on Tue Nov 3 2015 16:55:13 for Tissue Origami by
+    <li class="footer">Generated on Fri Apr 15 2016 19:51:54 for Tissue Origami by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

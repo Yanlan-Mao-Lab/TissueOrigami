@@ -87,6 +87,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
       <li><a href="#index_d"><span>d</span></a></li>
       <li><a href="#index_g"><span>g</span></a></li>
       <li><a href="#index_m"><span>m</span></a></li>
+      <li><a href="#index_o"><span>o</span></a></li>
       <li><a href="#index_r"><span>r</span></a></li>
       <li><a href="#index_s"><span>s</span></a></li>
       <li><a href="#index_u"><span>u</span></a></li>
@@ -128,7 +129,22 @@ $(document).ready(function(){initNavTree('functions_func.html','');});
 
 <h3><a class="anchor" id="index_c"></a>- c -</h3><ul>
 <li>calculateCurrNodalForces()
-: <a class="el" href="classPrism.html#aea47379b3064d866f93508a9337d8f12">Prism</a>
+: <a class="el" href="classPrism.html#a606fbf422f9d652e0f697ea93dc2e088">Prism</a>
+</li>
+<li>calculatePacking()
+: <a class="el" href="classSimulation.html#a51cb5448f660eeefc54a5d2a33ab561e">Simulation</a>
+</li>
+<li>calculateRateOfDeformationTensor()
+: <a class="el" href="classShapeBase.html#afbbf191777e8787a0e8307d30ce0aa9d">ShapeBase</a>
+</li>
+<li>calculateVelocityGradientTensor()
+: <a class="el" href="classShapeBase.html#aafb0d14adc7ac116191bcff4a7837e98">ShapeBase</a>
+</li>
+<li>calculateViscousForces()
+: <a class="el" href="classShapeBase.html#a4d10225f251fa1bd8a2e6ffc8feb5326">ShapeBase</a>
+</li>
+<li>calculateViscousStress()
+: <a class="el" href="classShapeBase.html#a22ffae25fafb0fa584a3a4d0196af7aa">ShapeBase</a>
 </li>
 <li>changeShapeByFsc()
 : <a class="el" href="classShapeBase.html#a5409de18ee9e47af0bb977f4a1e608fb">ShapeBase</a>
@@ -138,6 +154,9 @@ $(document).ready(function(){initNavTree('functions_func.html','');});
 </li>
 <li>checkIfNodeHasPacking()
 : <a class="el" href="classNode.html#a1d80e6f467d8ca919872b6e47a882dd5">Node</a>
+</li>
+<li>constructElementalDisplacementMatrix()
+: <a class="el" href="classShapeBase.html#afcdbbe37a746ade52a1af70a9aa12b9f">ShapeBase</a>
 </li>
 </ul>
 
@@ -186,6 +205,9 @@ $(document).ready(function(){initNavTree('functions_func.html','');});
 <li>getInnerRadius()
 : <a class="el" href="classRingGrowthFunction.html#ae1f4f4cecfab3ec343c748cfe78ab70b">RingGrowthFunction</a>
 </li>
+<li>getNormRV()
+: <a class="el" href="classRandomGenerator.html#ade01887d86acde9c158dd3ee80250e47">RandomGenerator</a>
+</li>
 <li>getOrientationMatrix()
 : <a class="el" href="classMyosinFunction.html#a2249447e97be176009c74d34d5219498">MyosinFunction</a>
 </li>
@@ -195,6 +217,9 @@ $(document).ready(function(){initNavTree('functions_func.html','');});
 <li>getOuterRadius()
 : <a class="el" href="classRingGrowthFunction.html#ad5c890c72a8ce520411d28e929faec19">RingGrowthFunction</a>
 </li>
+<li>getRandomStr()
+: <a class="el" href="classRandomGenerator.html#a2da3e84fb399d8af423547376a1aae42">RandomGenerator</a>
+</li>
 <li>getShearAngle()
 : <a class="el" href="classRingGrowthFunction.html#aa70523c66dce48e7e54360596787a629">RingGrowthFunction</a>
 , <a class="el" href="classUniformGrowthFunction.html#a8a60d83743c441f7453af8053d5e7010">UniformGrowthFunction</a>
@@ -202,6 +227,9 @@ $(document).ready(function(){initNavTree('functions_func.html','');});
 <li>getShearAngleRotationMatrix()
 : <a class="el" href="classRingGrowthFunction.html#a05f880ba6df8b3001a8e8fdec5ba1ad6">RingGrowthFunction</a>
 , <a class="el" href="classUniformGrowthFunction.html#a5a7e9b102a299b94ba648513b66f9cd1">UniformGrowthFunction</a>
+</li>
+<li>getUniformRV()
+: <a class="el" href="classRandomGenerator.html#a39a6365864741e8246546162b6e5a34e">RandomGenerator</a>
 </li>
 <li>getXyShearAngleMatrix()
 : <a class="el" href="classGridBasedGrowthFunction.html#ad590b4a5c6e5e47f5679de5a8c6cb738">GridBasedGrowthFunction</a>
@@ -226,12 +254,22 @@ $(document).ready(function(){initNavTree('functions_func.html','');});
 : <a class="el" href="classModelInputObject.html#a64b031469546b19177c0a13365058162">ModelInputObject</a>
 </li>
 <li>MyosinFunction()
-: <a class="el" href="classMyosinFunction.html#a9a1d0f2da5bf8c9f3e9f48d88297c3fd">MyosinFunction</a>
+: <a class="el" href="classMyosinFunction.html#a25c83e1aaafc9d029e6c551008114ef7">MyosinFunction</a>
+</li>
+</ul>
+
+
+<h3><a class="anchor" id="index_o"></a>- o -</h3><ul>
+<li>Obj()
+: <a class="el" href="classRandomGenerator.html#a6c161d5ba97abe160d46d031f2211eb7">RandomGenerator</a>
 </li>
 </ul>
 
 
 <h3><a class="anchor" id="index_r"></a>- r -</h3><ul>
+<li>RandomGenerator()
+: <a class="el" href="classRandomGenerator.html#ad2b3256e634878160c7d8b6e865341b2">RandomGenerator</a>
+</li>
 <li>readParameters()
 : <a class="el" href="classModelInputObject.html#a9741685527f446bd2bf66455c5b01d0c">ModelInputObject</a>
 </li>
@@ -245,6 +283,12 @@ $(document).ready(function(){initNavTree('functions_func.html','');});
 
 
 <h3><a class="anchor" id="index_s"></a>- s -</h3><ul>
+<li>Seed()
+: <a class="el" href="classRandomGenerator.html#a35e84fa76d2bfaba05671aa0f79c1b0a">RandomGenerator</a>
+</li>
+<li>setExternalViscosity()
+: <a class="el" href="classNode.html#a9a3b878b16fe5be6ee707a49f3fd7d5a">Node</a>
+</li>
 <li>setGrowthMatrixElement()
 : <a class="el" href="classGridBasedGrowthFunction.html#a9d01fcbba5732aad966659d4f64c145b">GridBasedGrowthFunction</a>
 </li>
@@ -254,9 +298,6 @@ $(document).ready(function(){initNavTree('functions_func.html','');});
 </li>
 <li>setOrientationMatrixElement()
 : <a class="el" href="classMyosinFunction.html#a7f9b40f267049352619709243c929a25">MyosinFunction</a>
-</li>
-<li>setViscosity()
-: <a class="el" href="classNode.html#a67cfbbe5179590b5deddf7d4086bc316">Node</a>
 </li>
 </ul>
 
@@ -292,7 +333,7 @@ $(document).ready(function(){initNavTree('functions_func.html','');});
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Tue Nov 3 2015 16:55:14 for Tissue Origami by
+    <li class="footer">Generated on Fri Apr 15 2016 19:51:55 for Tissue Origami by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

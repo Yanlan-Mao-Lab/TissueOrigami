@@ -120,9 +120,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ac84926c5a9cf2883665f00382781b932"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac84926c5a9cf2883665f00382781b932"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>Node</b> (int id, int dim, double *pos, int tissuePos, int <a class="el" href="classNode.html#ae621097f98f1d33d283cf65a0a02d29a">tissueType</a>)</td></tr>
 <tr class="separator:ac84926c5a9cf2883665f00382781b932"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a67cfbbe5179590b5deddf7d4086bc316"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a67cfbbe5179590b5deddf7d4086bc316">setViscosity</a> (double ApicalVisc, double BasalVisc, double PeripodialViscosity)</td></tr>
-<tr class="memdesc:a67cfbbe5179590b5deddf7d4086bc316"><td class="mdescLeft">&#160;</td><td class="mdescRight">The function to set the viscosity of the node.  <a href="#a67cfbbe5179590b5deddf7d4086bc316">More...</a><br /></td></tr>
-<tr class="separator:a67cfbbe5179590b5deddf7d4086bc316"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9a3b878b16fe5be6ee707a49f3fd7d5a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a9a3b878b16fe5be6ee707a49f3fd7d5a">setExternalViscosity</a> (double ApicalVisc, double BasalVisc)</td></tr>
+<tr class="memdesc:a9a3b878b16fe5be6ee707a49f3fd7d5a"><td class="mdescLeft">&#160;</td><td class="mdescRight">The function to set the viscosity of the node.  <a href="#a9a3b878b16fe5be6ee707a49f3fd7d5a">More...</a><br /></td></tr>
+<tr class="separator:a9a3b878b16fe5be6ee707a49f3fd7d5a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7dc5a9838a0a1963e58f648c5f7cb635"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a7dc5a9838a0a1963e58f648c5f7cb635">checkIfNeighbour</a> (int IdToCheck)</td></tr>
 <tr class="memdesc:a7dc5a9838a0a1963e58f648c5f7cb635"><td class="mdescLeft">&#160;</td><td class="mdescRight">The function to check if the node with input Id (IdToCheck) is an immediate neighbour of the owner node.  <a href="#a7dc5a9838a0a1963e58f648c5f7cb635">More...</a><br /></td></tr>
 <tr class="separator:a7dc5a9838a0a1963e58f648c5f7cb635"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -165,10 +165,14 @@ double *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 double **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#ac27dee69b570030aacf8865190879845">Velocity</a></td></tr>
 <tr class="memdesc:ac27dee69b570030aacf8865190879845"><td class="mdescLeft">&#160;</td><td class="mdescRight">The pointer(**) to the velocities of the node for each Runge-Kutta step. The final calculated velocity is stored in Velocity[0]. <br /></td></tr>
 <tr class="separator:ac27dee69b570030aacf8865190879845"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a69fe9806911156a4b9db8d2aca1b6328"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a69fe9806911156a4b9db8d2aca1b6328"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a69fe9806911156a4b9db8d2aca1b6328">Viscosity</a></td></tr>
-<tr class="memdesc:a69fe9806911156a4b9db8d2aca1b6328"><td class="mdescLeft">&#160;</td><td class="mdescRight">Viscosity of the node, defined by its placement within the tissue. <br /></td></tr>
-<tr class="separator:a69fe9806911156a4b9db8d2aca1b6328"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a03f2f0310bec3504b082d0f707fa3db2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a03f2f0310bec3504b082d0f707fa3db2"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a03f2f0310bec3504b082d0f707fa3db2">externalViscositySetInFixing</a> [3]</td></tr>
+<tr class="memdesc:a03f2f0310bec3504b082d0f707fa3db2"><td class="mdescLeft">&#160;</td><td class="mdescRight">The boolean array stating if the external viscosity of any axis has been set in node fixing options. The node fixing is carried out before the physical parameter settings in most cases. The boolean check is carried out not to overwrite the existing set viscosity in normal viscosity assignment. <br /></td></tr>
+<tr class="separator:a03f2f0310bec3504b082d0f707fa3db2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9bb34133d43eb0f29bfd0d0b65df395d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9bb34133d43eb0f29bfd0d0b65df395d"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a9bb34133d43eb0f29bfd0d0b65df395d">externalViscosity</a> [3]</td></tr>
+<tr class="memdesc:a9bb34133d43eb0f29bfd0d0b65df395d"><td class="mdescLeft">&#160;</td><td class="mdescRight">External viscosity of the node, defined by its placement within the tissue. This can be defined as an external adhesion, ECM remodelling, or any other form of viscosity. <br /></td></tr>
+<tr class="separator:a9bb34133d43eb0f29bfd0d0b65df395d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af754322e3928dc45f70b19762551890a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af754322e3928dc45f70b19762551890a"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#af754322e3928dc45f70b19762551890a">tissuePlacement</a></td></tr>
 <tr class="memdesc:af754322e3928dc45f70b19762551890a"><td class="mdescLeft">&#160;</td><td class="mdescRight">The tissue placement is 0 for basal nodes, 1 for apical nodes, and 2 for middle range. <br /></td></tr>
@@ -195,7 +199,7 @@ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cl
 <tr class="separator:af8e9678dfeffc9e99d925a83b58fde3d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab22060fb9f61a0d93ec52e6045828782"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab22060fb9f61a0d93ec52e6045828782"></a>
 vector&lt; int &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#ab22060fb9f61a0d93ec52e6045828782">immediateNeigs</a></td></tr>
-<tr class="memdesc:ab22060fb9f61a0d93ec52e6045828782"><td class="mdescLeft">&#160;</td><td class="mdescRight">The list of Id's for immediate neighbours of the node, i.e. the nodes that are shared by the elements that utilise the owner of this parameter. <br /></td></tr>
+<tr class="memdesc:ab22060fb9f61a0d93ec52e6045828782"><td class="mdescLeft">&#160;</td><td class="mdescRight">The list of Id's for immediate neighbours of the node, i.e. the nodes that are shared by the elements that utilise the owner of this node. <br /></td></tr>
 <tr class="separator:ab22060fb9f61a0d93ec52e6045828782"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a18bae606efb025cc90b4c117776e0bf9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a18bae606efb025cc90b4c117776e0bf9"></a>
 vector&lt; int &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a18bae606efb025cc90b4c117776e0bf9">connectedElementIds</a></td></tr>
@@ -205,6 +209,18 @@ vector&lt; int &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class=
 vector&lt; double &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a7ffccd2a70d08c1a42d4701f32a266c5">connectedElementWeights</a></td></tr>
 <tr class="memdesc:a7ffccd2a70d08c1a42d4701f32a266c5"><td class="mdescLeft">&#160;</td><td class="mdescRight">The list of weights (normalised mass) for elements that are utilising this node, order is linked to <a class="el" href="classNode.html#a18bae606efb025cc90b4c117776e0bf9" title="The list of Id&#39;s for elements that are utilising this node. ">Node::connectedElementIds</a>. <br /></td></tr>
 <tr class="separator:a7ffccd2a70d08c1a42d4701f32a266c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad29e0f81f8c0a5d4a3e891d3b239af7e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad29e0f81f8c0a5d4a3e891d3b239af7e"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#ad29e0f81f8c0a5d4a3e891d3b239af7e">symmetricEquivalentId</a></td></tr>
+<tr class="memdesc:ad29e0f81f8c0a5d4a3e891d3b239af7e"><td class="mdescLeft">&#160;</td><td class="mdescRight">The id of the node that this node will move symmetrically in y, if the tissue is symmetric and only half is simulated. <br /></td></tr>
+<tr class="separator:ad29e0f81f8c0a5d4a3e891d3b239af7e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a71d38b47678cff15e338f9c917d32696"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a71d38b47678cff15e338f9c917d32696"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a71d38b47678cff15e338f9c917d32696">hasLateralElementOwner</a></td></tr>
+<tr class="memdesc:a71d38b47678cff15e338f9c917d32696"><td class="mdescLeft">&#160;</td><td class="mdescRight">The boolean stating if any lateral element uses this node. <br /></td></tr>
+<tr class="separator:a71d38b47678cff15e338f9c917d32696"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae14618d71e657039ed84316154be7330"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae14618d71e657039ed84316154be7330"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#ae14618d71e657039ed84316154be7330">atSymmetricityBorder</a></td></tr>
+<tr class="memdesc:ae14618d71e657039ed84316154be7330"><td class="mdescLeft">&#160;</td><td class="mdescRight">The boolean stating if the node is at the border of symmetricity. <br /></td></tr>
+<tr class="separator:ae14618d71e657039ed84316154be7330"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>The node class </p>
@@ -224,6 +240,7 @@ vector&lt; double &gt;&#160;</td><td class="memItemRight" valign="bottom"><a cla
 </div><div class="memdoc">
 
 <p>The function to check if the node with input Id (IdToCheck) is an immediate neighbour of the owner node. </p>
+<p>This node will take in the apical columnar layer, basal columnar layer, and peripodial membrane viscosities of the tissue as inputs, respectively. The external viscosity of the node will be assigned via its <a class="el" href="classNode.html#af754322e3928dc45f70b19762551890a" title="The tissue placement is 0 for basal nodes, 1 for apical nodes, and 2 for middle range. ">Node::tissuePlacement</a> and <a class="el" href="classNode.html#ae621097f98f1d33d283cf65a0a02d29a" title="The tissue type is 0 for columnar layer, 1 for peripodial membrane, and 2 for linker zone...">Node::tissueType</a>. On the columnar layer, nodes that are in the mid-zone of the tissue (neither on the apical nor on the basal surface, will take the average of the two values. </p>
 <p>The function will return true if the node with the unique <a class="el" href="classNode.html#a1bd379569cc1a8b96432e61971aed4d9" title="The unique identification number of the node. ">Node::Id</a> equal to "IdToCheck" is an immediate neighbour of the current node. The search will be done through the list <a class="el" href="classNode.html#ab22060fb9f61a0d93ec52e6045828782" title="The list of Id&#39;s for immediate neighbours of the node, i.e. the nodes that are shared by the elements...">Node::immediateNeigs</a></p>
 
 </div>
@@ -242,7 +259,7 @@ vector&lt; double &gt;&#160;</td><td class="memItemRight" valign="bottom"><a cla
 </div><div class="memdoc">
 
 <p>The function to check if the node is eligible for packing. </p>
-<p>The function will return true if the node is eligible for packing calculation. This packing will ensure volume exclusion, and is calculated via function Simulation::calculatePacking. It is not necessary to calculate packing under the following conditions: 1) The node is at the middle of the columnar layer, the packing should have stopped any other node/element coming close enough to this node, as they would need to penetrate through the apical or basal surface of the tissue to reach this node.</p>
+<p>The function will return true if the node is eligible for packing calculation. This packing will ensure volume exclusion, and is calculated via function <a class="el" href="classSimulation.html#a51cb5448f660eeefc54a5d2a33ab561e">Simulation::calculatePacking</a>. It is not necessary to calculate packing under the following conditions: 1) The node is at the middle of the columnar layer, the packing should have stopped any other node/element coming close enough to this node, as they would need to penetrate through the apical or basal surface of the tissue to reach this node.</p>
 
 </div>
 </div>
@@ -301,12 +318,12 @@ vector&lt; double &gt;&#160;</td><td class="memItemRight" valign="bottom"><a cla
 
 </div>
 </div>
-<a class="anchor" id="a67cfbbe5179590b5deddf7d4086bc316"></a>
+<a class="anchor" id="a9a3b878b16fe5be6ee707a49f3fd7d5a"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void Node::setViscosity </td>
+          <td class="memname">void Node::setExternalViscosity </td>
           <td>(</td>
           <td class="paramtype">double&#160;</td>
           <td class="paramname"><em>ApicalVisc</em>, </td>
@@ -315,13 +332,7 @@ vector&lt; double &gt;&#160;</td><td class="memItemRight" valign="bottom"><a cla
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>BasalVisc</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>PeripodialViscosity</em>&#160;</td>
+          <td class="paramname"><em>BasalVisc</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -332,7 +343,7 @@ vector&lt; double &gt;&#160;</td><td class="memItemRight" valign="bottom"><a cla
 </div><div class="memdoc">
 
 <p>The function to set the viscosity of the node. </p>
-<p>This node will take in the apical columnar layer, basal columnar layer, and peripodial membrane viscosities of the tissue as inputs, respectively. The viscosity of the node will be assigned via its <a class="el" href="classNode.html#af754322e3928dc45f70b19762551890a" title="The tissue placement is 0 for basal nodes, 1 for apical nodes, and 2 for middle range. ">Node::tissuePlacement</a> and <a class="el" href="classNode.html#ae621097f98f1d33d283cf65a0a02d29a" title="The tissue type is 0 for columnar layer, 1 for peripodial membrane, and 2 for linker zone...">Node::tissueType</a>. The peripodial membrane is a 2D structure, and will not need to have the distinction between the apical and basal surfaces. On the columnar layer, nodes that are in the mid-zone of the tissue (neither on the apical nor on the basal surface, will take the average of the two values.</p>
+<p>This node will take in the apical and basal external viscosities of the tissue as inputs, respectively. The external viscosity of the node will be assigned via its <a class="el" href="classNode.html#af754322e3928dc45f70b19762551890a" title="The tissue placement is 0 for basal nodes, 1 for apical nodes, and 2 for middle range. ">Node::tissuePlacement</a> and <a class="el" href="classNode.html#ae621097f98f1d33d283cf65a0a02d29a" title="The tissue type is 0 for columnar layer, 1 for peripodial membrane, and 2 for linker zone...">Node::tissueType</a>. On the columnar layer, nodes that are in the mid-zone of the tissue (neither on the apical nor on the basal surface, will take the average of the two values.</p>
 
 </div>
 </div>
@@ -346,7 +357,7 @@ vector&lt; double &gt;&#160;</td><td class="memItemRight" valign="bottom"><a cla
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="classNode.html">Node</a></li>
-    <li class="footer">Generated on Tue Nov 3 2015 16:55:13 for Tissue Origami by
+    <li class="footer">Generated on Fri Apr 15 2016 19:51:54 for Tissue Origami by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

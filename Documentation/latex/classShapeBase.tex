@@ -24,6 +24,9 @@ Inheritance diagram for Shape\+Base\+:\begin{figure}[H]
 \hypertarget{classShapeBase_a55c283eaee304f9056089987e9b65012}{}int $\ast$ {\bfseries get\+Node\+Ids} ()\label{classShapeBase_a55c283eaee304f9056089987e9b65012}
 
 \item 
+\hypertarget{classShapeBase_a586ebd517ab4b08eab7685b3c004b800}{}int {\bfseries get\+Node\+Id} (int i)\label{classShapeBase_a586ebd517ab4b08eab7685b3c004b800}
+
+\item 
 \hypertarget{classShapeBase_ad60d92b34044153a677a8bfc0a31a5df}{}int {\bfseries get\+Dim} ()\label{classShapeBase_ad60d92b34044153a677a8bfc0a31a5df}
 
 \item 
@@ -39,7 +42,10 @@ Inheritance diagram for Shape\+Base\+:\begin{figure}[H]
 \hypertarget{classShapeBase_a44c758ac93865a1e51e63212ebfe2787}{}double {\bfseries get\+Columnarness} ()\label{classShapeBase_a44c758ac93865a1e51e63212ebfe2787}
 
 \item 
-\hypertarget{classShapeBase_ad88d175251a7604ed47e2b694f111c47}{}void {\bfseries get\+Relative\+Position\+In\+Tissue\+In\+Grid\+Index} (int n\+Grid\+X, int n\+Grid\+Y, double $\ast$columnar\+Reletive\+Pos, double $\ast$peripodial\+Relative\+Pos, int \&columnar\+Index\+X, int \&peripodial\+Index\+X, int \&columnar\+Index\+Y, int \&peripodial\+Index\+Y, double \&columnar\+Frac\+X, double \&peripodial\+Frac\+X, double \&columnar\+Frac\+Y, double \&peripodial\+Frac\+Y)\label{classShapeBase_ad88d175251a7604ed47e2b694f111c47}
+\hypertarget{classShapeBase_a13cf955dcc9db425c762053468578d72}{}void {\bfseries get\+Relative\+Position\+In\+Tissue\+In\+Grid\+Index} (int n\+Grid\+X, int n\+Grid\+Y, int \&Index\+X, int \&Index\+Y, double \&Frac\+X, double \&Frac\+Y)\label{classShapeBase_a13cf955dcc9db425c762053468578d72}
+
+\item 
+\hypertarget{classShapeBase_a2e91ece1ff8f6cfa8d8c495a3afc59c5}{}void {\bfseries get\+Initial\+Relative\+Position\+In\+Tissue\+In\+Grid\+Index} (int n\+Grid\+X, int n\+Grid\+Y, int \&Index\+X, int \&Index\+Y, double \&Frac\+X, double \&Frac\+Y)\label{classShapeBase_a2e91ece1ff8f6cfa8d8c495a3afc59c5}
 
 \item 
 \hypertarget{classShapeBase_a7c429bc57f1b16e3e1d4f2bb98360298}{}bool {\bfseries is\+Growth\+Rate\+Applicable} (int source\+Tissue, double \&weight)\label{classShapeBase_a7c429bc57f1b16e3e1d4f2bb98360298}
@@ -54,16 +60,19 @@ Inheritance diagram for Shape\+Base\+:\begin{figure}[H]
 \hypertarget{classShapeBase_a009b5aed1c546db5e517f9f33f67b066}{}void {\bfseries update\+Growth\+Increment} (gsl\+\_\+matrix $\ast$columnar, gsl\+\_\+matrix $\ast$peripodial)\label{classShapeBase_a009b5aed1c546db5e517f9f33f67b066}
 
 \item 
-\hypertarget{classShapeBase_a3d71461730bfc221c8dcf8e4a7e31b3d}{}void {\bfseries calculate\+Relative\+Pos\+In\+Bounding\+Box} (double columnar\+Bounding\+Box\+X\+Min, double columnar\+Bounding\+Box\+Y\+Min, double columnar\+Bounding\+Box\+Length, double columnar\+Bounding\+Box\+Width, double peipodial\+Bounding\+Box\+X\+Min, double peipodial\+Bounding\+Box\+Y\+Min, double peipodial\+Bounding\+Box\+Length, double peipodial\+Bounding\+Box\+Width)\label{classShapeBase_a3d71461730bfc221c8dcf8e4a7e31b3d}
+\hypertarget{classShapeBase_a04278729ad9cc3238b1966ade0685a3d}{}void {\bfseries calculate\+Relative\+Pos\+In\+Bounding\+Box} (double bounding\+Box\+X\+Min, double bounding\+Box\+Y\+Min, double bounding\+Box\+Length, double bounding\+Box\+Width)\label{classShapeBase_a04278729ad9cc3238b1966ade0685a3d}
 
 \item 
 \hypertarget{classShapeBase_ae5e17514271f121498ed12cebae3aebe}{}void {\bfseries display\+Relative\+Pos\+In\+Bounding\+Box} ()\label{classShapeBase_ae5e17514271f121498ed12cebae3aebe}
 
 \item 
-\hypertarget{classShapeBase_aa741d2a88ca8107af26816e467adc8ba}{}void {\bfseries get\+Relative\+Pos\+In\+Columnar\+Bounding\+Box} (double $\ast$relative\+Pos)\label{classShapeBase_aa741d2a88ca8107af26816e467adc8ba}
+\hypertarget{classShapeBase_a0d33afa938cd84b1376806a06769f6b9}{}void {\bfseries get\+Relative\+Pos\+In\+Bounding\+Box} (double $\ast$relative\+Pos)\label{classShapeBase_a0d33afa938cd84b1376806a06769f6b9}
 
 \item 
-\hypertarget{classShapeBase_a1c8199f314d271da360831d797f7c070}{}void {\bfseries get\+Relative\+Pos\+In\+Peripodial\+Bounding\+Box} (double $\ast$relative\+Pos)\label{classShapeBase_a1c8199f314d271da360831d797f7c070}
+\hypertarget{classShapeBase_a8c7a7578407be503531bf14af6d004d1}{}void {\bfseries set\+Initial\+Relative\+Pos\+In\+Bounding\+Box} ()\label{classShapeBase_a8c7a7578407be503531bf14af6d004d1}
+
+\item 
+\hypertarget{classShapeBase_af2e6905d811de3ca73c0971b3fd21225}{}void {\bfseries get\+Initial\+Relative\+Pos\+In\+Bounding\+Box} (double $\ast$relative\+Pos)\label{classShapeBase_af2e6905d811de3ca73c0971b3fd21225}
 
 \item 
 \hypertarget{classShapeBase_ad34b6e8535ad7a534110f03792f5f5d1}{}void {\bfseries convert\+Relative\+Pos\+To\+Grid\+Index} (double $\ast$relpos, int \&index\+X, int \&index\+Y, double \&frac\+X, double \&frac\+Y, int n\+Grid\+X, int n\+Grid\+Y)\label{classShapeBase_ad34b6e8535ad7a534110f03792f5f5d1}
@@ -76,6 +85,9 @@ Inheritance diagram for Shape\+Base\+:\begin{figure}[H]
 
 \item 
 \hypertarget{classShapeBase_abff91451c3465778ed89624d6196f7f6}{}void {\bfseries get\+Pys\+Prop} (int type, float \&Pys\+Prop\+Mag, double dt)\label{classShapeBase_abff91451c3465778ed89624d6196f7f6}
+
+\item 
+\hypertarget{classShapeBase_a51bc2c7303dfaae0687d1d785b077e81}{}double {\bfseries get\+Internal\+Viscosity} ()\label{classShapeBase_a51bc2c7303dfaae0687d1d785b077e81}
 
 \item 
 \hypertarget{classShapeBase_ade96ff86461eaabce716e83fa68bfa19}{}double {\bfseries get\+Young\+Modulus} ()\label{classShapeBase_ade96ff86461eaabce716e83fa68bfa19}
@@ -123,6 +135,12 @@ Inheritance diagram for Shape\+Base\+:\begin{figure}[H]
 \hypertarget{classShapeBase_a948e9da80e40851c9813f8251d1979ec}{}virtual void {\bfseries set\+Elastic\+Properties} (double E\+Apical, double E\+Basal, double E\+Mid, double v)\label{classShapeBase_a948e9da80e40851c9813f8251d1979ec}
 
 \item 
+\hypertarget{classShapeBase_ac4e051a82edb9b987edfbd783076e348}{}void {\bfseries set\+Viscosity} (double viscosity\+Apical, double viscosity\+Basal, double viscosity\+Mid)\label{classShapeBase_ac4e051a82edb9b987edfbd783076e348}
+
+\item 
+\hypertarget{classShapeBase_a8b6ffc8d699795e4efb867efd065a679}{}void {\bfseries set\+Viscosity} (double viscosity\+Apical, double viscosity\+Basal)\label{classShapeBase_a8b6ffc8d699795e4efb867efd065a679}
+
+\item 
 \hypertarget{classShapeBase_ae7c003e9b98e31d04275ffb45709c9fa}{}virtual void {\bfseries calculate\+Basal\+Normal} (double $\ast$normal)\label{classShapeBase_ae7c003e9b98e31d04275ffb45709c9fa}
 
 \item 
@@ -141,10 +159,13 @@ Inheritance diagram for Shape\+Base\+:\begin{figure}[H]
 \hypertarget{classShapeBase_ab86b6c4eef2ea6232dd1d0c300ae5602}{}virtual void {\bfseries calculate\+Element\+Shape\+Function\+Derivatives} ()\label{classShapeBase_ab86b6c4eef2ea6232dd1d0c300ae5602}
 
 \item 
-\hypertarget{classShapeBase_afc2e2e90a9352778ba6bf6d547e319bf}{}virtual void {\bfseries calculate\+Curr\+Nodal\+Forces} (gsl\+\_\+matrix $\ast$gslcurrg, gsl\+\_\+matrix $\ast$gslcurr\+F, int point\+No)\label{classShapeBase_afc2e2e90a9352778ba6bf6d547e319bf}
+\hypertarget{classShapeBase_a794789329f2e957deb1eef163310c982}{}virtual void {\bfseries calculate\+Curr\+Nodal\+Forces} (gsl\+\_\+matrix $\ast$gslcurrge, gsl\+\_\+matrix $\ast$gslcurrgv, gsl\+\_\+matrix $\ast$gslcurr\+F, gsl\+\_\+matrix $\ast$displacement\+Per\+Dt, int point\+No)\label{classShapeBase_a794789329f2e957deb1eef163310c982}
 
 \item 
 \hypertarget{classShapeBase_a146919562543c6f08d34cf1ae3e54a51}{}virtual void {\bfseries calculate\+Curr\+Tri\+Point\+F\+For\+Rotation} (gsl\+\_\+matrix $\ast$curr\+F, int point\+No)\label{classShapeBase_a146919562543c6f08d34cf1ae3e54a51}
+
+\item 
+\hypertarget{classShapeBase_a0f3186b2f1bfd0c1f012f4cede1074d6}{}void {\bfseries write\+Internal\+Forces\+Toge\+Andgv} (gsl\+\_\+matrix $\ast$ge, gsl\+\_\+matrix $\ast$gv\+Internal, double $\ast$$\ast$System\+Forces, vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&Nodes)\label{classShapeBase_a0f3186b2f1bfd0c1f012f4cede1074d6}
 
 \item 
 \hypertarget{classShapeBase_a010092ac7af5667facbbb8fb6bd98976}{}virtual void {\bfseries calculate\+Apical\+Area} ()\label{classShapeBase_a010092ac7af5667facbbb8fb6bd98976}
@@ -153,13 +174,22 @@ Inheritance diagram for Shape\+Base\+:\begin{figure}[H]
 \hypertarget{classShapeBase_a0bc80947335afbc181fca326e9a6b7fb}{}virtual void {\bfseries calculate\+Basal\+Area} ()\label{classShapeBase_a0bc80947335afbc181fca326e9a6b7fb}
 
 \item 
-\hypertarget{classShapeBase_a075abfd176f835cf41b581f34682785f}{}void {\bfseries calculate\+Forces} (double $\ast$$\ast$System\+Forces, vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&Nodes, bool record\+Forces\+On\+Fixed\+Nodes, double $\ast$$\ast$Fixed\+Node\+Forces, ofstream \&output\+File)\label{classShapeBase_a075abfd176f835cf41b581f34682785f}
+\hypertarget{classShapeBase_aca8440ce5566af0d0a6a6d981e9784cc}{}void {\bfseries calculate\+Forces} (vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&Nodes, gsl\+\_\+matrix $\ast$displacement\+Per\+Dt, bool record\+Forces\+On\+Fixed\+Nodes, double $\ast$$\ast$Fixed\+Node\+Forces, ofstream \&output\+File)\label{classShapeBase_aca8440ce5566af0d0a6a6d981e9784cc}
 
 \item 
 \hypertarget{classShapeBase_a990c3d93836d53687b8af49a489dbde4}{}void {\bfseries update\+Positions} (vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&Nodes)\label{classShapeBase_a990c3d93836d53687b8af49a489dbde4}
 
 \item 
-\hypertarget{classShapeBase_a360757aa3950487361874725c1e5ed9e}{}void {\bfseries set\+Growth\+Rate} (double dt, double x, double y, double z)\label{classShapeBase_a360757aa3950487361874725c1e5ed9e}
+\hypertarget{classShapeBase_a67c28a77c275496eaecc88005e097819}{}void {\bfseries update\+Reference\+Positions\+To\+Curent\+Shape} ()\label{classShapeBase_a67c28a77c275496eaecc88005e097819}
+
+\item 
+\hypertarget{classShapeBase_ac06c53088788e3c1461233623f506dbb}{}void {\bfseries set\+Growth\+Rate} (double dt, double rx, double ry, double rz)\label{classShapeBase_ac06c53088788e3c1461233623f506dbb}
+
+\item 
+\hypertarget{classShapeBase_ad463361e0b893ceee62a5c65c4c0e0f6}{}void {\bfseries set\+Growth\+Rate\+Exp\+From\+Input} (double x, double y, double z)\label{classShapeBase_ad463361e0b893ceee62a5c65c4c0e0f6}
+
+\item 
+\hypertarget{classShapeBase_ad7d7957431a1ae402347efb03ad94d0e}{}void {\bfseries update\+Growth\+Increment\+From\+Rate} ()\label{classShapeBase_ad7d7957431a1ae402347efb03ad94d0e}
 
 \item 
 \hypertarget{classShapeBase_aaf8312bb00ea6178abd9ebb1e8f40099}{}void {\bfseries clean\+Myosin\+Force} ()\label{classShapeBase_aaf8312bb00ea6178abd9ebb1e8f40099}
@@ -171,7 +201,22 @@ Inheritance diagram for Shape\+Base\+:\begin{figure}[H]
 \hypertarget{classShapeBase_a6e4cc22d01118cf2dcb77276b56edf9d}{}void {\bfseries update\+Unipolar\+Equilibrium\+Myosin\+Concentration} (bool is\+Apical, double c\+Eq\+Unipolar, double orientation\+X, double orientation\+Y)\label{classShapeBase_a6e4cc22d01118cf2dcb77276b56edf9d}
 
 \item 
-\hypertarget{classShapeBase_ac39db6987b89791e7a0dad1c9f3540f2}{}void {\bfseries update\+Myosin\+Concentration} (double dt, double k\+Myo)\label{classShapeBase_ac39db6987b89791e7a0dad1c9f3540f2}
+\hypertarget{classShapeBase_ae141d5296b5b4ce7ca59b8c217ef2947}{}void {\bfseries adjust\+C\+Myosin\+From\+Save} ()\label{classShapeBase_ae141d5296b5b4ce7ca59b8c217ef2947}
+
+\item 
+\hypertarget{classShapeBase_aa5af6d7dda5ce1f12bf644d06b1f151c}{}void {\bfseries update\+Myosin\+Concentration} (double dt, double k\+Myo, bool there\+Is\+Myosin\+Feedback, double Myosin\+Feedback\+Cap)\label{classShapeBase_aa5af6d7dda5ce1f12bf644d06b1f151c}
+
+\item 
+\hypertarget{classShapeBase_a52c8bd76ad2d14cab37563fcdeff1b20}{}void {\bfseries calculate\+Principal\+Strain\+Axes\+On\+X\+Y\+Plane} (double \&e1, double \&e2, double \&tet)\label{classShapeBase_a52c8bd76ad2d14cab37563fcdeff1b20}
+
+\item 
+\hypertarget{classShapeBase_a6d50f91e2e243539cfa67b8c0f28612e}{}void {\bfseries update\+Equilibrium\+Myo\+With\+Feedback\+From\+Zero} (double Myosin\+Feedback\+Cap)\label{classShapeBase_a6d50f91e2e243539cfa67b8c0f28612e}
+
+\item 
+\hypertarget{classShapeBase_a842a99fa11e8bd7293644ccb0b99ba3a}{}void {\bfseries update\+Equilibrium\+Myo\+With\+Feedback\+From\+Fixed\+Total} (double total\+Myosin\+Level)\label{classShapeBase_a842a99fa11e8bd7293644ccb0b99ba3a}
+
+\item 
+\hypertarget{classShapeBase_a61b4685d3e89fae029b56ca3f81fb5d6}{}bool {\bfseries check\+If\+X\+Y\+Plane\+Strain\+Above\+Threshold} (double thres)\label{classShapeBase_a61b4685d3e89fae029b56ca3f81fb5d6}
 
 \item 
 \hypertarget{classShapeBase_abfb5933433de7f4f6c58734be0faeac2}{}bool {\bfseries calculate\+If\+Inside\+Active\+Stripe} (double initial\+Point, double end\+Point, double stripe\+Size1, double stripe\+Size2)\label{classShapeBase_abfb5933433de7f4f6c58734be0faeac2}
@@ -222,10 +267,16 @@ Inheritance diagram for Shape\+Base\+:\begin{figure}[H]
 \hypertarget{classShapeBase_a3c08833714950163efbf15f9b1c26765}{}void {\bfseries reset\+Curr\+Step\+Shape\+Change\+Data} ()\label{classShapeBase_a3c08833714950163efbf15f9b1c26765}
 
 \item 
-\hypertarget{classShapeBase_af6cd6e943b529eca33c92723893bf991}{}void {\bfseries write\+Kelastic\+To\+Main\+Katrix} (gsl\+\_\+matrix $\ast$Ke)\label{classShapeBase_af6cd6e943b529eca33c92723893bf991}
+\hypertarget{classShapeBase_a2bfdde187477364a5a0e2220ea6b2e0e}{}void {\bfseries write\+Kelastic\+To\+Main\+Katrix} (gsl\+\_\+matrix $\ast$K)\label{classShapeBase_a2bfdde187477364a5a0e2220ea6b2e0e}
+
+\item 
+\hypertarget{classShapeBase_a388d38c2d6588c7ddf622f1deed53853}{}void {\bfseries write\+Kviscous\+To\+Main\+Katrix} (gsl\+\_\+matrix $\ast$K)\label{classShapeBase_a388d38c2d6588c7ddf622f1deed53853}
 
 \item 
 \hypertarget{classShapeBase_a922c41864d4826725cc72089046f818c}{}void {\bfseries calculate\+Implicit\+K\+Elastic} ()\label{classShapeBase_a922c41864d4826725cc72089046f818c}
+
+\item 
+\hypertarget{classShapeBase_ac239aba1d2778cd3353bdab964396de8}{}void {\bfseries calculate\+Implicit\+K\+Viscous} (double dt)\label{classShapeBase_ac239aba1d2778cd3353bdab964396de8}
 
 \item 
 \hypertarget{classShapeBase_a6a9f16ddb320974584323d78ca4aec9c}{}void {\bfseries calculate\+Force\+From\+Stress} (int node\+Id, gsl\+\_\+matrix $\ast$Externalstress, gsl\+\_\+matrix $\ast$External\+Nodal\+Forces)\label{classShapeBase_a6a9f16ddb320974584323d78ca4aec9c}
@@ -302,6 +353,9 @@ Inheritance diagram for Shape\+Base\+:\begin{figure}[H]
 \item 
 void \hyperlink{classShapeBase_a5409de18ee9e47af0bb977f4a1e608fb}{change\+Shape\+By\+Fsc} (double dt)
 \item 
+\hypertarget{classShapeBase_a35681881a6597bb1c0788ec219a77282}{}void {\bfseries calculate\+Plastic\+Deformation} (bool volume\+Conserved, double rate)\label{classShapeBase_a35681881a6597bb1c0788ec219a77282}
+
+\item 
 \hypertarget{classShapeBase_a6d8088a8bb897d79a796a253c06d954f}{}virtual double {\bfseries get\+Apical\+Side\+Length\+Average} ()\label{classShapeBase_a6d8088a8bb897d79a796a253c06d954f}
 
 \item 
@@ -317,13 +371,16 @@ void \hyperlink{classShapeBase_a5409de18ee9e47af0bb977f4a1e608fb}{change\+Shape\
 \hypertarget{classShapeBase_a995a5e6a553ed0cdaadf74dab4f88822}{}virtual double {\bfseries get\+Element\+Height} ()\label{classShapeBase_a995a5e6a553ed0cdaadf74dab4f88822}
 
 \item 
-\hypertarget{classShapeBase_a1c09acb3989e4d461c2ce74715214954}{}virtual bool {\bfseries Is\+Point\+Close\+Enough\+For\+Packing} (double $\ast$Pos, float Peripodialthreshold, float Columnarthreshold, int Tissue\+Placement\+Of\+Packing\+Node, int Tissue\+Type\+Of\+Packing\+Node)\label{classShapeBase_a1c09acb3989e4d461c2ce74715214954}
+\hypertarget{classShapeBase_a2177773f629648276202a5beca81a4e8}{}virtual void {\bfseries get\+Relevant\+Nodes\+For\+Packing} (int Tissue\+Placement\+Of\+Packing\+Node, int Tissue\+Type\+Of\+Packing\+Node, int \&id1, int \&id2, int \&id3)\label{classShapeBase_a2177773f629648276202a5beca81a4e8}
 
 \item 
-\hypertarget{classShapeBase_ab6611ef2738450d5990e93ccedcb18ad}{}virtual void {\bfseries calculate\+Normal\+For\+Packing} (int tissue\+Placement)\label{classShapeBase_ab6611ef2738450d5990e93ccedcb18ad}
+\hypertarget{classShapeBase_a2182160216e98fb3c07648d4101f9833}{}virtual bool {\bfseries Is\+Point\+Close\+Enough\+For\+Packing} (double $\ast$Pos, float threshold, int Tissue\+Placement\+Of\+Packing\+Node, int Tissue\+Type\+Of\+Packing\+Node)\label{classShapeBase_a2182160216e98fb3c07648d4101f9833}
 
 \item 
-\hypertarget{classShapeBase_af715a49333b9ffd4fcd96a3c649cbe2b}{}virtual void {\bfseries Add\+Packing\+To\+Surface} (int tissueplacement, double Fx, double Fy, double Fz, double $\ast$$\ast$System\+Forces, double $\ast$$\ast$Packing\+Forces, vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&Nodes)\label{classShapeBase_af715a49333b9ffd4fcd96a3c649cbe2b}
+\hypertarget{classShapeBase_a81c2b32d9bd860c202c2c18bdaefb46c}{}virtual void {\bfseries calculate\+Normal\+For\+Packing} (int tissue\+Placement\+Of\+Normal)\label{classShapeBase_a81c2b32d9bd860c202c2c18bdaefb46c}
+
+\item 
+\hypertarget{classShapeBase_a3d9c7401fa0ffdb2fda0b69fc854f6f3}{}virtual void {\bfseries Add\+Packing\+To\+Surface} (int tissueplacement, double Fx, double Fy, double Fz, double $\ast$$\ast$Packing\+Forces, vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&Nodes, bool \&all\+Corners\+Fixed\+X, bool \&all\+Corners\+Fixed\+Y, bool \&all\+Corners\+Fixed\+Z)\label{classShapeBase_a3d9c7401fa0ffdb2fda0b69fc854f6f3}
 
 \item 
 \hypertarget{classShapeBase_a8e70b4b3be96de765028face345ad73d}{}virtual void {\bfseries get\+Apical\+Node\+Pos} (double $\ast$pos\+Corner)\label{classShapeBase_a8e70b4b3be96de765028face345ad73d}
@@ -383,6 +440,9 @@ void \hyperlink{classShapeBase_a5409de18ee9e47af0bb977f4a1e608fb}{change\+Shape\
 \hypertarget{classShapeBase_a3a3490f8a96e14e59b82f4de24ce48e2}{}void {\bfseries check\+Display\+Clipping} (double x\+Clip, double y\+Clip, double z\+Clip)\label{classShapeBase_a3a3490f8a96e14e59b82f4de24ce48e2}
 
 \item 
+\hypertarget{classShapeBase_a6b58642f88a23bd984d7af48cbd4f95a}{}double {\bfseries dot\+Product3\+D} (double $\ast$u, double $\ast$v)\label{classShapeBase_a6b58642f88a23bd984d7af48cbd4f95a}
+
+\item 
 \hypertarget{classShapeBase_ab5c4c774227af1d446f80c0ef58044c9}{}void {\bfseries cross\+Product3\+D} (double $\ast$u, double $\ast$v, double $\ast$cross)\label{classShapeBase_ab5c4c774227af1d446f80c0ef58044c9}
 
 \item 
@@ -422,6 +482,9 @@ void \hyperlink{classShapeBase_a5409de18ee9e47af0bb977f4a1e608fb}{change\+Shape\
 \hypertarget{classShapeBase_a4bda00f80968d836c647afe5f6d1fb36}{}gsl\+\_\+matrix $\ast$ {\bfseries Strain}\label{classShapeBase_a4bda00f80968d836c647afe5f6d1fb36}
 
 \item 
+\hypertarget{classShapeBase_a3da6d64116b5d73e2bb27d378035df41}{}bool {\bfseries is\+Flipped}\label{classShapeBase_a3da6d64116b5d73e2bb27d378035df41}
+
+\item 
 \hypertarget{classShapeBase_a994acea5e6f2cf92c94f485e7ba5afc9}{}bool {\bfseries Is\+Changing\+Shape}\label{classShapeBase_a994acea5e6f2cf92c94f485e7ba5afc9}
 
 \item 
@@ -437,10 +500,22 @@ void \hyperlink{classShapeBase_a5409de18ee9e47af0bb977f4a1e608fb}{change\+Shape\
 \hypertarget{classShapeBase_a1d56f7eb3fed744adc268bc4da7a790f}{}int \hyperlink{classShapeBase_a1d56f7eb3fed744adc268bc4da7a790f}{tissue\+Type}\label{classShapeBase_a1d56f7eb3fed744adc268bc4da7a790f}
 
 \begin{DoxyCompactList}\small\item\em The tissue type is 0 for columnar layer, 1 for peripodial membrane, and 2 for linker zone. \end{DoxyCompactList}\item 
+\hypertarget{classShapeBase_adafe85bbee6173d2a321408cd8b63db3}{}bool \hyperlink{classShapeBase_adafe85bbee6173d2a321408cd8b63db3}{spans\+Whole\+Tissue}\label{classShapeBase_adafe85bbee6173d2a321408cd8b63db3}
+
+\begin{DoxyCompactList}\small\item\em Boolean staing is the element spans the whole tissue. This is used to identify mid-\/layer tagged tissues (tissue\+Placement = 2), that should still have apical abd basal responses (such as myosin). \end{DoxyCompactList}\item 
 \hypertarget{classShapeBase_a4f09d39d079bfe95ea7c25f5d3de6c09}{}bool {\bfseries Is\+Ablated}\label{classShapeBase_a4f09d39d079bfe95ea7c25f5d3de6c09}
 
 \item 
+\hypertarget{classShapeBase_a3d15f14d23230682242ed063872617af}{}bool {\bfseries at\+Symetricity\+Boundary}\label{classShapeBase_a3d15f14d23230682242ed063872617af}
+
+\item 
 \hypertarget{classShapeBase_a6f5e25bc9b4376c0aa28aec59af6cf2f}{}bool {\bfseries Is\+Clipped\+In\+Display}\label{classShapeBase_a6f5e25bc9b4376c0aa28aec59af6cf2f}
+
+\item 
+\hypertarget{classShapeBase_ad58b945ab4de36d2ab56b8a33fd10c20}{}bool {\bfseries Is\+X\+Symmetric\+Clipped\+In\+Display}\label{classShapeBase_ad58b945ab4de36d2ab56b8a33fd10c20}
+
+\item 
+\hypertarget{classShapeBase_ab7376a727388707fc2502490701e48a0}{}bool {\bfseries Is\+Y\+Symmetric\+Clipped\+In\+Display}\label{classShapeBase_ab7376a727388707fc2502490701e48a0}
 
 \item 
 \hypertarget{classShapeBase_a3d48903871978d77a77cb77f569975c0}{}double {\bfseries Curr\+Shape\+Change\+To\+Add} \mbox{[}3\mbox{]}\label{classShapeBase_a3d48903871978d77a77cb77f569975c0}
@@ -506,9 +581,6 @@ void \hyperlink{classShapeBase_a5409de18ee9e47af0bb977f4a1e608fb}{change\+Shape\
 \hypertarget{classShapeBase_a82fc62813dedf48bf3074206a26c3dfd}{}int {\bfseries determinant\+\_\+sign} (boost\+::numeric\+::ublas\+::permutation\+\_\+matrix$<$ std\+::size\+\_\+t $>$ \&pm)\label{classShapeBase_a82fc62813dedf48bf3074206a26c3dfd}
 
 \item 
-\hypertarget{classShapeBase_a6b58642f88a23bd984d7af48cbd4f95a}{}double {\bfseries dot\+Product3\+D} (double $\ast$u, double $\ast$v)\label{classShapeBase_a6b58642f88a23bd984d7af48cbd4f95a}
-
-\item 
 \hypertarget{classShapeBase_ac4c46ba7c9b89a208fafb419097494a5}{}void {\bfseries update\+Node\+Ids\+From\+Save} (ifstream \&file)\label{classShapeBase_ac4c46ba7c9b89a208fafb419097494a5}
 
 \item 
@@ -521,16 +593,25 @@ void \hyperlink{classShapeBase_a5409de18ee9e47af0bb977f4a1e608fb}{change\+Shape\
 \hypertarget{classShapeBase_a8bf9c7c8ae6a3195ec9c6b6bdaf847ab}{}bool {\bfseries calculate\+Growth\+Strains\+Rot\+Mat} (double $\ast$v)\label{classShapeBase_a8bf9c7c8ae6a3195ec9c6b6bdaf847ab}
 
 \item 
-\hypertarget{classShapeBase_acbe7dfe60cdac63414879ea0e0d0fc2f}{}void {\bfseries calculate\+Forces3\+D} (double $\ast$$\ast$System\+Forces, vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&Nodes, bool record\+Forces\+On\+Fixed\+Nodes, double $\ast$$\ast$Fixed\+Node\+Forces, ofstream \&output\+File)\label{classShapeBase_acbe7dfe60cdac63414879ea0e0d0fc2f}
+\hypertarget{classShapeBase_adb3406309c4c0d5ba20cb637ceca6856}{}void {\bfseries calculate\+Forces3\+D} (vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&Nodes, gsl\+\_\+matrix $\ast$displacement\+Per\+Dt, bool record\+Forces\+On\+Fixed\+Nodes, double $\ast$$\ast$Fixed\+Node\+Forces, ofstream \&output\+File)\label{classShapeBase_adb3406309c4c0d5ba20cb637ceca6856}
 
 \item 
-\hypertarget{classShapeBase_a311e773cb7bf7c410c39026d7183b4ad}{}gsl\+\_\+matrix $\ast$ {\bfseries calculate\+E\+For\+Nodal\+Forces} (gsl\+\_\+matrix $\ast$F, gsl\+\_\+matrix $\ast$Fe)\label{classShapeBase_a311e773cb7bf7c410c39026d7183b4ad}
+\hypertarget{classShapeBase_a347fb2687678294a252a12820842cb0d}{}gsl\+\_\+matrix $\ast$ {\bfseries calculate\+E\+For\+Nodal\+Forces\+Kirshoff} (gsl\+\_\+matrix $\ast$C)\label{classShapeBase_a347fb2687678294a252a12820842cb0d}
 
 \item 
-\hypertarget{classShapeBase_ae935864e71abacdb3181d441826bbd39}{}gsl\+\_\+matrix $\ast$ {\bfseries calculate\+S\+For\+Nodal\+Forces} (gsl\+\_\+matrix $\ast$E)\label{classShapeBase_ae935864e71abacdb3181d441826bbd39}
+\hypertarget{classShapeBase_a2357b6ab477eceb874b627d5d8894eb9}{}gsl\+\_\+matrix $\ast$ {\bfseries calculate\+Cauchy\+Green\+Deformation\+Tensor} (gsl\+\_\+matrix $\ast$Fe, gsl\+\_\+matrix $\ast$Fe\+T)\label{classShapeBase_a2357b6ab477eceb874b627d5d8894eb9}
 
 \item 
-\hypertarget{classShapeBase_a27269b78017539874f7be9e20973c086}{}gsl\+\_\+matrix $\ast$ {\bfseries calculate\+Compact\+Stress\+For\+Nodal\+Forces} (gsl\+\_\+matrix $\ast$Fe, gsl\+\_\+matrix $\ast$S, gsl\+\_\+matrix $\ast$Fe\+T, gsl\+\_\+matrix $\ast$Stress)\label{classShapeBase_a27269b78017539874f7be9e20973c086}
+\hypertarget{classShapeBase_a9c79b3bced80eac8af18a0a81d3898ab}{}gsl\+\_\+matrix $\ast$ {\bfseries calculate\+S\+For\+Nodal\+Forces\+Kirshoff} (gsl\+\_\+matrix $\ast$E)\label{classShapeBase_a9c79b3bced80eac8af18a0a81d3898ab}
+
+\item 
+\hypertarget{classShapeBase_a697f24754441df216b4245e7eb467b13}{}gsl\+\_\+matrix $\ast$ {\bfseries calculate\+S\+For\+Nodal\+Forces\+Neo\+Hookean} (gsl\+\_\+matrix $\ast$inv\+C, double ln\+J)\label{classShapeBase_a697f24754441df216b4245e7eb467b13}
+
+\item 
+\hypertarget{classShapeBase_a606ddc7f909062e9faae9f4a311ccd8a}{}void {\bfseries update\+Lagrangian\+Elasticity\+Tensor\+Neo\+Hookean} (gsl\+\_\+matrix $\ast$inv\+C, double ln\+J, int point\+No)\label{classShapeBase_a606ddc7f909062e9faae9f4a311ccd8a}
+
+\item 
+\hypertarget{classShapeBase_a54d16f9a6cff5031555c0cbf3892873a}{}gsl\+\_\+matrix $\ast$ {\bfseries calculate\+Compact\+Stress\+For\+Nodal\+Forces} (double det\+Fe, gsl\+\_\+matrix $\ast$Fe, gsl\+\_\+matrix $\ast$S, gsl\+\_\+matrix $\ast$Fe\+T, gsl\+\_\+matrix $\ast$Stress)\label{classShapeBase_a54d16f9a6cff5031555c0cbf3892873a}
 
 \item 
 \hypertarget{classShapeBase_ac9eaa594e8955de91b2f4b0368c85bae}{}gsl\+\_\+matrix $\ast$ {\bfseries calculate\+Inverse\+Jacobian\+Stack\+For\+Nodal\+Forces} (gsl\+\_\+matrix $\ast$Jacobian)\label{classShapeBase_ac9eaa594e8955de91b2f4b0368c85bae}
@@ -542,16 +623,41 @@ void \hyperlink{classShapeBase_a5409de18ee9e47af0bb977f4a1e608fb}{change\+Shape\
 \hypertarget{classShapeBase_aa9f48481aba22e06b07e6ce665ef58fb}{}gsl\+\_\+matrix $\ast$ {\bfseries calculate\+Inv\+J\+Sh\+Func\+Der\+S\+With\+Fe} (gsl\+\_\+matrix $\ast$curr\+Fe, gsl\+\_\+matrix $\ast$Inv\+D\+Xde, gsl\+\_\+matrix $\ast$Shape\+Func\+Der\+Stack, gsl\+\_\+matrix $\ast$inv\+J\+Sh\+Func\+Der\+S\+With\+F)\label{classShapeBase_aa9f48481aba22e06b07e6ce665ef58fb}
 
 \item 
-\hypertarget{classShapeBase_ab9e027b7bb9553a0850875c5b94ed4a5}{}void {\bfseries calculate\+C\+Matrix} (int point\+No)\label{classShapeBase_ab9e027b7bb9553a0850875c5b94ed4a5}
-
+gsl\+\_\+matrix $\ast$ \hyperlink{classShapeBase_aafb0d14adc7ac116191bcff4a7837e98}{calculate\+Velocity\+Gradient\+Tensor} (gsl\+\_\+matrix $\ast$B, gsl\+\_\+matrix $\ast$displacement\+Per\+Dt)
 \item 
+gsl\+\_\+matrix $\ast$ \hyperlink{classShapeBase_afcdbbe37a746ade52a1af70a9aa12b9f}{construct\+Elemental\+Displacement\+Matrix} (gsl\+\_\+matrix $\ast$displacement)
+\begin{DoxyCompactList}\small\item\em The function will assemble elemental node displacement matrix from the input displacement matrix for the whole system. \end{DoxyCompactList}\item 
+gsl\+\_\+matrix $\ast$ \hyperlink{classShapeBase_afbbf191777e8787a0e8307d30ce0aa9d}{calculate\+Rate\+Of\+Deformation\+Tensor} (gsl\+\_\+matrix $\ast$l)
+\begin{DoxyCompactList}\small\item\em The function will calculate rate of deformation tensor from velocity gradient tensor. \end{DoxyCompactList}\item 
+void \hyperlink{classShapeBase_a22ffae25fafb0fa584a3a4d0196af7aa}{calculate\+Viscous\+Stress} (gsl\+\_\+matrix $\ast$d, gsl\+\_\+matrix $\ast$\hyperlink{classShapeBase_a95733061efc2a6645fecfe5c0aa1dd93}{viscous\+Stress})
+\begin{DoxyCompactList}\small\item\em The function will calculate internal viscous stress of the element from rate of deformation matrix. \end{DoxyCompactList}\item 
+void \hyperlink{classShapeBase_a4d10225f251fa1bd8a2e6ffc8feb5326}{calculate\+Viscous\+Forces} (gsl\+\_\+matrix $\ast$gv, gsl\+\_\+matrix $\ast$B\+Tdet\+Fdetd\+Xde, gsl\+\_\+matrix $\ast$\hyperlink{classShapeBase_a95733061efc2a6645fecfe5c0aa1dd93}{viscous\+Stress})
+\begin{DoxyCompactList}\small\item\em The function will calculate the elemental viscous forces from viscous stress. \end{DoxyCompactList}\item 
 \hypertarget{classShapeBase_a7ae9fb15fa6e3f99173841ea910710c1}{}void {\bfseries consturct\+Ba\+T\+Bb} (gsl\+\_\+matrix $\ast$B, gsl\+\_\+matrix $\ast$Ba\+T, gsl\+\_\+matrix $\ast$Bb, int a, int b)\label{classShapeBase_a7ae9fb15fa6e3f99173841ea910710c1}
 
 \item 
-\hypertarget{classShapeBase_af7556d90ad8fe05eb78a5c2967b75f53}{}void {\bfseries calculate\+Elastic\+K\+Integral1} (gsl\+\_\+matrix $\ast$curr\+K, int point\+No)\label{classShapeBase_af7556d90ad8fe05eb78a5c2967b75f53}
+\hypertarget{classShapeBase_abb02278c3894e00fdbc0cd2e379111ce}{}void {\bfseries calculate\+Elastic\+K\+Integral1} (gsl\+\_\+matrix $\ast$curr\+Elemental\+K, int point\+No)\label{classShapeBase_abb02278c3894e00fdbc0cd2e379111ce}
 
 \item 
-\hypertarget{classShapeBase_a2011f33d1b4fd848d46d9faad66e1b7e}{}void {\bfseries calculate\+Elastic\+K\+Integral2} (gsl\+\_\+matrix $\ast$curr\+K, int point\+No)\label{classShapeBase_a2011f33d1b4fd848d46d9faad66e1b7e}
+\hypertarget{classShapeBase_a74a5f7382e5d4038e4396d3f4a198105}{}void {\bfseries calculate\+Elastic\+K\+Integral2} (gsl\+\_\+matrix $\ast$curr\+Elemental\+K, int point\+No)\label{classShapeBase_a74a5f7382e5d4038e4396d3f4a198105}
+
+\item 
+\hypertarget{classShapeBase_a2913ab81b03bdad0368f5295fc56912d}{}void {\bfseries calculate\+Viscous\+K\+Integral1} (gsl\+\_\+matrix $\ast$curr\+Elemental\+K, double dt, int point\+No)\label{classShapeBase_a2913ab81b03bdad0368f5295fc56912d}
+
+\item 
+\hypertarget{classShapeBase_a3f0a1261dc17d4f8b7a47ba458e00cd1}{}void {\bfseries calculate\+Viscous\+K\+Integral2\+To4} (gsl\+\_\+matrix $\ast$curr\+Elemental\+K, int point\+No)\label{classShapeBase_a3f0a1261dc17d4f8b7a47ba458e00cd1}
+
+\item 
+\hypertarget{classShapeBase_ad37ab5ac465d250c7c48d2b55e855f8f}{}void {\bfseries calculate\+Kvab\+Int2} (gsl\+\_\+matrix $\ast$Kvab\+Int2, gsl\+\_\+matrix $\ast$D\+Na\+T, gsl\+\_\+matrix $\ast$D\+Nb, gsl\+\_\+matrix $\ast$Stress)\label{classShapeBase_ad37ab5ac465d250c7c48d2b55e855f8f}
+
+\item 
+\hypertarget{classShapeBase_a07e84b37967dd936115bd1adb75a0fd2}{}gsl\+\_\+matrix $\ast$ {\bfseries calculate\+Symmetricised\+Tensor\+Product} (gsl\+\_\+matrix $\ast$a, gsl\+\_\+matrix $\ast$b)\label{classShapeBase_a07e84b37967dd936115bd1adb75a0fd2}
+
+\item 
+\hypertarget{classShapeBase_a12635b0325e57f1348aff46c4825ed26}{}void {\bfseries calculate\+Kvab\+Int3} (gsl\+\_\+matrix $\ast$Kvab\+Int3, gsl\+\_\+matrix $\ast$averaged\+Contraction, gsl\+\_\+matrix $\ast$Stress)\label{classShapeBase_a12635b0325e57f1348aff46c4825ed26}
+
+\item 
+\hypertarget{classShapeBase_a77bb18dc70d5ec7de80254eee0531238}{}void {\bfseries calculate\+Kvab\+Int4} (gsl\+\_\+matrix $\ast$Kvab\+Int4, gsl\+\_\+matrix $\ast$averaged\+Contraction, gsl\+\_\+matrix $\ast$Stress)\label{classShapeBase_a77bb18dc70d5ec7de80254eee0531238}
 
 \item 
 \hypertarget{classShapeBase_a91a660608ede71c5bfdd1c4956843760}{}bool {\bfseries disassemble\+Rotation\+Matrix\+For\+Z} (gsl\+\_\+matrix $\ast$rot\+Mat)\label{classShapeBase_a91a660608ede71c5bfdd1c4956843760}
@@ -593,88 +699,103 @@ void \hyperlink{classShapeBase_a5409de18ee9e47af0bb977f4a1e608fb}{change\+Shape\
 \hypertarget{classShapeBase_aee6a2cd267d49404f5442a48c867860f}{}bool \hyperlink{classShapeBase_aee6a2cd267d49404f5442a48c867860f}{rotated\+Growth}\label{classShapeBase_aee6a2cd267d49404f5442a48c867860f}
 
 \begin{DoxyCompactList}\small\item\em The boolean stating if the element has rotated from the growth axis, hence the calculated growth requires further rotation to follow tissue axes. \end{DoxyCompactList}\item 
-\hypertarget{classShapeBase_a3a88df07863ecf2a78fbd75543320edd}{}double $\ast$ \hyperlink{classShapeBase_a3a88df07863ecf2a78fbd75543320edd}{columnar\+Relative\+Pos\+In\+Bounding\+Box}\label{classShapeBase_a3a88df07863ecf2a78fbd75543320edd}
+\hypertarget{classShapeBase_a7a7826fb2ce3b2e666b65d99b00eadea}{}double $\ast$ \hyperlink{classShapeBase_a7a7826fb2ce3b2e666b65d99b00eadea}{relative\+Pos\+In\+Bounding\+Box}\label{classShapeBase_a7a7826fb2ce3b2e666b65d99b00eadea}
 
-\begin{DoxyCompactList}\small\item\em The relative position on x-\/y plane, within the bounding box of the columnar layer (x,y). \end{DoxyCompactList}\item 
-\hypertarget{classShapeBase_a3dfa65871a157645e733a4b01f1c8955}{}double $\ast$ \hyperlink{classShapeBase_a3dfa65871a157645e733a4b01f1c8955}{peripodial\+Relative\+Pos\+In\+Bounding\+Box}\label{classShapeBase_a3dfa65871a157645e733a4b01f1c8955}
+\begin{DoxyCompactList}\small\item\em The relative position on x-\/y plane, within the bounding box of the tissue(x,y). \end{DoxyCompactList}\item 
+\hypertarget{classShapeBase_a8825955bac10c5deabb9c02cd27577e9}{}double $\ast$ \hyperlink{classShapeBase_a8825955bac10c5deabb9c02cd27577e9}{initial\+Relative\+Pos\+In\+Bounding\+Box}\label{classShapeBase_a8825955bac10c5deabb9c02cd27577e9}
 
-\begin{DoxyCompactList}\small\item\em The relative position on x-\/y plane, within the bounding box of the peripodial membrane layer (x,y). \end{DoxyCompactList}\item 
-\hypertarget{classShapeBase_a80a8943320a0cdc871565acded52b239}{}gsl\+\_\+matrix $\ast$$\ast$ {\bfseries Shape\+Func\+Derivatives}\label{classShapeBase_a80a8943320a0cdc871565acded52b239}
+\begin{DoxyCompactList}\small\item\em The relative position on x-\/y plane, within the bounding box of the tissue(x,y) at the beginning of simulation. This is used when growth rates are pinned to the initial structure of the tissue. \end{DoxyCompactList}\item 
+\hypertarget{classShapeBase_a80a8943320a0cdc871565acded52b239}{}gsl\+\_\+matrix $\ast$$\ast$ \hyperlink{classShapeBase_a80a8943320a0cdc871565acded52b239}{Shape\+Func\+Derivatives}\label{classShapeBase_a80a8943320a0cdc871565acded52b239}
 
-\item 
-\hypertarget{classShapeBase_a23deaddf67b09f6fe5470f05385001fe}{}gsl\+\_\+matrix $\ast$$\ast$ {\bfseries Shape\+Func\+Der\+Stacks}\label{classShapeBase_a23deaddf67b09f6fe5470f05385001fe}
+\begin{DoxyCompactList}\small\item\em The array of matrices for shape function derivatives. The array stores a \hyperlink{classShapeBase_a250bd3396546342c8104f5b9c180d18f}{Shape\+Base\+::n\+Dim} by \hyperlink{classShapeBase_ae7dd93b58b3281ce90025f83d0f0e976}{Shape\+Base\+::n\+Nodes} matrix for each gauss point (there are 3 Gauss points for prisms). \end{DoxyCompactList}\item 
+\hypertarget{classShapeBase_a23deaddf67b09f6fe5470f05385001fe}{}gsl\+\_\+matrix $\ast$$\ast$ \hyperlink{classShapeBase_a23deaddf67b09f6fe5470f05385001fe}{Shape\+Func\+Der\+Stacks}\label{classShapeBase_a23deaddf67b09f6fe5470f05385001fe}
 
-\item 
-\hypertarget{classShapeBase_a4a5fc631abba61fa2488112a7a674377}{}gsl\+\_\+matrix $\ast$$\ast$ {\bfseries Invd\+Xdes}\label{classShapeBase_a4a5fc631abba61fa2488112a7a674377}
+\begin{DoxyCompactList}\small\item\em The array of matrices of shape function derivatives in stacked format for ease of matrix operations. The array stores a (\hyperlink{classShapeBase_a250bd3396546342c8104f5b9c180d18f}{Shape\+Base\+::n\+Dim} $\ast$ \hyperlink{classShapeBase_a250bd3396546342c8104f5b9c180d18f}{Shape\+Base\+::n\+Dim}) by (\hyperlink{classShapeBase_a250bd3396546342c8104f5b9c180d18f}{Shape\+Base\+::n\+Dim} $\ast$ \hyperlink{classShapeBase_ae7dd93b58b3281ce90025f83d0f0e976}{Shape\+Base\+::n\+Nodes}) matrix for each gauss point (there are 3 Gauss points for prisms). \end{DoxyCompactList}\item 
+\hypertarget{classShapeBase_a4a5fc631abba61fa2488112a7a674377}{}gsl\+\_\+matrix $\ast$$\ast$ \hyperlink{classShapeBase_a4a5fc631abba61fa2488112a7a674377}{Invd\+Xdes}\label{classShapeBase_a4a5fc631abba61fa2488112a7a674377}
 
-\item 
-\hypertarget{classShapeBase_ad1c2ef88314c7e567ca2bdcc6592f5ec}{}double $\ast$ {\bfseries detd\+Xdes}\label{classShapeBase_ad1c2ef88314c7e567ca2bdcc6592f5ec}
+\begin{DoxyCompactList}\small\item\em The array stores inverse of the matrix for derivatives of world coordinates with respect to barycentric coordinates (d\+X / de). The array stores an \hyperlink{classShapeBase_a250bd3396546342c8104f5b9c180d18f}{Shape\+Base\+::n\+Dim} by \hyperlink{classShapeBase_a250bd3396546342c8104f5b9c180d18f}{Shape\+Base\+::n\+Dim} matrix for each gauss point (there are 3 Gauss points for prisms). \end{DoxyCompactList}\item 
+\hypertarget{classShapeBase_ad1c2ef88314c7e567ca2bdcc6592f5ec}{}double $\ast$ \hyperlink{classShapeBase_ad1c2ef88314c7e567ca2bdcc6592f5ec}{detd\+Xdes}\label{classShapeBase_ad1c2ef88314c7e567ca2bdcc6592f5ec}
 
-\item 
-\hypertarget{classShapeBase_ace860a66508f503be2a46c351a9358c3}{}gsl\+\_\+matrix $\ast$$\ast$ {\bfseries Bmatrices}\label{classShapeBase_ace860a66508f503be2a46c351a9358c3}
+\begin{DoxyCompactList}\small\item\em The array stores the determinants of the matrices for derivatives of world coordinates with respect to barycentric coordinates (d\+X / de). The array stores a double value for each gauss point (there are 3 Gauss points for prisms). \end{DoxyCompactList}\item 
+\hypertarget{classShapeBase_ace860a66508f503be2a46c351a9358c3}{}gsl\+\_\+matrix $\ast$$\ast$ \hyperlink{classShapeBase_ace860a66508f503be2a46c351a9358c3}{Bmatrices}\label{classShapeBase_ace860a66508f503be2a46c351a9358c3}
 
-\item 
-\hypertarget{classShapeBase_adbb0a1617e6e0acfbf67038a5aed8366}{}gsl\+\_\+matrix $\ast$$\ast$ {\bfseries C\+Matrices}\label{classShapeBase_adbb0a1617e6e0acfbf67038a5aed8366}
+\begin{DoxyCompactList}\small\item\em The array stores the B matrix for the calculation of stiffness matrix, see for Shape\+Base\+::calculate\+B\+Tfor\+Nodal\+Forces calculation. The array stores an \hyperlink{classShapeBase_ae7dd93b58b3281ce90025f83d0f0e976}{Shape\+Base\+::n\+Nodes} by (\hyperlink{classShapeBase_a250bd3396546342c8104f5b9c180d18f}{Shape\+Base\+::n\+Dim}$\ast$\+Shape\+Base\hyperlink{classShapeBase_ae7dd93b58b3281ce90025f83d0f0e976}{n\+Nodes}) matrix for each Gauss point (there are 3 Gauss points for prisms). \end{DoxyCompactList}\item 
+\hypertarget{classShapeBase_ac3259f3f52ab4d7a514ea987012a6bd6}{}gsl\+\_\+matrix $\ast$$\ast$ \hyperlink{classShapeBase_ac3259f3f52ab4d7a514ea987012a6bd6}{Fe\+Matrices}\label{classShapeBase_ac3259f3f52ab4d7a514ea987012a6bd6}
 
-\item 
-\hypertarget{classShapeBase_ac3259f3f52ab4d7a514ea987012a6bd6}{}gsl\+\_\+matrix $\ast$$\ast$ {\bfseries Fe\+Matrices}\label{classShapeBase_ac3259f3f52ab4d7a514ea987012a6bd6}
+\begin{DoxyCompactList}\small\item\em The array stores the elastic part of the deformation matrix. The array stores an \hyperlink{classShapeBase_a250bd3396546342c8104f5b9c180d18f}{Shape\+Base\+::n\+Dim} by \hyperlink{classShapeBase_a250bd3396546342c8104f5b9c180d18f}{Shape\+Base\+::n\+Dim} matrix for each Gauss point (there are 3 Gauss points for prisms). \end{DoxyCompactList}\item 
+\hypertarget{classShapeBase_aa0dbfe70da6938be7304934d80cb0ddf}{}gsl\+\_\+matrix $\ast$ \hyperlink{classShapeBase_aa0dbfe70da6938be7304934d80cb0ddf}{Fplastic}\label{classShapeBase_aa0dbfe70da6938be7304934d80cb0ddf}
 
-\item 
-\hypertarget{classShapeBase_a9478b062928ae554c25cd3269cc9e790}{}gsl\+\_\+matrix $\ast$$\ast$ {\bfseries inv\+J\+Shape\+Func\+Der\+Stack}\label{classShapeBase_a9478b062928ae554c25cd3269cc9e790}
+\begin{DoxyCompactList}\small\item\em The array stores the plastic part of the deformation matrix. The array stores an \hyperlink{classShapeBase_a250bd3396546342c8104f5b9c180d18f}{Shape\+Base\+::n\+Dim} by \hyperlink{classShapeBase_a250bd3396546342c8104f5b9c180d18f}{Shape\+Base\+::n\+Dim} matrix for each Gauss point (there are 3 Gauss points for prisms). \end{DoxyCompactList}\item 
+\hypertarget{classShapeBase_aaa49d057ee26d805da5befa72c9bbf58}{}gsl\+\_\+matrix $\ast$ \hyperlink{classShapeBase_aaa49d057ee26d805da5befa72c9bbf58}{inv\+Fplastic}\label{classShapeBase_aaa49d057ee26d805da5befa72c9bbf58}
 
-\item 
-\hypertarget{classShapeBase_a490391c781e50cfc7e2f1a0814bb6d25}{}gsl\+\_\+matrix $\ast$$\ast$ {\bfseries inv\+J\+Shape\+Func\+Der\+Stackwith\+Fe}\label{classShapeBase_a490391c781e50cfc7e2f1a0814bb6d25}
+\begin{DoxyCompactList}\small\item\em The array stores inverses of the plastic part of the deformation matrix, in same structure as \hyperlink{classShapeBase_aa0dbfe70da6938be7304934d80cb0ddf}{Shape\+Base\+::\+Fplastic}. \end{DoxyCompactList}\item 
+\hypertarget{classShapeBase_a9478b062928ae554c25cd3269cc9e790}{}gsl\+\_\+matrix $\ast$$\ast$ \hyperlink{classShapeBase_a9478b062928ae554c25cd3269cc9e790}{inv\+J\+Shape\+Func\+Der\+Stack}\label{classShapeBase_a9478b062928ae554c25cd3269cc9e790}
 
-\item 
-\hypertarget{classShapeBase_acd549e0086d16194ae389ae528969596}{}gsl\+\_\+matrix $\ast$$\ast$ {\bfseries elastic\+Stress}\label{classShapeBase_acd549e0086d16194ae389ae528969596}
+\begin{DoxyCompactList}\small\item\em The array stores the shape function derivatives multiplied by the inverse Jacobian stack, for each Gauss point. See Shape\+Base\+::calculate\+B\+Tfor\+Nodal\+Forces for calculation. \end{DoxyCompactList}\item 
+\hypertarget{classShapeBase_a490391c781e50cfc7e2f1a0814bb6d25}{}gsl\+\_\+matrix $\ast$$\ast$ \hyperlink{classShapeBase_a490391c781e50cfc7e2f1a0814bb6d25}{inv\+J\+Shape\+Func\+Der\+Stackwith\+Fe}\label{classShapeBase_a490391c781e50cfc7e2f1a0814bb6d25}
 
-\item 
-\hypertarget{classShapeBase_ab7ac8f14929ab37e8eae5fcaf93b18a8}{}gsl\+\_\+matrix $\ast$ {\bfseries Tri\+Point\+F}\label{classShapeBase_ab7ac8f14929ab37e8eae5fcaf93b18a8}
+\begin{DoxyCompactList}\small\item\em See Shape\+Base\+::calculate\+Inv\+J\+Sh\+Func\+Der\+S\+With\+Fe for calculation. \end{DoxyCompactList}\item 
+\hypertarget{classShapeBase_acd549e0086d16194ae389ae528969596}{}gsl\+\_\+matrix $\ast$$\ast$ \hyperlink{classShapeBase_acd549e0086d16194ae389ae528969596}{elastic\+Stress}\label{classShapeBase_acd549e0086d16194ae389ae528969596}
 
-\item 
-\hypertarget{classShapeBase_ab41f6a16647607b1c898eea1c2860367}{}double $\ast$ {\bfseries det\+Fs}\label{classShapeBase_ab41f6a16647607b1c898eea1c2860367}
+\begin{DoxyCompactList}\small\item\em The array of matrices for elastic stress of the element. The array stores a 6 by 6 matrix for each Gauss point (there are 3 Gauss points for prisms). \end{DoxyCompactList}\item 
+\hypertarget{classShapeBase_a95733061efc2a6645fecfe5c0aa1dd93}{}gsl\+\_\+matrix $\ast$$\ast$ \hyperlink{classShapeBase_a95733061efc2a6645fecfe5c0aa1dd93}{viscous\+Stress}\label{classShapeBase_a95733061efc2a6645fecfe5c0aa1dd93}
 
-\item 
-\hypertarget{classShapeBase_a51a8101057e2771172a4716c128705d7}{}double {\bfseries Z\+Projected\+Basal\+Area}\label{classShapeBase_a51a8101057e2771172a4716c128705d7}
+\begin{DoxyCompactList}\small\item\em The array of matrices for internal viscous stress of the element. The array stores a 6 by 6 matrix for each Gauss point (there are 3 Gauss points for prisms). \end{DoxyCompactList}\item 
+\hypertarget{classShapeBase_ab7ac8f14929ab37e8eae5fcaf93b18a8}{}gsl\+\_\+matrix $\ast$ \hyperlink{classShapeBase_ab7ac8f14929ab37e8eae5fcaf93b18a8}{Tri\+Point\+F}\label{classShapeBase_ab7ac8f14929ab37e8eae5fcaf93b18a8}
 
-\item 
-\hypertarget{classShapeBase_aa7043ddacbcd92480cb54467a2777627}{}double {\bfseries Z\+Projected\+Apical\+Area}\label{classShapeBase_aa7043ddacbcd92480cb54467a2777627}
+\begin{DoxyCompactList}\small\item\em The deformation matrix of the element resulting from iteration over all Gauss points. The dimensions of the matrix is \hyperlink{classShapeBase_a250bd3396546342c8104f5b9c180d18f}{Shape\+Base\+::n\+Dim} by \hyperlink{classShapeBase_a250bd3396546342c8104f5b9c180d18f}{Shape\+Base\+::n\+Dim}. \end{DoxyCompactList}\item 
+\hypertarget{classShapeBase_a94d201c88c73283f2e9711d1cc038e02}{}gsl\+\_\+matrix $\ast$ \hyperlink{classShapeBase_a94d201c88c73283f2e9711d1cc038e02}{Elemental\+Elastic\+System\+Forces}\label{classShapeBase_a94d201c88c73283f2e9711d1cc038e02}
 
-\item 
-\hypertarget{classShapeBase_a2ae2b0b1dfd0672a39897e780d861254}{}double {\bfseries Basal\+Area}\label{classShapeBase_a2ae2b0b1dfd0672a39897e780d861254}
+\begin{DoxyCompactList}\small\item\em The matrix stores the elemental elastic forces. The dimensions of the matrix is \hyperlink{classShapeBase_ae7dd93b58b3281ce90025f83d0f0e976}{Shape\+Base\+::n\+Nodes} by \hyperlink{classShapeBase_a250bd3396546342c8104f5b9c180d18f}{Shape\+Base\+::n\+Dim}. \end{DoxyCompactList}\item 
+\hypertarget{classShapeBase_a54b5ebd33ad4ed5739c0431bf0d4346d}{}gsl\+\_\+matrix $\ast$ \hyperlink{classShapeBase_a54b5ebd33ad4ed5739c0431bf0d4346d}{Elemental\+Internal\+Viscous\+System\+Forces}\label{classShapeBase_a54b5ebd33ad4ed5739c0431bf0d4346d}
 
-\item 
-\hypertarget{classShapeBase_adb4227c13db7e34dd1af182d143af47b}{}double {\bfseries Apical\+Area}\label{classShapeBase_adb4227c13db7e34dd1af182d143af47b}
+\begin{DoxyCompactList}\small\item\em The matrix stores the elemental internal viscous forces. The dimensions of the matrix is \hyperlink{classShapeBase_ae7dd93b58b3281ce90025f83d0f0e976}{Shape\+Base\+::n\+Nodes} by \hyperlink{classShapeBase_a250bd3396546342c8104f5b9c180d18f}{Shape\+Base\+::n\+Dim}. \end{DoxyCompactList}\item 
+\hypertarget{classShapeBase_ab41f6a16647607b1c898eea1c2860367}{}double $\ast$ \hyperlink{classShapeBase_ab41f6a16647607b1c898eea1c2860367}{det\+Fs}\label{classShapeBase_ab41f6a16647607b1c898eea1c2860367}
 
-\item 
-\hypertarget{classShapeBase_a485e95cb1e7a440e57884d4df5ee1350}{}double {\bfseries c\+Myo\+Uniform} \mbox{[}2\mbox{]}\label{classShapeBase_a485e95cb1e7a440e57884d4df5ee1350}
+\begin{DoxyCompactList}\small\item\em The array stores the determinant of the deformation matrix for each Gauss point. \end{DoxyCompactList}\item 
+\hypertarget{classShapeBase_a51a8101057e2771172a4716c128705d7}{}double \hyperlink{classShapeBase_a51a8101057e2771172a4716c128705d7}{Z\+Projected\+Basal\+Area}\label{classShapeBase_a51a8101057e2771172a4716c128705d7}
 
-\item 
-\hypertarget{classShapeBase_a2a1e584564ef617fa1d18eb591c84a67}{}double {\bfseries c\+Myo\+Unipolar} \mbox{[}2\mbox{]}\label{classShapeBase_a2a1e584564ef617fa1d18eb591c84a67}
+\begin{DoxyCompactList}\small\item\em The z-\/projected area of the basal surface of the element. \end{DoxyCompactList}\item 
+\hypertarget{classShapeBase_aa7043ddacbcd92480cb54467a2777627}{}double \hyperlink{classShapeBase_aa7043ddacbcd92480cb54467a2777627}{Z\+Projected\+Apical\+Area}\label{classShapeBase_aa7043ddacbcd92480cb54467a2777627}
 
-\item 
-\hypertarget{classShapeBase_aa32b4675de014e09732e7ab89719e679}{}double {\bfseries c\+Myo\+Uniform\+Eq} \mbox{[}2\mbox{]}\label{classShapeBase_aa32b4675de014e09732e7ab89719e679}
+\begin{DoxyCompactList}\small\item\em The z-\/projected area of the apical surface of the element. \end{DoxyCompactList}\item 
+\hypertarget{classShapeBase_a2ae2b0b1dfd0672a39897e780d861254}{}double \hyperlink{classShapeBase_a2ae2b0b1dfd0672a39897e780d861254}{Basal\+Area}\label{classShapeBase_a2ae2b0b1dfd0672a39897e780d861254}
 
-\item 
-\hypertarget{classShapeBase_a59c3af9d1dcfe4749d33ba168c5bda53}{}double {\bfseries c\+Myo\+Unipolar\+Eq} \mbox{[}2\mbox{]}\label{classShapeBase_a59c3af9d1dcfe4749d33ba168c5bda53}
+\begin{DoxyCompactList}\small\item\em The area of the basal surface of the element. \end{DoxyCompactList}\item 
+\hypertarget{classShapeBase_adb4227c13db7e34dd1af182d143af47b}{}double \hyperlink{classShapeBase_adb4227c13db7e34dd1af182d143af47b}{Apical\+Area}\label{classShapeBase_adb4227c13db7e34dd1af182d143af47b}
 
-\item 
-\hypertarget{classShapeBase_afc91612adf1d146a48767756f38d1152}{}gsl\+\_\+matrix $\ast$ {\bfseries myo\+Polarity\+Dir}\label{classShapeBase_afc91612adf1d146a48767756f38d1152}
+\begin{DoxyCompactList}\small\item\em The area of the apical surface of the element. \end{DoxyCompactList}\item 
+\hypertarget{classShapeBase_a485e95cb1e7a440e57884d4df5ee1350}{}double \hyperlink{classShapeBase_a485e95cb1e7a440e57884d4df5ee1350}{c\+Myo\+Uniform} \mbox{[}2\mbox{]}\label{classShapeBase_a485e95cb1e7a440e57884d4df5ee1350}
 
-\item 
+\begin{DoxyCompactList}\small\item\em Myosin concentration in the uniformly distributed pool, array of 2\+: \mbox{[}apical\mbox{]}\mbox{[}basal\mbox{]}. \end{DoxyCompactList}\item 
+\hypertarget{classShapeBase_a2a1e584564ef617fa1d18eb591c84a67}{}double \hyperlink{classShapeBase_a2a1e584564ef617fa1d18eb591c84a67}{c\+Myo\+Unipolar} \mbox{[}2\mbox{]}\label{classShapeBase_a2a1e584564ef617fa1d18eb591c84a67}
+
+\begin{DoxyCompactList}\small\item\em Myosin concentration in the polarised pool, array of 2\+: \mbox{[}apical\mbox{]}\mbox{[}basal\mbox{]}. \end{DoxyCompactList}\item 
+\hypertarget{classShapeBase_aa32b4675de014e09732e7ab89719e679}{}double \hyperlink{classShapeBase_aa32b4675de014e09732e7ab89719e679}{c\+Myo\+Uniform\+Eq} \mbox{[}2\mbox{]}\label{classShapeBase_aa32b4675de014e09732e7ab89719e679}
+
+\begin{DoxyCompactList}\small\item\em The equilibrium level of myosin concentration in uniformly distributed pool, array of 2\+: \mbox{[}apical\mbox{]}\mbox{[}basal\mbox{]}. \end{DoxyCompactList}\item 
+\hypertarget{classShapeBase_a59c3af9d1dcfe4749d33ba168c5bda53}{}double \hyperlink{classShapeBase_a59c3af9d1dcfe4749d33ba168c5bda53}{c\+Myo\+Unipolar\+Eq} \mbox{[}2\mbox{]}\label{classShapeBase_a59c3af9d1dcfe4749d33ba168c5bda53}
+
+\begin{DoxyCompactList}\small\item\em The equilibrium level of myosin concentration in polarised pool, array of 2\+: \mbox{[}apical\mbox{]}\mbox{[}basal\mbox{]}. \end{DoxyCompactList}\item 
+\hypertarget{classShapeBase_afc91612adf1d146a48767756f38d1152}{}gsl\+\_\+matrix $\ast$ \hyperlink{classShapeBase_afc91612adf1d146a48767756f38d1152}{myo\+Polarity\+Dir}\label{classShapeBase_afc91612adf1d146a48767756f38d1152}
+
+\begin{DoxyCompactList}\small\item\em The orientation of myosin polarity, unit vector in world coordinates. \end{DoxyCompactList}\item 
 \hypertarget{classShapeBase_a1878efccfc629e53748e8907386825b0}{}gsl\+\_\+matrix $\ast$ {\bfseries D}\label{classShapeBase_a1878efccfc629e53748e8907386825b0}
 
 \item 
 \hypertarget{classShapeBase_a7266beef6c849298c3786a53259bd467}{}gsl\+\_\+matrix $\ast$ {\bfseries Coeff\+Mat}\label{classShapeBase_a7266beef6c849298c3786a53259bd467}
 
 \item 
-\hypertarget{classShapeBase_abafc7c3b44ef3be78d4be880406bbc5f}{}double {\bfseries D81} \mbox{[}4\mbox{]}\mbox{[}4\mbox{]}\mbox{[}4\mbox{]}\mbox{[}4\mbox{]}\label{classShapeBase_abafc7c3b44ef3be78d4be880406bbc5f}
+\hypertarget{classShapeBase_a484d12c563c8b75e955a7cceba26094a}{}double {\bfseries D81} \mbox{[}3\mbox{]}\mbox{[}4\mbox{]}\mbox{[}4\mbox{]}\mbox{[}4\mbox{]}\mbox{[}4\mbox{]}\label{classShapeBase_a484d12c563c8b75e955a7cceba26094a}
 
 \item 
 \hypertarget{classShapeBase_a6c1a3a0173841d6072a5268978463ff2}{}double {\bfseries E}\label{classShapeBase_a6c1a3a0173841d6072a5268978463ff2}
 
 \item 
 \hypertarget{classShapeBase_a8b4c2d3bfbc6c9785c5181a56f929151}{}double {\bfseries v}\label{classShapeBase_a8b4c2d3bfbc6c9785c5181a56f929151}
+
+\item 
+\hypertarget{classShapeBase_a7fd0830ee5d4e64bb68e58aa77736757}{}double {\bfseries internal\+Viscosity}\label{classShapeBase_a7fd0830ee5d4e64bb68e58aa77736757}
 
 \item 
 \hypertarget{classShapeBase_aa16b41d5791fc15531cbee067c502a5d}{}double {\bfseries lambda}\label{classShapeBase_aa16b41d5791fc15531cbee067c502a5d}
@@ -697,18 +818,145 @@ void \hyperlink{classShapeBase_a5409de18ee9e47af0bb977f4a1e608fb}{change\+Shape\
 \begin{DoxyCompactList}\small\item\em Inverse of shape change matrix. \end{DoxyCompactList}\item 
 \hypertarget{classShapeBase_ace20710f27099833509c474b221c25df}{}gsl\+\_\+matrix $\ast$ {\bfseries Tri\+Point\+Ke}\label{classShapeBase_ace20710f27099833509c474b221c25df}
 
+\item 
+\hypertarget{classShapeBase_a7fa5b1338e405a2c75c8d010f4153b05}{}gsl\+\_\+matrix $\ast$ {\bfseries Tri\+Point\+Kv}\label{classShapeBase_a7fa5b1338e405a2c75c8d010f4153b05}
+
 \end{DoxyCompactItemize}
 
 
 \subsection{Member Function Documentation}
-\hypertarget{classShapeBase_a5409de18ee9e47af0bb977f4a1e608fb}{}\index{Shape\+Base@{Shape\+Base}!change\+Shape\+By\+Fsc@{change\+Shape\+By\+Fsc}}
+\hypertarget{classShapeBase_afbbf191777e8787a0e8307d30ce0aa9d}{}\index{Shape\+Base@{Shape\+Base}!calculate\+Rate\+Of\+Deformation\+Tensor@{calculate\+Rate\+Of\+Deformation\+Tensor}}
+\index{calculate\+Rate\+Of\+Deformation\+Tensor@{calculate\+Rate\+Of\+Deformation\+Tensor}!Shape\+Base@{Shape\+Base}}
+\subsubsection[{calculate\+Rate\+Of\+Deformation\+Tensor}]{\setlength{\rightskip}{0pt plus 5cm}gsl\+\_\+matrix $\ast$ Shape\+Base\+::calculate\+Rate\+Of\+Deformation\+Tensor (
+\begin{DoxyParamCaption}
+\item[{gsl\+\_\+matrix $\ast$}]{l}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [protected]}}\label{classShapeBase_afbbf191777e8787a0e8307d30ce0aa9d}
+
+
+The function will calculate rate of deformation tensor from velocity gradient tensor. 
+
+Inputs\+:
+\begin{DoxyEnumerate}
+\item The velocity gradient tensor given in Voigt notation (6 x 1).
+\end{DoxyEnumerate}
+
+Output\+:
+\begin{DoxyEnumerate}
+\item Rate of deformation tensor (3 x 3).
+\end{DoxyEnumerate}
+
+This function primarily rearranges the elements of the velocity gradient tensor given in Voigt notation, to from the rate of deformation tensor
+
+Procedure\+:
+\begin{DoxyItemize}
+\item Allocate the memory for rate of deformation tensor
+\item Write the terms of velocity gradient tensor into rate of deformation tensor
+\item Return rate of deformation tensor
+\end{DoxyItemize}\hypertarget{classShapeBase_aafb0d14adc7ac116191bcff4a7837e98}{}\index{Shape\+Base@{Shape\+Base}!calculate\+Velocity\+Gradient\+Tensor@{calculate\+Velocity\+Gradient\+Tensor}}
+\index{calculate\+Velocity\+Gradient\+Tensor@{calculate\+Velocity\+Gradient\+Tensor}!Shape\+Base@{Shape\+Base}}
+\subsubsection[{calculate\+Velocity\+Gradient\+Tensor}]{\setlength{\rightskip}{0pt plus 5cm}gsl\+\_\+matrix $\ast$ Shape\+Base\+::calculate\+Velocity\+Gradient\+Tensor (
+\begin{DoxyParamCaption}
+\item[{gsl\+\_\+matrix $\ast$}]{B, }
+\item[{gsl\+\_\+matrix $\ast$}]{displacement\+Per\+Dt}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [protected]}}\label{classShapeBase_aafb0d14adc7ac116191bcff4a7837e98}
+Inputs\+:
+\begin{DoxyEnumerate}
+\item The elemental B matrix (6 , \hyperlink{classShapeBase_a250bd3396546342c8104f5b9c180d18f}{Shape\+Base\+::n\+Dim} x \hyperlink{classShapeBase_ae7dd93b58b3281ce90025f83d0f0e976}{Shape\+Base\+::n\+Nodes}).
+\item The displacement of all nodes of the system, divided by the time step (\hyperlink{classShapeBase_a250bd3396546342c8104f5b9c180d18f}{Shape\+Base\+::n\+Dim} x Simulation\+::n\+Nodes, 1).
+\end{DoxyEnumerate}
+
+Output\+:
+\begin{DoxyEnumerate}
+\item Velocity gradient tensor in Voigt notation (6, 1).
+\end{DoxyEnumerate}
+
+This function calculates the velocity gradient tensor from elemental B matrix and elemental displacement. The elemental B matrix is composed of a stack of B matrices for each node of the element\+: \begin{eqnarray*} \textbf{B} &=& \left[ \left[ \textbf{B}_{0} \right] \left[ \textbf{B}_{1} \right] ... \left[ \textbf{B}_{nNode}\right] \right]\\ &=& \left[ \begin{bmatrix} \partial_x N_0 & 0 & 0 \\ 0 & \partial_y N_0 & 0 \\ 0 & 0 & \partial_z N_0 \\ \partial_y N_0 & \partial_x N_0 & 0\\ \partial_z N_0 & 0 & \partial_x N_0 \\ 0 & \partial_z N_0 & \partial_y N_0 \end{bmatrix} \begin{bmatrix} \partial_x N_1 & 0 & 0 \\ 0 & \partial_y N_1 & 0 \\ 0 & 0 & \partial_z N_1 \\ \partial_y N_1 & \partial_x N_1 & 0\\ \partial_z N_1 & 0 & \partial_x N_1 \\ 0 & \partial_z N_1 & \partial_y N_1 \end{bmatrix} ... \begin{bmatrix} \partial_x N_{nNode} & 0 & 0 \\ 0 & \partial_y N_{nNode} & 0 \\ 0 & 0 & \partial_z N_{nNode} \\ \partial_y N_{nNode} & \partial_x N_{nNode} & 0\\ \partial_z N_{nNode} & 0 & \partial_x N_{nNode} \\ 0 & \partial_z N_{nNode} & \partial_y N_{nNode} \end{bmatrix} \right] \end{eqnarray*} The elemental displacement matrix is extracted from the system displacement matrix via the function \hyperlink{classShapeBase_afcdbbe37a746ade52a1af70a9aa12b9f}{Shape\+Base\+::construct\+Elemental\+Displacement\+Matrix}. The displacement is calculated as the displacement of a node from its position at the end of last time step, $ u_{n}$ to the position at the current Newton-\/\+Raphson iteration $ u_{k}$. With the velocities (displacement per time step), and the $\textbf{B}$ matrix, velocity gradient tensor can be calculated through\+: \begin{eqnarray*} \boldsymbol{l} & = \boldsymbol{B} \boldsymbol{v_{n+1}}\nonumber \\ & = \boldsymbol{B} \frac{{u_{n+1}^{k} - u_{n}}} {\delta t}. \end{eqnarray*}
+
+Procedure\+:
+\begin{DoxyItemize}
+\item construct the Elemental\+Displacement\+Matrix.
+\item Allocate the velocity gradient tensor in Voigt notation.
+\item calculate velocity gradient tensor.
+\item free allocated memory.
+\item return velocity gradient tensor.
+\end{DoxyItemize}\hypertarget{classShapeBase_a4d10225f251fa1bd8a2e6ffc8feb5326}{}\index{Shape\+Base@{Shape\+Base}!calculate\+Viscous\+Forces@{calculate\+Viscous\+Forces}}
+\index{calculate\+Viscous\+Forces@{calculate\+Viscous\+Forces}!Shape\+Base@{Shape\+Base}}
+\subsubsection[{calculate\+Viscous\+Forces}]{\setlength{\rightskip}{0pt plus 5cm}void Shape\+Base\+::calculate\+Viscous\+Forces (
+\begin{DoxyParamCaption}
+\item[{gsl\+\_\+matrix $\ast$}]{gv, }
+\item[{gsl\+\_\+matrix $\ast$}]{B\+Tdet\+Fdetd\+Xde, }
+\item[{gsl\+\_\+matrix $\ast$}]{viscous\+Stress}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [protected]}}\label{classShapeBase_a4d10225f251fa1bd8a2e6ffc8feb5326}
+
+
+The function will calculate the elemental viscous forces from viscous stress. 
+
+Inputs\+:
+\begin{DoxyEnumerate}
+\item Elemental matrix for internal viscous forces (\hyperlink{classShapeBase_a250bd3396546342c8104f5b9c180d18f}{Shape\+Base\+::n\+Dim} x \hyperlink{classShapeBase_ae7dd93b58b3281ce90025f83d0f0e976}{Shape\+Base\+::n\+Nodes}, 1) the resulting forces will be written on this matrix
+\item Transpose of elemental B matrix, multiplied by the determinant of the deformation gradient, $\textbf{F}$, and the determinant of $ \delta \textbf{X}/\delta \boldsymbol{\xi}$
+\item The viscous stresses calculated in \hyperlink{classShapeBase_a22ffae25fafb0fa584a3a4d0196af7aa}{Shape\+Base\+::calculate\+Viscous\+Stress}
+\end{DoxyEnumerate}
+
+This function will calculate the elemental viscous forces from viscous stress, via\+: \begin{eqnarray*} \textbf{g}^v &=& \int_{V} \textbf{B}^{T} \sigma^{v} dV \\ &=& det(\textbf{F})det\left( \frac{\delta \textbf{X} }{\delta \boldsymbol{\xi}} \right) \textbf{B}^{T} \sigma^{v} \end{eqnarray*} Procedure\+:
+\begin{DoxyItemize}
+\item Allocate the memory for stress in Voigt notation
+\item Write stress in Voigt notation
+\item Calculate nodal forces
+\item Free memory
+\end{DoxyItemize}\hypertarget{classShapeBase_a22ffae25fafb0fa584a3a4d0196af7aa}{}\index{Shape\+Base@{Shape\+Base}!calculate\+Viscous\+Stress@{calculate\+Viscous\+Stress}}
+\index{calculate\+Viscous\+Stress@{calculate\+Viscous\+Stress}!Shape\+Base@{Shape\+Base}}
+\subsubsection[{calculate\+Viscous\+Stress}]{\setlength{\rightskip}{0pt plus 5cm}void Shape\+Base\+::calculate\+Viscous\+Stress (
+\begin{DoxyParamCaption}
+\item[{gsl\+\_\+matrix $\ast$}]{d, }
+\item[{gsl\+\_\+matrix $\ast$}]{viscous\+Stress}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [protected]}}\label{classShapeBase_a22ffae25fafb0fa584a3a4d0196af7aa}
+
+
+The function will calculate internal viscous stress of the element from rate of deformation matrix. 
+
+Inputs\+:
+\begin{DoxyEnumerate}
+\item The rate of deformation matrix (\hyperlink{classShapeBase_a250bd3396546342c8104f5b9c180d18f}{Shape\+Base\+::n\+Dim} x \hyperlink{classShapeBase_a250bd3396546342c8104f5b9c180d18f}{Shape\+Base\+::n\+Dim}).
+\item the viscous stress of current Gauss point, the result will be written on this matrix
+\end{DoxyEnumerate}
+
+This function will calculate the internal viscous stress of the element using rate of deformation matrix and Shape\+Base\+::internal\+Viscosity, $\eta$ , via\+: \[\sigma^{v} = \eta \textbf{d} \]
+
+Procedure\+:
+\begin{DoxyItemize}
+\item Copy rate of deformation tensor over to viscous stress tensor.
+\item Scale with the internal viscosity to obtain viscous stress tensor
+\end{DoxyItemize}\hypertarget{classShapeBase_a5409de18ee9e47af0bb977f4a1e608fb}{}\index{Shape\+Base@{Shape\+Base}!change\+Shape\+By\+Fsc@{change\+Shape\+By\+Fsc}}
 \index{change\+Shape\+By\+Fsc@{change\+Shape\+By\+Fsc}!Shape\+Base@{Shape\+Base}}
 \subsubsection[{change\+Shape\+By\+Fsc}]{\setlength{\rightskip}{0pt plus 5cm}void Shape\+Base\+::change\+Shape\+By\+Fsc (
 \begin{DoxyParamCaption}
 \item[{double}]{dt}
 \end{DoxyParamCaption}
 )}\label{classShapeBase_a5409de18ee9e47af0bb977f4a1e608fb}
-$<$ The increment of shape change that will be induced this step 
+$<$ The increment of shape change that will be induced this step \hypertarget{classShapeBase_afcdbbe37a746ade52a1af70a9aa12b9f}{}\index{Shape\+Base@{Shape\+Base}!construct\+Elemental\+Displacement\+Matrix@{construct\+Elemental\+Displacement\+Matrix}}
+\index{construct\+Elemental\+Displacement\+Matrix@{construct\+Elemental\+Displacement\+Matrix}!Shape\+Base@{Shape\+Base}}
+\subsubsection[{construct\+Elemental\+Displacement\+Matrix}]{\setlength{\rightskip}{0pt plus 5cm}gsl\+\_\+matrix $\ast$ Shape\+Base\+::construct\+Elemental\+Displacement\+Matrix (
+\begin{DoxyParamCaption}
+\item[{gsl\+\_\+matrix $\ast$}]{displacement}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [protected]}}\label{classShapeBase_afcdbbe37a746ade52a1af70a9aa12b9f}
+
+
+The function will assemble elemental node displacement matrix from the input displacement matrix for the whole system. 
+
+Inputs\+:
+\begin{DoxyEnumerate}
+\item The displacement matrix (\hyperlink{classShapeBase_a250bd3396546342c8104f5b9c180d18f}{Shape\+Base\+::n\+Dim} x Simulation\+::n\+Nodes, 1).
+\end{DoxyEnumerate}
+
+This function calculates the elemental displacement matrix from the displacement matrix of the whole system, given as input. In current usage, under normal circumstances, the input matrix is displacement divided by time step. The displacement is calculated by Simulation\+::calculate\+Displacement\+Matrix Both matrices, the displacement matrix of the whole system and the elemental displacement matrix are in vector form\+:
+
+$ displacement = \begin{bmatrix} \Delta x_{0}\\ \Delta y_{0}\\ \Delta z_{0}\\ ... ,\\ \Delta x_{N}\\ \Delta y_{N}\\ \Delta z_{N} \end{bmatrix} $
 
 The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
 \item 

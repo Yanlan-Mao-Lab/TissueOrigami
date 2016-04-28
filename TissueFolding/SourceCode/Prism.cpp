@@ -99,6 +99,7 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
     invJShapeFuncDerStack = new gsl_matrix*[3];
     invJShapeFuncDerStackwithFe  = new gsl_matrix*[3];
     elasticStress = new gsl_matrix*[3];
+    viscousStress = new gsl_matrix*[3];
     for (int i=0; i<3; ++i){
         ShapeFuncDerivatives[i] = gsl_matrix_calloc(nDim, nNodes);
         ShapeFuncDerStacks[i] = gsl_matrix_calloc(nDim*nDim, nDim*nNodes);
@@ -109,6 +110,7 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
         invJShapeFuncDerStack[i] = gsl_matrix_calloc(nDim*nDim, nDim*nNodes);
         invJShapeFuncDerStackwithFe[i] = gsl_matrix_calloc(nDim*nDim, nDim*nNodes);
         elasticStress[i] = gsl_matrix_calloc(3,3);
+        viscousStress[i] = gsl_matrix_calloc(3,3);
     }
     Strain = gsl_matrix_calloc(6,1);
     GrowthStrainsRotMat = gsl_matrix_alloc(3,3);
@@ -129,7 +131,9 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
     gsl_matrix_set_identity(growthIncrement);
     TriPointF = gsl_matrix_calloc(3,3);
     TriPointKe = gsl_matrix_calloc(nDim*nNodes,nDim*nNodes);
-    ElementalSystemForces = gsl_matrix_calloc(nNodes,nDim);
+    TriPointKv = gsl_matrix_calloc(nDim*nNodes,nDim*nNodes);
+    ElementalElasticSystemForces = gsl_matrix_calloc(nNodes,nDim);
+    ElementalInternalViscousSystemForces = gsl_matrix_calloc(nNodes,nDim);
 	RotatedElement = false;    
 
 	CurrShapeChangeToAdd[0] = 0;
@@ -174,6 +178,7 @@ Prism::~Prism(){
     gsl_matrix_free(TriPointF);
     gsl_matrix_free(Strain);
     gsl_matrix_free(TriPointKe);
+    gsl_matrix_free(TriPointKv);
     gsl_matrix_free(GrowthStrainsRotMat);
     for (int i=0; i<3; ++i){
         gsl_matrix_free (ShapeFuncDerivatives[i]);
@@ -184,6 +189,7 @@ Prism::~Prism(){
         gsl_matrix_free (invJShapeFuncDerStack[i]);
         gsl_matrix_free (invJShapeFuncDerStackwithFe[i]);
         gsl_matrix_free (elasticStress[i]);
+        gsl_matrix_free (viscousStress[i]);
     }
     delete[] ShapeFuncDerivatives;
     delete[] ShapeFuncDerStacks;
@@ -195,6 +201,7 @@ Prism::~Prism(){
     delete[] invJShapeFuncDerStack;
     delete[] invJShapeFuncDerStackwithFe;
     delete[] elasticStress;
+    delete[] viscousStress;
     delete[] Fplastic;
     delete[] invFplastic;
 }
@@ -468,7 +475,7 @@ void Prism::calculateCurrTriPointFForRotation(gsl_matrix *currF,int pointNo){
 }
 
 
-void Prism::calculateCurrNodalForces(gsl_matrix *currg, gsl_matrix *currF, int pointNo){
+void Prism::calculateCurrNodalForces(gsl_matrix *currge, gsl_matrix *currgv, gsl_matrix *currF, gsl_matrix* displacementPerDt, int pointNo){
     const int n = nNodes;
     const int dim = nDim;
     gsl_matrix* currFeFpFsc = gsl_matrix_alloc(dim,dim);
@@ -483,10 +490,10 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currg, gsl_matrix *currF, int p
     gsl_matrix* ShapeFuncDer = ShapeFuncDerivatives[pointNo];
     gsl_matrix* ShapeFuncDerStack = ShapeFuncDerStacks[pointNo];
     gsl_matrix* InvdXde = InvdXdes[pointNo];
-    gsl_matrix* Jacobian = gsl_matrix_calloc(dim, dim);
-    gsl_matrix* B = Bmatrices[pointNo];
+    gsl_matrix* B = Bmatrices[pointNo]; //I will update and use this value, it is not a constant.
     gsl_matrix* invJShFuncDerS = invJShapeFuncDerStack[pointNo];
     gsl_matrix* invJShFuncDerSWithFe =invJShapeFuncDerStackwithFe[pointNo];
+    gsl_matrix* Jacobian = gsl_matrix_calloc(dim, dim);
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, ShapeFuncDer, CurrShape, 0.0, Jacobian);
     gsl_matrix_transpose(Jacobian);
 
@@ -497,18 +504,20 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currg, gsl_matrix *currF, int p
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currF, InvFg, 0.0, currFeFpFsc);	///< Removing growth
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currFeFpFsc, InvFsc, 0.0, currFeFp);	///< Removing shape change
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currFeFp, invFplastic, 0.0, currFe);	///< Removing shape change
-    //if (Id == 0){
-    //	displayMatrix(currFe,"Element0-currFe");
-    //	displayMatrix(InvFg,"Element0-InvFg");
-    //}
 	gsl_matrix* currFeT = gsl_matrix_alloc(dim, dim);
     gsl_matrix_transpose_memcpy(currFeT,currFe);
     createMatrixCopy(FeMatrices[pointNo], currFe); // storing Fe for use in implicit elastic K calculation.
+
+    //setting material type:
     bool KirshoffMaterial = false;
     bool neoHookeanMaterial = !KirshoffMaterial;
-    gsl_matrix* E ;
+
+    //calculating Cauchy-Green Deformation Tensor
+    gsl_matrix* E;
     gsl_matrix* S;
     gsl_matrix* C = calculateCauchyGreenDeformationTensor(currFe,currFeT);
+
+    //calculating S:
     double detFe = determinant3by3Matrix(currFe);
     double lnJ = log(detFe);
     if (KirshoffMaterial){
@@ -537,11 +546,12 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currg, gsl_matrix *currF, int p
 		gsl_matrix_set(Strain,4,0, 2.0*gsl_matrix_get(E,2,1));
 		gsl_matrix_set(Strain,5,0, 2.0*gsl_matrix_get(E,0,2));
     }
-    //calculating stress (stress = detFe^-1 Fe S Fe^T):
+
+    //calculating elastic stress (elastic stress = detFe^-1 Fe S Fe^T):
     gsl_matrix_set_zero(elasticStress[pointNo]);
     gsl_matrix* compactStress  = calculateCompactStressForNodalForces(detFe, currFe,S,currFeT, elasticStress[pointNo]);
 
-    //Now from stress, I will calculate nodal forces via B.
+    //Now from elastic stress, I will calculate nodal forces via B.
     //Calculating the inverse Jacobian stack matrix:
     gsl_matrix* InvJacobianStack = calculateInverseJacobianStackForNodalForces(Jacobian);
 
@@ -552,11 +562,24 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currg, gsl_matrix *currF, int p
     //Calculate invJShapeFuncDerStackwithFe for K calculation (using F in inverse jacobian calculation rather than Fe):
     calculateInvJShFuncDerSWithFe(currFe, InvdXde, ShapeFuncDerStack, invJShFuncDerSWithFe);
 
-    //calculating nodal forces as B^T compactStress detF
+    //calculating nodal elastic forces as B^T compactStress detF
     gsl_matrix_scale(currBT,detFs[pointNo]);
     gsl_matrix_scale(currBT,detdXdes[pointNo]);
-    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currBT, compactStress,0.0, currg);
+    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currBT, compactStress,0.0, currge);
 
+    //calculating viscous stress:
+    gsl_matrix* l = calculateVelocityGradientTensor(B, displacementPerDt);
+    gsl_matrix* d = calculateRateOfDeformationTensor(l);
+    gsl_matrix_set_zero(viscousStress[pointNo]);
+    calculateViscousStress(d,viscousStress[pointNo]);
+    //The Bt I am giving into this function has already been scaled to include volume integration.
+    calculateViscousForces(currgv, currBT,viscousStress[pointNo]);
+
+    /*if (Id ==0){
+    	displayMatrix(viscousStress[pointNo],"viscousStress");
+    	//displayMatrix(currgv,"currgv");
+    	//displayMatrix(currge,"currge");
+    }*/
     //freeing the matrices allocated in this function
     gsl_matrix_free(currFeT);
     gsl_matrix_free(currFeFp);
@@ -570,9 +593,11 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currg, gsl_matrix *currF, int p
     gsl_matrix_free(currFe);
     gsl_matrix_free(CurrShape);
     gsl_matrix_free(Jacobian);
+    //gsl_matrix_free(l);
+    //gsl_matrix_free(d);
+    //gsl_matrix_free(viscousStress);
     //cout<<"Finished calculate nodel forces"<<endl;
 }
-
 
 void Prism::calculateReferenceVolume(){
 	double height = 0.0;

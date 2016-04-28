@@ -39,13 +39,16 @@ Inheritance diagram for Prism\+:\begin{figure}[H]
 \hypertarget{classPrism_a91d08cfcf6bf111f5d9e314499bafd11}{}double {\bfseries get\+Element\+Height} ()\label{classPrism_a91d08cfcf6bf111f5d9e314499bafd11}
 
 \item 
-\hypertarget{classPrism_a37ba7c6f45d6b5abbfb0923c0cc72fa9}{}void {\bfseries Add\+Packing\+To\+Surface} (int tissueplacement, double Fx, double Fy, double Fz, double $\ast$$\ast$System\+Forces, double $\ast$$\ast$Packing\+Forces, vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&Nodes)\label{classPrism_a37ba7c6f45d6b5abbfb0923c0cc72fa9}
+\hypertarget{classPrism_aea2d84b05534bb2aedcdb49a53eab1ae}{}void {\bfseries Add\+Packing\+To\+Surface} (int tissueplacement\+Of\+Packing\+Node, double Fx, double Fy, double Fz, double $\ast$$\ast$Packing\+Forces, vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&Nodes, bool \&all\+Corners\+Fixed\+X, bool \&all\+Corners\+Fixed\+Y, bool \&all\+Corners\+Fixed\+Z)\label{classPrism_aea2d84b05534bb2aedcdb49a53eab1ae}
 
 \item 
-\hypertarget{classPrism_a523002e7e6487db1a4506b2f0b2b4e04}{}bool {\bfseries Is\+Point\+Close\+Enough\+For\+Packing} (double $\ast$Pos, float Peripodialthreshold, float Columnarthreshold, int Tissue\+Placement\+Of\+Packing\+Node, int Tissue\+Type\+Of\+Packing\+Node)\label{classPrism_a523002e7e6487db1a4506b2f0b2b4e04}
+\hypertarget{classPrism_aa153c49304a9d808af5ea65a40f89128}{}void {\bfseries get\+Relevant\+Nodes\+For\+Packing} (int Tissue\+Placement\+Of\+Packing\+Node, int Tissue\+Type\+Of\+Packing\+Node, int \&id1, int \&id2, int \&id3)\label{classPrism_aa153c49304a9d808af5ea65a40f89128}
 
 \item 
-\hypertarget{classPrism_adaa9ffb371d07e063e1b280d959a9fe6}{}void {\bfseries calculate\+Normal\+For\+Packing} (int tissue\+Placement)\label{classPrism_adaa9ffb371d07e063e1b280d959a9fe6}
+\hypertarget{classPrism_a45363ee4cc0dddd82ef567846a6bf123}{}bool {\bfseries Is\+Point\+Close\+Enough\+For\+Packing} (double $\ast$Pos, float threshold, int Tissue\+Placement\+Of\+Packing\+Node, int Tissue\+Type\+Of\+Packing\+Node)\label{classPrism_a45363ee4cc0dddd82ef567846a6bf123}
+
+\item 
+\hypertarget{classPrism_acb1603367b049392cebfc20b3aaeab87}{}void {\bfseries calculate\+Normal\+For\+Packing} (int tissue\+Placement\+Of\+Normal)\label{classPrism_acb1603367b049392cebfc20b3aaeab87}
 
 \item 
 \hypertarget{classPrism_a67e80515fb1cdf4438b4b7d47334bd2e}{}void {\bfseries calculate\+Apical\+Area} ()\label{classPrism_a67e80515fb1cdf4438b4b7d47334bd2e}
@@ -93,7 +96,7 @@ Inheritance diagram for Prism\+:\begin{figure}[H]
 \hypertarget{classPrism_aa433244f86cdf23a611a1adc3391c3f0}{}void {\bfseries calculate\+Currk} (boost\+::numeric\+::ublas\+::matrix$<$ double $>$ \&currk, boost\+::numeric\+::ublas\+::matrix$<$ double $>$ \&curr\+B, boost\+::numeric\+::ublas\+::matrix$<$ double $>$ \&curr\+B\+E, boost\+::numeric\+::ublas\+::matrix$<$ double $>$ \&curr\+Bo, double eta, double zeta, double nu)\label{classPrism_aa433244f86cdf23a611a1adc3391c3f0}
 
 \item 
-void \hyperlink{classPrism_aea47379b3064d866f93508a9337d8f12}{calculate\+Curr\+Nodal\+Forces} (gsl\+\_\+matrix $\ast$gslcurrg, gsl\+\_\+matrix $\ast$gslcurr\+F, int point\+No)
+void \hyperlink{classPrism_a606fbf422f9d652e0f697ea93dc2e088}{calculate\+Curr\+Nodal\+Forces} (gsl\+\_\+matrix $\ast$gslcurrge, gsl\+\_\+matrix $\ast$gslcurrgv, gsl\+\_\+matrix $\ast$gslcurr\+F, gsl\+\_\+matrix $\ast$displacement\+Per\+Dt, int point\+No)
 \item 
 \hypertarget{classPrism_ae9403142a217a005a4d588a6e472be27}{}void {\bfseries calculate\+Curr\+Tri\+Point\+F\+For\+Rotation} (gsl\+\_\+matrix $\ast$curr\+F, int point\+No)\label{classPrism_ae9403142a217a005a4d588a6e472be27}
 
@@ -138,16 +141,20 @@ void \hyperlink{classPrism_aea47379b3064d866f93508a9337d8f12}{calculate\+Curr\+N
 
 
 \subsection{Member Function Documentation}
-\hypertarget{classPrism_aea47379b3064d866f93508a9337d8f12}{}\index{Prism@{Prism}!calculate\+Curr\+Nodal\+Forces@{calculate\+Curr\+Nodal\+Forces}}
+\hypertarget{classPrism_a606fbf422f9d652e0f697ea93dc2e088}{}\index{Prism@{Prism}!calculate\+Curr\+Nodal\+Forces@{calculate\+Curr\+Nodal\+Forces}}
 \index{calculate\+Curr\+Nodal\+Forces@{calculate\+Curr\+Nodal\+Forces}!Prism@{Prism}}
 \subsubsection[{calculate\+Curr\+Nodal\+Forces}]{\setlength{\rightskip}{0pt plus 5cm}void Prism\+::calculate\+Curr\+Nodal\+Forces (
 \begin{DoxyParamCaption}
-\item[{gsl\+\_\+matrix $\ast$}]{gslcurrg, }
+\item[{gsl\+\_\+matrix $\ast$}]{gslcurrge, }
+\item[{gsl\+\_\+matrix $\ast$}]{gslcurrgv, }
 \item[{gsl\+\_\+matrix $\ast$}]{gslcurr\+F, }
+\item[{gsl\+\_\+matrix $\ast$}]{displacement\+Per\+Dt, }
 \item[{int}]{point\+No}
 \end{DoxyParamCaption}
-)\hspace{0.3cm}{\ttfamily [protected]}, {\ttfamily [virtual]}}\label{classPrism_aea47379b3064d866f93508a9337d8f12}
+)\hspace{0.3cm}{\ttfamily [protected]}, {\ttfamily [virtual]}}\label{classPrism_a606fbf422f9d652e0f697ea93dc2e088}
 $<$ Removing growth
+
+$<$ Removing shape change
 
 $<$ Removing shape change 
 

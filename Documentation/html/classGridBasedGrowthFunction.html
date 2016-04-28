@@ -155,10 +155,19 @@ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cl
 gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGridBasedGrowthFunction.html#a85ed4f6a4b5165adf1ab8806b885f81a">getXyShearRotationsMatrixElement</a> (int i, int j)</td></tr>
 <tr class="memdesc:a85ed4f6a4b5165adf1ab8806b885f81a"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function returns the xyShear rotation matrix at grid point [i][j] (in dimensions <a class="el" href="classGridBasedGrowthFunction.html#af872b9963f3a579dcd615c23bcb58a86" title="The number of grid points that discretise the tissue in x. ">GridBasedGrowthFunction::nGridX</a>, <a class="el" href="classGridBasedGrowthFunction.html#a625bc963a1f1e7d1f1a35dbd0ef51728" title="The number of grid points that discretise the tissue in y. ">GridBasedGrowthFunction::nGridY</a>). <br /></td></tr>
 <tr class="separator:a85ed4f6a4b5165adf1ab8806b885f81a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab07937a18f72f31f4875225c1e246032"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab07937a18f72f31f4875225c1e246032"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>isAspectRatioOverOne</b> (int i, int j)</td></tr>
+<tr class="separator:ab07937a18f72f31f4875225c1e246032"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9d01fcbba5732aad966659d4f64c145b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9d01fcbba5732aad966659d4f64c145b"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGridBasedGrowthFunction.html#a9d01fcbba5732aad966659d4f64c145b">setGrowthMatrixElement</a> (double ex, double ey, double ez, int i, int j)</td></tr>
 <tr class="memdesc:a9d01fcbba5732aad966659d4f64c145b"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function sets the growth rate at grid point [i][j] (in dimensions <a class="el" href="classGridBasedGrowthFunction.html#af872b9963f3a579dcd615c23bcb58a86" title="The number of grid points that discretise the tissue in x. ">GridBasedGrowthFunction::nGridX</a>, <a class="el" href="classGridBasedGrowthFunction.html#a625bc963a1f1e7d1f1a35dbd0ef51728" title="The number of grid points that discretise the tissue in y. ">GridBasedGrowthFunction::nGridY</a>), to the growth rate [ex, ey, ez] in the format [ DV axis (x), AP axis (y), and AB axis (z)]. <br /></td></tr>
 <tr class="separator:a9d01fcbba5732aad966659d4f64c145b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a92f4db6ab17ba3539f98895c500ec2d7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a92f4db6ab17ba3539f98895c500ec2d7"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>preCalculateAnglesForCompatibleAveraging</b> ()</td></tr>
+<tr class="separator:a92f4db6ab17ba3539f98895c500ec2d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a11692e47b20e812fe775f99a78480571"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a11692e47b20e812fe775f99a78480571"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>getGrowthProfileAt4Corners</b> (int IndexX, int IndexY, double *growth0, double *growth1, double *growth2, double *growth3, double *angles, bool *anglesEliminated)</td></tr>
+<tr class="separator:a11692e47b20e812fe775f99a78480571"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a659418841b4a3bc8be1dec15f95d7b76"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGridBasedGrowthFunction.html#a659418841b4a3bc8be1dec15f95d7b76">writeSummary</a> (ofstream &amp;saveFileSimulationSummary, double dt)</td></tr>
 <tr class="memdesc:a659418841b4a3bc8be1dec15f95d7b76"><td class="mdescLeft">&#160;</td><td class="mdescRight">The function is to write the growth function summary to simulation summary file.  <a href="#a659418841b4a3bc8be1dec15f95d7b76">More...</a><br /></td></tr>
 <tr class="separator:a659418841b4a3bc8be1dec15f95d7b76"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -218,6 +227,18 @@ double **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href=
 <tr class="memitem:a62e3267b367261ff2f37cee9a7c2b02b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a62e3267b367261ff2f37cee9a7c2b02b"></a>
 gsl_matrix ***&#160;</td><td class="memItemRight" valign="bottom"><b>xyShearRotationsMatrix</b></td></tr>
 <tr class="separator:a62e3267b367261ff2f37cee9a7c2b02b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a56ff4380487e4d24881431f0e6ea6f2e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a56ff4380487e4d24881431f0e6ea6f2e"></a>
+bool **&#160;</td><td class="memItemRight" valign="bottom"><b>aspectRatioOverThresoldMatrix</b></td></tr>
+<tr class="separator:a56ff4380487e4d24881431f0e6ea6f2e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a59b0e127387157f89f099ae3beeaa671"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a59b0e127387157f89f099ae3beeaa671"></a>
+double ****&#160;</td><td class="memItemRight" valign="bottom"><b>compatibleGrowths</b></td></tr>
+<tr class="separator:a59b0e127387157f89f099ae3beeaa671"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aac8a163bbd008d327859b488cf023c10"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aac8a163bbd008d327859b488cf023c10"></a>
+double ***&#160;</td><td class="memItemRight" valign="bottom"><b>compatibleAngles</b></td></tr>
+<tr class="separator:aac8a163bbd008d327859b488cf023c10"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:addfc2d280d1fc0b0b17d7f1dfe54f873"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="addfc2d280d1fc0b0b17d7f1dfe54f873"></a>
+bool ***&#160;</td><td class="memItemRight" valign="bottom"><b>compatibleAngleEliminated</b></td></tr>
+<tr class="separator:addfc2d280d1fc0b0b17d7f1dfe54f873"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_attribs_classGrowthFunctionBase"><td colspan="2" onclick="javascript:toggleInherit('pub_attribs_classGrowthFunctionBase')"><img src="closed.png" alt="-"/>&#160;Public Attributes inherited from <a class="el" href="classGrowthFunctionBase.html">GrowthFunctionBase</a></td></tr>
 <tr class="memitem:a90fc4b14e2adcda0930fe93b1490fb7a inherit pub_attribs_classGrowthFunctionBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a90fc4b14e2adcda0930fe93b1490fb7a"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGrowthFunctionBase.html#a90fc4b14e2adcda0930fe93b1490fb7a">Type</a></td></tr>
@@ -383,7 +404,7 @@ double*** GrowthMat is the pointer to the 2-dimensional matrix of double triplet
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="classGridBasedGrowthFunction.html">GridBasedGrowthFunction</a></li>
-    <li class="footer">Generated on Tue Nov 3 2015 16:55:13 for Tissue Origami by
+    <li class="footer">Generated on Fri Apr 15 2016 19:51:54 for Tissue Origami by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

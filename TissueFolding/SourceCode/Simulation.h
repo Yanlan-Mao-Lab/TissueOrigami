@@ -13,6 +13,7 @@
 #include "GrowthFunctionBase.h"
 #include "GrowthFunctionTypes.h"
 #include "MyosinFunction.h"
+#include "NewtonRapsonSolver.h"
 
 #include <omp.h>
 //test for rici pull
@@ -62,6 +63,8 @@ private:
     //vector <Node*> symmetricYBoundaryNodes;
     //vector <Node*> symmetricXBoundaryNodes;
     vector <int> AblatedNodes;
+
+    NewtonRapsonSolver *NRSolver;
 
 	bool readModeOfSim(int& i, int argc, char **argv);
 	bool readParameters(int& i, int argc, char **argv);
@@ -239,7 +242,7 @@ public:
 	double discProperBasalViscosity;
 	double discProperMidlineViscosity;
 	int noiseOnPysProp[4];
-	bool zeroExternalViscosity;
+	bool zeroExternalViscosity[3]; //The boolean stating if there is zero external viscosity on any of the 3 dimensions
 	double externalViscosityDPApical;
 	double externalViscosityDPBasal;
 	double externalViscosityPMApical;
@@ -374,7 +377,7 @@ public:
 	double packingThreshold;
 	//soft periphery parameters:
 	bool 	softPeriphery;
-	double 	softDebth;
+	double 	softDepth;
 	double 	softnessFraction;
 	bool 	softPeripheryBooleans[4]; //  [applyToApical]  [applyToBasal]  [applyToColumnar]  [applyToPeripodial]
 
@@ -386,13 +389,10 @@ public:
 	bool readExecutableInputs(int argc, char **argv);
 	bool initiateSystem();
 	void calculateSystemCentre();
-	//void cleanGrowthData();
 	void cleanMatrixUpdateData();
 	void resetForces(bool resetPacking);
 	void calculateApicalSize();
 	void calculateBoundingBox();
-	//void calculateColumnarLayerBoundingBox();
-	//void calculatePeripodialBoundingBox();
     void calculateZProjectedAreas();
     void correctzProjectedAreaForMidNodes();
     void clearProjectedAreas();
@@ -403,27 +403,28 @@ public:
     bool runOneStep();
     void updatePlasticDeformation();
     void updateStepNR();
-    void constructUnMatrix(gsl_matrix* un);
-    void constructLumpedMassExternalViscosityDtMatrix(gsl_matrix* mviscdt);
-    void calculateElasticForcesAndImplicitKelasticForNR();
-    void calculateElasticForcesForNR();
-    void writeElasticForcesToge(gsl_matrix* ge);
-    void calculateViscousForcesForNR(gsl_matrix* gv, gsl_matrix* mviscdt, gsl_matrix* uk, gsl_matrix* un);
-    void calculateImplicitKElastic();
-    void writeImplicitElementalKElasticToKe(gsl_matrix* K);
-    void calculateImplucitKViscous(gsl_matrix* K, gsl_matrix*  mviscdt);
+    //void constructUnMatrix(gsl_matrix* un);
+    //void constructLumpedMassExternalViscosityDtMatrix(gsl_matrix* mvisc, gsl_matrix* mviscPerDt);
+    //void calculateForcesAndJacobianMatrixNR(gsl_matrix* displacementPerDt);
+    //void writeForcesTogeAndgvInternal(gsl_matrix* ge, gsl_matrix* gvInternal);
+    //void calculateDisplacementMatrix(gsl_matrix* uk, gsl_matrix* un, gsl_matrix* displacement);
+    void calculateExternalViscousForcesForNR(gsl_matrix* gv, gsl_matrix* mviscdt, gsl_matrix* displacement);
+    //void calculateImplicitKElastic();
+    //void writeImplicitElementalKToJacobian(gsl_matrix* K);
+    //void addImplicitKViscousExternalToJacobian(gsl_matrix* K, gsl_matrix*  mviscPerDt);
     //void calculateImplucitKElasticNumerical(gsl_matrix* K,gsl_matrix* geNoPerturbation);
-    void solveForDeltaU(gsl_matrix* K, gsl_vector* g, gsl_vector *deltaU);
-    void constructiaForPardiso(gsl_matrix* K, int* ia, const int nmult, vector<int> &ja_vec, vector<double> &a_vec);
-    void writeKinPardisoFormat(const int nNonzero, vector<int> &ja_vec, vector<double> &a_vec, int* ja, double* a);
-    void writeginPardisoFormat(gsl_vector* g, double* b, const int n);
-    int  solveWithPardiso(double* a, double*b, int* ia, int* ja, gsl_vector* x ,const int n_variables);
-    void updateUkInNR(gsl_matrix* uk, gsl_vector* deltaU);
+
+    //void solveForDeltaU(gsl_matrix* K, gsl_vector* g, gsl_vector *deltaU);
+    //void constructiaForPardiso(gsl_matrix* K, int* ia, const int nmult, vector<int> &ja_vec, vector<double> &a_vec);
+    //void writeKinPardisoFormat(const int nNonzero, vector<int> &ja_vec, vector<double> &a_vec, int* ja, double* a);
+    //void writeginPardisoFormat(gsl_vector* g, double* b, const int n);
+    //int  solveWithPardiso(double* a, double*b, int* ia, int* ja, gsl_vector* x ,const int n_variables);
+    //void updateUkInNR(gsl_matrix* uk, gsl_vector* deltaU);
     void updateElementPositionsinNR(gsl_matrix* uk);
-    bool checkConvergenceViaDeltaU(gsl_vector* deltaU);
-    bool checkConvergenceViaForce(gsl_vector* gSum);
+    //bool checkConvergenceViaDeltaU(gsl_vector* deltaU);
+    //bool checkConvergenceViaForce(gsl_vector* gSum);
     void updateNodePositionsNR(gsl_matrix* uk);
-    void calcutateFixedK(gsl_matrix* K, gsl_vector* g);
+    //void calcutateFixedK(gsl_matrix* K, gsl_vector* g);
     void calculateRandomForces();
     void addRandomForces(gsl_matrix* gExt);
     void smallStrainrunOneStep();

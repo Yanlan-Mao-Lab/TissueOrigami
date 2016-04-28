@@ -911,7 +911,7 @@ void GLWidget::highlightNode(int i){
               dx *=this->devicePixelRatio();
               dy *=this->devicePixelRatio();
               //cout<<"dx: "<<dx<<" dy: "<<dy<<endl;
-              float speed = 0.05;
+              float speed = 0.1;
               obj_pos[0] +=  dx*speed;
               obj_pos[1] += -dy*speed;
               lastPos = event->pos();
@@ -931,7 +931,7 @@ void GLWidget::highlightNode(int i){
     	 int dy = event->y() - lastPos.y();
          dx *=this->devicePixelRatio();
          dy *=this->devicePixelRatio();
-    	 float speed = 0.05;
+    	 float speed = 0.1;
     	 obj_pos[0] +=  dx*speed;
     	 obj_pos[1] += -dy*speed;
          //cerr<<"right button "<<dx<<" "<<dy<<" "<<obj_pos[0]<<" "<<obj_pos[1]<<endl;

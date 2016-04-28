@@ -26,9 +26,9 @@ Node::Node(int id, int dim, double* pos, int tissuePos, int tissueType){
 		FixedPos[i] = false;
 		externalViscositySetInFixing[i] = false;
 	}
-	externalViscosity[0] = -10.0;
-	externalViscosity[1] = -10.0;
-	externalViscosity[2] = -10.0;
+	externalViscosity[0] = 0.0;
+	externalViscosity[1] = 0.0;
+	externalViscosity[2] = 0.0;
 	tissuePlacement = tissuePos;
 	this->tissueType = tissueType;
 	atCircumference = false;

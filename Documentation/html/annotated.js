@@ -8,6 +8,7 @@ var annotated =
     [ "MyosinFunction", "classMyosinFunction.html", "classMyosinFunction" ],
     [ "Node", "classNode.html", "classNode" ],
     [ "Prism", "classPrism.html", "classPrism" ],
+    [ "RandomGenerator", "classRandomGenerator.html", "classRandomGenerator" ],
     [ "ReferenceShapeBase", "classReferenceShapeBase.html", "classReferenceShapeBase" ],
     [ "RingGrowthFunction", "classRingGrowthFunction.html", "classRingGrowthFunction" ],
     [ "ShapeBase", "classShapeBase.html", "classShapeBase" ],

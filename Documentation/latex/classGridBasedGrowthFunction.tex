@@ -32,9 +32,18 @@ Inheritance diagram for Grid\+Based\+Growth\+Function\+:\begin{figure}[H]
 \hypertarget{classGridBasedGrowthFunction_a85ed4f6a4b5165adf1ab8806b885f81a}{}gsl\+\_\+matrix $\ast$ \hyperlink{classGridBasedGrowthFunction_a85ed4f6a4b5165adf1ab8806b885f81a}{get\+Xy\+Shear\+Rotations\+Matrix\+Element} (int i, int j)\label{classGridBasedGrowthFunction_a85ed4f6a4b5165adf1ab8806b885f81a}
 
 \begin{DoxyCompactList}\small\item\em This function returns the xy\+Shear rotation matrix at grid point \mbox{[}i\mbox{]}\mbox{[}j\mbox{]} (in dimensions \hyperlink{classGridBasedGrowthFunction_af872b9963f3a579dcd615c23bcb58a86}{Grid\+Based\+Growth\+Function\+::n\+Grid\+X}, \hyperlink{classGridBasedGrowthFunction_a625bc963a1f1e7d1f1a35dbd0ef51728}{Grid\+Based\+Growth\+Function\+::n\+Grid\+Y}). \end{DoxyCompactList}\item 
+\hypertarget{classGridBasedGrowthFunction_ab07937a18f72f31f4875225c1e246032}{}bool {\bfseries is\+Aspect\+Ratio\+Over\+One} (int i, int j)\label{classGridBasedGrowthFunction_ab07937a18f72f31f4875225c1e246032}
+
+\item 
 \hypertarget{classGridBasedGrowthFunction_a9d01fcbba5732aad966659d4f64c145b}{}void \hyperlink{classGridBasedGrowthFunction_a9d01fcbba5732aad966659d4f64c145b}{set\+Growth\+Matrix\+Element} (double ex, double ey, double ez, int i, int j)\label{classGridBasedGrowthFunction_a9d01fcbba5732aad966659d4f64c145b}
 
 \begin{DoxyCompactList}\small\item\em This function sets the growth rate at grid point \mbox{[}i\mbox{]}\mbox{[}j\mbox{]} (in dimensions \hyperlink{classGridBasedGrowthFunction_af872b9963f3a579dcd615c23bcb58a86}{Grid\+Based\+Growth\+Function\+::n\+Grid\+X}, \hyperlink{classGridBasedGrowthFunction_a625bc963a1f1e7d1f1a35dbd0ef51728}{Grid\+Based\+Growth\+Function\+::n\+Grid\+Y}), to the growth rate \mbox{[}ex, ey, ez\mbox{]} in the format \mbox{[} D\+V axis (x), A\+P axis (y), and A\+B axis (z)\mbox{]}. \end{DoxyCompactList}\item 
+\hypertarget{classGridBasedGrowthFunction_a92f4db6ab17ba3539f98895c500ec2d7}{}void {\bfseries pre\+Calculate\+Angles\+For\+Compatible\+Averaging} ()\label{classGridBasedGrowthFunction_a92f4db6ab17ba3539f98895c500ec2d7}
+
+\item 
+\hypertarget{classGridBasedGrowthFunction_a11692e47b20e812fe775f99a78480571}{}void {\bfseries get\+Growth\+Profile\+At4\+Corners} (int Index\+X, int Index\+Y, double $\ast$growth0, double $\ast$growth1, double $\ast$growth2, double $\ast$growth3, double $\ast$angles, bool $\ast$angles\+Eliminated)\label{classGridBasedGrowthFunction_a11692e47b20e812fe775f99a78480571}
+
+\item 
 void \hyperlink{classGridBasedGrowthFunction_a659418841b4a3bc8be1dec15f95d7b76}{write\+Summary} (ofstream \&save\+File\+Simulation\+Summary, double dt)
 \begin{DoxyCompactList}\small\item\em The function is to write the growth function summary to simulation summary file. \end{DoxyCompactList}\end{DoxyCompactItemize}
 \subsection*{Public Attributes}
@@ -53,6 +62,18 @@ void \hyperlink{classGridBasedGrowthFunction_a659418841b4a3bc8be1dec15f95d7b76}{
 
 \begin{DoxyCompactList}\small\item\em The matrix of xy shear rate (rad/sec). It is a matrix of doubles at each grid point. he dimensions of the matrix are equal to (\hyperlink{classGridBasedGrowthFunction_af872b9963f3a579dcd615c23bcb58a86}{Grid\+Based\+Growth\+Function\+::n\+Grid\+X}, \hyperlink{classGridBasedGrowthFunction_a625bc963a1f1e7d1f1a35dbd0ef51728}{Grid\+Based\+Growth\+Function\+::n\+Grid\+Y}), and set in constructor of the \hyperlink{classGridBasedGrowthFunction}{Grid\+Based\+Growth\+Function}. \end{DoxyCompactList}\item 
 \hypertarget{classGridBasedGrowthFunction_a62e3267b367261ff2f37cee9a7c2b02b}{}gsl\+\_\+matrix $\ast$$\ast$$\ast$ {\bfseries xy\+Shear\+Rotations\+Matrix}\label{classGridBasedGrowthFunction_a62e3267b367261ff2f37cee9a7c2b02b}
+
+\item 
+\hypertarget{classGridBasedGrowthFunction_a56ff4380487e4d24881431f0e6ea6f2e}{}bool $\ast$$\ast$ {\bfseries aspect\+Ratio\+Over\+Thresold\+Matrix}\label{classGridBasedGrowthFunction_a56ff4380487e4d24881431f0e6ea6f2e}
+
+\item 
+\hypertarget{classGridBasedGrowthFunction_a59b0e127387157f89f099ae3beeaa671}{}double $\ast$$\ast$$\ast$$\ast$ {\bfseries compatible\+Growths}\label{classGridBasedGrowthFunction_a59b0e127387157f89f099ae3beeaa671}
+
+\item 
+\hypertarget{classGridBasedGrowthFunction_aac8a163bbd008d327859b488cf023c10}{}double $\ast$$\ast$$\ast$ {\bfseries compatible\+Angles}\label{classGridBasedGrowthFunction_aac8a163bbd008d327859b488cf023c10}
+
+\item 
+\hypertarget{classGridBasedGrowthFunction_addfc2d280d1fc0b0b17d7f1dfe54f873}{}bool $\ast$$\ast$$\ast$ {\bfseries compatible\+Angle\+Eliminated}\label{classGridBasedGrowthFunction_addfc2d280d1fc0b0b17d7f1dfe54f873}
 
 \end{DoxyCompactItemize}
 

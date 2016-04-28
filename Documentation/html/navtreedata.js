@@ -20,8 +20,9 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "GLWidget_8h_source.html",
-"classPrism.html#aa107f8923cbbc9e1881cf98666743ae6",
-"classShapeBase.html#ae935864e71abacdb3181d441826bbd39"
+"classNode.html#af8e9678dfeffc9e99d925a83b58fde3d",
+"classShapeBase.html#aa32b4675de014e09732e7ab89719e679",
+"classSimulation.html#a9d12531ec1daffb9e389ac59b4f43299"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
