@@ -3837,13 +3837,68 @@ void Simulation::updatePlasticDeformation(){
 	}
 }
 
+void Simulation::calculateNumericalJacobian(bool displayMatricesDuringNumericalCalculation){
+	int dim = 3;
+	gsl_matrix_set_zero(NRSolver->Knumerical);
+	NRSolver->calculateDisplacementMatrix(dt);
+	//Trying to see the manual values:
+	resetForces(true); // reset the packing forces together with all the rest of the forces here
+	//No perturbation:
+	gsl_matrix* ge_noPerturb = gsl_matrix_calloc(dim*nNodes,1);
+	gsl_matrix* gvInternal_noPerturb = gsl_matrix_calloc(dim*nNodes,1);
+	NRSolver->calculateForcesAndJacobianMatrixNR(Nodes, Elements, dt, recordForcesOnFixedNodes, FixedNodeForces, outputFile);
+	NRSolver->writeForcesTogeAndgvInternal(Nodes, Elements, SystemForces);
+	gsl_matrix_memcpy(ge_noPerturb, NRSolver->ge);
+	gsl_matrix_memcpy(gvInternal_noPerturb, NRSolver->gvInternal);
+	//perturbation loop:
+	gsl_matrix* uk_original = gsl_matrix_calloc(dim*nNodes,1);
+	gsl_matrix_memcpy(uk_original,NRSolver->uk);
+	for (int i=0; i<nNodes; ++i){
+		for (int j=0; j<3; ++j){
+			resetForces(true); // reset the packing forces together with all the rest of the forces here
+			gsl_matrix_set(NRSolver->uk,i*3+j,0,gsl_matrix_get(NRSolver->uk,i*3+j,0)+1E-6);
+			NRSolver->calculateDisplacementMatrix(dt);
+			Nodes[i]->Position[j] += 1E-6;
+			updateElementPositions();
+			NRSolver->calculateForcesAndJacobianMatrixNR(Nodes, Elements, dt, recordForcesOnFixedNodes, FixedNodeForces, outputFile);
+			gsl_matrix* ge_withPerturb = gsl_matrix_calloc(dim*nNodes,1);
+			gsl_matrix* gvInternal_withPerturb = gsl_matrix_calloc(dim*nNodes,1);
+			NRSolver->writeForcesTogeAndgvInternal(Nodes, Elements, SystemForces);
+			gsl_matrix_memcpy(ge_withPerturb, NRSolver->ge);
+			gsl_matrix_memcpy(gvInternal_withPerturb, NRSolver->gvInternal);
+			//Calculate dg/dx:
+			gsl_matrix_sub(ge_withPerturb,ge_noPerturb);
+			gsl_matrix_sub(gvInternal_withPerturb,gvInternal_noPerturb);
+			gsl_matrix_scale(ge_withPerturb,1.0/1E-6);
+			gsl_matrix_scale(gvInternal_withPerturb,1.0/1E-6);
+			for (int k=0; k<nNodes*3; ++k){
+				double valueElastic =   0;//gsl_matrix_get(ge_withPerturb,k,0);
+				double valueViscous = 	gsl_matrix_get(gvInternal_withPerturb,k,0);
+				double value = valueElastic + valueViscous;
+				value *= -1.0;
+				gsl_matrix_set(NRSolver->K,i*3+j,k,value);
+			}
+			gsl_matrix_memcpy(NRSolver->uk,uk_original);
+			//gsl_matrix_set(uk,i*3+j,0,gsl_matrix_get(uk,i*3+j,0)-1E-6);
+			Nodes[i]->Position[j] -= 1E-6;
+			updateElementPositions();
+		}
+	}
+	NRSolver->calcutateFixedK(Nodes);
+	if (displayMatricesDuringNumericalCalculation){
+		Elements[0]->displayMatrix(NRSolver->K,"numericalK");
+	}
+	gsl_matrix_memcpy(NRSolver->Knumerical,NRSolver->K);
+	NRSolver->setMatricesToZeroInsideIteration();
+}
+
 void Simulation::updateStepNR(){
     int dim  = 3;
     int iteratorK = 0;
     bool converged = false;
 
     bool numericalCalculation = false;
-    bool displayMAtricesDuringNumericalCalculation = false;
+    bool displayMatricesDuringNumericalCalculation = false;
     bool useNumericalKIncalculation = false;
     NRSolver->setMatricesToZeroAtTheBeginningOfIteration(numericalCalculation);
     NRSolver->constructUnMatrix(Nodes);
@@ -3853,94 +3908,20 @@ void Simulation::updateStepNR(){
         cout<<"iteration: "<<iteratorK<<endl;
         resetForces(true);	//do reset packing forces
         NRSolver->setMatricesToZeroInsideIteration();
-        //cout<<"after reset forces"<<endl;
-
         if (numericalCalculation){
-            gsl_matrix_set_zero(NRSolver->Knumerical);
-            NRSolver->calculateDisplacementMatrix(dt);
-			//Trying to see the manual values:
-			resetForces(true); // reset the packing forces together with all the rest of the forces here
-			//No perturbation:
-			gsl_matrix* ge_noPerturb = gsl_matrix_calloc(dim*nNodes,1);
-			gsl_matrix* gvInternal_noPerturb = gsl_matrix_calloc(dim*nNodes,1);
-			NRSolver->calculateForcesAndJacobianMatrixNR(Nodes, Elements, dt, recordForcesOnFixedNodes, FixedNodeForces, outputFile);
-			NRSolver->writeForcesTogeAndgvInternal(Nodes, Elements, SystemForces);
-			gsl_matrix_memcpy(ge_noPerturb, NRSolver->ge);
-			gsl_matrix_memcpy(gvInternal_noPerturb, NRSolver->gvInternal);
-			//perturbation loop:
-			gsl_matrix* uk_original = gsl_matrix_calloc(dim*nNodes,1);
-			gsl_matrix_memcpy(uk_original,NRSolver->uk);
-			for (int i=0; i<nNodes; ++i){
-				for (int j=0; j<3; ++j){
-					resetForces(true); // reset the packing forces together with all the rest of the forces here
-					gsl_matrix_set(NRSolver->uk,i*3+j,0,gsl_matrix_get(NRSolver->uk,i*3+j,0)+1E-6);
-					NRSolver->calculateDisplacementMatrix(dt);
-					Nodes[i]->Position[j] += 1E-6;
-					updateElementPositions();
-					NRSolver->calculateForcesAndJacobianMatrixNR(Nodes, Elements, dt, recordForcesOnFixedNodes, FixedNodeForces, outputFile);
-					gsl_matrix* ge_withPerturb = gsl_matrix_calloc(dim*nNodes,1);
-					gsl_matrix* gvInternal_withPerturb = gsl_matrix_calloc(dim*nNodes,1);
-					NRSolver->writeForcesTogeAndgvInternal(Nodes, Elements, SystemForces);
-					gsl_matrix_memcpy(ge_withPerturb, NRSolver->ge);
-					gsl_matrix_memcpy(gvInternal_withPerturb, NRSolver->gvInternal);
-					//Calculate dg/dx:
-					gsl_matrix_sub(ge_withPerturb,ge_noPerturb);
-					gsl_matrix_sub(gvInternal_withPerturb,gvInternal_noPerturb);
-					gsl_matrix_scale(ge_withPerturb,1.0/1E-6);
-					gsl_matrix_scale(gvInternal_withPerturb,1.0/1E-6);
-					for (int k=0; k<nNodes*3; ++k){
-						double valueElastic =   0;//gsl_matrix_get(ge_withPerturb,k,0);
-						double valueViscous = 	gsl_matrix_get(gvInternal_withPerturb,k,0);
-						double value = valueElastic + valueViscous;
-						value *= -1.0;
-						gsl_matrix_set(NRSolver->K,i*3+j,k,value);
-					}
-					gsl_matrix_memcpy(NRSolver->uk,uk_original);
-					//gsl_matrix_set(uk,i*3+j,0,gsl_matrix_get(uk,i*3+j,0)-1E-6);
-					Nodes[i]->Position[j] -= 1E-6;
-					updateElementPositions();
-				}
-			}
-			NRSolver->calcutateFixedK(Nodes);
-			if (displayMAtricesDuringNumericalCalculation){
-				Elements[0]->displayMatrix(NRSolver->K,"numericalK");
-			}
-			gsl_matrix_memcpy(NRSolver->Knumerical,NRSolver->K);
-			NRSolver->setMatricesToZeroInsideIteration();
-
-        }//end OF NUMERICAL CALCULATION
-
+        	calculateNumericalJacobian(displayMatricesDuringNumericalCalculation);
+        }
         NRSolver->calculateDisplacementMatrix(dt);
 		NRSolver->calculateForcesAndJacobianMatrixNR(Nodes, Elements, dt, recordForcesOnFixedNodes, FixedNodeForces, outputFile);
 		//Writing elastic Forces and elastic Ke:
 		NRSolver->writeForcesTogeAndgvInternal(Nodes, Elements, SystemForces);
 		NRSolver->writeImplicitElementalKToJacobian(Elements);
 		if (numericalCalculation){
-			NRSolver->calcutateFixedK(Nodes);
-			if(displayMAtricesDuringNumericalCalculation){
-				Elements[0]->displayMatrix(NRSolver->K,"normalK");
-			}
-		}
-		if (numericalCalculation){
-			gsl_matrix* Kdiff = gsl_matrix_calloc(dim*nNodes,dim*nNodes);
-			double d = 0;
-			for (int i=0; i<dim*nNodes; ++i){
-				for (int j=0; j<dim*nNodes; ++j){
-					double value = gsl_matrix_get(NRSolver->Knumerical,i,j) - gsl_matrix_get(NRSolver->K,i,j);
-					gsl_matrix_set(Kdiff,i,j,value);
-					d += value*value;
-				}
-			}
-			d = pow(d,0.5);
-			if(displayMAtricesDuringNumericalCalculation){
-				Elements[0]->displayMatrix(Kdiff,"differenceKMatrix");
-			}
-			cout<<"norm of difference between numerical and analytical K: "<<d<<endl;
+			NRSolver->calculateDifferenceBetweenNumericalAndAnalyticalJacobian(Nodes, displayMatricesDuringNumericalCalculation);
 			if(useNumericalKIncalculation){
-				gsl_matrix_memcpy(NRSolver->K,NRSolver->Knumerical);
+				NRSolver->useNumericalJacobianInIteration();
 			}
 		}
-
 		NRSolver->calculateExternalViscousForcesForNR();
 		NRSolver->addImplicitKViscousExternalToJacobian();
         calculatePackingImplicit3D();
@@ -3967,7 +3948,6 @@ void Simulation::updateStepNR(){
         if (converged){
             break;
         }
-
         //cout<<"solving for deltaU"<<endl;
         NRSolver->solveForDeltaU();
         //cout<<"checking convergence"<<endl;
@@ -3985,7 +3965,6 @@ void Simulation::updateStepNR(){
     //Now the calculation is converged, I update the node positions with the latest positions uk:
     updateNodePositionsNR(NRSolver->uk);
     //Element positions are already up to date.
-
     cout<<"finished run one step"<<endl;
 }
 /*

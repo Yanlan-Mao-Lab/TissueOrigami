@@ -62,6 +62,10 @@ public:
 	bool checkConvergenceViaDeltaU();
 	bool checkConvergenceViaForce();
 	void updateUkInIteration();
+	void useNumericalJacobianInIteration();
+	void calculateDifferenceBetweenNumericalAndAnalyticalJacobian(vector <Node*>& Nodes, bool displayMAtricesDuringNumericalCalculation);
+
+	void displayMatrix(gsl_matrix* mat, string matname);
 
 };
 

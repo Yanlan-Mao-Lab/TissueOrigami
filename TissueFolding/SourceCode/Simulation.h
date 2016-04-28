@@ -409,6 +409,8 @@ public:
     //void writeForcesTogeAndgvInternal(gsl_matrix* ge, gsl_matrix* gvInternal);
     //void calculateDisplacementMatrix(gsl_matrix* uk, gsl_matrix* un, gsl_matrix* displacement);
     void calculateExternalViscousForcesForNR(gsl_matrix* gv, gsl_matrix* mviscdt, gsl_matrix* displacement);
+    void calculateNumericalJacobian(bool displayMatricesDuringNumericalCalculation);
+
     //void calculateImplicitKElastic();
     //void writeImplicitElementalKToJacobian(gsl_matrix* K);
     //void addImplicitKViscousExternalToJacobian(gsl_matrix* K, gsl_matrix*  mviscPerDt);

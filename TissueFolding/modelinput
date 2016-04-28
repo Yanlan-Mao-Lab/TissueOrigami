@@ -5,7 +5,7 @@ InputMeshParameters:
   symmetricInY(bool): 1
  
 TimeParameters:
-  TimeStep(sec): 1
+  TimeStep(sec): 100
   SimulationLength(sec):  100
 
 SaveOptions:
@@ -26,7 +26,7 @@ NodeFixingOptions:
   CircumferenceFix(bool-x,y,z): 0 0 0
 
 Manipulations:
-  AddCurvature(bool): 0
+  AddCurvature(bool): 1
   CurvatureDepthAtCentre(double-microns): 2.0
   AddSoftPeriphery(bool): 0
   SoftPeripheryRange(double-microns): 10.0
@@ -42,9 +42,9 @@ Manipulations:
 PysicalProperties:
   YoungsModulusApical: 1000.0	YoungsModulusBasal: 1000.0	YoungsModulusMid: 1000.0	Noise(%-int): 0
   PoissonsRatio: 0.45		Noise(%-int): 0
-  ApicalViscosity:  1000000.0 	Noise(%-int): 0
-  BasalViscosity:   1000000.0
-  MidLineViscosity: 1000000.0
+  ApicalViscosity:  10000.0 	Noise(%-int): 0
+  BasalViscosity:   10000.0
+  MidLineViscosity: 10000.0
 
 PeripodialMembraneParameters:
   AddPeripodialMembrane: 0
@@ -129,9 +129,9 @@ GrowthOptions:
   GrowthFunctionType(int-seeDocumentation): 3
   InitialTime(sec):  86400
   FinalTime(sec):  172800
-  ApplyToColumnarLayer(bool): 0
+  ApplyToColumnarLayer(bool): 1
   ApplyToPeripodialMembrane(bool): 0
-  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/Col_64-88_7-0
+  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/Col_64-88_1-0
 
   GrowthFunctionType(int-seeDocumentation): 3
   InitialTime(sec):  86400

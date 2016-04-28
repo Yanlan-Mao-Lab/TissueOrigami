@@ -588,3 +588,46 @@ void NewtonRapsonSolver::updateUkInIteration(){
         gsl_matrix_set(uk,i,0,newValue);
     }
 }
+
+void NewtonRapsonSolver::calculateDifferenceBetweenNumericalAndAnalyticalJacobian(vector <Node*>& Nodes, bool displayMatricesDuringNumericalCalculation){
+	//The normal K still includes the values for fixed nodes. Should correct the fixed nodes,
+	//then calculate the difference
+	calcutateFixedK(Nodes);
+	//calculate the difference:
+	gsl_matrix* Kdiff = gsl_matrix_calloc(nDim*nNodes,nDim*nNodes);
+	double d = 0;
+	for (int i=0; i<nDim*nNodes; ++i){
+		for (int j=0; j<nDim*nNodes; ++j){
+			double value = gsl_matrix_get(Knumerical,i,j) - gsl_matrix_get(K,i,j);
+			gsl_matrix_set(Kdiff,i,j,value);
+			d += value*value;
+		}
+	}
+	d = pow(d,0.5);
+	if(displayMatricesDuringNumericalCalculation){
+		displayMatrix(K,"normalK");
+		displayMatrix(Kdiff,"differenceKMatrix");
+	}
+	cout<<"norm of difference between numerical and analytical K: "<<d<<endl;
+	gsl_matrix_free(Kdiff);
+}
+
+void NewtonRapsonSolver::useNumericalJacobianInIteration(){
+	gsl_matrix_memcpy(K,Knumerical);
+}
+
+void NewtonRapsonSolver::displayMatrix(gsl_matrix* mat, string matname){
+    int m = mat->size1;
+    int n = mat->size2;
+    cout<<matname<<": "<<endl;
+
+    for (int i =0; i<m; i++){
+        for (int j =0; j<n; j++){
+            cout.precision(4);
+            cout.width(6);
+            cout<<gsl_matrix_get(mat,i,j)<<" ";
+        }
+        cout<<endl;
+    }
+    cout<<endl;
+}
