@@ -39,6 +39,7 @@ MainWindow::MainWindow(Simulation* Sim01)
     //QLabel *SimTime = new QLabel("SimTime");
     //SimTime->setText( "aaa" );
     simulationStartClock = std::clock();
+    simulationStartTime = time(0);
     displayedSimulationLength = false;
 
     MainScene->update();
@@ -400,10 +401,10 @@ void MainWindow::setDisplayPreferences(QGridLayout *ProjectDisplayOptionsGrid){
 	DisplayPreferencesCheckBoxes[1] = new QCheckBox("Net Forces");
 	DisplayPreferencesCheckBoxes[1]->setChecked(false);
 	connect(DisplayPreferencesCheckBoxes[1] , SIGNAL(stateChanged(int)),this,SLOT(updateNetForceCheckBox(int)));
-	//draw velocities checkbox
-	DisplayPreferencesCheckBoxes[2] = new QCheckBox("Velocities");
+	//draw fixed Nodes checkbox
+	DisplayPreferencesCheckBoxes[2] = new QCheckBox("Fixed Nodes");
 	DisplayPreferencesCheckBoxes[2]->setChecked(false);
-	connect(DisplayPreferencesCheckBoxes[2] , SIGNAL(stateChanged(int)),this,SLOT(updateVelocityCheckBox(int)));
+	connect(DisplayPreferencesCheckBoxes[2] , SIGNAL(stateChanged(int)),this,SLOT(updateFixedNodesCheckBox(int)));
 	DisplayPreferencesCheckBoxes[3] = new QCheckBox("ScaleCube");
 	DisplayPreferencesCheckBoxes[3]->setChecked(false);
 	connect(DisplayPreferencesCheckBoxes[3] , SIGNAL(stateChanged(int)),this,SLOT(updateScaleBarCheckBox(int)));
@@ -430,7 +431,7 @@ void MainWindow::setDisplayPreferences(QGridLayout *ProjectDisplayOptionsGrid){
 	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[7],3,2,1,2,Qt::AlignLeft);  // display bounding box
 	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[1],4,0,1,2,Qt::AlignLeft);  // Net Forces
 	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[6],4,2,1,2,Qt::AlignLeft);  // Packing Forces
-	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[2],5,0,1,1,Qt::AlignLeft);  // Velocities
+	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[2],5,0,1,1,Qt::AlignLeft);  // Fixed Nodes
 	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[8],5,2,1,2,Qt::AlignLeft);  // display myosin box
 	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[3],6,0,1,2,Qt::AlignLeft); // Scale Bar
 	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[4],7,0,1,2,Qt::AlignLeft); // Display Peripodial Membrane
@@ -538,11 +539,11 @@ void  MainWindow::updatePackingForceCheckBox(int s){
 }
 
 
-void  MainWindow::updateVelocityCheckBox(int s){
+void  MainWindow::updateFixedNodesCheckBox(int s){
 	if ( s == 2 )
-		MainGLWidget->drawVelocities = true;
+		MainGLWidget->DisplayFixedNodes = true;
 	else
-		MainGLWidget->drawVelocities = false;
+		MainGLWidget->DisplayFixedNodes = false;
 }
 
 void  MainWindow::updateScaleBarCheckBox(int s){
@@ -673,10 +674,9 @@ void MainWindow::updatePysPropSpinBoxes(double d){
 }
 
 void MainWindow::updateTimeText(){
-	double time = Sim01->timestep*Sim01->dt;
 	//round to two digits:
-	QString timeStringInSec = QString::number(time);
-	QString timeStringInHr = QString::number(time/3600.0, 'f', 2);
+	QString timeStringInSec = QString::number(Sim01->currSimTimeSec);
+	QString timeStringInHr = QString::number(Sim01->currSimTimeSec/3600.0, 'f', 2);
 	timeStringInSec = "Simulation Time: " + timeStringInHr + " hr ( "+ timeStringInSec + " sec, " + QString::number(Sim01->timestep) + " steps )"; ;
 	TimeTitle->setText(timeStringInSec);
 }
@@ -747,19 +747,18 @@ void MainWindow::timerSimulationStep(){
 			MainGLWidget->updateToPerspectiveView(); //display tissue from the tilted view
 			MainGLWidget->drawSymmetricity = false; //hide symmetric
 			MainGLWidget->PerspectiveView = false; //switch to orthogoanal view type.
+            Sim01->saveImages = true;
+            Sim01->saveDirectory = Sim01->saveDirectoryToDisplayString;
 		}
 		if(!Sim01->reachedEndOfSaveFile){
 			Sim01->updateOneStepFromSave();
 			Sim01->calculateDVDistance();
-			for (int a = 0; a<5; a++){
+			for (int a = 0; a<0; a++){ //35 for 12 hours with 600 sec time step
 				Sim01->updateOneStepFromSave();
 				Sim01->calculateDVDistance();
 			}
-
 			Sim01->fixNode0InPosition(36,0,0);
 			updateTimeText();
-			//cout<<" step: "<<Sim01->timestep<<"Node[0] pos: "<<Sim01->Nodes[0]->Position[0]<<" "<<Sim01->Nodes[0]->Position[1]<<" "<<Sim01->Nodes[0]->Position[2]<<endl;
-			//cout<<" step: "<<Sim01->timestep<<"Node[43] pos: "<<Sim01->Nodes[43]->Position[0]<<" "<<Sim01->Nodes[43]->Position[1]<<" "<<Sim01->Nodes[43]->Position[2]<<endl;
 			QTime dieTime= QTime::currentTime().addSecs(1);
             while( QTime::currentTime() < dieTime ){
 			    QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
@@ -767,6 +766,7 @@ void MainWindow::timerSimulationStep(){
 			if (Sim01->saveImages){
 				takeScreenshot();
 			}
+			//sleep(60);
 			//spitting coordinates:
 			//Sim01->CoordinateDisplay();
 			//Sim01->TissueAxisPositionDisplay();
@@ -778,7 +778,7 @@ void MainWindow::timerSimulationStep(){
 		}
 	}
 	else{
-		if (Sim01->timestep < Sim01->SimLength){
+		if (Sim01->currSimTimeSec < Sim01->SimLength){
 			//cout<<"dataSaveInterval before calling a step: " <<Sim01->dataSaveInterval<<endl;
 			bool Success = Sim01->runOneStep();
 			updateTimeText();
@@ -804,8 +804,9 @@ void MainWindow::timerSimulationStep(){
             Sim01->wrapUpAtTheEndOfSimulation();
             Sim01->writeRelaxedMeshFromCurrentState();
             //Sim01->writeMeshRemovingAblatedRegions();
-            double duration = ( std::clock() - simulationStartClock ) / (double) CLOCKS_PER_SEC;
-            cout<<"Simulation duration: "<<duration<<" sec"<<endl;
+            double durationClock = ( std::clock() - simulationStartClock ) / (double) CLOCKS_PER_SEC;
+            double durationTime = std::difftime(std::time(0), simulationStartTime);
+            cout<<"Simulation time: "<<durationTime<<" sec, Simulation clock: "<<durationClock<<" sec"<<endl;
             //close();
         }
     }

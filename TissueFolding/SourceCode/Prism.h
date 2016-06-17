@@ -40,7 +40,7 @@ protected:
 	double getApicalSideLengthAverage();
 
 public:
-	Prism(int* NodeIds,vector<Node*>& Nodes, int CurrId);
+	Prism(int* NodeIds,vector<Node*>& Nodes, int CurrId, bool thereIsPlasticDeformation);
 	~Prism();
 	void  setElasticProperties(double EApical, double EBasal, double EMid,double v);
 	void  calculateBasalNormal(double * normal);

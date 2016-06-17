@@ -1,21 +1,21 @@
 InputMeshParameters:
   MeshInputMode(int-seeDocumentation): 4
-  MeshFile(full-path):   /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Exp48hr-noPeri_04.mesh
+  MeshFile(full-path):   /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Run021Frame144400.mesh
   symmetricInX(bool): 0
   symmetricInY(bool): 1
  
 TimeParameters:
-  TimeStep(sec): 100
-  SimulationLength(sec):  100
+  TimeStep(sec): 1200
+  SimulationLength(sec): 36500
 
 SaveOptions:
-  SaveImages(bool): 0
+  SaveImages(bool): 1
   SaveData(bool):   1
   ImageSaveInterval(sec): 1
   DataSaveInterval(sec):  1
 
 NodeFixingOptions:
-  FixWithHighExternalViscosity(bool): 0
+  FixWithHighExternalViscosity(bool): 1
     FixVis(x,y,z): 0   0  100000
   ApicalSurfaceFix(bool-x,y,z): 0 0 0
   BasalSurfaceFix(bool-x,y,z): 0 0 0
@@ -23,7 +23,7 @@ NodeFixingOptions:
   BasalCircumferenceFix(bool-x,y,z): 0 0 0
   LinkerApicalCircumferenceFix(bool-x,y,z): 0 0 0
   LinkerBasalCircumferenceFix(bool-x,y,z): 0 0 0
-  CircumferenceFix(bool-x,y,z): 0 0 0
+  CircumferenceFix(bool-x,y,z): 0 0 1
 
 Manipulations:
   AddCurvature(bool): 1
@@ -40,11 +40,11 @@ Manipulations:
   RandomForceVar(double): 1E-5
 
 PysicalProperties:
-  YoungsModulusApical: 1000.0	YoungsModulusBasal: 1000.0	YoungsModulusMid: 1000.0	Noise(%-int): 0
+  YoungsModulusApical: 2000.0	YoungsModulusBasal: 1000.0	YoungsModulusMid: 1000.0	Noise(%-int): 0
   PoissonsRatio: 0.45		Noise(%-int): 0
-  ApicalViscosity:  10000.0 	Noise(%-int): 0
-  BasalViscosity:   10000.0
-  MidLineViscosity: 10000.0
+  ApicalViscosity:  0.0 	Noise(%-int): 0
+  BasalViscosity:   0.0
+  MidLineViscosity: 0.0
 
 PeripodialMembraneParameters:
   AddPeripodialMembrane: 0
@@ -65,8 +65,8 @@ LinkerZoneParameters:
   LinkerZoneMidlineViscosity: 0.0
 
 ExternalViscositySetup:
-  DiscProperApicalExternalViscosity: 0.0 
-  DiscProperBasalExternalViscosity: 0.0 
+  DiscProperApicalExternalViscosity: 75000.0 
+  DiscProperBasalExternalViscosity: 75000.0 
   PeripodialMembraneApicalExternalViscosity: 0.0 
   PeripodialMembraneBasalExternalViscosity: 0.0 
   LinkerZoneApicalExternalViscosity: 0.0
@@ -75,6 +75,8 @@ ExternalViscositySetup:
 GrowthOptions:
   NumberofGrowthFunctions(int): 8
   GridGrowthsPinnedOnInitialMesh(bool):	0
+  GridGrowthsInterpolationType(0=step,1=linear): 1
+
   GrowthFunctionType(int-seeDocumentation): 2
   InitialTime(sec): 0
   FinalTime(sec):  86400
@@ -114,31 +116,31 @@ GrowthOptions:
 
   GrowthFunctionType(int-seeDocumentation): 3
   InitialTime(sec):  0
-  FinalTime(sec):  86400
-  ApplyToColumnarLayer(bool): 1
+  FinalTime(sec):  57600
+  ApplyToColumnarLayer(bool): 0
   ApplyToPeripodialMembrane(bool): 0
-  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/Col_48-72_1-0
+  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/Grid20-11_Col_48-72_1-1
+
+  GrowthFunctionType(int-seeDocumentation): 3
+  InitialTime(sec):  57600
+  FinalTime(sec):  86400
+  ApplyToColumnarLayer(bool): 0
+  ApplyToPeripodialMembrane(bool): 0
+  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/Grid20-11_Col_56-80_1-1
+
+  GrowthFunctionType(int-seeDocumentation): 3
+  InitialTime(sec):  86400
+  FinalTime(sec):  115200
+  ApplyToColumnarLayer(bool): 0
+  ApplyToPeripodialMembrane(bool): 0
+  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/Grid20-11_Col_64-88_1-0
 
   GrowthFunctionType(int-seeDocumentation): 3
   InitialTime(sec):  0
-  FinalTime(sec):  86400
-  ApplyToColumnarLayer(bool): 0
-  ApplyToPeripodialMembrane(bool): 0
-  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/Rate70_Per_48-72_8-0
-
-  GrowthFunctionType(int-seeDocumentation): 3
-  InitialTime(sec):  86400
   FinalTime(sec):  172800
   ApplyToColumnarLayer(bool): 1
   ApplyToPeripodialMembrane(bool): 0
-  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/Col_64-88_1-0
-
-  GrowthFunctionType(int-seeDocumentation): 3
-  InitialTime(sec):  86400
-  FinalTime(sec):  144000
-  ApplyToColumnarLayer(bool): 0
-  ApplyToPeripodialMembrane(bool): 0
-  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/Rate70_Per_64-88_8-0
+  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/Rate125_Grid20-11_Col_72-96_1-0
 
 ShapeChangeOptions:
   NumberofShapeChangeFunctions(int): 1

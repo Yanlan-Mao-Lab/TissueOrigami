@@ -6,7 +6,7 @@
 
 using namespace std;
 
-Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
+Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, bool thereIsPlasticDeformation){
 	//cout<<"constructing prism"<<endl;
 	nNodes = 6;
 	nDim = 3;
@@ -16,6 +16,7 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
 	IdentifierColour = new int[3];
 	E = 10.0;
 	v = 0.3;
+    internalViscosity = 0;
     lambda = E*v /(1+v)/(1-2.0*v);
     mu = E/2.0/(1+v);
 
@@ -24,7 +25,8 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
 	GrowthRate = new double[3];
 	ShapeChangeRate  = new double[6];
 	//CurrGrowthStrainAddition = new double[6];
-	ApicalNormalForPacking =  new double[3];
+
+    ApicalNormalForPacking =  new double[3];
 	BasalNormalForPacking =  new double[3];
 	relativePosInBoundingBox = new double[3];
 	initialRelativePosInBoundingBox = new double[3];
@@ -123,8 +125,13 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId){
     gsl_matrix_set_identity(Fsc);
     InvFsc = gsl_matrix_calloc(3,3);
     gsl_matrix_set_identity(InvFsc);
-    Fplastic  = gsl_matrix_calloc(3,3);
-    gsl_matrix_set_identity(Fplastic);
+	if (thereIsPlasticDeformation){
+		 Fplastic  = gsl_matrix_calloc(3,3);
+		 gsl_matrix_set_identity(Fplastic);
+	}
+	else{
+		Fplastic = 0;
+	}
     invFplastic  = gsl_matrix_calloc(3,3);
     gsl_matrix_set_identity(invFplastic);
     growthIncrement = gsl_matrix_calloc(3,3);
@@ -503,7 +510,7 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currge, gsl_matrix *currgv, gsl
     //calculating Fe:
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currF, InvFg, 0.0, currFeFpFsc);	///< Removing growth
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currFeFpFsc, InvFsc, 0.0, currFeFp);	///< Removing shape change
-    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currFeFp, invFplastic, 0.0, currFe);	///< Removing shape change
+    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currFeFp, invFplastic, 0.0, currFe);	///< Removing plastic deformation
 	gsl_matrix* currFeT = gsl_matrix_alloc(dim, dim);
     gsl_matrix_transpose_memcpy(currFeT,currFe);
     createMatrixCopy(FeMatrices[pointNo], currFe); // storing Fe for use in implicit elastic K calculation.
@@ -568,12 +575,14 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currge, gsl_matrix *currgv, gsl
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currBT, compactStress,0.0, currge);
 
     //calculating viscous stress:
-    gsl_matrix* l = calculateVelocityGradientTensor(B, displacementPerDt);
-    gsl_matrix* d = calculateRateOfDeformationTensor(l);
     gsl_matrix_set_zero(viscousStress[pointNo]);
-    calculateViscousStress(d,viscousStress[pointNo]);
-    //The Bt I am giving into this function has already been scaled to include volume integration.
-    calculateViscousForces(currgv, currBT,viscousStress[pointNo]);
+    if (internalViscosity != 0){
+    	gsl_matrix* l = calculateVelocityGradientTensor(B, displacementPerDt);
+    	gsl_matrix* d = calculateRateOfDeformationTensor(l);
+    	calculateViscousStress(d,viscousStress[pointNo]);
+    	//The Bt I am giving into this function has already been scaled to include volume integration.
+    	calculateViscousForces(currgv, currBT,viscousStress[pointNo]);
+    }
 
     /*if (Id ==0){
     	displayMatrix(viscousStress[pointNo],"viscousStress");

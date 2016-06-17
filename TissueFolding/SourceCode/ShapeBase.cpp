@@ -125,6 +125,19 @@ void ShapeBase::getPos(gsl_matrix* Pos){
 double 	ShapeBase::getInternalViscosity(){
 	return internalViscosity;
 }
+void ShapeBase::updateInternalViscosityTest(){
+	double d[2] = {0.0,0.0};
+	for (int i = 0; i<nNodes; ++i ){
+		d[0] += Positions[i][0];
+		d[1] += Positions[i][1];
+	}
+	d[0] /= nNodes; d[1] /= nNodes;
+	double dmag = d[0]*d[0] + d[1]*d[1];
+	dmag = pow(dmag,0.5);
+	internalViscosity = dmag*originalInternalViscosity;
+}
+
+
 double 	ShapeBase::getYoungModulus(){
 	return E;
 }
@@ -301,10 +314,22 @@ void ShapeBase::calculateFgFromGridCorners(double dt, GrowthFunctionBase* currGF
 }*/
 
 
-void ShapeBase::calculateFgFromGridCorners(double dt, GrowthFunctionBase* currGF, gsl_matrix* increment, int sourceTissue,  int IndexX, int IndexY, double FracX, double FracY){
+void ShapeBase::calculateFgFromGridCorners(int gridGrowthsInterpolationType, double dt, GrowthFunctionBase* currGF, gsl_matrix* increment, int sourceTissue,  int IndexX, int IndexY, double FracX, double FracY){
 	double tissueWeight;
 	bool continueCalaculation = isGrowthRateApplicable(sourceTissue,tissueWeight);
 	if (continueCalaculation){
+		//taking growth data around 4 grid points
+		//
+		// Grid shape:
+		//    [point 2] ------------- [point 3]
+		//       |                        |
+		//       |<--fracX----> (o)       |
+		//       |               |        |
+		//       |               |        |
+		//       |             fracY      |
+		//       |               |        |
+		//    [point 0] ------------- [point 1]
+		//
 		double *growth0, *growth1, *growth2, *growth3;
 		growth0 = new double[3];
 		growth1 = new double[3];
@@ -315,32 +340,67 @@ void ShapeBase::calculateFgFromGridCorners(double dt, GrowthFunctionBase* currGF
 		bool *angleEliminated;
 		angleEliminated = new bool[4];
 		currGF->getGrowthProfileAt4Corners(IndexX, IndexY, growth0, growth1, growth2, growth3, angles, angleEliminated);
-		//calculating the fraction eliminated:
-		double FracEliminated = 0.0;
-		if (angleEliminated[0]){ FracEliminated += (1.0-FracX)*(1.0-FracY);	}
-		if (angleEliminated[1]){ FracEliminated += FracX*(1.0-FracY);		}
-		if (angleEliminated[2]){ FracEliminated += (1.0-FracX)*FracY;		}
-		if (angleEliminated[3]){ FracEliminated += FracX*FracY;				}
 		double growth[3];
 		double angle;
-		//Take the average of angles:
-		angle = angles[0]*(1.0-FracX)*(1.0-FracY)+angles[1]*FracX*(1.0-FracY)+angles[2]*(1.0-FracX)*FracY+angles[3]*FracX*FracY;
-		if (FracEliminated>0){
-			if (FracEliminated >= 0.9999999){
-				angle = 0.0; //if all the angles should be eliminated because all corners have low aspect ratio, then angle is arbitrary, selected as zero
+		if (gridGrowthsInterpolationType == 0){
+			//using the growth rate at the grid point:
+			//if fraction is below 0,5, I will use the index availabe.
+			//If it is above 0.5, it is within the range of next groid point, I will use index +1:
+			if(FracX > 0.5){
+				if (FracY > 0.5){
+					for (int i=0; i<3; ++i){
+						growth[i] = growth3[i];
+					}
+				}
+				else{
+					for (int i=0; i<3; ++i){
+						growth[i] = growth1[i];
+					}
+				}
 			}
 			else{
-				angle /= (1.0-FracEliminated); //normalising the sum to the eliminated averaging
+				if (FracY > 0.5){
+					for (int i=0; i<3; ++i){
+						growth[i] = growth2[i];
+					}
+				}
+				else{
+					for (int i=0; i<3; ++i){
+						growth[i] = growth0[i];
+					}
+				}
+			}
+
+		}
+		else if (gridGrowthsInterpolationType == 1){
+			//calculating the angle fraction eliminated, if any:
+			double FracEliminated = 0.0;
+			if (angleEliminated[0]){ FracEliminated += (1.0-FracX)*(1.0-FracY);	}
+			if (angleEliminated[1]){ FracEliminated += FracX*(1.0-FracY);		}
+			if (angleEliminated[2]){ FracEliminated += (1.0-FracX)*FracY;		}
+			if (angleEliminated[3]){ FracEliminated += FracX*FracY;				}
+			//taking the linear interpolation of 4 angles at 4 grid points:
+			angle = angles[0]*(1.0-FracX)*(1.0-FracY)+angles[1]*FracX*(1.0-FracY)+angles[2]*(1.0-FracX)*FracY+angles[3]*FracX*FracY;
+			if (FracEliminated>0){
+				if (FracEliminated >= 0.9999999){
+					angle = 0.0; //if all the angles should be eliminated because all corners have low aspect ratio, then angle is arbitrary, selected as zero
+				}
+				else{
+					angle /= (1.0-FracEliminated); //normalising the sum to the eliminated averaging
+				}
+			}
+			//taking the linear interpolation of 4 growth rates at 4 grid points
+			for (int axis =0; axis<3; axis++){
+				growth[axis]  = growth0[axis]*(1.0-FracX)*(1.0-FracY)+growth1[axis]*FracX*(1.0-FracY)+growth2[axis]*(1.0-FracX)*FracY+growth3[axis]*FracX*FracY;
+				growth[axis] *= tissueWeight;
+				//if (tissuePlacement == 0){
+					//Prevented basal element z growth! Correct this later!!!
+					//growth[2] = 0;
+				//}
 			}
 		}
-		//Take the average of growths:
+		//write the increment from obtained growth:
 		for (int axis =0; axis<3; axis++){
-			growth[axis]  = growth0[axis]*(1.0-FracX)*(1.0-FracY)+growth1[axis]*FracX*(1.0-FracY)+growth2[axis]*(1.0-FracX)*FracY+growth3[axis]*FracX*FracY;
-			growth[axis] *= tissueWeight;
-			//if (tissuePlacement == 0){
-				//Prevented basal element z growth! Correct this later!!!
-				//growth[2] = 0;
-			//}
 			gsl_matrix_set(increment,axis,axis,exp(growth[axis]*dt));
 		}
 		//Rotate the growth if the angel is not zero:
@@ -611,6 +671,7 @@ void ShapeBase::setViscosity(double viscosityApical,double viscosityBasal, doubl
 	if (Id>754 && Id<769){
 		cout<<"element: "<<Id<<" tissue placement: "<<tissuePlacement<<" internal viscosity: "<<internalViscosity<<endl;
 	}
+	this -> originalInternalViscosity = internalViscosity;
 }
 
 void ShapeBase::setViscosity(double viscosityApical,double viscosityBasal){
@@ -1732,7 +1793,7 @@ void ShapeBase::calculateImplicitKViscous(gsl_matrix* displacementPerDt, double 
 	//the necessary matrices to carry out the calculation.
 	int dim = nDim;
 	int n = nNodes;
-	if (IsAblated){
+	if (IsAblated || internalViscosity == 0){
 	    //This is for efficiency, I do not calculate if the
 	    //current element is laser ablated
 		gsl_matrix_set_zero(TriPointKv);
@@ -1808,20 +1869,22 @@ void ShapeBase::writeKelasticToMainKatrix(gsl_matrix* K){
 }
 
 void ShapeBase::writeKviscousToMainKatrix(gsl_matrix* K){
-    for (int a=0; a<nNodes; ++a){
-        for (int b=0; b<nNodes; ++b){
-            int NodeId1 = NodeIds[a];
-            int NodeId2 = NodeIds[b];
-            NodeId1 *= nDim;
-            NodeId2 *= nDim;
-            for (int i=0; i<nDim; ++i){
-                for (int j=0; j<nDim; ++j){
-                    double valueij = gsl_matrix_get(K,NodeId1+i,NodeId2+j);
-					valueij	+= gsl_matrix_get(TriPointKv,a*nDim+i,b*nDim+j);
-                    gsl_matrix_set(K,NodeId1+i,NodeId2+j,valueij);
-                }
-            }
-        }
+	if (internalViscosity != 0){
+		for (int a=0; a<nNodes; ++a){
+			for (int b=0; b<nNodes; ++b){
+				int NodeId1 = NodeIds[a];
+				int NodeId2 = NodeIds[b];
+				NodeId1 *= nDim;
+				NodeId2 *= nDim;
+				for (int i=0; i<nDim; ++i){
+					for (int j=0; j<nDim; ++j){
+						double valueij = gsl_matrix_get(K,NodeId1+i,NodeId2+j);
+						valueij	+= gsl_matrix_get(TriPointKv,a*nDim+i,b*nDim+j);
+						gsl_matrix_set(K,NodeId1+i,NodeId2+j,valueij);
+					}
+				}
+			}
+		}
     }
 }
 

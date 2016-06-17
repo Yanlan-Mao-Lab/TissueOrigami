@@ -12,15 +12,18 @@
 using namespace std;
 
 NewtonRaphsonSolver::NewtonRaphsonSolver(int dim, int n){
-    threshold = 1E-10;
+    threshold = 1E-8;
 
 	nDim = dim;
 	nNodes = n;
 
 	numericalParametersSet = false;
+
 	un = gsl_matrix_calloc(dim*nNodes,1);
-	mvisc = gsl_matrix_calloc(dim*nNodes,dim*nNodes);
-	mviscPerDt = gsl_matrix_calloc(dim*nNodes,dim*nNodes);
+	//mvisc = gsl_matrix_calloc(dim*nNodes,dim*nNodes);
+	//mvisc = gsl_matrix_calloc(1,dim*nNodes);
+	//mviscPerDt = gsl_matrix_calloc(dim*nNodes,dim*nNodes);
+	//mviscPerDt = gsl_matrix_calloc(1,dim*nNodes);
 	ge = gsl_matrix_calloc(dim*nNodes,1);
 	gvInternal = gsl_matrix_calloc(dim*nNodes,1);
 	gvExternal = gsl_matrix_calloc(dim*nNodes,1);
@@ -31,28 +34,52 @@ NewtonRaphsonSolver::NewtonRaphsonSolver(int dim, int n){
 	deltaU = gsl_vector_calloc(dim*nNodes);
 	K = gsl_matrix_calloc(dim*nNodes,dim*nNodes);
 
+	Knumerical = 0;
 }
 
 NewtonRaphsonSolver::~NewtonRaphsonSolver(){
+	cout<<"inside deleting NR solver"<<endl;
+
+	gsl_matrix_free(uk);
+	cout<<" deleted uk"<<endl;
     gsl_matrix_free(un);
-    gsl_matrix_free(mvisc);
-    gsl_matrix_free(mviscPerDt);
-    gsl_matrix_free(ge);
-    gsl_matrix_free(gvInternal);
-    gsl_matrix_free(gvExternal);
-    gsl_matrix_free(gExt);
-    gsl_vector_free(gSum);
-    gsl_matrix_free(uk);
-    gsl_matrix_free(displacementPerDt);
-    gsl_vector_free(deltaU);
-    gsl_matrix_free(K);
-    gsl_matrix_free(Knumerical);
+	cout<<" deleted un"<<endl;
+	gsl_matrix_free(ge);
+	cout<<" deleted ge"<<endl;
+	gsl_matrix_free(gvExternal);
+	cout<<" deleted gvExternal"<<endl;
+	gsl_matrix_free(gvInternal);
+	cout<<" deleted gvInternal"<<endl;
+	gsl_matrix_free(gExt);
+	cout<<" deleted gExt"<<endl;
+	gsl_vector_free(gSum);
+	cout<<" deleted gSum"<<endl;
+	gsl_matrix_free(displacementPerDt);
+	cout<<" deleted displacementPerDt"<<endl;
+	gsl_vector_free(deltaU);
+	cout<<" deleted deltaU"<<endl;
+
+	cout<<"K(0,0): "<<gsl_matrix_get(K,0,0)<<endl;
+	cout<<"(K->size1,K->size2): "<<K->size1<<" "<<K->size2<<endl;
+	gsl_matrix_free(K);
+	cout<<" deleted K"<<endl;
+    //gsl_matrix_free(mviscPerDt);
+	//cout<<" deleted mviscPerDt"<<endl;
+    //gsl_matrix_free(mvisc);
+	//cout<<" deleted mvisc"<<endl;
+	if (Knumerical != 0){
+		gsl_matrix_free(Knumerical);
+	}
+	else{
+		free(Knumerical);
+	}
+	cout<<" deleted Knumerical"<<endl;
 }
 
 void NewtonRaphsonSolver::setMatricesToZeroAtTheBeginningOfIteration(bool thereIsNumericalCalculation){
 	gsl_matrix_set_zero(un);
-	gsl_matrix_set_zero(mvisc);
-	gsl_matrix_set_zero(mviscPerDt);
+	//gsl_matrix_set_zero(mvisc);
+	//gsl_matrix_set_zero(mviscPerDt);
 	gsl_matrix_set_zero(ge);
 	gsl_matrix_set_zero(gvInternal);
 	gsl_matrix_set_zero(gvExternal);
@@ -78,7 +105,10 @@ void NewtonRaphsonSolver::setMatricesToZeroInsideIteration(){
 	gsl_matrix_set_zero(gvInternal);
 	gsl_matrix_set_zero(gvExternal);
 	gsl_vector_set_zero(gSum);
+	gsl_matrix_set_zero(gExt);
 	gsl_matrix_set_zero(K);
+
+
 }
 
 
@@ -94,18 +124,18 @@ void NewtonRaphsonSolver::initialteUkMatrix(){
     gsl_matrix_memcpy(uk,un);
 }
 
-void NewtonRaphsonSolver::constructLumpedMassExternalViscosityDtMatrix(vector <Node*>& Nodes, double dt){
+/*void NewtonRaphsonSolver::constructLumpedMassExternalViscosityMatrix(vector <Node*>& Nodes){
     for (int i = 0; i<nNodes; ++i ){
         //double matrixValue = Nodes[i]->mass*Nodes[i]->Viscosity / dt;
         for (int j=0; j<nDim; ++j){
         	double matrixValue = Nodes[i]->mass*Nodes[i]->externalViscosity[j];
-            gsl_matrix_set(mvisc,3*i+j,3*i+j,matrixValue);
+            gsl_matrix_set(mvisc,0,3*i+j,matrixValue);
         }
-        //cout<<" Node "<<i<<" - mass: "<<Nodes[i]->mass<<" visc: "<<Nodes[i]->Viscosity<<" matrixvalues: "<<gsl_matrix_get(mviscdt,3*i,3*i)<<" "<<gsl_matrix_get(mviscdt,3*i+1,3*i+1)<<" "<<gsl_matrix_get(mviscdt,3*i+2,3*i+2)<<endl;
+
     }
-    gsl_matrix_memcpy(mviscPerDt,mvisc);
-    gsl_matrix_scale(mviscPerDt,1/dt);
-}
+    //gsl_matrix_memcpy(mviscPerDt,mvisc);
+    //gsl_matrix_scale(mviscPerDt,1/dt);
+}*/
 
 void NewtonRaphsonSolver::calculateDisplacementMatrix(double dt){
 	gsl_matrix_memcpy(displacementPerDt,uk);
@@ -135,26 +165,21 @@ void NewtonRaphsonSolver::calcutateFixedK(vector <Node*>& Nodes){
 }
 
 void NewtonRaphsonSolver::calculateForcesAndJacobianMatrixNR(vector <Node*>& Nodes, vector <ShapeBase*>& Elements, double dt, bool recordForcesOnFixedNodes, double **FixedNodeForces, ofstream& outputFile){
-//    omp_set_num_threads(4);
-//#pragma omp parallel for
-//    for (int a =0; a<2; ++a){
-//    	int initialpoint = 0;
-//    	int breakpoint =  nElements/2;
-//    	if (a == 1){
-//    		initialpoint = breakpoint;
-//    		breakpoint = nElements;
-//    	}
-		for(vector<ShapeBase*>::iterator  itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-    	//for(vector<ShapeBase*>::iterator  itElement=Elements.begin()+ initialpoint; itElement<Elements.begin()+breakpoint; ++itElement){
-			//int nThreads = omp_get_thread_num();
-			//cout<<" omp threads: "<<nThreads<<endl;
+	const int maxThreads = omp_get_max_threads();
+	omp_set_num_threads(maxThreads);
+	#pragma omp parallel for //private(Nodes, displacementPerDt, recordForcesOnFixedNodes, FixedNodeForces, outputFile, dt)
+		for( vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+			//int nThreads = omp_get_num_threads();
+			//int threadNum = omp_get_thread_num();
+			//int isParallel = omp_in_parallel();
+			//int levleNo = omp_get_level();
+			//cout<<" level no:" <<levleNo<<" is parallel? " <<isParallel<<" omp threads inside loop, nThreads:"<<nThreads<<" threadNum: "<<threadNum<<endl;
 			if (!(*itElement)->IsAblated){
 				(*itElement)->calculateForces(Nodes, displacementPerDt, recordForcesOnFixedNodes, FixedNodeForces, outputFile);
 			}
 			(*itElement)->calculateImplicitKElastic(); //This is the stiffness matrix, elastic part of the jacobian matrix
 			(*itElement)->calculateImplicitKViscous(displacementPerDt, dt); //This is the viscous part of jacobian matrix
 		}
-//	}
 }
 
 void NewtonRaphsonSolver::writeForcesTogeAndgvInternal(vector <Node*>& Nodes, vector <ShapeBase*>& Elements, double** SystemForces){
@@ -181,16 +206,33 @@ void NewtonRaphsonSolver::writeImplicitElementalKToJacobian(vector <ShapeBase*>&
     }
 }
 
-void NewtonRaphsonSolver::calculateExternalViscousForcesForNR(){
+void NewtonRaphsonSolver::calculateExternalViscousForcesForNR(vector <Node*>& Nodes){
     //the mass is already updated for symmetricity boundary nodes, and the viscous forces will be calculated correctly,
 	//as mvisdt is already accounting for the doubling of mass
-    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, mvisc, displacementPerDt,0.0, gvExternal);
-    //added this line with sign change
+    //gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, mvisc, displacementPerDt,0.0, gvExternal);
+	for (int i = 0; i<nNodes; ++i ){
+		for (int j=0; j<nDim; ++j){
+			//double matrixValue = gsl_matrix_get(mvisc,0,3*i+j);
+			double massTimesViscosity = Nodes[i]->mass*Nodes[i]->externalViscosity[j];
+			double displacementValue = gsl_matrix_get(displacementPerDt,3*i+j,0);
+			gsl_matrix_set(gvExternal,3*i+j,0,massTimesViscosity*displacementValue);
+		}
+	}
+	//added this line with sign change
     gsl_matrix_scale(gvExternal,-1.0);
 }
 
-void NewtonRaphsonSolver::addImplicitKViscousExternalToJacobian(){
-    gsl_matrix_add(K,mviscPerDt);
+void NewtonRaphsonSolver::addImplicitKViscousExternalToJacobian(vector <Node*>& Nodes, double dt){
+    //gsl_matrix_add(K,mviscPerDt);
+	for (int i = 0; i<nNodes; ++i ){
+		double massPerDt = Nodes[i]->mass/dt;
+		for (int j=0; j<nDim; ++j){
+			double curKValue = gsl_matrix_get(K,3*i+j,3*i+j);
+			double massTimesViscosityPerDt = massPerDt*Nodes[i]->externalViscosity[j];
+			//double matrixValuePerDt = gsl_matrix_get(mvisc,0,3*i+j)/dt;
+			gsl_matrix_set(K,3*i+j,3*i+j,massTimesViscosityPerDt+curKValue);
+		}
+	}
 }
 
 void NewtonRaphsonSolver::checkJacobianForAblatedNodes(vector <int> & AblatedNodes){
@@ -205,6 +247,7 @@ void NewtonRaphsonSolver::checkJacobianForAblatedNodes(vector <int> & AblatedNod
 		}
 	}
 }
+
 void NewtonRaphsonSolver::calculateSumOfInternalForces(){
 	for (int i=0; i<nDim*nNodes; ++i){
 		gsl_vector_set(gSum,i,gsl_matrix_get(ge,i,0)+gsl_matrix_get(gvInternal,i,0)+gsl_matrix_get(gvExternal,i,0));

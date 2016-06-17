@@ -6,15 +6,6 @@ Node::Node(int id, int dim, double* pos, int tissuePos, int tissueType){
 	Id = id;
 	nDim = dim;
 	const int n = nDim;
-	//4 RK steps
-	Velocity = new double*[4];
-	for (int i=0; i<4; ++i){
-		//n dimensions
-		Velocity[i] = new double[n];
-		for (int j=0; j<n; ++j){
-			Velocity[i][j] = 0.0;
-		}
-	}
 	Position = new double[n];
 	RKPosition = new double[n];
 	for (int i=0; i<n; ++i){
@@ -42,20 +33,9 @@ Node::Node(int id, int dim, double* pos, int tissuePos, int tissueType){
 }
 
 Node::~Node(){
-	//cout<<"called the destructor for node class"<<endl;
 	delete[] Position;
 	delete[] RKPosition;
-    /*for (int i=0; i<4; ++i){
-        for (int j=0; j<3; ++j){
-            cout<<"Velocity["<<i<<"]["<<j<<"] of node "<<Id<<": "<<Velocity[i][j]<<endl;
-        }
-    }*/
-	for (int i=0; i<4; ++i){
-		delete[] Velocity[i];
-	}    
-	delete[] Velocity;
 	delete[] FixedPos;
-	//cout<<"finalised the destructor for node class"<<endl;
 }
 
 void Node::setExternalViscosity(double ApicalVisc,double BasalVisc){
@@ -74,6 +54,15 @@ void Node::setExternalViscosity(double ApicalVisc,double BasalVisc){
 		if (!externalViscositySetInFixing[1]){externalViscosity[1] = ApicalVisc;}
 		if (!externalViscositySetInFixing[2]){externalViscosity[2] = ApicalVisc;}
 	}
+	else if (atCircumference){
+		//circumferential nodes are equal to the minimum of apical and basal values
+		double minV = ApicalVisc;
+		if (BasalVisc < ApicalVisc){minV = BasalVisc;};
+		if (!externalViscositySetInFixing[0]){externalViscosity[0] = minV;}//(apicalV + basalV) /2.0;
+		if (!externalViscositySetInFixing[2]){externalViscosity[1] = minV;}//(apicalV + basalV) /2.0;
+		if (!externalViscositySetInFixing[2]){externalViscosity[2] = minV;}//(apicalV + basalV) /2.0;
+
+	}/*
 	else if (tissuePlacement == 2 || tissuePlacement == 3){
 		//middle or lateral node are equal to the minimum of apical and basal values
 		double minV = ApicalVisc;
@@ -81,7 +70,7 @@ void Node::setExternalViscosity(double ApicalVisc,double BasalVisc){
 		if (!externalViscositySetInFixing[0]){externalViscosity[0] = minV;}//(apicalV + basalV) /2.0;
 		if (!externalViscositySetInFixing[2]){externalViscosity[1] = minV;}//(apicalV + basalV) /2.0;
 		if (!externalViscositySetInFixing[2]){externalViscosity[2] = minV;}//(apicalV + basalV) /2.0;
-	}
+	}*/
 }
 
 //void Node::setExternalViscosity(double ApicalVisc,double BasalVisc, double PeripodialApicalVisc, double PeripodialBasalVisc){

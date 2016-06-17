@@ -1986,7 +1986,7 @@ int main(int argc, char **argv)
 	double 	sideLength;
 	int    	ABLayers;
 	bool 	symmetricY = false;
-	bool 	symmetricX = true;
+	bool 	symmetricX = false;
 	
 	if (success) {
 		if (parameters[0] == -1){

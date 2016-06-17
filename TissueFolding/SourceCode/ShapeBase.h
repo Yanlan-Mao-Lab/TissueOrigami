@@ -130,6 +130,7 @@ protected:
 
 	double E, v;
 	double internalViscosity;
+	double originalInternalViscosity;
     double lambda, mu;
     gsl_matrix* Fg;			///< Growth matrix
     gsl_matrix* InvFg;		///< Inverse of growth matrix
@@ -186,7 +187,7 @@ public:
 	void	getInitialRelativePositionInTissueInGridIndex(int nGridX, int nGridY, int& IndexX, int& IndexY, double& FracX, double& FracY);
 	bool 	isGrowthRateApplicable(int sourceTissue, double& weight);
 	void 	calculateFgFromRates(double dt, double x, double y, double z, gsl_matrix* rotMat, gsl_matrix* increment, int sourceTissue);
-	void 	calculateFgFromGridCorners(double dt, GrowthFunctionBase* currGF, gsl_matrix* increment, int sourceTissue, int IndexX, int IndexY, double FracX, double dFracY);
+	void 	calculateFgFromGridCorners(int gridGrowthsInterpolationType, double dt, GrowthFunctionBase* currGF, gsl_matrix* increment, int sourceTissue, int IndexX, int IndexY, double FracX, double dFracY);
 	void 	updateGrowthIncrement(gsl_matrix* columnar, gsl_matrix* peripodial);
 	void	calculateRelativePosInBoundingBox(double boundingBoxXMin, double boundingBoxYMin, double boundingBoxLength, double boundingBoxWidth);
 	//void	calculateRelativePosInBoundingBox(double columnarBoundingBoxXMin, double columnarBoundingBoxYMin, double columnarBoundingBoxLength, double columnarBoundingBoxWidth, double peipodialBoundingBoxXMin, double peipodialBoundingBoxYMin, double peipodialBoundingBoxLength, double peipodialBoundingBoxWidth);
@@ -201,6 +202,7 @@ public:
 	void 	getNodeBasedPysProp(int type, int NodeNo, vector<Node*>& Nodes, float& PysPropMag);
     void 	getPysProp(int type, float &PysPropMag, double dt);
     double getInternalViscosity();
+    void updateInternalViscosityTest();
     double 	getYoungModulus();
 	double 	getPoissonRatio();
 	double* getGrowthRate();
@@ -223,7 +225,7 @@ public:
 	void 	calculateCurrentGrowthIncrement(gsl_matrix* resultingGrowthIncrement, double dt, double growthx, double growthy, double growthz, gsl_matrix* ShearAngleRotationMatrix);
 	void 	updateShapeChangeRate(double x, double y, double z, double xy, double yz, double xz);
 	virtual void calculateReferenceStiffnessMatrix(){ParentErrorMessage("calculateReferenceStiffnessMatrix");};
-    virtual void calculateElementShapeFunctionDerivatives(){ParentErrorMessage("calculateReferenceStiffnessMatrix");};
+    virtual void calculateElementShapeFunctionDerivatives(){ParentErrorMessage("calculateElementShapeFunctionDerivatives");};
     virtual void calculateCurrNodalForces(gsl_matrix *gslcurrge, gsl_matrix *gslcurrgv, gsl_matrix *gslcurrF, gsl_matrix* displacementPerDt, int pointNo){ParentErrorMessage("calculateCurrNodalForces");};
     virtual void calculateCurrTriPointFForRotation(gsl_matrix *currF,int pointNo){ParentErrorMessage("calculateCurrTriPointFForRotation");};
 
@@ -276,7 +278,7 @@ public:
 	void 	displayMatrix(boost::numeric::ublas::vector<double>& vec, string matname);
     void 	displayMatrix(gsl_matrix* mat, string matname);
     void 	displayMatrix(gsl_vector* mat, string matname);
-    void createMatrixCopy(gsl_matrix *dest, gsl_matrix* src);
+    void 	createMatrixCopy(gsl_matrix *dest, gsl_matrix* src);
 	double	calculateMagnitudeVector3D(double* v);
 	void	normaliseVector3D(double* v);
 	void	normaliseVector3D(gsl_vector* v);

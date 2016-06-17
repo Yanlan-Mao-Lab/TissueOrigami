@@ -19,7 +19,7 @@ public:
 	int 			nDim;					///< The number of dimensions of the node, (2 or 3)
 	double 			*Position;				///< The pointer to the position array of the node. The array itself is declared within the constructor, depending on nDim
 	double 			*RKPosition;			///< The pointer to the position array for position during a Runge-Kutta step array of the node. The array itself is declared within the constructor, depending on nDim
-	double 			**Velocity;				///< The pointer(**) to the velocities of the node for each Runge-Kutta step. The final calculated velocity is stored in Velocity[0]
+	//double 			**Velocity;				///< The pointer(**) to the velocities of the node for each Runge-Kutta step. The final calculated velocity is stored in Velocity[0]
 	bool			externalViscositySetInFixing[3];	///< The boolean array stating if the external viscosity of any axis has been set in node fixing options. The node fixing is carried out before the physical parameter settings in most cases. The boolean check is carried out not to overwrite the existing set viscosity in normal viscosity assignment.
 	double 			externalViscosity[3];				///< External viscosity of the node, defined by its placement within the tissue. This can be defined as an external adhesion, ECM remodelling, or any other form of viscosity.
 	int 			tissuePlacement;		///< The tissue placement is 0 for basal nodes, 1 for apical nodes, and 2 for middle range

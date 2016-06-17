@@ -29,7 +29,7 @@ int main(int argc, char * argv[])
 			Sim01->Elements[i]->updatePositions(Sim01->Nodes);
 		}
 		cout<<"Initiating simulation in the background"<<endl;
-		while (Sim01->timestep < Sim01->SimLength){
+		while (Sim01->currSimTimeSec < Sim01->SimLength){
 			//cout<<"running step: "<<Sim01.timestep<<", this is time: "<<Sim01.timestep*Sim01.dt<<" sec"<<endl;
 			bool Success = Sim01->runOneStep();
 			if (Success == false ){

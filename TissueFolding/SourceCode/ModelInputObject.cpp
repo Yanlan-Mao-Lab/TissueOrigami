@@ -207,6 +207,14 @@ bool ModelInputObject::readGrowthOptions(ifstream& file){
 		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: GridGrowthsPinnedOnInitialMesh(bool):" <<endl;
 		return false;
 	}
+	file >> currHeader;
+	if (currHeader == "GridGrowthsInterpolationType(0=step,1=linear):"){
+		file >> Sim->gridGrowthsInterpolationType;
+	}
+	else{
+		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: GridGrowthsInterpolationType(0=step,1=linear):" <<endl;
+		return false;
+	}
 	for (int i = 0; i<n; ++i){
 		file >> currHeader;
 		int type;
@@ -1070,9 +1078,7 @@ bool ModelInputObject::readTimeParameters(ifstream& file){
 
 	file >> currHeader;
 	if(currHeader == "SimulationLength(sec):"){
-		float timeInSec;
-		file >> timeInSec;
-		Sim->SimLength = timeInSec/Sim->dt;
+		file >> Sim->SimLength;
 	}
 	else{
 		cerr<<"Error in reading simulation length, curr string: "<<currHeader<<" should have been: SimulationLength(sec)::" <<endl;
@@ -1652,7 +1658,7 @@ bool ModelInputObject::readStretcherSetup(ifstream& file){
 	if(currHeader == "InitialTime(sec):"){
 		double inittime;
 		file >> inittime;
-		Sim->StretchInitialStep = inittime/Sim->dt;
+		Sim->StretchInitialTime = inittime;
 	}
 	else{
 		cerr<<"Error in reading stretcher setup: "<<currHeader<<", should have been: InitialTime(sec):" <<endl;
@@ -1662,7 +1668,7 @@ bool ModelInputObject::readStretcherSetup(ifstream& file){
 	if(currHeader == "FinalTime(sec):"){
 		double endtime;
 		file >> endtime;
-		Sim->StretchEndStep = endtime/Sim->dt;
+		Sim->StretchEndTime = endtime;
 	}
 	else{
 		cerr<<"Error in reading stretcher setup: "<<currHeader<<", should have been: FinalTime(sec):" <<endl;

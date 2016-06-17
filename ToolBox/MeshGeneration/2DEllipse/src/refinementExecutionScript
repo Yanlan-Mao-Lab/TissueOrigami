@@ -1,10 +1,11 @@
 Building the meshes via refinement
 area constraint for given side length: 1.5 * (side/2)^2*sqrt(3) (1.5 is the buffer of 50%).
 area constraint for side 6.5 -> 27.44
+area constraint for side 5 -> 16.23
 area constraint for side 4 -> 10.4
 area constraint for side 3 -> 5.8
 area constraint for side 2 -> 2.6
-
+area constraint for side 0.7 -> 0.3
 
 Small 48 hours. The average is 85.56 to 54.6 microns. The cross point at 50 microns.
 Without taking the curve region into account this traslates to a shape of:
@@ -20,30 +21,40 @@ Without taking the curve region into account this traslates to a shape of:
 %Now Points.4.ele is my mesh with side length 3
 ../triangle/triangle -rq33a2.6 Points.4
 %Now Points.5.ele is my mesh with side length 2
+../triangle/triangle -rq33a0.65 Points.5
+%Now Points.6.ele is my mesh with side length 1
 
 cp Points.2.ele Points.1.ele
 cp Points.2.node Points.1.node
 ./EllipseFromOutline -1 12.5 6.5 2 1  ./inputOutlines/48hrDiscOutline
-cp MeshFile.out ./SmallExp48hr-noPeri_04.mesh
+cp MeshFile.out ./Exp48hr-noPeri_04.mesh
 
 cp Points.3.ele Points.1.ele
 cp Points.3.node Points.1.node
 ./EllipseFromOutline -1 12.5 4 2 1  ./inputOutlines/48hrDiscOutline
-cp MeshFile.out ./SmallExp48hr-noPeri_05.mesh
+cp MeshFile.out ./Exp48hr-noPeri_05.mesh
 
 cp Points.3.ele Points.1.ele
 cp Points.3.node Points.1.node
 ./EllipseFromOutline -1 12.5 4 3 1  ./inputOutlines/48hrDiscOutline
-cp MeshFile.out ./SmallExp48hr-noPeri_06.mesh
+cp MeshFile.out ./Exp48hr-noPeri_06.mesh
 
 cp Points.4.ele Points.1.ele
 cp Points.4.node Points.1.node
 ./EllipseFromOutline -1 12.5 3 4 1  ./inputOutlines/48hrDiscOutline
-cp MeshFile.out ./SmallExp48hr-noPeri_07.mesh  
+cp MeshFile.out ./Exp48hr-noPeri_07.mesh  
 cp Points.5.ele Points.1.ele
 cp Points.5.node Points.1.node
 ./EllipseFromOutline -1 12.5 2 5 1  ./inputOutlines/48hrDiscOutline
-cp MeshFile.out ./SmallExp48hr-noPeri_08.mesh
+cp MeshFile.out ./Exp48hr-noPeri_08.mesh
+
+
+cp Points.6.ele Points.1.ele
+cp Points.6.node Points.1.node
+./EllipseFromOutline -1 12.5 2 3 1  ./inputOutlines/48hrDiscOutline
+cp MeshFile.out ./Exp48hr-noPeri_09.mesh
+
+
 
 % Now with peripodial
 % There is the side curve measurement of 5.52 microns at 48 hours.
@@ -79,12 +90,9 @@ cp Points.5.node Points.1.node
 cp MeshFile.out ./Exp48hr_08.mesh
 
 
-
 Large 48 hours. The average is 106.5 to 64.8 microns. The cross point at 64 microns.
 Without taking the curve region into account this traslates to a shape of:
 42.5 64 32.4 32.4
-
-
 
 %first mesh:
 ./EllipseFromOutline 1 42.5 64 32.4 32.4 12.5 8 2 1  ./inputOutlines/48hrDiscOutline
@@ -124,10 +132,9 @@ cp MeshFile.out ./LargeExp48hr_08.mesh
 
 
 72hr experimental - this will have to be done with refining an existing mesh.
-
 %for this  scaledSideLen = sideLen*0.8;
 %first mesh:
-./EllipseFromOutline 1 60 150 65 65 12.5 28 2 1  ./inputOutlines/72hrDiscOutline
+./EllipseFromOutline 1 55 138 56.43 56.43 12.5 28 2 1  ./inputOutlines/72hrDiscOutline
 %refinements:
 ../triangle/triangle -rq33a250 Points.1
 ../triangle/triangle -rq33a125 Points.2 
@@ -145,28 +152,33 @@ cp MeshFile.out ./LargeExp48hr_08.mesh
 cp Points.6.ele Points.1.ele
 cp Points.6.node Points.1.node
 ./EllipseFromOutline -1 12.5 6.5 2 1  ./inputOutlines/72hrDiscOutline
-cp MeshFile.out ./Exp72hr_04.mesh
+cp MeshFile.out ./Exp72hr-noPeri_04.mesh
 
 cp Points.7.ele Points.1.ele
 cp Points.7.node Points.1.node
-./EllipseFromOutline -1 12.5 4 2 1  ./inputOutlines/72hrDiscOutline
-cp MeshFile.out ./Exp72hr_05.mesh
+./EllipseFromOutline -1 12.5 5 2 1  ./inputOutlines/72hrDiscOutline
+cp MeshFile.out ./Exp72hr-noPeri_05.mesh
 
 cp Points.7.ele Points.1.ele
 cp Points.7.node Points.1.node
 ./EllipseFromOutline -1 12.5 4 3 1  ./inputOutlines/72hrDiscOutline
-cp MeshFile.out ./Exp72hr_06.mesh
+cp MeshFile.out ./Exp72hr-noPeri_06.mesh
 
 cp Points.8.ele Points.1.ele
 cp Points.8.node Points.1.node
 ./EllipseFromOutline -1 12.5 3 4 1  ./inputOutlines/72hrDiscOutline
-cp MeshFile.out ./Exp72hr_07.mesh
+cp MeshFile.out ./Exp72hr-noPeri_07.mesh
 
 cp Points.9.ele Points.1.ele
 cp Points.9.node Points.1.node
 ./EllipseFromOutline -1 12.5 2 5 1  ./inputOutlines/72hrDiscOutline
-cp MeshFile.out ./Exp72hr_08.mesh
+cp MeshFile.out ./Exp72hr-noPeri_08.mesh
 
+%This is the rough equivalent of Exp48hr_08 grown to 72 hrs, it should have ~2500 elements.
+cp Points.6.ele Points.1.ele
+cp Points.6.node Points.1.node
+./EllipseFromOutline -1 12.5 6.5 4 1  ./inputOutlines/72hrDiscOutline
+cp MeshFile.out ./Exp72hr-noPeri_09.mesh
 
 Drawing a circle: 
 % The pipettes will have inner diameter of 30(max) and outer diameter of 60(max)
@@ -210,7 +222,7 @@ cp Points.3.node Points.1.node
 ./EllipseFromOutline -1 100 1 4 1  ./inputOutlines/circleOutline
 cp MeshFile.out ./Circle100_h100_02.mesh
 
-%Now for the peripodial:
+%Drawing a circle:
 ./EllipseFromOutline 1 50 50 50 50 8.0 10 2 1  ./inputOutlines/circleOutline
 
 ../triangle/triangle -rq33a27.44 Points.1
@@ -225,3 +237,35 @@ cp Points.3.ele Points.1.ele
 cp Points.3.node Points.1.node
 ./EllipseFromOutline -1 8 1 2 1  ./inputOutlines/circleOutline
 cp MeshFile.out ./Circle100_h8_02.mesh
+
+
+%Half ellipse equivalent of 48 hour disc (turn off blunt tip for this!):
+./EllipseFromOutline 1 37.26 37.26 21.78 21.78 12.5 8 2 1  ./inputOutlines/circleOutline
+%further refinements, same as above:
+../triangle/triangle -rq33a27.44 Points.1
+../triangle/triangle -rq33a10.4 Points.2
+../triangle/triangle -rq33a5.8 Points.3
+../triangle/triangle -rq33a2.6 Points.4
+%genetratin the meshes:
+cp Points.2.ele Points.1.ele
+cp Points.2.node Points.1.node
+./EllipseFromOutline -1 12.5 6.5 2 1  ./inputOutlines/48hrDiscOutline
+cp MeshFile.out ./Ellipse48hr_04.mesh
+
+cp Points.3.ele Points.1.ele
+cp Points.3.node Points.1.node
+./EllipseFromOutline -1 12.5 4 2 1  ./inputOutlines/48hrDiscOutline
+cp MeshFile.out ./Ellipse48hr_05.mesh
+cp Points.3.ele Points.1.ele
+cp Points.3.node Points.1.node
+./EllipseFromOutline -1 12.5 4 3 1  ./inputOutlines/48hrDiscOutline
+cp MeshFile.out ./Ellipse48hr_06.mesh
+cp Points.4.ele Points.1.ele
+cp Points.4.node Points.1.node
+./EllipseFromOutline -1 12.5 3 4 1  ./inputOutlines/48hrDiscOutline
+cp MeshFile.out ./Ellipse48hr_07.mesh  
+cp Points.5.ele Points.1.ele
+cp Points.5.node Points.1.node
+./EllipseFromOutline -1 12.5 2 5 1  ./inputOutlines/48hrDiscOutline
+cp MeshFile.out ./Ellipse48hr_08.mesh
+

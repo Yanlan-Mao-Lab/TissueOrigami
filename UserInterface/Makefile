@@ -13,11 +13,11 @@ MAKEFILE      = Makefile
 CC            = gcc
 CXX           = g++
 DEFINES       = -DQT_NO_DEBUG -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB
-CFLAGS        = -pipe -O2 -Wall -W -D_REENTRANT -fPIE $(DEFINES)
-CXXFLAGS      = -pipe -O2 -Wall -W -D_REENTRANT -fPIE $(DEFINES)
+CFLAGS        = -pipe -O2 -fopenmp -Wall -W -D_REENTRANT -fPIE $(DEFINES)
+CXXFLAGS      = -pipe -fopenmp -O2 -Wall -W -D_REENTRANT -fPIE $(DEFINES)
 INCPATH       = -I/opt/Qt5.2.1/5.2.1/gcc_64/mkspecs/linux-g++ -I. -I/opt/Qt5.2.1/5.2.1/gcc_64/include -I/opt/Qt5.2.1/5.2.1/gcc_64/include/QtOpenGL -I/opt/Qt5.2.1/5.2.1/gcc_64/include/QtWidgets -I/opt/Qt5.2.1/5.2.1/gcc_64/include/QtGui -I/opt/Qt5.2.1/5.2.1/gcc_64/include/QtCore -I.
 LINK          = g++
-LFLAGS        = -Wl,-O1 -Wl,-rpath,/opt/Qt5.2.1/5.2.1/gcc_64 -Wl,-rpath,/opt/Qt5.2.1/5.2.1/gcc_64/lib
+LFLAGS        = -fopenmp -Wl,-O1 -Wl,-rpath,/opt/Qt5.2.1/5.2.1/gcc_64 -Wl,-rpath,/opt/Qt5.2.1/5.2.1/gcc_64/lib
 LIBS          = $(SUBLIBS) -L/usr/include -lgsl -lgslcblas -lpardiso500-GNU461-X86-64 -fopenmp -llapack -L/opt/Qt5.2.1/5.2.1/gcc_64/lib -lQt5OpenGL -lQt5Widgets -lQt5Gui -lQt5Core -lGL -lpthread 
 AR            = ar cqs
 RANLIB        = 
@@ -904,6 +904,7 @@ moc_MainWindow.cpp: /opt/Qt5.2.1/5.2.1/gcc_64/include/QtGui/QtGui \
 		../TissueFolding/SourceCode/GrowthFunctionBase.h \
 		../TissueFolding/SourceCode/GrowthFunctionTypes.h \
 		../TissueFolding/SourceCode/MyosinFunction.h \
+		../TissueFolding/SourceCode/NewtonRaphsonSolver.h \
 		SourceCode/MainWindow.h
 	/opt/Qt5.2.1/5.2.1/gcc_64/bin/moc $(DEFINES) $(INCPATH) SourceCode/MainWindow.h -o moc_MainWindow.cpp
 
@@ -1363,6 +1364,7 @@ moc_GLWidget.cpp: /opt/Qt5.2.1/5.2.1/gcc_64/include/QtOpenGL/QGLWidget \
 		../TissueFolding/SourceCode/GrowthFunctionBase.h \
 		../TissueFolding/SourceCode/GrowthFunctionTypes.h \
 		../TissueFolding/SourceCode/MyosinFunction.h \
+		../TissueFolding/SourceCode/NewtonRaphsonSolver.h \
 		SourceCode/GLWidget.h
 	/opt/Qt5.2.1/5.2.1/gcc_64/bin/moc $(DEFINES) $(INCPATH) SourceCode/GLWidget.h -o moc_GLWidget.cpp
 
@@ -1830,6 +1832,7 @@ main.o: SourceCode/main.cpp /opt/Qt5.2.1/5.2.1/gcc_64/include/QtWidgets/QGraphic
 		../TissueFolding/SourceCode/GrowthFunctionBase.h \
 		../TissueFolding/SourceCode/GrowthFunctionTypes.h \
 		../TissueFolding/SourceCode/MyosinFunction.h \
+		../TissueFolding/SourceCode/NewtonRaphsonSolver.h \
 		SourceCode/GLWidget.h \
 		/opt/Qt5.2.1/5.2.1/gcc_64/include/QtOpenGL/QGLWidget \
 		/opt/Qt5.2.1/5.2.1/gcc_64/include/QtOpenGL/qgl.h \
@@ -2297,6 +2300,7 @@ MainWindow.o: SourceCode/MainWindow.cpp /opt/Qt5.2.1/5.2.1/gcc_64/include/QtGui/
 		../TissueFolding/SourceCode/GrowthFunctionBase.h \
 		../TissueFolding/SourceCode/GrowthFunctionTypes.h \
 		../TissueFolding/SourceCode/MyosinFunction.h \
+		../TissueFolding/SourceCode/NewtonRaphsonSolver.h \
 		SourceCode/GLWidget.h \
 		/opt/Qt5.2.1/5.2.1/gcc_64/include/QtOpenGL/QGLWidget \
 		/opt/Qt5.2.1/5.2.1/gcc_64/include/QtOpenGL/qgl.h \
@@ -2769,7 +2773,8 @@ GLWidget.o: SourceCode/GLWidget.cpp /opt/Qt5.2.1/5.2.1/gcc_64/include/QtGui/QtGu
 		../TissueFolding/SourceCode/ReferenceShapeBase.h \
 		../TissueFolding/SourceCode/GrowthFunctionBase.h \
 		../TissueFolding/SourceCode/GrowthFunctionTypes.h \
-		../TissueFolding/SourceCode/MyosinFunction.h
+		../TissueFolding/SourceCode/MyosinFunction.h \
+		../TissueFolding/SourceCode/NewtonRaphsonSolver.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o GLWidget.o SourceCode/GLWidget.cpp
 
 Prism.o: ../TissueFolding/SourceCode/Prism.cpp ../TissueFolding/SourceCode/Prism.h \
@@ -2798,6 +2803,7 @@ Simulation.o: ../TissueFolding/SourceCode/Simulation.cpp ../TissueFolding/Source
 		../TissueFolding/SourceCode/GrowthFunctionBase.h \
 		../TissueFolding/SourceCode/GrowthFunctionTypes.h \
 		../TissueFolding/SourceCode/MyosinFunction.h \
+		../TissueFolding/SourceCode/NewtonRaphsonSolver.h \
 		../TissueFolding/SourceCode/Prism.h \
 		../TissueFolding/SourceCode/RandomGenerator.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o Simulation.o ../TissueFolding/SourceCode/Simulation.cpp
@@ -2812,7 +2818,8 @@ ModelInputObject.o: ../TissueFolding/SourceCode/ModelInputObject.cpp ../TissueFo
 		../TissueFolding/SourceCode/ReferenceShapeBase.h \
 		../TissueFolding/SourceCode/GrowthFunctionBase.h \
 		../TissueFolding/SourceCode/GrowthFunctionTypes.h \
-		../TissueFolding/SourceCode/MyosinFunction.h
+		../TissueFolding/SourceCode/MyosinFunction.h \
+		../TissueFolding/SourceCode/NewtonRaphsonSolver.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ModelInputObject.o ../TissueFolding/SourceCode/ModelInputObject.cpp
 
 RandomGenerator.o: ../TissueFolding/SourceCode/RandomGenerator.cpp ../TissueFolding/SourceCode/RandomGenerator.h

@@ -56,7 +56,7 @@ public slots:
     void 	updateNetForceCheckBox(int);
     void	updateMyosinCheckBox(int);
     void 	updatePackingForceCheckBox(int);
-    void 	updateVelocityCheckBox(int);
+    void 	updateFixedNodesCheckBox(int);
     void  	updateScaleBarCheckBox(int);
     void  	updatePeripodialDisplayCheckBox(int s);
     void  	updateColumnarLayerDisplayCheckBox(int s);
@@ -121,7 +121,9 @@ public slots:
     QLineEdit 		*TimeBox;
     QLabel 			*TimeTitle;
     //MacOS version:
-    std::clock_t    simulationStartClock;
+    std::clock_t    simulationStartClock;	//simulation clock as in cpu clock time (will be the same regardless of using single or multi-processors. sleep during process etc.
+    std::time_t 	simulationStartTime;	//simulation time in real time, given in seconds
+
     bool            displayedSimulationLength;
  };
 

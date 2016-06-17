@@ -41,6 +41,7 @@ using namespace std;
      MainShapeLineThickness = 1.0;
      DisplayStrains = true;
      DisplayPysProp = false;
+     DisplayFixedNodes = false;
      //current ranges:
      DisplayPysPropRange[0][0] = 1000.0; DisplayPysPropRange[0][1] = 10000.0; 	//External Viscosity
      DisplayPysPropRange[1][0] = 1000.0; DisplayPysPropRange[1][1] = 10000.0; 	//Internal Viscosity
@@ -78,7 +79,6 @@ using namespace std;
   	 setSizePolicy(QSizePolicy ::Expanding , QSizePolicy ::Expanding );
   	 drawNetForces = false;
   	 drawPackingForces = false;
-     drawVelocities = false;
      drawMyosinForces = false;
      drawPeripodialMembrane = true;
      drawColumnar = true;
@@ -131,7 +131,7 @@ using namespace std;
 	//int a = 1;
     //    int *swap_interval = &a;
     //    CGLContextObj cgl_context = CGLGetCurrentContext();
-    //    CGLSetParameter(cgl_context, kCGLCPSwapInterval, swap_interval);
+    //    CGLSetParameter(cgl_context, CGLCPSwapInterval, swap_interval);
  }
 
  void GLWidget::initialiseNodeColourList(){
@@ -187,7 +187,7 @@ using namespace std;
 	 }
 	 drawForces();
 	 drawPackForces();
-	 drawNodeVelocities();
+	 //drawNodeVelocities();
 	 drawMyosin();
 	 drawBoundingBox();
      drawPipette();
@@ -213,8 +213,6 @@ using namespace std;
 		glEnd();
 	}
 */
-
-	 DisplayFixedNodes= true;
 	 if (DisplayFixedNodes){
 		 drawFixedNodes();
 	 }
@@ -376,7 +374,7 @@ void GLWidget::highlightNode(int i){
 	for (itNode=Sim01->Nodes.begin(); itNode<Sim01->Nodes.end(); ++itNode){
 		float* currColour;
 		currColour = new float[3];
-		if(!DisplayStrains && !DisplayPysProp && !drawNetForces && !drawPackingForces && !drawVelocities && !drawMyosinForces){
+		if(!DisplayStrains && !DisplayPysProp && !drawNetForces && !drawPackingForces && !drawMyosinForces){
 			//I am not displaying ant data on the colours, therefore I do not need any calculaitons on element basis, the colour is constant
 			if ((*itNode)->tissueType == 0){ // columnar layer
 				NodeColourList[(*itNode)->Id][0]=0.75;
@@ -482,20 +480,6 @@ void GLWidget::highlightNode(int i){
 					currColour[2] = 0.8;
 				}
 			}
-			else if(drawVelocities){
-				float VelMag = 0.0;
-				double v[3] = {(*itNode)->Velocity[0][0],(*itNode)->Velocity[0][1],(*itNode)->Velocity[0][2]};
-				VelMag = v[0]*v[0]+v[1]*v[1]+v[2]*v[2];
-				VelMag = pow(VelMag,(float)0.5);
-				if (VelMag>threshold){
-					getVelocityColour(currColour, VelMag);
-				}
-				else{
-					currColour[0] = 1.0;
-					currColour[1] = 1.0;
-					currColour[2] = 0.8;
-				}
-			}
 			NodeColourList[(*itNode)->Id][0]=currColour[0];
 			NodeColourList[(*itNode)->Id][1]=currColour[1];
 			NodeColourList[(*itNode)->Id][2]=currColour[2];
@@ -557,6 +541,10 @@ void GLWidget::highlightNode(int i){
 	int BorderConnectivity[nLineStrip] = {0,2,5,3,0,1,4,3,5,4,1,2};
 	float** NodeColours;
 	NodeColours = getElementColourList(i);
+	//NodeColours = new float*[n];
+
+	//float NodeColours[6][3] = {{0.1,0.1,0.1},{0.1,0.1,0.1},{0.1,0.1,0.1},{0.1,0.1,0.1},{0.1,0.1,0.1},{0.1,0.1,0.1}};
+
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glEnable(GL_POLYGON_OFFSET_FILL); // Avoid Stitching!
 	glPolygonOffset(1.0, 1.0); 	//These are necessary so the depth test can keep the lines above surfaces
@@ -589,6 +577,9 @@ void GLWidget::highlightNode(int i){
 			glVertex3f( x, y, z);
 		}
 	glEnd();
+	for (int i=0; i<Sim01->Elements[i]->getNodeNumber(); ++i ){
+		delete[] NodeColours[i];
+	}
 	delete[] NodeColours;
  }
 
@@ -1610,8 +1601,8 @@ bool GLWidget::findNode(int i){
 		 }
 		 nPack = Sim01->pacingNodePointList0.size();
 		 for (int aa=0; aa<nPack; ++aa){
-			 int id0 = Sim01->pacingNodePointList0[aa];
-			 int id1 = Sim01->pacingNodePointList1[aa];
+			 int id0 = Sim01->pacingNodeCouples0[aa];
+			 int id1 = Sim01->pacingNodeCouples1[aa];
 			 double px = Sim01->Nodes[id1]->Position[0] ;
 			 double py = Sim01->Nodes[id1]->Position[1];
 			 double pz = Sim01->Nodes[id1]->Position[2];
@@ -1659,46 +1650,6 @@ bool GLWidget::findNode(int i){
 		 }
 	 }
 
- }
-
- void GLWidget::drawNodeVelocities(){
-	 if (drawVelocities){
-		 double threshold2 = 1E-16;
-		 double scale2[2] = {0,0.01}, scale = 0.5;
-		 double minlength = 0.3, maxlength = 2;
-		 double minlength2 = minlength*minlength, maxlength2 = maxlength*maxlength;
-		 double scalesq = scale*scale;
-		 int n = Sim01->Nodes.size();
-		 for (int i =0; i<n; ++i){
-			 bool drawCurrentNode = checkIfDrawingNode(i);
-			 if (drawCurrentNode){
-				 double* v;
-				 v = new double[3];
-				 v[0] = Sim01->Nodes[i]->Velocity[0][0];
-				 v[1] = Sim01->Nodes[i]->Velocity[0][1];
-				 v[2] = Sim01->Nodes[i]->Velocity[0][2];
-				 //check if the force is large enough to display:
-				 double mag2 = v[0]* v[0] + v[1]*v[1] + v[2]* v[2];
-				 if (mag2 > threshold2){
-					 double mag = pow(mag2,0.5);
-					 double a = mag2/scalesq;
-					 if (a < minlength2 ){
-						 scale = mag /minlength;
-					 }
-					 else if ( a > maxlength2){
-						 scale = mag /maxlength;
-					 }
-					 double b = (mag- scale2[0])/(scale2[1]-scale2[0]);
-					 //cout<<"Colour coding: "<<b<<endl;
-					 v[0] = v[0]/scale + Sim01->Nodes[i]->Position[0];
-					 v[1] = v[1]/scale + Sim01->Nodes[i]->Position[1];
-					 v[2] = v[2]/scale + Sim01->Nodes[i]->Position[2];
-					 drawArrow3D(Sim01->Nodes[i]->Position, v, 0.0, 0.0, b);
-				 }
-				 delete[] v;
-			 }
-		 }
-	 }
  }
 
  void GLWidget::drawPipette(){

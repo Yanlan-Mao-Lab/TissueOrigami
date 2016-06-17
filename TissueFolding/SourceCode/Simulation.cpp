@@ -17,6 +17,7 @@ Simulation::Simulation(){
 	TissueHeight = 0.0;
 	TissueHeightDiscretisationLayers= 1;
 	timestep = 0;
+	currSimTimeSec = 0;
 	reachedEndOfSaveFile = false;
 	AddPeripodialMembrane = false;
 	thereIsPeripodialMembrane = false;
@@ -31,7 +32,7 @@ Simulation::Simulation(){
     nNodes = 0;
     if (growthRotationUpdateFrequency<1) {growthRotationUpdateFrequency =1;}
 	setDefaultParameters();
-
+	implicitPacking = true;
 	//double GrowthMatrix[3][3][3] = {
 	//							{{1.00, 0.50, 0.00}, {1.00, 0.50, 0.00}, {1.00, 0.50, 0.00}},
 	//							{{1.00, 0.75, 0.00}, {1.00, 0.625,0.00}, {1.00, 0.50, 0.00}},
@@ -63,13 +64,14 @@ Simulation::~Simulation(){
 		delete tmp_pt;
         //cerr<<"Element list size: "<<Elements.size()<<endl;
 	}
+    cout<<"deleting nodes"<<endl;
 	while(!Nodes.empty()){
 		Node* tmp_pt;
 		tmp_pt = Nodes.back();
 		Nodes.pop_back();
 		delete tmp_pt;
-        //cerr<<"Node list size: "<<Nodes.size()<<endl;
 	}
+    cout<<"deleting GrowthFunctions"<<endl;
 	while(!GrowthFunctions.empty()){
 		GrowthFunctionBase* tmp_GF;
 		tmp_GF = GrowthFunctions.back();
@@ -77,12 +79,15 @@ Simulation::~Simulation(){
 		delete tmp_GF;
         //cerr<<"GrowtFuncitons list size: "<<GrowthFunctions.size()<<endl;
 	}
+    cout<<"deleting NRSolver"<<endl;
     delete NRSolver;
+    cout<<"deletion complete"<<endl;
+
 }
 
 void Simulation::setDefaultParameters(){
 	dt = 0.01;				//sec
-	SimLength = 10.0/dt; 	//timesteps wothr 10 sec of simulation
+	SimLength = 10.0; 		//10 sec of simulation
 	saveImages = false;		//do not save simulation images by default
 	saveData = false;		//do not save simulation data by default
 	imageSaveInterval = 60.0/dt;	//save images every minute
@@ -118,12 +123,12 @@ void Simulation::setDefaultParameters(){
 	}
 	nGrowthFunctions = 0;
 	GridGrowthsPinnedOnInitialMesh = false;
+	gridGrowthsInterpolationType = 1;
 	nShapeChangeFunctions = 0;
 	TensionCompressionSaved = true;
     GrowthSaved = true;
     GrowthRateSaved = true;
 	ForcesSaved = true;
-	VelocitiesSaved = true;
 	ProteinsSaved = true;
 	PackingSaved = true;
 	PeripodialElasticity = 0.0;
@@ -141,8 +146,8 @@ void Simulation::setDefaultParameters(){
 	distanceIndex = false;
 	StretchDistanceStep = 0.0;
 	DVClamp = true;
-	StretchInitialStep = -100;
-	StretchEndStep = -100;
+	StretchInitialTime = -100;
+	StretchEndTime = -100;
 	PipetteSuction = false;
 	PipetteInitialStep= -100;
 	PipetteEndStep = 0.0;
@@ -332,11 +337,12 @@ bool Simulation::readFinalSimulationStep(){
 			break;
 		}
 		success = readNodeDataToContinueFromSave();
+		cout<<"dt after  readNodeDataToContinueFromSave "<<dt<<" timeStepCurrentSim: "<<timeStepCurrentSim<<endl;
 		if (!success){
 			return false;
 		}
 		readElementDataToContinueFromSave();
-
+		cout<<"dt after  readElementDataToContinueFromSave "<<dt<<" timeStepCurrentSim: "<<timeStepCurrentSim<<endl;
 		//assignPhysicalParameters();
 
 		if (TensionCompressionSaved){
@@ -353,11 +359,12 @@ bool Simulation::readFinalSimulationStep(){
 		}
 		if (ZerothFrame){
 			ZerothFrame = false;
+			cout<<"dt after  ZerothFrame if clause "<<dt<<" timeStepCurrentSim: "<<timeStepCurrentSim<<endl;
 		}
 		else{
 			timestep = timestep + dataSaveInterval;
+			currSimTimeSec += dt*dataSaveInterval;
 		}
-		cout<<"read time point: "<<timestep<<" this is "<<timestep*dt<<" sec, dataSaveInterval is : "<<dataSaveInterval<<" dataSaveIntervalCurrentSim: "<<dataSaveIntervalCurrentSim<<endl;
 		//skipping the footer:
 		getline(saveFileToDisplayMesh,currline);
 		while (currline.empty() && !saveFileToDisplayMesh.eof()){
@@ -380,7 +387,9 @@ bool Simulation::readFinalSimulationStep(){
 	//if (thereIsPeripodialMembrane){
 	//	calculatePeripodialBoundingBox();
 	//}
+
 	//bring the time step and data save stime steps to the main modelinput:
+	currSimTimeSec += dt*dataSaveInterval;
 	dataSaveInterval = dataSaveIntervalCurrentSim;
 	dt = timeStepCurrentSim;
 	//During a simulation, the data is saved after the step is run, and the time step is incremented after the save. Now I have read in the final step,
@@ -601,17 +610,6 @@ bool Simulation::openFiles(){
             Success = false;
         }
 
-		//Velocity information at each step:
-		saveFileString = saveDirectory +"/Save_Velocity";
-		const char* name_saveFileVelocities = saveFileString.c_str();
-		saveFileVelocities.open(name_saveFileVelocities, ofstream::binary);
-		if (saveFileVelocities.good() && saveFileVelocities.is_open()){
-			Success = true;
-		}
-		else{
-			cerr<<"could not open file: "<<name_saveFileVelocities<<endl;
-			Success = false;
-		}
 		//Force information at each step:
 		saveFileString = saveDirectory +"/Save_Force";
 		const char* name_saveFileForces = saveFileString.c_str();
@@ -670,7 +668,7 @@ bool Simulation::reOpenOutputFile(){
 	const char* name_outputFile = outputFileString.c_str();
 	outputFile.open(name_outputFile, ofstream::out);
 	if (!(outputFile.good() && outputFile.is_open())){
-		cerr<<"at step: "<<timestep<<" could not open file: "<<name_outputFile<<endl;
+		cerr<<"at step: "<<currSimTimeSec<<" could not open file: "<<name_outputFile<<endl;
 		return false;
 	}
 	return true;
@@ -809,14 +807,6 @@ bool Simulation::openFilesToDisplay(){
 		cerr<<"Cannot open the save file to display: "<<name_saveFileToDisplayGrowthRate<<endl;
 		GrowthRateSaved = false;
 	}
-
-	saveFileString = saveDirectoryToDisplayString +"/Save_Velocity";
-	const char* name_saveFileToDisplayVel = saveFileString.c_str();;
-	saveFileToDisplayVel.open(name_saveFileToDisplayVel, ifstream::in);
-	if (!(saveFileToDisplayVel.good() && saveFileToDisplayVel.is_open())){
-		cerr<<"Cannot open the save file to display: "<<name_saveFileToDisplayVel<<endl;
-		VelocitiesSaved = false;
-	}
 	saveFileString = saveDirectoryToDisplayString +"/Save_Force";
 	const char* name_saveFileToDisplayForce = saveFileString.c_str();;
 	saveFileToDisplayForce.open(name_saveFileToDisplayForce, ifstream::in);
@@ -869,9 +859,6 @@ bool Simulation::initiateSavedSystem(){
     }
 	if (ForcesSaved){
 		updateForcesFromSave();
-	}
-	if (VelocitiesSaved){
-		updateVelocitiesFromSave();
 	}
 	updateElementVolumesAndTissuePlacements();
     //cleanMatrixUpdateData();
@@ -1124,7 +1111,7 @@ void Simulation::initiatePrismFromSave(){
 		NodeIds[i] = 0;
 	}
 	Prism* PrismPnt01;
-	PrismPnt01 = new Prism(NodeIds, Nodes, currElementId);
+	PrismPnt01 = new Prism(NodeIds, Nodes, currElementId,thereIsPlasticDeformation);
 	PrismPnt01->updateShapeFromSave(saveFileToDisplayMesh);
 	Elements.push_back(PrismPnt01);
 	nElements = Elements.size();
@@ -1165,7 +1152,7 @@ void Simulation::initiatePrismFromMeshInput(){
 		NodeIds[i] = savedId;
 	}
 	Prism* PrismPnt01;
-	PrismPnt01 = new Prism(NodeIds, Nodes, currElementId);
+	PrismPnt01 = new Prism(NodeIds, Nodes, currElementId,thereIsPlasticDeformation);
 	PrismPnt01->updateReferencePositionMatrixFromMeshInput(saveFileToDisplayMesh);
 	PrismPnt01->checkRotationConsistency3D();
 	Elements.push_back(PrismPnt01);
@@ -1234,14 +1221,6 @@ void Simulation::updateForcesFromSave(){
 			saveFileToDisplayForce.read((char*) &Elements[i]->MyoForce[j][0], sizeof &Elements[i]->MyoForce[j][0]);
 			saveFileToDisplayForce.read((char*) &Elements[i]->MyoForce[j][1], sizeof &Elements[i]->MyoForce[j][1]);
 			saveFileToDisplayForce.read((char*) &Elements[i]->MyoForce[j][2], sizeof &Elements[i]->MyoForce[j][2]);
-		}
-	}
-}
-
-void Simulation::updateVelocitiesFromSave(){
-	for (int i=0;i<nNodes;++i){
-		for (int j=0; j<Nodes[i]->nDim; ++j){
-			saveFileToDisplayVel.read((char*) &Nodes[i]->Velocity[j], sizeof Nodes[i]->Velocity[j]);
 		}
 	}
 }
@@ -1393,7 +1372,7 @@ void Simulation::initiatePrismFromSaveForUpdate(int k){
 		NodeIds[i] = 0;
 	}
 	Prism* PrismPnt01;
-	PrismPnt01 = new Prism(NodeIds, Nodes, currElementId);
+	PrismPnt01 = new Prism(NodeIds, Nodes, currElementId,thereIsPlasticDeformation);
 	PrismPnt01->updateShapeFromSave(saveFileToDisplayMesh);
 	vector<ShapeBase*>::iterator it = Elements.begin();
 	it += k;
@@ -1414,8 +1393,13 @@ void Simulation::updateOneStepFromSave(){
 		return;
 	}
 	//cout<<"skipped header: "<<currline<<endl;
-	resetForces(true); //reset packing Forces
-	updateNodeNumberFromSave();
+    if (implicitPacking){
+        resetForces(true);	// reset packing forces
+    }
+    else{
+        resetForces(false);	// do not reset packing forces
+    }
+    updateNodeNumberFromSave();
 	updateNodePositionsFromSave();
 	updateElementStatesFromSave();
 	vector<ShapeBase*>::iterator itElement;
@@ -1435,9 +1419,6 @@ void Simulation::updateOneStepFromSave(){
     }
 	if (ForcesSaved){
 		updateForcesFromSave();
-	}
-	if(VelocitiesSaved){
-		updateVelocitiesFromSave();
 	}
 	if(ProteinsSaved){
 		updateProteinsFromSave();
@@ -1473,6 +1454,7 @@ void Simulation::updateOneStepFromSave(){
 	//}
 	//cout<<"in step update, skipped footer: "<<currline2<<endl;
 	timestep = timestep + dataSaveInterval;
+	currSimTimeSec += dt*dataSaveInterval;
 }
 
 void  Simulation::updateNodeNumberFromSave(){
@@ -2231,7 +2213,7 @@ void Simulation::initiateSinglePrismElement(){
 		NodeIds[i]=i;
 	}
 	Prism* PrismPnt01;
-	PrismPnt01 = new Prism(NodeIds, Nodes, currElementId);
+	PrismPnt01 = new Prism(NodeIds, Nodes, currElementId,thereIsPlasticDeformation);
 	Elements.push_back(PrismPnt01);
 	nElements = Elements.size();
 	currElementId++;
@@ -2454,7 +2436,7 @@ void Simulation::initiateElementsByRowAndColumn(int Row, int Column){
 			NodeIds[4] = NodeIds[1] + n;
 			NodeIds[5] = NodeIds[2] + n;
 			Prism* PrismPnt01;
-			PrismPnt01 = new Prism(NodeIds, Nodes, currElementId);
+			PrismPnt01 = new Prism(NodeIds, Nodes, currElementId,thereIsPlasticDeformation);
 			Elements.push_back(PrismPnt01);
 			nElements = Elements.size();
 			currElementId++;
@@ -2465,7 +2447,7 @@ void Simulation::initiateElementsByRowAndColumn(int Row, int Column){
 			NodeIds[3] = NodeIds[0] + n;
 			NodeIds[4] = NodeIds[1] + n;
 			NodeIds[5] = NodeIds[2] + n;
-			PrismPnt01 = new Prism(NodeIds, Nodes, currElementId);
+			PrismPnt01 = new Prism(NodeIds, Nodes, currElementId,thereIsPlasticDeformation);
 			Elements.push_back(PrismPnt01);
 			nElements = Elements.size();
 			currElementId++;
@@ -2481,7 +2463,7 @@ void Simulation::initiateElementsByRowAndColumn(int Row, int Column){
 			NodeIds[4] = NodeIds[1] + n;
 			NodeIds[5] = NodeIds[2] + n;
 			Prism* PrismPnt01;
-			PrismPnt01 = new Prism(NodeIds, Nodes, currElementId);
+			PrismPnt01 = new Prism(NodeIds, Nodes, currElementId,thereIsPlasticDeformation);
 			Elements.push_back(PrismPnt01);
 			nElements = Elements.size();
 			currElementId++;
@@ -2492,7 +2474,7 @@ void Simulation::initiateElementsByRowAndColumn(int Row, int Column){
 			NodeIds[3] = NodeIds[0] + n;
 			NodeIds[4] = NodeIds[1] + n;
 			NodeIds[5] = NodeIds[2] + n;
-			PrismPnt01 = new Prism(NodeIds, Nodes, currElementId);
+			PrismPnt01 = new Prism(NodeIds, Nodes, currElementId,thereIsPlasticDeformation);
 			Elements.push_back(PrismPnt01);
 			nElements = Elements.size();
 			currElementId++;
@@ -3306,7 +3288,7 @@ void Simulation::addLateralPeripodialElements(int LumenHeightDiscretisationLayer
 			NodeIds[4] = ColumnarBasedNodeArray[indiceTri0Corner1][j+1];
 			NodeIds[5] = ColumnarBasedNodeArray[indiceTri0Corner2][j+1];
 			Prism* PrismPnt01;
-			PrismPnt01 = new Prism(NodeIds, Nodes, currElementId);
+			PrismPnt01 = new Prism(NodeIds, Nodes, currElementId,thereIsPlasticDeformation);
 			PrismPnt01->setGrowthWeightsViaTissuePlacement(peripodialWeight);
 			Elements.push_back(PrismPnt01);
 			nElements = Elements.size();
@@ -3318,7 +3300,7 @@ void Simulation::addLateralPeripodialElements(int LumenHeightDiscretisationLayer
 			NodeIds[3] = OuterNodeArray[indiceTri1Corner0][j+1];
 			NodeIds[4] = OuterNodeArray[indiceTri1Corner1][j+1];
 			NodeIds[5] = ColumnarBasedNodeArray[indiceTri1Corner2][j+1];
-			PrismPnt01 = new Prism(NodeIds, Nodes, currElementId);
+			PrismPnt01 = new Prism(NodeIds, Nodes, currElementId,thereIsPlasticDeformation);
 			PrismPnt01->setGrowthWeightsViaTissuePlacement(peripodialWeight);
 			Elements.push_back(PrismPnt01);
 			nElements = Elements.size();
@@ -3435,7 +3417,7 @@ void Simulation::addCapPeripodialElements( vector< vector<int> > &TriangleList, 
 			NodeIds[4] = PeripodialCapNodeArray[indiceTri0Corner1][j+1];
 			NodeIds[5] = PeripodialCapNodeArray[indiceTri0Corner2][j+1];
 			Prism* PrismPnt01;
-			PrismPnt01 = new Prism(NodeIds, Nodes, currElementId);
+			PrismPnt01 = new Prism(NodeIds, Nodes, currElementId,thereIsPlasticDeformation);
 			Elements.push_back(PrismPnt01);
 			nElements = Elements.size();
 			currElementId++;
@@ -3711,7 +3693,7 @@ bool Simulation::runOneStep(){
     bool Success = true;
 	cout<<"entered run one step"<<endl;
     //ablateSpcific();
-    if (dt*timestep == -16*3600) {
+    if (currSimTimeSec == -16*3600) {
     	pokeElement(31,0,0,-0.1);pokeElement(34,0,0,-0.1);
     }
     manualPerturbationToInitialSetup(false,false); //bool deform, bool rotate
@@ -3719,7 +3701,7 @@ bool Simulation::runOneStep(){
     int freq = 10.0/dt ;
     if (freq <1 ){freq =1;}
     if ((timestep - 1)% freq  == 0){
-        cout<<"At time -- "<<dt*timestep<<" sec ("<<dt*timestep/3600<<" hours - "<<timestep<<" timesteps)"<<endl;
+        cout<<"At time -- "<<currSimTimeSec<<" sec ("<<currSimTimeSec/3600<<" hours - "<<timestep<<" timesteps)"<<endl;
         alignTissueDVToXPositive();
         //alignTissueAPToXYPlane();
         calculateBoundingBox();
@@ -3747,6 +3729,7 @@ bool Simulation::runOneStep(){
     }
     for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
         if (!(*itElement)->IsAblated){
+        	//(*itElement)->updateInternalViscosityTest();
         	(*itElement)->growShapeByFg(dt);
         	//(*itElement)->defineFgByGrowthTemplate();
         	(*itElement)->changeShapeByFsc(dt);
@@ -3755,9 +3738,10 @@ bool Simulation::runOneStep(){
     updateNodeMasses();
     updateElementToConnectedNodes(Nodes);
     calculateMyosinForces();
-	//calculatePacking();
     detectPacingNodes();
-    //detectPacingCombinations();
+    if (implicitPacking == false){
+    	calculatePackingForcesExplicit3D();
+    }
     if (addingRandomForces){
     	calculateRandomForces();
     }
@@ -3775,6 +3759,7 @@ bool Simulation::runOneStep(){
     //cout<<" step: "<<timestep<<" Pressure: "<<SuctionPressure[2]<<" Pa, maximum z-height: "<<boundingBox[1][2]<<" L/a: "<<(boundingBox[1][2]-50)/(2.0*pipetteRadius)<<endl;
     Success = checkFlip();
     timestep++;
+    currSimTimeSec += dt;
     return Success;
     //for (int i=0; i<nNodes; ++i){
     //	cout<<" Nodes["<<i<<"]->Position[0]="<<Nodes[i]->Position[0]<<"; Nodes["<<i<<"]->Position[1]="<<Nodes[i]->Position[1]<<";  Nodes["<<i<<"]->Position[2]="<<Nodes[i]->Position[2]<<"; "<<endl;
@@ -3841,6 +3826,8 @@ void Simulation::calculateNumericalJacobian(bool displayMatricesDuringNumericalC
 	int dim = 3;
 	gsl_matrix_set_zero(NRSolver->Knumerical);
 	NRSolver->calculateDisplacementMatrix(dt);
+	//PACKING SHOULD BE ADDED HERE If using this nuerical calculation!!!
+
 	//Trying to see the manual values:
 	resetForces(true); // reset the packing forces together with all the rest of the forces here
 	//No perturbation:
@@ -3855,8 +3842,13 @@ void Simulation::calculateNumericalJacobian(bool displayMatricesDuringNumericalC
 	gsl_matrix_memcpy(uk_original,NRSolver->uk);
 	for (int i=0; i<nNodes; ++i){
 		for (int j=0; j<3; ++j){
-			resetForces(true); // reset the packing forces together with all the rest of the forces here
-			gsl_matrix_set(NRSolver->uk,i*3+j,0,gsl_matrix_get(NRSolver->uk,i*3+j,0)+1E-6);
+	        if (implicitPacking){
+	            resetForces(true);	// reset packing forces
+	        }
+	        else{
+	            resetForces(false);	// do not reset packing forces
+	        }
+	        gsl_matrix_set(NRSolver->uk,i*3+j,0,gsl_matrix_get(NRSolver->uk,i*3+j,0)+1E-6);
 			NRSolver->calculateDisplacementMatrix(dt);
 			Nodes[i]->Position[j] += 1E-6;
 			updateElementPositions();
@@ -3899,36 +3891,47 @@ void Simulation::updateStepNR(){
     bool numericalCalculation = false;
     bool displayMatricesDuringNumericalCalculation = false;
     bool useNumericalKIncalculation = false;
+
+    //double clock0 = ( std::clock() - simulationStartClock ) / (double) CLOCKS_PER_SEC;
     NRSolver->setMatricesToZeroAtTheBeginningOfIteration(numericalCalculation);
     NRSolver->constructUnMatrix(Nodes);
-    NRSolver->constructLumpedMassExternalViscosityDtMatrix(Nodes,dt);
+    //NRSolver->constructLumpedMassExternalViscosityMatrix(Nodes);
     NRSolver->initialteUkMatrix();
     while (!converged){
         cout<<"iteration: "<<iteratorK<<endl;
-        resetForces(true);	//do reset packing forces
+        if (implicitPacking){
+            resetForces(true);	// reset packing forces
+        }
+        else{
+            resetForces(false);	// do not reset packing forces
+        }
         NRSolver->setMatricesToZeroInsideIteration();
         if (numericalCalculation){
         	calculateNumericalJacobian(displayMatricesDuringNumericalCalculation);
         }
         NRSolver->calculateDisplacementMatrix(dt);
-		NRSolver->calculateForcesAndJacobianMatrixNR(Nodes, Elements, dt, recordForcesOnFixedNodes, FixedNodeForces, outputFile);
-		//Writing elastic Forces and elastic Ke:
+        NRSolver->calculateForcesAndJacobianMatrixNR(Nodes, Elements, dt, recordForcesOnFixedNodes, FixedNodeForces, outputFile);
+	    //Writing elastic Forces and elastic Ke:
 		NRSolver->writeForcesTogeAndgvInternal(Nodes, Elements, SystemForces);
-		NRSolver->writeImplicitElementalKToJacobian(Elements);
-		if (numericalCalculation){
+	    NRSolver->writeImplicitElementalKToJacobian(Elements);
+	    if (numericalCalculation){
 			NRSolver->calculateDifferenceBetweenNumericalAndAnalyticalJacobian(Nodes, displayMatricesDuringNumericalCalculation);
 			if(useNumericalKIncalculation){
 				NRSolver->useNumericalJacobianInIteration();
 			}
 		}
-		NRSolver->calculateExternalViscousForcesForNR();
-		NRSolver->addImplicitKViscousExternalToJacobian();
-        calculatePackingImplicit3D();
-        calculatePackingNumerical3D(NRSolver->K);
+		NRSolver->calculateExternalViscousForcesForNR(Nodes);
+	    NRSolver->addImplicitKViscousExternalToJacobian(Nodes,dt);
+	    //These are the calculation of packing forces that would work if I wanted implicit packing
+	    if (implicitPacking){
+	    	calculatePackingForcesImplicit3D();
+	    	calculatePackingJacobianNumerical3D(NRSolver->K);
+	    }
+	    //End of packing forces.
         //Now I will check if there are any nodes with zero mass, then I will be able to fill in the zero K matrix with identity if necessary.
         NRSolver->checkJacobianForAblatedNodes(AblatedNodes);
         NRSolver->calculateSumOfInternalForces();
-		if (PipetteSuction && timestep >= PipetteInitialStep && timestep<PipetteEndStep){
+        if (PipetteSuction && timestep >= PipetteInitialStep && timestep<PipetteEndStep){
 			packToPipetteWall();
 			calculateZProjectedAreas();
 			addPipetteForces(NRSolver->gExt);
@@ -3939,7 +3942,6 @@ void Simulation::updateStepNR(){
 			addRandomForces(NRSolver->gExt);
 		}
         NRSolver->addExernalForces();
-
         checkForExperimentalSetupsWithinIteration();
         NRSolver->calcutateFixedK(Nodes);
         //cout<<"checking convergence with forces"<<endl;
@@ -3966,210 +3968,7 @@ void Simulation::updateStepNR(){
     //Element positions are already up to date.
     cout<<"finished run one step"<<endl;
 }
-/*
-void Simulation::updateStepNR(){
-    int dim  = 3;
-    int iteratorK = 0;
-    bool converged = false;
-    gsl_matrix* un = gsl_matrix_calloc(dim*nNodes,1);
-    constructUnMatrix(un);
-    gsl_matrix* mvisc = gsl_matrix_calloc(dim*nNodes,dim*nNodes);
-    gsl_matrix* mviscPerDt = gsl_matrix_calloc(dim*nNodes,dim*nNodes);
-    constructLumpedMassExternalViscosityDtMatrix(mvisc,mviscPerDt);
-    gsl_matrix* ge = gsl_matrix_calloc(dim*nNodes,1);
-    gsl_matrix* gvInternal = gsl_matrix_calloc(dim*nNodes,1);
-    gsl_matrix* gvExternal = gsl_matrix_calloc(dim*nNodes,1);
-    gsl_matrix* gExt = gsl_matrix_calloc(dim*nNodes,1);
-    gsl_vector* gSum = gsl_vector_calloc(dim*nNodes);
-    gsl_matrix* uk = gsl_matrix_calloc(dim*nNodes,1);
-    gsl_matrix* displacementPerDt = gsl_matrix_calloc(dim*nNodes,1);
-    gsl_vector* deltaU = gsl_vector_calloc(dim*nNodes);
-    Elements[0]->createMatrixCopy(uk,un);
-    //gsl_matrix_set(uk,9,0,gsl_matrix_get(un,2,0)-10); //node 3_x
-    //gsl_matrix_set(uk,30,0,gsl_matrix_get(un,30,0)-10); //node 10_x
-    gsl_matrix* K = gsl_matrix_calloc(dim*nNodes,dim*nNodes);
-    gsl_matrix* Knumerical = gsl_matrix_calloc(dim*nNodes,dim*nNodes);
 
-    //Elements[0]->displayMatrix(mviscdt,"mviscdt");
-    //cout<<" checking for Pipette forces: "<<PipetteSuction<<" Pipette time: "<<PipetteInitialStep<<" "<<PipetteEndStep<<" timestep "<<timestep<<endl;
-    while (!converged){
-        cout<<"iteration: "<<iteratorK<<endl;
-        //Elements[0]->displayMatrix(Elements[0]->TriPointF,"Element0TriPointF");
-        //cout<<"Element 0 BasalArea: "<<Elements[0]->ReferenceShape->BasalArea<<endl;
-        resetForces(true);	//do reset packing forces
-        //cout<<"after reset forces"<<endl;
-        gsl_matrix_set_zero(ge);
-        gsl_matrix_set_zero(gvInternal);
-        gsl_matrix_set_zero(gvExternal);
-        gsl_matrix_set_zero(K);
-        gsl_vector_set_zero(gSum);
-
-        bool numericalCalculation = false;
-        bool displayMAtricesDuringNumericalCalculation = false;
-        bool useNumericalKIncalculation = false;
-        if (numericalCalculation){
-            gsl_matrix_set_zero(Knumerical);
-    		calculateDisplacementMatrix(uk,un,displacementPerDt);
-			//Trying to see the manual values:
-			resetForces(true); // reset the packing forces together with all the rest of the forces here
-			//No perturbation:
-			gsl_matrix* ge_noPerturb = gsl_matrix_calloc(dim*nNodes,1);
-			gsl_matrix* gvInternal_noPerturb = gsl_matrix_calloc(dim*nNodes,1);
-			calculateForcesAndJacobianMatrixNR(displacementPerDt);
-			writeForcesTogeAndgvInternal(ge_noPerturb,gvInternal_noPerturb);
-			//perturbation loop:
-			gsl_matrix* uk_original = gsl_matrix_calloc(dim*nNodes,1);
-			gsl_matrix_memcpy(uk_original,uk);
-			for (int i=0; i<nNodes; ++i){
-				for (int j=0; j<3; ++j){
-					resetForces(true); // reset the packing forces together with all the rest of the forces here
-					gsl_matrix_set(uk,i*3+j,0,gsl_matrix_get(uk,i*3+j,0)+1E-6);
-					calculateDisplacementMatrix(uk,un,displacementPerDt);
-					Nodes[i]->Position[j] += 1E-6;
-					updateElementPositions();
-					calculateForcesAndJacobianMatrixNR(displacementPerDt);
-					gsl_matrix* ge_withPerturb = gsl_matrix_calloc(dim*nNodes,1);
-					gsl_matrix* gvInternal_withPerturb = gsl_matrix_calloc(dim*nNodes,1);
-					writeForcesTogeAndgvInternal(ge_withPerturb,gvInternal_withPerturb);
-					//Elements[0]->displayMatrix(ge_withPerturb,"ge-withPerturbation");
-					//Elements[0]->displayMatrix(gvInternal_withPerturb,"gvInternal-withPerturbation");
-					//Calculate dg/dx:
-					gsl_matrix_sub(ge_withPerturb,ge_noPerturb);
-					gsl_matrix_sub(gvInternal_withPerturb,gvInternal_noPerturb);
-					gsl_matrix_scale(ge_withPerturb,1.0/1E-6);
-					gsl_matrix_scale(gvInternal_withPerturb,1.0/1E-6);
-					//Elements[0]->displayMatrix(ge_withPerturb,"dgedx");
-					//Elements[0]->displayMatrix(gvInternal_withPerturb,"dgvdx");
-					for (int k=0; k<nNodes*3; ++k){
-						double valueElastic =   0;//gsl_matrix_get(ge_withPerturb,k,0);
-						double valueViscous = 	gsl_matrix_get(gvInternal_withPerturb,k,0);
-						double value = valueElastic + valueViscous;
-						value *= -1.0;
-						gsl_matrix_set(K,i*3+j,k,value);
-					}
-					gsl_matrix_memcpy(uk,uk_original);
-					//gsl_matrix_set(uk,i*3+j,0,gsl_matrix_get(uk,i*3+j,0)-1E-6);
-					Nodes[i]->Position[j] -= 1E-6;
-					updateElementPositions();
-				}
-			}
-	        calcutateFixedK(K,gSum);
-			if (displayMAtricesDuringNumericalCalculation){
-				Elements[0]->displayMatrix(K,"numericalK");
-			}
-			gsl_matrix_memcpy(Knumerical,K);
-	        gsl_matrix_set_zero(ge);
-	        gsl_matrix_set_zero(gvInternal);
-	        gsl_matrix_set_zero(gvExternal);
-	        gsl_matrix_set_zero(K);
-	        gsl_vector_set_zero(gSum);
-        }//end OF NUMERICAL CALCULATION
-
-		calculateDisplacementMatrix(uk,un,displacementPerDt);
-        calculateForcesAndJacobianMatrixNR(displacementPerDt);
-
-		//Writing elastic Forces and elastic Ke:
-		writeForcesTogeAndgvInternal(ge,gvInternal);
-		writeImplicitElementalKToJacobian(K);
-		if (numericalCalculation){
-			calcutateFixedK(K,gSum);
-			if(displayMAtricesDuringNumericalCalculation){
-				Elements[0]->displayMatrix(K,"normalK");
-			}
-		}
-		if (numericalCalculation){
-			gsl_matrix* Kdiff = gsl_matrix_calloc(dim*nNodes,dim*nNodes);
-			double d = 0;
-			for (int i=0; i<dim*nNodes; ++i){
-				for (int j=0; j<dim*nNodes; ++j){
-					double value = gsl_matrix_get(Knumerical,i,j) - gsl_matrix_get(K,i,j);
-					gsl_matrix_set(Kdiff,i,j,value);
-					d += value*value;
-				}
-			}
-			d = pow(d,0.5);
-			if(displayMAtricesDuringNumericalCalculation){
-				Elements[0]->displayMatrix(Kdiff,"differenceKMatrix");
-			}
-			cout<<"norm of difference between numerical and analytical K: "<<d<<endl;
-			if(useNumericalKIncalculation){
-				gsl_matrix_memcpy(K,Knumerical);
-			}
-		}
-        calculateExternalViscousForcesForNR(gvExternal,mvisc,displacementPerDt);
-        addImplicitKViscousExternalToJacobian(K,mviscPerDt);
-        calculatePackingImplicit3D();
-        calculatePackingNumerical3D(K);
-        //Now I will check if there are any nodes with zero mass, then I will be able to fill in the zero K matrix with identity if necessary.
-        int nAblatedNode = AblatedNodes.size();
-        for (int a = 0; a<nAblatedNode; ++a){
-        	int NodeId = AblatedNodes[a]*3;
-        	for (int aa= 0; aa<3; ++aa){
-				double Kdiagonal = gsl_matrix_get(K,NodeId+aa,NodeId+aa);
-				if (Kdiagonal == 0){
-					gsl_matrix_set(K,NodeId+aa,NodeId+aa,1);
-				}
-        	}
-        }
-        for (int i=0; i<dim*nNodes; ++i){
-            gsl_vector_set(gSum,i,gsl_matrix_get(ge,i,0)+gsl_matrix_get(gvInternal,i,0)+gsl_matrix_get(gvExternal,i,0));
-        }
-        gsl_matrix_set_zero(gExt);
-		if (PipetteSuction && timestep >= PipetteInitialStep && timestep<PipetteEndStep){
-			packToPipetteWall();
-			calculateZProjectedAreas();
-			addPipetteForces(gExt);
-		}
-		addMyosinForces(gExt);
-		addPackingForces(gExt);
-		if (addingRandomForces){
-			addRandomForces(gExt);
-		}
-		//cout<<"after random forces addition"<<endl;
-        for (int i=0; i<dim*nNodes; ++i){
-            gsl_vector_set(gSum,i,gsl_vector_get(gSum,i)+gsl_matrix_get(gExt,i,0));
-        }
-        checkForExperimentalSetupsWithinIteration();
-        calcutateFixedK(K,gSum);
-        //cout<<"checking convergence with forces"<<endl;
-        //converged = checkConvergenceViaForce(gSum);
-        if (converged){
-            break;
-        }
-        //cout<<"solving for deltaU"<<endl;
-        solveForDeltaU(K,gSum,deltaU);
-        //cout<<"checking convergence"<<endl;
-        converged = checkConvergenceViaDeltaU(deltaU);
-        updateUkInNR(uk,deltaU);
-        updateElementPositionsinNR(uk);
-        updateNodePositionsNR(uk);
-        iteratorK ++;
-        if (!converged && iteratorK > 20){
-            cerr<<"Error: did not converge!!!"<<endl;
-            converged = true;
-        }
-    }
-
-    checkForExperimentalSetupsAfterIteration();
-    //Now the calculation is converged, I update the node positions with the latest positions uk:
-    updateNodePositionsNR(uk);
-    //Element positions are already up to date.
-    gsl_matrix_free(un);
-    gsl_matrix_free(displacementPerDt);
-    gsl_matrix_free(mvisc);
-    gsl_matrix_free(mviscPerDt);
-    gsl_matrix_free(ge);
-    gsl_matrix_free(gvInternal);
-    gsl_matrix_free(gvExternal);
-    gsl_matrix_free(gExt);
-    gsl_vector_free(gSum);
-    gsl_matrix_free(uk);
-    gsl_vector_free(deltaU);
-    gsl_matrix_free(K);
-
-    cout<<"finished run one step"<<endl;
-}
-*/
 void Simulation::calculateRandomForces(){
 	randomForces.empty();
 	randomForces=RandomGenerator::Obj().getNormRV( randomForceMean,randomForceVar, 3*nNodes );
@@ -4202,26 +4001,6 @@ void Simulation::addRandomForces(gsl_matrix* gExt){
 			gsl_matrix_set(gExt,j,0,F);
 		}
 }
-/*
-void Simulation::calcutateFixedK(gsl_matrix* K, gsl_vector* g){
-    int dim = 3;
-    int Ksize = K->size1;
-    for(int i=0; i<nNodes; i++){
-        for (int j=0; j<dim; ++j){
-            //if ( (Xfixed && j == 0) || (Yfixed && j == 1) || (Zfixed && j == 2) ){
-            if (Nodes[i]->FixedPos[j]){
-                int index1 = i*dim+j;
-                gsl_vector_set(g,index1,0.0); // making the forces zero
-                for (int k =0; k<Ksize; ++k){
-                    double value =0.0;
-                    if (index1 == k ){value =1.0;}
-                    gsl_matrix_set(K, index1, k, value);
-                    gsl_matrix_set(K, k, index1, value); //K is symmetric;
-                }
-            }
-        }
-    }
-}*/
 
 void Simulation::updateNodePositionsNR(gsl_matrix* uk){
     int dim = 3;
@@ -4232,11 +4011,6 @@ void Simulation::updateNodePositionsNR(gsl_matrix* uk){
     }
     //cout<<"finised node pos update"<<endl;
 }
-/*
-void Simulation::addImplicitKViscousExternalToJacobian(gsl_matrix* K, gsl_matrix*  mviscPerDt){
-    gsl_matrix_add(K,mviscPerDt);
-}
-*/
 
 void Simulation::updateElementPositionsinNR(gsl_matrix* uk){
     int dim = 3;
@@ -4254,367 +4028,114 @@ void Simulation::updateElementPositionsinNR(gsl_matrix* uk){
         }
     }
 }
-/*
-void Simulation::updateUkInNR(gsl_matrix* uk, gsl_vector* deltaU){
-    int n = uk->size1;
-    for (int i=0; i<n;++i){
-        double newValue = gsl_matrix_get(uk,i,0)+gsl_vector_get(deltaU,i);
-        gsl_matrix_set(uk,i,0,newValue);
-    }
-    //deltU for node 0 z: 0*3 + 3  = 3 -> index 2
-    //deltaU for node 48 z: 43*3 +3 = 132 -> index 131
-}
-*/
-/*
-void Simulation::solveForDeltaU(gsl_matrix* K, gsl_vector* g, gsl_vector* deltaU){
-    int dim = 3;
-    const int nmult  = dim*nNodes;
 
-    int *ia = new int[nmult+1];
-    double *b = new double[nmult];
-    vector <int> ja_vec;
-    vector <double> a_vec;
-
-    constructiaForPardiso(K, ia, nmult, ja_vec, a_vec);
-    const int nNonzero = ja_vec.size();
-    int* ja = new int[nNonzero];
-    double* a = new double [nNonzero];
-    writeKinPardisoFormat(nNonzero, ja_vec, a_vec, ja, a);
-    writeginPardisoFormat(g,b,nmult);
-    int error = solveWithPardiso(a, b, ia, ja, deltaU , nmult);
-    if (error != 0){cerr<<"Pardiso solver did not return success!!"<<endl;}
-    delete[] ia;
-    delete[] ja;
-    delete[] a;
-    delete[] b;
-}
-*/
-/*
-
-#include <math.h>
-// PARDISO prototype.
-extern "C" void pardisoinit (void   *, int    *,   int *, int *, double *, int *);
-extern "C" void pardiso     (void   *, int    *,   int *, int *,    int *, int *, double *, int    *,    int *, int *,   int *, int *,   int *, double *, double *, int *, double *);
-extern "C" void pardiso_chkmatrix  (int *, int *, double *, int *, int *, int *);
-extern "C" void pardiso_chkvec     (int *, int *, double *, int *);
-extern "C" void pardiso_printstats (int *, int *, double *, int *, int *, int *, double *, int *);
-
-
-int Simulation::solveWithPardiso(double* a, double*b, int* ia, int* ja, gsl_vector* deltaU ,const int n_variables){
-
-    // I am copying my libraries to a different location for this to work:
-    // On MAC:
-    // cp /usr/local/lib/gcc/x86_64-apple-darwin14.4.0/4.7.4/libgfortran.3.dylib /usr/local/lib/
-    // cp /usr/local/lib/gcc/x86_64-apple-darwin14.4.0/4.7.4/libgomp.1.dylib /usr/local/lib/
-    // cp /usr/local/lib/gcc/x86_64-apple-darwin14.4.0/4.7.4/libquadmath.0.dylib /usr/local/lib/
-    // cp libpardiso500-MACOS-X86-64.dylib usr/local/lib
-    //
-    // compilation:
-    // g++ pardiso_sym.cpp -o pardiso_sym  -L./ -L/usr/local/lib -L/usr/lib/  -lpardiso500-MACOS-X86-64 -llapack
-
-
-    // On ubuntu,
-    // cp libpardiso500-GNU461-X86-64.so /usr/lib/
-    //
-    // sometimes linux cannot recognise liblapack.so.3gf or liblapack.so.3.0.1 or others like this, are essentially liblapack.so
-    // on ubuntu you can get this solved by installing liblapack-dev:
-    // sudo apt-get install liblapack-dev
-    //
-    // compilation:
-    // gcc test.cpp -o testexe  -L/usr/lib/  -lpardiso500-GNU461-X86-64  -fopenmp  -llapack
-
-    //
-    // also for each terminal run:
-    // export OMP_NUM_THREADS=1
-    // For mkl this is :
-    // export MKL_PARDISO_OOC_MAX_CORE_SIZE=10000
-    // export MKL_PARDISO_OOC_MAX_SWAP_SIZE=2000
-    //
-    // MSGLVL: the level of verbal output, 0 is no output.
-
-    int    n = n_variables;
-    int    nnz = ia[n];
-    int    mtype = 11;        // Real unsymmetric matrix //
-
-    // RHS and solution vectors.
-    int      nrhs = 1;          // Number of right hand sides. //
-    double   x[n_variables], diag[n_variables];
-    // Internal solver memory pointer pt,                  //
-    // 32-bit: int pt[64]; 64-bit: long int pt[64]         //
-    // or void *pt[64] should be OK on both architectures  //
-    void    *pt[64];
-
-    // Pardiso control parameters. //
-    int      iparm[64];
-    double   dparm[64];
-    int      maxfct, mnum, phase, error, msglvl, solver;
-
-    iparm[60] = 1; //use in-core version when there is enough memory, use out of core version when not.
-
-    // Number of processors. //
-    int      num_procs;
-
-    // Auxiliary variables. //
-    char    *var;
-    int      i, k;
-
-    double   ddum;              // Double dummy
-    int      idum;              // Integer dummy.
-
-
-// -------------------------------------------------------------------- //
-// ..  Setup Pardiso control parameters.                                //
-// -------------------------------------------------------------------- //
-
-    error = 0;
-    solver = 0; // use sparse direct solver
-    pardisoinit (pt,  &mtype, &solver, iparm, dparm, &error);
-
-    if (error != 0)
-    {
-        if (error == -10 )
-           printf("No license file found \n");
-        if (error == -11 )
-           printf("License is expired \n");
-        if (error == -12 )
-           printf("Wrong username or hostname \n");
-         return 1;
-    }
-    else
-        //printf("[PARDISO]: License check was successful ... \n");
-
-    // Numbers of processors, value of OMP_NUM_THREADS
-    var = getenv("OMP_NUM_THREADS");
-    if(var != NULL)
-        sscanf( var, "%d", &num_procs );
-    else {
-        printf("Set environment OMP_NUM_THREADS to 1");
-        exit(1);
-    }
-    iparm[2]  = num_procs;
-
-    maxfct = 1;		    // Maximum number of numerical factorizations.
-    mnum   = 1;         // Which factorization to use.
-
-    iparm[10] = 0; // no scaling
-    iparm[12] = 0; // no matching
-
-    msglvl = 0;         // Print statistical information
-    error  = 0;         // Initialize error flag
-
-// --------------------------------------------------------------------
-// ..  Convert matrix from 0-based C-notation to Fortran 1-based
-//     notation.
-// --------------------------------------------------------------------
-    for (i = 0; i < n+1; i++) {
-        ia[i] += 1;
-    }
-    for (i = 0; i < nnz; i++) {
-        ja[i] += 1;
-    }
-
-// -------------------------------------------------------------------- /
-//  .. pardiso_chk_matrix(...)                                          /
-//     Checks the consistency of the given matrix.                      /
-//     Use this functionality only for debugging purposes               /
-// -------------------------------------------------------------------- /
-    bool carryOutDebuggingChecks = false;
-    if (carryOutDebuggingChecks){
-        pardiso_chkmatrix  (&mtype, &n, a, ia, ja, &error);
-        if (error != 0) {
-            printf("\nERROR in consistency of matrix: %d", error);
-            exit(1);
-        }
-    }
-// -------------------------------------------------------------------- /
-// ..  pardiso_chkvec(...)                                              /
-//     Checks the given vectors for infinite and NaN values             /
-//     Input parameters (see PARDISO user manual for a description):    /
-//     Use this functionality only for debugging purposes               /
-// -------------------------------------------------------------------- /
-
-    if (carryOutDebuggingChecks){
-        pardiso_chkvec (&n, &nrhs, b, &error);
-        if (error != 0) {
-            printf("\nERROR  in right hand side: %d", error);
-            exit(1);
-        }
-    }
-// -------------------------------------------------------------------- /
-// .. pardiso_printstats(...)                                           /
-//    prints information on the matrix to STDOUT.                       /
-//    Use this functionality only for debugging purposes                /
-// -------------------------------------------------------------------- /
-    if (carryOutDebuggingChecks){
-        pardiso_printstats (&mtype, &n, a, ia, ja, &nrhs, b, &error);
-        if (error != 0) {
-            printf("\nERROR right hand side: %d", error);
-            exit(1);
-        }
-    }
-// -------------------------------------------------------------------- /
-// ..  Reordering and Symbolic Factorization.  This step also allocates /
-//     all memory that is necessary for the factorization.              /
-// -------------------------------------------------------------------- /
-    phase = 11;
-    pardiso (pt, &maxfct, &mnum, &mtype, &phase,
-             &n, a, ia, ja, &idum, &nrhs,
-             iparm, &msglvl, &ddum, &ddum, &error, dparm);
-//cout<<"symbolic factorisation"<<endl;
-    if (error != 0) {
-        printf("\nERROR during symbolic factorization: %d", error);
-        exit(1);
-    }
-    //printf("\nReordering completed ... ");
-    //printf("\nNumber of nonzeros in factors  = %d", iparm[17]);
-    //printf("\nNumber of factorization MFLOPS = %d", iparm[18]);
-
-// -------------------------------------------------------------------- /
-// ..  Numerical factorization.                                         /
-// -------------------------------------------------------------------- /
-    phase = 22;
-//    iparm[32] = 1; // compute determinant
-
-    pardiso (pt, &maxfct, &mnum, &mtype, &phase,
-             &n, a, ia, ja, &idum, &nrhs,
-             iparm, &msglvl, &ddum, &ddum, &error,  dparm);
-//cout<<"numerical factorisation"<<endl;
-    if (error != 0) {
-        printf("\nERROR during numerical factorization: %d", error);
-        exit(2);
-    }
-    //printf("\nFactorization completed ...\n ");
-
-// -------------------------------------------------------------------- //
-// ..  Back substitution and iterative refinement.                      //
-// -------------------------------------------------------------------- //
-
-// phase = 33;
-//
-//    iparm[7] = 1;       // Max numbers of iterative refinement steps.
-//
-//    pardiso (pt, &maxfct, &mnum, &mtype, &phase,
-//             &n, a, ia, ja, &idum, &nrhs,
-//             iparm, &msglvl, b, x, &error,  dparm);
-//
-//    if (error != 0) {
-//        printf("\nERROR during solution: %d", error);
-//        exit(3);
-//    }
-//    bool displayResult = false;
-//    if (displayResult){
-//        printf("\nSolve completed ... ");
-//        printf("\nThe solution of the system is: ");
-//        for (i = 0; i < n; i++) {
-//           printf("\n x [%d] = % f", i, x[i] );
-//        }
-//        printf ("\n");
-//    }
-//    //Write x into deltaU:
-//    for (int i=0; i<n_variables; ++i){
-//        gsl_vector_set(deltaU,i,x[i]);
-//   }
-
-
-// -------------------------------------------------------------------- /
-// ..  Back substitution with tranposed matrix A^t x=b                  /
-// -------------------------------------------------------------------- /
-
-	phase = 33;
-	//iparm[4]  = 61;	 //changing the precision of convergence with pre-conditioning, not sure what it does, I added as trial, but did not change anything
-	iparm[7]  = 1;       // Max numbers of iterative refinement steps.
-	iparm[11] = 1;       // Solving with transpose matrix.
-
-	pardiso (pt, &maxfct, &mnum, &mtype, &phase,
-			 &n, a, ia, ja, &idum, &nrhs,
-			 iparm, &msglvl, b, x, &error,  dparm);
-
-	if (error != 0) {
-		printf("\nERROR during solution: %d", error);
-		exit(3);
-	}
-
-	bool displayResult = false;
-	if (displayResult){
-		printf("\nSolve completed ... ");
-		printf("\nThe solution of the system is: ");
-		for (i = 0; i < n; i++) {
-			printf("\n x [%d] = % f", i, x[i] );
-		}
-		printf ("\n");
-	}
-    //Write x into deltaU:
-    for (int i=0; i<n_variables; ++i){
-        gsl_vector_set(deltaU,i,x[i]);
-    }
-
-// -------------------------------------------------------------------- /
-// ..  Convert matrix back to 0-based C-notation.                       /
-// -------------------------------------------------------------------- /
-    for (i = 0; i < n+1; i++) {
-        ia[i] -= 1;
-    }
-    for (i = 0; i < nnz; i++) {
-        ja[i] -= 1;
-    }
-
-// -------------------------------------------------------------------- //
-// ..  Termination and release of memory.                               //
-// -------------------------------------------------------------------- //
-    phase = -1;                 // Release internal memory.
-
-    pardiso (pt, &maxfct, &mnum, &mtype, &phase,
-             &n, &ddum, ia, ja, &idum, &nrhs,
-             iparm, &msglvl, &ddum, &ddum, &error,  dparm);
-    return 0;
-}
-*/
-/*
-void Simulation::constructiaForPardiso(gsl_matrix* K, int* ia, const int nmult, vector<int> &ja_vec, vector<double> &a_vec){
-    double negThreshold = -1E-13, posThreshold = 1E-13;
-    //count how many elements there are on K matrix and fill up ia:
-    int counter = 0;
-    for (int i =0; i<nmult; ++i){
-        bool wroteiaForThisRow = false;
-        for (int j=0; j<nmult; ++j){
-            double Kvalue = gsl_matrix_get(K,i,j);
-            if (Kvalue>posThreshold || Kvalue<negThreshold){
-                ja_vec.push_back(j);
-                a_vec.push_back(Kvalue);
-                if (!wroteiaForThisRow){
-                    //cout<<"writing is for row "<<i<<" column is: "<<j<<endl;
-                    ia[i] = counter;
-                    wroteiaForThisRow = true;
-                }
-                counter++;
-            }
-        }
-    }
-    ia[nmult] = counter;
-}
-*/
-/*
-void Simulation::writeKinPardisoFormat(const int nNonzero, vector<int> &ja_vec, vector<double> &a_vec, int* ja, double* a){
-    //now filling up the int & double arrays for ja, a
-    for (int i=0 ; i<nNonzero; ++i){
-        ja[i] = ja_vec[i];
-        a[i]  = a_vec [i];
-    }
-}
-*/
-/*
-void Simulation::writeginPardisoFormat(gsl_vector* g, double* b, const int n){
-    for (int i=0; i<n; ++i){
-        b[i] = gsl_vector_get(g,i);
-    }
-}
-*/
-void Simulation::calculatePackingImplicit3D(){
+void Simulation::calculatePackingForcesExplicit3D(){
+	//cout<<"inside calculatePackingForcesExplicit3D, size of packing node couples: "<<pacingNodeCouples0.size()<<endl;
 	int n = pacingNodeCouples0.size();
 	for(int i = 0 ; i<n; ++i){
 		int id0 = pacingNodeCouples0[i];
 		int id1 = pacingNodeCouples1[i];
-		double multiplier = 1;
+		//if (id0 == 3445 || id1 == 3445){
+		//	cout<<"calculating packing for nodes : "<<id0<<" "<<id1<<endl;
+		//}
+
+		double dx = Nodes[id0]->Position[0] - Nodes[id1]->Position[0];
+		double dy = Nodes[id0]->Position[1] - Nodes[id1]->Position[1];
+		double dz = Nodes[id0]->Position[2] - Nodes[id1]->Position[2];
+
+		double d = pow((dx*dx + dy*dy + dz*dz),0.5);
+
+		double averageMass = 0.5 *( Nodes[id0]->mass + Nodes[id1]->mass );
+		double sigmoidSaturation = 5;
+
+		double F = 5000.0 * averageMass / (1 + exp(sigmoidSaturation* d / packingThreshold));
+
+		double Fx = F * initialWeightPointx[i];
+		double Fy = F * initialWeightPointy[i];
+		double Fz = F * initialWeightPointz[i];
+		PackingForces[id0][0] += Fx;
+		PackingForces[id0][1] += Fy;
+		PackingForces[id0][2] += Fz;
+		PackingForces[id1][0] -= Fx;
+		PackingForces[id1][1] -= Fy;
+		PackingForces[id1][2] -= Fz;
+		if (id0 == 3444 || id0 == 3444 || id1 == 3444 || id1 == 3444){
+			cout<<"id0: "<<id0<<" id1: "<<id1<<endl;
+			cout<<" dx: "<<dx<<" dy: "<<dy<<" dz: "<<dz<<" d: "<<d<<endl;
+			cout<<" Fz: "<<Fx<<" Fy: "<<Fy<<" Fz: "<<Fz<<" F: "<<F<<endl;
+			cout<<" initialWeightPoins: "<<initialWeightPointx[i]<<" "<<initialWeightPointy[i]<<" "<<initialWeightPointz[i]<<endl;
+			cout<<" PackingForces["<<id0<<"]: "<<PackingForces[id0][0]<<" "<<PackingForces[id0][1]<<" "<<PackingForces[id0][2]<<endl;
+			cout<<" PackingForces["<<id1<<"]: "<<PackingForces[id1][0]<<" "<<PackingForces[id1][1]<<" "<<PackingForces[id1][2]<<endl;
+		}
+	}
+}
+
+void Simulation::calculatePackingForcesImplicit3D(){
+	//cout<<"inside calculatePackingForcesImplicit3D, size of packing node couples: "<<pacingNodeCouples0.size()<<endl;
+	int n = pacingNodeCouples0.size();
+	for(int i = 0 ; i<n; ++i){
+		int id0 = pacingNodeCouples0[i];
+		int id1 = pacingNodeCouples1[i];
+		double multiplier = 500;
+		//if (id0 == 3445 || id1 == 3445){
+		//	cout<<"calculating packing for nodes : "<<id0<<" "<<id1<<endl;
+		//}
+
+/*		double dx = Nodes[id0]->Position[0] - Nodes[id1]->Position[0];
+		if (initialWeightPointx[i] < 0 ){
+			dx *= -1.0;
+		}
+		double Fx = 100.0*dx;
+		Fx *=  initialWeightPointx[i];
+		PackingForces[id0][0] += Fx;
+		PackingForces[id1][0] -= Fx;
+*/
+
+
+		//sigmoid test:
+		double dx = Nodes[id0]->Position[0] - Nodes[id1]->Position[0];
+		double dy = Nodes[id0]->Position[1] - Nodes[id1]->Position[1];
+		double dz = Nodes[id0]->Position[2] - Nodes[id1]->Position[2];
+
+		double averageMass = 0.5 *( Nodes[id0]->mass + Nodes[id1]->mass );
+		double sigmoidSaturation = 5;
+
+		if (initialWeightPointx[i]>0){
+			dx *= -1.0;
+		}
+		if (initialWeightPointy[i]>0){
+			dy *= -1.0;
+		}
+		if (initialWeightPointz[i]>0){
+			dz *= -1.0;
+		}
+		double Fx = multiplier * averageMass / (1 + exp(sigmoidSaturation / packingThreshold * (-1.0*dx)));
+		Fx *= initialWeightPointx[i];
+
+		double Fy = multiplier * averageMass / (1 + exp(sigmoidSaturation / packingThreshold * (-1.0*dy)));
+		Fy *= initialWeightPointy[i];
+
+		double Fz = multiplier * averageMass / (1 + exp(sigmoidSaturation / packingThreshold * (-1.0*dz)));
+		Fz *= initialWeightPointz[i];
+
+		PackingForces[id0][0] += Fx;
+		PackingForces[id0][1] += Fy;
+		PackingForces[id0][2] += Fz;
+		PackingForces[id1][0] -= Fx;
+		PackingForces[id1][1] -= Fy;
+		PackingForces[id1][2] -= Fz;
+
+		//if ((id0 == 3444 && id1 == 3444 )|| (id0 == 3190 || id1 == 3444)){
+		//	cout<<"id0: "<<id0<<" id1: "<<id1<<endl;
+		//	cout<<" dx: "<<dx<<" dy: "<<dy<<" dz: "<<dz<<" d: "<<d<<endl;
+		//	cout<<" Fx: "<<Fx<<" Fy: "<<Fy<<" Fz: "<<Fz<<" F: "<<F<<endl;
+		//	cout<<" position ["<<id0<<"][0]: "<<Nodes[id0]->Position[0]<<"  position ["<<id1<<"][0]: "<<Nodes[id1]->Position[0]<<endl;
+		//	cout<<" initialWeightPoins: "<<initialWeightPointx[i]<<" "<<initialWeightPointy[i]<<" "<<initialWeightPointz[i]<<endl;
+		//	cout<<" PackingForces["<<id0<<"]: "<<PackingForces[id0][0]<<" "<<PackingForces[id0][1]<<" "<<PackingForces[id0][2]<<endl;
+		//	cout<<" PackingForces["<<id1<<"]: "<<PackingForces[id1][0]<<" "<<PackingForces[id1][1]<<" "<<PackingForces[id1][2]<<endl;
+		//}
+
+		/*double multiplier = 1;
 		double p = 2; //the power of the division (d/t);
 
 		double dx = Nodes[id0]->Position[0] - Nodes[id1]->Position[0];
@@ -4636,13 +4157,15 @@ void Simulation::calculatePackingImplicit3D(){
 		PackingForces[id1][0] -= Fx;
 		PackingForces[id1][1] -= Fy;
 		PackingForces[id1][2] -= Fz;
+		*/
 
-		//cout<<" packing force mag: "<<Fmag <<endl;
-		//cout<<" node0("<<id0<<") pos: "<<Nodes[id0]->Position[0]<<" "<<Nodes[id0]->Position[1]<<" "<<Nodes[id0]->Position[2]<<endl;
-		//cout<<" node1("<<id1<<") pos: "<<Nodes[id1]->Position[0]<<" "<<Nodes[id1]->Position[1]<<" "<<Nodes[id1]->Position[2]<<endl;
-		//cout<<" dx, dy, dz: "<<dx<<" "<<dy<<" "<<dz<<" d: "<<d<<endl;
-		//cout<<" packing force: "<<0 <<" "<<0<<" "<<Fmag<<endl;
-		//cout<<" aveerage mass: "<<averageMass<<" dz: "<<dz<<endl;
+		//if (id0 == 3445 || id1 == 3445){
+		//	cout<<" packing force : "<<Fx <<" "<<Fy<<" "<<Fz<<endl;
+		//	cout<<" node0("<<id0<<") pos: "<<Nodes[id0]->Position[0]<<" "<<Nodes[id0]->Position[1]<<" "<<Nodes[id0]->Position[2]<<endl;
+		//	cout<<" node1("<<id1<<") pos: "<<Nodes[id1]->Position[0]<<" "<<Nodes[id1]->Position[1]<<" "<<Nodes[id1]->Position[2]<<endl;
+		//	cout<<" dx, dy, dz: "<<dx<<" "<<dy<<" "<<dz<<endl;
+		//	cout<<" average mass: "<<averageMass<<" dz: "<<dz<<endl;
+		//}
 	}
 }
 void Simulation::calculatePackingImplicit3DnotWorking(){
@@ -4759,27 +4282,28 @@ void Simulation::calculatePackingImplicit3DnotWorking(){
 		double Fmagz = initialWeightPointz[i]*Fmag;
 
 
-		PackingForces[id0][0] += Fmagx ;
-		PackingForces[id0][1] += Fmagy ;
+		//PackingForces[id0][0] += Fmagx ;
+		//PackingForces[id0][1] += Fmagy ;
 		PackingForces[id0][2] += Fmagz ;
 
-		PackingForces[id1][0] -= Fmagx ;
-		PackingForces[id1][1] -= Fmagy ;
+		//PackingForces[id1][0] -= Fmagx ;
+		//PackingForces[id1][1] -= Fmagy ;
 		PackingForces[id1][2] -= Fmagz ;
 		cout<<"ids: "<<id0<<" "<<id1<<" d: "<<dx<<" "<<dy<<" "<<dz<<" F: "<<Fmagx<<" "<<Fmagy<<" "<<Fmagz<<endl;
 	}
 }
 
-void Simulation::calculatePackingNumerical3D(gsl_matrix* K){
+void Simulation::calculatePackingJacobianNumerical3D(gsl_matrix* K){
 	int n = pacingNodeCouples0.size();
 	for(int i = 0 ; i<n; ++i){
 		int id0 = pacingNodeCouples0[i];
 		int id1 = pacingNodeCouples1[i];
-		double averageMass = 0.5 *( Nodes[id0]->mass + Nodes[id1]->mass );
-		double multiplier = 1;
-		double c = multiplier * averageMass;
+		double multiplier = 500;
+		/*double multiplier = 1;
 		double p = 2; //the power of the division (d/t);
+		double averageMass = 0.5 *( Nodes[id0]->mass + Nodes[id1]->mass );
 
+		double c = multiplier * averageMass;
 		double perturbation = 0.0000001;
 
 		double dx = Nodes[id0]->Position[0] - Nodes[id1]->Position[0];
@@ -4789,25 +4313,22 @@ void Simulation::calculatePackingNumerical3D(gsl_matrix* K){
 		double Fx = c * (1 - pow(dx/packingThreshold,p));
 		double Fy = c * (1 - pow(dy/packingThreshold,p));
 		double Fz = c * (1 - pow(dz/packingThreshold,p));
-		//if (initialWeightPointx[i]>0){Fx *= -1.0;};
-		//if (initialWeightPointy[i]>0){Fy *= -1.0;};
-		//if (initialWeightPointz[i]>0){Fz *= -1.0;};
-		Fx =  -1.0 * initialWeightPointx[i] * c * (1 - pow(dx/packingThreshold,p));
-		Fy =  -1.0 * initialWeightPointy[i] * c * (1 - pow(dy/packingThreshold,p));
-		Fz =  -1.0 * initialWeightPointz[i] * c * (1 - pow(dz/packingThreshold,p));
+
+		Fx *=  initialWeightPointx[i];
+		Fy *=  initialWeightPointy[i];
+		Fz *=  initialWeightPointz[i];
 		double F0[3] = {Fx, Fy,  Fz};
 
 		dx += perturbation;
-		double Fxp =  -1.0 * initialWeightPointx[i] * c * (1 - pow(dx/packingThreshold,p));
+		double Fxp =  initialWeightPointx[i] * c * (1 - pow(dx/packingThreshold,p));
 		double F1[3] = {Fxp, Fy,  Fz};
 
 		dy += perturbation;
-		double Fyp =  -1.0 * initialWeightPointy[i] * c * (1 - pow(dy/packingThreshold,p));;
+		double Fyp =  initialWeightPointy[i] * c * (1 - pow(dy/packingThreshold,p));;
 		double F2[3] = {Fx, Fyp,  Fz};
 
 		dz += perturbation;
-		//Fz = c * (1 - pow(dz/threshold,p));
-		double Fzp =  -1.0 * initialWeightPointz[i] * c * (1 - pow(dz/packingThreshold,p));;
+		double Fzp =  initialWeightPointz[i] * c * (1 - pow(dz/packingThreshold,p));;
 		double F3[3] = {Fx, Fy,  Fzp};
 
 		double dgcxx = (F1[0]-F0[0])/ perturbation;
@@ -4841,25 +4362,129 @@ void Simulation::calculatePackingNumerical3D(gsl_matrix* K){
 		value -= dgcyy;
 		gsl_matrix_set(K,3*id1+1,3*id0+1,value);
 
-		//cout<<"dgczz: "<<dgczz<<endl;//" dgcxy: "<<dgcxy<<" dgcyx: "<<dgcyx<<" c: "<<c<<endl;
-		//cout<<"K matrix "<<3*id0+2<<" , "<<3*id0+2<<" : "<<gsl_matrix_get(K,3*id0+2,3*id0+2)<<endl;
+		//cout<<"dgczz: "<<dgczz<<" dgcxy: "<<dgcxy<<" dgcyx: "<<dgcyx<<" c: "<<c<<endl;
 		value = gsl_matrix_get(K,3*id0+2,3*id0+2);
 		value += dgczz;
 		gsl_matrix_set(K,3*id0+2,3*id0+2,value);
-		//cout<<"K matrix "<<3*id0+2<<" , "<<3*id0+2<<" : "<<gsl_matrix_get(K,3*id0+2,3*id0+2)<<endl;
-		//cout<<"K matrix "<<3*id0+2<<" , "<<3*id1+2<<" : "<<gsl_matrix_get(K,3*id0+2,3*id1+2)<<endl;
 		value = gsl_matrix_get(K,3*id0+2,3*id1+2);
 		value -= dgczz;
 		gsl_matrix_set(K,3*id0+2,3*id1+2,value);
-		//cout<<"K matrix "<<3*id0+2<<" , "<<3*id1+2<<" : "<<gsl_matrix_get(K,3*id0+2,3*id1+2)<<endl;
 
 		value = gsl_matrix_get(K,3*id1+2,3*id1+2);
 		value += dgczz;
 		gsl_matrix_set(K,3*id1+2,3*id1+2,value);
-
 		value = gsl_matrix_get(K,3*id1+2,3*id0+2);
 		value -= dgczz;
 		gsl_matrix_set(K,3*id1+2,3*id0+2,value);
+		*/
+
+
+/*
+		double dFxdx0 = 100.0*initialWeightPointx[i];
+		double dFxdx1 = -100.0*initialWeightPointx[i];
+
+		if (initialWeightPointx[i] < 0 ){
+			dFxdx0 *= -1.0;
+			dFxdx1 *= -1.0;
+		}
+		double value = gsl_matrix_get(K,3*id0,3*id0);
+		value -= dFxdx0;
+		gsl_matrix_set(K,3*id0,3*id0,value);
+
+		value = gsl_matrix_get(K,3*id0,3*id1);
+		value -= dFxdx1;
+		gsl_matrix_set(K,3*id0,3*id1,value);
+
+		value = gsl_matrix_get(K,3*id1,3*id1);
+		value -= dFxdx0;
+		gsl_matrix_set(K,3*id1,3*id1,value);
+
+		value = gsl_matrix_get(K,3*id1,3*id0);
+		value -= dFxdx1;
+		gsl_matrix_set(K,3*id1,3*id0,value);
+*/
+
+
+		//sigmoid test:
+		double dx = Nodes[id0]->Position[0] - Nodes[id1]->Position[0];
+		double dy = Nodes[id0]->Position[1] - Nodes[id1]->Position[1];
+		double dz = Nodes[id0]->Position[2] - Nodes[id1]->Position[2];
+		double averageMass = 0.5 *( Nodes[id0]->mass + Nodes[id1]->mass );
+		double sigmoidSaturation = 5;
+		if (initialWeightPointx[i]>0){
+			dx *= -1.0;
+		}
+		if (initialWeightPointy[i]>0){
+			dy *= -1.0;
+		}
+		if (initialWeightPointz[i]>0){
+			dz *= -1.0;
+		}
+		double sigmoidx =  1 / (1 + exp(sigmoidSaturation/ packingThreshold * (-1.0 * dx) ));
+		double dFxdx0 = sigmoidx * (1 - sigmoidx) * multiplier * averageMass * initialWeightPointx[i] * (sigmoidSaturation/packingThreshold);
+		double dFxdx1 = -1.0*dFxdx0;
+		if (initialWeightPointx[i]>0){
+			dFxdx0 *= -1.0;
+			dFxdx1 *= -1.0;
+		}
+
+		double sigmoidy =  1 / (1 + exp(sigmoidSaturation/ packingThreshold * (-1.0 * dy) ));
+		double dFydy0 = sigmoidy * (1 - sigmoidy) * multiplier * averageMass * initialWeightPointy[i] * (sigmoidSaturation/packingThreshold);
+		double dFydy1 = -1.0*dFydy0;
+		if (initialWeightPointy[i]>0){
+			dFydy0 *= -1.0;
+			dFydy1 *= -1.0;
+		}
+
+		double sigmoidz =  1 / (1 + exp(sigmoidSaturation/ packingThreshold * (-1.0 * dz) ));
+		double dFzdz0 = sigmoidz * (1 - sigmoidz) * multiplier * averageMass * initialWeightPointz[i] * (sigmoidSaturation/packingThreshold);
+		double dFzdz1 = -1.0*dFzdz0;
+		if (initialWeightPointz[i]>0){
+			dFzdz0 *= -1.0;
+			dFzdz1 *= -1.0;
+		}
+		//x values:
+		double value = gsl_matrix_get(K,3*id0,3*id0);
+		value -= dFxdx0;
+		gsl_matrix_set(K,3*id0,3*id0,value);
+		value = gsl_matrix_get(K,3*id0,3*id1);
+		value -= dFxdx1;
+		gsl_matrix_set(K,3*id0,3*id1,value);
+		value = gsl_matrix_get(K,3*id1,3*id1);
+		value -= dFxdx0;
+		gsl_matrix_set(K,3*id1,3*id1,value);
+		value = gsl_matrix_get(K,3*id1,3*id0);
+		value -= dFxdx1;
+		gsl_matrix_set(K,3*id1,3*id0,value);
+
+		//y values:
+		value = gsl_matrix_get(K,3*id0+1,3*id0+1);
+		value -= dFydy0;
+		gsl_matrix_set(K,3*id0+1,3*id0+1,value);
+		value = gsl_matrix_get(K,3*id0+1,3*id1+1);
+		value -= dFydy1;
+		gsl_matrix_set(K,3*id0+1,3*id1+1,value);
+		value = gsl_matrix_get(K,3*id1+1,3*id1+1);
+		value -= dFydy0;
+		gsl_matrix_set(K,3*id1+1,3*id1+1,value);
+		value = gsl_matrix_get(K,3*id1+1,3*id0+1);
+		value -= dFydy1;
+		gsl_matrix_set(K,3*id1+1,3*id0+1,value);
+
+		//z values:
+		value = gsl_matrix_get(K,3*id0+2,3*id0+2);
+		value -= dFzdz0;
+		gsl_matrix_set(K,3*id0+2,3*id0+2,value);
+		value = gsl_matrix_get(K,3*id0+2,3*id1+2);
+		value -= dFzdz1;
+		gsl_matrix_set(K,3*id0+2,3*id1+2,value);
+		value = gsl_matrix_get(K,3*id1+2,3*id1+2);
+		value -= dFzdz0;
+		gsl_matrix_set(K,3*id1+2,3*id1+2,value);
+		value = gsl_matrix_get(K,3*id1+2,3*id0+2);
+		value -= dFzdz1;
+		gsl_matrix_set(K,3*id1+2,3*id0+2,value);
+
 	}
 }
 
@@ -5406,31 +5031,6 @@ void Simulation::addValueToMatrix(gsl_matrix* K, int i, int j , double value){
 	gsl_matrix_set(K,i,j,value);
 }
 
-void Simulation::calculatePackingImplicit(){
-	int n = pacingNodeCouples0.size();
-	for(int i = 0 ; i<n; ++i){
-		int id0 = pacingNodeCouples0[i];
-		int id1 = pacingNodeCouples1[i];
-		double multiplier = 1;
-		double p = 2; //the power of the division (d/t);
-		double threshold = 6.0; //packing threshold;
-		double dz = Nodes[id0]->Position[2] - Nodes[id1]->Position[2];
-
-		double averageMass = 0.5 *( Nodes[id0]->mass + Nodes[id1]->mass );
-		double c = multiplier * averageMass;
-		double Fmag = c * (1 - pow(dz/threshold,p));
-
-		PackingForces[id0][2] -= Fmag ;
-		PackingForces[id1][2] += Fmag ;
-		//cout<<" packing force mag: "<<Fmag <<endl;
-		//cout<<" node0("<<id0<<") pos: "<<Nodes[id0]->Position[0]<<" "<<Nodes[id0]->Position[1]<<" "<<Nodes[id0]->Position[2]<<endl;
-		//cout<<" node1("<<id1<<") pos: "<<Nodes[id1]->Position[0]<<" "<<Nodes[id1]->Position[1]<<" "<<Nodes[id1]->Position[2]<<endl;
-		//cout<<" dx, dy, dz: "<<dx<<" "<<dy<<" "<<dz<<" d: "<<d<<endl;
-		//cout<<" packing force: "<<0 <<" "<<0<<" "<<Fmag<<endl;
-		//cout<<" aveerage mass: "<<averageMass<<" dz: "<<dz<<endl;
-	}
-}
-
 void Simulation::calculatePackingNumerical(gsl_matrix* K){
 	int n = pacingNodeCouples0.size();
 	for(int i = 0 ; i<n; ++i){
@@ -5662,140 +5262,7 @@ void Simulation::calculatePackingK(gsl_matrix* K){
 		 gsl_matrix_set(K,3*id0+2,3*id1+1,value);
 	}
 }
-/*
-void Simulation::calculateForcesAndJacobianMatrixNR(gsl_matrix* displacementPerDt){
-//    omp_set_num_threads(4);
-//#pragma omp parallel for
-//    for (int a =0; a<2; ++a){
-//    	int initialpoint = 0;
-//    	int breakpoint =  nElements/2;
-//    	if (a == 1){
-//    		initialpoint = breakpoint;
-//    		breakpoint = nElements;
-//    	}
-		for(vector<ShapeBase*>::iterator  itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-    	//for(vector<ShapeBase*>::iterator  itElement=Elements.begin()+ initialpoint; itElement<Elements.begin()+breakpoint; ++itElement){
-			//int nThreads = omp_get_thread_num();
-			//cout<<" omp threads: "<<nThreads<<endl;
-			if (!(*itElement)->IsAblated){
-				(*itElement)->calculateForces(Nodes, displacementPerDt, recordForcesOnFixedNodes, FixedNodeForces, outputFile);
-			}
-			//replacing calculateImplicitKElastic function, exactly the same content:
-			(*itElement)->calculateImplicitKElastic(); //This is the stiffness matrix, elastic part of the jacobian matrix
-			(*itElement)->calculateImplicitKViscous(displacementPerDt, dt); //This is the viscous part of jacobian matrix
-		}
-//	}
-}
 
-*/
-/*
-void Simulation::calculateImplicitKElastic(){
-    //cout<<"calculateImplicitKElastic for thw whole system"<<endl;
-    for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-    	//if element is ablated, the matrix will be set to identity here:
-    	(*itElement)->calculateImplicitKElastic();
-    }
-   //Elements[0]->displayMatrix(K,"KafterElastic");
-   // Elements[0]->displayMatrix(K,"KafterFixingForSymmetry");
-}
-*/
-/*
-void Simulation::writeImplicitElementalKToJacobian(gsl_matrix* K){
-    //writing all elements K values into big K matrix:
-    for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-    	//if element is ablated, current elemental K matrix will be identity
-    	//(*itElement)->writeKelasticToMainKatrix(K);
-    	//activate this for internal viscosity
-    	(*itElement)->writeKviscousToMainKatrix(K);
-    }
-    //Elements[0]->displayMatrix(K,"normalKonlyViscous");
-    for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-    	//if element is ablated, current elemental K matrix will be identity
-    	(*itElement)->writeKelasticToMainKatrix(K);
-    	//activate this for internal viscosity
-    }
-}
-*/
-/*
-void Simulation::writeForcesTogeAndgvInternal(gsl_matrix* ge, gsl_matrix* gvInternal){
-    for(vector<ShapeBase*>::iterator  itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-        if (!(*itElement)->IsAblated){
-        	(*itElement)->writeInternalForcesTogeAndgv(ge,gvInternal,SystemForces,Nodes);
-        }
-    }
-    //now all the forces are written on SysyemForces
-}
-*/
-/*
-void Simulation::calculateDisplacementMatrix(gsl_matrix* uk, gsl_matrix* un, gsl_matrix* displacementPerDt){
-	//Elements[0]->createMatrixCopy(displacementPerDt,uk);
-	gsl_matrix_memcpy(displacementPerDt,uk);
-	gsl_matrix_sub(displacementPerDt,un);
-	gsl_matrix_scale(displacementPerDt,1.0/dt);
-
-}
-*/
-void Simulation::calculateExternalViscousForcesForNR(gsl_matrix* gvExt, gsl_matrix* mvisc, gsl_matrix* displacementPerDt){
-    //the mass is already updated for symmetricity boundary nodes, and the viscous forces will be calculated correctly,
-	//as mvisdt is already accounting for the doubling of mass
-    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, mvisc, displacementPerDt,0.0, gvExt);
-    //added this line with sign change
-    gsl_matrix_scale(gvExt,-1.0);
-}
-/*
-void Simulation::constructUnMatrix(gsl_matrix* un){
-    for (int i = 0; i<nNodes; ++i ){
-        for (int j=0; j<3; ++j){
-            gsl_matrix_set(un,3*i+j,0,Nodes[i]->Position[j]);
-        }
-    }
-}
-*/
-/*
-void Simulation::constructLumpedMassExternalViscosityDtMatrix(gsl_matrix* mvisc, gsl_matrix* mviscPerDt){
-    for (int i = 0; i<nNodes; ++i ){
-        //double matrixValue = Nodes[i]->mass*Nodes[i]->Viscosity / dt;
-        for (int j=0; j<3; ++j){
-        	double matrixValue = Nodes[i]->mass*Nodes[i]->externalViscosity[j];
-            gsl_matrix_set(mvisc,3*i+j,3*i+j,matrixValue);
-        }
-        //cout<<" Node "<<i<<" - mass: "<<Nodes[i]->mass<<" visc: "<<Nodes[i]->Viscosity<<" matrixvalues: "<<gsl_matrix_get(mviscdt,3*i,3*i)<<" "<<gsl_matrix_get(mviscdt,3*i+1,3*i+1)<<" "<<gsl_matrix_get(mviscdt,3*i+2,3*i+2)<<endl;
-    }
-    Elements[0]->createMatrixCopy(mviscPerDt,mvisc);
-    gsl_matrix_scale(mviscPerDt,1/dt);
-}
-*/
-/*
-bool Simulation::checkConvergenceViaDeltaU(gsl_vector* deltaU){
-    bool converged = true;
-    double Threshold = 1E-10;
-    double d = gsl_blas_dnrm2 (deltaU);
-
-    if (d>Threshold){
-        converged = false;
-        cout<<" not  yet converged via du: norm "<<d<<endl;
-    }
-    else{
-        cout<<"converged with displacement: norm"<<d<<endl;
-    }
-    return converged;
-}
-
-bool Simulation::checkConvergenceViaForce(gsl_vector* gSum){
-    bool converged = true;
-    double Threshold = 1E-10;
-    double d = gsl_blas_dnrm2 (gSum);
-    if (d>Threshold){
-        converged = false;
-        cout<<" not  yet converged via forces: norm "<<d<<endl;
-    }
-    else{
-        cout<<"converged with forces: norm"<<d<<endl;
-    }
-    return converged;
-}
-
-*/
 void Simulation::processDisplayDataAndSave(){
     //if (displayIsOn && !DisplaySave){
         //The simulation is not displaying a saved setup, it is running and displaying
@@ -6057,6 +5524,7 @@ void Simulation::detectPacingCombinations(){
 	initialWeightPointx.empty();
 	initialWeightPointy.empty();
 	initialWeightPointz.empty();
+
 	//
 	vector<Node*>::iterator itNode;
 	vector<ShapeBase*>::iterator itEle;
@@ -6266,7 +5734,8 @@ void Simulation::detectPacingCombinations(){
 	cleanUpPacingCombinations();
 }
 
-void Simulation::detectPacingNodes(){
+/*void Simulation::detectPacingNodesSerial(){
+	//cout<<"inside detectPacingNodes"<<endl;
 	double periAverageSideLength = 0,colAverageSideLength = 0;
 	getAverageSideLength(periAverageSideLength, colAverageSideLength);
 
@@ -6291,9 +5760,10 @@ void Simulation::detectPacingNodes(){
 			(*itNode)->getCurrentPosition(pos);
 			vector<Node*>::iterator itNodeSlave;
 			for (itNodeSlave=itNode+1; itNodeSlave<Nodes.end(); ++itNodeSlave){
-				bool nodesOnSeperateSurfaces = (*itNodeSlave)->tissueType != (*itNode)->tissueType;
 				bool SlaveNodeHasPacking = (*itNodeSlave)->checkIfNodeHasPacking();
-				if (SlaveNodeHasPacking && nodesOnSeperateSurfaces){
+				//bool nodesOnSeperateSurfaces = (*itNodeSlave)->tissueType != (*itNode)->tissueType;
+				//if (SlaveNodeHasPacking && nodesOnSeperateSurfaces){
+				if (SlaveNodeHasPacking){
 					if ((*itNode)->tissuePlacement == (*itNodeSlave)->tissuePlacement){
 						//nodes can pack, are they connected?
 						bool neigbours = false;
@@ -6328,6 +5798,118 @@ void Simulation::detectPacingNodes(){
 			}
 		}
 	}
+}*/
+
+void Simulation::detectPacingNodes(){
+	//cout<<"inside detectPacingNodes"<<endl;
+	double periAverageSideLength = 0,colAverageSideLength = 0;
+	getAverageSideLength(periAverageSideLength, colAverageSideLength);
+
+	if (thereIsPeripodialMembrane){
+		colAverageSideLength = (periAverageSideLength+colAverageSideLength)/2.0;
+	}
+	packingThreshold = 0.6*colAverageSideLength;
+	packingDetectionThreshold = 1.2 * packingThreshold; //0.9 * packingThreshold;
+	double t2 = packingDetectionThreshold*packingDetectionThreshold;	//threshold square for rapid calculation
+	pacingNodeCouples0.empty();
+	pacingNodeCouples1.empty();
+	initialWeightPointx.empty();
+	initialWeightPointy.empty();
+	initialWeightPointz.empty();
+
+
+	//Added for parallelisation:
+	//node based only:
+	const int nArray = 16; //the size of array that I will divide the elements into.
+	int parallellisationSegmentSize = ceil(nNodes/nArray);
+	const int nSegments = ceil(nNodes/parallellisationSegmentSize); //this does not need to be the same as desired size
+	//if there are 5 nodes and I want 16 segments, the actual nSegments will be 5.
+	const int segmentBoundariesArraySize = nSegments+1;
+	int parallellisationSegmentBoundaries[segmentBoundariesArraySize];
+	parallellisationSegmentBoundaries[0] = 0;
+	parallellisationSegmentBoundaries[segmentBoundariesArraySize-1] = nNodes;
+	for (int i=1; i<segmentBoundariesArraySize-1; ++i){
+		parallellisationSegmentBoundaries[i] = i*parallellisationSegmentSize;
+	}
+	vector <vector<int> > arrayForParallelisationPacingNodeCouples0(nSegments, vector <int>(0));
+	vector <vector<int> > arrayForParallelisationPacingNodeCouples1(nSegments, vector <int>(0));
+	vector <vector<double> > arrayForParallelisationInitialWeightPointx(nSegments, vector <double>(0));
+	vector <vector<double> > arrayForParallelisationInitialWeightPointy(nSegments, vector <double>(0));
+	vector <vector<double> > arrayForParallelisationInitialWeightPointz(nSegments, vector <double>(0));
+	//parallelise this loop:
+	//cout<<" at parallelisation loop for packing, within detectPacingNodes"<<endl;
+	const int maxThreads = omp_get_max_threads();
+	omp_set_num_threads(maxThreads);
+	/*cout<<"parallellisationSegmentBoundaries: "<<endl;
+	for (int i = 0; i<segmentBoundariesArraySize; ++i){
+		cout<<" "<<parallellisationSegmentBoundaries[i]<<" ";
+	}
+	cout<<endl;*/
+	//#pragma omp parallel for //private(arrayForParallelisationPacingNodeCouples0, arrayForParallelisationPacingNodeCouples1, arrayForParallelisationInitialWeightPointx, arrayForParallelisationInitialWeightPointy, arrayForParallelisationInitialWeightPointz)
+	for (int a =0; a<nSegments; ++a){
+		int initialpoint = parallellisationSegmentBoundaries[a];
+		int breakpoint =  parallellisationSegmentBoundaries[a+1];
+		//cout<<" a = "<<a<<" initialpoint: "<<initialpoint<<" breakpoint "<<breakpoint<<" nNodes: "<<nNodes<<endl;
+		for (vector<Node*>::iterator itNode=Nodes.begin()+ initialpoint; itNode<Nodes.begin()+breakpoint; ++itNode){
+			//cout<<" inside loop, for node : "<<(*itNode)->Id<<endl;
+			bool NodeHasPacking = (*itNode)->checkIfNodeHasPacking();
+			if (NodeHasPacking){
+				double* pos;
+				pos = new double[3];
+				(*itNode)->getCurrentPosition(pos);
+				for (vector<Node*>::iterator itNodeSlave=itNode+1; itNodeSlave<Nodes.end(); ++itNodeSlave){
+					bool SlaveNodeHasPacking = (*itNodeSlave)->checkIfNodeHasPacking();
+					//bool nodesOnSeperateSurfaces = (*itNodeSlave)->tissueType != (*itNode)->tissueType;
+					//if (SlaveNodeHasPacking && nodesOnSeperateSurfaces){
+					if (SlaveNodeHasPacking){
+						if ((*itNode)->tissuePlacement == (*itNodeSlave)->tissuePlacement){
+							//nodes can pack, are they connected?
+							bool neigbours = false;
+							int n = (*itNode)->immediateNeigs.size();
+							for (int i= 0; i<n; ++i){
+								if ((*itNode)->immediateNeigs[i] ==(*itNodeSlave)->Id ){
+									neigbours = true;
+									break;
+								}
+							}
+							if (!neigbours){
+								//the nodes can potentially pack, are they close enough?
+								double* posSlave;
+								posSlave = new double[3];
+								(*itNodeSlave)->getCurrentPosition(posSlave);
+								double dx = pos[0] - posSlave[0];
+								double dy = pos[1] - posSlave[1];
+								double dz = pos[2] - posSlave[2];
+								double d2 = dx*dx + dy*dy + dz*dz;
+								if (d2<t2){
+									//close enough for packing , add to list:
+									arrayForParallelisationPacingNodeCouples0[a].push_back((*itNode)->Id);
+									arrayForParallelisationPacingNodeCouples1[a].push_back((*itNodeSlave)->Id);
+									double d = pow (d2,0.5);
+									arrayForParallelisationInitialWeightPointx[a].push_back(dx/d);
+									arrayForParallelisationInitialWeightPointy[a].push_back(dy/d);
+									arrayForParallelisationInitialWeightPointz[a].push_back(dz/d);
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		//calculate packing here
+	}
+	//outside parallellisation, need to combine the nodes:
+	for (int a =0; a<nSegments-1; ++a){
+		int n = arrayForParallelisationPacingNodeCouples0[a].size();
+		for (int i=0; i<n; ++i){
+			pacingNodeCouples0.push_back(arrayForParallelisationPacingNodeCouples0[a][i]);
+			pacingNodeCouples1.push_back(arrayForParallelisationPacingNodeCouples1[a][i]);
+			initialWeightPointx.push_back(arrayForParallelisationInitialWeightPointx[a][i]);
+			initialWeightPointy.push_back(arrayForParallelisationInitialWeightPointy[a][i]);
+			initialWeightPointz.push_back(arrayForParallelisationInitialWeightPointz[a][i]);
+		}
+	}
+	//cout<<"finalised detectPacingNodes"<<endl;
 }
 
 void Simulation::calculatePacking(){
@@ -6756,8 +6338,8 @@ void Simulation::addToEdgeList(Node* nodePointer, ShapeBase* elementPointer, vec
 void Simulation::addPackingForces(gsl_matrix* gExt){
 	double sumPack[3] = {0.0,0.0,0.0};
 	//double sumPackPre[3] = {0.0,0.0,0.0};
-	double sumAv[3] = {0.0,0.0,0.0};
-	double sumgExt[3] = {0.0,0.0,0.0};
+	//double sumAv[3] = {0.0,0.0,0.0};
+	//double sumgExt[3] = {0.0,0.0,0.0};
 	//cout<<"in add packing forces"<<endl;
 	for (int j=0; j<nNodes; ++j){
 		//cout<<"calculating node: "<<j<<" of "<<nNodes<<endl;
@@ -6767,16 +6349,15 @@ void Simulation::addPackingForces(gsl_matrix* gExt){
 		double Fx = PackingForces[j][0];
 		double Fy = PackingForces[j][1];
 		double Fz = PackingForces[j][2];
-		//cout<<"node: "<<j<<" packing force: "<<PackingForces[j][0]<<" "<<PackingForces[j][1]<<" "<<PackingForces[j][2]<<endl;
 		sumPack[0] += PackingForces[j][0];
 		//sumPackPre[0] += PackingForcesPreviousStep[j][0];
-		sumAv[0] += Fx;
+		//sumAv[0] += Fx;
 		sumPack[1] += PackingForces[j][1];
 		//sumPackPre[1] += PackingForcesPreviousStep[j][1];
-		sumAv[1] += Fy;
+		//sumAv[1] += Fy;
 		sumPack[2] += PackingForces[j][2];
 		//sumPackPre[2] += PackingForcesPreviousStep[j][2];
-		sumAv[2] += Fz;
+		//sumAv[2] += Fz;
 		//cout<<"node: "<<j<<" after summation"<<endl;
 		int indice = j*3;
 		Fx += gsl_matrix_get(gExt,indice,0);
@@ -6785,11 +6366,11 @@ void Simulation::addPackingForces(gsl_matrix* gExt){
 		gsl_matrix_set(gExt,indice+1,0,Fy);
 		Fz += gsl_matrix_get(gExt,indice+2,0);
 		gsl_matrix_set(gExt,indice+2,0,Fz);
-		sumgExt[0] += gsl_matrix_get(gExt,indice,0);
-		sumgExt[1] += gsl_matrix_get(gExt,indice+1,0);
-		sumgExt[2] += gsl_matrix_get(gExt,indice+2,0);
+		//sumgExt[0] += gsl_matrix_get(gExt,indice,0);
+		//sumgExt[1] += gsl_matrix_get(gExt,indice+1,0);
+		//sumgExt[2] += gsl_matrix_get(gExt,indice+2,0);
 	}
-	//cout<<" sum pack: "<<sumPack[0]<<" "<<sumPack[1]<<" "<<sumPack[2]<<" sumPre: "<<sumPackPre[0]<<" "<<sumPackPre[1]<<" "<<sumPackPre[2]<<" sum Av: "<<sumAv[0]<<" "<<sumAv[1]<<" "<<sumAv[2]<<endl;
+	//cout<<" sum pack: "<<sumPack[0]<<" "<<sumPack[1]<<" "<<sumPack[2]<<endl;
 	//cout<<" sum gExt: "<<sumgExt[0]<<" "<<sumgExt[1]<<" "<<sumgExt[2]<<endl;
 }
 
@@ -7112,8 +6693,8 @@ void Simulation::calculateDVDistance(){
 	}
 	double dmag = d[0]+d[1]+d[2];
 	dmag = pow(dmag,0.5);
-	outputFile<<"time: "<<timestep * dt<<" DV distance is: "<<dmag<<" ";
-	cout<<"time: "<<timestep * dt<<" DV distance is: "<<dmag<<" ";
+	outputFile<<"time: "<<currSimTimeSec<<" DV distance is: "<<dmag<<" ";
+	cout<<"time: "<<currSimTimeSec<<" DV distance is: "<<dmag<<" ";
 	if (symmetricY){
 		for (int i=0;i<3;++i){
 			d[i] = Nodes[posteriorTipIndex]->Position[i];
@@ -7177,7 +6758,7 @@ void Simulation::calculateApicalSize(){
 	}
 	double DV = sizeLim[1][0] - sizeLim[0][0];
 	double AP = sizeLim[1][1] - sizeLim[0][1];
-	outputFile<<"At time: "<<dt*timestep<<" apical bounding box size: "<<DV<<" "<<AP<<endl;
+	outputFile<<"At time: "<<currSimTimeSec<<" apical bounding box size: "<<DV<<" "<<AP<<endl;
 }
 
 void Simulation::calculateBoundingBox(){
@@ -7206,8 +6787,8 @@ void Simulation::calculateBoundingBox(){
 		//}
 		//}
 	}
-	cout<<"calculating bounding box, symmetricity x & y: "<<symmetricX<<" "<<symmetricY<<endl;
-	cout<<"bounding box before update: "<<boundingBox[0][0]<<" "<<boundingBox[0][1]<<" "<<boundingBox[1][0]<<" "<<boundingBox[1][1]<<endl;
+	//cout<<"calculating bounding box, symmetricity x & y: "<<symmetricX<<" "<<symmetricY<<endl;
+	//cout<<"bounding box before update: "<<boundingBox[0][0]<<" "<<boundingBox[0][1]<<" "<<boundingBox[1][0]<<" "<<boundingBox[1][1]<<endl;
 	if (symmetricY){
 		boundingBox[0][1] = (-1.0)*boundingBox[1][1]; //if there is Y symmetricity, then the bounding box is extended to double the size in y
 	}
@@ -7295,7 +6876,7 @@ void Simulation::calculatePeripodialBoundingBox(){
 }
 */
 void Simulation::saveStep(){
-	outputFile<<"Saving step: "<< timestep<<" this is :"<<timestep*dt<<" sec ("<<timestep*dt/3600<<" hr )"<<endl;
+	outputFile<<"Saving step: "<< timestep<<" this is :"<<currSimTimeSec<<" sec ("<<currSimTimeSec/3600<<" hr )"<<endl;
 	writeSaveFileStepHeader();
 	writeNodes();
 	writeElements();
@@ -7304,7 +6885,6 @@ void Simulation::saveStep(){
     writeGrowth();
 	writeForces();
 	writePacking();
-	writeVelocities();
 	writeProteins();
 }
 
@@ -7312,7 +6892,7 @@ void Simulation::writeSaveFileStepHeader(){
     saveFileMesh<<"=============== TIME: ";
 	saveFileMesh.precision(6);
 	saveFileMesh.width(10);
-	saveFileMesh<<timestep*dt;
+	saveFileMesh<<currSimTimeSec;
 	saveFileMesh<<"==================================================="<<endl;
 }
 
@@ -7320,7 +6900,7 @@ void Simulation::writeSaveFileStepFooter(){
 	saveFileMesh<<"=============== END OF TIME: ";
 	saveFileMesh.precision(6);
 	saveFileMesh.width(10);
-	saveFileMesh<<timestep*dt;
+	saveFileMesh<<currSimTimeSec;
 	saveFileMesh<<"============================================"<<endl;
 }
 
@@ -7462,14 +7042,6 @@ void Simulation::writePacking(){
 	}
 	saveFilePacking.flush();
 }
-void Simulation::writeVelocities(){
-	for (int i=0;i<nNodes;++i){
-		for (int j=0; j<Nodes[i]->nDim; ++j){
-			saveFileVelocities.write((char*) &Nodes[i]->Velocity[j], sizeof Nodes[i]->Velocity[j]);
-		}
-	}
-	saveFileVelocities.flush();
-}
 
 void Simulation::writeProteins(){
 	vector<ShapeBase*>::iterator itElement;
@@ -7510,7 +7082,7 @@ void Simulation::cleanUpMyosinForces(){
 
 void Simulation::checkForMyosinUpdates(){
 	for (int i=0; i<nMyosinFunctions; ++i){
-		if(timestep == myosinFunctions[i]->initTime  ){ //the application time of the signal is given in simulation time steps.
+		if(currSimTimeSec == myosinFunctions[i]->initTime  ){ //the application time of the signal is given in seconds.
 			updateEquilibriumMyosinsFromInputSignal(myosinFunctions[i]);
 		}
 	}
@@ -7631,8 +7203,7 @@ void Simulation::cleanUpShapeChangeRates(){
 }
 
 void Simulation::calculateShapeChangeUniform (GrowthFunctionBase* currSCF){
-	float simTime = dt*timestep;
-	if(simTime >= currSCF->initTime && simTime < currSCF->endTime ){
+	if(currSimTimeSec >= currSCF->initTime && currSimTimeSec < currSCF->endTime ){
 		//cout<<"calculating shape change uniform"<<endl;
 		double *maxValues;
         maxValues = new double[3];
@@ -7664,9 +7235,8 @@ void Simulation::calculateShapeChangeUniform (GrowthFunctionBase* currSCF){
 }
 
 void Simulation::calculateGrowthUniform(GrowthFunctionBase* currGF){
-	float simTime = dt*timestep;
 	//cout<<"inside uniform growth function, initTime: "<<currGF->initTime <<" endtime: "<<currGF->endTime<<" simTime"<<simTime<<endl;
-	if(simTime >= currGF->initTime && simTime < currGF->endTime ){
+	if(currSimTimeSec >= currGF->initTime && currSimTimeSec < currGF->endTime ){
 		gsl_matrix* columnarFgIncrement = gsl_matrix_calloc(3,3);
 		gsl_matrix* peripodialFgIncrement = gsl_matrix_calloc(3,3);
 		double *growthRates;
@@ -7692,8 +7262,7 @@ void Simulation::calculateGrowthUniform(GrowthFunctionBase* currGF){
 }
 
 void Simulation::calculateGrowthRing(GrowthFunctionBase* currGF){
-	float simTime = dt*timestep;
-	if(simTime >= currGF->initTime && simTime < currGF->endTime ){
+	if(currSimTimeSec >= currGF->initTime && currSimTimeSec < currGF->endTime ){
 		//The growth function is active at current time, now I will grow the elements.
 		//First get the remaining data from the growth function parameters
 		float centre[2];
@@ -7739,8 +7308,7 @@ void Simulation::calculateGrowthRing(GrowthFunctionBase* currGF){
 void Simulation::calculateGrowthGridBased(GrowthFunctionBase* currGF){
 	int nGridX = currGF->getGridX();
 	int nGridY = currGF->getGridY();
-	float simTime = dt*timestep;
-	if(simTime >= currGF->initTime && simTime < currGF->endTime ){
+	if(currSimTimeSec >= currGF->initTime && currSimTimeSec < currGF->endTime ){
 		gsl_matrix* columnarFgIncrement = gsl_matrix_calloc(3,3);
 		gsl_matrix* peripodialFgIncrement = gsl_matrix_calloc(3,3);
 		vector<ShapeBase*>::iterator itElement;
@@ -7758,10 +7326,10 @@ void Simulation::calculateGrowthGridBased(GrowthFunctionBase* currGF){
 				(*itElement)->getRelativePositionInTissueInGridIndex(nGridX, nGridY, IndexX, IndexY, FracX, FracY);
 			}
 			if (currGF->applyToColumnarLayer){
-				(*itElement)->calculateFgFromGridCorners(dt, currGF, columnarFgIncrement, 0, IndexX,  IndexY, FracX, FracY); 	//sourceTissue is 0 for columnar Layer
+				(*itElement)->calculateFgFromGridCorners(gridGrowthsInterpolationType, dt, currGF, columnarFgIncrement, 0, IndexX,  IndexY, FracX, FracY); 	//sourceTissue is 0 for columnar Layer
 			}
 			if (currGF->applyToPeripodialMembrane){
-				(*itElement)->calculateFgFromGridCorners(dt, currGF, peripodialFgIncrement, 1, IndexX,  IndexY, FracX, FracY); 	//sourceTissue is 1 for peripodial membrane
+				(*itElement)->calculateFgFromGridCorners(gridGrowthsInterpolationType, dt, currGF, peripodialFgIncrement, 1, IndexX,  IndexY, FracX, FracY); 	//sourceTissue is 1 for peripodial membrane
 			}
 			(*itElement)->updateGrowthIncrement(columnarFgIncrement,peripodialFgIncrement);
     		//if ((*itElement)->Id == 176){
@@ -7852,7 +7420,7 @@ void Simulation::setStretch(){
 	distance *= StretchStrain;
 	cerr<<"the distance that is to be moved: "<<distance<<" ";
 	//the time steps that the stretch operation should take place in:
-	double StretchTimeSteps = StretchEndStep - StretchInitialStep;
+	double StretchTimeSteps = (StretchEndTime - StretchInitialTime)/dt;
 	cerr<<"stretchTimeSteps: "<<StretchTimeSteps<<" ";
 	StretchDistanceStep = 0.5* (distance / StretchTimeSteps);
 	cerr<<"StretchDistanceStep: "<<StretchDistanceStep<<endl;
@@ -7955,7 +7523,7 @@ void Simulation::recordForcesOnClampBorders(){
 }
 
 void Simulation::moveClampedNodesForStretcher(){
-	if (timestep>=StretchInitialStep && timestep<StretchEndStep){
+	if (currSimTimeSec>=StretchInitialTime && currSimTimeSec<StretchEndTime){
 		for (int i=0; i<nNodes; ++i){
 			if (Nodes[i]->Position[distanceIndex]> StretchMax){
 				Nodes[i]->Position[distanceIndex] += StretchDistanceStep;
