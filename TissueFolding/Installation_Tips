@@ -31,11 +31,11 @@ compile:
 
 
 test full code:
-	g++  -o "TissueFolding" $(OBJS) $(USER_OBJS) $(LIBS) -L${OPENBLASROOT}/lib -lopenblas -lpardiso500-GNU481-X86-64  -fopenmp -L/usr/include  -lgsl -lgslcblas
+	g++  -o "TissueFolding" $(OBJS) $(USER_OBJS) $(LIBS) -L${OPENBLASROOT}/lib -lopenblas -lpardiso500-GNU481-X86-64  -fopenmp  -I/shared/ucl/apps/gsl/1.16/gcc/include  -lgsl -lgslcblas
 
 
 requesting test node on legion:
-	qrsh -l h_rt=00:30:00, memory=2G
+	qrsh -l h_rt=00:15:00, memory=8G
 job submission:
 	the bash setting should indicate this is a login shell:
 	#!bin/bash -l

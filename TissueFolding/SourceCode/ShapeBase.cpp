@@ -706,7 +706,9 @@ bool 	ShapeBase::readNodeIdData(ifstream& file){
 	for (int i = 0; i<nNodes; ++i){
 		int savedId;
 		file >> savedId;
+
 		if (NodeIds[i] != savedId){
+			cout<<"NodeId "<<NodeIds[i]<<" savedId "<<savedId<<endl;
 			return false;
 		}
 	}
@@ -729,6 +731,8 @@ bool	ShapeBase::readReferencePositionData(ifstream& file){
 		for (int j = 0; j<nDim; ++j){
 			double savedPos;
 			file >> savedPos;
+			//cout<<i<<" "<<j<<" ReferenceShape->Positions: "<<ReferenceShape -> Positions[i][j]<<" savedPos "<<savedPos<<endl;
+
 			if (ReferenceShape -> Positions[i][j] != savedPos){
 				//the positions are not equal, it may be an issue of rounding, my satisfactory precision is 2%
 				float percentError = (ReferenceShape -> Positions[i][j] - savedPos) / ReferenceShape -> Positions[i][j]*100.0;
@@ -840,7 +844,8 @@ void 	ShapeBase::getPysProp(int type, float &PysPropMag, double dt){
 		double* growth;
 		growth = getGrowthRate();
         double timescale = 60.0*60.0; //reporting per hour
-        for (int i =0 ; i< nDim-1 ; ++i){ //reporting only x & y
+        //for (int i =0 ; i< nDim-1 ; ++i){ //reporting only x & y
+        for (int i =2 ; i< nDim ; ++i){ //reporting only z
         //for (int i =0 ; i< nDim ; ++i){
 			//growth is in form exp(r*dt), get r first, then adjust the time scale, and report the exponential form still:
 			//And I want to rate of volumetric growth, that is x*y*z
@@ -3033,4 +3038,22 @@ void 	ShapeBase::checkDisplayClipping(double xClip, double yClip, double zClip){
 			 return;
 		 }
 	 }
+}
+
+void 	ShapeBase::doesElementNeedRefinement(double areaThreshold, int surfacedentifier){
+	if (surfacedentifier == 0){
+		//checking for basal surface
+		if ( BasalArea > areaThreshold){
+			willBeRefined = true;
+		}
+	}
+	else if (surfacedentifier == 1){
+		//checking for apical surface
+		if ( ApicalArea > areaThreshold){
+			willBeRefined = true;
+		}
+	}
+	if (willBeRefined){
+		cout<<" Element "<<Id<<" will be  refined: "<<willBeRefined<<" apical area: "<<ApicalArea<<" basal area: "<<BasalArea<<endl;
+	}
 }

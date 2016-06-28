@@ -753,7 +753,7 @@ void MainWindow::timerSimulationStep(){
 		if(!Sim01->reachedEndOfSaveFile){
 			Sim01->updateOneStepFromSave();
 			Sim01->calculateDVDistance();
-			for (int a = 0; a<0; a++){ //35 for 12 hours with 600 sec time step
+			for (int a = 0; a<5; a++){ //35 for 12 hours with 600 sec time step
 				Sim01->updateOneStepFromSave();
 				Sim01->calculateDVDistance();
 			}

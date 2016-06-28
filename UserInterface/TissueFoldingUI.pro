@@ -11,10 +11,10 @@
 #These include the files under "/home/melda/Documents/TissueFolding/TissueFolding/Debug/" and 
 #                              "/home/melda/Documents/TissueFolding/TissueFolding/Debug/SourceCode"
 #The procedure is, you need to build the latest version (updates the *.mk files). Then go to the makefile of the non-visual version
-# under  "/home/melda/Documents/TissueFolding/TissueFolding/Debug/". Change the compiler line with the line given above. Make the latest non-visual version.
+# under  "/home/melda/Documents/TissueFolding/TissueFolding/Debug/". Change the compiler line with the line given below. Make the latest non-visual version.
 # These steps will ensure the the subdirectory repositories are updated. Then copy all (as listed above) to Legion. The make file of Legion 
 # is not the same as the makfile of Tethys. The compiler line is:
-#   g++  -o "TissueFolding" $(OBJS) $(USER_OBJS) $(LIBS) -L${OPENBLASROOT}/lib -lopenblas -L-lpardiso500-GNU481-X86-64  -fopenmp  -I/shared/ucl/apps/gsl/1.16/gcc/include  -lgsl -lgslcblas
+#   	g++  -o "TissueFolding" $(OBJS) $(USER_OBJS) $(LIBS) -L${OPENBLASROOT}/lib -lopenblas -lpardiso500-GNU481-X86-64  -fopenmp  -I/shared/ucl/apps/gsl/1.16/gcc/include  -lgsl -lgslcblas
 # Then you can make on legion.
 
 

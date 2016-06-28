@@ -152,6 +152,7 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, bool thereIsPlas
     ZProjectedApicalArea=0.0;
     BasalArea=0.0;
     ApicalArea=0.0;
+    willBeRefined = false;
 }
 
 Prism::~Prism(){

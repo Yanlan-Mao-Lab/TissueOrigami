@@ -48,10 +48,9 @@ cp Points.5.node Points.1.node
 ./EllipseFromOutline -1 12.5 2 5 1  ./inputOutlines/48hrDiscOutline
 cp MeshFile.out ./Exp48hr-noPeri_08.mesh
 
-
 cp Points.6.ele Points.1.ele
 cp Points.6.node Points.1.node
-./EllipseFromOutline -1 12.5 2 3 1  ./inputOutlines/48hrDiscOutline
+./EllipseFromOutline -1 12.5 2 4 1  ./inputOutlines/48hrDiscOutline
 cp MeshFile.out ./Exp48hr-noPeri_09.mesh
 
 

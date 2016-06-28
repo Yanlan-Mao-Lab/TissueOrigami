@@ -30,7 +30,7 @@ class MainWindow : public QMainWindow
      Q_OBJECT
 
  public:
-    MainWindow(Simulation* SIm01);
+    MainWindow(Simulation* Sim01);
     ~MainWindow();
     QGraphicsScene	*MainScene;
     QVBoxLayout		*ControlPanelMainHBox;

@@ -1,12 +1,12 @@
 InputMeshParameters:
   MeshInputMode(int-seeDocumentation): 4
-  MeshFile(full-path):   /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Run021Frame144400.mesh
+  MeshFile(full-path):   /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Exp48hr-noPeri_04.mesh
   symmetricInX(bool): 0
   symmetricInY(bool): 1
  
 TimeParameters:
-  TimeStep(sec): 1200
-  SimulationLength(sec): 36500
+  TimeStep(sec): 1
+  SimulationLength(sec): 1
 
 SaveOptions:
   SaveImages(bool): 1
@@ -73,7 +73,7 @@ ExternalViscositySetup:
   LinkerZoneBasalExternalViscosity: 0.0
 
 GrowthOptions:
-  NumberofGrowthFunctions(int): 8
+  NumberofGrowthFunctions(int): 7
   GridGrowthsPinnedOnInitialMesh(bool):	0
   GridGrowthsInterpolationType(0=step,1=linear): 1
 
@@ -109,13 +109,6 @@ GrowthOptions:
 
   GrowthFunctionType(int-seeDocumentation): 3
   InitialTime(sec):  0
-  FinalTime(sec):  86400
-  ApplyToColumnarLayer(bool): 0
-  ApplyToPeripodialMembrane(bool): 0
-  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/HalfTissue_Uniform
-
-  GrowthFunctionType(int-seeDocumentation): 3
-  InitialTime(sec):  0
   FinalTime(sec):  57600
   ApplyToColumnarLayer(bool): 0
   ApplyToPeripodialMembrane(bool): 0
@@ -138,7 +131,7 @@ GrowthOptions:
   GrowthFunctionType(int-seeDocumentation): 3
   InitialTime(sec):  0
   FinalTime(sec):  172800
-  ApplyToColumnarLayer(bool): 1
+  ApplyToColumnarLayer(bool): 0
   ApplyToPeripodialMembrane(bool): 0
   Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/Rate125_Grid20-11_Col_72-96_1-0
 

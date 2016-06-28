@@ -372,9 +372,7 @@ bool Simulation::readFinalSimulationStep(){
 			getline(saveFileToDisplayMesh,currline);
 		}
 	}
-	//Outside the loop for reading all time frames:
 	updateElementVolumesAndTissuePlacements();
-    //cleanMatrixUpdateData();
 	clearNodeMassLists();
 	assignNodeMasses();
 	assignConnectedElementsAndWeightsToNodes();
@@ -383,12 +381,8 @@ bool Simulation::readFinalSimulationStep(){
 	updateElementPositions();
 	calculateBoundingBox();
 	bringMyosinStimuliUpToDate();
-	//calculateColumnarLayerBoundingBox();
-	//if (thereIsPeripodialMembrane){
-	//	calculatePeripodialBoundingBox();
-	//}
 
-	//bring the time step and data save stime steps to the main modelinput:
+	//bring the time step and data save time steps to the main modelinput:
 	currSimTimeSec += dt*dataSaveInterval;
 	dataSaveInterval = dataSaveIntervalCurrentSim;
 	dt = timeStepCurrentSim;
@@ -860,16 +854,24 @@ bool Simulation::initiateSavedSystem(){
 	if (ForcesSaved){
 		updateForcesFromSave();
 	}
+	cout<<" updating  ElementVolumesAndTissuePlacements"<<endl;
 	updateElementVolumesAndTissuePlacements();
     //cleanMatrixUpdateData();
 	clearNodeMassLists();
 	assignNodeMasses();
+    cout<<"above assignConnectedElementsAndWeightsToNodes"<<endl;
 	assignConnectedElementsAndWeightsToNodes();
+    cout<<"above clearLaserAblatedSites"<<endl;
 	clearLaserAblatedSites();
     //calculateStiffnessMatrices();
+    cout<<"calculating ShapeFunctionDerivatives"<<endl;
+
     calculateShapeFunctionDerivatives();
+    cout<<"updating element positions"<<endl;
 	updateElementPositions();
 	//skipping the footer:
+    cout<<"updated element positions"<<endl;
+
 	getline(saveFileToDisplayMesh,currline);
 	while (currline.empty() && !saveFileToDisplayMesh.eof()){
 		//skipping empty line
@@ -958,6 +960,7 @@ bool Simulation::readSystemSummaryFromSave(){
 bool Simulation::readNodeDataToContinueFromSave(){
 	int n;
 	saveFileToDisplayMesh >> n;
+	cout<<"number of nodes: "<<n<<endl;
 	if(nNodes != n){
 		cerr<<"The node number from save file("<<n<<") and model input("<<Nodes.size()<<") are not consistent - cannot continue simulation from save"<<endl;
 		return false;
@@ -1065,9 +1068,13 @@ bool Simulation::readElementDataToContinueFromSave(){
 	saveFileToDisplayMesh >> n;
 	if (nElements != n){
 		cerr<<"The element number from save file and model input are not consistent - cannot continue simulation from save"<<endl;
+		cerr<<"n: "<<n<<" nElements: "<<endl;
 		return false;
 	}
 	for (int i=0; i<nElements; ++i){
+		//string line;
+		//getline(saveFileToDisplayMesh, line);
+
 		int shapeType;
 		saveFileToDisplayMesh >> shapeType;
 		if (Elements[i]->getShapeType() != shapeType){
@@ -1097,7 +1104,11 @@ bool Simulation::readElementDataToContinueFromSave(){
 		else{
 			cerr<<"Error in shape type, corrupt save file! - currShapeType: "<<shapeType<<endl;
 		}
+
 	}
+	//string line;
+	//getline(saveFileToDisplayMesh, line);
+
 	return true;
 }
 
@@ -3715,6 +3726,10 @@ bool Simulation::runOneStep(){
     if(nMyosinFunctions > 0){
     	checkForMyosinUpdates();
     }
+    bool thereIsRefinement = true;
+    if (thereIsRefinement){
+    	calculateApicalBasalAreas();
+    }
     if(nGrowthFunctions>0 || nShapeChangeFunctions >0){
         //outputFile<<"calculating growth"<<endl;
 		//if ((timestep - 1)% growthRotationUpdateFrequency  == 0){
@@ -3768,6 +3783,26 @@ bool Simulation::runOneStep(){
 	//Elements[38]->displayPositions();
 	//cout<<"Element: 39"<<endl;
 	//Elements[39]->displayPositions();
+}
+
+
+void Simulation::calculateApicalBasalAreas(){
+	double thresholdArea = 27;
+	const int maxThreads = omp_get_max_threads();
+	omp_set_num_threads(maxThreads);
+	#pragma omp parallel for //private(Nodes, displacementPerDt, recordForcesOnFixedNodes, FixedNodeForces, outputFile, dt)
+	for( vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		if (!(*itElement)->IsAblated){
+			if ((*itElement)->tissuePlacement == 1){ // element is apical, I should check with apical area
+				(*itElement)->calculateApicalArea();
+				(*itElement)->doesElementNeedRefinement(thresholdArea, 1); //checking refinement with apical surface;
+			}
+			else if ((*itElement)->tissuePlacement == 0){ // element is basal, I should check with basal area
+				(*itElement)->calculateBasalArea();
+				(*itElement)->doesElementNeedRefinement(thresholdArea, 0); //checking refinement with basal surface;
+			}
+		}
+	}
 }
 
 bool Simulation::checkFlip(){
@@ -4076,7 +4111,7 @@ void Simulation::calculatePackingForcesImplicit3D(){
 	for(int i = 0 ; i<n; ++i){
 		int id0 = pacingNodeCouples0[i];
 		int id1 = pacingNodeCouples1[i];
-		double multiplier = 500;
+		double multiplier = 1000;
 		//if (id0 == 3445 || id1 == 3445){
 		//	cout<<"calculating packing for nodes : "<<id0<<" "<<id1<<endl;
 		//}
@@ -4298,7 +4333,7 @@ void Simulation::calculatePackingJacobianNumerical3D(gsl_matrix* K){
 	for(int i = 0 ; i<n; ++i){
 		int id0 = pacingNodeCouples0[i];
 		int id1 = pacingNodeCouples1[i];
-		double multiplier = 500;
+		double multiplier = 1000;
 		/*double multiplier = 1;
 		double p = 2; //the power of the division (d/t);
 		double averageMass = 0.5 *( Nodes[id0]->mass + Nodes[id1]->mass );
@@ -6950,13 +6985,13 @@ void Simulation::writeElements(){
 		int nodeNumber = Elements[i]->getNodeNumber();
 		int*  NodeIds = Elements[i]->getNodeIds();
 		for (int j = 0; j<nodeNumber; ++j ){
-			saveFileMesh.width(5);saveFileMesh<<NodeIds[j];
+			saveFileMesh.width(9);saveFileMesh<<NodeIds[j];
 		}
 		int dim  = Elements[i]->getDim();
 		double** refPos = Elements[i]->getReferencePos();
 		for (int j = 0; j<nodeNumber; ++j ){
 			for (int k = 0; k<dim; ++k ){
-				saveFileMesh.precision(5);saveFileMesh.width(12);
+				saveFileMesh.precision(4);saveFileMesh.width(15);
 				saveFileMesh<<refPos[j][k];
 			}
 		}
@@ -7746,6 +7781,7 @@ void Simulation::laserAblate(double OriginX, double OriginY, double Radius){
 void Simulation::updateElementVolumesAndTissuePlacements(){
 	vector<ShapeBase*>::iterator itElement;
 	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		cout<<"updating element: "<<(*itElement)->Id<<endl;
 		(*itElement)->updateElementVolumesAndTissuePlacementsForSave(Nodes);
 	}
 }

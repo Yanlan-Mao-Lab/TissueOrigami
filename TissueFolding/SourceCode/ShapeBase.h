@@ -154,6 +154,7 @@ public:
     //bool 	IsGrowing;
     bool 	isFlipped;
 	bool 	IsChangingShape;
+	bool	willBeRefined;
 	bool	ApicalNormalForPackingUpToDate;
 	bool	BasalNormalForPackingUpToDate;
 	int 	tissuePlacement; //1 -> apical, 0 -> basal, 2->middle, 3 -> lateral
@@ -327,6 +328,7 @@ public:
 	bool RotatedElement;
     gsl_matrix* GrowthStrainsRotMat;
 
+    void doesElementNeedRefinement(double areaThreshold, int surfaceidentifier);
 
 	bool 	calculateAlignmentScore(double** RefNormalised);
 	void 	bringShapePositionsToOrigin(double** RefNormalised, double* refCentre);

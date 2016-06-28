@@ -437,6 +437,7 @@ public:
 	void alignTissueDVToXPositive();
 	void alignTissueAPToXYPlane();
 	bool checkFlip();
+	void calculateApicalBasalAreas();
 	void wrapUpAtTheEndOfSimulation();
 	void writeRelaxedMeshFromCurrentState();
 	void writeMeshRemovingAblatedRegions();
