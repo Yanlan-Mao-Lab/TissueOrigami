@@ -1338,8 +1338,9 @@ bool ModelInputObject::readPlasticDeformationOptions(ifstream& file){
 		return false;
 	}
 	file >> currHeader;
-	if(currHeader == "DeformationRate(FractionPerHour):"){
-		file >> Sim->plasticDeformationRate;
+	if(currHeader == "DeformationHalfLife(hour):"){
+		file >> Sim->plasticDeformationHalfLife;
+		Sim->plasticDeformationHalfLife *= 3600; //converting to seconds.
 	}
 	else{
 		cerr<<"Error in reading plastic deformation options, curr string: "<<currHeader<<", should have been: DeformationRate(FractionPerHour):" <<endl;

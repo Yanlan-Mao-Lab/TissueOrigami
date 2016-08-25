@@ -1,12 +1,12 @@
 InputMeshParameters:
   MeshInputMode(int-seeDocumentation): 4
-  MeshFile(full-path):   /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Exp48hr-noPeri_08.mesh
+  MeshFile(full-path):    /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Exp48hr-noPeri_04.mesh
   symmetricInX(bool): 0
-  symmetricInY(bool): 1
+  symmetricInY(bool): 0
  
 TimeParameters:
-  TimeStep(sec): 7200
-  SimulationLength(sec): 180000
+  TimeStep(sec): 1
+  SimulationLength(sec): 1
 
 SaveOptions:
   SaveImages(bool): 0
@@ -16,17 +16,17 @@ SaveOptions:
 
 NodeFixingOptions:
   FixWithHighExternalViscosity(bool): 1
-    FixVis(x,y,z): 0   0  100000
+    FixVis(x,y,z): 80000   80000  80000
   ApicalSurfaceFix(bool-x,y,z): 0 0 0
   BasalSurfaceFix(bool-x,y,z): 0 0 0
   ApicalCircumferenceFix(bool-x,y,z): 0 0 0
   BasalCircumferenceFix(bool-x,y,z): 0 0 0
   LinkerApicalCircumferenceFix(bool-x,y,z): 0 0 0
   LinkerBasalCircumferenceFix(bool-x,y,z): 0 0 0
-  CircumferenceFix(bool-x,y,z): 0 0 1
+  CircumferenceFix(bool-x,y,z): 1 1 1
 
 Manipulations:
-  AddCurvature(bool): 0
+  AddCurvature(bool): 1
   CurvatureDepthAtCentre(double-microns): 1.0
   AddSoftPeriphery(bool): 0
   SoftPeripheryRange(double-microns): 10.0
@@ -93,10 +93,10 @@ GrowthOptions:
 
   GrowthFunctionType(int-seeDocumentation): 1 
   InitialTime(sec): 0
-  FinalTime(sec):  7200
+  FinalTime(sec):  3600
   ApplyToColumnarLayer(bool): 0
   ApplyToPeripodialMembrane(bool): 0
-  MaxValue(fractionPerHour-DV,AP,AB): 0.06 0 0.0 
+  MaxValue(fractionPerHour-DV,AP,AB): 0.69315 0 0.0 
   Angle(degrees): 0
 
 
@@ -154,13 +154,13 @@ ShapeChangeOptions:
 
 PlasticDeformationOptions:
   ThereIsPlasticDeformation(bool): 1
-  VolumeConserved(bool): 1
-  DeformationRate(FractionPerHour): 0.05
+  VolumeConserved(bool): 0
+  DeformationHalfLife(hour): 5.12
 
 MyosinOptions:
   MyosinDiffusionRate(double-1/sec): 0.09873
   ForcePerMyosinMolecule(double):  100.0
-  ThereIsMyosinFeedback(bool): 1
+  ThereIsMyosinFeedback(bool): 0
   MyosinFeedbackCap: 1
   NumberofMyosinFunctions(int): 2
 

@@ -182,18 +182,6 @@ gsl_matrix* ShapeBase::getInvFsc(){
     return tmpInvFsc;
 }
 
-gsl_matrix* ShapeBase::getFplastic(){
-    gsl_matrix* tmpFplastic =gsl_matrix_calloc(nDim, nDim);
-    createMatrixCopy(tmpFplastic,Fplastic);
-    return tmpFplastic;
-}
-
-gsl_matrix* ShapeBase::getInvFplastic(){
-    gsl_matrix* tmpInvFplastic =gsl_matrix_calloc(nDim, nDim);
-    createMatrixCopy(tmpInvFplastic,invFplastic);
-    return tmpInvFplastic;
-}
-
 void ShapeBase::createMatrixCopy(gsl_matrix* dest, gsl_matrix* src){
     int m = src->size1;
     int n = src->size2;
@@ -991,6 +979,12 @@ void 	ShapeBase::changeShapeByFsc(double dt){
 	gsl_matrix_free(tmpFscForInversion);
 }
 
+void ShapeBase::setPlasticDeformationIncrement(double xx, double yy, double zz){
+	gsl_matrix_set(plasticDeformationIncrement,0,0,xx);
+	gsl_matrix_set(plasticDeformationIncrement,1,1,yy);
+	gsl_matrix_set(plasticDeformationIncrement,2,2,zz);
+
+}
 
 void 	ShapeBase::growShapeByFg(){
     if (rotatedGrowth){
@@ -1005,8 +999,10 @@ void 	ShapeBase::growShapeByFg(){
     }
     //incrementing Fg with current growth rate:
     gsl_matrix* temp1 = gsl_matrix_calloc(nDim,nDim);
-    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, growthIncrement, Fg, 0.0, temp1);
-    gsl_matrix_memcpy(Fg, temp1);
+    gsl_matrix* temp2 = gsl_matrix_calloc(nDim,nDim);
+    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, plasticDeformationIncrement,growthIncrement, 0.0, temp1);
+    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, temp1, Fg, 0.0, temp2);
+    gsl_matrix_memcpy(Fg, temp2);
     gsl_matrix * tmpFgForInversion = gsl_matrix_calloc(nDim,nDim);
     createMatrixCopy(tmpFgForInversion,Fg);
     bool inverted = InvertMatrix(tmpFgForInversion, InvFg);
@@ -1018,6 +1014,7 @@ void 	ShapeBase::growShapeByFg(){
     VolumePerNode = GrownVolume/nNodes;
     //freeing matrices allocated in this function
     gsl_matrix_free(temp1);
+    gsl_matrix_free(temp2);
     gsl_matrix_free(tmpFgForInversion);
 }
 
@@ -1032,11 +1029,74 @@ double 	ShapeBase::calculateCurrentGrownAndEmergentVolumes(){
 
 }
 
-void	ShapeBase::calculatePlasticDeformation(bool volumeConserved, double rate){
-	gsl_matrix* TriPointFe = gsl_matrix_calloc(3,3);
+void	ShapeBase::calculatePlasticDeformation(bool volumeConserved, double dt, double plasticDeformationHalfLife){
+	double e1 = 0.0, e2 = 0.0, tet = 0.0;
+	calculatePrincipalStrainAxesOnXYPlane(e1, e2, tet);
+	//NowI have the green strain in principal direction in the orientation of the element internal coordinats.
+	//I can simply grow the element in this axis, to obtain some form of plastic growth.
+	//the strain I have here is Green strain, I would like to convert it back to deformation
+	//gradient terms. Since  E = 1/2 *(Fe^T*Fe-I):
+	double Fxx = pow(e1*2+1,0.5);
+	double Fyy = pow(e2*2+1,0.5);
+	//The effective change I want within one time step is the faction given in "rate"
+
+	//half life of plastic deformation:
+	//Maria's aspect ratio data shows, normalised to initial aspect ratio, if a tissue
+	//is stretched to an aspect ratio of 2.0, and relaxed in 20 minutes, it relaxes back to original shape.
+	//On the other hand, if it is stretched for 3 hr, it relaxed to an aspect ratio of 1.2.
+	//Then the elastic deformation gradient, starting from 2.0, relaxes to a values such that
+	//1.2 * Fe = 2.0 -> Fe = 1.6667. Then the deformation I am calculating decays from 1.0 to 0.66667
+	//N(0) = 1.0, N(3hr) = 0.66667, then this gives me
+	//a half life of 5.12 hr ( N(t) = N(0) * 2 ^ (-t/t_{1/2}) )
+	//This is the value set into modelinput file
+	double tau = plasticDeformationHalfLife/(log(2)); // (mean lifetime tau is half life / ln(2))
+	double Fxxt = (Fxx-1)*exp(-1.0*dt/tau) + 1;
+	double Fyyt = (Fyy-1)*exp(-1.0*dt/tau) + 1;
+	Fxx = Fxx/Fxxt;
+	Fyy = Fyy/Fyyt;
+	//Fxx = (Fxx-1)*rate +1;
+	//dFyy = (Fyy-1)*rate +1;
+	//cout<<"element: "<<Id<<" principal strains: "<<e1<<" "<<e2<<" angle: "<<tet<<" in degrees: "<<tet/3.14*180<<" resulting scaled increment: "<<Fxx<<" "<<Fyy<<" Fxxt: "<<Fxxt<<" Fyyt: "<<Fyyt<<endl;
+
+	//If I am conserving the volum, I need to scale:
+	gsl_matrix*  increment = gsl_matrix_calloc(3,3);
+	gsl_matrix_set(increment,0,0,Fxx);
+	gsl_matrix_set(increment,1,1,Fyy);
+	gsl_matrix_set(increment,2,2,1);
+	if (volumeConserved){
+		double det = determinant3by3Matrix(increment);
+		double scale = 1.0/pow (det,1.0/3.0);
+		gsl_matrix_scale(increment,scale);
+	}
+	//rotate the growth rate to be applied in the selected angle:
+	gsl_matrix*  rotMat = gsl_matrix_calloc(3,3);
+	gsl_matrix_set_identity(rotMat);
+	double c = cos(tet);
+	double s = sin(tet);
+	gsl_matrix_set(rotMat,0,0,  c );
+	gsl_matrix_set(rotMat,0,1, -1.0*s);
+	gsl_matrix_set(rotMat,0,2,  0.0);
+	gsl_matrix_set(rotMat,1,0,  s);
+	gsl_matrix_set(rotMat,1,1,  c);
+	gsl_matrix_set(rotMat,1,2,  0.0);
+	gsl_matrix_set(rotMat,2,0,  0.0);
+	gsl_matrix_set(rotMat,2,1,  0.0);
+	gsl_matrix_set(rotMat,2,2,  1.0);
+	gsl_matrix* temp = gsl_matrix_calloc(3,3);
+	gsl_matrix* rotMatT = gsl_matrix_calloc(3,3);
+	gsl_matrix_transpose_memcpy(rotMatT,rotMat);
+	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, rotMat, increment, 0.0, temp);
+	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, temp, rotMatT, 0.0, plasticDeformationIncrement);
+	gsl_matrix_free(temp);
+	gsl_matrix_free(rotMat);
+	gsl_matrix_free(rotMatT);
+	gsl_matrix_free(increment);
+
+
+	/*gsl_matrix* TriPointFe = gsl_matrix_calloc(3,3);
 	gsl_matrix* FplasticIncrement = gsl_matrix_calloc(3,3);
     gsl_matrix_set_identity(FplasticIncrement);
-    //gsl_matrix_set_identity(TriPointFe);
+    gsl_matrix_set_identity(TriPointFe);
 	double weights[3] = {1.0/3.0,1.0/3.0,1.0/3.0};
 	for (int iter =0; iter<3;++iter){
 		gsl_matrix* currFe =  gsl_matrix_calloc(3,3);
@@ -1068,7 +1128,7 @@ void	ShapeBase::calculatePlasticDeformation(bool volumeConserved, double rate){
 	gsl_matrix_free(FplasticIncrement);
     gsl_matrix_free(TriPointFe);
     gsl_matrix_free(temp);
-    gsl_matrix_free(tmpFplasticForInversion);
+    gsl_matrix_free(tmpFplasticForInversion);*/
 }
 
 void 	ShapeBase::CalculateGrowthRotationByF(){

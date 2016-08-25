@@ -197,7 +197,7 @@ void Simulation::setDefaultParameters(){
 
 	thereIsPlasticDeformation = false;
 	volumeConservedInPlasticDeformation = false;
-	plasticDeformationRate = 0.0;
+	plasticDeformationHalfLife = 0.0;
 
 	kMyo = 0.09873;
 	forcePerMyoMolecule = 1.0;
@@ -2077,7 +2077,7 @@ void Simulation::fixAllD(Node* currNode, bool fixWithViscosity){
 			currNode->FixedPos[j]=true;
 		}
 	}
-	cout<<" fixAllD called on node: "<<currNode->Id<<endl;
+	//cout<<" fixAllD called on node: "<<currNode->Id<<endl;
 }
 
 void Simulation::fixAllD(int i, bool fixWithViscosity){
@@ -2949,13 +2949,6 @@ void Simulation::manualPerturbationToInitialSetup(bool deform, bool rotate){
 				(*itNode)->Position[0] -= 5;
 			}*/
 		}
-		/*cout<<" fixingExternalViscosity: "<<fixingExternalViscosity[0]<<" "<<fixingExternalViscosity[1]<<" "<<fixingExternalViscosity[2]<<endl;
-		for (vector<Node*>::iterator  itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-			cout<<"Node: "<<(*itNode)->Id<<" external visc: "<<(*itNode)->externalViscosity[0]<<" "<<(*itNode)->externalViscosity[1]<<" "<<(*itNode)->externalViscosity[2]<<endl;
-		}
-		for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-			cout<<"Element: "<<(*itElement)->Id<<" internal viscosity: "<<(*itElement)->getInternalViscosity()<<endl;
-		}*/
 		//laserAblateTissueType(1);
 		//laserAblate(0.0, 0.0, 5.0);
         double scaleX = 1.0;
@@ -2963,9 +2956,10 @@ void Simulation::manualPerturbationToInitialSetup(bool deform, bool rotate){
         double scaleZ = 2.0;
 
         double PI = 3.14159265359;
-        double tetX = 0 *PI/180.0;
+        double tetX = 45 *PI/180.0;
         double tetY = 0 *PI/180.0;
-        double tetZ = 45 *PI/180.0;
+        double tetZ = 0 *PI/180.0;
+    	int axisToRotateOn = 0; //0: rotate around x axis, 1: around y-axis, and 2: around z-axis.
         if(deform){
         	for (vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
         		(*itNode)->Position[0] *=scaleX;
@@ -2975,7 +2969,6 @@ void Simulation::manualPerturbationToInitialSetup(bool deform, bool rotate){
         }
         if (rotate){
         	cerr<<"Rotating system"<<endl;
-        	int axisToRotateOn = 2; //0: rotate around x axis, 1: around y-axis, and 2: around z-axis.
             double R[3][3] =  {{1,0,0},{0,1,0},{0,0,1}};
             if (axisToRotateOn == 0){
             	double c = cos(tetX);
@@ -3839,6 +3832,9 @@ bool Simulation::runOneStep(){
         	calculateShapeChange();
         }
     }
+    if(thereIsPlasticDeformation){
+    	updatePlasticDeformation();
+    }
     for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
         if (!(*itElement)->IsAblated){
         	//(*itElement)->updateInternalViscosityTest();
@@ -3865,11 +3861,6 @@ bool Simulation::runOneStep(){
 
 
     updateStepNR();
-
-
-    if(thereIsPlasticDeformation){
-    	updatePlasticDeformation();
-    }
     calculateBoundingBox();
 
     //calculateColumnarLayerBoundingBox();
@@ -4172,11 +4163,14 @@ void Simulation::calculateZProjectedAreas(){
 }
 
 void Simulation::updatePlasticDeformation(){
-	double rate = plasticDeformationRate/3600.0*dt; //convert from per hour to per sec
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+	//double rate = plasticDeformationRate/3600.0*dt; //convert from per hour to per de(in sec)
+	#pragma omp parallel for //private(Nodes, displacementPerDt, recordForcesOnFixedNodes, FixedNodeForces, outputFile, dt)
+	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 		if (!(*itElement)->IsAblated){
-			(*itElement)->calculatePlasticDeformation(volumeConservedInPlasticDeformation,rate );
+			(*itElement)->calculatePlasticDeformation(volumeConservedInPlasticDeformation,dt,plasticDeformationHalfLife );
+		}
+		else{
+			(*itElement)->setPlasticDeformationIncrement(1.0,1.0,1.0);
 		}
 	}
 }

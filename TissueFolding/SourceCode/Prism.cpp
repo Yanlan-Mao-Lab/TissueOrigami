@@ -127,7 +127,7 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, bool thereIsPlas
     gsl_matrix_set_identity(Fsc);
     InvFsc = gsl_matrix_calloc(3,3);
     gsl_matrix_set_identity(InvFsc);
-	if (thereIsPlasticDeformation){
+	/*if (thereIsPlasticDeformation){
 		 Fplastic  = gsl_matrix_calloc(3,3);
 		 gsl_matrix_set_identity(Fplastic);
 	}
@@ -136,8 +136,10 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, bool thereIsPlas
 	}
     invFplastic  = gsl_matrix_calloc(3,3);
     gsl_matrix_set_identity(invFplastic);
-    growthIncrement = gsl_matrix_calloc(3,3);
+    */growthIncrement = gsl_matrix_calloc(3,3);
     gsl_matrix_set_identity(growthIncrement);
+    plasticDeformationIncrement= gsl_matrix_calloc(3,3);
+    gsl_matrix_set_identity(plasticDeformationIncrement);
     TriPointF = gsl_matrix_calloc(3,3);
     TriPointKe = gsl_matrix_calloc(nDim*nNodes,nDim*nNodes);
     TriPointKv = gsl_matrix_calloc(nDim*nNodes,nDim*nNodes);
@@ -177,14 +179,15 @@ Prism::~Prism(){
 
     //freeing matrices allocated
 	gsl_matrix_free(growthIncrement);
+	gsl_matrix_free(plasticDeformationIncrement);
     gsl_matrix_free(D);
     gsl_matrix_free(CoeffMat);
     gsl_matrix_free(Fg);
     gsl_matrix_free(InvFg);
     gsl_matrix_free(Fsc);
     gsl_matrix_free(InvFsc);
-    gsl_matrix_free(Fplastic);
-    gsl_matrix_free(invFplastic);
+    //gsl_matrix_free(Fplastic);
+    //gsl_matrix_free(invFplastic);
     gsl_matrix_free(TriPointF);
     gsl_matrix_free(Strain);
     gsl_matrix_free(TriPointKe);
@@ -212,8 +215,8 @@ Prism::~Prism(){
     delete[] invJShapeFuncDerStackwithFe;
     delete[] elasticStress;
     delete[] viscousStress;
-    delete[] Fplastic;
-    delete[] invFplastic;
+    //delete[] Fplastic;
+    //delete[] invFplastic;
     delete[] elementsIdsOnSameColumn;
 }
 
@@ -499,8 +502,8 @@ void Prism::calculateCurrTriPointFForRotation(gsl_matrix *currF,int pointNo){
 void Prism::calculateCurrNodalForces(gsl_matrix *currge, gsl_matrix *currgv, gsl_matrix *currF, gsl_matrix* displacementPerDt, int pointNo){
     const int n = nNodes;
     const int dim = nDim;
-    gsl_matrix* currFeFpFsc = gsl_matrix_alloc(dim,dim);
-    gsl_matrix* currFeFp = gsl_matrix_alloc(dim,dim);
+    //gsl_matrix* currFeFpFsc = gsl_matrix_alloc(dim,dim);
+    //gsl_matrix* currFeFp = gsl_matrix_alloc(dim,dim);
     gsl_matrix* currFe = gsl_matrix_alloc(dim,dim);
     gsl_matrix* CurrShape = gsl_matrix_alloc(n,dim);
 
@@ -522,9 +525,10 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currge, gsl_matrix *currgv, gsl
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, Jacobian, InvdXde, 0.0, currF);
 
     //calculating Fe:
-    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currF, InvFg, 0.0, currFeFpFsc);	///< Removing growth
-    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currFeFpFsc, InvFsc, 0.0, currFeFp);	///< Removing shape change
-    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currFeFp, invFplastic, 0.0, currFe);	///< Removing plastic deformation
+    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currF, InvFg, 0.0, currFe);	///< Removing growth
+    //gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currF, InvFg, 0.0, currFeFpFsc);	///< Removing growth
+    //gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currFeFpFsc, InvFsc, 0.0, currFeFp);	///< Removing shape change
+    //gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currFeFp, invFplastic, 0.0, currFe);	///< Removing plastic deformation
 	gsl_matrix* currFeT = gsl_matrix_alloc(dim, dim);
     gsl_matrix_transpose_memcpy(currFeT,currFe);
     createMatrixCopy(FeMatrices[pointNo], currFe); // storing Fe for use in implicit elastic K calculation.
@@ -605,8 +609,8 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currge, gsl_matrix *currgv, gsl
     }*/
     //freeing the matrices allocated in this function
     gsl_matrix_free(currFeT);
-    gsl_matrix_free(currFeFp);
-    gsl_matrix_free(currFeFpFsc);
+    //gsl_matrix_free(currFeFp);
+    //gsl_matrix_free(currFeFpFsc);
     gsl_matrix_free(C);
     gsl_matrix_free(E);
     gsl_matrix_free(S);
@@ -1782,32 +1786,32 @@ void Prism::copyElementInformationAfterRefinement(ShapeBase* baseElement, int la
 	gsl_matrix* baseInvFg = baseElement->getInvFg();
 	gsl_matrix* baseFsc = baseElement->getFsc();
 	gsl_matrix* baseInvFsc = baseElement->getInvFsc();
-	gsl_matrix* baseFplastic;
+	/*gsl_matrix* baseFplastic;
 	gsl_matrix* baseInvFplastic;
 	if(thereIsPlasticDeformation){
 		baseFplastic = baseElement->getFplastic();
 		baseInvFplastic = baseElement->getInvFplastic();
-	}
+	}*/
 	for (int i=0; i<3; ++i){
 		for (int j=0; j<3; ++j){
 			gsl_matrix_set(this->Fg,i,j,gsl_matrix_get(baseFg,i,j));
 			gsl_matrix_set(this->InvFg,i,j,gsl_matrix_get(baseInvFg,i,j));
 			gsl_matrix_set(this->Fsc,i,j,gsl_matrix_get(baseFsc,i,j));
 			gsl_matrix_set(this->InvFsc,i,j,gsl_matrix_get(baseInvFsc,i,j));
-			if(thereIsPlasticDeformation){
+			/*if(thereIsPlasticDeformation){
 				gsl_matrix_set(this->Fplastic,i,j,gsl_matrix_get(baseFplastic,i,j));
 				gsl_matrix_set(this->invFplastic,i,j,gsl_matrix_get(baseInvFplastic,i,j));
-			}
+			}*/
 		}
 	}
 	gsl_matrix_free(baseFg);
 	gsl_matrix_free(baseInvFg);
 	gsl_matrix_free(baseFsc);
 	gsl_matrix_free(baseInvFsc);
-	if(thereIsPlasticDeformation){
+	/*if(thereIsPlasticDeformation){
 		gsl_matrix_free(baseFplastic);
 		gsl_matrix_free(baseInvFplastic);
-	}
+	}*/
 	double* initialReletivePos = new double[2];
 	double* reletivePos = new double[2];
 	baseElement->getInitialRelativePosInBoundingBox(initialReletivePos);

@@ -295,7 +295,7 @@ public:
 
 	bool thereIsPlasticDeformation;
 	bool volumeConservedInPlasticDeformation;
-	double plasticDeformationRate;
+	double plasticDeformationHalfLife;
 
 	int nMyosinFunctions;
 	vector<MyosinFunction*> myosinFunctions;

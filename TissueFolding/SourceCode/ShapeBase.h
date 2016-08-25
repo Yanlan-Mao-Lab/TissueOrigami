@@ -42,6 +42,7 @@ protected:
 	int* 		IdentifierColour;		///< The unique identifier colour of the element, this is used for "picking" in the visual interface.
 	double* 	GrowthRate;				///< Growth rate recording for display purposes only. The recorded growth rate in x, y, and z  coordinates, does not record shear deformation induced in growth. Recorded in exponential form through time step, converted to rate per hour for display within the visual interface
 	gsl_matrix* growthIncrement;		///< The matrix (3,3) representing the incremental growth in current time step. Reset to identity at the beginning of each time step, updated in growth functions, and utilised to update Fg.
+	gsl_matrix* plasticDeformationIncrement;		///< The matrix (3,3) representing the incremental plastic deformation (treated as growth) in current time step. Set in plastic deformation calculation at each step, and utilised to update Fg.
 	double  	columnarGrowthWeight;	///< The fraction defining how close to the columnar layer the element is. 1.0 for columnar layer, 0.0 for peripodial membrane elements, and scaled according to position in the elements surrounding the lumen.
 	double  	peripodialGrowthWeight;	///< The fraction defining how close to the peripodial membrane the element is. 0.0 for columnar layer, 1.0 for peripodial membrane elements, and scaled according to position in the elements surrounding the lumen.
 	double* 	ShapeChangeRate;		///< Shape change rate of the elements, only orthagonal shape changes are allowed (x, y, z). Shape changes will be scaled to conserve volume, thus three values will not be independent.
@@ -57,8 +58,8 @@ protected:
     double* detdXdes;							///< The array stores the determinants of the matrices for derivatives of world coordinates with respect to barycentric coordinates (dX / de). The array stores a double value for each gauss point (there are 3 Gauss points for prisms).
     gsl_matrix 	**Bmatrices;					///< The array stores the B matrix for the calculation of stiffness matrix, see for ShapeBase#calculateBTforNodalForces calculation. The array stores an ShapeBase#nNodes by (ShapeBase#nDim*ShapeBase#nNodes)  matrix for each Gauss point (there are 3 Gauss points for prisms).
     gsl_matrix 	**FeMatrices;					///< The array stores the elastic part of the deformation matrix. The array stores an ShapeBase#nDim by ShapeBase#nDim  matrix for each Gauss point (there are 3 Gauss points for prisms).
-    gsl_matrix 	*Fplastic;						///< The array stores the plastic part of the deformation matrix. The array stores an ShapeBase#nDim by ShapeBase#nDim  matrix for each Gauss point (there are 3 Gauss points for prisms).
-    gsl_matrix 	*invFplastic;					///< The array stores inverses of the plastic part of the deformation matrix, in same structure as ShapeBase#Fplastic.
+    //gsl_matrix 	*Fplastic;						///< The array stores the plastic part of the deformation matrix. The array stores an ShapeBase#nDim by ShapeBase#nDim  matrix for each Gauss point (there are 3 Gauss points for prisms).
+    //gsl_matrix 	*invFplastic;					///< The array stores inverses of the plastic part of the deformation matrix, in same structure as ShapeBase#Fplastic.
     gsl_matrix 	**invJShapeFuncDerStack;		///< The array stores the shape function derivatives multiplied by the inverse Jacobian stack, for each Gauss point. See ShapeBase#calculateBTforNodalForces for calculation.
     gsl_matrix 	**invJShapeFuncDerStackwithFe;	///< See ShapeBase#calculateInvJShFuncDerSWithFe for calculation.
     gsl_matrix 	**elasticStress;				///< The array of matrices for elastic stress of the element. The array stores a 6 by 6 matrix for each Gauss point (there are 3 Gauss points for prisms).
@@ -221,8 +222,6 @@ public:
     gsl_matrix* getInvFg();
     gsl_matrix* getFsc();
     gsl_matrix* getInvFsc();
-    gsl_matrix* getFplastic();
-    gsl_matrix* getInvFplastic();
 	void 	displayName();
 	void	displayNodeIds();
 	void 	displayPositions();
@@ -314,9 +313,10 @@ public:
 
 	void    CalculateGrowthRotationByF();
 	void 	calculateTriPointFForRatation();
+	void 	setPlasticDeformationIncrement(double xx, double yy, double zz);
     void 	growShapeByFg();
     void 	changeShapeByFsc(double dt);
-    void	calculatePlasticDeformation(bool volumeConserved, double rate);
+    void	calculatePlasticDeformation(bool volumeConserved, double dt, double plasticDeformationHalfLife);
 
 	virtual double getApicalSideLengthAverage(){return ParentErrorMessage("getApicalSideLengthAverage",0.0);};
 	virtual void getApicalTriangles(vector <int> &/*ApicalTriangles*/){ParentErrorMessage("getApicalTriangles");};
