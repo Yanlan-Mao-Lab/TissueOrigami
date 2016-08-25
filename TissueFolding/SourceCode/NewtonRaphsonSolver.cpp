@@ -19,20 +19,20 @@ NewtonRaphsonSolver::NewtonRaphsonSolver(int dim, int n){
 
 	numericalParametersSet = false;
 
-	un = gsl_matrix_calloc(dim*nNodes,1);
+	un = gsl_matrix_calloc(nDim*nNodes,1);
 	//mvisc = gsl_matrix_calloc(dim*nNodes,dim*nNodes);
 	//mvisc = gsl_matrix_calloc(1,dim*nNodes);
 	//mviscPerDt = gsl_matrix_calloc(dim*nNodes,dim*nNodes);
 	//mviscPerDt = gsl_matrix_calloc(1,dim*nNodes);
-	ge = gsl_matrix_calloc(dim*nNodes,1);
-	gvInternal = gsl_matrix_calloc(dim*nNodes,1);
-	gvExternal = gsl_matrix_calloc(dim*nNodes,1);
-	gExt = gsl_matrix_calloc(dim*nNodes,1);
-	gSum = gsl_vector_calloc(dim*nNodes);
-	uk = gsl_matrix_calloc(dim*nNodes,1);
-	displacementPerDt = gsl_matrix_calloc(dim*nNodes,1);
-	deltaU = gsl_vector_calloc(dim*nNodes);
-	K = gsl_matrix_calloc(dim*nNodes,dim*nNodes);
+	ge = gsl_matrix_calloc(nDim*nNodes,1);
+	gvInternal = gsl_matrix_calloc(nDim*nNodes,1);
+	gvExternal = gsl_matrix_calloc(nDim*nNodes,1);
+	gExt = gsl_matrix_calloc(nDim*nNodes,1);
+	gSum = gsl_vector_calloc(nDim*nNodes);
+	uk = gsl_matrix_calloc(nDim*nNodes,1);
+	displacementPerDt = gsl_matrix_calloc(nDim*nNodes,1);
+	deltaU = gsl_vector_calloc(nDim*nNodes);
+	K = gsl_matrix_calloc(nDim*nNodes,nDim*nNodes);
 
 	Knumerical = 0;
 }
@@ -59,8 +59,8 @@ NewtonRaphsonSolver::~NewtonRaphsonSolver(){
 	gsl_vector_free(deltaU);
 	cout<<" deleted deltaU"<<endl;
 
-	cout<<"K(0,0): "<<gsl_matrix_get(K,0,0)<<endl;
-	cout<<"(K->size1,K->size2): "<<K->size1<<" "<<K->size2<<endl;
+	//cout<<"K(0,0): "<<gsl_matrix_get(K,0,0)<<endl;
+	//cout<<"(K->size1,K->size2): "<<K->size1<<" "<<K->size2<<endl;
 	gsl_matrix_free(K);
 	cout<<" deleted K"<<endl;
     //gsl_matrix_free(mviscPerDt);
@@ -75,6 +75,36 @@ NewtonRaphsonSolver::~NewtonRaphsonSolver(){
 	}
 	cout<<" deleted Knumerical"<<endl;
 }
+
+void NewtonRaphsonSolver::reInitiateMatricesAfterRefinement(int n){
+	//I have added nodes to the system after refinement.
+	//I need to change the number of nodes recorded in NR solver, and
+	//re-allocate the matrices with new node size.
+	nNodes = n;
+
+	gsl_matrix_free(un);
+	gsl_matrix_free(ge);
+	gsl_matrix_free(gvInternal);
+	gsl_matrix_free(gvExternal);
+	gsl_matrix_free(gExt);
+	gsl_vector_free(gSum);
+	gsl_matrix_free(uk);
+	gsl_matrix_free(displacementPerDt);
+	gsl_vector_free(deltaU);
+	gsl_matrix_free(K);
+
+	un = gsl_matrix_calloc(nDim*nNodes,1);
+	ge = gsl_matrix_calloc(nDim*nNodes,1);
+	gvInternal = gsl_matrix_calloc(nDim*nNodes,1);
+	gvExternal = gsl_matrix_calloc(nDim*nNodes,1);
+	gExt = gsl_matrix_calloc(nDim*nNodes,1);
+	gSum = gsl_vector_calloc(nDim*nNodes);
+	uk = gsl_matrix_calloc(nDim*nNodes,1);
+	displacementPerDt = gsl_matrix_calloc(nDim*nNodes,1);
+	deltaU = gsl_vector_calloc(nDim*nNodes);
+	K = gsl_matrix_calloc(nDim*nNodes,nDim*nNodes);
+}
+
 
 void NewtonRaphsonSolver::setMatricesToZeroAtTheBeginningOfIteration(bool thereIsNumericalCalculation){
 	gsl_matrix_set_zero(un);
@@ -111,7 +141,6 @@ void NewtonRaphsonSolver::setMatricesToZeroInsideIteration(){
 
 }
 
-
 void NewtonRaphsonSolver::constructUnMatrix(vector <Node*>& Nodes){
     for (int i = 0; i<nNodes; ++i ){
         for (int j=0; j<nDim; ++j){
@@ -142,6 +171,20 @@ void NewtonRaphsonSolver::calculateDisplacementMatrix(double dt){
 	gsl_matrix_sub(displacementPerDt,un);
 	gsl_matrix_scale(displacementPerDt,1.0/dt);
 
+	//Implicit viscosity testing:
+	//Assigning velocity to nodes:
+	/*
+	 gsl_matrix_set_zero(displacementPerDt);
+    //int nodes[3] = {0,66,132};
+    int nodes[3] = {0,163,326};
+	int n = 3;
+	double dvel = 0.1;
+	for (int i=0;i<n;++i){
+		gsl_matrix_set(displacementPerDt,nodes[i]*3,0,dvel);
+	}
+	//end of assigning velocity to nodes
+	 */
+
 }
 
 void NewtonRaphsonSolver::calcutateFixedK(vector <Node*>& Nodes){
@@ -164,7 +207,7 @@ void NewtonRaphsonSolver::calcutateFixedK(vector <Node*>& Nodes){
     }
 }
 
-void NewtonRaphsonSolver::calculateForcesAndJacobianMatrixNR(vector <Node*>& Nodes, vector <ShapeBase*>& Elements, double dt, bool recordForcesOnFixedNodes, double **FixedNodeForces, ofstream& outputFile){
+void NewtonRaphsonSolver::calculateForcesAndJacobianMatrixNR(vector <Node*>& Nodes, vector <ShapeBase*>& Elements, double dt, bool recordForcesOnFixedNodes, double **FixedNodeForces){
 	const int maxThreads = omp_get_max_threads();
 	omp_set_num_threads(maxThreads);
 	#pragma omp parallel for //private(Nodes, displacementPerDt, recordForcesOnFixedNodes, FixedNodeForces, outputFile, dt)
@@ -175,7 +218,7 @@ void NewtonRaphsonSolver::calculateForcesAndJacobianMatrixNR(vector <Node*>& Nod
 			//int levleNo = omp_get_level();
 			//cout<<" level no:" <<levleNo<<" is parallel? " <<isParallel<<" omp threads inside loop, nThreads:"<<nThreads<<" threadNum: "<<threadNum<<endl;
 			if (!(*itElement)->IsAblated){
-				(*itElement)->calculateForces(Nodes, displacementPerDt, recordForcesOnFixedNodes, FixedNodeForces, outputFile);
+				(*itElement)->calculateForces(Nodes, displacementPerDt, recordForcesOnFixedNodes, FixedNodeForces);
 			}
 			(*itElement)->calculateImplicitKElastic(); //This is the stiffness matrix, elastic part of the jacobian matrix
 			(*itElement)->calculateImplicitKViscous(displacementPerDt, dt); //This is the viscous part of jacobian matrix
@@ -269,7 +312,6 @@ void NewtonRaphsonSolver::solveForDeltaU(){
     double *b = new double[nmult];
     vector <int> ja_vec;
     vector <double> a_vec;
-
     constructiaForPardiso(ia, nmult, ja_vec, a_vec);
     const int nNonzero = ja_vec.size();
     int* ja = new int[nNonzero];
@@ -331,7 +373,7 @@ int NewtonRaphsonSolver::solveWithPardiso(double* a, double*b, int* ia, int* ja,
 
     /* RHS and solution vectors. */
     int      nrhs = 1;          /* Number of right hand sides. */
-    double   x[n_variables], diag[n_variables];
+    double   x[n_variables];//, diag[n_variables];
     /* Internal solver memory pointer pt,                  */
     /* 32-bit: int pt[64]; 64-bit: long int pt[64]         */
     /* or void *pt[64] should be OK on both architectures  */
@@ -349,7 +391,7 @@ int NewtonRaphsonSolver::solveWithPardiso(double* a, double*b, int* ia, int* ja,
 
     /* Auxiliary variables. */
     char    *var;
-    int      i, k;
+    int      i;// k;
 
     double   ddum;              /* Double dummy */
     int      idum;              /* Integer dummy. */
@@ -428,6 +470,7 @@ int NewtonRaphsonSolver::solveWithPardiso(double* a, double*b, int* ia, int* ja,
 
     if (carryOutDebuggingChecks){
         pardiso_chkvec (&n, &nrhs, b, &error);
+
         if (error != 0) {
             printf("\nERROR  in right hand side: %d", error);
             exit(1);
@@ -600,7 +643,7 @@ bool NewtonRaphsonSolver::checkConvergenceViaDeltaU(){
     bool converged = true;
 
     double d = gsl_blas_dnrm2 (deltaU);
-
+    //displayMatrix(deltaU,"deltaUInConvergence");
     if (d>threshold){
         converged = false;
         cout<<" not  yet converged via du: norm "<<d<<endl;
@@ -674,3 +717,15 @@ void NewtonRaphsonSolver::displayMatrix(gsl_matrix* mat, string matname){
     }
     cout<<endl;
 }
+
+void NewtonRaphsonSolver::displayMatrix(gsl_vector* mat, string matname){
+    int m = mat->size;
+    //int n = mat->size2;
+    cout<<matname<<": "<<endl;
+    for (int i =0; i<m; i++){
+		cout.precision(4);
+		cout.width(6);
+		cout<<gsl_vector_get(mat,i)<<endl;
+    }
+}
+

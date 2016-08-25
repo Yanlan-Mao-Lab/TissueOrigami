@@ -49,10 +49,10 @@ using namespace std;
      int 		StrainToDisplay;
      bool 		DisplayPysProp;
      int 		PysPropToDisplay;
-     float 		DisplayPysPropRange[6][2];	//current range
-     float 		DisplayPysPropBounds[6][4];  //the minimum and maximum they can get
-     int		DisplayPysPropDecimals[6];	//the decimal points for spin boxes
-     float 		DisplayPysPropSteps[6];	//current step of the spinbox
+     float 		DisplayPysPropRange[7][2];	//current range
+     float 		DisplayPysPropBounds[7][4];  //the minimum and maximum they can get
+     int		DisplayPysPropDecimals[7];	//the decimal points for spin boxes
+     float 		DisplayPysPropSteps[7];	//current step of the spinbox
      vector <QString> SelectedPos;
      vector <QString> SelectedId;
      bool 		drawNetForces;
@@ -67,6 +67,7 @@ using namespace std;
      bool       displayPipette;
      double  	xClip, yClip, zClip;
      bool 		drawSymmetricity;
+     int		currNodeNumber;
 
  signals:
  	 void SelectedItemChanged();
@@ -90,6 +91,7 @@ using namespace std;
      void 	drawForPicking ();
      void 	generate3DObject();
      void 	initialiseNodeColourList();
+     void	reInitialiseNodeColourList(int oldNodeNumber);
 
      //Element drawing functions
      bool 	checkIfDrawingElement(int i);

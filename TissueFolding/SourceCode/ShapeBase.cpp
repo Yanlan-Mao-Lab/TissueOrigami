@@ -122,9 +122,15 @@ void ShapeBase::getPos(gsl_matrix* Pos){
         }
     }
 }
+
 double 	ShapeBase::getInternalViscosity(){
 	return internalViscosity;
 }
+
+double 	ShapeBase::getOriginalInternalViscosity(){
+	return originalInternalViscosity;
+}
+
 void ShapeBase::updateInternalViscosityTest(){
 	double d[2] = {0.0,0.0};
 	for (int i = 0; i<nNodes; ++i ){
@@ -155,6 +161,37 @@ gsl_matrix* ShapeBase::getFg(){
     gsl_matrix* tmpFg =gsl_matrix_calloc(nDim, nDim);
     createMatrixCopy(tmpFg,Fg);
     return tmpFg;
+}
+
+gsl_matrix* ShapeBase::getInvFg(){
+    gsl_matrix* tmpInvFg =gsl_matrix_calloc(nDim, nDim);
+    createMatrixCopy(tmpInvFg,InvFg);
+    return tmpInvFg;
+}
+
+
+gsl_matrix* ShapeBase::getFsc(){
+    gsl_matrix* tmpFsc =gsl_matrix_calloc(nDim, nDim);
+    createMatrixCopy(tmpFsc,Fsc);
+    return tmpFsc;
+}
+
+gsl_matrix* ShapeBase::getInvFsc(){
+    gsl_matrix* tmpInvFsc =gsl_matrix_calloc(nDim, nDim);
+    createMatrixCopy(tmpInvFsc,InvFsc);
+    return tmpInvFsc;
+}
+
+gsl_matrix* ShapeBase::getFplastic(){
+    gsl_matrix* tmpFplastic =gsl_matrix_calloc(nDim, nDim);
+    createMatrixCopy(tmpFplastic,Fplastic);
+    return tmpFplastic;
+}
+
+gsl_matrix* ShapeBase::getInvFplastic(){
+    gsl_matrix* tmpInvFplastic =gsl_matrix_calloc(nDim, nDim);
+    createMatrixCopy(tmpInvFplastic,invFplastic);
+    return tmpInvFplastic;
 }
 
 void ShapeBase::createMatrixCopy(gsl_matrix* dest, gsl_matrix* src){
@@ -211,8 +248,11 @@ void ShapeBase::getInitialRelativePositionInTissueInGridIndex(int nGridX, int nG
 
 }
 
-bool ShapeBase::isGrowthRateApplicable( int sourceTissue, double& weight){
-	//wight is the weight of hte current tissue in linker sites
+bool ShapeBase::isGrowthRateApplicable( int sourceTissue, double& weight, double zmin, double zmax){
+	//weight is the weight of the current tissue in linker sites
+	if (initialRelativePositionInZ < zmin ||  initialRelativePositionInZ > zmax){
+		return false;
+	}
 	if (sourceTissue == 0){//columnar layer growth
 		if (tissueType == 0){ //columnar
 			weight = 1.0;
@@ -236,9 +276,9 @@ bool ShapeBase::isGrowthRateApplicable( int sourceTissue, double& weight){
 	return false;
 }
 
-void ShapeBase::calculateFgFromRates(double dt, double x, double y, double z, gsl_matrix* rotMat, gsl_matrix* increment, int sourceTissue){
+void ShapeBase::calculateFgFromRates(double dt, double x, double y, double z, gsl_matrix* rotMat, gsl_matrix* increment, int sourceTissue, double zMin, double zMax){
 	double tissueWeight;
-	bool continueCalaculation = isGrowthRateApplicable(sourceTissue, tissueWeight);
+	bool continueCalaculation = isGrowthRateApplicable(sourceTissue, tissueWeight, zMin, zMax);
 	if (continueCalaculation){
 		gsl_matrix_set(increment,0,0,exp(x*tissueWeight*dt));
 		gsl_matrix_set(increment,1,1,exp(y*tissueWeight*dt));
@@ -316,7 +356,7 @@ void ShapeBase::calculateFgFromGridCorners(double dt, GrowthFunctionBase* currGF
 
 void ShapeBase::calculateFgFromGridCorners(int gridGrowthsInterpolationType, double dt, GrowthFunctionBase* currGF, gsl_matrix* increment, int sourceTissue,  int IndexX, int IndexY, double FracX, double FracY){
 	double tissueWeight;
-	bool continueCalaculation = isGrowthRateApplicable(sourceTissue,tissueWeight);
+	bool continueCalaculation = isGrowthRateApplicable(sourceTissue,tissueWeight,currGF->zMin,currGF->zMax);
 	if (continueCalaculation){
 		//taking growth data around 4 grid points
 		//
@@ -340,8 +380,8 @@ void ShapeBase::calculateFgFromGridCorners(int gridGrowthsInterpolationType, dou
 		bool *angleEliminated;
 		angleEliminated = new bool[4];
 		currGF->getGrowthProfileAt4Corners(IndexX, IndexY, growth0, growth1, growth2, growth3, angles, angleEliminated);
-		double growth[3];
-		double angle;
+		double growth[3]= {0.0,0.0,0.0};
+		double angle = 0;
 		if (gridGrowthsInterpolationType == 0){
 			//using the growth rate at the grid point:
 			//if fraction is below 0,5, I will use the index availabe.
@@ -399,6 +439,14 @@ void ShapeBase::calculateFgFromGridCorners(int gridGrowthsInterpolationType, dou
 				//}
 			}
 		}
+		/*if (Id == 5133 || Id == 4744 || Id == 4379 || Id == 4554 || Id == 5235){
+			cout<<" Corner growths for Element: "<<Id<<" growth0: "<<endl;
+			cout<<"		growth0			: "<<growth0[0]<<" "<<growth0[1]<<" "<<growth0[2]<<" "<<endl;
+			cout<<"		growth1			: "<<growth1[0]<<" "<<growth1[1]<<" "<<growth1[2]<<" "<<endl;
+			cout<<"		growth2			: "<<growth2[0]<<" "<<growth2[1]<<" "<<growth2[2]<<" "<<endl;
+			cout<<"		growth3			: "<<growth3[0]<<" "<<growth3[1]<<" "<<growth3[2]<<" "<<endl;
+			cout<<"		average growth	: "<<growth[0]<<" "<<growth[1]<<" "<<growth[2]<<endl;
+		}*/
 		//write the increment from obtained growth:
 		for (int axis =0; axis<3; axis++){
 			gsl_matrix_set(increment,axis,axis,exp(growth[axis]*dt));
@@ -480,6 +528,8 @@ void ShapeBase::updateGrowthIncrement(gsl_matrix* columnar, gsl_matrix* peripodi
 	//	displayMatrix(growthIncrement,"growthIncrement");
 	//}
 }
+
+
 /*
 void ShapeBase::getRelativePosInColumnarBoundingBox(double* relativePos){
 	relativePos[0] =  columnarRelativePosInBoundingBox[0];
@@ -491,6 +541,8 @@ void ShapeBase::getRelativePosInPeripodialBoundingBox(double* relativePos){
 	relativePos[1] =  peripodialRelativePosInBoundingBox[1];
 }*/
 
+
+
 void ShapeBase::getRelativePosInBoundingBox(double* relativePos){
 	relativePos[0] =  relativePosInBoundingBox[0];
 	relativePos[1] =  relativePosInBoundingBox[1];
@@ -501,6 +553,22 @@ void ShapeBase::setInitialRelativePosInBoundingBox(){
 	initialRelativePosInBoundingBox[1] = relativePosInBoundingBox[1];
 }
 
+void ShapeBase::setInitialZPosition(double zMin, double TissueHeight){
+	//maximum z of the tissue and the tissue height given as input
+	double* c = getCentre();
+	initialRelativePositionInZ = 1.0 - ( (c[2] - zMin)/TissueHeight );
+	//I cannot work with maximum tissue thickness, as there may be peripodial membrane on top
+	//the tissue height is applicable to columnar layer only. I need to calculate from the bottom, then convert
+	//such that apical surface will have a value of 0, and basal surface will have 1.0;
+	//Apical surface is 0, basal surface is 1;
+	if (initialRelativePositionInZ < 0){
+		initialRelativePositionInZ = 0;
+	}
+	if (initialRelativePositionInZ > 1.0){
+		initialRelativePositionInZ = 1.0;
+	}
+	delete[] c;
+}
 void ShapeBase::getInitialRelativePosInBoundingBox(double* relativePos){
 	relativePos[0] =  initialRelativePosInBoundingBox[0];
 	relativePos[1] =  initialRelativePosInBoundingBox[1];
@@ -539,6 +607,10 @@ void 	ShapeBase::readNodeIds(int* inpNodeIds){
 	for (int i=0; i<nNodes; ++i){
 		this->NodeIds[i] = inpNodeIds[i];
 	}
+}
+
+void 	ShapeBase::updateNodeIdsForRefinement(int* inpNodeIds){
+	readNodeIds(inpNodeIds);
 }
 
 void 	ShapeBase::displayName(){
@@ -657,6 +729,9 @@ void ShapeBase::setFg(gsl_matrix* currFg){
     gsl_matrix* tmpFgForInversion =gsl_matrix_calloc(nDim,nDim);
     createMatrixCopy(tmpFgForInversion, Fg);
     bool inverted = InvertMatrix(tmpFgForInversion, InvFg);
+    if (!inverted){
+    	cerr<<"Fg cannot be inverted!"<<endl;
+    }
     gsl_matrix_free(tmpFgForInversion);
 }
 
@@ -667,9 +742,6 @@ void ShapeBase::setViscosity(double viscosityApical,double viscosityBasal, doubl
 	}
 	else if(tissuePlacement == 1 ){
 		this -> internalViscosity = viscosityApical;
-	}
-	if (Id>754 && Id<769){
-		cout<<"element: "<<Id<<" tissue placement: "<<tissuePlacement<<" internal viscosity: "<<internalViscosity<<endl;
 	}
 	this -> originalInternalViscosity = internalViscosity;
 }
@@ -722,6 +794,14 @@ void 	ShapeBase::updateReferencePositionMatrixFromSave(ifstream& file){
 			file >> savedPos;
 			ReferenceShape -> Positions[i][j] = savedPos;
 			//cout<<"savedPos: "<<savedPos<<endl;
+		}
+	}
+}
+
+void 	ShapeBase::updateReferencePositionMatrixFromInput(double** inputPos){
+	for (int i = 0; i<nNodes; ++i){
+		for (int j = 0; j<nDim; ++j){
+			ReferenceShape -> Positions[i][j] = inputPos[i][j];
 		}
 	}
 }
@@ -843,20 +923,23 @@ void 	ShapeBase::getPysProp(int type, float &PysPropMag, double dt){
 	else if (type == 4){
 		double* growth;
 		growth = getGrowthRate();
-        double timescale = 60.0*60.0; //reporting per hour
+        double timescale = 24*60.0*60.0; //reporting per 24 hours
         //for (int i =0 ; i< nDim-1 ; ++i){ //reporting only x & y
-        for (int i =2 ; i< nDim ; ++i){ //reporting only z
-        //for (int i =0 ; i< nDim ; ++i){
+        //for (int i =2 ; i< nDim ; ++i){ //reporting only z
+        for (int i =0; i< nDim ; ++i){//reporting x,y,z
 			//growth is in form exp(r*dt), get r first, then adjust the time scale, and report the exponential form still:
 			//And I want to rate of volumetric growth, that is x*y*z
 			double value = exp(log(growth[i])/dt*timescale);
 			PysPropMag *= value;
 		}
-        //converting to percentage increase per hour:
-        PysPropMag -= 1.0;
-        PysPropMag *= 100.0;
+        //converting to percentage increase per 24 hours:
+        //PysPropMag -= 1.0;
+        //PysPropMag *= 100.0;
 	}
 	else if (type == 5){
+		PysPropMag = GrownVolume/ReferenceShape->Volume;
+	}
+	else if (type == 6){
 		double* shapechange;
 		shapechange = getShapeChangeRate();
 		PysPropMag = shapechange[2];
@@ -909,7 +992,7 @@ void 	ShapeBase::changeShapeByFsc(double dt){
 }
 
 
-void 	ShapeBase::growShapeByFg(double dt){
+void 	ShapeBase::growShapeByFg(){
     if (rotatedGrowth){
         gsl_matrix* temp = gsl_matrix_calloc(nDim,nDim);
         gsl_matrix* GrowthStrainsRotMatT = gsl_matrix_calloc(nDim,nDim);
@@ -936,7 +1019,17 @@ void 	ShapeBase::growShapeByFg(double dt){
     //freeing matrices allocated in this function
     gsl_matrix_free(temp1);
     gsl_matrix_free(tmpFgForInversion);
-	//if (Id == 38) {displayMatrix(Fg,"element38Fg");}
+}
+
+double 	ShapeBase::calculateCurrentGrownAndEmergentVolumes(){
+	calculateReferenceVolume();
+	double detFg = determinant3by3Matrix(Fg);
+    GrownVolume = detFg*ReferenceShape->Volume;
+	calculateTriPointFForRatation();
+	double detF =determinant3by3Matrix(TriPointF);
+	double emergentVolume = detF*ReferenceShape->Volume;
+    return emergentVolume;
+
 }
 
 void	ShapeBase::calculatePlasticDeformation(bool volumeConserved, double rate){
@@ -1060,7 +1153,7 @@ bool 	ShapeBase::calculate3DRotMatFromF(gsl_matrix* rotMat){
     gsl_vector * workspace = gsl_vector_alloc (3);
     createMatrixCopy (Sgsl,TriPointF);
     //Singular Value Decomposition of covariance matrix S
-    int a  =  gsl_linalg_SV_decomp (Sgsl, V, Sig, workspace);
+    (void) gsl_linalg_SV_decomp (Sgsl, V, Sig, workspace); //This function does have a return value, but I do not need to use it, hence cast it to void!
 
     gsl_matrix_transpose(Sgsl); //Sgsl ended up as U, I need U^T to calculate rotation matrix as : V*U^T
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, V, Sgsl,0.0, rotMat);
@@ -1132,10 +1225,10 @@ bool 	ShapeBase::checkPackingToThisNodeViaState(int ColumnarLayerDiscretisationL
 		//If the columnar layer is discretised into multiple layers, the apical elements should be checked against apical nodes,
 		// and basal nodes should be checked against basal elements. The midline elements should not have packing, BUT on  a single layer tissue, all is midline, therefore
 		// this check would not be valid.
-		if (tissuePlacement == 2){	//tissue placement of the element is midline in a multi-layered columnar layer, it should not pack to anything
+		if ( tissuePlacement == 2 ){	//tissue placement of the element is midline in a multi-layered columnar layer, it should not pack to anything
 			return false;
 		}
-		if (NodePointer->tissuePlacement != tissuePlacement == 1){
+		if (NodePointer->tissuePlacement != tissuePlacement){
 			//apical nodes pack to apical elements and basal nodes pack to basal elements only
 			return false;
 		}
@@ -1263,9 +1356,9 @@ void  ShapeBase::rotateReferenceElementByRotationMatrix(double* rotMat){
 	}
 }
 
-void	ShapeBase::calculateForces(vector <Node*>& Nodes, gsl_matrix* displacementPerDt, bool recordForcesOnFixedNodes, double **FixedNodeForces, ofstream& outputFile){
+void	ShapeBase::calculateForces(vector <Node*>& Nodes, gsl_matrix* displacementPerDt, bool recordForcesOnFixedNodes, double **FixedNodeForces){
     if (ShapeDim == 3){		//3D element
-        calculateForces3D(Nodes, displacementPerDt, recordForcesOnFixedNodes, FixedNodeForces, outputFile);
+        calculateForces3D(Nodes, displacementPerDt, recordForcesOnFixedNodes, FixedNodeForces);
     }
 }
 
@@ -1288,7 +1381,9 @@ void ShapeBase::writeInternalForcesTogeAndgv(gsl_matrix* ge, gsl_matrix* gvInter
     for (int i = 0; i<nNodes; ++i){
         for (int j = 0; j<nDim; ++j){
             if (!Nodes[NodeIds[i]]->FixedPos[j]){
+               // cout<<"element: "<<Id<<" writing to system forces for NodeID: "<<NodeIds[i]<<" dim: "<<j<<" initial value "<<SystemForces[NodeIds[i]][j]<<" Felastic: "<<gsl_matrix_get(ElementalElasticSystemForces,i,j)<<" Fvisc: "<<gsl_matrix_get(ElementalInternalViscousSystemForces,i,j)<<endl;
                 SystemForces[NodeIds[i]][j] = SystemForces[NodeIds[i]][j] + gsl_matrix_get(ElementalElasticSystemForces,i,j) + gsl_matrix_get(ElementalInternalViscousSystemForces,i,j);
+
             }
             /*else if(recordForcesOnFixedNodes){
                 FixedNodeForces[NodeIds[i]][j] = FixedNodeForces[NodeIds[i]][j] - gsl_matrix_get(TriPointg,counter,0);
@@ -1300,7 +1395,7 @@ void ShapeBase::writeInternalForcesTogeAndgv(gsl_matrix* ge, gsl_matrix* gvInter
 
 
 
-void	ShapeBase::calculateForces3D(vector <Node*>& Nodes,  gsl_matrix* displacementPerDt, bool recordForcesOnFixedNodes, double **FixedNodeForces, ofstream& outputFile){
+void	ShapeBase::calculateForces3D(vector <Node*>& Nodes,  gsl_matrix* displacementPerDt, bool recordForcesOnFixedNodes, double **FixedNodeForces){
     int dim = nDim;
     int n = nNodes;
     //calculating F and B in a 3 point gaussian:
@@ -1471,7 +1566,7 @@ gsl_matrix* ShapeBase::calculateCompactStressForNodalForces(double detFe, gsl_ma
     return compactStress;
 }
 
-gsl_matrix* ShapeBase::calculateInvJShFuncDerSWithFe(gsl_matrix* currFe, gsl_matrix* InvDXde, gsl_matrix* ShapeFuncDerStack, gsl_matrix *invJShFuncDerSWithFe){
+void ShapeBase::calculateInvJShFuncDerSWithFe(gsl_matrix* currFe, gsl_matrix* InvDXde, gsl_matrix* ShapeFuncDerStack, gsl_matrix *invJShFuncDerSWithFe){
 	//I want InvJe, normally J InvDXde = F, I can get Je from
 	// Je InvDXde = Fe
 	// but I can also get InvJe directly from:
@@ -1920,7 +2015,7 @@ void	ShapeBase::calculateForceFromStress(int nodeId, gsl_matrix* Externalstress,
 }
 void	ShapeBase::calculateElasticKIntegral1(gsl_matrix* currElementalK,int pointNo){
     gsl_matrix * invJShFuncDerS = invJShapeFuncDerStack[pointNo];
-    gsl_matrix * invJShFuncDerSWithFe = invJShapeFuncDerStackwithFe[pointNo];
+    //gsl_matrix * invJShFuncDerSWithFe = invJShapeFuncDerStackwithFe[pointNo];
 
     double detF = detFs[pointNo];
     double detdXde = detdXdes[pointNo];
@@ -2250,7 +2345,6 @@ void	ShapeBase::fillNodeNeighbourhood(vector<Node*>& Nodes){
 	}
 }
 
-
 void	ShapeBase::updatePositions(vector<Node*>& Nodes){
 	for (int i = 0; i<nNodes; ++i){
 		for (int j = 0; j<nDim; ++j){
@@ -2383,6 +2477,12 @@ double ShapeBase::getCmyosinUnipolarForNode (int TissuePlacement){
 	return 0.0;
 }
 
+gsl_matrix* ShapeBase::getMyosinDirection(){
+    gsl_matrix* tmpMyoDir =gsl_matrix_calloc(2, nDim);
+    createMatrixCopy(tmpMyoDir,myoPolarityDir);
+    return tmpMyoDir;
+}
+
 void ShapeBase::getMyosinLevels (double *cMyo){
 	cMyo[0] = cMyoUniform[0];
 	cMyo[1] = cMyoUniform[1];
@@ -2446,7 +2546,7 @@ void 	ShapeBase::calculatePrincipalStrainAxesOnXYPlane(double& e1, double &e2, d
 	//double sqrootTerm = pow ( difference*difference +  exy*exy, 0.5);
 	//e1 = sumTerm + sqrootTerm;
 	//e2 = sumTerm - sqrootTerm;
-	double tan2Tet = exy/difference;
+	//double tan2Tet = exy/difference;
 	tet = atan2(exy,difference)/2.0;
 	//tet = atan(tan2Tet)/2;
 	//I can calculate e1 and e2, but I will not know which direction they
@@ -2496,13 +2596,14 @@ bool	ShapeBase::checkIfXYPlaneStrainAboveThreshold(double thres){
 	double exx = gsl_matrix_get(Strain,0,0);
 	double eyy = gsl_matrix_get(Strain,1,0);
 	double exy = gsl_matrix_get(Strain,3,0)/2.0;
-	//cout<<"Element: "<<Id<<" exx, eyy, exy: "<<exx<<" "<<eyy<<" "<<exy<<endl;
 	double thresSquared = thres*thres;
 	double diff= exx - eyy;
 	if (diff*diff > thresSquared){
+		//cout<<"Element: "<<Id<<" exx, eyy, exy: "<<exx<<" "<<eyy<<" "<<exy<<endl;
 		return true;
 	}
 	if (exy*exy > thresSquared){
+		//cout<<"Element: "<<Id<<" exx, eyy, exy: "<<exx<<" "<<eyy<<" "<<exy<<endl;
 		return true;
 	}
 	return false;
@@ -2522,17 +2623,24 @@ void	ShapeBase::updateEquilibriumMyoWithFeedbackFromZero(double MyosinFeedbackCa
 			bool calculatePrincipalStrainDirection = checkIfXYPlaneStrainAboveThreshold(1E-5);
 			if (calculatePrincipalStrainDirection){
 				calculatePrincipalStrainAxesOnXYPlane(e1, e2, tet);
-				double lowThres = 0.05;
+				double eEffectiveGreen = e1 - e2; //eEffective (eEffective = e1 - e2), is the difference between strains of major and minor axes.
+				double eEffectiveEngineering = pow(2*eEffectiveGreen +1 , 0.5) - 1;
+
+				double lowThres = 0.0;
 				double upThres = 0.2;
-				if(e1<lowThres){
+				double diffThres = upThres-lowThres;
+				//if(e1<lowThres){
+				if(eEffectiveEngineering<lowThres){
 					cMyoUnipolarEq[0] = 0.0;
 				}else {
 					//calculate concentration:
-					if (e1>upThres){
+					//if (e1>upThres){
+					if (eEffectiveEngineering>upThres){
 						cMyoUnipolarEq[0] = MyosinFeedbackCap;
 					}
 					else{
-						cMyoUnipolarEq[0] = e1*1000.0;
+						//cMyoUnipolarEq[0] = MyosinFeedbackCap*(e1 - lowThres)/diffThres;
+						cMyoUnipolarEq[0] = MyosinFeedbackCap*(eEffectiveEngineering - lowThres)/diffThres;
 					}
 					//give the current direction:
 					gsl_matrix_set(myoPolarityDir,0,0,cos(tet));
@@ -2607,6 +2715,7 @@ void	ShapeBase::updateEquilibriumMyoWithFeedbackFromFixedTotal(double totalMyosi
 				//In the model, this should be the residual strain, as is the difference of the strains
 				//of the major and minor axis, as long as, e1 is positive (there is stretch)
 				if (e1>0){
+					//cout<<"Element : "<<Id<<" has positive strain: [e1, e2, tet]: "<<e1<<" "<<e2<<" "<<tet<<endl;
 					//there is stretch
 					double eEffectiveGreen = e1 - e2; //eEffective (eEffective = e1 - e2), is the difference between strains of major and minor axes.
 					double eEffectiveEngineering = pow(2*eEffectiveGreen +1 , 0.5) - 1;
@@ -2643,62 +2752,71 @@ void	ShapeBase::updateMyosinConcentration(double dt, double kMyo, bool thereIsMy
 	double cInitial, cEq;
 	//0 for any polarity below
 	if (thereIsMyosinFeedback){
-		//updateEquilibriumMyoWithFeedbackFromZero(MyosinFeedbackCap); // this function adds in polarised myosin to the tissue, independent of the uniform myosin levels
-		updateEquilibriumMyoWithFeedbackFromFixedTotal(MyosinFeedbackCap); //this function redistributes a total pool of myosin in between uniform and polarised myosin levels
+		updateEquilibriumMyoWithFeedbackFromZero(MyosinFeedbackCap); // this function adds in polarised myosin to the tissue, independent of the uniform myosin levels
+		//updateEquilibriumMyoWithFeedbackFromFixedTotal(MyosinFeedbackCap); //this function redistributes a total pool of myosin in between uniform and polarised myosin levels
 	}
-	for (int myoIter =0; myoIter<4; myoIter++){
-		if (myoIter == 0){ //apical uniform
-			cInitial = cMyoUniform[0];
-			cEq = cMyoUniformEq[0];
-		}
-		else if (myoIter == 1){//basal uniform
-			cInitial = cMyoUniform[1];
-			cEq = cMyoUniformEq[1];
-		}
-		else if (myoIter == 2){//apical polar
-			cInitial = cMyoUnipolar[0];
-			cEq = cMyoUnipolarEq[0];
-		}
-		else if (myoIter == 3){//basal polar
-			cInitial = cMyoUnipolar[1];
-			cEq = cMyoUnipolarEq[1];
-		}
-		bool converged = false;
-		while (!converged){
-			int steps[3] = {dt/currMyoDt[0],dt/currMyoDt[1],dt/currMyoDt[2]};
-			for (int j=0; j<3; ++j){
-				cFinal[j] = cInitial;
-				for (int i =0 ;i<steps[j]; ++i){
-					cFinal[j] += (cEq - cFinal[j])*kMyo*currMyoDt[j];
+	bool useDiffusion = false;
+	if (useDiffusion){
+		for (int myoIter =0; myoIter<4; myoIter++){
+			if (myoIter == 0){ //apical uniform
+				cInitial = cMyoUniform[0];
+				cEq = cMyoUniformEq[0];
+			}
+			else if (myoIter == 1){//basal uniform
+				cInitial = cMyoUniform[1];
+				cEq = cMyoUniformEq[1];
+			}
+			else if (myoIter == 2){//apical polar
+				cInitial = cMyoUnipolar[0];
+				cEq = cMyoUnipolarEq[0];
+			}
+			else if (myoIter == 3){//basal polar
+				cInitial = cMyoUnipolar[1];
+				cEq = cMyoUnipolarEq[1];
+			}
+			bool converged = false;
+			while (!converged){
+				int steps[3] = {dt/currMyoDt[0],dt/currMyoDt[1],dt/currMyoDt[2]};
+				for (int j=0; j<3; ++j){
+					cFinal[j] = cInitial;
+					for (int i =0 ;i<steps[j]; ++i){
+						cFinal[j] += (cEq - cFinal[j])*kMyo*currMyoDt[j];
+					}
 				}
+				//check if the value of the current dt and half current dt are below the threshold:
+				double diff = fabs((cFinal[0] - cFinal[2]));
+				if ( diff < thresholdValue ){
+					converged = true;
+				}
+				else if( fabs(diff / cFinal[2]) < thresholdFraction){
+					converged = true;
+				}
+				else{
+					currMyoDt[1] = currMyoDt[0];
+					currMyoDt[0] = currMyoDt[2];
+					currMyoDt[2] *= 0.5;
+				}
+				//need to implement increasing this
 			}
-			//check if the value of the current dt and half current dt are below the threshold:
-			double diff = fabs((cFinal[0] - cFinal[2]));
-			if ( diff < thresholdValue ){
-				converged = true;
+			if (myoIter == 0){
+				cMyoUniform[0] = cFinal[2];
 			}
-			else if( fabs(diff / cFinal[2]) < thresholdFraction){
-				converged = true;
+			else if (myoIter == 1){
+				cMyoUniform[1] = cFinal[2];
 			}
-			else{
-				currMyoDt[1] = currMyoDt[0];
-				currMyoDt[0] = currMyoDt[2];
-				currMyoDt[2] *= 0.5;
+			else if (myoIter == 2){
+				cMyoUnipolar[0] = cFinal[2];
 			}
-			//need to implement increasing this
+			else if (myoIter == 3){
+				cMyoUnipolar[1] = cFinal[2];
+			}
 		}
-		if (myoIter == 0){
-			cMyoUniform[0] = cFinal[2];
-		}
-		else if (myoIter == 1){
-			cMyoUniform[1] = cFinal[2];
-		}
-		else if (myoIter == 2){
-			cMyoUnipolar[0] = cFinal[2];
-		}
-		else if (myoIter == 3){
-			cMyoUnipolar[1] = cFinal[2];
-		}
+	}
+	else{
+		cMyoUniform[0] = cMyoUniformEq[0];
+		cMyoUniform[1] = cMyoUniformEq[1];
+		cMyoUnipolar[0] = cMyoUnipolarEq[0];
+		cMyoUnipolar[1] = cMyoUnipolarEq[1];
 	}
 	//if (cMyoUnipolar[0] > 0 || cMyoUnipolar[1]>0){
 		//cout<<" Element: "<<Id<<" unipolar myo:  "<<cMyoUnipolar[0]<<" "<<cMyoUnipolar[1]<<" eq: "<<cMyoUnipolarEq[0]<<" "<<cMyoUnipolarEq[1]<<" polarity dir: "<<endl;

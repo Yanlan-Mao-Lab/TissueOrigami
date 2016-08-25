@@ -1,18 +1,18 @@
 InputMeshParameters:
   MeshInputMode(int-seeDocumentation): 4
-  MeshFile(full-path):   /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Exp48hr-noPeri_04.mesh
+  MeshFile(full-path):   /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Exp48hr-noPeri_08.mesh
   symmetricInX(bool): 0
   symmetricInY(bool): 1
  
 TimeParameters:
-  TimeStep(sec): 1
-  SimulationLength(sec): 1
+  TimeStep(sec): 7200
+  SimulationLength(sec): 180000
 
 SaveOptions:
-  SaveImages(bool): 1
+  SaveImages(bool): 0
   SaveData(bool):   1
   ImageSaveInterval(sec): 1
-  DataSaveInterval(sec):  1
+  DataSaveInterval(sec):  3600
 
 NodeFixingOptions:
   FixWithHighExternalViscosity(bool): 1
@@ -26,8 +26,8 @@ NodeFixingOptions:
   CircumferenceFix(bool-x,y,z): 0 0 1
 
 Manipulations:
-  AddCurvature(bool): 1
-  CurvatureDepthAtCentre(double-microns): 2.0
+  AddCurvature(bool): 0
+  CurvatureDepthAtCentre(double-microns): 1.0
   AddSoftPeriphery(bool): 0
   SoftPeripheryRange(double-microns): 10.0
   SoftnessFraction(double-fraction): 0.2
@@ -40,8 +40,8 @@ Manipulations:
   RandomForceVar(double): 1E-5
 
 PysicalProperties:
-  YoungsModulusApical: 2000.0	YoungsModulusBasal: 1000.0	YoungsModulusMid: 1000.0	Noise(%-int): 0
-  PoissonsRatio: 0.45		Noise(%-int): 0
+  YoungsModulusApical: 3000.0	YoungsModulusBasal: 3000.0	YoungsModulusMid: 750.0	Noise(%-int): 0
+  PoissonsRatio: 0.0		Noise(%-int): 0
   ApicalViscosity:  0.0 	Noise(%-int): 0
   BasalViscosity:   0.0
   MidLineViscosity: 0.0
@@ -51,30 +51,32 @@ PeripodialMembraneParameters:
   PeripodialMembraneThickness(fractionOfTissueHeight): 0.45
   PeripodialMembraneLateralThickness(fractionOfTissueHeight): 0.5
   LumenHeightScale(fractionOfTissueHeight): 0.25
-  PeripodialMembraneYoungsModulus: 1000.0
+  PeripodialMembraneYoungsModulus: 3000.0
   PeripodialMembraneApicalViscosity: 0.0
   PeripodialMembraneBasalViscosity: 0.0
   PeripodialMembraneMidlineViscosity: 0.0
 
 LinkerZoneParameters:
   BaseOnPeripodialness(bool): 0
-  LinkerZoneApicalYoungsModulus: 1000
-  LinkerZoneBasalYoungsModulus: 1000
+  LinkerZoneApicalYoungsModulus: 3000
+  LinkerZoneBasalYoungsModulus: 3000
   LinkerZoneApicalViscosity: 0.0
   LinkerZoneBasalViscosity: 0.0
   LinkerZoneMidlineViscosity: 0.0
 
 ExternalViscositySetup:
-  DiscProperApicalExternalViscosity: 75000.0 
-  DiscProperBasalExternalViscosity: 75000.0 
-  PeripodialMembraneApicalExternalViscosity: 0.0 
+  ExtendToWholeTissue: 1
+  DiscProperApicalExternalViscosity: 80000.0 
+  DiscProperBasalExternalViscosity: 80000.0 
+  PeripodialMembraneApicalExternalViscosity: 0.0
   PeripodialMembraneBasalExternalViscosity: 0.0 
   LinkerZoneApicalExternalViscosity: 0.0
   LinkerZoneBasalExternalViscosity: 0.0
 
 GrowthOptions:
   NumberofGrowthFunctions(int): 7
-  GridGrowthsPinnedOnInitialMesh(bool):	0
+  GridGrowthsPinnedOnInitialMesh(bool): 1 
+  PinningUpdateTimes(number-times(sec)): 2 36000 72000
   GridGrowthsInterpolationType(0=step,1=linear): 1
 
   GrowthFunctionType(int-seeDocumentation): 2
@@ -88,13 +90,15 @@ GrowthOptions:
   MaxValue(fractionPerHour-DV,AP,AB): 0.038262 0.033788 0.0 
   Angle(degrees): 0
 
-  GrowthFunctionType(int-seeDocumentation): 1
+
+  GrowthFunctionType(int-seeDocumentation): 1 
   InitialTime(sec): 0
   FinalTime(sec):  7200
   ApplyToColumnarLayer(bool): 0
   ApplyToPeripodialMembrane(bool): 0
   MaxValue(fractionPerHour-DV,AP,AB): 0.06 0 0.0 
   Angle(degrees): 0
+
 
   GrowthFunctionType(int-seeDocumentation): 2
   InitialTime(sec): 0
@@ -110,30 +114,34 @@ GrowthOptions:
   GrowthFunctionType(int-seeDocumentation): 3
   InitialTime(sec):  0
   FinalTime(sec):  57600
-  ApplyToColumnarLayer(bool): 0
+  ApplyToColumnarLayer(bool): 1
   ApplyToPeripodialMembrane(bool): 0
-  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/Grid20-11_Col_48-72_1-1
+  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/Grid20-11_Col_48-72_2-1
+  zRange: 0.0 1.0
 
   GrowthFunctionType(int-seeDocumentation): 3
   InitialTime(sec):  57600
   FinalTime(sec):  86400
-  ApplyToColumnarLayer(bool): 0
+  ApplyToColumnarLayer(bool): 1
   ApplyToPeripodialMembrane(bool): 0
-  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/Grid20-11_Col_56-80_1-1
+  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/Grid20-11_Col_56-80_2-1
+  zRange: 0.0 1.0
 
   GrowthFunctionType(int-seeDocumentation): 3
   InitialTime(sec):  86400
   FinalTime(sec):  115200
-  ApplyToColumnarLayer(bool): 0
+  ApplyToColumnarLayer(bool): 1
   ApplyToPeripodialMembrane(bool): 0
-  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/Grid20-11_Col_64-88_1-0
+  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/Grid20-11_Col_64-88_2-1
+  zRange: 0.0 1.0
 
   GrowthFunctionType(int-seeDocumentation): 3
-  InitialTime(sec):  0
+  InitialTime(sec):  115200
   FinalTime(sec):  172800
-  ApplyToColumnarLayer(bool): 0
+  ApplyToColumnarLayer(bool): 1
   ApplyToPeripodialMembrane(bool): 0
-  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/Rate125_Grid20-11_Col_72-96_1-0
+  Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/Grid20-11_Col_72-96_2-1
+  zRange: 0.0 1.0
 
 ShapeChangeOptions:
   NumberofShapeChangeFunctions(int): 1
@@ -145,15 +153,15 @@ ShapeChangeOptions:
   MaxValue(fractionPerHour): 0.2888
 
 PlasticDeformationOptions:
-  ThereIsPlasticDeformation(bool): 0
+  ThereIsPlasticDeformation(bool): 1
   VolumeConserved(bool): 1
   DeformationRate(FractionPerHour): 0.05
 
 MyosinOptions:
   MyosinDiffusionRate(double-1/sec): 0.09873
-  ForcePerMyosinMolecule(double):  1.0
-  ThereIsMyosinFeedback(bool): 0
-  MyosinFeedbackCap: 300
+  ForcePerMyosinMolecule(double):  100.0
+  ThereIsMyosinFeedback(bool): 1
+  MyosinFeedbackCap: 1
   NumberofMyosinFunctions(int): 2
 
   InitialTime(sec):   0
@@ -195,3 +203,12 @@ Pipette_Aspiration:
   Pipette_Radius(micron): 30.0
   Pipette_Effect_Depth(micron): 8.0
   Pipette_Suction_Pressure(x,y,z-unit): 0.0 0.0 100.0
+
+ECM_Perturbation:
+  ThereIsECMSoftening(bool): 0
+  ApplyToApicalECM(bool): 1
+  ApplyToBasalECM(bool): 1
+  timeOfSoftening(hr): 0.5
+  relativeXRangeOfSoftening([min,max]):  0.55 0.65
+  softeningFraction(double(0-1.0):  0.8
+

@@ -175,7 +175,7 @@ void EllipseLayoutGenerator::linkerTesselate2D(){
 	//writing segments:
 	//the first set of segments will link all the outer nodes, that is n-1 segments, 
 	//the second set will be the same for inner layer
-	//then there is the segments coundint the two layers
+	//then there is the segments connecting the two layers
 	//There will be one hole, looping over the inner side
 	int nSeg = nLinker-2+2;
 	pointsForTesselation<< nSeg<<" 1"<<endl; //nSeg, border markers on or of
@@ -212,7 +212,7 @@ void EllipseLayoutGenerator::linkerTesselate2D(){
 	ostringstream Convert;
 	Convert << maxArea; // Use some manipulators
 	string maxAreaStr = Convert.str(); // Give the result to the string
-	string sysCommand = "/home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/triangle/triangle -pq25a"+maxAreaStr+" ./LinkerPoints.poly  ";
+	string sysCommand = "/home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/triangle/triangle -pq33a"+maxAreaStr+" ./LinkerPoints.poly  ";
 	cerr<<"Running triangulation with: "<<sysCommand<<endl;
 	system(sysCommand.c_str());
 }
@@ -228,6 +228,7 @@ void EllipseLayoutGenerator::linkerReadInTesselation2D(){
 	MeshFile>>nodesPerTri;
 	int nAttributes;
 	MeshFile>>nAttributes;
+	cout<<" ntri, nodesPerTri, nAttributes: "<<ntri<<" "<<nodesPerTri<<" "<<nAttributes<<endl;
 	for (int i=0; i<ntri; ++i){
 		int triId;
 		MeshFile>>triId;
@@ -245,6 +246,9 @@ void EllipseLayoutGenerator::linkerReadInTesselation2D(){
 		linkerLinks1.push_back(pnts[0]);
 	}
 	MeshFile.close();
+	for (int aa = 0 ; aa<linkerLinks0.size(); aa++){
+		cout<<" linkerLinks0, linkerLinks1 : "<<linkerLinks0[aa]<<" "<<linkerLinks1[aa]<<endl;	
+	}
 	ifstream NodeFile;	
 	NodeFile.open("./LinkerPoints.1.node", ifstream::in);
 	int nNode;
@@ -268,6 +272,9 @@ void EllipseLayoutGenerator::linkerReadInTesselation2D(){
 		LinkerPosz.push_back(pnts[0]);	
 		LinkerPosx.push_back(pnts[1]);
 		
+	}
+	for (int aa = 0 ; aa<LinkerPosz.size(); aa++){
+		cout<<" LinkerPosx, LinkerPosz : "<<LinkerPosx[aa]<<" "<<LinkerPosz[aa]<<endl;	
 	}
 	cout<<" end of read in tesselation, size of points: "<<posx.size()<<" size of tissue shape: "<<tissueType.size()<<endl;
 	NodeFile.close();
@@ -1122,7 +1129,7 @@ void EllipseLayoutGenerator::writeMeshFileForSimulation(double zHeight, int zLay
 	}
 	//loop for peripodial elements:
 	if(addPeripodial){
-		//move one more layer up on nodes, I do not want to connect top layer of columnar to bottom of peripodial, I want to continue on peroipodial:
+		//move one more layer up on nodes, I do not want to connect top layer of columnar to bottom of peripodial, I want to continue on peripodial:
 		currOffset += n;
 		for (int layers=0; layers<peripodialLayers; ++layers){
 			for (int i =0; i<nTri; ++i){
@@ -1184,27 +1191,31 @@ void EllipseLayoutGenerator::writeMeshFileForSimulation(double zHeight, int zLay
 					int idOnLinkerOrder = linkerTriangles[k][j];
 					//cout<<" corner: "<<j<<" idOnLinkerOrder: "<<idOnLinkerOrder<<endl;
 					if (duplicateLinkerNode[idOnLinkerOrder]){
-						//cout<<" the node "<<j<<" is duplicate, pos: "<<LinkerPosx[idOnLinkerOrder]<<" 0 "<<LinkerPosz[idOnLinkerOrder]<<endl;
-						//this is a duplicate node, I will go up on the circumference point, untill
+						cout<<" the node "<<j<<" (id : "<<idOnLinkerOrder<<")  is duplicate, pos: "<<LinkerPosx[idOnLinkerOrder]<<" 0 "<<LinkerPosz[idOnLinkerOrder]<<endl;
+						//this is a duplicate node, I will go up on the circumference point, until
 						//I find the closest point in z (should be overlaping)
 						//Then add that node to the node list.
 						double dzCol = zHeight/zLayers;
 						double dzPer = peripodialHeight/peripodialLayers;
 						int currLayer = 0;					
-						for (int k=0; k<zLayers+peripodialLayers+2; k++){
+						for (int m=0; m<zLayers+peripodialLayers+2; m++){
 							//searching the columnar list:
-							//cout<<" checking heights for k:"<<k<<" 	zLayers: "<<zLayers<<" 	dzCol: "<<dzCol<< " dzPer "<<dzPer<<endl;				
-							double hToCompare = k*dzCol;							
-							if (k<zLayers+1 && LinkerPosz[idOnLinkerOrder] > hToCompare-0.01 && LinkerPosz[idOnLinkerOrder] < hToCompare+0.01){
-								//cout<<"equivalent layer is on columnar, k: "<<k<<endl;									
-								currLayer = k;
-								break;
-							}
+							double hToCompare = m*dzCol;	
+							cout<<" checking heights for m:"<<m<<" the height of node is : "<<LinkerPosz[idOnLinkerOrder]<<" hToCompare: "<<hToCompare<<" 	zLayers: "<<zLayers<<" 	dzCol: "<<dzCol<< " dzPer "<<dzPer<<endl;				
+							double topOfColumnar = 	zLayers*dzCol;
+							if( LinkerPosz[idOnLinkerOrder] < topOfColumnar*1.1){
+								if (m<zLayers+1 && LinkerPosz[idOnLinkerOrder] > hToCompare-0.01 && LinkerPosz[idOnLinkerOrder] < hToCompare+0.01){
+									cout<<"equivalent layer is on columnar, m: "<<m<<endl;									
+									currLayer = m;
+									break;
+								}
+							}	
 							else{
-								double hToCompare = zLayers*dzCol + lumenHeight+ (k-zLayers-1)*dzPer;
+								cout<<" moved on to peripodial, the height of node is : "<<LinkerPosz[idOnLinkerOrder]<<" hToCompare: "<<hToCompare<<endl;
+								double hToCompare = zLayers*dzCol + lumenHeight+ (m-zLayers-1)*dzPer;
 								if( LinkerPosz[idOnLinkerOrder] > hToCompare-0.01 && LinkerPosz[idOnLinkerOrder] < hToCompare+0.01){
-									//cout<<"equivalent layer is on peripodial, k: "<<k<<endl;									
-									currLayer = k;
+									cout<<"equivalent layer is on peripodial, m: "<<m<<endl;									
+									currLayer = m;
 									break;										
 								}						
 							}		
@@ -1315,17 +1326,19 @@ void EllipseLayoutGenerator::bluntTip(vector <float>&  x, vector <float>& y){
 		cout<<" currnodelist: "<<i<<" "<<x[i]<<" "<<y[i]<<endl;	
 	}
 	//now go back till you reach the height of sideLength
+	double bluntTipSclae = 0.9;	
 	int firstBreak = 0;	
 	for (int i=yTipIndex; i<n; --i){
-		if (y[i] > sideLen*0.9){
+		if (y[i] > sideLen*bluntTipSclae){
 			firstBreak = i-1;
 			break;		
 		}	
 	}
 	//now go forward till you reach the height of side Length
+
 	int secondBreak = n;
 	for (int i=yTipIndex; i<n; i++){
-		if (y[i] > sideLen*0.9){
+		if (y[i] > sideLen*bluntTipSclae){
 			secondBreak = i;
 			break;		
 		}	
@@ -2006,7 +2019,7 @@ int main(int argc, char **argv)
 		}
 	}
 	EllipseLayoutGenerator Lay01(DVRadius[0],DVRadius[1], APRadius[0], APRadius[1], sideLength, symmetricX, symmetricY, 0.9);
-	bool addPeripodial = false;
+	bool addPeripodial = true;
 	double peripodialHeightFrac = 0.45;
 	double lumenHeightFrac = 0.25;
 	double peripodialSideCurveFrac = 5.52 /ABHeight ; //5.52 is the side thickness Maria Measured for 48 hr discs

@@ -100,6 +100,7 @@ void MainWindow::generateControlPanel(){
 void MainWindow::setUpGLWidget(){
 	MainGLWidget = new GLWidget();
 	MainGLWidget->Sim01 = Sim01;
+	MainGLWidget->currNodeNumber = Sim01->nNodes;
 	MainGLWidget->DisplayStrainRange[0] = StrainSpinBoxes[0]->value();
 	MainGLWidget->DisplayStrainRange[1] = StrainSpinBoxes[1]->value();
     for (int i =0; i<4; ++i){
@@ -128,24 +129,24 @@ void MainWindow::setUpCentralWidget(){
     connect(MainGLWidget, SIGNAL(NeedToClearManualNodeSelection()), this, SLOT(ManualNodeSelectionReset()));
 }
 
-void MainWindow::setSelectionByIdSection(QFont font1, QFont boldFont1, QGridLayout *SelectionDisplayGrid){
-	QFont boldFont("SansSerif", 9, QFont::Bold,true);
-	QFont font("SansSerif", 9);
+void MainWindow::setSelectionByIdSection(QFont font1, QGridLayout *SelectionDisplayGrid){
+	//QFont boldFont("SansSerif", 9, QFont::Bold,true);
+	//QFont font("SansSerif", 9);
 	QLabel *NodeSelectTitle = new QLabel("Select <br> Node:");
-	NodeSelectTitle->setFont(font);
+	NodeSelectTitle->setFont(font1);
 	//setWordWrap(true);
 	NodeSelectBox = new QLineEdit();
 	NodeSelectBox->setPlaceholderText ( QString("# 0-%1").arg(Sim01->Nodes.size()-1) );
-	NodeSelectBox->setFont(font);
+	NodeSelectBox->setFont(font1);
 	NodeSelectBox->setStyleSheet("background-color: white");
 	NodeSelectBox->setFixedWidth(70);
 	NodeSelectBox->setValidator( new QIntValidator(0, Sim01->Nodes.size()-1, this) );
 
 	QLabel *ElementSelectTitle = new QLabel("Select <br> Element:");
-	ElementSelectTitle->setFont(font);
+	ElementSelectTitle->setFont(font1);
 	ElementSelectBox = new QLineEdit();
 	ElementSelectBox->setPlaceholderText ( QString("# 0-%1").arg(Sim01->Elements.size()-1) );
-	ElementSelectBox->setFont(font);
+	ElementSelectBox->setFont(font1);
 	ElementSelectBox->setStyleSheet("background-color: white");
 	ElementSelectBox->setFixedWidth(70);
 	ElementSelectBox->setValidator( new QIntValidator(0, Sim01->Elements.size()-1, this) );
@@ -163,7 +164,7 @@ void MainWindow::setUpSelectionDisplayGrid(QGridLayout *SelectionDisplayGrid){
 	QFont font("SansSerif", 10);
 	setItemSelectionTitles(font, boldFont, SelectionDisplayGrid);
 	setCoordBoxes(font, boldFont, SelectionDisplayGrid);
-	setSelectionByIdSection(font, boldFont, SelectionDisplayGrid);
+	setSelectionByIdSection(font, SelectionDisplayGrid);
 }
 
 void MainWindow::setUpProjectDisplayOptionGrid(QGridLayout *ProjectDisplayOptionsGrid){
@@ -266,16 +267,16 @@ void MainWindow::setStrainDisplayMenu(QGridLayout *ProjectDisplayOptionsGrid){
     StrainSpinBoxes[1] = new  QDoubleSpinBox();
     StrainSpinBoxes[0]->setRange( -1.0, -0.00 );
     StrainSpinBoxes[0]->setSingleStep( 0.005 );
-    StrainSpinBoxes[0]->setValue ( -0.1 );
+    StrainSpinBoxes[0]->setValue ( -0.35 );
     StrainSpinBoxes[0]->setDecimals(5);
     StrainSpinBoxes[0]->setEnabled(false);
     StrainSpinBoxes[1]->setRange( 0.0, 1.0 );
     StrainSpinBoxes[1]->setSingleStep( 0.005 );
-    StrainSpinBoxes[1]->setValue( 0.1 );
+    StrainSpinBoxes[1]->setValue( 0.35 );
     StrainSpinBoxes[1]->setDecimals(3);
     StrainSpinBoxes[1]->setEnabled(false);
-    connect(StrainSpinBoxes[0], SIGNAL(valueChanged (double)), this, SLOT(updateStrainSpinBoxes(double)));
-    connect(StrainSpinBoxes[1], SIGNAL(valueChanged (double)), this, SLOT(updateStrainSpinBoxes(double)));
+	connect(StrainSpinBoxes[0] , SIGNAL(valueChanged(double)),this,SLOT(updateStrainSpinBoxes()));
+    connect(StrainSpinBoxes[1], SIGNAL(valueChanged(double)), this, SLOT(updateStrainSpinBoxes()));
 
     ProjectDisplayOptionsGrid->addWidget(DisplayCheckBoxes[0],0,0,1,2,Qt::AlignLeft);
     ProjectDisplayOptionsGrid->addWidget(StrainComboBox,1,0,1,2,Qt::AlignLeft);
@@ -294,7 +295,8 @@ void MainWindow::setPysPropDisplayMenu(QGridLayout *ProjectDisplayOptionsGrid){
 	PysPropComboBox->addItem("Internal Viscosity");
 	PysPropComboBox->addItem("Young Modulus");
 	PysPropComboBox->addItem("Poisson Ratio");
-	PysPropComboBox->addItem("Planar (xy) Growth (% per hour)");
+	PysPropComboBox->addItem("Volume (xyz) Growth Rate (fold per 24hr)");
+	PysPropComboBox->addItem("Volume Growth (fold total)");
 	PysPropComboBox->addItem("ShapeChangeRate_z");
 	PysPropComboBox->setEnabled(false);
 	connect(PysPropComboBox , SIGNAL(currentIndexChanged(int)),this,SLOT(updatePysProp(int)));
@@ -309,8 +311,8 @@ void MainWindow::setPysPropDisplayMenu(QGridLayout *ProjectDisplayOptionsGrid){
 	PysPropSpinBoxes[1]->setSingleStep( 0.1 );
 	PysPropSpinBoxes[1]->setValue( 5.0 );
 	PysPropSpinBoxes[1]->setEnabled(false);
-    connect(PysPropSpinBoxes[0], SIGNAL(valueChanged (double)), this, SLOT(updatePysPropSpinBoxes(double)));
-    connect(PysPropSpinBoxes[1], SIGNAL(valueChanged (double)), this, SLOT(updatePysPropSpinBoxes(double)));
+    connect(PysPropSpinBoxes[0], SIGNAL(valueChanged (double)), this, SLOT(updatePysPropSpinBoxes()));
+    connect(PysPropSpinBoxes[1], SIGNAL(valueChanged (double)), this, SLOT(updatePysPropSpinBoxes()));
 
 
     //SelectionDisplayGrid->addWidget(DisplayCheckBoxes[1],4+nCoordBox,2,1,2,Qt::AlignLeft);
@@ -577,7 +579,7 @@ void  MainWindow::updateBoundingBoxCheckBox(int s){
 void MainWindow::updateStrain(int s){
 	MainGLWidget->StrainToDisplay = s;
 	MainGLWidget->update();
-	//cout<<"Strain to display: "<<MainGLWidget->StrainToDisplay <<endl;
+	cout<<"Strain to display: "<<MainGLWidget->StrainToDisplay <<endl;
 }
 
 void MainWindow::updateMyosinComboBox(int s){
@@ -623,6 +625,8 @@ void MainWindow::updateStrainCheckBox(int s){
 		MainGLWidget->DisplayStrains = true;
 	}
 	//MainGLWidget->update();
+	cout<<"Strain Check Box updated, active/nonactive: "<<s <<endl;
+
 }
 
 void MainWindow::updatePysCheckBox(int s){
@@ -661,24 +665,31 @@ void MainWindow::updatePysCheckBox(int s){
 	//MainGLWidget->update();
 }
 
-void MainWindow::updateStrainSpinBoxes(double d){
+void MainWindow::updateStrainSpinBoxes(){
 	MainGLWidget->DisplayStrainRange[0] = StrainSpinBoxes[0]->value();
 	MainGLWidget->DisplayStrainRange[1] = StrainSpinBoxes[1]->value();
 	//MainGLWidget->update();
+	//cout<<"Strain Spin Box updated: "<<StrainSpinBoxes[0]->value()<<" "<<StrainSpinBoxes[1]->value()<<endl;
 }
 
-void MainWindow::updatePysPropSpinBoxes(double d){
+
+void MainWindow::updatePysPropSpinBoxes(){
 	MainGLWidget->DisplayPysPropRange[MainGLWidget->PysPropToDisplay][0] = PysPropSpinBoxes[0]->value();
 	MainGLWidget->DisplayPysPropRange[MainGLWidget->PysPropToDisplay][1] = PysPropSpinBoxes[1]->value();
 	//MainGLWidget->update();
+	//cout<<"Physical property Spin Box updated: "<<StrainSpinBoxes[0]->value()<<" "<<StrainSpinBoxes[1]->value()<<endl;
+
 }
 
 void MainWindow::updateTimeText(){
+	cout<<"inside updateTimeText"<<endl;
 	//round to two digits:
 	QString timeStringInSec = QString::number(Sim01->currSimTimeSec);
 	QString timeStringInHr = QString::number(Sim01->currSimTimeSec/3600.0, 'f', 2);
-	timeStringInSec = "Simulation Time: " + timeStringInHr + " hr ( "+ timeStringInSec + " sec, " + QString::number(Sim01->timestep) + " steps )"; ;
+	QString timeStringInHrAEL = QString::number((Sim01->currSimTimeSec/3600.0 + 48), 'f', 2);
+	timeStringInSec = "Simulation Time: " + timeStringInHr + " hr ("+timeStringInHrAEL+" hr AEL) - ( "+ timeStringInSec + " sec, " + QString::number(Sim01->timestep) + " steps )"; ;
 	TimeTitle->setText(timeStringInSec);
+	cout<<"finalised updateTimeText"<<endl;
 }
 
 void MainWindow::SelectedItemChange(){
@@ -741,30 +752,71 @@ void MainWindow::timerSimulationStep(){
     //    cout<<"Node 2025 at circmference: "<<Sim01->Nodes[2025]->atCircumference<<" fixed pos "<<j<<" "<<Sim01->Nodes[2025]->FixedPos[j]<<endl;
     //}
 	bool automatedSave = false;
+	bool analyseResults = true;
+	bool slowstepsOnDisplay = false;
+	bool slowstepsOnRun = false;
+	int slowWaitTime = 10;
 	if (Sim01->DisplaySave){
-		if (Sim01->timestep == 0 && automatedSave){
-			Sim01->assignTips();
-			MainGLWidget->updateToPerspectiveView(); //display tissue from the tilted view
-			MainGLWidget->drawSymmetricity = false; //hide symmetric
-			MainGLWidget->PerspectiveView = false; //switch to orthogoanal view type.
-            Sim01->saveImages = true;
-            Sim01->saveDirectory = Sim01->saveDirectoryToDisplayString;
+		if (Sim01->timestep == 0){
+			if (analyseResults){
+				cout<<"Analysin results"<<endl;
+				analyser01 = new Analysis(3, Sim01->nElements, Sim01->saveDirectoryToDisplayString, Sim01->Nodes);
+			}
+			if( automatedSave){
+				Sim01->assignTips();
+				MainGLWidget->updateToTopView(); //display tissue from the top view
+				//MainGLWidget->updateToFrontView(); //display tissue from the front view
+				//MainGLWidget->updateToPerspectiveView(); //display tissue from the tilted view
+				MainGLWidget->drawSymmetricity = true; //hide symmetric
+				MainGLWidget->PerspectiveView = false; //switch to orthogoanal view type.
+				Sim01->saveImages = true;
+				Sim01->saveDirectory = Sim01->saveDirectoryToDisplayString;
+			}
 		}
+		//My spin boxes stopeed emmitting the signals necessary for this update
+		//I do not know how to fix this for now
+		//as they simply stopped working one day (23.08.2016)
+		//Therefore, I am forcing the update at all steps.
+		//MainGLWidget->DisplayStrainRange[0] = StrainSpinBoxes[0]->value();
+		//MainGLWidget->DisplayStrainRange[1] = StrainSpinBoxes[1]->value();
+		//MainGLWidget->DisplayPysPropRange[MainGLWidget->PysPropToDisplay][0] = PysPropSpinBoxes[0]->value();
+		//MainGLWidget->DisplayPysPropRange[MainGLWidget->PysPropToDisplay][1] = PysPropSpinBoxes[1]->value();
+
 		if(!Sim01->reachedEndOfSaveFile){
 			Sim01->updateOneStepFromSave();
+			if (Sim01->timestep >= 0){
+				double boundingBoxLength = Sim01->boundingBox[1][0] - Sim01->boundingBox[0][0];
+				double boundingBoxWidth  = Sim01->boundingBox[1][1] - Sim01->boundingBox[0][1];
+				analyser01->calculateBoundingBoxSizeAndAspectRatio(Sim01->currSimTimeSec,boundingBoxLength,boundingBoxWidth);
+				analyser01->calculateContourLineLengthsDV(Sim01->Nodes);
+				analyser01->findApicalKinkPointsDV(Sim01->currSimTimeSec,Sim01->boundingBox[0][0], boundingBoxLength, Sim01->Nodes);
+				analyser01->calculateTissueVolumeMap(Sim01->Elements, Sim01->currSimTimeSec,Sim01->boundingBox[0][0],Sim01->boundingBox[0][1],boundingBoxLength,boundingBoxWidth);
+
+				/*double nodearray[3] = {3414,3333,3431};
+				for (int aa=0;aa<3; aa++){
+					int no=nodearray[aa];
+					cout<<"RelativePositionofNode "<<no<<" at "<<Sim01->currSimTimeSec<<" sec: "<< (Sim01->Nodes[no]->Position[0]-Sim01->boundingBox[0][0])/boundingBoxLength<<" "<<(Sim01->Nodes[no]->Position[1]-Sim01->boundingBox[0][1])/boundingBoxWidth<<endl;
+				}*/
+			}
 			Sim01->calculateDVDistance();
-			for (int a = 0; a<5; a++){ //35 for 12 hours with 600 sec time step
+			for (int a = 0; a<0; a++){ //35 for 12 hours with 600 sec time step
 				Sim01->updateOneStepFromSave();
 				Sim01->calculateDVDistance();
 			}
-			Sim01->fixNode0InPosition(36,0,0);
+			//Sim01->fixNode0InPosition(36,0,0);
 			updateTimeText();
-			QTime dieTime= QTime::currentTime().addSecs(1);
+			QTime dieTime= QTime::currentTime().addSecs(0.01);
             while( QTime::currentTime() < dieTime ){
 			    QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
             }
 			if (Sim01->saveImages){
 				takeScreenshot();
+			}
+			if (slowstepsOnDisplay){
+				QTime dieTime= QTime::currentTime().addSecs(slowWaitTime);
+				while( QTime::currentTime() < dieTime ){
+					QCoreApplication::processEvents(QEventLoop::AllEvents, slowWaitTime);
+				}
 			}
 			//sleep(60);
 			//spitting coordinates:
@@ -778,17 +830,17 @@ void MainWindow::timerSimulationStep(){
 		}
 	}
 	else{
-		if (Sim01->currSimTimeSec < Sim01->SimLength){
-			//cout<<"dataSaveInterval before calling a step: " <<Sim01->dataSaveInterval<<endl;
+		//cout<<" step: "<<Sim01->timestep<<" currSimTimeSec: "<<Sim01->currSimTimeSec<<" simLength: "<< Sim01->SimLength<<endl;
+		if (Sim01->currSimTimeSec <= Sim01->SimLength){
+			//cout<<"started step: "<<Sim01->currSimTimeSec<<" length: "<<Sim01->SimLength<<endl;
 			bool Success = Sim01->runOneStep();
 			updateTimeText();
 			//cout<<" step: "<<Sim01->timestep<<"Node[0] pos: "<<Sim01->Nodes[0]->Position[0]<<" "<<Sim01->Nodes[0]->Position[1]<<" "<<Sim01->Nodes[0]->Position[2]<<endl;
 			//cout<<" step: "<<Sim01->timestep<<"Node[43] pos: "<<Sim01->Nodes[43]->Position[0]<<" "<<Sim01->Nodes[43]->Position[1]<<" "<<Sim01->Nodes[43]->Position[2]<<endl;
-			bool slowsteps = false;
-			if (slowsteps){
-				QTime dieTime= QTime::currentTime().addSecs(3);
+			if (slowstepsOnRun){
+				QTime dieTime= QTime::currentTime().addSecs(slowWaitTime);
 				while( QTime::currentTime() < dieTime ){
-					QCoreApplication::processEvents(QEventLoop::AllEvents, 3);
+					QCoreApplication::processEvents(QEventLoop::AllEvents, slowWaitTime);
 				}
 			}
 			if (Sim01->saveImages && Sim01->timestep%Sim01->imageSaveInterval == 0){
@@ -796,6 +848,7 @@ void MainWindow::timerSimulationStep(){
 			}
 			if (Success == false ){
 				//there is a flipped element, I am not continuing simulation
+				cout<<"there is a flipped element, I am not continuing simulation"<<endl;
 				Sim01->timestep = 2*Sim01->SimLength;
 			}
 		}
@@ -803,6 +856,18 @@ void MainWindow::timerSimulationStep(){
         	displayedSimulationLength = true;
             Sim01->wrapUpAtTheEndOfSimulation();
             Sim01->writeRelaxedMeshFromCurrentState();
+			/*for(vector<ShapeBase*>::iterator itElement=Sim01->Elements.begin(); itElement<Sim01->Elements.end(); ++itElement){
+				if((*itElement)->tissuePlacement == 1){ //apical element
+						double* growthRate =(*itElement)->getGrowthRate();
+						gsl_matrix* elementFG = (*itElement)->getFg();
+						double detFg = (*itElement)->determinant3by3Matrix(elementFG);
+						double* ReletivePos = new double[2];
+						(*itElement)->getRelativePosInBoundingBox(ReletivePos);
+						cout<<" TheGrowthRateOfElement: "<<(*itElement)->Id<<" "<<growthRate[0]<<" "<<growthRate[1]<<" "<<growthRate[2]<<" curent detFg: "<<detFg<<" grownVolume: "<<(*itElement)->GrownVolume<<" ReferenceVolume "<<(*itElement)->ReferenceShape->Volume<<" Relative pos: "<<ReletivePos[0]<<" "<<ReletivePos[1]<<endl;
+						gsl_matrix_free(elementFG);
+						delete[] ReletivePos;
+				}
+			}*/
             //Sim01->writeMeshRemovingAblatedRegions();
             double durationClock = ( std::clock() - simulationStartClock ) / (double) CLOCKS_PER_SEC;
             double durationTime = std::difftime(std::time(0), simulationStartTime);

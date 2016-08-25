@@ -48,6 +48,7 @@ protected:
     bool    	rotatedGrowth;			///< The boolean stating if the element has rotated from the growth axis, hence the calculated growth requires further rotation to follow tissue axes.
     double* 	relativePosInBoundingBox;  			///< The relative position on x-y plane, within the bounding box of the tissue(x,y).
     double* 	initialRelativePosInBoundingBox; 	///< The relative position on x-y plane, within the bounding box of the tissue(x,y) at the beginning of simulation. This is used when growth rates are pinned to the initial structure of the tissue.
+    double 		initialRelativePositionInZ;			///<< The relative position on z-height of tissue, taken not in z direction but in tissue layers, 0 being on the apical surface and 1 being on the basal surface.
     //double* columnarRelativePosInBoundingBox;		///< The relative position on x-y plane, within the bounding box of the columnar layer (x,y).
 	//double* peripodialRelativePosInBoundingBox; 	///< The relative position on x-y plane, within the bounding box of the peripodial membrane layer (x,y).
     gsl_matrix 	**ShapeFuncDerivatives;			///< The array of matrices for shape function derivatives. The array stores a ShapeBase#nDim by ShapeBase#nNodes matrix for each gauss point (there are 3 Gauss points for prisms).
@@ -93,8 +94,10 @@ protected:
 	void 		updateNodeIdsFromSave(ifstream& file);
 	void 		updateReferencePositionMatrixFromSave(ifstream& file);
 	virtual void calculateReferenceVolume(){ParentErrorMessage("calculateReferenceVolume");};
+
+
 	bool 		calculateGrowthStrainsRotMat(double* v);
-	void		calculateForces3D(vector <Node*>& Nodes,  gsl_matrix* displacementPerDt, bool recordForcesOnFixedNodes, double **FixedNodeForces, ofstream& outputFile);
+	void		calculateForces3D(vector <Node*>& Nodes,  gsl_matrix* displacementPerDt, bool recordForcesOnFixedNodes, double **FixedNodeForces);
 	gsl_matrix* calculateEForNodalForcesKirshoff(gsl_matrix* C);
 	gsl_matrix* calculateCauchyGreenDeformationTensor(gsl_matrix* Fe, gsl_matrix* FeT);
 	gsl_matrix* calculateSForNodalForcesKirshoff(gsl_matrix* E);
@@ -103,7 +106,7 @@ protected:
 	gsl_matrix* calculateCompactStressForNodalForces(double detFe,gsl_matrix* Fe, gsl_matrix* S, gsl_matrix* FeT, gsl_matrix *Stress);
     gsl_matrix* calculateInverseJacobianStackForNodalForces(gsl_matrix* Jacobian);
     gsl_matrix* calculateBTforNodalForces(gsl_matrix* InvJacobianStack, gsl_matrix* ShapeFuncDerStack, gsl_matrix *B, gsl_matrix* invJShFuncDerS);
-    gsl_matrix* calculateInvJShFuncDerSWithFe(gsl_matrix * currFe, gsl_matrix * InvDXde, gsl_matrix* ShapeFuncDerStack, gsl_matrix *invJShFuncDerSWithF);
+    void		calculateInvJShFuncDerSWithFe(gsl_matrix * currFe, gsl_matrix * InvDXde, gsl_matrix* ShapeFuncDerStack, gsl_matrix *invJShFuncDerSWithF);
     gsl_matrix* calculateVelocityGradientTensor(gsl_matrix* B, gsl_matrix* displacementPerDt);
     gsl_matrix* constructElementalDisplacementMatrix(gsl_matrix* displacement); 		///< The function will assemble elemental node displacement matrix from the input displacement matrix for the whole system.
     gsl_matrix* calculateRateOfDeformationTensor(gsl_matrix* l);						///< The function will calculate rate of deformation tensor from velocity gradient tensor
@@ -172,6 +175,7 @@ public:
 	double  VolumePerNode;
 	bool 	capElement;
 	double** MyoForce;
+	int* 	elementsIdsOnSameColumn;
 
 	int 	getId();
 	string 	getName();
@@ -186,15 +190,17 @@ public:
 	double	getColumnarness();
 	void	getRelativePositionInTissueInGridIndex(int nGridX, int nGridY, int& IndexX, int& IndexY, double& FracX, double& FracY);
 	void	getInitialRelativePositionInTissueInGridIndex(int nGridX, int nGridY, int& IndexX, int& IndexY, double& FracX, double& FracY);
-	bool 	isGrowthRateApplicable(int sourceTissue, double& weight);
-	void 	calculateFgFromRates(double dt, double x, double y, double z, gsl_matrix* rotMat, gsl_matrix* increment, int sourceTissue);
+	bool 	isGrowthRateApplicable(int sourceTissue, double& weight, double zmin, double zmax);
+	void 	calculateFgFromRates(double dt, double x, double y, double z, gsl_matrix* rotMat, gsl_matrix* increment, int sourceTissue, double zMin, double zMax);
 	void 	calculateFgFromGridCorners(int gridGrowthsInterpolationType, double dt, GrowthFunctionBase* currGF, gsl_matrix* increment, int sourceTissue, int IndexX, int IndexY, double FracX, double dFracY);
 	void 	updateGrowthIncrement(gsl_matrix* columnar, gsl_matrix* peripodial);
 	void	calculateRelativePosInBoundingBox(double boundingBoxXMin, double boundingBoxYMin, double boundingBoxLength, double boundingBoxWidth);
 	//void	calculateRelativePosInBoundingBox(double columnarBoundingBoxXMin, double columnarBoundingBoxYMin, double columnarBoundingBoxLength, double columnarBoundingBoxWidth, double peipodialBoundingBoxXMin, double peipodialBoundingBoxYMin, double peipodialBoundingBoxLength, double peipodialBoundingBoxWidth);
+	void	updateReferencePositionMatrixFromInput(double** input);
 	void	displayRelativePosInBoundingBox();
 	void	getRelativePosInBoundingBox(double* relativePos);
 	void	setInitialRelativePosInBoundingBox();
+	void 	setInitialZPosition(double zMax, double TissueHeight);
 	void	getInitialRelativePosInBoundingBox(double* relativePos);
 	//void	getRelativePosInColumnarBoundingBox(double* relativePos);
 	//void	getRelativePosInPeripodialBoundingBox(double* relativePos);
@@ -202,7 +208,8 @@ public:
 	void 	getStrain(int type, float &StrainMag);
 	void 	getNodeBasedPysProp(int type, int NodeNo, vector<Node*>& Nodes, float& PysPropMag);
     void 	getPysProp(int type, float &PysPropMag, double dt);
-    double getInternalViscosity();
+    double	getInternalViscosity();
+    double	getOriginalInternalViscosity();
     void updateInternalViscosityTest();
     double 	getYoungModulus();
 	double 	getPoissonRatio();
@@ -211,6 +218,11 @@ public:
 	double** getReferencePos();
     void    getPos(gsl_matrix* Pos);
     gsl_matrix* getFg();
+    gsl_matrix* getInvFg();
+    gsl_matrix* getFsc();
+    gsl_matrix* getInvFsc();
+    gsl_matrix* getFplastic();
+    gsl_matrix* getInvFplastic();
 	void 	displayName();
 	void	displayNodeIds();
 	void 	displayPositions();
@@ -218,24 +230,27 @@ public:
 	void 	displayIdentifierColour();
     void    setFg(gsl_matrix* currFg);
 	void 	setGrowthWeightsViaTissuePlacement (double periWeight);
-    virtual void setElasticProperties(double EApical,double EBasal, double EMid,double v){ParentErrorMessage("setElasticProperties");};
+    virtual void setElasticProperties(double /*EApical*/,double /*EBasal*/, double /*EMid*/,double /*v*/){ParentErrorMessage("setElasticProperties");};
     void 	setViscosity(double viscosityApical,double viscosityBasal, double viscosityMid);
     void 	setViscosity(double viscosityApical,double viscosityBasal);
-    virtual void calculateBasalNormal(double * normal){ParentErrorMessage("calculateBasalNormal");};
+    virtual void calculateBasalNormal(double * /*normal*/){ParentErrorMessage("calculateBasalNormal");};
 	virtual void AlignReferenceBaseNormalToZ(){ParentErrorMessage("AlignReferenceBaseNormalToZ");};
 	void 	calculateCurrentGrowthIncrement(gsl_matrix* resultingGrowthIncrement, double dt, double growthx, double growthy, double growthz, gsl_matrix* ShearAngleRotationMatrix);
 	void 	updateShapeChangeRate(double x, double y, double z, double xy, double yz, double xz);
 	virtual void calculateReferenceStiffnessMatrix(){ParentErrorMessage("calculateReferenceStiffnessMatrix");};
     virtual void calculateElementShapeFunctionDerivatives(){ParentErrorMessage("calculateElementShapeFunctionDerivatives");};
-    virtual void calculateCurrNodalForces(gsl_matrix *gslcurrge, gsl_matrix *gslcurrgv, gsl_matrix *gslcurrF, gsl_matrix* displacementPerDt, int pointNo){ParentErrorMessage("calculateCurrNodalForces");};
-    virtual void calculateCurrTriPointFForRotation(gsl_matrix *currF,int pointNo){ParentErrorMessage("calculateCurrTriPointFForRotation");};
+    virtual void calculateCurrNodalForces(gsl_matrix */*gslcurrge*/, gsl_matrix */*gslcurrgv*/, gsl_matrix */*gslcurrF*/, gsl_matrix* /*displacementPerDt*/, int /*pointNo*/){ParentErrorMessage("calculateCurrNodalForces");};
+    virtual void calculateCurrTriPointFForRotation(gsl_matrix */*currF*/,int /*pointNo*/){ParentErrorMessage("calculateCurrTriPointFForRotation");};
+    virtual void copyElementInformationAfterRefinement(ShapeBase* /*baseElement*/){ParentErrorMessage("copyElementInformationAfterRefinement");};
+    virtual void calculateApicalArea(){ParentErrorMessage("calculateApicalArea");};
+	virtual void calculateBasalArea(){ParentErrorMessage("calculateBasalArea");};
+	double 		calculateCurrentGrownAndEmergentVolumes();
+	void 	updateNodeIdsForRefinement(int* tmpNodeIds);
 
 	void 	writeInternalForcesTogeAndgv(gsl_matrix* ge, gsl_matrix* gvInternal, double** SystemForces, vector <Node*>& Nodes);
 
-    virtual void calculateApicalArea(){ParentErrorMessage("calculateApicalArea");};
-    virtual void calculateBasalArea(){ParentErrorMessage("calculateBasalArea");};
 
-    void 	calculateForces(vector <Node*>& Nodes, gsl_matrix* displacementPerDt, bool recordForcesOnFixedNodes, double** FixedNodeForces,  ofstream& outputFile);
+    void 	calculateForces(vector <Node*>& Nodes, gsl_matrix* displacementPerDt, bool recordForcesOnFixedNodes, double** FixedNodeForces);
     void 	updatePositions(vector<Node*>& Nodes);
 	void	updateReferencePositionsToCurentShape();
     void 	setGrowthRate(double dt, double rx, double ry, double rz);
@@ -255,10 +270,13 @@ public:
 	double	getCmyosinUnipolarForNode (int TissuePlacement);
 	void 	getMyosinLevels (double *cMyo);
 	void 	getEquilibriumMyosinLevels (double *cMyoEq);
+	gsl_matrix* getMyosinDirection();
 	void 	setMyosinLevels (double cUni0, double cUni1, double cPol0, double cPol1);
 	void 	setEquilibriumMyosinLevels (double cUni0, double cUni1, double cPol0, double cPol1);
-	virtual void calculateMyosinForces(double forcePerMyoMolecule){ParentErrorMessage("calculateMyosinForces");};
-	virtual void distributeMyosinForce(bool isIsotropic, bool apical){ParentErrorMessage("distributeMyosin");};
+	virtual void calculateMyosinForcesAreaBased(double /*forcePerMyoMolecule*/){ParentErrorMessage("calculateMyosinForces");};
+	virtual void calculateMyosinForcesTotalSizeBased(double /*forcePerMyoMolecule*/){ParentErrorMessage("calculateMyosinForces");};
+	virtual void distributeMyosinForcesAreaBased(bool /*isIsotropic*/, bool /*apical*/, double /*forcePerMyoMolecule*/){ParentErrorMessage("distributeMyosinAreaBased");};
+	virtual void distributeMyosinForcesTotalSizeBased(bool /*isIsotropic*/, bool /*apical*/, double /*forcePerMyoMolecule*/){ParentErrorMessage("distributeMyosinToitalSizeBased");};
 	void 	setShapeChangeRate(double x, double y, double z, double xy, double yz, double xz);
 	void 	updateElementVolumesAndTissuePlacementsForSave(vector<Node*>& Nodes);
 	bool 	readNodeIdData(ifstream& file);
@@ -296,22 +314,32 @@ public:
 
 	void    CalculateGrowthRotationByF();
 	void 	calculateTriPointFForRatation();
-    void 	growShapeByFg(double dt);
+    void 	growShapeByFg();
     void 	changeShapeByFsc(double dt);
     void	calculatePlasticDeformation(bool volumeConserved, double rate);
 
 	virtual double getApicalSideLengthAverage(){return ParentErrorMessage("getApicalSideLengthAverage",0.0);};
-	virtual void getApicalTriangles(vector <int> &ApicalTriangles){ParentErrorMessage("getApicalTriangles");};
-	virtual int getCorrecpondingApical(int currNodeId){return ParentErrorMessage("getCorrecpondingApical", -100);};
-	virtual bool IsThisNodeMyBasal(int currNodeId){return ParentErrorMessage("IsThisNodeMyBasal", false);};
+	virtual void getApicalTriangles(vector <int> &/*ApicalTriangles*/){ParentErrorMessage("getApicalTriangles");};
+	virtual int getCorrecpondingApical(int /*currNodeId*/){return ParentErrorMessage("getCorrecpondingApical", -100);};
+	virtual bool IsThisNodeMyBasal(int /*currNodeId*/){return ParentErrorMessage("IsThisNodeMyBasal", false);};
 	virtual double getElementHeight(){return ParentErrorMessage("getElementHeight", 0.0);};
-	virtual void getRelevantNodesForPacking(int TissuePlacementOfPackingNode, int TissueTypeOfPackingNode, int& id1, int& id2, int& id3){return ParentErrorMessage("getRelevantNodesForPacking");}
-	virtual bool IsPointCloseEnoughForPacking(double* Pos,  float threshold, int TissuePlacementOfPackingNode, int TissueTypeOfPackingNode){return ParentErrorMessage("IsPointCloseEnoughForPacking", false);};
-	virtual void calculateNormalForPacking(int tissuePlacementOfNormal){ParentErrorMessage("calculateNormalForPacking");};
-	virtual void AddPackingToSurface(int tissueplacement, double Fx, double Fy,double Fz, double **PackingForces, vector<Node*> &Nodes, bool& allCornersFixedX, bool& allCornersFixedY, bool& allCornersFixedZ){ParentErrorMessage("AddPackingToApicalSurface");};
-	virtual void getApicalNodePos(double* posCorner){ParentErrorMessage("getApicalNodePos");};
-	virtual void getBasalNodePos(double* posCorner){ParentErrorMessage("getBasalNodePos");};
-	virtual bool IspointInsideTriangle(int tissueplacement, double x, double y,double z){return ParentErrorMessage("IspointInsideTriangle",false );};
+	virtual void getRelevantNodesForPacking(int /*TissuePlacementOfPackingNode*/, int& /*id1*/, int& /*id2*/, int& /*id3*/){return ParentErrorMessage("getRelevantNodesForPacking");}
+	virtual bool IsPointCloseEnoughForPacking(double* /*Pos*/,  float /*threshold*/, int /*TissuePlacementOfPackingNode*/){return ParentErrorMessage("IsPointCloseEnoughForPacking", false);};
+	virtual void calculateNormalForPacking(int /*tissuePlacementOfNormal*/){ParentErrorMessage("calculateNormalForPacking");};
+	virtual void AddPackingToSurface(int /*tissueplacement*/, double /*Fx*/, double /*Fy*/,double /*Fz*/, double **/*PackingForces*/, vector<Node*> &/*Nodes*/, bool& /*allCornersFixedX*/, bool& /*allCornersFixedY*/, bool& /*allCornersFixedZ*/){ParentErrorMessage("AddPackingToApicalSurface");};
+	virtual void getApicalNodePos(double* /*posCorner*/){ParentErrorMessage("getApicalNodePos");};
+	virtual void getBasalNodePos(double* /*posCorner*/){ParentErrorMessage("getBasalNodePos");};
+	virtual bool IspointInsideTriangle(int /*tissueplacement*/, double /*x*/, double /*y*/,double /*z*/){return ParentErrorMessage("IspointInsideTriangle",false );};
+	virtual void constructElementStackList(const int /*discretisationLayers*/, vector<ShapeBase*>& /*elementsList*/){ParentErrorMessage("constructElementStackList");};
+	virtual void getApicalCentre(double* /*centre*/){ParentErrorMessage("getApicalCentre");};
+	virtual void getBasalCentre(double* /*centre*/){ParentErrorMessage("getBasalCentre");};
+	virtual void getReferenceApicalCentre(double* /*centre*/){ParentErrorMessage("getReferenceApicalCentre");};
+	virtual void getReferenceBasalCentre(double* /*centre*/){ParentErrorMessage("getReferenceBasalCentre");};
+	virtual double* getApicalMinViscosity(vector<Node*> /*Nodes*/){ParentErrorMessage("getApicalMinViscosity");double* dummy; return dummy;};
+	virtual double* getBasalMinViscosity(vector<Node*> /*Nodes*/){ParentErrorMessage("getBasalMinViscosity");double* dummy; return dummy;};
+	virtual void copyElementInformationAfterRefinement(ShapeBase* /*baseElement*/, int /*layers*/, bool /*thereIsPlasticDeformation*/){ParentErrorMessage("copyElementInformationAfterRefinement");};
+	virtual void checkRotationConsistency3D(){ParentErrorMessage("checkRotationConsistency3D");};
+
 	bool checkPackingToThisNodeViaState(int ColumnarLayerDiscretisationLAyers, Node* NodePointer);
 	bool DoesPointBelogToMe(int IdNode);
 	void growShape();

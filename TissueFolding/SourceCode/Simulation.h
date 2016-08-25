@@ -64,6 +64,8 @@ private:
 
     NewtonRaphsonSolver *NRSolver;
 
+
+
 	bool readModeOfSim(int& i, int argc, char **argv);
 	bool readParameters(int& i, int argc, char **argv);
 	bool readOutputDirectory(int& i, int argc, char **argv);
@@ -107,9 +109,9 @@ private:
 	void initiateSystemForces();
 	bool initiateMesh(int MeshType,float zHeight);
 	bool initiateMesh(int MeshType, int Row, int Column, float SideLength, float zHeight);
-	bool initiateMesh(int MeshType, string inputtype, float SideLength, float zHeight );
+	//bool initiateMesh(int MeshType, string inputtype, float SideLength, float zHeight );
 	bool initiateMesh(int MeshType);
-	bool readInTissueWeights();
+	void readInTissueWeights();
 	bool checkIfTissueWeightsRecorded();
 	bool generateColumnarCircumferenceNodeList(vector <int> &ColumnarCircumferencialNodeList);
 	void sortColumnarCircumferenceNodeList(vector <int> &ColumnarCircumferencialNodeList);
@@ -120,6 +122,7 @@ private:
 	bool checkIfThereIsPeripodialMembrane();
 	void setLinkerCircumference();
 	bool calculateTissueHeight();
+	void assignInitialZPositions();
 	bool addStraightPeripodialMembraneToTissue();
 	bool addCurvedPeripodialMembraneToTissue();
 	void calculateDiscretisationLayers(double &hColumnar, int& LumenHeightDiscretisationLayers, double &hLumen, double &peripodialHeight, int& peripodialHeightDiscretisationLayers, double& hPeripodial);
@@ -181,6 +184,8 @@ private:
 	void calculateGrowth();
 	void calculateShapeChange();
 	void cleanUpGrowthRates();
+	void checkForPinningPositionsUpdate();
+	void updatePinningPositions();
     void updateGrowthRotationMatrices();
 	void cleanUpShapeChangeRates();
 	void calculateGrowthUniform(GrowthFunctionBase* currGF);
@@ -200,6 +205,7 @@ private:
 	void laserAblate(double OriginX, double OriginY, double Radius);
 	void laserAblateTissueType(int ablationType);
 	void fillInNodeNeighbourhood();
+	void fillInElementColumnLists();
 	void updateElementVolumesAndTissuePlacements();
 	void clearNodeMassLists();
 	void clearLaserAblatedSites();
@@ -240,6 +246,8 @@ public:
 	double discProperMidlineViscosity;
 	int noiseOnPysProp[4];
 	bool zeroExternalViscosity[3]; //The boolean stating if there is zero external viscosity on any of the 3 dimensions
+	bool extendExternalViscosityToInnerTissue;
+	bool softenedECM;
 	double externalViscosityDPApical;
 	double externalViscosityDPBasal;
 	double externalViscosityPMApical;
@@ -275,6 +283,9 @@ public:
 
 	int nGrowthFunctions;
 	bool GridGrowthsPinnedOnInitialMesh;
+	int nGrowthPinning; ///number of times growth pinning positions will be updated, the relative positions of elements in tissue.
+	int* growthPinUpdateTime;
+	bool* growthPinUpdateBools;
 	int gridGrowthsInterpolationType; //0 = no interpolation, step function, 1 = linear interpolation (default = 1).
 	vector <double***> GrowthMatrices;
 	vector<GrowthFunctionBase*> GrowthFunctions;
@@ -370,6 +381,14 @@ public:
 	vector <double> initialWeightPointy;
 	vector <double> initialWeightPointz;
 
+
+    bool thereIsECMSoftening;
+	double ECMSofteningXRange[2];
+	double softeningTimeInSec;
+	double ECMSofteningFraction;
+	bool softenBasalECM;
+	bool softenApicalECM;
+
 	double packingDetectionThreshold;
 	double packingThreshold;
 	//soft periphery parameters:
@@ -397,6 +416,7 @@ public:
     void checkForExperimentalSetupsBeforeIteration();
     void checkForExperimentalSetupsWithinIteration();
     void checkForExperimentalSetupsAfterIteration();
+    void checkECMSoftening();
     bool runOneStep();
     void updatePlasticDeformation();
     void updateStepNR();
@@ -423,7 +443,7 @@ public:
     void calculatePackingNumerical3DnotWorking(gsl_matrix* K);
     void addValueToMatrix(gsl_matrix* K, int i, int j, double value);
     void addPackingForces(gsl_matrix* gExt);
-	void checkPackingToPipette(bool& packsToPip, double* pos, double* pipF,double mass, int id);
+	void checkPackingToPipette(bool& packsToPip, double* pos, double* pipF,double mass);
 	void getNormalAndCornerPosForPacking(Node* NodePointer, ShapeBase* ElementPointer, double* normalForPacking,double* posCorner);
 	void getApicalNormalAndCornerPosForPacking(ShapeBase* ElementPointer, double* normalForPacking,double* posCorner);
 	void getBasalNormalAndCornerPosForPacking(ShapeBase* ElementPointer, double* normalForPacking,double* posCorner);
@@ -437,7 +457,10 @@ public:
 	void alignTissueDVToXPositive();
 	void alignTissueAPToXYPlane();
 	bool checkFlip();
-	void calculateApicalBasalAreas();
+	void flagElementsThatNeedRefinement();
+	void refineElements();
+	void addNodesForRefinement(ShapeBase* currElement, int* newNodeIdList);
+	void addElementsForRefinement(int* elementsIdsOnColumn, int* newNodeIdList);
 	void wrapUpAtTheEndOfSimulation();
 	void writeRelaxedMeshFromCurrentState();
 	void writeMeshRemovingAblatedRegions();

@@ -25,6 +25,8 @@ public:
 		this->endTime = endTime;
 		this->applyToColumnarLayer = applyToColumnarLayer;
 		this->applyToPeripodialMembrane = applyToPeripodialMembrane;
+		zMin = 0;
+		zMax = 1.0;
 	} ///< The constructor of GrowthFunctionBase. Different growth functions will be derived from this class
 	~GrowthFunctionBase(){};
 
@@ -34,7 +36,8 @@ public:
 	float endTime;					///< The end time of the growth, in seconds.
 	bool applyToColumnarLayer;		///< Boolean stating if the growth should be applied to columnar layer
 	bool applyToPeripodialMembrane; ///< Boolean stating if the growth should be applied to peripodial membrane
-
+	double zMin;
+	double zMax;
 
 	void 	ParentErrorMessage(string functionName){
 		cerr<<"You are calling the function: "<<functionName<<" from a parent here, check declaration is via pointers"<<endl;
@@ -47,25 +50,26 @@ public:
 		cerr<<"You are calling the function: "<<functionName<<" from a parent here, check declaration is via pointers"<<endl;
 		return returnValue;
 	}
-	virtual void		writeSummary(ofstream &saveFileSimulationSummary, double dt){ParentErrorMessage("writeSummary");};
-	virtual void 		getCentre(float &centreX, float &centreY){ParentErrorMessage("getCentre");};
+	virtual void		writeSummary(ofstream&/*saveFileSimulationSummary*/){ParentErrorMessage("writeSummary_no_dt");};
+	virtual void		writeSummary(ofstream&/*saveFileSimulationSummary*/, double /*dt*/){ParentErrorMessage("writeSummary_with_dt");};
+	virtual void 		getCentre(float &/*centreX*/, float &/*centreY*/){ParentErrorMessage("getCentre");};
 	virtual float 		getInnerRadius(){return ParentErrorMessage("getInnerRadius",0.0);};
 	virtual float 		getOuterRadius(){return ParentErrorMessage("getOuterRadius",0.0);};
-	virtual void 		getGrowthRate(double *maxValue){ParentErrorMessage("getGrowthRate");};
-	virtual gsl_matrix* getShearAngleRotationMatrix(){ParentErrorMessage("getShearAngleRotationMatrix");}; // this is used by unoiform growth
+	virtual void 		getGrowthRate(double* /*maxValue*/){ParentErrorMessage("getGrowthRate");};
+	virtual gsl_matrix* getShearAngleRotationMatrix(){ParentErrorMessage("getShearAngleRotationMatrix"); gsl_matrix* dummy; return dummy;}; // this is used by unoiform growth
 	virtual double 		getShearAngle(){ParentErrorMessage("getShearAngle");return 0.0;};
 	virtual int			getGridX(){return ParentErrorMessage("getGridX",0);};
 	virtual int			getGridY(){return ParentErrorMessage("getGridY",0);};
 	virtual double*** 	getGrowthMatrix(){ParentErrorMessage("getGrowthMatrix");double*** a;return a;}
 	virtual double** 	getXyShearAngleMatrix(){ParentErrorMessage("getXyShearMatrix");double** a;return a;}
-	virtual	double 		getGrowthMatrixElement(int i, int j, int k){return ParentErrorMessage("getGrowthMatrixElement",0.0);};
-	virtual	double 		getXyShearAngleMatrixElement(int i, int j){return ParentErrorMessage("getXyShearhMatrixElement",0.0);};
-	virtual bool 		isAspectRatioOverOne(int i, int j){return ParentErrorMessage("isAspectRatioOverOne",0);};
-	virtual gsl_matrix* getXyShearRotationsMatrixElement(int i, int j){ParentErrorMessage("getShearAngleRotationMatrixElement");}; //this is used by grid based growth
-	virtual void 		getGrowthProfileAt4Corners(int IndexX, int IndexY, double *growth0, double *growth1, double *growth2, double *growth3, double *angles, bool *anglesEliminated){ParentErrorMessage("getGrowthProfileAt4Corners");};;
+	virtual	double 		getGrowthMatrixElement(int /*i*/, int /*j*/, int /*k*/){return ParentErrorMessage("getGrowthMatrixElement",0.0);};
+	virtual	double 		getXyShearAngleMatrixElement(int /*i*/, int /*j*/){return ParentErrorMessage("getXyShearhMatrixElement",0.0);};
+	virtual bool 		isAspectRatioOverOne(int /*i*/, int /*j*/){return ParentErrorMessage("isAspectRatioOverOne",0);};
+	virtual gsl_matrix* getXyShearRotationsMatrixElement(int /*i*/, int /*j*/){ParentErrorMessage("getShearAngleRotationMatrixElement");gsl_matrix* dummy; return dummy;}; //this is used by grid based growth
+	virtual void 		getGrowthProfileAt4Corners(int /*IndexX*/, int /*IndexY*/, double */*growth0*/, double */*growth1*/, double */*growth2*/, double */*growth3*/, double */*angles*/, bool */*anglesEliminated*/){ParentErrorMessage("getGrowthProfileAt4Corners");};;
 
-	virtual void		setGrowtRate(double ex, double ey, double ez){ParentErrorMessage("setGrowtRate");};
-	virtual void		setGrowthMatrixElement(double ex, double ey, double ez, int i, int j){ParentErrorMessage("setGrowtRate");};
+	virtual void		setGrowtRate(double /*ex*/, double /*ey*/, double /*ez*/){ParentErrorMessage("setGrowtRate");};
+	virtual void		setGrowthMatrixElement(double /*ex*/, double /*ey*/, double /*ez*/, int /*i*/, int /*j*/){ParentErrorMessage("setGrowtRate");};
 };
 #endif
 

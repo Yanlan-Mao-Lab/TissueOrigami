@@ -43,6 +43,10 @@ Simulation::Simulation(){
 Simulation::~Simulation(){
     cerr<<"destructor for simulation called"<<endl;
 	delete ModInp;
+	if (nGrowthPinning>0){
+		delete [] growthPinUpdateTime;
+		delete [] growthPinUpdateBools;
+	}
 	//n nodes
 	for (int j=0;j<nNodes;++j){
 		delete[] SystemForces[j];
@@ -123,6 +127,7 @@ void Simulation::setDefaultParameters(){
 	}
 	nGrowthFunctions = 0;
 	GridGrowthsPinnedOnInitialMesh = false;
+	nGrowthPinning = 0;
 	gridGrowthsInterpolationType = 1;
 	nShapeChangeFunctions = 0;
 	TensionCompressionSaved = true;
@@ -205,12 +210,23 @@ void Simulation::setDefaultParameters(){
 	linkerZoneApicalViscosity = discProperApicalViscosity;
 	linkerZoneBasalViscosity = discProperBasalViscosity;
 
+	extendExternalViscosityToInnerTissue = false;
 	externalViscosityDPApical = 0.0;
 	externalViscosityDPBasal  = 0.0;
 	externalViscosityPMApical = 0.0;
 	externalViscosityPMBasal  = 0.0;
 	externalViscosityLZApical = 0.0;
 	externalViscosityLZBasal  = 0.0;
+
+	softenedECM = false;
+    thereIsECMSoftening = false;
+	ECMSofteningXRange[0] = 0.0;
+    ECMSofteningXRange[1] = 1.0;
+	softeningTimeInSec = -1;
+	ECMSofteningFraction = 0.0;
+	softenBasalECM = false;
+	softenApicalECM = false;
+
 }
 
 bool Simulation::readExecutableInputs(int argc, char **argv){
@@ -322,7 +338,7 @@ bool Simulation::readFinalSimulationStep(){
 	//backing up data save interval and time step before reading the system summary:
 	double timeStepCurrentSim = dt;
 	int dataSaveIntervalCurrentSim = dataSaveInterval;
-	bool ZerothFrame = true;
+	//bool ZerothFrame = true;
 	//reading system properties:
 	success  = readSystemSummaryFromSave();
 	if (!success){
@@ -337,12 +353,12 @@ bool Simulation::readFinalSimulationStep(){
 			break;
 		}
 		success = readNodeDataToContinueFromSave();
-		cout<<"dt after  readNodeDataToContinueFromSave "<<dt<<" timeStepCurrentSim: "<<timeStepCurrentSim<<endl;
+		cout<<"dt after  readNodeDataToContinueFromSave "<<dt<<" timeStepCurrentSim: "<<timeStepCurrentSim<<" dataSaveInterval: "<<dataSaveInterval<<" dataSaveIntervalCurrentSim: "<<dataSaveIntervalCurrentSim<<endl;
 		if (!success){
 			return false;
 		}
 		readElementDataToContinueFromSave();
-		cout<<"dt after  readElementDataToContinueFromSave "<<dt<<" timeStepCurrentSim: "<<timeStepCurrentSim<<endl;
+		cout<<"dt after  readElementDataToContinueFromSave "<<dt<<" timeStepCurrentSim: "<<timeStepCurrentSim<<" dataSaveInterval: "<<dataSaveInterval<<" dataSaveIntervalCurrentSim: "<<dataSaveIntervalCurrentSim<<endl;
 		//assignPhysicalParameters();
 
 		if (TensionCompressionSaved){
@@ -357,14 +373,16 @@ bool Simulation::readFinalSimulationStep(){
         if (ProteinsSaved){
         	readProteinsToContinueFromSave();
 		}
-		if (ZerothFrame){
-			ZerothFrame = false;
-			cout<<"dt after  ZerothFrame if clause "<<dt<<" timeStepCurrentSim: "<<timeStepCurrentSim<<endl;
-		}
-		else{
+		//if (ZerothFrame){
+		//	ZerothFrame = false;
+		//	cout<<"dt after  ZerothFrame if clause "<<dt<<" timeStepCurrentSim: "<<timeStepCurrentSim<<" dataSaveInterval: "<<dataSaveInterval<<endl;
+		//}
+		//else{
 			timestep = timestep + dataSaveInterval;
 			currSimTimeSec += dt*dataSaveInterval;
-		}
+		//}
+		cout<<"current time step "<<timestep<<" currSimTimeSec: "<<currSimTimeSec<<endl;
+
 		//skipping the footer:
 		getline(saveFileToDisplayMesh,currline);
 		while (currline.empty() && !saveFileToDisplayMesh.eof()){
@@ -382,13 +400,15 @@ bool Simulation::readFinalSimulationStep(){
 	calculateBoundingBox();
 	bringMyosinStimuliUpToDate();
 
-	//bring the time step and data save time steps to the main modelinput:
-	currSimTimeSec += dt*dataSaveInterval;
-	dataSaveInterval = dataSaveIntervalCurrentSim;
-	dt = timeStepCurrentSim;
 	//During a simulation, the data is saved after the step is run, and the time step is incremented after the save. Now I have read in the final step,
 	//I need to increment my time step to continue the next time step from here.
-	timestep++;
+	//currSimTimeSec += dt*dataSaveInterval;
+	//timestep++;
+
+	//bring the time step and data save time steps to the main modelinput:
+	dataSaveInterval = dataSaveIntervalCurrentSim;
+	dt = timeStepCurrentSim;
+
 	return true;
 }
 
@@ -432,7 +452,7 @@ bool Simulation::initiateSystem(){
 		Success = initiateMesh(MeshType, Row, Column,  SideLength,  zHeight);
 	}
 	else if(MeshType == 4){
-		//cout<<"mesh type : 4"<<endl;
+		cout<<"mesh type : 4"<<endl;
 		Success = initiateMesh(MeshType);
 	}
 	if (!Success){
@@ -443,6 +463,8 @@ bool Simulation::initiateSystem(){
 	}
 	Success = checkIfThereIsPeripodialMembrane();
 	Success = calculateTissueHeight(); //Calculating how many layers the columnar layer has, and what the actual height is.
+	calculateBoundingBox();
+	assignInitialZPositions();
 	if (!Success){
 		return Success;
 	}
@@ -469,6 +491,7 @@ bool Simulation::initiateSystem(){
 		addCurvatureToColumnar(tissueCurvatureDepth);
 	}
 	fillInNodeNeighbourhood();
+	fillInElementColumnLists();
 	checkForNodeFixing();
 	assignTips();
 	if (!Success){
@@ -479,14 +502,14 @@ bool Simulation::initiateSystem(){
 	assignPhysicalParameters();
 	checkForZeroExternalViscosity();
     //calculateStiffnessMatrices();
-    calculateShapeFunctionDerivatives();
+	calculateShapeFunctionDerivatives();
 	assignNodeMasses();
 	assignConnectedElementsAndWeightsToNodes();
     alignTissueDVToXPositive();
     //alignTissueAPToXYPlane();
     calculateBoundingBox();
     calculateDVDistance();
-    vector<ShapeBase*>::iterator itElement;
+	vector<ShapeBase*>::iterator itElement;
     for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
     	(*itElement)->calculateRelativePosInBoundingBox(boundingBox[0][0],boundingBox[0][1],boundingBoxSize[0],boundingBoxSize[1]);
     	(*itElement)->setInitialRelativePosInBoundingBox();
@@ -521,6 +544,12 @@ bool Simulation::initiateSystem(){
 	//initiating the NR solver object, that generates the necessary matrices
 	//for solving the tissue dynamics
     NRSolver = new NewtonRaphsonSolver(Nodes[0]->nDim,nNodes);
+    /*for (int i =0 ; i<nNodes; ++i){
+		if (i != 0   && i != 66 ){
+		    fixAllD (i,false);
+		}
+
+    }*/
 	return Success;
 }
 
@@ -703,14 +732,17 @@ void Simulation::writeMeshFileSummary(){
 }
 
 void Simulation::writeGrowthRatesSummary(){
-	int currIndex = 0;
 	for (int i=0; i<nGrowthFunctions; ++i){
-		GrowthFunctions[i]->writeSummary(saveFileSimulationSummary,dt);
+		if(GrowthFunctions[i]->Type == 3){ //grid based function does not need dt in summary
+			GrowthFunctions[i]->writeSummary(saveFileSimulationSummary);
+		}
+		else{
+			GrowthFunctions[i]->writeSummary(saveFileSimulationSummary,dt);
+		}
 	}
 }
 
 void Simulation::writeMyosinSummary(){
-	int currIndex = 0;
 	for (int i=0; i<nMyosinFunctions; ++i){
 		myosinFunctions[i]->writeSummary(saveFileSimulationSummary);
 	}
@@ -854,24 +886,16 @@ bool Simulation::initiateSavedSystem(){
 	if (ForcesSaved){
 		updateForcesFromSave();
 	}
-	cout<<" updating  ElementVolumesAndTissuePlacements"<<endl;
 	updateElementVolumesAndTissuePlacements();
     //cleanMatrixUpdateData();
 	clearNodeMassLists();
 	assignNodeMasses();
-    cout<<"above assignConnectedElementsAndWeightsToNodes"<<endl;
 	assignConnectedElementsAndWeightsToNodes();
-    cout<<"above clearLaserAblatedSites"<<endl;
 	clearLaserAblatedSites();
     //calculateStiffnessMatrices();
-    cout<<"calculating ShapeFunctionDerivatives"<<endl;
-
     calculateShapeFunctionDerivatives();
-    cout<<"updating element positions"<<endl;
 	updateElementPositions();
 	//skipping the footer:
-    cout<<"updated element positions"<<endl;
-
 	getline(saveFileToDisplayMesh,currline);
 	while (currline.empty() && !saveFileToDisplayMesh.eof()){
 		//skipping empty line
@@ -1025,9 +1049,6 @@ void Simulation::initiateNodesFromMeshInput(){
 		nNodes = Nodes.size();
 		delete[] pos;
 	}
-	//for (int i=0; i<n; ++i){
-	//	cout<<"node "<<i<<"pos: "<<
-	//}
 }
 
 void Simulation::initiateElementsFromMeshInput(){
@@ -1271,6 +1292,18 @@ void Simulation::updateGrowthRateFromSave(){
 		saveFileToDisplayGrowthRate.read((char*) &ry, sizeof ry);
 		saveFileToDisplayGrowthRate.read((char*) &rz, sizeof rz);
 		(*itElement)->setGrowthRateExpFromInput(rx,ry,rz);
+		/*if((*itElement)->tissuePlacement == 1){ //apical element
+			double* growthRate =(*itElement)->getGrowthRate();
+			gsl_matrix* elementFG = (*itElement)->getFg();
+			double detFg = (*itElement)->determinant3by3Matrix(elementFG);
+			double* ReletivePos = new double[2];
+			(*itElement)->getRelativePosInBoundingBox(ReletivePos);
+			cout<<" TheGrowthRateOfElement: "<<(*itElement)->Id<<" "<<growthRate[0]<<" "<<growthRate[1]<<" "<<growthRate[2]<<" curent detFg: "<<detFg<<" grownVolume: "<<(*itElement)->GrownVolume<<" ReferenceVolume "<<(*itElement)->ReferenceShape->Volume<<" Relative pos: "<<ReletivePos[0]<<" "<<ReletivePos[1]<<endl;
+			(*itElement)->displayMatrix(elementFG,"correspondingFg");
+			gsl_matrix_free(elementFG);
+			delete[] ReletivePos;
+
+		}*/
 	}
 }
 
@@ -1498,8 +1531,9 @@ void  Simulation::updateNodeNumberFromSave(){
 			delete tmp_nd;
 		}
 	}
-	if ( Nodes.size() != nNodes){
-		//the node number is change, I yupdated the node list, now I need to fix system forces:
+	n = Nodes.size();
+	if ( n != nNodes){
+		//the node number is change, I updated the node list, now I need to fix system forces:
 		reInitiateSystemForces(nElements);
 	}
 	//cout<<"end of funciton, number of nodes from save file: "<<n <<" number of nodes on the vector: "<<Nodes.size()<<endl;
@@ -1636,7 +1670,7 @@ bool Simulation::initiateMesh(int MeshType, int Row, int Column, float SideLengt
 	return true;
 }
 
-bool Simulation::initiateMesh(int MeshType, string inputtype, float SideLength, float zHeight ){
+/*bool Simulation::initiateMesh(int MeshType, string inputtype, float SideLength, float zHeight ){
 	if ( MeshType == 1 ){
 		cerr<<"Error: Too many arguments for a single element system"<<endl;
 		return false;
@@ -1650,7 +1684,7 @@ bool Simulation::initiateMesh(int MeshType, string inputtype, float SideLength, 
 		//generate mesh by triangulation
 		return false;
 	}
-	else if ( MeshType ==4 ){
+	else if ( MeshType == 4 ){
 		cerr<<"Error: Too many arguments for reading the mesh from file"<<endl;
 		return false;
 		//this will be reading full mesh data
@@ -1661,7 +1695,7 @@ bool Simulation::initiateMesh(int MeshType, string inputtype, float SideLength, 
 		return false;
 	}
 	return true;
-}
+}*/
 
 bool Simulation::initiateMesh(int MeshType){
 	if ( MeshType == 1 ){
@@ -1685,6 +1719,7 @@ bool Simulation::initiateMesh(int MeshType){
 			cerr<<"Cannot open the save file to display: "<<name_inputMeshFile<<endl;
 			return false;
 		}
+		cout<<"initiating nodes"<<endl;
 		initiateNodesFromMeshInput();
 		initiateElementsFromMeshInput();
 		cout<<" nNodes: "<<nNodes<<" nEle: "<<nElements<<endl;
@@ -1709,7 +1744,7 @@ bool Simulation::checkIfTissueWeightsRecorded(){
 	return tissueWeightsRecorded;
 }
 
-bool Simulation::readInTissueWeights(){
+void Simulation::readInTissueWeights(){
 	vector<ShapeBase*>::iterator itEle;
 	double wPeri;
 	for (itEle=Elements.begin(); itEle<Elements.end(); ++itEle){
@@ -2008,6 +2043,12 @@ bool Simulation::calculateTissueHeight(){
 		lumenHeight = columnarTop - peripodialbottom;
 	}
 	return true;
+}
+
+void Simulation::assignInitialZPositions(){
+	for(vector<ShapeBase*>::iterator itElement = Elements.begin(); itElement<Elements.end(); ++itElement){
+		(*itElement)->setInitialZPosition(boundingBox[0][2], TissueHeight);  //minimum z of the tissue and the tissue height given as input
+	}
 }
 
 void Simulation::calculateStiffnessMatrices(){
@@ -2655,18 +2696,18 @@ void Simulation::assignPhysicalParameters(){
 				//take average of the two:
 				double currExternalViscApical = 0.5*(externalViscosityDPApical + externalViscosityPMApical);
 				double currExternalViscBasal  = 0.5*(externalViscosityDPBasal  + externalViscosityPMBasal);
-				(*itNode)->setExternalViscosity(currExternalViscApical,currExternalViscBasal);
+				(*itNode)->setExternalViscosity(currExternalViscApical,currExternalViscBasal, extendExternalViscosityToInnerTissue);
 				//(*itNode)->setExternalViscosity(externalViscosityDPApical*noise3, externalViscosityDPBasal*noise3, externalViscosityPMApical*noise3, externalViscosityPMBasal*noise3);
 			}
 			else{
-				(*itNode)->setExternalViscosity(externalViscosityLZApical*noise3, externalViscosityLZBasal*noise3);
+				(*itNode)->setExternalViscosity(externalViscosityLZApical*noise3, externalViscosityLZBasal*noise3, extendExternalViscosityToInnerTissue);
 				//(*itNode)->setExternalViscosity(externalViscosityLZApical*noise3, externalViscosityLZBasal*noise3, externalViscosityLZApical*noise3, externalViscosityLZBasal*noise3);
 			}
 		}else if ((*itNode)->tissueType == 0){ //disc proper
-			(*itNode)->setExternalViscosity(externalViscosityDPApical*noise3, externalViscosityDPBasal*noise3);
+			(*itNode)->setExternalViscosity(externalViscosityDPApical*noise3, externalViscosityDPBasal*noise3, extendExternalViscosityToInnerTissue);
 			//(*itNode)->setExternalViscosity(externalViscosityDPApical*noise3, externalViscosityDPBasal*noise3, externalViscosityPMApical*noise3, externalViscosityPMBasal*noise3);
 		}else if ((*itNode)->tissueType == 1){
-			(*itNode)->setExternalViscosity(externalViscosityPMApical*noise3, externalViscosityPMBasal*noise3);
+			(*itNode)->setExternalViscosity(externalViscosityPMApical*noise3, externalViscosityPMBasal*noise3, extendExternalViscosityToInnerTissue);
 		}
 	}
 	delete[] fractions;
@@ -2932,20 +2973,36 @@ void Simulation::manualPerturbationToInitialSetup(bool deform, bool rotate){
                 (*itNode)->Position[2] *=scaleZ;
             }
         }
-
         if (rotate){
         	cerr<<"Rotating system"<<endl;
-            double R[3][3];
-            double c = cos(tetX), s = sin(tetX);
-            double Rx[3][3] = {{1,0,0},{0,c,-s},{0,s,c}};
-            c = cos(tetY); s = sin(tetY);
-            double Ry[3][3] = {{c,0,s},{0,1,0},{-s,0,c}};
-            c = cos(tetZ), s = sin(tetZ);
-            double Rz[3][3] = {{c,-s,0},{s,c,0},{0,0,1}};
-            for (int j =0; j<3;++j){
-                for(int k=0; k<3;++k){
-                    R[j][k] = Rz[j][k];
-                }
+        	int axisToRotateOn = 2; //0: rotate around x axis, 1: around y-axis, and 2: around z-axis.
+            double R[3][3] =  {{1,0,0},{0,1,0},{0,0,1}};
+            if (axisToRotateOn == 0){
+            	double c = cos(tetX);
+            	double s = sin(tetX);
+            	//Rx = {{1,0,0},{0,c,-s},{0,s,c}};
+            	R[1][1] = c;
+				R[1][2] = -s;
+				R[2][1] = s;
+				R[2][2] = c;
+            }
+            else if(axisToRotateOn == 1){
+            	double c = cos(tetY);
+            	double s = sin(tetY);
+            	//Ry = {{c,0,s},{0,1,0},{-s,0,c}};
+            	R[0][0] = c;
+				R[0][2] = s;
+				R[2][0] = -s;
+				R[2][2] = c;
+            }
+            else if(axisToRotateOn == 2){
+            	double c = cos(tetZ);
+            	double s = sin(tetZ);
+            	//Rz = {{c,-s,0},{s,c,0},{0,0,1}};
+            	R[0][0] = c;
+				R[0][1] = -s;
+				R[1][0] = s;
+				R[1][1] = c;
             }
         	for (vector<Node*>::iterator  itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
                 double x = (*itNode)->Position[0]*R[0][0] + (*itNode)->Position[1]*R[0][1] + (*itNode)->Position[2]*R[0][2];
@@ -3397,7 +3454,7 @@ void Simulation::constructTriangleCornerListOfApicalSurface( vector< vector<int>
 void Simulation::addCapPeripodialElements( vector< vector<int> > &TriangleList, vector< vector<int> > &PeripodialCapNodeArray, int peripodialHeightDiscretisationLayers){
 	int nTri = TriangleList.size();
 	for (int i=0; i<nTri; ++i){
-		int indiceTri0Corner0, indiceTri0Corner1,indiceTri0Corner2;
+		int indiceTri0Corner0 =-1, indiceTri0Corner1=-1,indiceTri0Corner2=-1;
 		int n = PeripodialCapNodeArray.size();
 		//cout<<"size of the peripodial cap node array: "<<n<<endl;
 		bool found0 = false, found1 = false, found2 = false;
@@ -3417,6 +3474,10 @@ void Simulation::addCapPeripodialElements( vector< vector<int> > &TriangleList, 
 		   if (found0 && found1 && found2 ){
 			   break;
 		   }
+		}
+		if(!(found0 && found1 && found2)){
+			cerr<<"could not find all the corners in addCapPeripodialElements, will give error"<<endl;
+			cerr.flush();
 		}
 		//now I have the indices of the corners, adding the elements, as many layers as necessary:
 		int* NodeIds = new int[6];
@@ -3508,9 +3569,9 @@ bool Simulation::addCurvedPeripodialMembraneToTissue(){
 	double hMidPoint = TissueHeight + 0.5*hLumen;
 	for (int i=0;i<nCircumference; ++i){
 		int idBase = ColumnarBasedNodeArray[i][0];
-		int idTop = ColumnarBasedNodeArray[i][ColumnarBasedNodeArray[i].size()-1];
-		double posBase[3] = { Nodes[idBase]->Position[0],Nodes[idBase]->Position[1],Nodes[idBase]->Position[2]};
-		double posTop[3] = { Nodes[idTop]->Position[0],Nodes[idTop]->Position[1],Nodes[idTop]->Position[2]};
+		//int idTop = ColumnarBasedNodeArray[i][ColumnarBasedNodeArray[i].size()-1];
+		//double posBase[3] = { Nodes[idBase]->Position[0],Nodes[idBase]->Position[1],Nodes[idBase]->Position[2]};
+		//double posTop[3] = { Nodes[idTop]->Position[0],Nodes[idTop]->Position[1],Nodes[idTop]->Position[2]};
 
 		//first find the vector pointing out from the base node:
 		int nodeId0 = ColumnarBasedNodeArray[i][0];
@@ -3585,17 +3646,11 @@ bool Simulation::addCurvedPeripodialMembraneToTissue(){
 			double s = sin(j*tet);
 			double r1 = hMidPoint *(1 -c);
 			double r2 = hMidPoint * s;
-			double r3 = hMidPoint - (hMidPoint - TissueHeight) * c;
-			double r4 = hMidPoint * s;
 			//outer node:
 			drawingPointsX.push_back(Nodes[idBase]->Position[0] + r2 * vec1[0]);
 			drawingPointsY.push_back(Nodes[idBase]->Position[1] + r2 * vec1[1]);
 			drawingPointsZ.push_back(Nodes[idBase]->Position[2] + r1);
 			cout<<"hMidPoint: "<<hMidPoint<<endl;
-			//inner node:
-			//drawingPointsX.push_back(Nodes[idTop]->Position[0] + r4 * vec1[0]);
-			//drawingPointsY.push_back(Nodes[idTop]->Position[1] + r4 * vec1[1]);
-			//drawingPointsZ.push_back(Nodes[idTop]->Position[2] + r2);
 		}
 		delete[] vec1;
 	}
@@ -3603,7 +3658,8 @@ bool Simulation::addCurvedPeripodialMembraneToTissue(){
 
 
 	for (int i=0;i<nCircumference; ++i){
-		for (int j =0; j< ColumnarBasedNodeArray[i].size(); ++j){
+		int nColumnarBasedNodeArray = ColumnarBasedNodeArray[i].size();
+		for (int j =0; j< nColumnarBasedNodeArray; ++j){
 			int id = ColumnarBasedNodeArray[i][j];
 			drawingPointsX.push_back( Nodes[id]->Position[0]);
 			drawingPointsY.push_back( Nodes[id]->Position[1]);
@@ -3699,11 +3755,29 @@ void Simulation::checkForExperimentalSetupsAfterIteration(){
 	}
 }
 
+void Simulation::checkECMSoftening(){
+	//I have not carried out any softening as yet
+	//I will if the time is after 32 hr
+	if (currSimTimeSec >=softeningTimeInSec){
+		softenedECM = true;
+		for (int aa=0; aa<nNodes; ++aa){
+			if((Nodes[aa]->tissuePlacement == 0 && softenBasalECM ) || (Nodes[aa]->tissuePlacement == 1 && softenApicalECM )){
+				double relativeX = (Nodes[aa]->Position[0] - boundingBox[0][0])/boundingBoxSize[0];
+				if (relativeX> ECMSofteningXRange[0] && relativeX<ECMSofteningXRange[1]){
+					Nodes[aa]->externalViscosity[0] *= ECMSofteningFraction;
+					Nodes[aa]->externalViscosity[1] *= ECMSofteningFraction;
+					Nodes[aa]->externalViscosity[2] *= ECMSofteningFraction;
+				}
+			}
+		}
+	}
+
+}
 
 bool Simulation::runOneStep(){
     bool Success = true;
 	cout<<"entered run one step"<<endl;
-    //ablateSpcific();
+	//ablateSpcific();
     if (currSimTimeSec == -16*3600) {
     	pokeElement(31,0,0,-0.1);pokeElement(34,0,0,-0.1);
     }
@@ -3722,15 +3796,38 @@ bool Simulation::runOneStep(){
         	(*itElement)->calculateRelativePosInBoundingBox(boundingBox[0][0],boundingBox[0][1],boundingBoxSize[0],boundingBoxSize[1]);
         }
 	}
+    //cout<<"after bounding box"<<endl;
     checkForExperimentalSetupsBeforeIteration();
+    if (thereIsECMSoftening && !softenedECM) {
+    	checkECMSoftening();
+    }
     if(nMyosinFunctions > 0){
     	checkForMyosinUpdates();
     }
-    bool thereIsRefinement = true;
+    //cout<<"after checking for myoisn"<<endl;
+    bool thereIsRefinement = false;
     if (thereIsRefinement){
-    	calculateApicalBasalAreas();
+    	int oldNodeSize = nNodes;
+    	flagElementsThatNeedRefinement(); //this is done in parallel, the actual refinement cannot be parallel
+    	refineElements();
+    	cout<<"outside refine elements"<<endl;
+    	if (nNodes != oldNodeSize){
+    		cout<<"re-initiating system forces"<<endl;
+    		reInitiateSystemForces(oldNodeSize);
+    		NRSolver->reInitiateMatricesAfterRefinement(nNodes);
+    	}
     }
     if(nGrowthFunctions>0 || nShapeChangeFunctions >0){
+    	checkForPinningPositionsUpdate();
+    	double* initialRelativePos = new double[2];
+		Elements[110]->getInitialRelativePosInBoundingBox(initialRelativePos);
+		double* relativePos = new double[2];
+		Elements[110]->getRelativePosInBoundingBox(relativePos);
+		cout<<" currSimTimeSec: "<<currSimTimeSec<<" relative pos of element 110: "<<relativePos[0]<<" "<<relativePos[1]<<" initial relative pos: "<<initialRelativePos[0]<<" "<<initialRelativePos[1]<<endl;
+		delete[] initialRelativePos;
+		delete[] relativePos;
+
+
         //outputFile<<"calculating growth"<<endl;
 		//if ((timestep - 1)% growthRotationUpdateFrequency  == 0){
 			updateGrowthRotationMatrices();
@@ -3745,14 +3842,18 @@ bool Simulation::runOneStep(){
     for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
         if (!(*itElement)->IsAblated){
         	//(*itElement)->updateInternalViscosityTest();
-        	(*itElement)->growShapeByFg(dt);
+        	(*itElement)->growShapeByFg();
         	//(*itElement)->defineFgByGrowthTemplate();
         	(*itElement)->changeShapeByFsc(dt);
         }
     }
+    //cout<<"adding mass to nodes"<<endl;
     updateNodeMasses();
+    //cout<<"updating connected node lists"<<endl;
     updateElementToConnectedNodes(Nodes);
+    //cout<<"calculate Myosin Forces"<<endl;
     calculateMyosinForces();
+    //cout<<"detect Pacing Nodes"<<endl;
     detectPacingNodes();
     if (implicitPacking == false){
     	calculatePackingForcesExplicit3D();
@@ -3760,11 +3861,15 @@ bool Simulation::runOneStep(){
     if (addingRandomForces){
     	calculateRandomForces();
     }
+    //cout<<"starting NR"<<endl;
+
+
     updateStepNR();
+
+
     if(thereIsPlasticDeformation){
     	updatePlasticDeformation();
     }
-    processDisplayDataAndSave();
     calculateBoundingBox();
 
     //calculateColumnarLayerBoundingBox();
@@ -3775,6 +3880,9 @@ bool Simulation::runOneStep(){
     Success = checkFlip();
     timestep++;
     currSimTimeSec += dt;
+    if (Success){
+    	processDisplayDataAndSave();
+    }
     return Success;
     //for (int i=0; i<nNodes; ++i){
     //	cout<<" Nodes["<<i<<"]->Position[0]="<<Nodes[i]->Position[0]<<"; Nodes["<<i<<"]->Position[1]="<<Nodes[i]->Position[1]<<";  Nodes["<<i<<"]->Position[2]="<<Nodes[i]->Position[2]<<"; "<<endl;
@@ -3785,14 +3893,35 @@ bool Simulation::runOneStep(){
 	//Elements[39]->displayPositions();
 }
 
+void Simulation::checkForPinningPositionsUpdate(){
+	cout<<"checking for pinning update, currTime: "<<currSimTimeSec<<" nGrowthPinning: "<<nGrowthPinning<<" GridGrowthsPinnedOnInitialMesh? "<<GridGrowthsPinnedOnInitialMesh<<endl;
+	if (GridGrowthsPinnedOnInitialMesh){
+		cout<<" grid is pinned "<<endl;
+		for (int i=0; i<nGrowthPinning; ++i){
+			cout<<"growthPinUpdateTime["<<i<<"]: "<<growthPinUpdateTime[i]<<" growthPinUpdateBools["<<i<<"]: "<<growthPinUpdateBools[i]<<endl;
+			if (currSimTimeSec >= growthPinUpdateTime[i] &&  !growthPinUpdateBools[i]){
+				updatePinningPositions();
+				growthPinUpdateBools[i] = true;
+			}
+		}
+	}
+}
 
-void Simulation::calculateApicalBasalAreas(){
-	double thresholdArea = 27;
+void Simulation::updatePinningPositions(){
+	for( vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		(*itElement)->setInitialRelativePosInBoundingBox();
+	}
+}
+
+void Simulation::flagElementsThatNeedRefinement(){
+	//cout<<"inside flag for refinement"<<endl;
+	double thresholdSide = 5;
+	double thresholdArea = thresholdSide/2.0 * thresholdSide/2.0 *pow(3,0.5);
 	const int maxThreads = omp_get_max_threads();
 	omp_set_num_threads(maxThreads);
 	#pragma omp parallel for //private(Nodes, displacementPerDt, recordForcesOnFixedNodes, FixedNodeForces, outputFile, dt)
 	for( vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		if (!(*itElement)->IsAblated){
+		if (!(*itElement)->IsAblated && (*itElement)->tissueType ==0){//Refine only the columnar layer elements.
 			if ((*itElement)->tissuePlacement == 1){ // element is apical, I should check with apical area
 				(*itElement)->calculateApicalArea();
 				(*itElement)->doesElementNeedRefinement(thresholdArea, 1); //checking refinement with apical surface;
@@ -3802,6 +3931,201 @@ void Simulation::calculateApicalBasalAreas(){
 				(*itElement)->doesElementNeedRefinement(thresholdArea, 0); //checking refinement with basal surface;
 			}
 		}
+	}
+
+}
+
+void Simulation::refineElements(){
+	int n = Elements.size();
+	for (int i=0; i<n; ++i){
+		if (Elements[i]->willBeRefined){
+			//I will refine all the elements in this column, they are
+			//stored on elementsIdsOnSameColumn attribute of each element
+			//This list starts from basal elements and moves to apical;
+			//Clearing pu the flags that I may have on the other end of the tissue first:
+			for (int j=0; j<TissueHeightDiscretisationLayers; ++j){
+				Elements[Elements[i]->elementsIdsOnSameColumn[j]]->willBeRefined = false;
+			}
+			//I will add discretisation layers + 1 number of nodes, I want to keep the ids recorded for now:
+			int* newNodeIdList = new int [TissueHeightDiscretisationLayers+1];
+			addNodesForRefinement(Elements[i],newNodeIdList);
+			addElementsForRefinement(Elements[i]->elementsIdsOnSameColumn,newNodeIdList);
+			delete[] newNodeIdList;
+		}
+	}
+
+
+}
+
+void Simulation::addNodesForRefinement(ShapeBase* currElement, int* newNodeIdList){
+	//cout<<" inside add nodes for refinement"<<endl;
+	Node* tmp_nd;
+	//now I will add nodes:
+	//Adding the basal node first:
+	int dividedElementId = currElement->elementsIdsOnSameColumn[0];
+	double* pos = new double[3];
+	Elements[dividedElementId]->getBasalCentre(pos);
+	double* externalViscosity = Elements[dividedElementId]->getBasalMinViscosity(Nodes);
+	//cout<<" basal centre: "<<pos[0]<<" "<<pos[1]<<" "<<pos[2]<<endl;
+	int tissuePos = 0; //at basal position
+	int tissueType = 0; //columnar layer tissue, I only refine columnar layer
+	int atCircumference = 0; //newly added nodes will never be at circumferenece or at symmetry borders
+	tmp_nd = new Node(nNodes, 3, pos,tissuePos, tissueType);
+	tmp_nd->atCircumference = atCircumference;
+	for (int j=0; j<3; ++j){
+		tmp_nd->externalViscosity[j] = externalViscosity[j];
+	}
+	Nodes.push_back(tmp_nd);
+	nNodes = Nodes.size();
+	newNodeIdList[0] = tmp_nd->Id;
+	//Now adding the apical nodes:
+	tissuePos = 2;//rest of the nodes are at mid-line, except for the last node to be added
+	for (int i=0; i< TissueHeightDiscretisationLayers ;++i){
+		if (i == TissueHeightDiscretisationLayers-1){
+			tissuePos = 1; // the last node to be added is apical
+		}
+		dividedElementId = currElement->elementsIdsOnSameColumn[i];
+		Elements[dividedElementId]->getApicalCentre(pos);
+		//cout<<" apical centre: "<<pos[0]<<" "<<pos[1]<<" "<<pos[2]<<endl;
+		double* externalViscosity = Elements[dividedElementId]->getApicalMinViscosity(Nodes);
+		tmp_nd = new Node(nNodes, 3, pos,tissuePos, tissueType);
+		tmp_nd->atCircumference = atCircumference;
+		for (int j=0; j<3; ++j){
+			tmp_nd->externalViscosity[j] = externalViscosity[j];
+		}
+		Nodes.push_back(tmp_nd);
+		nNodes = Nodes.size();
+		newNodeIdList[i+1] = tmp_nd->Id;
+		/*cout<<" Element: "<<(*itElement)->Id<<" column : ";
+		for (int j=0; j<TissueHeightDiscretisationLayers; ++j){
+			cout<<" "<<(*itElement)->elementsIdsOnSameColumn[j]<<" ";
+		}
+		cout<<endl;*/
+	}
+	delete[] pos;
+}
+
+void Simulation::addElementsForRefinement(int* elementsIdsOnColumn, int* newNodeIdList){
+	//I will convert the existing element for each layer to the element using
+	//corner 0-1-new basal node, 3 - 4 - new apical node. Then I will create two new
+	//elements, that will use corners  1-2 and 2-0 (basally).
+
+	for (int i=0; i< TissueHeightDiscretisationLayers ;++i){
+		//cout<<"Started the layer: "<<i<<endl;
+		ShapeBase* currElement = Elements[elementsIdsOnColumn[i]];
+		const int dim = currElement->getDim();
+		const int n = currElement->getNodeNumber();
+		double** referenceOfShapeToBeRefined = currElement->getReferencePos();
+		double * basalReferenceCentre = new double [dim];
+		double * apicalReferenceCentre = new double [dim];
+		currElement->getReferenceBasalCentre(basalReferenceCentre);
+		currElement->getReferenceApicalCentre(apicalReferenceCentre);
+		//cout<<" basal reference centre: "<<basalReferenceCentre[0]<<" "<<basalReferenceCentre[1]<<" "<<basalReferenceCentre[2]<<endl;
+		//cout<<" apical reference centre: "<<apicalReferenceCentre[0]<<" "<<apicalReferenceCentre[1]<<" "<<apicalReferenceCentre[2]<<endl;
+
+		//Removing the current element from the nodes it is attached to:
+		for (int j=0; j<n; ++j){
+			Nodes[currElement->NodeIds[j]]->removeFromConnectedElements(currElement->Id, currElement->VolumePerNode);
+		}
+		//adding the immediate neighbours before I change the node list of elemetn to be divided.
+		//I am adding the new basal node to the lists of basal nodes of the element (0-2);
+		Nodes[currElement->NodeIds[0]]->addToImmediateNeigs(newNodeIdList[i]);
+		Nodes[currElement->NodeIds[1]]->addToImmediateNeigs(newNodeIdList[i]);
+		Nodes[currElement->NodeIds[2]]->addToImmediateNeigs(newNodeIdList[i]);
+		//I am adding the new apical node to the lists of apical nodes of the element (3-5);
+		Nodes[currElement->NodeIds[3]]->addToImmediateNeigs(newNodeIdList[i+1]);
+		Nodes[currElement->NodeIds[4]]->addToImmediateNeigs(newNodeIdList[i+1]);
+		Nodes[currElement->NodeIds[5]]->addToImmediateNeigs(newNodeIdList[i+1]);
+		//Now moving on to manipulating elements:
+		int* NodeIds;
+		NodeIds = new int[n];
+		double** referencePos;
+		referencePos = new double*[n];
+		for (int j=0; j<n; ++j){
+			referencePos[j] = new double[dim];
+			for(int k=0; k<dim; ++k){
+				referencePos[j][k] = 0.0;
+			}
+		}
+		for (int k =0; k<3; ++k){
+			int basalIdIndice0;
+			int basalIdIndice1;
+			int apicalIdIndice0;
+			int apicalIdIndice1;
+			if ( k == 0 ){
+				basalIdIndice0 = 1;
+				basalIdIndice1 = 2;
+				apicalIdIndice0 = 4;
+				apicalIdIndice1 = 5;
+			}
+			else if ( k == 1 ){
+				basalIdIndice0 = 2;
+				basalIdIndice1 = 0;
+				apicalIdIndice0 = 5;
+				apicalIdIndice1 = 3;
+			}
+			else if ( k == 2 ){
+				//This is converting the main element into a smaller one!
+				basalIdIndice0 = 0;
+				basalIdIndice1 = 1;
+				apicalIdIndice0 = 3;
+				apicalIdIndice1 = 4;
+			}
+			NodeIds[0] = currElement->NodeIds[basalIdIndice0];
+			NodeIds[1] = currElement->NodeIds[basalIdIndice1];
+			NodeIds[2] = newNodeIdList[i];
+			NodeIds[3] = currElement->NodeIds[apicalIdIndice0];
+			NodeIds[4] = currElement->NodeIds[apicalIdIndice1];
+			NodeIds[5] = newNodeIdList[i+1];
+			for (int j=0; j<dim; ++j){
+				referencePos[0][j] = referenceOfShapeToBeRefined[basalIdIndice0][j];
+				referencePos[1][j] = referenceOfShapeToBeRefined[basalIdIndice1][j];
+				referencePos[2][j] = basalReferenceCentre[j];
+				referencePos[3][j] = referenceOfShapeToBeRefined[apicalIdIndice0][j];
+				referencePos[4][j] = referenceOfShapeToBeRefined[apicalIdIndice1][j];
+				referencePos[5][j] = apicalReferenceCentre[j];
+			}
+			if (k == 0 || k == 1){
+				//cout<<" k is "<<k<<endl;
+				Prism* PrismPnt01;
+				PrismPnt01 = new Prism(NodeIds, Nodes, currElementId,thereIsPlasticDeformation);
+				PrismPnt01->updateReferencePositionMatrixFromInput(referencePos);
+				PrismPnt01->checkRotationConsistency3D();
+				PrismPnt01->copyElementInformationAfterRefinement(currElement,TissueHeightDiscretisationLayers,thereIsPlasticDeformation);
+				PrismPnt01->calculateElementShapeFunctionDerivatives();
+				//Add the weight of element to its nodes:
+				for (int j = 0; j<n;++j){
+					Nodes[NodeIds[j]]->addToConnectedElements(PrismPnt01->Id,PrismPnt01->VolumePerNode);
+				}
+				Elements.push_back(PrismPnt01);
+				nElements = Elements.size();
+				currElementId++;
+			}
+			else if (k == 2){
+				//cout<<" k is two, manipulating old element"<<endl;
+				//converting the current prism to a smaller version.
+				currElement->updateNodeIdsForRefinement(NodeIds);
+				currElement->updateReferencePositionMatrixFromInput(referencePos);
+				currElement->checkRotationConsistency3D();
+				currElement->updatePositions(Nodes);
+				currElement->GrownVolume /=3.0;
+				currElement->VolumePerNode /= 3.0;
+				currElement->calculateElementShapeFunctionDerivatives();
+				//Add the weight of element to its nodes, I have removed this element from its nodes above:
+				for (int j = 0; j<n;++j){
+					Nodes[currElement->NodeIds[j]]->addToConnectedElements(currElement->Id,currElement->VolumePerNode);
+				}
+				//cout<<"finalised manipulating old element: "<<currElement->Id<<endl;
+			}
+		}
+		//clean up:
+		delete[] NodeIds;
+		for (int j=0; j<n; ++j){
+			delete[] referencePos[j];
+		}
+		delete[] referencePos;
+		delete[] apicalReferenceCentre;
+		delete[] basalReferenceCentre;
 	}
 }
 
@@ -3868,7 +4192,7 @@ void Simulation::calculateNumericalJacobian(bool displayMatricesDuringNumericalC
 	//No perturbation:
 	gsl_matrix* ge_noPerturb = gsl_matrix_calloc(dim*nNodes,1);
 	gsl_matrix* gvInternal_noPerturb = gsl_matrix_calloc(dim*nNodes,1);
-	NRSolver->calculateForcesAndJacobianMatrixNR(Nodes, Elements, dt, recordForcesOnFixedNodes, FixedNodeForces, outputFile);
+	NRSolver->calculateForcesAndJacobianMatrixNR(Nodes, Elements, dt, recordForcesOnFixedNodes, FixedNodeForces);
 	NRSolver->writeForcesTogeAndgvInternal(Nodes, Elements, SystemForces);
 	gsl_matrix_memcpy(ge_noPerturb, NRSolver->ge);
 	gsl_matrix_memcpy(gvInternal_noPerturb, NRSolver->gvInternal);
@@ -3887,7 +4211,7 @@ void Simulation::calculateNumericalJacobian(bool displayMatricesDuringNumericalC
 			NRSolver->calculateDisplacementMatrix(dt);
 			Nodes[i]->Position[j] += 1E-6;
 			updateElementPositions();
-			NRSolver->calculateForcesAndJacobianMatrixNR(Nodes, Elements, dt, recordForcesOnFixedNodes, FixedNodeForces, outputFile);
+			NRSolver->calculateForcesAndJacobianMatrixNR(Nodes, Elements, dt, recordForcesOnFixedNodes, FixedNodeForces);
 			gsl_matrix* ge_withPerturb = gsl_matrix_calloc(dim*nNodes,1);
 			gsl_matrix* gvInternal_withPerturb = gsl_matrix_calloc(dim*nNodes,1);
 			NRSolver->writeForcesTogeAndgvInternal(Nodes, Elements, SystemForces);
@@ -3945,7 +4269,7 @@ void Simulation::updateStepNR(){
         	calculateNumericalJacobian(displayMatricesDuringNumericalCalculation);
         }
         NRSolver->calculateDisplacementMatrix(dt);
-        NRSolver->calculateForcesAndJacobianMatrixNR(Nodes, Elements, dt, recordForcesOnFixedNodes, FixedNodeForces, outputFile);
+        NRSolver->calculateForcesAndJacobianMatrixNR(Nodes, Elements, dt, recordForcesOnFixedNodes, FixedNodeForces);
 	    //Writing elastic Forces and elastic Ke:
 		NRSolver->writeForcesTogeAndgvInternal(Nodes, Elements, SystemForces);
 	    NRSolver->writeImplicitElementalKToJacobian(Elements);
@@ -3977,6 +4301,34 @@ void Simulation::updateStepNR(){
 			addRandomForces(NRSolver->gExt);
 		}
         NRSolver->addExernalForces();
+        //int nodes[3] = {0,66,132};
+        //ImplicitViscTesting:
+        /*
+        int nodes[3] = {0,163,326};
+        int n = 3;
+        double dvel = 0.1;
+        for (int i=0;i<n;++i){
+    		cout<<" Node : "<<nodes[i]<<"mass: "<<Nodes[nodes[i]]->mass<<" external viscosity: "<<Nodes[nodes[i]]->externalViscosity[0]<<" "<<Nodes[nodes[i]]->externalViscosity[1]<<" "<<Nodes[nodes[i]]->externalViscosity[2]<<endl;
+    		cout<<" Node : "<<nodes[i]<<" External viscous forces : ";
+    		for (int j=0;j<3;++j){
+        		double Fext = gsl_matrix_get(NRSolver->gvExternal,nodes[i]*3+j,0);
+        		cout<<" "<<Fext;
+        	}
+    		cout<<" Node : "<<nodes[i]<<" Internal viscous forces : ";
+    		for (int j=0;j<3;++j){
+				double Fint = gsl_matrix_get(NRSolver->gvInternal,nodes[i]*3+j,0);
+				cout<<"  "<<Fint;
+			}
+    		cout<<endl;
+        }
+        //int ele[2] = {2,104};
+        int ele[2] = {203,473};
+        n =2;
+        for (int i=0;i<n;++i){
+        	cout<<" Element : "<<ele[i]<<"internal viscosity: "<<Elements[ele[i]]->getInternalViscosity()<<endl;
+        }
+        //end of implicit visc testing
+         */
         checkForExperimentalSetupsWithinIteration();
         NRSolver->calcutateFixedK(Nodes);
         //cout<<"checking convergence with forces"<<endl;
@@ -3985,6 +4337,7 @@ void Simulation::updateStepNR(){
             break;
         }
         //cout<<"solving for deltaU"<<endl;
+        //Elements[0]->displayMatrix(NRSolver->K,"K");
         NRSolver->solveForDeltaU();
         //cout<<"checking convergence"<<endl;
         converged = NRSolver->checkConvergenceViaDeltaU();
@@ -5305,7 +5658,9 @@ void Simulation::processDisplayDataAndSave(){
         //the displayed values will be from artificial setups of different RK steps. (RK1 or RK4 depending on parameter)
         //updateDisplaySaveValuesFromRK();
     //}
-    if (saveData && timestep % dataSaveInterval == 0){
+	cout<<"timestep: "<<timestep<<" dataSaveInterval "<<dataSaveInterval<<" currSimTimeSec: "<<currSimTimeSec<<endl;
+
+	if (saveData && ((int)currSimTimeSec/ (int) dt) % dataSaveInterval == 0){ //timestep % dataSaveInterval == 0){
         //updateDisplaySaveValuesFromRK();
         saveStep();
     }
@@ -5325,8 +5680,7 @@ void Simulation::updateNodeMasses(){
 }
 
 void 	Simulation:: updateElementToConnectedNodes(vector <Node*>& Nodes){
-	vector<Node*>::iterator itNode;
-	for(itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+	for(vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
 	    if ((*itNode)->mass > 0){//an ablated node will have this as zero
 			int n = (*itNode)->connectedElementIds.size();
 			for (int i=0; i<n; ++i){
@@ -5343,6 +5697,20 @@ void Simulation::fillInNodeNeighbourhood(){
 	vector<ShapeBase*>::iterator itEle;
 	for (itEle=Elements.begin(); itEle<Elements.end(); ++itEle){
 		(*itEle)->fillNodeNeighbourhood(Nodes);
+	}
+}
+void Simulation::fillInElementColumnLists(){
+	const int maxThreads = omp_get_max_threads();
+	omp_set_num_threads(maxThreads);
+	#pragma omp parallel for //private(Nodes, displacementPerDt, recordForcesOnFixedNodes, FixedNodeForces, outputFile, dt)
+	for( vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		if (!(*itElement)->IsAblated && (*itElement)->tissueType ==0 ){//Check only the columnar layer elements.
+			if ((*itElement)->tissuePlacement == 0){
+				//start from the basal element and move up
+				//then you can copy the element numbers to the other elements on the list
+				(*itElement)->constructElementStackList(TissueHeightDiscretisationLayers, Elements);
+			}
+		}
 	}
 }
 
@@ -5384,7 +5752,7 @@ inline void Simulation::CapPackingForce(double& Fmag){
 	}
 }
 
-void Simulation::checkPackingToPipette(bool& packsToPip, double* pos, double* pipF, double mass, int id){
+void Simulation::checkPackingToPipette(bool& packsToPip, double* pos, double* pipF, double mass){
 	double pipThickness = 2; //microns
 	double multiplier = 0.05; //just a term to scale the forces down
 	double threshold = 1.0;	 //pipette packing forces start at 2 microns
@@ -5577,7 +5945,7 @@ void Simulation::detectPacingCombinations(){
 				bool PackingToThisElement =  (*itEle)->checkPackingToThisNodeViaState(TissueHeightDiscretisationLayers, (*itNode));
 				if (PackingToThisElement){
 					int id1 = -1, id2 = -1, id3 = -1;
-					(*itEle)->getRelevantNodesForPacking((*itNode)->tissuePlacement, (*itNode)->tissueType, id1, id2, id3);
+					(*itEle)->getRelevantNodesForPacking((*itNode)->tissuePlacement, id1, id2, id3);
 					//make a separate function to detect packing to surface, filling the vecotrs if necessary and returning packedToSurface bool;
 					//get mid point:
 					/*
@@ -5836,7 +6204,6 @@ void Simulation::detectPacingCombinations(){
 }*/
 
 void Simulation::detectPacingNodes(){
-	//cout<<"inside detectPacingNodes"<<endl;
 	double periAverageSideLength = 0,colAverageSideLength = 0;
 	getAverageSideLength(periAverageSideLength, colAverageSideLength);
 
@@ -5851,12 +6218,13 @@ void Simulation::detectPacingNodes(){
 	initialWeightPointx.empty();
 	initialWeightPointy.empty();
 	initialWeightPointz.empty();
-
-
 	//Added for parallelisation:
 	//node based only:
 	const int nArray = 16; //the size of array that I will divide the elements into.
 	int parallellisationSegmentSize = ceil(nNodes/nArray);
+	if (parallellisationSegmentSize<1){
+		parallellisationSegmentSize =1;
+	}
 	const int nSegments = ceil(nNodes/parallellisationSegmentSize); //this does not need to be the same as desired size
 	//if there are 5 nodes and I want 16 segments, the actual nSegments will be 5.
 	const int segmentBoundariesArraySize = nSegments+1;
@@ -5944,7 +6312,6 @@ void Simulation::detectPacingNodes(){
 			initialWeightPointz.push_back(arrayForParallelisationInitialWeightPointz[a][i]);
 		}
 	}
-	//cout<<"finalised detectPacingNodes"<<endl;
 }
 
 void Simulation::calculatePacking(){
@@ -5989,7 +6356,7 @@ void Simulation::calculatePacking(){
 					//cout<<"	node may pack to element: "<<(*itEle)->Id<<endl;
 					//the node does not belong to the element, and placed correctly. Lets have a preliminary distance check:
 					//if ((*itNode)->Id == 60 && ( (*itEle)->Id == 184 ||  (*itEle)->Id == 195 ) ) {cout<<" checking 2nd to element  : "<<(*itEle)->Id<<endl;}
-					PackingToThisElement = (*itEle)->IsPointCloseEnoughForPacking((*itNode)->Position, thresholdForNodeDetection,(*itNode)->tissuePlacement, (*itNode)->tissueType);
+					PackingToThisElement = (*itEle)->IsPointCloseEnoughForPacking((*itNode)->Position, thresholdForNodeDetection, (*itNode)->tissuePlacement);
 				}
 				if (PackingToThisElement){
 					//if ((*itNode)->Id == 60 && ( (*itEle)->Id == 184 ||  (*itEle)->Id == 195 ) ) {cout<<" continuing packing to element  : "<<(*itEle)->Id<<endl;}
@@ -6074,7 +6441,7 @@ void Simulation::calculatePacking(){
 			}
 			int closestNode  = -1000;
 			double currMinDist2 = 1000;
-			double closestNodeVec[3];
+			double closestNodeVec[3] = {0.0,0.0,0.0};
 			if (!pushedBySurface){
 				//find closest node, if any edge is closer than the node, it will pack:
 				int n = edgeNodeData0.size();
@@ -6297,7 +6664,7 @@ void Simulation::calculatePacking(){
 					}
 				}
 			}
-			if ((*itNode)->Id == 211 ) {cout<<"node 211: packing to surf: "<<pushedBySurface<<" packing to edge: "<<pushedByEdge<<endl;}
+			//if ((*itNode)->Id == 211 ) {cout<<"node 211: packing to surf: "<<pushedBySurface<<" packing to edge: "<<pushedByEdge<<endl;}
 		}
 	}
 }
@@ -6746,6 +7113,7 @@ void Simulation::calculateDVDistance(){
 	dmag = pow(dmag,0.5);
 	outputFile<<" AP distance is: "<<dmag<<endl;
 	cout<<" AP distance is: "<<dmag<<endl;
+	//cout<<"time: "<<currSimTimeSec<<" Node 0 position: "<<Nodes[0]->Position[0]<<" "<<Nodes[0]->Position[1]<<" "<<Nodes[0]->Position[2]<<endl;
 	//cout<<"TIPS: "<<dorsalTipIndex<<" "<<ventralTipIndex<<" "<<anteriorTipIndex<<" "<<posteriorTipIndex<<endl;
 }
 
@@ -7047,7 +7415,7 @@ void Simulation::writeForces(){
 	//Then write myosin forces
 	for (int i=0;i<nElements;++i){
 		int n=Elements[i]->getNodeNumber();
-		for (int j=0; j<6; ++j){
+		for (int j=0; j<n; ++j){
 			saveFileForces.write((char*) &Elements[i]->MyoForce[j][0], sizeof Elements[i]->MyoForce[j][0]);
 			saveFileForces.write((char*) &Elements[i]->MyoForce[j][1], sizeof Elements[i]->MyoForce[j][1]);
 			saveFileForces.write((char*) &Elements[i]->MyoForce[j][2], sizeof Elements[i]->MyoForce[j][2]);
@@ -7101,10 +7469,18 @@ void Simulation::writeProteins(){
 void Simulation::calculateMyosinForces(){
 	//cout<<"Entered calculateMyosinForces"<<endl;
 	cleanUpMyosinForces();
+	bool basedOnArea = false;
 	vector<ShapeBase*>::iterator itElement;
 	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 		(*itElement)->updateMyosinConcentration(dt, kMyo, thereIsMyosinFeedback, MyosinFeedbackCap);
-		(*itElement)->calculateMyosinForces(forcePerMyoMolecule);
+		if (basedOnArea){
+			//The forces are based on the total apical/basal area of the element, it may not fluctuate with rapid shape changes driven by myosin itself.
+			(*itElement)->calculateMyosinForcesAreaBased(forcePerMyoMolecule);
+		}
+		else{
+			//The forces are based on the total size of the element, it does not fluctuate with rapid shape changes, based on the grown volume
+			(*itElement)->calculateMyosinForcesTotalSizeBased(forcePerMyoMolecule);
+		}
 	}
 }
 
@@ -7283,10 +7659,10 @@ void Simulation::calculateGrowthUniform(GrowthFunctionBase* currGF){
     		gsl_matrix_set_identity(columnarFgIncrement);
 			gsl_matrix_set_identity(peripodialFgIncrement);
 			if (currGF->applyToColumnarLayer){
-				(*itElement)->calculateFgFromRates(dt, growthRates[0],growthRates[1],growthRates[2], currGF->getShearAngleRotationMatrix(), columnarFgIncrement, 0);
+				(*itElement)->calculateFgFromRates(dt, growthRates[0],growthRates[1],growthRates[2], currGF->getShearAngleRotationMatrix(), columnarFgIncrement, 0, currGF->zMin, currGF->zMax);
 			}
 			if (currGF->applyToPeripodialMembrane){
-				(*itElement)->calculateFgFromRates(dt, growthRates[0],growthRates[1],growthRates[2], currGF->getShearAngleRotationMatrix(), peripodialFgIncrement, 1);
+				(*itElement)->calculateFgFromRates(dt, growthRates[0],growthRates[1],growthRates[2], currGF->getShearAngleRotationMatrix(), peripodialFgIncrement, 1, currGF->zMin, currGF->zMax);
 			}
 			(*itElement)->updateGrowthIncrement(columnarFgIncrement,peripodialFgIncrement);
 		}
@@ -7327,10 +7703,10 @@ void Simulation::calculateGrowthRing(GrowthFunctionBase* currGF){
 				gsl_matrix_set_identity(columnarFgIncrement);
 				gsl_matrix_set_identity(peripodialFgIncrement);
 				if (currGF->applyToColumnarLayer){
-					(*itElement)->calculateFgFromRates(dt, growthscale[0],growthscale[1],growthscale[2], currGF->getShearAngleRotationMatrix(), columnarFgIncrement, 0);
+					(*itElement)->calculateFgFromRates(dt, growthscale[0],growthscale[1],growthscale[2], currGF->getShearAngleRotationMatrix(), columnarFgIncrement, 0, currGF->zMin, currGF->zMax);
 				}
 				if (currGF->applyToPeripodialMembrane){
-					(*itElement)->calculateFgFromRates(dt, growthscale[0],growthscale[1],growthscale[2], currGF->getShearAngleRotationMatrix(), peripodialFgIncrement, 1);
+					(*itElement)->calculateFgFromRates(dt, growthscale[0],growthscale[1],growthscale[2], currGF->getShearAngleRotationMatrix(), peripodialFgIncrement, 1, currGF->zMin, currGF->zMax);
 				}
 				(*itElement)->updateGrowthIncrement(columnarFgIncrement,peripodialFgIncrement);
 			}
@@ -7367,11 +7743,12 @@ void Simulation::calculateGrowthGridBased(GrowthFunctionBase* currGF){
 				(*itElement)->calculateFgFromGridCorners(gridGrowthsInterpolationType, dt, currGF, peripodialFgIncrement, 1, IndexX,  IndexY, FracX, FracY); 	//sourceTissue is 1 for peripodial membrane
 			}
 			(*itElement)->updateGrowthIncrement(columnarFgIncrement,peripodialFgIncrement);
-    		//if ((*itElement)->Id == 176){
-    			//cout<<" the index for element 176 is: "<<IndexX<<" "<<IndexY<<" fracX "<< FracX<<" fracY "<< FracY<<endl;
+			/*int Id = (*itElement)->Id;
+			if (Id == 5133 || Id == 4744 || Id == 4379 || Id == 4554 || Id == 5235){
+    			cout<<" the index for element "<<(*itElement)->Id<<" is: "<<IndexX<<" "<<IndexY<<" fracX "<< FracX<<" fracY "<< FracY<<endl;
     			//(*itElement)->displayMatrix(columnarFgIncrement,"columnarFgIncrement");
     			//(*itElement)->displayMatrix(peripodialFgIncrement,"peripodialFgIncrement");
-    		//}
+    		}*/
 		}
 		gsl_matrix_free(columnarFgIncrement);
 		gsl_matrix_free(peripodialFgIncrement);
@@ -7752,6 +8129,9 @@ void Simulation::laserAblate(double OriginX, double OriginY, double Radius){
 		if (d2 < thres2){
 			AblatedNodes.push_back(i);
 		}
+		//if (i != 0 && i != 1 && i != 22 && i != 88 && i != 66 && i != 67  ){
+			//AblatedNodes.push_back(i);
+		//}
 	}
 
 	int nAN = AblatedNodes.size();

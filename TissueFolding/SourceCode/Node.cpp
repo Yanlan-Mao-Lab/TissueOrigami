@@ -38,7 +38,7 @@ Node::~Node(){
 	delete[] FixedPos;
 }
 
-void Node::setExternalViscosity(double ApicalVisc,double BasalVisc){
+void Node::setExternalViscosity(double ApicalVisc,double BasalVisc, bool extendExternalViscosityToInnerTissue){
 	/**
 	 *  This node will take in the apical and basal external viscosities of the tissue as inputs, respectively.
 	 *  The external viscosity of the node will be assigned via its Node#tissuePlacement and Node#tissueType. On the columnar layer, nodes that are in the mid-zone of the tissue (neither on the
@@ -49,7 +49,7 @@ void Node::setExternalViscosity(double ApicalVisc,double BasalVisc){
 		if (!externalViscositySetInFixing[1]){externalViscosity[1] = BasalVisc;}
 		if (!externalViscositySetInFixing[2]){externalViscosity[2] = BasalVisc;}
 	}
-	else if (tissuePlacement ==1){
+	else if (tissuePlacement ==  1){
 		if (!externalViscositySetInFixing[0]){externalViscosity[0] = ApicalVisc;}
 		if (!externalViscositySetInFixing[1]){externalViscosity[1] = ApicalVisc;}
 		if (!externalViscositySetInFixing[2]){externalViscosity[2] = ApicalVisc;}
@@ -62,15 +62,17 @@ void Node::setExternalViscosity(double ApicalVisc,double BasalVisc){
 		if (!externalViscositySetInFixing[2]){externalViscosity[1] = minV;}//(apicalV + basalV) /2.0;
 		if (!externalViscositySetInFixing[2]){externalViscosity[2] = minV;}//(apicalV + basalV) /2.0;
 
-	}/*
+	}
 	else if (tissuePlacement == 2 || tissuePlacement == 3){
-		//middle or lateral node are equal to the minimum of apical and basal values
-		double minV = ApicalVisc;
-		if (BasalVisc < ApicalVisc){minV = BasalVisc;};
-		if (!externalViscositySetInFixing[0]){externalViscosity[0] = minV;}//(apicalV + basalV) /2.0;
-		if (!externalViscositySetInFixing[2]){externalViscosity[1] = minV;}//(apicalV + basalV) /2.0;
-		if (!externalViscositySetInFixing[2]){externalViscosity[2] = minV;}//(apicalV + basalV) /2.0;
-	}*/
+		if (extendExternalViscosityToInnerTissue){
+			//middle or lateral node are equal to the minimum of apical and basal values
+			double minV = ApicalVisc;
+			if (BasalVisc < ApicalVisc){minV = BasalVisc;};
+			if (!externalViscositySetInFixing[0]){externalViscosity[0] = minV;}//(apicalV + basalV) /2.0;
+			if (!externalViscositySetInFixing[2]){externalViscosity[1] = minV;}//(apicalV + basalV) /2.0;
+			if (!externalViscositySetInFixing[2]){externalViscosity[2] = minV;}//(apicalV + basalV) /2.0;
+		}
+	}
 }
 
 //void Node::setExternalViscosity(double ApicalVisc,double BasalVisc, double PeripodialApicalVisc, double PeripodialBasalVisc){
@@ -179,4 +181,61 @@ void Node::displayConnectedElementWeights(){
 		cout<<connectedElementWeights[i]<<"	";
 	}
 	cout<<endl;
+}
+
+void  Node::addToImmediateNeigs(int newNodeId){
+	immediateNeigs.push_back(newNodeId);
+}
+
+void Node::addToConnectedElements(int newElementId, double volumePerNode){
+	//
+	double oldMass = mass;
+	mass += volumePerNode;
+	double scaler = mass/oldMass;
+	int n = connectedElementIds.size();
+	for (int j=0;j<n;++j){
+		connectedElementWeights[j] /= scaler;
+	}
+	connectedElementIds.push_back(newElementId);
+	connectedElementWeights.push_back(volumePerNode/mass);
+}
+
+void Node::removeFromConnectedElements(int ElementId, double volumePerNode){
+	double oldMass = mass;
+	mass -= volumePerNode;
+	double scaler = mass/oldMass;
+	int n = connectedElementIds.size();
+	int indextToBeDeleted = 0;
+	//cout<<" connected element ids: ";
+	for (int j=0;j<n;++j){
+		connectedElementWeights[j] /= scaler;
+		if (connectedElementIds[j] == ElementId){
+			indextToBeDeleted = j;
+		}
+		//cout<<" "<<connectedElementIds[j]<<" ";
+	}
+	//cout<<endl;
+	//cout<<"Id to be deleted: "<<ElementId<<" index to be deleted: "<<indextToBeDeleted<<endl;
+	vector<int>::iterator itElementId = connectedElementIds.begin();
+	itElementId += indextToBeDeleted;
+	if (itElementId != connectedElementIds.end()) {
+	  using std::swap;
+	  // swap the one to be removed with the last element
+	  // and remove the item at the end of the container
+	  // to prevent moving all items after '5' by one
+	  swap(*itElementId, connectedElementIds.back());
+	  connectedElementIds.pop_back();
+	}
+	vector<double>::iterator itElementWeight = connectedElementWeights.begin();
+	itElementWeight +=indextToBeDeleted;
+	if (itElementWeight != connectedElementWeights.end()) {
+	  using std::swap;
+	  // swap the one to be removed with the last element
+	  // and remove the item at the end of the container
+	  // to prevent moving all items after '5' by one
+	  swap(*itElementWeight, connectedElementWeights.back());
+	  connectedElementWeights.pop_back();
+	}
+
+	n = connectedElementIds.size();
 }

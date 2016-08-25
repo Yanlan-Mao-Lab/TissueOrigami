@@ -21,6 +21,7 @@
 class GLWidget;
 
 #include "../TissueFolding/SourceCode/Simulation.h"
+#include "../TissueFolding/SourceCode/Analysis.h"
 
 
 using namespace std;
@@ -37,6 +38,7 @@ class MainWindow : public QMainWindow
     QGridLayout		*MainGrid;
     GLWidget 		*MainGLWidget;
     Simulation* Sim01;
+    Analysis* analyser01;
 
 public slots:
     void 	SelectedItemChange();
@@ -48,10 +50,10 @@ public slots:
     void 	updateStrain(int);
     void 	updateMyosinComboBox(int s);
     void 	updateStrainCheckBox(int);
-    void 	updateStrainSpinBoxes(double);
+    void 	updateStrainSpinBoxes();
     void 	updatePysProp(int s);
     void 	updatePysCheckBox(int);
-    void 	updatePysPropSpinBoxes(double d);
+    void 	updatePysPropSpinBoxes();
     void    updateDisplayPipette(int);
     void 	updateNetForceCheckBox(int);
     void	updateMyosinCheckBox(int);
@@ -82,7 +84,7 @@ public slots:
     void setUpSelectionDisplayGrid(QGridLayout *SelectionDisplayGrid);
     void setUpProjectDisplayOptionGrid(QGridLayout *ProjectDisplayOptionsGrid);
     void setUpViewOptionsGrid(QGridLayout *ViewOptionsGrid);
-    void setSelectionByIdSection(QFont font, QFont boldFont, QGridLayout *SelectionDisplayGrid);
+    void setSelectionByIdSection(QFont font, QGridLayout *SelectionDisplayGrid);
     void setCoordBoxes(QFont font, QFont boldFont, QGridLayout *SelectionDisplayGrid);
     void setItemSelectionTitles(QFont font, QFont boldFont, QGridLayout *SelectionDisplayGrid);
     void setStrainDisplayMenu(QGridLayout *DisplayOptionsGrid);

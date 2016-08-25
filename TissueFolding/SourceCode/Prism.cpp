@@ -30,6 +30,7 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, bool thereIsPlas
 	BasalNormalForPacking =  new double[3];
 	relativePosInBoundingBox = new double[3];
 	initialRelativePosInBoundingBox = new double[3];
+	initialRelativePositionInZ = 1.0;
 	//columnarRelativePosInBoundingBox = new double[3];
 	//peripodialRelativePosInBoundingBox = new double[3];
 
@@ -81,6 +82,7 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, bool thereIsPlas
 	setIdentificationColour();
 	setShapeType("Prism");
 	ReferenceShape = new ReferenceShapeBase("Prism",Id);
+
 	readNodeIds(tmpNodeIds);
 	setPositionMatrix(Nodes);
 	setReferencePositionMatrix();
@@ -212,6 +214,7 @@ Prism::~Prism(){
     delete[] viscousStress;
     delete[] Fplastic;
     delete[] invFplastic;
+    delete[] elementsIdsOnSameColumn;
 }
 
 void Prism::setCoeffMat(){
@@ -352,24 +355,35 @@ void  Prism::setElasticProperties(double EApical, double EBasal, double EMid, do
     lambda = E*v/(1+v)/(1-2.0*v);
     mu = E/2.0/(1+v);
 
+    //mu = 0.001*mu;
+
+    calculateDVector();
+    calculateD81Tensor();
+
+    //cout<<" Element: "<<Id<<" E : "<<E<<" v: "<<v<<" lambda: "<<lambda<< " mu: "<<mu<<endl;
+}
+
+void Prism::calculateDVector(){
 	double multiplier = E/((1+v)*(1-2*v));
-    gsl_matrix_set(D,0,0,  multiplier*(1-v));
-    gsl_matrix_set(D,0,1,  multiplier*v);
-    gsl_matrix_set(D,0,2,  multiplier*v);
-    gsl_matrix_set(D,1,0,  multiplier*v);
-    gsl_matrix_set(D,1,1,  multiplier*(1-v));
-    gsl_matrix_set(D,1,2,  multiplier*v);
-    gsl_matrix_set(D,2,0,  multiplier*v);
-    gsl_matrix_set(D,2,1,  multiplier*v);
-    gsl_matrix_set(D,2,2,  multiplier*(1-v));
-    gsl_matrix_set(D,3,3,  multiplier*(1-2*v)/2);
-    gsl_matrix_set(D,4,4,  multiplier*(1-2*v)/2);
-    gsl_matrix_set(D,5,5,  multiplier*(1-2*v)/2);
-	
-    //calculating 4th order tensor D
-    // lambda is Lame s first parameter and mu is the shear modulus .
-    double Idouble[3][3] = {{1.0,0.0,0.0} , {0.0,1.0,0.0}, {0.0,0.0,1.0}};
-    for (int pointNo = 0; pointNo<3; pointNo++){
+	gsl_matrix_set(D,0,0,  multiplier*(1-v));
+	gsl_matrix_set(D,0,1,  multiplier*v);
+	gsl_matrix_set(D,0,2,  multiplier*v);
+	gsl_matrix_set(D,1,0,  multiplier*v);
+	gsl_matrix_set(D,1,1,  multiplier*(1-v));
+	gsl_matrix_set(D,1,2,  multiplier*v);
+	gsl_matrix_set(D,2,0,  multiplier*v);
+	gsl_matrix_set(D,2,1,  multiplier*v);
+	gsl_matrix_set(D,2,2,  multiplier*(1-v));
+	gsl_matrix_set(D,3,3,  multiplier*(1-2*v)/2);
+	gsl_matrix_set(D,4,4,  multiplier*(1-2*v)/2);
+	gsl_matrix_set(D,5,5,  multiplier*(1-2*v)/2);
+}
+
+void Prism::calculateD81Tensor(){
+	//calculating 4th order tensor D
+	// lambda is Lame s first parameter and mu is the shear modulus .
+	double Idouble[3][3] = {{1.0,0.0,0.0} , {0.0,1.0,0.0}, {0.0,0.0,1.0}};
+	for (int pointNo = 0; pointNo<3; pointNo++){
 		for (int I = 0; I<nDim; ++I){
 			for (int J = 0; J<nDim; ++J){
 				for (int K = 0; K<nDim; ++K){
@@ -379,8 +393,7 @@ void  Prism::setElasticProperties(double EApical, double EBasal, double EMid, do
 				}
 			}
 		}
-    }
-    //cout<<" Element: "<<Id<<" E : "<<E<<" v: "<<v<<" lambda: "<<lambda<< " mu: "<<mu<<endl;
+	}
 }
 
 void Prism::getCurrRelaxedShape(gsl_matrix* CurrRelaxedShape){
@@ -790,7 +803,7 @@ double Prism::getElementHeight(){
 
 
 void Prism::AddPackingToSurface(int tissueplacementOfPackingNode, double Fx, double Fy,double Fz, double **PackingForces, vector<Node*> &Nodes, bool& allCornersFixedX, bool& allCornersFixedY, bool& allCornersFixedZ){
-	int Id0, Id1, Id2;
+	int Id0 = -1, Id1= -1, Id2 = -1;
 	if (tissueplacementOfPackingNode == 0){//basal node, packing to basal surface:
 		if (tissueType == 0){ //element is columnar, basal surface is bottom
 			Id0 = 0;
@@ -954,7 +967,7 @@ void Prism::calculateNormalForPacking(int tissuePlacementOfNormal){
 }
 
 
-void Prism::getRelevantNodesForPacking(int TissuePlacementOfPackingNode, int TissueTypeOfPackingNode, int& id1, int& id2, int& id3){
+void Prism::getRelevantNodesForPacking(int TissuePlacementOfPackingNode, int& id1, int& id2, int& id3){
 	if (TissuePlacementOfPackingNode == 0){
 		//tissue placement of the node is basal, should check it against basal surface nodes only
 		if(tissueType == 0){ //element is columnar, the basal nodes are nodes 0-2:
@@ -985,7 +998,7 @@ void Prism::getRelevantNodesForPacking(int TissuePlacementOfPackingNode, int Tis
 	}
 }
 
-bool Prism::IsPointCloseEnoughForPacking(double* Pos,  float threshold, int TissuePlacementOfPackingNode, int TissueTypeOfPackingNode){
+bool Prism::IsPointCloseEnoughForPacking(double* Pos,  float threshold, int TissuePlacementOfPackingNode){
 	int initial =0, final = 6;
 	if (TissuePlacementOfPackingNode == 0){
 		//tissue placement of the node is basal, should check it against basal surface nodes only
@@ -1062,10 +1075,159 @@ void  Prism::getBasalNodePos(double* posCorner){
 	}
 }
 
+void Prism::getBasalCentre(double* centre){
+	centre[0] = 0;
+	centre[1] = 0;
+	centre[2] = 0;
+	if (tissueType == 0){
+		for (int j=0; j<3; ++j){
+			for (int i=0; i<3; ++i){ //columnar element, basal surface is the bottom nodes, (first 3 nodes)
+				centre[j] += Positions[i][j];
+			}
+			centre[j] /= 3.0;
+		}
+	}
+	else{
+		//
+		//the linker elements never reach this question
+		for (int j=0; j<3; ++j){
+			for (int i=3; i<6; ++i){//peripodial element, basal surface is the top nodes, (last 3 nodes)
+				centre[j] += Positions[i][j];
+			}
+			centre[j] /= 3.0;
+		}
+	}
+}
+
+void Prism::getApicalCentre(double* centre){
+	centre[0] = 0;
+	centre[1] = 0;
+	centre[2] = 0;
+	if (tissueType == 0){
+		for (int j=0; j<3; ++j){
+			for (int i=3; i<6; ++i){ //columnar element, apical surface is the top nodes, (last 3 nodes)
+				centre[j] += Positions[i][j];
+			}
+			centre[j] /= 3.0;
+		}
+	}
+	else{
+		//
+		//the linker elements never reach this question
+		for (int j=0; j<3; ++j){
+			for (int i=0; i<3; ++i){//peripodial element, apical surface is the bottom nodes, (first 3 nodes)
+				centre[j] += Positions[i][j];
+			}
+			centre[j] /= 3.0;
+		}
+	}
+}
+
+void Prism::getReferenceBasalCentre(double* centre){
+	centre[0] = 0;
+	centre[1] = 0;
+	centre[2] = 0;
+	if (tissueType == 0){
+		for (int j=0; j<3; ++j){
+			for (int i=0; i<3; ++i){ //columnar element, basal surface is the bottom nodes, (first 3 nodes)
+				centre[j] += ReferenceShape->Positions[i][j];
+			}
+			centre[j] /= 3.0;
+		}
+	}
+	else{
+		//
+		//the linker elements never reach this question
+		for (int j=0; j<3; ++j){
+			for (int i=3; i<6; ++i){//peripodial element, basal surface is the top nodes, (last 3 nodes)
+				centre[j] += ReferenceShape->Positions[i][j];
+			}
+			centre[j] /= 3.0;
+		}
+	}
+}
+
+void Prism::getReferenceApicalCentre(double* centre){
+	centre[0] = 0;
+	centre[1] = 0;
+	centre[2] = 0;
+	if (tissueType == 0){
+		for (int j=0; j<3; ++j){
+			for (int i=3; i<6; ++i){ //columnar element, apical surface is the top nodes, (last 3 nodes)
+				centre[j] += ReferenceShape->Positions[i][j];
+			}
+			centre[j] /= 3.0;
+		}
+	}
+	else{
+		//
+		//the linker elements never reach this question
+		for (int j=0; j<3; ++j){
+			for (int i=0; i<3; ++i){//peripodial element, apical surface is the bottom nodes, (first 3 nodes)
+				centre[j] += ReferenceShape->Positions[i][j];
+			}
+			centre[j] /= 3.0;
+		}
+	}
+}
+
+double* Prism::getBasalMinViscosity(vector<Node*> Nodes){
+	double* ExtVisc = new double[3];
+	ExtVisc[0] = 10000000.0;
+	ExtVisc[1] = 10000000.0;
+	ExtVisc[2] = 10000000.0;
+
+	if (tissueType == 0){
+		for (int i=0; i<3; ++i){
+			for (int j= 0; j<nDim; ++j){
+				if (ExtVisc[j] > Nodes[NodeIds[i]]->externalViscosity[j]){
+					ExtVisc[j] = Nodes[NodeIds[i]]->externalViscosity[j];
+				}
+			}
+		}
+	}
+	else{
+		for (int i=3; i<6; ++i){//peripodial element, apical surface is the bottom nodes, (first 3 nodes)
+			for (int j= 0; j<nDim; ++j){
+				if (ExtVisc[j] > Nodes[NodeIds[i]]->externalViscosity[j]){
+					ExtVisc[j] = Nodes[NodeIds[i]]->externalViscosity[j];
+				}
+			}
+		}
+	}
+	return ExtVisc;
+}
+
+double* Prism::getApicalMinViscosity(vector<Node*> Nodes){
+	double* ExtVisc = new double[3];
+	ExtVisc[0] = 10000000.0;
+	ExtVisc[1] = 10000000.0;
+	ExtVisc[2] = 10000000.0;
+	if (tissueType == 0){
+		for (int i=3; i<6; ++i){
+			for (int j= 0; j<nDim; ++j){
+				if (ExtVisc[j] > Nodes[NodeIds[i]]->externalViscosity[j]){
+					ExtVisc[j] = Nodes[NodeIds[i]]->externalViscosity[j];
+				}
+			}
+		}
+	}
+	else{
+		for (int i=0; i<3; ++i){//peripodial element, apical surface is the bottom nodes, (first 3 nodes)
+			for (int j= 0; j<nDim; ++j){
+				if (ExtVisc[j] > Nodes[NodeIds[i]]->externalViscosity[j]){
+					ExtVisc[j] = Nodes[NodeIds[i]]->externalViscosity[j];
+				}
+			}
+		}
+	}
+	return ExtVisc;
+}
+
 bool  Prism::IspointInsideTriangle(int tissueplacementOfPackingNode,double x, double y,double z){
-	double zeroThreshold = 10-10;
-	double zeroThresholdNeg = (-1.0)*zeroThreshold;
-	double threshold = 5;
+	//double zeroThreshold = 10-10;
+	//double zeroThresholdNeg = (-1.0)*zeroThreshold;
+	//double threshold = 5;
 	bool isInside = false;
 	//Using Barycentric coordinates:
 	int  E0Index = -1, E1Index = -1, E2Index = -1;
@@ -1197,30 +1359,49 @@ bool  Prism::IspointInsideTriangle(int tissueplacementOfPackingNode,double x, do
 	return isInside;
 }
 
-void  	Prism::calculateMyosinForces(double forcePerMyoMolecule){
+void  	Prism::calculateMyosinForcesAreaBased(double forcePerMyoMolecule){
 	if (cMyoUniform[0]>0){
 		calculateApicalArea();
-		distributeMyosinForce(true,true, forcePerMyoMolecule); //isIsotropic, isApical, force per myosin molecule to calculte the actual total force
+		distributeMyosinForcesAreaBased(true,true, forcePerMyoMolecule); //isIsotropic, isApical, force per myosin molecule to calculte the actual total force
 		//there is unfiorm myosin activity on apical surface
 	}
 	if (cMyoUniform[1]>0){
 		calculateBasalArea();
-		distributeMyosinForce(true,false, forcePerMyoMolecule);
+		distributeMyosinForcesAreaBased(true,false, forcePerMyoMolecule);
 		//there is unfiorm myosin activity on basal surface
 	}
 	if (cMyoUnipolar[0]>0){
 		calculateApicalArea();
-		distributeMyosinForce(false,true, forcePerMyoMolecule);
+		distributeMyosinForcesAreaBased(false,true, forcePerMyoMolecule);
 		//there is unipolar myosin activity on apical surface
 	}
 	if (cMyoUnipolar[1]>0){
 		calculateBasalArea();
-		distributeMyosinForce(false,false, forcePerMyoMolecule);
+		distributeMyosinForcesAreaBased(false,false, forcePerMyoMolecule);
 		//there is unipolar myosin activity on basal surface
 	}
 }
 
-void 	Prism::distributeMyosinForce(bool isIsotropic, bool apical, double forcePerMyoMolecule){
+void  	Prism::calculateMyosinForcesTotalSizeBased(double forcePerMyoMolecule){
+	if (cMyoUniform[0]>0){
+		distributeMyosinForcesTotalSizeBased(true,true, forcePerMyoMolecule); //isIsotropic, isApical, force per myosin molecule to calculte the actual total force
+		//there is unfiorm myosin activity on apical surface
+	}
+	if (cMyoUniform[1]>0){
+		distributeMyosinForcesTotalSizeBased(true,false, forcePerMyoMolecule);
+		//there is unfiorm myosin activity on basal surface
+	}
+	if (cMyoUnipolar[0]>0){
+		distributeMyosinForcesTotalSizeBased(false,true, forcePerMyoMolecule);
+		//there is unipolar myosin activity on apical surface
+	}
+	if (cMyoUnipolar[1]>0){
+		distributeMyosinForcesTotalSizeBased(false,false, forcePerMyoMolecule);
+		//there is unipolar myosin activity on basal surface
+	}
+}
+
+void 	Prism::distributeMyosinForcesAreaBased(bool isIsotropic, bool apical, double forcePerMyoMolecule){
 	int id0, id1, id2;
 	double forcemag;
 	int currSurface = 0;
@@ -1336,6 +1517,137 @@ void 	Prism::distributeMyosinForce(bool isIsotropic, bool apical, double forcePe
 
 }
 
+void 	Prism::distributeMyosinForcesTotalSizeBased(bool isIsotropic, bool apical, double forcePerMyoMolecule){
+	int id0, id1, id2;
+	double forcemag;
+	int currSurface = 0;
+	if (apical){
+		id0 = 3;
+		id1 = 4;
+		id2 = 5;
+		currSurface = 0;
+		if (isIsotropic){
+			forcemag = cMyoUniform[0]*GrownVolume;
+		}
+		else{
+			forcemag = cMyoUnipolar[0]*GrownVolume;
+		}
+	}
+	else{
+		id0 = 0;
+		id1 = 1;
+		id2 = 2;
+		currSurface = 1;
+		if (isIsotropic){
+			forcemag = cMyoUniform[1]*GrownVolume;
+		}
+		else{
+			forcemag = cMyoUnipolar[1]*GrownVolume;
+		}
+	}
+	if (Id == 203){
+		cout<<" element 203, inside distributeMyosinForcesTotalSizeBased, forcemag with volume (isIsotropic): ("<<isIsotropic<<") "<<forcemag<<endl;
+	}
+	forcemag *= forcePerMyoMolecule;
+	if (Id == 203){
+		cout<<"                                                          , forcemag with molec: "<<forcemag<<endl;
+	}
+	double centre[3] = {0.0,0.0,0.0};
+	gsl_vector* vec0 = gsl_vector_calloc(3);
+	gsl_vector* vec1 = gsl_vector_calloc(3);
+	gsl_vector* vec2 = gsl_vector_calloc(3);
+	for (int i=0; i<3; ++i){
+		centre[i] = (Positions[id0][i] + Positions[id1][i] +  Positions[id2][i])/3.0;
+		//axisSum[i] = -2.0 * centre[i];
+		gsl_vector_set(vec0,i,centre[i] - Positions[id0][i]);
+		gsl_vector_set(vec1,i,centre[i] - Positions[id1][i]);
+		gsl_vector_set(vec2,i,centre[i] - Positions[id2][i]);
+	}
+	if (!isIsotropic){
+		//If I am doing a non-isotropic calculation, then I will project the vectors towards the centre
+		// on top of the axis of interest:
+		//First I need to align the myosin polarity direction on to the surface, the forces are on the surface!:
+		//get the normal:
+		gsl_vector* cross = gsl_vector_calloc(3);
+		crossProduct3D(vec0,vec1,cross);
+		normaliseVector3D(cross);
+		//project vector on normal:
+		//cout<<"myo polarity dir: "<<gsl_matrix_get(myoPolarityDir,currSurface,0)<<" "<<gsl_matrix_get(myoPolarityDir,currSurface,1)<<endl;
+		double dotp = 0.0;
+		for (int i =0; i<3; ++i){
+			dotp += gsl_vector_get(cross,i)*gsl_matrix_get(myoPolarityDir,currSurface,i);
+		}
+		gsl_vector* alignedmyoPolarityDir = gsl_vector_calloc(3);
+		for (int i =0; i<3; ++i){
+			gsl_vector_set(alignedmyoPolarityDir,i,gsl_matrix_get(myoPolarityDir,currSurface,i) - dotp*gsl_vector_get(cross,i));
+		}
+		double proj[3] = {0,0,0};
+		for (int i =0; i<3; ++i){
+			proj[0] += gsl_vector_get(vec0,i)*gsl_vector_get(alignedmyoPolarityDir,i);
+			proj[1] += gsl_vector_get(vec1,i)*gsl_vector_get(alignedmyoPolarityDir,i);
+			proj[2] += gsl_vector_get(vec2,i)*gsl_vector_get(alignedmyoPolarityDir,i);
+		}
+		for (int i =0; i<3; ++i){
+			gsl_vector_set(vec0,i,proj[0]*gsl_vector_get(alignedmyoPolarityDir,i));
+			gsl_vector_set(vec1,i,proj[1]*gsl_vector_get(alignedmyoPolarityDir,i));
+			gsl_vector_set(vec2,i,proj[2]*gsl_vector_get(alignedmyoPolarityDir,i));
+		}
+		gsl_vector_free(alignedmyoPolarityDir);
+		gsl_vector_free(cross);
+	}
+	//now I will distribute the force proportional to the magnitude of each vector:
+	double sumMag = 0.0;
+	double x = gsl_vector_get(vec0,0);
+	double y = gsl_vector_get(vec0,1);
+	double z = gsl_vector_get(vec0,2);
+	sumMag += pow(x*x+y*y+z*z,0.5);
+	x = gsl_vector_get(vec1,0);
+	y = gsl_vector_get(vec1,1);
+	z = gsl_vector_get(vec1,2);
+	sumMag += pow(x*x+y*y+z*z,0.5);
+	x = gsl_vector_get(vec2,0);
+	y = gsl_vector_get(vec2,1);
+	z = gsl_vector_get(vec2,2);
+	sumMag += pow(x*x+y*y+z*z,0.5);
+	double scaleFactor = forcemag/sumMag;
+	gsl_vector_scale(vec0,scaleFactor);
+	gsl_vector_scale(vec1,scaleFactor);
+	gsl_vector_scale(vec2,scaleFactor);
+
+	for (int i=0; i<3; ++i){
+		MyoForce[id0][i] += gsl_vector_get(vec0,i);
+		MyoForce[id1][i] += gsl_vector_get(vec1,i);
+		MyoForce[id2][i] += gsl_vector_get(vec2,i);
+	}
+	gsl_vector_free(vec0);
+	gsl_vector_free(vec1);
+	gsl_vector_free(vec2);
+	if (Id == 203){
+		cout<<" element 203, Myoforces: "<<forcemag<<endl;
+		for (int i=0; i<6; i++){
+			for (int j=0; j<3; j++){
+				cout<<MyoForce[i][j]<<" ";
+				//sum[j] += MyoForce[i][j];
+			}
+			cout<<endl;
+		}
+	}
+	/*cout<<" Element: "<<Id<<" forcemag: "<<forcemag<<" Myoforces: "<<endl;
+	//double sum[3] = {0,0,0};
+	for (int i=0; i<6; i++){
+		for (int j=0; j<3; j++){
+			cout<<MyoForce[i][j]<<" ";
+			//sum[j] += MyoForce[i][j];
+		}
+		cout<<endl;
+	}
+	cout<<endl;
+	displayMatrix(myoPolarityDir,"myoPolarityDir");
+	*/
+	//cout<<"sum: "<<sum[0]<<" "<<sum[1]<<" "<<sum[2]<<endl;
+
+
+}
 void 	Prism::calculateBasalArea(){
     double Threshold = 1E-5;
 	int id0 = 0, id1 = 1, id2 = 2; // this is correct for basal side, I will change it for apical calculation
@@ -1387,4 +1699,140 @@ void 	Prism::calculateApicalArea(){
 		Area = Side1* Side2 * sintet / 2.0;
 	}
 	ApicalArea = Area;
+}
+
+void Prism::constructElementStackList(const int discretisationLayers, vector<ShapeBase*>& elementsList){
+	//This is a basal element. I will take my basal nodes, and find elements that have them as apical nodes.
+	elementsIdsOnSameColumn	= new int[discretisationLayers];
+	int currApicalNodes[3] = {NodeIds[3], NodeIds[4],NodeIds[5]};
+	int currElementId = Id;
+	//Starting the list with the basal element
+	elementsIdsOnSameColumn[0] = currElementId;
+	for (int i=1; i<  discretisationLayers; ++i ){
+		//cout<<" starting to fill the list item: "<<i <<" of "<< discretisationLayers-1<<endl;
+		for( vector<ShapeBase*>::iterator itElement=elementsList.begin(); itElement<elementsList.end(); ++itElement){
+			int checkedElementId = (*itElement)->getId();
+			if (checkedElementId != currElementId){ //the iterator is not this element
+				//I will find the elemetns that have this elements apical nodes as basal. All three ndes should match;
+				bool IsBasalOwner = (*itElement)->IsThisNodeMyBasal(currApicalNodes[0]);
+				if (IsBasalOwner){
+					IsBasalOwner = (*itElement)->IsThisNodeMyBasal(currApicalNodes[1]);
+				}
+				if (IsBasalOwner){
+					IsBasalOwner = (*itElement)->IsThisNodeMyBasal(currApicalNodes[2]);
+				}
+				//If IsBasalOwner is true at this point, then I found the matching element.
+				if (IsBasalOwner){
+					//I found the element:
+					elementsIdsOnSameColumn[i] = checkedElementId;
+					for (int j=0; j<3; ++j){
+						currApicalNodes[j] = (*itElement)->getCorrecpondingApical(currApicalNodes[j]);
+					}
+					currElementId = checkedElementId;
+					break;
+				}
+			}
+		}
+	}
+	//Now I have the list for the basal element.
+	//I should construct it for at midline and apical elements:
+	for (int i=1; i<  discretisationLayers; ++i ){
+		elementsList[elementsIdsOnSameColumn[i]]->elementsIdsOnSameColumn = new int[discretisationLayers];
+		for (int j=0; j<  discretisationLayers; ++j ){
+			elementsList[elementsIdsOnSameColumn[i]]->elementsIdsOnSameColumn[j] = elementsIdsOnSameColumn[j];
+		}
+	}
+};
+
+void Prism::copyElementInformationAfterRefinement(ShapeBase* baseElement, int layers,bool thereIsPlasticDeformation){
+	this->columnarGrowthWeight = baseElement->getColumnarness();
+	this->peripodialGrowthWeight = baseElement->getPeripodialness();
+
+	this->E = baseElement->getYoungModulus();
+	this->v = baseElement->getPoissonRatio();
+	this->internalViscosity = baseElement->getInternalViscosity();
+	this->originalInternalViscosity = baseElement->getOriginalInternalViscosity();
+
+    lambda = E*v /(1+v)/(1-2.0*v);
+    mu = E/2.0/(1+v);
+    calculateDVector();
+    calculateD81Tensor();
+	this->spansWholeTissue = baseElement->spansWholeTissue;
+	this->IsAblated = baseElement->IsAblated;
+	this->isFlipped = baseElement->isFlipped;
+	this->IsChangingShape = baseElement->IsChangingShape;
+	this->BasalNormalForPackingUpToDate = baseElement->BasalNormalForPackingUpToDate;
+	this->ApicalNormalForPackingUpToDate = baseElement->ApicalNormalForPackingUpToDate;
+	this->atSymetricityBoundary = baseElement->atSymetricityBoundary;
+	this->IsClippedInDisplay = baseElement->IsClippedInDisplay;
+	this->IsXSymmetricClippedInDisplay = baseElement->IsXSymmetricClippedInDisplay;
+	this->IsYSymmetricClippedInDisplay = baseElement->IsYSymmetricClippedInDisplay;
+	this->GrownVolume = baseElement->GrownVolume/3.0;
+	this->VolumePerNode = baseElement->VolumePerNode/3.0;
+	this->capElement = baseElement->capElement;
+	double* baseGrowthRate = baseElement->getGrowthRate();
+	double* baseShapeChangeRate = baseElement->getShapeChangeRate();
+	for (int i=0; i<3; ++i){
+		this->GrowthRate[i] = baseGrowthRate[i];
+		this->ShapeChangeRate[i] = baseShapeChangeRate[i];
+		this->ApicalNormalForPacking[i] = baseElement->ApicalNormalForPacking[i];
+		this->BasalNormalForPacking[i] = baseElement->BasalNormalForPacking[i];
+	}
+	gsl_matrix* baseFg = baseElement->getFg();
+	gsl_matrix* baseInvFg = baseElement->getInvFg();
+	gsl_matrix* baseFsc = baseElement->getFsc();
+	gsl_matrix* baseInvFsc = baseElement->getInvFsc();
+	gsl_matrix* baseFplastic;
+	gsl_matrix* baseInvFplastic;
+	if(thereIsPlasticDeformation){
+		baseFplastic = baseElement->getFplastic();
+		baseInvFplastic = baseElement->getInvFplastic();
+	}
+	for (int i=0; i<3; ++i){
+		for (int j=0; j<3; ++j){
+			gsl_matrix_set(this->Fg,i,j,gsl_matrix_get(baseFg,i,j));
+			gsl_matrix_set(this->InvFg,i,j,gsl_matrix_get(baseInvFg,i,j));
+			gsl_matrix_set(this->Fsc,i,j,gsl_matrix_get(baseFsc,i,j));
+			gsl_matrix_set(this->InvFsc,i,j,gsl_matrix_get(baseInvFsc,i,j));
+			if(thereIsPlasticDeformation){
+				gsl_matrix_set(this->Fplastic,i,j,gsl_matrix_get(baseFplastic,i,j));
+				gsl_matrix_set(this->invFplastic,i,j,gsl_matrix_get(baseInvFplastic,i,j));
+			}
+		}
+	}
+	gsl_matrix_free(baseFg);
+	gsl_matrix_free(baseInvFg);
+	gsl_matrix_free(baseFsc);
+	gsl_matrix_free(baseInvFsc);
+	if(thereIsPlasticDeformation){
+		gsl_matrix_free(baseFplastic);
+		gsl_matrix_free(baseInvFplastic);
+	}
+	double* initialReletivePos = new double[2];
+	double* reletivePos = new double[2];
+	baseElement->getInitialRelativePosInBoundingBox(initialReletivePos);
+	baseElement->getRelativePosInBoundingBox(reletivePos);
+	double *cmyo = new double[4];
+	baseElement->getMyosinLevels(cmyo);
+	double *cmyoEq = new double[4];
+	baseElement->getEquilibriumMyosinLevels(cmyoEq);
+	gsl_matrix* baseMyoDir = baseElement->getMyosinDirection();
+	for (int i=0; i<2; ++i){
+		this->initialRelativePosInBoundingBox[i] = initialReletivePos[i];
+		this->relativePosInBoundingBox[i] = reletivePos[i];
+		this->cMyoUniform[i] = cmyo[i];
+		this->cMyoUnipolar[i] = cmyo[i+2];
+		this->cMyoUniformEq[i] = cmyoEq[i];
+		this->cMyoUnipolarEq[i] = cmyoEq[i+2];
+		for (int j=0; j<3; ++j){
+			gsl_matrix_set(this->myoPolarityDir,i,j,gsl_matrix_get(baseMyoDir,i,j));
+		}
+	}
+	delete[] cmyo;
+	delete[] cmyoEq;
+	gsl_matrix_free(baseMyoDir);
+	elementsIdsOnSameColumn = new int [layers];
+	for(int i=0;i<layers;++i){
+		this->elementsIdsOnSameColumn[i] = baseElement->elementsIdsOnSameColumn[i];
+	}
 }

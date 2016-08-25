@@ -50,7 +50,7 @@ cp MeshFile.out ./Exp48hr-noPeri_08.mesh
 
 cp Points.6.ele Points.1.ele
 cp Points.6.node Points.1.node
-./EllipseFromOutline -1 12.5 2 4 1  ./inputOutlines/48hrDiscOutline
+./EllipseFromOutline -1 12.5 1 5 1  ./inputOutlines/48hrDiscOutline
 cp MeshFile.out ./Exp48hr-noPeri_09.mesh
 
 
@@ -65,7 +65,7 @@ cp MeshFile.out ./Exp48hr-noPeri_09.mesh
 ../triangle/triangle -rq33a27.44 Points.1
 ../triangle/triangle -rq33a10.4 Points.2
 ../triangle/triangle -rq33a5.8 Points.3
-../triangle/triangle -rq33a2.6 Points.4
+../triangle/triangle -rq33a2.8 Points.4
 %genetratin the meshes:
 cp Points.2.ele Points.1.ele
 cp Points.2.node Points.1.node
@@ -237,6 +237,32 @@ cp Points.3.node Points.1.node
 ./EllipseFromOutline -1 8 1 2 1  ./inputOutlines/circleOutline
 cp MeshFile.out ./Circle100_h8_02.mesh
 
+%circle equivalent to 48 hr wing disc volume has 22.5 micron radius:
+./EllipseFromOutline 1 22.5 22.5 22.5 22.5 12.5 3.5 2 1  ./inputOutlines/circleOutline
+../triangle/triangle -rq33a27.44 Points.1
+../triangle/triangle -rq33a10.4 Points.2
+../triangle/triangle -rq33a5.8 Points.3
+../triangle/triangle -rq33a2.6 Points.4
+../triangle/triangle -rq33a0.65 Points.5
+
+cp Points.5.ele Points.1.ele
+cp Points.5.node Points.1.node
+./EllipseFromOutline -1 12.5 2 5 1  ./inputOutlines/circleOutline
+cp MeshFile.out ./Circle48hrEq-noPeri_08.mesh
+
+cp Points.5.ele Points.1.ele
+cp Points.5.node Points.1.node
+./EllipseFromOutline -1 5.0 2 5 1  ./inputOutlines/circleOutline
+cp MeshFile.out ./Circle48hrEq-noPeri_08-thin.mesh
+
+%Turn on symmetric X here!
+cp Points.5.ele Points.1.ele
+cp Points.5.node Points.1.node
+./EllipseFromOutline -1 12.5 2 5 1  ./inputOutlines/circleOutline
+cp MeshFile.out ./Circle48hrEqQuarter-noPeri_08.mesh
+
+
+
 
 %Half ellipse equivalent of 48 hour disc (turn off blunt tip for this!):
 ./EllipseFromOutline 1 37.26 37.26 21.78 21.78 12.5 8 2 1  ./inputOutlines/circleOutline
@@ -267,4 +293,3 @@ cp Points.5.ele Points.1.ele
 cp Points.5.node Points.1.node
 ./EllipseFromOutline -1 12.5 2 5 1  ./inputOutlines/48hrDiscOutline
 cp MeshFile.out ./Ellipse48hr_08.mesh
-

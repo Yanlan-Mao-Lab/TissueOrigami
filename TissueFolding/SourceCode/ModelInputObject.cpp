@@ -89,9 +89,9 @@ bool ModelInputObject::readParameters(){
 			}
 			else if(currParameterHeader == "ExternalViscositySetup:"){
 				/**
-				 * Inputs relating to the external viscosity felt by the tissue through private function ModelInputObject#readEternalViscosityParameters
+				 * Inputs relating to the external viscosity felt by the tissue through private function ModelInputObject#readExternalViscosityParameters
 				 */
-				Success  = readEternalViscosityParameters(parametersFile);
+				Success  = readExternalViscosityParameters(parametersFile);
 			}
 			else if(currParameterHeader == "Manipulations:"){
 				/**
@@ -153,6 +153,12 @@ bool ModelInputObject::readParameters(){
 				 */
 				Success  = readPipetteSetup(parametersFile);
 			}
+			else if(currParameterHeader == "ECM_Perturbation:"){
+				/**
+				 * Setting perturbations to ECM, current setup includes softening of apical or basal ECM at a given time point.
+				 */
+				Success  = readECMPerturbation(parametersFile);
+			}
 			else {
 				/**
 				 * In the case that the function, or any of the above listed parameter reading functions, encounters an
@@ -205,6 +211,23 @@ bool ModelInputObject::readGrowthOptions(ifstream& file){
 	}
 	else{
 		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: GridGrowthsPinnedOnInitialMesh(bool):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "PinningUpdateTimes(number-times(sec)):"){
+		file >> Sim->nGrowthPinning;
+		if ( Sim->nGrowthPinning > 0){
+			Sim->growthPinUpdateTime = new int[(const int) Sim->nGrowthPinning];
+			Sim->growthPinUpdateBools = new bool[(const int) Sim->nGrowthPinning];
+
+			for (int j=0; j<Sim->nGrowthPinning; ++j){
+				file >> Sim->growthPinUpdateTime[j];
+				Sim->growthPinUpdateBools[j] = false;
+			}
+		}
+	}
+	else{
+		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: PinningUpdateTimes(number-times(sec)):" <<endl;
 		return false;
 	}
 	file >> currHeader;
@@ -553,10 +576,23 @@ bool ModelInputObject::readGrowthType3(ifstream& file){
 		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: Filename(full-path):" <<endl;
 		return false;
 	}
+	double zMin, zMax;
+	file >> currHeader;
+	if(currHeader == "zRange:"){
+		file >> zMin;
+		file >> zMax;
+	}
+	else{
+		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: zRange:" <<endl;
+		return false;
+	}
 	GrowthFunctionBase* GSBp;
 	int Id = Sim->GrowthFunctions.size();
 	//type is 3
 	GSBp = new GridBasedGrowthFunction(Id, 3, initialtime, finaltime, applyToColumnarLayer, applyToPeripodialMembrane, gridX, gridY, GrowthMatrix, AngleMatrix);
+	GSBp->zMin = zMin;
+	GSBp->zMax = zMax;
+
 	Sim->GrowthFunctions.push_back(GSBp);
 	return true;
 }
@@ -602,8 +638,16 @@ bool ModelInputObject::readMeshParameters(ifstream& file){
 	return true;
 }
 
-bool ModelInputObject::readEternalViscosityParameters(ifstream& file){
+bool ModelInputObject::readExternalViscosityParameters(ifstream& file){
 	string currHeader;
+	file >> currHeader;
+	if(currHeader == "ExtendToWholeTissue:"){
+		file >>Sim->extendExternalViscosityToInnerTissue;
+	}
+	else{
+		cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: DiscProperApicalExternalViscosity:" <<endl;
+		return false;
+	}
 	file >> currHeader;
 	if(currHeader == "DiscProperApicalExternalViscosity:"){
 		file >>Sim->externalViscosityDPApical;
@@ -1628,9 +1672,9 @@ bool ModelInputObject::readShapeChangeType1(ifstream& file){
 	return true;
 }
 
-bool ModelInputObject::readShapeChangeType2(ifstream& file){
+/*bool ModelInputObject::readShapeChangeType2(ifstream& file){
 	return true;
-}
+}*/
 
 bool ModelInputObject::readStretcherSetup(ifstream& file){
 	cout<<"reading stretcher options"<<endl;
@@ -1705,6 +1749,70 @@ bool ModelInputObject::readStretcherSetup(ifstream& file){
 		return false;
 	}
 	//cout<<"StretcherAttached "<<Sim->stretcherAttached<<"InitialStep "<<Sim->StretchInitialStep<<" EndStep: "<<Sim->StretchEndStep<<" ClapmPos: "<<Sim->StretchMin<<" "<<Sim->StretchMax<<" strain: "<<Sim->StretchStrain<<endl;
+	return true;
+}
+
+bool ModelInputObject::readECMPerturbation(ifstream& file){
+	string currHeader;
+	file >> currHeader;
+	if(currHeader == "ThereIsECMSoftening(bool):"){
+		file >> Sim->thereIsECMSoftening;
+	}
+	else{
+		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: ThereIsECMSoftening(bool):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "ApplyToApicalECM(bool):"){
+			file >> Sim->softenApicalECM;
+	}
+	else{
+		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: ApplyToApicalECM(bool):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "ApplyToBasalECM(bool):"){
+			file >> Sim->softenBasalECM;
+	}
+	else{
+		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: ApplyToBasalECM(bool):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "timeOfSoftening(hr):"){
+		double timeInHr;
+		file >> timeInHr;
+		Sim->softeningTimeInSec = timeInHr*3600;
+	}
+	else{
+		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: timeOfSoftening(hr):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "relativeXRangeOfSoftening([min,max]):"){
+		file >> Sim->ECMSofteningXRange[0];
+		file >> Sim->ECMSofteningXRange[1];
+	}
+	else{
+		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: relativeXRangeOfSoftening([min,max]):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "softeningFraction(double(0-1.0):"){
+		double fraction;
+		file >> fraction;
+		if (fraction <=0.0) {
+			fraction = 0.0001;
+		}
+		if (fraction > 1.0){
+			fraction = 1.0;
+		}
+		Sim->ECMSofteningFraction = fraction;
+	}
+	else{
+		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: relativeXRangeOfSoftening([min,max]):" <<endl;
+		return false;
+	}
 	return true;
 }
 

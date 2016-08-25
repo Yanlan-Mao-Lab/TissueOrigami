@@ -43,38 +43,44 @@ using namespace std;
      DisplayPysProp = false;
      DisplayFixedNodes = false;
      //current ranges:
-     DisplayPysPropRange[0][0] = 1000.0; DisplayPysPropRange[0][1] = 10000.0; 	//External Viscosity
-     DisplayPysPropRange[1][0] = 1000.0; DisplayPysPropRange[1][1] = 10000.0; 	//Internal Viscosity
+     DisplayPysPropRange[0][0] = 1000.0; DisplayPysPropRange[0][1] = 85000.0; 	//External Viscosity
+     DisplayPysPropRange[1][0] = 1000.0; DisplayPysPropRange[1][1] = 50000.0; 	//Internal Viscosity
      DisplayPysPropRange[2][0] = 1000.0; DisplayPysPropRange[2][1] = 5000.0; //Young's modulus
      DisplayPysPropRange[3][0] = 0.0; DisplayPysPropRange[3][1] = 0.5; 		//Poisson's ratio
-     DisplayPysPropRange[4][0] = 0.0; DisplayPysPropRange[4][1] = 10; 		//xy-planar growth
-     DisplayPysPropRange[5][0] = -1.0; DisplayPysPropRange[5][1] = 10.0; 	//shape change
+     DisplayPysPropRange[4][0] = 0.0; DisplayPysPropRange[4][1] = 12; 		//volumetric (xyz) growth rate
+     DisplayPysPropRange[5][0] = 0.0; DisplayPysPropRange[5][1] = 12.0; 	//volumetric (xyz) growth
+     DisplayPysPropRange[6][0] = -1.0; DisplayPysPropRange[6][1] = 10.0; 	//shape change
+
      //the minimum and maximum they can get:
-     DisplayPysPropBounds[0][0] = 0.0; DisplayPysPropBounds[0][1] = 1000.0;     //External Viscosity - lower limit, min max range
-     DisplayPysPropBounds[0][2] = 100.0; DisplayPysPropBounds[0][3] = 10000.0;  //External Viscosity - upper limit, min max range
-     DisplayPysPropBounds[1][0] = 0.0; DisplayPysPropBounds[1][1] = 1000.0;     //Internal Viscosity - lower limit, min max range
-     DisplayPysPropBounds[1][2] = 100.0; DisplayPysPropBounds[1][3] = 10000.0;  //Internal Viscosity - upper limit, min max range
-     DisplayPysPropBounds[2][0] = 1.0; DisplayPysPropBounds[2][1] = 1000.0; 		//Young's modulus - lower limit, min max range
+     DisplayPysPropBounds[0][0] = 0.0; DisplayPysPropBounds[0][1] = 10000.0;     //External Viscosity - lower limit, min max range
+     DisplayPysPropBounds[0][2] = 100.0; DisplayPysPropBounds[0][3] = 100000.0;  //External Viscosity - upper limit, min max range
+     DisplayPysPropBounds[1][0] = 0.0; DisplayPysPropBounds[1][1] = 5000.0;     //Internal Viscosity - lower limit, min max range
+     DisplayPysPropBounds[1][2] = 100.0; DisplayPysPropBounds[1][3] = 100000.0;  //Internal Viscosity - upper limit, min max range
+     DisplayPysPropBounds[2][0] = 1.0; DisplayPysPropBounds[2][1] = 1000.0; 	//Young's modulus - lower limit, min max range
      DisplayPysPropBounds[2][2] = 51.0; DisplayPysPropBounds[2][3] = 10000.0;  	//Young's modulus - upper limit, min max range
      DisplayPysPropBounds[3][0] = 0.0; DisplayPysPropBounds[3][1] = 0.1; 		//Poisson's ratio - lower limit, min max range
      DisplayPysPropBounds[3][2] = 0.11; DisplayPysPropBounds[3][3] = 0.5; 		//Poisson's ratio - upper limit, min max range
-     DisplayPysPropBounds[4][0] = 0.0; DisplayPysPropBounds[4][1] = 10; 		//xy-planar growth - lower limit, min max range
-     DisplayPysPropBounds[4][2] = 5; DisplayPysPropBounds[4][3] = 50; 			//xy-planar growth - upper limit, min max range
-     DisplayPysPropBounds[5][0] = -6.0; DisplayPysPropBounds[5][1] = 0.0;		//shape change - lower limit, min max range
-     DisplayPysPropBounds[5][2] = 0.0; DisplayPysPropBounds[5][3] = 6.0;		//shape change - upper limit, min max range
+     DisplayPysPropBounds[4][0] = 0.0; DisplayPysPropBounds[4][1] = 10; 		//xy-planar growth rate - lower limit, min max range
+     DisplayPysPropBounds[4][2] = 1; DisplayPysPropBounds[4][3] = 150; 			//xy-planar growth rate - upper limit, min max range
+     DisplayPysPropBounds[5][0] = 0.0; DisplayPysPropBounds[5][1] = 10; 		//xy-planar growth total - lower limit, min max range
+     DisplayPysPropBounds[5][2] = 1; DisplayPysPropBounds[5][3] = 150; 			//xy-planar growth total - upper limit, min max range
+     DisplayPysPropBounds[6][0] = -6.0; DisplayPysPropBounds[6][1] = 0.0;		//shape change - lower limit, min max range
+     DisplayPysPropBounds[6][2] = 0.0; DisplayPysPropBounds[6][3] = 6.0;		//shape change - upper limit, min max range
      //the decimals to display:
      DisplayPysPropDecimals[0] = 0;
      DisplayPysPropDecimals[1] = 0;
      DisplayPysPropDecimals[2] = 0;
 	 DisplayPysPropDecimals[3] = 2;
 	 DisplayPysPropDecimals[4] = 0;
-	 DisplayPysPropDecimals[5] = 2;
+	 DisplayPysPropDecimals[5] = 0;
+	 DisplayPysPropDecimals[6] = 2;
 	 DisplayPysPropSteps[0] = 1;
 	 DisplayPysPropSteps[1] = 1;
 	 DisplayPysPropSteps[2] = 10;
 	 DisplayPysPropSteps[3] = 0.05;
 	 DisplayPysPropSteps[4] = 1;
-	 DisplayPysPropSteps[5] = 0.05;
+	 DisplayPysPropSteps[5] = 1;
+	 DisplayPysPropSteps[6] = 0.05;
 
   	 setSizePolicy(QSizePolicy ::Expanding , QSizePolicy ::Expanding );
   	 drawNetForces = false;
@@ -122,6 +128,7 @@ using namespace std;
      glGetFloatv(GL_LINE_WIDTH_RANGE,LineRange);
      ReferenceLineThickness = (LineRange[1]-LineRange[0])/2.0;
      MainShapeLineThickness = (LineRange[1]-LineRange[0])/3.0;
+     MainShapeLineThickness /= 2;
      initialiseNodeColourList();
      DisplayStrains = false;
      glTranslatef( obj_pos[0], obj_pos[1], -obj_pos[2] );
@@ -145,6 +152,22 @@ using namespace std;
      }
  }
 
+void GLWidget::reInitialiseNodeColourList(int oldNodeNumber){
+	 for (int i=0; i<oldNodeNumber; ++i){
+		delete[] NodeColourList[i];
+	 }
+	 delete[] NodeColourList;
+	 const int n = Sim01->nNodes;
+     NodeColourList = new float*[n];
+     for (int i=0; i<n; ++i){
+    	 NodeColourList[i]=new float[3];
+    	 NodeColourList[i][0]=0.0;
+    	 NodeColourList[i][1]=0.0;
+    	 NodeColourList[i][2]=0.0;
+     }
+ }
+
+
  void GLWidget::paintGL()
  {
      //glScalef(this->devicePixelRatio(),this->devicePixelRatio(),this->devicePixelRatio());
@@ -163,6 +186,10 @@ using namespace std;
 	 glMatrixMode(GL_MODELVIEW);
      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	 glLoadIdentity();
+	 if (currNodeNumber !=Sim01->nNodes){
+		 reInitialiseNodeColourList(currNodeNumber);
+		 currNodeNumber = Sim01->nNodes;
+	 }
 	 constructNodeColourList();
 	 drawColourbar();
 	 drawAxesArrows();
@@ -173,7 +200,6 @@ using namespace std;
 	 glTranslatef( Sim01->SystemCentre[0], Sim01->SystemCentre[1], -Sim01->SystemCentre[2]);
 	 glMultMatrixf(MatRot);
 	 glTranslatef( -Sim01->SystemCentre[0], -Sim01->SystemCentre[1], Sim01->SystemCentre[2]);
-
 	 if (ItemSelected){
 		 drawReferenceElement(SelectedItemIndex);
 		 highlightElement(SelectedItemIndex);
@@ -192,27 +218,6 @@ using namespace std;
 	 drawBoundingBox();
      drawPipette();
      drawPointsForDisplay();
-
-/*
-	glColor3f(0.8,0,0);
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	glEnable(GL_POLYGON_OFFSET_FILL); // Avoid Stitching!
-	glPolygonOffset(1.0, 1.0); 	//These are necessary so the depth test can keep the lines above surfaces
-
-	cout<<"Drawing triangles now: "<<endl;
-	for (int i =0; i<Sim01->TrianglesToDraw.size();i++){
-		glBegin(GL_TRIANGLES);
-		for (int k=0;k<3;++k){
-			float x = Sim01->NodesToDraw [Sim01->TrianglesToDraw[i][k]][0];
-			float y = Sim01->NodesToDraw [Sim01->TrianglesToDraw[i][k]][1];
-			float z = Sim01->NodesToDraw [Sim01->TrianglesToDraw[i][k]][2];
-			cout<<Sim01->TrianglesToDraw[i][k]<<" ";
-			glVertex3f( x, y, z);
-		}
-		cout<<endl;
-		glEnd();
-	}
-*/
 	 if (DisplayFixedNodes){
 		 drawFixedNodes();
 	 }
@@ -316,6 +321,7 @@ using namespace std;
 			 }
 		 }
 	 }
+
  }
 
 
@@ -397,7 +403,7 @@ void GLWidget::highlightNode(int i){
 				float StrainMag = 0.0;
 				int nConnectedElements = (*itNode)->connectedElementIds.size();
 				for (int i=0;i<nConnectedElements; ++i){
-					float TmpStrainMag =0.0, PlasticStrainMag=0;
+					float TmpStrainMag =0.0;
 					Sim01->Elements[(*itNode)->connectedElementIds[i]]->getStrain(StrainToDisplay, TmpStrainMag);
                     StrainMag += (TmpStrainMag)*(*itNode)->connectedElementWeights[i];
 				}
@@ -415,7 +421,7 @@ void GLWidget::highlightNode(int i){
 					int nConnectedElements = (*itNode)->connectedElementIds.size();
 					for (int i=0;i<nConnectedElements; ++i){
 						float TmpPysPropMag = 0.0;
-						if ( PysPropToDisplay == 4 ){
+						if ( PysPropToDisplay == 4 || PysPropToDisplay == 5){
 							//Growth is multiplicative, base should be 1.0:
 							TmpPysPropMag = 1.0;
 						}
@@ -424,6 +430,7 @@ void GLWidget::highlightNode(int i){
 					}
 				}
 				getDisplayColour(currColour,PysPropMag);
+
 			}
 			/*else if(drawMyosinForces){
 			 	//activate this if clause to display myosin levels in a nodal basis (smoothing).
@@ -495,13 +502,26 @@ void GLWidget::highlightNode(int i){
 	NodeColours = new float*[n];
 	for (int j = 0; j<n; j++){
 		NodeColours[j] = new float[3];
-		if(drawMyosinForces && !DisplayStrains && !DisplayPysProp){
+		if (DisplayPysProp && PysPropToDisplay == 4){
+			//Displaying growth rate, I want this on an elemental basis
+			float* currColour;
+			currColour = new float[3];
+			//Growth is multiplicative, base should be 1.0:
+			float PysPropMag = 1.0;
+			Sim01->Elements[i]->getPysProp(PysPropToDisplay, PysPropMag, Sim01->dt);
+			getDisplayColour(currColour,PysPropMag);
+			NodeColours[j][0]=currColour[0];
+			NodeColours[j][1]=currColour[1];
+			NodeColours[j][2]=currColour[2];
+			delete[] currColour;
+		}
+		else if(drawMyosinForces && !DisplayStrains && !DisplayPysProp){
 			// Myosin is drawn on an element basis, for ease of following the local distribution.
 			// deactivate this if clause to display myosin levels in a nodal basis (smoothing).
 			// you will also need to activate the clause in function constructNodeColourList.
 			float* currColour;
 			currColour = new float[3];
-			float cMyoMag;
+			float cMyoMag = 0;
 			if (MyosinToDisplay == 0){
 				cMyoMag = Sim01->Elements[i]->getCmyosinUniformForNode(Sim01->Nodes[NodeIds[j]]->tissuePlacement);
 				//if (cMyoMag> 1){cout<<" Element: "<<i<<" myo uniform: "<<cMyoMag<<endl;}
@@ -521,7 +541,6 @@ void GLWidget::highlightNode(int i){
 			NodeColours[j][1]=NodeColourList[NodeIds[j]][1];
 			NodeColours[j][2]=NodeColourList[NodeIds[j]][2];
 		}
-
 	}
 	return NodeColours;
  }
@@ -542,7 +561,6 @@ void GLWidget::highlightNode(int i){
 	float** NodeColours;
 	NodeColours = getElementColourList(i);
 	//NodeColours = new float*[n];
-
 	//float NodeColours[6][3] = {{0.1,0.1,0.1},{0.1,0.1,0.1},{0.1,0.1,0.1},{0.1,0.1,0.1},{0.1,0.1,0.1},{0.1,0.1,0.1}};
 
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -561,7 +579,6 @@ void GLWidget::highlightNode(int i){
 			}
 		}
 	glEnd();
-
 	glDisable(GL_POLYGON_OFFSET_FILL);
 
 	glLineWidth(MainShapeLineThickness);
@@ -578,9 +595,13 @@ void GLWidget::highlightNode(int i){
 		}
 	glEnd();
 	for (int i=0; i<Sim01->Elements[i]->getNodeNumber(); ++i ){
+		//cout<<"node colours: "<<NodeColours[i][0]<<" "<<NodeColours[i][1]<<" "<<NodeColours[i][2]<<endl;
+		//cout<<"deleting node colours["<<i<<"]"<<endl;
 		delete[] NodeColours[i];
 	}
 	delete[] NodeColours;
+	//cout<<"finalised draw prism"<<endl;
+
  }
 
  void GLWidget::drawTriangle(int i){
@@ -647,7 +668,7 @@ void GLWidget::highlightNode(int i){
  }
 
  void GLWidget::getConcentrationColour(float* OutputColour, float concentration){
-	 double scale2[2] = {20,100.0};
+	 double scale2[2] = {0,1.0};
 	 double g = (concentration- scale2[0])/(scale2[1]-scale2[0]);
 	 if (g<0) {g=0;}
 	 OutputColour[0] = 1.0-g;
@@ -708,8 +729,8 @@ void GLWidget::highlightNode(int i){
 		 g = 0;
 		 b = 1.0 - d*(1-minB)/(segment/2.0);
 	 }
-	 //invert the display from blue to red for growth!:
-	 if (DisplayPysProp &&  PysPropToDisplay==4){
+	 //invert the display from blue to red for growth (rate and total growth)!:
+	 if (DisplayPysProp && (PysPropToDisplay==4 ||  PysPropToDisplay==5) ){
 		 double tmpred = r;
 		 r=b;
 		 b=tmpred;
@@ -1201,7 +1222,6 @@ bool GLWidget::findNode(int i){
 	SelectedItemName = Sim01->Elements[i]->getName();
 	int nNodes = Sim01->Elements[i]->getNodeNumber();
 	int nDim = Sim01->Elements[i]->getDim();
-	int* NodeIds =  Sim01->Elements[i]->getNodeIds();
 	for (int j=0;j<nNodes;j++){
 		for (int k =0 ;k<nDim; k++){
 			QString tmpstring = QString::number(Sim01->Elements[i]->Positions[j][k], 'f', 2);
@@ -1403,7 +1423,7 @@ bool GLWidget::findNode(int i){
  }
 
  void GLWidget::drawForPicking(){
-	 for (int i =0; i<Sim01->Elements.size();i++){
+	 for (int i =0; i<Sim01->nElements;i++){
 		drawElement(i,true);
 	 }
       //To debug, you can actually draw the colour buffer to the screen, and see the change in behaviour
@@ -1715,6 +1735,22 @@ bool GLWidget::findNode(int i){
 			glVertex3f(boundingBox[1][0],boundingBox[1][1],boundingBox[1][2]);
 			glVertex3f(boundingBox[0][0],boundingBox[1][1],boundingBox[0][2]);
 			glVertex3f(boundingBox[0][0],boundingBox[1][1],boundingBox[1][2]);
+		 glEnd();
+		 glColor3f(0.75,0.75,0.75);
+
+		 int grixX = 20;
+		 int gridY = 11;
+		 double dx = (boundingBox[1][0] - boundingBox[0][0])/grixX;
+		 double dy = (boundingBox[1][1] - boundingBox[0][1])/gridY;
+		 glBegin(GL_LINES);
+		 	 for (int m =1; m<grixX; ++m){
+		 		glVertex3f(boundingBox[0][0]+m*dx,boundingBox[0][1],boundingBox[1][2]);
+		 		glVertex3f(boundingBox[0][0]+m*dx,boundingBox[1][1],boundingBox[1][2]);
+		 	 }
+		 	 for (int m =1; m<gridY; ++m){
+				glVertex3f(boundingBox[0][0],boundingBox[0][1]+m*dy,boundingBox[1][2]);
+				glVertex3f(boundingBox[1][0],boundingBox[0][1]+m*dy,boundingBox[1][2]);
+			 }
 		 glEnd();
 		 //glDisable(GL_LINE_STIPPLE);
 	 }

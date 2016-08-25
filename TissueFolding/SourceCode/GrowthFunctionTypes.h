@@ -597,10 +597,9 @@ public:
 		}
 	}
 
-	void writeSummary(ofstream &saveFileSimulationSummary,double dt){
+	void writeSummary(ofstream &saveFileSimulationSummary){
 		/**
 		 *  This function will write the GridBasedGrowthFunction details into the simulation summary file, provided as the first input.
-		 *  Time step (dt) of the simulation is provided as second input, to report the growth rates per hour.
 		 *  The output should look like: \n
 		 *			Growth Type:  growth From File (3)
 		 *			Initial time(sec): GridBasedGrowthFunction#initTime	FinalTime time(sec): GridBasedGrowthFunction#endTime	Growth matrix mesh size: GridBasedGrowthFunction#nGridX GridBasedGrowthFunction#nGridY

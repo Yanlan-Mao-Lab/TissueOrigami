@@ -42,13 +42,13 @@ public:
 
 	void setMatricesToZeroAtTheBeginningOfIteration(bool thereIsNumericalCalculation); 		//< The function setting the calculation matrices to zero at the beginning of each iteration.
 	void setMatricesToZeroInsideIteration();												//< The function setting the relevant matrices to zero at each iteration.
-
+	void reInitiateMatricesAfterRefinement(int n);
 	void constructUnMatrix(vector <Node*>& Nodes);											//< This function constructs NewtonRaphsonSolver#un matrix at the beginning of the iterations.
 	void initialteUkMatrix();																//< This function initiates NewtonRaphsonSolver#uk matrix at the beginning of the iterations, it is initiated to be equal to NewtonRaphsonSolver#un.
 	//void constructLumpedMassExternalViscosityMatrix(vector <Node*>& Nodes);	//< This function constructs NewtonRaphsonSolver#mvisc and  NewtonRaphsonSolver#mviscPerDt for external viscosity related calculations.
 	void calculateDisplacementMatrix(double dt);											//< This function calculates the displacement of each node in current iteration "k", from their positions at the end of the previous step "n" (NewtonRaphsonSolver#uk - NewtonRaphsonSolver#un)
 	void calcutateFixedK(vector <Node*>& Nodes);											//< This function updates the Jacobian to account for nodes  that are fixed in certain dimensions in space, as part of boundary conditions.
-	void calculateForcesAndJacobianMatrixNR(vector <Node*>& Nodes, vector <ShapeBase*>& Elements, double dt, bool recordForcesOnFixedNodes, double **FixedNodeForces, ofstream& outputFile);	//< This function calculates elemental forces and Jacobians, later to be combined in NewtonRaphsonSolver#K and NewtonRaphsonSolver#gSum
+	void calculateForcesAndJacobianMatrixNR(vector <Node*>& Nodes, vector <ShapeBase*>& Elements, double dt, bool recordForcesOnFixedNodes, double **FixedNodeForces );	//< This function calculates elemental forces and Jacobians, later to be combined in NewtonRaphsonSolver#K and NewtonRaphsonSolver#gSum
 	void writeForcesTogeAndgvInternal(vector <Node*>& Nodes, vector <ShapeBase*>& Elements, double** SystemForces);	//< This function writes the values of elemental elastic (ShapeBase#ge) and internal viscous forces (ShapeBase#gvInternal) into the system elastic and internal viscous forces, NewtonRaphsonSolver#ge, and NewtonRaphsonSolver#gvInternal, respectively.
 	void writeImplicitElementalKToJacobian(vector <ShapeBase*>& Elements);	//< This function writes the elemental values for elastic part of the Jacobian - stiffness matrix - (ShapeBase#TriPointKe) and for viscous part of Jacobian (ShapeBase#TriPointKv) into the system Jacobian NewtonRaphsonSolver#K.
 	void calculateExternalViscousForcesForNR(vector <Node*>& Nodes);		//< This function calculates the external viscous forces acting on each node, the values are sotred in NewtonRaphsonSolver#gvExternal
@@ -69,6 +69,8 @@ public:
 	void calculateDifferenceBetweenNumericalAndAnalyticalJacobian(vector <Node*>& Nodes, bool displayMAtricesDuringNumericalCalculation);
 
 	void displayMatrix(gsl_matrix* mat, string matname);
+	void displayMatrix(gsl_vector* mat, string matname);
+
 
 };
 

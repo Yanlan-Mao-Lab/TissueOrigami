@@ -24,7 +24,7 @@ private:
 	bool readMeshParameters(ifstream& file);				///< This function reads the mesh structure related parameters of the tissue from file.
 	bool readPeripodialMembraneParameters(ifstream& file);	///< This function reads the peripodial membrane related parameters of the tissue from file.
 	bool readLinkerZoneParameters(ifstream& file);			///< This function reads the linker zone related parameters of the tissue from file.
-	bool readEternalViscosityParameters(ifstream& file);	///< This function reads the external viscosity setup for the whole tissue.
+	bool readExternalViscosityParameters(ifstream& file);	///< This function reads the external viscosity setup for the whole tissue.
 	bool readNodeFixingParameters(ifstream& file);			///< This function reads the inputs relating to fixing the nodes of the tissue from file.
 	bool readManupulationParamters(ifstream& file);			///< This function reads the inputs relating to manipulations made on the tissue after mesh read.
 	bool readTimeParameters(ifstream &file);				///< This function reads the time related parameters of the simulation from file.
@@ -39,10 +39,11 @@ private:
 	bool readPlasticDeformationOptions(ifstream& file);		///< This function reads the parametrs for plastic deformation, as a response to strains and stresses in the tissue.
 	bool readGridBasedMyosinFunction(ifstream& file);		///< This function reads the myosin parameters from file (GridBased). It will utilise a separate input file storing the equilibrium myosin levels and orientations.
 	bool readShapeChangeType1(ifstream& file);				///< This function reads the shape change  parameters from file (UniformShapeChange).
-	bool readShapeChangeType2(ifstream& file);				///< This function reads the shape change  parameters from file (CircularShapeChange).
+	//bool readShapeChangeType2(ifstream& file);				///< This function reads the shape change  parameters from file (CircularShapeChange).
 	bool readShapeChangeType3(ifstream& file);				///< This function reads the shape change  parameters from file (GridBasedShapeChange).
 	bool readStretcherSetup(ifstream& file);				///< This function reads the stretcher experimental setup parameters of the simulation from file.
 	bool readPipetteSetup(ifstream& file);					///< This function reads the pipette aspiration experimental setup parameters of the simulation from file.
+	bool readECMPerturbation(ifstream& file);
 public:
 	Simulation* Sim;				///< The pointer to the simulation object, for which the parameters are being read from the modelinput file.
 	const char*  parameterFileName;	///< The name (including path) of the file containing the model input parameters.

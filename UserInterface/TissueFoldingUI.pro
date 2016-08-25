@@ -51,7 +51,8 @@ SOURCES += $$CurrPath/SourceCode/main.cpp \
         $$CurrPath/../TissueFolding/SourceCode/Node.cpp \
         $$CurrPath/../TissueFolding/SourceCode/ModelInputObject.cpp \
 	$$CurrPath/../TissueFolding/SourceCode/RandomGenerator.cpp \
-	$$CurrPath/../TissueFolding/SourceCode/NewtonRaphsonSolver.cpp
+	$$CurrPath/../TissueFolding/SourceCode/NewtonRaphsonSolver.cpp \
+	$$CurrPath/../TissueFolding/SourceCode/Analysis.cpp
 
 #libs and includes for linux:
 LIBS += -L/usr/include -lgsl -lgslcblas -lpardiso500-GNU461-X86-64  -fopenmp -llapack
