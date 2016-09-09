@@ -1,5 +1,5 @@
 #include "Node.h"
-
+#include <math.h>
 using namespace std;
 
 Node::Node(int id, int dim, double* pos, int tissuePos, int tissueType){
@@ -8,9 +8,11 @@ Node::Node(int id, int dim, double* pos, int tissuePos, int tissueType){
 	const int n = nDim;
 	Position = new double[n];
 	RKPosition = new double[n];
+	previousStepPosition = new double[n];
 	for (int i=0; i<n; ++i){
 		Position[i] = pos[i];
 		RKPosition[i] = pos[i];
+		previousStepPosition[i] = pos[i];
 	}
 	FixedPos = new bool[3];
 	for (int i=0; i<3; ++i){
@@ -35,7 +37,40 @@ Node::Node(int id, int dim, double* pos, int tissuePos, int tissueType){
 Node::~Node(){
 	delete[] Position;
 	delete[] RKPosition;
+	delete[] previousStepPosition;
 	delete[] FixedPos;
+}
+
+double Node::getDisplacement(){
+	displacement = 0;
+	for (int i=0; i<nDim; ++i){
+		double d = previousStepPosition[i] - Position[i];
+		displacement += d*d;
+	}
+	displacement = pow(displacement,0.5);
+	return displacement;
+}
+
+void Node::updatePreviousPosition(){
+	for (int i=0; i<nDim; ++i){
+		previousStepPosition[i] = Position[i];
+	}
+}
+
+void Node::updateECMVisocityWithDeformationRate(double ECMChangeFraction, double averageDisplacement){
+	double multiplier = (1.0+ECMChangeFraction);
+	if (displacement < averageDisplacement){
+		multiplier = 1/multiplier;
+	}
+	externalViscosity[0] *= multiplier;
+	externalViscosity[1] *= multiplier;
+	externalViscosity[2] *= multiplier;
+	for (int i=0; i<nDim; ++i){
+		externalViscosity[i] *= multiplier;
+		if (externalViscosity[i] < baseExternalViscosity[i]){
+			externalViscosity[i] = baseExternalViscosity[i];
+		}
+	}
 }
 
 void Node::setExternalViscosity(double ApicalVisc,double BasalVisc, bool extendExternalViscosityToInnerTissue){
@@ -45,32 +80,43 @@ void Node::setExternalViscosity(double ApicalVisc,double BasalVisc, bool extendE
 	 *  apical nor on the basal surface, will take the average of the two values.
 	 */
 	if (tissuePlacement ==0){
-		if (!externalViscositySetInFixing[0]){externalViscosity[0] = BasalVisc;}
-		if (!externalViscositySetInFixing[1]){externalViscosity[1] = BasalVisc;}
-		if (!externalViscositySetInFixing[2]){externalViscosity[2] = BasalVisc;}
+		for (int i=0; i<3; ++i){
+			if (!externalViscositySetInFixing[i]){
+				externalViscosity[i] = BasalVisc;
+				baseExternalViscosity[i] = externalViscosity[i];
+			}
+		}
 	}
 	else if (tissuePlacement ==  1){
-		if (!externalViscositySetInFixing[0]){externalViscosity[0] = ApicalVisc;}
-		if (!externalViscositySetInFixing[1]){externalViscosity[1] = ApicalVisc;}
-		if (!externalViscositySetInFixing[2]){externalViscosity[2] = ApicalVisc;}
+		for (int i=0; i<3; ++i){
+			if (!externalViscositySetInFixing[i]){
+				externalViscosity[i] = ApicalVisc;
+				baseExternalViscosity[i] = externalViscosity[i];
+			}
+		}
 	}
 	else if (atCircumference){
 		//circumferential nodes are equal to the minimum of apical and basal values
 		double minV = ApicalVisc;
 		if (BasalVisc < ApicalVisc){minV = BasalVisc;};
-		if (!externalViscositySetInFixing[0]){externalViscosity[0] = minV;}//(apicalV + basalV) /2.0;
-		if (!externalViscositySetInFixing[2]){externalViscosity[1] = minV;}//(apicalV + basalV) /2.0;
-		if (!externalViscositySetInFixing[2]){externalViscosity[2] = minV;}//(apicalV + basalV) /2.0;
-
+		for (int i=0; i<3; ++i){
+			if (!externalViscositySetInFixing[i]){
+				externalViscosity[i] = minV;
+				baseExternalViscosity[i] = externalViscosity[i];
+			}
+		}
 	}
 	else if (tissuePlacement == 2 || tissuePlacement == 3){
 		if (extendExternalViscosityToInnerTissue){
 			//middle or lateral node are equal to the minimum of apical and basal values
 			double minV = ApicalVisc;
 			if (BasalVisc < ApicalVisc){minV = BasalVisc;};
-			if (!externalViscositySetInFixing[0]){externalViscosity[0] = minV;}//(apicalV + basalV) /2.0;
-			if (!externalViscositySetInFixing[2]){externalViscosity[1] = minV;}//(apicalV + basalV) /2.0;
-			if (!externalViscositySetInFixing[2]){externalViscosity[2] = minV;}//(apicalV + basalV) /2.0;
+			for (int i=0; i<3; ++i){
+				if (!externalViscositySetInFixing[i]){
+					externalViscosity[i] = minV; //(apicalV + basalV) /2.0;
+					baseExternalViscosity[i] = externalViscosity[i];
+				}
+			}
 		}
 	}
 }

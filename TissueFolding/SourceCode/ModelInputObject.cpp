@@ -1343,7 +1343,16 @@ bool ModelInputObject::readPlasticDeformationOptions(ifstream& file){
 		Sim->plasticDeformationHalfLife *= 3600; //converting to seconds.
 	}
 	else{
-		cerr<<"Error in reading plastic deformation options, curr string: "<<currHeader<<", should have been: DeformationRate(FractionPerHour):" <<endl;
+		cerr<<"Error in reading plastic deformation options, curr string: "<<currHeader<<", should have been: DeformationHalfLife(hour):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "zDeformationLimits(lowerFraction-upperFraction):"){
+		file >> Sim->zRemodellingLowerThreshold;
+		file >> Sim->zRemodellingUpperThreshold;
+	}
+	else{
+		cerr<<"Error in reading plastic deformation options, curr string: "<<currHeader<<", should have been: zDeformationLimits(lowerFraction-upperFraction):" <<endl;
 		return false;
 	}
 	return true;
@@ -1812,6 +1821,54 @@ bool ModelInputObject::readECMPerturbation(ifstream& file){
 	}
 	else{
 		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: relativeXRangeOfSoftening([min,max]):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "ThereIsECMRemodellinbg(bool):"){
+		file >> Sim->thereIsECMRemodellinbgWithDeforamtionRate;
+	}
+	else{
+		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: ThereIsECMRemodellinbg(bool):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "ApplyToApicalECM(bool):"){
+			file >> Sim->remodelApicalECM;
+	}
+	else{
+		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: ApplyToApicalECM(bool):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "ApplyToBasalECM(bool):"){
+			file >> Sim->remodelBasalECM;
+	}
+	else{
+		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: ApplyToBasalECM(bool):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "ECMRemodellingFraction(double(0-1.0)-ratePerHr):"){
+		double fraction;
+		file >> fraction;
+		if (fraction <=0.0) {
+			fraction = 0.0001;
+		}
+		if (fraction > 1.0){
+			fraction = 1.0;
+		}
+		Sim->ECMRemodellingFraction = fraction;
+	}
+	else{
+		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: ECMRemodellingFraction(double(0-1.0)-ratePerHr):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "RemodellingVelocityThresholdScale(double>1.0):"){
+		file >> Sim->remodellingThresholdFraction;
+	}
+	else{
+		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: RemodellingVelocityThresholdScale(double>1.0)):" <<endl;
 		return false;
 	}
 	return true;

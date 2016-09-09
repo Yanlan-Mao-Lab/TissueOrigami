@@ -43,6 +43,7 @@ protected:
 	double* 	GrowthRate;				///< Growth rate recording for display purposes only. The recorded growth rate in x, y, and z  coordinates, does not record shear deformation induced in growth. Recorded in exponential form through time step, converted to rate per hour for display within the visual interface
 	gsl_matrix* growthIncrement;		///< The matrix (3,3) representing the incremental growth in current time step. Reset to identity at the beginning of each time step, updated in growth functions, and utilised to update Fg.
 	gsl_matrix* plasticDeformationIncrement;		///< The matrix (3,3) representing the incremental plastic deformation (treated as growth) in current time step. Set in plastic deformation calculation at each step, and utilised to update Fg.
+	double 		zRemodellingSoFar;
 	double  	columnarGrowthWeight;	///< The fraction defining how close to the columnar layer the element is. 1.0 for columnar layer, 0.0 for peripodial membrane elements, and scaled according to position in the elements surrounding the lumen.
 	double  	peripodialGrowthWeight;	///< The fraction defining how close to the peripodial membrane the element is. 0.0 for columnar layer, 1.0 for peripodial membrane elements, and scaled according to position in the elements surrounding the lumen.
 	double* 	ShapeChangeRate;		///< Shape change rate of the elements, only orthagonal shape changes are allowed (x, y, z). Shape changes will be scaled to conserve volume, thus three values will not be independent.
@@ -222,6 +223,8 @@ public:
     gsl_matrix* getInvFg();
     gsl_matrix* getFsc();
     gsl_matrix* getInvFsc();
+    double 	getZRemodellingSoFar();
+    void 	setZRemodellingSoFar(double zRemodellingSoFar);
 	void 	displayName();
 	void	displayNodeIds();
 	void 	displayPositions();
@@ -229,9 +232,11 @@ public:
 	void 	displayIdentifierColour();
     void    setFg(gsl_matrix* currFg);
 	void 	setGrowthWeightsViaTissuePlacement (double periWeight);
+	void 	setYoungsModulus(double E);
     virtual void setElasticProperties(double /*EApical*/,double /*EBasal*/, double /*EMid*/,double /*v*/){ParentErrorMessage("setElasticProperties");};
     void 	setViscosity(double viscosityApical,double viscosityBasal, double viscosityMid);
     void 	setViscosity(double viscosityApical,double viscosityBasal);
+    void 	setViscosity(double viscosity);
     virtual void calculateBasalNormal(double * /*normal*/){ParentErrorMessage("calculateBasalNormal");};
 	virtual void AlignReferenceBaseNormalToZ(){ParentErrorMessage("AlignReferenceBaseNormalToZ");};
 	void 	calculateCurrentGrowthIncrement(gsl_matrix* resultingGrowthIncrement, double dt, double growthx, double growthy, double growthz, gsl_matrix* ShearAngleRotationMatrix);
@@ -316,7 +321,7 @@ public:
 	void 	setPlasticDeformationIncrement(double xx, double yy, double zz);
     void 	growShapeByFg();
     void 	changeShapeByFsc(double dt);
-    void	calculatePlasticDeformation(bool volumeConserved, double dt, double plasticDeformationHalfLife);
+    void	calculatePlasticDeformation(bool volumeConserved, double dt, double plasticDeformationHalfLife, double zRemodellingLowerThreshold, double zRemodellingUpperThreshold);
 
 	virtual double getApicalSideLengthAverage(){return ParentErrorMessage("getApicalSideLengthAverage",0.0);};
 	virtual void getApicalTriangles(vector <int> &/*ApicalTriangles*/){ParentErrorMessage("getApicalTriangles");};

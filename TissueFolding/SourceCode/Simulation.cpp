@@ -136,6 +136,7 @@ void Simulation::setDefaultParameters(){
 	ForcesSaved = true;
 	ProteinsSaved = true;
 	PackingSaved = true;
+	physicalPropertiesSaved = true;
 	PeripodialElasticity = 0.0;
 	peripodialApicalViscosity = discProperApicalViscosity;
 	peripodialBasalViscosity  = discProperBasalViscosity;
@@ -198,6 +199,8 @@ void Simulation::setDefaultParameters(){
 	thereIsPlasticDeformation = false;
 	volumeConservedInPlasticDeformation = false;
 	plasticDeformationHalfLife = 0.0;
+	zRemodellingLowerThreshold = 0.5;
+	zRemodellingUpperThreshold = 2.0;
 
 	kMyo = 0.09873;
 	forcePerMyoMolecule = 1.0;
@@ -226,7 +229,11 @@ void Simulation::setDefaultParameters(){
 	ECMSofteningFraction = 0.0;
 	softenBasalECM = false;
 	softenApicalECM = false;
-
+	thereIsECMRemodellinbgWithDeforamtionRate = false;
+	remodellingThresholdFraction = 1.10;
+	remodelBasalECM = false;
+	remodelApicalECM = false;
+	ECMRemodellingFraction = 0.0;
 }
 
 bool Simulation::readExecutableInputs(int argc, char **argv){
@@ -373,6 +380,9 @@ bool Simulation::readFinalSimulationStep(){
         if (ProteinsSaved){
         	readProteinsToContinueFromSave();
 		}
+        if (physicalPropertiesSaved){
+        	readPhysicalPropToContinueFromSave();
+        }
 		//if (ZerothFrame){
 		//	ZerothFrame = false;
 		//	cout<<"dt after  ZerothFrame if clause "<<dt<<" timeStepCurrentSim: "<<timeStepCurrentSim<<" dataSaveInterval: "<<dataSaveInterval<<endl;
@@ -666,6 +676,17 @@ bool Simulation::openFiles(){
 			cerr<<"could not open file: "<<name_saveFileProteins<<endl;
 			Success = false;
 		}
+		//opening the physical property information file:
+		saveFileString = saveDirectory +"/Save_PhysicalProp";
+		const char* name_saveFilePhysicalProp = saveFileString.c_str();
+		saveFilePhysicalProp.open(name_saveFilePhysicalProp, ofstream::binary);
+		if (saveFilePhysicalProp.good() && saveFilePhysicalProp.is_open()){
+			Success = true;
+		}
+		else{
+			cerr<<"could not open file: "<<name_saveFilePhysicalProp<<endl;
+			Success = false;
+		}
 	}
 	if (saveDirectory == "Not-Set"){
 		cerr<<"Output directory is not set, outputting on Out file in current directory"<<endl;
@@ -854,6 +875,14 @@ bool Simulation::openFilesToDisplay(){
 		cerr<<"Cannot open the save file to display: "<<name_saveFileToDisplayPacking<<endl;
 		PackingSaved = false;
 	}
+	saveFileString = saveDirectoryToDisplayString +"/Save_PhysicalProp";
+	const char* name_saveFileToDisplayPhysicalProp = saveFileString.c_str();;
+	saveFileToDisplayPhysicalProp.open(name_saveFileToDisplayPhysicalProp, ifstream::in);
+	if (!(saveFileToDisplayPhysicalProp.good() && saveFileToDisplayPhysicalProp.is_open())){
+		cerr<<"Cannot open the save file to display: "<<name_saveFileToDisplayPhysicalProp<<endl;
+		physicalPropertiesSaved = false;
+	}
+
 	return true;
 }
 
@@ -1323,6 +1352,10 @@ void Simulation::updateProteinsFromSave(){
 	}
 }
 
+void Simulation::updatePhysicalPropFromSave(){
+	readPhysicalPropToContinueFromSave();
+}
+
 void Simulation::updatePackingFromSave(){
 	//reading the number of packing nodes:
 	int n;
@@ -1405,6 +1438,30 @@ void Simulation::readProteinsToContinueFromSave(){
 	}
 }
 
+void Simulation::readPhysicalPropToContinueFromSave(){
+	vector<ShapeBase*>::iterator itElement;
+	double E;
+	double internalViscposity;
+	double externalViscosity[3];
+	double zRemodelling;
+	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		saveFileToDisplayPhysicalProp.read((char*) &E, sizeof E);
+		saveFileToDisplayPhysicalProp.read((char*) &internalViscposity, sizeof internalViscposity);
+		saveFileToDisplayPhysicalProp.read((char*) &zRemodelling, sizeof zRemodelling);
+		(*itElement)->setYoungsModulus(E);
+		(*itElement)->setViscosity(internalViscposity);
+		(*itElement)->setZRemodellingSoFar(zRemodelling);
+	}
+	vector<Node*>::iterator itNode;
+	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+		for (int i=0; i<3; ++i){
+			saveFileToDisplayPhysicalProp.read((char*) &externalViscosity[i], sizeof externalViscosity[i]);
+			(*itNode)->externalViscosity[i] = externalViscosity[i];
+		}
+	}
+}
+
+
 void Simulation::initiatePrismFromSaveForUpdate(int k){
 	//inserts a new prism at order k into elements vector
 	//the node ids and reference shape positions
@@ -1466,6 +1523,9 @@ void Simulation::updateOneStepFromSave(){
 	}
 	if(ProteinsSaved){
 		updateProteinsFromSave();
+	}
+	if(physicalPropertiesSaved){
+		updatePhysicalPropFromSave();
 	}
 	//cout<<"trying to update packing from save, PackingSaved: "<<PackingSaved<<endl;
 	if (PackingSaved){
@@ -2071,6 +2131,7 @@ void Simulation::fixAllD(Node* currNode, bool fixWithViscosity){
 	for (int j =0 ; j<currNode->nDim; ++j){
 		if(fixWithViscosity){
 			currNode->externalViscosity[j] = fixingExternalViscosity[j];
+			currNode->baseExternalViscosity[j] = currNode->externalViscosity[j];
 			currNode->externalViscositySetInFixing[j] = true;
 		}
 		else{
@@ -2084,6 +2145,7 @@ void Simulation::fixAllD(int i, bool fixWithViscosity){
 	for (int j =0 ; j<Nodes[i]->nDim; ++j){
 		if(fixWithViscosity){
 			Nodes[i]->externalViscosity[j] = fixingExternalViscosity[j];
+			Nodes[i]->baseExternalViscosity[j] = Nodes[i]->externalViscosity[j];
 			Nodes[i]->externalViscositySetInFixing[j] = true;
 		}
 		else{
@@ -2096,6 +2158,7 @@ void Simulation::fixX(Node* currNode, bool fixWithViscosity){
 	if(currNode->nDim>0){
 		if(fixWithViscosity){
 			currNode->externalViscosity[0] = fixingExternalViscosity[0];
+			currNode->baseExternalViscosity[0] = currNode->externalViscosity[0];
 			currNode->externalViscositySetInFixing[0] = true;
 		}
 		else{
@@ -2110,6 +2173,7 @@ void Simulation::fixX(int i, bool fixWithViscosity){
 	if(Nodes[i]->nDim>0){
 		if(fixWithViscosity){
 			Nodes[i]->externalViscosity[0] = fixingExternalViscosity[0];
+			Nodes[i]->baseExternalViscosity[0] = Nodes[i]->externalViscosity[0];
 			Nodes[i]->externalViscositySetInFixing[0] = true;
 		}
 		else{
@@ -2126,6 +2190,7 @@ void Simulation::fixY(Node* currNode, bool fixWithViscosity){
 	if(currNode->nDim>1){
 		if(fixWithViscosity){
 			currNode->externalViscosity[1] = fixingExternalViscosity[1];
+			currNode->baseExternalViscosity[1] = currNode->externalViscosity[1];
 			currNode->externalViscositySetInFixing[1] = true;
 		}
 		else{
@@ -2141,6 +2206,7 @@ void Simulation::fixY(int i, bool fixWithViscosity){
 	if(Nodes[i]->nDim>1){
 		if(fixWithViscosity){
 			Nodes[i]->externalViscosity[1] = fixingExternalViscosity[1];
+			Nodes[i]->baseExternalViscosity[1] = Nodes[i]->externalViscosity[1];
 			Nodes[i]->externalViscositySetInFixing[1] = true;
 		}
 		else{
@@ -2156,6 +2222,7 @@ void Simulation::fixZ(Node* currNode, bool fixWithViscosity){
 	if(currNode->nDim>2){
 		if(fixWithViscosity){
 			currNode->externalViscosity[2] = fixingExternalViscosity[2];
+			currNode->baseExternalViscosity[2] = currNode->externalViscosity[2];
 			currNode->externalViscositySetInFixing[2] = true;
 		}
 		else{
@@ -2171,6 +2238,7 @@ void Simulation::fixZ(int i, bool fixWithViscosity){
 	if(Nodes[i]->nDim>2){
 		if(fixWithViscosity){
 			Nodes[i]->externalViscosity[2] = fixingExternalViscosity[2];
+			Nodes[i]->baseExternalViscosity[2] = Nodes[i]->externalViscosity[2];
 			Nodes[i]->externalViscositySetInFixing[2] = true;
 		}
 		else{
@@ -2616,7 +2684,7 @@ void Simulation::addSoftPeriphery(double* fractions){
 					if (d<t2){
 						d = pow(d,0.5);
 						double f = currSoftnessFraction + (1.0 - currSoftnessFraction)*d/softDepth;
-						if (f < fractions[(*itElement)->Id]){
+						if ((softnessFraction< 1.0 && f < fractions[(*itElement)->Id]) ||(softnessFraction> 1.0 && f > fractions[(*itElement)->Id])){
 							fractions[(*itElement)->Id] = f;
 						}
 					}
@@ -2951,9 +3019,9 @@ void Simulation::manualPerturbationToInitialSetup(bool deform, bool rotate){
 		}
 		//laserAblateTissueType(1);
 		//laserAblate(0.0, 0.0, 5.0);
-        double scaleX = 1.0;
+        double scaleX = 0.5;
         double scaleY = 1.0;
-        double scaleZ = 2.0;
+        double scaleZ = 1.0;
 
         double PI = 3.14159265359;
         double tetX = 45 *PI/180.0;
@@ -3760,8 +3828,37 @@ void Simulation::checkECMSoftening(){
 					Nodes[aa]->externalViscosity[0] *= ECMSofteningFraction;
 					Nodes[aa]->externalViscosity[1] *= ECMSofteningFraction;
 					Nodes[aa]->externalViscosity[2] *= ECMSofteningFraction;
+					Nodes[aa]->baseExternalViscosity[0] = Nodes[aa]->externalViscosity[0];
+					Nodes[aa]->baseExternalViscosity[1] = Nodes[aa]->externalViscosity[1];
+					Nodes[aa]->baseExternalViscosity[2] = Nodes[aa]->externalViscosity[2];
 				}
 			}
+		}
+	}
+}
+
+double Simulation::calculateAverageDisplacement(){
+	double displacement = 0;
+	int counter = 0;
+	for (int aa=0; aa<nNodes; ++aa){
+		if((Nodes[aa]->tissuePlacement == 0 && remodelBasalECM ) || (Nodes[aa]->tissuePlacement == 1 && remodelApicalECM )){
+			double currDisplacement = Nodes[aa]->getDisplacement();
+			displacement += currDisplacement;
+			counter ++;
+		}
+	}
+	if (counter >0) {
+		displacement /= counter;
+	}
+	return displacement;
+}
+
+void Simulation::updateECMVisocityWithDeformationRate(){
+	double averageDisplacement = calculateAverageDisplacement();
+	double currECMRemodellingFraction = ECMRemodellingFraction /3600 * dt; //converting per hr tpo per time step
+	for (int aa=0; aa<nNodes; ++aa){
+		if((Nodes[aa]->tissuePlacement == 0 && remodelBasalECM ) || (Nodes[aa]->tissuePlacement == 1 && remodelApicalECM )){
+			Nodes[aa]->updateECMVisocityWithDeformationRate(currECMRemodellingFraction, averageDisplacement*remodellingThresholdFraction);
 		}
 	}
 
@@ -3774,7 +3871,7 @@ bool Simulation::runOneStep(){
     if (currSimTimeSec == -16*3600) {
     	pokeElement(31,0,0,-0.1);pokeElement(34,0,0,-0.1);
     }
-    manualPerturbationToInitialSetup(false,false); //bool deform, bool rotate
+    manualPerturbationToInitialSetup(true,false); //bool deform, bool rotate
     resetForces(true); // reset the packing forces together with all the rest of the forces here
     int freq = 10.0/dt ;
     if (freq <1 ){freq =1;}
@@ -3794,6 +3891,9 @@ bool Simulation::runOneStep(){
     if (thereIsECMSoftening && !softenedECM) {
     	checkECMSoftening();
     }
+    if (thereIsECMRemodellinbgWithDeforamtionRate){
+    	updateECMVisocityWithDeformationRate();
+    }
     if(nMyosinFunctions > 0){
     	checkForMyosinUpdates();
     }
@@ -3812,15 +3912,6 @@ bool Simulation::runOneStep(){
     }
     if(nGrowthFunctions>0 || nShapeChangeFunctions >0){
     	checkForPinningPositionsUpdate();
-    	double* initialRelativePos = new double[2];
-		Elements[110]->getInitialRelativePosInBoundingBox(initialRelativePos);
-		double* relativePos = new double[2];
-		Elements[110]->getRelativePosInBoundingBox(relativePos);
-		cout<<" currSimTimeSec: "<<currSimTimeSec<<" relative pos of element 110: "<<relativePos[0]<<" "<<relativePos[1]<<" initial relative pos: "<<initialRelativePos[0]<<" "<<initialRelativePos[1]<<endl;
-		delete[] initialRelativePos;
-		delete[] relativePos;
-
-
         //outputFile<<"calculating growth"<<endl;
 		//if ((timestep - 1)% growthRotationUpdateFrequency  == 0){
 			updateGrowthRotationMatrices();
@@ -3885,11 +3976,11 @@ bool Simulation::runOneStep(){
 }
 
 void Simulation::checkForPinningPositionsUpdate(){
-	cout<<"checking for pinning update, currTime: "<<currSimTimeSec<<" nGrowthPinning: "<<nGrowthPinning<<" GridGrowthsPinnedOnInitialMesh? "<<GridGrowthsPinnedOnInitialMesh<<endl;
+	//cout<<"checking for pinning update, currTime: "<<currSimTimeSec<<" nGrowthPinning: "<<nGrowthPinning<<" GridGrowthsPinnedOnInitialMesh? "<<GridGrowthsPinnedOnInitialMesh<<endl;
 	if (GridGrowthsPinnedOnInitialMesh){
 		cout<<" grid is pinned "<<endl;
 		for (int i=0; i<nGrowthPinning; ++i){
-			cout<<"growthPinUpdateTime["<<i<<"]: "<<growthPinUpdateTime[i]<<" growthPinUpdateBools["<<i<<"]: "<<growthPinUpdateBools[i]<<endl;
+			//cout<<"growthPinUpdateTime["<<i<<"]: "<<growthPinUpdateTime[i]<<" growthPinUpdateBools["<<i<<"]: "<<growthPinUpdateBools[i]<<endl;
 			if (currSimTimeSec >= growthPinUpdateTime[i] &&  !growthPinUpdateBools[i]){
 				updatePinningPositions();
 				growthPinUpdateBools[i] = true;
@@ -4166,8 +4257,8 @@ void Simulation::updatePlasticDeformation(){
 	//double rate = plasticDeformationRate/3600.0*dt; //convert from per hour to per de(in sec)
 	#pragma omp parallel for //private(Nodes, displacementPerDt, recordForcesOnFixedNodes, FixedNodeForces, outputFile, dt)
 	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		if (!(*itElement)->IsAblated){
-			(*itElement)->calculatePlasticDeformation(volumeConservedInPlasticDeformation,dt,plasticDeformationHalfLife );
+		if (!(*itElement)->IsAblated /* && (*itElement)->tissuePlacement == 0 /* basal element*/){
+			(*itElement)->calculatePlasticDeformation(volumeConservedInPlasticDeformation,dt,plasticDeformationHalfLife, zRemodellingLowerThreshold, zRemodellingUpperThreshold);
 		}
 		else{
 			(*itElement)->setPlasticDeformationIncrement(1.0,1.0,1.0);
@@ -4387,7 +4478,8 @@ void Simulation::addRandomForces(gsl_matrix* gExt){
 void Simulation::updateNodePositionsNR(gsl_matrix* uk){
     int dim = 3;
     for (int i = 0; i<nNodes; ++i){
-        for (int j=0; j<dim; ++j){
+    	Nodes[i]->updatePreviousPosition();
+    	for (int j=0; j<dim; ++j){
             Nodes[i]->Position[j]=gsl_matrix_get(uk,dim*i+j,0);
         }
     }
@@ -7283,6 +7375,7 @@ void Simulation::saveStep(){
 	writeForces();
 	writePacking();
 	writeProteins();
+	writePhysicalProp();
 }
 
 void Simulation::writeSaveFileStepHeader(){
@@ -7459,6 +7552,24 @@ void Simulation::writeProteins(){
 	saveFileProteins.flush();
 }
 
+void Simulation::writePhysicalProp(){
+	vector<ShapeBase*>::iterator itElement;
+	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		double E = (*itElement)->getYoungModulus();
+		double interalVisc	= (*itElement)->getInternalViscosity();
+		double zRemodellingSoFar = (*itElement)->getZRemodellingSoFar();
+		saveFilePhysicalProp.write((char*) &E, sizeof E);
+		saveFilePhysicalProp.write((char*) &interalVisc, sizeof interalVisc);
+		saveFilePhysicalProp.write((char*) &zRemodellingSoFar, sizeof zRemodellingSoFar);
+	}
+	vector<Node*>::iterator itNode;
+	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+		saveFilePhysicalProp.write((char*) &(*itNode)->externalViscosity[0], sizeof (*itNode)->externalViscosity[0]);
+		saveFilePhysicalProp.write((char*) &(*itNode)->externalViscosity[1], sizeof (*itNode)->externalViscosity[1]);
+		saveFilePhysicalProp.write((char*) &(*itNode)->externalViscosity[2], sizeof (*itNode)->externalViscosity[2]);
+	}
+	saveFilePhysicalProp.flush();
+}
 
 void Simulation::calculateMyosinForces(){
 	//cout<<"Entered calculateMyosinForces"<<endl;
@@ -7730,7 +7841,7 @@ void Simulation::calculateGrowthGridBased(GrowthFunctionBase* currGF){
 			else{
 				(*itElement)->getRelativePositionInTissueInGridIndex(nGridX, nGridY, IndexX, IndexY, FracX, FracY);
 			}
-			if (currGF->applyToColumnarLayer){
+			if (currGF->applyToColumnarLayer /*&& (*itElement)->tissuePlacement != 0 /*not basal element*/){
 				(*itElement)->calculateFgFromGridCorners(gridGrowthsInterpolationType, dt, currGF, columnarFgIncrement, 0, IndexX,  IndexY, FracX, FracY); 	//sourceTissue is 0 for columnar Layer
 			}
 			if (currGF->applyToPeripodialMembrane){

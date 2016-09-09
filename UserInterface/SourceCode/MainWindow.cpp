@@ -751,11 +751,11 @@ void MainWindow::timerSimulationStep(){
     //for (int j=0; j<3; ++j){
     //    cout<<"Node 2025 at circmference: "<<Sim01->Nodes[2025]->atCircumference<<" fixed pos "<<j<<" "<<Sim01->Nodes[2025]->FixedPos[j]<<endl;
     //}
-	bool automatedSave = false;
-	bool analyseResults = true;
-	bool slowstepsOnDisplay = false;
-	bool slowstepsOnRun = false;
-	int slowWaitTime = 10;
+	bool 	automatedSave = false;
+	bool 	analyseResults = true;
+	bool 	slowstepsOnDisplay = false;
+	bool 	slowstepsOnRun = false;
+	int 	slowWaitTime = 10;
 	if (Sim01->DisplaySave){
 		if (Sim01->timestep == 0){
 			if (analyseResults){
@@ -764,39 +764,26 @@ void MainWindow::timerSimulationStep(){
 			}
 			if( automatedSave){
 				Sim01->assignTips();
-				MainGLWidget->updateToTopView(); //display tissue from the top view
+				//MainGLWidget->updateToTopView(); //display tissue from the top view
 				//MainGLWidget->updateToFrontView(); //display tissue from the front view
-				//MainGLWidget->updateToPerspectiveView(); //display tissue from the tilted view
-				MainGLWidget->drawSymmetricity = true; //hide symmetric
+				MainGLWidget->updateToPerspectiveView(); //display tissue from the tilted view
+				MainGLWidget->drawSymmetricity = false; //hide symmetric
 				MainGLWidget->PerspectiveView = false; //switch to orthogoanal view type.
 				Sim01->saveImages = true;
 				Sim01->saveDirectory = Sim01->saveDirectoryToDisplayString;
 			}
 		}
-		//My spin boxes stopeed emmitting the signals necessary for this update
-		//I do not know how to fix this for now
-		//as they simply stopped working one day (23.08.2016)
-		//Therefore, I am forcing the update at all steps.
-		//MainGLWidget->DisplayStrainRange[0] = StrainSpinBoxes[0]->value();
-		//MainGLWidget->DisplayStrainRange[1] = StrainSpinBoxes[1]->value();
-		//MainGLWidget->DisplayPysPropRange[MainGLWidget->PysPropToDisplay][0] = PysPropSpinBoxes[0]->value();
-		//MainGLWidget->DisplayPysPropRange[MainGLWidget->PysPropToDisplay][1] = PysPropSpinBoxes[1]->value();
-
 		if(!Sim01->reachedEndOfSaveFile){
 			Sim01->updateOneStepFromSave();
 			if (Sim01->timestep >= 0){
 				double boundingBoxLength = Sim01->boundingBox[1][0] - Sim01->boundingBox[0][0];
 				double boundingBoxWidth  = Sim01->boundingBox[1][1] - Sim01->boundingBox[0][1];
-				analyser01->calculateBoundingBoxSizeAndAspectRatio(Sim01->currSimTimeSec,boundingBoxLength,boundingBoxWidth);
-				analyser01->calculateContourLineLengthsDV(Sim01->Nodes);
-				analyser01->findApicalKinkPointsDV(Sim01->currSimTimeSec,Sim01->boundingBox[0][0], boundingBoxLength, Sim01->Nodes);
-				analyser01->calculateTissueVolumeMap(Sim01->Elements, Sim01->currSimTimeSec,Sim01->boundingBox[0][0],Sim01->boundingBox[0][1],boundingBoxLength,boundingBoxWidth);
-
-				/*double nodearray[3] = {3414,3333,3431};
-				for (int aa=0;aa<3; aa++){
-					int no=nodearray[aa];
-					cout<<"RelativePositionofNode "<<no<<" at "<<Sim01->currSimTimeSec<<" sec: "<< (Sim01->Nodes[no]->Position[0]-Sim01->boundingBox[0][0])/boundingBoxLength<<" "<<(Sim01->Nodes[no]->Position[1]-Sim01->boundingBox[0][1])/boundingBoxWidth<<endl;
-				}*/
+				if (analyseResults){
+					analyser01->calculateBoundingBoxSizeAndAspectRatio(Sim01->currSimTimeSec,boundingBoxLength,boundingBoxWidth);
+					analyser01->calculateContourLineLengthsDV(Sim01->Nodes);
+					analyser01->findApicalKinkPointsDV(Sim01->currSimTimeSec,Sim01->boundingBox[0][0], boundingBoxLength, Sim01->Nodes);
+					analyser01->calculateTissueVolumeMap(Sim01->Elements, Sim01->currSimTimeSec,Sim01->boundingBox[0][0],Sim01->boundingBox[0][1],boundingBoxLength,boundingBoxWidth);
+				}
 			}
 			Sim01->calculateDVDistance();
 			for (int a = 0; a<0; a++){ //35 for 12 hours with 600 sec time step

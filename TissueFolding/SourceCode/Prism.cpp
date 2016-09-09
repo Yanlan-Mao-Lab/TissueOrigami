@@ -140,6 +140,7 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, bool thereIsPlas
     gsl_matrix_set_identity(growthIncrement);
     plasticDeformationIncrement= gsl_matrix_calloc(3,3);
     gsl_matrix_set_identity(plasticDeformationIncrement);
+    zRemodellingSoFar = 1.0;
     TriPointF = gsl_matrix_calloc(3,3);
     TriPointKe = gsl_matrix_calloc(nDim*nNodes,nDim*nNodes);
     TriPointKv = gsl_matrix_calloc(nDim*nNodes,nDim*nNodes);

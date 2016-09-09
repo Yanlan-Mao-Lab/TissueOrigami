@@ -31,6 +31,7 @@ private:
     ofstream saveFileGrowthRate;
 	ofstream saveFileForces;
 	ofstream saveFileProteins;
+	ofstream saveFilePhysicalProp;
 	ofstream saveFilePacking;
 	ofstream saveFileSimulationSummary;
 	ifstream saveFileToDisplayMesh;
@@ -39,6 +40,7 @@ private:
     ifstream saveFileToDisplayGrowthRate;
 	ifstream saveFileToDisplayForce;
 	ifstream saveFileToDisplayProteins;
+	ifstream saveFileToDisplayPhysicalProp;
 	ifstream saveFileToDisplayPacking;
 	ifstream saveFileToDisplayVel;
 	ifstream saveFileToDisplaySimSum;
@@ -48,6 +50,7 @@ private:
     bool GrowthRateSaved;
 	bool ForcesSaved;
 	bool ProteinsSaved;
+	bool physicalPropertiesSaved;
 	bool PackingSaved;
 	int	 nCircumferencialNodes;
 	int dorsalTipIndex,ventralTipIndex,anteriorTipIndex,posteriorTipIndex;
@@ -95,11 +98,13 @@ private:
     void updateGrowthFromSave();
     void updateGrowthRateFromSave();
     void updateProteinsFromSave();
+    void updatePhysicalPropFromSave();
     void updatePackingFromSave();
 	void readTensionCompressionToContinueFromSave();
     void readGrowthToContinueFromSave();
     void readGrowthRateToContinueFromSave();
     void readProteinsToContinueFromSave();
+    void readPhysicalPropToContinueFromSave();
 	bool readFinalSimulationStep();
 	void reInitiateSystemForces(int oldSize);
 	bool checkInputConsistency();
@@ -177,6 +182,7 @@ private:
 	void writeForces();
 	void writePacking();
 	void writeProteins();
+	void writePhysicalProp();
 	void calculateMyosinForces();
 	void cleanUpMyosinForces();
 	void checkForMyosinUpdates();
@@ -296,6 +302,8 @@ public:
 	bool thereIsPlasticDeformation;
 	bool volumeConservedInPlasticDeformation;
 	double plasticDeformationHalfLife;
+	double zRemodellingLowerThreshold;
+	double zRemodellingUpperThreshold;
 
 	int nMyosinFunctions;
 	vector<MyosinFunction*> myosinFunctions;
@@ -382,12 +390,18 @@ public:
 	vector <double> initialWeightPointz;
 
 
-    bool thereIsECMSoftening;
-	double ECMSofteningXRange[2];
-	double softeningTimeInSec;
-	double ECMSofteningFraction;
-	bool softenBasalECM;
-	bool softenApicalECM;
+    bool 	thereIsECMSoftening;
+	double 	ECMSofteningXRange[2];
+	double 	softeningTimeInSec;
+	double 	ECMSofteningFraction;
+	bool 	softenBasalECM;
+	bool 	softenApicalECM;
+
+	bool 	thereIsECMRemodellinbgWithDeforamtionRate;
+	bool 	remodelBasalECM;
+	bool 	remodelApicalECM;
+	double	ECMRemodellingFraction;
+	double 	remodellingThresholdFraction; //The displacement should be above the average with this fraction.
 
 	double packingDetectionThreshold;
 	double packingThreshold;
@@ -417,6 +431,8 @@ public:
     void checkForExperimentalSetupsWithinIteration();
     void checkForExperimentalSetupsAfterIteration();
     void checkECMSoftening();
+    double calculateAverageDisplacement();
+    void updateECMVisocityWithDeformationRate();
     bool runOneStep();
     void updatePlasticDeformation();
     void updateStepNR();

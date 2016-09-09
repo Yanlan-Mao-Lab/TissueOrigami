@@ -18,10 +18,13 @@ public:
 	int 			Id;						///< The unique identification number of the node
 	int 			nDim;					///< The number of dimensions of the node, (2 or 3)
 	double 			*Position;				///< The pointer to the position array of the node. The array itself is declared within the constructor, depending on nDim
+	double 			*previousStepPosition;	///< The pointer to the previous step position array of the node. The array itself is declared within the constructor, depending on nDim.
 	double 			*RKPosition;			///< The pointer to the position array for position during a Runge-Kutta step array of the node. The array itself is declared within the constructor, depending on nDim
 	//double 			**Velocity;				///< The pointer(**) to the velocities of the node for each Runge-Kutta step. The final calculated velocity is stored in Velocity[0]
 	bool			externalViscositySetInFixing[3];	///< The boolean array stating if the external viscosity of any axis has been set in node fixing options. The node fixing is carried out before the physical parameter settings in most cases. The boolean check is carried out not to overwrite the existing set viscosity in normal viscosity assignment.
 	double 			externalViscosity[3];				///< External viscosity of the node, defined by its placement within the tissue. This can be defined as an external adhesion, ECM remodelling, or any other form of viscosity.
+	double			baseExternalViscosity[3];			///< External viscosity of the node, before any remodelling;
+	double			displacement;						///< the displacement of the node from previous time step;
 	int 			tissuePlacement;		///< The tissue placement is 0 for basal nodes, 1 for apical nodes, and 2 for middle range
 	int 			tissueType;		 		///< The tissue type is 0 for columnar layer, 1 for peripodial membrane, and 2 for linker zone
 	bool 			atCircumference;		///< Boolean defining if the node is at the circumference of the columnar layer of the tissue.
@@ -45,5 +48,9 @@ public:
 	void addToImmediateNeigs(int newNodeId);
 	void addToConnectedElements(int newElementId, double volumePerNode);
 	void removeFromConnectedElements(int newElementId, double volumePerNode);
+	double 	getDisplacement();
+	void 	updatePreviousPosition();
+	void updateECMVisocityWithDeformationRate(double ECMChangeFraction, double averageDisplacement);
+
 };
 #endif

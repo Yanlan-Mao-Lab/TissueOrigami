@@ -131,6 +131,14 @@ double 	ShapeBase::getOriginalInternalViscosity(){
 	return originalInternalViscosity;
 }
 
+double 	ShapeBase::getZRemodellingSoFar(){
+	return zRemodellingSoFar;
+}
+
+void 	ShapeBase::setZRemodellingSoFar(double zRemodellingSoFar){
+	this -> zRemodellingSoFar = zRemodellingSoFar;
+}
+
 void ShapeBase::updateInternalViscosityTest(){
 	double d[2] = {0.0,0.0};
 	for (int i = 0; i<nNodes; ++i ){
@@ -723,6 +731,14 @@ void ShapeBase::setFg(gsl_matrix* currFg){
     gsl_matrix_free(tmpFgForInversion);
 }
 
+void ShapeBase::setYoungsModulus(double E){
+	this -> E = E;
+}
+
+void ShapeBase::setViscosity(double viscosity){
+	this -> internalViscosity = viscosity;
+}
+
 void ShapeBase::setViscosity(double viscosityApical,double viscosityBasal, double viscosityMid){
 	this -> internalViscosity = viscosityMid;
 	if (tissuePlacement == 0 ){
@@ -1029,7 +1045,7 @@ double 	ShapeBase::calculateCurrentGrownAndEmergentVolumes(){
 
 }
 
-void	ShapeBase::calculatePlasticDeformation(bool volumeConserved, double dt, double plasticDeformationHalfLife){
+void	ShapeBase::calculatePlasticDeformation(bool volumeConserved, double dt, double plasticDeformationHalfLife, double zRemodellingLowerThreshold, double zRemodellingUpperThreshold){
 	double e1 = 0.0, e2 = 0.0, tet = 0.0;
 	calculatePrincipalStrainAxesOnXYPlane(e1, e2, tet);
 	//NowI have the green strain in principal direction in the orientation of the element internal coordinats.
@@ -1038,8 +1054,9 @@ void	ShapeBase::calculatePlasticDeformation(bool volumeConserved, double dt, dou
 	//gradient terms. Since  E = 1/2 *(Fe^T*Fe-I):
 	double Fxx = pow(e1*2+1,0.5);
 	double Fyy = pow(e2*2+1,0.5);
-	//The effective change I want within one time step is the faction given in "rate"
-
+	//if (Id == 0){
+	//	cout<<"element: "<<Id<<" principal strains: "<<e1<<" "<<e2<<" angle: "<<tet<<" in degrees: "<<tet/3.14*180<<" initial Fxx, Fyy : "<<Fxx<<" "<<Fyy<<endl;
+	//}
 	//half life of plastic deformation:
 	//Maria's aspect ratio data shows, normalised to initial aspect ratio, if a tissue
 	//is stretched to an aspect ratio of 2.0, and relaxed in 20 minutes, it relaxes back to original shape.
@@ -1056,18 +1073,44 @@ void	ShapeBase::calculatePlasticDeformation(bool volumeConserved, double dt, dou
 	Fyy = Fyy/Fyyt;
 	//Fxx = (Fxx-1)*rate +1;
 	//dFyy = (Fyy-1)*rate +1;
-	//cout<<"element: "<<Id<<" principal strains: "<<e1<<" "<<e2<<" angle: "<<tet<<" in degrees: "<<tet/3.14*180<<" resulting scaled increment: "<<Fxx<<" "<<Fyy<<" Fxxt: "<<Fxxt<<" Fyyt: "<<Fyyt<<endl;
 
-	//If I am conserving the volum, I need to scale:
+	//If I am conserving the volume, I need to scale:
 	gsl_matrix*  increment = gsl_matrix_calloc(3,3);
 	gsl_matrix_set(increment,0,0,Fxx);
 	gsl_matrix_set(increment,1,1,Fyy);
 	gsl_matrix_set(increment,2,2,1);
 	if (volumeConserved){
 		double det = determinant3by3Matrix(increment);
-		double scale = 1.0/pow (det,1.0/3.0);
-		gsl_matrix_scale(increment,scale);
+		bool zCapped = false;
+		if (det>1 && zRemodellingSoFar<zRemodellingLowerThreshold){
+			//The remodelling is trying to enlarge the tissue.
+			//To conserve volume, I need to shrink all axes, keeping the ratio constant.
+			//This means the z height will be shrunk. But it has laready been shrunk to my threshold level.
+			//I have the z capped, I will scale only on x & y axes.
+			zCapped = true;
+		}
+		if (det<1 && zRemodellingSoFar>zRemodellingUpperThreshold){
+			//similar to above, not the remodelling is trying to shrink the tissue.
+			//To conserve the volume, I will need to enlarge all axes, keeping the ratio constant.
+			//I have already extended z axis to a large extent, I will not extend it any more.
+			//z is capped.
+			zCapped = true;
+		}
+		if (zCapped){
+			double scale = 1.0/pow (det,1.0/2.0); //scale the size with the square root of the determinant to keep the volume conserved. Then set z to 1 again, we do not want to affect z growth, remodelling is in x & y
+			gsl_matrix_scale(increment,scale);
+			gsl_matrix_set(increment,2,2,1);
+		}
+		else{
+			double scale = 1.0/pow (det,1.0/3.0); //scaling in x,y, and z
+			gsl_matrix_scale(increment,scale);
+			zRemodellingSoFar *= gsl_matrix_get(increment,2,2);
+		}
+		//if (Id == 0){
+		//	cout<<"element: "<<Id<<" principal strains: "<<e1<<" "<<e2<<" angle: "<<tet<<" in degrees: "<<tet/3.14*180<<" resulting scaled increment: "<<Fxx<<" "<<Fyy<<" Fxxt: "<<Fxxt<<" Fyyt: "<<Fyyt<<" zRemodellingSoFar: "<<zRemodellingSoFar<<" zCapped: "<<zCapped<<" det: "<<det<<endl;
+		//}
 	}
+
 	//rotate the growth rate to be applied in the selected angle:
 	gsl_matrix*  rotMat = gsl_matrix_calloc(3,3);
 	gsl_matrix_set_identity(rotMat);

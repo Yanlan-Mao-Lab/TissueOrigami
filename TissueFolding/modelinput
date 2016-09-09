@@ -2,20 +2,20 @@ InputMeshParameters:
   MeshInputMode(int-seeDocumentation): 4
   MeshFile(full-path):    /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Exp48hr-noPeri_04.mesh
   symmetricInX(bool): 0
-  symmetricInY(bool): 0
+  symmetricInY(bool): 1
  
 TimeParameters:
-  TimeStep(sec): 1
-  SimulationLength(sec): 1
+  TimeStep(sec): 180
+  SimulationLength(sec): 180000
 
 SaveOptions:
   SaveImages(bool): 0
   SaveData(bool):   1
   ImageSaveInterval(sec): 1
-  DataSaveInterval(sec):  3600
+  DataSaveInterval(sec):  1
 
 NodeFixingOptions:
-  FixWithHighExternalViscosity(bool): 1
+  FixWithHighExternalViscosity(bool): 0
     FixVis(x,y,z): 80000   80000  80000
   ApicalSurfaceFix(bool-x,y,z): 0 0 0
   BasalSurfaceFix(bool-x,y,z): 0 0 0
@@ -23,7 +23,7 @@ NodeFixingOptions:
   BasalCircumferenceFix(bool-x,y,z): 0 0 0
   LinkerApicalCircumferenceFix(bool-x,y,z): 0 0 0
   LinkerBasalCircumferenceFix(bool-x,y,z): 0 0 0
-  CircumferenceFix(bool-x,y,z): 1 1 1
+  CircumferenceFix(bool-x,y,z): 1 1 0
 
 Manipulations:
   AddCurvature(bool): 1
@@ -40,11 +40,11 @@ Manipulations:
   RandomForceVar(double): 1E-5
 
 PysicalProperties:
-  YoungsModulusApical: 3000.0	YoungsModulusBasal: 3000.0	YoungsModulusMid: 750.0	Noise(%-int): 0
+  YoungsModulusApical: 250.0	YoungsModulusBasal: 250.0	YoungsModulusMid: 250.0	Noise(%-int): 0
   PoissonsRatio: 0.0		Noise(%-int): 0
-  ApicalViscosity:  0.0 	Noise(%-int): 0
-  BasalViscosity:   0.0
-  MidLineViscosity: 0.0
+  ApicalViscosity:  150000.0 	Noise(%-int): 0
+  BasalViscosity:   100000.0
+  MidLineViscosity: 100000.0
 
 PeripodialMembraneParameters:
   AddPeripodialMembrane: 0
@@ -66,8 +66,8 @@ LinkerZoneParameters:
 
 ExternalViscositySetup:
   ExtendToWholeTissue: 1
-  DiscProperApicalExternalViscosity: 80000.0 
-  DiscProperBasalExternalViscosity: 80000.0 
+  DiscProperApicalExternalViscosity: 8000.0 
+  DiscProperBasalExternalViscosity: 8000.0 
   PeripodialMembraneApicalExternalViscosity: 0.0
   PeripodialMembraneBasalExternalViscosity: 0.0 
   LinkerZoneApicalExternalViscosity: 0.0
@@ -93,7 +93,7 @@ GrowthOptions:
 
   GrowthFunctionType(int-seeDocumentation): 1 
   InitialTime(sec): 0
-  FinalTime(sec):  3600
+  FinalTime(sec):  7200
   ApplyToColumnarLayer(bool): 0
   ApplyToPeripodialMembrane(bool): 0
   MaxValue(fractionPerHour-DV,AP,AB): 0.69315 0 0.0 
@@ -154,8 +154,9 @@ ShapeChangeOptions:
 
 PlasticDeformationOptions:
   ThereIsPlasticDeformation(bool): 1
-  VolumeConserved(bool): 0
+  VolumeConserved(bool): 1
   DeformationHalfLife(hour): 5.12
+  zDeformationLimits(lowerFraction-upperFraction): 0.5  1.05
 
 MyosinOptions:
   MyosinDiffusionRate(double-1/sec): 0.09873
@@ -211,4 +212,9 @@ ECM_Perturbation:
   timeOfSoftening(hr): 0.5
   relativeXRangeOfSoftening([min,max]):  0.55 0.65
   softeningFraction(double(0-1.0):  0.8
+  ThereIsECMRemodellinbg(bool): 0
+  ApplyToApicalECM(bool): 0
+  ApplyToBasalECM(bool): 1
+  ECMRemodellingFraction(double(0-1.0)-ratePerHr): 1.2
+  RemodellingVelocityThresholdScale(double>1.0): 1.3
 
