@@ -3871,7 +3871,7 @@ bool Simulation::runOneStep(){
     if (currSimTimeSec == -16*3600) {
     	pokeElement(31,0,0,-0.1);pokeElement(34,0,0,-0.1);
     }
-    manualPerturbationToInitialSetup(true,false); //bool deform, bool rotate
+    manualPerturbationToInitialSetup(false,false); //bool deform, bool rotate
     resetForces(true); // reset the packing forces together with all the rest of the forces here
     int freq = 10.0/dt ;
     if (freq <1 ){freq =1;}
