@@ -78,7 +78,9 @@ protected:
     double 		cMyoUniformEq[2]; 					///< The equilibrium level of myosin concentration in uniformly distributed pool, array of 2: [apical][basal]
     double 		cMyoUnipolarEq[2]; 					///< The equilibrium level of myosin concentration in polarised pool, array of 2: [apical][basal]
     gsl_matrix*	myoPolarityDir;						///< The orientation of myosin polarity, unit vector in world coordinates.
+    bool		cellsMigrating;						///< The boolean stating it the cells inside the element are migrating
 
+    double 	actinMultiplier;
     void 	setShapeType(string TypeName);
 	void 	readNodeIds(int* tmpNodeIds);
 	void 	setPositionMatrix(vector<Node*>& Nodes);
@@ -146,6 +148,8 @@ protected:
     gsl_matrix* TriPointKv;
 
 public:
+    gsl_matrix*	remodellingPlaneRotationMatrix;			///< The rotation matrix converting the xyz coordinate system to the plane of remodelling for the lateral elements.
+
     int 	Id;
 	int		ShapeDim;
 	int* 	NodeIds;
@@ -165,6 +169,7 @@ public:
 	int 	tissuePlacement; //1 -> apical, 0 -> basal, 2->middle, 3 -> lateral
 	int 	tissueType;	///< The tissue type is 0 for columnar layer, 1 for peripodial membrane, and 2 for linker zone
 	bool	spansWholeTissue; ///< Boolean staing is the element spans the whole tissue. This is used to identify mid-layer tagged tissues (tissuePlacement = 2), that should still have apical abd basal responses (such as myosin).
+	bool	isECMMimicing;
 	bool	IsAblated;
 	bool	atSymetricityBoundary;
 	bool	IsClippedInDisplay;
@@ -237,6 +242,9 @@ public:
     void 	setViscosity(double viscosityApical,double viscosityBasal, double viscosityMid);
     void 	setViscosity(double viscosityApical,double viscosityBasal);
     void 	setViscosity(double viscosity);
+    void	setCellMigration(bool migratingBool);
+//    virtual void	fillLateralNeighbours();
+    bool	getCellMigration();
     virtual void calculateBasalNormal(double * /*normal*/){ParentErrorMessage("calculateBasalNormal");};
 	virtual void AlignReferenceBaseNormalToZ(){ParentErrorMessage("AlignReferenceBaseNormalToZ");};
 	void 	calculateCurrentGrowthIncrement(gsl_matrix* resultingGrowthIncrement, double dt, double growthx, double growthy, double growthz, gsl_matrix* ShearAngleRotationMatrix);
@@ -250,7 +258,9 @@ public:
 	virtual void calculateBasalArea(){ParentErrorMessage("calculateBasalArea");};
 	double 		calculateCurrentGrownAndEmergentVolumes();
 	void 	updateNodeIdsForRefinement(int* tmpNodeIds);
-
+	virtual void updateElasticProperties(){ParentErrorMessage("updateElasticProperties");};
+	virtual void  fillLateralNeighbours(vector<Node*>& /*Nodes*/, vector<int>& /*lateralNeigbours*/ ){ParentErrorMessage("fillInLateralNeigbours");};
+	void	calculateActinFeedback(double dt);
 	void 	writeInternalForcesTogeAndgv(gsl_matrix* ge, gsl_matrix* gvInternal, double** SystemForces, vector <Node*>& Nodes);
 
 
@@ -265,6 +275,7 @@ public:
 	void	updateUnipolarEquilibriumMyosinConcentration(bool isApical, double cEqUnipolar, double orientationX, double orientationY);
 	void	adjustCMyosinFromSave();
 	void	updateMyosinConcentration(double dt, double kMyo, bool thereIsMyosinFeedback, double MyosinFeedbackCap);
+	void 	calculatePrincipalStrains3D(bool ignoreZ, double& e1, double &e2,  double &e3, gsl_matrix* eigenVec);
 	void 	calculatePrincipalStrainAxesOnXYPlane(double& e1, double &e2, double& tet);
 	void	updateEquilibriumMyoWithFeedbackFromZero(double MyosinFeedbackCap);
 	void	updateEquilibriumMyoWithFeedbackFromFixedTotal(double totalMyosinLevel);
@@ -286,6 +297,8 @@ public:
 	bool 	readNodeIdData(ifstream& file);
 	bool	readReferencePositionData(ifstream& file);
 	void 	convertPlasticStrainToGrowthStrain();
+	void 	setLateralElementsRemodellingPlaneRotationMatrix(double systemCentreX, double systemCentreY);
+
 	virtual void  checkHealth(){ParentErrorMessage("checkHealth");};
 	void 	resetCurrStepShapeChangeData();
     void    writeKelasticToMainKatrix(gsl_matrix* K);
@@ -321,8 +334,10 @@ public:
 	void 	setPlasticDeformationIncrement(double xx, double yy, double zz);
     void 	growShapeByFg();
     void 	changeShapeByFsc(double dt);
-    void	calculatePlasticDeformation(bool volumeConserved, double dt, double plasticDeformationHalfLife, double zRemodellingLowerThreshold, double zRemodellingUpperThreshold);
-
+    void	calculatePlasticDeformationOld(bool volumeConserved, double dt, double plasticDeformationHalfLife, double zRemodellingLowerThreshold, double zRemodellingUpperThreshold);
+    void	calculatePlasticDeformation3D(bool volumeConserved, double dt, double plasticDeformationHalfLife, double zRemodellingLowerThreshold, double zRemodellingUpperThreshold);
+    void 	addMigrationIncrementToGrowthIncrement(gsl_matrix* migrationIncrement);
+    void 	displayDebuggingMatrices();
 	virtual double getApicalSideLengthAverage(){return ParentErrorMessage("getApicalSideLengthAverage",0.0);};
 	virtual void getApicalTriangles(vector <int> &/*ApicalTriangles*/){ParentErrorMessage("getApicalTriangles");};
 	virtual int getCorrecpondingApical(int /*currNodeId*/){return ParentErrorMessage("getCorrecpondingApical", -100);};
@@ -354,7 +369,7 @@ public:
     void assignZProjectedAreas(vector <Node*> Nodes);
 	void assignElementToConnectedNodes(vector <Node*>& Nodes);
 	void removeMassFromNodes(vector <Node*>& Nodes);
-
+	void setECMMimicing(bool IsECMMimicing);
 
 	void 	convertLocalStrainToTissueStrain(double* strainsToAdd);
 

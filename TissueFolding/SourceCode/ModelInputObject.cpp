@@ -159,6 +159,18 @@ bool ModelInputObject::readParameters(){
 				 */
 				Success  = readECMPerturbation(parametersFile);
 			}
+			else if(currParameterHeader == "Cell_Migration:"){
+				/**
+				 * Setting perturbations to ECM, current setup includes softening of apical or basal ECM at a given time point.
+				 */
+				Success  = readCellMigrationOptions(parametersFile);
+			}
+			else if(currParameterHeader == "ExplicitECMOptions:"){
+				/**
+				 * Setting perturbations to ECM, current setup includes softening of apical or basal ECM at a given time point.
+				 */
+				Success  = readExplicitECMOptions(parametersFile);
+			}
 			else {
 				/**
 				 * In the case that the function, or any of the above listed parameter reading functions, encounters an
@@ -1329,6 +1341,25 @@ bool ModelInputObject::readPlasticDeformationOptions(ifstream& file){
 		cerr<<"Error in reading plastic deformation options, curr string: "<<currHeader<<", should have been: ThereIsPlasticDeformation(bool):" <<endl;
 		return false;
 	}
+
+
+	file >> currHeader;
+		if(currHeader == "ApplyToColumnarLayer(bool):"){
+				file >> Sim->plasticDeformationAppliedToColumnar;
+		}
+		else{
+			cerr<<"Error in reading  plastic deformation options, curr string: "<<currHeader<<", should have been: ApplyToColumnarLayer(bool):" <<endl;
+			return false;
+		}
+		file >> currHeader;
+		if(currHeader == "ApplyToPeripodialMembrane(bool):"){
+				file >> Sim->plasticDeformationAppliedToPeripodial;;
+		}
+		else{
+			cerr<<"Error in reading  plastic deformation options, curr string: "<<currHeader<<", should have been: ApplyToPeripodialMembrane(bool):" <<endl;
+			return false;
+		}
+
 	file >> currHeader;
 	if(currHeader == "VolumeConserved(bool):"){
 		file >> Sim->volumeConservedInPlasticDeformation;
@@ -1792,19 +1823,30 @@ bool ModelInputObject::readECMPerturbation(ifstream& file){
 	if(currHeader == "timeOfSoftening(hr):"){
 		double timeInHr;
 		file >> timeInHr;
-		Sim->softeningTimeInSec = timeInHr*3600;
+		Sim->softeningBeginTimeInSec = timeInHr*3600;
+		file >> timeInHr;
+		Sim->softeningEndTimeInSec = timeInHr*3600;
 	}
 	else{
 		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: timeOfSoftening(hr):" <<endl;
 		return false;
 	}
 	file >> currHeader;
-	if(currHeader == "relativeXRangeOfSoftening([min,max]):"){
-		file >> Sim->ECMSofteningXRange[0];
-		file >> Sim->ECMSofteningXRange[1];
+	if(currHeader == "relativeXRangeOfSoftening(number,[min,max][min,max]):"){
+		file >> Sim->numberOfSoftenedRanges;
+		double minX, maxX;
+		for (int aa=0; aa<Sim->numberOfSoftenedRanges; ++aa){
+			file >>minX;
+			file >>maxX;
+			Sim->ECMSofteningXRangeMins.push_back(minX);
+			Sim->ECMSofteningXRangeMaxs.push_back(maxX);
+		}
+		//file >> Sim->ECMSofteningXRange[0];
+		//file >> Sim->ECMSofteningXRange[1];
+
 	}
 	else{
-		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: relativeXRangeOfSoftening([min,max]):" <<endl;
+		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: relativeXRangeOfSoftening(number,[min,max][min,max]):" <<endl;
 		return false;
 	}
 	file >> currHeader;
@@ -1869,6 +1911,41 @@ bool ModelInputObject::readECMPerturbation(ifstream& file){
 	}
 	else{
 		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: RemodellingVelocityThresholdScale(double>1.0)):" <<endl;
+		return false;
+	}
+	return true;
+}
+
+bool ModelInputObject::readCellMigrationOptions(ifstream& file){
+	string currHeader;
+	file >> currHeader;
+	if(currHeader == "ThereIsCellMigration(bool):"){
+		file >> Sim->thereIsCellMigration;
+	}
+	else{
+		cerr<<"Error in reading cell migration options: "<<currHeader<<", should have been: ThereIsCellMigration(bool):" <<endl;
+		return false;
+	}
+	return true;
+}
+
+bool ModelInputObject::readExplicitECMOptions(ifstream& file){
+	string currHeader;
+	file >> currHeader;
+	if(currHeader == "ThereIsExplicitECM(bool):"){
+		file >> Sim->thereIsExplicitECM;
+	}
+	else{
+		cerr<<"Error in reading cell migration options: "<<currHeader<<", should have been: ThereIsExplicitECM(bool):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "ECMRemodellingHalfLife(hour):"){
+		file >> Sim->ECMRenawalHalfLife;
+		Sim->ECMRenawalHalfLife *= 3600; //converting to seconds.
+	}
+	else{
+		cerr<<"Error in reading cell migration options: "<<currHeader<<", should have been: ECMRemodellingHalfLife(hour):" <<endl;
 		return false;
 	}
 	return true;

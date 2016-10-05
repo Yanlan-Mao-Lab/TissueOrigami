@@ -45,7 +45,7 @@ public:
 	Prism(int* NodeIds,vector<Node*>& Nodes, int CurrId, bool thereIsPlasticDeformation);
 	~Prism();
 	void  setElasticProperties(double EApical, double EBasal, double EMid,double v);
-
+	void  fillLateralNeighbours(vector<Node*>& Nodes, vector<int>& lateralNeigbours );
 	void  calculateBasalNormal(double * normal);
 	void  AlignReferenceBaseNormalToZ();
     void  calculateElementShapeFunctionDerivatives();
@@ -66,7 +66,8 @@ public:
 	void calculateMyosinForcesTotalSizeBased(double forcePerMyoMolecule);
 	void distributeMyosinForcesAreaBased(bool isIsotropic, bool apical, double forcePerMyoMolecule);
 	void distributeMyosinForcesTotalSizeBased(bool isIsotropic, bool apical, double forcePerMyoMolecule);
-
+	//void fillLateralNeighbours();
+	//void updateElasticProperties();
 	void constructElementStackList(const int discretisationLayers, vector<ShapeBase*>& elementsList);
 	void getApicalNodePos(double* posCorner);
 	void getBasalNodePos(double* posCorner);

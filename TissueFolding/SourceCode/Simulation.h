@@ -14,6 +14,8 @@
 #include "GrowthFunctionTypes.h"
 #include "MyosinFunction.h"
 #include "NewtonRaphsonSolver.h"
+#include "CellMigration.h"
+
 
 #include <omp.h>
 //test for rici pull
@@ -222,6 +224,7 @@ private:
     void setupYsymmetricity();
     void setupXsymmetricity();
     void ablateSpcific();
+    void setUpECMMimicingElements();
 
     //void setSymmetricNode(Node* currNode, double yLimPos);
 
@@ -300,6 +303,8 @@ public:
 	vector<GrowthFunctionBase*> ShapeChangeFunctions;
 
 	bool thereIsPlasticDeformation;
+	bool plasticDeformationAppliedToPeripodial;
+	bool plasticDeformationAppliedToColumnar;
 	bool volumeConservedInPlasticDeformation;
 	double plasticDeformationHalfLife;
 	double zRemodellingLowerThreshold;
@@ -391,8 +396,12 @@ public:
 
 
     bool 	thereIsECMSoftening;
-	double 	ECMSofteningXRange[2];
-	double 	softeningTimeInSec;
+    int numberOfSoftenedRanges;
+    vector<double> ECMSofteningXRangeMins;
+    vector<double> ECMSofteningXRangeMaxs;
+    //double 	ECMSofteningXRange[2];
+	double 	softeningBeginTimeInSec;
+	double  softeningEndTimeInSec;
 	double 	ECMSofteningFraction;
 	bool 	softenBasalECM;
 	bool 	softenApicalECM;
@@ -412,8 +421,12 @@ public:
 	bool 	softPeripheryBooleans[4]; //  [applyToApical]  [applyToBasal]  [applyToColumnar]  [applyToPeripodial]
 
 	bool implicitPacking;
-
+	bool thereIsCellMigration;
+	CellMigration* cellMigrationTool;
 	vector <double> drawingPointsX, drawingPointsY, drawingPointsZ;
+
+	bool thereIsExplicitECM;
+	double ECMRenawalHalfLife; //The half life for ECM renewal inside plastic deformation
 	Simulation();
 	~Simulation();
 	void assignTips();
@@ -430,6 +443,8 @@ public:
     void checkForExperimentalSetupsBeforeIteration();
     void checkForExperimentalSetupsWithinIteration();
     void checkForExperimentalSetupsAfterIteration();
+    void setLateralElementsRemodellingPlaneRotationMatrices();
+
     void checkECMSoftening();
     double calculateAverageDisplacement();
     void updateECMVisocityWithDeformationRate();

@@ -19,6 +19,7 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, bool thereIsPlas
     internalViscosity = 0;
     lambda = E*v /(1+v)/(1-2.0*v);
     mu = E/2.0/(1+v);
+    actinMultiplier = 1.0;
 
     D = gsl_matrix_calloc(6,6);
     MyoForce = new double*[6];
@@ -158,6 +159,10 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, bool thereIsPlas
     BasalArea=0.0;
     ApicalArea=0.0;
     willBeRefined = false;
+    cellsMigrating = false;
+    remodellingPlaneRotationMatrix = gsl_matrix_calloc(3,3);
+    gsl_matrix_set_identity(remodellingPlaneRotationMatrix);
+    isECMMimicing = false;
 }
 
 Prism::~Prism(){
@@ -344,6 +349,7 @@ void  Prism::AlignReferenceBaseNormalToZ(){
 	delete[] z;
 }
 
+
 void  Prism::setElasticProperties(double EApical, double EBasal, double EMid, double v){
 	this -> E = EMid;
 	if (tissuePlacement == 0 ){
@@ -366,6 +372,99 @@ void  Prism::setElasticProperties(double EApical, double EBasal, double EMid, do
 
     //cout<<" Element: "<<Id<<" E : "<<E<<" v: "<<v<<" lambda: "<<lambda<< " mu: "<<mu<<endl;
 }
+
+/*
+void  Prism::updateElasticProperties(){
+	lambda = actinMultiplier*E*v/(1+v)/(1-2.0*v);
+	mu = actinMultiplier*E/2.0/(1+v);
+    calculateDVector();
+    calculateD81Tensor();
+}
+
+void Prism::fillLateralNeighbours(){
+	if (tissueType == 0 || tissueType ==1){ //peripodial or columnar element
+		//This is a peripodial or columnar element, The lateral neighbours are those that will
+		//share two nodes on the apical side and two nodes on the basal side:
+		//I go over the apical surface, each elemetn here should be connected to the equivalent node on the apical side, so that
+		//these elements will be connected on the rectangular side
+		Continue from here!
+		NodeIds[0]->connectedElementIds == NodeIds[3]->connectedElementIds
+		NodeIds[1]->connectedElementIds == NodeIds[4]->connectedElementIds
+		NodeIds[2]->connectedElementIds == NodeIds[5]->connectedElementIds
+
+	}
+}
+
+void Prism::fillLateralNeighbours(vector<Nodes>& Nodes){
+	//generate a list of element that are connected to this element
+	vector <int> connectedElementList;
+	vector <int> connectedElementEncounterCounter;
+	for (int i=0; i<nNodes; ++i){
+		int nConnectedElement = Nodes[NodeIds[i]]->connectedElementIds.size();
+		for (int j=0; j<nConnectedElement; ++j){
+			int currElementId = Nodes[NodeIds[i]]->connectedElementIds[j];
+			if (currElementId != this->Id){
+				//the connected element of the node is not this element itself
+				int currListSize = connectedElementList.size();
+				bool alreadyRecorded = false;
+				for (int k=0; k<currListSize; ++k){
+					if (connectedElementList[k] == currElementId){
+						connectedElementEncounterCounter[k]++;
+						alreadyRecorded = true;
+						break;
+					}
+				}
+				if (!alreadyRecorded){
+					connectedElementList.push_back(currElementId);
+					connectedElementEncounterCounter.push_back(1);
+				}
+			}
+		}
+	}
+	//If the element id have been encoiuntered 4 times, then it is a lateral neighbour:
+	int currListSize = connectedElementList.size();
+	for (int k=0; k<currListSize; ++k){
+		if (connectedElementEncounterCounter[k] == 4){
+			bibap
+		}
+	}
+}*/
+
+void Prism::fillLateralNeighbours(vector<Node*>& Nodes, vector<int>& lateralNeigbours){
+	//generate a list of element that are connected to this element
+	vector <int> connectedElementList;
+	vector <int> connectedElementEncounterCounter;
+	for (int i=0; i<nNodes; ++i){
+		int nConnectedElement = Nodes[NodeIds[i]]->connectedElementIds.size();
+		for (int j=0; j<nConnectedElement; ++j){
+			int currElementId = Nodes[NodeIds[i]]->connectedElementIds[j];
+			if (currElementId != this->Id){
+				//the connected element of the node is not this element itself
+				int currListSize = connectedElementList.size();
+				bool alreadyRecorded = false;
+				for (int k=0; k<currListSize; ++k){
+					if (connectedElementList[k] == currElementId){
+						connectedElementEncounterCounter[k]++;
+						alreadyRecorded = true;
+						break;
+					}
+				}
+				if (!alreadyRecorded){
+					connectedElementList.push_back(currElementId);
+					connectedElementEncounterCounter.push_back(1);
+				}
+			}
+		}
+	}
+	//If the element id have been encoiuntered 4 times, then it is a lateral neighbour:
+	int currListSize = connectedElementList.size();
+	for (int k=0; k<currListSize; ++k){
+		if (connectedElementEncounterCounter[k] == 4){
+			lateralNeigbours.push_back(connectedElementList[k]);
+		}
+	}
+}
+
 
 void Prism::calculateDVector(){
 	double multiplier = E/((1+v)*(1-2*v));

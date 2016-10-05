@@ -18,10 +18,9 @@ Node::Node(int id, int dim, double* pos, int tissuePos, int tissueType){
 	for (int i=0; i<3; ++i){
 		FixedPos[i] = false;
 		externalViscositySetInFixing[i] = false;
+		externalViscosity[i] = 0.0;
+		ECMViscosityReductionPerHour[i] = 0;
 	}
-	externalViscosity[0] = 0.0;
-	externalViscosity[1] = 0.0;
-	externalViscosity[2] = 0.0;
 	tissuePlacement = tissuePos;
 	this->tissueType = tissueType;
 	atCircumference = false;

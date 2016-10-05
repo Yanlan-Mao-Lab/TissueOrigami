@@ -197,6 +197,8 @@ void Simulation::setDefaultParameters(){
 	softPeripheryBooleans[3] = false; //peripodial
 
 	thereIsPlasticDeformation = false;
+	plasticDeformationAppliedToPeripodial = false;
+	plasticDeformationAppliedToColumnar = false;
 	volumeConservedInPlasticDeformation = false;
 	plasticDeformationHalfLife = 0.0;
 	zRemodellingLowerThreshold = 0.5;
@@ -223,9 +225,11 @@ void Simulation::setDefaultParameters(){
 
 	softenedECM = false;
     thereIsECMSoftening = false;
-	ECMSofteningXRange[0] = 0.0;
-    ECMSofteningXRange[1] = 1.0;
-	softeningTimeInSec = -1;
+    numberOfSoftenedRanges = 0;
+	//ECMSofteningXRange[0] = 0.0;
+    //ECMSofteningXRange[1] = 1.0;
+	softeningEndTimeInSec = -1;
+	softeningEndTimeInSec = -1;
 	ECMSofteningFraction = 0.0;
 	softenBasalECM = false;
 	softenApicalECM = false;
@@ -234,6 +238,10 @@ void Simulation::setDefaultParameters(){
 	remodelBasalECM = false;
 	remodelApicalECM = false;
 	ECMRemodellingFraction = 0.0;
+
+	thereIsCellMigration = false;
+	thereIsExplicitECM = false;
+	ECMRenawalHalfLife = 0.0;
 }
 
 bool Simulation::readExecutableInputs(int argc, char **argv){
@@ -560,12 +568,44 @@ bool Simulation::initiateSystem(){
 		}
 
     }*/
+
+    if (thereIsCellMigration) {
+    	cout<<"initiation of cell migration"<<endl;
+    	double cellMigrationOriginAngle = M_PI/2.0;
+    	cellMigrationTool = new CellMigration(nElements,0.5);
+        cellMigrationTool->assignElementRadialVectors(Elements);
+        cellMigrationTool->assignOriginOfMigration(Elements, cellMigrationOriginAngle);
+        cellMigrationTool->assignElementConnectivity(Nodes,Elements);
+        cellMigrationTool->generateListOfRateFractions(Elements);
+    }
+    if (thereIsPlasticDeformation){
+    	setLateralElementsRemodellingPlaneRotationMatrices();
+    }
+    if (thereIsExplicitECM){
+    	setUpECMMimicingElements();
+    }
 	return Success;
 }
 
+void Simulation::setLateralElementsRemodellingPlaneRotationMatrices(){
+	calculateSystemCentre();
+	double cx = SystemCentre[0];
+	double cy = SystemCentre[1];
+	if (symmetricX){
+		cx = 0;
+	}
+	if (symmetricY){
+		cy = 0;
+	}
+	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		if ((*itElement)->tissueType == 2){
+			(*itElement)->setLateralElementsRemodellingPlaneRotationMatrix(cx,cy);
+		}
+	}
+}
+
 void Simulation::assignNodeMasses(){
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 	    (*itElement)->assignVolumesToNodes(Nodes);
 		(*itElement)->assignSurfaceAreaToNodes(Nodes);
 	}
@@ -1786,8 +1826,9 @@ bool Simulation::initiateMesh(int MeshType){
 		bool areTissueWeightsRecorded = checkIfTissueWeightsRecorded();
 		if (areTissueWeightsRecorded){
 			readInTissueWeights();
+			cout<<" read in tissue weights"<<endl;
 		}
-		cout<<" read in tissue weights"<<endl;
+
 		//addCurvatureToColumnar(5.0);
 		saveFileToDisplayMesh.close();
 	}
@@ -3016,12 +3057,14 @@ void Simulation::manualPerturbationToInitialSetup(bool deform, bool rotate){
 				//fixY((*itNode),0);
 				(*itNode)->Position[0] -= 5;
 			}*/
+			//fixAllD((*itNode),0);
 		}
 		//laserAblateTissueType(1);
 		//laserAblate(0.0, 0.0, 5.0);
-        double scaleX = 0.5;
+		//deform = true;
+        double scaleX = 2.0;
         double scaleY = 1.0;
-        double scaleZ = 1.0;
+        double scaleZ = 2.0;
 
         double PI = 3.14159265359;
         double tetX = 45 *PI/180.0;
@@ -3819,18 +3862,36 @@ void Simulation::checkForExperimentalSetupsAfterIteration(){
 void Simulation::checkECMSoftening(){
 	//I have not carried out any softening as yet
 	//I will if the time is after 32 hr
-	if (currSimTimeSec >=softeningTimeInSec){
-		softenedECM = true;
+	if (currSimTimeSec >=softeningBeginTimeInSec && currSimTimeSec <softeningEndTimeInSec){
+		if (softenedECM == false){
+			softenedECM = true;
+			//this is the first time step I am reducing the ECM viscosity.
+			//I need to calculate rates first:
+			for (int aa=0; aa<nNodes; ++aa){
+				double timeDifferenceInHours = (softeningEndTimeInSec - softeningBeginTimeInSec)/3600;
+				for (int i=0; i<3; ++i){
+					Nodes[aa]->ECMViscosityReductionPerHour[i] = Nodes[aa]->externalViscosity[i]*(1-ECMSofteningFraction)/timeDifferenceInHours;
+				}
+			}
+		}
 		for (int aa=0; aa<nNodes; ++aa){
 			if((Nodes[aa]->tissuePlacement == 0 && softenBasalECM ) || (Nodes[aa]->tissuePlacement == 1 && softenApicalECM )){
 				double relativeX = (Nodes[aa]->Position[0] - boundingBox[0][0])/boundingBoxSize[0];
-				if (relativeX> ECMSofteningXRange[0] && relativeX<ECMSofteningXRange[1]){
-					Nodes[aa]->externalViscosity[0] *= ECMSofteningFraction;
-					Nodes[aa]->externalViscosity[1] *= ECMSofteningFraction;
-					Nodes[aa]->externalViscosity[2] *= ECMSofteningFraction;
-					Nodes[aa]->baseExternalViscosity[0] = Nodes[aa]->externalViscosity[0];
-					Nodes[aa]->baseExternalViscosity[1] = Nodes[aa]->externalViscosity[1];
-					Nodes[aa]->baseExternalViscosity[2] = Nodes[aa]->externalViscosity[2];
+				for (int ECMReductionRangeCounter =0; ECMReductionRangeCounter<numberOfSoftenedRanges; ++ECMReductionRangeCounter){
+					if (relativeX> ECMSofteningXRangeMins[ECMReductionRangeCounter] && relativeX<ECMSofteningXRangeMaxs[ECMReductionRangeCounter]){
+						Nodes[aa]->externalViscosity[0] -= Nodes[aa]->ECMViscosityReductionPerHour[0]/3600*dt;
+						Nodes[aa]->externalViscosity[1] -= Nodes[aa]->ECMViscosityReductionPerHour[1]/3600*dt;
+						Nodes[aa]->externalViscosity[2] -= Nodes[aa]->ECMViscosityReductionPerHour[2]/3600*dt;
+						Nodes[aa]->baseExternalViscosity[0] = Nodes[aa]->externalViscosity[0];
+						Nodes[aa]->baseExternalViscosity[1] = Nodes[aa]->externalViscosity[1];
+						Nodes[aa]->baseExternalViscosity[2] = Nodes[aa]->externalViscosity[2];
+						//Nodes[aa]->externalViscosity[0] *= ECMSofteningFraction;
+						//Nodes[aa]->externalViscosity[1] *= ECMSofteningFraction;
+						//Nodes[aa]->externalViscosity[2] *= ECMSofteningFraction;
+						//Nodes[aa]->baseExternalViscosity[0] = Nodes[aa]->externalViscosity[0];
+						//Nodes[aa]->baseExternalViscosity[1] = Nodes[aa]->externalViscosity[1];
+						//Nodes[aa]->baseExternalViscosity[2] = Nodes[aa]->externalViscosity[2];
+					}
 				}
 			}
 		}
@@ -3866,7 +3927,7 @@ void Simulation::updateECMVisocityWithDeformationRate(){
 
 bool Simulation::runOneStep(){
     bool Success = true;
-	cout<<"entered run one step"<<endl;
+	cout<<"entered run one step, time "<<currSimTimeSec<<endl;
 	//ablateSpcific();
     if (currSimTimeSec == -16*3600) {
     	pokeElement(31,0,0,-0.1);pokeElement(34,0,0,-0.1);
@@ -3888,7 +3949,14 @@ bool Simulation::runOneStep(){
 	}
     //cout<<"after bounding box"<<endl;
     checkForExperimentalSetupsBeforeIteration();
-    if (thereIsECMSoftening && !softenedECM) {
+    bool thereIsActinStrainFeedback = false;
+    if (thereIsActinStrainFeedback){
+    	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+    	        (*itElement)->calculateActinFeedback(dt);
+    	        (*itElement)->updateElasticProperties();
+    	}
+    }
+    if (thereIsECMSoftening) {
     	checkECMSoftening();
     }
     if (thereIsECMRemodellinbgWithDeforamtionRate){
@@ -3923,8 +3991,13 @@ bool Simulation::runOneStep(){
         	calculateShapeChange();
         }
     }
-    if(thereIsPlasticDeformation){
+    if(thereIsPlasticDeformation || thereIsExplicitECM){
     	updatePlasticDeformation();
+    }
+    if(thereIsCellMigration){
+    	cellMigrationTool->updateMigratingElements(Elements);
+    	cellMigrationTool->updateMigrationLists(Elements, dt);
+    	cellMigrationTool->updateVolumesWithMigration(Elements);
     }
     for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
         if (!(*itElement)->IsAblated){
@@ -3952,6 +4025,8 @@ bool Simulation::runOneStep(){
 
 
     updateStepNR();
+	//Elements[2]->displayDebuggingMatrices();
+	//Elements[115]->displayDebuggingMatrices();
     calculateBoundingBox();
 
     //calculateColumnarLayerBoundingBox();
@@ -4257,8 +4332,26 @@ void Simulation::updatePlasticDeformation(){
 	//double rate = plasticDeformationRate/3600.0*dt; //convert from per hour to per de(in sec)
 	#pragma omp parallel for //private(Nodes, displacementPerDt, recordForcesOnFixedNodes, FixedNodeForces, outputFile, dt)
 	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		if (!(*itElement)->IsAblated /* && (*itElement)->tissuePlacement == 0 /* basal element*/){
-			(*itElement)->calculatePlasticDeformation(volumeConservedInPlasticDeformation,dt,plasticDeformationHalfLife, zRemodellingLowerThreshold, zRemodellingUpperThreshold);
+		if (!(*itElement)->IsAblated ){
+			if (thereIsExplicitECM &&  (*itElement)->isECMMimicing){
+				//The simulation is defining an explicit ECM layer. All basal elements
+				//should be subject to non-volum econserving plastic deformation.
+				//The volume conservation should be false (first inout)
+				//the half time used should be the ecm remodelling half time
+				//there should not be thresholds for z remodelling, there is no
+				//volume conservation, therefore these are not relevant anyway.
+				(*itElement)->calculatePlasticDeformation3D(false,dt,ECMRenawalHalfLife, 0.1, 10.0);
+			}
+			else if (thereIsPlasticDeformation){
+				//The ECM will always have plastic deformation, hence this function will be called.
+				//Then for all other elements, I should first check if there is plastic deformation in the first place
+				//Then I will check the tissue types
+				//the lateral elements will have plastic deformaiton if either columnar or peripodial elemetns have the deformation.
+				if(( ((*itElement)->tissueType == 0 || (*itElement)->tissueType == 2) && plasticDeformationAppliedToColumnar) || ( ((*itElement)->tissueType == 1 || (*itElement)->tissueType == 2) && plasticDeformationAppliedToPeripodial))
+				{
+					(*itElement)->calculatePlasticDeformation3D(volumeConservedInPlasticDeformation,dt,plasticDeformationHalfLife, zRemodellingLowerThreshold, zRemodellingUpperThreshold);
+				}
+			}
 		}
 		else{
 			(*itElement)->setPlasticDeformationIncrement(1.0,1.0,1.0);
@@ -5750,6 +5843,7 @@ void Simulation::processDisplayDataAndSave(){
         //updateDisplaySaveValuesFromRK();
         saveStep();
     }
+	cout<<"finished processDisplayDataAndSave"<<endl;
 }
 
 void Simulation::updateNodeMasses(){
@@ -6296,7 +6390,7 @@ void Simulation::detectPacingNodes(){
 	if (thereIsPeripodialMembrane){
 		colAverageSideLength = (periAverageSideLength+colAverageSideLength)/2.0;
 	}
-	packingThreshold = 0.6*colAverageSideLength;
+	packingThreshold = 0.4*colAverageSideLength;  //0.6 was old value
 	packingDetectionThreshold = 1.2 * packingThreshold; //0.9 * packingThreshold;
 	double t2 = packingDetectionThreshold*packingDetectionThreshold;	//threshold square for rapid calculation
 	pacingNodeCouples0.empty();
@@ -7821,14 +7915,27 @@ void Simulation::calculateGrowthRing(GrowthFunctionBase* currGF){
 	}
 }
 
+void Simulation::setUpECMMimicingElements(){
+	for(vector<ShapeBase*>::iterator  itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		if ( (*itElement)->tissuePlacement == 0 ){
+			//basal elements are mimicing the ECM:
+			(*itElement)->setECMMimicing(true);
+		}
+		if ( (*itElement)->tissuePlacement = 2 && (*itElement)->spansWholeTissue ){
+			//elemetns that  are called mid -line, as they
+			//span the whole tissue, are treated as ECM mimicing
+			(*itElement)->setECMMimicing(true);
+		}
+	}
+}
+
 void Simulation::calculateGrowthGridBased(GrowthFunctionBase* currGF){
 	int nGridX = currGF->getGridX();
 	int nGridY = currGF->getGridY();
 	if(currSimTimeSec >= currGF->initTime && currSimTimeSec < currGF->endTime ){
 		gsl_matrix* columnarFgIncrement = gsl_matrix_calloc(3,3);
 		gsl_matrix* peripodialFgIncrement = gsl_matrix_calloc(3,3);
-		vector<ShapeBase*>::iterator itElement;
-		for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		for(vector<ShapeBase*>::iterator  itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 			gsl_matrix_set_identity(columnarFgIncrement);
 			gsl_matrix_set_identity(peripodialFgIncrement);
 
@@ -7841,19 +7948,18 @@ void Simulation::calculateGrowthGridBased(GrowthFunctionBase* currGF){
 			else{
 				(*itElement)->getRelativePositionInTissueInGridIndex(nGridX, nGridY, IndexX, IndexY, FracX, FracY);
 			}
-			if (currGF->applyToColumnarLayer /*&& (*itElement)->tissuePlacement != 0 /*not basal element*/){
-				(*itElement)->calculateFgFromGridCorners(gridGrowthsInterpolationType, dt, currGF, columnarFgIncrement, 0, IndexX,  IndexY, FracX, FracY); 	//sourceTissue is 0 for columnar Layer
-			}
-			if (currGF->applyToPeripodialMembrane){
-				(*itElement)->calculateFgFromGridCorners(gridGrowthsInterpolationType, dt, currGF, peripodialFgIncrement, 1, IndexX,  IndexY, FracX, FracY); 	//sourceTissue is 1 for peripodial membrane
+			if (!thereIsExplicitECM || !(*itElement)->isECMMimicing){
+				//There is either no explicit ECM definition, or the element is not ECM mimicing.
+				//If there is explicit ECM, the basal elements should not grow, all others should proceed as usual
+				//If there is no explicit ecm, then all should proceed as usual.
+				if (currGF->applyToColumnarLayer){
+					(*itElement)->calculateFgFromGridCorners(gridGrowthsInterpolationType, dt, currGF, columnarFgIncrement, 0, IndexX,  IndexY, FracX, FracY); 	//sourceTissue is 0 for columnar Layer
+				}
+				if (currGF->applyToPeripodialMembrane){
+					(*itElement)->calculateFgFromGridCorners(gridGrowthsInterpolationType, dt, currGF, peripodialFgIncrement, 1, IndexX,  IndexY, FracX, FracY); 	//sourceTissue is 1 for peripodial membrane
+				}
 			}
 			(*itElement)->updateGrowthIncrement(columnarFgIncrement,peripodialFgIncrement);
-			/*int Id = (*itElement)->Id;
-			if (Id == 5133 || Id == 4744 || Id == 4379 || Id == 4554 || Id == 5235){
-    			cout<<" the index for element "<<(*itElement)->Id<<" is: "<<IndexX<<" "<<IndexY<<" fracX "<< FracX<<" fracY "<< FracY<<endl;
-    			//(*itElement)->displayMatrix(columnarFgIncrement,"columnarFgIncrement");
-    			//(*itElement)->displayMatrix(peripodialFgIncrement,"peripodialFgIncrement");
-    		}*/
 		}
 		gsl_matrix_free(columnarFgIncrement);
 		gsl_matrix_free(peripodialFgIncrement);

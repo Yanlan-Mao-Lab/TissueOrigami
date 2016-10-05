@@ -6,7 +6,7 @@
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_math.h>
-
+#include <gsl/gsl_eigen.h>
 
 
 void 	ShapeBase::ParentErrorMessage(string functionName){
@@ -153,7 +153,7 @@ void ShapeBase::updateInternalViscosityTest(){
 
 
 double 	ShapeBase::getYoungModulus(){
-	return E;
+	return (actinMultiplier*E);
 }
 
 double 	ShapeBase::getPoissonRatio(){
@@ -667,7 +667,9 @@ void 	ShapeBase::setTissuePlacement(vector<Node*>& Nodes){
 	}
 }
 
-
+void ShapeBase::setECMMimicing(bool IsECMMimicing){
+	this->isECMMimicing = IsECMMimicing;
+}
 
 void 	ShapeBase::setTissueType(vector<Node*>& Nodes){
 	bool hasColumnarNode = false;
@@ -737,6 +739,14 @@ void ShapeBase::setYoungsModulus(double E){
 
 void ShapeBase::setViscosity(double viscosity){
 	this -> internalViscosity = viscosity;
+}
+
+void ShapeBase::setCellMigration(bool migratingBool){
+	cellsMigrating = migratingBool;
+}
+
+bool ShapeBase::getCellMigration(){
+	return cellsMigrating;
 }
 
 void ShapeBase::setViscosity(double viscosityApical,double viscosityBasal, double viscosityMid){
@@ -1034,6 +1044,26 @@ void 	ShapeBase::growShapeByFg(){
     gsl_matrix_free(tmpFgForInversion);
 }
 
+void ShapeBase::displayDebuggingMatrices(){
+	//double a = gsl_matrix_get(FeMatrices[0],0,0);
+	//if (a>(1.0+10E-4) || a <(1-1E-5) ){
+		cout<<" Prism "<<Id<<" rotatedGrowth: "<<rotatedGrowth<<endl;
+		displayMatrix(Fg, " Fg");
+		displayMatrix(FeMatrices[0], " FeMatrices[0]");
+		displayMatrix(FeMatrices[1], " FeMatrices[1]");
+		displayMatrix(FeMatrices[2], " FeMatrices[2]");
+		displayMatrix(GrowthStrainsRotMat, " GrowthStrainsRotMat");
+	//}
+}
+
+void ShapeBase::addMigrationIncrementToGrowthIncrement(gsl_matrix* migrationIncrement){
+		gsl_matrix* temp1 = gsl_matrix_calloc(3,3);
+		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, migrationIncrement,growthIncrement, 0.0, temp1);
+		gsl_matrix_memcpy(growthIncrement, temp1);
+		gsl_matrix_free( temp1 );
+}
+
+
 double 	ShapeBase::calculateCurrentGrownAndEmergentVolumes(){
 	calculateReferenceVolume();
 	double detFg = determinant3by3Matrix(Fg);
@@ -1045,7 +1075,133 @@ double 	ShapeBase::calculateCurrentGrownAndEmergentVolumes(){
 
 }
 
-void	ShapeBase::calculatePlasticDeformation(bool volumeConserved, double dt, double plasticDeformationHalfLife, double zRemodellingLowerThreshold, double zRemodellingUpperThreshold){
+void ShapeBase::calculateActinFeedback(double dt){
+	if (tissueType == 0 && tissuePlacement == 1){ //apical columnar layer element
+		gsl_matrix* Fe = gsl_matrix_calloc(3,3);
+		double weights[3] = {1.0/3.0,1.0/3.0,1.0/3.0};
+		for (int iter =0; iter<3;++iter){
+			gsl_matrix_add(Fe, FeMatrices[iter]);
+		}
+		gsl_matrix_scale(Fe,1.0/3.0);
+		//taking into account only x&y deformation
+		gsl_matrix_set(Fe,2,2,1.0);
+		double detFe = determinant3by3Matrix(Fe);
+		if (detFe > 0){
+			double eqActinMultiplier = 1 + (detFe -1)*10.0;
+			cout<<"Id: "<<Id<<" determinant of Fe: "<<detFe<<" eq Actin: "<<eqActinMultiplier<<" actin before update: "<<actinMultiplier<<" ";
+			double rate =1.0/3600 * dt;
+			if (rate > 1.0) {rate =1.0;}
+			actinMultiplier += rate* (eqActinMultiplier-actinMultiplier);
+			cout<<" actin after update: "<<actinMultiplier<<endl;
+			if (actinMultiplier < 1.0){
+				actinMultiplier = 1;
+			}
+		}
+		gsl_matrix_free(Fe);
+	}
+}
+
+void	ShapeBase::calculatePlasticDeformation3D(bool volumeConserved, double dt, double plasticDeformationHalfLife, double zRemodellingLowerThreshold, double zRemodellingUpperThreshold){
+	double e1 = 0.0, e2 = 0.0, e3 = 0.0, tet = 0.0;
+	gsl_matrix* eigenVec = gsl_matrix_calloc(3,3);
+
+	//by default, I will ignore z deformations for columnat tissue.
+	//If the element is mimicing an explicit ECM, then it should be able to deform in z too,.
+	//Linker zone elements are allowed to deform in z, as we have no information on what they are doing.
+	//They do change their z height, and grow in weord patterns. So let them be...
+	bool ignoreZ = true;
+	if(isECMMimicing || tissueType == 2){
+		ignoreZ = false;
+	}
+	calculatePrincipalStrains3D(ignoreZ,e1,e2,e3,eigenVec);
+	//NowI have the green strain in principal direction in the orientation of the element internal coordinats.
+	//I can simply grow the element in this axis, to obtain some form of plastic growth.
+	//the strain I have here is Green strain, I would like to convert it back to deformation
+	//gradient terms. Since  E = 1/2 *(Fe^T*Fe-I):
+	double Fxx = pow(e1*2+1,0.5);
+	double Fyy = pow(e2*2+1,0.5);
+	double Fzz = pow(e3*2+1,0.5);
+	//half life of plastic deformation:
+	//Maria's aspect ratio data shows, normalised to initial aspect ratio, if a tissue
+	//is stretched to an aspect ratio of 2.0, and relaxed in 20 minutes, it relaxes back to original shape.
+	//On the other hand, if it is stretched for 3 hr, it relaxed to an aspect ratio of 1.2.
+	//Then the elastic deformation gradient, starting from 2.0, relaxes to a values such that
+	//1.2 * Fe = 2.0 -> Fe = 1.6667. Then the deformation I am calculating decays from 1.0 to 0.66667
+	//N(0) = 1.0, N(3hr) = 0.66667, then this gives me
+	//a half life of 5.12 hr ( N(t) = N(0) * 2 ^ (-t/t_{1/2}) )
+	//This is the value set into modelinput file
+	double tau = plasticDeformationHalfLife/(log(2)); // (mean lifetime tau is half life / ln(2))
+	double Fxxt = (Fxx-1)*exp(-1.0*dt/tau) + 1;
+	double Fyyt = (Fyy-1)*exp(-1.0*dt/tau) + 1;
+	double Fzzt = (Fzz-1)*exp(-1.0*dt/tau) + 1;
+	Fxx = Fxx/Fxxt;
+	Fyy = Fyy/Fyyt;
+	Fzz = Fzz/Fzzt;
+	//writing onto an incremental matrix:
+	gsl_matrix*  increment = gsl_matrix_calloc(3,3);
+	gsl_matrix_set(increment,0,0,Fxx);
+	gsl_matrix_set(increment,1,1,Fyy);
+	gsl_matrix_set(increment,2,2,Fzz);
+	//If I am conserving the volume, I need to scale:
+	if (volumeConserved){
+		double det = determinant3by3Matrix(increment);
+		bool zCapped = false;
+		if (det>1 && zRemodellingSoFar<zRemodellingLowerThreshold){
+			//The remodelling is trying to enlarge the tissue.
+			//To conserve volume, I need to shrink all axes, keeping the ratio constant.
+			//This means the z height will be shrunk. But it has laready been shrunk to my threshold level.
+			//I have the z capped, I will scale only on x & y axes.
+			zCapped = true;
+		}
+		if (det<1 && zRemodellingSoFar>zRemodellingUpperThreshold){
+			//similar to above, not the remodelling is trying to shrink the tissue.
+			//To conserve the volume, I will need to enlarge all axes, keeping the ratio constant.
+			//I have already extended z axis to a large extent, I will not extend it any more.
+			//z is capped.
+			zCapped = true;
+		}
+		if (zCapped){
+			double scale = 1.0/pow (det,1.0/2.0); //scale the size with the square root of the determinant to keep the volume conserved. Then set z to 1 again, we do not want to affect z growth, remodelling is in x & y
+			gsl_matrix_scale(increment,scale);
+			gsl_matrix_set(increment,2,2,1);
+		}
+		else{
+			double scale = 1.0/pow (det,1.0/3.0); //scaling in x,y, and z
+			gsl_matrix_scale(increment,scale);
+			zRemodellingSoFar *= gsl_matrix_get(increment,2,2);
+		}
+		//if (Id == 0){
+		//	cout<<"element: "<<Id<<" principal strains: "<<e1<<" "<<e2<<" angle: "<<tet<<" in degrees: "<<tet/3.14*180<<" resulting scaled increment: "<<Fxx<<" "<<Fyy<<" Fxxt: "<<Fxxt<<" Fyyt: "<<Fyyt<<" zRemodellingSoFar: "<<zRemodellingSoFar<<" zCapped: "<<zCapped<<" det: "<<det<<endl;
+		//}
+	}
+	//The growth I would like to apply now is written on the increment.
+	//I would like to rotate the calculated incremental "growth" to be aligned with the coordinate
+	//system defined by the eigen vectors.
+	//In a growth setup, I calculate the rotationa matrix to be rotation by a certain angle.
+	//Here, the rotation matrix is the eigen vector matrix itself. The eigen vector matrix
+	//will rotate the identity matrix upon itself.
+
+	//gsl_matrix* rotMat  = gsl_matrix_calloc(3,3);
+	gsl_matrix* rotMatT = gsl_matrix_calloc(3,3);
+	gsl_matrix* temp = gsl_matrix_calloc(nDim,nDim);
+	gsl_matrix_transpose_memcpy(rotMatT,eigenVec);
+	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, eigenVec, increment, 0.0, temp);
+	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, temp, rotMatT, 0.0, plasticDeformationIncrement);
+	/*if (Id == -100043 ){
+		cout<<" Prism "<<Id<<" e1, e2, e3: "<<e1<<" "<<e2<<" "<<e3<<endl;
+		displayMatrix(plasticDeformationIncrement, " plasticDeformationIncrement");
+		displayMatrix(eigenVec," eigenVec");
+		cout<<"    Fxx,  Fyy,  Fzz : "<<Fxx<<" "<<Fyy<<" "<<Fzz<<endl;
+		cout<<"    Fxxt, Fyyt, Fzzt: "<<Fxxt<<" "<<Fyyt<<" "<<Fzzt<<endl;
+		cout<<"    plasticDeformationHalfLife: "<<plasticDeformationHalfLife<<" tau: "<<tau<<" exp(-1.0*dt/tau): "<<exp(-1.0*dt/tau)<<endl;
+	}*/
+	gsl_matrix_free(temp);
+	//gsl_matrix_free(rotMat);
+	gsl_matrix_free(rotMatT);
+	gsl_matrix_free(eigenVec);
+}
+
+void	ShapeBase::calculatePlasticDeformationOld(bool volumeConserved, double dt, double plasticDeformationHalfLife, double zRemodellingLowerThreshold, double zRemodellingUpperThreshold){
 	double e1 = 0.0, e2 = 0.0, tet = 0.0;
 	calculatePrincipalStrainAxesOnXYPlane(e1, e2, tet);
 	//NowI have the green strain in principal direction in the orientation of the element internal coordinats.
@@ -1110,7 +1266,6 @@ void	ShapeBase::calculatePlasticDeformation(bool volumeConserved, double dt, dou
 		//	cout<<"element: "<<Id<<" principal strains: "<<e1<<" "<<e2<<" angle: "<<tet<<" in degrees: "<<tet/3.14*180<<" resulting scaled increment: "<<Fxx<<" "<<Fyy<<" Fxxt: "<<Fxxt<<" Fyyt: "<<Fyyt<<" zRemodellingSoFar: "<<zRemodellingSoFar<<" zCapped: "<<zCapped<<" det: "<<det<<endl;
 		//}
 	}
-
 	//rotate the growth rate to be applied in the selected angle:
 	gsl_matrix*  rotMat = gsl_matrix_calloc(3,3);
 	gsl_matrix_set_identity(rotMat);
@@ -1130,48 +1285,21 @@ void	ShapeBase::calculatePlasticDeformation(bool volumeConserved, double dt, dou
 	gsl_matrix_transpose_memcpy(rotMatT,rotMat);
 	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, rotMat, increment, 0.0, temp);
 	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, temp, rotMatT, 0.0, plasticDeformationIncrement);
+	//Now if this is a lateral element, I need to rotate further to rotate back to normal coordinates from the tilted coordinates:
+	if (tissueType == 2 && ShapeType == 1){ //the matrix is only calculated for prisms of lateral tissue type
+		gsl_matrix* remodellingPlaneRotationMatrixT = gsl_matrix_calloc(3,3);
+		gsl_matrix* tmp = gsl_matrix_calloc(3,3);
+		gsl_matrix_transpose_memcpy(remodellingPlaneRotationMatrixT,remodellingPlaneRotationMatrix);
+
+		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, remodellingPlaneRotationMatrix, plasticDeformationIncrement, 0.0, tmp);
+		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, tmp, remodellingPlaneRotationMatrixT, 0.0, plasticDeformationIncrement);
+		gsl_matrix_free(remodellingPlaneRotationMatrixT);
+		gsl_matrix_free(tmp);
+	}
 	gsl_matrix_free(temp);
 	gsl_matrix_free(rotMat);
 	gsl_matrix_free(rotMatT);
 	gsl_matrix_free(increment);
-
-
-	/*gsl_matrix* TriPointFe = gsl_matrix_calloc(3,3);
-	gsl_matrix* FplasticIncrement = gsl_matrix_calloc(3,3);
-    gsl_matrix_set_identity(FplasticIncrement);
-    gsl_matrix_set_identity(TriPointFe);
-	double weights[3] = {1.0/3.0,1.0/3.0,1.0/3.0};
-	for (int iter =0; iter<3;++iter){
-		gsl_matrix* currFe =  gsl_matrix_calloc(3,3);
-		createMatrixCopy(currFe,FeMatrices[iter]);
-		gsl_matrix_scale(currFe,weights[iter]);
-		gsl_matrix_add(TriPointFe, currFe);
-	}
-	double p[3] = {gsl_matrix_get(TriPointFe,0,0),gsl_matrix_get(TriPointFe,1,1),gsl_matrix_get(TriPointFe,2,2)};
-	for (int i=0;i<3;++i){
-		p[i] -= 1.0;
-		p[i] *= rate;
-		p[i] += 1.0;
-		gsl_matrix_set(FplasticIncrement,i,i,p[i]);
-	}
-	if (volumeConserved){
-		double det = determinant3by3Matrix(FplasticIncrement);
-		double scale = 1.0/pow (det,1.0/3.0);
-		gsl_matrix_scale(FplasticIncrement,scale);
-	}
-	gsl_matrix* temp = gsl_matrix_calloc(3,3);
-    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, FplasticIncrement, Fplastic, 0.0, temp);
-    gsl_matrix_memcpy(Fplastic, temp);
-	gsl_matrix * tmpFplasticForInversion = gsl_matrix_calloc(3,3);
-	createMatrixCopy(tmpFplasticForInversion,Fplastic);
-	bool inverted = InvertMatrix(tmpFplasticForInversion, invFplastic);
-	if (!inverted){
-		cerr<<"Fplastic not inverted!!"<<endl;
-	}
-	gsl_matrix_free(FplasticIncrement);
-    gsl_matrix_free(TriPointFe);
-    gsl_matrix_free(temp);
-    gsl_matrix_free(tmpFplasticForInversion);*/
 }
 
 void 	ShapeBase::CalculateGrowthRotationByF(){
@@ -2635,15 +2763,73 @@ void	ShapeBase::updateUnipolarEquilibriumMyosinConcentration(bool isApical, doub
 	gsl_matrix_set(myoPolarityDir,indice,2,0.0);
 }
 
+void 	ShapeBase::calculatePrincipalStrains3D(bool ignoreZ, double& e1, double &e2,  double &e3, gsl_matrix* eigenVec){
+	gsl_matrix* Strain3D = gsl_matrix_calloc(3,3);
+	gsl_matrix_set(Strain3D,0,0, gsl_matrix_get(Strain,0,0));
+	gsl_matrix_set(Strain3D,1,1, gsl_matrix_get(Strain,1,0));
+	gsl_matrix_set(Strain3D,0,1, 0.5 * gsl_matrix_get(Strain,3,0));
+	gsl_matrix_set(Strain3D,1,0, 0.5 * gsl_matrix_get(Strain,3,0));
+	if (!ignoreZ){
+		gsl_matrix_set(Strain3D,2,2, gsl_matrix_get(Strain,2,0));
+		gsl_matrix_set(Strain3D,2,1, 0.5 * gsl_matrix_get(Strain,4,0));
+		gsl_matrix_set(Strain3D,1,2, 0.5 * gsl_matrix_get(Strain,4,0));
+		gsl_matrix_set(Strain3D,0,2, 0.5 * gsl_matrix_get(Strain,5,0));
+		gsl_matrix_set(Strain3D,2,0, 0.5 * gsl_matrix_get(Strain,5,0));
+	}
+	gsl_vector* eigenValues = gsl_vector_calloc(3);
+	gsl_eigen_symmv_workspace* w = gsl_eigen_symmv_alloc(3);
+	gsl_eigen_symmv(Strain3D, eigenValues, eigenVec, w);
+	gsl_eigen_symmv_free(w);
+	gsl_eigen_symmv_sort(eigenValues, eigenVec, GSL_EIGEN_SORT_ABS_ASC);
+	e1 = gsl_vector_get(eigenValues,0);
+	e2 = gsl_vector_get(eigenValues,1);
+	e3 = gsl_vector_get(eigenValues,2);
+	gsl_vector_free(eigenValues);
+
+}
+
 void 	ShapeBase::calculatePrincipalStrainAxesOnXYPlane(double& e1, double &e2, double& tet){
 	//principal strains:
 	//e1,e2 = (exx + eyy) /2  +- sqrt( ( (exx - eyy)/2 ) ^2 + exy ^2)
 	//extension is taken to be positive, therefore the most extended axis will be e1.
 	//angle of the strains (direction of e1):
 	// tan (2*tetha) = (2 exy ) / ( exx - eyy )
-	double exx = gsl_matrix_get(Strain,0,0);
-	double eyy = gsl_matrix_get(Strain,1,0);
-	double exy = gsl_matrix_get(Strain,3,0)/2.0;
+
+
+	//remodellingPlaneRotationMatrix
+	double exx, eyy, exy;
+	if (tissueType == 2 && ShapeType == 1){ //the matrix is only calculated for prisms of lateral tissue type
+		gsl_matrix* rotatedStrain = gsl_matrix_calloc(3,3);
+		gsl_matrix_set(rotatedStrain,0,0, gsl_matrix_get(Strain,0,0));
+		gsl_matrix_set(rotatedStrain,1,1, gsl_matrix_get(Strain,1,0));
+		gsl_matrix_set(rotatedStrain,2,2, gsl_matrix_get(Strain,2,0));
+		gsl_matrix_set(rotatedStrain,0,1, 0.5 * gsl_matrix_get(Strain,3,0));
+		gsl_matrix_set(rotatedStrain,1,0, 0.5 * gsl_matrix_get(Strain,3,0));
+		gsl_matrix_set(rotatedStrain,2,1, 0.5 * gsl_matrix_get(Strain,4,0));
+		gsl_matrix_set(rotatedStrain,1,2, 0.5 * gsl_matrix_get(Strain,4,0));
+		gsl_matrix_set(rotatedStrain,0,2, 0.5 * gsl_matrix_get(Strain,5,0));
+		gsl_matrix_set(rotatedStrain,2,0, 0.5 * gsl_matrix_get(Strain,5,0));
+
+		gsl_matrix* remodellingPlaneRotationMatrixT = gsl_matrix_calloc(3,3);
+		gsl_matrix* tmp = gsl_matrix_calloc(3,3);
+		gsl_matrix_transpose_memcpy(remodellingPlaneRotationMatrixT,remodellingPlaneRotationMatrix);
+
+		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, remodellingPlaneRotationMatrixT, rotatedStrain, 0.0, tmp);
+		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, tmp, remodellingPlaneRotationMatrix, 0.0, rotatedStrain);
+		exx = gsl_matrix_get(rotatedStrain,0,0);
+		eyy = gsl_matrix_get(rotatedStrain,1,1);
+		exy = gsl_matrix_get(rotatedStrain,	0,1);
+		gsl_matrix_free(rotatedStrain);
+		gsl_matrix_free(remodellingPlaneRotationMatrixT);
+		gsl_matrix_free(tmp);
+
+	}
+	else{
+		exx = gsl_matrix_get(Strain,0,0);
+		eyy = gsl_matrix_get(Strain,1,0);
+		exy = gsl_matrix_get(Strain,3,0)/2.0;
+	}
+
 	double difference = (exx - eyy)/2.0;
 	//double sumTerm = (exx + eyy) /2.0 ;
 	//double sqrootTerm = pow ( difference*difference +  exy*exy, 0.5);
@@ -2673,8 +2859,8 @@ void 	ShapeBase::calculatePrincipalStrainAxesOnXYPlane(double& e1, double &e2, d
 	gsl_matrix_set(newStrain,0,1,exy);
 	gsl_matrix_set(newStrain,1,0,exy);
 	gsl_matrix_set(newStrain,1,1,eyy);
-	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, Rot, newStrain, 0.0, tmp);
-	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, tmp, RotT, 0.0, newStrain);
+	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, RotT, newStrain, 0.0, tmp);
+	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, tmp, Rot, 0.0, newStrain);
 	e1 = gsl_matrix_get(newStrain,0,0);
 	e2 = gsl_matrix_get(newStrain,1,1);
 	//cout<<"Id: "<<Id<<" tan2Tet "<<tan2Tet<<" 2Tet "<<atan2(exy,difference)<<" tet: "<<tet;
@@ -3277,4 +3463,91 @@ void 	ShapeBase::doesElementNeedRefinement(double areaThreshold, int surfacedent
 	if (willBeRefined){
 		cout<<" Element "<<Id<<" will be  refined: "<<willBeRefined<<" apical area: "<<ApicalArea<<" basal area: "<<BasalArea<<endl;
 	}
+}
+
+void ShapeBase::setLateralElementsRemodellingPlaneRotationMatrix(double systemCentreX, double systemCentreY){
+	if(tissueType == 2){
+		if (ShapeType == 1){
+			//calculating the z vector I am interested in:
+			//rotation axis will be the axis in the xy plane, for a prism, this is the
+			//vector from node 0 to 3
+			double* rotAx = new double[3];
+			rotAx[0] = Positions[3][0] - Positions[0][0];
+			rotAx[1] = Positions[3][1] - Positions[0][1];
+			rotAx[2] = Positions[3][2] - Positions[0][2];
+			normaliseVector3D(rotAx);
+			//I rotation angle  will come from peripodialness. If peripodialness is 1, the angle is pi, if it is 0, the angle is 0.
+			//I will rotate the coordinates via y axis in psi degrees:
+			double psi = (-1.0) * peripodialGrowthWeight*M_PI;
+			double cosPsi = cos(psi);
+			double sinPsi = sin(psi);
+			double * rotMat = new double [9];
+			constructRotationMatrix(cosPsi, sinPsi, rotAx, rotMat);
+			for (int i=0; i<3; ++i){
+				for (int j=0; j<3;++j){
+					gsl_matrix_set(remodellingPlaneRotationMatrix,i,j,rotMat[i*3+j]);
+				}
+			}
+			//Now I will align the y vector with the rotation axis, so that all the elemetns of the system will be consistent:
+			//rotate the y unit vector with the matric to see where it will be:
+			gsl_matrix* y = gsl_matrix_calloc(3,1);
+			gsl_matrix* tmp = gsl_matrix_calloc(3,1);
+			gsl_matrix_set(tmp,1,0,1);
+			gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, remodellingPlaneRotationMatrix, tmp, 0.0, y);
+			//now fins the rotation you need to bring this y vector on top of rotation axis:
+			double c,s;
+			double* u = new double [3];
+			double* rotAx2 = new double [3];
+			u[0] = gsl_matrix_get(y,0,0);
+			u[1] = gsl_matrix_get(y,1,0);
+			u[2] = gsl_matrix_get(y,2,0);
+			//calculating the rotation angle between my current y vector and the rotation axis:
+			calculateRotationAngleSinCos(u, rotAx, c, s);
+			//calculating the corresponding rotation axis:
+			calculateRotationAxis(u, rotAx, rotAx2, c);
+			//The rotation axis will be equal to my new z axis, or 180 degrees rotated version
+			gsl_matrix* z = gsl_matrix_calloc(3,1);
+			gsl_matrix_set(tmp,0,0,0);
+			gsl_matrix_set(tmp,1,0,0);
+			gsl_matrix_set(tmp,2,0,1);
+			gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, remodellingPlaneRotationMatrix, tmp, 0.0, z);
+			double* v = new double[3];
+			v[0] = gsl_matrix_get(z,0,0);
+			v[1] = gsl_matrix_get(z,1,0);
+			v[2] = gsl_matrix_get(z,2,0);
+			double cRotAxes = dotProduct3D(rotAx2,v);
+			//If cosince is negative, then the rotation angle I am using should be altered as well tet -> (-tet)
+			//then cos tet = costet, sintet = -sintet
+			if (cRotAxes <0){
+				s *= (-1.0);
+			}
+			//now I can construct the rotation matrix:
+			constructRotationMatrix(c, s, v, rotMat);
+			//then write it on a gsl matrix and ad to current rotation matrix:
+			gsl_matrix* temRotMat = gsl_matrix_calloc(3,3);
+			for (int i=0; i<3; ++i){
+				for (int j=0; j<3;++j){
+					gsl_matrix_set(temRotMat,i,j,rotMat[i*3+j]);
+				}
+			}
+			gsl_matrix* tmp2 = gsl_matrix_calloc(3,3);
+			gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, temRotMat, remodellingPlaneRotationMatrix, 0.0, tmp2);
+		    createMatrixCopy(remodellingPlaneRotationMatrix,tmp2);
+			delete[] u;
+			delete[] v;
+			delete[] rotAx;
+			delete[] rotMat;
+			delete[] rotAx2;
+			gsl_matrix_free(tmp);
+			gsl_matrix_free(temRotMat);
+			gsl_matrix_free(tmp2);
+		}
+		else{
+			//this axis calculation will only work for prisms!!!
+			cout<<"Error! Trying to calculate remodellingPlaneRotationMatrix for non-prism element, update code, I will delte the matrix to make code break here!"<<endl;
+			cerr<<"Error! Trying to calculate remodellingPlaneRotationMatrix for non-prism element, update code, I will delte the matrix to make code break here!"<<endl;
+			gsl_matrix_free(remodellingPlaneRotationMatrix);
+		}
+	}
+	//This function should not have been called if the element is not a linker!
 }
