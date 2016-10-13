@@ -7,6 +7,9 @@ area constraint for side 3 -> 5.8
 area constraint for side 2 -> 2.6
 area constraint for side 0.7 -> 0.3
 
+format is shapetype r1-1 r1-2 r2-1 r2-2 z-height sidelength numberofzlayers Y-symmetricity
+
+
 Small 48 hours. The average is 85.56 to 54.6 microns. The cross point at 50 microns.
 Without taking the curve region into account this traslates to a shape of:
 35.56 50 27.3 27.3
@@ -87,6 +90,11 @@ cp Points.5.ele Points.1.ele
 cp Points.5.node Points.1.node
 ./EllipseFromOutline -1 12.5 2 5 1  ./inputOutlines/48hrDiscOutline
 cp MeshFile.out ./Exp48hr_08.mesh
+
+cp Points.5.ele Points.1.ele
+cp Points.5.node Points.1.node
+./EllipseFromOutline -1 15 2 6 1  ./inputOutlines/48hrDiscOutline
+cp MeshFile.out ./ECMMimic_08.mesh
 
 
 Large 48 hours. The average is 106.5 to 64.8 microns. The cross point at 64 microns.
@@ -293,3 +301,20 @@ cp Points.5.ele Points.1.ele
 cp Points.5.node Points.1.node
 ./EllipseFromOutline -1 12.5 2 5 1  ./inputOutlines/48hrDiscOutline
 cp MeshFile.out ./Ellipse48hr_08.mesh
+
+
+
+%%Ellipse for optic cup formation
+%%r1 and r2 are 100 and 75, without the curvature
+%%curvature is 30 microns, therefore r1 = 70 r2 = 45. Tissue thickness is 30
+./EllipseFromOutline 1 70 70 45 45 30 9 4 1  ./inputOutlines/ellipseOutline
+../triangle/triangle -rq33a27.44 Points.1
+%Now Points.2.ele is my mesh with side length 6.5
+
+./EllipseFromOutline -1 30 9 7 1  ./inputOutlines/ellipseOutline
+cp MeshFile.out ./OpticCup_01.mesh
+
+cp Points.2.ele Points.1.ele
+cp Points.2.node Points.1.node
+./EllipseFromOutline -1 30 6.5 7 1  ./inputOutlines/ellipseOutline
+cp MeshFile.out ./OpticCup_02.mesh

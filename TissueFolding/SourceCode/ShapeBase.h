@@ -139,7 +139,7 @@ protected:
 	double internalViscosity;
 	double originalInternalViscosity;
     double lambda, mu;
-    gsl_matrix* Fg;			///< Growth matrix
+
     gsl_matrix* InvFg;		///< Inverse of growth matrix
     gsl_matrix* Fsc;		///< Shape change matrix
     gsl_matrix* InvFsc;		///< Inverse of shape change matrix
@@ -149,6 +149,7 @@ protected:
 
 public:
     gsl_matrix*	remodellingPlaneRotationMatrix;			///< The rotation matrix converting the xyz coordinate system to the plane of remodelling for the lateral elements.
+    gsl_matrix* Fg;			///< Growth matrix
 
     int 	Id;
 	int		ShapeDim;
@@ -275,6 +276,7 @@ public:
 	void	updateUnipolarEquilibriumMyosinConcentration(bool isApical, double cEqUnipolar, double orientationX, double orientationY);
 	void	adjustCMyosinFromSave();
 	void	updateMyosinConcentration(double dt, double kMyo, bool thereIsMyosinFeedback, double MyosinFeedbackCap);
+	double  calculateVolumeForInputShapeStructure(double** shapePositions, int nTriangularFaces, int** triangularFaces, double* midPoint );
 	void 	calculatePrincipalStrains3D(bool ignoreZ, double& e1, double &e2,  double &e3, gsl_matrix* eigenVec);
 	void 	calculatePrincipalStrainAxesOnXYPlane(double& e1, double &e2, double& tet);
 	void	updateEquilibriumMyoWithFeedbackFromZero(double MyosinFeedbackCap);

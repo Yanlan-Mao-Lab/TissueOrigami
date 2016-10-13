@@ -39,6 +39,7 @@ CellMigration::~CellMigration(){
 	delete[] listOfGainedVolumePerStep;
 	delete[] listOfNumberOfNeigsEachElementSendsMaterialTo;
 	delete[] listOfNumberOfNeigsEachElementGetsMaterialFrom;
+	delete[] listOfRateFractions;
 }
 
 void CellMigration::assignElementRadialVectors(vector <ShapeBase*>& Elements){

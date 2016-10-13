@@ -470,7 +470,6 @@ int NewtonRaphsonSolver::solveWithPardiso(double* a, double*b, int* ia, int* ja,
 
     if (carryOutDebuggingChecks){
         pardiso_chkvec (&n, &nrhs, b, &error);
-
         if (error != 0) {
             printf("\nERROR  in right hand side: %d", error);
             exit(1);

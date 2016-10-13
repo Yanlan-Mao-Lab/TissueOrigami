@@ -291,63 +291,6 @@ void ShapeBase::calculateFgFromRates(double dt, double x, double y, double z, gs
 		gsl_matrix_set_identity(increment);
 	}
 }
-/*
-void ShapeBase::calculateFgFromGridCorners(double dt, GrowthFunctionBase* currGF, gsl_matrix* increment, int sourceTissue,  int IndexX, int IndexY, double FracX, double FracY){
-	double tissueWeight;
-	bool continueCalaculation = isGrowthRateApplicable(sourceTissue,tissueWeight);
-	if (continueCalaculation){
-		gsl_matrix* corner0 = gsl_matrix_calloc(3,3);
-		gsl_matrix* corner1 = gsl_matrix_calloc(3,3);
-		gsl_matrix* corner2 = gsl_matrix_calloc(3,3);
-		gsl_matrix* corner3 = gsl_matrix_calloc(3,3);
-		double growth0[3], growth1[3], growth2[3], growth3[3];
-		gsl_matrix* rotMat0;
-		gsl_matrix* rotMat1;
-		gsl_matrix* rotMat2;
-		gsl_matrix* rotMat3;
-		gsl_matrix* rotMatT = gsl_matrix_calloc(3,3);
-		for (int axis =0; axis<3; axis++){
-			growth0[axis] = currGF->getGrowthMatrixElement(IndexX,IndexY,axis)*tissueWeight*(1.0-FracX)*(1.0-FracY);
-			gsl_matrix_set(corner0,axis,axis,exp(growth0[axis]*dt));
-			growth1[axis] = currGF->getGrowthMatrixElement(IndexX+1,IndexY,axis)*tissueWeight*FracX*(1.0-FracY);
-			gsl_matrix_set(corner1,axis,axis,exp(growth1[axis]*dt));
-			growth2[axis] = currGF->getGrowthMatrixElement(IndexX,IndexY+1,axis)*tissueWeight*(1.0-FracX)*FracY;
-			gsl_matrix_set(corner2,axis,axis,exp(growth2[axis]*dt));
-			growth3[axis] = currGF->getGrowthMatrixElement(IndexX+1,IndexY+1,axis)*tissueWeight*FracX*FracY;
-			gsl_matrix_set(corner3,axis,axis,exp(growth3[axis]*dt));
-		}
-		rotMat0 = currGF->getXyShearRotationsMatrixElement(IndexX,IndexY);
-		rotMat1 = currGF->getXyShearRotationsMatrixElement(IndexX+1,IndexY);
-		rotMat2 = currGF->getXyShearRotationsMatrixElement(IndexX,IndexY+1);
-		rotMat3 = currGF->getXyShearRotationsMatrixElement(IndexX+1,IndexY+1);
-		gsl_matrix* temp = gsl_matrix_calloc(nDim,nDim);
-		gsl_matrix_transpose_memcpy(rotMatT,rotMat0);
-		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, rotMat0, corner0, 0.0, temp);
-		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, temp, rotMatT, 0.0, corner0);
-		gsl_matrix_transpose_memcpy(rotMatT,rotMat1);
-		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, rotMat1, corner1, 0.0, temp);
-		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, temp, rotMatT, 0.0, corner1);
-		gsl_matrix_transpose_memcpy(rotMatT,rotMat2);
-		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, rotMat2, corner2, 0.0, temp);
-		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, temp, rotMatT, 0.0, corner2);
-		gsl_matrix_transpose_memcpy(rotMatT,rotMat3);
-		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, rotMat3, corner3, 0.0, temp);
-		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, temp, rotMatT, 0.0, corner3);
-		//applying all the growhts to increment:
-		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, corner2, corner3, 0.0, increment);
-		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, corner1, increment, 0.0, temp);
-		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, corner0, temp, 0.0, increment);
-		gsl_matrix_free(temp);
-		gsl_matrix_free(corner0);
-		gsl_matrix_free(corner1);
-		gsl_matrix_free(corner2);
-		gsl_matrix_free(corner3);
-		gsl_matrix_free(rotMatT);
-	}
-	else{
-		gsl_matrix_set_identity(increment);
-	}
-}*/
 
 
 void ShapeBase::calculateFgFromGridCorners(int gridGrowthsInterpolationType, double dt, GrowthFunctionBase* currGF, gsl_matrix* increment, int sourceTissue,  int IndexX, int IndexY, double FracX, double FracY){
@@ -494,6 +437,12 @@ void ShapeBase::calculateFgFromGridCorners(int gridGrowthsInterpolationType, dou
 			cout<<endl;
 			displayMatrix(increment,"currIncrement");
 		}*/
+		delete[] growth0;
+		delete[] growth1;
+		delete[] growth2;
+		delete[] growth3;
+		delete[] angles;
+		delete[] angleEliminated;
 	}
 	else{
 		gsl_matrix_set_identity(increment);
@@ -519,10 +468,6 @@ void ShapeBase::updateGrowthIncrement(gsl_matrix* columnar, gsl_matrix* peripodi
 		GrowthRate[i] = gsl_matrix_get(growthIncrement,i,i);
 	}
 	gsl_matrix_free(temp);
-	//if (Id == 38 || Id == 39){
-	//	cout<<"Element: "<<Id<<endl;
-	//	displayMatrix(growthIncrement,"growthIncrement");
-	//}
 }
 
 
@@ -821,12 +766,23 @@ void 	ShapeBase::updateReferencePositionMatrixFromInput(double** inputPos){
 }
 
 bool	ShapeBase::readReferencePositionData(ifstream& file){
+	/*if (Id == 302){
+		cout<<" element: "<<Id<<" reference shape initial: "<<endl;
+		for (int i = 0; i<nNodes; ++i){
+			for (int j = 0; j<nDim; ++j){
+				cout<<ReferenceShape -> Positions[i][j]<<" ";
+			}
+			cout<<endl;
+		}
+		cout<<" reference shape updated: "<<endl;
+	}*/
+
 	for (int i = 0; i<nNodes; ++i){
 		for (int j = 0; j<nDim; ++j){
 			double savedPos;
 			file >> savedPos;
 			//cout<<i<<" "<<j<<" ReferenceShape->Positions: "<<ReferenceShape -> Positions[i][j]<<" savedPos "<<savedPos<<endl;
-
+			//if (Id == 302){cout<<savedPos<<" ";}
 			if (ReferenceShape -> Positions[i][j] != savedPos){
 				//the positions are not equal, it may be an issue of rounding, my satisfactory precision is 2%
 				float percentError = (ReferenceShape -> Positions[i][j] - savedPos) / ReferenceShape -> Positions[i][j]*100.0;
@@ -836,7 +792,9 @@ bool	ShapeBase::readReferencePositionData(ifstream& file){
 				}
 			}
 		}
+		//if (Id == 302){cout<<endl;}
 	}
+
 	return true;
 }
 
@@ -992,7 +950,7 @@ void 	ShapeBase::changeShapeByFsc(double dt){
     gsl_matrix* temp1 = gsl_matrix_calloc(nDim,nDim);
 	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, FscIncrement, Fsc, 0.0, temp1);
 	gsl_matrix_memcpy(Fsc, temp1);
-	gsl_matrix * tmpFscForInversion = gsl_matrix_calloc(nDim,nDim);
+	gsl_matrix* tmpFscForInversion = gsl_matrix_calloc(nDim,nDim);
 	createMatrixCopy(tmpFscForInversion,Fsc);
 	bool inverted = InvertMatrix(tmpFscForInversion, InvFsc);
 	if (!inverted){
@@ -1029,7 +987,7 @@ void 	ShapeBase::growShapeByFg(){
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, plasticDeformationIncrement,growthIncrement, 0.0, temp1);
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, temp1, Fg, 0.0, temp2);
     gsl_matrix_memcpy(Fg, temp2);
-    gsl_matrix * tmpFgForInversion = gsl_matrix_calloc(nDim,nDim);
+    gsl_matrix* tmpFgForInversion = gsl_matrix_calloc(nDim,nDim);
     createMatrixCopy(tmpFgForInversion,Fg);
     bool inverted = InvertMatrix(tmpFgForInversion, InvFg);
     if (!inverted){
@@ -1038,6 +996,11 @@ void 	ShapeBase::growShapeByFg(){
     double detFg = determinant3by3Matrix(Fg);
     GrownVolume = detFg*ReferenceShape->Volume;
     VolumePerNode = GrownVolume/nNodes;
+    /*if (Id == 302 || Id == 174 || Id == 345 || Id == 107){
+    	cout.precision(9);
+    	cout<<"Element: "<<Id<<" For simulationOnTheGo, detFg: "<<detFg<<endl;
+    	displayMatrix(Fg,"FgForDebugging");
+    }*/
     //freeing matrices allocated in this function
     gsl_matrix_free(temp1);
     gsl_matrix_free(temp2);
@@ -1068,6 +1031,10 @@ double 	ShapeBase::calculateCurrentGrownAndEmergentVolumes(){
 	calculateReferenceVolume();
 	double detFg = determinant3by3Matrix(Fg);
     GrownVolume = detFg*ReferenceShape->Volume;
+    /*if (Id == 302){
+    	cout<<"Element: "<<Id<<" For displaySave, detFg: "<<detFg<<endl;
+    	displayMatrix(Fg,"FgForDebugging");
+    }*/
 	calculateTriPointFForRatation();
 	double detF =determinant3by3Matrix(TriPointF);
 	double emergentVolume = detF*ReferenceShape->Volume;
@@ -1104,7 +1071,6 @@ void ShapeBase::calculateActinFeedback(double dt){
 void	ShapeBase::calculatePlasticDeformation3D(bool volumeConserved, double dt, double plasticDeformationHalfLife, double zRemodellingLowerThreshold, double zRemodellingUpperThreshold){
 	double e1 = 0.0, e2 = 0.0, e3 = 0.0, tet = 0.0;
 	gsl_matrix* eigenVec = gsl_matrix_calloc(3,3);
-
 	//by default, I will ignore z deformations for columnat tissue.
 	//If the element is mimicing an explicit ECM, then it should be able to deform in z too,.
 	//Linker zone elements are allowed to deform in z, as we have no information on what they are doing.
@@ -1187,18 +1153,20 @@ void	ShapeBase::calculatePlasticDeformation3D(bool volumeConserved, double dt, d
 	gsl_matrix_transpose_memcpy(rotMatT,eigenVec);
 	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, eigenVec, increment, 0.0, temp);
 	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, temp, rotMatT, 0.0, plasticDeformationIncrement);
-	/*if (Id == -100043 ){
+	/*if (Id == 345 || Id == 174 ){
 		cout<<" Prism "<<Id<<" e1, e2, e3: "<<e1<<" "<<e2<<" "<<e3<<endl;
 		displayMatrix(plasticDeformationIncrement, " plasticDeformationIncrement");
 		displayMatrix(eigenVec," eigenVec");
 		cout<<"    Fxx,  Fyy,  Fzz : "<<Fxx<<" "<<Fyy<<" "<<Fzz<<endl;
 		cout<<"    Fxxt, Fyyt, Fzzt: "<<Fxxt<<" "<<Fyyt<<" "<<Fzzt<<endl;
 		cout<<"    plasticDeformationHalfLife: "<<plasticDeformationHalfLife<<" tau: "<<tau<<" exp(-1.0*dt/tau): "<<exp(-1.0*dt/tau)<<endl;
+		displayMatrix(Fg,"FgBeforeUpdateByPlasticity");
+		displayMatrix(Strain,"Strain");
 	}*/
 	gsl_matrix_free(temp);
-	//gsl_matrix_free(rotMat);
 	gsl_matrix_free(rotMatT);
 	gsl_matrix_free(eigenVec);
+	gsl_matrix_free(increment);
 }
 
 void	ShapeBase::calculatePlasticDeformationOld(bool volumeConserved, double dt, double plasticDeformationHalfLife, double zRemodellingLowerThreshold, double zRemodellingUpperThreshold){
@@ -1334,6 +1302,7 @@ void 	ShapeBase::calculateTriPointFForRatation(){
         gsl_matrix_scale(currF,weights[iter]);
         gsl_matrix_add(TriPointF, currF);
     }
+    gsl_matrix_free(currF);
 }
 
 bool 	ShapeBase::disassembleRotationMatrixForZ(gsl_matrix* rotMat){
@@ -1377,11 +1346,11 @@ bool 	ShapeBase::disassembleRotationMatrixForZ(gsl_matrix* rotMat){
 
 bool 	ShapeBase::calculate3DRotMatFromF(gsl_matrix* rotMat){
     //if (Id == 0) {displayMatrix(TriPointF,"TriPointF");}
-    gsl_matrix * Sgsl = gsl_matrix_alloc (3, 3);
-    gsl_matrix * V = gsl_matrix_alloc (3, 3);
-    gsl_matrix * R = gsl_matrix_alloc (3, 3);
-    gsl_vector * Sig = gsl_vector_alloc (3);
-    gsl_vector * workspace = gsl_vector_alloc (3);
+    gsl_matrix* Sgsl = gsl_matrix_alloc (3, 3);
+    gsl_matrix* V = gsl_matrix_alloc (3, 3);
+    gsl_matrix* R = gsl_matrix_alloc (3, 3);
+    gsl_vector* Sig = gsl_vector_alloc (3);
+    gsl_vector* workspace = gsl_vector_alloc (3);
     createMatrixCopy (Sgsl,TriPointF);
     //Singular Value Decomposition of covariance matrix S
     (void) gsl_linalg_SV_decomp (Sgsl, V, Sig, workspace); //This function does have a return value, but I do not need to use it, hence cast it to void!
@@ -1498,10 +1467,10 @@ double 	ShapeBase::determinant3by3Matrix(boost::numeric::ublas::matrix<double>& 
 
 double 	ShapeBase::determinant3by3Matrix(gsl_matrix* Mat){
     double det =0.0;
-    gsl_matrix_get(Mat,0,0);
-    det  =  gsl_matrix_get(Mat,0,0)*(gsl_matrix_get(Mat,1,1)*gsl_matrix_get(Mat,2,2)-gsl_matrix_get(Mat,1,2)*gsl_matrix_get(Mat,2,1));
-    det -= gsl_matrix_get(Mat,0,1)*(gsl_matrix_get(Mat,1,0)*gsl_matrix_get(Mat,2,2)-gsl_matrix_get(Mat,1,2)*gsl_matrix_get(Mat,2,0));
-    det += gsl_matrix_get(Mat,0,2)*(gsl_matrix_get(Mat,1,0)*gsl_matrix_get(Mat,2,1)-gsl_matrix_get(Mat,1,1)*gsl_matrix_get(Mat,2,0));
+
+    det  = gsl_matrix_get(Mat,0,0)* ( gsl_matrix_get(Mat,1,1)*gsl_matrix_get(Mat,2,2)-gsl_matrix_get(Mat,1,2)*gsl_matrix_get(Mat,2,1) );
+    det -= gsl_matrix_get(Mat,0,1)* ( gsl_matrix_get(Mat,1,0)*gsl_matrix_get(Mat,2,2)-gsl_matrix_get(Mat,1,2)*gsl_matrix_get(Mat,2,0) );
+    det += gsl_matrix_get(Mat,0,2)* ( gsl_matrix_get(Mat,1,0)*gsl_matrix_get(Mat,2,1)-gsl_matrix_get(Mat,1,1)*gsl_matrix_get(Mat,2,0) );
     return det;
 }
 double 	ShapeBase::determinant2by2Matrix(boost::numeric::ublas::matrix<double>& Mat){
@@ -1584,6 +1553,7 @@ void  ShapeBase::rotateReferenceElementByRotationMatrix(double* rotMat){
 		for (int j=0; j<nDim; ++j){
 			ReferenceShape->Positions[i][j] = u[j];
 		}
+		delete[] u;
 	}
 }
 
@@ -1630,7 +1600,6 @@ void	ShapeBase::calculateForces3D(vector <Node*>& Nodes,  gsl_matrix* displaceme
     int dim = nDim;
     int n = nNodes;
     //calculating F and B in a 3 point gaussian:
-
     gsl_matrix* TriPointge  = gsl_matrix_calloc(dim*n,1);
     gsl_matrix* TriPointgv  = gsl_matrix_calloc(dim*n,1);
     gsl_matrix_set_zero(TriPointF);
@@ -1652,8 +1621,6 @@ void	ShapeBase::calculateForces3D(vector <Node*>& Nodes,  gsl_matrix* displaceme
         gsl_matrix_add(TriPointgv, currgv);
         gsl_matrix_scale(currF,weights[iter]);
         gsl_matrix_add(TriPointF, currF);
-        //displayMatrix(currg,"currg");
-        //if (Id == 0) {displayMatrix(currgv,"currgv");}
     }
     int counter = 0;
     for (int i = 0; i<nNodes; ++i){
@@ -1672,22 +1639,6 @@ void	ShapeBase::calculateForces3D(vector <Node*>& Nodes,  gsl_matrix* displaceme
 				counter++;
             }
     }
-    //cout<<"Element: "<<Id<<endl;
-    //displayMatrix(ElementalElasticSystemForces,"ElementalElasticSystemForces");
-/*
-    int counter = 0;
-    for (int i = 0; i<nNodes; ++i){
-        for (int j = 0; j<nDim; ++j){
-            if (!Nodes[NodeIds[i]]->FixedPos[j]){
-                SystemForces[NodeIds[i]][j] = SystemForces[NodeIds[i]][j] - gsl_matrix_get(TriPointg,counter,0);
-            }
-            else if(recordForcesOnFixedNodes){
-                FixedNodeForces[NodeIds[i]][j] = FixedNodeForces[NodeIds[i]][j] - gsl_matrix_get(TriPointg,counter,0);
-            }
-            counter++;
-        }
-    }
-*/
     //freeing matrices allocated in this function
     gsl_matrix_free(TriPointge);
     gsl_matrix_free(TriPointgv);
@@ -1701,16 +1652,16 @@ void	ShapeBase::calculateForces3D(vector <Node*>& Nodes,  gsl_matrix* displaceme
 
 gsl_matrix* ShapeBase::calculateCauchyGreenDeformationTensor(gsl_matrix* Fe, gsl_matrix* FeT){
 	//calculating C (C = (Fe^T*Fe):
-	gsl_matrix * C =  gsl_matrix_alloc(nDim, nDim);
+	gsl_matrix* C =  gsl_matrix_alloc(nDim, nDim);
 	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, FeT, Fe,0.0, C);
 	return C;
 }
 
 gsl_matrix* ShapeBase::calculateEForNodalForcesKirshoff(gsl_matrix* C){
     //calculating E ( E = 1/2 *(Fe^T*Fe-I) ; E = 1/2 *(C-I):):
-    gsl_matrix * E =  gsl_matrix_alloc(nDim, nDim);
+    gsl_matrix* E =  gsl_matrix_alloc(nDim, nDim);
 	createMatrixCopy(E,C);
-    gsl_matrix * I = gsl_matrix_alloc(nDim, nDim);
+    gsl_matrix* I = gsl_matrix_alloc(nDim, nDim);
     gsl_matrix_set_identity(I);
     gsl_matrix_sub(E,I);
     gsl_matrix_scale(E, 0.5);
@@ -1730,7 +1681,7 @@ gsl_matrix* ShapeBase::calculateSForNodalForcesKirshoff(gsl_matrix* E){
     gsl_matrix_set(Strain,5,0, 2.0*gsl_matrix_get(E,0,2));
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, D, Strain,0.0, compactS);
 
-    gsl_matrix * S =  gsl_matrix_alloc(nDim, nDim);
+    gsl_matrix* S =  gsl_matrix_alloc(nDim, nDim);
     gsl_matrix_set(S,0,0,gsl_matrix_get(compactS,0,0));
     gsl_matrix_set(S,1,1,gsl_matrix_get(compactS,1,0));
     gsl_matrix_set(S,2,2,gsl_matrix_get(compactS,2,0));
@@ -1747,15 +1698,16 @@ gsl_matrix* ShapeBase::calculateSForNodalForcesKirshoff(gsl_matrix* E){
 
 gsl_matrix* ShapeBase::calculateSForNodalForcesNeoHookean(gsl_matrix* invC, double lnJ){
 	//S = mu (I - C^-1) + lambda (lnJ) C^-1
-	gsl_matrix * S =  gsl_matrix_alloc(nDim, nDim);
+	gsl_matrix* S =  gsl_matrix_alloc(nDim, nDim);
 	createMatrixCopy(S,invC);
 	//displayMatrix(S,"S1");
-	gsl_matrix * I = gsl_matrix_alloc(nDim, nDim);
+	gsl_matrix* I = gsl_matrix_alloc(nDim, nDim);
 	gsl_matrix_set_identity(I);
     gsl_matrix_sub(I,invC);  //(I - C^-1)
     gsl_matrix_scale(I, mu); // mu (I - C^-1)
     gsl_matrix_scale(S, lambda*lnJ); //lambda (lnJ) C^-1
     gsl_matrix_add(S,I); // mu (I - C^-1) + lambda (lnJ) C^-1
+    gsl_matrix_free(I);
 	return S;
 }
 
@@ -1780,12 +1732,12 @@ void ShapeBase::updateLagrangianElasticityTensorNeoHookean(gsl_matrix* invC, dou
 gsl_matrix* ShapeBase::calculateCompactStressForNodalForces(double detFe, gsl_matrix* Fe, gsl_matrix* S, gsl_matrix* FeT, gsl_matrix* Stress){
     //calculating stress (stress = detFe^-1 Fe S Fe^T):
     //double detFe = determinant3by3Matrix(Fe);
-    gsl_matrix * tmpMat1 =  gsl_matrix_calloc(nDim, nDim);
+    gsl_matrix* tmpMat1 =  gsl_matrix_calloc(nDim, nDim);
     //cout<<"detFe: "<<detFe<<endl;
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, Fe, S,0.0, tmpMat1);
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, tmpMat1, FeT,0.0, Stress);
     gsl_matrix_scale(Stress, 1.0/detFe);
-    gsl_matrix * compactStress =  gsl_matrix_calloc(6,1);
+    gsl_matrix* compactStress =  gsl_matrix_calloc(6,1);
     gsl_matrix_set(compactStress,0,0,gsl_matrix_get(Stress,0,0));
     gsl_matrix_set(compactStress,1,0,gsl_matrix_get(Stress,1,1));
     gsl_matrix_set(compactStress,2,0,gsl_matrix_get(Stress,2,2));
@@ -1802,7 +1754,7 @@ void ShapeBase::calculateInvJShFuncDerSWithFe(gsl_matrix* currFe, gsl_matrix* In
 	// Je InvDXde = Fe
 	// but I can also get InvJe directly from:
 	// InvJe Je InvdXde = InvJe Fe => I InvdXde = InvJe Fe => InvdXde InvFe = InvJe I => InvJe = InvdXde InvFe
-	gsl_matrix * tmpFeforInversion =  gsl_matrix_calloc(nDim,nDim);
+	gsl_matrix* tmpFeforInversion =  gsl_matrix_calloc(nDim,nDim);
 	gsl_matrix* InvFe = gsl_matrix_calloc(nDim,nDim);
 	gsl_matrix* InvJe = gsl_matrix_calloc(nDim,nDim);
 	createMatrixCopy(tmpFeforInversion,currFe);
@@ -1814,7 +1766,7 @@ void ShapeBase::calculateInvJShFuncDerSWithFe(gsl_matrix* currFe, gsl_matrix* In
 
 	int dim2 = nDim*nDim;
 	//Generating the inverse Jacobian(elastic) stack:
-	gsl_matrix * InvJacobianElasticStack =  gsl_matrix_calloc(dim2,dim2);
+	gsl_matrix* InvJacobianElasticStack =  gsl_matrix_calloc(dim2,dim2);
 	for (int i =0; i<nDim; i++){
 		for (int m=0; m<nDim; ++m){
 			for (int n=0; n<3; ++n){
@@ -1848,7 +1800,7 @@ gsl_matrix* ShapeBase::calculateBTforNodalForces(gsl_matrix* InvJacobianStack, g
     //displayMatrix(ShapeFuncDerivatives[2],"ShapeFuncDerivatives[2]");
 
     //generating B^T:
-    gsl_matrix * BT = gsl_matrix_alloc(nNodes*nDim,6);
+    gsl_matrix* BT = gsl_matrix_alloc(nNodes*nDim,6);
     gsl_matrix_transpose_memcpy(BT,B);
     //displayMatrix(BT,"BT");
     //gsl_matrix_free(tmpMat2);
@@ -1867,7 +1819,7 @@ gsl_matrix* ShapeBase::calculateInverseJacobianStackForNodalForces(gsl_matrix* J
     }
     //displayMatrix(Jacobian,"Jacobian");
     //Generating the inverse Jacobian stack:
-    gsl_matrix * InvJacobianStack =  gsl_matrix_calloc(dim2,dim2);
+    gsl_matrix* InvJacobianStack =  gsl_matrix_calloc(dim2,dim2);
     for (int i =0; i<nDim; i++){
         for (int m=0; m<nDim; ++m){
             for (int n=0; n<3; ++n){
@@ -2066,7 +2018,7 @@ void ShapeBase::calculateViscousForces(gsl_matrix*  gv, gsl_matrix*  BTdetFdetdX
 	 * Procedure:
 	 * - Allocate the memory for stress in Voigt notation
 	 * */
-	gsl_matrix * compactStress =  gsl_matrix_calloc(6,1);
+	gsl_matrix* compactStress =  gsl_matrix_calloc(6,1);
 	/**
 	 * - Write stress in Voigt notation
 	 */
@@ -2153,7 +2105,6 @@ void ShapeBase::calculateImplicitKViscous(gsl_matrix* displacementPerDt, double 
 			//calculate the velocity gradient:
 			calculateVelocityGradient(velocityGradient, displacementPerDt, iter);
 			//calculate ( I / dt - velocityGradient) for first term:
-			gsl_matrix* paranthesisTermForKv1 = gsl_matrix_alloc(nDim,nDim);
 			//set the term to identity:
 			gsl_matrix_set_identity(paranthesisTermForKv1);
 			//divide the term by dt to obtain I/dt:
@@ -2241,13 +2192,12 @@ void	ShapeBase::calculateForceFromStress(int nodeId, gsl_matrix* Externalstress,
         gsl_matrix_add(ExternalNodalForces,NodeForces);
         gsl_matrix_free(BaT);
         gsl_matrix_free(Bb);
+        gsl_matrix_free(NodeForces);
     }
     //displayMatrix(ExternalNodalForces,"ExternalNodalForces");
 }
 void	ShapeBase::calculateElasticKIntegral1(gsl_matrix* currElementalK,int pointNo){
-    gsl_matrix * invJShFuncDerS = invJShapeFuncDerStack[pointNo];
-    //gsl_matrix * invJShFuncDerSWithFe = invJShapeFuncDerStackwithFe[pointNo];
-
+    gsl_matrix* invJShFuncDerS = invJShapeFuncDerStack[pointNo];
     double detF = detFs[pointNo];
     double detdXde = detdXdes[pointNo];
     gsl_matrix* Fe = FeMatrices[pointNo];
@@ -2306,21 +2256,21 @@ void	ShapeBase::calculateElasticKIntegral1(gsl_matrix* currElementalK,int pointN
 
 
 void	ShapeBase::calculateElasticKIntegral2(gsl_matrix* currElementalK,int pointNo){
-    gsl_matrix * invJShFuncDerS = invJShapeFuncDerStack[pointNo];
-    gsl_matrix * Stress = elasticStress[pointNo];
+    gsl_matrix* invJShFuncDerS = invJShapeFuncDerStack[pointNo];
+    gsl_matrix* Stress = elasticStress[pointNo];
     double detF = detFs[pointNo];
     double detdXde = detdXdes[pointNo];
 
-    gsl_matrix * DNaT = gsl_matrix_calloc(1,nDim);
-    gsl_matrix * DNb = gsl_matrix_calloc(nDim,1);
-    gsl_matrix * Keab2 = gsl_matrix_calloc(1,1);
+    gsl_matrix* DNaT = gsl_matrix_calloc(1,nDim);
+    gsl_matrix* DNb = gsl_matrix_calloc(nDim,1);
+    gsl_matrix* Keab2 = gsl_matrix_calloc(1,1);
     for (int a =0; a<nNodes; ++a){
         for (int b=0; b<nNodes; ++b){
             for (int i=0;i<nDim;++i){
                 gsl_matrix_set(DNaT,0,i,gsl_matrix_get(invJShFuncDerS,i,nDim*a));
                 gsl_matrix_set(DNb,i,0,gsl_matrix_get(invJShFuncDerS,i,nDim*b));
             }
-            gsl_matrix * tmp1 = gsl_matrix_calloc(1,nDim);
+            gsl_matrix* tmp1 = gsl_matrix_calloc(1,nDim);
             gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, DNaT, Stress,0.0, tmp1);
             gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, tmp1, DNb,0.0, Keab2);
             double value = gsl_matrix_get(Keab2,0,0)*detF*detdXde;
@@ -2339,11 +2289,11 @@ void	ShapeBase::calculateElasticKIntegral2(gsl_matrix* currElementalK,int pointN
 }
 
 void ShapeBase::calculateVelocityGradient( gsl_matrix* velocityGradient, gsl_matrix* displacementPerDt, int pointNo){
-	gsl_matrix * invJShFuncDerS = invJShapeFuncDerStack[pointNo];
+	gsl_matrix* invJShFuncDerS = invJShapeFuncDerStack[pointNo];
 	for (int c=0; c<nNodes; ++c){
 		gsl_matrix* delVc = gsl_matrix_calloc(nDim,nDim);
 		//get \DelNc^T
-		gsl_matrix * DNc = gsl_matrix_calloc(nDim,1);
+		gsl_matrix* DNc = gsl_matrix_calloc(nDim,1);
 		for (int i=0;i<nDim;++i){
 			gsl_matrix_set(DNc,i,0,gsl_matrix_get(invJShFuncDerS,i,nDim*c));
 		}
@@ -2368,7 +2318,6 @@ void ShapeBase::calculateVelocityGradient( gsl_matrix* velocityGradient, gsl_mat
 }
 
 void ShapeBase::calculateViscousKIntegral1(gsl_matrix* currElementalK, gsl_matrix* paranthesisTermForKv1, int pointNo){
-//	gsl_matrix * invJShFuncDerS = invJShapeFuncDerStack[pointNo];
 	gsl_matrix* BaT = gsl_matrix_calloc(nDim,6);
     gsl_matrix* Bb = gsl_matrix_calloc(6,nDim);
     gsl_matrix* BaTBb = gsl_matrix_calloc(nDim,nDim);
@@ -2432,11 +2381,11 @@ void ShapeBase::calculateViscousKIntegral1(gsl_matrix* currElementalK, gsl_matri
 }
 
 void ShapeBase::calculateViscousKIntegral2(gsl_matrix* currElementalK,int pointNo){
-    gsl_matrix * invJShFuncDerS = invJShapeFuncDerStack[pointNo];
-    gsl_matrix * Stress = viscousStress[pointNo];
-    gsl_matrix * DNa = gsl_matrix_calloc(nDim,1);
-    gsl_matrix * DNb = gsl_matrix_calloc(nDim,1);
-    gsl_matrix * KvabInt2 = gsl_matrix_calloc(nDim,nDim);
+    gsl_matrix* invJShFuncDerS = invJShapeFuncDerStack[pointNo];
+    gsl_matrix* Stress = viscousStress[pointNo];
+    gsl_matrix* DNa = gsl_matrix_calloc(nDim,1);
+    gsl_matrix* DNb = gsl_matrix_calloc(nDim,1);
+    gsl_matrix* KvabInt2 = gsl_matrix_calloc(nDim,nDim);
     for (int a =0; a<nNodes; ++a){
         for (int b=0; b<nNodes; ++b){
             for (int i=0;i<nDim;++i){
@@ -2481,6 +2430,7 @@ void ShapeBase::calculateViscousKIntegral2(gsl_matrix* currElementalK,int pointN
 			}
             gsl_matrix_free(DNaDNbOuterProduct);
             gsl_matrix_free(DNbDNaOuterProduct);
+            gsl_matrix_free(paranthesisTerm);
         }
     }
     gsl_matrix_free(DNa);
@@ -2506,7 +2456,7 @@ void	ShapeBase::calculateOuterProduct(gsl_matrix* a, gsl_matrix* b, gsl_matrix* 
 	if ((int) b->size2 != size2){
 		cerr<<"matrix dimension mismatch in outer product calculation"<<endl;
 	}
-	gsl_matrix * bT = gsl_matrix_calloc(size2,size1);
+	gsl_matrix* bT = gsl_matrix_calloc(size2,size1);
 	gsl_matrix_transpose_memcpy (bT,b);
 	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, a, bT,0.0, outerProduct);
 	gsl_matrix_free(bT);
@@ -2522,20 +2472,15 @@ gsl_matrix*	ShapeBase::calculateSymmetricisedTensorProduct(gsl_matrix* a, gsl_ma
 	if ((int) b->size2 != size2){
 		cerr<<"matrix dimension mismatch in symmetricised outer product calculation"<<endl;
 	}
-	//generating the transposes:
-	//gsl_matrix * aT = gsl_matrix_calloc(size2,size1);
-	//gsl_matrix * bT = gsl_matrix_calloc(size2,size1);
-	//gsl_matrix_transpose_memcpy (aT,a);
-	//gsl_matrix_transpose_memcpy (bT,b);
 	//calculating individual outer products a x b = a bT
-	gsl_matrix * abOuterProduct = gsl_matrix_calloc(size1,size1);
+	gsl_matrix* abOuterProduct = gsl_matrix_calloc(size1,size1);
 	calculateOuterProduct(a,b,abOuterProduct);
 	//gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, a, bT,0.0, abOuterProduct);
-	gsl_matrix * baOuterProduct = gsl_matrix_calloc(size1,size1);
+	gsl_matrix* baOuterProduct = gsl_matrix_calloc(size1,size1);
 	calculateOuterProduct(b,a,abOuterProduct);
 	//gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, b, aT,0.0, baOuterProduct);
 	//calculating the averaged contraction term:
-	gsl_matrix * averagedContraction = gsl_matrix_calloc(size1,size1);
+	gsl_matrix* averagedContraction = gsl_matrix_calloc(size1,size1);
 	gsl_matrix_add(averagedContraction,abOuterProduct);
 	gsl_matrix_add(averagedContraction,baOuterProduct);
 	gsl_matrix_scale(averagedContraction,0.5);
@@ -2785,7 +2730,44 @@ void 	ShapeBase::calculatePrincipalStrains3D(bool ignoreZ, double& e1, double &e
 	e2 = gsl_vector_get(eigenValues,1);
 	e3 = gsl_vector_get(eigenValues,2);
 	gsl_vector_free(eigenValues);
+	gsl_matrix_free(Strain3D);
+}
 
+double  ShapeBase::calculateVolumeForInputShapeStructure(double** shapePositions, int nTriangularFaces, int** triangularFaces, double* midPoint ){
+	double totalVolume = 0;
+	for (int i = 0; i<nTriangularFaces; ++i){
+	//calculateTetrahedraVolume:
+	int node0 = triangularFaces[i][0];
+	int node1 = triangularFaces[i][1];
+	int node2 = triangularFaces[i][2];
+	double* vec1 = new double [(const int) nDim];
+	double* vec2 = new double [(const int) nDim];
+	double* vecMid = new double [(const int) nDim];
+	for (int j=0 ;j < nDim; ++j){
+			vec1   [j] = shapePositions[node1][j] - shapePositions[node0][j];
+			vec2   [j] = shapePositions[node2][j] - shapePositions[node0][j];
+			vecMid [j] = midPoint[j] - shapePositions[node0][j];
+	}
+	double* baseVec = new double [(const int) nDim];
+	crossProduct3D(vec1,vec2,baseVec);
+	double normBaseVec= calculateMagnitudeVector3D (baseVec);
+	double baseArea= normBaseVec/2;
+	if (i == 0){
+		ReferenceShape->BasalArea = baseArea;
+	}
+	double height = dotProduct3D(vecMid,baseVec) / normBaseVec;
+	if (height <0){
+		height *= (-1.0);
+	}
+	double currVolume = 1.0/3.0 *(height *baseArea);
+	totalVolume += currVolume;
+	delete[] vec1;
+	delete[] vec2;
+	delete[] vecMid;
+	delete[] baseVec;
+}
+
+return totalVolume;
 }
 
 void 	ShapeBase::calculatePrincipalStrainAxesOnXYPlane(double& e1, double &e2, double& tet){
@@ -3501,6 +3483,7 @@ void ShapeBase::setLateralElementsRemodellingPlaneRotationMatrix(double systemCe
 			u[0] = gsl_matrix_get(y,0,0);
 			u[1] = gsl_matrix_get(y,1,0);
 			u[2] = gsl_matrix_get(y,2,0);
+			gsl_matrix_free(y);
 			//calculating the rotation angle between my current y vector and the rotation axis:
 			calculateRotationAngleSinCos(u, rotAx, c, s);
 			//calculating the corresponding rotation axis:
@@ -3515,6 +3498,7 @@ void ShapeBase::setLateralElementsRemodellingPlaneRotationMatrix(double systemCe
 			v[0] = gsl_matrix_get(z,0,0);
 			v[1] = gsl_matrix_get(z,1,0);
 			v[2] = gsl_matrix_get(z,2,0);
+			gsl_matrix_free(z);
 			double cRotAxes = dotProduct3D(rotAx2,v);
 			//If cosince is negative, then the rotation angle I am using should be altered as well tet -> (-tet)
 			//then cos tet = costet, sintet = -sintet

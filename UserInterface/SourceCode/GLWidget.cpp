@@ -536,6 +536,18 @@ void GLWidget::highlightNode(int i){
 			NodeColours[j][2]=currColour[2];
 			delete[] currColour;
 		}
+		else if (Sim01->thereIsExplicitECM && Sim01->Elements[i]->isECMMimicing){
+			if(!DisplayStrains && !DisplayPysProp && !drawNetForces && !drawPackingForces && !drawMyosinForces){
+				NodeColours[j][0]=0.6;
+				NodeColours[j][1]=0.6;
+				NodeColours[j][2]=0.0;
+			}
+			else{
+				NodeColours[j][0]=NodeColourList[NodeIds[j]][0];
+				NodeColours[j][1]=NodeColourList[NodeIds[j]][1];
+				NodeColours[j][2]=NodeColourList[NodeIds[j]][2];
+			}
+		}
 		else{
 			NodeColours[j][0]=NodeColourList[NodeIds[j]][0];
 			NodeColours[j][1]=NodeColourList[NodeIds[j]][1];
@@ -560,6 +572,69 @@ void GLWidget::highlightNode(int i){
 	int BorderConnectivity[nLineStrip] = {0,2,5,3,0,1,4,3,5,4,1,2};
 	float** NodeColours;
 	NodeColours = getElementColourList(i);
+
+
+	/*if( Sim01->Elements[i]->getCellMigration()){
+		for(int l=0;l<6;++l){
+			NodeColours[l][0] = 0.75 + Sim01->cellMigrationTool->getRateFractionForElement(i)/ (1-0.75);
+			NodeColours[l][1] = 1 - Sim01->cellMigrationTool->getRateFractionForElement(i);
+			NodeColours[l][2] = 1 - Sim01->cellMigrationTool->getRateFractionForElement(i);
+		}
+	}*/
+
+	/*for(int l=0;l<6;++l){
+		NodeColours[l][0] = 0;
+		NodeColours[l][1] = 1;
+		NodeColours[l][2] = 0.5*Sim01->cellMigrationTool->getMigrationAngleForElement(i);
+	}*/
+/*
+ Drawing the arrows of rottion for the linker elemetns:
+
+	if( Sim01->Elements[i]->tissueType == 2 ){
+		double ax = 0, ay = 0, az= 0;
+		ax = Sim01->Elements[i]->Positions[0][0]+Sim01->Elements[i]->Positions[1][0]+Sim01->Elements[i]->Positions[2][0];
+		ay = Sim01->Elements[i]->Positions[0][1]+Sim01->Elements[i]->Positions[1][1]+Sim01->Elements[i]->Positions[2][1];
+		az = Sim01->Elements[i]->Positions[0][2]+Sim01->Elements[i]->Positions[1][2]+Sim01->Elements[i]->Positions[2][2];
+		ax /= 3.0;
+		ay /= 3.0;
+		az /= 3.0;
+
+		gsl_matrix* a = gsl_matrix_calloc(3,1);
+		gsl_matrix* b = gsl_matrix_calloc(3,1);
+		glBegin(GL_LINE_STRIP);
+			gsl_matrix_set_identity(b);
+			gsl_matrix_set(a,0,0,-5);
+			gsl_matrix_set(a,1,0,0);
+			gsl_matrix_set(a,2,0,0);
+			gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, Sim01->Elements[i]->remodellingPlaneRotationMatrix, a, 0.0, b);
+			glColor3f(1,0,0);
+			glVertex3f( ax, ay, az);
+			glVertex3f( ax + gsl_matrix_get(b,0,0), ay+ gsl_matrix_get(b,1,0), az+ gsl_matrix_get(b,2,0));
+		glEnd();
+		glBegin(GL_LINE_STRIP);
+			gsl_matrix_set_identity(b);
+			gsl_matrix_set(a,0,0,0);
+			gsl_matrix_set(a,1,0,-5);
+			gsl_matrix_set(a,2,0,0);
+			gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, Sim01->Elements[i]->remodellingPlaneRotationMatrix, a, 0.0, b);
+			glColor3f(0,1,0);
+			glVertex3f( ax, ay, az);
+			glVertex3f( ax + gsl_matrix_get(b,0,0), ay+ gsl_matrix_get(b,1,0), az+ gsl_matrix_get(b,2,0));
+		glEnd();
+		glBegin(GL_LINE_STRIP);
+			gsl_matrix_set_identity(b);
+			gsl_matrix_set(a,0,0,0);
+			gsl_matrix_set(a,1,0,0);
+			gsl_matrix_set(a,2,0,-5);
+			gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, Sim01->Elements[i]->remodellingPlaneRotationMatrix, a, 0.0, b);
+			glColor3f(0,0,1);
+			glVertex3f( ax, ay, az);
+			glVertex3f( ax + gsl_matrix_get(b,0,0), ay+ gsl_matrix_get(b,1,0), az+ gsl_matrix_get(b,2,0));
+		glEnd();
+		gsl_matrix_free(a);
+		gsl_matrix_free(b);
+	 }
+	 */
 	//NodeColours = new float*[n];
 	//float NodeColours[6][3] = {{0.1,0.1,0.1},{0.1,0.1,0.1},{0.1,0.1,0.1},{0.1,0.1,0.1},{0.1,0.1,0.1},{0.1,0.1,0.1}};
 

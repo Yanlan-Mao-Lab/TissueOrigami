@@ -756,6 +756,7 @@ void MainWindow::timerSimulationStep(){
 	bool 	slowstepsOnDisplay = false;
 	bool 	slowstepsOnRun = false;
 	int 	slowWaitTime = 10;
+
 	if (Sim01->DisplaySave){
 		if (Sim01->timestep == 0){
 			if (analyseResults){
@@ -805,6 +806,13 @@ void MainWindow::timerSimulationStep(){
 					QCoreApplication::processEvents(QEventLoop::AllEvents, slowWaitTime);
 				}
 			}
+
+			/*for (int i =0 ; i<Sim01->nElements; i++){
+				if (i == 345 || i == 174 || i == 302 || i == 1041){
+					cout.precision(6);
+					cout<<"After display frame: Time: "<<Sim01->currSimTimeSec<<" Element : "<<Sim01->Elements[i]->Id<<" grownVolume: "<<Sim01->Elements[i]->GrownVolume<<" reference volume: "<<Sim01->Elements[i]->ReferenceShape->Volume<<endl;
+				}
+			}*/
 			//sleep(60);
 			//spitting coordinates:
 			//Sim01->CoordinateDisplay();
@@ -838,6 +846,7 @@ void MainWindow::timerSimulationStep(){
 				cout<<"there is a flipped element, I am not continuing simulation"<<endl;
 				Sim01->timestep = 2*Sim01->SimLength;
 			}
+
 		}
         else if(!displayedSimulationLength){
         	displayedSimulationLength = true;
@@ -859,7 +868,7 @@ void MainWindow::timerSimulationStep(){
             double durationClock = ( std::clock() - simulationStartClock ) / (double) CLOCKS_PER_SEC;
             double durationTime = std::difftime(std::time(0), simulationStartTime);
             cout<<"Simulation time: "<<durationTime<<" sec, Simulation clock: "<<durationClock<<" sec"<<endl;
-            //close();
+            close();
         }
     }
     MainGLWidget->update();

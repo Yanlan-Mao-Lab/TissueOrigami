@@ -259,10 +259,6 @@ void Prism::checkRotationConsistency3D(){
 	double  dot = dotProduct3D(view,normal);
 	if (dot > 0) {
 		cerr<<"prism: "<<Id<<" nodes are ordered clockwise, correcting"<<endl;
-		delete[] vec1;
-		delete[] vec2;
-		delete[] view;
-		delete[] normal;
 		cout<<"Positions before swap, element: "<<Id<<endl;
 		displayPositions();
 		//swapping node ids:
@@ -287,29 +283,26 @@ void Prism::checkRotationConsistency3D(){
 		cout<<"Positions after swap, element: "<<Id<<endl;
 		displayPositions();
 	}
+	delete[] vec1;
+	delete[] vec2;
+	delete[] view;
+	delete[] normal;
 }
 
 void  Prism::calculateBasalNormal(double * normal){
-	double * u;
-	u = new double[3];
-	double * v;
-	v = new double[3];
+	double * u = new double[3];
+	double * v = new double[3];
 	for (int i=0; i<nDim; ++i){
 		u[i] = ReferenceShape->Positions[1][i] - ReferenceShape->Positions[0][i];
 		v[i] = ReferenceShape->Positions[2][i] - ReferenceShape->Positions[0][i];
 		normal[i] = 0.0;
 	}
-	cerr<<"		u: "<<u[0]<<" "<<u[1]<<" "<<u[2]<<" v: "<<v[0]<<" "<<v[1]<<" "<<v[2]<<endl;
 	crossProduct3D(u,v,normal);
-	cerr<<"		normal before normalisation: "<<normal[0]<<" "<<normal[1]<<" "<<normal[2]<<endl;
 	normaliseVector3D(normal);
-	cerr<<"		normal after normalisation: "<<normal[0]<<" "<<normal[1]<<" "<<normal[2]<<endl;
 	for (int i=0; i<nDim; ++i){
 		u[i] = ReferenceShape->Positions[3][i] - ReferenceShape->Positions[0][i];
 	}
-	cerr<<"		vector to apical: "<<u[0]<<" "<<u[1]<<" "<<u[2]<<endl;
 	double  dot = dotProduct3D(u,normal);
-	cerr<<"		dot product: "<<dot<<endl;
 	if (dot<0){
 		for (int i=0; i<nDim; ++i){
 			normal[i] *=(-1.0);
@@ -322,8 +315,7 @@ void  Prism::calculateBasalNormal(double * normal){
 
 void  Prism::AlignReferenceBaseNormalToZ(){
 	//getting the normal of the reference element basal surface
-	double * normal;
-	normal = new double[3];
+	double * normal = new double[3];
 	cerr<<"Element: "<<Id<<endl;
 	calculateBasalNormal(normal);
 	//Now I have the normal pointing towards the apical surface, I need to align it with (+ve)z vector
@@ -561,8 +553,8 @@ void Prism::calculateElementShapeFunctionDerivatives(){
     //Shape Function Derivatives 3-point:
     double points[3][3]={{1.0/6.0,1.0/6.0,0.0},{2.0/3.0,1.0/6.0,0.0},{1.0/6.0,2.0/3.0,0.0}};
     //Setting up the current reference shape position matrix:
-    gsl_matrix * CurrRelaxedShape = gsl_matrix_calloc(nNodes, nDim);
-    gsl_matrix * dXde  = gsl_matrix_calloc(nDim, nDim);
+    gsl_matrix* CurrRelaxedShape = gsl_matrix_calloc(nNodes, nDim);
+    gsl_matrix* dXde  = gsl_matrix_calloc(nDim, nDim);
     getCurrRelaxedShape(CurrRelaxedShape);
     for (int iter =0; iter<3;++iter){
         double eta  = points[iter][0];
@@ -579,6 +571,8 @@ void Prism::calculateElementShapeFunctionDerivatives(){
             cerr<<"dXde not inverted at point "<<iter<<"!!"<<endl;
         }
     }
+    gsl_matrix_free(CurrRelaxedShape);
+    gsl_matrix_free(dXde);
 }
 
 void Prism::calculateCurrTriPointFForRotation(gsl_matrix *currF,int pointNo){
@@ -602,8 +596,6 @@ void Prism::calculateCurrTriPointFForRotation(gsl_matrix *currF,int pointNo){
 void Prism::calculateCurrNodalForces(gsl_matrix *currge, gsl_matrix *currgv, gsl_matrix *currF, gsl_matrix* displacementPerDt, int pointNo){
     const int n = nNodes;
     const int dim = nDim;
-    //gsl_matrix* currFeFpFsc = gsl_matrix_alloc(dim,dim);
-    //gsl_matrix* currFeFp = gsl_matrix_alloc(dim,dim);
     gsl_matrix* currFe = gsl_matrix_alloc(dim,dim);
     gsl_matrix* CurrShape = gsl_matrix_alloc(n,dim);
 
@@ -651,7 +643,7 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currge, gsl_matrix *currgv, gsl
     	//calculating S: (S = D:E)
     	S = calculateSForNodalForcesKirshoff(E);
     }else if (neoHookeanMaterial){
-    	gsl_matrix * tmpCforInversion =  gsl_matrix_calloc(nDim,nDim);
+    	gsl_matrix* tmpCforInversion =  gsl_matrix_calloc(nDim,nDim);
 		gsl_matrix* InvC = gsl_matrix_calloc(nDim,nDim);
 		createMatrixCopy(tmpCforInversion,C);
 		bool inverted = InvertMatrix(tmpCforInversion, InvC);
@@ -670,6 +662,8 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currge, gsl_matrix *currgv, gsl
 		gsl_matrix_set(Strain,3,0, 2.0*gsl_matrix_get(E,0,1));
 		gsl_matrix_set(Strain,4,0, 2.0*gsl_matrix_get(E,2,1));
 		gsl_matrix_set(Strain,5,0, 2.0*gsl_matrix_get(E,0,2));
+		gsl_matrix_free(tmpCforInversion);
+		gsl_matrix_free(InvC);
     }
 
     //calculating elastic stress (elastic stress = detFe^-1 Fe S Fe^T):
@@ -700,17 +694,11 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currge, gsl_matrix *currgv, gsl
     	calculateViscousStress(d,viscousStress[pointNo]);
     	//The Bt I am giving into this function has already been scaled to include volume integration.
     	calculateViscousForces(currgv, currBT,viscousStress[pointNo]);
+        gsl_matrix_free(l);
+        gsl_matrix_free(d);
     }
-
-    /*if (Id ==0){
-    	displayMatrix(viscousStress[pointNo],"viscousStress");
-    	//displayMatrix(currgv,"currgv");
-    	//displayMatrix(currge,"currge");
-    }*/
     //freeing the matrices allocated in this function
     gsl_matrix_free(currFeT);
-    //gsl_matrix_free(currFeFp);
-    //gsl_matrix_free(currFeFpFsc);
     gsl_matrix_free(C);
     gsl_matrix_free(E);
     gsl_matrix_free(S);
@@ -720,14 +708,68 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currge, gsl_matrix *currgv, gsl
     gsl_matrix_free(currFe);
     gsl_matrix_free(CurrShape);
     gsl_matrix_free(Jacobian);
-    //gsl_matrix_free(l);
-    //gsl_matrix_free(d);
+
     //gsl_matrix_free(viscousStress);
     //cout<<"Finished calculate nodel forces"<<endl;
 }
 
+
+
 void Prism::calculateReferenceVolume(){
-	double height = 0.0;
+	int nTriangularFaces = 8;
+	int** triangularFaces = new int*[8];
+	for (int i =0;i<nTriangularFaces; ++i){
+		triangularFaces[i] = new int[3];
+	}
+	//two bases:
+	triangularFaces[0][0] = 0; triangularFaces[0][1] = 1; triangularFaces[0][2] = 2;
+	triangularFaces[1][0] = 3; triangularFaces[1][1] = 4; triangularFaces[1][2] = 5;
+	//divide the rectangular dies into trianges:
+	triangularFaces[2][0] = 0; triangularFaces[2][1] = 1; triangularFaces[2][2] = 3;
+	triangularFaces[3][0] = 1; triangularFaces[3][1] = 3; triangularFaces[3][2] = 4;
+	triangularFaces[4][0] = 1; triangularFaces[4][1] = 2; triangularFaces[4][2] = 4;
+	triangularFaces[5][0] = 2; triangularFaces[5][1] = 4; triangularFaces[5][2] = 5;
+	triangularFaces[6][0] = 0; triangularFaces[6][1] = 2; triangularFaces[6][2] = 3;
+	triangularFaces[7][0] = 2; triangularFaces[7][1] = 3; triangularFaces[7][2] = 5;
+	//calculating the centre point of the reference shape so that I will have the
+	//mid point
+	double* centre = new double[3];
+	centre[0] = 0.0;
+	centre[1] = 0.0;
+	centre[2] = 0.0;
+	for (int i = 0; i < nNodes; ++i){
+		for (int j = 0 ;j < nDim; ++j){
+			centre[j] += ReferenceShape->Positions[i][j];
+		}
+	}
+	for (int j = 0 ;j < nDim; ++j){
+		centre[j] /= nNodes;
+	}
+	ReferenceShape->Volume = calculateVolumeForInputShapeStructure(ReferenceShape->Positions, nTriangularFaces, triangularFaces,centre);
+	GrownVolume = ReferenceShape->Volume;
+	VolumePerNode = GrownVolume/nNodes;
+
+	//calculating the basal area:
+	double* vec1 = new double [(const int) nDim];
+	double* vec2 = new double [(const int) nDim];
+	double* baseVec = new double [(const int) nDim];
+	for (int j=0 ;j < nDim; ++j){
+			vec1 [j] = ReferenceShape->Positions[1][j] - ReferenceShape->Positions[0][j];
+			vec2 [j] = ReferenceShape->Positions[2][j] - ReferenceShape->Positions[0][j];
+	}
+	crossProduct3D(vec1,vec2,baseVec);
+	double normBaseVec= calculateMagnitudeVector3D (baseVec);
+	double baseArea= normBaseVec/2;
+	ReferenceShape->BasalArea = baseArea;
+	delete [] vec1;
+	delete [] vec2;
+	delete [] baseVec;
+	delete [] centre;
+	for (int i =0;i<nTriangularFaces; ++i){
+		delete [] triangularFaces[i];
+	}
+	delete [] triangularFaces;
+	/*double height = 0.0;
 	for (int i = 0; i<3; ++i){
         double d = ReferenceShape->Positions[0][i] - ReferenceShape->Positions[3][i];
 		d *= d;
@@ -755,7 +797,8 @@ void Prism::calculateReferenceVolume(){
 	ReferenceShape->BasalArea = baseArea;
 	ReferenceShape->Volume = height * baseArea;
     GrownVolume = ReferenceShape->Volume;
-    VolumePerNode = GrownVolume/nNodes;
+    VolumePerNode = GrownVolume/nNodes;*/
+
 	//cout<<"baseSide1: "<<baseSide1<<" baseSide2: "<<baseSide2<<" costet: "<<costet<<" sintet: "<<sintet<<endl;
 	//cout<<"basearea: "<<baseArea<<" heignt: "<<	height<<" Volume: "<<ReferenceShape->Volume<<endl;
 }
@@ -987,10 +1030,8 @@ void Prism::AddPackingToSurface(int tissueplacementOfPackingNode, double Fx, dou
 
 
 void Prism::calculateNormalForPacking(int tissuePlacementOfNormal){
-	double * u;
-	u = new double[3];
-	double * v;
-	v = new double[3];
+	double * u = new double[3];
+	double * v = new double[3];
 	int index0,index1, index2,index4,index5;
 	if (tissuePlacementOfNormal == 1 ){ //calculating apical packing
 		if (tissueType == 0){ //columnar layer, apical indexes should be 4&5 (use 3 as a corner)
@@ -1649,13 +1690,6 @@ void 	Prism::distributeMyosinForcesTotalSizeBased(bool isIsotropic, bool apical,
 			forcemag = cMyoUnipolar[1]*GrownVolume;
 		}
 	}
-	if (Id == 203){
-		cout<<" element 203, inside distributeMyosinForcesTotalSizeBased, forcemag with volume (isIsotropic): ("<<isIsotropic<<") "<<forcemag<<endl;
-	}
-	forcemag *= forcePerMyoMolecule;
-	if (Id == 203){
-		cout<<"                                                          , forcemag with molec: "<<forcemag<<endl;
-	}
 	double centre[3] = {0.0,0.0,0.0};
 	gsl_vector* vec0 = gsl_vector_calloc(3);
 	gsl_vector* vec1 = gsl_vector_calloc(3);
@@ -1886,12 +1920,6 @@ void Prism::copyElementInformationAfterRefinement(ShapeBase* baseElement, int la
 	gsl_matrix* baseInvFg = baseElement->getInvFg();
 	gsl_matrix* baseFsc = baseElement->getFsc();
 	gsl_matrix* baseInvFsc = baseElement->getInvFsc();
-	/*gsl_matrix* baseFplastic;
-	gsl_matrix* baseInvFplastic;
-	if(thereIsPlasticDeformation){
-		baseFplastic = baseElement->getFplastic();
-		baseInvFplastic = baseElement->getInvFplastic();
-	}*/
 	for (int i=0; i<3; ++i){
 		for (int j=0; j<3; ++j){
 			gsl_matrix_set(this->Fg,i,j,gsl_matrix_get(baseFg,i,j));
@@ -1932,6 +1960,8 @@ void Prism::copyElementInformationAfterRefinement(ShapeBase* baseElement, int la
 			gsl_matrix_set(this->myoPolarityDir,i,j,gsl_matrix_get(baseMyoDir,i,j));
 		}
 	}
+	delete[] initialReletivePos;
+	delete[] reletivePos;
 	delete[] cmyo;
 	delete[] cmyoEq;
 	gsl_matrix_free(baseMyoDir);

@@ -141,7 +141,7 @@ void Analysis::findApicalKinkPointsDV(int timeInSec,  double boundingBoxXMin, do
 			double secondDerivative = (m01 - m12)/(midPointX01 - midPointX12);
 			double radiusofCurvature = pow((1 + meanSlope*meanSlope ),1.5)/secondDerivative;
 			double relativeX = (nodes[id1]->Position[0] - boundingBoxXMin)/boundingBoxLength;
-			cout<<timeInSec<<" "<<id1<<" "<<relativeX<<" "<<radiusofCurvature<<" "<<endl;
+			//cout<<timeInSec<<" "<<id1<<" "<<relativeX<<" "<<radiusofCurvature<<" "<<endl;
 			id0 = id1;
 			id1 = id2;
 			if ((radiusofCurvature>0 && radiusofCurvature<thresholdRCurvature) || (radiusofCurvature<0 && radiusofCurvature>(-1.0)*thresholdRCurvature)){

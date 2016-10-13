@@ -441,29 +441,48 @@ void EllipseLayoutGenerator::extractBorder(bool symmetricX, bool symmetricY, vec
 		}	
 	}
 	if (symmetricX){
-		//find maximum and minimum in x:
+		//find maximum and minimum in y:
 		n = y.size();
 		int maxId, minId;
 		double maxY= -1000, minY = 1000;
 		for(int i=0; i<n; ++i){
-			if (y[i] <minY){
+			if (y[i] == minY){
+				//The two nodes are at same y at the min end, 
+				//the one further away at x is the actual tip:
+				if (x[i] > x[maxId]){
+					minY = y[i];
+					minId = ids[i];					
+				}			
+			}			
+			if (y[i] < minY){
 				minY = y[i];
 				minId = ids[i];				
 			}
-			if (y[i] >maxY){
+			if (y[i] == maxY){
+				//The two nodes are at same y at the max end, 
+				//the one closer to zero in x should be tha actual tip:
+				if (x[i] < x[maxId]){
+					maxY  = y[i];
+					maxId = ids[i];					
+				}			
+			}
+			if (y[i] > maxY){
 				maxY  = y[i];
 				maxId = ids[i];				
 			}	
 		}
-		//I need to keep these two points, and remove all remaining nodes at y = 0;
+		cout<<"maxId and minId for xSymmetric borders: "<<maxId<<" "<<minId<<endl;
+		//I need to keep these two points, and remove all remaining nodes at x = 0;
 		int k = 0;		
 		while(k<n){
+			cout<<"checking id "<<ids[k]<<" at pos: "<<x[k]<<" "<<y[k]<<" "<<endl;
 			if (x[k]<1E-4 && x[k]>-1E-4){
 				//this node is at the y=0 border, check if it is one of hte end points:
 				if ( ids[k] == minId || ids[k] == maxId){
 					//no need to do anything it is one of the borders				
 				} 		
 				else{
+					cout<<" id: "<<ids[k]<<" is deleted"<<endl;
 					x.erase (x.begin()+k);
 					y.erase (y.begin()+k);
 					ids.erase (ids.begin()+k);
@@ -480,10 +499,26 @@ void EllipseLayoutGenerator::extractBorder(bool symmetricX, bool symmetricY, vec
 		int maxId, minId;
 		double maxX= -1000, minX = 1000;
 		for(int i=0; i<n; ++i){
+			if (x[i] == minX){
+				//The two nodes are at same x at the min end, 
+				//the one closer to zero ay y will be the actual tip
+				if (y[i] < y[maxId]){
+					minX  = x[i];
+					minId = ids[i];					
+				}			
+			}
 			if (x[i] <minX){
 				minX  = x[i];
 				minId = ids[i];				
 			}
+			if (x[i] == maxX){
+				//The two nodes are at same x at the max end, 
+				//the one closer to zero in y should be tha actual tip:
+				if (y[i] < y[maxId]){
+					maxX  = x[i];
+					maxId = ids[i];					
+				}			
+			}	
 			if (x[i] >maxX){
 				maxX  = x[i];
 				maxId = ids[i];				
@@ -1043,6 +1078,7 @@ void EllipseLayoutGenerator::writeMeshFileForSimulation(double zHeight, int zLay
 		int nCirc = SortedCircumferenceForLinkers.size();
 		for (int i =0 ; i<nCirc;++i){
 			int id  = SortedCircumferenceForLinkers[i];
+			cout<<" i: "<<i<<"of "<<nCirc<<", SortedCircumferenceForLinkers[i]: " <<SortedCircumferenceForLinkers[i]<<endl;
 			//the normalised vector from centre to node position
 			//double vec[2] = {posx[id] - c[0], posy[id] - c[1]};
 			//double mag = pow(vec[0]*vec[0]+ vec[1]*vec[1],0.5);
@@ -1185,13 +1221,14 @@ void EllipseLayoutGenerator::writeMeshFileForSimulation(double zHeight, int zLay
 			cout<<"circBaseIds: "<<circBaseId0<<" "<<circBaseId1<<endl;
 			double refPos[6][3];
 			int nodes[6];
+			cout<<"size of linkerTriangles: "<<linkerTriangles.size()<<endl;
 			for (int k=0;k<linkerTriangles.size();++k){
 				//cout<<" working on trianlge "<<k<<" of "<<linkerTriangles.size()<<endl;
 				for (int j=0;j<3;++j){
 					int idOnLinkerOrder = linkerTriangles[k][j];
 					//cout<<" corner: "<<j<<" idOnLinkerOrder: "<<idOnLinkerOrder<<endl;
 					if (duplicateLinkerNode[idOnLinkerOrder]){
-						cout<<" the node "<<j<<" (id : "<<idOnLinkerOrder<<")  is duplicate, pos: "<<LinkerPosx[idOnLinkerOrder]<<" 0 "<<LinkerPosz[idOnLinkerOrder]<<endl;
+						//cout<<" the node "<<j<<" (id : "<<idOnLinkerOrder<<")  is duplicate, pos: "<<LinkerPosx[idOnLinkerOrder]<<" 0 "<<LinkerPosz[idOnLinkerOrder]<<endl;
 						//this is a duplicate node, I will go up on the circumference point, until
 						//I find the closest point in z (should be overlaping)
 						//Then add that node to the node list.
@@ -1201,20 +1238,20 @@ void EllipseLayoutGenerator::writeMeshFileForSimulation(double zHeight, int zLay
 						for (int m=0; m<zLayers+peripodialLayers+2; m++){
 							//searching the columnar list:
 							double hToCompare = m*dzCol;	
-							cout<<" checking heights for m:"<<m<<" the height of node is : "<<LinkerPosz[idOnLinkerOrder]<<" hToCompare: "<<hToCompare<<" 	zLayers: "<<zLayers<<" 	dzCol: "<<dzCol<< " dzPer "<<dzPer<<endl;				
+							//cout<<" checking heights for m:"<<m<<" the height of node is : "<<LinkerPosz[idOnLinkerOrder]<<" hToCompare: "<<hToCompare<<" 	zLayers: "<<zLayers<<" 	dzCol: "<<dzCol<< " dzPer "<<dzPer<<endl;				
 							double topOfColumnar = 	zLayers*dzCol;
 							if( LinkerPosz[idOnLinkerOrder] < topOfColumnar*1.1){
 								if (m<zLayers+1 && LinkerPosz[idOnLinkerOrder] > hToCompare-0.01 && LinkerPosz[idOnLinkerOrder] < hToCompare+0.01){
-									cout<<"equivalent layer is on columnar, m: "<<m<<endl;									
+									//cout<<"equivalent layer is on columnar, m: "<<m<<endl;									
 									currLayer = m;
 									break;
 								}
 							}	
 							else{
-								cout<<" moved on to peripodial, the height of node is : "<<LinkerPosz[idOnLinkerOrder]<<" hToCompare: "<<hToCompare<<endl;
+								//cout<<" moved on to peripodial, the height of node is : "<<LinkerPosz[idOnLinkerOrder]<<" hToCompare: "<<hToCompare<<endl;
 								double hToCompare = zLayers*dzCol + lumenHeight+ (m-zLayers-1)*dzPer;
 								if( LinkerPosz[idOnLinkerOrder] > hToCompare-0.01 && LinkerPosz[idOnLinkerOrder] < hToCompare+0.01){
-									cout<<"equivalent layer is on peripodial, m: "<<m<<endl;									
+									//cout<<"equivalent layer is on peripodial, m: "<<m<<endl;									
 									currLayer = m;
 									break;										
 								}						
@@ -1232,7 +1269,7 @@ void EllipseLayoutGenerator::writeMeshFileForSimulation(double zHeight, int zLay
 								idAfterDuplicateClean--;							
 							}	
 						}
-						//cout<<"currOffsetForThisCircumferenceNode: "<<currOffsetForThisCircumferenceNode<<" currOffsetForMainTissueNodes: "<<currOffsetForMainTissueNodes<<endl;					
+						cout<<"currOffsetForThisCircumferenceNode: "<<currOffsetForThisCircumferenceNode<<" currOffsetForMainTissueNodes: "<<currOffsetForMainTissueNodes<<endl;					
 						nodes[j]=idAfterDuplicateClean+currOffsetForThisCircumferenceNode+currOffsetForMainTissueNodes;
 						nodes[j+3] = nodes[j]+nNonDuplicateLinkers;
 					}	
@@ -1243,7 +1280,7 @@ void EllipseLayoutGenerator::writeMeshFileForSimulation(double zHeight, int zLay
 					refPos[j+3][1] = recordedNodesY[nodes[j+3]];
 					refPos[j+3][2] = recordedNodesZ[nodes[j+3]];
 				}
-				//cout<<"Nodes: "<<nodes[0]<<"  "<<nodes[1]<<" "<<nodes[2]<<" "<<nodes[3]<<" " <<nodes[4]<<" " <<nodes[5]<<endl;	
+				cout<<"Nodes: "<<nodes[0]<<"  "<<nodes[1]<<" "<<nodes[2]<<" "<<nodes[3]<<" " <<nodes[4]<<" " <<nodes[5]<<endl;	
 				//writing Shapetype
 				MeshFile<<"1	";
 				//writing nodes of prism
@@ -2000,7 +2037,31 @@ int main(int argc, char **argv)
 	int    	ABLayers;
 	bool 	symmetricY = false;
 	bool 	symmetricX = false;
-	
+	// 0 : wingdisc48Hr, 
+	// 1: ECM mimicing wing disc 48 hr,
+	// 2: wing disc 72 hr,
+	// 3: optic cup
+	int selectTissueType = 1; 
+	if (selectTissueType == 0){ // 0 : wingdisc48Hr, 
+		symmetricY = true;
+		symmetricX = false; 
+	}
+	else if(selectTissueType == 1){ // 1: ECM mimicing wing disc 48 hr,
+		symmetricY = true;
+		symmetricX = false; 
+	}
+	else if(selectTissueType == 2){
+		symmetricY = true;
+		symmetricX = false; 
+	}
+	else if(selectTissueType == 3){
+		symmetricY = true;
+		symmetricX = true; 
+	}
+	else{
+		cerr<<"Tissue type selected wrong!!"<<endl;	
+		return 0;
+	}
 	if (success) {
 		if (parameters[0] == -1){
 			cerr<<"preparing from ready triangulation"<<endl;
@@ -2020,10 +2081,62 @@ int main(int argc, char **argv)
 	}
 	EllipseLayoutGenerator Lay01(DVRadius[0],DVRadius[1], APRadius[0], APRadius[1], sideLength, symmetricX, symmetricY, 0.9);
 	bool addPeripodial = true;
-	double peripodialHeightFrac = 0.45;
-	double lumenHeightFrac = 0.25;
-	double peripodialSideCurveFrac = 5.52 /ABHeight ; //5.52 is the side thickness Maria Measured for 48 hr discs
-	//double peripodialSideCurveFrac = 7.1 /ABHeight ; //7.1 is the side thickness Maria Measured for 72 hr discs
+	double peripodialHeightFrac;
+	double lumenHeightFrac;
+	double peripodialSideCurveFrac;
+	/*parameters for different setups:*/
+	//  Wing disc :
+	//  	peripodial height fraction for wing disc: 0.45;
+	//  	lumen heigth fraction for wing disc: 0.25;
+	//  	peripodial side curve for 48 hrs: 5.52
+ 	// 	(5.52 is the side thickness Maria Measured for 48 hr discs)
+	//  	peripodial side curve for 72 hrs: 7.1
+	// Wing disc with ECM mimicing:
+	// 	peripodial height fraction for ECM mimicing setup: 2*0.167; (make height 15, and layers 6)
+	// 	lumen heigth fraction for wing disc: 0.15;
+	//	0.508 -> 12.5*0.45 = 5.625 is the peripodial height. I add the ECM layer -> 8.125
+	//	8.125 is 0.508 * 15 the height I am giving that includes the ECM.
+	// 	peripodial side curve for 48 hrs:  2.5+5.52
+	// 	ECM mimicing setup should have an additional layer (2.5 + 5.52 as given above)
+	// Optic Cup:
+	// 	peripodial height fraction for optic cup: 0.8;
+	// 	lumen heigth fraction for optic cup: 0.2
+	// 	the side curve for optic cup is 30 microns, as measured by Karens group
+
+	if (selectTissueType == 0){ // 0 : wingdisc48Hr, 
+		peripodialHeightFrac = 0.45; 
+		lumenHeightFrac = 0.25;
+		peripodialSideCurveFrac = 5.52 /ABHeight ;
+		Lay01.symmetricY = true;
+		Lay01.symmetricX = false;
+	}
+	else if(selectTissueType == 1){ // 1: ECM mimicing wing disc 48 hr,
+		peripodialHeightFrac = 0.508; 
+		lumenHeightFrac = 0.25;
+		peripodialSideCurveFrac = (2.5 + 5.52) /ABHeight ;
+		Lay01.symmetricY = true;
+		Lay01.symmetricX = false;
+	}
+	else if(selectTissueType == 2){
+		peripodialHeightFrac = 0.45; 
+		lumenHeightFrac = 0.25;
+		peripodialSideCurveFrac = 7.1 /ABHeight ;
+		Lay01.symmetricY = true;
+		Lay01.symmetricX = false;
+	}
+	else if(selectTissueType == 3){
+		peripodialHeightFrac = 1.0; 
+		lumenHeightFrac = 0.2;
+		peripodialSideCurveFrac = 30.0 /ABHeight ;
+		Lay01.symmetricY = true;
+		Lay01.symmetricX = true;
+	}
+	else{
+		cerr<<"Tissue type selected wrong!!"<<endl;	
+		return 0;
+	}
+
+	
 	if(addPeripodial){
 		Lay01.addPeripodial = true;
 		Lay01.calculatePeripodialMembraneParameters(ABHeight, ABLayers, peripodialHeightFrac, lumenHeightFrac,peripodialSideCurveFrac);

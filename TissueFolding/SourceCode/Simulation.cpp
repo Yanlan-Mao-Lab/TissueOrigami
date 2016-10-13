@@ -33,11 +33,6 @@ Simulation::Simulation(){
     if (growthRotationUpdateFrequency<1) {growthRotationUpdateFrequency =1;}
 	setDefaultParameters();
 	implicitPacking = true;
-	//double GrowthMatrix[3][3][3] = {
-	//							{{1.00, 0.50, 0.00}, {1.00, 0.50, 0.00}, {1.00, 0.50, 0.00}},
-	//							{{1.00, 0.75, 0.00}, {1.00, 0.625,0.00}, {1.00, 0.50, 0.00}},
-	//							{{1.00, 1.00, 0.00}, {1.00, 0.75, 0.00}, {1.00, 0.50, 0.00}}
-	//							};
 }
 
 Simulation::~Simulation(){
@@ -1340,7 +1335,7 @@ void Simulation::updateTensionCompressionFromSave(){
 void Simulation::updateGrowthFromSave(){
 	vector<ShapeBase*>::iterator itElement;
 	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		gsl_matrix * currFg = gsl_matrix_calloc(3,3);
+		gsl_matrix* currFg = gsl_matrix_calloc(3,3);
         for (int j=0; j<3; ++j){
             for(int k=0; k<3; ++k){
                 double Fgjk;
@@ -1361,18 +1356,6 @@ void Simulation::updateGrowthRateFromSave(){
 		saveFileToDisplayGrowthRate.read((char*) &ry, sizeof ry);
 		saveFileToDisplayGrowthRate.read((char*) &rz, sizeof rz);
 		(*itElement)->setGrowthRateExpFromInput(rx,ry,rz);
-		/*if((*itElement)->tissuePlacement == 1){ //apical element
-			double* growthRate =(*itElement)->getGrowthRate();
-			gsl_matrix* elementFG = (*itElement)->getFg();
-			double detFg = (*itElement)->determinant3by3Matrix(elementFG);
-			double* ReletivePos = new double[2];
-			(*itElement)->getRelativePosInBoundingBox(ReletivePos);
-			cout<<" TheGrowthRateOfElement: "<<(*itElement)->Id<<" "<<growthRate[0]<<" "<<growthRate[1]<<" "<<growthRate[2]<<" curent detFg: "<<detFg<<" grownVolume: "<<(*itElement)->GrownVolume<<" ReferenceVolume "<<(*itElement)->ReferenceShape->Volume<<" Relative pos: "<<ReletivePos[0]<<" "<<ReletivePos[1]<<endl;
-			(*itElement)->displayMatrix(elementFG,"correspondingFg");
-			gsl_matrix_free(elementFG);
-			delete[] ReletivePos;
-
-		}*/
 	}
 }
 
@@ -1442,19 +1425,6 @@ void Simulation::readTensionCompressionToContinueFromSave(){
 
 void Simulation::readGrowthToContinueFromSave(){
 	updateGrowthFromSave();
-	/*vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-        gsl_matrix * currFg = gsl_matrix_calloc(3,3);
-        for (int j=0; j<3; ++j){
-            for(int k=0; k<3; ++k){
-                double Fgjk;
-                saveFileToDisplayGrowth.read((char*) &Fgjk, sizeof Fgjk);
-                gsl_matrix_set(currFg,j,k,Fgjk);
-            }
-        }
-        (*itElement)->setFg(currFg);
-        gsl_matrix_free(currFg);
-    }*/
 }
 
 void Simulation::readGrowthRateToContinueFromSave(){
@@ -2762,8 +2732,14 @@ void Simulation::assignPhysicalParameters(){
 			(*itElement)->setViscosity(discProperApicalViscosity,discProperBasalViscosity,discProperMidlineViscosity);
 		}
 		else if ((*itElement)->tissueType == 1){ //Element is on the peripodial membrane
-			double currE = fractions[(*itElement)->Id] * PeripodialElasticity*(1 + noise1/100.0);
-			(*itElement)->setElasticProperties(currE,currE,currE,poisson*(1 + noise2/100));
+			double currEApical = fractions[(*itElement)->Id] * PeripodialElasticity*(1 + noise1/100.0);
+			double currEBasal = currEApical;
+			double currEMid = currEApical;
+			if(thereIsExplicitECM){
+				currEBasal = fractions[(*itElement)->Id] * EBasal*(1 + noise1/100.0);
+				currEMid = fractions[(*itElement)->Id] * EMid*(1 + noise1/100.0);
+			}
+			(*itElement)->setElasticProperties(currEApical,currEBasal,currEMid,poisson*(1 + noise2/100));
 			(*itElement)->setViscosity(peripodialApicalViscosity,peripodialBasalViscosity,peripodialMidlineViscosity);
 		}
 		else if ((*itElement)->tissueType == 2 ){ //Element is on the linker Zone,
@@ -3928,6 +3904,13 @@ void Simulation::updateECMVisocityWithDeformationRate(){
 bool Simulation::runOneStep(){
     bool Success = true;
 	cout<<"entered run one step, time "<<currSimTimeSec<<endl;
+	/*for (int i=0; i<nElements; ++i){
+		if (i == 302 || i == 174 || i == 345 || i == 107){
+			cout.precision(9);
+			cout<<"Element: "<<Elements[i]->Id<<endl;
+			Elements[i]->displayMatrix(Elements[i]->Fg,"FgAtTheBeginning");
+		}
+	}*/
 	//ablateSpcific();
     if (currSimTimeSec == -16*3600) {
     	pokeElement(31,0,0,-0.1);pokeElement(34,0,0,-0.1);
@@ -4022,8 +4005,12 @@ bool Simulation::runOneStep(){
     	calculateRandomForces();
     }
     //cout<<"starting NR"<<endl;
-
-
+	/*for (int i =0 ; i<nElements; i++){
+		if (i == 345 || i == 174 || i == 302 || i == 1041 || i == 107){
+			cout.precision(6);
+			cout<<"Before runOneStep: Time: "<<currSimTimeSec<<" Element : "<<Elements[i]->Id<<" grownVolume: "<<Elements[i]->GrownVolume<<" reference volume: "<<Elements[i]->ReferenceShape->Volume<<endl;
+		}
+	}*/
     updateStepNR();
 	//Elements[2]->displayDebuggingMatrices();
 	//Elements[115]->displayDebuggingMatrices();
@@ -4411,6 +4398,8 @@ void Simulation::calculateNumericalJacobian(bool displayMatricesDuringNumericalC
 			//gsl_matrix_set(uk,i*3+j,0,gsl_matrix_get(uk,i*3+j,0)-1E-6);
 			Nodes[i]->Position[j] -= 1E-6;
 			updateElementPositions();
+			gsl_matrix_free(ge_withPerturb);
+			gsl_matrix_free(gvInternal_withPerturb);
 		}
 	}
 	NRSolver->calcutateFixedK(Nodes);
@@ -4419,6 +4408,9 @@ void Simulation::calculateNumericalJacobian(bool displayMatricesDuringNumericalC
 	}
 	gsl_matrix_memcpy(NRSolver->Knumerical,NRSolver->K);
 	NRSolver->setMatricesToZeroInsideIteration();
+	gsl_matrix_free(ge_noPerturb);
+	gsl_matrix_free(gvInternal_noPerturb);
+	gsl_matrix_free(uk_original);
 }
 
 void Simulation::updateStepNR(){
@@ -6312,76 +6304,11 @@ void Simulation::detectPacingCombinations(){
 
 				}
 			}
+			delete[] pos;
 		}
 	}
 	cleanUpPacingCombinations();
 }
-
-/*void Simulation::detectPacingNodesSerial(){
-	//cout<<"inside detectPacingNodes"<<endl;
-	double periAverageSideLength = 0,colAverageSideLength = 0;
-	getAverageSideLength(periAverageSideLength, colAverageSideLength);
-
-	if (thereIsPeripodialMembrane){
-		colAverageSideLength = (periAverageSideLength+colAverageSideLength)/2.0;
-	}
-	packingThreshold = 0.6*colAverageSideLength;
-	packingDetectionThreshold = 0.9 * packingThreshold;
-	double t2 = packingDetectionThreshold*packingDetectionThreshold;	//threshold square for rapid calculation
-	pacingNodeCouples0.empty();
-	pacingNodeCouples1.empty();
-	initialWeightPointx.empty();
-	initialWeightPointy.empty();
-	initialWeightPointz.empty();
-
-	vector<Node*>::iterator itNode;
-	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-		bool NodeHasPacking = (*itNode)->checkIfNodeHasPacking();
-		if (NodeHasPacking){
-			double* pos;
-			pos = new double[3];
-			(*itNode)->getCurrentPosition(pos);
-			vector<Node*>::iterator itNodeSlave;
-			for (itNodeSlave=itNode+1; itNodeSlave<Nodes.end(); ++itNodeSlave){
-				bool SlaveNodeHasPacking = (*itNodeSlave)->checkIfNodeHasPacking();
-				//bool nodesOnSeperateSurfaces = (*itNodeSlave)->tissueType != (*itNode)->tissueType;
-				//if (SlaveNodeHasPacking && nodesOnSeperateSurfaces){
-				if (SlaveNodeHasPacking){
-					if ((*itNode)->tissuePlacement == (*itNodeSlave)->tissuePlacement){
-						//nodes can pack, are they connected?
-						bool neigbours = false;
-						int n = (*itNode)->immediateNeigs.size();
-						for (int i= 0; i<n; ++i){
-							if ((*itNode)->immediateNeigs[i] ==(*itNodeSlave)->Id ){
-								neigbours = true;
-								break;
-							}
-						}
-						if (!neigbours){
-							//the nodes can potentially pack, are they close enough?
-							double* posSlave;
-							posSlave = new double[3];
-							(*itNodeSlave)->getCurrentPosition(posSlave);
-							double dx = pos[0] - posSlave[0];
-							double dy = pos[1] - posSlave[1];
-							double dz = pos[2] - posSlave[2];
-							double d2 = dx*dx + dy*dy + dz*dz;
-							if (d2<t2){
-								//close enough for packing , add to list:
-								pacingNodeCouples0.push_back((*itNode)->Id);
-								pacingNodeCouples1.push_back((*itNodeSlave)->Id);
-								double d = pow (d2,0.5);
-								initialWeightPointx.push_back(dx/d);
-								initialWeightPointy.push_back(dy/d);
-								initialWeightPointz.push_back(dz/d);
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-}*/
 
 void Simulation::detectPacingNodes(){
 	double periAverageSideLength = 0,colAverageSideLength = 0;
@@ -6473,10 +6400,12 @@ void Simulation::detectPacingNodes(){
 									arrayForParallelisationInitialWeightPointy[a].push_back(dy/d);
 									arrayForParallelisationInitialWeightPointz[a].push_back(dz/d);
 								}
+								delete[] posSlave;
 							}
 						}
 					}
 				}
+				delete[] pos;
 			}
 		}
 		//calculate packing here
@@ -6602,6 +6531,7 @@ void Simulation::calculatePacking(){
 									//if the node is fixed on  a certain axis, then do not reflect the force on the surface
 								}
 							}
+
 							bool allCornersFixed[3] = {false,false,false};
 							(*itEle)->AddPackingToSurface((*itNode)->tissuePlacement, F[0],F[1],F[2], PackingForces, Nodes, allCornersFixed[0], allCornersFixed[1], allCornersFixed[2]);
 							for(int i=0; i<3; ++i){
@@ -6617,6 +6547,8 @@ void Simulation::calculatePacking(){
 							pushedBySurface = true;
 						}
 					}
+					delete[] normalForPacking;
+					delete[] posCorner;
 				}
 			}
 			int closestNode  = -1000;
@@ -6845,6 +6777,7 @@ void Simulation::calculatePacking(){
 				}
 			}
 			//if ((*itNode)->Id == 211 ) {cout<<"node 211: packing to surf: "<<pushedBySurface<<" packing to edge: "<<pushedByEdge<<endl;}
+			delete[] pos;
 		}
 	}
 }
@@ -6955,156 +6888,6 @@ void Simulation::addPackingForces(gsl_matrix* gExt){
 	//cout<<" sum pack: "<<sumPack[0]<<" "<<sumPack[1]<<" "<<sumPack[2]<<endl;
 	//cout<<" sum gExt: "<<sumgExt[0]<<" "<<sumgExt[1]<<" "<<sumgExt[2]<<endl;
 }
-
-/*
-void Simulation::calculatePacking2(double PeriThreshold, double ColThreshold){
-	//cout<<"inside calculate packing"<<endl;
-	double multiplier = 0.05; //just a term to scale the forces down
-	double threshold = 5;	 //packing forces start at 3 microns
-	double t2 = threshold*threshold;
-
-	vector<Node*>::iterator itNode;
-	vector<ShapeBase*>::iterator itEle;
-	//resetting all the normal update flags
-	for (itEle=Elements.begin(); itEle<Elements.end(); ++itEle){
-		(*itEle)->ApicalNormalForPackingUpToDate = false;
-		(*itEle)->BasalNormalForPackingUpToDate = false;
-	}
-	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-		bool NodeHasPacking = (*itNode)->checkIfNodeHasPacking();
-		if (NodeHasPacking){
-			//if ((*itNode)->Id == 358) {
-			//	cout<<"calculating packing for node: "<<(*itNode)->Id<<endl;
-			//}
-			double* pos;
-			pos = new double[3];
-			(*itNode)->getCurrentPosition(pos);
-			for (itEle=Elements.begin(); itEle<Elements.end(); ++itEle){
-				//excluding elements that own this element
-				bool PackingToThisElement =  (*itEle)->checkPackingToThisNodeViaState(TissueHeightDiscretisationLayers, (*itNode));
-				if (PackingToThisElement){
-					//the node does not belong to the element, and placed correctly. Lets have a preliminary distance check:
-					PackingToThisElement = (*itEle)->IsPointCloseEnoughForPacking((*itNode)->Position, PeriThreshold, ColThreshold,(*itNode)->tissuePlacement, (*itNode)->tissueType);
-				}
-				if (PackingToThisElement){
-					//All position and state conditions are satisfied, and the point is close enough to the element for packing.
-					double* normalForPacking;
-					normalForPacking = new double[3];
-					normalForPacking[0]=0.0;normalForPacking[1]=0.0;normalForPacking[2]=0.0;
-					double* posCorner;
-					posCorner = new double[3];
-					bool bothperipodial = false;
-					getNormalAndCornerPosForPacking((*itNode),(*itEle),normalForPacking,posCorner,bothperipodial);
-					double dProjectionOffset = 0.0;
-					for (int i=0; i<3; ++i){
-						dProjectionOffset += (pos[i] - posCorner[i])*normalForPacking[i];
-					}
-					//cout<<"dProjectionOffset: "<<dProjectionOffset<<endl;
-					if (bothperipodial && dProjectionOffset<0){
-						//both node and element lie on the peripodial membrane, the directionality does not come from tissue placement, they should always push away.
-						dProjectionOffset *= -1.0;
-						normalForPacking[0] *= -1.0;
-						normalForPacking[1] *= -1.0;
-						normalForPacking[2] *= -1.0;
-					}
-					//cout<<" calculated distace between node and element: "<<dProjectionOffset<<" threshold : "<<threshold<<endl;
-					//In the case that there is packing (the point will lie on the triangle, the distance
-					//I will be interested in is dProjectionOffet. I will check if this is below threshold,
-					//then I will bother with the following calculation if necessary
-					if ((dProjectionOffset > 0 && dProjectionOffset < threshold) || (dProjectionOffset < 0 && dProjectionOffset > (-1.0)*threshold)){
-						//cout<<"checking element "<<(*itEle)->Id<<" for node: "<<(*itNode)->Id<<endl;
-						double VecprojectedPoint[3];
-						VecprojectedPoint[0] = (-1.0)*dProjectionOffset*(normalForPacking[0]);
-						VecprojectedPoint[1] = (-1.0)*dProjectionOffset*(normalForPacking[1]);
-						VecprojectedPoint[2] = (-1.0)*dProjectionOffset*(normalForPacking[2]);
-						double projectedPoint[3] = {pos[0] + VecprojectedPoint[0], pos[1] + VecprojectedPoint[1], pos[2] + VecprojectedPoint[2]};
-						//cout<<"projected point: "<<projectedPoint[0]<<" "<<projectedPoint[1]<<projectedPoint[2]<<endl;
-						//check if the projected point lies on the triangle, if so the distance is (-1.0)*dProjectionOffet
-						bool pointInsideTriangle = (*itEle)->IspointInsideTriangle((*itNode)->tissuePlacement,projectedPoint[0],projectedPoint[1],projectedPoint[2]);
-						if (pointInsideTriangle){
-							//there is packing:
-							//cout<<" Node : " <<(*itNode)->Id <<" element: "<<(*itEle)->Id<<" projected point: "<<projectedPoint[0]<<" "<<projectedPoint[1]<<projectedPoint[2]<<endl;
-							float d2 = dProjectionOffset*dProjectionOffset;
-							//cout<<"	point is inside triangle: d2: "<<d2 <<endl;
-							//normalising force direction
-							//cout<<" Node : " <<(*itNode)->Id <<" element: "<<(*itEle)->Id<<"	- before normalisation VecprojectedPoint: "<<VecprojectedPoint[0]<<" "<<VecprojectedPoint[1]<<" "<<VecprojectedPoint[2]<<endl;
-							if (dProjectionOffset<0){
-								VecprojectedPoint[0] /= dProjectionOffset;
-								VecprojectedPoint[1] /= dProjectionOffset;
-								VecprojectedPoint[2] /= dProjectionOffset;
-							}
-							else{
-								VecprojectedPoint[0] /= (-1.0)*dProjectionOffset;
-								VecprojectedPoint[1] /= (-1.0)*dProjectionOffset;
-								VecprojectedPoint[2] /= (-1.0)*dProjectionOffset;
-							}
-							//cleaning up noise to allow accurate calculation of strong pushing forces
-							//cout<<" Node : " <<(*itNode)->Id <<" element: "<<(*itEle)->Id<<"	- after normalisation VecprojectedPoint: "<<VecprojectedPoint[0]<<" "<<VecprojectedPoint[1]<<" "<<VecprojectedPoint[2]<<endl;
-							for (int i=0;i<3; i++){
-								if(VecprojectedPoint[i]<1E-6 && VecprojectedPoint[i]>-1E-6){
-									VecprojectedPoint[i]=0.0;
-								}
-							}
-							//cout<<"Normal for packing for element: "<<(*itEle)->Id<<" vec: "<<normalForPacking[0]<<" "<<normalForPacking[1]<<" "<<normalForPacking[2]<<endl;
-							//cout<<"Node "<<(*itNode)->Id<<" position: "<<pos[0]<<" "<<pos[1]<<" "<<pos[2]<<" "<<" corner position: "<<posCorner[0]<<" "<<posCorner[1]<<" "<<posCorner[2]<<endl;
-							//cout<<"	normalised VecprojectedPoint "<<VecprojectedPoint[0]<<" "<<VecprojectedPoint[1]<<" "<<VecprojectedPoint[2]<<endl;
-							double averageMass = 0.5*((*itEle)->VolumePerNode + (*itNode)->mass);
-							double Fmag = averageMass* multiplier * (1.0/d2 - 1.0/t2);
-							CapPackingForce(Fmag);
-							//cout<<"	d2  "<<d2 <<endl;
-							//cout<<"	Fmag  "<<Fmag <<endl;
-							double F[3];
-							F[0] = Fmag * VecprojectedPoint[0];
-							F[1] = Fmag * VecprojectedPoint[1];
-							F[2] = Fmag * VecprojectedPoint[2];
-							//cout<<"Node "<<(*itNode)->Id<<" is packing to Element: "<<(*itEle)->Id<<" mag: "<<Fmag<<" Force: "<<F[0] <<" "<<F[1]<<" " <<F[2]<<endl;
-							//cout<<" Force: "<<F[0] <<" "<<F[1]<<" " <<F[2]<<endl;
-							//direction correction with (-) sign
-							for(int j=0; j<3; ++j){
-								if (!(*itNode)->FixedPos[j]){
-									SystemForces[(*itNode)->Id][j] += F[j];
-									PackingForces[(*itNode)->Id][j] += F[j];
-								}
-								else if (recordForcesOnFixedNodes) {
-									FixedNodeForces[(*itNode)->Id][j] += F[j];
-								}
-							}
-							//cout<<"updated the system forces: "<<SystemForces[(*itNode)->Id][0]<<" "<<SystemForces[(*itNode)->Id][1]<<" "<<SystemForces[(*itNode)->Id][2]<<endl;
-							//add opposite force to the element nodes:
-							(*itEle)->AddPackingToSurface((*itNode)->tissuePlacement, F[0],F[1],F[2], SystemForces,PackingForces, Nodes);
-							//cout<<"added packing to surface"<<endl;
-						}
-					}
-					delete[] posCorner;
-				}
-			}
-			if (PipetteSuction && timestep> PipetteInitialStep && timestep<PipetteEndStep){
-				if ( (ApicalSuction && (*itNode)->tissuePlacement == 1) || (!ApicalSuction && (*itNode)->tissuePlacement == 0)){
-					//checking packing of node to the pipette:
-					double* pipF;
-					pipF = new double[3];
-					bool packsToPip = false;
-					checkPackingToPipette(packsToPip, pos, pipF,(*itNode)->mass,(*itNode)->Id);
-					if (packsToPip){
-						for (int j=0;j<3;++j){
-							if (!(*itNode)->FixedPos[j]){
-								SystemForces[(*itNode)->Id][j] += pipF[j];
-								PackingForces[(*itNode)->Id][j] += pipF[j];
-							}
-							else if(recordForcesOnFixedNodes){
-								FixedNodeForces[(*itNode)->Id][j] += pipF[j];
-							}
-						}
-					}
-					delete[] pipF;
-				}
-			}
-			delete[] pos;
-		}
-	}
-	//cout<<"finalised calculate packing"<<endl;
-}
-*/
 
 void Simulation::updateElementPositions(){
 	vector<ShapeBase*>::iterator itElement;
@@ -7578,7 +7361,6 @@ void Simulation::writeGrowth(){
             saveFileGrowthRate.write((char*) &growthRate[j], sizeof growthRate[j]);
         }
         gsl_matrix_free(currFg);
-
     }
     saveFileGrowth.flush();
     saveFileGrowthRate.flush();
@@ -7642,6 +7424,8 @@ void Simulation::writeProteins(){
 		saveFileProteins.write((char*) &cMyoEq[1], sizeof cMyoEq[1]);
 		saveFileProteins.write((char*) &cMyoEq[2], sizeof cMyoEq[2]);
 		saveFileProteins.write((char*) &cMyoEq[3], sizeof cMyoEq[3]);
+		delete[] cMyo;
+		delete[] cMyoEq;
 	}
 	saveFileProteins.flush();
 }
@@ -7849,22 +7633,23 @@ void Simulation::calculateGrowthUniform(GrowthFunctionBase* currGF){
 	if(currSimTimeSec >= currGF->initTime && currSimTimeSec < currGF->endTime ){
 		gsl_matrix* columnarFgIncrement = gsl_matrix_calloc(3,3);
 		gsl_matrix* peripodialFgIncrement = gsl_matrix_calloc(3,3);
-		double *growthRates;
-        growthRates = new double[3];
+		double *growthRates = new double[3];
 		currGF->getGrowthRate(growthRates);
     	vector<ShapeBase*>::iterator itElement;
     	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-			//tissue type == 0 is columnar layer, ==1 is peripodial membrane, ==2 id linker zone
-    		gsl_matrix_set_identity(columnarFgIncrement);
-			gsl_matrix_set_identity(peripodialFgIncrement);
-			if (currGF->applyToColumnarLayer){
-				(*itElement)->calculateFgFromRates(dt, growthRates[0],growthRates[1],growthRates[2], currGF->getShearAngleRotationMatrix(), columnarFgIncrement, 0, currGF->zMin, currGF->zMax);
-			}
-			if (currGF->applyToPeripodialMembrane){
-				(*itElement)->calculateFgFromRates(dt, growthRates[0],growthRates[1],growthRates[2], currGF->getShearAngleRotationMatrix(), peripodialFgIncrement, 1, currGF->zMin, currGF->zMax);
-			}
-			(*itElement)->updateGrowthIncrement(columnarFgIncrement,peripodialFgIncrement);
-		}
+    		if (!thereIsExplicitECM || !(*itElement)->isECMMimicing){
+    			//tissue type == 0 is columnar layer, ==1 is peripodial membrane, ==2 id linker zone
+				gsl_matrix_set_identity(columnarFgIncrement);
+				gsl_matrix_set_identity(peripodialFgIncrement);
+				if (currGF->applyToColumnarLayer){
+					(*itElement)->calculateFgFromRates(dt, growthRates[0],growthRates[1],growthRates[2], currGF->getShearAngleRotationMatrix(), columnarFgIncrement, 0, currGF->zMin, currGF->zMax);
+				}
+				if (currGF->applyToPeripodialMembrane){
+					(*itElement)->calculateFgFromRates(dt, growthRates[0],growthRates[1],growthRates[2], currGF->getShearAngleRotationMatrix(), peripodialFgIncrement, 1, currGF->zMin, currGF->zMax);
+				}
+				(*itElement)->updateGrowthIncrement(columnarFgIncrement,peripodialFgIncrement);
+    		}
+    	}
 		delete[] growthRates;
 		gsl_matrix_free(columnarFgIncrement);
 		gsl_matrix_free(peripodialFgIncrement);
@@ -7888,29 +7673,33 @@ void Simulation::calculateGrowthRing(GrowthFunctionBase* currGF){
 		gsl_matrix* peripodialFgIncrement = gsl_matrix_calloc(3,3);
     	vector<ShapeBase*>::iterator itElement;
     	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-			double* Elementcentre = new double[3];
-			Elementcentre = (*itElement)->getCentre();
-			//the distance is calculated in the x-y projection
-			double d[2] = {centre[0] - Elementcentre[0], centre[1] - Elementcentre[1]};
-			double dmag2 = d[0]*d[0] + d[1]*d[1];
-			if (dmag2 > innerRadius2 && dmag2 < outerRadius2){
-				//the element is within the growth zone.
-				float distance = pow(dmag2,0.5);
-				//calculating the growth rate: as a fraction increase within this time point
-				double sf = (1.0 - (distance - innerRadius) / (outerRadius - innerRadius) );
-				double growthscale[3] = {maxValues[0]*sf,maxValues[1]*sf,maxValues[2]*sf};
-				gsl_matrix_set_identity(columnarFgIncrement);
-				gsl_matrix_set_identity(peripodialFgIncrement);
-				if (currGF->applyToColumnarLayer){
-					(*itElement)->calculateFgFromRates(dt, growthscale[0],growthscale[1],growthscale[2], currGF->getShearAngleRotationMatrix(), columnarFgIncrement, 0, currGF->zMin, currGF->zMax);
+    		if (!thereIsExplicitECM || !(*itElement)->isECMMimicing){
+				double* Elementcentre = new double[3];
+				Elementcentre = (*itElement)->getCentre();
+				//the distance is calculated in the x-y projection
+				double d[2] = {centre[0] - Elementcentre[0], centre[1] - Elementcentre[1]};
+				double dmag2 = d[0]*d[0] + d[1]*d[1];
+				if (dmag2 > innerRadius2 && dmag2 < outerRadius2){
+					//the element is within the growth zone.
+					float distance = pow(dmag2,0.5);
+					//calculating the growth rate: as a fraction increase within this time point
+					double sf = (1.0 - (distance - innerRadius) / (outerRadius - innerRadius) );
+					double growthscale[3] = {maxValues[0]*sf,maxValues[1]*sf,maxValues[2]*sf};
+					gsl_matrix_set_identity(columnarFgIncrement);
+					gsl_matrix_set_identity(peripodialFgIncrement);
+					if (currGF->applyToColumnarLayer){
+						(*itElement)->calculateFgFromRates(dt, growthscale[0],growthscale[1],growthscale[2], currGF->getShearAngleRotationMatrix(), columnarFgIncrement, 0, currGF->zMin, currGF->zMax);
+					}
+					if (currGF->applyToPeripodialMembrane){
+						(*itElement)->calculateFgFromRates(dt, growthscale[0],growthscale[1],growthscale[2], currGF->getShearAngleRotationMatrix(), peripodialFgIncrement, 1, currGF->zMin, currGF->zMax);
+					}
+					(*itElement)->updateGrowthIncrement(columnarFgIncrement,peripodialFgIncrement);
 				}
-				if (currGF->applyToPeripodialMembrane){
-					(*itElement)->calculateFgFromRates(dt, growthscale[0],growthscale[1],growthscale[2], currGF->getShearAngleRotationMatrix(), peripodialFgIncrement, 1, currGF->zMin, currGF->zMax);
-				}
-				(*itElement)->updateGrowthIncrement(columnarFgIncrement,peripodialFgIncrement);
-			}
-			delete[] Elementcentre;
+				delete[] Elementcentre;
+    		}
 		}
+		gsl_matrix_free(columnarFgIncrement);
+		gsl_matrix_free(peripodialFgIncrement);
 		delete[] maxValues;
 	}
 }
