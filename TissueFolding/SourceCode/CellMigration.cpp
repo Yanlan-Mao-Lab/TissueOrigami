@@ -46,18 +46,6 @@ void CellMigration::assignElementRadialVectors(vector <ShapeBase*>& Elements){
 	cout<<"inside element angle  asignment"<<endl;
 	int counter = 0;
 	for( vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		/*double *c = (*itElement)->getCentre();
-		//assuming the centre is at position [0, 0, 14]
-		double dx = c[0] - 0.0;
-		double dy = c[1] - 0.0;
-		double dz = c[2] - 14.0;
-		elementAnglesList[counter] = calculateAngleOfVector(dx,dy,dz);
-		//if (counter == 688 || counter == 699 || counter == 735 || counter == 710){
-		//	cout<<" Angles of element: "<<counter<<" of "<<Elements.size()<<" : "<<ElementAnglesList[counter]<<" in degrees: "<<ElementAnglesList[counter]*180/3.14<<endl;
-		//}
-		*/
-		//Check where peripodialness is being updated, if ever.
-
 		elementAnglesList[counter] = 5;
 		if ((*itElement)->tissueType == 0 || (*itElement)->tissueType == 1){
 			// For columnar and peripodial elements, the angle will scale with distance from centre;
@@ -78,25 +66,11 @@ void CellMigration::assignElementRadialVectors(vector <ShapeBase*>& Elements){
 			//for peripodialness = 1, angle = 1, for peripodialness = 0. angle = 2
 			elementAnglesList[counter] = 2 - (*itElement)->getPeripodialness();
 		}
-		cout<<"assigned element "<<counter<<" of 2396"<<endl;
 		counter++;
 	}
 }
 
 void CellMigration::assignOriginOfMigration(vector <ShapeBase*>& Elements, double originAngle){
-	/*double buffer = M_PI/90; //A buffer of 2 degrees
-	int counter = 0;
-	cout<<"assigning migration, origin angle : "<<originAngle<<" ("<<originAngle*180/3.14<<"), buffer:"<<buffer<<" ("<<buffer*180/3.14<<")"<<endl;
-	for( vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		//if (counter == 688 || counter == 699 || counter == 735 || counter == 710){
-		//	cout<<" Angles of element: "<<counter<<" "<<ElementAnglesList[counter]<<" in degrees: "<<ElementAnglesList[counter]*180/3.14<<endl;
-		//}
-		if (elementAnglesList[counter] > originAngle - buffer && elementAnglesList[counter] < originAngle + buffer){
-			(*itElement)->setCellMigration(true);
-			//cout<<"element: "<<counter<<" angle : "<< ElementAnglesList[counter]<<" ("<<ElementAnglesList[counter]*180/3.14<<") in range: "<<originAngle- buffer<<" ("<<(originAngle- buffer)*180/3.14<<") - "<<originAngle + buffer<<" ("<<(originAngle+ buffer)/3.14*180<<")"<<endl;
-		}
-		counter++;
-	}*/
 	for( vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 		if ((*itElement)->tissueType == 2){
 			(*itElement)->setCellMigration(true);
@@ -208,9 +182,15 @@ void CellMigration::updateMigrationLists(vector <ShapeBase*>& Elements, double d
 			listOfLeavingVolumePerStep[counter] += totalmassToSendOut;
 			//the element is migrating, I should check the which of neigs it will deliver material to
 			int nNeigs = elementConnectivityMap[counter].size();
+			if ((*itElement)->Id == 1076 || (*itElement)->Id == 1929 ){
+				cout<<"Element: "<<(*itElement)->Id<<"angle: "<<elementAnglesList[counter]<<" nNeigs: "<<nNeigs<<" grown volume: "<<(*itElement)->GrownVolume<<endl;
+			}
 			//Element will only migrate out material to angles higher than itself:
 			for (int i=0; i< nNeigs; ++i){
 				int currNeig = elementConnectivityMap[counter][i];
+				if ((*itElement)->Id == 1076 || (*itElement)->Id == 1929 ){
+					cout<<" Element: "<<(*itElement)->Id<<" currNeig: "<<currNeig<<" neigAngle: "<<elementAnglesList[currNeig]<<" neig grown volume : "<<Elements[currNeig]->GrownVolume<<endl;
+				}
 				if (elementAnglesList[counter] < elementAnglesList[currNeig]){
 					//Current element is sending material to the element on the neighbour list:
 					listOfGainedVolumePerStep[currNeig]+=massToSendOutPerElement;
@@ -218,6 +198,12 @@ void CellMigration::updateMigrationLists(vector <ShapeBase*>& Elements, double d
 			}
 		}
 		counter++;
+	}
+
+	int idList[6] = {1076, 1141, 1073, 1929, 1933, 2009};
+	for(int j=0;j<6;++j){
+		int i = idList[j];
+		cout<<"Element "<<Elements[i]->Id<<" gainedVolume: "<<listOfGainedVolumePerStep[i]<<" lostVolume: "<<listOfLeavingVolumePerStep[i]<<endl;
 	}
 }
 
@@ -227,13 +213,29 @@ void CellMigration::updateVolumesWithMigration(vector <ShapeBase*>& Elements){
 		double netVolumeChange = listOfGainedVolumePerStep[counter] - listOfLeavingVolumePerStep[counter];
 		//I should apply a multiplicative growth rate such that the net volume change of this element will be equal to "netVolumeChange"
 		double determinantToBe = ( (*itElement)->GrownVolume + netVolumeChange)/(*itElement)->GrownVolume;
-		//Now I distribute this among x & y only:
-		double incrementX = pow(determinantToBe,0.5);
+
+
 		//Now increase the growth increment for this step:
 		gsl_matrix* migrationIncrement = gsl_matrix_calloc(3,3);
-		gsl_matrix_set(migrationIncrement,0,0,incrementX);
-		gsl_matrix_set(migrationIncrement,1,1,incrementX);
-		gsl_matrix_set(migrationIncrement,2,2,1);
+		if((*itElement)->tissueType == 2){
+			//linker elements should grow in 3D:
+			double incrementX = pow(determinantToBe,1.0/3.0);
+			gsl_matrix_set(migrationIncrement,0,0,incrementX);
+			gsl_matrix_set(migrationIncrement,1,1,incrementX);
+			gsl_matrix_set(migrationIncrement,2,2,incrementX);
+		}
+		else{
+			//The element is columnar of peripodial,
+			//Now I distribute this among x & y only:
+			double incrementX = pow(determinantToBe,0.5);
+			gsl_matrix_set(migrationIncrement,0,0,incrementX);
+			gsl_matrix_set(migrationIncrement,1,1,incrementX);
+			gsl_matrix_set(migrationIncrement,2,2,1);
+		}
+		if ((*itElement)->Id == 1076 || (*itElement)->Id == 1929 ){
+			cout<<" Element: "<<(*itElement)->Id<<" netVolumeChange: "<<netVolumeChange<<" det to be: "<<determinantToBe<<" grown volume before update: "<<(*itElement)->GrownVolume<<endl;
+			(*itElement)->displayMatrix(migrationIncrement,"migrationIncrement");
+		}
 		(*itElement)->addMigrationIncrementToGrowthIncrement(migrationIncrement);
 		//reset volume change due to migration
 		listOfGainedVolumePerStep[counter] = 0.0;

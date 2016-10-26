@@ -751,7 +751,7 @@ void MainWindow::timerSimulationStep(){
     //for (int j=0; j<3; ++j){
     //    cout<<"Node 2025 at circmference: "<<Sim01->Nodes[2025]->atCircumference<<" fixed pos "<<j<<" "<<Sim01->Nodes[2025]->FixedPos[j]<<endl;
     //}
-	bool 	automatedSave = false;
+	bool 	automatedSave = true;
 	bool 	analyseResults = true;
 	bool 	slowstepsOnDisplay = false;
 	bool 	slowstepsOnRun = false;
@@ -766,8 +766,8 @@ void MainWindow::timerSimulationStep(){
 			if( automatedSave){
 				Sim01->assignTips();
 				//MainGLWidget->updateToTopView(); //display tissue from the top view
-				//MainGLWidget->updateToFrontView(); //display tissue from the front view
-				MainGLWidget->updateToPerspectiveView(); //display tissue from the tilted view
+				MainGLWidget->updateToFrontView(); //display tissue from the front view
+				//MainGLWidget->updateToPerspectiveView(); //display tissue from the tilted view
 				MainGLWidget->drawSymmetricity = false; //hide symmetric
 				MainGLWidget->PerspectiveView = false; //switch to orthogoanal view type.
 				Sim01->saveImages = true;
@@ -868,7 +868,7 @@ void MainWindow::timerSimulationStep(){
             double durationClock = ( std::clock() - simulationStartClock ) / (double) CLOCKS_PER_SEC;
             double durationTime = std::difftime(std::time(0), simulationStartTime);
             cout<<"Simulation time: "<<durationTime<<" sec, Simulation clock: "<<durationClock<<" sec"<<endl;
-            close();
+            //close();
         }
     }
     MainGLWidget->update();

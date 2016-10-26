@@ -1324,13 +1324,24 @@ void EllipseLayoutGenerator::scaleInputOutline(vector <float>& x, vector <float>
 	if (symmetricX || symmetricY ){
 		clearSymmetric(x,y);
 	}
+	cout<<"after cleaning up symmetry (if any)"<<endl;
+	for (int i=0; i<x.size(); ++i){
+		cout<<" node: "<<i<<" "<<x[i]<<" "<<y[i]<<endl;	
+	}
 	if (!symmetricX){
 		//if there is x symmetricity, there will be no tip,
 		//and I would be chopping off mid region of the tissue with this
 		bluntTip(x,y);
 	}
-	cout<<"after cleaning up symmetry"<<endl;
+	cout<<"after blunt tip correction"<<endl;
+	for (int i=0; i<x.size(); ++i){
+		cout<<" node: "<<i<<" "<<x[i]<<" "<<y[i]<<endl;	
+	}
 	calculateBoundingBox(boundingBox,x,y);
+	cout<<"after calculateBoundingBox"<<endl;
+	for (int i=0; i<x.size(); ++i){
+		cout<<" node: "<<i<<" "<<x[i]<<" "<<y[i]<<endl;	
+	}
 	//If there was symmetricity, need to scale tissue again here:
 	//If the input is not symmetric in y, which it will not be, as anteripor and posterior sides 
 	// are not symmetric in the outlines, then the size will be scaled where the lengths on 
@@ -1363,19 +1374,18 @@ void EllipseLayoutGenerator::bluntTip(vector <float>&  x, vector <float>& y){
 		cout<<" currnodelist: "<<i<<" "<<x[i]<<" "<<y[i]<<endl;	
 	}
 	//now go back till you reach the height of sideLength
-	double bluntTipSclae = 0.9;	
+	double bluntTipScale = 0.9;	
 	int firstBreak = 0;	
 	for (int i=yTipIndex; i<n; --i){
-		if (y[i] > sideLen*bluntTipSclae){
+		if (fabs(y[i]) > sideLen*bluntTipScale){
 			firstBreak = i-1;
 			break;		
 		}	
 	}
 	//now go forward till you reach the height of side Length
-
 	int secondBreak = n;
 	for (int i=yTipIndex; i<n; i++){
-		if (y[i] > sideLen*bluntTipSclae){
+		if (fabs(y[i]) > sideLen*bluntTipScale){
 			secondBreak = i;
 			break;		
 		}	
@@ -1569,7 +1579,8 @@ void EllipseLayoutGenerator::smooth(int pointAvr, vector <float>&  x, vector <fl
 		//x[i] = currSum[0];
 		//y[i] = currSum[1];	
 	}
-	for (int i=range; i<n-range; ++i){
+	//for (int i=range; i<n-range; ++i){
+	for (int i=0; i<n; ++i){
 		x[i] = tmpCoord[i][0];
 		y[i] = tmpCoord[i][1];	
 	}	
@@ -2041,7 +2052,7 @@ int main(int argc, char **argv)
 	// 1: ECM mimicing wing disc 48 hr,
 	// 2: wing disc 72 hr,
 	// 3: optic cup
-	int selectTissueType = 1; 
+	int selectTissueType = 0; 
 	if (selectTissueType == 0){ // 0 : wingdisc48Hr, 
 		symmetricY = true;
 		symmetricX = false; 
@@ -2078,9 +2089,12 @@ int main(int argc, char **argv)
 		if (parameters[8] == 1 ){ 		
 			symmetricY = true;
 		}
+		else{
+			symmetricY = false;
+		}
 	}
 	EllipseLayoutGenerator Lay01(DVRadius[0],DVRadius[1], APRadius[0], APRadius[1], sideLength, symmetricX, symmetricY, 0.9);
-	bool addPeripodial = true;
+	bool addPeripodial = false;
 	double peripodialHeightFrac;
 	double lumenHeightFrac;
 	double peripodialSideCurveFrac;
@@ -2107,7 +2121,7 @@ int main(int argc, char **argv)
 		peripodialHeightFrac = 0.45; 
 		lumenHeightFrac = 0.25;
 		peripodialSideCurveFrac = 5.52 /ABHeight ;
-		Lay01.symmetricY = true;
+		Lay01.symmetricY = symmetricY;
 		Lay01.symmetricX = false;
 	}
 	else if(selectTissueType == 1){ // 1: ECM mimicing wing disc 48 hr,

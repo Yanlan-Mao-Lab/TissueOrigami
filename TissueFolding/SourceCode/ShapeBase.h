@@ -171,6 +171,7 @@ public:
 	int 	tissueType;	///< The tissue type is 0 for columnar layer, 1 for peripodial membrane, and 2 for linker zone
 	bool	spansWholeTissue; ///< Boolean staing is the element spans the whole tissue. This is used to identify mid-layer tagged tissues (tissuePlacement = 2), that should still have apical abd basal responses (such as myosin).
 	bool	isECMMimicing;
+	bool	isActinMimicing;
 	bool	IsAblated;
 	bool	atSymetricityBoundary;
 	bool	IsClippedInDisplay;
@@ -372,6 +373,7 @@ public:
 	void assignElementToConnectedNodes(vector <Node*>& Nodes);
 	void removeMassFromNodes(vector <Node*>& Nodes);
 	void setECMMimicing(bool IsECMMimicing);
+	void setActinMimicing(bool isActinMimicing);
 
 	void 	convertLocalStrainToTissueStrain(double* strainsToAdd);
 

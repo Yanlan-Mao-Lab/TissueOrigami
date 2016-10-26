@@ -225,7 +225,7 @@ private:
     void setupXsymmetricity();
     void ablateSpcific();
     void setUpECMMimicingElements();
-
+    void setUpActinMimicingElements();
     //void setSymmetricNode(Node* currNode, double yLimPos);
 
 
@@ -426,6 +426,7 @@ public:
 	vector <double> drawingPointsX, drawingPointsY, drawingPointsZ;
 
 	bool thereIsExplicitECM;
+	bool thereIsExplicitActin;
 	double ECMRenawalHalfLife; //The half life for ECM renewal inside plastic deformation
 	Simulation();
 	~Simulation();

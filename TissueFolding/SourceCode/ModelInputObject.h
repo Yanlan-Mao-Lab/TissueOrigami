@@ -46,6 +46,7 @@ private:
 	bool readECMPerturbation(ifstream& file);
 	bool readCellMigrationOptions(ifstream& file);			///< This function reads cell migration related parameters of the simulation from file.
 	bool readExplicitECMOptions(ifstream& file);			///< This function reads parameters relating to the definitin of an explicit ECM layer.
+	bool readExplicitActinOptions(ifstream& file);
 public:
 	Simulation* Sim;				///< The pointer to the simulation object, for which the parameters are being read from the modelinput file.
 	const char*  parameterFileName;	///< The name (including path) of the file containing the model input parameters.

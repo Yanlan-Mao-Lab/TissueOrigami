@@ -171,6 +171,12 @@ bool ModelInputObject::readParameters(){
 				 */
 				Success  = readExplicitECMOptions(parametersFile);
 			}
+			else if(currParameterHeader == "ExplicitActinOptions:"){
+				/**
+				 * Setting explicit actin options, The actin layer will not grow in z.
+				 */
+				Success  = readExplicitActinOptions(parametersFile);
+			}
 			else {
 				/**
 				 * In the case that the function, or any of the above listed parameter reading functions, encounters an
@@ -1928,6 +1934,22 @@ bool ModelInputObject::readCellMigrationOptions(ifstream& file){
 	}
 	return true;
 }
+
+
+bool ModelInputObject::readExplicitActinOptions(ifstream& file){
+	string currHeader;
+	file >> currHeader;
+	if(currHeader == "ThereIsExplicitActin(bool):"){
+		file >> Sim->thereIsExplicitActin;
+	}
+	else{
+		cerr<<"Error in reading cell migration options: "<<currHeader<<", should have been: ThereIsExplicitActin(bool):" <<endl;
+		return false;
+	}
+	return true;
+}
+
+
 
 bool ModelInputObject::readExplicitECMOptions(ifstream& file){
 	string currHeader;

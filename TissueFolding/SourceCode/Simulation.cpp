@@ -237,6 +237,7 @@ void Simulation::setDefaultParameters(){
 	thereIsCellMigration = false;
 	thereIsExplicitECM = false;
 	ECMRenawalHalfLife = 0.0;
+	thereIsExplicitActin = false;
 }
 
 bool Simulation::readExecutableInputs(int argc, char **argv){
@@ -557,17 +558,11 @@ bool Simulation::initiateSystem(){
 	//initiating the NR solver object, that generates the necessary matrices
 	//for solving the tissue dynamics
     NRSolver = new NewtonRaphsonSolver(Nodes[0]->nDim,nNodes);
-    /*for (int i =0 ; i<nNodes; ++i){
-		if (i != 0   && i != 66 ){
-		    fixAllD (i,false);
-		}
-
-    }*/
 
     if (thereIsCellMigration) {
     	cout<<"initiation of cell migration"<<endl;
     	double cellMigrationOriginAngle = M_PI/2.0;
-    	cellMigrationTool = new CellMigration(nElements,0.5);
+    	cellMigrationTool = new CellMigration(nElements,0.5); //50% leaves the tissue region per hour
         cellMigrationTool->assignElementRadialVectors(Elements);
         cellMigrationTool->assignOriginOfMigration(Elements, cellMigrationOriginAngle);
         cellMigrationTool->assignElementConnectivity(Nodes,Elements);
@@ -578,6 +573,10 @@ bool Simulation::initiateSystem(){
     }
     if (thereIsExplicitECM){
     	setUpECMMimicingElements();
+    	//TO DO: NEED TO UPDATE THE PHYSICAL PROPERTIES AFTER THIS!
+    }
+    if (thereIsExplicitActin){
+    	setUpActinMimicingElements();
     }
 	return Success;
 }
@@ -4471,34 +4470,6 @@ void Simulation::updateStepNR(){
 			addRandomForces(NRSolver->gExt);
 		}
         NRSolver->addExernalForces();
-        //int nodes[3] = {0,66,132};
-        //ImplicitViscTesting:
-        /*
-        int nodes[3] = {0,163,326};
-        int n = 3;
-        double dvel = 0.1;
-        for (int i=0;i<n;++i){
-    		cout<<" Node : "<<nodes[i]<<"mass: "<<Nodes[nodes[i]]->mass<<" external viscosity: "<<Nodes[nodes[i]]->externalViscosity[0]<<" "<<Nodes[nodes[i]]->externalViscosity[1]<<" "<<Nodes[nodes[i]]->externalViscosity[2]<<endl;
-    		cout<<" Node : "<<nodes[i]<<" External viscous forces : ";
-    		for (int j=0;j<3;++j){
-        		double Fext = gsl_matrix_get(NRSolver->gvExternal,nodes[i]*3+j,0);
-        		cout<<" "<<Fext;
-        	}
-    		cout<<" Node : "<<nodes[i]<<" Internal viscous forces : ";
-    		for (int j=0;j<3;++j){
-				double Fint = gsl_matrix_get(NRSolver->gvInternal,nodes[i]*3+j,0);
-				cout<<"  "<<Fint;
-			}
-    		cout<<endl;
-        }
-        //int ele[2] = {2,104};
-        int ele[2] = {203,473};
-        n =2;
-        for (int i=0;i<n;++i){
-        	cout<<" Element : "<<ele[i]<<"internal viscosity: "<<Elements[ele[i]]->getInternalViscosity()<<endl;
-        }
-        //end of implicit visc testing
-         */
         checkForExperimentalSetupsWithinIteration();
         NRSolver->calcutateFixedK(Nodes);
         //cout<<"checking convergence with forces"<<endl;
@@ -7710,10 +7681,24 @@ void Simulation::setUpECMMimicingElements(){
 			//basal elements are mimicing the ECM:
 			(*itElement)->setECMMimicing(true);
 		}
-		if ( (*itElement)->tissuePlacement = 2 && (*itElement)->spansWholeTissue ){
+		if ( (*itElement)->tissuePlacement == 2 && (*itElement)->spansWholeTissue ){
 			//elemetns that  are called mid -line, as they
 			//span the whole tissue, are treated as ECM mimicing
 			(*itElement)->setECMMimicing(true);
+		}
+	}
+}
+
+void Simulation::setUpActinMimicingElements(){
+	for(vector<ShapeBase*>::iterator  itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		if ( (*itElement)->tissuePlacement == 1 ){
+			//apical elements are mimicing actin:
+			(*itElement)->setActinMimicing(true);
+		}
+		if ( (*itElement)->tissuePlacement == 2 && (*itElement)->spansWholeTissue ){
+			//elemetns that  are called mid -line, as they
+			//span the whole tissue, are treated as ECM mimicing
+			(*itElement)->setActinMimicing(true);
 		}
 	}
 }

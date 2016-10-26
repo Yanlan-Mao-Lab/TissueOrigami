@@ -163,6 +163,7 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, bool thereIsPlas
     remodellingPlaneRotationMatrix = gsl_matrix_calloc(3,3);
     gsl_matrix_set_identity(remodellingPlaneRotationMatrix);
     isECMMimicing = false;
+    isActinMimicing = false;
 }
 
 Prism::~Prism(){

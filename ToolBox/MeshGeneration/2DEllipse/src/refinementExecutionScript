@@ -57,6 +57,44 @@ cp Points.6.node Points.1.node
 cp MeshFile.out ./Exp48hr-noPeri_09.mesh
 
 
+%genereation of the full version (full tissue, with an outline that was made symmetric outside this tool):
+./EllipseFromOutline 1 35.56 50 27.3 27.3 12.5 9 2 0  ./inputOutlines/48hrDiscSymmetricOutline
+../triangle/triangle -rq33a27.44 Points.1
+%Now Points.2.ele is my mesh with side length 6.5
+../triangle/triangle -rq33a10.4 Points.2
+%Now Points.3.ele is my mesh with side length 4
+../triangle/triangle -rq33a5.8 Points.3
+%Now Points.4.ele is my mesh with side length 3
+../triangle/triangle -rq33a2.6 Points.4
+%Now Points.5.ele is my mesh with side length 2
+../triangle/triangle -rq33a0.65 Points.5
+%Now Points.6.ele is my mesh with side length 1
+
+cp Points.2.ele Points.1.ele
+cp Points.2.node Points.1.node
+./EllipseFromOutline -1 12.5 6.5 2 0  ./inputOutlines/48hrDiscSymmetricOutline
+cp MeshFile.out ./Exp48hr-noPerinoSym_04.mesh
+cp Points.3.ele Points.1.ele
+cp Points.3.node Points.1.node
+./EllipseFromOutline -1 12.5 4 2 0  ./inputOutlines/48hrDiscSymmetricOutline
+cp MeshFile.out ./Exp48hr-noPerinoSym_05.mesh
+cp Points.3.ele Points.1.ele
+cp Points.3.node Points.1.node
+./EllipseFromOutline -1 12.5 4 3 0  ./inputOutlines/48hrDiscSymmetricOutline
+cp MeshFile.out ./Exp48hr-noPerinoSym_06.mesh
+cp Points.4.ele Points.1.ele
+cp Points.4.node Points.1.node
+./EllipseFromOutline -1 12.5 3 4 0  ./inputOutlines/48hrDiscSymmetricOutline
+cp MeshFile.out ./Exp48hr-noPerinoSym_07.mesh  
+cp Points.5.ele Points.1.ele
+cp Points.5.node Points.1.node
+./EllipseFromOutline -1 12.5 2 5 0  ./inputOutlines/48hrDiscSymmetricOutline
+cp MeshFile.out ./Exp48hr-noPerinoSym_08.mesh
+cp Points.6.ele Points.1.ele
+cp Points.6.node Points.1.node
+./EllipseFromOutline -1 12.5 1 5 0  ./inputOutlines/48hrDiscSymmetricOutline
+cp MeshFile.out ./Exp48hr-noPerinoSym_09.mesh
+
 
 % Now with peripodial
 % There is the side curve measurement of 5.52 microns at 48 hours.
