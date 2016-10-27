@@ -1005,11 +1005,6 @@ void 	ShapeBase::growShapeByFg(){
     double detFg = determinant3by3Matrix(Fg);
     GrownVolume = detFg*ReferenceShape->Volume;
     VolumePerNode = GrownVolume/nNodes;
-    if (Id == 1929){
-    	cout.precision(9);
-    	cout<<"Element: "<<Id<<" For simulationOnTheGo, detFg: "<<detFg<<" GrownVolume: "<<GrownVolume<<endl;
-    	displayMatrix(Fg,"FgForDebugging");
-    }
     //freeing matrices allocated in this function
     gsl_matrix_free(temp1);
     gsl_matrix_free(temp2);

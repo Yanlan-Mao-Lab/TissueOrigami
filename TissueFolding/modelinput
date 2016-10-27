@@ -5,7 +5,7 @@ InputMeshParameters:
   symmetricInY(bool): 1
  
 TimeParameters:
-  TimeStep(sec): 1200
+  TimeStep(sec): 120
   SimulationLength(sec): 180000
 
 SaveOptions:
@@ -41,7 +41,7 @@ Manipulations:
 
 PysicalProperties:
   YoungsModulusApical: 3000.0	YoungsModulusBasal: 250.0	YoungsModulusMid: 250.0	Noise(%-int): 0
-  PoissonsRatio: 0.45		Noise(%-int): 0
+  PoissonsRatio: 0.49		Noise(%-int): 0
   ApicalViscosity:  0.0 	Noise(%-int): 0
   BasalViscosity:   0.0
   MidLineViscosity: 0.0
@@ -66,8 +66,8 @@ LinkerZoneParameters:
 
 ExternalViscositySetup:
   ExtendToWholeTissue: 0
-  DiscProperApicalExternalViscosity: 80000.0 
-  DiscProperBasalExternalViscosity: 80000.0 
+  DiscProperApicalExternalViscosity: 10000.0 
+  DiscProperBasalExternalViscosity: 10000.0 
   PeripodialMembraneApicalExternalViscosity: 0.0
   PeripodialMembraneBasalExternalViscosity: 0.0 
   LinkerZoneApicalExternalViscosity: 0.0
@@ -76,7 +76,7 @@ ExternalViscositySetup:
 GrowthOptions:
   NumberofGrowthFunctions(int): 7
   GridGrowthsPinnedOnInitialMesh(bool): 1 
-  PinningUpdateTimes(number-times(sec)): 2 36000 72000
+  PinningUpdateTimes(number-times(sec)): 3 57600 86400 115200
   GridGrowthsInterpolationType(0=step,1=linear): 1
 
   GrowthFunctionType(int-seeDocumentation): 2

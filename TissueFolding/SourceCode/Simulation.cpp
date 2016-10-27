@@ -504,6 +504,14 @@ bool Simulation::initiateSystem(){
 	if (addCurvatureToTissue){
 		addCurvatureToColumnar(tissueCurvatureDepth);
 	}
+
+	if (thereIsExplicitECM){
+		setUpECMMimicingElements();
+		//TO DO: NEED TO UPDATE THE PHYSICAL PROPERTIES AFTER THIS!
+	}
+	if (thereIsExplicitActin){
+		setUpActinMimicingElements();
+	}
 	fillInNodeNeighbourhood();
 	fillInElementColumnLists();
 	checkForNodeFixing();
@@ -571,13 +579,7 @@ bool Simulation::initiateSystem(){
     if (thereIsPlasticDeformation){
     	setLateralElementsRemodellingPlaneRotationMatrices();
     }
-    if (thereIsExplicitECM){
-    	setUpECMMimicingElements();
-    	//TO DO: NEED TO UPDATE THE PHYSICAL PROPERTIES AFTER THIS!
-    }
-    if (thereIsExplicitActin){
-    	setUpActinMimicingElements();
-    }
+
 	return Success;
 }
 
@@ -2727,18 +2729,21 @@ void Simulation::assignPhysicalParameters(){
 			double currEApical 	= fractions[(*itElement)->Id] * EApical*(1 + noise1/100.0);
 			double currEBasal	= fractions[(*itElement)->Id] * EBasal*(1 + noise1/100.0);
 			double currEMid		= fractions[(*itElement)->Id] * EMid*(1 + noise1/100.0);
-			(*itElement)->setElasticProperties(currEApical,currEBasal,currEMid,poisson*(1 + noise2/100));
+			double currPoisson = poisson*(1 + noise2/100);
+			(*itElement)->setElasticProperties(currEApical,currEBasal,currEMid,currPoisson);
 			(*itElement)->setViscosity(discProperApicalViscosity,discProperBasalViscosity,discProperMidlineViscosity);
 		}
 		else if ((*itElement)->tissueType == 1){ //Element is on the peripodial membrane
 			double currEApical = fractions[(*itElement)->Id] * PeripodialElasticity*(1 + noise1/100.0);
 			double currEBasal = currEApical;
 			double currEMid = currEApical;
+			double currPoisson = poisson*(1 + noise2/100);
 			if(thereIsExplicitECM){
 				currEBasal = fractions[(*itElement)->Id] * EBasal*(1 + noise1/100.0);
 				currEMid = fractions[(*itElement)->Id] * EMid*(1 + noise1/100.0);
+				currPoisson = 0;
 			}
-			(*itElement)->setElasticProperties(currEApical,currEBasal,currEMid,poisson*(1 + noise2/100));
+			(*itElement)->setElasticProperties(currEApical,currEBasal,currEMid,currPoisson);
 			(*itElement)->setViscosity(peripodialApicalViscosity,peripodialBasalViscosity,peripodialMidlineViscosity);
 		}
 		else if ((*itElement)->tissueType == 2 ){ //Element is on the linker Zone,
@@ -2748,12 +2753,13 @@ void Simulation::assignPhysicalParameters(){
 				double currEApical 		= fractions[(*itElement)->Id] * EApical * (1 + noise1/100.0);
 				double currEBasal 		= fractions[(*itElement)->Id] * EBasal * (1 + noise1/100.0);
 				double currEMid 		= fractions[(*itElement)->Id] * EMid * (1 + noise1/100.0);
+				double currPoisson      = poisson*(1 + noise2/100);
 				double periWeight 		= (*itElement)->getPeripodialness();
 				double colWeight = (*itElement)->getColumnarness();
 				currEApical = colWeight * currEApical + periWeight * currPeripodialE;
 				currEBasal  = colWeight * currEBasal  + periWeight * currPeripodialE;
 				currEMid    = colWeight * currEMid    + periWeight * currPeripodialE;
-				(*itElement)->setElasticProperties(currEApical,currEBasal,currEMid,poisson*(1 + noise2/100));
+				(*itElement)->setElasticProperties(currEApical,currEBasal,currEMid,currPoisson);
 				double currViscApical  = colWeight * discProperApicalViscosity  + periWeight * peripodialApicalViscosity;
 				double currViscBasal   = colWeight * discProperBasalViscosity   + periWeight * peripodialBasalViscosity;
 				(*itElement)->setViscosity(currViscApical,currViscBasal); //There is no midline in the linker zone.
@@ -2763,9 +2769,9 @@ void Simulation::assignPhysicalParameters(){
 				double currEApical 	= fractions[(*itElement)->Id] * LinkerZoneApicalElasticity*(1 + noise1/100.0);
 				double currEBasal	= fractions[(*itElement)->Id] * LinkerZoneBasalYoungsModulus*(1 + noise1/100.0);
 				double currEMid		= fractions[(*itElement)->Id] * 0.5 * (LinkerZoneApicalElasticity+LinkerZoneBasalYoungsModulus)*(1 + noise1/100.0);
-				(*itElement)->setElasticProperties(currEApical,currEBasal,currEMid,poisson*(1 + noise2/100));
+				double currPoisson  = poisson*(1 + noise2/100);
+				(*itElement)->setElasticProperties(currEApical,currEBasal,currEMid,currPoisson);
 				(*itElement)->setViscosity(linkerZoneApicalViscosity,linkerZoneBasalViscosity,linkerZoneMidlineViscosity);
-
 			}
 		}
 	}
@@ -2795,8 +2801,6 @@ void Simulation::assignPhysicalParameters(){
 		}
 	}
 	delete[] fractions;
-
-
 }
 
 void Simulation::checkForZeroExternalViscosity(){
