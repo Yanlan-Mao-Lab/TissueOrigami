@@ -2730,6 +2730,10 @@ void Simulation::assignPhysicalParameters(){
 			double currEBasal	= fractions[(*itElement)->Id] * EBasal*(1 + noise1/100.0);
 			double currEMid		= fractions[(*itElement)->Id] * EMid*(1 + noise1/100.0);
 			double currPoisson = poisson*(1 + noise2/100);
+			if((*itElement)->isECMMimicing){
+				//the Poisson ratio is zero so that the ECM layer will not thin!
+				currPoisson = 0;
+			}
 			(*itElement)->setElasticProperties(currEApical,currEBasal,currEMid,currPoisson);
 			(*itElement)->setViscosity(discProperApicalViscosity,discProperBasalViscosity,discProperMidlineViscosity);
 		}
@@ -2739,8 +2743,15 @@ void Simulation::assignPhysicalParameters(){
 			double currEMid = currEApical;
 			double currPoisson = poisson*(1 + noise2/100);
 			if(thereIsExplicitECM){
+				//The input file does not define apical and basal stiffness separately
+				//for each element. If I have explicit ECM, I will change the basal ECM
+				//stiffness such that it will be the same as basal of the columnar layer,
+				//therefore the ECM.
 				currEBasal = fractions[(*itElement)->Id] * EBasal*(1 + noise1/100.0);
 				currEMid = fractions[(*itElement)->Id] * EMid*(1 + noise1/100.0);
+			}
+			if((*itElement)->isECMMimicing){
+				//the Poisson ratio is zero so that the ECM layer will not thin!
 				currPoisson = 0;
 			}
 			(*itElement)->setElasticProperties(currEApical,currEBasal,currEMid,currPoisson);
@@ -2770,6 +2781,10 @@ void Simulation::assignPhysicalParameters(){
 				double currEBasal	= fractions[(*itElement)->Id] * LinkerZoneBasalYoungsModulus*(1 + noise1/100.0);
 				double currEMid		= fractions[(*itElement)->Id] * 0.5 * (LinkerZoneApicalElasticity+LinkerZoneBasalYoungsModulus)*(1 + noise1/100.0);
 				double currPoisson  = poisson*(1 + noise2/100);
+				if((*itElement)->isECMMimicing){
+					//the Poisson ratio is zero so that the ECM layer will not thin!
+					currPoisson = 0;
+				}
 				(*itElement)->setElasticProperties(currEApical,currEBasal,currEMid,currPoisson);
 				(*itElement)->setViscosity(linkerZoneApicalViscosity,linkerZoneBasalViscosity,linkerZoneMidlineViscosity);
 			}
@@ -3041,15 +3056,15 @@ void Simulation::manualPerturbationToInitialSetup(bool deform, bool rotate){
 		//laserAblateTissueType(1);
 		//laserAblate(0.0, 0.0, 5.0);
 		//deform = true;
-        double scaleX = 2.0;
+        double scaleX = 1.0;
         double scaleY = 1.0;
         double scaleZ = 2.0;
 
         double PI = 3.14159265359;
-        double tetX = 45 *PI/180.0;
-        double tetY = 0 *PI/180.0;
+        double tetX = 0 *PI/180.0;
+        double tetY = 45 *PI/180.0;
         double tetZ = 0 *PI/180.0;
-    	int axisToRotateOn = 0; //0: rotate around x axis, 1: around y-axis, and 2: around z-axis.
+    	int axisToRotateOn = 1; //0: rotate around x axis, 1: around y-axis, and 2: around z-axis.
         if(deform){
         	for (vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
         		(*itNode)->Position[0] *=scaleX;

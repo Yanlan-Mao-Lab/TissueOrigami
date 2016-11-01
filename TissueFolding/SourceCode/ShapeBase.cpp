@@ -2733,6 +2733,11 @@ void 	ShapeBase::calculatePrincipalStrains3D(bool ignoreZ, double& e1, double &e
 	e1 = gsl_vector_get(eigenValues,0);
 	e2 = gsl_vector_get(eigenValues,1);
 	e3 = gsl_vector_get(eigenValues,2);
+	/*if (Id ==0){
+		displayMatrix(Strain,"Strain");
+		displayMatrix(Strain3D,"Strain3D");
+		cout<<"e1: "<<e1<<" e2: "<<e2<<" e3: "<<e3<<endl;
+	}*/
 	gsl_vector_free(eigenValues);
 	gsl_matrix_free(Strain3D);
 }

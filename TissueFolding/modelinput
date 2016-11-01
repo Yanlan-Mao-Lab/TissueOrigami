@@ -1,11 +1,11 @@
 InputMeshParameters:
   MeshInputMode(int-seeDocumentation): 4
-  MeshFile(full-path):     /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Exp48hr-noPeri_08.mesh
+  MeshFile(full-path):     /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Exp48hr-noPeri_04.mesh
   symmetricInX(bool): 0
   symmetricInY(bool): 1
  
 TimeParameters:
-  TimeStep(sec): 120
+  TimeStep(sec): 300
   SimulationLength(sec): 180000
 
 SaveOptions:
@@ -16,7 +16,7 @@ SaveOptions:
 
 NodeFixingOptions:
   FixWithHighExternalViscosity(bool): 1
-    FixVis(x,y,z): 80000   80000  100000
+    FixVis(x,y,z): 80000   80000  200000
   ApicalSurfaceFix(bool-x,y,z): 0 0 0
   BasalSurfaceFix(bool-x,y,z): 0 0 0
   ApicalCircumferenceFix(bool-x,y,z): 0 0 0
@@ -41,7 +41,7 @@ Manipulations:
 
 PysicalProperties:
   YoungsModulusApical: 3000.0	YoungsModulusBasal: 250.0	YoungsModulusMid: 250.0	Noise(%-int): 0
-  PoissonsRatio: 0.49		Noise(%-int): 0
+  PoissonsRatio: 0.0		Noise(%-int): 0
   ApicalViscosity:  0.0 	Noise(%-int): 0
   BasalViscosity:   0.0
   MidLineViscosity: 0.0
@@ -66,8 +66,8 @@ LinkerZoneParameters:
 
 ExternalViscositySetup:
   ExtendToWholeTissue: 0
-  DiscProperApicalExternalViscosity: 10000.0 
-  DiscProperBasalExternalViscosity: 10000.0 
+  DiscProperApicalExternalViscosity: 80000.0 
+  DiscProperBasalExternalViscosity: 80000.0 
   PeripodialMembraneApicalExternalViscosity: 0.0
   PeripodialMembraneBasalExternalViscosity: 0.0 
   LinkerZoneApicalExternalViscosity: 0.0
@@ -77,7 +77,7 @@ GrowthOptions:
   NumberofGrowthFunctions(int): 7
   GridGrowthsPinnedOnInitialMesh(bool): 1 
   PinningUpdateTimes(number-times(sec)): 3 57600 86400 115200
-  GridGrowthsInterpolationType(0=step,1=linear): 1
+  GridGrowthsInterpolationType(0=step,1=linear): 0
 
   GrowthFunctionType(int-seeDocumentation): 2
   InitialTime(sec): 0
@@ -153,10 +153,10 @@ ShapeChangeOptions:
   MaxValue(fractionPerHour): 0.2888
 
 PlasticDeformationOptions:
-  ThereIsPlasticDeformation(bool): 0
-  ApplyToColumnarLayer(bool): 0
-  ApplyToPeripodialMembrane(bool): 1
-  VolumeConserved(bool): 0
+  ThereIsPlasticDeformation(bool): 1
+  ApplyToColumnarLayer(bool): 1
+  ApplyToPeripodialMembrane(bool): 0
+  VolumeConserved(bool): 1
   DeformationHalfLife(hour): 5.12
   zDeformationLimits(lowerFraction-upperFraction): 0.5  1.05
 
