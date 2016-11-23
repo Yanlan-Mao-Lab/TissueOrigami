@@ -3056,9 +3056,9 @@ void Simulation::manualPerturbationToInitialSetup(bool deform, bool rotate){
 		//laserAblateTissueType(1);
 		//laserAblate(0.0, 0.0, 5.0);
 		//deform = true;
-        double scaleX = 1.0;
+        double scaleX = 2.0;
         double scaleY = 1.0;
-        double scaleZ = 2.0;
+        double scaleZ = 1.0;
 
         double PI = 3.14159265359;
         double tetX = 0 *PI/180.0;
@@ -4045,6 +4045,10 @@ bool Simulation::runOneStep(){
     if (Success){
     	processDisplayDataAndSave();
     }
+    //if(nElements>201){
+    //	Elements[99]->displayMatrix(Elements[99]->Strain,"Element99Strain");
+    //	Elements[201]->displayMatrix(Elements[201]->Strain,"Element201Strain");
+    //}
     return Success;
     //for (int i=0; i<nNodes; ++i){
     //	cout<<" Nodes["<<i<<"]->Position[0]="<<Nodes[i]->Position[0]<<"; Nodes["<<i<<"]->Position[1]="<<Nodes[i]->Position[1]<<";  Nodes["<<i<<"]->Position[2]="<<Nodes[i]->Position[2]<<"; "<<endl;
@@ -4491,6 +4495,8 @@ void Simulation::updateStepNR(){
         NRSolver->addExernalForces();
         checkForExperimentalSetupsWithinIteration();
         NRSolver->calcutateFixedK(Nodes);
+        //cout<<"displaying the jacobian after all additions"<<endl;
+        //Elements[0]->displayMatrix(NRSolver->K,"theJacobian");
         //cout<<"checking convergence with forces"<<endl;
         //converged = NRSolver->checkConvergenceViaForce();
         if (converged){
@@ -4504,6 +4510,18 @@ void Simulation::updateStepNR(){
         NRSolver->updateUkInIteration();
         updateElementPositionsinNR(NRSolver->uk);
         updateNodePositionsNR(NRSolver->uk);
+
+        //int nNodeList = 6;
+        //int nodeList[6] = {0,1,2,3,4,5};
+        //for (int nodeListIterator=0; nodeListIterator<nNodeList;nodeListIterator++){
+		//	int currNodeOfInterest = nodeList[nodeListIterator];
+		//	if (nNodes>currNodeOfInterest){
+		//		double currNodeOfInterestX = gsl_vector_get(NRSolver->deltaU,currNodeOfInterest*3);
+		//		double currNodeOfInterestY = gsl_vector_get(NRSolver->deltaU,currNodeOfInterest*3+1);
+		//		double currNodeOfInterestZ = gsl_vector_get(NRSolver->deltaU,currNodeOfInterest*3+2);
+		//		cout<<" displacement for Node "<<currNodeOfInterest<<":  "<<currNodeOfInterestX<<" "<<currNodeOfInterestY<<" "<<currNodeOfInterestZ<<endl;
+		//	}
+        //}
         iteratorK ++;
         if (!converged && iteratorK > 20){
             cerr<<"Error: did not converge!!!"<<endl;

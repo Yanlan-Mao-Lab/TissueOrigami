@@ -170,6 +170,7 @@ void GLWidget::reInitialiseNodeColourList(int oldNodeNumber){
 
  void GLWidget::paintGL()
  {
+	 //cout<<"inside paint GL"<<endl;
      //glScalef(this->devicePixelRatio(),this->devicePixelRatio(),this->devicePixelRatio());
      QSize viewport_size = size();
      glViewport(0, 0, viewport_size.width()*this->devicePixelRatio(), viewport_size.height()*this->devicePixelRatio());
@@ -221,7 +222,6 @@ void GLWidget::reInitialiseNodeColourList(int oldNodeNumber){
 	 if (DisplayFixedNodes){
 		 drawFixedNodes();
 	 }
-
      //swapBuffers();
  }
 
@@ -500,6 +500,10 @@ void GLWidget::highlightNode(int i){
 	int* NodeIds = Sim01->Elements[i]->getNodeIds();
 	float** NodeColours;
 	NodeColours = new float*[n];
+	/*Sim01->thereIsExplicitECM = true;
+	if(Sim01->Elements[i]->tissuePlacement == 0){
+		Sim01->Elements[i]->isECMMimicing= true;
+	}*/
 	for (int j = 0; j<n; j++){
 		NodeColours[j] = new float[3];
 		if (DisplayPysProp && PysPropToDisplay == 4){
@@ -578,7 +582,6 @@ void GLWidget::highlightNode(int i){
 	float** NodeColours;
 	NodeColours = getElementColourList(i);
 
-
 	/*if( Sim01->Elements[i]->getCellMigration()){
 		for(int l=0;l<6;++l){
 			NodeColours[l][0] = 0.75 + Sim01->cellMigrationTool->getRateFractionForElement(i)/ (1-0.75);
@@ -642,7 +645,6 @@ void GLWidget::highlightNode(int i){
 	 */
 	//NodeColours = new float*[n];
 	//float NodeColours[6][3] = {{0.1,0.1,0.1},{0.1,0.1,0.1},{0.1,0.1,0.1},{0.1,0.1,0.1},{0.1,0.1,0.1},{0.1,0.1,0.1}};
-
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glEnable(GL_POLYGON_OFFSET_FILL); // Avoid Stitching!
 	glPolygonOffset(1.0, 1.0); 	//These are necessary so the depth test can keep the lines above surfaces
@@ -660,7 +662,6 @@ void GLWidget::highlightNode(int i){
 		}
 	glEnd();
 	glDisable(GL_POLYGON_OFFSET_FILL);
-
 	glLineWidth(MainShapeLineThickness);
 	//Drawing the borders
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -674,13 +675,13 @@ void GLWidget::highlightNode(int i){
 			glVertex3f( x, y, z);
 		}
 	glEnd();
-	for (int i=0; i<Sim01->Elements[i]->getNodeNumber(); ++i ){
-		//cout<<"node colours: "<<NodeColours[i][0]<<" "<<NodeColours[i][1]<<" "<<NodeColours[i][2]<<endl;
-		//cout<<"deleting node colours["<<i<<"]"<<endl;
-		delete[] NodeColours[i];
+	for (int j=0; j<Sim01->Elements[i]->getNodeNumber(); ++j ){
+		//cout<<"node colours: "<<NodeColours[j][0]<<" "<<NodeColours[j][1]<<" "<<NodeColours[j][2]<<endl;
+		//cout<<"deleting node colours["<<j<<"]"<<endl;
+		delete[] NodeColours[j];
+		//cout<<"deleted node colours["<<j<<"]"<<endl;
 	}
 	delete[] NodeColours;
-	//cout<<"finalised draw prism"<<endl;
 
  }
 

@@ -349,7 +349,6 @@ void ShapeBase::calculateFgFromGridCorners(int gridGrowthsInterpolationType, dou
 					}
 				}
 			}
-
 		}
 		else if (gridGrowthsInterpolationType == 1){
 			//calculating the angle fraction eliminated, if any:
@@ -1119,12 +1118,12 @@ void	ShapeBase::calculatePlasticDeformation3D(bool volumeConserved, double dt, d
 		if (det>1 && zRemodellingSoFar<zRemodellingLowerThreshold){
 			//The remodelling is trying to enlarge the tissue.
 			//To conserve volume, I need to shrink all axes, keeping the ratio constant.
-			//This means the z height will be shrunk. But it has laready been shrunk to my threshold level.
+			//This means the z height will be shrunk. But it has already been shrunk to my threshold level.
 			//I have the z capped, I will scale only on x & y axes.
 			zCapped = true;
 		}
 		if (det<1 && zRemodellingSoFar>zRemodellingUpperThreshold){
-			//similar to above, not the remodelling is trying to shrink the tissue.
+			//similar to above, but the remodelling is trying to shrink the tissue.
 			//To conserve the volume, I will need to enlarge all axes, keeping the ratio constant.
 			//I have already extended z axis to a large extent, I will not extend it any more.
 			//z is capped.
@@ -1626,6 +1625,11 @@ void	ShapeBase::calculateForces3D(vector <Node*>& Nodes,  gsl_matrix* displaceme
         gsl_matrix_scale(currF,weights[iter]);
         gsl_matrix_add(TriPointF, currF);
     }
+    //if(Id == 0){
+    //	cout<<"Element: "<<Id<<endl;
+    //	displayMatrix(TriPointgv,"TriPointgv");
+    //	displayMatrix(TriPointge,"TriPointge");
+    //}
     int counter = 0;
     for (int i = 0; i<nNodes; ++i){
             for (int j = 0; j<nDim; ++j){
@@ -2076,8 +2080,8 @@ void ShapeBase::calculateImplicitKViscous(gsl_matrix* displacementPerDt, double 
 	//each integral calculation will be listed below, individually.
 	//The inputs are:
 	//1) the displacement per dt for all nodes (uk-un)/dt,
-	//2) and is the time step the object has access to all
-	//the necessary matrices to carry out the calculation.
+	//2) the time step
+	//the object has access to all the necessary matrices to carry out the calculation.
 	int dim = nDim;
 	int n = nNodes;
 	if (IsAblated || internalViscosity == 0){
@@ -2137,6 +2141,10 @@ void ShapeBase::calculateImplicitKViscous(gsl_matrix* displacementPerDt, double 
 };
 
 void ShapeBase::writeKelasticToMainKatrix(gsl_matrix* K){
+	//if (Id == 0) {
+	//	displayMatrix(TriPointKe,"TriPointKeWhileWriting");
+	//}
+
     for (int a=0; a<nNodes; ++a){
         for (int b=0; b<nNodes; ++b){
             int NodeId1 = NodeIds[a];
@@ -2155,6 +2163,9 @@ void ShapeBase::writeKelasticToMainKatrix(gsl_matrix* K){
 }
 
 void ShapeBase::writeKviscousToMainKatrix(gsl_matrix* K){
+	//if (Id == 0) {
+	//	displayMatrix(TriPointKv,"TriPointKvWhileWriting");
+	//}
 	if (internalViscosity != 0){
 		for (int a=0; a<nNodes; ++a){
 			for (int b=0; b<nNodes; ++b){
@@ -2346,19 +2357,21 @@ void ShapeBase::calculateViscousKIntegral1(gsl_matrix* currElementalK, gsl_matri
     		//the paranthesis term is: ( I / dt - velocityGradient)
     		//calculate all multiplication: BaT*Bb* (I/dt - \Del v):
 			gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, BaTBb, paranthesisTermForKv1,0.0, KvabInt1);
-			/*if (Id == 0 && a == 3 && b ==3){
-				displayMatrix(BaTBb,"BaTBb_33");
-				displayMatrix(KvabInt1,"KvabInt1_beforeVolumeIntegraiton_33");
-				cout<<"detF: "<<detFs[pointNo]<<" detdXde: "<<detdXdes[pointNo]<<endl;
-			}*/
+			//if (Id == 0){// && a == 3 && b ==3){
+			//	//displayMatrix(KvabInt1,"KvabInt1_beforeVolumeIntegraiton_33");
+			//	cout<<"a,b: "<<a<<", "<<b<<" detF: "<<detFs[pointNo]<<" detdXde: "<<detdXdes[pointNo]<<" dV: "<<detFs[pointNo]*detdXdes[pointNo]<<" element volume "<<ReferenceShape->Volume<<endl;
+			//	displayMatrix(BaTBb,"BaTBb");
+			//}
 			//volume integration:
     	    gsl_matrix_scale(KvabInt1,detFs[pointNo]);
     	    gsl_matrix_scale(KvabInt1,detdXdes[pointNo]);
     	    //scaling by viscosity:
     	    gsl_matrix_scale(KvabInt1,internalViscosity);
-    	    /*if (Id == 0 && a == 3 && b ==3){
-    	    	displayMatrix(KvabInt1,"KvabInt1_afterVolumeIntegraiton_33");
-    	    }*/
+    	    //if (Id == 0 && a == 0 && b == 0){
+    	    //	displayMatrix(KvabInt1,"KvabInt1_afterVolumeIntegraiton_00Element0");
+    	    //	cout<<"dV: "<<detFs[pointNo]*detdXdes[pointNo];
+    	    //	displayMatrix(BaTBb,"BaTBb");
+    	    //}
     	    //Now KabvInt1 is a 3x3 (dim x dim) matrix, while currK is 18 x 18 (dim*n_node x dim*n_nodes)
     	    //currK is composed of 3x3 Kab matrices placed into the blocks (a,b), with indexing from zero,
     	    //for a = 1 and b=2, Kab will be placed in the 3x3 block covering indices (3,4,5) x (6,7,8) on K matrix.

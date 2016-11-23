@@ -751,7 +751,7 @@ void MainWindow::timerSimulationStep(){
     //for (int j=0; j<3; ++j){
     //    cout<<"Node 2025 at circmference: "<<Sim01->Nodes[2025]->atCircumference<<" fixed pos "<<j<<" "<<Sim01->Nodes[2025]->FixedPos[j]<<endl;
     //}
-	bool 	automatedSave = true;
+	bool 	automatedSave = false;
 	bool 	analyseResults = true;
 	bool 	slowstepsOnDisplay = false;
 	bool 	slowstepsOnRun = false;
@@ -765,10 +765,10 @@ void MainWindow::timerSimulationStep(){
 			}
 			if( automatedSave){
 				Sim01->assignTips();
-				//MainGLWidget->updateToTopView(); //display tissue from the top view
-				MainGLWidget->updateToFrontView(); //display tissue from the front view
+				MainGLWidget->updateToTopView(); //display tissue from the top view
+				//MainGLWidget->updateToFrontView(); //display tissue from the front view
 				//MainGLWidget->updateToPerspectiveView(); //display tissue from the tilted view
-				MainGLWidget->drawSymmetricity = false; //hide symmetric
+				MainGLWidget->drawSymmetricity = true; //hide symmetric
 				MainGLWidget->PerspectiveView = false; //switch to orthogoanal view type.
 				Sim01->saveImages = true;
 				Sim01->saveDirectory = Sim01->saveDirectoryToDisplayString;
@@ -787,7 +787,7 @@ void MainWindow::timerSimulationStep(){
 				}
 			}
 			Sim01->calculateDVDistance();
-			for (int a = 0; a<0; a++){ //35 for 12 hours with 600 sec time step
+			for (int a = 0; a<0; a++){ //11 for 6 hours with 1800 sec time step
 				Sim01->updateOneStepFromSave();
 				Sim01->calculateDVDistance();
 			}
@@ -827,11 +827,9 @@ void MainWindow::timerSimulationStep(){
 	else{
 		//cout<<" step: "<<Sim01->timestep<<" currSimTimeSec: "<<Sim01->currSimTimeSec<<" simLength: "<< Sim01->SimLength<<endl;
 		if (Sim01->currSimTimeSec <= Sim01->SimLength){
-			//cout<<"started step: "<<Sim01->currSimTimeSec<<" length: "<<Sim01->SimLength<<endl;
+			cout<<"started step: "<<Sim01->currSimTimeSec<<" length: "<<Sim01->SimLength<<endl;
 			bool Success = Sim01->runOneStep();
 			updateTimeText();
-			//cout<<" step: "<<Sim01->timestep<<"Node[0] pos: "<<Sim01->Nodes[0]->Position[0]<<" "<<Sim01->Nodes[0]->Position[1]<<" "<<Sim01->Nodes[0]->Position[2]<<endl;
-			//cout<<" step: "<<Sim01->timestep<<"Node[43] pos: "<<Sim01->Nodes[43]->Position[0]<<" "<<Sim01->Nodes[43]->Position[1]<<" "<<Sim01->Nodes[43]->Position[2]<<endl;
 			if (slowstepsOnRun){
 				QTime dieTime= QTime::currentTime().addSecs(slowWaitTime);
 				while( QTime::currentTime() < dieTime ){
@@ -846,7 +844,6 @@ void MainWindow::timerSimulationStep(){
 				cout<<"there is a flipped element, I am not continuing simulation"<<endl;
 				Sim01->timestep = 2*Sim01->SimLength;
 			}
-
 		}
         else if(!displayedSimulationLength){
         	displayedSimulationLength = true;

@@ -1862,9 +1862,9 @@ bool ModelInputObject::readECMPerturbation(ifstream& file){
 		if (fraction <=0.0) {
 			fraction = 0.0001;
 		}
-		if (fraction > 1.0){
-			fraction = 1.0;
-		}
+		//if (fraction > 1.0){
+		//	fraction = 1.0;
+		//}
 		Sim->ECMSofteningFraction = fraction;
 	}
 	else{

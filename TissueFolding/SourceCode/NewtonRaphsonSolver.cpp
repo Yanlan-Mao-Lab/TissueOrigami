@@ -267,6 +267,7 @@ void NewtonRaphsonSolver::calculateExternalViscousForcesForNR(vector <Node*>& No
 
 void NewtonRaphsonSolver::addImplicitKViscousExternalToJacobian(vector <Node*>& Nodes, double dt){
     //gsl_matrix_add(K,mviscPerDt);
+	//cout<<"Jacobian due to explicit viscosity" <<endl;
 	for (int i = 0; i<nNodes; ++i ){
 		double massPerDt = Nodes[i]->mass/dt;
 		for (int j=0; j<nDim; ++j){
@@ -637,6 +638,7 @@ void NewtonRaphsonSolver::writeginPardisoFormat(double* b, const int n){
         b[i] = gsl_vector_get(gSum,i);
     }
 }
+
 
 bool NewtonRaphsonSolver::checkConvergenceViaDeltaU(){
     bool converged = true;
