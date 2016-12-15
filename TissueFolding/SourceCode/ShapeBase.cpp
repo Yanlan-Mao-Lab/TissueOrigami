@@ -29,7 +29,16 @@ int 	ShapeBase::ParentErrorMessage(string functionName, int returnValue){
 }
 
 void	ShapeBase::setShapeType(string TypeName){
-	//cout<<"inside set shape type"<<endl;
+	/**
+	 *  The function will set the shape type of the element, stored in variable ShapeBase#ShapeType.
+	 *  The mapping is as follows:
+	 *  	- 1 	: Prism
+	 *  	- 2 	: PrismLateral
+	 *  	- 3 	: Tetrahedron
+	 *  	- 4 	: Triangle
+	 *  	- (-100): Default number if input name is not recognised.
+	 *
+	 */
 	if (TypeName == "Prism"){
 		this->ShapeType = 1;
 	}
@@ -50,6 +59,14 @@ void	ShapeBase::setShapeType(string TypeName){
 }
 
 void	ShapeBase::setIdentificationColour(){
+	/**
+	 *  The function sets the unique ShapeBase#IdentifierColour, which on click, will allow the
+	 *  user interface to identify this element as the selected element. ShapeBase#IdentifierColour
+	 *  is an integer array of size 3, and corresponds to rgb channels, in 0-255 range. Therefore, the
+	 *  selection tool works for 255^3 = 16581375 elements.
+	 *  The colour storing is started from b channel moving towards r, and done with element Id
+	 *
+	 */
 	IdentifierColour[2] = Id % 255;
 	int a = (Id - IdentifierColour[2]) / 255;
 	IdentifierColour[1] = ( a ) % 255;
@@ -547,6 +564,12 @@ void ShapeBase::convertRelativePosToGridIndex(double* relpos, int& indexX, int &
 }
 
 void 	ShapeBase::readNodeIds(int* inpNodeIds){
+	/**
+	 *  This function will take the input of an int pointer that contains the Ids of the nodes that
+	 *  construct the element, and write them into the int array ShapeBase#NodeIds of size ShapeBase#nNodes.
+	 *  There is no checkpoint to ensure the size of the array input pointer points to is equal to ShapeBase#nNodes.
+	 *
+	 */
 	for (int i=0; i<nNodes; ++i){
 		this->NodeIds[i] = inpNodeIds[i];
 	}
@@ -557,10 +580,21 @@ void 	ShapeBase::updateNodeIdsForRefinement(int* inpNodeIds){
 }
 
 void 	ShapeBase::displayName(){
+	/**
+	 *  This function will write the shape type and shape id to standard output.
+	 */
 	cout<<"Type: "<<this->ShapeType<<" Id: "<<this->Id<<endl;
 }
 
 void 	ShapeBase::setPositionMatrix(vector<Node*>& Nodes){
+	/**
+	 *  This function will take the address of a Nodes pointers vector (It should be the Simulation#Nodes vector)
+	 *  It will go through the ShapeBase#NodeIds in a nested loop of ShapeBase#nNodes and ShapeBase#nDim,
+	 *  read the positions of the corresponding node from the input vector storing the pointers to all the nodes,
+	 *  and write the position information into the ShapeBase#Positions array. This is a double storing of the
+	 *  same information, yet is practical for elasticity calculations.
+	 *
+	 */
 	const int n = nNodes;
 	const int dim = nDim;
 	Positions = new double*[n];
@@ -573,6 +607,19 @@ void 	ShapeBase::setPositionMatrix(vector<Node*>& Nodes){
 }
 
 void 	ShapeBase::setTissuePlacement(vector<Node*>& Nodes){
+	/**
+	 *  This function will take the address of a Nodes pointers vector (It should be the Simulation#Nodes vector)
+	 *  Checking the nodes that construct the element, the function will decide the placement of the element
+	 *  within the tissue. The placement of the element within the tissue is defined by the ShapeBase#tissuePlacement
+	 *  integer such that:
+	 *  	- Apical:  ShapeBase#tissuePlacement = 1
+	 *  	- Basal:   ShapeBase#tissuePlacement = 0
+	 *  	- Mid-line or spans the whole tissue: ShapeBase#tissuePlacement = 2
+	 *  	- Lateral: ShapeBase#tissuePlacement = 3
+	 *
+	 *  The function will first decide which type of nodes the element is composed of.
+	 *
+	 */
 	bool hasApicalNode = false;
 	bool hasBasalNode = false;
 	bool hasLateralNode = false;
@@ -588,10 +635,22 @@ void 	ShapeBase::setTissuePlacement(vector<Node*>& Nodes){
 			hasLateralNode = true;
 		}
 	}
+	/**
+	*  Lateral elements can be composed of any combination of lateral, mid-line, apical and basal nodes.
+	*  Any element that contains at least one lateral node, must be a lateral element.
+	*
+	*/
 	if (hasLateralNode){
 		tissuePlacement = 3;
 	}
 	else{
+		/**
+		* Elements that does not contain any lateral nodes, but apical nodes must be apical.
+		* The only exception to this when the whole tissue is spanned by a single layer of
+		* elements. Then the element will have apical and basal nodes, and it will be defined as
+		* a mid-line node, with ShapeBase#spansWholeTissue set to true.
+		*
+		*/
 		if (hasApicalNode){
 			if (hasBasalNode){
 				//the element spans through the whole tissue, the mid-line value should be used
@@ -604,10 +663,21 @@ void 	ShapeBase::setTissuePlacement(vector<Node*>& Nodes){
 			}
 		}
 		else if (hasBasalNode){
+			/**
+			* Elements that does not contain any lateral or apical nodes, but
+			* does contain basal nodes then must be basal.
+			*
+			*/
 			//the element only has basal and mid-line nodes, it is basal
 			tissuePlacement = 0;
 		}
 		else{
+			/**
+			* If the element does not contain any lateral, apical or basal nodes, it must be that the
+			* element is composed wholly of mid-line nodes. Then, the element lies in the mid-layer of
+			* tissue.
+			*
+			*/
 			//the element has only mid-line nodes, it is mid-line
 			tissuePlacement = 2;
 		}
@@ -664,6 +734,16 @@ void 	ShapeBase::setGrowthWeightsViaTissuePlacement (double periWeight){
 }
 
 void 	ShapeBase::setReferencePositionMatrix(){
+	/**
+	*  This function will allocate the position array of the ReferenceShape (ReferenceShape#Positions)
+	*  Then the reference will be equated to the current position of the element.
+	*  It is essential this function is called at simulation initiation, and after any subsequent modifications
+	*  made to the reference structure of the tissue. But it should not be called in cases where
+	*  the current shape of the element has progressed to differ from its reference (such as after loading
+	*  steps of a save file). In saves, the reference shapes are set at the initiation of the system,
+	*  and the positions of saves steps are loaded afterwards.
+	*
+	*/
 	const int n = nNodes;
 	const int dim = nDim;
 	ReferenceShape -> Positions = new double*[n];
@@ -1077,19 +1157,21 @@ void	ShapeBase::calculatePlasticDeformation3D(bool volumeConserved, double dt, d
 	//by default, I will ignore z deformations for columnat tissue.
 	//If the element is mimicing an explicit ECM, then it should be able to deform in z too,.
 	//Linker zone elements are allowed to deform in z, as we have no information on what they are doing.
-	//They do change their z height, and grow in weord patterns. So let them be...
-	bool ignoreZ = true;
+	//They do change their z height, and grow in weird patterns. So let them be...
+	bool ignoreZ = false;
+	bool checkZCapping = true;
 	if(isECMMimicing || tissueType == 2){
-		ignoreZ = false;
+		//ignoreZ = false;
+		checkZCapping = false;
 	}
 	calculatePrincipalStrains3D(ignoreZ,e1,e2,e3,eigenVec);
 	//NowI have the green strain in principal direction in the orientation of the element internal coordinats.
 	//I can simply grow the element in this axis, to obtain some form of plastic growth.
 	//the strain I have here is Green strain, I would like to convert it back to deformation
 	//gradient terms. Since  E = 1/2 *(Fe^T*Fe-I):
-	double Fxx = pow(e1*2+1,0.5);
-	double Fyy = pow(e2*2+1,0.5);
-	double Fzz = pow(e3*2+1,0.5);
+	double F11 = pow(e1*2+1,0.5);
+	double F22 = pow(e2*2+1,0.5);
+	double F33 = pow(e3*2+1,0.5);
 	//half life of plastic deformation:
 	//Maria's aspect ratio data shows, normalised to initial aspect ratio, if a tissue
 	//is stretched to an aspect ratio of 2.0, and relaxed in 20 minutes, it relaxes back to original shape.
@@ -1100,48 +1182,103 @@ void	ShapeBase::calculatePlasticDeformation3D(bool volumeConserved, double dt, d
 	//a half life of 5.12 hr ( N(t) = N(0) * 2 ^ (-t/t_{1/2}) )
 	//This is the value set into modelinput file
 	double tau = plasticDeformationHalfLife/(log(2)); // (mean lifetime tau is half life / ln(2))
-	double Fxxt = (Fxx-1)*exp(-1.0*dt/tau) + 1;
-	double Fyyt = (Fyy-1)*exp(-1.0*dt/tau) + 1;
-	double Fzzt = (Fzz-1)*exp(-1.0*dt/tau) + 1;
-	Fxx = Fxx/Fxxt;
-	Fyy = Fyy/Fyyt;
-	Fzz = Fzz/Fzzt;
+	double F11t = (F11-1)*exp(-1.0*dt/tau) + 1;
+	double F22t = (F22-1)*exp(-1.0*dt/tau) + 1;
+	double F33t = (F33-1)*exp(-1.0*dt/tau) + 1;
+	F11 = F11/F11t;
+	F22 = F22/F22t;
+	F33 = F33/F33t;
 	//writing onto an incremental matrix:
 	gsl_matrix*  increment = gsl_matrix_calloc(3,3);
-	gsl_matrix_set(increment,0,0,Fxx);
-	gsl_matrix_set(increment,1,1,Fyy);
-	gsl_matrix_set(increment,2,2,Fzz);
+	gsl_matrix_set(increment,0,0,F11);
+	gsl_matrix_set(increment,1,1,F22);
+	gsl_matrix_set(increment,2,2,F33);
+	bool zCapped = false;
+	if (checkZCapping){
+		//I want to do some further checks on the z axis, I
+		//need to find what the growth on z axis will be:
+		gsl_matrix* rotMatTForZCap = gsl_matrix_calloc(3,3);
+		gsl_matrix* tempForZCap = gsl_matrix_calloc(nDim,nDim);
+		gsl_matrix* incrementToTestZCapping = gsl_matrix_calloc(nDim,nDim);
+		gsl_matrix_transpose_memcpy(rotMatTForZCap,eigenVec);
+		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, eigenVec, increment, 0.0, tempForZCap);
+		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, tempForZCap, rotMatTForZCap, 0.0, incrementToTestZCapping);
+		gsl_matrix* scaleMat = gsl_matrix_calloc(nDim,nDim);
+		gsl_matrix_set_identity(scaleMat);
+		//The increment I have calculated is non-volume conserved, and non-scaled
+		//for z. There are limitations to how much z axis can be remodelled.
+		//I will check those now and cap the z deformation if necessary:
+		double Fzz = gsl_matrix_get(incrementToTestZCapping,2,2);
+		if (volumeConserved){
+			double det = determinant3by3Matrix(incrementToTestZCapping);
+			double scale = 1.0/pow (det,1.0/3.0);
+			double zIncrement = Fzz/scale;
+			if (zRemodellingSoFar*zIncrement >= zRemodellingUpperThreshold){
+				zCapped = true;
+			}
+			if (zRemodellingSoFar*zIncrement <= zRemodellingLowerThreshold){
+				zCapped = true;
+			}
+		}
+		else{
+			if (zRemodellingSoFar*Fzz >= zRemodellingUpperThreshold){
+				zCapped = true;
+			}
+			if (zRemodellingSoFar*Fzz <= zRemodellingLowerThreshold){
+				zCapped = true;
+			}
+		}
+		gsl_matrix_free(rotMatTForZCap);
+		gsl_matrix_free(tempForZCap);
+		gsl_matrix_free(incrementToTestZCapping);
+	}
+	if (zCapped){
+		if (Id == 141){
+			cout<<"inside z caped increment calculation  in plastic deformation"<<endl;
+			displayMatrix(increment, "incrementBeforeZCapUpdate");
+			displayMatrix(eigenVec, "eigenVecBeforeZCapUpdate");
+		}
+		ignoreZ = true;
+		calculatePrincipalStrains3D(ignoreZ,e1,e2,e3,eigenVec);
+		F11 = pow(e1*2+1,0.5);
+		F22 = pow(e2*2+1,0.5);
+		F11t = (F11-1)*exp(-1.0*dt/tau) + 1;
+		F22t = (F22-1)*exp(-1.0*dt/tau) + 1;
+		F33t = 1.0;
+		F11 = F11/F11t;
+		F22 = F22/F22t;
+		F33 = 1.0;
+		gsl_matrix_set(increment,0,0,F11);
+		gsl_matrix_set(increment,1,1,F22);
+		gsl_matrix_set(increment,2,2,F33);
+		if (Id == 141){
+			displayMatrix(increment, "incrementAfterZCapUpdate");
+			displayMatrix(eigenVec, "eigenVecAfterZCapUpdate");
+		}
+	}
+
 	//If I am conserving the volume, I need to scale:
 	if (volumeConserved){
+
 		double det = determinant3by3Matrix(increment);
-		bool zCapped = false;
-		if (det>1 && zRemodellingSoFar<zRemodellingLowerThreshold){
-			//The remodelling is trying to enlarge the tissue.
-			//To conserve volume, I need to shrink all axes, keeping the ratio constant.
-			//This means the z height will be shrunk. But it has already been shrunk to my threshold level.
-			//I have the z capped, I will scale only on x & y axes.
-			zCapped = true;
-		}
-		if (det<1 && zRemodellingSoFar>zRemodellingUpperThreshold){
-			//similar to above, but the remodelling is trying to shrink the tissue.
-			//To conserve the volume, I will need to enlarge all axes, keeping the ratio constant.
-			//I have already extended z axis to a large extent, I will not extend it any more.
-			//z is capped.
-			zCapped = true;
+		if (Id == 141){
+			cout<<"inside volume conservation check in plastic deformation, det: "<<det<<endl;
+			displayMatrix(increment, "incrementBeforeScale");
 		}
 		if (zCapped){
 			double scale = 1.0/pow (det,1.0/2.0); //scale the size with the square root of the determinant to keep the volume conserved. Then set z to 1 again, we do not want to affect z growth, remodelling is in x & y
 			gsl_matrix_scale(increment,scale);
+			//I know the eigen vector of the 2nd (in 3 dim indexed from 0) column is z axis, if z is capped
+			//Then the incremental value at 2,2 position (in 3 dim indexed from 0) is z
 			gsl_matrix_set(increment,2,2,1);
 		}
 		else{
 			double scale = 1.0/pow (det,1.0/3.0); //scaling in x,y, and z
 			gsl_matrix_scale(increment,scale);
-			zRemodellingSoFar *= gsl_matrix_get(increment,2,2);
 		}
-		//if (Id == 0){
-		//	cout<<"element: "<<Id<<" principal strains: "<<e1<<" "<<e2<<" angle: "<<tet<<" in degrees: "<<tet/3.14*180<<" resulting scaled increment: "<<Fxx<<" "<<Fyy<<" Fxxt: "<<Fxxt<<" Fyyt: "<<Fyyt<<" zRemodellingSoFar: "<<zRemodellingSoFar<<" zCapped: "<<zCapped<<" det: "<<det<<endl;
-		//}
+		if (Id == 141){
+			displayMatrix(increment, "incrementAfterScale");
+		}
 	}
 	//The growth I would like to apply now is written on the increment.
 	//I would like to rotate the calculated incremental "growth" to be aligned with the coordinate
@@ -1150,22 +1287,25 @@ void	ShapeBase::calculatePlasticDeformation3D(bool volumeConserved, double dt, d
 	//Here, the rotation matrix is the eigen vector matrix itself. The eigen vector matrix
 	//will rotate the identity matrix upon itself.
 
-	//gsl_matrix* rotMat  = gsl_matrix_calloc(3,3);
 	gsl_matrix* rotMatT = gsl_matrix_calloc(3,3);
 	gsl_matrix* temp = gsl_matrix_calloc(nDim,nDim);
 	gsl_matrix_transpose_memcpy(rotMatT,eigenVec);
 	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, eigenVec, increment, 0.0, temp);
 	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, temp, rotMatT, 0.0, plasticDeformationIncrement);
-	/*if (Id == 345 || Id == 174 ){
+	//update z remodelling so far to keep track and not update beyond limits
+	zRemodellingSoFar *= gsl_matrix_get(plasticDeformationIncrement,2,2);
+	if (Id == 141 || Id == 141 ){
 		cout<<" Prism "<<Id<<" e1, e2, e3: "<<e1<<" "<<e2<<" "<<e3<<endl;
 		displayMatrix(plasticDeformationIncrement, " plasticDeformationIncrement");
 		displayMatrix(eigenVec," eigenVec");
-		cout<<"    Fxx,  Fyy,  Fzz : "<<Fxx<<" "<<Fyy<<" "<<Fzz<<endl;
-		cout<<"    Fxxt, Fyyt, Fzzt: "<<Fxxt<<" "<<Fyyt<<" "<<Fzzt<<endl;
+		displayMatrix(temp," temp");
+		cout<<"    F11,  F22,  F33 : "<<F11<<" "<<F22<<" "<<F33<<endl;
+		cout<<"    F11t, F22t, F33t: "<<F11t<<" "<<F22t<<" "<<F33t<<endl;
 		cout<<"    plasticDeformationHalfLife: "<<plasticDeformationHalfLife<<" tau: "<<tau<<" exp(-1.0*dt/tau): "<<exp(-1.0*dt/tau)<<endl;
+		cout<<"    zRemodellingSoFar: "<<zRemodellingSoFar<<" limits: "<<zRemodellingLowerThreshold<<" "<<zRemodellingUpperThreshold<<endl;
 		displayMatrix(Fg,"FgBeforeUpdateByPlasticity");
 		displayMatrix(Strain,"Strain");
-	}*/
+	}
 	gsl_matrix_free(temp);
 	gsl_matrix_free(rotMatT);
 	gsl_matrix_free(eigenVec);
@@ -2725,34 +2865,66 @@ void	ShapeBase::updateUnipolarEquilibriumMyosinConcentration(bool isApical, doub
 	gsl_matrix_set(myoPolarityDir,indice,2,0.0);
 }
 
+
 void 	ShapeBase::calculatePrincipalStrains3D(bool ignoreZ, double& e1, double &e2,  double &e3, gsl_matrix* eigenVec){
-	gsl_matrix* Strain3D = gsl_matrix_calloc(3,3);
-	gsl_matrix_set(Strain3D,0,0, gsl_matrix_get(Strain,0,0));
-	gsl_matrix_set(Strain3D,1,1, gsl_matrix_get(Strain,1,0));
-	gsl_matrix_set(Strain3D,0,1, 0.5 * gsl_matrix_get(Strain,3,0));
-	gsl_matrix_set(Strain3D,1,0, 0.5 * gsl_matrix_get(Strain,3,0));
-	if (!ignoreZ){
+	if (ignoreZ){
+		gsl_matrix* Strain2D = gsl_matrix_calloc(2,2);
+		gsl_matrix_set(Strain2D,0,0, gsl_matrix_get(Strain,0,0));
+		gsl_matrix_set(Strain2D,1,1, gsl_matrix_get(Strain,1,0));
+		gsl_matrix_set(Strain2D,0,1, 0.5 * gsl_matrix_get(Strain,3,0));
+		gsl_matrix_set(Strain2D,1,0, 0.5 * gsl_matrix_get(Strain,3,0));
+		gsl_vector* eigenValues = gsl_vector_calloc(2);
+		gsl_matrix* eigenVec2D = gsl_matrix_calloc(2,2);
+		gsl_eigen_symmv_workspace* w = gsl_eigen_symmv_alloc(2);
+		gsl_eigen_symmv(Strain2D, eigenValues, eigenVec2D, w);
+		gsl_eigen_symmv_free(w);
+		gsl_eigen_symmv_sort(eigenValues, eigenVec2D, GSL_EIGEN_SORT_ABS_ASC);
+		e1 = gsl_vector_get(eigenValues,0);
+		e2 = gsl_vector_get(eigenValues,1);
+		e3 = 0;
+		gsl_matrix_set_identity(eigenVec);
+		for (int i=0; i<2; ++i){
+			for (int j=0; j<2; ++j){
+				gsl_matrix_set(eigenVec,i,j,gsl_matrix_get(eigenVec2D,i,j));
+			}
+		}
+		/*if (Id ==0){
+			displayMatrix(Strain,"Strain");
+			displayMatrix(Strain3D,"Strain3D");
+			cout<<"e1: "<<e1<<" e2: "<<e2<<" e3: "<<e3<<endl;
+		}*/
+		gsl_vector_free(eigenValues);
+		gsl_matrix_free(eigenVec2D);
+		gsl_matrix_free(Strain2D);
+	}
+	else{
+		gsl_matrix* Strain3D = gsl_matrix_calloc(3,3);
+		gsl_matrix_set(Strain3D,0,0, gsl_matrix_get(Strain,0,0));
+		gsl_matrix_set(Strain3D,1,1, gsl_matrix_get(Strain,1,0));
+		gsl_matrix_set(Strain3D,0,1, 0.5 * gsl_matrix_get(Strain,3,0));
+		gsl_matrix_set(Strain3D,1,0, 0.5 * gsl_matrix_get(Strain,3,0));
 		gsl_matrix_set(Strain3D,2,2, gsl_matrix_get(Strain,2,0));
 		gsl_matrix_set(Strain3D,2,1, 0.5 * gsl_matrix_get(Strain,4,0));
 		gsl_matrix_set(Strain3D,1,2, 0.5 * gsl_matrix_get(Strain,4,0));
 		gsl_matrix_set(Strain3D,0,2, 0.5 * gsl_matrix_get(Strain,5,0));
 		gsl_matrix_set(Strain3D,2,0, 0.5 * gsl_matrix_get(Strain,5,0));
+		gsl_vector* eigenValues = gsl_vector_calloc(3);
+		gsl_eigen_symmv_workspace* w = gsl_eigen_symmv_alloc(3);
+		gsl_eigen_symmv(Strain3D, eigenValues, eigenVec, w);
+		gsl_eigen_symmv_free(w);
+		gsl_eigen_symmv_sort(eigenValues, eigenVec, GSL_EIGEN_SORT_ABS_ASC);
+		e1 = gsl_vector_get(eigenValues,0);
+		e2 = gsl_vector_get(eigenValues,1);
+		e3 = gsl_vector_get(eigenValues,2);
+		gsl_vector_free(eigenValues);
+		gsl_matrix_free(Strain3D);
 	}
-	gsl_vector* eigenValues = gsl_vector_calloc(3);
-	gsl_eigen_symmv_workspace* w = gsl_eigen_symmv_alloc(3);
-	gsl_eigen_symmv(Strain3D, eigenValues, eigenVec, w);
-	gsl_eigen_symmv_free(w);
-	gsl_eigen_symmv_sort(eigenValues, eigenVec, GSL_EIGEN_SORT_ABS_ASC);
-	e1 = gsl_vector_get(eigenValues,0);
-	e2 = gsl_vector_get(eigenValues,1);
-	e3 = gsl_vector_get(eigenValues,2);
 	/*if (Id ==0){
 		displayMatrix(Strain,"Strain");
 		displayMatrix(Strain3D,"Strain3D");
 		cout<<"e1: "<<e1<<" e2: "<<e2<<" e3: "<<e3<<endl;
 	}*/
-	gsl_vector_free(eigenValues);
-	gsl_matrix_free(Strain3D);
+
 }
 
 double  ShapeBase::calculateVolumeForInputShapeStructure(double** shapePositions, int nTriangularFaces, int** triangularFaces, double* midPoint ){
@@ -3326,19 +3498,155 @@ void	ShapeBase::displayMatrix(boost::numeric::ublas::vector<double>& vec, string
 	cout<<endl;
 }
 
-void 	ShapeBase:: assignVolumesToNodes(vector <Node*>& Nodes){
+void 	ShapeBase::assignVolumesToNodes(vector <Node*>& Nodes){
 	for (int i=0; i<nNodes; i++){
         Nodes[NodeIds[i]]->mass += VolumePerNode;
 	}
 }
 
+void 	ShapeBase::calculateExposedLateralAreaBasalSide(){
+	double Threshold = 1E-5;
+	exposedLateralAreaBasalSide = 0;
+	int id0 = exposedLateralAreaBasalSideNodeIds[0];
+	int id1 = exposedLateralAreaBasalSideNodeIds[1];
+	int id2 = exposedLateralAreaBasalSideNodeIds[2];
+	int id3 = exposedLateralAreaBasalSideNodeIds[3];
+
+	double sideVec1[3];
+	double sideVec2[3];
+	double Side1 = 0.0;
+	double Side2 = 0.0;
+	double costet = 0.0;
+	double Area = 0.0;
+	for (int i = 0; i<3; ++i){
+		sideVec1[i]= Positions[id1][i] - Positions[id0][i];
+		sideVec2[i]= Positions[id2][i] - Positions[id0][i];
+		costet += sideVec1[i] * sideVec2[i];
+		Side1  += sideVec1[i] * sideVec1[i];
+		Side2  += sideVec2[i] * sideVec2[i];
+	}
+	if (Side1 > Threshold && Side2 > Threshold){
+		Side1 = pow(Side1,0.5);
+		Side2 = pow(Side2,0.5);
+		costet /= (Side1*Side2);
+		double sintet = pow((1-costet*costet),0.5);
+		Area = Side1* Side2 * sintet / 2.0;
+	}
+	exposedLateralAreaBasalSide += Area;
+	for (int i = 0; i<3; ++i){
+		sideVec1[i]= Positions[id3][i] - Positions[id2][i];
+		sideVec2[i]= Positions[id0][i] - Positions[id2][i];
+		costet += sideVec1[i] * sideVec2[i];
+		Side1  += sideVec1[i] * sideVec1[i];
+		Side2  += sideVec2[i] * sideVec2[i];
+	}
+	if (Side1 > Threshold && Side2 > Threshold){
+		Side1 = pow(Side1,0.5);
+		Side2 = pow(Side2,0.5);
+		costet /= (Side1*Side2);
+		double sintet = pow((1-costet*costet),0.5);
+		Area = Side1* Side2 * sintet / 2.0;
+	}
+	exposedLateralAreaBasalSide  += Area;
+	//cout<<" Element "<<Id<<" exposedLateralAreaBasalSide: "<<exposedLateralAreaBasalSide<<endl;
+
+}
+
+void 	ShapeBase::calculateExposedLateralAreaApicalSide(){
+	double Threshold = 1E-5;
+	exposedLateralAreaApicalSide = 0;
+	int id0 = exposedLateralAreaApicalSideNodeIds[0];
+	int id1 = exposedLateralAreaApicalSideNodeIds[1];
+	int id2 = exposedLateralAreaApicalSideNodeIds[2];
+	int id3 = exposedLateralAreaApicalSideNodeIds[3];
+
+	double sideVec1[3];
+	double sideVec2[3];
+	double Side1 = 0.0;
+	double Side2 = 0.0;
+	double costet = 0.0;
+	double Area = 0.0;
+	for (int i = 0; i<3; ++i){
+		sideVec1[i]= Positions[id1][i] - Positions[id0][i];
+		sideVec2[i]= Positions[id2][i] - Positions[id0][i];
+		costet += sideVec1[i] * sideVec2[i];
+		Side1  += sideVec1[i] * sideVec1[i];
+		Side2  += sideVec2[i] * sideVec2[i];
+	}
+	if (Side1 > Threshold && Side2 > Threshold){
+		Side1 = pow(Side1,0.5);
+		Side2 = pow(Side2,0.5);
+		costet /= (Side1*Side2);
+		double sintet = pow((1-costet*costet),0.5);
+		Area = Side1* Side2 * sintet / 2.0;
+	}
+	exposedLateralAreaApicalSide += Area;
+	for (int i = 0; i<3; ++i){
+		sideVec1[i]= Positions[id3][i] - Positions[id2][i];
+		sideVec2[i]= Positions[id0][i] - Positions[id2][i];
+		costet += sideVec1[i] * sideVec2[i];
+		Side1  += sideVec1[i] * sideVec1[i];
+		Side2  += sideVec2[i] * sideVec2[i];
+	}
+	if (Side1 > Threshold && Side2 > Threshold){
+		Side1 = pow(Side1,0.5);
+		Side2 = pow(Side2,0.5);
+		costet /= (Side1*Side2);
+		double sintet = pow((1-costet*costet),0.5);
+		Area = Side1* Side2 * sintet / 2.0;
+	}
+	exposedLateralAreaApicalSide  += Area;
+	//cout<<" Element "<<Id<<" exposedLateralAreaApicalSide: "<<exposedLateralAreaApicalSide<<endl;
+
+}
+
+
+void 	ShapeBase::calculateViscositySurfaces(){
+	if (elementHasExposedLateralApicalSurface){
+		calculateExposedLateralAreaApicalSide();
+	}
+	if (elementHasExposedLateralBasalSurface){
+		calculateExposedLateralAreaBasalSide();
+	}
+	if (elementHasExposedApicalSurface){
+		calculateApicalArea();
+	}
+	if (elementHasExposedBasalSurface){
+		calculateBasalArea();
+	}
+}
+
+void ShapeBase::assignViscositySurfaceAreaToNodes(vector <Node*>& Nodes){
+	if (elementHasExposedLateralApicalSurface){
+		for(int i=0;i<nLateralSurfaceAreaNodeNumber; ++i){
+			Nodes[NodeIds[exposedLateralAreaApicalSideNodeIds[i]]]->viscositySurface+=exposedLateralAreaApicalSide/nLateralSurfaceAreaNodeNumber;
+		}
+	}
+	if (elementHasExposedLateralBasalSurface){
+		for(int i=0;i<nLateralSurfaceAreaNodeNumber; ++i){
+			Nodes[NodeIds[exposedLateralAreaBasalSideNodeIds[i]]]->viscositySurface+=exposedLateralAreaBasalSide/nLateralSurfaceAreaNodeNumber;
+		}
+	}
+	if (elementHasExposedApicalSurface){
+		for(int i=0;i<nSurfaceAreaNodeNumber; ++i){
+			Nodes[NodeIds[exposedApicalSurfaceNodeIds[i]]]->viscositySurface+=ApicalArea/nSurfaceAreaNodeNumber;
+		}
+	}
+	if (elementHasExposedBasalSurface){
+		for(int i=0;i<nSurfaceAreaNodeNumber; ++i){
+			Nodes[NodeIds[exposedBasalSurfaceNodeIds[i]]]->viscositySurface+=BasalArea/nSurfaceAreaNodeNumber;
+		}
+	}
+}
+
+/*
 void 	ShapeBase:: assignSurfaceAreaToNodes(vector <Node*>& Nodes){
     double multiplier = 1.0;
     if (ShapeType ==1 ){ multiplier = 0.5;}
     for (int i=0; i<nNodes; i++){
         Nodes[NodeIds[i]]->surface +=ReferenceShape->BasalArea/(multiplier*nNodes);
 	}
-}
+}*/
 
 void 	ShapeBase::calculateZProjectedAreas(){
     double Threshold = 1E-5;

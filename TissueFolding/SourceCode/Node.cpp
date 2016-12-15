@@ -25,7 +25,8 @@ Node::Node(int id, int dim, double* pos, int tissuePos, int tissueType){
 	this->tissueType = tissueType;
 	atCircumference = false;
 	mass = 0.0;
-	surface = 0.0;
+	//surface = 0.0;
+	viscositySurface=0.0;
     zProjectedArea = 0.0;
     symmetricEquivalentId = -1000;
     hasLateralElementOwner = false;

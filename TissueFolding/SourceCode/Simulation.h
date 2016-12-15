@@ -157,6 +157,8 @@ private:
     void calculateShapeFunctionDerivatives();
     void assignNodeMasses();
     void updateNodeMasses();
+    void assignElementalSurfaceAreaIndices();
+    void updateNodeViscositySurfaces();
     void updateElementToConnectedNodes(vector <Node*>& Nodes);
 	void assignConnectedElementsAndWeightsToNodes();
 	void fixAllD(int i, bool fixWithViscosity);

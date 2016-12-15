@@ -27,6 +27,15 @@
 #include "GrowthFunctionBase.h"
 #include "GrowthFunctionTypes.h"
 
+
+/* TO DO
+ *  The variables are defined for prisms only, convert them to be generic:
+ *  	exposedApicalSurfaceNodeIds[3];				///< The int array of size 3, listing the node IDs of element that form the exposed apical surface. The IDs are the node IDs on the element (0-5 for prism), not the actual Node::Id.
+ *  	exposedBasalSurfaceNodeIds[3];				///< The int array of size 3, listing the node IDs of element that form the exposed basal surface. The IDs are the node IDs on the element (0-5 for prism), not the actual Node::Id.
+ *  	exposedLateralAreaApicalSideNodeIds[4];		///< The int array of size 4, listing the node IDs of element that form the lateral surface exposed apically. The IDs are the node IDs on the element (0-5 for prism), not the actual Node::Id.
+ *  	exposedLateralAreaBasalSideNodeIds[4];		///< The int array of size 4, listing the node IDs of element that form the lateral surface exposed basally. The IDs are the node IDs on the element (0-5 for prism), not the actual Node::Id.
+ * 		The actual numbers 3 & 4 are already stored in variables and used as such (nLateralSurfaceAreaNodeNumber, nSurfaceAreaNodeNumber);
+ */
 using namespace std;
 
 class ShapeBase{
@@ -36,58 +45,69 @@ private:
 	double ParentErrorMessage(string functionName, double returnValue);	///<Error message displayed when a virtual function is called through the ShapeBase(parent), while it should have been called through a child (eg. Prism). For functions taking in string and double inputs, returning double.
 	int ParentErrorMessage(string functionName, int returnValue);		///<Error message displayed when a virtual function is called through the ShapeBase(parent), while it should have been called through a child (eg. Prism). For functions taking in string and int inputs, returning int.
 protected:
-	int 		ShapeType;				///< The integer defining the type of the shape, Prisms shape type = 1;
-	int 		nNodes;					///< The number of nodes of the element, it is based on ShapeBase#ShapeType
-	int 		nDim;					///< The number of dimensions for the positions of each of the nodes of the element
-	int* 		IdentifierColour;		///< The unique identifier colour of the element, this is used for "picking" in the visual interface.
-	double* 	GrowthRate;				///< Growth rate recording for display purposes only. The recorded growth rate in x, y, and z  coordinates, does not record shear deformation induced in growth. Recorded in exponential form through time step, converted to rate per hour for display within the visual interface
-	gsl_matrix* growthIncrement;		///< The matrix (3,3) representing the incremental growth in current time step. Reset to identity at the beginning of each time step, updated in growth functions, and utilised to update Fg.
+	int 		ShapeType;							///< The integer defining the type of the shape, Prisms shape type = 1;
+	int 		nNodes;								///< The number of nodes of the element, it is based on ShapeBase#ShapeType
+	int 		nDim;								///< The number of dimensions for the positions of each of the nodes of the element
+	int* 		IdentifierColour;					///< The unique identifier colour of the element, this is used for "picking" in the visual interface.
+	double* 	GrowthRate;							///< Growth rate recording for display purposes only. The recorded growth rate in x, y, and z  coordinates, does not record shear deformation induced in growth. Recorded in exponential form through time step, converted to rate per hour for display within the visual interface
+	gsl_matrix* growthIncrement;					///< The matrix (3,3) representing the incremental growth in current time step. Reset to identity at the beginning of each time step, updated in growth functions, and utilised to update Fg.
 	gsl_matrix* plasticDeformationIncrement;		///< The matrix (3,3) representing the incremental plastic deformation (treated as growth) in current time step. Set in plastic deformation calculation at each step, and utilised to update Fg.
 	double 		zRemodellingSoFar;
-	double  	columnarGrowthWeight;	///< The fraction defining how close to the columnar layer the element is. 1.0 for columnar layer, 0.0 for peripodial membrane elements, and scaled according to position in the elements surrounding the lumen.
-	double  	peripodialGrowthWeight;	///< The fraction defining how close to the peripodial membrane the element is. 0.0 for columnar layer, 1.0 for peripodial membrane elements, and scaled according to position in the elements surrounding the lumen.
-	double* 	ShapeChangeRate;		///< Shape change rate of the elements, only orthagonal shape changes are allowed (x, y, z). Shape changes will be scaled to conserve volume, thus three values will not be independent.
-    bool    	rotatedGrowth;			///< The boolean stating if the element has rotated from the growth axis, hence the calculated growth requires further rotation to follow tissue axes.
+	double  	columnarGrowthWeight;				///< The fraction defining how close to the columnar layer the element is. 1.0 for columnar layer, 0.0 for peripodial membrane elements, and scaled according to position in the elements surrounding the lumen.
+	double  	peripodialGrowthWeight;				///< The fraction defining how close to the peripodial membrane the element is. 0.0 for columnar layer, 1.0 for peripodial membrane elements, and scaled according to position in the elements surrounding the lumen.
+	double* 	ShapeChangeRate;					///< Shape change rate of the elements, only orthagonal shape changes are allowed (x, y, z). Shape changes will be scaled to conserve volume, thus three values will not be independent.
+    bool    	rotatedGrowth;						///< The boolean stating if the element has rotated from the growth axis, hence the calculated growth requires further rotation to follow tissue axes.
     double* 	relativePosInBoundingBox;  			///< The relative position on x-y plane, within the bounding box of the tissue(x,y).
     double* 	initialRelativePosInBoundingBox; 	///< The relative position on x-y plane, within the bounding box of the tissue(x,y) at the beginning of simulation. This is used when growth rates are pinned to the initial structure of the tissue.
     double 		initialRelativePositionInZ;			///<< The relative position on z-height of tissue, taken not in z direction but in tissue layers, 0 being on the apical surface and 1 being on the basal surface.
-    //double* columnarRelativePosInBoundingBox;		///< The relative position on x-y plane, within the bounding box of the columnar layer (x,y).
-	//double* peripodialRelativePosInBoundingBox; 	///< The relative position on x-y plane, within the bounding box of the peripodial membrane layer (x,y).
-    gsl_matrix 	**ShapeFuncDerivatives;			///< The array of matrices for shape function derivatives. The array stores a ShapeBase#nDim by ShapeBase#nNodes matrix for each gauss point (there are 3 Gauss points for prisms).
-    gsl_matrix 	**ShapeFuncDerStacks;			///< The array of matrices of shape function derivatives in stacked format for ease of matrix operations. The array stores a (ShapeBase#nDim * ShapeBase#nDim) by (ShapeBase#nDim * ShapeBase#nNodes) matrix for each gauss point (there are 3 Gauss points for prisms).
-    gsl_matrix 	**InvdXdes;						///< The array stores inverse of the matrix for derivatives of world coordinates with respect to barycentric coordinates (dX / de). The array stores an ShapeBase#nDim by ShapeBase#nDim  matrix for each gauss point (there are 3 Gauss points for prisms).
-    double* detdXdes;							///< The array stores the determinants of the matrices for derivatives of world coordinates with respect to barycentric coordinates (dX / de). The array stores a double value for each gauss point (there are 3 Gauss points for prisms).
-    gsl_matrix 	**Bmatrices;					///< The array stores the B matrix for the calculation of stiffness matrix, see for ShapeBase#calculateBTforNodalForces calculation. The array stores an ShapeBase#nNodes by (ShapeBase#nDim*ShapeBase#nNodes)  matrix for each Gauss point (there are 3 Gauss points for prisms).
-    gsl_matrix 	**FeMatrices;					///< The array stores the elastic part of the deformation matrix. The array stores an ShapeBase#nDim by ShapeBase#nDim  matrix for each Gauss point (there are 3 Gauss points for prisms).
-    //gsl_matrix 	*Fplastic;						///< The array stores the plastic part of the deformation matrix. The array stores an ShapeBase#nDim by ShapeBase#nDim  matrix for each Gauss point (there are 3 Gauss points for prisms).
-    //gsl_matrix 	*invFplastic;					///< The array stores inverses of the plastic part of the deformation matrix, in same structure as ShapeBase#Fplastic.
-    gsl_matrix 	**invJShapeFuncDerStack;		///< The array stores the shape function derivatives multiplied by the inverse Jacobian stack, for each Gauss point. See ShapeBase#calculateBTforNodalForces for calculation.
-    gsl_matrix 	**invJShapeFuncDerStackwithFe;	///< See ShapeBase#calculateInvJShFuncDerSWithFe for calculation.
-    gsl_matrix 	**elasticStress;				///< The array of matrices for elastic stress of the element. The array stores a 6 by 6 matrix for each Gauss point (there are 3 Gauss points for prisms).
-    gsl_matrix 	**viscousStress;				///< The array of matrices for internal viscous stress of the element. The array stores a 6 by 6 matrix for each Gauss point (there are 3 Gauss points for prisms).
-    gsl_matrix*	TriPointF;						///< The deformation matrix of the element resulting from iteration over all Gauss points. The dimensions of the matrix is ShapeBase#nDim by ShapeBase#nDim.
-	gsl_matrix*	ElementalElasticSystemForces;   ///< The matrix stores the elemental elastic forces. The dimensions of the matrix is ShapeBase#nNodes by ShapeBase#nDim.
+    gsl_matrix 	**ShapeFuncDerivatives;				///< The array of matrices for shape function derivatives. The array stores a ShapeBase#nDim by ShapeBase#nNodes matrix for each gauss point (there are 3 Gauss points for prisms).
+    gsl_matrix 	**ShapeFuncDerStacks;				///< The array of matrices of shape function derivatives in stacked format for ease of matrix operations. The array stores a (ShapeBase#nDim * ShapeBase#nDim) by (ShapeBase#nDim * ShapeBase#nNodes) matrix for each gauss point (there are 3 Gauss points for prisms).
+    gsl_matrix 	**InvdXdes;							///< The array stores inverse of the matrix for derivatives of world coordinates with respect to barycentric coordinates (dX / de). The array stores an ShapeBase#nDim by ShapeBase#nDim  matrix for each gauss point (there are 3 Gauss points for prisms).
+    double* detdXdes;								///< The array stores the determinants of the matrices for derivatives of world coordinates with respect to barycentric coordinates (dX / de). The array stores a double value for each gauss point (there are 3 Gauss points for prisms).
+    gsl_matrix 	**Bmatrices;						///< The array stores the B matrix for the calculation of stiffness matrix, see for ShapeBase#calculateBTforNodalForces calculation. The array stores an ShapeBase#nNodes by (ShapeBase#nDim*ShapeBase#nNodes)  matrix for each Gauss point (there are 3 Gauss points for prisms).
+    gsl_matrix 	**FeMatrices;						///< The array stores the elastic part of the deformation matrix. The array stores an ShapeBase#nDim by ShapeBase#nDim  matrix for each Gauss point (there are 3 Gauss points for prisms).
+    gsl_matrix 	**invJShapeFuncDerStack;			///< The array stores the shape function derivatives multiplied by the inverse Jacobian stack, for each Gauss point. See ShapeBase#calculateBTforNodalForces for calculation.
+    gsl_matrix 	**invJShapeFuncDerStackwithFe;		///< See ShapeBase#calculateInvJShFuncDerSWithFe for calculation.
+    gsl_matrix 	**elasticStress;					///< The array of matrices for elastic stress of the element. The array stores a 6 by 6 matrix for each Gauss point (there are 3 Gauss points for prisms).
+    gsl_matrix 	**viscousStress;					///< The array of matrices for internal viscous stress of the element. The array stores a 6 by 6 matrix for each Gauss point (there are 3 Gauss points for prisms).
+    gsl_matrix*	TriPointF;							///< The deformation matrix of the element resulting from iteration over all Gauss points. The dimensions of the matrix is ShapeBase#nDim by ShapeBase#nDim.
+	gsl_matrix*	ElementalElasticSystemForces;   	///< The matrix stores the elemental elastic forces. The dimensions of the matrix is ShapeBase#nNodes by ShapeBase#nDim.
 	gsl_matrix*	ElementalInternalViscousSystemForces; ///< The matrix stores the elemental internal viscous forces. The dimensions of the matrix is ShapeBase#nNodes by ShapeBase#nDim.
     double* 	detFs;								///< The array stores the determinant of the deformation matrix for each Gauss point.
     double 		ZProjectedBasalArea;				///< The z-projected area of the basal surface of the element.
     double 		ZProjectedApicalArea;				///< The z-projected area of the apical surface of the element.
     double 		BasalArea;							///< The area of the basal surface of the element.
     double 		ApicalArea;							///< The area of the apical surface of the element.
+    double		exposedLateralAreaApicalSide;		///< The area of the element on a linker position, and has lateral sides exposed to outside of the tissue, on the apical side, therefore should feel external viscosity.
+    double		exposedLateralAreaBasalSide;		///< The area of the element on a linker position, and has lateral sides exposed to outside of the tissue, on the basal side, therefore should feel external viscosity.
     double 		cMyoUniform[2]; 					///< Myosin concentration in the uniformly distributed pool, array of 2: [apical][basal]
     double 		cMyoUnipolar[2]; 					///< Myosin concentration in the polarised pool, array of 2: [apical][basal]
     double 		cMyoUniformEq[2]; 					///< The equilibrium level of myosin concentration in uniformly distributed pool, array of 2: [apical][basal]
     double 		cMyoUnipolarEq[2]; 					///< The equilibrium level of myosin concentration in polarised pool, array of 2: [apical][basal]
     gsl_matrix*	myoPolarityDir;						///< The orientation of myosin polarity, unit vector in world coordinates.
-    bool		cellsMigrating;						///< The boolean stating it the cells inside the element are migrating
+    bool		cellsMigrating;						///< The boolean stating if the cells inside the element are migrating
 
-    double 	actinMultiplier;
-    void 	setShapeType(string TypeName);
-	void 	readNodeIds(int* tmpNodeIds);
-	void 	setPositionMatrix(vector<Node*>& Nodes);
-	void 	setTissuePlacement(vector<Node*>& Nodes);
-	void 	setTissueType(vector<Node*>& Nodes);
-	void 	setReferencePositionMatrix();
-	void 	setIdentificationColour();
+
+    bool elementHasExposedApicalSurface;			///< The boolean stating if the element has any apical surface exposed to the environment
+    bool elementHasExposedBasalSurface;				///< The boolean stating if the element has any basal surface exposed to the environment
+    bool elementHasExposedLateralApicalSurface;		///< The boolean stating if the element has any lateral surfaces exposed to the environment on the apical side of the tissue
+    bool elementHasExposedLateralBasalSurface;		///< The boolean stating if the element has any lateral surfaces exposed to the environment on the basal side of the tissue
+    int exposedApicalSurfaceNodeIds[3];				///< The int array of size 3, listing the node IDs of element that form the exposed apical surface. The IDs are the node IDs on the element (0-5 for prism), not the actual Node#Id.
+    int exposedBasalSurfaceNodeIds[3];				///< The int array of size 3, listing the node IDs of element that form the exposed basal surface. The IDs are the node IDs on the element (0-5 for prism), not the actual Node#Id.
+    int exposedLateralAreaApicalSideNodeIds[4];		///< The int array of size 4, listing the node IDs of element that form the lateral surface exposed apically. The IDs are the node IDs on the element (0-5 for prism), not the actual Node::Id.
+    int exposedLateralAreaBasalSideNodeIds[4];		///< The int array of size 4, listing the node IDs of element that form the lateral surface exposed basally. The IDs are the node IDs on the element (0-5 for prism), not the actual Node::Id.
+    int nLateralSurfaceAreaNodeNumber;				///< Number of nodes that form the lateral surfaces for the element.
+    int nSurfaceAreaNodeNumber;						///< Number of nodes that form the apical/basal surfaces for the element.
+
+    double 	actinMultiplier;						///< The double for the multiplier that will define actin stress stiffening.
+
+    void 	setShapeType(string TypeName);				///< The function sets the type of the shape.
+	void 	readNodeIds(int* tmpNodeIds);				///< The function sets the Node#Id array that constructs the shape.
+	void 	setPositionMatrix(vector<Node*>& Nodes);	///< The function sets the ShapeBase#Positions matrix to define the locations of each constructing node.
+	void 	setTissuePlacement(vector<Node*>& Nodes);	///< The function sets the placement of the element within the tissue
+	void 	setTissueType(vector<Node*>& Nodes);		///< The function sets the tissue type of the element
+	void 	setReferencePositionMatrix();				///< The function sets the RefereneceShapeBase#Positions matrix to define the reference positions of the element.
+	void 	setIdentificationColour();					///< The function sets the unique ShapeBase#IdentifierColour colour for the element, which is used in element picking from the user interface.
 	void 	rotateReferenceElementByRotationMatrix(double* rotMat);
 	bool 	InvertMatrix(boost::numeric::ublas::matrix<double>& input, boost::numeric::ublas::matrix<double>& inverse);
     bool 	InvertMatrix(gsl_matrix* input, gsl_matrix* inverse);
@@ -367,7 +387,7 @@ public:
 	bool DoesPointBelogToMe(int IdNode);
 	void growShape();
 	void assignVolumesToNodes(vector <Node*>& Nodes);
-	void assignSurfaceAreaToNodes(vector <Node*>& Nodes);
+	//void assignSurfaceAreaToNodes(vector <Node*>& Nodes);
     void calculateZProjectedAreas();
     void assignZProjectedAreas(vector <Node*> Nodes);
 	void assignElementToConnectedNodes(vector <Node*>& Nodes);
@@ -376,6 +396,11 @@ public:
 	void setActinMimicing(bool isActinMimicing);
 
 	void 	convertLocalStrainToTissueStrain(double* strainsToAdd);
+	virtual void assignExposedSurfaceAreaIndices(vector <Node*>& /*Nodes*/){ParentErrorMessage("assignExposedSurfaceAreaIndices");};
+	void	calculateExposedLateralAreaApicalSide();
+	void 	calculateExposedLateralAreaBasalSide();
+	void 	calculateViscositySurfaces();
+	void 	assignViscositySurfaceAreaToNodes(vector <Node*>& Nodes);
 
 	bool RotatedElement;
     gsl_matrix* GrowthStrainsRotMat;

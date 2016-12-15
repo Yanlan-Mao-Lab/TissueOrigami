@@ -526,6 +526,7 @@ bool Simulation::initiateSystem(){
     //calculateStiffnessMatrices();
 	calculateShapeFunctionDerivatives();
 	assignNodeMasses();
+	assignElementalSurfaceAreaIndices();
 	assignConnectedElementsAndWeightsToNodes();
     alignTissueDVToXPositive();
     //alignTissueAPToXYPlane();
@@ -603,7 +604,16 @@ void Simulation::setLateralElementsRemodellingPlaneRotationMatrices(){
 void Simulation::assignNodeMasses(){
 	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 	    (*itElement)->assignVolumesToNodes(Nodes);
-		(*itElement)->assignSurfaceAreaToNodes(Nodes);
+		//(*itElement)->assignSurfaceAreaToNodes(Nodes);
+	}
+}
+
+void Simulation::assignElementalSurfaceAreaIndices(){
+	const int maxThreads = omp_get_max_threads();
+	omp_set_num_threads(maxThreads);
+	#pragma omp parallel for
+	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		(*itElement)->assignExposedSurfaceAreaIndices(Nodes);
 	}
 }
 
@@ -3051,7 +3061,7 @@ void Simulation::manualPerturbationToInitialSetup(bool deform, bool rotate){
 				//fixY((*itNode),0);
 				(*itNode)->Position[0] -= 5;
 			}*/
-			//fixAllD((*itNode),0);
+			fixAllD((*itNode),0);
 		}
 		//laserAblateTissueType(1);
 		//laserAblate(0.0, 0.0, 5.0);
@@ -4010,6 +4020,8 @@ bool Simulation::runOneStep(){
     }
     //cout<<"adding mass to nodes"<<endl;
     updateNodeMasses();
+    updateNodeViscositySurfaces();
+    //updateNodeSurfaces();
     //cout<<"updating connected node lists"<<endl;
     updateElementToConnectedNodes(Nodes);
     //cout<<"calculate Myosin Forces"<<endl;
@@ -4355,7 +4367,7 @@ void Simulation::updatePlasticDeformation(){
 				//The ECM will always have plastic deformation, hence this function will be called.
 				//Then for all other elements, I should first check if there is plastic deformation in the first place
 				//Then I will check the tissue types
-				//the lateral elements will have plastic deformaiton if either columnar or peripodial elemetns have the deformation.
+				//the lateral elements will have plastic deformation if either columnar or peripodial elemetns have the deformation.
 				if(( ((*itElement)->tissueType == 0 || (*itElement)->tissueType == 2) && plasticDeformationAppliedToColumnar) || ( ((*itElement)->tissueType == 1 || (*itElement)->tissueType == 2) && plasticDeformationAppliedToPeripodial))
 				{
 					(*itElement)->calculatePlasticDeformation3D(volumeConservedInPlasticDeformation,dt,plasticDeformationHalfLife, zRemodellingLowerThreshold, zRemodellingUpperThreshold);
@@ -5851,12 +5863,34 @@ void Simulation::updateNodeMasses(){
     for(itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
     	(*itNode)->mass = 0;
     }
-    vector<ShapeBase*>::iterator itElement;
-    for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+    for( vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
         if (!(*itElement)->IsAblated){
         	(*itElement)->assignVolumesToNodes(Nodes);
         }
     }
+}
+
+void Simulation::updateNodeViscositySurfaces(){
+	const int maxThreads = omp_get_max_threads();
+	omp_set_num_threads(maxThreads);
+	#pragma omp parallel for
+    for( vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		if (!(*itElement)->IsAblated){
+			(*itElement)->calculateViscositySurfaces();
+		}
+	}
+    //calculated the areas, now assigning them
+	for(vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+		(*itNode)->viscositySurface = 0;
+	}
+    for( vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+    	if (!(*itElement)->IsAblated){
+    		(*itElement)->assignViscositySurfaceAreaToNodes(Nodes);
+    	}
+    }
+    //for(vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+    //	cout<<" Viscosity surface of node: "<<(*itNode)->Id<<" is "<<(*itNode)->viscositySurface<<endl;
+    //}
 }
 
 void 	Simulation:: updateElementToConnectedNodes(vector <Node*>& Nodes){
@@ -8177,7 +8211,6 @@ void Simulation::laserAblate(double OriginX, double OriginY, double Radius){
 			Nodes[i]->mass = 0.1;
 		}
 	}
-
 }
 
 void Simulation::updateElementVolumesAndTissuePlacements(){
@@ -8194,7 +8227,7 @@ void Simulation::clearNodeMassLists(){
 		Nodes[i]->connectedElementIds.clear();
 		Nodes[i]->connectedElementWeights.clear();
 		Nodes[i]->mass=0.0;
-		Nodes[i]->surface=0.0;
+		//Nodes[i]->surface=0.0;
 	}
 }
 

@@ -158,6 +158,29 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, bool thereIsPlas
     ZProjectedApicalArea=0.0;
     BasalArea=0.0;
     ApicalArea=0.0;
+    exposedLateralAreaApicalSide = 0;
+    exposedLateralAreaApicalSide = 0;
+    elementHasExposedApicalSurface = false;
+    elementHasExposedBasalSurface = false;
+    elementHasExposedLateralApicalSurface = false;
+    elementHasExposedLateralBasalSurface = false;
+    exposedApicalSurfaceNodeIds[0] = 0;
+    exposedApicalSurfaceNodeIds[1] = 0;
+    exposedApicalSurfaceNodeIds[2] = 0;
+    exposedBasalSurfaceNodeIds[0] = 0;
+    exposedBasalSurfaceNodeIds[1] = 0;
+    exposedBasalSurfaceNodeIds[2] = 0;
+    exposedLateralAreaApicalSideNodeIds[0] = 0;
+    exposedLateralAreaApicalSideNodeIds[1] = 0;
+    exposedLateralAreaApicalSideNodeIds[2] = 0;
+    exposedLateralAreaApicalSideNodeIds[3] = 0;
+    exposedLateralAreaBasalSideNodeIds[0] = 0;
+    exposedLateralAreaBasalSideNodeIds[1] = 0;
+    exposedLateralAreaBasalSideNodeIds[2] = 0;
+    exposedLateralAreaBasalSideNodeIds[3] = 0;
+    nLateralSurfaceAreaNodeNumber = 4;
+    nSurfaceAreaNodeNumber = 3;
+
     willBeRefined = false;
     cellsMigrating = false;
     remodellingPlaneRotationMatrix = gsl_matrix_calloc(3,3);
@@ -1790,6 +1813,11 @@ void 	Prism::distributeMyosinForcesTotalSizeBased(bool isIsotropic, bool apical,
 void 	Prism::calculateBasalArea(){
     double Threshold = 1E-5;
 	int id0 = 0, id1 = 1, id2 = 2; // this is correct for basal side, I will change it for apical calculation
+	if (tissueType == 1){ //peroipodial element, the basal surface is actually on top
+		id0 = 3;
+		id1 = 4;
+		id2 = 5;
+	}
 	double sideVec1[3];
 	double sideVec2[3];
 	double Side1 = 0.0;
@@ -1811,12 +1839,18 @@ void 	Prism::calculateBasalArea(){
 		Area = Side1* Side2 * sintet / 2.0;
 	}
 	BasalArea = Area;
+	//cout<<" Element "<<Id<<" basal area: "<<BasalArea<<endl;
 	//ApicalArea = Area;
 }
 
 void 	Prism::calculateApicalArea(){
     double Threshold = 1E-5;
 	int id0 = 3, id1 = 4, id2 = 5; // this is correct for basal side, I will change it for apical calculation
+	if (tissueType == 1){ //peroipodial element, the basal surface is actually at the bottom
+		id0 = 0;
+		id1 = 1;
+		id2 = 2;
+	}
 	double sideVec1[3];
 	double sideVec2[3];
 	double Side1 = 0.0;
@@ -1838,6 +1872,7 @@ void 	Prism::calculateApicalArea(){
 		Area = Side1* Side2 * sintet / 2.0;
 	}
 	ApicalArea = Area;
+	//cout<<" Element "<<Id<<" apical area: "<<ApicalArea<<endl;
 }
 
 void Prism::constructElementStackList(const int discretisationLayers, vector<ShapeBase*>& elementsList){
@@ -1971,3 +2006,74 @@ void Prism::copyElementInformationAfterRefinement(ShapeBase* baseElement, int la
 		this->elementsIdsOnSameColumn[i] = baseElement->elementsIdsOnSameColumn[i];
 	}
 }
+
+void Prism::assignExposedSurfaceAreaIndices(vector <Node*>& Nodes){
+	if (tissueType == 0 || tissueType == 1){//columnar or peripodial Element
+		//these are written for columnar tissue, should be swapped for peorpodial tissue:
+		int apicalIds[3] = {3,4,5};
+		int basalIds[3] = {0,1,2};
+		if (tissueType == 1){//peripodial Element
+			apicalIds[0]= 0;
+			apicalIds[1]= 1;
+			apicalIds[2]= 2;
+			basalIds[0]= 3;
+			basalIds[1]= 4;
+			basalIds[2]= 5;
+		}
+		if (tissuePlacement == 1){ //apical element
+			elementHasExposedApicalSurface = true;
+			//If element is apical, I will calculate the apical surface
+			exposedApicalSurfaceNodeIds[0] = apicalIds[0];
+			exposedApicalSurfaceNodeIds[1] = apicalIds[1];
+			exposedApicalSurfaceNodeIds[2] = apicalIds[2];
+		}
+		else if(tissuePlacement == 0){ //basal element
+			elementHasExposedBasalSurface = true;
+			//If element is basal, I will calculate the basal surface
+			exposedBasalSurfaceNodeIds[0] = basalIds[0];
+			exposedBasalSurfaceNodeIds[1] = basalIds[1];
+			exposedBasalSurfaceNodeIds[2] = basalIds[2];
+		}
+		else if (tissuePlacement == 2 && spansWholeTissue) {//midline element, but spans whole tissue
+			elementHasExposedApicalSurface = true;
+			elementHasExposedBasalSurface = true;
+			exposedApicalSurfaceNodeIds[0] = apicalIds[0];
+			exposedApicalSurfaceNodeIds[1] = apicalIds[1];
+			exposedApicalSurfaceNodeIds[2] = apicalIds[2];
+			exposedBasalSurfaceNodeIds[0] = basalIds[0];
+			exposedBasalSurfaceNodeIds[1] = basalIds[1];
+			exposedBasalSurfaceNodeIds[2] = basalIds[2];
+		}
+	}
+	else if (tissueType == 2){//linker element
+		int numberOfApicalNodes = 0;
+		int numberOfBasalNodes = 0;
+		for (int i=0; i<nNodes; ++i){
+			if (Nodes[NodeIds[i]]->tissuePlacement == 0){ //basal Node
+				exposedLateralAreaBasalSideNodeIds[numberOfBasalNodes] = i;
+				numberOfBasalNodes++;
+			}
+			if (Nodes[NodeIds[i]]->tissuePlacement == 1){ //apical Node
+				exposedLateralAreaApicalSideNodeIds[numberOfApicalNodes] = i;
+				numberOfApicalNodes++;
+			}
+		}
+		if (numberOfApicalNodes>3){
+			elementHasExposedLateralApicalSurface = true;
+		}
+		if (numberOfBasalNodes>3){
+			elementHasExposedLateralBasalSurface = true;
+		}
+	}
+	//cout<<" Element: "<<Id<<" has exposed apical/basal/lateral surfaces: "<<elementHasExposedApicalSurface<<" "<<elementHasExposedBasalSurface<<" "<<elementHasExposedLateralApicalSurface<<endl;
+	//if (elementHasExposedApicalSurface){
+	//	cout<<" exposed apical nodes: "<<exposedApicalSurfaceNodeIds[0]<<" "<<exposedApicalSurfaceNodeIds[1]<<" "<<exposedApicalSurfaceNodeIds[2]<<endl;
+	//}
+	//if (elementHasExposedBasalSurface){
+	//	cout<<" exposed basal nodes: "<<exposedBasalSurfaceNodeIds[0]<<" "<<exposedBasalSurfaceNodeIds[1]<<" "<<exposedBasalSurfaceNodeIds[2]<<endl;
+	//}
+	//if (elementHasExposedLateralApicalSurface){
+	//	cout<<" exposed lateral nodes: "<<exposedLateralAreaApicalSideNodeIds[0]<<" "<<exposedLateralAreaApicalSideNodeIds[1]<<" "<<exposedLateralAreaApicalSideNodeIds[2]<<" "<<exposedLateralAreaApicalSideNodeIds[3]<<endl;
+	//}
+}
+

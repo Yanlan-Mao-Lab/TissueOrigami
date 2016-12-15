@@ -40,6 +40,7 @@ protected:
 	void assignNodalVector(double* vec, int id0, int id1);
 	bool checkNodePlaneConsistency(double** normals);
 	double getApicalSideLengthAverage();
+	void assignExposedSurfaceAreaIndices(vector <Node*>& Nodes);
 
 public:
 	Prism(int* NodeIds,vector<Node*>& Nodes, int CurrId, bool thereIsPlasticDeformation);

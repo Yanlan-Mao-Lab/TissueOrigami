@@ -20,6 +20,7 @@ private:
 	int nDim;			//< Dimension of the space (3D)
 	int nNodes;			//< Number of nodes of the system
 	double threshold;	//< Convergence threshold for iterations
+	bool externalViscosityVolumeBased;	//< Boolean stating if the exteranal viscosity calculation is volume based (true) or surface area based (false)
 
 public:
 	NewtonRaphsonSolver(int nDim, int nNodes); 	//<Constructer of the N-R solver

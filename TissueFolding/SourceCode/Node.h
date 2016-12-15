@@ -30,8 +30,9 @@ public:
 	int 			tissueType;		 		///< The tissue type is 0 for columnar layer, 1 for peripodial membrane, and 2 for linker zone
 	bool 			atCircumference;		///< Boolean defining if the node is at the circumference of the columnar layer of the tissue.
 	double 			mass;					///< The mass of the node, calculated via the elements that use the node as a vertex
-	double 			surface;				///< The surface of the node, calculated via apical or basal elements. Lateral surfaces are not included
-    double  		zProjectedArea;         ///< The surface of the node, as projected in Z, calculated from apical or pasal surfces of elements, lateral surfaces are not included.
+	//double 			surface;				///< The surface of the node, calculated via apical or basal elements. Lateral surfaces are not included
+	double			viscositySurface;		///< The surface of the node, calculated for application of external viscosity via surface. It is positive for a surface that is to feel external viscosity, zero othervise.
+	double  		zProjectedArea;         ///< The surface of the node, as projected in Z, calculated from apical or pasal surfces of elements, lateral surfaces are not included.
    	vector <int> 	immediateNeigs;				///< The list of Id's for immediate neighbours of the node, i.e. the nodes that are shared by the elements that utilise the owner of this node.
 	vector <int> 	connectedElementIds;		///< The list of Id's for elements that are utilising this node.
 	vector <double>	connectedElementWeights;	///< The list of weights (normalised mass) for elements that are utilising this node, order is linked to Node#connectedElementIds.

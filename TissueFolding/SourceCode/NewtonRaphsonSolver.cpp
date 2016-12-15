@@ -16,7 +16,7 @@ NewtonRaphsonSolver::NewtonRaphsonSolver(int dim, int n){
 
 	nDim = dim;
 	nNodes = n;
-
+	externalViscosityVolumeBased = false; //using external surface
 	numericalParametersSet = false;
 
 	un = gsl_matrix_calloc(nDim*nNodes,1);
@@ -256,9 +256,16 @@ void NewtonRaphsonSolver::calculateExternalViscousForcesForNR(vector <Node*>& No
 	for (int i = 0; i<nNodes; ++i ){
 		for (int j=0; j<nDim; ++j){
 			//double matrixValue = gsl_matrix_get(mvisc,0,3*i+j);
-			double massTimesViscosity = Nodes[i]->mass*Nodes[i]->externalViscosity[j];
-			double displacementValue = gsl_matrix_get(displacementPerDt,3*i+j,0);
-			gsl_matrix_set(gvExternal,3*i+j,0,massTimesViscosity*displacementValue);
+			if (externalViscosityVolumeBased){
+				double massTimesViscosity = Nodes[i]->mass*Nodes[i]->externalViscosity[j];
+				double displacementValue = gsl_matrix_get(displacementPerDt,3*i+j,0);
+				gsl_matrix_set(gvExternal,3*i+j,0,massTimesViscosity*displacementValue);
+			}
+			else{
+				double surfaceAreaTimesViscosity = Nodes[i]->viscositySurface*Nodes[i]->externalViscosity[j];
+				double displacementValue = gsl_matrix_get(displacementPerDt,3*i+j,0);
+				gsl_matrix_set(gvExternal,3*i+j,0,surfaceAreaTimesViscosity*displacementValue);
+			}
 		}
 	}
 	//added this line with sign change
@@ -269,12 +276,22 @@ void NewtonRaphsonSolver::addImplicitKViscousExternalToJacobian(vector <Node*>& 
     //gsl_matrix_add(K,mviscPerDt);
 	//cout<<"Jacobian due to explicit viscosity" <<endl;
 	for (int i = 0; i<nNodes; ++i ){
-		double massPerDt = Nodes[i]->mass/dt;
-		for (int j=0; j<nDim; ++j){
-			double curKValue = gsl_matrix_get(K,3*i+j,3*i+j);
-			double massTimesViscosityPerDt = massPerDt*Nodes[i]->externalViscosity[j];
-			//double matrixValuePerDt = gsl_matrix_get(mvisc,0,3*i+j)/dt;
-			gsl_matrix_set(K,3*i+j,3*i+j,massTimesViscosityPerDt+curKValue);
+		if (externalViscosityVolumeBased){
+			double massPerDt = Nodes[i]->mass/dt;
+			for (int j=0; j<nDim; ++j){
+				double curKValue = gsl_matrix_get(K,3*i+j,3*i+j);
+				double massTimesViscosityPerDt = massPerDt*Nodes[i]->externalViscosity[j];
+				//double matrixValuePerDt = gsl_matrix_get(mvisc,0,3*i+j)/dt;
+				gsl_matrix_set(K,3*i+j,3*i+j,massTimesViscosityPerDt+curKValue);
+			}
+		}
+		else{
+			double surfaceAreaPerDt = Nodes[i]->viscositySurface/dt;
+			for (int j=0; j<nDim; ++j){
+				double curKValue = gsl_matrix_get(K,3*i+j,3*i+j);
+				double surfaceAreaTimesViscosityPerDt = surfaceAreaPerDt*Nodes[i]->externalViscosity[j];
+				gsl_matrix_set(K,3*i+j,3*i+j,surfaceAreaTimesViscosityPerDt+curKValue);
+			}
 		}
 	}
 }
