@@ -1151,6 +1151,45 @@ void ShapeBase::calculateActinFeedback(double dt){
 	}
 }
 
+bool	ShapeBase::checkZCappingInRemodelling(bool volumeConserved, double zRemodellingLowerThreshold, double zRemodellingUpperThreshold, gsl_matrix* increment, gsl_matrix* eigenVec){
+	//I want to do some further checks on the z axis, I
+	//need to find what the growth on z axis will be:
+	bool zCapped = false;
+	gsl_matrix* rotMatTForZCap = gsl_matrix_calloc(3,3);
+	gsl_matrix* tempForZCap = gsl_matrix_calloc(nDim,nDim);
+	gsl_matrix* incrementToTestZCapping = gsl_matrix_calloc(nDim,nDim);
+	gsl_matrix_transpose_memcpy(rotMatTForZCap,eigenVec);
+	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, eigenVec, increment, 0.0, tempForZCap);
+	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, tempForZCap, rotMatTForZCap, 0.0, incrementToTestZCapping);
+	//The increment I have calculated is non-volume conserved, and non-scaled
+	//for z. There are limitations to how much z axis can be remodelled.
+	//I will check those now and cap the z deformation if necessary:
+	double Fzz = gsl_matrix_get(incrementToTestZCapping,2,2);
+	if (volumeConserved){
+		double det = determinant3by3Matrix(incrementToTestZCapping);
+		double scale = 1.0/pow (det,1.0/3.0);
+		double zIncrement = Fzz*scale;
+		if (zRemodellingSoFar*zIncrement >= zRemodellingUpperThreshold){
+			zCapped = true;
+		}
+		if (zRemodellingSoFar*zIncrement <= zRemodellingLowerThreshold){
+			zCapped = true;
+		}
+	}
+	else{
+		if (zRemodellingSoFar*Fzz >= zRemodellingUpperThreshold){
+			zCapped = true;
+		}
+		if (zRemodellingSoFar*Fzz <= zRemodellingLowerThreshold){
+			zCapped = true;
+		}
+	}
+	gsl_matrix_free(rotMatTForZCap);
+	gsl_matrix_free(tempForZCap);
+	gsl_matrix_free(incrementToTestZCapping);
+	return zCapped;
+}
+
 void	ShapeBase::calculatePlasticDeformation3D(bool volumeConserved, double dt, double plasticDeformationHalfLife, double zRemodellingLowerThreshold, double zRemodellingUpperThreshold){
 	double e1 = 0.0, e2 = 0.0, e3 = 0.0, tet = 0.0;
 	gsl_matrix* eigenVec = gsl_matrix_calloc(3,3);
@@ -1158,13 +1197,13 @@ void	ShapeBase::calculatePlasticDeformation3D(bool volumeConserved, double dt, d
 	//If the element is mimicing an explicit ECM, then it should be able to deform in z too,.
 	//Linker zone elements are allowed to deform in z, as we have no information on what they are doing.
 	//They do change their z height, and grow in weird patterns. So let them be...
-	bool ignoreZ = false;
+	//bool ignoreZ = false;
 	bool checkZCapping = true;
 	if(isECMMimicing || tissueType == 2){
 		//ignoreZ = false;
 		checkZCapping = false;
 	}
-	calculatePrincipalStrains3D(ignoreZ,e1,e2,e3,eigenVec);
+	calculatePrincipalStrains3D(e1,e2,e3,eigenVec);
 	//NowI have the green strain in principal direction in the orientation of the element internal coordinats.
 	//I can simply grow the element in this axis, to obtain some form of plastic growth.
 	//the strain I have here is Green strain, I would like to convert it back to deformation
@@ -1195,51 +1234,10 @@ void	ShapeBase::calculatePlasticDeformation3D(bool volumeConserved, double dt, d
 	gsl_matrix_set(increment,2,2,F33);
 	bool zCapped = false;
 	if (checkZCapping){
-		//I want to do some further checks on the z axis, I
-		//need to find what the growth on z axis will be:
-		gsl_matrix* rotMatTForZCap = gsl_matrix_calloc(3,3);
-		gsl_matrix* tempForZCap = gsl_matrix_calloc(nDim,nDim);
-		gsl_matrix* incrementToTestZCapping = gsl_matrix_calloc(nDim,nDim);
-		gsl_matrix_transpose_memcpy(rotMatTForZCap,eigenVec);
-		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, eigenVec, increment, 0.0, tempForZCap);
-		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, tempForZCap, rotMatTForZCap, 0.0, incrementToTestZCapping);
-		gsl_matrix* scaleMat = gsl_matrix_calloc(nDim,nDim);
-		gsl_matrix_set_identity(scaleMat);
-		//The increment I have calculated is non-volume conserved, and non-scaled
-		//for z. There are limitations to how much z axis can be remodelled.
-		//I will check those now and cap the z deformation if necessary:
-		double Fzz = gsl_matrix_get(incrementToTestZCapping,2,2);
-		if (volumeConserved){
-			double det = determinant3by3Matrix(incrementToTestZCapping);
-			double scale = 1.0/pow (det,1.0/3.0);
-			double zIncrement = Fzz/scale;
-			if (zRemodellingSoFar*zIncrement >= zRemodellingUpperThreshold){
-				zCapped = true;
-			}
-			if (zRemodellingSoFar*zIncrement <= zRemodellingLowerThreshold){
-				zCapped = true;
-			}
-		}
-		else{
-			if (zRemodellingSoFar*Fzz >= zRemodellingUpperThreshold){
-				zCapped = true;
-			}
-			if (zRemodellingSoFar*Fzz <= zRemodellingLowerThreshold){
-				zCapped = true;
-			}
-		}
-		gsl_matrix_free(rotMatTForZCap);
-		gsl_matrix_free(tempForZCap);
-		gsl_matrix_free(incrementToTestZCapping);
+		zCapped = checkZCappingInRemodelling(volumeConserved, zRemodellingLowerThreshold, zRemodellingUpperThreshold, increment, eigenVec);
 	}
 	if (zCapped){
-		if (Id == 141){
-			cout<<"inside z caped increment calculation  in plastic deformation"<<endl;
-			displayMatrix(increment, "incrementBeforeZCapUpdate");
-			displayMatrix(eigenVec, "eigenVecBeforeZCapUpdate");
-		}
-		ignoreZ = true;
-		calculatePrincipalStrains3D(ignoreZ,e1,e2,e3,eigenVec);
+		calculatePrincipalStrains2D(e1,e2,e3,eigenVec);
 		F11 = pow(e1*2+1,0.5);
 		F22 = pow(e2*2+1,0.5);
 		F11t = (F11-1)*exp(-1.0*dt/tau) + 1;
@@ -1251,20 +1249,11 @@ void	ShapeBase::calculatePlasticDeformation3D(bool volumeConserved, double dt, d
 		gsl_matrix_set(increment,0,0,F11);
 		gsl_matrix_set(increment,1,1,F22);
 		gsl_matrix_set(increment,2,2,F33);
-		if (Id == 141){
-			displayMatrix(increment, "incrementAfterZCapUpdate");
-			displayMatrix(eigenVec, "eigenVecAfterZCapUpdate");
-		}
 	}
 
 	//If I am conserving the volume, I need to scale:
 	if (volumeConserved){
-
 		double det = determinant3by3Matrix(increment);
-		if (Id == 141){
-			cout<<"inside volume conservation check in plastic deformation, det: "<<det<<endl;
-			displayMatrix(increment, "incrementBeforeScale");
-		}
 		if (zCapped){
 			double scale = 1.0/pow (det,1.0/2.0); //scale the size with the square root of the determinant to keep the volume conserved. Then set z to 1 again, we do not want to affect z growth, remodelling is in x & y
 			gsl_matrix_scale(increment,scale);
@@ -1276,9 +1265,6 @@ void	ShapeBase::calculatePlasticDeformation3D(bool volumeConserved, double dt, d
 			double scale = 1.0/pow (det,1.0/3.0); //scaling in x,y, and z
 			gsl_matrix_scale(increment,scale);
 		}
-		if (Id == 141){
-			displayMatrix(increment, "incrementAfterScale");
-		}
 	}
 	//The growth I would like to apply now is written on the increment.
 	//I would like to rotate the calculated incremental "growth" to be aligned with the coordinate
@@ -1286,7 +1272,6 @@ void	ShapeBase::calculatePlasticDeformation3D(bool volumeConserved, double dt, d
 	//In a growth setup, I calculate the rotationa matrix to be rotation by a certain angle.
 	//Here, the rotation matrix is the eigen vector matrix itself. The eigen vector matrix
 	//will rotate the identity matrix upon itself.
-
 	gsl_matrix* rotMatT = gsl_matrix_calloc(3,3);
 	gsl_matrix* temp = gsl_matrix_calloc(nDim,nDim);
 	gsl_matrix_transpose_memcpy(rotMatT,eigenVec);
@@ -1294,124 +1279,24 @@ void	ShapeBase::calculatePlasticDeformation3D(bool volumeConserved, double dt, d
 	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, temp, rotMatT, 0.0, plasticDeformationIncrement);
 	//update z remodelling so far to keep track and not update beyond limits
 	zRemodellingSoFar *= gsl_matrix_get(plasticDeformationIncrement,2,2);
-	if (Id == 141 || Id == 141 ){
-		cout<<" Prism "<<Id<<" e1, e2, e3: "<<e1<<" "<<e2<<" "<<e3<<endl;
-		displayMatrix(plasticDeformationIncrement, " plasticDeformationIncrement");
-		displayMatrix(eigenVec," eigenVec");
-		displayMatrix(temp," temp");
-		cout<<"    F11,  F22,  F33 : "<<F11<<" "<<F22<<" "<<F33<<endl;
-		cout<<"    F11t, F22t, F33t: "<<F11t<<" "<<F22t<<" "<<F33t<<endl;
-		cout<<"    plasticDeformationHalfLife: "<<plasticDeformationHalfLife<<" tau: "<<tau<<" exp(-1.0*dt/tau): "<<exp(-1.0*dt/tau)<<endl;
-		cout<<"    zRemodellingSoFar: "<<zRemodellingSoFar<<" limits: "<<zRemodellingLowerThreshold<<" "<<zRemodellingUpperThreshold<<endl;
-		displayMatrix(Fg,"FgBeforeUpdateByPlasticity");
-		displayMatrix(Strain,"Strain");
-	}
+	//if (Id == 104 || Id == 104 ){
+		//cout<<" Prism "<<Id<<" e1, e2, e3: "<<e1<<" "<<e2<<" "<<e3<<endl;
+		//displayMatrix(plasticDeformationIncrement, " plasticDeformationIncrement");
+		//displayMatrix(eigenVec," eigenVec");
+		//displayMatrix(temp," temp");
+		//cout<<"    F11,  F22,  F33 : "<<F11<<" "<<F22<<" "<<F33<<endl;
+		//cout<<"    F11t, F22t, F33t: "<<F11t<<" "<<F22t<<" "<<F33t<<endl;
+		//cout<<"    plasticDeformationHalfLife: "<<plasticDeformationHalfLife<<" tau: "<<tau<<" exp(-1.0*dt/tau): "<<exp(-1.0*dt/tau)<<endl;
+		//cout<<"    zRemodellingSoFar: "<<zRemodellingSoFar<<" zCapped: "<<zCapped<<" limits: "<<zRemodellingLowerThreshold<<" "<<zRemodellingUpperThreshold<<endl;
+		//displayMatrix(Fg,"FgBeforeUpdateByPlasticity");
+		//displayMatrix(Strain,"Strain");
+	//}
 	gsl_matrix_free(temp);
 	gsl_matrix_free(rotMatT);
 	gsl_matrix_free(eigenVec);
 	gsl_matrix_free(increment);
 }
 
-void	ShapeBase::calculatePlasticDeformationOld(bool volumeConserved, double dt, double plasticDeformationHalfLife, double zRemodellingLowerThreshold, double zRemodellingUpperThreshold){
-	double e1 = 0.0, e2 = 0.0, tet = 0.0;
-	calculatePrincipalStrainAxesOnXYPlane(e1, e2, tet);
-	//NowI have the green strain in principal direction in the orientation of the element internal coordinats.
-	//I can simply grow the element in this axis, to obtain some form of plastic growth.
-	//the strain I have here is Green strain, I would like to convert it back to deformation
-	//gradient terms. Since  E = 1/2 *(Fe^T*Fe-I):
-	double Fxx = pow(e1*2+1,0.5);
-	double Fyy = pow(e2*2+1,0.5);
-	//if (Id == 0){
-	//	cout<<"element: "<<Id<<" principal strains: "<<e1<<" "<<e2<<" angle: "<<tet<<" in degrees: "<<tet/3.14*180<<" initial Fxx, Fyy : "<<Fxx<<" "<<Fyy<<endl;
-	//}
-	//half life of plastic deformation:
-	//Maria's aspect ratio data shows, normalised to initial aspect ratio, if a tissue
-	//is stretched to an aspect ratio of 2.0, and relaxed in 20 minutes, it relaxes back to original shape.
-	//On the other hand, if it is stretched for 3 hr, it relaxed to an aspect ratio of 1.2.
-	//Then the elastic deformation gradient, starting from 2.0, relaxes to a values such that
-	//1.2 * Fe = 2.0 -> Fe = 1.6667. Then the deformation I am calculating decays from 1.0 to 0.66667
-	//N(0) = 1.0, N(3hr) = 0.66667, then this gives me
-	//a half life of 5.12 hr ( N(t) = N(0) * 2 ^ (-t/t_{1/2}) )
-	//This is the value set into modelinput file
-	double tau = plasticDeformationHalfLife/(log(2)); // (mean lifetime tau is half life / ln(2))
-	double Fxxt = (Fxx-1)*exp(-1.0*dt/tau) + 1;
-	double Fyyt = (Fyy-1)*exp(-1.0*dt/tau) + 1;
-	Fxx = Fxx/Fxxt;
-	Fyy = Fyy/Fyyt;
-	//Fxx = (Fxx-1)*rate +1;
-	//dFyy = (Fyy-1)*rate +1;
-
-	//If I am conserving the volume, I need to scale:
-	gsl_matrix*  increment = gsl_matrix_calloc(3,3);
-	gsl_matrix_set(increment,0,0,Fxx);
-	gsl_matrix_set(increment,1,1,Fyy);
-	gsl_matrix_set(increment,2,2,1);
-	if (volumeConserved){
-		double det = determinant3by3Matrix(increment);
-		bool zCapped = false;
-		if (det>1 && zRemodellingSoFar<zRemodellingLowerThreshold){
-			//The remodelling is trying to enlarge the tissue.
-			//To conserve volume, I need to shrink all axes, keeping the ratio constant.
-			//This means the z height will be shrunk. But it has laready been shrunk to my threshold level.
-			//I have the z capped, I will scale only on x & y axes.
-			zCapped = true;
-		}
-		if (det<1 && zRemodellingSoFar>zRemodellingUpperThreshold){
-			//similar to above, not the remodelling is trying to shrink the tissue.
-			//To conserve the volume, I will need to enlarge all axes, keeping the ratio constant.
-			//I have already extended z axis to a large extent, I will not extend it any more.
-			//z is capped.
-			zCapped = true;
-		}
-		if (zCapped){
-			double scale = 1.0/pow (det,1.0/2.0); //scale the size with the square root of the determinant to keep the volume conserved. Then set z to 1 again, we do not want to affect z growth, remodelling is in x & y
-			gsl_matrix_scale(increment,scale);
-			gsl_matrix_set(increment,2,2,1);
-		}
-		else{
-			double scale = 1.0/pow (det,1.0/3.0); //scaling in x,y, and z
-			gsl_matrix_scale(increment,scale);
-			zRemodellingSoFar *= gsl_matrix_get(increment,2,2);
-		}
-		//if (Id == 0){
-		//	cout<<"element: "<<Id<<" principal strains: "<<e1<<" "<<e2<<" angle: "<<tet<<" in degrees: "<<tet/3.14*180<<" resulting scaled increment: "<<Fxx<<" "<<Fyy<<" Fxxt: "<<Fxxt<<" Fyyt: "<<Fyyt<<" zRemodellingSoFar: "<<zRemodellingSoFar<<" zCapped: "<<zCapped<<" det: "<<det<<endl;
-		//}
-	}
-	//rotate the growth rate to be applied in the selected angle:
-	gsl_matrix*  rotMat = gsl_matrix_calloc(3,3);
-	gsl_matrix_set_identity(rotMat);
-	double c = cos(tet);
-	double s = sin(tet);
-	gsl_matrix_set(rotMat,0,0,  c );
-	gsl_matrix_set(rotMat,0,1, -1.0*s);
-	gsl_matrix_set(rotMat,0,2,  0.0);
-	gsl_matrix_set(rotMat,1,0,  s);
-	gsl_matrix_set(rotMat,1,1,  c);
-	gsl_matrix_set(rotMat,1,2,  0.0);
-	gsl_matrix_set(rotMat,2,0,  0.0);
-	gsl_matrix_set(rotMat,2,1,  0.0);
-	gsl_matrix_set(rotMat,2,2,  1.0);
-	gsl_matrix* temp = gsl_matrix_calloc(3,3);
-	gsl_matrix* rotMatT = gsl_matrix_calloc(3,3);
-	gsl_matrix_transpose_memcpy(rotMatT,rotMat);
-	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, rotMat, increment, 0.0, temp);
-	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, temp, rotMatT, 0.0, plasticDeformationIncrement);
-	//Now if this is a lateral element, I need to rotate further to rotate back to normal coordinates from the tilted coordinates:
-	if (tissueType == 2 && ShapeType == 1){ //the matrix is only calculated for prisms of lateral tissue type
-		gsl_matrix* remodellingPlaneRotationMatrixT = gsl_matrix_calloc(3,3);
-		gsl_matrix* tmp = gsl_matrix_calloc(3,3);
-		gsl_matrix_transpose_memcpy(remodellingPlaneRotationMatrixT,remodellingPlaneRotationMatrix);
-
-		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, remodellingPlaneRotationMatrix, plasticDeformationIncrement, 0.0, tmp);
-		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, tmp, remodellingPlaneRotationMatrixT, 0.0, plasticDeformationIncrement);
-		gsl_matrix_free(remodellingPlaneRotationMatrixT);
-		gsl_matrix_free(tmp);
-	}
-	gsl_matrix_free(temp);
-	gsl_matrix_free(rotMat);
-	gsl_matrix_free(rotMatT);
-	gsl_matrix_free(increment);
-}
 
 void 	ShapeBase::CalculateGrowthRotationByF(){
     gsl_matrix* rotMat = gsl_matrix_alloc(3,3);
@@ -2866,65 +2751,53 @@ void	ShapeBase::updateUnipolarEquilibriumMyosinConcentration(bool isApical, doub
 }
 
 
-void 	ShapeBase::calculatePrincipalStrains3D(bool ignoreZ, double& e1, double &e2,  double &e3, gsl_matrix* eigenVec){
-	if (ignoreZ){
-		gsl_matrix* Strain2D = gsl_matrix_calloc(2,2);
-		gsl_matrix_set(Strain2D,0,0, gsl_matrix_get(Strain,0,0));
-		gsl_matrix_set(Strain2D,1,1, gsl_matrix_get(Strain,1,0));
-		gsl_matrix_set(Strain2D,0,1, 0.5 * gsl_matrix_get(Strain,3,0));
-		gsl_matrix_set(Strain2D,1,0, 0.5 * gsl_matrix_get(Strain,3,0));
-		gsl_vector* eigenValues = gsl_vector_calloc(2);
-		gsl_matrix* eigenVec2D = gsl_matrix_calloc(2,2);
-		gsl_eigen_symmv_workspace* w = gsl_eigen_symmv_alloc(2);
-		gsl_eigen_symmv(Strain2D, eigenValues, eigenVec2D, w);
-		gsl_eigen_symmv_free(w);
-		gsl_eigen_symmv_sort(eigenValues, eigenVec2D, GSL_EIGEN_SORT_ABS_ASC);
-		e1 = gsl_vector_get(eigenValues,0);
-		e2 = gsl_vector_get(eigenValues,1);
-		e3 = 0;
-		gsl_matrix_set_identity(eigenVec);
-		for (int i=0; i<2; ++i){
-			for (int j=0; j<2; ++j){
-				gsl_matrix_set(eigenVec,i,j,gsl_matrix_get(eigenVec2D,i,j));
-			}
+void 	ShapeBase::calculatePrincipalStrains2D(double& e1, double &e2,  double &e3, gsl_matrix* eigenVec){
+	gsl_matrix* Strain2D = gsl_matrix_calloc(2,2);
+	gsl_matrix_set(Strain2D,0,0, gsl_matrix_get(Strain,0,0));
+	gsl_matrix_set(Strain2D,1,1, gsl_matrix_get(Strain,1,0));
+	gsl_matrix_set(Strain2D,0,1, 0.5 * gsl_matrix_get(Strain,3,0));
+	gsl_matrix_set(Strain2D,1,0, 0.5 * gsl_matrix_get(Strain,3,0));
+	gsl_vector* eigenValues = gsl_vector_calloc(2);
+	gsl_matrix* eigenVec2D = gsl_matrix_calloc(2,2);
+	gsl_eigen_symmv_workspace* w = gsl_eigen_symmv_alloc(2);
+	gsl_eigen_symmv(Strain2D, eigenValues, eigenVec2D, w);
+	gsl_eigen_symmv_free(w);
+	gsl_eigen_symmv_sort(eigenValues, eigenVec2D, GSL_EIGEN_SORT_ABS_ASC);
+	e1 = gsl_vector_get(eigenValues,0);
+	e2 = gsl_vector_get(eigenValues,1);
+	e3 = 0;
+	gsl_matrix_set_identity(eigenVec);
+	for (int i=0; i<2; ++i){
+		for (int j=0; j<2; ++j){
+			gsl_matrix_set(eigenVec,i,j,gsl_matrix_get(eigenVec2D,i,j));
 		}
-		/*if (Id ==0){
-			displayMatrix(Strain,"Strain");
-			displayMatrix(Strain3D,"Strain3D");
-			cout<<"e1: "<<e1<<" e2: "<<e2<<" e3: "<<e3<<endl;
-		}*/
-		gsl_vector_free(eigenValues);
-		gsl_matrix_free(eigenVec2D);
-		gsl_matrix_free(Strain2D);
 	}
-	else{
-		gsl_matrix* Strain3D = gsl_matrix_calloc(3,3);
-		gsl_matrix_set(Strain3D,0,0, gsl_matrix_get(Strain,0,0));
-		gsl_matrix_set(Strain3D,1,1, gsl_matrix_get(Strain,1,0));
-		gsl_matrix_set(Strain3D,0,1, 0.5 * gsl_matrix_get(Strain,3,0));
-		gsl_matrix_set(Strain3D,1,0, 0.5 * gsl_matrix_get(Strain,3,0));
-		gsl_matrix_set(Strain3D,2,2, gsl_matrix_get(Strain,2,0));
-		gsl_matrix_set(Strain3D,2,1, 0.5 * gsl_matrix_get(Strain,4,0));
-		gsl_matrix_set(Strain3D,1,2, 0.5 * gsl_matrix_get(Strain,4,0));
-		gsl_matrix_set(Strain3D,0,2, 0.5 * gsl_matrix_get(Strain,5,0));
-		gsl_matrix_set(Strain3D,2,0, 0.5 * gsl_matrix_get(Strain,5,0));
-		gsl_vector* eigenValues = gsl_vector_calloc(3);
-		gsl_eigen_symmv_workspace* w = gsl_eigen_symmv_alloc(3);
-		gsl_eigen_symmv(Strain3D, eigenValues, eigenVec, w);
-		gsl_eigen_symmv_free(w);
-		gsl_eigen_symmv_sort(eigenValues, eigenVec, GSL_EIGEN_SORT_ABS_ASC);
-		e1 = gsl_vector_get(eigenValues,0);
-		e2 = gsl_vector_get(eigenValues,1);
-		e3 = gsl_vector_get(eigenValues,2);
-		gsl_vector_free(eigenValues);
-		gsl_matrix_free(Strain3D);
-	}
-	/*if (Id ==0){
-		displayMatrix(Strain,"Strain");
-		displayMatrix(Strain3D,"Strain3D");
-		cout<<"e1: "<<e1<<" e2: "<<e2<<" e3: "<<e3<<endl;
-	}*/
+	gsl_vector_free(eigenValues);
+	gsl_matrix_free(eigenVec2D);
+	gsl_matrix_free(Strain2D);
+}
 
+void 	ShapeBase::calculatePrincipalStrains3D(double& e1, double &e2,  double &e3, gsl_matrix* eigenVec){
+	gsl_matrix* Strain3D = gsl_matrix_calloc(3,3);
+	gsl_matrix_set(Strain3D,0,0, gsl_matrix_get(Strain,0,0));
+	gsl_matrix_set(Strain3D,1,1, gsl_matrix_get(Strain,1,0));
+	gsl_matrix_set(Strain3D,0,1, 0.5 * gsl_matrix_get(Strain,3,0));
+	gsl_matrix_set(Strain3D,1,0, 0.5 * gsl_matrix_get(Strain,3,0));
+	gsl_matrix_set(Strain3D,2,2, gsl_matrix_get(Strain,2,0));
+	gsl_matrix_set(Strain3D,2,1, 0.5 * gsl_matrix_get(Strain,4,0));
+	gsl_matrix_set(Strain3D,1,2, 0.5 * gsl_matrix_get(Strain,4,0));
+	gsl_matrix_set(Strain3D,0,2, 0.5 * gsl_matrix_get(Strain,5,0));
+	gsl_matrix_set(Strain3D,2,0, 0.5 * gsl_matrix_get(Strain,5,0));
+	gsl_vector* eigenValues = gsl_vector_calloc(3);
+	gsl_eigen_symmv_workspace* w = gsl_eigen_symmv_alloc(3);
+	gsl_eigen_symmv(Strain3D, eigenValues, eigenVec, w);
+	gsl_eigen_symmv_free(w);
+	gsl_eigen_symmv_sort(eigenValues, eigenVec, GSL_EIGEN_SORT_ABS_ASC);
+	e1 = gsl_vector_get(eigenValues,0);
+	e2 = gsl_vector_get(eigenValues,1);
+	e3 = gsl_vector_get(eigenValues,2);
+	gsl_vector_free(eigenValues);
+	gsl_matrix_free(Strain3D);
 }
 
 double  ShapeBase::calculateVolumeForInputShapeStructure(double** shapePositions, int nTriangularFaces, int** triangularFaces, double* midPoint ){

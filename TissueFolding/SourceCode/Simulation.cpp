@@ -3061,7 +3061,7 @@ void Simulation::manualPerturbationToInitialSetup(bool deform, bool rotate){
 				//fixY((*itNode),0);
 				(*itNode)->Position[0] -= 5;
 			}*/
-			fixAllD((*itNode),0);
+			//fixAllD((*itNode),0);
 		}
 		//laserAblateTissueType(1);
 		//laserAblate(0.0, 0.0, 5.0);

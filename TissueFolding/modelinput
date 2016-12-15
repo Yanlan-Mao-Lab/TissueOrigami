@@ -122,7 +122,7 @@ GrowthOptions:
   GrowthFunctionType(int-seeDocumentation): 3
   InitialTime(sec):  57600
   FinalTime(sec):  86400
-  ApplyToColumnarLayer(bool): 1
+  ApplyToColumnarLayer(bool): 0
   ApplyToPeripodialMembrane(bool): 0
   Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/Grid20-11_Col_56-88_3-0
   zRange: 0.0 1.0
@@ -130,7 +130,7 @@ GrowthOptions:
   GrowthFunctionType(int-seeDocumentation): 3
   InitialTime(sec):  86400
   FinalTime(sec):  115200
-  ApplyToColumnarLayer(bool): 1
+  ApplyToColumnarLayer(bool): 0
   ApplyToPeripodialMembrane(bool): 0
   Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/Grid20-11_Col_64-88_3-0
   zRange: 0.0 1.0
@@ -138,7 +138,7 @@ GrowthOptions:
   GrowthFunctionType(int-seeDocumentation): 3
   InitialTime(sec):  115200
   FinalTime(sec):  172800
-  ApplyToColumnarLayer(bool): 1
+  ApplyToColumnarLayer(bool): 0
   ApplyToPeripodialMembrane(bool): 0
   Filename(full-path): /home/melda/Documents/TissueFolding/ToolBox/GrowtRates/Grid20-11_Col_72-96_3-0
   zRange: 0.0 1.0
@@ -154,11 +154,11 @@ ShapeChangeOptions:
 
 PlasticDeformationOptions:
   ThereIsPlasticDeformation(bool): 1
-  ApplyToColumnarLayer(bool): 0
+  ApplyToColumnarLayer(bool): 1
   ApplyToPeripodialMembrane(bool): 0
   VolumeConserved(bool): 1
   DeformationHalfLife(hour): 1.12
-  zDeformationLimits(lowerFraction-upperFraction): 1.0  1.0
+  zDeformationLimits(lowerFraction-upperFraction): 0.8  1.2
 
 ExplicitECMOptions:
   ThereIsExplicitECM(bool): 0

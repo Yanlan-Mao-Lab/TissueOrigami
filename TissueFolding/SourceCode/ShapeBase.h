@@ -298,7 +298,8 @@ public:
 	void	adjustCMyosinFromSave();
 	void	updateMyosinConcentration(double dt, double kMyo, bool thereIsMyosinFeedback, double MyosinFeedbackCap);
 	double  calculateVolumeForInputShapeStructure(double** shapePositions, int nTriangularFaces, int** triangularFaces, double* midPoint );
-	void 	calculatePrincipalStrains3D(bool ignoreZ, double& e1, double &e2,  double &e3, gsl_matrix* eigenVec);
+	void 	calculatePrincipalStrains3D(double& e1, double &e2,  double &e3, gsl_matrix* eigenVec);
+	void 	calculatePrincipalStrains2D(double& e1, double &e2,  double &e3, gsl_matrix* eigenVec);
 	void 	calculatePrincipalStrainAxesOnXYPlane(double& e1, double &e2, double& tet);
 	void	updateEquilibriumMyoWithFeedbackFromZero(double MyosinFeedbackCap);
 	void	updateEquilibriumMyoWithFeedbackFromFixedTotal(double totalMyosinLevel);
@@ -357,7 +358,7 @@ public:
 	void 	setPlasticDeformationIncrement(double xx, double yy, double zz);
     void 	growShapeByFg();
     void 	changeShapeByFsc(double dt);
-    void	calculatePlasticDeformationOld(bool volumeConserved, double dt, double plasticDeformationHalfLife, double zRemodellingLowerThreshold, double zRemodellingUpperThreshold);
+    bool	checkZCappingInRemodelling(bool volumeConserved, double zRemodellingLowerThreshold, double zRemodellingUpperThreshold, gsl_matrix* increment, gsl_matrix* eigenVec);
     void	calculatePlasticDeformation3D(bool volumeConserved, double dt, double plasticDeformationHalfLife, double zRemodellingLowerThreshold, double zRemodellingUpperThreshold);
     void 	addMigrationIncrementToGrowthIncrement(gsl_matrix* migrationIncrement);
     void 	displayDebuggingMatrices();
