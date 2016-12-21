@@ -219,10 +219,8 @@ void Simulation::setDefaultParameters(){
 	externalViscosityLZBasal  = 0.0;
 
 	softenedECM = false;
-    thereIsECMSoftening = false;
-    numberOfSoftenedRanges = 0;
-	//ECMSofteningXRange[0] = 0.0;
-    //ECMSofteningXRange[1] = 1.0;
+    	thereIsECMSoftening = false;
+	numberOfSoftenedEllipseBands = 0;
 	softeningEndTimeInSec = -1;
 	softeningEndTimeInSec = -1;
 	ECMSofteningFraction = 0.0;
@@ -238,6 +236,8 @@ void Simulation::setDefaultParameters(){
 	thereIsExplicitECM = false;
 	ECMRenawalHalfLife = 0.0;
 	thereIsExplicitActin = false;
+
+	nMarkerEllipseRanges = 0;
 }
 
 bool Simulation::readExecutableInputs(int argc, char **argv){
@@ -475,9 +475,16 @@ bool Simulation::initiateSystem(){
 	if (symmetricY || symmetricX){
 		 clearCircumferenceDataFromSymmetricityLine();
 	}
+	cout<<"cleared symmetricity"<<endl;
+
 	Success = checkIfThereIsPeripodialMembrane();
+	cout<<"calculating tissue height"<<endl;
 	Success = calculateTissueHeight(); //Calculating how many layers the columnar layer has, and what the actual height is.
+	cout<<"calculating bounding box"<<endl;
+
 	calculateBoundingBox();
+	cout<<"assigning Initial Z Positions"<<endl;
+
 	assignInitialZPositions();
 	if (!Success){
 		return Success;
@@ -501,6 +508,8 @@ bool Simulation::initiateSystem(){
 			Success = false;
 		}
 	}
+	cout<<"after peripodial checks"<<endl;
+
 	if (addCurvatureToTissue){
 		addCurvatureToColumnar(tissueCurvatureDepth);
 	}
@@ -512,6 +521,7 @@ bool Simulation::initiateSystem(){
 	if (thereIsExplicitActin){
 		setUpActinMimicingElements();
 	}
+	cout<<"starting node neig"<<endl;
 	fillInNodeNeighbourhood();
 	fillInElementColumnLists();
 	checkForNodeFixing();
@@ -551,6 +561,7 @@ bool Simulation::initiateSystem(){
 	if (symmetricX){
 		setupXsymmetricity();
 	}
+	assignIfElementsAreInsideEllipseBands();
 	if (ContinueFromSave){
 		cout<<"Reading Final SimulationStep: "<<endl;
 		Success = readFinalSimulationStep();
@@ -2053,7 +2064,9 @@ bool Simulation::calculateTissueHeight(){
 	//check if the columnar layer is made of 3D elements:
 	bool ColumnarLayer3D = isColumnarLayer3D();
 	TissueHeight = 0;
+	//cout<<"inside calculateTissueHeight"<<endl;
 	if (ColumnarLayer3D){
+		//cout<<"tissue is 3d"<<endl;
 		//Find the first basal node on the Nodes List
 		//Find the first element that has this node on the elements list
 		//Move apically through the elements until you reach the apical surface - an apical node
@@ -2071,6 +2084,7 @@ bool Simulation::calculateTissueHeight(){
 		}
 		//Find an element using the basal node, and move on the elements apically, until you reach the apical surface:
 		int currNodeId = (*itNode)->Id;
+		cout<<"found node: "<<foundNode<<" currNodeId: "<<currNodeId<<endl;
 		vector<ShapeBase*>::iterator itElement;
 		bool foundElement = true;
 		TissueHeightDiscretisationLayers = 0;
@@ -2083,10 +2097,12 @@ bool Simulation::calculateTissueHeight(){
 					break;
 				}
 			}
+			//cout<<"found element: "<<foundElement<<" currNodeId: "<<currNodeId<<endl;
 			double currentH = (*itElement)->getElementHeight();
 			TissueHeight += currentH;
 			TissueHeightDiscretisationLayers++;
 			currNodeId = (*itElement)->getCorrecpondingApical(currNodeId); //have the next node
+			//cout<<"corresponding apical node: "<<currNodeId<<" foundElement bool at this point: "<<foundElement<<" tissueplacement: "<<Nodes[currNodeId]->tissuePlacement<<endl;
 		}
 		if (!foundElement){
 			return false;
@@ -2099,6 +2115,8 @@ bool Simulation::calculateTissueHeight(){
 			return false;
 		}
 	}
+	//cout<<"checking for peripodial & lumen in calculateTissueHeight"<<endl;
+
 	if (thereIsPeripodialMembrane){
 		double columnarTop = -1000.0, peripodialbottom = 1000.0;
 		vector<Node*>::iterator itNode;
@@ -2124,6 +2142,7 @@ bool Simulation::calculateTissueHeight(){
 		}
 		lumenHeight = columnarTop - peripodialbottom;
 	}
+	//cout<<"finalised calculateTissueHeight"<<endl;
 	return true;
 }
 
@@ -3066,7 +3085,7 @@ void Simulation::manualPerturbationToInitialSetup(bool deform, bool rotate){
 		//laserAblateTissueType(1);
 		//laserAblate(0.0, 0.0, 5.0);
 		//deform = true;
-        double scaleX = 2.0;
+        double scaleX = 1.0;
         double scaleY = 1.0;
         double scaleZ = 1.0;
 
@@ -3880,8 +3899,8 @@ void Simulation::checkECMSoftening(){
 		}
 		for (int aa=0; aa<nNodes; ++aa){
 			if((Nodes[aa]->tissuePlacement == 0 && softenBasalECM ) || (Nodes[aa]->tissuePlacement == 1 && softenApicalECM )){
-				double relativeX = (Nodes[aa]->Position[0] - boundingBox[0][0])/boundingBoxSize[0];
-				for (int ECMReductionRangeCounter =0; ECMReductionRangeCounter<numberOfSoftenedRanges; ++ECMReductionRangeCounter){
+				//double relativeX = (Nodes[aa]->Position[0] - boundingBox[0][0])/boundingBoxSize[0];
+				/*for (int ECMReductionRangeCounter =0; ECMReductionRangeCounter<numberOfSoftenedRanges; ++ECMReductionRangeCounter){
 					if (relativeX> ECMSofteningXRangeMins[ECMReductionRangeCounter] && relativeX<ECMSofteningXRangeMaxs[ECMReductionRangeCounter]){
 						Nodes[aa]->externalViscosity[0] -= Nodes[aa]->ECMViscosityReductionPerHour[0]/3600*dt;
 						Nodes[aa]->externalViscosity[1] -= Nodes[aa]->ECMViscosityReductionPerHour[1]/3600*dt;
@@ -3895,6 +3914,18 @@ void Simulation::checkECMSoftening(){
 						//Nodes[aa]->baseExternalViscosity[0] = Nodes[aa]->externalViscosity[0];
 						//Nodes[aa]->baseExternalViscosity[1] = Nodes[aa]->externalViscosity[1];
 						//Nodes[aa]->baseExternalViscosity[2] = Nodes[aa]->externalViscosity[2];
+					}
+				}*/
+				if(Nodes[aa]->insideEllipseBand){
+					for (int ECMReductionRangeCounter =0; ECMReductionRangeCounter<numberOfSoftenedEllipseBands; ++ECMReductionRangeCounter){
+						if (Nodes[aa]->coveringEllipseBandId == ECMSofteningEllipseBandIds[ECMReductionRangeCounter]){
+							Nodes[aa]->externalViscosity[0] -= Nodes[aa]->ECMViscosityReductionPerHour[0]/3600*dt;
+							Nodes[aa]->externalViscosity[1] -= Nodes[aa]->ECMViscosityReductionPerHour[1]/3600*dt;
+							Nodes[aa]->externalViscosity[2] -= Nodes[aa]->ECMViscosityReductionPerHour[2]/3600*dt;
+							Nodes[aa]->baseExternalViscosity[0] = Nodes[aa]->externalViscosity[0];
+							Nodes[aa]->baseExternalViscosity[1] = Nodes[aa]->externalViscosity[1];
+							Nodes[aa]->baseExternalViscosity[2] = Nodes[aa]->externalViscosity[2];
+						}
 					}
 				}
 			}
@@ -4069,6 +4100,14 @@ bool Simulation::runOneStep(){
 	//Elements[38]->displayPositions();
 	//cout<<"Element: 39"<<endl;
 	//Elements[39]->displayPositions();
+}
+
+void Simulation::assignIfElementsAreInsideEllipseBands(){
+	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		if (!(*itElement)->IsAblated){
+			(*itElement)->checkIfInsideEllipseBands(nMarkerEllipseRanges, markerEllipseBandXCentres,markerEllipseBandR1Ranges, markerEllipseBandR2Ranges, Nodes);
+		}
+	}
 }
 
 void Simulation::checkForPinningPositionsUpdate(){

@@ -19,9 +19,9 @@ using namespace std;
  GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
  {
 	 //cout<<"initiating gl widget"<<endl;
-	 obj_pos[0] = 50.0f;
-	 obj_pos[1] =  -130.0f;
-     obj_pos[2] =  500.0f;//250.0f;
+	 obj_pos[0] =  0.0f;
+	 obj_pos[1] = 0.0f;//-130.0f;
+     	 obj_pos[2] =  500.0f;//250.0f;
 	 MatRot[0]  = 1.0; MatRot[1]  = 0.0; MatRot[2]  = 0.0; MatRot[3]  = 0.0;
 	 MatRot[4]  = 0.0; MatRot[5]  = 1.0; MatRot[6]  = 0.0; MatRot[7]  = 0.0;
 	 MatRot[8]  = 0.0; MatRot[9]  = 0.0; MatRot[10] = 1.0; MatRot[11] = 0.0;
@@ -42,6 +42,7 @@ using namespace std;
      DisplayStrains = true;
      DisplayPysProp = false;
      DisplayFixedNodes = false;
+
      //current ranges:
      DisplayPysPropRange[0][0] = 1000.0; DisplayPysPropRange[0][1] = 85000.0; 	//External Viscosity
      DisplayPysPropRange[1][0] = 1000.0; DisplayPysPropRange[1][1] = 50000.0; 	//Internal Viscosity
@@ -88,15 +89,17 @@ using namespace std;
      drawMyosinForces = false;
      drawPeripodialMembrane = true;
      drawColumnar = true;
+     drawMarkingEllipses = false;
      ManualNodeSelection = false;
      ManualSelectedNodeId = -100;
      PerspectiveView = true;
      orthoViewLimits[0] = -250;
      orthoViewLimits[1] =  250;
-     orthoViewLimits[2] = -250;
-     orthoViewLimits[3] =  250;
+     orthoViewLimits[2] = -40;//-250;
+     orthoViewLimits[3] = 40;// 250;
      orthoViewLimits[4] = -1000;
      orthoViewLimits[5] =  1000;
+		 
      displayBoundingBox = false;
      xClip = 1000.0;
      yClip = 1000.0;
@@ -178,14 +181,14 @@ void GLWidget::reInitialiseNodeColourList(int oldNodeNumber){
 	 glMatrixMode(GL_PROJECTION);
 	 glLoadIdentity();
 	 if (PerspectiveView) {
-         glFrustum(-1*aspectratio, 1*aspectratio, -1, 1, 1, 10000); // near and far match your triangle Z distance
+         	glFrustum(-1*aspectratio, 1*aspectratio, -1, 1, 1, 10000); // near and far match your triangle Z distance
 	 }
 	 else{
 		 glOrtho(orthoViewLimits[2]*aspectratio, orthoViewLimits[3]*aspectratio, orthoViewLimits[2], orthoViewLimits[3], orthoViewLimits[4],orthoViewLimits[5]);
 	 }
 
 	 glMatrixMode(GL_MODELVIEW);
-     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+     	 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	 glLoadIdentity();
 	 if (currNodeNumber !=Sim01->nNodes){
 		 reInitialiseNodeColourList(currNodeNumber);
@@ -380,7 +383,7 @@ void GLWidget::highlightNode(int i){
 	for (itNode=Sim01->Nodes.begin(); itNode<Sim01->Nodes.end(); ++itNode){
 		float* currColour;
 		currColour = new float[3];
-		if(!DisplayStrains && !DisplayPysProp && !drawNetForces && !drawPackingForces && !drawMyosinForces){
+		if(!DisplayStrains && !DisplayPysProp && !drawNetForces && !drawPackingForces && !drawMyosinForces && !drawMarkingEllipses){
 			//I am not displaying ant data on the colours, therefore I do not need any calculaitons on element basis, the colour is constant
 			if ((*itNode)->tissueType == 0){ // columnar layer
 				NodeColourList[(*itNode)->Id][0]=0.75;
@@ -405,7 +408,7 @@ void GLWidget::highlightNode(int i){
 				for (int i=0;i<nConnectedElements; ++i){
 					float TmpStrainMag =0.0;
 					Sim01->Elements[(*itNode)->connectedElementIds[i]]->getStrain(StrainToDisplay, TmpStrainMag);
-                    StrainMag += (TmpStrainMag)*(*itNode)->connectedElementWeights[i];
+                    			StrainMag += (TmpStrainMag)*(*itNode)->connectedElementWeights[i];
 				}
 				getDisplayColour(currColour, StrainMag);
 			}
@@ -425,7 +428,7 @@ void GLWidget::highlightNode(int i){
 							//Growth is multiplicative, base should be 1.0:
 							TmpPysPropMag = 1.0;
 						}
-                        Sim01->Elements[(*itNode)->connectedElementIds[i]]->getPysProp(PysPropToDisplay, TmpPysPropMag, Sim01->dt);
+                        			Sim01->Elements[(*itNode)->connectedElementIds[i]]->getPysProp(PysPropToDisplay, TmpPysPropMag, Sim01->dt);
 						PysPropMag += TmpPysPropMag*(*itNode)->connectedElementWeights[i];
 					}
 				}
@@ -469,7 +472,7 @@ void GLWidget::highlightNode(int i){
 				}
 			}
 			else if(drawPackingForces){
-                //cout<<"Drawing Packing Forces"<<endl;
+                		//cout<<"Drawing Packing Forces"<<endl;
 				float ForceMag = 0.0;
 				double F[3];
 				F[0] = Sim01->PackingForces[(*itNode)->Id][0];
@@ -477,14 +480,38 @@ void GLWidget::highlightNode(int i){
 				F[2] = Sim01->PackingForces[(*itNode)->Id][2];
 				ForceMag = F[0]* F[0] + F[1]*F[1] + F[2]* F[2];
 				ForceMag = pow(ForceMag,(float)0.5);
-                //cout<<"PAcking Force: "<<F[0]<<" "<<F[1]<<" "<<F[2]<<endl;
-                if (ForceMag>threshold){
+				//cout<<"PAcking Force: "<<F[0]<<" "<<F[1]<<" "<<F[2]<<endl;
+				if (ForceMag>threshold){
 					getForceColour(currColour,ForceMag);
 				}
 				else{
 					currColour[0] = 1.0;
 					currColour[1] = 1.0;
 					currColour[2] = 0.8;
+				}
+			}
+			else if(drawMarkingEllipses){
+				if ((*itNode)->insideEllipseBand){
+					currColour[0] = 2.0;
+					currColour[1] = 0.0;
+					currColour[2] = 1.0;
+				}
+				else{
+					if ((*itNode)->tissueType == 0){ // columnar 
+						currColour[0] = 0.75;
+						currColour[1] = 1.0;
+						currColour[2] = 1.0;
+					}
+					else if ((*itNode)->tissueType == 1){ // Peripodial membrane
+						currColour[0] = 1.0;
+						currColour[1] = 1.0;
+						currColour[2] = 0.75;
+					}
+					else if ((*itNode)->tissueType == 2){ // Linker Zone
+						currColour[0] = 0.87;
+						currColour[1] = 1.0;
+						currColour[2] = 0.87;
+					}	
 				}
 			}
 			NodeColourList[(*itNode)->Id][0]=currColour[0];
@@ -653,6 +680,9 @@ void GLWidget::highlightNode(int i){
 			for (int k =0; k<3; ++k){
 				int pointId = TriangleConnectivity[j][k];
 				glColor3f(NodeColours[pointId][0],NodeColours[pointId][1],NodeColours[pointId][2]);
+				//if (Sim01->Elements[i]->insideEllipseBand){
+				//	 glColor3f(1,0,1);
+				//}
 				float x = xMultiplier * Sim01->Elements[i]->Positions[pointId][0];
 				float y = yMultiplier * Sim01->Elements[i]->Positions[pointId][1];
 				float z = Sim01->Elements[i]->Positions[pointId][2];

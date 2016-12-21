@@ -159,6 +159,12 @@ bool ModelInputObject::readParameters(){
 				 */
 				Success  = readECMPerturbation(parametersFile);
 			}
+			else if(currParameterHeader == "Marker_Ellipses:"){
+				/**
+				 * Setting perturbations to ECM, current setup includes softening of apical or basal ECM at a given time point.
+				 */
+				Success  = readMarkerEllipseBandOptions(parametersFile);
+			}
 			else if(currParameterHeader == "Cell_Migration:"){
 				/**
 				 * Setting perturbations to ECM, current setup includes softening of apical or basal ECM at a given time point.
@@ -1799,6 +1805,61 @@ bool ModelInputObject::readStretcherSetup(ifstream& file){
 	return true;
 }
 
+
+bool ModelInputObject::readMarkerEllipseBandOptions(ifstream& file){
+	string currHeader;
+	file >> currHeader;
+	if(currHeader == "numberOfMarkerEllipses(int):"){
+		file >> Sim->nMarkerEllipseRanges;
+	}
+	else{
+		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: numberOfMarkerEllipses(int):" <<endl;
+		return false;
+	}
+	
+	file >> currHeader;
+	if(currHeader == "MarkerEllipseXCenters(fractionOfTissueSize):"){
+		double dummy;
+		for (int i=0; i<Sim->nMarkerEllipseRanges; ++i){
+			file >> dummy;	
+			Sim->markerEllipseBandXCentres.push_back(dummy);
+		}
+	}
+	else{
+		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: MarkerEllipseXCenters(fractionOfTissueSize):"<<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "MarkerEllipseBandR1Ranges(fractionOfTissueSize-x1Low-x1High):"){
+		double dummy;
+		for (int i=0; i<Sim->nMarkerEllipseRanges; ++i){
+			file >> dummy;	
+			Sim->markerEllipseBandR1Ranges.push_back(dummy);
+			file >> dummy;	
+			Sim->markerEllipseBandR1Ranges.push_back(dummy);
+		}
+	}
+	else{
+		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: MarkerEllipseBandR1Ranges(fractionOfTissueSize-x1Low-x1High):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "MarkerEllipseBandR2Ranges(fractionOfTissueSize-y2Low-y2High):"){
+		double dummy;
+		for (int i=0; i<Sim->nMarkerEllipseRanges; ++i){
+			file >> dummy;	
+			Sim->markerEllipseBandR2Ranges.push_back(dummy);
+			file >> dummy;	
+			Sim->markerEllipseBandR2Ranges.push_back(dummy);
+		}
+	}
+	else{
+		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: MarkerEllipseBandR2Ranges(fractionOfTissueSize-y2Low-y2High):" <<endl;
+		return false;
+	}
+	return true;
+}
+
 bool ModelInputObject::readECMPerturbation(ifstream& file){
 	string currHeader;
 	file >> currHeader;
@@ -1838,23 +1899,22 @@ bool ModelInputObject::readECMPerturbation(ifstream& file){
 		return false;
 	}
 	file >> currHeader;
-	if(currHeader == "relativeXRangeOfSoftening(number,[min,max][min,max]):"){
-		file >> Sim->numberOfSoftenedRanges;
-		double minX, maxX;
-		for (int aa=0; aa<Sim->numberOfSoftenedRanges; ++aa){
-			file >>minX;
-			file >>maxX;
-			Sim->ECMSofteningXRangeMins.push_back(minX);
-			Sim->ECMSofteningXRangeMaxs.push_back(maxX);
+	if(currHeader == "softeningAppliedToEllipses(number,[ellipseId][ellipseId]):"){
+		file >> Sim->numberOfSoftenedEllipseBands;
+		double ellipseBandId;
+		for (int aa=0; aa<Sim->numberOfSoftenedEllipseBands; ++aa){
+			file >>ellipseBandId;
+			Sim->ECMSofteningEllipseBandIds.push_back(ellipseBandId);
 		}
 		//file >> Sim->ECMSofteningXRange[0];
 		//file >> Sim->ECMSofteningXRange[1];
 
 	}
 	else{
-		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: relativeXRangeOfSoftening(number,[min,max][min,max]):" <<endl;
+		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: softeningAppliedToEllipses(number,[ellipseId][ellipseId]):" <<endl;
 		return false;
 	}
+
 	file >> currHeader;
 	if(currHeader == "softeningFraction(double(0-1.0):"){
 		double fraction;

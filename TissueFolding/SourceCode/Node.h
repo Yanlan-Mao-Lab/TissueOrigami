@@ -39,6 +39,8 @@ public:
 	int 			symmetricEquivalentId;		///< The id of the node that this node will move symmetrically in y, if the tissue is symmetric and only half is simulated.
 	bool			hasLateralElementOwner;		///< The boolean stating if any lateral element uses this node
 	bool			atSymmetricityBorder;		///< The boolean stating if the node is at the border of symmetricity
+	bool		insideEllipseBand;
+	int		coveringEllipseBandId;	
 	//bool 			allOwnersAblated;			///< Boolean stating if the node is ablated. The node is ablated if all the elements making use of the node are ablated.
 	//void setExternalViscosity(double ApicalVisc,double BasalVisc, double PeripodialApicalVisc, double PeripodialBasalVisc);///< The function to set the viscosity of the node.
 	void setExternalViscosity(double ApicalVisc,double BasalVisc, bool extendExternalViscosityToInnerTissue);///< The function to set the viscosity of the node.

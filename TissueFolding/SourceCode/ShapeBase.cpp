@@ -1190,6 +1190,33 @@ bool	ShapeBase::checkZCappingInRemodelling(bool volumeConserved, double zRemodel
 	return zCapped;
 }
 
+void	ShapeBase::checkIfInsideEllipseBands(int nMarkerEllipseRanges, vector<double> markerEllipseBandXCentres,vector<double> markerEllipseBandR1Ranges, vector<double> markerEllipseBandR2Ranges, vector<Node*>& Nodes){
+	for (int i=0;i<nMarkerEllipseRanges; ++i){	
+		double dx  = relativePosInBoundingBox[0] - markerEllipseBandXCentres [i];
+		double dy = relativePosInBoundingBox[1];
+		if (dx <0){
+			double dxOverR1 = dx/markerEllipseBandR1Ranges[2*i];
+			double dyOverR2 = dy/markerEllipseBandR2Ranges[2*i];
+			double d_squareLower = dxOverR1*dxOverR1 + dyOverR2*dyOverR2;
+			dxOverR1 = dx/markerEllipseBandR1Ranges[2*i+1];
+			dyOverR2 = dy/markerEllipseBandR2Ranges[2*i+1];
+			double d_squareUpper = dxOverR1*dxOverR1 + dyOverR2*dyOverR2;
+			//For element to be inside the band, calculated distance square values
+			//should be larger than 1 for the smaller ellipse, and smaller than 1 for the
+			//larger ellipse, hence in between two ellipses.
+			if (d_squareLower> 1 && d_squareUpper<1){
+				insideEllipseBand = true;
+				coveringEllipseBandId = i;
+				for (int j =0 ; j<nNodes; ++j){
+					int currNodeId = NodeIds[j];
+					Nodes[currNodeId]->insideEllipseBand=true;
+					Nodes[currNodeId]->coveringEllipseBandId = i;			
+				}
+			}
+		}		
+	}
+}
+
 void	ShapeBase::calculatePlasticDeformation3D(bool volumeConserved, double dt, double plasticDeformationHalfLife, double zRemodellingLowerThreshold, double zRemodellingUpperThreshold){
 	double e1 = 0.0, e2 = 0.0, e3 = 0.0, tet = 0.0;
 	gsl_matrix* eigenVec = gsl_matrix_calloc(3,3);

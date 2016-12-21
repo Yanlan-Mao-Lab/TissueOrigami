@@ -57,6 +57,7 @@ using namespace std;
      vector <QString> SelectedId;
      bool 		drawNetForces;
      bool		drawMyosinForces;
+     bool		drawMarkingEllipses;
      int		MyosinToDisplay;		//the index of myosin to display, 1: uniform, 2: unipolar
      bool 		drawPackingForces;
      bool 		drawTissueScaleBar;
@@ -68,6 +69,7 @@ using namespace std;
      double  	xClip, yClip, zClip;
      bool 		drawSymmetricity;
      int		currNodeNumber;
+     float 	obj_pos[3];
 
  signals:
  	 void SelectedItemChanged();
@@ -117,7 +119,7 @@ using namespace std;
      QPoint lastPos;
      QPoint InitialClickPos;
      int 	MouseButton;
-     float 	obj_pos[3];
+     
      float 	aspectratio;
      int 	PickedColour[4];
      float 	ReferenceLineThickness, MainShapeLineThickness;

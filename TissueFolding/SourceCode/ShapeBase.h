@@ -205,6 +205,8 @@ public:
 	bool 	capElement;
 	double** MyoForce;
 	int* 	elementsIdsOnSameColumn;
+	bool 	insideEllipseBand;
+	int 	coveringEllipseBandId;
 
 	int 	getId();
 	string 	getName();
@@ -358,7 +360,9 @@ public:
 	void 	setPlasticDeformationIncrement(double xx, double yy, double zz);
     void 	growShapeByFg();
     void 	changeShapeByFsc(double dt);
+    void	checkIfInsideEllipseBands(int nMarkerEllipseRanges, vector<double> markerEllipseBandXCentres, vector<double> markerEllipseBandR1Ranges, vector<double> markerEllipseBandR2Ranges, vector<Node*>& Nodes);
     bool	checkZCappingInRemodelling(bool volumeConserved, double zRemodellingLowerThreshold, double zRemodellingUpperThreshold, gsl_matrix* increment, gsl_matrix* eigenVec);
+
     void	calculatePlasticDeformation3D(bool volumeConserved, double dt, double plasticDeformationHalfLife, double zRemodellingLowerThreshold, double zRemodellingUpperThreshold);
     void 	addMigrationIncrementToGrowthIncrement(gsl_matrix* migrationIncrement);
     void 	displayDebuggingMatrices();

@@ -67,8 +67,8 @@ int main(int argc, char **argv)
 	mw.show();
 	mw.MainGLWidget->show();
 	mw.raise();
-    mw.setGeometry(1600, 900, 1600, 900);
-    //mw.setGeometry(50, 50, 900, 550);
+    //mw.setGeometry(1600, 900, 1600, 900);
+    mw.setGeometry(50, 50, 900, 550);
     mw.MainScene->update();
 
 	return app.exec();

@@ -194,6 +194,7 @@ private:
 	void calculateGrowth();
 	void calculateShapeChange();
 	void cleanUpGrowthRates();
+	void assignIfElementsAreInsideEllipseBands();
 	void checkForPinningPositionsUpdate();
 	void updatePinningPositions();
     void updateGrowthRotationMatrices();
@@ -396,11 +397,13 @@ public:
 	vector <double> initialWeightPointy;
 	vector <double> initialWeightPointz;
 
-
-    bool 	thereIsECMSoftening;
-    int numberOfSoftenedRanges;
-    vector<double> ECMSofteningXRangeMins;
-    vector<double> ECMSofteningXRangeMaxs;
+	int	nMarkerEllipseRanges;
+	vector<double> markerEllipseBandXCentres;
+	vector<double> markerEllipseBandR1Ranges;
+	vector<double> markerEllipseBandR2Ranges;
+    	bool 	thereIsECMSoftening;	
+	int numberOfSoftenedEllipseBands;
+	vector<int> ECMSofteningEllipseBandIds;
     //double 	ECMSofteningXRange[2];
 	double 	softeningBeginTimeInSec;
 	double  softeningEndTimeInSec;

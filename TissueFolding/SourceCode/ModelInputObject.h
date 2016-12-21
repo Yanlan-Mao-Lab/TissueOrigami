@@ -40,6 +40,7 @@ private:
 	bool readGridBasedMyosinFunction(ifstream& file);		///< This function reads the myosin parameters from file (GridBased). It will utilise a separate input file storing the equilibrium myosin levels and orientations.
 	bool readShapeChangeType1(ifstream& file);				///< This function reads the shape change  parameters from file (UniformShapeChange).
 	//bool readShapeChangeType2(ifstream& file);				///< This function reads the shape change  parameters from file (CircularShapeChange).
+	bool readMarkerEllipseBandOptions(ifstream& file);	
 	bool readShapeChangeType3(ifstream& file);				///< This function reads the shape change  parameters from file (GridBasedShapeChange).
 	bool readStretcherSetup(ifstream& file);				///< This function reads the stretcher experimental setup parameters of the simulation from file.
 	bool readPipetteSetup(ifstream& file);					///< This function reads the pipette aspiration experimental setup parameters of the simulation from file.

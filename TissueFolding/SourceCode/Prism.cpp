@@ -187,6 +187,8 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, bool thereIsPlas
     gsl_matrix_set_identity(remodellingPlaneRotationMatrix);
     isECMMimicing = false;
     isActinMimicing = false;
+    insideEllipseBand = false;
+    coveringEllipseBandId = -1;
 }
 
 Prism::~Prism(){

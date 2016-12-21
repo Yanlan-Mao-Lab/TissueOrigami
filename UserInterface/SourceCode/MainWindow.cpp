@@ -429,6 +429,11 @@ void MainWindow::setDisplayPreferences(QGridLayout *ProjectDisplayOptionsGrid){
 	DisplayPreferencesCheckBoxes[8]->setChecked(false);
 	connect(DisplayPreferencesCheckBoxes[8] , SIGNAL(stateChanged(int)),this,SLOT(updateMyosinCheckBox(int)));
 
+	//draw marking ellipses
+	DisplayPreferencesCheckBoxes[9] = new QCheckBox("MarkingEllipses");
+	DisplayPreferencesCheckBoxes[9]->setChecked(false);
+	connect(DisplayPreferencesCheckBoxes[9] , SIGNAL(stateChanged(int)),this,SLOT(updateMarkingEllipseCheckBox(int)));
+
     ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[0],3,0,1,2,Qt::AlignLeft);  // display pipette
 	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[7],3,2,1,2,Qt::AlignLeft);  // display bounding box
 	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[1],4,0,1,2,Qt::AlignLeft);  // Net Forces
@@ -438,6 +443,7 @@ void MainWindow::setDisplayPreferences(QGridLayout *ProjectDisplayOptionsGrid){
 	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[3],6,0,1,2,Qt::AlignLeft); // Scale Bar
 	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[4],7,0,1,2,Qt::AlignLeft); // Display Peripodial Membrane
 	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[5],8,0,1,2,Qt::AlignLeft); // Display Columnar Layer
+	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[9],7,2,1,2,Qt::AlignLeft); // Display Marked Ellipses
 }
 
 
@@ -525,6 +531,16 @@ void  MainWindow::updateMyosinCheckBox(int s){
 		cout<<" MyosinToDisplay: "<<MainGLWidget->MyosinToDisplay <<endl;
 	}
 }
+
+void  MainWindow::updateMarkingEllipseCheckBox(int s){
+	if (s ==2 ){
+		MainGLWidget->drawMarkingEllipses = true;
+	}
+	else{
+		MainGLWidget->drawMarkingEllipses = false;
+	}
+}
+
 
 void  MainWindow::updateDisplayPipette(int s){
     if ( s == 2 )
@@ -751,7 +767,7 @@ void MainWindow::timerSimulationStep(){
     //for (int j=0; j<3; ++j){
     //    cout<<"Node 2025 at circmference: "<<Sim01->Nodes[2025]->atCircumference<<" fixed pos "<<j<<" "<<Sim01->Nodes[2025]->FixedPos[j]<<endl;
     //}
-	bool 	automatedSave = false;
+	bool 	automatedSave = true;
 	bool 	analyseResults = true;
 	bool 	slowstepsOnDisplay = false;
 	bool 	slowstepsOnRun = false;
@@ -765,10 +781,10 @@ void MainWindow::timerSimulationStep(){
 			}
 			if( automatedSave){
 				Sim01->assignTips();
-				MainGLWidget->updateToTopView(); //display tissue from the top view
-				//MainGLWidget->updateToFrontView(); //display tissue from the front view
+				//MainGLWidget->updateToTopView(); //display tissue from the top view
+				MainGLWidget->updateToFrontView(); //display tissue from the front view
 				//MainGLWidget->updateToPerspectiveView(); //display tissue from the tilted view
-				MainGLWidget->drawSymmetricity = true; //hide symmetric
+				MainGLWidget->drawSymmetricity = false; //hide symmetric
 				MainGLWidget->PerspectiveView = false; //switch to orthogoanal view type.
 				Sim01->saveImages = true;
 				Sim01->saveDirectory = Sim01->saveDirectoryToDisplayString;
@@ -787,7 +803,7 @@ void MainWindow::timerSimulationStep(){
 				}
 			}
 			Sim01->calculateDVDistance();
-			for (int a = 0; a<0; a++){ //11 for 6 hours with 1800 sec time step
+			for (int a = 0; a<11; a++){ //11 for 6 hours with 1800 sec time step
 				Sim01->updateOneStepFromSave();
 				Sim01->calculateDVDistance();
 			}
@@ -826,6 +842,8 @@ void MainWindow::timerSimulationStep(){
 	}
 	else{
 		//cout<<" step: "<<Sim01->timestep<<" currSimTimeSec: "<<Sim01->currSimTimeSec<<" simLength: "<< Sim01->SimLength<<endl;
+		MainGLWidget->PerspectiveView = false; //switch to orthogoanal view type.
+		MainGLWidget->drawSymmetricity = false; //hide symmetric	
 		if (Sim01->currSimTimeSec <= Sim01->SimLength){
 			cout<<"started step: "<<Sim01->currSimTimeSec<<" length: "<<Sim01->SimLength<<endl;
 			bool Success = Sim01->runOneStep();

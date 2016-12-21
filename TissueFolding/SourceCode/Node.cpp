@@ -31,6 +31,8 @@ Node::Node(int id, int dim, double* pos, int tissuePos, int tissueType){
     symmetricEquivalentId = -1000;
     hasLateralElementOwner = false;
     atSymmetricityBorder = false;
+    insideEllipseBand = false;
+    coveringEllipseBandId = -1;
    // allOwnersAblated = false;
 }
 
