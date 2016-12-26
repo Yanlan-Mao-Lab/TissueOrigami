@@ -1125,6 +1125,19 @@ double 	ShapeBase::calculateCurrentGrownAndEmergentVolumes(){
 
 }
 
+void ShapeBase::calculateStiffnessPerturbationRate(double stiffnessPerturbationBeginTimeInSec, double stiffnessPerturbationEndTimeInSec, double stiffnessChangedToFractionOfOriginal){
+    double totalTimePerturbationWillBeAppliedInSec = stiffnessPerturbationEndTimeInSec-stiffnessPerturbationBeginTimeInSec;
+    if (totalTimePerturbationWillBeAppliedInSec <0){
+        stiffnessPerturbationRateInSec = 0;
+        return;
+    }
+    stiffnessPerturbationRateInSec =  (stiffnessChangedToFractionOfOriginal - 1.0)/totalTimePerturbationWillBeAppliedInSec;
+}
+
+void ShapeBase::updateActinMultiplier(double dt){
+    actinMultiplier *= ( 1.0 + stiffnessPerturbationRateInSec*dt);
+}
+
 void ShapeBase::calculateActinFeedback(double dt){
 	if (tissueType == 0 && tissuePlacement == 1){ //apical columnar layer element
 		gsl_matrix* Fe = gsl_matrix_calloc(3,3);
@@ -1772,17 +1785,17 @@ gsl_matrix* ShapeBase::calculateSForNodalForcesNeoHookean(gsl_matrix* invC, doub
 }
 
 void ShapeBase::updateLagrangianElasticityTensorNeoHookean(gsl_matrix* invC, double lnJ, int pointNo){
-	//calculating 4th order tensor C, for convenience the matrix D81 is used for both Kirshoff materials and neo-Hookean materials in the code.
-	//The documentation lists  Lagrangian Elasticity Tensor with C for neo-Hookean, and with D for Kirshoff materials.
+    //calculating 4th order tensor C, for convenience the matrix D81 is used for both Kirshoff materials and neo-Hookean materials in the code.
+    //The documentation lists  Lagrangian Elasticity Tensor with C for neo-Hookean, and with D for Kirshoff materials.
     //lambda is Lame s first parameter and mu is the shear modulus .
 	double multiplier = 2*(mu - lambda*lnJ);
 	for (int I = 0; I<nDim; ++I){
         for (int J = 0; J<nDim; ++J){
             for (int K = 0; K<nDim; ++K){
                 for (int L = 0; L<nDim; ++L){
-                	double Iijkl = 0.5* (gsl_matrix_get(invC,I,K)*gsl_matrix_get(invC,J,L) + gsl_matrix_get(invC,I,L)*gsl_matrix_get(invC,J,K));
+                    double Iijkl = 0.5* (gsl_matrix_get(invC,I,K)*gsl_matrix_get(invC,J,L) + gsl_matrix_get(invC,I,L)*gsl_matrix_get(invC,J,K));
                     D81[pointNo][I][J][K][L] = lambda*gsl_matrix_get(invC,I,J)*gsl_matrix_get(invC,K,L) + multiplier * Iijkl;
-                	//D81[I][J][K][L] = lambda*gsl_matrix_get(invC,I,J)*gsl_matrix_get(invC,K,L) + multiplier * gsl_matrix_get(invC,I,K)*gsl_matrix_get(invC,J,L);
+                    //D81[I][J][K][L] = lambda*gsl_matrix_get(invC,I,J)*gsl_matrix_get(invC,K,L) + multiplier * gsl_matrix_get(invC,I,K)*gsl_matrix_get(invC,J,L);
                 }
             }
         }

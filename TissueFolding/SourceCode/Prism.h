@@ -68,7 +68,7 @@ public:
 	void distributeMyosinForcesAreaBased(bool isIsotropic, bool apical, double forcePerMyoMolecule);
 	void distributeMyosinForcesTotalSizeBased(bool isIsotropic, bool apical, double forcePerMyoMolecule);
 	//void fillLateralNeighbours();
-	//void updateElasticProperties();
+	void updateElasticProperties();
 	void constructElementStackList(const int discretisationLayers, vector<ShapeBase*>& elementsList);
 	void getApicalNodePos(double* posCorner);
 	void getBasalNodePos(double* posCorner);

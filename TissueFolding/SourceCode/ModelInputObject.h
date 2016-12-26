@@ -45,6 +45,7 @@ private:
 	bool readStretcherSetup(ifstream& file);				///< This function reads the stretcher experimental setup parameters of the simulation from file.
 	bool readPipetteSetup(ifstream& file);					///< This function reads the pipette aspiration experimental setup parameters of the simulation from file.
 	bool readECMPerturbation(ifstream& file);
+	bool readStiffnessPerturbation(ifstream& file);	
 	bool readCellMigrationOptions(ifstream& file);			///< This function reads cell migration related parameters of the simulation from file.
 	bool readExplicitECMOptions(ifstream& file);			///< This function reads parameters relating to the definitin of an explicit ECM layer.
 	bool readExplicitActinOptions(ifstream& file);

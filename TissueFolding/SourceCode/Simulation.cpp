@@ -238,6 +238,15 @@ void Simulation::setDefaultParameters(){
 	thereIsExplicitActin = false;
 
 	nMarkerEllipseRanges = 0;
+	startedStiffnessPerturbation = false;
+	ThereIsApicalStiffnessPerturbation = false;
+	ThereIsBasalStiffnessPerturbation = false;
+	ThereIsWholeTissueStiffnessPerturbation  = false;
+	ThereIsStiffnessPerturbation = false;
+	stiffnessChangedToFractionOfOriginal = 1.0;
+	stiffnessPerturbationBeginTimeInSec = 0.0;
+	stiffnessPerturbationBeginTimeInSec = -1.0;
+	numberOfStiffnessPerturbationAppliesEllipseBands = 0;
 }
 
 bool Simulation::readExecutableInputs(int argc, char **argv){
@@ -3882,6 +3891,36 @@ void Simulation::checkForExperimentalSetupsAfterIteration(){
 	}
 }
 
+void Simulation::checkStiffnessPerturbation(){
+    if (currSimTimeSec >=stiffnessPerturbationBeginTimeInSec && currSimTimeSec <stiffnessPerturbationEndTimeInSec){    
+        const int maxThreads = omp_get_max_threads();
+        omp_set_num_threads(maxThreads);
+        #pragma omp parallel for
+        for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+            if((*itElement)->insideEllipseBand){ //this covers the tissue type as well as the position, ellipses are applied to columnar and linker zones only.
+                if( ThereIsWholeTissueStiffnessPerturbation  //the whole columnar tissue is perturbed
+                   || ((*itElement)->tissuePlacement == 0 && ThereIsBasalStiffnessPerturbation  ) //the basal surface is perturbed and element is basal
+                   || ((*itElement)->tissuePlacement == 1 && ThereIsApicalStiffnessPerturbation ) // the apical surface is perturbed and element is apical
+                  ){
+                    for (int stiffnessPerturbationRangeCounter =0; stiffnessPerturbationRangeCounter<numberOfStiffnessPerturbationAppliesEllipseBands; ++stiffnessPerturbationRangeCounter){
+                        if ((*itElement)->coveringEllipseBandId == stiffnessPerturbationEllipseBandIds[stiffnessPerturbationRangeCounter]){
+                            if (startedStiffnessPerturbation == false){
+                                //this is the first time step I am applying stiffenning.
+                                //I need to calculate rates per element first:ß
+                                (*itElement)->calculateStiffnessPerturbationRate(stiffnessPerturbationBeginTimeInSec,stiffnessPerturbationEndTimeInSec, stiffnessChangedToFractionOfOriginal);
+                            }                        
+                            (*itElement)->updateActinMultiplier(dt);
+                            (*itElement)->updateElasticProperties();
+                        }
+                    }
+                }
+            }
+        }
+        //I have entered the time loop once, therefore, the stiffness change rates have been calculated.
+        startedStiffnessPerturbation = true;
+    }
+}
+
 void Simulation::checkECMSoftening(){
 	//I have not carried out any softening as yet
 	//I will if the time is after 32 hr
@@ -3988,15 +4027,18 @@ bool Simulation::runOneStep(){
         for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
         	(*itElement)->calculateRelativePosInBoundingBox(boundingBox[0][0],boundingBox[0][1],boundingBoxSize[0],boundingBoxSize[1]);
         }
-	}
+    }
     //cout<<"after bounding box"<<endl;
     checkForExperimentalSetupsBeforeIteration();
-    bool thereIsActinStrainFeedback = false;
-    if (thereIsActinStrainFeedback){
-    	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-    	        (*itElement)->calculateActinFeedback(dt);
-    	        (*itElement)->updateElasticProperties();
-    	}
+    //bool thereIsActinStrainFeedback = false;
+    //if (thereIsActinStrainFeedback){
+    //	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+    //	        (*itElement)->calculateActinFeedback(dt);
+    //	        (*itElement)->updateElasticProperties();
+    //	}
+    //}
+    if (ThereIsStiffnessPerturbation) {
+    	checkStiffnessPerturbation();
     }
     if (thereIsECMSoftening) {
     	checkECMSoftening();
@@ -4104,7 +4146,10 @@ bool Simulation::runOneStep(){
 
 void Simulation::assignIfElementsAreInsideEllipseBands(){
 	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		if (!(*itElement)->IsAblated){
+		if (!(*itElement)->IsAblated && ((*itElement)->tissueType == 0 || (*itElement)->tissueType == 2)){
+			//The element is not ablated, it is either a columnar or a linker element.
+			//Peripodial elements are not counted in the ellipses, as the perturbations of
+			// interest are not applied to them			
 			(*itElement)->checkIfInsideEllipseBands(nMarkerEllipseRanges, markerEllipseBandXCentres,markerEllipseBandR1Ranges, markerEllipseBandR2Ranges, Nodes);
 		}
 	}

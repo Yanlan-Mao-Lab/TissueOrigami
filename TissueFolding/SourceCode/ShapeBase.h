@@ -100,16 +100,17 @@ protected:
     int nSurfaceAreaNodeNumber;						///< Number of nodes that form the apical/basal surfaces for the element.
 
     double 	actinMultiplier;						///< The double for the multiplier that will define actin stress stiffening.
+    double	stiffnessPerturbationRateInSec;	///< The rate at which the stiffness ofthe element will be perturbed, used with the model inputs from "Stiffness_Perturbation:" header in model input file
 
     void 	setShapeType(string TypeName);				///< The function sets the type of the shape.
-	void 	readNodeIds(int* tmpNodeIds);				///< The function sets the Node#Id array that constructs the shape.
-	void 	setPositionMatrix(vector<Node*>& Nodes);	///< The function sets the ShapeBase#Positions matrix to define the locations of each constructing node.
-	void 	setTissuePlacement(vector<Node*>& Nodes);	///< The function sets the placement of the element within the tissue
-	void 	setTissueType(vector<Node*>& Nodes);		///< The function sets the tissue type of the element
-	void 	setReferencePositionMatrix();				///< The function sets the RefereneceShapeBase#Positions matrix to define the reference positions of the element.
-	void 	setIdentificationColour();					///< The function sets the unique ShapeBase#IdentifierColour colour for the element, which is used in element picking from the user interface.
-	void 	rotateReferenceElementByRotationMatrix(double* rotMat);
-	bool 	InvertMatrix(boost::numeric::ublas::matrix<double>& input, boost::numeric::ublas::matrix<double>& inverse);
+    void 	readNodeIds(int* tmpNodeIds);				///< The function sets the Node#Id array that constructs the shape.
+    void 	setPositionMatrix(vector<Node*>& Nodes);	///< The function sets the ShapeBase#Positions matrix to define the locations of each constructing node.
+    void 	setTissuePlacement(vector<Node*>& Nodes);	///< The function sets the placement of the element within the tissue
+    void 	setTissueType(vector<Node*>& Nodes);		///< The function sets the tissue type of the element
+    void 	setReferencePositionMatrix();				///< The function sets the RefereneceShapeBase#Positions matrix to define the reference positions of the element.
+    void 	setIdentificationColour();					///< The function sets the unique ShapeBase#IdentifierColour colour for the element, which is used in element picking from the user interface.
+    void 	rotateReferenceElementByRotationMatrix(double* rotMat);
+    bool 	InvertMatrix(boost::numeric::ublas::matrix<double>& input, boost::numeric::ublas::matrix<double>& inverse);
     bool 	InvertMatrix(gsl_matrix* input, gsl_matrix* inverse);
 
     int 	determinant_sign(boost::numeric::ublas::permutation_matrix<std::size_t>& pm);
@@ -172,26 +173,26 @@ public:
     gsl_matrix* Fg;			///< Growth matrix
 
     int 	Id;
-	int		ShapeDim;
-	int* 	NodeIds;
-	virtual ~ShapeBase(){
-			//while deleting a ShapeBase* that happens to point a child, this destructor will be called after the child destructor
-			};
-	double** Positions;
-	ReferenceShapeBase* ReferenceShape;
+    int		ShapeDim;
+    int* 	NodeIds;
+    virtual ~ShapeBase(){
+        //while deleting a ShapeBase* that happens to point a child, this destructor will be called after the child destructor
+    };
+    double** Positions;
+    ReferenceShapeBase* ReferenceShape;
     gsl_matrix* Strain;
 
     //bool 	IsGrowing;
     bool 	isFlipped;
-	bool 	IsChangingShape;
-	bool	willBeRefined;
-	bool	ApicalNormalForPackingUpToDate;
-	bool	BasalNormalForPackingUpToDate;
-	int 	tissuePlacement; //1 -> apical, 0 -> basal, 2->middle, 3 -> lateral
-	int 	tissueType;	///< The tissue type is 0 for columnar layer, 1 for peripodial membrane, and 2 for linker zone
-	bool	spansWholeTissue; ///< Boolean staing is the element spans the whole tissue. This is used to identify mid-layer tagged tissues (tissuePlacement = 2), that should still have apical abd basal responses (such as myosin).
-	bool	isECMMimicing;
-	bool	isActinMimicing;
+    bool 	IsChangingShape;
+    bool	willBeRefined;
+    bool	ApicalNormalForPackingUpToDate;
+    bool	BasalNormalForPackingUpToDate;
+    int 	tissuePlacement; //1 -> apical, 0 -> basal, 2->middle, 3 -> lateral
+    int 	tissueType;	///< The tissue type is 0 for columnar layer, 1 for peripodial membrane, and 2 for linker zone
+    bool	spansWholeTissue; ///< Boolean staing is the element spans the whole tissue. This is used to identify mid-layer tagged tissues (tissuePlacement = 2), that should still have apical abd basal responses (such as myosin).
+    bool	isECMMimicing;
+    bool	isActinMimicing;
 	bool	IsAblated;
 	bool	atSymetricityBoundary;
 	bool	IsClippedInDisplay;
@@ -267,35 +268,38 @@ public:
     void 	setViscosity(double viscosityApical,double viscosityBasal);
     void 	setViscosity(double viscosity);
     void	setCellMigration(bool migratingBool);
+
+    void 	calculateStiffnessPerturbationRate(double stiffnessPerturbationBeginTimeInSec, double stiffnessPerturbationEndTimeInSec, double stiffnessChangedToFractionOfOriginal);
+    void 	updateActinMultiplier(double dt); ///< The funciton will update the actin multiplier as a result of stiffness perturbations.    
 //    virtual void	fillLateralNeighbours();
     bool	getCellMigration();
     virtual void calculateBasalNormal(double * /*normal*/){ParentErrorMessage("calculateBasalNormal");};
-	virtual void AlignReferenceBaseNormalToZ(){ParentErrorMessage("AlignReferenceBaseNormalToZ");};
-	void 	calculateCurrentGrowthIncrement(gsl_matrix* resultingGrowthIncrement, double dt, double growthx, double growthy, double growthz, gsl_matrix* ShearAngleRotationMatrix);
-	void 	updateShapeChangeRate(double x, double y, double z, double xy, double yz, double xz);
-	virtual void calculateReferenceStiffnessMatrix(){ParentErrorMessage("calculateReferenceStiffnessMatrix");};
+    virtual void AlignReferenceBaseNormalToZ(){ParentErrorMessage("AlignReferenceBaseNormalToZ");};
+    void 	calculateCurrentGrowthIncrement(gsl_matrix* resultingGrowthIncrement, double dt, double growthx, double growthy, double growthz, gsl_matrix* ShearAngleRotationMatrix);
+    void 	updateShapeChangeRate(double x, double y, double z, double xy, double yz, double xz);
+    virtual void calculateReferenceStiffnessMatrix(){ParentErrorMessage("calculateReferenceStiffnessMatrix");};
     virtual void calculateElementShapeFunctionDerivatives(){ParentErrorMessage("calculateElementShapeFunctionDerivatives");};
     virtual void calculateCurrNodalForces(gsl_matrix */*gslcurrge*/, gsl_matrix */*gslcurrgv*/, gsl_matrix */*gslcurrF*/, gsl_matrix* /*displacementPerDt*/, int /*pointNo*/){ParentErrorMessage("calculateCurrNodalForces");};
     virtual void calculateCurrTriPointFForRotation(gsl_matrix */*currF*/,int /*pointNo*/){ParentErrorMessage("calculateCurrTriPointFForRotation");};
     virtual void copyElementInformationAfterRefinement(ShapeBase* /*baseElement*/){ParentErrorMessage("copyElementInformationAfterRefinement");};
     virtual void calculateApicalArea(){ParentErrorMessage("calculateApicalArea");};
-	virtual void calculateBasalArea(){ParentErrorMessage("calculateBasalArea");};
-	double 		calculateCurrentGrownAndEmergentVolumes();
-	void 	updateNodeIdsForRefinement(int* tmpNodeIds);
-	virtual void updateElasticProperties(){ParentErrorMessage("updateElasticProperties");};
-	virtual void  fillLateralNeighbours(vector<Node*>& /*Nodes*/, vector<int>& /*lateralNeigbours*/ ){ParentErrorMessage("fillInLateralNeigbours");};
-	void	calculateActinFeedback(double dt);
-	void 	writeInternalForcesTogeAndgv(gsl_matrix* ge, gsl_matrix* gvInternal, double** SystemForces, vector <Node*>& Nodes);
+    virtual void calculateBasalArea(){ParentErrorMessage("calculateBasalArea");};
+    double 		calculateCurrentGrownAndEmergentVolumes();
+    void 	updateNodeIdsForRefinement(int* tmpNodeIds);
+    virtual void updateElasticProperties(){ParentErrorMessage("updateElasticProperties");};
+    virtual void  fillLateralNeighbours(vector<Node*>& /*Nodes*/, vector<int>& /*lateralNeigbours*/ ){ParentErrorMessage("fillInLateralNeigbours");};
+    void	calculateActinFeedback(double dt);
+    void 	writeInternalForcesTogeAndgv(gsl_matrix* ge, gsl_matrix* gvInternal, double** SystemForces, vector <Node*>& Nodes);
 
 
     void 	calculateForces(vector <Node*>& Nodes, gsl_matrix* displacementPerDt, bool recordForcesOnFixedNodes, double** FixedNodeForces);
     void 	updatePositions(vector<Node*>& Nodes);
-	void	updateReferencePositionsToCurentShape();
+    void	updateReferencePositionsToCurentShape();
     void 	setGrowthRate(double dt, double rx, double ry, double rz);
     void 	setGrowthRateExpFromInput(double x, double y, double z);
     void 	updateGrowthIncrementFromRate();
-	void 	cleanMyosinForce();
-	void	updateUniformEquilibriumMyosinConcentration(bool isApical, double cEqUniform);
+    void 	cleanMyosinForce();
+    void	updateUniformEquilibriumMyosinConcentration(bool isApical, double cEqUniform);
 	void	updateUnipolarEquilibriumMyosinConcentration(bool isApical, double cEqUnipolar, double orientationX, double orientationY);
 	void	adjustCMyosinFromSave();
 	void	updateMyosinConcentration(double dt, double kMyo, bool thereIsMyosinFeedback, double MyosinFeedbackCap);
@@ -316,17 +320,17 @@ public:
 	void 	setEquilibriumMyosinLevels (double cUni0, double cUni1, double cPol0, double cPol1);
 	virtual void calculateMyosinForcesAreaBased(double /*forcePerMyoMolecule*/){ParentErrorMessage("calculateMyosinForces");};
 	virtual void calculateMyosinForcesTotalSizeBased(double /*forcePerMyoMolecule*/){ParentErrorMessage("calculateMyosinForces");};
-	virtual void distributeMyosinForcesAreaBased(bool /*isIsotropic*/, bool /*apical*/, double /*forcePerMyoMolecule*/){ParentErrorMessage("distributeMyosinAreaBased");};
-	virtual void distributeMyosinForcesTotalSizeBased(bool /*isIsotropic*/, bool /*apical*/, double /*forcePerMyoMolecule*/){ParentErrorMessage("distributeMyosinToitalSizeBased");};
-	void 	setShapeChangeRate(double x, double y, double z, double xy, double yz, double xz);
-	void 	updateElementVolumesAndTissuePlacementsForSave(vector<Node*>& Nodes);
-	bool 	readNodeIdData(ifstream& file);
-	bool	readReferencePositionData(ifstream& file);
-	void 	convertPlasticStrainToGrowthStrain();
-	void 	setLateralElementsRemodellingPlaneRotationMatrix(double systemCentreX, double systemCentreY);
+    virtual void distributeMyosinForcesAreaBased(bool /*isIsotropic*/, bool /*apical*/, double /*forcePerMyoMolecule*/){ParentErrorMessage("distributeMyosinAreaBased");};
+    virtual void distributeMyosinForcesTotalSizeBased(bool /*isIsotropic*/, bool /*apical*/, double /*forcePerMyoMolecule*/){ParentErrorMessage("distributeMyosinToitalSizeBased");};
+    void 	setShapeChangeRate(double x, double y, double z, double xy, double yz, double xz);
+    void 	updateElementVolumesAndTissuePlacementsForSave(vector<Node*>& Nodes);
+    bool 	readNodeIdData(ifstream& file);
+    bool	readReferencePositionData(ifstream& file);
+    void 	convertPlasticStrainToGrowthStrain();
+    void 	setLateralElementsRemodellingPlaneRotationMatrix(double systemCentreX, double systemCentreY);
 
-	virtual void  checkHealth(){ParentErrorMessage("checkHealth");};
-	void 	resetCurrStepShapeChangeData();
+    virtual void  checkHealth(){ParentErrorMessage("checkHealth");};
+    void 	resetCurrStepShapeChangeData();
     void    writeKelasticToMainKatrix(gsl_matrix* K);
     void    writeKviscousToMainKatrix(gsl_matrix* K);
     void    calculateImplicitKElastic();

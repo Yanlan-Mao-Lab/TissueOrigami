@@ -404,12 +404,23 @@ public:
     	bool 	thereIsECMSoftening;	
 	int numberOfSoftenedEllipseBands;
 	vector<int> ECMSofteningEllipseBandIds;
-    //double 	ECMSofteningXRange[2];
 	double 	softeningBeginTimeInSec;
 	double  softeningEndTimeInSec;
 	double 	ECMSofteningFraction;
 	bool 	softenBasalECM;
 	bool 	softenApicalECM;
+	
+	bool startedStiffnessPerturbation;
+	bool ThereIsStiffnessPerturbation;
+	bool ThereIsApicalStiffnessPerturbation;
+	bool ThereIsBasalStiffnessPerturbation;
+	bool ThereIsWholeTissueStiffnessPerturbation;
+	double stiffnessChangedToFractionOfOriginal;
+	double stiffnessPerturbationBeginTimeInSec;
+	double stiffnessPerturbationEndTimeInSec;
+	int numberOfStiffnessPerturbationAppliesEllipseBands;
+	vector <int> stiffnessPerturbationEllipseBandIds;
+
 
 	bool 	thereIsECMRemodellinbgWithDeforamtionRate;
 	bool 	remodelBasalECM;
@@ -452,6 +463,7 @@ public:
     void setLateralElementsRemodellingPlaneRotationMatrices();
 
     void checkECMSoftening();
+    void checkStiffnessPerturbation();
     double calculateAverageDisplacement();
     void updateECMVisocityWithDeformationRate();
     bool runOneStep();

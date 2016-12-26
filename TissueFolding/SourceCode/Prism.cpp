@@ -189,6 +189,7 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, bool thereIsPlas
     isActinMimicing = false;
     insideEllipseBand = false;
     coveringEllipseBandId = -1;
+    stiffnessPerturbationRateInSec = 0;
 }
 
 Prism::~Prism(){
@@ -391,14 +392,17 @@ void  Prism::setElasticProperties(double EApical, double EBasal, double EMid, do
     //cout<<" Element: "<<Id<<" E : "<<E<<" v: "<<v<<" lambda: "<<lambda<< " mu: "<<mu<<endl;
 }
 
-/*
+
 void  Prism::updateElasticProperties(){
-	lambda = actinMultiplier*E*v/(1+v)/(1-2.0*v);
-	mu = actinMultiplier*E/2.0/(1+v);
+    lambda = actinMultiplier*E*v/(1+v)/(1-2.0*v);
+    mu = actinMultiplier*E/2.0/(1+v);
+    //These two updates are not really necessary for a neo-Hookean material, as the calculation for
+    //D81 vector is carried out at each Newton-Raphson iteration. I do not know the material type now,
+    //therefore I dont know if I should skip this or not. Can be eliminated for efficiency later on!
     calculateDVector();
     calculateD81Tensor();
 }
-
+/*
 void Prism::fillLateralNeighbours(){
 	if (tissueType == 0 || tissueType ==1){ //peripodial or columnar element
 		//This is a peripodial or columnar element, The lateral neighbours are those that will
