@@ -97,6 +97,8 @@ void Simulation::setDefaultParameters(){
 	EBasal = 10.0;
 	EMid = 10.0;
 	PeripodialElasticity = 10.0;
+	EColumnarECM = 10.0;
+	EPeripodialECM = 10.0;
 	poisson = 0.3;
 	discProperApicalViscosity = 0.0;
 	discProperBasalViscosity = 0.0;
@@ -151,17 +153,18 @@ void Simulation::setDefaultParameters(){
 	StretchEndTime = -100;
 	PipetteSuction = false;
 	PipetteInitialStep= -100;
-	PipetteEndStep = 0.0;
+	nPipetteSuctionSteps = 0;
 	ApicalSuction = true;
+	TissueStuckOnGlassDuringPipetteAspiration = true;
 	pipetteCentre[0] = 0.0;
 	pipetteCentre[1] = 0.0;
 	pipetteCentre[2] = 0.0;
 	pipetteDepth = 0.0;
-	pipetteRadius =0.0;
+	pipetteInnerRadius =0.0;
 	SuctionPressure[0] = 0.0;
 	SuctionPressure[1] = 0.0;
 	SuctionPressure[2] = 0.0;
-	pipetteRadiusSq = pipetteRadius*pipetteRadius;
+	pipetteInnerRadiusSq = pipetteInnerRadius*pipetteInnerRadius;
     pipetteThickness = 11.7;
 	effectLimitsInZ[0] = pipetteCentre[2] - pipetteDepth;
 	effectLimitsInZ[1] = pipetteCentre[2] + pipetteDepth;
@@ -414,6 +417,7 @@ bool Simulation::readFinalSimulationStep(){
 		}
 	}
 	updateElementVolumesAndTissuePlacements();
+	updateElasticPropertiesForAllNodes();
 	clearNodeMassLists();
 	assignNodeMasses();
 	assignConnectedElementsAndWeightsToNodes();
@@ -522,7 +526,6 @@ bool Simulation::initiateSystem(){
 	if (addCurvatureToTissue){
 		addCurvatureToColumnar(tissueCurvatureDepth);
 	}
-
 	if (thereIsExplicitECM){
 		setUpECMMimicingElements();
 		//TO DO: NEED TO UPDATE THE PHYSICAL PROPERTIES AFTER THIS!
@@ -969,6 +972,7 @@ bool Simulation::initiateSavedSystem(){
 	initiateElementsFromSave();
 	assignPhysicalParameters();
 	initiateSystemForces();
+
 	if (TensionCompressionSaved){
 		updateTensionCompressionFromSave();
 	}
@@ -1000,6 +1004,7 @@ bool Simulation::initiateSavedSystem(){
 		reachedEndOfSaveFile = true;
 		return true;
 	}
+
 	//cout<<"skipped footer: "<<currline<<endl;
 	return true;
 }
@@ -2746,6 +2751,7 @@ void Simulation::addSoftPeriphery(double* fractions){
 }
 
 void Simulation::assignPhysicalParameters(){
+
 	double* fractions;
 	fractions = new double[(const int) nElements];
 	for (int i=0; i<nElements; ++i){
@@ -2767,35 +2773,44 @@ void Simulation::assignPhysicalParameters(){
 			double currEApical 	= fractions[(*itElement)->Id] * EApical*(1 + noise1/100.0);
 			double currEBasal	= fractions[(*itElement)->Id] * EBasal*(1 + noise1/100.0);
 			double currEMid		= fractions[(*itElement)->Id] * EMid*(1 + noise1/100.0);
+			double currEECM		= fractions[(*itElement)->Id] * EColumnarECM*(1 + noise1/100.0);
 			double currPoisson = poisson*(1 + noise2/100);
 			if((*itElement)->isECMMimicing){
 				//the Poisson ratio is zero so that the ECM layer will not thin!
 				currPoisson = 0;
 			}
-			(*itElement)->setElasticProperties(currEApical,currEBasal,currEMid,currPoisson);
+			(*itElement)->setElasticProperties(currEApical,currEBasal,currEMid,currEECM,currPoisson);
 			(*itElement)->setViscosity(discProperApicalViscosity,discProperBasalViscosity,discProperMidlineViscosity);
 		}
 		else if ((*itElement)->tissueType == 1){ //Element is on the peripodial membrane
 			double currEApical = fractions[(*itElement)->Id] * PeripodialElasticity*(1 + noise1/100.0);
 			double currEBasal = currEApical;
 			double currEMid = currEApical;
+			double currEECM = fractions[(*itElement)->Id] * EPeripodialECM*(1 + noise1/100.0);
 			double currPoisson = poisson*(1 + noise2/100);
-			if(thereIsExplicitECM){
+			/*if(thereIsExplicitECM){
 				//The input file does not define apical and basal stiffness separately
 				//for each element. If I have explicit ECM, I will change the basal ECM
 				//stiffness such that it will be the same as basal of the columnar layer,
 				//therefore the ECM.
 				currEBasal = fractions[(*itElement)->Id] * EBasal*(1 + noise1/100.0);
 				currEMid = fractions[(*itElement)->Id] * EMid*(1 + noise1/100.0);
-			}
+			}*/
 			if((*itElement)->isECMMimicing){
 				//the Poisson ratio is zero so that the ECM layer will not thin!
 				currPoisson = 0;
 			}
-			(*itElement)->setElasticProperties(currEApical,currEBasal,currEMid,currPoisson);
+			(*itElement)->setElasticProperties(currEApical,currEBasal,currEMid,currEECM, currPoisson);
 			(*itElement)->setViscosity(peripodialApicalViscosity,peripodialBasalViscosity,peripodialMidlineViscosity);
 		}
 		else if ((*itElement)->tissueType == 2 ){ //Element is on the linker Zone,
+			//The elastic properties of the linker zone ECM are always based on the
+			//peripodialness factor.
+			double currPeripodialECME = fractions[(*itElement)->Id] * EPeripodialECM*(1 + noise1/100.0);
+			double currColumnarECME = fractions[(*itElement)->Id] * EColumnarECM*(1 + noise1/100.0);
+			double periWeight 		= (*itElement)->getPeripodialness();
+			double colWeight = (*itElement)->getColumnarness();
+			double currEECM		= colWeight * currColumnarECME + periWeight * currPeripodialECME;
 			if (BaseLinkerZoneParametersOnPeripodialness){
 				//I will weight the values:
 				double currPeripodialE 	= fractions[(*itElement)->Id] * PeripodialElasticity * (1 + noise1/100.0);
@@ -2803,12 +2818,10 @@ void Simulation::assignPhysicalParameters(){
 				double currEBasal 		= fractions[(*itElement)->Id] * EBasal * (1 + noise1/100.0);
 				double currEMid 		= fractions[(*itElement)->Id] * EMid * (1 + noise1/100.0);
 				double currPoisson      = poisson*(1 + noise2/100);
-				double periWeight 		= (*itElement)->getPeripodialness();
-				double colWeight = (*itElement)->getColumnarness();
 				currEApical = colWeight * currEApical + periWeight * currPeripodialE;
 				currEBasal  = colWeight * currEBasal  + periWeight * currPeripodialE;
 				currEMid    = colWeight * currEMid    + periWeight * currPeripodialE;
-				(*itElement)->setElasticProperties(currEApical,currEBasal,currEMid,currPoisson);
+				(*itElement)->setElasticProperties(currEApical,currEBasal,currEMid,currEECM, currPoisson);
 				double currViscApical  = colWeight * discProperApicalViscosity  + periWeight * peripodialApicalViscosity;
 				double currViscBasal   = colWeight * discProperBasalViscosity   + periWeight * peripodialBasalViscosity;
 				(*itElement)->setViscosity(currViscApical,currViscBasal); //There is no midline in the linker zone.
@@ -2819,11 +2832,13 @@ void Simulation::assignPhysicalParameters(){
 				double currEBasal	= fractions[(*itElement)->Id] * LinkerZoneBasalYoungsModulus*(1 + noise1/100.0);
 				double currEMid		= fractions[(*itElement)->Id] * 0.5 * (LinkerZoneApicalElasticity+LinkerZoneBasalYoungsModulus)*(1 + noise1/100.0);
 				double currPoisson  = poisson*(1 + noise2/100);
+
+
 				if((*itElement)->isECMMimicing){
 					//the Poisson ratio is zero so that the ECM layer will not thin!
 					currPoisson = 0;
 				}
-				(*itElement)->setElasticProperties(currEApical,currEBasal,currEMid,currPoisson);
+				(*itElement)->setElasticProperties(currEApical,currEBasal,currEMid,currEECM, currPoisson);
 				(*itElement)->setViscosity(linkerZoneApicalViscosity,linkerZoneBasalViscosity,linkerZoneMidlineViscosity);
 			}
 		}
@@ -4578,7 +4593,7 @@ void Simulation::updateStepNR(){
         //Now I will check if there are any nodes with zero mass, then I will be able to fill in the zero K matrix with identity if necessary.
         NRSolver->checkJacobianForAblatedNodes(AblatedNodes);
         NRSolver->calculateSumOfInternalForces();
-        if (PipetteSuction && timestep >= PipetteInitialStep && timestep<PipetteEndStep){
+        if (PipetteSuction && timestep >= PipetteInitialStep){
 			packToPipetteWall();
 			calculateZProjectedAreas();
 			addPipetteForces(NRSolver->gExt);
@@ -4629,6 +4644,18 @@ void Simulation::updateStepNR(){
     updateNodePositionsNR(NRSolver->uk);
     //Element positions are already up to date.
     cout<<"finished run one step"<<endl;
+    if (PipetteSuction){
+    	//find the max z:
+    	double zMax = -10000;
+    	int idMax = -10;
+    	for (vector<Node*>::iterator itNode = Nodes.begin(); itNode < Nodes.end(); ++itNode){
+    		if ((*itNode)->Position[2] > zMax){
+    			zMax = (*itNode)->Position[2];
+    			idMax = (*itNode)->Id;
+    		}
+    	}
+    	cout<<"Pipette suction: "<<SuctionPressure[2]<<" max suction: "<<zMax<<" from node "<<idMax<<endl;
+    }
 }
 
 void Simulation::calculateRandomForces(){
@@ -4698,9 +4725,6 @@ void Simulation::calculatePackingForcesExplicit3D(){
 	for(int i = 0 ; i<n; ++i){
 		int id0 = pacingNodeCouples0[i];
 		int id1 = pacingNodeCouples1[i];
-		//if (id0 == 3445 || id1 == 3445){
-		//	cout<<"calculating packing for nodes : "<<id0<<" "<<id1<<endl;
-		//}
 
 		double dx = Nodes[id0]->Position[0] - Nodes[id1]->Position[0];
 		double dy = Nodes[id0]->Position[1] - Nodes[id1]->Position[1];
@@ -4739,21 +4763,7 @@ void Simulation::calculatePackingForcesImplicit3D(){
 	for(int i = 0 ; i<n; ++i){
 		int id0 = pacingNodeCouples0[i];
 		int id1 = pacingNodeCouples1[i];
-		double multiplier = 1000;
-		//if (id0 == 3445 || id1 == 3445){
-		//	cout<<"calculating packing for nodes : "<<id0<<" "<<id1<<endl;
-		//}
-
-/*		double dx = Nodes[id0]->Position[0] - Nodes[id1]->Position[0];
-		if (initialWeightPointx[i] < 0 ){
-			dx *= -1.0;
-		}
-		double Fx = 100.0*dx;
-		Fx *=  initialWeightPointx[i];
-		PackingForces[id0][0] += Fx;
-		PackingForces[id1][0] -= Fx;
-*/
-
+		double multiplier = packingMultiplier;
 
 		//sigmoid test:
 		double dx = Nodes[id0]->Position[0] - Nodes[id1]->Position[0];
@@ -4761,7 +4771,7 @@ void Simulation::calculatePackingForcesImplicit3D(){
 		double dz = Nodes[id0]->Position[2] - Nodes[id1]->Position[2];
 
 		double averageMass = 0.5 *( Nodes[id0]->mass + Nodes[id1]->mass );
-		double sigmoidSaturation = 5;
+		double sigmoidSaturation = sigmoidSaturationForPacking;
 
 		if (initialWeightPointx[i]>0){
 			dx *= -1.0;
@@ -4787,172 +4797,6 @@ void Simulation::calculatePackingForcesImplicit3D(){
 		PackingForces[id1][0] -= Fx;
 		PackingForces[id1][1] -= Fy;
 		PackingForces[id1][2] -= Fz;
-
-		//if ((id0 == 3444 && id1 == 3444 )|| (id0 == 3190 || id1 == 3444)){
-		//	cout<<"id0: "<<id0<<" id1: "<<id1<<endl;
-		//	cout<<" dx: "<<dx<<" dy: "<<dy<<" dz: "<<dz<<" d: "<<d<<endl;
-		//	cout<<" Fx: "<<Fx<<" Fy: "<<Fy<<" Fz: "<<Fz<<" F: "<<F<<endl;
-		//	cout<<" position ["<<id0<<"][0]: "<<Nodes[id0]->Position[0]<<"  position ["<<id1<<"][0]: "<<Nodes[id1]->Position[0]<<endl;
-		//	cout<<" initialWeightPoins: "<<initialWeightPointx[i]<<" "<<initialWeightPointy[i]<<" "<<initialWeightPointz[i]<<endl;
-		//	cout<<" PackingForces["<<id0<<"]: "<<PackingForces[id0][0]<<" "<<PackingForces[id0][1]<<" "<<PackingForces[id0][2]<<endl;
-		//	cout<<" PackingForces["<<id1<<"]: "<<PackingForces[id1][0]<<" "<<PackingForces[id1][1]<<" "<<PackingForces[id1][2]<<endl;
-		//}
-
-		/*double multiplier = 1;
-		double p = 2; //the power of the division (d/t);
-
-		double dx = Nodes[id0]->Position[0] - Nodes[id1]->Position[0];
-		double dy = Nodes[id0]->Position[1] - Nodes[id1]->Position[1];
-		double dz = Nodes[id0]->Position[2] - Nodes[id1]->Position[2];
-
-		double averageMass = 0.5 *( Nodes[id0]->mass + Nodes[id1]->mass );
-		double c = multiplier * averageMass;
-		double Fx = c * (1 - pow(dx/packingThreshold,p));
-		double Fy = c * (1 - pow(dy/packingThreshold,p));
-		double Fz = c * (1 - pow(dz/packingThreshold,p));
-
-		Fx *=  initialWeightPointx[i];
-		Fy *=  initialWeightPointy[i];
-		Fz *=  initialWeightPointz[i];
-		PackingForces[id0][0] += Fx;
-		PackingForces[id0][1] += Fy;
-		PackingForces[id0][2] += Fz;
-		PackingForces[id1][0] -= Fx;
-		PackingForces[id1][1] -= Fy;
-		PackingForces[id1][2] -= Fz;
-		*/
-
-		//if (id0 == 3445 || id1 == 3445){
-		//	cout<<" packing force : "<<Fx <<" "<<Fy<<" "<<Fz<<endl;
-		//	cout<<" node0("<<id0<<") pos: "<<Nodes[id0]->Position[0]<<" "<<Nodes[id0]->Position[1]<<" "<<Nodes[id0]->Position[2]<<endl;
-		//	cout<<" node1("<<id1<<") pos: "<<Nodes[id1]->Position[0]<<" "<<Nodes[id1]->Position[1]<<" "<<Nodes[id1]->Position[2]<<endl;
-		//	cout<<" dx, dy, dz: "<<dx<<" "<<dy<<" "<<dz<<endl;
-		//	cout<<" average mass: "<<averageMass<<" dz: "<<dz<<endl;
-		//}
-	}
-}
-void Simulation::calculatePackingImplicit3DnotWorking(){
-	double multiplier = 1;
-	double p = 1; //the power of the division (d/t);
-	double threshold = 7; //packing threshold;
-	//surfaces:
-	int n = pacingNodeSurfaceList0.size();
-	for(int i = 0 ; i<n; ++i){
-		//cout<<"checking surfaces, "<<i <<" of "<<n<<endl;
-		int id0 = pacingNodeSurfaceList0[i];
-		int id1 = pacingNodeSurfaceList1[i];
-		int id2 = pacingNodeSurfaceList2[i];
-		int id3 = pacingNodeSurfaceList3[i];
-		double dx = Nodes[id0]->Position[0] - (Nodes[id1]->Position[0]+Nodes[id2]->Position[0]+Nodes[id3]->Position[0])/3.0;
-		double dy = Nodes[id0]->Position[1] - (Nodes[id1]->Position[1]+Nodes[id2]->Position[1]+Nodes[id3]->Position[1])/3.0;
-		double dz = Nodes[id0]->Position[2] - (Nodes[id1]->Position[2]+Nodes[id2]->Position[2]+Nodes[id3]->Position[2])/3.0;
-		//if dz was initially negative, I need to convert it to positive, I do not care if it became positive now. If dx was initially positive, multiplier is 1 anyway
-		//dx *= initialSignsSurfacex[i];
-		//dy *= initialSignsSurfacey[i];
-		//dz *= initialSignsSurfacez[i];
-		double averageMass = 0.25 *( Nodes[id0]->mass + Nodes[id1]->mass +  Nodes[id2]->mass  + Nodes[id3]->mass);
-		double c = multiplier * averageMass;
-		//double Fmagx = initialSignsSurfacex[i] * c * (1 - pow(dx/threshold,p));
-		//double Fmagy = initialSignsSurfacey[i] * c * (1 - pow(dy/threshold,p));
-		//double Fmagz = initialSignsSurfacez[i] * c * (1 - pow(dz/threshold,p));
-
-
-		double Fmag = c * (1 - pow((dx*dx + dy*dy + dz*dz)/threshold/threshold,p));
-		double Fmagx = initialWeightSurfacex[i]*Fmag;
-		double Fmagy = initialWeightSurfacey[i]*Fmag;
-		double Fmagz = initialWeightSurfacez[i]*Fmag;
-
-		PackingForces[id0][0] += Fmagx ;
-		PackingForces[id0][1] += Fmagy ;
-		PackingForces[id0][2] += Fmagz ;
-		Fmagx /= 3.0;
-		Fmagy /= 3.0;
-		Fmagz /= 3.0;
-
-		PackingForces[id1][0] -= Fmagx ;
-		PackingForces[id1][1] -= Fmagy ;
-		PackingForces[id1][2] -= Fmagz ;
-		PackingForces[id2][0] -= Fmagx ;
-		PackingForces[id2][1] -= Fmagy ;
-		PackingForces[id2][2] -= Fmagz ;
-		PackingForces[id3][0] -= Fmagx ;
-		PackingForces[id3][1] -= Fmagy ;
-		PackingForces[id3][2] -= Fmagz ;
-		cout<<"ids: "<<id0<<" "<<id1<<" "<<id2<<" "<<id3<<" d: "<<dx<<" "<<dy<<" "<<dz<<" F: "<<Fmagx<<" "<<Fmagy<<" "<<Fmagz<<endl;
-	}
-	//edges:
-	n = pacingNodeEdgeList0.size();
-	for(int i = 0 ; i<n; ++i){
-		int id0 = pacingNodeEdgeList0[i];
-		int id1 = pacingNodeEdgeList1[i];
-		int id2 = pacingNodeEdgeList2[i];
-		//cout<<"checking edges, "<<i <<" of "<<n<<" node ids: "<<id0<<" "<<id1<<" "<<id2<<endl;
-		double dx = Nodes[id0]->Position[0] - (Nodes[id1]->Position[0]+Nodes[id2]->Position[0])/2.0;
-		double dy = Nodes[id0]->Position[1] - (Nodes[id1]->Position[1]+Nodes[id2]->Position[1])/2.0;
-		double dz = Nodes[id0]->Position[2] - (Nodes[id1]->Position[2]+Nodes[id2]->Position[2])/2.0;
-		//if dz was initially negative, I need to convert it to positive, I do not care if it became positive now. If dx was initially positive, multiplier is 1 anyway
-		//dx *= initialSignsEdgex[i];
-		//dy *= initialSignsEdgey[i];
-		//dz *= initialSignsEdgez[i];
-		double averageMass = 1.0/3.0 *( Nodes[id0]->mass + Nodes[id1]->mass +  Nodes[id2]->mass );
-		double c = multiplier * averageMass;
-		//double Fmagx = initialSignsEdgex[i] * c * (1 - pow(dx/threshold,p));
-		//double Fmagy = initialSignsEdgey[i] * c * (1 - pow(dy/threshold,p));
-		//double Fmagz = initialSignsEdgez[i] * c * (1 - pow(dz/threshold,p));
-
-		double Fmag = c * (1 - pow((dx*dx + dy*dy + dz*dz)/threshold/threshold,p));
-		double Fmagx = initialWeightEdgex[i]*Fmag;
-		double Fmagy = initialWeightEdgey[i]*Fmag;
-		double Fmagz = initialWeightEdgez[i]*Fmag;
-
-		PackingForces[id0][0] += Fmagx ;
-		PackingForces[id0][1] += Fmagy ;
-		PackingForces[id0][2] += Fmagz ;
-		Fmagx /= 2.0;
-		Fmagy /= 2.0;
-		Fmagz /= 2.0;
-
-		PackingForces[id1][0] -= Fmagx ;
-		PackingForces[id1][1] -= Fmagy ;
-		PackingForces[id1][2] -= Fmagz ;
-		PackingForces[id2][0] -= Fmagx ;
-		PackingForces[id2][1] -= Fmagy ;
-		PackingForces[id2][2] -= Fmagz ;
-		cout<<"ids: "<<id0<<" "<<id1<<" "<<id2<<" d: "<<dx<<" "<<dy<<" "<<dz<<" F: "<<Fmagx<<" "<<Fmagy<<" "<<Fmagz<<endl;
-	}
-	//nodes:
-	n = pacingNodePointList0.size();
-	for(int i = 0 ; i<n; ++i){
-		//cout<<"checking nodes, "<<i <<" of "<<n<<endl;
-		int id0 = pacingNodePointList0[i];
-		int id1 = pacingNodePointList1[i];
-		double dx = Nodes[id0]->Position[0] - Nodes[id1]->Position[0];
-		double dy = Nodes[id0]->Position[1] - Nodes[id1]->Position[1];
-		double dz = Nodes[id0]->Position[2] - Nodes[id1]->Position[2];
-		//if dz was initially negative, I need to convert it to positive, I do not care if it became positive now. If dx was initially positive, multiplier is 1 anyway
-		//dx *= initialSignsPointx[i];
-		//dy *= initialSignsPointy[i];
-		//dz *= initialSignsPointz[i];
-		double averageMass = 0.5 *( Nodes[id0]->mass + Nodes[id1]->mass );
-		double c = multiplier * averageMass;
-		//double Fmagx = initialSignsPointx[i] * c * (1 - pow(dx/threshold,p));
-		//double Fmagy = initialSignsPointy[i] * c * (1 - pow(dy/threshold,p));
-		//double Fmagz = initialSignsPointz[i] * c * (1 - pow(dz/threshold,p));
-
-		double Fmag = c * (1 - pow((dx*dx + dy*dy + dz*dz)/threshold/threshold,p));
-		double Fmagx = initialWeightPointx[i]*Fmag;
-		double Fmagy = initialWeightPointy[i]*Fmag;
-		double Fmagz = initialWeightPointz[i]*Fmag;
-
-
-		//PackingForces[id0][0] += Fmagx ;
-		//PackingForces[id0][1] += Fmagy ;
-		PackingForces[id0][2] += Fmagz ;
-
-		//PackingForces[id1][0] -= Fmagx ;
-		//PackingForces[id1][1] -= Fmagy ;
-		PackingForces[id1][2] -= Fmagz ;
-		cout<<"ids: "<<id0<<" "<<id1<<" d: "<<dx<<" "<<dy<<" "<<dz<<" F: "<<Fmagx<<" "<<Fmagy<<" "<<Fmagz<<endl;
 	}
 }
 
@@ -4961,119 +4805,14 @@ void Simulation::calculatePackingJacobianNumerical3D(gsl_matrix* K){
 	for(int i = 0 ; i<n; ++i){
 		int id0 = pacingNodeCouples0[i];
 		int id1 = pacingNodeCouples1[i];
-		double multiplier = 1000;
-		/*double multiplier = 1;
-		double p = 2; //the power of the division (d/t);
-		double averageMass = 0.5 *( Nodes[id0]->mass + Nodes[id1]->mass );
-
-		double c = multiplier * averageMass;
-		double perturbation = 0.0000001;
-
-		double dx = Nodes[id0]->Position[0] - Nodes[id1]->Position[0];
-		double dy = Nodes[id0]->Position[1] - Nodes[id1]->Position[1];
-		double dz = Nodes[id0]->Position[2] - Nodes[id1]->Position[2];
-
-		double Fx = c * (1 - pow(dx/packingThreshold,p));
-		double Fy = c * (1 - pow(dy/packingThreshold,p));
-		double Fz = c * (1 - pow(dz/packingThreshold,p));
-
-		Fx *=  initialWeightPointx[i];
-		Fy *=  initialWeightPointy[i];
-		Fz *=  initialWeightPointz[i];
-		double F0[3] = {Fx, Fy,  Fz};
-
-		dx += perturbation;
-		double Fxp =  initialWeightPointx[i] * c * (1 - pow(dx/packingThreshold,p));
-		double F1[3] = {Fxp, Fy,  Fz};
-
-		dy += perturbation;
-		double Fyp =  initialWeightPointy[i] * c * (1 - pow(dy/packingThreshold,p));;
-		double F2[3] = {Fx, Fyp,  Fz};
-
-		dz += perturbation;
-		double Fzp =  initialWeightPointz[i] * c * (1 - pow(dz/packingThreshold,p));;
-		double F3[3] = {Fx, Fy,  Fzp};
-
-		double dgcxx = (F1[0]-F0[0])/ perturbation;
-		double dgcyy = (F2[1]-F0[1])/ perturbation;
-		double dgczz = (F3[2]-F0[2])/ perturbation;
-
-
-		double value = gsl_matrix_get(K,3*id0,3*id0);
-		value += dgcxx;
-		gsl_matrix_set(K,3*id0,3*id0,value);
-		value = gsl_matrix_get(K,3*id0,3*id1);
-		value -= dgcxx;
-		gsl_matrix_set(K,3*id0,3*id1,value);
-		value = gsl_matrix_get(K,3*id1,3*id1);
-		value += dgcxx;
-		gsl_matrix_set(K,3*id1,3*id1,value);
-		value = gsl_matrix_get(K,3*id1,3*id0);
-		value -= dgcxx;
-		gsl_matrix_set(K,3*id1,3*id0,value);
-
-		value = gsl_matrix_get(K,3*id0+1,3*id0+1);
-		value += dgcyy;
-		gsl_matrix_set(K,3*id0+1,3*id0+1,value);
-		value = gsl_matrix_get(K,3*id0+1,3*id1+1);
-		value -= dgcyy;
-		gsl_matrix_set(K,3*id0+1,3*id1+1,value);
-		value = gsl_matrix_get(K,3*id1+1,3*id1+1);
-		value += dgcyy;
-		gsl_matrix_set(K,3*id1+1,3*id1+1,value);
-		value = gsl_matrix_get(K,3*id1+1,3*id0+1);
-		value -= dgcyy;
-		gsl_matrix_set(K,3*id1+1,3*id0+1,value);
-
-		//cout<<"dgczz: "<<dgczz<<" dgcxy: "<<dgcxy<<" dgcyx: "<<dgcyx<<" c: "<<c<<endl;
-		value = gsl_matrix_get(K,3*id0+2,3*id0+2);
-		value += dgczz;
-		gsl_matrix_set(K,3*id0+2,3*id0+2,value);
-		value = gsl_matrix_get(K,3*id0+2,3*id1+2);
-		value -= dgczz;
-		gsl_matrix_set(K,3*id0+2,3*id1+2,value);
-
-		value = gsl_matrix_get(K,3*id1+2,3*id1+2);
-		value += dgczz;
-		gsl_matrix_set(K,3*id1+2,3*id1+2,value);
-		value = gsl_matrix_get(K,3*id1+2,3*id0+2);
-		value -= dgczz;
-		gsl_matrix_set(K,3*id1+2,3*id0+2,value);
-		*/
-
-
-/*
-		double dFxdx0 = 100.0*initialWeightPointx[i];
-		double dFxdx1 = -100.0*initialWeightPointx[i];
-
-		if (initialWeightPointx[i] < 0 ){
-			dFxdx0 *= -1.0;
-			dFxdx1 *= -1.0;
-		}
-		double value = gsl_matrix_get(K,3*id0,3*id0);
-		value -= dFxdx0;
-		gsl_matrix_set(K,3*id0,3*id0,value);
-
-		value = gsl_matrix_get(K,3*id0,3*id1);
-		value -= dFxdx1;
-		gsl_matrix_set(K,3*id0,3*id1,value);
-
-		value = gsl_matrix_get(K,3*id1,3*id1);
-		value -= dFxdx0;
-		gsl_matrix_set(K,3*id1,3*id1,value);
-
-		value = gsl_matrix_get(K,3*id1,3*id0);
-		value -= dFxdx1;
-		gsl_matrix_set(K,3*id1,3*id0,value);
-*/
-
+		double multiplier = packingMultiplier;
 
 		//sigmoid test:
 		double dx = Nodes[id0]->Position[0] - Nodes[id1]->Position[0];
 		double dy = Nodes[id0]->Position[1] - Nodes[id1]->Position[1];
 		double dz = Nodes[id0]->Position[2] - Nodes[id1]->Position[2];
 		double averageMass = 0.5 *( Nodes[id0]->mass + Nodes[id1]->mass );
-		double sigmoidSaturation = 5;
+		double sigmoidSaturation = sigmoidSaturationForPacking;
 		if (initialWeightPointx[i]>0){
 			dx *= -1.0;
 		}
@@ -5147,545 +4886,6 @@ void Simulation::calculatePackingJacobianNumerical3D(gsl_matrix* K){
 		value = gsl_matrix_get(K,3*id1+2,3*id0+2);
 		value -= dFzdz1;
 		gsl_matrix_set(K,3*id1+2,3*id0+2,value);
-
-	}
-}
-
-void Simulation::calculatePackingNumerical3DnotWorking(gsl_matrix* K){
-	double multiplier = 1;
-	double p = 1; //the power of the division (d/t);
-	double threshold = 6.0; //packing threshold
-/*
-	//surfaces:
-	int n = pacingNodeSurfaceList0.size();
-	for(int i = 0 ; i<n; ++i){
-		int id0 = pacingNodeSurfaceList0[i];
-		int id1 = pacingNodeSurfaceList1[i];
-		int id2 = pacingNodeSurfaceList2[i];
-		int id3 = pacingNodeSurfaceList3[i];
-		double averageMass = 0.25 *( Nodes[id0]->mass + Nodes[id1]->mass +  Nodes[id2]->mass  + Nodes[id3]->mass);
-		//calculating the base force (F0):
-		double dx = Nodes[id0]->Position[0] - (Nodes[id1]->Position[0]+Nodes[id2]->Position[0]+Nodes[id3]->Position[0])/3.0;
-		double dy = Nodes[id0]->Position[1] - (Nodes[id1]->Position[1]+Nodes[id2]->Position[1]+Nodes[id3]->Position[1])/3.0;
-		double dz = Nodes[id0]->Position[2] - (Nodes[id1]->Position[2]+Nodes[id2]->Position[2]+Nodes[id3]->Position[2])/3.0;
-		double c = multiplier * averageMass;
-		double F0[3] = {0.0,0.0,0.0};
-		F0[0] = c * (1 - pow(dx/threshold,p));
-		F0[1] = c * (1 - pow(dy/threshold,p));
-		F0[2] = c * (1 - pow(dz/threshold,p));
-		//a perturbation to x position of base node (id0)    :  dx -> dx + (perturbation)
-		//any perturbation to any of the slave nodes (id1-3) :  dx -> dx - (perturbation/3.0)
-		double perturbation = 0.0000001;
-		double F1[3] = {0.0,0.0,0.0};
-		F1[0] = c * (1 - pow((dx+perturbation)/threshold,p));
-		F1[1] = c * (1 - pow((dy+perturbation)/threshold,p));
-		F1[2] = c * (1 - pow((dz+perturbation)/threshold,p));
-		double dgcxx = (F1[0]-F0[0])/ perturbation;
-		double dgcyy = (F1[1]-F0[1])/ perturbation;
-		double dgczz = (F1[2]-F0[2])/ perturbation;
-		double dgcxxSlave = -dgcxx/3.0;
-		double dgcyySlave = -dgcyy/3.0;
-		double dgczzSlave = -dgczz/3.0;
-		//add to master_x - master_x:
-		double value = gsl_matrix_get(K,3*id0,3*id0);
-		value += dgcxx;
-		gsl_matrix_set(K,3*id0,3*id0,value);
-		//add to master_y - master_y:
-		value = gsl_matrix_get(K,3*id0+1,3*id0+1);
-		value += dgcyy;
-		gsl_matrix_set(K,3*id0+1,3*id0+1,value);
-		//add to master_z - master_z:
-		value = gsl_matrix_get(K,3*id0+2,3*id0+2);
-		value += dgczz;
-		gsl_matrix_set(K,3*id0+2,3*id0+2,value);
-
-		//add to master - slaves: ( how much master force changes upon slave movement)
-		value = gsl_matrix_get(K,3*id0,3*id1);
-		value += dgcxxSlave;
-		gsl_matrix_set(K,3*id0,3*id1,value);
-		value = gsl_matrix_get(K,3*id0,3*id2);
-		value += dgcxxSlave;
-		gsl_matrix_set(K,3*id0,3*id2,value);
-		value = gsl_matrix_get(K,3*id0,3*id3);
-		value += dgcxxSlave;
-		gsl_matrix_set(K,3*id0,3*id3,value);
-
-		value = gsl_matrix_get(K,3*id0+1,3*id1+1);
-		value += dgcyySlave;
-		gsl_matrix_set(K,3*id0+1,3*id1+1,value);
-		value = gsl_matrix_get(K,3*id0+1,3*id2+1);
-		value += dgcyySlave;
-		gsl_matrix_set(K,3*id0+1,3*id2+1,value);
-		value = gsl_matrix_get(K,3*id0+1,3*id3+1);
-		value += dgcyySlave;
-		gsl_matrix_set(K,3*id0+1,3*id3+1,value);
-
-		value = gsl_matrix_get(K,3*id0+2,3*id1+2);
-		value += dgczzSlave;
-		gsl_matrix_set(K,3*id0+2,3*id1+2,value);
-		value = gsl_matrix_get(K,3*id0+2,3*id2+2);
-		value += dgczzSlave;
-		gsl_matrix_set(K,3*id0+2,3*id2+2,value);
-		value = gsl_matrix_get(K,3*id0+2,3*id3+2);
-		value += dgczzSlave;
-		gsl_matrix_set(K,3*id0+2,3*id3+2,value);
-		//add to slave - slave: ( how much slave force changes upon slave movement)
-		//slave to slave xx:
-		value = gsl_matrix_get(K,3*id1,3*id1);
-		value -= dgcxxSlave;
-		gsl_matrix_set(K,3*id1,3*id1,value);
-		value = gsl_matrix_get(K,3*id1,3*id2);
-		value -= dgcxxSlave;
-		gsl_matrix_set(K,3*id1,3*id2,value);
-		value = gsl_matrix_get(K,3*id1,3*id3);
-		value -= dgcxxSlave;
-		gsl_matrix_set(K,3*id1,3*id3,value);
-
-		value = gsl_matrix_get(K,3*id2,3*id2);
-		value -= dgcxxSlave;
-		gsl_matrix_set(K,3*id2,3*id2,value);
-		value = gsl_matrix_get(K,3*id2,3*id1);
-		value -= dgcxxSlave;
-		gsl_matrix_set(K,3*id2,3*id1,value);
-		value = gsl_matrix_get(K,3*id2,3*id3);
-		value -= dgcxxSlave;
-		gsl_matrix_set(K,3*id2,3*id3,value);
-
-		value = gsl_matrix_get(K,3*id3,3*id3);
-		value -= dgcxxSlave;
-		gsl_matrix_set(K,3*id3,3*id3,value);
-		value = gsl_matrix_get(K,3*id3,3*id1);
-		value -= dgcxxSlave;
-		gsl_matrix_set(K,3*id3,3*id1,value);
-		value = gsl_matrix_get(K,3*id3,3*id2);
-		value -= dgcxxSlave;
-		gsl_matrix_set(K,3*id3,3*id2,value);
-
-		//slave to slave yy:
-		value = gsl_matrix_get(K,3*id1+1,3*id1+1);
-		value -= dgcyySlave;
-		gsl_matrix_set(K,3*id1+1,3*id1+1,value);
-		value = gsl_matrix_get(K,3*id1+1,3*id2+1);
-		value -= dgcyySlave;
-		gsl_matrix_set(K,3*id1+1,3*id2+1,value);
-		value = gsl_matrix_get(K,3*id1+1,3*id3+1);
-		value -= dgcyySlave;
-		gsl_matrix_set(K,3*id1+1,3*id3+1,value);
-
-		value = gsl_matrix_get(K,3*id2+1,3*id2+1);
-		value -= dgcyySlave;
-		gsl_matrix_set(K,3*id2+1,3*id2+1,value);
-		value = gsl_matrix_get(K,3*id2+1,3*id1+1);
-		value -= dgcyySlave;
-		gsl_matrix_set(K,3*id2+1,3*id1+1,value);
-		value = gsl_matrix_get(K,3*id2+1,3*id3+1);
-		value -= dgcyySlave;
-		gsl_matrix_set(K,3*id2+1,3*id3+1,value);
-
-		value = gsl_matrix_get(K,3*id3+1,3*id3+1);
-		value -= dgcyySlave;
-		gsl_matrix_set(K,3*id3+1,3*id3+1,value);
-		value = gsl_matrix_get(K,3*id3+1,3*id1+1);
-		value -= dgcyySlave;
-		gsl_matrix_set(K,3*id3+1,3*id1+1,value);
-		value = gsl_matrix_get(K,3*id3+1,3*id2+1);
-		value -= dgcyySlave;
-		gsl_matrix_set(K,3*id3+1,3*id2+1,value);
-
-		//slave to slave zz:
-		value = gsl_matrix_get(K,3*id1+2,3*id1+2);
-		value -= dgczzSlave;
-		gsl_matrix_set(K,3*id1+2,3*id1+2,value);
-		value = gsl_matrix_get(K,3*id1+2,3*id2+2);
-		value -= dgczzSlave;
-		gsl_matrix_set(K,3*id1+2,3*id2+2,value);
-		value = gsl_matrix_get(K,3*id1+2,3*id3+2);
-		value -= dgczzSlave;
-		gsl_matrix_set(K,3*id1+2,3*id3+2,value);
-		value = gsl_matrix_get(K,3*id2+2,3*id2+2);
-		value -= dgczzSlave;
-		gsl_matrix_set(K,3*id2+2,3*id2+2,value);
-		value = gsl_matrix_get(K,3*id2+2,3*id1+2);
-		value -= dgczzSlave;
-		gsl_matrix_set(K,3*id2+2,3*id1+2,value);
-		value = gsl_matrix_get(K,3*id2+2,3*id3+2);
-		value -= dgczzSlave;
-		gsl_matrix_set(K,3*id2+2,3*id3+2,value);
-		value = gsl_matrix_get(K,3*id3+2,3*id3+2);
-		value -= dgczzSlave;
-		gsl_matrix_set(K,3*id3+2,3*id3+2,value);
-		value = gsl_matrix_get(K,3*id3+2,3*id1+2);
-		value -= dgczzSlave;
-		gsl_matrix_set(K,3*id3+2,3*id1+2,value);
-		value = gsl_matrix_get(K,3*id3+2,3*id2+2);
-		value -= dgczzSlave;
-		gsl_matrix_set(K,3*id3+2,3*id2+2,value);
-
-		//add to slave - master: ( how much slave force changes upon master movement)
-		value = gsl_matrix_get(K,3*id1,3*id0);
-		value -= dgcxx;
-		gsl_matrix_set(K,3*id1,3*id0,value);
-		value = gsl_matrix_get(K,3*id2,3*id0);
-		value -= dgcxx;
-		gsl_matrix_set(K,3*id2,3*id0,value);
-		value = gsl_matrix_get(K,3*id3,3*id0);
-		value -= dgcxx;
-		gsl_matrix_set(K,3*id3,3*id0,value);
-
-		value = gsl_matrix_get(K,3*id1+1,3*id0+1);
-		value -= dgcyy;
-		gsl_matrix_set(K,3*id1+1,3*id0+1,value);
-		value = gsl_matrix_get(K,3*id2+1,3*id0+1);
-		value -= dgcyy;
-		gsl_matrix_set(K,3*id2+1,3*id0+1,value);
-		value = gsl_matrix_get(K,3*id3+1,3*id0+1);
-		value -= dgcyy;
-		gsl_matrix_set(K,3*id3+1,3*id0+1,value);
-
-		value = gsl_matrix_get(K,3*id1+2,3*id0+2);
-		value -= dgczz;
-		gsl_matrix_set(K,3*id1+2,3*id0+2,value);
-		value = gsl_matrix_get(K,3*id2+2,3*id0+2);
-		value -= dgczz;
-		gsl_matrix_set(K,3*id2+2,3*id0+2,value);
-		value = gsl_matrix_get(K,3*id3+2,3*id0+2);
-		value -= dgczz;
-		gsl_matrix_set(K,3*id3+2,3*id0+2,value);
-	}
-	n = pacingNodeEdgeList0.size();
-	for(int i = 0 ; i<n; ++i){
-		int id0 = pacingNodeEdgeList0[i];
-		int id1 = pacingNodeEdgeList1[i];
-		int id2 = pacingNodeEdgeList2[i];
-		double averageMass = 1.0/3.0 *( Nodes[id0]->mass + Nodes[id1]->mass +  Nodes[id2]->mass );
-		//calculating the base force (F0):
-		double dx = Nodes[id0]->Position[0] - (Nodes[id1]->Position[0]+Nodes[id2]->Position[0])/2.0;
-		double dy = Nodes[id0]->Position[1] - (Nodes[id1]->Position[1]+Nodes[id2]->Position[1])/2.0;
-		double dz = Nodes[id0]->Position[2] - (Nodes[id1]->Position[2]+Nodes[id2]->Position[2])/2.0;
-		double c = multiplier * averageMass;
-		double F0[3] = {0.0,0.0,0.0};
-		F0[0] = c * (1 - pow(dx/threshold,p));
-		F0[1] = c * (1 - pow(dy/threshold,p));
-		F0[2] = c * (1 - pow(dz/threshold,p));
-		//a perturbation to x position of base node (id0)    :  dx -> dx + (perturbation)
-		//any perturbation to any of the slave nodes (id1-3) :  dx -> dx - (perturbation/2.0)
-		double perturbation = 0.0000001;
-		double F1[3] = {0.0,0.0,0.0};
-		F1[0] = c * (1 - pow((dx+perturbation)/threshold,p));
-		F1[1] = c * (1 - pow((dy+perturbation)/threshold,p));
-		F1[2] = c * (1 - pow((dz+perturbation)/threshold,p));
-		double dgcxx = (F1[0]-F0[0])/ perturbation;
-		double dgcyy = (F1[1]-F0[1])/ perturbation;
-		double dgczz = (F1[2]-F0[2])/ perturbation;
-		double dgcxxSlave = -dgcxx/2.0;
-		double dgcyySlave = -dgcyy/2.0;
-		double dgczzSlave = -dgczz/2.0;
-		//add to master_x - master_x:
-		double value = gsl_matrix_get(K,3*id0,3*id0);
-		value += dgcxx;
-		gsl_matrix_set(K,3*id0,3*id0,value);
-		//add to master_y - master_y:
-		value = gsl_matrix_get(K,3*id0+1,3*id0+1);
-		value += dgcyy;
-		gsl_matrix_set(K,3*id0+1,3*id0+1,value);
-		//add to master_z - master_z:
-		value = gsl_matrix_get(K,3*id0+2,3*id0+2);
-		value += dgczz;
-		gsl_matrix_set(K,3*id0+2,3*id0+2,value);
-
-		//add to master - slaves: ( how much master force changes upon slave movement)
-		value = gsl_matrix_get(K,3*id0,3*id1);
-		value += dgcxxSlave;
-		gsl_matrix_set(K,3*id0,3*id1,value);
-		value = gsl_matrix_get(K,3*id0,3*id2);
-		value += dgcxxSlave;
-		gsl_matrix_set(K,3*id0,3*id2,value);
-
-
-		value = gsl_matrix_get(K,3*id0+1,3*id1+1);
-		value += dgcyySlave;
-		gsl_matrix_set(K,3*id0+1,3*id1+1,value);
-		value = gsl_matrix_get(K,3*id0+1,3*id2+1);
-		value += dgcyySlave;
-		gsl_matrix_set(K,3*id0+1,3*id2+1,value);
-
-		value = gsl_matrix_get(K,3*id0+2,3*id1+2);
-		value += dgczzSlave;
-		gsl_matrix_set(K,3*id0+2,3*id1+2,value);
-		value = gsl_matrix_get(K,3*id0+2,3*id2+2);
-		value += dgczzSlave;
-		gsl_matrix_set(K,3*id0+2,3*id2+2,value);
-		//add to slave - slave: ( how much slave force changes upon slave movement)
-		//slave to slave xx:
-		value = gsl_matrix_get(K,3*id1,3*id1);
-		value -= dgcxxSlave;
-		gsl_matrix_set(K,3*id1,3*id1,value);
-		value = gsl_matrix_get(K,3*id1,3*id2);
-		value -= dgcxxSlave;
-		gsl_matrix_set(K,3*id1,3*id2,value);
-
-		value = gsl_matrix_get(K,3*id2,3*id2);
-		value -= dgcxxSlave;
-		gsl_matrix_set(K,3*id2,3*id2,value);
-		value = gsl_matrix_get(K,3*id2,3*id1);
-		value -= dgcxxSlave;
-		gsl_matrix_set(K,3*id2,3*id1,value);
-
-		//slave to slave yy:
-		value = gsl_matrix_get(K,3*id1+1,3*id1+1);
-		value -= dgcyySlave;
-		gsl_matrix_set(K,3*id1+1,3*id1+1,value);
-		value = gsl_matrix_get(K,3*id1+1,3*id2+1);
-		value -= dgcyySlave;
-		gsl_matrix_set(K,3*id1+1,3*id2+1,value);
-
-		value = gsl_matrix_get(K,3*id2+1,3*id2+1);
-		value -= dgcyySlave;
-		gsl_matrix_set(K,3*id2+1,3*id2+1,value);
-		value = gsl_matrix_get(K,3*id2+1,3*id1+1);
-		value -= dgcyySlave;
-		gsl_matrix_set(K,3*id2+1,3*id1+1,value);
-
-		//slave to slave zz:
-		value = gsl_matrix_get(K,3*id1+2,3*id1+2);
-		value -= dgczzSlave;
-		gsl_matrix_set(K,3*id1+2,3*id1+2,value);
-		value = gsl_matrix_get(K,3*id1+2,3*id2+2);
-		value -= dgczzSlave;
-		gsl_matrix_set(K,3*id1+2,3*id2+2,value);
-		value = gsl_matrix_get(K,3*id2+2,3*id2+2);
-		value -= dgczzSlave;
-		gsl_matrix_set(K,3*id2+2,3*id2+2,value);
-		value = gsl_matrix_get(K,3*id2+2,3*id1+2);
-		value -= dgczzSlave;
-		gsl_matrix_set(K,3*id2+2,3*id1+2,value);
-
-		//add to slave - master: ( how much slave force changes upon master movement)
-		value = gsl_matrix_get(K,3*id1,3*id0);
-		value -= dgcxx;
-		gsl_matrix_set(K,3*id1,3*id0,value);
-		value = gsl_matrix_get(K,3*id2,3*id0);
-		value -= dgcxx;
-		gsl_matrix_set(K,3*id2,3*id0,value);
-
-		value = gsl_matrix_get(K,3*id1+1,3*id0+1);
-		value -= dgcyy;
-		gsl_matrix_set(K,3*id1+1,3*id0+1,value);
-		value = gsl_matrix_get(K,3*id2+1,3*id0+1);
-		value -= dgcyy;
-		gsl_matrix_set(K,3*id2+1,3*id0+1,value);
-
-		value = gsl_matrix_get(K,3*id1+2,3*id0+2);
-		value -= dgczz;
-		gsl_matrix_set(K,3*id1+2,3*id0+2,value);
-		value = gsl_matrix_get(K,3*id2+2,3*id0+2);
-		value -= dgczz;
-		gsl_matrix_set(K,3*id2+2,3*id0+2,value);
-	}*/
-	//KcalcForPoint
-	int n = pacingNodePointList0.size();
-	for(int i = 0 ; i<n; ++i){
-		int id0 = pacingNodePointList0[i];
-		int id1 = pacingNodePointList1[i];
-		double averageMass = 0.5 *( Nodes[id0]->mass + Nodes[id1]->mass);
-		//calculating the base force (F0):
-		double dx = Nodes[id0]->Position[0] - Nodes[id1]->Position[0];
-		double dy = Nodes[id0]->Position[1] - Nodes[id1]->Position[1];
-		double dz = Nodes[id0]->Position[2] - Nodes[id1]->Position[2];
-		double c = multiplier * averageMass;
-
-		double Fmag = c * (1 - pow((dx*dx + dy*dy + dz*dz)/threshold/threshold,p));
-		double F0[3] = {0.0,0.0,0.0};
-		F0[0] = initialWeightPointx[i]*Fmag;
-		F0[1] = initialWeightPointy[i]*Fmag;
-		F0[2] = initialWeightPointz[i]*Fmag;
-
-		//perturbation to dx, as in moveing master in +perturbation dir:
-		double perturbation = 0.0000001;
-		double dxp = dx + perturbation;
-		Fmag = c * (1 - pow((dxp*dxp + dy*dy + dz*dz)/threshold/threshold,p));
-		double F1[3] = {0.0,0.0,0.0};
-		F1[0] = initialWeightPointx[i]*Fmag;
-		F1[1] = initialWeightPointy[i]*Fmag;
-		F1[2] = initialWeightPointz[i]*Fmag;
-
-		//perturbation to dy, as in moving master in +perturbation dir:
-		double dyp = dy + perturbation;
-		Fmag = c * (1 - pow((dx*dx + dyp*dyp + dz*dz)/threshold/threshold,p));
-		double F2[3] = {0.0,0.0,0.0};
-		F2[0] = initialWeightPointx[i]*Fmag;
-		F2[1] = initialWeightPointy[i]*Fmag;
-		F2[2] = initialWeightPointz[i]*Fmag;
-
-		//perturbation to dz, as in moving master in +perturbation dir:
-		double dzp = dz + perturbation;
-		Fmag = c * (1 - pow((dx*dx + dy*dy + dzp*dzp)/threshold/threshold,p));
-		double F3[3] = {0.0,0.0,0.0};
-		F3[0] = initialWeightPointx[i]*Fmag;
-		F3[1] = initialWeightPointy[i]*Fmag;
-		F3[2] = initialWeightPointz[i]*Fmag;
-
-		double dgcxx = (F1[0]-F0[0])/ perturbation;
-		double dgcxy = (F1[1]-F0[1])/ perturbation;
-		double dgcxz = (F1[2]-F0[2])/ perturbation;
-		double dgcyy = (F2[1]-F0[1])/ perturbation;
-		double dgcyx = (F2[0]-F0[0])/ perturbation;
-		double dgcyz = (F2[2]-F0[2])/ perturbation;
-		double dgczz = (F3[2]-F0[2])/ perturbation;
-		double dgczx = (F3[0]-F0[0])/ perturbation;
-		double dgczy = (F3[1]-F0[1])/ perturbation;
-		dgcxx *= -1.0;
-		dgcyy *= -1.0;
-		dgczz *= -1.0;
-		dgcxy *= -1.0;
-		dgcxz *= -1.0;
-		dgcyx *= -1.0;
-		dgcyz *= -1.0;
-		dgczx *= -1.0;
-		dgczy *= -1.0;
-		//dgcxx = 0.0;
-		//dgcyy = 0.0;
-		//dgczz = 0.0;
-		//dgcxy = 0.0;
-		//dgcxz = 0.0;
-		//dgcyx = 0.0;
-		//dgcyz = 0.0;
-		//dgczx = 0.0;
-		//dgczy = 0.0;
-
-		double dgcxxSlave = -dgcxx;
-		double dgcxySlave = -dgcxy;
-		double dgcxzSlave = -dgcxz;
-		double dgcyySlave = -dgcyy;
-		double dgcyxSlave = -dgcyx;
-		double dgcyzSlave = -dgcyz;
-		double dgczzSlave = -dgczz;
-		double dgczxSlave = -dgczx;
-		double dgczySlave = -dgczy;
-
-
-		//add to master_x - master_x:
-		addValueToMatrix(K,3*id0,3*id0,dgcxx);
-		//add to master_x - master_y:
-		addValueToMatrix(K,3*id0,3*id0+1,dgcxy);
-		//add to master_x - master_z:
-		addValueToMatrix(K,3*id0,3*id0+2,dgcxz);
-		//add to master_y - master_y:
-		addValueToMatrix(K,3*id0+1,3*id0+1,dgcyy);
-		//add to master_y - master_x:
-		addValueToMatrix(K,3*id0+1,3*id0,dgcyx);
-		//add to master_y - master_z:
-		addValueToMatrix(K,3*id0+1,3*id0+2,dgcyz);
-		//add to master_z - master_z:
-		addValueToMatrix(K,3*id0+2,3*id0+2,dgczz);
-		//add to master_z - master_x:
-		addValueToMatrix(K,3*id0+2,3*id0,dgczx);
-		//add to master_z - master_y:
-		addValueToMatrix(K,3*id0+2,3*id0+1,dgczy);
-
-		//add values for master To slave:
-		addValueToMatrix(K,3*id0,3*id1,dgcxxSlave);
-		addValueToMatrix(K,3*id0,3*id1+1,dgcxySlave);
-		addValueToMatrix(K,3*id0,3*id1+2,dgcxzSlave);
-		addValueToMatrix(K,3*id0+1,3*id1+1,dgcyySlave);
-		addValueToMatrix(K,3*id0+1,3*id1,dgcyxSlave);
-		addValueToMatrix(K,3*id0+1,3*id1+2,dgcyzSlave);
-		addValueToMatrix(K,3*id0+2,3*id1+2,dgczzSlave);
-		addValueToMatrix(K,3*id0+2,3*id1,dgczxSlave);
-		addValueToMatrix(K,3*id0+2,3*id1+1,dgczySlave);
-
-		//add values for slave To slave:
-		addValueToMatrix(K,3*id1,3*id1,-dgcxxSlave);
-		addValueToMatrix(K,3*id1,3*id1+1,-dgcxySlave);
-		addValueToMatrix(K,3*id1,3*id1+2,-dgcxzSlave);
-		addValueToMatrix(K,3*id1+1,3*id1+1,-dgcyySlave);
-		addValueToMatrix(K,3*id1+1,3*id1,-dgcyxSlave);
-		addValueToMatrix(K,3*id1+1,3*id1+2,-dgcyzSlave);
-		addValueToMatrix(K,3*id1+2,3*id1+2,-dgczzSlave);
-		addValueToMatrix(K,3*id1+2,3*id1,-dgczxSlave);
-		addValueToMatrix(K,3*id1+2,3*id1+1,-dgczySlave);
-
-		//add values for slave To master:
-		addValueToMatrix(K,3*id1,3*id0,-dgcxx);
-		addValueToMatrix(K,3*id1,3*id0+1,-dgcxy);
-		addValueToMatrix(K,3*id1,3*id0+2,-dgcxz);
-		addValueToMatrix(K,3*id1+1,3*id0+1,-dgcyy);
-		addValueToMatrix(K,3*id1+1,3*id0,-dgcyx);
-		addValueToMatrix(K,3*id1+1,3*id0+2,-dgcyz);
-		addValueToMatrix(K,3*id1+2,3*id0+2,-dgczz);
-		addValueToMatrix(K,3*id1+2,3*id0,-dgczx);
-		addValueToMatrix(K,3*id1+2,3*id0+1,-dgczy);
-
-
-
-
-	/*	//a perturbation to x position of base node (id0)    :  dx -> dx + (perturbation)
-		//any perturbation to any of the slave nodes (id1-3) :  dx -> dx - (perturbation/2.0)
-		double perturbation = 0.0000001;
-		double F1[3] = {0.0,0.0,0.0};
-		F1[0] = c * (1 - pow((dx+perturbation)/threshold,p));
-		F1[1] = c * (1 - pow((dy+perturbation)/threshold,p));
-		F1[2] = c * (1 - pow((dz+perturbation)/threshold,p));
-		double dgcxx = (F1[0]-F0[0])/ perturbation;
-		double dgcyy = (F1[1]-F0[1])/ perturbation;
-		double dgczz = (F1[2]-F0[2])/ perturbation;
-		double dgcxxSlave = -dgcxx;
-		double dgcyySlave = -dgcyy;
-		double dgczzSlave = -dgczz;
-
-		//add to master_x - master_x:
-		double value = gsl_matrix_get(K,3*id0,3*id0);
-		value += dgcxx;
-		gsl_matrix_set(K,3*id0,3*id0,value);
-		//add to master_y - master_y:
-		value = gsl_matrix_get(K,3*id0+1,3*id0+1);
-		value += dgcyy;
-		gsl_matrix_set(K,3*id0+1,3*id0+1,value);
-		//add to master_z - master_z:
-		value = gsl_matrix_get(K,3*id0+2,3*id0+2);
-		value += dgczz;
-		gsl_matrix_set(K,3*id0+2,3*id0+2,value);
-
-		//add to master - slaves: ( how much master force changes upon slave movement)
-		value = gsl_matrix_get(K,3*id0,3*id1);
-		value += dgcxxSlave;
-		gsl_matrix_set(K,3*id0,3*id1,value);
-		value = gsl_matrix_get(K,3*id0+1,3*id1+1);
-		value += dgcyySlave;
-		gsl_matrix_set(K,3*id0+1,3*id1+1,value);
-		value = gsl_matrix_get(K,3*id0+2,3*id1+2);
-		value += dgczzSlave;
-		gsl_matrix_set(K,3*id0+2,3*id1+2,value);
-
-		//add to slave - slave: ( how much slave force changes upon slave movement)
-		//slave to slave xx:
-		value = gsl_matrix_get(K,3*id1,3*id1);
-		value -= dgcxxSlave;
-		gsl_matrix_set(K,3*id1,3*id1,value);
-
-		//slave to slave yy:
-		value = gsl_matrix_get(K,3*id1+1,3*id1+1);
-		value -= dgcyySlave;
-		gsl_matrix_set(K,3*id1+1,3*id1+1,value);
-
-		//slave to slave zz:
-		value = gsl_matrix_get(K,3*id1+2,3*id1+2);
-		value -= dgczzSlave;
-		gsl_matrix_set(K,3*id1+2,3*id1+2,value);
-
-		//add to slave - master: ( how much slave force changes upon master movement)
-		value = gsl_matrix_get(K,3*id1,3*id0);
-		value -= dgcxx;
-		gsl_matrix_set(K,3*id1,3*id0,value);
-
-		value = gsl_matrix_get(K,3*id1+1,3*id0+1);
-		value -= dgcyy;
-		gsl_matrix_set(K,3*id1+1,3*id0+1,value);
-
-		value = gsl_matrix_get(K,3*id1+2,3*id0+2);
-		value -= dgczz;
-		gsl_matrix_set(K,3*id1+2,3*id0+2,value);*/
-
 	}
 }
 
@@ -6055,7 +5255,7 @@ void Simulation::checkPackingToPipette(bool& packsToPip, double* pos, double* pi
 	double multiplier = 0.05; //just a term to scale the forces down
 	double threshold = 1.0;	 //pipette packing forces start at 2 microns
 	double t2 = threshold*threshold;
-	double pipRange2[2] = {pipetteRadius-threshold, pipetteRadius+pipThickness+threshold};
+	double pipRange2[2] = {pipetteInnerRadius-threshold, pipetteInnerRadius+pipThickness+threshold};
 	pipRange2[0] *= pipRange2[0];
 	pipRange2[1] *= pipRange2[1];
 	double dist[3] = {pos[0]-pipetteCentre[0], pos[1]-pipetteCentre[1], pos[2]-pipetteCentre[2]};
@@ -6082,30 +5282,30 @@ void Simulation::checkPackingToPipette(bool& packsToPip, double* pos, double* pi
 		//the node is not close to the pipette tip in x&y but not in range to be pushed by tip bottom, it may be too far away
 		//now I need to check the distance in z and then the walls:
 		if( (ApicalSuction && dist[2]>0) || (!ApicalSuction && dist[2]<0) ) {
-			double midWallDist2 =  pipetteRadius + 0.5*pipThickness;
+			double midWallDist2 =  pipetteInnerRadius + 0.5*pipThickness;
 			midWallDist2 *= midWallDist2;
 			double d2 = 0.0;
 			if (midWallDist2>xydist2){
 				//the node should be pushed inside:
 				multiplier *= -1.0;
-				if(xydist2>pipetteRadius*pipetteRadius){
+				if(xydist2>pipetteInnerRadius*pipetteInnerRadius){
 					//the node is inside the pipette: maximum force, d2 is zero:
 					d2 =1e-2;
 				}
 				else{
-					double dx = pos[0]-pipetteRadius;
-					double dy = pos[1]-pipetteRadius;
+					double dx = pos[0]-pipetteInnerRadius;
+					double dy = pos[1]-pipetteInnerRadius;
 					d2 = dx*dx+dy*dy;
 				}
 			}
 			else{
-				if(xydist2<(pipetteRadius+pipThickness)*(pipetteRadius+pipThickness)){
+				if(xydist2<(pipetteInnerRadius+pipThickness)*(pipetteInnerRadius+pipThickness)){
 					//the node is inside the pipette: maximum force, d2 is zero:
 					d2 =1e-2;
 				}
 				else{
-					double dx = pos[0]-pipetteRadius-pipThickness;
-					double dy = pos[1]-pipetteRadius-pipThickness;
+					double dx = pos[0]-pipetteInnerRadius-pipThickness;
+					double dy = pos[1]-pipetteInnerRadius-pipThickness;
 					d2 = dx*dx+dy*dy;
 				}
 			}
@@ -6445,6 +5645,8 @@ void Simulation::detectPacingNodes(){
 	}
 	packingThreshold = 0.4*colAverageSideLength;  //0.6 was old value
 	packingDetectionThreshold = 1.2 * packingThreshold; //0.9 * packingThreshold;
+	packingMultiplier = 1000;
+	sigmoidSaturationForPacking = 5;
 	double t2 = packingDetectionThreshold*packingDetectionThreshold;	//threshold square for rapid calculation
 	pacingNodeCouples0.empty();
 	pacingNodeCouples1.empty();
@@ -7583,7 +6785,7 @@ void Simulation::calculateMyosinForces(){
 	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 		(*itElement)->updateMyosinConcentration(dt, kMyo, thereIsMyosinFeedback, MyosinFeedbackCap);
 		if (basedOnArea){
-			//The forces are based on the total apical/basal area of the element, it may not fluctuate with rapid shape changes driven by myosin itself.
+			//The forces are based on the total apical/basal area of the element, it may cause oscillations with rapid shape changes driven by myosin itself.
 			(*itElement)->calculateMyosinForcesAreaBased(forcePerMyoMolecule);
 		}
 		else{
@@ -7616,7 +6818,7 @@ void Simulation::updateEquilibriumMyosinsFromInputSignal(MyosinFunction* currMF)
 	vector<ShapeBase*>::iterator itElement;
 	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 		if ((currMF->applyToColumnarLayer && (*itElement)->tissueType == 0) || (currMF->applyToPeripodialMembrane && (*itElement)->tissueType == 1) ){//|| (*itElement)->tissueType == 2){
-			if ((*itElement)->spansWholeTissue || (currMF->isApical && (*itElement)->tissuePlacement == 1) || (!currMF->isApical && (*itElement)->tissuePlacement == 0)){
+			if ((*itElement)->spansWholeTissue || (currMF->isApical && (*itElement)->tissuePlacement == 1) || (!currMF->isApical && !(*itElement)->isECMMimicing && ( (*itElement)->tissuePlacement == 0 || (*itElement)->atBorderOfECM) )){
 				// 1) The element spans the whole tissue therefore both apical and basal responses should be applied
 				// 2) The myosin response is applicable to apical surface, and the tissue placement of the element is apical,
 				// 3) The myosin response is applicable to basal surface, and the tissue placement of the lement is basal.
@@ -7837,9 +7039,41 @@ void Simulation::setUpECMMimicingElements(){
 			(*itElement)->setECMMimicing(true);
 		}
 		if ( (*itElement)->tissuePlacement == 2 && (*itElement)->spansWholeTissue ){
-			//elemetns that  are called mid -line, as they
+			//elements that  are called mid -line, as they
 			//span the whole tissue, are treated as ECM mimicing
 			(*itElement)->setECMMimicing(true);
+		}
+	}
+	vector<int> nodeListToCheck;
+	for(vector<ShapeBase*>::iterator  itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		if ( (*itElement)->isECMMimicing ){
+			//The element is ECM mimicking. All elements that share nodes with this element, but are
+			//not ECMMimicking themselves, should be treated as basal (or whole tissue spanning) elements:
+			int n = (*itElement)->getNodeNumber();
+			for (int i=0; i<n; ++i){
+				bool alreadyRecorded = false;
+				int nVector = nodeListToCheck.size();
+				for (int j=0 ;j< nVector; ++j){
+					if (nodeListToCheck[j] ==(*itElement)->NodeIds[i] ){
+						alreadyRecorded = true;
+						break;
+					}
+				}
+				if (!alreadyRecorded){
+					nodeListToCheck.push_back((*itElement)->NodeIds[i]);
+				}
+			}
+		}
+	}
+	int nVector = nodeListToCheck.size();
+	for(vector<ShapeBase*>::iterator  itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		if (!(*itElement)->isECMMimicing && !(*itElement)->atBorderOfECM){
+			for (int j=0 ;j< nVector; ++j){
+				if ((*itElement)->DoesPointBelogToMe(nodeListToCheck[j])){
+					(*itElement)->atBorderOfECM = true;
+					break;
+				}
+			}
 		}
 	}
 }
@@ -8092,7 +7326,7 @@ void Simulation::moveClampedNodesForStretcher(){
 }
 
 void Simulation::setupPipetteExperiment(){
-	pipetteRadiusSq = pipetteRadius*pipetteRadius;
+	pipetteInnerRadiusSq = pipetteInnerRadius*pipetteInnerRadius;
 	effectLimitsInZ[0] = pipetteCentre[2] - pipetteDepth;
 	effectLimitsInZ[1] = pipetteCentre[2] + pipetteDepth;
 	//Now I set up the upper and lower boundaries to cover both apical and basal suction, but I need to extend the boundary
@@ -8106,19 +7340,21 @@ void Simulation::setupPipetteExperiment(){
 	}
 	//cout<<"set the system, fixing nodes:"<<endl;
     //Now I am sticking the other side of the tissue to a surface
-	if (ApicalSuction){
-		for (int i=0; i<nNodes; ++i){
-			//fix basal nodes of columnar layer:
-			if(Nodes[i]->tissuePlacement == 0 && Nodes[i]->tissueType == 0) {
-				fixAllD(i, false); //this is fixing with adhesives, should be a hard fix at all times
+	if (TissueStuckOnGlassDuringPipetteAspiration){
+		if (ApicalSuction){
+			for (int i=0; i<nNodes; ++i){
+				//fix basal nodes of columnar layer:
+				if(Nodes[i]->tissuePlacement == 0 && Nodes[i]->tissueType == 0) {
+					fixAllD(i, false); //this is fixing with adhesives, should be a hard fix at all times
+				}
 			}
 		}
-	}
-	else{
-		for (int i=0; i<nNodes; ++i){
-			//fix apical nodes and all peripodial membrane nodes:
-			if(Nodes[i]->tissuePlacement == 1 || Nodes[i]->tissueType == 1) {
-				fixAllD(i, false); //this is fixing with adhesives, should be a hard fix at all times
+		else{
+			for (int i=0; i<nNodes; ++i){
+				//fix apical nodes and all peripodial membrane nodes:
+				if(Nodes[i]->tissuePlacement == 1 || Nodes[i]->tissueType == 1) {
+					fixAllD(i, false); //this is fixing with adhesives, should be a hard fix at all times
+				}
 			}
 		}
 	}
@@ -8145,48 +7381,52 @@ void Simulation::addMyosinForces(gsl_matrix* gExt){
 }
 
 void Simulation::addPipetteForces(gsl_matrix* gExt){
-    if      (timestep == 0) {SuctionPressure[2] = 0;}
-    else if (timestep == 1) {SuctionPressure[2] = 100;}
-    else if (timestep == 2) {SuctionPressure[2] = 200;}
-    else if (timestep == 3) {SuctionPressure[2] = 300;}
-    else if (timestep == 4) {SuctionPressure[2] = 400;}
-    else if (timestep == 5) {SuctionPressure[2] = 500;}
-    else if (timestep == 6) {SuctionPressure[2] = 600;}
-
     //cout<<"in add pipette forces, pipette pos: "<<pipetteCentre[0]<<" "<<pipetteCentre[1]<<endl;
-    int dim = 3;
+	for (int i=0; i<nPipetteSuctionSteps; ++i){
+		if (currSimTimeSec >= pipetteSuctionTimes[i]){
+			SuctionPressure[2] = pipetteSuctionPressures[i];
+		}
+		else{
+			break;
+		}
+	}
+	int dim = 3;
 	for (int i=0; i<nNodes; ++i){
         //cout<<"Node "<<i<<" z pos: "<<Nodes[i]->Position[2]<<" effectLimitsInZ: "<<effectLimitsInZ[0]<<" "<<effectLimitsInZ[1]<<endl;
-		if (Nodes[i]->Position[2]> effectLimitsInZ[0] &&  Nodes[i]->Position[2]< effectLimitsInZ[1]){
-            //cout<<"Node "<<i<<" is within z range"<<endl;
-			double dx = pipetteCentre[0] - Nodes[i]->Position[0];
-			double dy = pipetteCentre[1] - Nodes[i]->Position[1];
-			//cout<<"dx: "<<dx<<" dy: "<<dy<<" dx*dx+dy*dy: "<<dx*dx+dy*dy<<endl;
-			double d2 = dx*dx+dy*dy ;
-			if (d2 < pipetteRadiusSq){
-                //cout<<"Node "<<i<<" is within planar range"<<endl;
-                double multiplier = 1.0;
-                bool scalePressure = false;
-				if(scalePressure){ multiplier = (1 - d2/pipetteRadiusSq);}
-				double LocalPressure[3] = { multiplier*SuctionPressure[0], multiplier*SuctionPressure[1],multiplier*SuctionPressure[2]};
-				//cout<<"Node: "<<i<<" being sucked into pipette, force: "<<SuctionPressure[0]*Nodes[i]->surface<<" "<<SuctionPressure[1]*Nodes[i]->surface<<" "<<SuctionPressure[2]*Nodes[i]->surface<<endl;
-				//node is within suciton range
-				if(!Nodes[i]->FixedPos[0]){
-                    double value = gsl_matrix_get(gExt,i*dim,0);
-                    value +=LocalPressure[0]*Nodes[i]->zProjectedArea;
-                    gsl_matrix_set(gExt,i*dim,0,value);
-                }
-				if(!Nodes[i]->FixedPos[1]){
-                    double value = gsl_matrix_get(gExt,i*dim+1,0);
-                    value +=LocalPressure[1]*Nodes[i]->zProjectedArea;
-                    gsl_matrix_set(gExt,i*dim+1,0,value);
-                }
-				if(!Nodes[i]->FixedPos[2]){
-                    double value = gsl_matrix_get(gExt,i*dim+2,0);
-                    value +=LocalPressure[2]*Nodes[i]->zProjectedArea;
-                    gsl_matrix_set(gExt,i*dim+2,0,value);
-                }
-                //Elements[0]->displayMatrix(gExt,"gExtInsidePipetteFunc");
+		//The node is apical and the suction is apical OR the suction is basal and the node is basal!
+		//Should not fix midline nodes just because they are coming close to the pipette border
+		if( ( ApicalSuction && Nodes[i]->tissuePlacement == 1) || ( !ApicalSuction && Nodes[i]->tissuePlacement == 0)){
+			if (Nodes[i]->Position[2]> effectLimitsInZ[0] &&  Nodes[i]->Position[2]< effectLimitsInZ[1]){
+				//cout<<"Node "<<i<<" is within z range"<<endl;
+				double dx = pipetteCentre[0] - Nodes[i]->Position[0];
+				double dy = pipetteCentre[1] - Nodes[i]->Position[1];
+				//cout<<"dx: "<<dx<<" dy: "<<dy<<" dx*dx+dy*dy: "<<dx*dx+dy*dy<<endl;
+				double d2 = dx*dx+dy*dy ;
+				if (d2 < pipetteInnerRadiusSq){
+					//cout<<"Node "<<i<<" is within planar range"<<endl;
+					double multiplier = 1.0;
+					bool scalePressure = false;
+					if(scalePressure){ multiplier = (1 - d2/pipetteInnerRadiusSq);}
+					double LocalPressure[3] = { multiplier*SuctionPressure[0], multiplier*SuctionPressure[1],multiplier*SuctionPressure[2]};
+					//cout<<"Node: "<<i<<" being sucked into pipette, force: "<<SuctionPressure[0]*Nodes[i]->surface<<" "<<SuctionPressure[1]*Nodes[i]->surface<<" "<<SuctionPressure[2]*Nodes[i]->surface<<endl;
+					//node is within suciton range
+					if(!Nodes[i]->FixedPos[0]){
+						double value = gsl_matrix_get(gExt,i*dim,0);
+						value +=LocalPressure[0]*Nodes[i]->zProjectedArea;
+						gsl_matrix_set(gExt,i*dim,0,value);
+					}
+					if(!Nodes[i]->FixedPos[1]){
+						double value = gsl_matrix_get(gExt,i*dim+1,0);
+						value +=LocalPressure[1]*Nodes[i]->zProjectedArea;
+						gsl_matrix_set(gExt,i*dim+1,0,value);
+					}
+					if(!Nodes[i]->FixedPos[2]){
+						double value = gsl_matrix_get(gExt,i*dim+2,0);
+						value +=LocalPressure[2]*Nodes[i]->zProjectedArea;
+						gsl_matrix_set(gExt,i*dim+2,0,value);
+					}
+					//Elements[0]->displayMatrix(gExt,"gExtInsidePipetteFunc");
+				}
 			}
 		}
 	}
@@ -8194,9 +7434,9 @@ void Simulation::addPipetteForces(gsl_matrix* gExt){
 
 void Simulation::packToPipetteWall(){
 	//Fixing the z-height of nodes near the pipette wall:
-	double pipLim2[2] = {0.9*pipetteRadius, 1.4*(pipetteRadius+pipetteThickness)};
-	pipLim2[0] *= pipLim2[0];
-	pipLim2[1] *= pipLim2[1];
+	double pipLim[2] = {0.95*pipetteInnerRadius, 1.2*(pipetteInnerRadius+pipetteThickness)};
+	double pipLim2[2] = {pipLim[0] *pipLim[0], pipLim[1]* pipLim[1]};
+	bool croppedTipPipette = false;
 	int nZfix = TransientZFixListForPipette.size();
 	for (int zfixiter =0; zfixiter <nZfix; zfixiter++){
 		Nodes[TransientZFixListForPipette[zfixiter]]->FixedPos[2] = 0;
@@ -8204,18 +7444,36 @@ void Simulation::packToPipetteWall(){
 	TransientZFixListForPipette.clear();
 	for (int currId=0; currId<nNodes;currId++){
 		if (Nodes[currId]->FixedPos[2] == 0){
-			//the node is not already fixed in z
-			//I will check if it is in the range of the tip of pipette:
-			double zLimits[2] = {-2.0,2.0}; //the range in z to freeze nodes
-			double v0[3] = {Nodes[currId]->Position[0]-pipetteCentre[0], Nodes[currId]->Position[1]-pipetteCentre[1], Nodes[currId]->Position[2]-pipetteCentre[2]};
-			if (v0[2] < zLimits[1] && v0[2]> zLimits[0]){
-				if (currId == 61) {cout<<"Node[61] is in z range"<<endl;}
-				//node is in Z range, is it in x-y range?
-				double xydist2 = v0[0]*v0[0]+v0[1]*v0[1];
-				if (xydist2>pipLim2[0] && xydist2<pipLim2[1]){
-					 //node is within x-y range, freeze!
-					Nodes[currId]->FixedPos[2] = 1;
-					TransientZFixListForPipette.push_back(currId);
+			//The node is apical and the suction is apical OR the suction is basal and the node is basal!
+			//Should not fix midline nodes just because they are coming close to the pipette border
+			if( ( ApicalSuction && Nodes[currId]->tissuePlacement == 1) || ( !ApicalSuction && Nodes[currId]->tissuePlacement == 0)){
+				bool freezeNodeZ = false;
+				//the node is not already fixed in z
+				//I will check if it is in the range of the tip of pipette:
+				double zLimits[2] = {-2.0,2.0}; //the range in z to freeze nodes
+				double v0[3] = {Nodes[currId]->Position[0]-pipetteCentre[0], Nodes[currId]->Position[1]-pipetteCentre[1], Nodes[currId]->Position[2]-pipetteCentre[2]};
+				if (v0[2] < zLimits[1] && v0[2]> zLimits[0]){
+					//node is in Z range, is it in x-y range?
+					double xydist2 = v0[0]*v0[0]+v0[1]*v0[1];
+					if (xydist2>pipLim2[0] && xydist2<pipLim2[1]){
+						//node is within x-y range,
+						//Now I want to know if I am using cropped pipette tip, and if so,
+						//I will check z limit again:
+						if (croppedTipPipette){
+							double R = pow(xydist2,0.5);
+							double CroppedZAtCurrentR =  zLimits[0] + ((zLimits[1] - zLimits[0])/(pipLim[1] - pipLim[0]) * (R - pipLim[0] ));
+							if (v0[2] < CroppedZAtCurrentR){
+								freezeNodeZ = true;
+							}
+						}
+						else{
+							freezeNodeZ = true;
+						}
+						if (freezeNodeZ){
+							Nodes[currId]->FixedPos[2] = 1;
+							TransientZFixListForPipette.push_back(currId);
+						}
+					}
 				}
 			}
 		}
@@ -8302,6 +7560,12 @@ void Simulation::updateElementVolumesAndTissuePlacements(){
 	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 		cout<<"updating element: "<<(*itElement)->Id<<endl;
 		(*itElement)->updateElementVolumesAndTissuePlacementsForSave(Nodes);
+	}
+}
+
+void Simulation::updateElasticPropertiesForAllNodes(){
+	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		(*itElement)->updateElasticProperties();
 	}
 }
 

@@ -186,10 +186,12 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, bool thereIsPlas
     remodellingPlaneRotationMatrix = gsl_matrix_calloc(3,3);
     gsl_matrix_set_identity(remodellingPlaneRotationMatrix);
     isECMMimicing = false;
+    atBorderOfECM = false;
     isActinMimicing = false;
     insideEllipseBand = false;
     coveringEllipseBandId = -1;
     stiffnessPerturbationRateInSec = 0;
+    ECMThicknessPlaneRotationalMatrix = gsl_matrix_calloc(3,3);
 }
 
 Prism::~Prism(){
@@ -251,6 +253,7 @@ Prism::~Prism(){
     //delete[] Fplastic;
     //delete[] invFplastic;
     delete[] elementsIdsOnSameColumn;
+    gsl_matrix_free(ECMThicknessPlaneRotationalMatrix);
 }
 
 void Prism::setCoeffMat(){
@@ -369,13 +372,18 @@ void  Prism::AlignReferenceBaseNormalToZ(){
 }
 
 
-void  Prism::setElasticProperties(double EApical, double EBasal, double EMid, double v){
+void  Prism::setElasticProperties(double EApical, double EBasal, double EMid, double EECM, double v){
 	this -> E = EMid;
-	if (tissuePlacement == 0 ){
-		this -> E = EBasal;
+	if (isECMMimicing){
+		this -> E = EECM;
 	}
-	else if(tissuePlacement == 1 ){
-		this -> E = EApical;
+	else{
+		if (tissuePlacement == 0 || atBorderOfECM){
+			this -> E = EBasal;
+		}
+		else if(tissuePlacement == 1 ){
+			this -> E = EApical;
+		}
 	}
 	this -> v = v; //poisson ratio
 	if (this -> v>0.5){this -> v= 0.5;}
@@ -1696,16 +1704,17 @@ void 	Prism::distributeMyosinForcesTotalSizeBased(bool isIsotropic, bool apical,
 	int id0, id1, id2;
 	double forcemag;
 	int currSurface = 0;
+	double AverageSurfaceArea = GrownVolume/(gsl_matrix_get(Fg,2,2)*ReferenceShape->height);
 	if (apical){
 		id0 = 3;
 		id1 = 4;
 		id2 = 5;
 		currSurface = 0;
 		if (isIsotropic){
-			forcemag = cMyoUniform[0]*GrownVolume;
+			forcemag = cMyoUniform[0]*AverageSurfaceArea;
 		}
 		else{
-			forcemag = cMyoUnipolar[0]*GrownVolume;
+			forcemag = cMyoUnipolar[0]*AverageSurfaceArea;
 		}
 	}
 	else{
@@ -1714,10 +1723,10 @@ void 	Prism::distributeMyosinForcesTotalSizeBased(bool isIsotropic, bool apical,
 		id2 = 2;
 		currSurface = 1;
 		if (isIsotropic){
-			forcemag = cMyoUniform[1]*GrownVolume;
+			forcemag = cMyoUniform[1]*AverageSurfaceArea;
 		}
 		else{
-			forcemag = cMyoUnipolar[1]*GrownVolume;
+			forcemag = cMyoUnipolar[1]*AverageSurfaceArea;
 		}
 	}
 	double centre[3] = {0.0,0.0,0.0};

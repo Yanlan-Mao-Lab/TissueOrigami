@@ -25,6 +25,7 @@ public:
 	bool applyToColumnarLayer;		///< Boolean stating if the myosin levels should be applied to columnar layer
 	bool applyToPeripodialMembrane; ///< Boolean stating if the myosin levels should be applied to peripodial membrane
 	bool manualStripes;
+	bool markerEllipse;				///<< Boolean stating if the myosin function is applied via marker ellipses
 	double stripeSize1, stripeSize2;
 	double initialPoint, endPoint;
 	double manualCMyoEq;
@@ -36,10 +37,7 @@ public:
 	//double kMyo = 0.09873; 				///<myosin update rate constant, in units (1/time) time beeing the same units as dt, currently sec;
 	MyosinFunction(int id, bool isApical, bool isPolarised, int initTime, bool applyToColumnarLayer, bool applyToPeripodialMembrane, int nX, int nY, double** MyoMat, double** angleMat){
 		/**
-		 *  The first six parameters will be directed to the parent constructor, GrowthFunctionBase#GrowthFunctionBase. \n
-		 *  integers nX and nY will set GridBasedGrowthFunction#nGridX and GridBasedGrowthFunction#nGridY, respectively.  GridBasedGrowthFunction::GrowthMatrix will be initiated to point at a 2 dimensional matrix of double triplets the size(nX, nY). \n
-		 *  double*** GrowthMat is the pointer to the 2-dimensional matrix of double triplets, holding the 3D growth rates at each grid point. Values stored in GrowthMat will set the values in GridBasedGrowthFunction::GrowthMatrix.
-		 *  The matrix storing the growth rates have been read from an input file through ModelInputObject#readGrowthOptions and related functions therein \n
+		 * Define the inputs!
 		 */
 		//this ->kMyo = 0.09873;
 		this->manualStripes = false;
@@ -78,13 +76,10 @@ public:
 		this ->manualCMyoEq = 0;
 		this->manualOrientation[0] = 1;
 		this->manualOrientation[1] = 0;
-	} ///< The constructor of MyosinFunction. Different growth functions will be derived from this class
+	} ///< The constructor of MyosinFunction.
 	MyosinFunction(int id, bool isApical, bool isPolarised, int initTime, bool applyToColumnarLayer, bool applyToPeripodialMembrane, double stripeSize1, double stripeSize2, double initialPoint, double endPoint, double manualcEq, double tetha){
 		/**
-		 *  The first six parameters will be directed to the parent constructor, GrowthFunctionBase#GrowthFunctionBase. \n
-		 *  integers nX and nY will set GridBasedGrowthFunction#nGridX and GridBasedGrowthFunction#nGridY, respectively.  GridBasedGrowthFunction::GrowthMatrix will be initiated to point at a 2 dimensional matrix of double triplets the size(nX, nY). \n
-		 *  double*** GrowthMat is the pointer to the 2-dimensional matrix of double triplets, holding the 3D growth rates at each grid point. Values stored in GrowthMat will set the values in GridBasedGrowthFunction::GrowthMatrix.
-		 *  The matrix storing the growth rates have been read from an input file through ModelInputObject#readGrowthOptions and related functions therein \n
+		 *  Define the inputs!
 		 */
 		//this ->kMyo = 0.09873;
 		this->manualStripes = true;
@@ -122,7 +117,7 @@ public:
 				MyosinOrientationMatrix[i][j][1] = 0;
 			}
 		}
-	} ///< The constructor of MyosinFunction. Different growth functions will be derived from this class
+	} ///< The constructor of MyosinFunction.
 
 	~MyosinFunction(){
 		for (int i=0; i<nGridX; ++i){

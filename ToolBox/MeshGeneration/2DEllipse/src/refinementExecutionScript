@@ -107,6 +107,7 @@ cp MeshFile.out ./Exp48hr-noPerinoSym_09.mesh
 ../triangle/triangle -rq33a10.4 Points.2
 ../triangle/triangle -rq33a5.8 Points.3
 ../triangle/triangle -rq33a2.8 Points.4
+../triangle/triangle -rq33a0.65 Points.5
 %genetratin the meshes:
 cp Points.2.ele Points.1.ele
 cp Points.2.node Points.1.node
@@ -132,7 +133,12 @@ cp MeshFile.out ./Exp48hr_08.mesh
 cp Points.5.ele Points.1.ele
 cp Points.5.node Points.1.node
 ./EllipseFromOutline -1 15 2 6 1  ./inputOutlines/48hrDiscOutline
-cp MeshFile.out ./ECMMimic_08.mesh
+cp MeshFile.out ./ECMMimic_08thin.mesh
+
+cp Points.6.ele Points.1.ele
+cp Points.6.node Points.1.node
+./EllipseFromOutline -1 12.5 1 5 1  ./inputOutlines/48hrDiscOutline
+cp MeshFile.out ./ECMMimic_09thin.mesh
 
 
 Large 48 hours. The average is 106.5 to 64.8 microns. The cross point at 64 microns.
@@ -268,13 +274,24 @@ cp Points.3.node Points.1.node
 cp MeshFile.out ./Circle100_h100_02.mesh
 
 %Drawing a circle:
-./EllipseFromOutline 1 50 50 50 50 8.0 10 2 1  ./inputOutlines/circleOutline
+./EllipseFromOutline 1 50 50 50 50 8.0 28 2 1  ./inputOutlines/circleOutline
 
-../triangle/triangle -rq33a27.44 Points.1
-../triangle/triangle -rq33a10.4 Points.2
+../triangle/triangle -rq33a250 Points.1
+../triangle/triangle -rq33a125 Points.2 
+../triangle/triangle -rq33a75 Points.3
+../triangle/triangle -rq33a35 Points.4
+../triangle/triangle -rq33a27.44 Points.5
+%Now Points.6.ele is my mesh with side length 6.5
+../triangle/triangle -rq33a10.4 Points.6
+%Now Points.7.ele is my mesh with side length 4
+../triangle/triangle -rq33a5.8 Points.7
+%Now Points.8.ele is my mesh with side length 3
+../triangle/triangle -rq33a2.6 Points.8
+%Now Points.9.ele is my mesh with side length 2
 
-cp Points.2.ele Points.1.ele
-cp Points.2.node Points.1.node
+
+cp Points.5.ele Points.1.ele
+cp Points.5.node Points.1.node
 ./EllipseFromOutline -1  8 1 2 1  ./inputOutlines/circleOutline
 cp MeshFile.out ./Circle100_h8_01.mesh
 
@@ -283,6 +300,8 @@ cp Points.3.node Points.1.node
 ./EllipseFromOutline -1 8 1 2 1  ./inputOutlines/circleOutline
 cp MeshFile.out ./Circle100_h8_02.mesh
 
+% g++ -o src/EllipseFromOutline ./src/EllipseFromOutline.cpp
+% cp ./src/EllipseFromOutline ./EllipseFromOutline
 %circle equivalent to 48 hr wing disc volume has 22.5 micron radius:
 ./EllipseFromOutline 1 22.5 22.5 22.5 22.5 12.5 3.5 2 1  ./inputOutlines/circleOutline
 ../triangle/triangle -rq33a27.44 Points.1
@@ -301,14 +320,44 @@ cp Points.5.node Points.1.node
 ./EllipseFromOutline -1 5.0 2 5 1  ./inputOutlines/circleOutline
 cp MeshFile.out ./Circle48hrEq-noPeri_08-thin.mesh
 
+
+% g++ -o src/EllipseFromOutline ./src/EllipseFromOutline.cpp
+% cp ./src/EllipseFromOutline ./EllipseFromOutline
+%circle with 60 micron radius:
+./EllipseFromOutline 1 60.0 60.0 60.0 60.0 12.5 5 2 1  ./inputOutlines/circleOutline
+../triangle/triangle -rq33a10.4 Points.1
+%Now Points.2.ele is my mesh with side length 4
+../triangle/triangle -rq33a5.8 Points.2
+%Now Points.3.ele is my mesh with side length 3
+../triangle/triangle -rq33a2.6 Points.3
+%Now Points.4.ele is my mesh with side length 2
+
+./EllipseFromOutline -1 24.5 4 6 1  ./inputOutlines/circleOutline
+cp MeshFile.out ./ColumnarControl_01.mesh
+./EllipseFromOutline -1 5.3 4 3 1  ./inputOutlines/circleOutline
+cp MeshFile.out ./PeripodialControl_01.mesh
+./EllipseFromOutline -1 23.5 4 5 1  ./inputOutlines/circleOutline
+cp MeshFile.out ./ColumnarCollagenase_01.mesh
+./EllipseFromOutline -1 4.3 4 2 1  ./inputOutlines/circleOutline
+cp MeshFile.out ./PeripodialCollagenase_01.mesh
+
+cp Points.4.ele Points.1.ele
+cp Points.4.node Points.1.node
+./EllipseFromOutline -1 24.5 2 6 1  ./inputOutlines/circleOutline
+cp MeshFile.out ./ColumnarControl_02.mesh
+./EllipseFromOutline -1 5.3 2 3 1  ./inputOutlines/circleOutline
+cp MeshFile.out ./PeripodialControl_02.mesh
+./EllipseFromOutline -1 23.5 2 5 1  ./inputOutlines/circleOutline
+cp MeshFile.out ./ColumnarCollagenase_02.mesh
+./EllipseFromOutline -1 4.3 2 2 1  ./inputOutlines/circleOutline
+cp MeshFile.out ./PeripodialCollagenase_02.mesh
+
+
 %Turn on symmetric X here!
 cp Points.5.ele Points.1.ele
 cp Points.5.node Points.1.node
 ./EllipseFromOutline -1 12.5 2 5 1  ./inputOutlines/circleOutline
 cp MeshFile.out ./Circle48hrEqQuarter-noPeri_08.mesh
-
-
-
 
 %Half ellipse equivalent of 48 hour disc (turn off blunt tip for this!):
 ./EllipseFromOutline 1 37.26 37.26 21.78 21.78 12.5 8 2 1  ./inputOutlines/circleOutline

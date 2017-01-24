@@ -688,6 +688,8 @@ void ShapeBase::setECMMimicing(bool IsECMMimicing){
 	this->isECMMimicing = IsECMMimicing;
 	//setting poisson ratio to be zero, so the ECM elements will not be thinning.
 	this->v = 0;
+	//calculateInitialThickness();
+	setECMMimicingElementThicknessGrowthAxis();
 }
 
 void ShapeBase::setActinMimicing(bool isActinMimicing){
@@ -988,7 +990,7 @@ void 	ShapeBase::getPysProp(int type, float &PysPropMag, double dt){
         //for (int i =2 ; i< nDim ; ++i){ //reporting only z
         for (int i =0; i< nDim ; ++i){//reporting x,y,z
 			//growth is in form exp(r*dt), get r first, then adjust the time scale, and report the exponential form still:
-			//And I want to rate of volumetric growth, that is x*y*z
+			//And I want to rate of volume growth, that is x*y*z
 			double value = exp(log(growth[i])/dt*timescale);
 			PysPropMag *= value;
 		}
@@ -1000,10 +1002,71 @@ void 	ShapeBase::getPysProp(int type, float &PysPropMag, double dt){
 		PysPropMag = GrownVolume/ReferenceShape->Volume;
 	}
 	else if (type == 6){
+		//calculate the emergent volume and shape
+		PysPropMag = calculateEmergentShapeOrientation();
+	}
+	else if (type == 7){
 		double* shapechange;
 		shapechange = getShapeChangeRate();
 		PysPropMag = shapechange[2];
 	}
+}
+
+double	ShapeBase::calculateEmergentShapeOrientation(){
+	//cout<<"calculating emergent shape orientation"<<endl;
+	//I want to know in which direction the emergent shape is oriented.
+	//I need to have the combination of growth gradient and deformation gradient:
+	double currEmergentVolume = calculateCurrentGrownAndEmergentVolumes();
+	gsl_matrix* TriPointFT = gsl_matrix_alloc(nDim, nDim);
+	gsl_matrix_transpose_memcpy(TriPointFT,TriPointF);
+    gsl_matrix* E;
+    gsl_matrix* C = calculateCauchyGreenDeformationTensor(TriPointF,TriPointFT);
+	E = calculateEForNodalForcesKirshoff(C);
+	gsl_matrix* strainBackUp = gsl_matrix_calloc(6,1);
+	gsl_matrix_set_zero(Strain);
+	gsl_matrix_set(Strain,0,0, gsl_matrix_get(E,0,0));
+	gsl_matrix_set(Strain,1,0, gsl_matrix_get(E,1,1));
+	gsl_matrix_set(Strain,2,0, gsl_matrix_get(E,2,2));
+	gsl_matrix_set(Strain,3,0, 2.0*gsl_matrix_get(E,0,1));
+	gsl_matrix_set(Strain,4,0, 2.0*gsl_matrix_get(E,2,1));
+	gsl_matrix_set(Strain,5,0, 2.0*gsl_matrix_get(E,0,2));
+	double e1 = 0.0, e2 = 0.0, e3 = 0.0;
+	gsl_matrix* eigenVec = gsl_matrix_calloc(3,3);
+	calculatePrincipalStrains2D(e1,e2,e3,eigenVec);
+	//The Eigen vector matrix is a 3 by 3 matrix, but only stores the 2D vectors in its upper corner 2x2 terms
+	//The vectors are written in columns of the matrix.
+	//the strain I have here is Green strain, I would like to convert it back to deformation
+	//gradient terms. Since  E = 1/2 *(Fe^T*Fe-I):
+	double F11 = pow(e1*2+1,0.5);
+	double F22 = pow(e2*2+1,0.5);
+	double AR = F11/F22;
+	//cout<<"AR is : "<<AR<<endl;
+	//cout<<" currEmergentVolume "<<currEmergentVolume<<endl;
+	if (AR < 1.0){
+		AR = 1.0/AR;
+		emergentShapeLongAxis[0] = AR * gsl_matrix_get(eigenVec,0,1);
+		emergentShapeLongAxis[1] = AR * gsl_matrix_get(eigenVec,1,1);
+		emergentShapeShortAxis[0] = gsl_matrix_get(eigenVec,0,0);
+		emergentShapeShortAxis[1] = gsl_matrix_get(eigenVec,1,0);
+	}
+	else{
+		emergentShapeLongAxis[0] = AR * gsl_matrix_get(eigenVec,0,0);
+		emergentShapeLongAxis[1] = AR * gsl_matrix_get(eigenVec,1,0);
+		emergentShapeShortAxis[0] = gsl_matrix_get(eigenVec,0,1);
+		emergentShapeShortAxis[1] = gsl_matrix_get(eigenVec,1,1);
+	}
+	//copy the real strains back on the strains matrix
+	for (int i=0;i<5;++i){
+		gsl_matrix_set(Strain,i,0,gsl_matrix_get(strainBackUp,i,0));
+	}
+	gsl_matrix_free(TriPointFT);
+	gsl_matrix_free(C);
+	gsl_matrix_free(E);
+	gsl_matrix_free(strainBackUp);
+	gsl_matrix_free(eigenVec);
+	return currEmergentVolume/ReferenceShape->Volume;
+
+
 }
 
 void 	ShapeBase::displayIdentifierColour(){
@@ -1231,7 +1294,7 @@ void	ShapeBase::checkIfInsideEllipseBands(int nMarkerEllipseRanges, vector<doubl
 }
 
 void	ShapeBase::calculatePlasticDeformation3D(bool volumeConserved, double dt, double plasticDeformationHalfLife, double zRemodellingLowerThreshold, double zRemodellingUpperThreshold){
-	double e1 = 0.0, e2 = 0.0, e3 = 0.0, tet = 0.0;
+	double e1 = 0.0, e2 = 0.0, e3 = 0.0;
 	gsl_matrix* eigenVec = gsl_matrix_calloc(3,3);
 	//by default, I will ignore z deformations for columnat tissue.
 	//If the element is mimicing an explicit ECM, then it should be able to deform in z too,.
@@ -1239,9 +1302,12 @@ void	ShapeBase::calculatePlasticDeformation3D(bool volumeConserved, double dt, d
 	//They do change their z height, and grow in weird patterns. So let them be...
 	//bool ignoreZ = false;
 	bool checkZCapping = true;
-	if(isECMMimicing || tissueType == 2){
+	if( isECMMimicing || tissueType == 2){
 		//ignoreZ = false;
 		checkZCapping = false;
+		//if( Id == 42){
+		//	cout<<" Id : "<<Id<<" isECMMimicing: "<<isECMMimicing<<" tissueType: "<<tissueType<<endl;
+		//}
 	}
 	calculatePrincipalStrains3D(e1,e2,e3,eigenVec);
 	//NowI have the green strain in principal direction in the orientation of the element internal coordinats.
@@ -1276,6 +1342,10 @@ void	ShapeBase::calculatePlasticDeformation3D(bool volumeConserved, double dt, d
 	if (checkZCapping){
 		zCapped = checkZCappingInRemodelling(volumeConserved, zRemodellingLowerThreshold, zRemodellingUpperThreshold, increment, eigenVec);
 	}
+	//If the element is ECM mimicking but not lateral, then I do not want any z remodelling:
+	if ((isECMMimicing) && tissueType != 2){
+		zCapped = true;
+	}
 	if (zCapped){
 		calculatePrincipalStrains2D(e1,e2,e3,eigenVec);
 		F11 = pow(e1*2+1,0.5);
@@ -1290,7 +1360,9 @@ void	ShapeBase::calculatePlasticDeformation3D(bool volumeConserved, double dt, d
 		gsl_matrix_set(increment,1,1,F22);
 		gsl_matrix_set(increment,2,2,F33);
 	}
-
+	//if( Id == 42){
+	//	cout<<" Id : "<<Id<<" volumeConserved: "<<volumeConserved<<" zCapped: "<<zCapped<<endl;
+	//}
 	//If I am conserving the volume, I need to scale:
 	if (volumeConserved){
 		double det = determinant3by3Matrix(increment);
@@ -1304,6 +1376,16 @@ void	ShapeBase::calculatePlasticDeformation3D(bool volumeConserved, double dt, d
 		else{
 			double scale = 1.0/pow (det,1.0/3.0); //scaling in x,y, and z
 			gsl_matrix_scale(increment,scale);
+		}
+	}
+	//The element is ECM mimicing, and it is lateral. As a temporary solution, I simply will not
+	//allow any lateral elements to shrink as part of their remodelling.
+	if(isECMMimicing && tissueType == 2){
+		for (int i= 0; i<3; ++i){
+			double value = gsl_matrix_get(increment,i,i);
+			if (value < 1.0){
+				gsl_matrix_set(increment,i,i,1.0);
+			}
 		}
 	}
 	//The growth I would like to apply now is written on the increment.
@@ -2866,6 +2948,7 @@ double  ShapeBase::calculateVolumeForInputShapeStructure(double** shapePositions
 	if (height <0){
 		height *= (-1.0);
 	}
+	ReferenceShape->height = height;
 	double currVolume = 1.0/3.0 *(height *baseArea);
 	totalVolume += currVolume;
 	delete[] vec1;
@@ -3690,6 +3773,93 @@ void 	ShapeBase::doesElementNeedRefinement(double areaThreshold, int surfacedent
 	}
 }
 
+/*
+double ShapeBase::calculateECMThickness(vector <Node*>& Nodes){
+	bibap
+	double d;
+	if (isECMMimicing){
+		if(tissueType == 2){
+			int basalIndex = -1;
+			int apicalIndex = -2;
+			int thirdIndex = -3;
+			for (int i =0; i<3; ++i){
+				if (Nodes[NodeIds[i]]->tissuePlacement == 0 ){
+					basalIndex = i;
+					break;
+				}
+			}
+			for (int i =0; i<3; ++i){
+				if (Nodes[NodeIds[i]]->tissuePlacement != 0 ){
+					apicalIndex = i;
+					break;
+				}
+			}
+			for (int i =0; i<3; ++i){
+				if (i != apicalIndex && i!=basalIndex  ){
+					thirdIndex = i;
+					break;
+				}
+			}
+			bibap
+			double * u = new double [3];
+			double * v = new double [3];
+			u[0] = Positions[apicalIndex][0] - Positions[basalIndex][0];
+			u[1] = Positions[apicalIndex][1] - Positions[basalIndex][1];
+			u[2] = Positions[apicalIndex][2] - Positions[basalIndex][2];
+			v[0] = Positions[thirdIndex][0] - Positions[basalIndex][0];
+			v[1] = Positions[thirdIndex][1] - Positions[basalIndex][1];
+			v[2] = Positions[thirdIndex][2] - Positions[basalIndex][2];
+		}
+		else{
+			gsl_matrix_set_identity(ECMThicknessPlaneRotationalMatrix);
+		}
+	}
+	return d;
+}
+
+void ShapeBase::calculateInitialECMThickness(){
+	if (isECMMimicing){
+		initialECMThickness = calculateECMThickness();
+
+	}
+}*/
+
+void ShapeBase::setECMMimicingElementThicknessGrowthAxis(){
+	if (isECMMimicing){
+		if(tissueType == 2){
+			double* rotAx = new double[3];
+			rotAx[0] = Positions[3][0] - Positions[0][0];
+			rotAx[1] = Positions[3][1] - Positions[0][1];
+			rotAx[2] = Positions[3][2] - Positions[0][2];
+			normaliseVector3D(rotAx);
+			//I rotation angle  will come from peripodialness. If peripodialness is 1, the angle is pi, if it is 0, the angle is 0.
+			//I will rotate the coordinates via y axis in psi degrees:
+			double psi = (-1.0) * peripodialGrowthWeight*M_PI;
+			// I want to give growth to ECM elements such that each growth will happen in this axis. I will give the growth in z axis.
+			// Therefore the rotation should be at -phi, so that the vector will look at (-z)
+			psi *= (-1.0);
+			double cosPsi = cos(psi);
+			double sinPsi = sin(psi);
+			double * rotMat = new double [9];
+			constructRotationMatrix(cosPsi, sinPsi, rotAx, rotMat);
+			for (int i=0; i<3; ++i){
+				for (int j=0; j<3;++j){
+					gsl_matrix_set(ECMThicknessPlaneRotationalMatrix,i,j,rotMat[i*3+j]);
+				}
+			}
+			delete[] rotAx;
+			delete[] rotMat;
+		}
+		else{
+			gsl_matrix_set_identity(ECMThicknessPlaneRotationalMatrix);
+		}
+	}
+	else{
+		gsl_matrix_set_identity(ECMThicknessPlaneRotationalMatrix);
+	}
+
+}
+
 void ShapeBase::setLateralElementsRemodellingPlaneRotationMatrix(double systemCentreX, double systemCentreY){
 	if(tissueType == 2){
 		if (ShapeType == 1){
@@ -3714,12 +3884,12 @@ void ShapeBase::setLateralElementsRemodellingPlaneRotationMatrix(double systemCe
 				}
 			}
 			//Now I will align the y vector with the rotation axis, so that all the elemetns of the system will be consistent:
-			//rotate the y unit vector with the matric to see where it will be:
+			//rotate the y unit vector with the matrix to see where it will be:
 			gsl_matrix* y = gsl_matrix_calloc(3,1);
 			gsl_matrix* tmp = gsl_matrix_calloc(3,1);
 			gsl_matrix_set(tmp,1,0,1);
 			gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, remodellingPlaneRotationMatrix, tmp, 0.0, y);
-			//now fins the rotation you need to bring this y vector on top of rotation axis:
+			//now find the rotation you need to bring this y vector on top of rotation axis:
 			double c,s;
 			double* u = new double [3];
 			double* rotAx2 = new double [3];

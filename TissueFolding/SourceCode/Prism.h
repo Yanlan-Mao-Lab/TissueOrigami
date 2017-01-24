@@ -45,7 +45,7 @@ protected:
 public:
 	Prism(int* NodeIds,vector<Node*>& Nodes, int CurrId, bool thereIsPlasticDeformation);
 	~Prism();
-	void  setElasticProperties(double EApical, double EBasal, double EMid,double v);
+	void  setElasticProperties(double EApical, double EBasal, double EMid,  double EECM, double v);
 	void  fillLateralNeighbours(vector<Node*>& Nodes, vector<int>& lateralNeigbours );
 	void  calculateBasalNormal(double * normal);
 	void  AlignReferenceBaseNormalToZ();

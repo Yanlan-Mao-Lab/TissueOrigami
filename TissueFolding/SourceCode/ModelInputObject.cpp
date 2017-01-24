@@ -2124,6 +2124,22 @@ bool ModelInputObject::readExplicitECMOptions(ifstream& file){
 		cerr<<"Error in reading cell migration options: "<<currHeader<<", should have been: ECMRemodellingHalfLife(hour):" <<endl;
 		return false;
 	}
+	file >> currHeader;
+	if(currHeader == "ECMColumnarYoungsModulus:"){
+		file >> Sim->EColumnarECM;
+	}
+	else{
+		cerr<<"Error in reading cell migration options: "<<currHeader<<", should have been: ECMColumnarYoungsModulus:" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "ECMPeripodialYoungsModulus:"){
+		file >> Sim->EPeripodialECM;
+	}
+	else{
+		cerr<<"Error in reading cell migration options: "<<currHeader<<", should have been: ECMPeripodialYoungsModulus:" <<endl;
+		return false;
+	}
 	return true;
 }
 
@@ -2141,38 +2157,57 @@ bool ModelInputObject::readPipetteSetup(ifstream& file){
 		return false;
 	}
 	file >> currHeader;
-	if(currHeader == "InitialTime(sec):"){
-		double inittime;
-		file >> inittime;
-		Sim->PipetteInitialStep = inittime/Sim->dt;
+	if(currHeader == "NumberOfPressureStages(int):"){
+		file >> Sim->nPipetteSuctionSteps;
 	}
 	else{
-		cerr<<"Error in reading pipette aspiration setup: "<<currHeader<<", should have been: InitialTime(sec):" <<endl;
+		cerr<<"Error in reading pipette aspiration setup: "<<currHeader<<", should have been:  NumberOfPressureStages(int):" <<endl;
 		return false;
 	}
 	file >> currHeader;
-	if(currHeader == "FinalTime(sec):"){
-		double endtime;
-		file >> endtime;
-		Sim->PipetteEndStep = endtime/Sim->dt;
-        if (Sim->PipetteEndStep<1){
-            Sim->PipetteEndStep =1;
-        }
+	if(currHeader == "InitiationTimes(sec):"){
+		for (int i=0;i<Sim->nPipetteSuctionSteps;++i){
+			double pressureInitiationTime;
+			file >> pressureInitiationTime;
+			Sim->pipetteSuctionTimes.push_back(pressureInitiationTime);
+		}
 	}
 	else{
-		cerr<<"Error in reading pipette aspiration setup: "<<currHeader<<", should have been: FinalTime(sec):" <<endl;
+		cerr<<"Error in reading pipette aspiration setup: "<<currHeader<<", should have been:  InitiationTimes(sec):" <<endl;
 		return false;
 	}
 	file >> currHeader;
-	if(currHeader == "ApicalSuciton(bool-will_set_up_basal_suction_if_false):"){
-		bool ApicalSuction;
-		file >> ApicalSuction;
-		Sim->ApicalSuction = ApicalSuction;
+	if(currHeader == "Pressures(Pa):"){
+		for (int i=0;i<Sim->nPipetteSuctionSteps;++i){
+			double pipetePressure;
+			file >> pipetePressure;
+			Sim->pipetteSuctionPressures.push_back(pipetePressure);
+		}
 	}
 	else{
-		cerr<<"Error in reading pipette aspiration setup: "<<currHeader<<", should have been: ApicalSuciton(bool-will_set_up_basal_suction_if_false):" <<endl;
+		cerr<<"Error in reading pipette aspiration setup: "<<currHeader<<", should have been:  Pressures(Pa):" <<endl;
 		return false;
 	}
+	if (Sim->nPipetteSuctionSteps>0){
+		Sim->PipetteInitialStep = Sim->pipetteSuctionTimes[0]/Sim->dt;
+	}
+	file >> currHeader;
+	if(currHeader == "ApicalSuction(bool-will_set_up_basal_suction_if_false):"){
+		file >> Sim->ApicalSuction;
+	}
+	else{
+		cerr<<"Error in reading pipette aspiration setup: "<<currHeader<<", should have been: ApicalSuction(bool-will_set_up_basal_suction_if_false):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "TissueStuck(bool-will_fix_the_opposite_surface_in_z):"){
+		file >> Sim->TissueStuckOnGlassDuringPipetteAspiration;
+	}
+	else{
+		cerr<<"Error in reading pipette aspiration setup: "<<currHeader<<", should have been: TissueStuck(bool-will_fix_the_opposite_surface_in_z):" <<endl;
+		return false;
+	}
+
 	file >> currHeader;
 	if(currHeader == "Centre_Position(x,y,z):"){
 		double dummy;
@@ -2186,13 +2221,21 @@ bool ModelInputObject::readPipetteSetup(ifstream& file){
 		return false;
 	}
 	file >> currHeader;
-	if(currHeader == "Pipette_Radius(micron):"){
-		double dummy;
-		file >> dummy;
-		Sim->pipetteRadius = dummy;
+	if(currHeader == "Pipette_InnerRadius(micron):"){
+		file >> Sim->pipetteInnerRadius;
 	}
 	else{
-		cerr<<"Error in reading pipette aspiration setup: "<<currHeader<<", should have been: Pipette_Radius(micron):" <<endl;
+		cerr<<"Error in reading pipette aspiration setup: "<<currHeader<<", should have been: Pipette_InnerRadius(micron):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "Pipette_OuterRadius(micron):"){
+		double pippetOuterRad;
+		file >> pippetOuterRad;
+		Sim->pipetteThickness = pippetOuterRad - Sim->pipetteInnerRadius;
+	}
+	else{
+		cerr<<"Error in reading pipette aspiration setup: "<<currHeader<<", should have been: Pipette_OuterRadius(micron):" <<endl;
 		return false;
 	}
 	file >> currHeader;

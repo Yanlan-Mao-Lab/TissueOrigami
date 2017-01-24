@@ -39,6 +39,8 @@ class MainWindow : public QMainWindow
     GLWidget 		*MainGLWidget;
     Simulation* Sim01;
     Analysis* analyser01;
+	int interatorForPressure;
+
 
 public slots:
     void 	SelectedItemChange();

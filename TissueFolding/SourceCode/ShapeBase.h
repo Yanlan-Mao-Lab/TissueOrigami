@@ -120,7 +120,7 @@ protected:
 	void 		updateReferencePositionMatrixFromSave(ifstream& file);
 	virtual void calculateReferenceVolume(){ParentErrorMessage("calculateReferenceVolume");};
 
-
+	double		calculateEmergentShapeOrientation();
 	bool 		calculateGrowthStrainsRotMat(double* v);
 	void		calculateForces3D(vector <Node*>& Nodes,  gsl_matrix* displacementPerDt, bool recordForcesOnFixedNodes, double **FixedNodeForces);
 	gsl_matrix* calculateEForNodalForcesKirshoff(gsl_matrix* C);
@@ -192,6 +192,7 @@ public:
     int 	tissueType;	///< The tissue type is 0 for columnar layer, 1 for peripodial membrane, and 2 for linker zone
     bool	spansWholeTissue; ///< Boolean staing is the element spans the whole tissue. This is used to identify mid-layer tagged tissues (tissuePlacement = 2), that should still have apical abd basal responses (such as myosin).
     bool	isECMMimicing;
+    bool	atBorderOfECM;
     bool	isActinMimicing;
 	bool	IsAblated;
 	bool	atSymetricityBoundary;
@@ -208,7 +209,10 @@ public:
 	int* 	elementsIdsOnSameColumn;
 	bool 	insideEllipseBand;
 	int 	coveringEllipseBandId;
+    gsl_matrix* ECMThicknessPlaneRotationalMatrix;
 
+	double emergentShapeLongAxis[2];
+	double emergentShapeShortAxis[2];
 	int 	getId();
 	string 	getName();
 	int 	getShapeType();
@@ -263,7 +267,7 @@ public:
     void    setFg(gsl_matrix* currFg);
 	void 	setGrowthWeightsViaTissuePlacement (double periWeight);
 	void 	setYoungsModulus(double E);
-    virtual void setElasticProperties(double /*EApical*/,double /*EBasal*/, double /*EMid*/,double /*v*/){ParentErrorMessage("setElasticProperties");};
+    virtual void setElasticProperties(double /*EApical*/,double /*EBasal*/, double /*EMid*/, double /*EECM*/, double /*v*/){ParentErrorMessage("setElasticProperties");};
     void 	setViscosity(double viscosityApical,double viscosityBasal, double viscosityMid);
     void 	setViscosity(double viscosityApical,double viscosityBasal);
     void 	setViscosity(double viscosity);
@@ -328,6 +332,7 @@ public:
     bool	readReferencePositionData(ifstream& file);
     void 	convertPlasticStrainToGrowthStrain();
     void 	setLateralElementsRemodellingPlaneRotationMatrix(double systemCentreX, double systemCentreY);
+    void	setECMMimicingElementThicknessGrowthAxis();
 
     virtual void  checkHealth(){ParentErrorMessage("checkHealth");};
     void 	resetCurrStepShapeChangeData();

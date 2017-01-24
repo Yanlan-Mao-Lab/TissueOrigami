@@ -22,6 +22,9 @@ class MainWindow;
 
 MainWindow::MainWindow(Simulation* Sim01)
  {
+
+	interatorForPressure = 0;
+
 	MainScene = new QGraphicsScene;
     MainScene->setSceneRect(0, 0, 1000, 480);
     MainGrid = new QGridLayout;
@@ -297,6 +300,7 @@ void MainWindow::setPysPropDisplayMenu(QGridLayout *ProjectDisplayOptionsGrid){
 	PysPropComboBox->addItem("Poisson Ratio");
 	PysPropComboBox->addItem("Volume (xyz) Growth Rate (fold per 24hr)");
 	PysPropComboBox->addItem("Volume Growth (fold total)");
+	PysPropComboBox->addItem("Emergent Size & Shape");
 	PysPropComboBox->addItem("ShapeChangeRate_z");
 	PysPropComboBox->setEnabled(false);
 	connect(PysPropComboBox , SIGNAL(currentIndexChanged(int)),this,SLOT(updatePysProp(int)));
@@ -398,7 +402,6 @@ void MainWindow::setDisplayPreferences(QGridLayout *ProjectDisplayOptionsGrid){
     //draw pipette aspiration CheckBox
     DisplayPreferencesCheckBoxes[0] = new QCheckBox("Display Pipette");
 	DisplayPreferencesCheckBoxes[0]->setChecked(false);
-    connect(DisplayPreferencesCheckBoxes[0] , SIGNAL(stateChanged(int)),this,SLOT(updateDisplayPipette(int)));
 	//draw net forces checkbox
 	DisplayPreferencesCheckBoxes[1] = new QCheckBox("Net Forces");
 	DisplayPreferencesCheckBoxes[1]->setChecked(false);
@@ -767,12 +770,11 @@ void MainWindow::timerSimulationStep(){
     //for (int j=0; j<3; ++j){
     //    cout<<"Node 2025 at circmference: "<<Sim01->Nodes[2025]->atCircumference<<" fixed pos "<<j<<" "<<Sim01->Nodes[2025]->FixedPos[j]<<endl;
     //}
-	bool 	automatedSave = true;
+	bool 	automatedSave = false;
 	bool 	analyseResults = true;
 	bool 	slowstepsOnDisplay = false;
-	bool 	slowstepsOnRun = false;
+	bool 	slowstepsOnRun = true;
 	int 	slowWaitTime = 10;
-
 	if (Sim01->DisplaySave){
 		if (Sim01->timestep == 0){
 			if (analyseResults){
@@ -790,11 +792,29 @@ void MainWindow::timerSimulationStep(){
 				Sim01->saveDirectory = Sim01->saveDirectoryToDisplayString;
 			}
 		}
+		double pressureArray[117]= {2.5,5,5,7.5,7.5,10,10,12.5,12.5,15,15,17.5,17.5,20,20,22.5,22.5,24.525,24.525,27.5,27.5,30,30,32.5,32.5,35,35,37.5,37.5,40,40,42.5,42.5,45,45,47.5,47.5,49.05,49.05,52.5,52.5,55,55,57.5,57.5,60,60,62.5,62.5,65,65,67.5,67.5,70,70,73.575,73.575,75,75,77.5,77.5,80,80,82.5,82.5,85,85,87.5,87.5,90,90,92.5,92.5,95,95,98.01,98.01,100,100,102.5,102.5,105,105,107.5,107.5,110,110,112.5,112.5,115,115,117.5,117.5,120,120,122.625,122.625,125,125,127.5,127.5,130,130,132.5,132.5,135,135,137.5,137.5,140,140,142.5,142.5,145,145,147.15,147.15};
 		if(!Sim01->reachedEndOfSaveFile){
 			Sim01->updateOneStepFromSave();
 			if (Sim01->timestep >= 0){
 				double boundingBoxLength = Sim01->boundingBox[1][0] - Sim01->boundingBox[0][0];
 				double boundingBoxWidth  = Sim01->boundingBox[1][1] - Sim01->boundingBox[0][1];
+
+
+				Sim01->SuctionPressure[2] = pressureArray[interatorForPressure];
+				double zMax = -10000;
+				int idMax = -10;
+				for (vector<Node*>::iterator itNode = Sim01->Nodes.begin(); itNode < Sim01->Nodes.end(); ++itNode){
+					if ((*itNode)->Position[2] > zMax){
+						zMax = (*itNode)->Position[2];
+						idMax = (*itNode)->Id;
+					}
+				}
+				cout<<"Pipette suction: "<<Sim01->SuctionPressure[2]<<" max suction: "<<zMax<<" from node "<<idMax<<endl;
+				interatorForPressure++;
+
+
+
+
 				if (analyseResults){
 					analyser01->calculateBoundingBoxSizeAndAspectRatio(Sim01->currSimTimeSec,boundingBoxLength,boundingBoxWidth);
 					analyser01->calculateContourLineLengthsDV(Sim01->Nodes);
@@ -803,7 +823,7 @@ void MainWindow::timerSimulationStep(){
 				}
 			}
 			Sim01->calculateDVDistance();
-			for (int a = 0; a<11; a++){ //11 for 6 hours with 1800 sec time step
+			for (int a = 0; a<0; a++){ //11 for 6 hours with 1800 sec time step
 				Sim01->updateOneStepFromSave();
 				Sim01->calculateDVDistance();
 			}
@@ -835,6 +855,7 @@ void MainWindow::timerSimulationStep(){
 			//Sim01->TissueAxisPositionDisplay();
 		}
 		else{
+			close();
 			if (automatedSave){
 				close();
 			}
@@ -842,8 +863,6 @@ void MainWindow::timerSimulationStep(){
 	}
 	else{
 		//cout<<" step: "<<Sim01->timestep<<" currSimTimeSec: "<<Sim01->currSimTimeSec<<" simLength: "<< Sim01->SimLength<<endl;
-		MainGLWidget->PerspectiveView = false; //switch to orthogoanal view type.
-		MainGLWidget->drawSymmetricity = false; //hide symmetric	
 		if (Sim01->currSimTimeSec <= Sim01->SimLength){
 			cout<<"started step: "<<Sim01->currSimTimeSec<<" length: "<<Sim01->SimLength<<endl;
 			bool Success = Sim01->runOneStep();

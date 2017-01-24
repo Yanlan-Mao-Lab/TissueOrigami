@@ -19,9 +19,9 @@ using namespace std;
  GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
  {
 	 //cout<<"initiating gl widget"<<endl;
-	 obj_pos[0] =  0.0f;
+	 obj_pos[0] =  80.0f; //0.0f;
 	 obj_pos[1] = 0.0f;//-130.0f;
-     	 obj_pos[2] =  500.0f;//250.0f;
+	 obj_pos[2] =  250.0f;// 500.0f;
 	 MatRot[0]  = 1.0; MatRot[1]  = 0.0; MatRot[2]  = 0.0; MatRot[3]  = 0.0;
 	 MatRot[4]  = 0.0; MatRot[5]  = 1.0; MatRot[6]  = 0.0; MatRot[7]  = 0.0;
 	 MatRot[8]  = 0.0; MatRot[9]  = 0.0; MatRot[10] = 1.0; MatRot[11] = 0.0;
@@ -50,7 +50,8 @@ using namespace std;
      DisplayPysPropRange[3][0] = 0.0; DisplayPysPropRange[3][1] = 0.5; 		//Poisson's ratio
      DisplayPysPropRange[4][0] = 0.0; DisplayPysPropRange[4][1] = 12; 		//volumetric (xyz) growth rate
      DisplayPysPropRange[5][0] = 0.0; DisplayPysPropRange[5][1] = 12.0; 	//volumetric (xyz) growth
-     DisplayPysPropRange[6][0] = -1.0; DisplayPysPropRange[6][1] = 10.0; 	//shape change
+     DisplayPysPropRange[6][0] = 0; DisplayPysPropRange[6][1] = 12.0; 	//Emergent size & shape
+     DisplayPysPropRange[7][0] = -1.0; DisplayPysPropRange[7][1] = 10.0; 	//shape change
 
      //the minimum and maximum they can get:
      DisplayPysPropBounds[0][0] = 0.0; DisplayPysPropBounds[0][1] = 10000.0;     //External Viscosity - lower limit, min max range
@@ -65,8 +66,10 @@ using namespace std;
      DisplayPysPropBounds[4][2] = 1; DisplayPysPropBounds[4][3] = 150; 			//xy-planar growth rate - upper limit, min max range
      DisplayPysPropBounds[5][0] = 0.0; DisplayPysPropBounds[5][1] = 10; 		//xy-planar growth total - lower limit, min max range
      DisplayPysPropBounds[5][2] = 1; DisplayPysPropBounds[5][3] = 150; 			//xy-planar growth total - upper limit, min max range
-     DisplayPysPropBounds[6][0] = -6.0; DisplayPysPropBounds[6][1] = 0.0;		//shape change - lower limit, min max range
-     DisplayPysPropBounds[6][2] = 0.0; DisplayPysPropBounds[6][3] = 6.0;		//shape change - upper limit, min max range
+     DisplayPysPropBounds[6][0] = 0.0; DisplayPysPropBounds[6][1] = 10.0;		//emergent shape and size - lower limit, min max range
+     DisplayPysPropBounds[6][2] = 1.0; DisplayPysPropBounds[6][3] = 150.0;		//emergent shape and size - upper limit, min max range
+     DisplayPysPropBounds[7][0] = -6.0; DisplayPysPropBounds[7][1] = 0.0;		//shape change - lower limit, min max range
+     DisplayPysPropBounds[7][2] = 0.0; DisplayPysPropBounds[7][3] = 6.0;		//shape change - upper limit, min max range
      //the decimals to display:
      DisplayPysPropDecimals[0] = 0;
      DisplayPysPropDecimals[1] = 0;
@@ -74,14 +77,16 @@ using namespace std;
 	 DisplayPysPropDecimals[3] = 2;
 	 DisplayPysPropDecimals[4] = 0;
 	 DisplayPysPropDecimals[5] = 0;
-	 DisplayPysPropDecimals[6] = 2;
+	 DisplayPysPropDecimals[6] = 0;
+	 DisplayPysPropDecimals[7] = 2;
 	 DisplayPysPropSteps[0] = 1;
 	 DisplayPysPropSteps[1] = 1;
 	 DisplayPysPropSteps[2] = 10;
 	 DisplayPysPropSteps[3] = 0.05;
 	 DisplayPysPropSteps[4] = 1;
 	 DisplayPysPropSteps[5] = 1;
-	 DisplayPysPropSteps[6] = 0.05;
+	 DisplayPysPropSteps[6] = 1;
+	 DisplayPysPropSteps[7] = 0.05;
 
   	 setSizePolicy(QSizePolicy ::Expanding , QSizePolicy ::Expanding );
   	 drawNetForces = false;
@@ -95,8 +100,8 @@ using namespace std;
      PerspectiveView = true;
      orthoViewLimits[0] = -250;
      orthoViewLimits[1] =  250;
-     orthoViewLimits[2] = -40;//-250;
-     orthoViewLimits[3] = 40;// 250;
+     orthoViewLimits[2] = -250;//-40;
+     orthoViewLimits[3] = 250;// 40;
      orthoViewLimits[4] = -1000;
      orthoViewLimits[5] =  1000;
 		 
@@ -424,16 +429,15 @@ void GLWidget::highlightNode(int i){
 					int nConnectedElements = (*itNode)->connectedElementIds.size();
 					for (int i=0;i<nConnectedElements; ++i){
 						float TmpPysPropMag = 0.0;
-						if ( PysPropToDisplay == 4 || PysPropToDisplay == 5){
+						if ( PysPropToDisplay == 4 || PysPropToDisplay == 5 || PysPropToDisplay == 6){
 							//Growth is multiplicative, base should be 1.0:
 							TmpPysPropMag = 1.0;
 						}
-                        			Sim01->Elements[(*itNode)->connectedElementIds[i]]->getPysProp(PysPropToDisplay, TmpPysPropMag, Sim01->dt);
+                        Sim01->Elements[(*itNode)->connectedElementIds[i]]->getPysProp(PysPropToDisplay, TmpPysPropMag, Sim01->dt);
 						PysPropMag += TmpPysPropMag*(*itNode)->connectedElementWeights[i];
 					}
 				}
 				getDisplayColour(currColour,PysPropMag);
-
 			}
 			/*else if(drawMyosinForces){
 			 	//activate this if clause to display myosin levels in a nodal basis (smoothing).
@@ -527,10 +531,10 @@ void GLWidget::highlightNode(int i){
 	int* NodeIds = Sim01->Elements[i]->getNodeIds();
 	float** NodeColours;
 	NodeColours = new float*[n];
-	/*Sim01->thereIsExplicitECM = true;
-	if(Sim01->Elements[i]->tissuePlacement == 0){
-		Sim01->Elements[i]->isECMMimicing= true;
-	}*/
+	Sim01->thereIsExplicitECM = true;
+	//if(Sim01->Elements[i]->tissuePlacement == 0){
+	//	Sim01->Elements[i]->isECMMimicing= true;
+	//}
 	for (int j = 0; j<n; j++){
 		NodeColours[j] = new float[3];
 		if (DisplayPysProp && PysPropToDisplay == 4){
@@ -579,6 +583,18 @@ void GLWidget::highlightNode(int i){
 				NodeColours[j][2]=NodeColourList[NodeIds[j]][2];
 			}
 		}
+		/*else if (Sim01->thereIsExplicitECM && Sim01->Elements[i]->atBorderOfECM){
+			if(!DisplayStrains && !DisplayPysProp && !drawNetForces && !drawPackingForces && !drawMyosinForces){
+				NodeColours[j][0]=1.6;
+				NodeColours[j][1]=0.6;
+				NodeColours[j][2]=0.0;
+			}
+			else{
+				NodeColours[j][0]=NodeColourList[NodeIds[j]][0];
+				NodeColours[j][1]=NodeColourList[NodeIds[j]][1];
+				NodeColours[j][2]=NodeColourList[NodeIds[j]][2];
+			}
+		}*/
 		else if (Sim01->thereIsCellMigration && Sim01->Elements[i]->getCellMigration()){
 			NodeColours[j][0]=1.0;
 			NodeColours[j][1]=0.0;
@@ -712,6 +728,37 @@ void GLWidget::highlightNode(int i){
 		//cout<<"deleted node colours["<<j<<"]"<<endl;
 	}
 	delete[] NodeColours;
+	if (DisplayPysProp && PysPropToDisplay == 6){
+		//drawingt the emergent shape
+		//I will draw the long and short axes of orientation:
+
+		double apicalCentre[3] = {0.0,0.0,0.0};
+		apicalCentre[0] = 1.0/3.0*(Sim01->Elements[i]->Positions[3][0]+Sim01->Elements[i]->Positions[4][0]+Sim01->Elements[i]->Positions[5][0]);
+		apicalCentre[1] = 1.0/3.0*(Sim01->Elements[i]->Positions[3][1]+Sim01->Elements[i]->Positions[4][1]+Sim01->Elements[i]->Positions[5][1]);
+		apicalCentre[2] = 1.0/3.0*(Sim01->Elements[i]->Positions[3][2]+Sim01->Elements[i]->Positions[4][2]+Sim01->Elements[i]->Positions[5][2]);
+		//cout<<" apical centre: "<<apicalCentre[0]<<" "<<apicalCentre[1]<<" "<<apicalCentre[2]<<endl;
+		//cout<<"long  axis: "<<Sim01->Elements[i]->emergentShapeLongAxis[0]<<" "<<Sim01->Elements[i]->emergentShapeLongAxis[1]<<endl;
+		//cout<<"short axis: "<<Sim01->Elements[i]->emergentShapeShortAxis[0]<<" "<<Sim01->Elements[i]->emergentShapeShortAxis[1]<<endl;
+
+		glBegin(GL_LINES);
+			glColor3f(0,0,0);
+			float x = apicalCentre[0] - Sim01->Elements[i]->emergentShapeLongAxis[0];
+			float y = apicalCentre[1] - Sim01->Elements[i]->emergentShapeLongAxis[1];
+			float z = apicalCentre[2];
+			glVertex3f( x, y, z);
+			x = apicalCentre[0] + Sim01->Elements[i]->emergentShapeLongAxis[0];
+			y = apicalCentre[1] + Sim01->Elements[i]->emergentShapeLongAxis[1];
+			glVertex3f( x, y, z);
+			glColor3f(0.2,0.2,0.2);
+			x = apicalCentre[0] - Sim01->Elements[i]->emergentShapeShortAxis[0];
+			y = apicalCentre[1] - Sim01->Elements[i]->emergentShapeShortAxis[1];
+			glVertex3f( x, y, z);
+			x = apicalCentre[0] + Sim01->Elements[i]->emergentShapeShortAxis[0];
+			y = apicalCentre[1] + Sim01->Elements[i]->emergentShapeShortAxis[1];
+			glVertex3f( x, y, z);
+
+		glEnd();
+	}
 
  }
 
@@ -841,7 +888,7 @@ void GLWidget::highlightNode(int i){
 		 b = 1.0 - d*(1-minB)/(segment/2.0);
 	 }
 	 //invert the display from blue to red for growth (rate and total growth)!:
-	 if (DisplayPysProp && (PysPropToDisplay==4 ||  PysPropToDisplay==5) ){
+	 if (DisplayPysProp && (PysPropToDisplay==4 ||  PysPropToDisplay==5 ||  PysPropToDisplay==6) ){
 		 double tmpred = r;
 		 r=b;
 		 b=tmpred;
@@ -1785,9 +1832,9 @@ bool GLWidget::findNode(int i){
 
  void GLWidget::drawPipette(){
      if (Sim01->PipetteSuction && displayPipette){
-         for (int i=0; i<2; i++){
+        /* for (int i=0; i<2; i++){
              //drawing inner and outer borders:
-             double distance  = Sim01->pipetteRadius;
+             double distance  = Sim01->pipetteInnerRadius;
              glColor3f(0.5,0.5,0.6);
              if (i == 1){
                  distance  += Sim01->pipetteThickness;
@@ -1810,6 +1857,31 @@ bool GLWidget::findNode(int i){
                    glEnd();
                 }
              glEnd();
+         }
+         */
+         double distance  = Sim01->pipetteInnerRadius;
+         float DEG2RAD = 3.14159/180;
+         glLineWidth(ReferenceLineThickness);
+         for (int i=0; i < 180; i++){
+			float degInRad = i*DEG2RAD;
+			float x = cos(degInRad)*distance + Sim01->pipetteCentre[0];
+			float y = sin(degInRad)*distance + Sim01->pipetteCentre[1];
+			float z = Sim01->pipetteCentre[2];
+			float xOut = cos(degInRad)*(distance + Sim01->pipetteThickness) + Sim01->pipetteCentre[0];
+			float yOut = sin(degInRad)*(distance + Sim01->pipetteThickness)+ Sim01->pipetteCentre[1];
+
+			glBegin(GL_LINES);
+				   glColor3f(0.5,0.5,0.6);
+				   glVertex3f(x,y,z);
+				   glVertex3f(x,y,z+100);
+				   glVertex3f(x,y,z);
+				   glColor3f(0.6,0.6,0.7);
+				   glVertex3f(xOut,yOut,z);
+				   glVertex3f(xOut,yOut,z);
+				   glVertex3f(x,y,z+100);
+
+			glEnd();
+
          }
      }
  }

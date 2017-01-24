@@ -218,6 +218,8 @@ private:
 	void fillInNodeNeighbourhood();
 	void fillInElementColumnLists();
 	void updateElementVolumesAndTissuePlacements();
+	void updateElasticPropertiesForAllNodes(); //When a simulation is read from save, the modified physical properties will be read.  The elasticity calculation parameters (lambda, mu, and related matrices) should be updated after reading the files. This function is called upon finishing reading a save file, to ensure the update.
+
 	void clearNodeMassLists();
 	void clearLaserAblatedSites();
     void manualPerturbationToInitialSetup(bool deform, bool rotate);
@@ -252,6 +254,7 @@ public:
 	int imageSaveInterval;
 	int dataSaveInterval;
 	double EApical,EBasal,EMid;
+	double EColumnarECM, EPeripodialECM;
 	double poisson;
 	double discProperApicalViscosity;
 	double discProperBasalViscosity;
@@ -349,14 +352,18 @@ public:
 	int distanceIndex;	//the index of dimension for stretcher clamp position,
 	bool PipetteSuction;
 	bool ApicalSuction;
+	bool TissueStuckOnGlassDuringPipetteAspiration;
 	vector <int> TransientZFixListForPipette;
 	int StretchInitialTime, StretchEndTime;
-	int PipetteInitialStep, PipetteEndStep;
+	int PipetteInitialStep;
+	int nPipetteSuctionSteps;
+	vector<double> pipetteSuctionTimes;
+	vector<double> pipetteSuctionPressures;
 	double pipetteCentre[3];
 	double pipetteDepth;
-	double pipetteRadius;
+	double pipetteInnerRadius;
     double pipetteThickness;
-	double pipetteRadiusSq;
+	double pipetteInnerRadiusSq;
 	double effectLimitsInZ[2];
 	double SuctionPressure[3];
 	double StretchMin, StretchMax, StretchStrain;
@@ -430,6 +437,8 @@ public:
 
 	double packingDetectionThreshold;
 	double packingThreshold;
+	double packingMultiplier;
+	double sigmoidSaturationForPacking;
 	//soft periphery parameters:
 	bool 	softPeriphery;
 	double 	softDepth;
@@ -444,6 +453,8 @@ public:
 	bool thereIsExplicitECM;
 	bool thereIsExplicitActin;
 	double ECMRenawalHalfLife; //The half life for ECM renewal inside plastic deformation
+
+	//packi
 	Simulation();
 	~Simulation();
 	void assignTips();
