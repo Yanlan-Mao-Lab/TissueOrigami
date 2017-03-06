@@ -222,14 +222,14 @@ void Simulation::setDefaultParameters(){
 	externalViscosityLZBasal  = 0.0;
 
 	softenedECM = false;
-    	thereIsECMSoftening = false;
+    thereIsECMSoftening = false;
 	numberOfSoftenedEllipseBands = 0;
 	softeningEndTimeInSec = -1;
 	softeningEndTimeInSec = -1;
 	ECMSofteningFraction = 0.0;
 	softenBasalECM = false;
 	softenApicalECM = false;
-	thereIsECMRemodellinbgWithDeforamtionRate = false;
+	thereIsECMRemodellingWithDeforamtionRate = false;
 	remodellingThresholdFraction = 1.10;
 	remodelBasalECM = false;
 	remodelApicalECM = false;
@@ -809,10 +809,13 @@ void Simulation::writeSimulationSummary(){
 	saveFileSimulationSummary<<ModInp->parameterFileName<<endl;
 	saveFileSimulationSummary<<"Mesh_Type:  ";
 	saveFileSimulationSummary<<MeshType<<endl;
-	saveFileSimulationSummary<<"Symmetricity-x: "<<symmetricX<<" Symmetricity-y: "<<symmetricY<<endl;
+	saveFileSimulationSummary<<"	Symmetricity-x: "<<symmetricX<<" Symmetricity-y: "<<symmetricY<<endl;
 	writeMeshFileSummary();
 	writeGrowthRatesSummary();
 	writeMyosinSummary();
+	writeECMSummary();
+	writeActinSummary();
+	witeExperimentalSummary();
 }
 
 void Simulation::writeSpecificNodeTypes(){
@@ -829,7 +832,7 @@ void Simulation::writeSpecificNodeTypes(){
 			counterForActinMimicingElements++;
 		}
 		if ((*itElement)->isECMMimicing){
-			counterForActinMimicingElements++;
+			counterForECMMimicingElements++;
 		}
 		if ((*itElement)->insideEllipseBand){
 			counterForMarkerEllipsesOnElements++;
@@ -843,6 +846,11 @@ void Simulation::writeSpecificNodeTypes(){
 			counterForMarkerEllipsesOnNodes++;
 		}
 	}
+
+	cout<<" counterForActinMimicingElements: "<<counterForActinMimicingElements<<endl;
+	cout<<" counterForECMMimicingElements: "<<counterForECMMimicingElements<<endl;
+	cout<<" counterForMarkerEllipsesOnElements: "<<counterForMarkerEllipsesOnElements<<endl;
+	cout<<" counterForMarkerEllipsesOnNodes: "<<counterForMarkerEllipsesOnNodes<<endl;
 
 	//Writing explicit actin layer:
 	saveFileSpecificType.write((char*) &counterForActinMimicingElements, sizeof counterForActinMimicingElements);
@@ -870,7 +878,7 @@ void Simulation::writeSpecificNodeTypes(){
 	}
 
 	//Writing marker ellipses for nodes:
-	saveFileSpecificType.write((char*) &counterForMarkerEllipsesOnElements, sizeof counterForMarkerEllipsesOnElements);
+	saveFileSpecificType.write((char*) &counterForMarkerEllipsesOnNodes, sizeof counterForMarkerEllipsesOnNodes);
 	for (vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
 		if ((*itNode)->insideEllipseBand){
 			saveFileSpecificType.write((char*) &(*itNode)->Id, sizeof (*itNode)->Id);
@@ -913,6 +921,41 @@ void Simulation::writeMyosinSummary(){
 	for (int i=0; i<nMyosinFunctions; ++i){
 		myosinFunctions[i]->writeSummary(saveFileSimulationSummary);
 	}
+}
+
+
+void Simulation::writeECMSummary(){
+	saveFileSimulationSummary<<"There is explicit ECM:	"<<thereIsExplicitECM<<endl;
+	if (thereIsExplicitECM){
+		writeECMProperties();
+	}
+}
+
+void Simulation::writeECMProperties(){
+	saveFileSimulationSummary<<endl;
+	saveFileSimulationSummary<<"	Columnar ECM Stiffness(Pa): "<<EColumnarECM<<endl;
+	saveFileSimulationSummary<<"	Peripodial ECM Stiffness(Pa): "<<EPeripodialECM<<endl;
+	saveFileSimulationSummary<<"	ECM remodelling half life (hour): "<<ECMRenawalHalfLife/3600.0<<endl;
+	saveFileSimulationSummary<<"	Is there perturbation to the ECM: "<<thereIsECMSoftening<<endl;
+	if (thereIsECMSoftening){
+		saveFileSimulationSummary<<"		perturbation begins at  "<<softeningBeginTimeInSec/3600.0<<" hrs and ends at "<<softeningEndTimeInSec/3600.0<<endl;
+		saveFileSimulationSummary<<"		final fraction of ECM stiffness  "<<ECMSofteningFraction<<" times original values."<<endl;
+		saveFileSimulationSummary<<"		perturbations applied to apical ECM: "	<<softenApicalECM<<endl;
+		saveFileSimulationSummary<<"		perturbations applied to basal  ECM: "	<<softenBasalECM<<endl;
+		saveFileSimulationSummary<<"		perturbation applied to ellipse bands: ";
+		for (int i=0; i<numberOfSoftenedEllipseBands; ++i){
+			saveFileSimulationSummary<<" "<<ECMSofteningEllipseBandIds[i];
+		}
+		saveFileSimulationSummary<<endl;
+	}
+}
+
+void Simulation::writeActinSummary(){
+	saveFileSimulationSummary<<"There is explicit actin:  "<<thereIsExplicitActin<<endl;
+}
+
+void Simulation::witeExperimentalSummary(){
+
 }
 
 void Simulation::writeRelaxedMeshFromCurrentState(){
@@ -975,6 +1018,13 @@ bool Simulation::openFilesToDisplay(){
 	saveFileToDisplaySimSum.open(name_saveFileToDisplaySimSum, ifstream::in);
 	if (!(saveFileToDisplaySimSum.good() && saveFileToDisplaySimSum.is_open())){
 		cerr<<"Cannot open the simulation summary: "<<name_saveFileToDisplaySimSum<<endl;
+		return false;
+	}
+	saveFileString = saveDirectoryToDisplayString +"/Save_SpecificElementAndNodeTypes";
+	const char* name_saveSpecificElementAndNodeTypes = saveFileString.c_str();;
+	saveFileToDisplaySpecificNodeTypes.open(name_saveSpecificElementAndNodeTypes, ifstream::in);
+	if (!(saveFileToDisplaySpecificNodeTypes.good() && saveFileToDisplaySpecificNodeTypes.is_open())){
+		cerr<<"Cannot open the specific node types: "<<name_saveSpecificElementAndNodeTypes<<endl;
 		return false;
 	}
 	saveFileString = saveDirectoryToDisplayString +"/Save_TensionCompression";
@@ -1049,7 +1099,10 @@ bool Simulation::initiateSavedSystem(){
 	initiateElementsFromSave();
 	assignPhysicalParameters();
 	initiateSystemForces();
-
+	success  = readSpecificNodeTypesFromSave();
+	if (!success){
+		return false;
+	}
 	if (TensionCompressionSaved){
 		updateTensionCompressionFromSave();
 	}
@@ -1156,6 +1209,104 @@ bool Simulation::readSystemSummaryFromSave(){
 	saveFileToDisplaySimSum >> symmetricY;
 	cout<<"read the summary, symmetricity data: "<<symmetricX<<" "<<symmetricY<<endl;
 	return true;
+}
+
+bool Simulation::readSpecificNodeTypesFromSave(){
+	int currElementId;
+	//read actin layer to display:
+	int counterForActinMimicingElements;
+	saveFileToDisplaySpecificNodeTypes.read((char*) &counterForActinMimicingElements, sizeof counterForActinMimicingElements);
+	if (counterForActinMimicingElements>0){
+		thereIsExplicitActin = true;
+	}
+	for (int i=0; i<counterForActinMimicingElements; i++){
+		saveFileToDisplaySpecificNodeTypes.read((char*) &currElementId, sizeof currElementId);
+		int currIndice = getElementArrayIndexFromId(currElementId);
+		if (currIndice < 0){
+			cout<<" error in reading actin mimicking elements "<<endl;
+			cerr<<" error in reading actin mimicking elements "<<endl;
+			return false;
+		}
+		Elements[currIndice]->isActinMimicing = true;
+	}
+	//read in ECM layer to display:
+	int counterForECMMimicingElements;
+	saveFileToDisplaySpecificNodeTypes.read((char*) &counterForECMMimicingElements, sizeof counterForECMMimicingElements);
+	if (counterForECMMimicingElements>0){
+		thereIsExplicitECM = true;
+	}
+	for (int i=0; i<counterForECMMimicingElements; i++){
+		saveFileToDisplaySpecificNodeTypes.read((char*) &currElementId, sizeof currElementId);
+		int currIndice = getElementArrayIndexFromId(currElementId);
+		if (currIndice < 0){
+			cout<<" error in reading ECM mimicking elements "<<endl;
+			cerr<<" error in reading ECM mimicking elements "<<endl;
+			return false;
+		}
+		Elements[currIndice]->isECMMimicing = true;
+	}
+	assigneElementsAtTheBorderOfECM();
+	//read marker ellipses to display for elements:
+	int counterForMarkerEllipsesOnElements;
+	int currEllipseBandId;
+	saveFileToDisplaySpecificNodeTypes.read((char*) &counterForMarkerEllipsesOnElements, sizeof counterForMarkerEllipsesOnElements);
+	cout<<" counterForMarkerEllipsesOnElements "<<counterForMarkerEllipsesOnElements<<endl;
+	for (int i=0; i<counterForMarkerEllipsesOnElements; i++){
+		saveFileToDisplaySpecificNodeTypes.read((char*) &currElementId, sizeof currElementId);
+		saveFileToDisplaySpecificNodeTypes.read((char*) &currEllipseBandId, sizeof currEllipseBandId);
+		int currIndice = getElementArrayIndexFromId(currElementId);
+		if (currIndice < 0){
+			cout<<" error in reading marker ellipses for elements "<<endl;
+			cerr<<" error in reading marker ellipses for elements "<<endl;
+			return false;
+		}
+		Elements[currIndice]->insideEllipseBand = true;
+		Elements[currIndice]->coveringEllipseBandId = currEllipseBandId;
+	}
+	//read marker ellipses to display for nodes:
+	int counterForMarkerEllipsesOnNodes;
+	int currNodeId;
+	saveFileToDisplaySpecificNodeTypes.read((char*) &counterForMarkerEllipsesOnNodes, sizeof counterForMarkerEllipsesOnNodes);
+	cout<<" counterForMarkerEllipsesOnNodes "<<counterForMarkerEllipsesOnNodes<<endl;
+	for (int i=0; i<counterForMarkerEllipsesOnNodes; i++){
+		saveFileToDisplaySpecificNodeTypes.read((char*) &currNodeId, sizeof currNodeId);
+		saveFileToDisplaySpecificNodeTypes.read((char*) &currEllipseBandId, sizeof currEllipseBandId);
+		int currIndice = getNodeArrayIndexFromId(currNodeId);
+		if (currIndice < 0){
+			cout<<" error in reading marker ellipses for nodes "<<endl;
+			cerr<<" error in reading marker ellipses for nodes "<<endl;
+			return false;
+		}
+		Nodes[currIndice]->insideEllipseBand = true;
+		Nodes[currIndice]->coveringEllipseBandId = currEllipseBandId;
+	}
+	return true;
+}
+
+int Simulation::getElementArrayIndexFromId(int currId){
+	int currIndice = 0;
+	for (vector<ShapeBase*>::iterator itElement = Elements.begin(); itElement < Elements.end(); itElement++){
+		if ((*itElement)->getId() == currId){
+			return currIndice;
+		}
+		currIndice++;
+	}
+	cout<<"Error in getElementArrayIndexFromId, required element Id : "<<currId<<" returnin -10, inducing a crash"<<endl;
+	cerr<<"Error in getElementArrayIndexFromId, required element Id : "<<currId<<" returnin -10, inducing a crash"<<endl;
+	return -10;
+}
+
+int Simulation::getNodeArrayIndexFromId(int currId){
+	int currIndice = 0;
+	for (vector<Node*>::iterator itNode = Nodes.begin(); itNode < Nodes.end(); itNode++){
+		if ((*itNode)->getId() == currId){
+			return currIndice;
+		}
+		currIndice++;
+	}
+	cout<<"Error in getElementArrayIndexFromId, required node Id : "<<currId<<" returnin -10, inducing a crash"<<endl;
+	cerr<<"Error in getElementArrayIndexFromId, required node Id : "<<currId<<" returnin -10, inducing a crash"<<endl;
+	return -10;
 }
 
 bool Simulation::readNodeDataToContinueFromSave(){
@@ -4145,7 +4296,7 @@ bool Simulation::runOneStep(){
     if (thereIsECMSoftening) {
     	checkECMSoftening();
     }
-    if (thereIsECMRemodellinbgWithDeforamtionRate){
+    if (thereIsECMRemodellingWithDeforamtionRate){
     	updateECMVisocityWithDeformationRate();
     }
     if(nMyosinFunctions > 0){
@@ -7130,6 +7281,10 @@ void Simulation::setUpECMMimicingElements(){
 			(*itElement)->setECMMimicing(true);
 		}
 	}
+	assigneElementsAtTheBorderOfECM();
+}
+
+void Simulation::assigneElementsAtTheBorderOfECM(){
 	vector<int> nodeListToCheck;
 	for(vector<ShapeBase*>::iterator  itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 		if ( (*itElement)->isECMMimicing ){

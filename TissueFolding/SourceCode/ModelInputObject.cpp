@@ -2026,8 +2026,8 @@ bool ModelInputObject::readECMPerturbation(ifstream& file){
 		return false;
 	}
 	file >> currHeader;
-	if(currHeader == "ThereIsECMRemodellinbg(bool):"){
-		file >> Sim->thereIsECMRemodellinbgWithDeforamtionRate;
+	if(currHeader == "ThereIsECMRemodelling(bool):"){
+		file >> Sim->thereIsECMRemodellingWithDeforamtionRate;
 	}
 	else{
 		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: ThereIsECMRemodellinbg(bool):" <<endl;

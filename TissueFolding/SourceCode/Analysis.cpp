@@ -125,9 +125,9 @@ void Analysis::findApicalKinkPointsDV(int timeInSec,  double boundingBoxXMin, do
 		double thresholdRCurvature = 2.0;
 		int id0 = apicalContourLineDVNodeIds[0];
 		int id1 = apicalContourLineDVNodeIds[1];
-		for (int i=1;i<n-1;++i){
+		for (int i=0;i<n-2;++i){
 			int id2 = apicalContourLineDVNodeIds[i+2];
-			//calcualting the first slope between node id 0 and node id1:
+			//calculating the first slope between node id 0 and node id1:
 			double dx = nodes[id0]->Position[0] - nodes[id1]->Position[0];
 			double dz = nodes[id0]->Position[2] - nodes[id1]->Position[2];
 			double m01 = dz/dx;
@@ -231,6 +231,7 @@ void Analysis::findApicalKinkPointsDV(int timeInSec,  double boundingBoxXMin, do
 			}
 		}
 	}
+	cout<<" finished findApicalKinkPointsDV "<<endl;
 }
 
 void Analysis::sortPositionMinToMax(vector<Node*> &nodes, int axisToSortWith, vector <int> &linkToArrayToSort ){

@@ -1,18 +1,18 @@
 InputMeshParameters:
   MeshInputMode(int-seeDocumentation): 4
-  MeshFile(full-path):     /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Exp48hr-noPeri_06.mesh
+  MeshFile(full-path):     /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Exp48hr-noPeri_04.mesh
   symmetricInX(bool): 0
   symmetricInY(bool): 1
  
 TimeParameters:
-  TimeStep(sec): 0.1
-  SimulationLength(sec): 0.1
+  TimeStep(sec): 1
+  SimulationLength(sec): 1
 
 SaveOptions:
   SaveImages(bool): 0
   SaveData(bool):   1
   ImageSaveInterval(sec): 1
-  DataSaveInterval(sec):  900
+  DataSaveInterval(sec):  1
 
 NodeFixingOptions:
   FixWithHighExternalViscosity(bool): 0
@@ -221,7 +221,7 @@ ECM_Perturbation:
   timeOfSoftening(hr): 2.0 4.0
   softeningAppliedToEllipses(number,[ellipseId][ellipseId]): 2 0 1
   softeningFraction(double(0-1.0):  0.1
-  ThereIsECMRemodellinbg(bool): 0
+  ThereIsECMRemodelling(bool): 0
   ApplyToApicalECM(bool): 0
   ApplyToBasalECM(bool): 1
   ECMRemodellingFraction(double(0-1.0)-ratePerHr): 1.2
@@ -237,7 +237,7 @@ Stiffness_Perturbation:
   stiffnessChangedToFractionOfOriginal(double):  3.5
   
 ExplicitActinOptions:
-  ThereIsExplicitActin(bool): 0
+  ThereIsExplicitActin(bool): 1
 
 Cell_Migration:
   ThereIsCellMigration(bool): 0

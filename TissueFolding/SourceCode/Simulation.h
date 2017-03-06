@@ -48,6 +48,7 @@ private:
 	ifstream saveFileToDisplayPacking;
 	ifstream saveFileToDisplayVel;
 	ifstream saveFileToDisplaySimSum;
+	ifstream saveFileToDisplaySpecificNodeTypes;
 
 	bool TensionCompressionSaved;
     bool GrowthSaved;
@@ -79,6 +80,7 @@ private:
 	bool readSaveDirectoryToDisplay(int& i, int argc, char **argv);
 	bool openFilesToDisplay();
 	bool readSystemSummaryFromSave();
+	bool readSpecificNodeTypesFromSave();
 	void initiateNodesFromSave();
 	bool readNodeDataToContinueFromSave();
 	void initiateNodesFromMeshInput();
@@ -128,6 +130,8 @@ private:
 	void clearCircumferenceDataFromSymmetricityLine();
 	//void removeSymmetryBorderFromColumnarCircumferenceNodeList(vector <int> &ColumnarCircumferencialNodeList);
 	void getAverageSideLength(double& periAverageSideLength, double& colAverageSideLength);
+	int getElementArrayIndexFromId(int currId);
+	int getNodeArrayIndexFromId(int currId);
 	bool isColumnarLayer3D();
 	bool checkIfThereIsPeripodialMembrane();
 	void setLinkerCircumference();
@@ -181,6 +185,10 @@ private:
 	void writeMeshFileSummary();
 	void writeGrowthRatesSummary();
 	void writeMyosinSummary();
+	void writeECMSummary();
+	void writeECMProperties();
+	void writeActinSummary();
+	void witeExperimentalSummary();
 	void writeSaveFileStepHeader();
 	void writeNodes();
 	void writeElements();
@@ -234,6 +242,7 @@ private:
     void setupXsymmetricity();
     void ablateSpcific();
     void setUpECMMimicingElements();
+    void assigneElementsAtTheBorderOfECM();
     void setUpActinMimicingElements();
     //void setSymmetricNode(Node* currNode, double yLimPos);
 
@@ -433,7 +442,7 @@ public:
 	vector <int> stiffnessPerturbationEllipseBandIds;
 
 
-	bool 	thereIsECMRemodellinbgWithDeforamtionRate;
+	bool 	thereIsECMRemodellingWithDeforamtionRate;
 	bool 	remodelBasalECM;
 	bool 	remodelApicalECM;
 	double	ECMRemodellingFraction;

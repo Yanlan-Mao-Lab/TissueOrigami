@@ -55,6 +55,6 @@ public:
 	double 	getDisplacement();
 	void 	updatePreviousPosition();
 	void updateECMVisocityWithDeformationRate(double ECMChangeFraction, double averageDisplacement);
-
+	int getId();
 };
 #endif

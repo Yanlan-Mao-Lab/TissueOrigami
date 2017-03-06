@@ -287,3 +287,7 @@ void Node::removeFromConnectedElements(int ElementId, double volumePerNode){
 
 	n = connectedElementIds.size();
 }
+
+int  Node::getId(){
+	return Id;
+}

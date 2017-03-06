@@ -778,7 +778,6 @@ void MainWindow::timerSimulationStep(){
 	if (Sim01->DisplaySave){
 		if (Sim01->timestep == 0){
 			if (analyseResults){
-				cout<<"Analysin results"<<endl;
 				analyser01 = new Analysis(3, Sim01->nElements, Sim01->saveDirectoryToDisplayString, Sim01->Nodes);
 			}
 			if( automatedSave){
@@ -808,8 +807,6 @@ void MainWindow::timerSimulationStep(){
 			if (Sim01->timestep >= 0){
 				double boundingBoxLength = Sim01->boundingBox[1][0] - Sim01->boundingBox[0][0];
 				double boundingBoxWidth  = Sim01->boundingBox[1][1] - Sim01->boundingBox[0][1];
-
-
 				/*Sim01->SuctionPressure[2] = pressureArray[interatorForPressure];
 				double zMax = -10000;
 				int idMax = -10;
@@ -823,8 +820,6 @@ void MainWindow::timerSimulationStep(){
 				interatorForPressure++;
 				 */
 
-
-
 				if (analyseResults){
 					analyser01->calculateBoundingBoxSizeAndAspectRatio(Sim01->currSimTimeSec,boundingBoxLength,boundingBoxWidth);
 					analyser01->calculateContourLineLengthsDV(Sim01->Nodes);
@@ -837,6 +832,7 @@ void MainWindow::timerSimulationStep(){
 				Sim01->updateOneStepFromSave();
 				Sim01->calculateDVDistance();
 			}
+			cout<<" updating time text"<<endl;
 			//Sim01->fixNode0InPosition(36,0,0);
 			updateTimeText();
 			QTime dieTime= QTime::currentTime().addSecs(0.01);
@@ -852,13 +848,6 @@ void MainWindow::timerSimulationStep(){
 					QCoreApplication::processEvents(QEventLoop::AllEvents, slowWaitTime);
 				}
 			}
-
-			/*for (int i =0 ; i<Sim01->nElements; i++){
-				if (i == 345 || i == 174 || i == 302 || i == 1041){
-					cout.precision(6);
-					cout<<"After display frame: Time: "<<Sim01->currSimTimeSec<<" Element : "<<Sim01->Elements[i]->Id<<" grownVolume: "<<Sim01->Elements[i]->GrownVolume<<" reference volume: "<<Sim01->Elements[i]->ReferenceShape->Volume<<endl;
-				}
-			}*/
 			//sleep(60);
 			//spitting coordinates:
 			//Sim01->CoordinateDisplay();

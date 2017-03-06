@@ -531,10 +531,6 @@ void GLWidget::highlightNode(int i){
 	int* NodeIds = Sim01->Elements[i]->getNodeIds();
 	float** NodeColours;
 	NodeColours = new float*[n];
-	Sim01->thereIsExplicitECM = true;
-	if(Sim01->Elements[i]->tissuePlacement == 0){
-		Sim01->Elements[i]->isECMMimicing= true;
-	}
 	for (int j = 0; j<n; j++){
 		NodeColours[j] = new float[3];
 		if (DisplayPysProp && PysPropToDisplay == 4){
@@ -572,8 +568,20 @@ void GLWidget::highlightNode(int i){
 			delete[] currColour;
 		}
 		else if (Sim01->thereIsExplicitECM && Sim01->Elements[i]->isECMMimicing){
-			if(!DisplayStrains && !DisplayPysProp && !drawNetForces && !drawPackingForces && !drawMyosinForces){
+			if(!DisplayStrains && !DisplayPysProp && !drawNetForces && !drawPackingForces && !drawMyosinForces && !drawMarkingEllipses){
 				NodeColours[j][0]=0.6;
+				NodeColours[j][1]=0.6;
+				NodeColours[j][2]=0.0;
+			}
+			else{
+				NodeColours[j][0]=NodeColourList[NodeIds[j]][0];
+				NodeColours[j][1]=NodeColourList[NodeIds[j]][1];
+				NodeColours[j][2]=NodeColourList[NodeIds[j]][2];
+			}
+		}
+		else if (Sim01->thereIsExplicitActin && Sim01->Elements[i]->isActinMimicing){
+			if(!DisplayStrains && !DisplayPysProp && !drawNetForces && !drawPackingForces && !drawMyosinForces && !drawMarkingEllipses){
+				NodeColours[j][0]=0.0;
 				NodeColours[j][1]=0.6;
 				NodeColours[j][2]=0.0;
 			}
