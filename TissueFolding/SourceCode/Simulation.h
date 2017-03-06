@@ -34,6 +34,7 @@ private:
 	ofstream saveFileForces;
 	ofstream saveFileProteins;
 	ofstream saveFilePhysicalProp;
+	ofstream saveFileSpecificType;
 	ofstream saveFilePacking;
 	ofstream saveFileSimulationSummary;
 	ifstream saveFileToDisplayMesh;
@@ -43,6 +44,7 @@ private:
 	ifstream saveFileToDisplayForce;
 	ifstream saveFileToDisplayProteins;
 	ifstream saveFileToDisplayPhysicalProp;
+	ifstream saveFileToDisplaySpecificType;
 	ifstream saveFileToDisplayPacking;
 	ifstream saveFileToDisplayVel;
 	ifstream saveFileToDisplaySimSum;
@@ -107,6 +109,7 @@ private:
     void readGrowthRateToContinueFromSave();
     void readProteinsToContinueFromSave();
     void readPhysicalPropToContinueFromSave();
+    void readSpecificElementNodeTypesToContinueFromSave();
 	bool readFinalSimulationStep();
 	void reInitiateSystemForces(int oldSize);
 	bool checkInputConsistency();
@@ -174,6 +177,7 @@ private:
 	//void updateDisplaySaveValuesFromRK();
 	void saveStep();
 	void writeSimulationSummary();
+	void writeSpecificNodeTypes();
 	void writeMeshFileSummary();
 	void writeGrowthRatesSummary();
 	void writeMyosinSummary();

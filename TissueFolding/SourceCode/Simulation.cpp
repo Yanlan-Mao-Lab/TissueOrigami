@@ -584,6 +584,7 @@ bool Simulation::initiateSystem(){
 	if (saveData){
 		cout<<"writing the summary current simulation parameters"<<endl;
 		writeSimulationSummary();
+		writeSpecificNodeTypes();
 	}
 	nNodes = Nodes.size();
 	nElements = Elements.size();
@@ -756,6 +757,18 @@ bool Simulation::openFiles(){
 			cerr<<"could not open file: "<<name_saveFilePhysicalProp<<endl;
 			Success = false;
 		}
+
+		//opening the specific Node/Element Type file:
+		saveFileString = saveDirectory +"/Save_SpecificElementAndNodeTypes";
+		const char* name_saveFileSpecificType = saveFileString.c_str();
+		saveFileSpecificType.open(name_saveFileSpecificType, ofstream::binary);
+		if (saveFileSpecificType.good() && saveFileSpecificType.is_open()){
+			Success = true;
+		}
+		else{
+			cerr<<"could not open file: "<<name_saveFileSpecificType<<endl;
+			Success = false;
+		}
 	}
 	if (saveDirectory == "Not-Set"){
 		cerr<<"Output directory is not set, outputting on Out file in current directory"<<endl;
@@ -800,6 +813,70 @@ void Simulation::writeSimulationSummary(){
 	writeMeshFileSummary();
 	writeGrowthRatesSummary();
 	writeMyosinSummary();
+}
+
+void Simulation::writeSpecificNodeTypes(){
+	//WCounting the number of elements and nodes for, actin elements, ECM mimicing elements
+	//Elements marked by ellipses and nodes marked by ellipses.
+	int counterForActinMimicingElements = 0;
+	int counterForECMMimicingElements = 0;
+	int counterForMarkerEllipsesOnElements = 0;
+	int counterForMarkerEllipsesOnNodes = 0;
+	int numberOfCounterEllipses = 0;
+
+	for (vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		if ((*itElement)->isActinMimicing){
+			counterForActinMimicingElements++;
+		}
+		if ((*itElement)->isECMMimicing){
+			counterForActinMimicingElements++;
+		}
+		if ((*itElement)->insideEllipseBand){
+			counterForMarkerEllipsesOnElements++;
+			if (numberOfCounterEllipses<(*itElement)->coveringEllipseBandId){
+				numberOfCounterEllipses=(*itElement)->coveringEllipseBandId;
+			}
+		}
+	}
+	for (vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+		if ((*itNode)->insideEllipseBand){
+			counterForMarkerEllipsesOnNodes++;
+		}
+	}
+
+	//Writing explicit actin layer:
+	saveFileSpecificType.write((char*) &counterForActinMimicingElements, sizeof counterForActinMimicingElements);
+	for (vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		if ((*itElement)->isActinMimicing){
+			saveFileSpecificType.write((char*) &(*itElement)->Id, sizeof (*itElement)->Id);
+		}
+	}
+
+	//Writing explicit ECM layer:
+	saveFileSpecificType.write((char*) &counterForECMMimicingElements, sizeof counterForECMMimicingElements);
+	for (vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		if ((*itElement)->isECMMimicing){
+			saveFileSpecificType.write((char*) &(*itElement)->Id, sizeof (*itElement)->Id);
+		}
+	}
+
+	//Writing marker ellipses for elements:
+	saveFileSpecificType.write((char*) &counterForMarkerEllipsesOnElements, sizeof counterForMarkerEllipsesOnElements);
+	for (vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		if ((*itElement)->insideEllipseBand){
+			saveFileSpecificType.write((char*) &(*itElement)->Id, sizeof (*itElement)->Id);
+			saveFileSpecificType.write((char*) &(*itElement)->coveringEllipseBandId, sizeof (*itElement)->coveringEllipseBandId);
+		}
+	}
+
+	//Writing marker ellipses for nodes:
+	saveFileSpecificType.write((char*) &counterForMarkerEllipsesOnElements, sizeof counterForMarkerEllipsesOnElements);
+	for (vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+		if ((*itNode)->insideEllipseBand){
+			saveFileSpecificType.write((char*) &(*itNode)->Id, sizeof (*itNode)->Id);
+			saveFileSpecificType.write((char*) &(*itNode)->coveringEllipseBandId, sizeof (*itNode)->coveringEllipseBandId);
+		}
+	}
 }
 
 void Simulation::writeMeshFileSummary(){
@@ -1507,6 +1584,16 @@ void Simulation::readPhysicalPropToContinueFromSave(){
 	}
 }
 
+void Simulation::readSpecificElementNodeTypesToContinueFromSave(){
+/*	int ;
+	int nECMMimicing;
+	int nEllipseMarkedElements;
+	int nEllipseMarkedNodes;
+	saveFileToDisplaySpecificType.read((char*) &nActinMimicing, sizeof nActinMimicing);
+	for (int i=0; i<nActinMimicing; ++i){
+CONTINUE FROM HERE!!!
+	}*/
+}
 
 void Simulation::initiatePrismFromSaveForUpdate(int k){
 	//inserts a new prism at order k into elements vector
@@ -3107,7 +3194,7 @@ void Simulation::manualPerturbationToInitialSetup(bool deform, bool rotate){
 			//fixAllD((*itNode),0);
 		}
 		//laserAblateTissueType(1);
-		//laserAblate(0.0, 0.0, 5.0);
+		//laserAblate(0.0, 0.0, 0.5);
 		//deform = true;
         double scaleX = 1.0;
         double scaleY = 1.0;
@@ -5134,9 +5221,8 @@ void Simulation::processDisplayDataAndSave(){
         //updateDisplaySaveValuesFromRK();
     //}
 	cout<<"timestep: "<<timestep<<" dataSaveInterval "<<dataSaveInterval<<" currSimTimeSec: "<<currSimTimeSec<<endl;
-
-	if (saveData && ((int)currSimTimeSec/ (int) dt) % dataSaveInterval == 0){ //timestep % dataSaveInterval == 0){
-        //updateDisplaySaveValuesFromRK();
+	if (saveData && ( (int) (currSimTimeSec/dt) )% dataSaveInterval == 0){ //timestep % dataSaveInterval == 0){
+       //updateDisplaySaveValuesFromRK();
         saveStep();
     }
 	cout<<"finished processDisplayDataAndSave"<<endl;

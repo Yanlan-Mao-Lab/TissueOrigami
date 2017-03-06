@@ -773,7 +773,7 @@ void MainWindow::timerSimulationStep(){
 	bool 	automatedSave = false;
 	bool 	analyseResults = true;
 	bool 	slowstepsOnDisplay = false;
-	bool 	slowstepsOnRun = true;
+	bool 	slowstepsOnRun = false;
 	int 	slowWaitTime = 10;
 	if (Sim01->DisplaySave){
 		if (Sim01->timestep == 0){
@@ -784,15 +784,25 @@ void MainWindow::timerSimulationStep(){
 			if( automatedSave){
 				Sim01->assignTips();
 				//MainGLWidget->updateToTopView(); //display tissue from the top view
-				MainGLWidget->updateToFrontView(); //display tissue from the front view
-				//MainGLWidget->updateToPerspectiveView(); //display tissue from the tilted view
-				MainGLWidget->drawSymmetricity = false; //hide symmetric
+				//MainGLWidget->updateToFrontView(); //display tissue from the front view
+				MainGLWidget->updateToPerspectiveView(); //display tissue from the tilted view
+				MainGLWidget->drawSymmetricity = true; //hide symmetric
+				//MainGLWidget->drawPeripodialMembrane= false;
 				MainGLWidget->PerspectiveView = false; //switch to orthogoanal view type.
 				Sim01->saveImages = true;
 				Sim01->saveDirectory = Sim01->saveDirectoryToDisplayString;
 			}
 		}
-		double pressureArray[117]= {2.5,5,5,7.5,7.5,10,10,12.5,12.5,15,15,17.5,17.5,20,20,22.5,22.5,24.525,24.525,27.5,27.5,30,30,32.5,32.5,35,35,37.5,37.5,40,40,42.5,42.5,45,45,47.5,47.5,49.05,49.05,52.5,52.5,55,55,57.5,57.5,60,60,62.5,62.5,65,65,67.5,67.5,70,70,73.575,73.575,75,75,77.5,77.5,80,80,82.5,82.5,85,85,87.5,87.5,90,90,92.5,92.5,95,95,98.01,98.01,100,100,102.5,102.5,105,105,107.5,107.5,110,110,112.5,112.5,115,115,117.5,117.5,120,120,122.625,122.625,125,125,127.5,127.5,130,130,132.5,132.5,135,135,137.5,137.5,140,140,142.5,142.5,145,145,147.15,147.15};
+
+
+		//Sim01->PipetteSuction = true;
+		//MainGLWidget->displayPipette = true;
+        //Sim01->pipetteInnerRadius = 12.4;
+        //Sim01->pipetteCentre[0] = 0;
+        //Sim01->pipetteCentre[1] = 0;
+        //Sim01->pipetteCentre[2] = 25;
+        //Sim01->pipetteThickness = 2.8;
+		//double pressureArray[117]= {2.5,5,5,7.5,7.5,10,10,12.5,12.5,15,15,17.5,17.5,20,20,22.5,22.5,24.525,24.525,27.5,27.5,30,30,32.5,32.5,35,35,37.5,37.5,40,40,42.5,42.5,45,45,47.5,47.5,49.05,49.05,52.5,52.5,55,55,57.5,57.5,60,60,62.5,62.5,65,65,67.5,67.5,70,70,73.575,73.575,75,75,77.5,77.5,80,80,82.5,82.5,85,85,87.5,87.5,90,90,92.5,92.5,95,95,98.01,98.01,100,100,102.5,102.5,105,105,107.5,107.5,110,110,112.5,112.5,115,115,117.5,117.5,120,120,122.625,122.625,125,125,127.5,127.5,130,130,132.5,132.5,135,135,137.5,137.5,140,140,142.5,142.5,145,145,147.15,147.15};
 		if(!Sim01->reachedEndOfSaveFile){
 			Sim01->updateOneStepFromSave();
 			if (Sim01->timestep >= 0){
@@ -800,7 +810,7 @@ void MainWindow::timerSimulationStep(){
 				double boundingBoxWidth  = Sim01->boundingBox[1][1] - Sim01->boundingBox[0][1];
 
 
-				Sim01->SuctionPressure[2] = pressureArray[interatorForPressure];
+				/*Sim01->SuctionPressure[2] = pressureArray[interatorForPressure];
 				double zMax = -10000;
 				int idMax = -10;
 				for (vector<Node*>::iterator itNode = Sim01->Nodes.begin(); itNode < Sim01->Nodes.end(); ++itNode){
@@ -811,7 +821,7 @@ void MainWindow::timerSimulationStep(){
 				}
 				cout<<"Pipette suction: "<<Sim01->SuctionPressure[2]<<" max suction: "<<zMax<<" from node "<<idMax<<endl;
 				interatorForPressure++;
-
+				 */
 
 
 
@@ -855,7 +865,7 @@ void MainWindow::timerSimulationStep(){
 			//Sim01->TissueAxisPositionDisplay();
 		}
 		else{
-			close();
+			//close();
 			if (automatedSave){
 				close();
 			}

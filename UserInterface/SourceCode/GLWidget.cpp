@@ -19,7 +19,7 @@ using namespace std;
  GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
  {
 	 //cout<<"initiating gl widget"<<endl;
-	 obj_pos[0] =  80.0f; //0.0f;
+	 obj_pos[0] =  0.0f;//80.0f; //0.0f;
 	 obj_pos[1] = 0.0f;//-130.0f;
 	 obj_pos[2] =  250.0f;// 500.0f;
 	 MatRot[0]  = 1.0; MatRot[1]  = 0.0; MatRot[2]  = 0.0; MatRot[3]  = 0.0;
@@ -100,8 +100,8 @@ using namespace std;
      PerspectiveView = true;
      orthoViewLimits[0] = -250;
      orthoViewLimits[1] =  250;
-     orthoViewLimits[2] = -250;//-40;
-     orthoViewLimits[3] = 250;// 40;
+     orthoViewLimits[2] = -60 ;//-250;//-40;
+     orthoViewLimits[3] =  60;//250;// 40;
      orthoViewLimits[4] = -1000;
      orthoViewLimits[5] =  1000;
 		 
@@ -532,9 +532,9 @@ void GLWidget::highlightNode(int i){
 	float** NodeColours;
 	NodeColours = new float*[n];
 	Sim01->thereIsExplicitECM = true;
-	//if(Sim01->Elements[i]->tissuePlacement == 0){
-	//	Sim01->Elements[i]->isECMMimicing= true;
-	//}
+	if(Sim01->Elements[i]->tissuePlacement == 0){
+		Sim01->Elements[i]->isECMMimicing= true;
+	}
 	for (int j = 0; j<n; j++){
 		NodeColours[j] = new float[3];
 		if (DisplayPysProp && PysPropToDisplay == 4){
@@ -1879,7 +1879,6 @@ bool GLWidget::findNode(int i){
 				   glVertex3f(xOut,yOut,z);
 				   glVertex3f(xOut,yOut,z);
 				   glVertex3f(x,y,z+100);
-
 			glEnd();
 
          }
