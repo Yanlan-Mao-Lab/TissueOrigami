@@ -229,12 +229,6 @@ void Simulation::setDefaultParameters(){
 	ECMSofteningFraction = 0.0;
 	softenBasalECM = false;
 	softenApicalECM = false;
-	thereIsECMRemodellingWithDeforamtionRate = false;
-	remodellingThresholdFraction = 1.10;
-	remodelBasalECM = false;
-	remodelApicalECM = false;
-	ECMRemodellingFraction = 0.0;
-
 	thereIsCellMigration = false;
 	thereIsExplicitECM = false;
 	ECMRenawalHalfLife = 0.0;
@@ -806,7 +800,7 @@ void Simulation::writeSimulationSummary(){
 	saveFileSimulationSummary<<"DataSaveInterval(sec):  ";
 	saveFileSimulationSummary<<dataSaveInterval*dt<<endl;
 	saveFileSimulationSummary<<"ModelinputName:  ";
-	saveFileSimulationSummary<<ModInp->parameterFileName<<endl;
+	saveFileSimulationSummary<<ModInp->parameterFileName<<endl<<endl;
 	saveFileSimulationSummary<<"Mesh_Type:  ";
 	saveFileSimulationSummary<<MeshType<<endl;
 	saveFileSimulationSummary<<"	Symmetricity-x: "<<symmetricX<<" Symmetricity-y: "<<symmetricY<<endl;
@@ -815,7 +809,7 @@ void Simulation::writeSimulationSummary(){
 	writeMyosinSummary();
 	writeECMSummary();
 	writeActinSummary();
-	witeExperimentalSummary();
+	writeExperimentalSummary();
 }
 
 void Simulation::writeSpecificNodeTypes(){
@@ -907,6 +901,7 @@ void Simulation::writeMeshFileSummary(){
 }
 
 void Simulation::writeGrowthRatesSummary(){
+	saveFileSimulationSummary<<endl;
 	for (int i=0; i<nGrowthFunctions; ++i){
 		if(GrowthFunctions[i]->Type == 3){ //grid based function does not need dt in summary
 			GrowthFunctions[i]->writeSummary(saveFileSimulationSummary);
@@ -918,6 +913,7 @@ void Simulation::writeGrowthRatesSummary(){
 }
 
 void Simulation::writeMyosinSummary(){
+	saveFileSimulationSummary<<endl;
 	for (int i=0; i<nMyosinFunctions; ++i){
 		myosinFunctions[i]->writeSummary(saveFileSimulationSummary);
 	}
@@ -925,6 +921,7 @@ void Simulation::writeMyosinSummary(){
 
 
 void Simulation::writeECMSummary(){
+	saveFileSimulationSummary<<endl;
 	saveFileSimulationSummary<<"There is explicit ECM:	"<<thereIsExplicitECM<<endl;
 	if (thereIsExplicitECM){
 		writeECMProperties();
@@ -932,7 +929,6 @@ void Simulation::writeECMSummary(){
 }
 
 void Simulation::writeECMProperties(){
-	saveFileSimulationSummary<<endl;
 	saveFileSimulationSummary<<"	Columnar ECM Stiffness(Pa): "<<EColumnarECM<<endl;
 	saveFileSimulationSummary<<"	Peripodial ECM Stiffness(Pa): "<<EPeripodialECM<<endl;
 	saveFileSimulationSummary<<"	ECM remodelling half life (hour): "<<ECMRenawalHalfLife/3600.0<<endl;
@@ -951,10 +947,33 @@ void Simulation::writeECMProperties(){
 }
 
 void Simulation::writeActinSummary(){
+	saveFileSimulationSummary<<endl;
 	saveFileSimulationSummary<<"There is explicit actin:  "<<thereIsExplicitActin<<endl;
 }
 
-void Simulation::witeExperimentalSummary(){
+void Simulation::writeExperimentalSummary(){
+	writePipetteSumary();
+}
+
+void Simulation::writePipetteSumary(){
+	saveFileSimulationSummary<<endl;
+	saveFileSimulationSummary<<"There is pipette aspiration:  "<<PipetteSuction<<endl;
+	if (PipetteSuction){
+		saveFileSimulationSummary<<"	is the tissue stuck on the glass: "<<TissueStuckOnGlassDuringPipetteAspiration<<endl;
+		saveFileSimulationSummary<<"	suction on apical side: "<<ApicalSuction<<endl;
+		saveFileSimulationSummary<<"	pipette position [centre(x,y,z), effective pippette suction depth, microns]: "<<pipetteCentre[0]<<" "<<pipetteCentre[1]<<" "<<pipetteCentre[2]<<" "<<pipetteDepth<<endl;
+		saveFileSimulationSummary<<"	pipette radia [inner & outer(microns)]: "<<pipetteInnerRadius<<" "<<pipetteInnerRadius+pipetteThickness<<endl;
+		saveFileSimulationSummary<<"	Steps for pipette suction "<<nPipetteSuctionSteps<<endl;
+		saveFileSimulationSummary<<"	suction times (sec): ";
+		for (int i=0; i<nPipetteSuctionSteps; ++i){
+			saveFileSimulationSummary<<pipetteSuctionTimes[i]<<" ";
+		}
+		saveFileSimulationSummary<<endl;
+		saveFileSimulationSummary<<"	suction pressures (Pa): ";
+		for (int i=0; i<nPipetteSuctionSteps; ++i){
+			saveFileSimulationSummary<<pipetteSuctionPressures[i]<<" ";
+		}
+	}
 
 }
 
@@ -4225,33 +4244,6 @@ void Simulation::checkECMSoftening(){
 	}
 }
 
-double Simulation::calculateAverageDisplacement(){
-	double displacement = 0;
-	int counter = 0;
-	for (int aa=0; aa<nNodes; ++aa){
-		if((Nodes[aa]->tissuePlacement == 0 && remodelBasalECM ) || (Nodes[aa]->tissuePlacement == 1 && remodelApicalECM )){
-			double currDisplacement = Nodes[aa]->getDisplacement();
-			displacement += currDisplacement;
-			counter ++;
-		}
-	}
-	if (counter >0) {
-		displacement /= counter;
-	}
-	return displacement;
-}
-
-void Simulation::updateECMVisocityWithDeformationRate(){
-	double averageDisplacement = calculateAverageDisplacement();
-	double currECMRemodellingFraction = ECMRemodellingFraction /3600 * dt; //converting per hr tpo per time step
-	for (int aa=0; aa<nNodes; ++aa){
-		if((Nodes[aa]->tissuePlacement == 0 && remodelBasalECM ) || (Nodes[aa]->tissuePlacement == 1 && remodelApicalECM )){
-			Nodes[aa]->updateECMVisocityWithDeformationRate(currECMRemodellingFraction, averageDisplacement*remodellingThresholdFraction);
-		}
-	}
-
-}
-
 bool Simulation::runOneStep(){
     bool Success = true;
 	cout<<"entered run one step, time "<<currSimTimeSec<<endl;
@@ -4295,9 +4287,6 @@ bool Simulation::runOneStep(){
     }
     if (thereIsECMSoftening) {
     	checkECMSoftening();
-    }
-    if (thereIsECMRemodellingWithDeforamtionRate){
-    	updateECMVisocityWithDeformationRate();
     }
     if(nMyosinFunctions > 0){
     	checkForMyosinUpdates();

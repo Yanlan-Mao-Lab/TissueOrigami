@@ -58,7 +58,7 @@ void Node::updatePreviousPosition(){
 		previousStepPosition[i] = Position[i];
 	}
 }
-
+/*
 void Node::updateECMVisocityWithDeformationRate(double ECMChangeFraction, double averageDisplacement){
 	double multiplier = (1.0+ECMChangeFraction);
 	if (displacement < averageDisplacement){
@@ -74,7 +74,7 @@ void Node::updateECMVisocityWithDeformationRate(double ECMChangeFraction, double
 		}
 	}
 }
-
+*/
 void Node::setExternalViscosity(double ApicalVisc,double BasalVisc, bool extendExternalViscosityToInnerTissue){
 	/**
 	 *  This node will take in the apical and basal external viscosities of the tissue as inputs, respectively.

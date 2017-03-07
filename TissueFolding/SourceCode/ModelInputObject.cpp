@@ -2025,54 +2025,6 @@ bool ModelInputObject::readECMPerturbation(ifstream& file){
 		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: softeningFraction(double(0-1.0):" <<endl;
 		return false;
 	}
-	file >> currHeader;
-	if(currHeader == "ThereIsECMRemodelling(bool):"){
-		file >> Sim->thereIsECMRemodellingWithDeforamtionRate;
-	}
-	else{
-		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: ThereIsECMRemodellinbg(bool):" <<endl;
-		return false;
-	}
-	file >> currHeader;
-	if(currHeader == "ApplyToApicalECM(bool):"){
-			file >> Sim->remodelApicalECM;
-	}
-	else{
-		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: ApplyToApicalECM(bool):" <<endl;
-		return false;
-	}
-	file >> currHeader;
-	if(currHeader == "ApplyToBasalECM(bool):"){
-			file >> Sim->remodelBasalECM;
-	}
-	else{
-		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: ApplyToBasalECM(bool):" <<endl;
-		return false;
-	}
-	file >> currHeader;
-	if(currHeader == "ECMRemodellingFraction(double(0-1.0)-ratePerHr):"){
-		double fraction;
-		file >> fraction;
-		if (fraction <=0.0) {
-			fraction = 0.0001;
-		}
-		if (fraction > 1.0){
-			fraction = 1.0;
-		}
-		Sim->ECMRemodellingFraction = fraction;
-	}
-	else{
-		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: ECMRemodellingFraction(double(0-1.0)-ratePerHr):" <<endl;
-		return false;
-	}
-	file >> currHeader;
-	if(currHeader == "RemodellingVelocityThresholdScale(double>1.0):"){
-		file >> Sim->remodellingThresholdFraction;
-	}
-	else{
-		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: RemodellingVelocityThresholdScale(double>1.0)):" <<endl;
-		return false;
-	}
 	return true;
 }
 

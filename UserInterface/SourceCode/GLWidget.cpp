@@ -591,18 +591,6 @@ void GLWidget::highlightNode(int i){
 				NodeColours[j][2]=NodeColourList[NodeIds[j]][2];
 			}
 		}
-		/*else if (Sim01->thereIsExplicitECM && Sim01->Elements[i]->atBorderOfECM){
-			if(!DisplayStrains && !DisplayPysProp && !drawNetForces && !drawPackingForces && !drawMyosinForces){
-				NodeColours[j][0]=1.6;
-				NodeColours[j][1]=0.6;
-				NodeColours[j][2]=0.0;
-			}
-			else{
-				NodeColours[j][0]=NodeColourList[NodeIds[j]][0];
-				NodeColours[j][1]=NodeColourList[NodeIds[j]][1];
-				NodeColours[j][2]=NodeColourList[NodeIds[j]][2];
-			}
-		}*/
 		else if (Sim01->thereIsCellMigration && Sim01->Elements[i]->getCellMigration()){
 			NodeColours[j][0]=1.0;
 			NodeColours[j][1]=0.0;

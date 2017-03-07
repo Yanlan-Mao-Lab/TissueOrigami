@@ -54,7 +54,7 @@ public:
 	void removeFromConnectedElements(int newElementId, double volumePerNode);
 	double 	getDisplacement();
 	void 	updatePreviousPosition();
-	void updateECMVisocityWithDeformationRate(double ECMChangeFraction, double averageDisplacement);
+	//void updateECMVisocityWithDeformationRate(double ECMChangeFraction, double averageDisplacement);
 	int getId();
 };
 #endif

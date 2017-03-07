@@ -188,7 +188,8 @@ private:
 	void writeECMSummary();
 	void writeECMProperties();
 	void writeActinSummary();
-	void witeExperimentalSummary();
+	void writeExperimentalSummary();
+	void writePipetteSumary();
 	void writeSaveFileStepHeader();
 	void writeNodes();
 	void writeElements();
@@ -441,13 +442,6 @@ public:
 	int numberOfStiffnessPerturbationAppliesEllipseBands;
 	vector <int> stiffnessPerturbationEllipseBandIds;
 
-
-	bool 	thereIsECMRemodellingWithDeforamtionRate;
-	bool 	remodelBasalECM;
-	bool 	remodelApicalECM;
-	double	ECMRemodellingFraction;
-	double 	remodellingThresholdFraction; //The displacement should be above the average with this fraction.
-
 	double packingDetectionThreshold;
 	double packingThreshold;
 	double packingMultiplier;
@@ -488,8 +482,6 @@ public:
 
     void checkECMSoftening();
     void checkStiffnessPerturbation();
-    double calculateAverageDisplacement();
-    void updateECMVisocityWithDeformationRate();
     bool runOneStep();
     void updatePlasticDeformation();
     void updateStepNR();
