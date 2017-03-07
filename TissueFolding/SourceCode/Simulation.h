@@ -276,7 +276,7 @@ public:
 	int noiseOnPysProp[4];
 	bool zeroExternalViscosity[3]; //The boolean stating if there is zero external viscosity on any of the 3 dimensions
 	bool extendExternalViscosityToInnerTissue;
-	bool softenedECM;
+	bool changedECMStiffness;
 	double externalViscosityDPApical;
 	double externalViscosityDPBasal;
 	double externalViscosityPMApical;
@@ -422,14 +422,14 @@ public:
 	vector<double> markerEllipseBandXCentres;
 	vector<double> markerEllipseBandR1Ranges;
 	vector<double> markerEllipseBandR2Ranges;
-    	bool 	thereIsECMSoftening;	
-	int numberOfSoftenedEllipseBands;
-	vector<int> ECMSofteningEllipseBandIds;
-	double 	softeningBeginTimeInSec;
-	double  softeningEndTimeInSec;
-	double 	ECMSofteningFraction;
-	bool 	softenBasalECM;
-	bool 	softenApicalECM;
+    bool 	thereIsECMStiffnessChange;
+	int numberOfECMStiffnessChangeEllipseBands;
+	vector<int> ECMStiffnessChangeEllipseBandIds;
+	double  stiffnessChangeBeginTimeInSec;
+	double  stiffnessChangeEndTimeInSec;
+	double 	ECMStiffnessChangeFraction;
+	bool 	changeStiffnessBasalECM;
+	bool 	changeStiffnessApicalECM;
 	
 	bool startedStiffnessPerturbation;
 	bool ThereIsStiffnessPerturbation;
@@ -480,7 +480,7 @@ public:
     void checkForExperimentalSetupsAfterIteration();
     void setLateralElementsRemodellingPlaneRotationMatrices();
 
-    void checkECMSoftening();
+    void checkECMStiffnessChange();
     void checkStiffnessPerturbation();
     bool runOneStep();
     void updatePlasticDeformation();

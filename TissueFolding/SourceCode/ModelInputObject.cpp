@@ -1957,8 +1957,8 @@ bool ModelInputObject::readStiffnessPerturbation(ifstream& file){
 bool ModelInputObject::readECMPerturbation(ifstream& file){
 	string currHeader;
 	file >> currHeader;
-	if(currHeader == "ThereIsECMSoftening(bool):"){
-		file >> Sim->thereIsECMSoftening;
+	if(currHeader == "ThereIsECMStiffnessChange(bool):"){
+		file >> Sim->thereIsECMStiffnessChange;
 	}
 	else{
 		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: ThereIsECMSoftening(bool):" <<endl;
@@ -1966,7 +1966,7 @@ bool ModelInputObject::readECMPerturbation(ifstream& file){
 	}
 	file >> currHeader;
 	if(currHeader == "ApplyToApicalECM(bool):"){
-			file >> Sim->softenApicalECM;
+			file >> Sim->changeStiffnessApicalECM;
 	}
 	else{
 		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: ApplyToApicalECM(bool):" <<endl;
@@ -1974,31 +1974,31 @@ bool ModelInputObject::readECMPerturbation(ifstream& file){
 	}
 	file >> currHeader;
 	if(currHeader == "ApplyToBasalECM(bool):"){
-			file >> Sim->softenBasalECM;
+			file >> Sim->changeStiffnessBasalECM;
 	}
 	else{
 		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: ApplyToBasalECM(bool):" <<endl;
 		return false;
 	}
 	file >> currHeader;
-	if(currHeader == "timeOfSoftening(hr):"){
+	if(currHeader == "timeOfStiffnessChange(hr):"){
 		double timeInHr;
 		file >> timeInHr;
-		Sim->softeningBeginTimeInSec = timeInHr*3600;
+		Sim->stiffnessChangeBeginTimeInSec = timeInHr*3600;
 		file >> timeInHr;
-		Sim->softeningEndTimeInSec = timeInHr*3600;
+		Sim->stiffnessChangeEndTimeInSec = timeInHr*3600;
 	}
 	else{
-		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: timeOfSoftening(hr):" <<endl;
+		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: timeOfStiffnessChange(hr):" <<endl;
 		return false;
 	}
 	file >> currHeader;
 	if(currHeader == "softeningAppliedToEllipses(number,[ellipseId][ellipseId]):"){
-		file >> Sim->numberOfSoftenedEllipseBands;
+		file >> Sim->numberOfECMStiffnessChangeEllipseBands;
 		double ellipseBandId;
-		for (int aa=0; aa<Sim->numberOfSoftenedEllipseBands; ++aa){
+		for (int aa=0; aa<Sim->numberOfECMStiffnessChangeEllipseBands; ++aa){
 			file >>ellipseBandId;
-			Sim->ECMSofteningEllipseBandIds.push_back(ellipseBandId);
+			Sim->ECMStiffnessChangeEllipseBandIds.push_back(ellipseBandId);
 		}
 		//file >> Sim->ECMSofteningXRange[0];
 		//file >> Sim->ECMSofteningXRange[1];
@@ -2019,7 +2019,7 @@ bool ModelInputObject::readECMPerturbation(ifstream& file){
 		//if (fraction > 1.0){
 		//	fraction = 1.0;
 		//}
-		Sim->ECMSofteningFraction = fraction;
+		Sim->ECMStiffnessChangeFraction = fraction;
 	}
 	else{
 		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: softeningFraction(double(0-1.0):" <<endl;

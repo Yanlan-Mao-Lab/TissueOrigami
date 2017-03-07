@@ -215,10 +215,10 @@ Pipette_Aspiration:
   Pipette_Suction_Pressure(x,y,z-unit): 0.0 0.0 25.0
 
 ECM_Perturbation:
-  ThereIsECMSoftening(bool): 0
+  ThereIsECMStiffnessChange(bool): 0
   ApplyToApicalECM(bool): 0
   ApplyToBasalECM(bool): 1
-  timeOfSoftening(hr): 2.0 4.0
+  timeOfStiffnessChange(hr): 2.0 4.0
   softeningAppliedToEllipses(number,[ellipseId][ellipseId]): 2 0 1
   softeningFraction(double(0-1.0):  0.1
 

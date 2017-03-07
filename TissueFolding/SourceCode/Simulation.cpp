@@ -221,14 +221,14 @@ void Simulation::setDefaultParameters(){
 	externalViscosityLZApical = 0.0;
 	externalViscosityLZBasal  = 0.0;
 
-	softenedECM = false;
-    thereIsECMSoftening = false;
-	numberOfSoftenedEllipseBands = 0;
-	softeningEndTimeInSec = -1;
-	softeningEndTimeInSec = -1;
-	ECMSofteningFraction = 0.0;
-	softenBasalECM = false;
-	softenApicalECM = false;
+	changedECMStiffness = false;
+	thereIsECMStiffnessChange = false;
+	numberOfECMStiffnessChangeEllipseBands = 0;
+	stiffnessChangeEndTimeInSec = -1;
+	stiffnessChangeEndTimeInSec = -1;
+	ECMStiffnessChangeFraction = 0.0;
+	changeStiffnessBasalECM = false;
+	changeStiffnessApicalECM = false;
 	thereIsCellMigration = false;
 	thereIsExplicitECM = false;
 	ECMRenawalHalfLife = 0.0;
@@ -932,15 +932,15 @@ void Simulation::writeECMProperties(){
 	saveFileSimulationSummary<<"	Columnar ECM Stiffness(Pa): "<<EColumnarECM<<endl;
 	saveFileSimulationSummary<<"	Peripodial ECM Stiffness(Pa): "<<EPeripodialECM<<endl;
 	saveFileSimulationSummary<<"	ECM remodelling half life (hour): "<<ECMRenawalHalfLife/3600.0<<endl;
-	saveFileSimulationSummary<<"	Is there perturbation to the ECM: "<<thereIsECMSoftening<<endl;
-	if (thereIsECMSoftening){
-		saveFileSimulationSummary<<"		perturbation begins at  "<<softeningBeginTimeInSec/3600.0<<" hrs and ends at "<<softeningEndTimeInSec/3600.0<<endl;
-		saveFileSimulationSummary<<"		final fraction of ECM stiffness  "<<ECMSofteningFraction<<" times original values."<<endl;
-		saveFileSimulationSummary<<"		perturbations applied to apical ECM: "	<<softenApicalECM<<endl;
-		saveFileSimulationSummary<<"		perturbations applied to basal  ECM: "	<<softenBasalECM<<endl;
-		saveFileSimulationSummary<<"		perturbation applied to ellipse bands: ";
-		for (int i=0; i<numberOfSoftenedEllipseBands; ++i){
-			saveFileSimulationSummary<<" "<<ECMSofteningEllipseBandIds[i];
+	saveFileSimulationSummary<<"	Is there perturbation to the ECM: "<<thereIsECMStiffnessChange<<endl;
+	if (thereIsECMStiffnessChange){
+		saveFileSimulationSummary<<"		stiffness alteration begins at  "<<stiffnessChangeBeginTimeInSec/3600.0<<" hrs and ends at "<<stiffnessChangeEndTimeInSec/3600.0<<endl;
+		saveFileSimulationSummary<<"		final fraction of ECM stiffness  "<<ECMStiffnessChangeFraction<<" times original values."<<endl;
+		saveFileSimulationSummary<<"		stiffness alteration applied to apical ECM: "	<<changeStiffnessApicalECM<<endl;
+		saveFileSimulationSummary<<"		stiffness alteration applied to basal  ECM: "	<<changeStiffnessBasalECM<<endl;
+		saveFileSimulationSummary<<"		stiffness alteratio applied to ellipse bands: ";
+		for (int i=0; i<numberOfECMStiffnessChangeEllipseBands; ++i){
+			saveFileSimulationSummary<<" "<<ECMStiffnessChangeEllipseBandIds[i];
 		}
 		saveFileSimulationSummary<<endl;
 	}
@@ -4193,46 +4193,29 @@ void Simulation::checkStiffnessPerturbation(){
     }
 }
 
-void Simulation::checkECMSoftening(){
+void Simulation::checkECMStiffnessChange(){
 	//I have not carried out any softening as yet
 	//I will if the time is after 32 hr
-	if (currSimTimeSec >=softeningBeginTimeInSec && currSimTimeSec <softeningEndTimeInSec){
-		if (softenedECM == false){
-			softenedECM = true;
+	if (currSimTimeSec >=stiffnessChangeBeginTimeInSec && currSimTimeSec <stiffnessChangeEndTimeInSec){
+		if (changedECMStiffness == false){
+			changedECMStiffness = true;
 			//this is the first time step I am reducing the ECM viscosity.
 			//I need to calculate rates first:
 			for (int aa=0; aa<nNodes; ++aa){
-				double timeDifferenceInHours = (softeningEndTimeInSec - softeningBeginTimeInSec)/3600;
+				double timeDifferenceInHours = (stiffnessChangeEndTimeInSec - stiffnessChangeBeginTimeInSec)/3600;
 				for (int i=0; i<3; ++i){
-					Nodes[aa]->ECMViscosityReductionPerHour[i] = Nodes[aa]->externalViscosity[i]*(1-ECMSofteningFraction)/timeDifferenceInHours;
+					Nodes[aa]->ECMViscosityChangePerHour[i] = Nodes[aa]->externalViscosity[i]*(1-ECMStiffnessChangeFraction)/timeDifferenceInHours;
 				}
 			}
 		}
 		for (int aa=0; aa<nNodes; ++aa){
-			if((Nodes[aa]->tissuePlacement == 0 && softenBasalECM ) || (Nodes[aa]->tissuePlacement == 1 && softenApicalECM )){
-				//double relativeX = (Nodes[aa]->Position[0] - boundingBox[0][0])/boundingBoxSize[0];
-				/*for (int ECMReductionRangeCounter =0; ECMReductionRangeCounter<numberOfSoftenedRanges; ++ECMReductionRangeCounter){
-					if (relativeX> ECMSofteningXRangeMins[ECMReductionRangeCounter] && relativeX<ECMSofteningXRangeMaxs[ECMReductionRangeCounter]){
-						Nodes[aa]->externalViscosity[0] -= Nodes[aa]->ECMViscosityReductionPerHour[0]/3600*dt;
-						Nodes[aa]->externalViscosity[1] -= Nodes[aa]->ECMViscosityReductionPerHour[1]/3600*dt;
-						Nodes[aa]->externalViscosity[2] -= Nodes[aa]->ECMViscosityReductionPerHour[2]/3600*dt;
-						Nodes[aa]->baseExternalViscosity[0] = Nodes[aa]->externalViscosity[0];
-						Nodes[aa]->baseExternalViscosity[1] = Nodes[aa]->externalViscosity[1];
-						Nodes[aa]->baseExternalViscosity[2] = Nodes[aa]->externalViscosity[2];
-						//Nodes[aa]->externalViscosity[0] *= ECMSofteningFraction;
-						//Nodes[aa]->externalViscosity[1] *= ECMSofteningFraction;
-						//Nodes[aa]->externalViscosity[2] *= ECMSofteningFraction;
-						//Nodes[aa]->baseExternalViscosity[0] = Nodes[aa]->externalViscosity[0];
-						//Nodes[aa]->baseExternalViscosity[1] = Nodes[aa]->externalViscosity[1];
-						//Nodes[aa]->baseExternalViscosity[2] = Nodes[aa]->externalViscosity[2];
-					}
-				}*/
+			if((Nodes[aa]->tissuePlacement == 0 && changeStiffnessBasalECM ) || (Nodes[aa]->tissuePlacement == 1 && changeStiffnessApicalECM )){
 				if(Nodes[aa]->insideEllipseBand){
-					for (int ECMReductionRangeCounter =0; ECMReductionRangeCounter<numberOfSoftenedEllipseBands; ++ECMReductionRangeCounter){
-						if (Nodes[aa]->coveringEllipseBandId == ECMSofteningEllipseBandIds[ECMReductionRangeCounter]){
-							Nodes[aa]->externalViscosity[0] -= Nodes[aa]->ECMViscosityReductionPerHour[0]/3600*dt;
-							Nodes[aa]->externalViscosity[1] -= Nodes[aa]->ECMViscosityReductionPerHour[1]/3600*dt;
-							Nodes[aa]->externalViscosity[2] -= Nodes[aa]->ECMViscosityReductionPerHour[2]/3600*dt;
+					for (int ECMReductionRangeCounter =0; ECMReductionRangeCounter<numberOfECMStiffnessChangeEllipseBands; ++ECMReductionRangeCounter){
+						if (Nodes[aa]->coveringEllipseBandId == ECMStiffnessChangeEllipseBandIds[ECMReductionRangeCounter]){
+							Nodes[aa]->externalViscosity[0] -= Nodes[aa]->ECMViscosityChangePerHour[0]/3600*dt;
+							Nodes[aa]->externalViscosity[1] -= Nodes[aa]->ECMViscosityChangePerHour[1]/3600*dt;
+							Nodes[aa]->externalViscosity[2] -= Nodes[aa]->ECMViscosityChangePerHour[2]/3600*dt;
 							Nodes[aa]->baseExternalViscosity[0] = Nodes[aa]->externalViscosity[0];
 							Nodes[aa]->baseExternalViscosity[1] = Nodes[aa]->externalViscosity[1];
 							Nodes[aa]->baseExternalViscosity[2] = Nodes[aa]->externalViscosity[2];
@@ -4285,8 +4268,8 @@ bool Simulation::runOneStep(){
     if (ThereIsStiffnessPerturbation) {
     	checkStiffnessPerturbation();
     }
-    if (thereIsECMSoftening) {
-    	checkECMSoftening();
+    if (thereIsECMStiffnessChange) {
+    	checkECMStiffnessChange();
     }
     if(nMyosinFunctions > 0){
     	checkForMyosinUpdates();
