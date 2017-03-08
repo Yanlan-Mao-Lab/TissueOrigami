@@ -99,7 +99,7 @@ protected:
     int nLateralSurfaceAreaNodeNumber;				///< Number of nodes that form the lateral surfaces for the element.
     int nSurfaceAreaNodeNumber;						///< Number of nodes that form the apical/basal surfaces for the element.
 
-    double 	actinMultiplier;						///< The double for the multiplier that will define actin stress stiffening.
+    double 	stiffnessMultiplier;						///< The double for the multiplier that will define Young's modulus stress stiffening.
     double	stiffnessPerturbationRateInSec;	///< The rate at which the stiffness ofthe element will be perturbed, used with the model inputs from "Stiffness_Perturbation:" header in model input file
 
     void 	setShapeType(string TypeName);				///< The function sets the type of the shape.
@@ -192,7 +192,7 @@ public:
     int 	tissueType;	///< The tissue type is 0 for columnar layer, 1 for peripodial membrane, and 2 for linker zone
     bool	spansWholeTissue; ///< Boolean staing is the element spans the whole tissue. This is used to identify mid-layer tagged tissues (tissuePlacement = 2), that should still have apical abd basal responses (such as myosin).
     bool	isECMMimicing;
-    bool	atBorderOfECM;
+    bool	atBasalBorderOfECM;
     bool	isActinMimicing;
 	bool	IsAblated;
 	bool	atSymetricityBoundary;
@@ -226,6 +226,7 @@ public:
 	double	getColumnarness();
 	void	getRelativePositionInTissueInGridIndex(int nGridX, int nGridY, int& IndexX, int& IndexY, double& FracX, double& FracY);
 	void	getInitialRelativePositionInTissueInGridIndex(int nGridX, int nGridY, int& IndexX, int& IndexY, double& FracX, double& FracY);
+	double	getStiffnessMultiplier();
 	bool 	isGrowthRateApplicable(int sourceTissue, double& weight, double zmin, double zmax);
 	void 	calculateFgFromRates(double dt, double x, double y, double z, gsl_matrix* rotMat, gsl_matrix* increment, int sourceTissue, double zMin, double zMax);
 	void 	calculateFgFromGridCorners(int gridGrowthsInterpolationType, double dt, GrowthFunctionBase* currGF, gsl_matrix* increment, int sourceTissue, int IndexX, int IndexY, double FracX, double dFracY);
@@ -273,8 +274,10 @@ public:
     void 	setViscosity(double viscosity);
     void	setCellMigration(bool migratingBool);
 
+    bool isActinStiffnessChangeAppliedToElement(bool ThereIsWholeTissueStiffnessPerturbation, bool ThereIsApicalStiffnessPerturbation, bool ThereIsBasalStiffnessPerturbation, vector <int> &stiffnessPerturbationEllipseBandIds, int numberOfStiffnessPerturbationAppliesEllipseBands );
+    bool isECMStiffnessChangeAppliedToElement(bool changeStiffnessApicalECM, bool changeStiffnessBasalECM, vector<int> &ECMStiffnessChangeEllipseBandIds, int numberOfECMStiffnessChangeEllipseBands);
     void 	calculateStiffnessPerturbationRate(double stiffnessPerturbationBeginTimeInSec, double stiffnessPerturbationEndTimeInSec, double stiffnessChangedToFractionOfOriginal);
-    void 	updateActinMultiplier(double dt); ///< The funciton will update the actin multiplier as a result of stiffness perturbations.    
+    void 	updateStiffnessMultiplier(double dt); ///< The funciton will update the actin multiplier as a result of stiffness perturbations.
 //    virtual void	fillLateralNeighbours();
     bool	getCellMigration();
     virtual void calculateBasalNormal(double * /*normal*/){ParentErrorMessage("calculateBasalNormal");};
@@ -292,7 +295,7 @@ public:
     void 	updateNodeIdsForRefinement(int* tmpNodeIds);
     virtual void updateElasticProperties(){ParentErrorMessage("updateElasticProperties");};
     virtual void  fillLateralNeighbours(vector<Node*>& /*Nodes*/, vector<int>& /*lateralNeigbours*/ ){ParentErrorMessage("fillInLateralNeigbours");};
-    void	calculateActinFeedback(double dt);
+    void	calculateStiffnessFeedback(double dt);
     void 	writeInternalForcesTogeAndgv(gsl_matrix* ge, gsl_matrix* gvInternal, double** SystemForces, vector <Node*>& Nodes);
 
 

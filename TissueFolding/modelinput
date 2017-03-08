@@ -1,12 +1,12 @@
 InputMeshParameters:
   MeshInputMode(int-seeDocumentation): 4
-  MeshFile(full-path):     /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Exp48hr-noPeri_04.mesh
+  MeshFile(full-path):     /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Exp48hr-noPeri_06.mesh
   symmetricInX(bool): 0
   symmetricInY(bool): 1
  
 TimeParameters:
-  TimeStep(sec): 1
-  SimulationLength(sec): 1
+  TimeStep(sec): 120
+  SimulationLength(sec): 960
 
 SaveOptions:
   SaveImages(bool): 0
@@ -40,7 +40,7 @@ Manipulations:
   RandomForceVar(double): 1E-5
 
 PysicalProperties:
-  YoungsModulusApical: 125.0	YoungsModulusBasal: 25.0	YoungsModulusMid: 25.0	Noise(%-int): 0
+  YoungsModulusApical: 125.0	YoungsModulusBasal: 125.0	YoungsModulusMid: 125.0	Noise(%-int): 0
   PoissonsRatio: 0.45		Noise(%-int): 0
   ApicalViscosity:  0.0 	Noise(%-int): 0
   BasalViscosity:   0.0
@@ -67,7 +67,7 @@ LinkerZoneParameters:
 ExplicitECMOptions:
   ThereIsExplicitECM(bool): 1
   ECMRemodellingHalfLife(hour): 2.0
-  ECMColumnarYoungsModulus:  8000
+  ECMColumnarYoungsModulus:  250
   ECMPeripodialYoungsModulus:  560
 
 ExternalViscositySetup:
@@ -215,21 +215,21 @@ Pipette_Aspiration:
   Pipette_Suction_Pressure(x,y,z-unit): 0.0 0.0 25.0
 
 ECM_Perturbation:
-  ThereIsECMStiffnessChange(bool): 0
+  ThereIsECMStiffnessChange(bool): 1
   ApplyToApicalECM(bool): 0
   ApplyToBasalECM(bool): 1
-  timeOfStiffnessChange(hr): 2.0 4.0
-  softeningAppliedToEllipses(number,[ellipseId][ellipseId]): 2 0 1
-  softeningFraction(double(0-1.0):  0.1
+  timeOfStiffnessChange(hr): 0.1 0.2
+  stiffnessChangeAppliedToEllipses(number,[ellipseId][ellipseId]): 2 0 1
+  stiffnessChangeFraction(double(0-1.0):  2.0
 
 Stiffness_Perturbation:
-  ThereIsStiffnessPerturbation(bool): 0
+  ThereIsStiffnessPerturbation(bool): 1
   ApplyToApically(bool): 0
   ApplyBasally(bool): 0
   ApplyToWholeTissue(bool): 1
-  timeOfStiffeningPerturbation(hr): 2.0 4.0
+  timeOfStiffeningPerturbation(hr): 0.1 0.2
   stiffnessPerturbationAppliedToEllipses(number,[ellipseId][ellipseId]): 2 0 1
-  stiffnessChangedToFractionOfOriginal(double):  3.5
+  stiffnessChangedToFractionOfOriginal(double):  2.0
   
 ExplicitActinOptions:
   ThereIsExplicitActin(bool): 1

@@ -152,6 +152,10 @@ double 	ShapeBase::getZRemodellingSoFar(){
 	return zRemodellingSoFar;
 }
 
+double 	ShapeBase::getStiffnessMultiplier(){
+	return stiffnessMultiplier;
+}
+
 void 	ShapeBase::setZRemodellingSoFar(double zRemodellingSoFar){
 	this -> zRemodellingSoFar = zRemodellingSoFar;
 }
@@ -170,7 +174,7 @@ void ShapeBase::updateInternalViscosityTest(){
 
 
 double 	ShapeBase::getYoungModulus(){
-	return (actinMultiplier*E);
+	return (stiffnessMultiplier*E);
 }
 
 double 	ShapeBase::getPoissonRatio(){
@@ -689,7 +693,7 @@ void ShapeBase::setECMMimicing(bool IsECMMimicing){
 	//setting poisson ratio to be zero, so the ECM elements will not be thinning.
 	this->v = 0;
 	//calculateInitialThickness();
-	setECMMimicingElementThicknessGrowthAxis();
+	//setECMMimicingElementThicknessGrowthAxis();
 }
 
 void ShapeBase::setActinMimicing(bool isActinMimicing){
@@ -1188,6 +1192,44 @@ double 	ShapeBase::calculateCurrentGrownAndEmergentVolumes(){
 
 }
 
+bool ShapeBase::isActinStiffnessChangeAppliedToElement(bool ThereIsWholeTissueStiffnessPerturbation, bool ThereIsApicalStiffnessPerturbation, bool ThereIsBasalStiffnessPerturbation, vector <int> &stiffnessPerturbationEllipseBandIds, int numberOfStiffnessPerturbationAppliesEllipseBands ){
+	if (!isECMMimicing){
+		if( ThereIsWholeTissueStiffnessPerturbation  //the whole columnar tissue is perturbed
+			|| (tissuePlacement == 0 && ThereIsBasalStiffnessPerturbation  ) //the basal surface is perturbed and element is basal
+			|| (tissuePlacement == 1 && ThereIsApicalStiffnessPerturbation ) // the apical surface is perturbed and element is apical
+			|| (atBasalBorderOfECM   && ThereIsBasalStiffnessPerturbation  ) //the basal surface is perturbed and element is at the layer above the "basal elements, but there is basal ECM, therefore the element is basal of the tissue (atBasalBorderOfECM)
+			){
+			if(insideEllipseBand){ //this covers the tissue type as well as the position, ellipses are applied to columnar and linker zones only.
+				for (int stiffnessPerturbationRangeCounter =0; stiffnessPerturbationRangeCounter<numberOfStiffnessPerturbationAppliesEllipseBands; ++stiffnessPerturbationRangeCounter){
+					if (coveringEllipseBandId == stiffnessPerturbationEllipseBandIds[stiffnessPerturbationRangeCounter]){
+						return true;
+					}
+				}
+			}
+		}
+	}
+	return false;
+}
+
+bool ShapeBase::isECMStiffnessChangeAppliedToElement(bool changeStiffnessApicalECM, bool changeStiffnessBasalECM, vector<int> &ECMStiffnessChangeEllipseBandIds, int numberOfECMStiffnessChangeEllipseBands){
+	if (isECMMimicing){
+		if  ( (changeStiffnessApicalECM && tissuePlacement == 1 ) ||
+			  (changeStiffnessBasalECM  && tissuePlacement == 0 )
+			){
+			if(insideEllipseBand){
+				for (int ECMReductionRangeCounter = 0; ECMReductionRangeCounter<numberOfECMStiffnessChangeEllipseBands; ++ECMReductionRangeCounter){
+					if (coveringEllipseBandId == ECMStiffnessChangeEllipseBandIds[ECMReductionRangeCounter]){
+						return true;
+					}
+				}
+			}
+
+		}
+	}
+	return false;
+}
+
+
 void ShapeBase::calculateStiffnessPerturbationRate(double stiffnessPerturbationBeginTimeInSec, double stiffnessPerturbationEndTimeInSec, double stiffnessChangedToFractionOfOriginal){
     double totalTimePerturbationWillBeAppliedInSec = stiffnessPerturbationEndTimeInSec-stiffnessPerturbationBeginTimeInSec;
     if (totalTimePerturbationWillBeAppliedInSec <0){
@@ -1197,11 +1239,15 @@ void ShapeBase::calculateStiffnessPerturbationRate(double stiffnessPerturbationB
     stiffnessPerturbationRateInSec =  (stiffnessChangedToFractionOfOriginal - 1.0)/totalTimePerturbationWillBeAppliedInSec;
 }
 
-void ShapeBase::updateActinMultiplier(double dt){
-    actinMultiplier *= ( 1.0 + stiffnessPerturbationRateInSec*dt);
+void ShapeBase::updateStiffnessMultiplier(double dt){
+    //stiffnessMultiplier *= ( 1.0 + stiffnessPerturbationRateInSec*dt);
+	stiffnessMultiplier += stiffnessPerturbationRateInSec*dt;
+	if (stiffnessMultiplier<0){
+		stiffnessMultiplier = 0.000001;
+	}
 }
 
-void ShapeBase::calculateActinFeedback(double dt){
+void ShapeBase::calculateStiffnessFeedback(double dt){
 	if (tissueType == 0 && tissuePlacement == 1){ //apical columnar layer element
 		gsl_matrix* Fe = gsl_matrix_calloc(3,3);
 		double weights[3] = {1.0/3.0,1.0/3.0,1.0/3.0};
@@ -1213,14 +1259,14 @@ void ShapeBase::calculateActinFeedback(double dt){
 		gsl_matrix_set(Fe,2,2,1.0);
 		double detFe = determinant3by3Matrix(Fe);
 		if (detFe > 0){
-			double eqActinMultiplier = 1 + (detFe -1)*10.0;
-			cout<<"Id: "<<Id<<" determinant of Fe: "<<detFe<<" eq Actin: "<<eqActinMultiplier<<" actin before update: "<<actinMultiplier<<" ";
+			double eqStiffnessMultiplier = 1 + (detFe -1)*10.0;
+			cout<<"Id: "<<Id<<" determinant of Fe: "<<detFe<<" eq Actin: "<<eqStiffnessMultiplier<<" actin before update: "<<stiffnessMultiplier<<" ";
 			double rate =1.0/3600 * dt;
 			if (rate > 1.0) {rate =1.0;}
-			actinMultiplier += rate* (eqActinMultiplier-actinMultiplier);
-			cout<<" actin after update: "<<actinMultiplier<<endl;
-			if (actinMultiplier < 1.0){
-				actinMultiplier = 1;
+			stiffnessMultiplier += rate* (eqStiffnessMultiplier-stiffnessMultiplier);
+			cout<<" actin after update: "<<stiffnessMultiplier<<endl;
+			if (stiffnessMultiplier < 1.0){
+				stiffnessMultiplier = 1;
 			}
 		}
 		gsl_matrix_free(Fe);
@@ -3775,7 +3821,6 @@ void 	ShapeBase::doesElementNeedRefinement(double areaThreshold, int surfacedent
 
 /*
 double ShapeBase::calculateECMThickness(vector <Node*>& Nodes){
-	bibap
 	double d;
 	if (isECMMimicing){
 		if(tissueType == 2){

@@ -1754,17 +1754,6 @@ void Simulation::readPhysicalPropToContinueFromSave(){
 	}
 }
 
-void Simulation::readSpecificElementNodeTypesToContinueFromSave(){
-/*	int ;
-	int nECMMimicing;
-	int nEllipseMarkedElements;
-	int nEllipseMarkedNodes;
-	saveFileToDisplaySpecificType.read((char*) &nActinMimicing, sizeof nActinMimicing);
-	for (int i=0; i<nActinMimicing; ++i){
-CONTINUE FROM HERE!!!
-	}*/
-}
-
 void Simulation::initiatePrismFromSaveForUpdate(int k){
 	//inserts a new prism at order k into elements vector
 	//the node ids and reference shape positions
@@ -4163,6 +4152,44 @@ void Simulation::checkForExperimentalSetupsAfterIteration(){
 	}
 }
 
+void Simulation::calculateStiffnessChangeRatesForActin(){
+    startedStiffnessPerturbation = true;
+    const int maxThreads = omp_get_max_threads();
+	omp_set_num_threads(maxThreads);
+	#pragma omp parallel for
+	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		bool applyToThisElement = (*itElement)->isActinStiffnessChangeAppliedToElement(ThereIsWholeTissueStiffnessPerturbation, ThereIsApicalStiffnessPerturbation, ThereIsBasalStiffnessPerturbation, stiffnessPerturbationEllipseBandIds, numberOfStiffnessPerturbationAppliesEllipseBands);
+		if (applyToThisElement){
+            (*itElement)->calculateStiffnessPerturbationRate(stiffnessPerturbationBeginTimeInSec,stiffnessPerturbationEndTimeInSec, stiffnessChangedToFractionOfOriginal);
+		}
+	}
+}
+
+void Simulation::updateStiffnessChangeForActin(){
+	const int maxThreads = omp_get_max_threads();
+	omp_set_num_threads(maxThreads);
+	#pragma omp parallel for
+	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		bool applyToThisElement = (*itElement)->isActinStiffnessChangeAppliedToElement(ThereIsWholeTissueStiffnessPerturbation, ThereIsApicalStiffnessPerturbation, ThereIsBasalStiffnessPerturbation, stiffnessPerturbationEllipseBandIds, numberOfStiffnessPerturbationAppliesEllipseBands);
+		if (applyToThisElement){
+            (*itElement)->updateStiffnessMultiplier(dt);
+            (*itElement)->updateElasticProperties();
+            cout<<" element: "<<(*itElement)->Id<<" stiffness multiplier: "<<(*itElement)->getStiffnessMultiplier()<<endl;
+		}
+	}
+}
+
+void Simulation::checkStiffnessPerturbation(){
+	if (currSimTimeSec >=stiffnessPerturbationBeginTimeInSec && currSimTimeSec <stiffnessPerturbationEndTimeInSec){
+		if (startedStiffnessPerturbation == false){
+			calculateStiffnessChangeRatesForActin();
+		}
+		updateStiffnessChangeForActin();
+    }
+}
+
+
+/*
 void Simulation::checkStiffnessPerturbation(){
     if (currSimTimeSec >=stiffnessPerturbationBeginTimeInSec && currSimTimeSec <stiffnessPerturbationEndTimeInSec){    
         const int maxThreads = omp_get_max_threads();
@@ -4181,7 +4208,7 @@ void Simulation::checkStiffnessPerturbation(){
                                 //I need to calculate rates per element first:ß
                                 (*itElement)->calculateStiffnessPerturbationRate(stiffnessPerturbationBeginTimeInSec,stiffnessPerturbationEndTimeInSec, stiffnessChangedToFractionOfOriginal);
                             }                        
-                            (*itElement)->updateActinMultiplier(dt);
+                            (*itElement)->updateStiffnessMultiplier(dt);
                             (*itElement)->updateElasticProperties();
                         }
                     }
@@ -4193,36 +4220,79 @@ void Simulation::checkStiffnessPerturbation(){
     }
 }
 
+*/
+
+void Simulation::updateStiffnessChangeForExplicitECM(){
+    const int maxThreads = omp_get_max_threads();
+	#pragma omp parallel for
+	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		bool applyToThisElement = (*itElement)->isECMStiffnessChangeAppliedToElement(changeStiffnessApicalECM, changeStiffnessBasalECM, ECMStiffnessChangeEllipseBandIds, numberOfECMStiffnessChangeEllipseBands);
+		if (applyToThisElement){
+			 (*itElement)->updateStiffnessMultiplier(dt);
+			 (*itElement)->updateElasticProperties();
+		}
+	}
+}
+
+void Simulation::updateStiffnessChangeForViscosityBasedECMDefinition(){
+    const int maxThreads = omp_get_max_threads();
+    #pragma omp parallel for
+	for (vector<Node*>::iterator itNode = Nodes.begin(); itNode<Nodes.end(); ++itNode){
+		if(((*itNode)->tissuePlacement == 0 && changeStiffnessBasalECM ) || ((*itNode)->tissuePlacement == 1 && changeStiffnessApicalECM )){
+			if((*itNode)->insideEllipseBand){
+				for (int ECMReductionRangeCounter =0; ECMReductionRangeCounter<numberOfECMStiffnessChangeEllipseBands; ++ECMReductionRangeCounter){
+					if ((*itNode)->coveringEllipseBandId == ECMStiffnessChangeEllipseBandIds[ECMReductionRangeCounter]){
+						(*itNode)->externalViscosity[0] -= (*itNode)->ECMViscosityChangePerHour[0]/3600*dt;
+						(*itNode)->externalViscosity[1] -= (*itNode)->ECMViscosityChangePerHour[1]/3600*dt;
+						(*itNode)->externalViscosity[2] -= (*itNode)->ECMViscosityChangePerHour[2]/3600*dt;
+						(*itNode)->baseExternalViscosity[0] = (*itNode)->externalViscosity[0];
+						(*itNode)->baseExternalViscosity[1] = (*itNode)->externalViscosity[1];
+						(*itNode)->baseExternalViscosity[2] = (*itNode)->externalViscosity[2];
+					}
+				}
+			}
+		}
+	}
+}
+
+void Simulation::calculateStiffnessChangeRatesForECM(){
+	changedECMStiffness = true;
+	//this is the first time step I am changing the ECM stiffness.
+	//I need to calculate rates first.
+	//If there is explicit ECM, I will calculate the young modulus change via elements.
+	//If there is no explicit ECM, the viscosity reflects the ECM stiffness, and I will change the viscosity on a nodal basis.
+	if( thereIsExplicitECM){
+		#pragma omp parallel for
+		for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+			bool applyToThisElement = (*itElement)->isECMStiffnessChangeAppliedToElement(changeStiffnessApicalECM, changeStiffnessBasalECM, ECMStiffnessChangeEllipseBandIds, numberOfECMStiffnessChangeEllipseBands);
+			if (applyToThisElement){
+				(*itElement)->calculateStiffnessPerturbationRate(stiffnessChangeBeginTimeInSec,stiffnessChangeEndTimeInSec, ECMStiffnessChangeFraction);
+			}
+		}
+	}
+	else{
+		#pragma omp parallel for
+		for (vector<Node*>::iterator itNode = Nodes.begin(); itNode<Nodes.end(); ++itNode){
+			double timeDifferenceInHours = (stiffnessChangeEndTimeInSec - stiffnessChangeBeginTimeInSec)/3600;
+			for (int i=0; i<3; ++i){
+				(*itNode)->ECMViscosityChangePerHour[i] = (*itNode)->externalViscosity[i]*(1-ECMStiffnessChangeFraction)/timeDifferenceInHours;
+			}
+		}
+	}
+}
+
 void Simulation::checkECMStiffnessChange(){
 	//I have not carried out any softening as yet
 	//I will if the time is after 32 hr
 	if (currSimTimeSec >=stiffnessChangeBeginTimeInSec && currSimTimeSec <stiffnessChangeEndTimeInSec){
 		if (changedECMStiffness == false){
-			changedECMStiffness = true;
-			//this is the first time step I am reducing the ECM viscosity.
-			//I need to calculate rates first:
-			for (int aa=0; aa<nNodes; ++aa){
-				double timeDifferenceInHours = (stiffnessChangeEndTimeInSec - stiffnessChangeBeginTimeInSec)/3600;
-				for (int i=0; i<3; ++i){
-					Nodes[aa]->ECMViscosityChangePerHour[i] = Nodes[aa]->externalViscosity[i]*(1-ECMStiffnessChangeFraction)/timeDifferenceInHours;
-				}
-			}
+			calculateStiffnessChangeRatesForECM();
 		}
-		for (int aa=0; aa<nNodes; ++aa){
-			if((Nodes[aa]->tissuePlacement == 0 && changeStiffnessBasalECM ) || (Nodes[aa]->tissuePlacement == 1 && changeStiffnessApicalECM )){
-				if(Nodes[aa]->insideEllipseBand){
-					for (int ECMReductionRangeCounter =0; ECMReductionRangeCounter<numberOfECMStiffnessChangeEllipseBands; ++ECMReductionRangeCounter){
-						if (Nodes[aa]->coveringEllipseBandId == ECMStiffnessChangeEllipseBandIds[ECMReductionRangeCounter]){
-							Nodes[aa]->externalViscosity[0] -= Nodes[aa]->ECMViscosityChangePerHour[0]/3600*dt;
-							Nodes[aa]->externalViscosity[1] -= Nodes[aa]->ECMViscosityChangePerHour[1]/3600*dt;
-							Nodes[aa]->externalViscosity[2] -= Nodes[aa]->ECMViscosityChangePerHour[2]/3600*dt;
-							Nodes[aa]->baseExternalViscosity[0] = Nodes[aa]->externalViscosity[0];
-							Nodes[aa]->baseExternalViscosity[1] = Nodes[aa]->externalViscosity[1];
-							Nodes[aa]->baseExternalViscosity[2] = Nodes[aa]->externalViscosity[2];
-						}
-					}
-				}
-			}
+		if( thereIsExplicitECM){
+			updateStiffnessChangeForExplicitECM();
+		}
+		else{
+			updateStiffnessChangeForViscosityBasedECMDefinition();
 		}
 	}
 }
@@ -7027,7 +7097,7 @@ void Simulation::updateEquilibriumMyosinsFromInputSignal(MyosinFunction* currMF)
 	vector<ShapeBase*>::iterator itElement;
 	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 		if ((currMF->applyToColumnarLayer && (*itElement)->tissueType == 0) || (currMF->applyToPeripodialMembrane && (*itElement)->tissueType == 1) ){//|| (*itElement)->tissueType == 2){
-			if ((*itElement)->spansWholeTissue || (currMF->isApical && (*itElement)->tissuePlacement == 1) || (!currMF->isApical && !(*itElement)->isECMMimicing && ( (*itElement)->tissuePlacement == 0 || (*itElement)->atBorderOfECM) )){
+			if ((*itElement)->spansWholeTissue || (currMF->isApical && (*itElement)->tissuePlacement == 1) || (!currMF->isApical && !(*itElement)->isECMMimicing && ( (*itElement)->tissuePlacement == 0 || (*itElement)->atBasalBorderOfECM) )){
 				// 1) The element spans the whole tissue therefore both apical and basal responses should be applied
 				// 2) The myosin response is applicable to apical surface, and the tissue placement of the element is apical,
 				// 3) The myosin response is applicable to basal surface, and the tissue placement of the lement is basal.
@@ -7280,10 +7350,10 @@ void Simulation::assigneElementsAtTheBorderOfECM(){
 	}
 	int nVector = nodeListToCheck.size();
 	for(vector<ShapeBase*>::iterator  itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		if (!(*itElement)->isECMMimicing && !(*itElement)->atBorderOfECM){
+		if (!(*itElement)->isECMMimicing && !(*itElement)->atBasalBorderOfECM){
 			for (int j=0 ;j< nVector; ++j){
 				if ((*itElement)->DoesPointBelogToMe(nodeListToCheck[j])){
-					(*itElement)->atBorderOfECM = true;
+					(*itElement)->atBasalBorderOfECM = true;
 					break;
 				}
 			}

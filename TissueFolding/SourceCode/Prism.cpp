@@ -19,7 +19,7 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, bool thereIsPlas
     internalViscosity = 0;
     lambda = E*v /(1+v)/(1-2.0*v);
     mu = E/2.0/(1+v);
-    actinMultiplier = 1.0;
+    stiffnessMultiplier = 1.0;
 
     D = gsl_matrix_calloc(6,6);
     MyoForce = new double*[6];
@@ -186,7 +186,7 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, bool thereIsPlas
     remodellingPlaneRotationMatrix = gsl_matrix_calloc(3,3);
     gsl_matrix_set_identity(remodellingPlaneRotationMatrix);
     isECMMimicing = false;
-    atBorderOfECM = false;
+    atBasalBorderOfECM = false;
     isActinMimicing = false;
     insideEllipseBand = false;
     coveringEllipseBandId = -1;
@@ -378,7 +378,7 @@ void  Prism::setElasticProperties(double EApical, double EBasal, double EMid, do
 		this -> E = EECM;
 	}
 	else{
-		if (tissuePlacement == 0 || atBorderOfECM){
+		if (tissuePlacement == 0 || atBasalBorderOfECM){
 			this -> E = EBasal;
 		}
 		else if(tissuePlacement == 1 ){
@@ -402,8 +402,8 @@ void  Prism::setElasticProperties(double EApical, double EBasal, double EMid, do
 
 
 void  Prism::updateElasticProperties(){
-    lambda = actinMultiplier*E*v/(1+v)/(1-2.0*v);
-    mu = actinMultiplier*E/2.0/(1+v);
+    lambda = stiffnessMultiplier*E*v/(1+v)/(1-2.0*v);
+    mu = stiffnessMultiplier*E/2.0/(1+v);
     //These two updates are not really necessary for a neo-Hookean material, as the calculation for
     //D81 vector is carried out at each Newton-Raphson iteration. I do not know the material type now,
     //therefore I dont know if I should skip this or not. Can be eliminated for efficiency later on!

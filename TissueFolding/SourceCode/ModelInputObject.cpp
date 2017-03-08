@@ -1993,7 +1993,7 @@ bool ModelInputObject::readECMPerturbation(ifstream& file){
 		return false;
 	}
 	file >> currHeader;
-	if(currHeader == "softeningAppliedToEllipses(number,[ellipseId][ellipseId]):"){
+	if(currHeader == "stiffnessChangeAppliedToEllipses(number,[ellipseId][ellipseId]):"){
 		file >> Sim->numberOfECMStiffnessChangeEllipseBands;
 		double ellipseBandId;
 		for (int aa=0; aa<Sim->numberOfECMStiffnessChangeEllipseBands; ++aa){
@@ -2005,24 +2005,21 @@ bool ModelInputObject::readECMPerturbation(ifstream& file){
 
 	}
 	else{
-		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: softeningAppliedToEllipses(number,[ellipseId][ellipseId]):" <<endl;
+		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: stiffnessChangeAppliedToEllipses(number,[ellipseId][ellipseId]):" <<endl;
 		return false;
 	}
 
 	file >> currHeader;
-	if(currHeader == "softeningFraction(double(0-1.0):"){
+	if(currHeader == "stiffnessChangeFraction(double(0-1.0):"){
 		double fraction;
 		file >> fraction;
 		if (fraction <=0.0) {
 			fraction = 0.0001;
 		}
-		//if (fraction > 1.0){
-		//	fraction = 1.0;
-		//}
 		Sim->ECMStiffnessChangeFraction = fraction;
 	}
 	else{
-		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: softeningFraction(double(0-1.0):" <<endl;
+		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: stiffnessChangeFraction(double(0-1.0):" <<endl;
 		return false;
 	}
 	return true;

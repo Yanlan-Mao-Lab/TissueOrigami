@@ -111,7 +111,6 @@ private:
     void readGrowthRateToContinueFromSave();
     void readProteinsToContinueFromSave();
     void readPhysicalPropToContinueFromSave();
-    void readSpecificElementNodeTypesToContinueFromSave();
 	bool readFinalSimulationStep();
 	void reInitiateSystemForces(int oldSize);
 	bool checkInputConsistency();
@@ -480,7 +479,12 @@ public:
     void checkForExperimentalSetupsAfterIteration();
     void setLateralElementsRemodellingPlaneRotationMatrices();
 
+    void updateStiffnessChangeForExplicitECM();
+    void updateStiffnessChangeForViscosityBasedECMDefinition();
+    void calculateStiffnessChangeRatesForECM();
     void checkECMStiffnessChange();
+    void updateStiffnessChangeForActin();
+    void calculateStiffnessChangeRatesForActin();
     void checkStiffnessPerturbation();
     bool runOneStep();
     void updatePlasticDeformation();
