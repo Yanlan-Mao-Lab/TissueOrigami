@@ -9,11 +9,11 @@
 
 #include "Analysis.h"
 
-Analysis::Analysis(int dim ,int nEle, string saveDirectoryToDisplayString, vector<Node*> &nodes){
+Analysis::Analysis(int dim, string saveDirectoryToDisplayString, vector<Node*> &nodes, double boundingBoxWidth){
 	Dim = dim;
-	nElements = nEle;
 	nNodes = nodes.size();
-
+	yPosForSideDVLine = 0.1;
+	relativeYPosSideDVLine = 0.3;
 	string saveFileString = saveDirectoryToDisplayString +"/Save_AnalysisVolumeMaps";
 	const char* name_saveFileVolumeMaps = saveFileString.c_str();;
 	saveFileVolumeMaps.open(name_saveFileVolumeMaps, ofstream::out);
@@ -32,11 +32,8 @@ Analysis::Analysis(int dim ,int nEle, string saveDirectoryToDisplayString, vecto
 	if (!(saveFileKinkPositions.good() && saveFileKinkPositions.is_open())){
 		cerr<<"Cannot open the save file to write analysis: "<<name_saveFileKinkPositions<<endl;
 	}
-	setUpContourLinesDV(nodes);
+	setUpContourLinesDV(nodes, boundingBoxWidth);
 }
-
-
-
 
 void Analysis::calculateBoundingBoxSizeAndAspectRatio(int timeInSec, double boundingBoxLength, double boundingBoxWidth){
 	// format is [time in sec] [DV length in microns] [AP length in microns] [aspect ratio DV/AP] [...] then contour lengths will follow in coming functions.
@@ -53,8 +50,7 @@ void Analysis::calculateBoundingBoxSizeAndAspectRatio(int timeInSec, double boun
 
 }
 
-void Analysis::setUpContourLinesDV(vector<Node*> &nodes){
-
+void Analysis::setUpContourLinesDV(vector<Node*> &nodes, double boundingBoxWidth){
 	double posThreshold = 10E-2;
 	double negThreshold = (-1.0)*posThreshold;
 	for (int i=0 ; i<nNodes; ++i){
@@ -69,13 +65,13 @@ void Analysis::setUpContourLinesDV(vector<Node*> &nodes){
 			}
 		}
 	}
+	setUpSideApicalDVContour(nodes, boundingBoxWidth);
 	sortPositionMinToMax(nodes, 0, basalContourLineDVNodeIds); //sort basalContourLineDVNodeIds with x position going from minimum to maximum
 	sortPositionMinToMax(nodes, 0, apicalContourLineDVNodeIds); //sort apicalContourLineDVNodeIds with x position going from minimum to maximum
 }
 
 
 void Analysis::calculateContourLineLengthsDV(vector<Node*> &nodes){
-
 	double currContourLength = 0;
 	//calculating contour length for basal DV axis:
 	int n = basalContourLineDVNodeIds.size();
@@ -115,120 +111,173 @@ void Analysis::calculateContourLineLengthsDV(vector<Node*> &nodes){
 
 }
 
-void Analysis::findApicalKinkPointsDV(int timeInSec,  double boundingBoxXMin, double boundingBoxLength, vector<Node*> &nodes){
-	bool withRadiusOfCurvature = true;
-	if (withRadiusOfCurvature){
-		int n = apicalContourLineDVNodeIds.size();
-		if (n<3){
-			return;
-		}
-		double thresholdRCurvature = 2.0;
-		int id0 = apicalContourLineDVNodeIds[0];
-		int id1 = apicalContourLineDVNodeIds[1];
-		for (int i=0;i<n-2;++i){
-			int id2 = apicalContourLineDVNodeIds[i+2];
-			//calculating the first slope between node id 0 and node id1:
-			double dx = nodes[id0]->Position[0] - nodes[id1]->Position[0];
-			double dz = nodes[id0]->Position[2] - nodes[id1]->Position[2];
-			double m01 = dz/dx;
-			//the slope for node id1 and node id2
-			dx = nodes[id1]->Position[0] - nodes[id2]->Position[0];
-			dz = nodes[id1]->Position[2] - nodes[id2]->Position[2];
-			double m12 = dz/dx;
-			double meanSlope = ( m01 + m12 ) * 0.5;
-			double midPointX01 = (nodes[id0]->Position[0] + nodes[id1]->Position[0])*0.5;
-			double midPointX12 = (nodes[id1]->Position[0] + nodes[id2]->Position[0])*0.5;
-			double secondDerivative = (m01 - m12)/(midPointX01 - midPointX12);
-			double radiusofCurvature = pow((1 + meanSlope*meanSlope ),1.5)/secondDerivative;
-			double relativeX = (nodes[id1]->Position[0] - boundingBoxXMin)/boundingBoxLength;
-			//cout<<timeInSec<<" "<<id1<<" "<<relativeX<<" "<<radiusofCurvature<<" "<<endl;
-			id0 = id1;
-			id1 = id2;
-			if ((radiusofCurvature>0 && radiusofCurvature<thresholdRCurvature) || (radiusofCurvature<0 && radiusofCurvature>(-1.0)*thresholdRCurvature)){
-				saveFileKinkPositions<<timeInSec<<" ";
-				saveFileKinkPositions<<id1<<" ";
-				saveFileKinkPositions.width(6);
-				saveFileKinkPositions.precision(3);
-				if (radiusofCurvature > 0){
-					saveFileKinkPositions<<relativeX<<" -1.0"<<endl; // a positive normal means the vectors are forming a kink on the apical surface, writing kink first, peak second]
-				}
-				else{
-					saveFileKinkPositions<<"-1.0 "<<relativeX<<endl;// a negative normal means the vectors are forming a peak on the apical surface, writing kink first, peak second]
+void Analysis::updateSideContourPosition(double boundingBoxWidth){
+	yPosForSideDVLine = relativeYPosSideDVLine * boundingBoxWidth;
+}
+
+void Analysis::setUpSideApicalDVContour(vector<Node*> &nodes, double boundingBoxWidth){
+	//cout<<"entered setUpSideApicalDVContour"<<endl;
+	apicalContourLineDVSelectedYPositionsX.clear();
+	apicalContourLineDVSelectedYPositionsZ.clear();
+	updateSideContourPosition(boundingBoxWidth);
+	vector<double> initialPositionsInX;
+	//cout<<" y cut off positions: "<<yPosForSideDVLine<<" relative to tissue: "<<relativeYPosSideDVLine<<endl;
+	for (vector<Node*>::iterator itNode = nodes.begin(); itNode<nodes.end(); ++itNode){
+		if ((*itNode)->tissuePlacement == 1){
+			//cout<<" checking node "<<(*itNode)->Id<<" # of immediate neigs: "<<(*itNode)->immediateNeigs.size()<<endl;
+			//checking only apical nodes
+			int nNeig = (*itNode)->immediateNeigs.size();
+			double diff0 = (*itNode)->Position[1]-yPosForSideDVLine;
+			for (int i=0; i<nNeig; ++i){
+				if ((*itNode)->Id < (*itNode)->immediateNeigs[i]
+				    && nodes[(*itNode)->immediateNeigs[i]]->tissuePlacement == 1 ){
+					//cout<<" checking node "<<(*itNode)->Id<<" aginst node "<<nodes[(*itNode)->immediateNeigs[i]]->Id<<endl;
+					//checking only neigs with id numbers larger than mine, therefore have not been checked yet:
+					//checking only apical neigs
+					int id1 = (*itNode)->immediateNeigs[i];
+					double diff1 = nodes[id1]->Position[1]-yPosForSideDVLine;
+					if (diff0*diff1 < 0){
+						//the two nodes are on different sides of the line!:
+						//find the intersection point
+						double vec0To1[3];
+						for (int k=0; k<3; ++k){
+							vec0To1[k] = nodes[id1]->Position[k] - (*itNode)->Position[k];
+						}
+						double scaleFactor = (yPosForSideDVLine-(*itNode)->Position[1])/vec0To1[1];
+						double pointX = (*itNode)->Position[0] + vec0To1[0]*scaleFactor;
+						double pointZ = (*itNode)->Position[2] + vec0To1[2]*scaleFactor;
+						apicalContourLineDVSelectedYPositionsX.push_back(pointX);
+						apicalContourLineDVSelectedYPositionsZ.push_back(pointZ);
+						//calculating the same point in the junction in original positions:
+						double vec0To1InitialPos[3];
+						for (int k=0; k<3; ++k){
+							vec0To1InitialPos[k] = nodes[id1]->initialPosition[k] - (*itNode)->initialPosition[k];
+						}
+						double pointXInitialPos =(*itNode)->initialPosition[0] + vec0To1InitialPos[0]*scaleFactor;
+						initialPositionsInX.push_back(pointXInitialPos);
+						//cout<<"node: "<<(*itNode)->Id<<" initial pos: "<<(*itNode)->initialPosition[0]<<" "<<(*itNode)->initialPosition[1]<<" "<<(*itNode)->initialPosition[2]<<endl;
+						//cout<<"node: "<<(*itNode)->Id<<" current pos: "<<(*itNode)->Position[0]<<" "<<(*itNode)->Position[1]<<" "<<(*itNode)->Position[2]<<endl;
+						//cout<<"node: "<<id1<<" initial pos: "<<nodes[id1]->initialPosition[0]<<" "<<nodes[id1]->initialPosition[1]<<" "<<nodes[id1]->initialPosition[2]<<endl;
+						//cout<<"node: "<<id1<<" current pos: "<<nodes[id1]->Position[0]<<" "<<nodes[id1]->Position[1]<<" "<<nodes[id1]->Position[2]<<endl;
+						//cout<<"vec0To1: "<<vec0To1[0]<<" "<<vec0To1[1]<<" "<<vec0To1[2]<<" vec0To1InitialPos: "<<vec0To1InitialPos[0]<<" "<<vec0To1InitialPos[1]<<" "<<vec0To1InitialPos[2]<<endl;
+						//cout<<"scaleFactor "<<scaleFactor<<" selected current point "<<pointX<<" "<<yPosForSideDVLine<<" "<<pointZ<<" selected initial x: "<<pointXInitialPos<<endl;
+					}
 				}
 			}
 		}
 	}
-	else{
+	sortPointsMinToMaxBasedOnInitialPos(initialPositionsInX, apicalContourLineDVSelectedYPositionsX,apicalContourLineDVSelectedYPositionsZ);
+	//sortPointsMinToMaxBasedFirstArray(apicalContourLineDVSelectedYPositionsX, apicalContourLineDVSelectedYPositionsZ, apicalContourLineDVSelectedYNodeCouples0,apicalContourLineDVSelectedYNodeCouples1);
+	//int nXpos = apicalContourLineDVSelectedYPositionsX.size();
+	//for (int i=0;i<nXpos;++i){
+	//	cout<<" side contour: "<<i<<" of "<<apicalContourLineDVSelectedYPositionsX.size()<<": "<<apicalContourLineDVSelectedYPositionsX[i]<<" "<<apicalContourLineDVSelectedYPositionsZ[i]<<" base: "<<initialPositionsInX[i]<<endl;
+	//}
+	//cout<<"finalised setUpSideApicalDVContour"<<endl;
+}
+
+void Analysis::findApicalKinkPointsDV(int timeInSec,  double boundingBoxXMin, double boundingBoxLength, double boundingBoxWidth, vector<Node*> &nodes){
+	cout<<" inside findApicalKinkPointsDV"<<endl;
+	setUpSideApicalDVContour(nodes,boundingBoxWidth);
+	for (int DVLineIndex = 0; DVLineIndex<2; DVLineIndex++){
+		//by default calculating for the mid line;
 		int n = apicalContourLineDVNodeIds.size();
-		if (n>5){
-			double thresholdRadian = 120.0 * (M_PI/180.0);
-			double thresholdCosine =  cos(thresholdRadian);
-			//I am taking 5 node regions, and calculating the angle that the vectors -2 , +2 neigs, and -1, +1 neigs make.
-			// If the angle is sharp enough (cos above threshold), then I will look at the direction.
-			// then I will check the direction of the curvature.
-			//distance in microns, the threshold I would accept to qualify as a downward/upeard pattern between two nodes
-			//as I am looking into 5 node clusters, this will require a kink to be 2*threshold deep before it is recorded.
-			int id0 = apicalContourLineDVNodeIds[0];
-			int id1 = apicalContourLineDVNodeIds[1];
-			int id2 = apicalContourLineDVNodeIds[2];
-			int id3 = apicalContourLineDVNodeIds[3];
-			for (int i=1;i<n-1;++i){
-				int id4 = apicalContourLineDVNodeIds[i+2];
-				double vec0[3],vec1[3],vec3[3],vec4[3];
-				for ( int a=0; a<3; ++a){
-					 vec0[a] = nodes[id0]->Position[a] - nodes[id2]->Position[a];
-					 vec1[a] = nodes[id1]->Position[a] - nodes[id2]->Position[a];
-					 vec3[a] = nodes[id3]->Position[a] - nodes[id2]->Position[a];
-					 vec4[a] = nodes[id4]->Position[a] - nodes[id2]->Position[a];
-				}
-				double dotP = vec0[0]*vec4[0]+vec0[1]*vec4[1]+vec0[2]*vec4[2];
-				double mag0 = pow(vec0[0]*vec0[0]+vec0[1]*vec0[1]+vec0[2]*vec0[2],0.5);
-				double mag4 = pow(vec4[0]*vec4[0]+vec4[1]*vec4[1]+vec4[2]*vec4[2],0.5);
-				double cosTet = dotP / mag0 / mag4;
-				if (cosTet > thresholdCosine){
-					//the angle is small enough, check direction:
-					//I am checking which direction the Y of hte normal vector points to, a kink should point ot
-					// positive y.
-					double crossPY = vec0[2]*vec4[0]-vec0[0]*vec4[2];
-					int signCrossPY04 = 1;
-					if (crossPY < 0) {
-						signCrossPY04 = -1;
-					}
-
-					//Now I can move on to the next connection:
-					dotP = vec1[0]*vec3[0]+vec1[1]*vec3[1]+vec1[2]*vec3[2];
-					double mag1 = pow(vec1[0]*vec1[0]+vec1[1]*vec1[1]+vec1[2]*vec1[2],0.5);
-					double mag3 = pow(vec3[0]*vec3[0]+vec3[1]*vec3[1]+vec3[2]*vec3[2],0.5);
-					double cosTet = dotP / mag1 / mag3;
-					if (cosTet > thresholdCosine){
-						double crossPY = vec1[2]*vec3[0]-vec1[0]*vec3[2];
-						int signCrossPY13 = 1;
-						if (crossPY < 0) {
-							signCrossPY13 = -1;
-						}
-
-						//now I have the sine and cosines of both comparisons, and they are both eligable as the angles are below the threshold.
-						//I need to make sure they are facing the same direction, if yes, I can record the information:
-						if (signCrossPY04*signCrossPY13 > 0){
-							double relativeX = (nodes[id3]->Position[0] - boundingBoxXMin)/boundingBoxLength;
-							saveFileKinkPositions<<timeInSec<<" ";
-							saveFileKinkPositions<<id3<<" ";
-							saveFileKinkPositions.width(6);
-							saveFileKinkPositions.precision(3);
-							if (signCrossPY04 > 0){
-								saveFileKinkPositions<<relativeX<<" -1.0"<<endl; // a positive normal means the vectors are forming a kink on the apical surface, writing kink first, peak second]
-							}
-							else{
-								saveFileKinkPositions<<"-1.0 "<<relativeX<<endl;// a negative normal means the vectors are forming a peak on the apical surface, writing kink first, peak second]
-							}
-						}
-					}
-				}
-				id0 = id1;
-				id1 = id2;
-				id2 = id3;
-				id3 = id4;
+		if (n<3){
+			return;
+		}
+		int id0 = apicalContourLineDVNodeIds[0];
+		int id1 = apicalContourLineDVNodeIds[1];
+		if (DVLineIndex ==1){
+			n = apicalContourLineDVSelectedYPositionsX.size();
+			if (n<3){
+				cout<<"too few nodes - cannot continue on contour calculation on the side"<<endl;
+				return;
 			}
+			id0 = 0;
+			id1 = 1;
+		}
+		double thresholdRCurvature = 1E3;
+		for (int i=0;i<n-2;++i){
+			int id2 = apicalContourLineDVNodeIds[i+2];
+			if (DVLineIndex ==1){
+				id2 =2;
+			}
+			double dx,dz;
+			double posId1[3];
+			if (DVLineIndex == 1){
+				dx = apicalContourLineDVSelectedYPositionsX[id0] - apicalContourLineDVSelectedYPositionsX[id1];
+				dz = apicalContourLineDVSelectedYPositionsZ[id0] - apicalContourLineDVSelectedYPositionsZ[id1];
+				posId1[0]=apicalContourLineDVSelectedYPositionsX[id1];
+				posId1[1]=yPosForSideDVLine;
+				posId1[2]=apicalContourLineDVSelectedYPositionsZ[id1];
+			}
+			else{
+				//calculating the first slope between node id 0 and node id1:
+				dx = nodes[id0]->Position[0] - nodes[id1]->Position[0];
+				dz = nodes[id0]->Position[2] - nodes[id1]->Position[2];
+				posId1[0]=nodes[id1]->Position[0];
+				posId1[1]=nodes[id1]->Position[1];
+				posId1[2]=nodes[id1]->Position[2];
+			}
+			double m01 = dz/dx;
+			//the slope for node id1 and node id2
+			if (DVLineIndex == 1){
+				dx = apicalContourLineDVSelectedYPositionsX[id1] - apicalContourLineDVSelectedYPositionsX[id2];
+				dz = apicalContourLineDVSelectedYPositionsZ[id1] - apicalContourLineDVSelectedYPositionsZ[id2];
+			}
+			else{
+				dx = nodes[id1]->Position[0] - nodes[id2]->Position[0];
+				dz = nodes[id1]->Position[2] - nodes[id2]->Position[2];
+			}
+			double m12 = dz/dx;
+			double meanSlope = ( m01 + m12 ) * 0.5;
+			double midPointX01, midPointX12;
+			if (DVLineIndex == 1){
+				midPointX01 = (apicalContourLineDVSelectedYPositionsX[id0] + apicalContourLineDVSelectedYPositionsX[id1])*0.5;
+				midPointX12 = (apicalContourLineDVSelectedYPositionsX[id1] + apicalContourLineDVSelectedYPositionsX[id2])*0.5;
+
+			}
+			else{
+				midPointX01 = (nodes[id0]->Position[0] + nodes[id1]->Position[0])*0.5;
+				midPointX12 = (nodes[id1]->Position[0] + nodes[id2]->Position[0])*0.5;
+			}
+			double secondDerivative = (m01 - m12)/(midPointX01 - midPointX12);
+			double radiusofCurvature = pow((1 + meanSlope*meanSlope ),1.5)/secondDerivative;
+			double relativeX;
+			if (DVLineIndex == 1){
+				relativeX = (apicalContourLineDVSelectedYPositionsX[id1] - boundingBoxXMin)/boundingBoxLength;
+			}
+			else{
+				relativeX = (nodes[id1]->Position[0] - boundingBoxXMin)/boundingBoxLength;
+			}
+			id0 = id1;
+			id1 = id2;
+			//if ((radiusofCurvature>0 && radiusofCurvature<thresholdRCurvature) || (radiusofCurvature<0 && radiusofCurvature>(-1.0)*thresholdRCurvature)){
+				double yPos = 0;
+				if (DVLineIndex ==1){
+					yPos = yPosForSideDVLine;
+				}
+				saveFileKinkPositions<<timeInSec<<" ";
+				saveFileKinkPositions<<id1<<" ";
+				saveFileKinkPositions.width(6);
+				saveFileKinkPositions.precision(3);
+				saveFileKinkPositions<<relativeX<<" "<<yPos<<" "<<radiusofCurvature<<" "<<posId1[0]<<" "<<posId1[1]<<" "<<posId1[2]<<endl;
+			//}
+			/*if ((radiusofCurvature>0 && radiusofCurvature<thresholdRCurvature) || (radiusofCurvature<0 && radiusofCurvature>(-1.0)*thresholdRCurvature)){
+				saveFileKinkPositions<<timeInSec<<" ";
+				saveFileKinkPositions<<id1<<" ";
+				saveFileKinkPositions.width(6);
+				saveFileKinkPositions.precision(3);
+				double yPos = 0;
+				if (DVLineIndex ==1){
+					yPos = yPosForSideDVLine;
+				}
+				if (radiusofCurvature > 0){
+					saveFileKinkPositions<<yPos<<" "<<relativeX<<" -1.0 "<<radiusofCurvature<<endl; // yPos is for y position (0 for mid line, given by parameter elsewhere), a positive normal means the vectors are forming a kink on the apical surface, writing surface kink first, surface peak second, the curvature at the end]
+				}
+				else{
+					saveFileKinkPositions<<yPos<<" -1.0 "<<relativeX<<" "<<radiusofCurvature<<endl;// 0 is for y position, a negative normal means the vectors are forming a peak on the apical surface, writing surface kink first, surface peak second, radius of curvature at eh end]
+				}
+			}*/
 		}
 	}
 	cout<<" finished findApicalKinkPointsDV "<<endl;
@@ -252,6 +301,56 @@ void Analysis::sortPositionMinToMax(vector<Node*> &nodes, int axisToSortWith, ve
 	}
 }
 
+
+void Analysis::sortPointsMinToMaxBasedOnInitialPos(vector<double> &base, vector<double> &x, vector<double> &z){
+	int n = x.size();
+	bool swapped = true;
+	while (swapped){
+		swapped = false;
+		for(int i=1; i<n; ++i){
+			double pos1 = base[i];
+			double pos0 = base[i-1];
+			if(pos1<pos0){
+				double tempX=x[i-1];
+				double tempZ=z[i-1];
+				double tmpBase = base[i-1];
+				x[i-1]=x[i];
+				x[i]=tempX;
+				z[i-1]=z[i];
+				z[i]=tempZ;
+				base[i-1]=base[i];
+				base[i]=tmpBase;
+				swapped = true;
+			}
+		}
+	}
+}
+void Analysis::sortPointsMinToMaxBasedFirstArray(vector<double> &x, vector<double> &z, vector<int> &baseNodeId0, vector <int> &baseNodeId1 ){
+	int n = x.size();
+	bool swapped = true;
+	while (swapped){
+		swapped = false;
+		for(int i=1; i<n; ++i){
+			double pos1 = x[i];
+			double pos0 = x[i-1];
+			if(pos1<pos0){
+				double tempX=x[i-1];
+				double tempZ=z[i-1];
+				double tempBase0 = baseNodeId0[i-1];
+				double tempBase1 = baseNodeId1[i-1];
+				x[i-1]=x[i];
+				x[i]=tempX;
+				z[i-1]=z[i];
+				z[i]=tempZ;
+				baseNodeId0[i-1]=baseNodeId0[i];
+				baseNodeId0[i]=tempBase0;
+				baseNodeId1[i-1]=baseNodeId1[i];
+				baseNodeId1[i]=tempBase1;
+				swapped = true;
+			}
+		}
+	}
+}
 
 void Analysis::calculateTissueVolumeMap	(vector<ShapeBase*> &elements, int timeInSec, double boundingBoxXMin, double boundingBoxYMin, double boundingBoxLength, double boundingBoxWidth){
 	//Format:

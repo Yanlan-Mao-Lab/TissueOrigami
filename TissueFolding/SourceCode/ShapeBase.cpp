@@ -192,6 +192,15 @@ gsl_matrix* ShapeBase::getFg(){
     return tmpFg;
 }
 
+gsl_matrix* ShapeBase::getFe(){
+    gsl_matrix* tmpFe =gsl_matrix_calloc(nDim, nDim);
+    for (int iter =0; iter<3;++iter){
+		gsl_matrix_add(tmpFe, FeMatrices[iter]);
+	}
+    gsl_matrix_scale(tmpFe,1.0/3.0);
+    return tmpFe;
+}
+
 gsl_matrix* ShapeBase::getInvFg(){
     gsl_matrix* tmpInvFg =gsl_matrix_calloc(nDim, nDim);
     createMatrixCopy(tmpInvFg,InvFg);
@@ -935,10 +944,19 @@ void 	ShapeBase::getStrain(int type, float &StrainMag){
 	StrainMag = 0.0;
 	if (type == 0){
 		//this is the average strain
-        for (int i=0; i<3; ++i){
-           StrainMag += gsl_matrix_get(Strain,i,0) ;
-        }
-		StrainMag /= 3;
+        //for (int i=0; i<3; ++i){
+        //   StrainMag += gsl_matrix_get(Strain,i,0) ;
+        //}
+		//StrainMag /= 3;
+		//This is volumetric strain, the total volume change:
+		gsl_matrix* Fe = getFe();
+		StrainMag = determinant3by3Matrix(Fe)-1 ;
+		gsl_matrix_free(Fe);
+		//StrainMag = 1;
+		//for (int i=0; i<3; ++i){
+		//	StrainMag *= (1+gsl_matrix_get(Strain,i,0)) ;
+		//}
+		//StrainMag -= 1.0;
 	}
 	else if (type == 1){
 		//DV
@@ -1192,6 +1210,25 @@ double 	ShapeBase::calculateCurrentGrownAndEmergentVolumes(){
 
 }
 
+bool ShapeBase::isMyosinViaEllipsesAppliedToElement(bool isApical, bool isLateral, vector <int> & myosinEllipseBandIds, int numberOfMyosinAppliedEllipseBands){
+	if (!isECMMimicing){
+		if ( isLateral //all elements will feel the myosin regardless of placement
+			 || (tissuePlacement == 1 && isApical ) //the myosin function is apical, and the element is apical
+			 || (tissuePlacement == 0 && !isApical  ) //the myosin function is not apical, and the element is basal
+			 || (atBasalBorderOfECM   && !isApical  ) //the myosin function is not apical (applied to basal) and element is at the layer above the "basal elements, but there is basal ECM, therefore the element is basal of the tissue (atBasalBorderOfECM)
+			){
+			if(insideEllipseBand){ //this covers the tissue type as well as the position, ellipses are applied to columnar and linker zones only.
+				for (int myoRangeCounter =0; myoRangeCounter<numberOfMyosinAppliedEllipseBands; ++myoRangeCounter){
+					if (coveringEllipseBandId == myosinEllipseBandIds[myoRangeCounter]){
+						return true;
+					}
+				}
+			}
+		}
+	}
+	return false;
+}
+
 bool ShapeBase::isActinStiffnessChangeAppliedToElement(bool ThereIsWholeTissueStiffnessPerturbation, bool ThereIsApicalStiffnessPerturbation, bool ThereIsBasalStiffnessPerturbation, vector <int> &stiffnessPerturbationEllipseBandIds, int numberOfStiffnessPerturbationAppliesEllipseBands ){
 	if (!isECMMimicing){
 		if( ThereIsWholeTissueStiffnessPerturbation  //the whole columnar tissue is perturbed
@@ -1211,10 +1248,12 @@ bool ShapeBase::isActinStiffnessChangeAppliedToElement(bool ThereIsWholeTissueSt
 	return false;
 }
 
+
 bool ShapeBase::isECMStiffnessChangeAppliedToElement(bool changeStiffnessApicalECM, bool changeStiffnessBasalECM, vector<int> &ECMStiffnessChangeEllipseBandIds, int numberOfECMStiffnessChangeEllipseBands){
 	if (isECMMimicing){
 		if  ( (changeStiffnessApicalECM && tissuePlacement == 1 ) ||
-			  (changeStiffnessBasalECM  && tissuePlacement == 0 )
+			  (changeStiffnessBasalECM  && tissuePlacement == 0 ) ||
+			  (changeStiffnessBasalECM  && tissuePlacement == 2 )
 			){
 			if(insideEllipseBand){
 				for (int ECMReductionRangeCounter = 0; ECMReductionRangeCounter<numberOfECMStiffnessChangeEllipseBands; ++ECMReductionRangeCounter){
@@ -1273,6 +1312,15 @@ void ShapeBase::calculateStiffnessFeedback(double dt){
 	}
 }
 
+bool	ShapeBase::assignSoftHinge(double lowHingeLimit, double highHingeLimit,double softnessLevel){
+	if (!isECMMimicing){
+		if (relativePosInBoundingBox[0]>lowHingeLimit && relativePosInBoundingBox[0] < highHingeLimit){
+			stiffnessMultiplier *= softnessLevel;
+			updateElasticProperties();
+		}
+	}
+}
+
 bool	ShapeBase::checkZCappingInRemodelling(bool volumeConserved, double zRemodellingLowerThreshold, double zRemodellingUpperThreshold, gsl_matrix* increment, gsl_matrix* eigenVec){
 	//I want to do some further checks on the z axis, I
 	//need to find what the growth on z axis will be:
@@ -1316,7 +1364,7 @@ void	ShapeBase::checkIfInsideEllipseBands(int nMarkerEllipseRanges, vector<doubl
 	for (int i=0;i<nMarkerEllipseRanges; ++i){	
 		double dx  = relativePosInBoundingBox[0] - markerEllipseBandXCentres [i];
 		double dy = relativePosInBoundingBox[1];
-		if (dx <0){
+		if ( (markerEllipseBandR1Ranges[2*i]> 0 && dx <0) || (markerEllipseBandR1Ranges[2*i]< 0 && dx >0)){
 			double dxOverR1 = dx/markerEllipseBandR1Ranges[2*i];
 			double dyOverR2 = dy/markerEllipseBandR2Ranges[2*i];
 			double d_squareLower = dxOverR1*dxOverR1 + dyOverR2*dyOverR2;
@@ -1389,8 +1437,16 @@ void	ShapeBase::calculatePlasticDeformation3D(bool volumeConserved, double dt, d
 		zCapped = checkZCappingInRemodelling(volumeConserved, zRemodellingLowerThreshold, zRemodellingUpperThreshold, increment, eigenVec);
 	}
 	//If the element is ECM mimicking but not lateral, then I do not want any z remodelling:
-	if ((isECMMimicing) && tissueType != 2){
-		zCapped = true;
+	//I need to write the specific conditions that cover the setup where there is explicit ECM, but no
+	//peripodial, therefore, the circumference elements should not be zCapped, they should be treated as lateral:
+	if ((isECMMimicing) ){
+		//first condition will exempt the lateral elements.
+		//second condition will exempt circumferential elements that are assigned to be ECM
+		if (tissueType != 2) {
+			if (!isECMMimimcingAtCircumference){
+				zCapped = true;
+			}
+		}
 	}
 	if (zCapped){
 		calculatePrincipalStrains2D(e1,e2,e3,eigenVec);
@@ -1575,6 +1631,18 @@ bool 	ShapeBase::calculate3DRotMatFromF(gsl_matrix* rotMat){
         }
     }
     return false; //none of the off - diagonal terms of the matrix are above the threshold, the current rotation is only numerical error.
+}
+
+void ShapeBase::mutateElement(double growthRatePerHour){
+	isMutated = true;
+	//growth will be uniform in x and y
+	mutationGrowthRatePerSec= growthRatePerHour/2.0/3600.0;
+}
+
+void ShapeBase::updateGrowthByMutation(double dt){
+	//overwriting up any growth that might be there, with uniform growth in x & y:
+	setGrowthRate(dt,mutationGrowthRatePerSec,mutationGrowthRatePerSec,0.0);
+	updateGrowthIncrementFromRate();
 }
 
 void 	ShapeBase::calculateRelativePosInBoundingBox(double boundingBoxXMin, double boundingBoxYMin, double boundingBoxLength, double boundingBoxWidth){
@@ -2971,39 +3039,38 @@ void 	ShapeBase::calculatePrincipalStrains3D(double& e1, double &e2,  double &e3
 double  ShapeBase::calculateVolumeForInputShapeStructure(double** shapePositions, int nTriangularFaces, int** triangularFaces, double* midPoint ){
 	double totalVolume = 0;
 	for (int i = 0; i<nTriangularFaces; ++i){
-	//calculateTetrahedraVolume:
-	int node0 = triangularFaces[i][0];
-	int node1 = triangularFaces[i][1];
-	int node2 = triangularFaces[i][2];
-	double* vec1 = new double [(const int) nDim];
-	double* vec2 = new double [(const int) nDim];
-	double* vecMid = new double [(const int) nDim];
-	for (int j=0 ;j < nDim; ++j){
-			vec1   [j] = shapePositions[node1][j] - shapePositions[node0][j];
-			vec2   [j] = shapePositions[node2][j] - shapePositions[node0][j];
-			vecMid [j] = midPoint[j] - shapePositions[node0][j];
+		//calculateTetrahedraVolume:
+		int node0 = triangularFaces[i][0];
+		int node1 = triangularFaces[i][1];
+		int node2 = triangularFaces[i][2];
+		double* vec1 = new double [(const int) nDim];
+		double* vec2 = new double [(const int) nDim];
+		double* vecMid = new double [(const int) nDim];
+		for (int j=0 ;j < nDim; ++j){
+				vec1   [j] = shapePositions[node1][j] - shapePositions[node0][j];
+				vec2   [j] = shapePositions[node2][j] - shapePositions[node0][j];
+				vecMid [j] = midPoint[j] - shapePositions[node0][j];
+		}
+		double* baseVec = new double [(const int) nDim];
+		crossProduct3D(vec1,vec2,baseVec);
+		double normBaseVec= calculateMagnitudeVector3D (baseVec);
+		double baseArea= normBaseVec/2;
+		if (i == 0){
+			ReferenceShape->BasalArea = baseArea;
+		}
+		double height = dotProduct3D(vecMid,baseVec) / normBaseVec;
+		if (height <0){
+			height *= (-1.0);
+		}
+		ReferenceShape->height = height;
+		double currVolume = 1.0/3.0 *(height *baseArea);
+		totalVolume += currVolume;
+		delete[] vec1;
+		delete[] vec2;
+		delete[] vecMid;
+		delete[] baseVec;
 	}
-	double* baseVec = new double [(const int) nDim];
-	crossProduct3D(vec1,vec2,baseVec);
-	double normBaseVec= calculateMagnitudeVector3D (baseVec);
-	double baseArea= normBaseVec/2;
-	if (i == 0){
-		ReferenceShape->BasalArea = baseArea;
-	}
-	double height = dotProduct3D(vecMid,baseVec) / normBaseVec;
-	if (height <0){
-		height *= (-1.0);
-	}
-	ReferenceShape->height = height;
-	double currVolume = 1.0/3.0 *(height *baseArea);
-	totalVolume += currVolume;
-	delete[] vec1;
-	delete[] vec2;
-	delete[] vecMid;
-	delete[] baseVec;
-}
-
-return totalVolume;
+	return totalVolume;
 }
 
 void 	ShapeBase::calculatePrincipalStrainAxesOnXYPlane(double& e1, double &e2, double& tet){
@@ -3114,6 +3181,128 @@ bool	ShapeBase::checkIfXYPlaneStrainAboveThreshold(double thres){
 		return true;
 	}
 	return false;
+}
+
+void	ShapeBase::checkVolumeRedistribution(vector<ShapeBase*>& elementsList, double dt){
+	//cout<<"inside checkVolumeRedistribution "<<endl;
+	double rate = 0.20/3600*dt;
+	double multiplier = 10.0;
+	if (tissueType == 0 && tissuePlacement == 1){ //apical columnar layer element
+		//basal neig is set for this apical element. Start calculation:
+		gsl_matrix* FeOwn = getFe();
+		double detFeOwn = determinant3by3Matrix(FeOwn);
+		double ownCompressionLevel  = detFeOwn; //check if volume dependent!
+		double ownPressure = -1.0*log(ownCompressionLevel);
+		int  ownId = Id;
+		bool ownZModelling = true;
+		//if (ownId == 676 || ownId == 406){
+		//	cout<<"ownId: "<<ownId<<" detFeOwn: "<<detFeOwn<<" ownCompressionLevel "<<ownCompressionLevel<<" ownPressure "<<ownPressure<<endl;
+		//	displayMatrix(FeOwn,"FeOwn");
+		//	displayMatrix(Strain,"StrainOwn");
+		//}
+		if (elementsList[ownId]->isActinMimicing){
+			ownZModelling = false;
+		}
+		while (elementsList[ownId]->basalNeigElementId != -1){
+			int neighbourId = elementsList[ownId]->basalNeigElementId;
+			gsl_matrix* FeNeig = elementsList[neighbourId]->getFe();
+			double detFeNeig = determinant3by3Matrix(FeNeig);
+			double neigCompressionLevel  = detFeNeig; //check if volume dependent!
+			double neigPressure = -1.0*log(neigCompressionLevel);
+			bool neigZModelling = true;
+			if (elementsList[neighbourId]->isActinMimicing){
+				ownZModelling = false;
+			}
+			//if (ownId == 676 || ownId == 406){
+			//	cout<<"neighbourId: "<<neighbourId<<" detFeNeig "<<detFeNeig<<" neigCompressionLevel "<<neigCompressionLevel<<" neigPressure "<<neigPressure <<endl;
+			//	displayMatrix(FeNeig,"FeNeig");
+			//	displayMatrix(elementsList[neighbourId]->Strain,"StrainNeig");
+			//}
+			double dP = (ownPressure - neigPressure);
+			double dFractionOfChange = rate * multiplier* dP;
+			//select the smaller volume of the two elements
+			double selectedVolume = elementsList[ownId]->GrownVolume;
+			if (elementsList[neighbourId]->GrownVolume<selectedVolume){
+				selectedVolume = elementsList[neighbourId]->GrownVolume;
+			}
+			double dV = selectedVolume*dFractionOfChange;
+			gsl_matrix*  incrementOwn = gsl_matrix_calloc(3,3);
+			double volumeAddidionFraction = (elementsList[ownId]->GrownVolume - dV)/elementsList[ownId]->GrownVolume;
+			//if (ownId == 676 || ownId == 406){
+			//	cout<<"dP "<<dP<<" dFractionOfChange "<<dFractionOfChange<<" selectedVolume "<<selectedVolume<<" dV "<<dV<<" volumeAddidionFraction: "<<volumeAddidionFraction<<endl;
+			//}
+			if (ownZModelling){
+				//there is z modelling, use 3D:
+				double xx = pow(volumeAddidionFraction,1.0/3.0);
+				gsl_matrix_set(incrementOwn,0,0,xx);
+				gsl_matrix_set(incrementOwn,1,1,xx);
+				gsl_matrix_set(incrementOwn,2,2,xx);
+			}
+			else{
+				double xx = pow(volumeAddidionFraction,1.0/2.0);
+				gsl_matrix_set(incrementOwn,0,0,xx);
+				gsl_matrix_set(incrementOwn,1,1,xx);
+				gsl_matrix_set(incrementOwn,2,2,1.0);
+			}
+			//if (ownId == 676 || ownId == 406){
+			//	displayMatrix(incrementOwn,"incrementOwn");
+			//}
+			elementsList[ownId]->updateFgWithVolumeRedistribution(incrementOwn);
+			gsl_matrix*  incrementNeig = gsl_matrix_calloc(3,3);
+			volumeAddidionFraction = (elementsList[neighbourId]->GrownVolume + dV)/elementsList[neighbourId]->GrownVolume;
+			if (neigZModelling){
+				//there is z modelling, use 3D:
+				double xx = pow(volumeAddidionFraction,1.0/3.0);
+				gsl_matrix_set(incrementNeig,0,0,xx);
+				gsl_matrix_set(incrementNeig,1,1,xx);
+				gsl_matrix_set(incrementNeig,2,2,xx);
+			}
+			else{
+				double xx = pow(volumeAddidionFraction,1.0/2.0);
+				gsl_matrix_set(incrementNeig,0,0,xx);
+				gsl_matrix_set(incrementNeig,1,1,xx);
+				gsl_matrix_set(incrementNeig,2,2,1.0);
+			}
+			if (ownId == 144){
+				displayMatrix(incrementNeig,"incrementNeig");
+			}
+			elementsList[neighbourId]->updateFgWithVolumeRedistribution(incrementNeig);
+			gsl_matrix_free(incrementNeig);
+		    gsl_matrix_free(incrementOwn);
+			//if (ownId == 676 || ownId == 406){
+			//	cout<<"finished ownId: "<<ownId<<" neighbourId: "<<neighbourId<<" detFeOwn: "<<detFeOwn<<endl;
+			//}
+			ownId = neighbourId;
+			ownCompressionLevel = neigCompressionLevel;
+			ownPressure = neigPressure;
+			ownZModelling = neigZModelling;
+			//if (ownId == 676 || ownId == 406){
+			//	cout<<" next basal Id : "<<elementsList[ownId]->basalNeigElementId<<endl;
+			//}
+			gsl_matrix_free(FeNeig);
+		}
+		gsl_matrix_free(FeOwn);
+	}
+	//cout<<"finished checkVolumeRedistribution "<<endl;
+}
+
+void 	ShapeBase::updateFgWithVolumeRedistribution(gsl_matrix*  increment){
+    //incrementing Fg with current increment of volume change:
+    gsl_matrix* temp1 = gsl_matrix_calloc(nDim,nDim);
+    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, increment, Fg, 0.0, temp1);
+    gsl_matrix_memcpy(Fg, temp1);
+    gsl_matrix* tmpFgForInversion = gsl_matrix_calloc(nDim,nDim);
+    createMatrixCopy(tmpFgForInversion,Fg);
+    bool inverted = InvertMatrix(tmpFgForInversion, InvFg);
+    if (!inverted){
+        cerr<<"Fg not inverted!!"<<endl;
+    }
+    double detFg = determinant3by3Matrix(Fg);
+    GrownVolume = detFg*ReferenceShape->Volume;
+    VolumePerNode = GrownVolume/nNodes;
+    //freeing matrices allocated in this function
+    gsl_matrix_free(temp1);
+    gsl_matrix_free(tmpFgForInversion);
 }
 
 
@@ -3903,6 +4092,17 @@ void ShapeBase::setECMMimicingElementThicknessGrowthAxis(){
 		gsl_matrix_set_identity(ECMThicknessPlaneRotationalMatrix);
 	}
 
+}
+
+bool ShapeBase::areanyOfMyNodesAtCircumference(vector<Node*>& Nodes){
+	bool thereIsNodeAtCircumference = false;
+	for (int i=0; i< nNodes; ++i){
+		if (Nodes[NodeIds[i]]->atCircumference){
+			thereIsNodeAtCircumference = true;
+			break;
+		}
+	}
+	return thereIsNodeAtCircumference;
 }
 
 void ShapeBase::setLateralElementsRemodellingPlaneRotationMatrix(double systemCentreX, double systemCentreY){

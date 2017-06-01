@@ -99,8 +99,9 @@ protected:
     int nLateralSurfaceAreaNodeNumber;				///< Number of nodes that form the lateral surfaces for the element.
     int nSurfaceAreaNodeNumber;						///< Number of nodes that form the apical/basal surfaces for the element.
 
-    double 	stiffnessMultiplier;						///< The double for the multiplier that will define Young's modulus stress stiffening.
     double	stiffnessPerturbationRateInSec;	///< The rate at which the stiffness ofthe element will be perturbed, used with the model inputs from "Stiffness_Perturbation:" header in model input file
+
+    double mutationGrowthRatePerSec;
 
     void 	setShapeType(string TypeName);				///< The function sets the type of the shape.
     void 	readNodeIds(int* tmpNodeIds);				///< The function sets the Node#Id array that constructs the shape.
@@ -169,6 +170,8 @@ protected:
     gsl_matrix* TriPointKv;
 
 public:
+    double 	stiffnessMultiplier;						///< The double for the multiplier that will define Young's modulus stress stiffening.
+
     gsl_matrix*	remodellingPlaneRotationMatrix;			///< The rotation matrix converting the xyz coordinate system to the plane of remodelling for the lateral elements.
     gsl_matrix* Fg;			///< Growth matrix
 
@@ -192,6 +195,7 @@ public:
     int 	tissueType;	///< The tissue type is 0 for columnar layer, 1 for peripodial membrane, and 2 for linker zone
     bool	spansWholeTissue; ///< Boolean staing is the element spans the whole tissue. This is used to identify mid-layer tagged tissues (tissuePlacement = 2), that should still have apical abd basal responses (such as myosin).
     bool	isECMMimicing;
+    bool	isECMMimimcingAtCircumference;
     bool	atBasalBorderOfECM;
     bool	isActinMimicing;
 	bool	IsAblated;
@@ -207,12 +211,16 @@ public:
 	bool 	capElement;
 	double** MyoForce;
 	int* 	elementsIdsOnSameColumn;
+	int 	basalNeigElementId; 	///<This is recorded only for apical nodes of the columnar layer. If not recorded, id is -1.
 	bool 	insideEllipseBand;
 	int 	coveringEllipseBandId;
     gsl_matrix* ECMThicknessPlaneRotationalMatrix;
 
 	double emergentShapeLongAxis[2];
 	double emergentShapeShortAxis[2];
+
+    bool isMutated;
+
 	int 	getId();
 	string 	getName();
 	int 	getShapeType();
@@ -231,7 +239,9 @@ public:
 	void 	calculateFgFromRates(double dt, double x, double y, double z, gsl_matrix* rotMat, gsl_matrix* increment, int sourceTissue, double zMin, double zMax);
 	void 	calculateFgFromGridCorners(int gridGrowthsInterpolationType, double dt, GrowthFunctionBase* currGF, gsl_matrix* increment, int sourceTissue, int IndexX, int IndexY, double FracX, double dFracY);
 	void 	updateGrowthIncrement(gsl_matrix* columnar, gsl_matrix* peripodial);
+	void 	updateGrowthByMutation(double dt);
 	void	calculateRelativePosInBoundingBox(double boundingBoxXMin, double boundingBoxYMin, double boundingBoxLength, double boundingBoxWidth);
+	void	mutateElement(double growthRatePerHour);
 	//void	calculateRelativePosInBoundingBox(double columnarBoundingBoxXMin, double columnarBoundingBoxYMin, double columnarBoundingBoxLength, double columnarBoundingBoxWidth, double peipodialBoundingBoxXMin, double peipodialBoundingBoxYMin, double peipodialBoundingBoxLength, double peipodialBoundingBoxWidth);
 	void	updateReferencePositionMatrixFromInput(double** input);
 	void	displayRelativePosInBoundingBox();
@@ -258,6 +268,7 @@ public:
     gsl_matrix* getInvFg();
     gsl_matrix* getFsc();
     gsl_matrix* getInvFsc();
+    gsl_matrix* getFe();
     double 	getZRemodellingSoFar();
     void 	setZRemodellingSoFar(double zRemodellingSoFar);
 	void 	displayName();
@@ -274,6 +285,7 @@ public:
     void 	setViscosity(double viscosity);
     void	setCellMigration(bool migratingBool);
 
+    bool isMyosinViaEllipsesAppliedToElement(bool isApical, bool isLateral, vector <int> & myosinEllipseBandIds, int numberOfMyosinAppliedEllipseBands);
     bool isActinStiffnessChangeAppliedToElement(bool ThereIsWholeTissueStiffnessPerturbation, bool ThereIsApicalStiffnessPerturbation, bool ThereIsBasalStiffnessPerturbation, vector <int> &stiffnessPerturbationEllipseBandIds, int numberOfStiffnessPerturbationAppliesEllipseBands );
     bool isECMStiffnessChangeAppliedToElement(bool changeStiffnessApicalECM, bool changeStiffnessBasalECM, vector<int> &ECMStiffnessChangeEllipseBandIds, int numberOfECMStiffnessChangeEllipseBands);
     void 	calculateStiffnessPerturbationRate(double stiffnessPerturbationBeginTimeInSec, double stiffnessPerturbationEndTimeInSec, double stiffnessChangedToFractionOfOriginal);
@@ -337,6 +349,8 @@ public:
     void 	setLateralElementsRemodellingPlaneRotationMatrix(double systemCentreX, double systemCentreY);
     void	setECMMimicingElementThicknessGrowthAxis();
 
+    bool areanyOfMyNodesAtCircumference(vector<Node*>& Nodes);
+
     virtual void  checkHealth(){ParentErrorMessage("checkHealth");};
     void 	resetCurrStepShapeChangeData();
     void    writeKelasticToMainKatrix(gsl_matrix* K);
@@ -375,6 +389,8 @@ public:
     void	checkIfInsideEllipseBands(int nMarkerEllipseRanges, vector<double> markerEllipseBandXCentres, vector<double> markerEllipseBandR1Ranges, vector<double> markerEllipseBandR2Ranges, vector<Node*>& Nodes);
     bool	checkZCappingInRemodelling(bool volumeConserved, double zRemodellingLowerThreshold, double zRemodellingUpperThreshold, gsl_matrix* increment, gsl_matrix* eigenVec);
 
+    bool	assignSoftHinge(double lowHingeLimit, double highHingeLimit,double softnessLevel);
+
     void	calculatePlasticDeformation3D(bool volumeConserved, double dt, double plasticDeformationHalfLife, double zRemodellingLowerThreshold, double zRemodellingUpperThreshold);
     void 	addMigrationIncrementToGrowthIncrement(gsl_matrix* migrationIncrement);
     void 	displayDebuggingMatrices();
@@ -382,6 +398,7 @@ public:
 	virtual void getApicalTriangles(vector <int> &/*ApicalTriangles*/){ParentErrorMessage("getApicalTriangles");};
 	virtual int getCorrecpondingApical(int /*currNodeId*/){return ParentErrorMessage("getCorrecpondingApical", -100);};
 	virtual bool IsThisNodeMyBasal(int /*currNodeId*/){return ParentErrorMessage("IsThisNodeMyBasal", false);};
+	virtual bool IsThisNodeMyApical(int /*currNodeId*/){return ParentErrorMessage("IsThisNodeMyApical", false);};
 	virtual double getElementHeight(){return ParentErrorMessage("getElementHeight", 0.0);};
 	virtual void getRelevantNodesForPacking(int /*TissuePlacementOfPackingNode*/, int& /*id1*/, int& /*id2*/, int& /*id3*/){return ParentErrorMessage("getRelevantNodesForPacking");}
 	virtual bool IsPointCloseEnoughForPacking(double* /*Pos*/,  float /*threshold*/, int /*TissuePlacementOfPackingNode*/){return ParentErrorMessage("IsPointCloseEnoughForPacking", false);};
@@ -437,6 +454,10 @@ public:
 	void	readNewGrowthRate(double* NewGrowth, double& ex, double&ey, double& ez, double& exy, double& exz, double& eyz);
 	void	updateUniformOrRingGrowthRate(double* NewGrowth, int GrowthId);
 	void	updateGridBasedGrowthRate(double* NewGrowth, int GrowthId, int i, int j);
+	virtual void setBasalNeigElementId(vector<ShapeBase*>& /*elementsList*/){ParentErrorMessage("setBasalNeigElementId");};
+	void	checkVolumeRedistribution(vector<ShapeBase*>& elementsList, double dt);
+	void 	updateFgWithVolumeRedistribution(gsl_matrix*  increment);
+
 };
 
 #endif

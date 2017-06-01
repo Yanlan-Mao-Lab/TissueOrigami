@@ -15,6 +15,7 @@
 #include "MyosinFunction.h"
 #include "NewtonRaphsonSolver.h"
 #include "CellMigration.h"
+#include "MuscleFibre.h"
 
 
 #include <omp.h>
@@ -38,6 +39,7 @@ private:
 	ofstream saveFilePacking;
 	ofstream saveFileSimulationSummary;
 	ifstream saveFileToDisplayMesh;
+	ifstream inputMeshFile;
 	ifstream saveFileToDisplayTenComp;
     ifstream saveFileToDisplayGrowth;
     ifstream saveFileToDisplayGrowthRate;
@@ -156,6 +158,7 @@ private:
 	void initiateNodesByRowAndColumn(int Row, int Column,  float SideLength, float zHeight);
 	void fixApicalBasalNodes(vector<int> &NodesToFix);
 	void checkForNodeFixing();
+	void induceClones();
 	void initiateElementsByRowAndColumn(int Row, int Column);
 	void assignPhysicalParameters();
 	void checkForZeroExternalViscosity();
@@ -228,6 +231,8 @@ private:
 	void laserAblate(double OriginX, double OriginY, double Radius);
 	void laserAblateTissueType(int ablationType);
 	void fillInNodeNeighbourhood();
+	void setBasalNeighboursForApicalElements();
+	void redistributeVolume();
 	void fillInElementColumnLists();
 	void updateElementVolumesAndTissuePlacements();
 	void updateElasticPropertiesForAllNodes(); //When a simulation is read from save, the modified physical properties will be read.  The elasticity calculation parameters (lambda, mu, and related matrices) should be updated after reading the files. This function is called upon finishing reading a save file, to ensure the update.
@@ -291,6 +296,8 @@ public:
 	double fixingExternalViscosity[3];
 	bool ApicalNodeFix[3];
 	bool BasalNodeFix[3];
+	bool NotumNodeFix[3];
+	double notumFixingRange[2];
 	bool CircumferentialNodeFix[5][3]; //row 0: apical circumferece x,y,z ; row 1: basal circumference x,y,z; row 2: linker apical circumference x,y,z, row 3: linker basal circumference x,y,z, row 4: all circumference x,y,z
 	double PeripodialElasticity;
 	double peripodialApicalViscosity;
@@ -356,6 +363,7 @@ public:
     bool symmetricY;
     bool symmetricX;
     bool addingRandomForces;
+    bool redistributingVolumes;
 	bool stretcherAttached;
 	vector <int> leftClampBorder;
 	vector <int> rightClampBorder;
@@ -429,6 +437,8 @@ public:
 	double 	ECMStiffnessChangeFraction;
 	bool 	changeStiffnessBasalECM;
 	bool 	changeStiffnessApicalECM;
+	int numberOfMyosinAppliedEllipseBands;
+	vector <int> myosinEllipseBandIds;
 	
 	bool startedStiffnessPerturbation;
 	bool ThereIsStiffnessPerturbation;
@@ -460,6 +470,11 @@ public:
 	bool thereIsExplicitActin;
 	double ECMRenawalHalfLife; //The half life for ECM renewal inside plastic deformation
 
+	int numberOfClones;
+	vector<double> cloneInformationX;
+	vector<double> cloneInformationY;
+	vector<double> cloneInformationR;
+	vector<double> cloneInformationGrowth;
 	//packi
 	Simulation();
 	~Simulation();

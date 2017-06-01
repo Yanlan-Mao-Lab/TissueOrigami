@@ -24,26 +24,26 @@ protected:
 	ofstream saveFileVolumeMaps;
 	ofstream saveFileLenghtMeasurements;
 	ofstream saveFileKinkPositions;
-	//vector <int> ApicalContourLineAPNodeIds;
 	vector <int> apicalContourLineDVNodeIds;
 	vector <int> basalContourLineDVNodeIds;
-	/*vector <int> BasalContourLineAPNodeIds;
-	vector <int> MidlineContourLineAPNodeIds;
-	vector <int> MidlineContourLineDVNodeIds;
-*/
-
 public:
-	Analysis(int dim ,int nEle, string saveDirectoryToDisplayString,vector<Node*> &nodes);
+	double yPosForSideDVLine;
+	double relativeYPosSideDVLine;
+	vector<double> apicalContourLineDVSelectedYPositionsX;
+	vector<double> apicalContourLineDVSelectedYPositionsZ;
+	Analysis(int dim, string saveDirectoryToDisplayString,vector<Node*> &nodes, double boundingBoxWidth);
 	~Analysis();
 	void calculateBoundingBoxSizeAndAspectRatio(int timeInSec,double boundingBoxLength, double boundingBoxWidth);
 	void sortPositionMinToMax(vector<Node*> &nodes, int axisToSortWith, vector <int> &linkToArrayToSort );
-
-	void setUpContourLinesDV(vector<Node*> &nodes);
+	void sortPointsMinToMaxBasedFirstArray(vector<double> &x, vector<double> &z, vector<int> &baseNodeId0, vector <int> &baseNodeId1);
+	void sortPointsMinToMaxBasedOnInitialPos(vector<double> &base, vector<double> &x, vector<double> &z);
+	void setUpContourLinesDV(vector<Node*> &nodes, double boundingBoxWidth);
 	void calculateContourLineLengthsDV(vector<Node*> &nodes);
-	void findApicalKinkPointsDV(int timeInSec, double boundingBoxXMin,  double boundingBoxLength, vector<Node*> &nodes);
+	void setUpSideApicalDVContour(vector<Node*> &nodes, double boundingBoxWidth);
+	void updateSideContourPosition(double boundingBoxSizeY);
+	void findApicalKinkPointsDV(int timeInSec, double boundingBoxXMin,  double boundingBoxLength, double boundingBoxWidth, vector<Node*> &nodes);
 	void setUpContourLinesAP(vector<Node*> &nodes);
 	void calculateContourLineLengthsAP(vector<Node*> &nodes);
-
 	void calculateTissueVolumeMap(vector<ShapeBase*> &elements, int timeInSec, double boundingBoxXMin, double boundingBoxYMin, double boundingBoxLength, double boundingBoxWidth);
 	};
 

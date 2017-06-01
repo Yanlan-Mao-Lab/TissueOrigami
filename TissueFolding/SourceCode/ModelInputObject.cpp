@@ -189,6 +189,18 @@ bool ModelInputObject::readParameters(){
 				 */
 				Success  = readExplicitActinOptions(parametersFile);
 			}
+			else if(currParameterHeader == "VolumeRedistributionOptions:"){
+				/**
+				 * Setting volume redistributions options, The volume will be redistributed within a column of elements, starting from the apical surface.
+				 */
+				Success  = readVolumeRedistributionOptions(parametersFile);
+			}
+			else if(currParameterHeader == "MutationOptions:"){
+				/**
+				 * Setting mutation options.
+				 */
+				Success  = readMutationOptions(parametersFile);
+			}
 			else {
 				/**
 				 * In the case that the function, or any of the above listed parameter reading functions, encounters an
@@ -819,6 +831,19 @@ bool ModelInputObject::readNodeFixingParameters(ifstream& file){
 		cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: CircumferenceFix(bool-x,y,z):" <<endl;
 		return false;
 	}
+	file >> currHeader;
+		if(currHeader == "NotumFix(bool-x,y,z,double-xFracMin,xFracMax):"){
+			file >>Sim->NotumNodeFix[0];
+			file >>Sim->NotumNodeFix[1];
+			file >>Sim->NotumNodeFix[2];
+			file >>Sim->notumFixingRange[0];
+			file >>Sim->notumFixingRange[1];
+		}
+		else{
+			cerr<<"Error in reading notum Fixing option, curr string: "<<currHeader<<", should have been: NotumFix(bool-x,y,z,double-xFracMin,xFracMax):" <<endl;
+			return false;
+		}
+
 	return true;
 }
 
@@ -1473,8 +1498,11 @@ bool ModelInputObject::readGridBasedMyosinFunction(ifstream& file){
 	bool applyToPeripodialMembrane = false;
 	bool isApical = true;
 	bool isPolarised = false;
+	bool isLateral = false;
 	bool manualStripes = false;
+	bool useEllipses = false;
 	double stripeSize1,stripeSize2, initialPoint, endPoint, manualcEq, tetha;
+	double ellipseLateralcEq, ellipsecEq;
 	int gridX, gridY;
 	double cEq;
 	double tet;
@@ -1576,85 +1604,126 @@ bool ModelInputObject::readGridBasedMyosinFunction(ifstream& file){
 		}
 	}
 	else{
-		//the stripes are not manual, I need to read a grid
 		file >> currHeader;
-		if(currHeader == "EquilibriumConcentrationFilename(full-path):"){
-			string filepath;
-			file >> filepath;
-			cerr<<" filename is: "<<filepath<<endl;
-			const char* name_cEq = filepath.c_str();
-			ifstream cEqFile;
-			cEqFile.open(name_cEq, ifstream::in);
-			if (!(cEqFile.good() && cEqFile.is_open())){
-				cerr<<"could not open equilibrium myosin concentrations file: "<<name_cEq<<endl;
-				return false;
-			}
-			//adding the indice of the growth matrix
-			cout<<"reading from growth file"<<endl;
-			cEqFile >> gridX;
-			cEqFile >> gridY;
-			cout<<"constructing equilibrium myosin matrix"<<endl;
-			cEqMatrix = new double*[(const int) gridX];
-			for (int i=0; i<gridX; ++i){
-				cEqMatrix[i] = new double[(const int) gridY];
-				for (int j=0; j<gridY; ++j){
-					cEqMatrix[i][j] = 0.0;
-				}
-			}
-			cout<<"reading equilibrium myosin matrix"<<endl;
-			for (int j=gridY-1; j>-1; --j){
-				for (int i=0; i<gridX; ++i){
-					//cout<<"i :"<<i<<" j: "<<j<<" k: "<<k<<" ";
-					cEqFile >> cEq;
-					//cout<<"rate: "<<rate<<" ";
-					//GrowthMatrix[i][j][k] = rate*timeMultiplier;
-					cEqMatrix[i][j] = cEq;
-					//cout<<"matrix value: "<<GrowthMatrix[i][j][k]<<endl;
-				}
-			}
-			cEqFile.close();
+		if(currHeader == "UseEllipses(bool):"){
+			file >> useEllipses;
 		}
 		else{
-			cerr<<"Error in reading  myosin stimuli options, curr string: "<<currHeader<<", should have been: EquilibriumConcentrationFilename(full-path):" <<endl;
+			cerr<<"Error in reading  myosin stimuli options, curr string: "<<currHeader<<", should have been: UseEllipses(bool):" <<endl;
 			return false;
 		}
-		file >> currHeader;
-		if(currHeader == "OrientationAngleFilename(full-path):"){
-			string filepath;
-			file >> filepath;
-			cerr<<" filename is: "<<filepath<<endl;
-			const char* name_angle = filepath.c_str();
-			ifstream angleFile;
-			angleFile.open(name_angle, ifstream::in);
-			if (!(angleFile.good() && angleFile.is_open())){
-				cerr<<"could not open orientation angle file: "<<name_angle<<endl;
+		if (useEllipses){
+			file >> currHeader;
+			if(currHeader == "isLateral(bool):"){
+				file >> isLateral;
+			}
+			else{
+				cerr<<"Error in reading  myosin stimuli options, curr string: "<<currHeader<<", should have been: isLateral(bool):" <<endl;
 				return false;
 			}
-			//adding the indice of the growth matrix
-			cout<<"reading from orientation angle file"<<endl;
-			angleFile >> gridX;
-			angleFile >> gridY;
-			cout<<"constructing myosin orientation matrix"<<endl;
-			angleMatrix = new double*[(const int) gridX];
-			for (int i=0; i<gridX; ++i){
-				angleMatrix[i] = new double[(const int) gridY];
-				for (int j=0; j<gridY; ++j){
-					angleMatrix[i][j] = 0.0;
+			file >> currHeader;
+			if(currHeader == "EquilibriumMyosinLevel(double):"){
+				file >> ellipsecEq;
+			}
+			else{
+				cerr<<"Error in reading  myosin stimuli options, curr string: "<<currHeader<<", should have been: EquilibriumMyosinLevel(double):" <<endl;
+				return false;
+			}
+			file >> currHeader;
+			if(currHeader == "myosinAppliedToEllipses(number,[ellipseId][ellipseId]):"){
+				file >> Sim->numberOfMyosinAppliedEllipseBands;
+				double ellipseBandId;
+				for (int aa=0; aa<Sim->numberOfMyosinAppliedEllipseBands; ++aa){
+					file >>ellipseBandId;
+					Sim->myosinEllipseBandIds.push_back(ellipseBandId);
 				}
 			}
-			cout<<"reading myosin orientation matrix"<<endl;
-			for (int j=gridY-1; j>-1; --j){
-				for (int i=0; i<gridX; ++i){
-					//cout<<"i :"<<i<<" j: "<<j<<" k: "<<k<<" ";
-					angleFile >> tet;
-					angleMatrix[i][j] =  tet;
-				}
+			else{
+				cerr<<"Error in reading  myosin stimuli options, curr string: "<<currHeader<<", should have been: myosinAppliedToEllipses(number,[ellipseId][ellipseId]):" <<endl;
+				return false;
 			}
-			angleFile.close();
 		}
 		else{
-			cerr<<"Error in reading  myosin stimuli options, curr string: "<<currHeader<<", should have been: OrientationAngleFilename(full-path):" <<endl;
-			return false;
+			//the stripes are not manual, I need to read a grid
+			file >> currHeader;
+			if(currHeader == "EquilibriumConcentrationFilename(full-path):"){
+				string filepath;
+				file >> filepath;
+				cerr<<" filename is: "<<filepath<<endl;
+				const char* name_cEq = filepath.c_str();
+				ifstream cEqFile;
+				cEqFile.open(name_cEq, ifstream::in);
+				if (!(cEqFile.good() && cEqFile.is_open())){
+					cerr<<"could not open equilibrium myosin concentrations file: "<<name_cEq<<endl;
+					return false;
+				}
+				//adding the indice of the growth matrix
+				cout<<"reading from growth file"<<endl;
+				cEqFile >> gridX;
+				cEqFile >> gridY;
+				cout<<"constructing equilibrium myosin matrix"<<endl;
+				cEqMatrix = new double*[(const int) gridX];
+				for (int i=0; i<gridX; ++i){
+					cEqMatrix[i] = new double[(const int) gridY];
+					for (int j=0; j<gridY; ++j){
+						cEqMatrix[i][j] = 0.0;
+					}
+				}
+				cout<<"reading equilibrium myosin matrix"<<endl;
+				for (int j=gridY-1; j>-1; --j){
+					for (int i=0; i<gridX; ++i){
+						//cout<<"i :"<<i<<" j: "<<j<<" k: "<<k<<" ";
+						cEqFile >> cEq;
+						//cout<<"rate: "<<rate<<" ";
+						//GrowthMatrix[i][j][k] = rate*timeMultiplier;
+						cEqMatrix[i][j] = cEq;
+						//cout<<"matrix value: "<<GrowthMatrix[i][j][k]<<endl;
+					}
+				}
+				cEqFile.close();
+			}
+			else{
+				cerr<<"Error in reading  myosin stimuli options, curr string: "<<currHeader<<", should have been: EquilibriumConcentrationFilename(full-path):" <<endl;
+				return false;
+			}
+			file >> currHeader;
+			if(currHeader == "OrientationAngleFilename(full-path):"){
+				string filepath;
+				file >> filepath;
+				cerr<<" filename is: "<<filepath<<endl;
+				const char* name_angle = filepath.c_str();
+				ifstream angleFile;
+				angleFile.open(name_angle, ifstream::in);
+				if (!(angleFile.good() && angleFile.is_open())){
+					cerr<<"could not open orientation angle file: "<<name_angle<<endl;
+					return false;
+				}
+				//adding the indice of the growth matrix
+				cout<<"reading from orientation angle file"<<endl;
+				angleFile >> gridX;
+				angleFile >> gridY;
+				cout<<"constructing myosin orientation matrix"<<endl;
+				angleMatrix = new double*[(const int) gridX];
+				for (int i=0; i<gridX; ++i){
+					angleMatrix[i] = new double[(const int) gridY];
+					for (int j=0; j<gridY; ++j){
+						angleMatrix[i][j] = 0.0;
+					}
+				}
+				cout<<"reading myosin orientation matrix"<<endl;
+				for (int j=gridY-1; j>-1; --j){
+					for (int i=0; i<gridX; ++i){
+						//cout<<"i :"<<i<<" j: "<<j<<" k: "<<k<<" ";
+						angleFile >> tet;
+						angleMatrix[i][j] =  tet;
+					}
+				}
+				angleFile.close();
+			}
+			else{
+				cerr<<"Error in reading  myosin stimuli options, curr string: "<<currHeader<<", should have been: OrientationAngleFilename(full-path):" <<endl;
+				return false;
+			}
 		}
 	}
 	MyosinFunction* MFp;
@@ -1662,6 +1731,9 @@ bool ModelInputObject::readGridBasedMyosinFunction(ifstream& file){
 	if(manualStripes){
 		MFp = new MyosinFunction(Id, isApical, isPolarised, initTime, applyToColumnarLayer, applyToPeripodialMembrane, stripeSize1,stripeSize2, initialPoint, endPoint, manualcEq,tetha);
 
+	}
+	else if (useEllipses){
+		MFp = new MyosinFunction(Id, isApical, isLateral, initTime, applyToColumnarLayer, applyToPeripodialMembrane, ellipseLateralcEq, ellipsecEq);
 	}
 	else{
 		MFp = new MyosinFunction(Id, isApical, isPolarised, initTime, applyToColumnarLayer, applyToPeripodialMembrane, gridX, gridY, cEqMatrix, angleMatrix);
@@ -2046,13 +2118,57 @@ bool ModelInputObject::readExplicitActinOptions(ifstream& file){
 		file >> Sim->thereIsExplicitActin;
 	}
 	else{
-		cerr<<"Error in reading cell migration options: "<<currHeader<<", should have been: ThereIsExplicitActin(bool):" <<endl;
+		cerr<<"Error in reading explicit actin options: "<<currHeader<<", should have been: ThereIsExplicitActin(bool):" <<endl;
 		return false;
 	}
 	return true;
 }
 
 
+bool ModelInputObject::readVolumeRedistributionOptions(ifstream& file){
+	string currHeader;
+	file >> currHeader;
+	if(currHeader == "ThereIsVolumeRedistribution(bool):"){
+		file >> Sim->redistributingVolumes;
+	}
+	else{
+		cerr<<"Error in reading volume redistribution options: "<<currHeader<<", should have been: ThereIsVolumeRedistribution(bool):" <<endl;
+		return false;
+	}
+	return true;
+}
+
+
+bool ModelInputObject::readMutationOptions(ifstream& file){
+	string currHeader;
+	file >> currHeader;
+	if(currHeader == "numberOfClones(int):"){
+		file >> Sim->numberOfClones;
+	}
+	else{
+		cerr<<"Error in reading explicit actin options: "<<currHeader<<", should have been: numberOfClones(int):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "cloneInformation(double-relativeX,relativeY,micronRadius,growthRatepPerHour):"){
+		double relativeX, relativeY, micronRadius, growthRate;
+		for (int i=0; i<Sim->numberOfClones; ++i){
+			file >> relativeX;
+			file >> relativeY;
+			file >> micronRadius;
+			file >> growthRate;
+			Sim->cloneInformationX.push_back(relativeX);
+			Sim->cloneInformationY.push_back(relativeY);
+			Sim->cloneInformationR.push_back(micronRadius);
+			Sim->cloneInformationGrowth.push_back(growthRate);
+		}
+	}
+	else{
+		cerr<<"Error in reading explicit actin options: "<<currHeader<<", should have been: cloneInformation(double-relativeX,relativeY,relativeR,growthRatepPerHour):" <<endl;
+		return false;
+	}
+	return true;
+}
 
 bool ModelInputObject::readExplicitECMOptions(ifstream& file){
 	string currHeader;

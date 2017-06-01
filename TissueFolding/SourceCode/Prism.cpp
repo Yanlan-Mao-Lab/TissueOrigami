@@ -186,12 +186,17 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, bool thereIsPlas
     remodellingPlaneRotationMatrix = gsl_matrix_calloc(3,3);
     gsl_matrix_set_identity(remodellingPlaneRotationMatrix);
     isECMMimicing = false;
+    isECMMimimcingAtCircumference = false;
     atBasalBorderOfECM = false;
     isActinMimicing = false;
     insideEllipseBand = false;
     coveringEllipseBandId = -1;
     stiffnessPerturbationRateInSec = 0;
     ECMThicknessPlaneRotationalMatrix = gsl_matrix_calloc(3,3);
+    basalNeigElementId = -1;
+
+    isMutated = false;
+    mutationGrowthRatePerSec = 0.0;
 }
 
 Prism::~Prism(){
@@ -396,8 +401,7 @@ void  Prism::setElasticProperties(double EApical, double EBasal, double EMid, do
 
     calculateDVector();
     calculateD81Tensor();
-
-    //cout<<" Element: "<<Id<<" E : "<<E<<" v: "<<v<<" lambda: "<<lambda<< " mu: "<<mu<<endl;
+    //cout<<" Element: "<<Id<<" E : "<<E<<" v: "<<v<<" lambda: "<<lambda<< " mu: "<<mu<<" atBasalBorderOfECM "<<atBasalBorderOfECM<<endl;
 }
 
 
@@ -762,7 +766,7 @@ void Prism::calculateReferenceVolume(){
 	//two bases:
 	triangularFaces[0][0] = 0; triangularFaces[0][1] = 1; triangularFaces[0][2] = 2;
 	triangularFaces[1][0] = 3; triangularFaces[1][1] = 4; triangularFaces[1][2] = 5;
-	//divide the rectangular dies into trianges:
+	//divide the rectangular sides into trianges:
 	triangularFaces[2][0] = 0; triangularFaces[2][1] = 1; triangularFaces[2][2] = 3;
 	triangularFaces[3][0] = 1; triangularFaces[3][1] = 3; triangularFaces[3][2] = 4;
 	triangularFaces[4][0] = 1; triangularFaces[4][1] = 2; triangularFaces[4][2] = 4;
@@ -978,6 +982,15 @@ bool Prism::IsThisNodeMyBasal(int currNodeId){
 	}
 	return false;
 }
+
+
+bool Prism::IsThisNodeMyApical(int currNodeId){
+	if (NodeIds[3] == currNodeId || NodeIds[4] == currNodeId || NodeIds[5] == currNodeId ){
+		return true;
+	}
+	return false;
+}
+
 
 double Prism::getElementHeight(){
 	double dx = Positions[0][0] - Positions[3][0];
@@ -1888,6 +1901,43 @@ void 	Prism::calculateApicalArea(){
 	}
 	ApicalArea = Area;
 	//cout<<" Element "<<Id<<" apical area: "<<ApicalArea<<endl;
+}
+
+void Prism::setBasalNeigElementId(vector<ShapeBase*>& elementsList){
+	//cout<<" working on prism "<<Id<<" tissueType "<<tissueType<<" atBasalBorderOfECM "<<atBasalBorderOfECM<< " isECMMimicing "<<isECMMimicing<<endl;
+	if (tissueType== 0 //columnar layer element
+			&& !tissuePlacement == 0 //not checking for basal elements, to save time
+			&& !atBasalBorderOfECM  //not checking for elements bordering ECM, same as basal
+			&& !isECMMimicing		 //not checking for ECM mimicking elements
+			){
+		//I am setting this only for columnar elements.
+		//I do not need to check for spanning the whole tissue, as those elements
+		//will not have a basal neighbour of relevance.
+		int currBasalNodes[3] = {NodeIds[0], NodeIds[1],NodeIds[2]};
+		for( vector<ShapeBase*>::iterator itElement=elementsList.begin(); itElement<elementsList.end(); ++itElement){
+			bool isApicalOwner  = (*itElement)->IsThisNodeMyApical(currBasalNodes[0]);
+			if (isApicalOwner){
+				//node 0 is owned by this element, is node 1?
+				isApicalOwner  = (*itElement)->IsThisNodeMyApical(currBasalNodes[1]);
+				if (isApicalOwner){
+					//node 0 & 1 are owned by this element, is node 2?
+					isApicalOwner  = (*itElement)->IsThisNodeMyApical(currBasalNodes[2]);
+					if (isApicalOwner){
+						//all thress nodes are owned as apical nodes,
+						//this element in the neighbour I am looking for.
+						//Is this element ECM?
+						if (!(*itElement)-> isECMMimicing){
+							basalNeigElementId = (*itElement)->getId();
+						}
+						//break the loop regardless of the ECM status. If I have reached an ECM element
+						//then this element does not have a basal bordering tissue. I should not
+						//have this case anyway, as I skip elemetns atBasalBorderOfECM.
+						break;
+					}
+				}
+			}
+		}
+	}
 }
 
 void Prism::constructElementStackList(const int discretisationLayers, vector<ShapeBase*>& elementsList){

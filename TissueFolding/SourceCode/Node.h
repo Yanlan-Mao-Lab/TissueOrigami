@@ -18,7 +18,7 @@ public:
 	int 			Id;						///< The unique identification number of the node
 	int 			nDim;					///< The number of dimensions of the node, (2 or 3)
 	double 			*Position;				///< The pointer to the position array of the node. The array itself is declared within the constructor, depending on nDim
-	double 			*previousStepPosition;	///< The pointer to the previous step position array of the node. The array itself is declared within the constructor, depending on nDim.
+	double 			*initialPosition;		///< The pointer to the initial position array of the node. The array itself is declared within the constructor, depending on nDim.
 	double 			*RKPosition;			///< The pointer to the position array for position during a Runge-Kutta step array of the node. The array itself is declared within the constructor, depending on nDim
 	//double 			**Velocity;				///< The pointer(**) to the velocities of the node for each Runge-Kutta step. The final calculated velocity is stored in Velocity[0]
 	bool			externalViscositySetInFixing[3];	///< The boolean array stating if the external viscosity of any axis has been set in node fixing options. The node fixing is carried out before the physical parameter settings in most cases. The boolean check is carried out not to overwrite the existing set viscosity in normal viscosity assignment.
@@ -39,8 +39,9 @@ public:
 	int 			symmetricEquivalentId;		///< The id of the node that this node will move symmetrically in y, if the tissue is symmetric and only half is simulated.
 	bool			hasLateralElementOwner;		///< The boolean stating if any lateral element uses this node
 	bool			atSymmetricityBorder;		///< The boolean stating if the node is at the border of symmetricity
-	bool		insideEllipseBand;
-	int		coveringEllipseBandId;	
+	bool			insideEllipseBand;
+	int				coveringEllipseBandId;
+	bool			allOwnersECMMimicing;		///< The boolean stating all the elements making use of the node are ECM mimicking elements.
 	//bool 			allOwnersAblated;			///< Boolean stating if the node is ablated. The node is ablated if all the elements making use of the node are ablated.
 	//void setExternalViscosity(double ApicalVisc,double BasalVisc, double PeripodialApicalVisc, double PeripodialBasalVisc);///< The function to set the viscosity of the node.
 	void setExternalViscosity(double ApicalVisc,double BasalVisc, bool extendExternalViscosityToInnerTissue);///< The function to set the viscosity of the node.
@@ -52,9 +53,6 @@ public:
 	void addToImmediateNeigs(int newNodeId);
 	void addToConnectedElements(int newElementId, double volumePerNode);
 	void removeFromConnectedElements(int newElementId, double volumePerNode);
-	double 	getDisplacement();
-	void 	updatePreviousPosition();
-	//void updateECMVisocityWithDeformationRate(double ECMChangeFraction, double averageDisplacement);
 	int getId();
 };
 #endif

@@ -21,15 +21,18 @@ public:
 	int Id;							///< The unique identification number of the myosin function
 	int initTime;					///< The application time of the myosin response, in time steps. If the input value(sec) does not fit with the time steps, it will be rounded down.
 	bool isApical;					///< The boolean stating if the myosin function is for the apical surface of selected tissue layer
+	bool isLateral;					///< The boolean stating if the myosin function is applied laterally
 	bool isPolarised;				///< The boolean stating if the myosin function is is polarised, defaul value is false, and applies a uniform contraction of the surface
 	bool applyToColumnarLayer;		///< Boolean stating if the myosin levels should be applied to columnar layer
 	bool applyToPeripodialMembrane; ///< Boolean stating if the myosin levels should be applied to peripodial membrane
-	bool manualStripes;
-	bool markerEllipse;				///<< Boolean stating if the myosin function is applied via marker ellipses
+	bool manualStripes;				///< Boolean stating if the myosin levels are based on manual stripes
+	bool useEllipses;				///< Boolean stating if the myosin levels are based on marker ellipses
 	double stripeSize1, stripeSize2;
 	double initialPoint, endPoint;
 	double manualCMyoEq;
 	double manualOrientation[2];
+	double ellipseLateralcEq;
+	double ellipsecEq;
 	int nGridX;						///< The number of grid points that discretise the tissue in x
 	int nGridY;						///< The number of grid points that discretise the tissue in y
 	double **EquilibriumMyosinMatrix;	///<The matrix of equilibrium myosin levels. It is a matrix of doubles for equilibrium concentration at each grid point. The dimensions of the matrix are equal to (MyosinFunction::nGridX, MyosinFunction::nGridY), and set in constructor of the MyosinFunction.
@@ -41,6 +44,8 @@ public:
 		 */
 		//this ->kMyo = 0.09873;
 		this->manualStripes = false;
+		this->useEllipses = false;
+		this->isLateral = false;
 		this->Id = id;
 		this->initTime = initTime;
 		this->applyToColumnarLayer = applyToColumnarLayer;
@@ -76,6 +81,8 @@ public:
 		this ->manualCMyoEq = 0;
 		this->manualOrientation[0] = 1;
 		this->manualOrientation[1] = 0;
+		this->ellipseLateralcEq = 0;
+		this->ellipsecEq = 0;
 	} ///< The constructor of MyosinFunction.
 	MyosinFunction(int id, bool isApical, bool isPolarised, int initTime, bool applyToColumnarLayer, bool applyToPeripodialMembrane, double stripeSize1, double stripeSize2, double initialPoint, double endPoint, double manualcEq, double tetha){
 		/**
@@ -83,6 +90,8 @@ public:
 		 */
 		//this ->kMyo = 0.09873;
 		this->manualStripes = true;
+		this->useEllipses = false;
+		this->isLateral = false;
 		this->Id = id;
 		this->initTime = initTime;
 		this->applyToColumnarLayer = applyToColumnarLayer;
@@ -117,7 +126,51 @@ public:
 				MyosinOrientationMatrix[i][j][1] = 0;
 			}
 		}
+		this->ellipseLateralcEq = 0;
+		this->ellipsecEq = 0;
 	} ///< The constructor of MyosinFunction.
+
+
+	MyosinFunction(int id, bool isApical, bool isLateral, int initTime, bool applyToColumnarLayer, bool applyToPeripodialMembrane, double ellipseLateralcEq, double ellipsecEq){
+		this->manualStripes = false;
+		this->useEllipses = true;
+		this->isLateral = isLateral;
+		this->Id = id;
+		this->initTime = initTime;
+		this->applyToColumnarLayer = applyToColumnarLayer;
+		this->applyToPeripodialMembrane = applyToPeripodialMembrane;
+		this->isApical = isApical;
+		this->isPolarised = isPolarised;
+		this->ellipseLateralcEq = ellipseLateralcEq;
+		this->ellipsecEq = ellipsecEq;
+		//Filling up unused parameters
+		this ->nGridX = 0;
+		this ->nGridY = 0;
+		EquilibriumMyosinMatrix = new double*[(const int) nGridX];
+		for (int i=0; i<nGridX; ++i){
+			EquilibriumMyosinMatrix[i] = new double[(const int) nGridY];
+			for (int j=0; j<nGridY; ++j){
+				EquilibriumMyosinMatrix[i][j] = 0.0;
+			}
+		}
+		MyosinOrientationMatrix = new double**[(const int) nGridX];
+		for (int i=0; i<nGridX; ++i){
+			MyosinOrientationMatrix[i] = new double*[(const int) nGridY];
+			for (int j=0; j<nGridY; ++j){
+				MyosinOrientationMatrix[i][j] = new double[2];
+				MyosinOrientationMatrix[i][j] =  new double[2];
+				MyosinOrientationMatrix[i][j][0] = 0;
+				MyosinOrientationMatrix[i][j][1] = 0;
+			}
+		}
+		this ->stripeSize1 = 0;
+		this ->stripeSize2 = 0;
+		this ->initialPoint = 0;
+		this ->endPoint = 0;
+		this ->manualCMyoEq = 0;
+		this->manualOrientation[0] = 1;
+		this->manualOrientation[1] = 0;
+	}
 
 	~MyosinFunction(){
 		for (int i=0; i<nGridX; ++i){

@@ -56,6 +56,7 @@ public:
 	void getApicalTriangles(vector <int> &ApicalTriangles);
 	int getCorrecpondingApical(int currNodeId);
 	bool IsThisNodeMyBasal(int currNodeId);
+	bool IsThisNodeMyApical(int currNodeId);
 	double getElementHeight();
 	void AddPackingToSurface(int tissueplacementOfPackingNode, double Fx, double Fy,double Fz,  double **PackingForces,vector<Node*> &Nodes, bool& allCornersFixedX, bool& allCornersFixedY, bool& allCornersFixedZ);
 	void getRelevantNodesForPacking(int TissuePlacementOfPackingNode, int& id1, int& id2, int& id3);
@@ -69,6 +70,7 @@ public:
 	void distributeMyosinForcesTotalSizeBased(bool isIsotropic, bool apical, double forcePerMyoMolecule);
 	//void fillLateralNeighbours();
 	void updateElasticProperties();
+	void setBasalNeigElementId(vector<ShapeBase*>& elementsList);
 	void constructElementStackList(const int discretisationLayers, vector<ShapeBase*>& elementsList);
 	void getApicalNodePos(double* posCorner);
 	void getBasalNodePos(double* posCorner);

@@ -8,11 +8,11 @@ Node::Node(int id, int dim, double* pos, int tissuePos, int tissueType){
 	const int n = nDim;
 	Position = new double[n];
 	RKPosition = new double[n];
-	previousStepPosition = new double[n];
+	initialPosition = new double[n];
 	for (int i=0; i<n; ++i){
 		Position[i] = pos[i];
 		RKPosition[i] = pos[i];
-		previousStepPosition[i] = pos[i];
+		initialPosition[i] = pos[i];
 	}
 	FixedPos = new bool[3];
 	for (int i=0; i<3; ++i){
@@ -33,31 +33,17 @@ Node::Node(int id, int dim, double* pos, int tissuePos, int tissueType){
     atSymmetricityBorder = false;
     insideEllipseBand = false;
     coveringEllipseBandId = -1;
+    allOwnersECMMimicing = false;
    // allOwnersAblated = false;
 }
 
 Node::~Node(){
 	delete[] Position;
 	delete[] RKPosition;
-	delete[] previousStepPosition;
+	delete[] initialPosition;
 	delete[] FixedPos;
 }
 
-double Node::getDisplacement(){
-	displacement = 0;
-	for (int i=0; i<nDim; ++i){
-		double d = previousStepPosition[i] - Position[i];
-		displacement += d*d;
-	}
-	displacement = pow(displacement,0.5);
-	return displacement;
-}
-
-void Node::updatePreviousPosition(){
-	for (int i=0; i<nDim; ++i){
-		previousStepPosition[i] = Position[i];
-	}
-}
 /*
 void Node::updateECMVisocityWithDeformationRate(double ECMChangeFraction, double averageDisplacement){
 	double multiplier = (1.0+ECMChangeFraction);
