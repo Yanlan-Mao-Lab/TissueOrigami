@@ -2876,12 +2876,12 @@ void Simulation::checkForNodeFixing(){
 }
 
 void Simulation::induceClones(){
-	cout<<"inside induce clones"<<endl;
+	//cout<<"inside induce clones"<<endl;
 	for (int i=0;i<numberOfClones; ++i){
 		double inMicronsX = cloneInformationX[i]*boundingBoxSize[0] + boundingBox[0][0];
 		double inMicronsY = cloneInformationY[i]*boundingBoxSize[1] + boundingBox[0][1];
 		double inMicronsRadius = cloneInformationR[i];
-		cout<<" clone: "<<i<<" position: "<<inMicronsX<<" "<<inMicronsY<<" radius: "<<inMicronsRadius<<endl;
+		//cout<<" clone: "<<i<<" position: "<<inMicronsX<<" "<<inMicronsY<<" radius: "<<inMicronsRadius<<endl;
 		double r2 = inMicronsRadius*inMicronsRadius;
 		double growthRate = cloneInformationGrowth[i];
 		for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
@@ -2891,7 +2891,7 @@ void Simulation::induceClones(){
 			double dy = inMicronsY - c[1];
 			double d2 = dx*dx + dy*dy;
 			if (d2 < r2){
-				cout<<"mutating element: "<<(*itElement)->Id<<endl;
+				//cout<<"mutating element: "<<(*itElement)->Id<<endl;
 				(*itElement)->mutateElement(growthRate);
 			}
 			delete[] c;
@@ -7370,7 +7370,7 @@ void Simulation::calculateGrowthUniform(GrowthFunctionBase* currGF){
 		currGF->getGrowthRate(growthRates);
     	vector<ShapeBase*>::iterator itElement;
     	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-    		if (!thereIsExplicitECM || !(*itElement)->isECMMimicing || !(*itElement)->isMutated){
+    		if ((!thereIsExplicitECM || !(*itElement)->isECMMimicing ) && !(*itElement)->isMutated){
     			//tissue type == 0 is columnar layer, ==1 is peripodial membrane, ==2 id linker zone
 				gsl_matrix_set_identity(columnarFgIncrement);
 				gsl_matrix_set_identity(peripodialFgIncrement);
@@ -7406,7 +7406,7 @@ void Simulation::calculateGrowthRing(GrowthFunctionBase* currGF){
 		gsl_matrix* peripodialFgIncrement = gsl_matrix_calloc(3,3);
     	vector<ShapeBase*>::iterator itElement;
     	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-    		if (!thereIsExplicitECM || !(*itElement)->isECMMimicing || !(*itElement)->isMutated){
+    		if ((!thereIsExplicitECM || !(*itElement)->isECMMimicing ) && !(*itElement)->isMutated){
 				double* Elementcentre = new double[3];
 				Elementcentre = (*itElement)->getCentre();
 				//the distance is calculated in the x-y projection
@@ -7573,7 +7573,7 @@ void Simulation::calculateGrowthGridBased(GrowthFunctionBase* currGF){
 			else{
 				(*itElement)->getRelativePositionInTissueInGridIndex(nGridX, nGridY, IndexX, IndexY, FracX, FracY);
 			}
-			if (!thereIsExplicitECM || !(*itElement)->isECMMimicing || !(*itElement)->isMutated){
+    		if ((!thereIsExplicitECM || !(*itElement)->isECMMimicing ) && !(*itElement)->isMutated){
 				//There is either no explicit ECM definition, or the element is not ECM mimicing.
 				//If there is explicit ECM, the basal elements should not grow, all others should proceed as usual
 				//If there is no explicit ecm, then all should proceed as usual.
