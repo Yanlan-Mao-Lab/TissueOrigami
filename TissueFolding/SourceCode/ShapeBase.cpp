@@ -1037,7 +1037,8 @@ void 	ShapeBase::getPysProp(int type, float &PysPropMag, double dt){
 double	ShapeBase::calculateEmergentShapeOrientation(){
 	//cout<<"calculating emergent shape orientation"<<endl;
 	//I want to know in which direction the emergent shape is oriented.
-	//I need to have the combination of growth gradient and deformation gradient:
+	//I need to have the combination of growth gradient and deformation gradient.
+	//It will reflect how the clones would "look":
 	double currEmergentVolume = calculateCurrentGrownAndEmergentVolumes();
 	gsl_matrix* TriPointFT = gsl_matrix_alloc(nDim, nDim);
 	gsl_matrix_transpose_memcpy(TriPointFT,TriPointF);
@@ -1229,12 +1230,13 @@ bool ShapeBase::isMyosinViaEllipsesAppliedToElement(bool isApical, bool isLatera
 	return false;
 }
 
-bool ShapeBase::isActinStiffnessChangeAppliedToElement(bool ThereIsWholeTissueStiffnessPerturbation, bool ThereIsApicalStiffnessPerturbation, bool ThereIsBasalStiffnessPerturbation, vector <int> &stiffnessPerturbationEllipseBandIds, int numberOfStiffnessPerturbationAppliesEllipseBands ){
+bool ShapeBase::isActinStiffnessChangeAppliedToElement(bool ThereIsWholeTissueStiffnessPerturbation, bool ThereIsApicalStiffnessPerturbation, bool ThereIsBasalStiffnessPerturbation, bool ThereIsBasolateralWithApicalRelaxationStiffnessPerturbation, vector <int> &stiffnessPerturbationEllipseBandIds, int numberOfStiffnessPerturbationAppliesEllipseBands ){
 	if (!isECMMimicing){
 		if( ThereIsWholeTissueStiffnessPerturbation  //the whole columnar tissue is perturbed
-			|| (tissuePlacement == 0 && ThereIsBasalStiffnessPerturbation  ) //the basal surface is perturbed and element is basal
-			|| (tissuePlacement == 1 && ThereIsApicalStiffnessPerturbation ) // the apical surface is perturbed and element is apical
-			|| (atBasalBorderOfECM   && ThereIsBasalStiffnessPerturbation  ) //the basal surface is perturbed and element is at the layer above the "basal elements, but there is basal ECM, therefore the element is basal of the tissue (atBasalBorderOfECM)
+			|| ThereIsBasolateralWithApicalRelaxationStiffnessPerturbation	// there is relaxation on the apical surface and stiffenning on the rest of the tissue, further checks needed while calculating the rate
+			|| (tissuePlacement == 0 && ThereIsBasalStiffnessPerturbation    ) //the basal surface is perturbed and element is basal
+			|| (tissuePlacement == 1 && ThereIsApicalStiffnessPerturbation   ) // the apical surface is perturbed and element is apical
+			|| (atBasalBorderOfECM   && ThereIsBasalStiffnessPerturbation    ) //the basal surface is perturbed and element is at the layer above the "basal elements, but there is basal ECM, therefore the element is basal of the tissue (atBasalBorderOfECM)
 			){
 			if(insideEllipseBand){ //this covers the tissue type as well as the position, ellipses are applied to columnar and linker zones only.
 				for (int stiffnessPerturbationRangeCounter =0; stiffnessPerturbationRangeCounter<numberOfStiffnessPerturbationAppliesEllipseBands; ++stiffnessPerturbationRangeCounter){
@@ -1269,11 +1271,23 @@ bool ShapeBase::isECMStiffnessChangeAppliedToElement(bool changeStiffnessApicalE
 }
 
 
-void ShapeBase::calculateStiffnessPerturbationRate(double stiffnessPerturbationBeginTimeInSec, double stiffnessPerturbationEndTimeInSec, double stiffnessChangedToFractionOfOriginal){
+void ShapeBase::calculateStiffnessPerturbationRate(bool ThereIsBasolateralWithApicalRelaxationStiffnessPerturbation, double stiffnessPerturbationBeginTimeInSec, double stiffnessPerturbationEndTimeInSec, double stiffnessChangedToFractionOfOriginal){
     double totalTimePerturbationWillBeAppliedInSec = stiffnessPerturbationEndTimeInSec-stiffnessPerturbationBeginTimeInSec;
     if (totalTimePerturbationWillBeAppliedInSec <0){
         stiffnessPerturbationRateInSec = 0;
         return;
+    }
+    if (ThereIsBasolateralWithApicalRelaxationStiffnessPerturbation){
+    	//the used rate will be different for apical elements and all the remaining elements.
+    	//I do not need to check for ECM, as this is called for only the elements that has
+    	//applied stiffness perturbations, which already excluded ECM elements.
+    	if(tissuePlacement == 1){ //element is apical.
+    		//This will not be feasible for elements that span the whole disc. Then you cannot
+    		//do a baso-lateral change for elements that cover the whole tissue!
+    		//the element is apical, whatever I am applying to the basal side, I will apply the inverse to the apical side.
+    		// If the baso-lateral side is doubling, apical surface will halve.
+    		stiffnessChangedToFractionOfOriginal = 1.0/stiffnessChangedToFractionOfOriginal;
+    	}
     }
     stiffnessPerturbationRateInSec =  (stiffnessChangedToFractionOfOriginal - 1.0)/totalTimePerturbationWillBeAppliedInSec;
 }
@@ -1420,7 +1434,7 @@ void	ShapeBase::calculatePlasticDeformation3D(bool volumeConserved, double dt, d
 	//N(0) = 1.0, N(3hr) = 0.66667, then this gives me
 	//a half life of 5.12 hr ( N(t) = N(0) * 2 ^ (-t/t_{1/2}) )
 	//This is the value set into modelinput file
-	double tau = plasticDeformationHalfLife/(log(2)); // (mean lifetime tau is half life / ln(2))
+	double tau = plasticDeformationHalfLifeMultiplier * plasticDeformationHalfLife/(log(2)); // (mean lifetime tau is half life / ln(2))
 	double F11t = (F11-1)*exp(-1.0*dt/tau) + 1;
 	double F22t = (F22-1)*exp(-1.0*dt/tau) + 1;
 	double F33t = (F33-1)*exp(-1.0*dt/tau) + 1;

@@ -24,7 +24,7 @@ Without taking the curve region into account this traslates to a shape of:
 %Now Points.4.ele is my mesh with side length 3
 ../triangle/triangle -rq33a2.6 Points.4
 %Now Points.5.ele is my mesh with side length 2
-../triangle/triangle -rq33a0.65 Points.5
+../triangle/triangle -rq33a0.63 Points.5
 %Now Points.6.ele is my mesh with side length 1
 
 cp Points.2.ele Points.1.ele
@@ -44,17 +44,24 @@ cp MeshFile.out ./Exp48hr-noPeri_06.mesh
 
 cp Points.4.ele Points.1.ele
 cp Points.4.node Points.1.node
-./EllipseFromOutline -1 12.5 3 4 1  ./inputOutlines/48hrDiscOutline
+b ./EllipseFromOutline -1 12.5 3 4 1  ./inputOutlines/48hrDiscOutline
 cp MeshFile.out ./Exp48hr-noPeri_07.mesh  
 cp Points.5.ele Points.1.ele
 cp Points.5.node Points.1.node
 ./EllipseFromOutline -1 12.5 2 5 1  ./inputOutlines/48hrDiscOutline
 cp MeshFile.out ./Exp48hr-noPeri_08.mesh
 
+
+%[input mesh] [xmin] [xmax] [area constraint] [buffer zone]
+./generateTriangleBasedAreaConstraints  Points.5 0.4 0.7 1.0 0.63 0.1 > tmp
+../triangle/triangle -rq33a Points.5.ele 
+%Now Points.6.ele is my mesh with side length 1
 cp Points.6.ele Points.1.ele
 cp Points.6.node Points.1.node
-./EllipseFromOutline -1 12.5 1 5 1  ./inputOutlines/48hrDiscOutline
+./EllipseFromOutline -1 12.5 1.0 5 1  ./inputOutlines/48hrDiscOutline
 cp MeshFile.out ./Exp48hr-noPeri_09.mesh
+./EllipseFromOutline -1 12.5 1.0 4 1  ./inputOutlines/48hrDiscOutline
+cp MeshFile.out ./Exp48hr-noPeriThin_09.mesh
 
 
 %genereation of the full version (full tissue, with an outline that was made symmetric outside this tool):
@@ -139,6 +146,35 @@ cp Points.6.ele Points.1.ele
 cp Points.6.node Points.1.node
 ./EllipseFromOutline -1 12.5 1 5 1  ./inputOutlines/48hrDiscOutline
 cp MeshFile.out ./ECMMimic_09thin.mesh
+
+% Now with explicit ECM but no peripodial:
+%first mesh:
+%Adding 3 microns on each side to account for the circumferential ECM
+./EllipseFromOutline 1 38.56 53 30.3 30.3 12.5 9 2 0  ./inputOutlines/48hrDiscOutline
+%further refinements, same as above:
+../triangle/triangle -rq33a27.44 Points.1
+../triangle/triangle -rq33a10.4 Points.2
+../triangle/triangle -rq33a5.8 Points.3
+../triangle/triangle -rq33a2.8 Points.4
+../triangle/triangle -rq33a0.65 Points.5
+cp Points.5.ele Points.1.ele
+cp Points.5.node Points.1.node
+./EllipseFromOutline -1 15.5 2 6 1  ./inputOutlines/48hrDiscOutline
+cp MeshFile.out ./Exp48hr-noPeriECM_08.mesh
+
+%[input mesh] [xmin] [xmax] [area constraint] [buffer zone]
+./generateTriangleBasedAreaConstraints  Points.5 0.5 0.7 0.7 0.63 0.1 > tmp
+../triangle/triangle -rq33a Points.5.ele 
+../triangle/showme Points.6.ele 
+
+cp Points.6.ele Points.1.ele
+cp Points.6.node Points.1.node
+./EllipseFromOutline -1 15.5 1 6 1  ./inputOutlines/48hrDiscOutline
+cp MeshFile.out ./Exp48hr-noPeriECM_09.mesh
+
+./EllipseFromOutline -1 15.5 1.0 5 1  ./inputOutlines/48hrDiscOutline
+cp MeshFile.out ./Exp48hr-noPeriECMThin_09.mesh
+
 
 
 Large 48 hours. The average is 106.5 to 64.8 microns. The cross point at 64 microns.

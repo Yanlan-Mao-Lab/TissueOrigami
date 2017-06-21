@@ -30,6 +30,10 @@ MainWindow::MainWindow(Simulation* Sim01)
     MainGrid = new QGridLayout;
     CentralWidget = new QWidget;
     this->Sim01 = Sim01;
+    Sim01->calculateBoundingBox();
+	double boundingBoxWidth  = Sim01->boundingBox[1][1] - Sim01->boundingBox[0][1];
+    this->analyser01 = new Analysis(3, Sim01->saveDirectoryToDisplayString, Sim01->Nodes, boundingBoxWidth);
+
     nCoordBox = 6;
 
     setWindowTitle(tr("Tissue Origami"));
@@ -103,6 +107,7 @@ void MainWindow::generateControlPanel(){
 void MainWindow::setUpGLWidget(){
 	MainGLWidget = new GLWidget();
 	MainGLWidget->Sim01 = Sim01;
+	MainGLWidget->analyser01 = analyser01;
 	MainGLWidget->currNodeNumber = Sim01->nNodes;
 	MainGLWidget->DisplayStrainRange[0] = StrainSpinBoxes[0]->value();
 	MainGLWidget->DisplayStrainRange[1] = StrainSpinBoxes[1]->value();
@@ -256,7 +261,7 @@ void MainWindow::setStrainDisplayMenu(QGridLayout *ProjectDisplayOptionsGrid){
 	connect(DisplayCheckBoxes[0] , SIGNAL(stateChanged(int)),this,SLOT(updateStrainCheckBox(int)));
 
 	StrainComboBox = new QComboBox();
-	StrainComboBox->addItem("Average(DV-AP-AB) Strain");
+	StrainComboBox->addItem("Volumetric Strain (via Fe)");
 	StrainComboBox->addItem("Strain in DV");
 	StrainComboBox->addItem("Strain in AP");
 	StrainComboBox->addItem("Strain in AB");
@@ -767,22 +772,29 @@ void MainWindow::ManualNodeSelectionReset(){
 
 void MainWindow::timerSimulationStep(){
     //cout<<"Called the function via timer"<<endl;
-	bool 	automatedSave = false;
+	bool 	automatedSave = true;
+	int		viewSelection = 1; //0: top, 1: cross, 2: perspective.
 	bool 	analyseResults = true;
 	bool 	slowstepsOnDisplay = false;
 	bool 	slowstepsOnRun = false;
 	int 	slowWaitTime = 10;
+
 	if (Sim01->DisplaySave){
 		if (Sim01->timestep == 0){
-			if (analyseResults){
-				analyser01 = new Analysis(3, Sim01->nElements, Sim01->saveDirectoryToDisplayString, Sim01->Nodes);
-			}
 			if( automatedSave){
 				Sim01->assignTips();
-				//MainGLWidget->updateToTopView(); //display tissue from the top view
-				//MainGLWidget->updateToFrontView(); //display tissue from the front view
-				MainGLWidget->updateToPerspectiveView(); //display tissue from the tilted view
-				MainGLWidget->drawSymmetricity = true; //hide symmetric
+				if (viewSelection == 0){
+					MainGLWidget->updateToTopView(); //display tissue from the top view
+					MainGLWidget->drawSymmetricity = true; //show symmetric
+				}
+				else if (viewSelection == 1){
+					MainGLWidget->updateToFrontView(); //display tissue from the front view
+					MainGLWidget->drawSymmetricity = false; //hide symmetric
+				}
+				else if (viewSelection == 2){
+					MainGLWidget->updateToPerspectiveView(); //display tissue from the tilted view
+					MainGLWidget->drawSymmetricity = true; //show symmetric
+				}
 				//MainGLWidget->drawPeripodialMembrane= false;
 				MainGLWidget->PerspectiveView = false; //switch to orthogoanal view type.
 				Sim01->saveImages = true;
@@ -790,19 +802,25 @@ void MainWindow::timerSimulationStep(){
 			}
 		}
 		if(!Sim01->reachedEndOfSaveFile){
+			cout<<" updating step"<<endl;
 			Sim01->updateOneStepFromSave();
 			if (Sim01->timestep >= 0){
 				double boundingBoxLength = Sim01->boundingBox[1][0] - Sim01->boundingBox[0][0];
 				double boundingBoxWidth  = Sim01->boundingBox[1][1] - Sim01->boundingBox[0][1];
 				if (analyseResults){
+					cout<<" calculateBoundingBoxSizeAndAspectRatio"<<endl;
 					analyser01->calculateBoundingBoxSizeAndAspectRatio(Sim01->currSimTimeSec,boundingBoxLength,boundingBoxWidth);
+					cout<<" calculateContourLineLengthsDV"<<endl;
 					analyser01->calculateContourLineLengthsDV(Sim01->Nodes);
-					analyser01->findApicalKinkPointsDV(Sim01->currSimTimeSec,Sim01->boundingBox[0][0], boundingBoxLength, Sim01->Nodes);
+					cout<<" findApicalKinkPointsDV"<<endl;
+					analyser01->findApicalKinkPointsDV(Sim01->currSimTimeSec,Sim01->boundingBox[0][0], boundingBoxLength, boundingBoxWidth, Sim01->Nodes);
+					cout<<" calculateTissueVolumeMap"<<endl;
 					analyser01->calculateTissueVolumeMap(Sim01->Elements, Sim01->currSimTimeSec,Sim01->boundingBox[0][0],Sim01->boundingBox[0][1],boundingBoxLength,boundingBoxWidth);
+					cout<<" finished analysis"<<endl;
 				}
 			}
 			Sim01->calculateDVDistance();
-			for (int a = 0; a<0; a++){ //11 for 6 hours with 1800 sec time step
+			for (int a = 0; a<5; a++){ //11 for 6 hours with 1800 sec time step
 				Sim01->updateOneStepFromSave();
 				Sim01->calculateDVDistance();
 			}
@@ -822,6 +840,7 @@ void MainWindow::timerSimulationStep(){
 					QCoreApplication::processEvents(QEventLoop::AllEvents, slowWaitTime);
 				}
 			}
+			cout<<"end of loop"<<endl;
 		}
 		else{
 			//close();

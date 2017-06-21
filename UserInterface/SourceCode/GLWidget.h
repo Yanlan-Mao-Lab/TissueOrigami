@@ -17,6 +17,7 @@
 using namespace std;
 
 #include "../TissueFolding/SourceCode/Simulation.h"
+#include "../TissueFolding/SourceCode/Analysis.h"
 
 /*! GLWidget class */
  class GLWidget : public QGLWidget
@@ -28,6 +29,7 @@ using namespace std;
      ~GLWidget();
 
      Simulation* Sim01;
+     Analysis* 	analyser01;
      QSize		minimumSizeHint() const;
      QSize 		sizeHint() const;
      void 		manualElementSelection(int i);
@@ -38,6 +40,7 @@ using namespace std;
      void		updateToSideView();
      void		updateToPerspectiveView();
      void		drawPointsForDisplay();
+     void		drawEnclosingShell();
      bool 		ItemSelected;
      string 	SelectedItemName;
      int 		SelectedItemIndex;
@@ -69,7 +72,7 @@ using namespace std;
      double  	xClip, yClip, zClip;
      bool 		drawSymmetricity;
      int		currNodeNumber;
-     float 	obj_pos[3];
+     float 		obj_pos[3];
 
  signals:
  	 void SelectedItemChanged();

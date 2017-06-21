@@ -201,6 +201,12 @@ bool ModelInputObject::readParameters(){
 				 */
 				Success  = readMutationOptions(parametersFile);
 			}
+			else if(currParameterHeader == "zShellOptions:"){
+				/**
+				 * Setting z enclosement options.
+				 */
+				Success  = readEnclosementOptions(parametersFile);
+			}
 			else {
 				/**
 				 * In the case that the function, or any of the above listed parameter reading functions, encounters an
@@ -1983,6 +1989,14 @@ bool ModelInputObject::readStiffnessPerturbation(ifstream& file){
 		return false;
 	}
 	file >> currHeader;
+	if(currHeader == "BasolateralWithApicalRelaxation(bool):"){
+		file >> Sim->ThereIsBasolateralWithApicalRelaxationStiffnessPerturbation;
+	}
+	else{
+		cerr<<"Error in reading stiffness perturbations, curr string: "<<currHeader<<", should have been: BasolateralWithApicalRelaxation(bool):" <<endl;
+		return false;
+	}
+	file >> currHeader;
 	if(currHeader == "timeOfStiffeningPerturbation(hr):"){
 		double timeInHr;
 		file >> timeInHr;
@@ -2094,6 +2108,19 @@ bool ModelInputObject::readECMPerturbation(ifstream& file){
 		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: stiffnessChangeFraction(double(0-1.0):" <<endl;
 		return false;
 	}
+	file >> currHeader;
+	if(currHeader == "ECMRenewalHalfLifeTargetFraction(double(0-1.0):"){
+		double fraction;
+		file >> fraction;
+		if (fraction <=0.0) {
+			fraction = 0.0001;
+		}
+		Sim->ECMRenewalHalfLifeTargetFraction = fraction;
+	}
+	else{
+		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: ECMRenewalHalfLifeTargetFraction(double(0-1.0):" <<endl;
+		return false;
+	}
 	return true;
 }
 
@@ -2138,6 +2165,54 @@ bool ModelInputObject::readVolumeRedistributionOptions(ifstream& file){
 	return true;
 }
 
+bool ModelInputObject::readEnclosementOptions(ifstream& file){
+	cout<<"inside readEnclosementOptions"<<endl;
+	string currHeader;
+	file >> currHeader;
+	if(currHeader == "thereIsEnclosementOfTheTissue(bool):"){
+		file >> Sim->encloseTissueBetweenSurfaces;
+	}
+	else{
+		cerr<<"Error in reading enclosement options: "<<currHeader<<", should have been: thereIsEnclosementOfTheTissue(bool):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "initialLimits(lowerBound,upperBound):"){
+		file >> Sim->initialZEnclosementBoundaries[0];
+		file >> Sim->initialZEnclosementBoundaries[1];
+	}
+	else{
+		cerr<<"Error in reading enclosementoptions: "<<currHeader<<", should have been: initialLimits(lowerBound,upperBound):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "finalLimits(lowerBound,upperBound):"){
+		file >> Sim->finalZEnclosementBoundaries[0];
+		file >> Sim->finalZEnclosementBoundaries[1];
+	}
+	else{
+		cerr<<"Error in reading enclosement options: "<<currHeader<<", should have been: finalLimits(lowerBound,upperBound):" <<endl;
+		return false;
+	}
+
+	file >> currHeader;
+	if(currHeader == "initialTime(sec):"){
+		file >> Sim->initialTimeToEncloseTissueBetweenSurfacesSec;
+	}
+	else{
+		cerr<<"Error in reading enclosement options: "<<currHeader<<", should have been: initialTime(sec):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "finalTime(sec):"){
+		file >> Sim->finalTimeToEncloseTissueBetweenSurfacesSec;
+	}
+	else{
+		cerr<<"Error in reading enclosement options: "<<currHeader<<", should have been: finalTime(sec):" <<endl;
+		return false;
+	}
+	return true;
+}
 
 bool ModelInputObject::readMutationOptions(ifstream& file){
 	string currHeader;

@@ -1,6 +1,6 @@
 InputMeshParameters:
   MeshInputMode(int-seeDocumentation): 4
-  MeshFile(full-path):     /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Exp48hr-noPeri_06.mesh
+  MeshFile(full-path):     /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Exp48hr-noPeri_04.mesh
 
   symmetricInX(bool): 0
   symmetricInY(bool): 1
@@ -24,7 +24,7 @@ NodeFixingOptions:
   BasalCircumferenceFix(bool-x,y,z): 0 0 0
   LinkerApicalCircumferenceFix(bool-x,y,z): 0 0 0
   LinkerBasalCircumferenceFix(bool-x,y,z): 0 0 0
-  CircumferenceFix(bool-x,y,z): 0 0 1
+  CircumferenceFix(bool-x,y,z): 0 0 0
   NotumFix(bool-x,y,z,double-xFracMin,xFracMax): 0 0 0 -0.1 0.5
 
 Manipulations:
@@ -74,8 +74,8 @@ ExplicitECMOptions:
 
 ExternalViscositySetup:
   ExtendToWholeTissue: 0
-  DiscProperApicalExternalViscosity: 4000.0 
-  DiscProperBasalExternalViscosity: 0.0 
+  DiscProperApicalExternalViscosity: 0.0 
+  DiscProperBasalExternalViscosity: 300.0 
   PeripodialMembraneApicalExternalViscosity: 0.0
   PeripodialMembraneBasalExternalViscosity: 0.0 
   LinkerZoneApicalExternalViscosity: 0.0
@@ -103,7 +103,7 @@ GrowthOptions:
   FinalTime(sec):  3600
   ApplyToColumnarLayer(bool): 0
   ApplyToPeripodialMembrane(bool): 0
-  MaxValue(fractionPerHour-DV,AP,AB): 0.62 0.0 0.0 
+  MaxValue(fractionPerHour-DV,AP,AB): 0.62 0.0 0.62 
   Angle(degrees): 20
 
   GrowthFunctionType(int-seeDocumentation): 2
@@ -236,15 +236,17 @@ ECM_Perturbation:
   timeOfStiffnessChange(hr): 1 4
   stiffnessChangeAppliedToEllipses(number,[ellipseId][ellipseId]): 2 1 2
   stiffnessChangeFraction(double(0-1.0):  5.0
+  ECMRenewalHalfLifeTargetFraction(double(0-1.0): 1.0
 
 Stiffness_Perturbation:
   ThereIsStiffnessPerturbation(bool): 0
   ApplyToApically(bool): 0
-  ApplyBasally(bool): 1
+  ApplyBasally(bool): 0
   ApplyToWholeTissue(bool): 0
-  timeOfStiffeningPerturbation(hr): 1 4
+  BasolateralWithApicalRelaxation(bool): 1
+  timeOfStiffeningPerturbation(hr): 2 6
   stiffnessPerturbationAppliedToEllipses(number,[ellipseId][ellipseId]): 2 0 1
-  stiffnessChangedToFractionOfOriginal(double):  8.0
+  stiffnessChangedToFractionOfOriginal(double):  4.0
   
 ExplicitActinOptions:
   ThereIsExplicitActin(bool): 1
@@ -257,14 +259,19 @@ Cell_Migration:
 
 Marker_Ellipses:
   numberOfMarkerEllipses(int): 2
-  MarkerEllipseXCenters(fractionOfTissueSize): 0.75 0.25 
+  MarkerEllipseXCenters(fractionOfTissueSize):  0.75 0.25
   MarkerEllipseBandR1Ranges(fractionOfTissueSize-x1Low-x1High): 0.11  0.14 -0.31  -0.34
-  MarkerEllipseBandR2Ranges(fractionOfTissueSize-y2Low-y2High): 1.3   1.4   1.4  1.65
+  MarkerEllipseBandR2Ranges(fractionOfTissueSize-y2Low-y2High): 1.4   1.5   1.2  1.3
 
 MutationOptions:
   numberOfClones(int): 1
   cloneInformation(double-relativeX,relativeY,micronRadius,growthRatepPerHour):
   1.2 1.3 5 0.9
  
-
+zShellOptions:
+  thereIsEnclosementOfTheTissue(bool): 0
+  initialLimits(lowerBound,upperBound): -2.0  15.5
+  finalLimits(lowerBound,upperBound):   -2.0  15.5
+  initialTime(sec):	0
+  finalTime(sec):	1
 

@@ -234,6 +234,7 @@ void Simulation::setDefaultParameters(){
 	stiffnessChangeEndTimeInSec = -1;
 	stiffnessChangeEndTimeInSec = -1;
 	ECMStiffnessChangeFraction = 0.0;
+	ECMRenewalHalfLifeTargetFraction = 1.0;
 	changeStiffnessBasalECM = false;
 	changeStiffnessApicalECM = false;
 	thereIsCellMigration = false;
@@ -246,11 +247,20 @@ void Simulation::setDefaultParameters(){
 	ThereIsApicalStiffnessPerturbation = false;
 	ThereIsBasalStiffnessPerturbation = false;
 	ThereIsWholeTissueStiffnessPerturbation  = false;
+	ThereIsBasolateralWithApicalRelaxationStiffnessPerturbation = false;
 	ThereIsStiffnessPerturbation = false;
 	stiffnessChangedToFractionOfOriginal = 1.0;
 	stiffnessPerturbationBeginTimeInSec = 0.0;
 	stiffnessPerturbationBeginTimeInSec = -1.0;
 	numberOfStiffnessPerturbationAppliesEllipseBands = 0;
+
+	encloseTissueBetweenSurfaces =  false;
+	zEnclosementBoundaries[0] = -1000;
+	zEnclosementBoundaries[1] = 1000;
+	initialZEnclosementBoundaries[0] = -1000;
+	initialZEnclosementBoundaries[1] = 1000;
+	finalZEnclosementBoundaries[0] = -1000;
+	finalZEnclosementBoundaries[1] = 1000;
 }
 
 bool Simulation::readExecutableInputs(int argc, char **argv){
@@ -4229,9 +4239,9 @@ void Simulation::calculateStiffnessChangeRatesForActin(){
 	omp_set_num_threads(maxThreads);
 	#pragma omp parallel for
 	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		bool applyToThisElement = (*itElement)->isActinStiffnessChangeAppliedToElement(ThereIsWholeTissueStiffnessPerturbation, ThereIsApicalStiffnessPerturbation, ThereIsBasalStiffnessPerturbation, stiffnessPerturbationEllipseBandIds, numberOfStiffnessPerturbationAppliesEllipseBands);
+		bool applyToThisElement = (*itElement)->isActinStiffnessChangeAppliedToElement(ThereIsWholeTissueStiffnessPerturbation, ThereIsApicalStiffnessPerturbation, ThereIsBasalStiffnessPerturbation, ThereIsBasolateralWithApicalRelaxationStiffnessPerturbation, stiffnessPerturbationEllipseBandIds, numberOfStiffnessPerturbationAppliesEllipseBands);
 		if (applyToThisElement){
-            (*itElement)->calculateStiffnessPerturbationRate(stiffnessPerturbationBeginTimeInSec,stiffnessPerturbationEndTimeInSec, stiffnessChangedToFractionOfOriginal);
+            (*itElement)->calculateStiffnessPerturbationRate(ThereIsBasolateralWithApicalRelaxationStiffnessPerturbation, stiffnessPerturbationBeginTimeInSec,stiffnessPerturbationEndTimeInSec, stiffnessChangedToFractionOfOriginal);
 		}
 	}
 }
@@ -4241,7 +4251,7 @@ void Simulation::updateStiffnessChangeForActin(){
 	omp_set_num_threads(maxThreads);
 	#pragma omp parallel for
 	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		bool applyToThisElement = (*itElement)->isActinStiffnessChangeAppliedToElement(ThereIsWholeTissueStiffnessPerturbation, ThereIsApicalStiffnessPerturbation, ThereIsBasalStiffnessPerturbation, stiffnessPerturbationEllipseBandIds, numberOfStiffnessPerturbationAppliesEllipseBands);
+		bool applyToThisElement = (*itElement)->isActinStiffnessChangeAppliedToElement(ThereIsWholeTissueStiffnessPerturbation, ThereIsApicalStiffnessPerturbation, ThereIsBasalStiffnessPerturbation, ThereIsBasolateralWithApicalRelaxationStiffnessPerturbation,  stiffnessPerturbationEllipseBandIds, numberOfStiffnessPerturbationAppliesEllipseBands);
 		if (applyToThisElement){
             (*itElement)->updateStiffnessMultiplier(dt);
             (*itElement)->updateElasticProperties();
@@ -4339,7 +4349,9 @@ void Simulation::calculateStiffnessChangeRatesForECM(){
 		for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 			bool applyToThisElement = (*itElement)->isECMStiffnessChangeAppliedToElement(changeStiffnessApicalECM, changeStiffnessBasalECM, ECMStiffnessChangeEllipseBandIds, numberOfECMStiffnessChangeEllipseBands);
 			if (applyToThisElement){
-				(*itElement)->calculateStiffnessPerturbationRate(stiffnessChangeBeginTimeInSec,stiffnessChangeEndTimeInSec, ECMStiffnessChangeFraction);
+				//the first input is used for checking basolateral stiffenning combined with apical relaxation
+				//the ECM does not have such options. Will give the boolean as falsa and continue.
+				(*itElement)->calculateStiffnessPerturbationRate(false, stiffnessChangeBeginTimeInSec,stiffnessChangeEndTimeInSec, ECMStiffnessChangeFraction);
 			}
 		}
 		//now I need to check for the apical surface with viscosity based calculation:
@@ -4362,6 +4374,29 @@ void Simulation::calculateStiffnessChangeRatesForECM(){
 	}
 }
 
+void Simulation::updateECMRenewalHalflifeMultiplier(){
+	if(thereIsExplicitECM){
+		if (currSimTimeSec>stiffnessPerturbationEndTimeInSec){
+			//perturbation on ECM renewal half life started
+			double currECMRenewaHalfLifeMultiplier = 1.0;
+			if (currSimTimeSec>=stiffnessPerturbationEndTimeInSec){
+				currECMRenewaHalfLifeMultiplier = ECMRenewalHalfLifeTargetFraction;
+			}
+			else{
+				double totalTimeChange = stiffnessPerturbationEndTimeInSec - stiffnessPerturbationBeginTimeInSec;
+				double currTimeChange = currSimTimeSec - stiffnessPerturbationBeginTimeInSec;
+				double currECMRenewaHalfLifeMultiplier = 1 + (ECMRenewalHalfLifeTargetFraction - 1.0) * currTimeChange / totalTimeChange;
+			}
+			#pragma omp parallel for
+			for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+				if ((*itElement)->isECMMimicing){
+					(*itElement)->plasticDeformationHalfLifeMultiplier =  currECMRenewaHalfLifeMultiplier;
+				}
+			}
+		}
+	}
+}
+
 void Simulation::checkECMStiffnessChange(){
 	//I have not carried out any softening as yet
 	//I will if the time is after 32 hr
@@ -4370,6 +4405,7 @@ void Simulation::checkECMStiffnessChange(){
 			calculateStiffnessChangeRatesForECM();
 		}
 		if( thereIsExplicitECM){
+			updateECMRenewalHalflifeMultiplier();
 			updateStiffnessChangeForExplicitECM();
 		}
 		//I will check for updating the viscosity based ECM manipulation to apply to an apical
@@ -4479,6 +4515,9 @@ bool Simulation::runOneStep(){
     calculateMyosinForces();
     //cout<<"detect Pacing Nodes"<<endl;
     detectPacingNodes();
+    if (encloseTissueBetweenSurfaces){
+    	detectPacingToEnclosingSurfacesNodes();
+    }
     if (implicitPacking == false){
     	calculatePackingForcesExplicit3D();
     }
@@ -4931,6 +4970,10 @@ void Simulation::updateStepNR(){
 	    if (implicitPacking){
 	    	calculatePackingForcesImplicit3D();
 	    	calculatePackingJacobianNumerical3D(NRSolver->K);
+	        if (encloseTissueBetweenSurfaces){
+	        	calculatePackingForcesToEnclosingSurfacesImplicit3D();
+	        	calculatePackingToEnclosingSurfacesJacobianNumerical3D(NRSolver->K);
+	        }
 	    }
 	    //End of packing forces.
         //Now I will check if there are any nodes with zero mass, then I will be able to fill in the zero K matrix with identity if necessary.
@@ -5125,6 +5168,81 @@ void Simulation::calculatePackingForcesExplicit3D(){
 		}
 	}
 }
+
+void Simulation::calculatePackingForcesToEnclosingSurfacesImplicit3D(){
+	int nPositive=nodesPackingToPositiveSurface.size();
+	int nNegative=nodesPackingToNegativeSurface.size();
+	double multiplier = packingMultiplier;
+	double sigmoidSaturation = sigmoidSaturationForPacking;
+	for(int i = 0 ; i<nNegative; ++i){
+		int id0 = nodesPackingToNegativeSurface[i];
+		double dz = Nodes[id0]->Position[2] - zEnclosementBoundaries[0];
+		if (initialWeightPackingToNegativeSurface[i]>0){
+			dz *= -1.0;
+		}
+		double mass = Nodes[id0]->mass;
+		double Fz = multiplier * mass / (1 + exp(sigmoidSaturation / packingToEnclosingSurfacesThreshold * (-1.0*dz)));
+		Fz *= initialWeightPackingToNegativeSurface[i];
+		PackingForces[id0][2] += Fz;
+	}
+	for(int i = 0 ; i<nPositive; ++i){
+		int id0 = nodesPackingToPositiveSurface[i];
+		double dz = Nodes[id0]->Position[2] - zEnclosementBoundaries[1];
+		if (initialWeightPackingToPositiveSurface[i]>0){
+			dz *= -1.0;
+		}
+		double mass = Nodes[id0]->mass;
+		double Fz = multiplier * mass / (1 + exp(sigmoidSaturation / packingToEnclosingSurfacesThreshold * (-1.0*dz)));
+		Fz *= initialWeightPackingToPositiveSurface[i];
+		PackingForces[id0][2] += Fz;
+	}
+}
+
+void Simulation::calculatePackingToEnclosingSurfacesJacobianNumerical3D(gsl_matrix* K){
+	int nPositive=nodesPackingToPositiveSurface.size();
+	int nNegative=nodesPackingToNegativeSurface.size();
+	double sigmoidSaturation = sigmoidSaturationForPacking;
+	double multiplier = packingMultiplier;
+	#pragma omp parallel for
+	for(int i = 0 ; i<nPositive; ++i){
+		int id0 =  nodesPackingToPositiveSurface[i];
+		//sigmoid test:
+		double dz = Nodes[id0]->Position[2] - zEnclosementBoundaries[1];
+		double mass = Nodes[id0]->mass;
+		if (initialWeightPackingToPositiveSurface[i]>0){
+			dz *= -1.0;
+		}
+		double sigmoidz =  1 / (1 + exp(sigmoidSaturation/ packingToEnclosingSurfacesThreshold * (-1.0 * dz) ));
+		double dFzdz0 = sigmoidz * (1 - sigmoidz) * multiplier * mass * initialWeightPackingToPositiveSurface[i] * (sigmoidSaturation/packingToEnclosingSurfacesThreshold);
+		if (initialWeightPackingToPositiveSurface[i]>0){
+			dFzdz0 *= -1.0;
+		}
+		//z values:
+		double value = gsl_matrix_get(K,3*id0+2,3*id0+2);
+		value -= dFzdz0;
+		gsl_matrix_set(K,3*id0+2,3*id0+2,value);
+	}
+	#pragma omp parallel for
+	for(int i = 0 ; i<nNegative; ++i){
+		int id0 =  nodesPackingToNegativeSurface[i];
+		//sigmoid test:
+		double dz = Nodes[id0]->Position[2] - zEnclosementBoundaries[0];
+		double mass = Nodes[id0]->mass;
+		if (initialWeightPackingToNegativeSurface[i]>0){
+			dz *= -1.0;
+		}
+		double sigmoidz =  1 / (1 + exp(sigmoidSaturation/ packingToEnclosingSurfacesThreshold * (-1.0 * dz) ));
+		double dFzdz0 = sigmoidz * (1 - sigmoidz) * multiplier * mass * initialWeightPackingToNegativeSurface[i] * (sigmoidSaturation/packingToEnclosingSurfacesThreshold);
+		if (initialWeightPackingToNegativeSurface[i]>0){
+			dFzdz0 *= -1.0;
+		}
+		//z values:
+		double value = gsl_matrix_get(K,3*id0+2,3*id0+2);
+		value -= dFzdz0;
+		gsl_matrix_set(K,3*id0+2,3*id0+2,value);
+	}
+}
+
 
 void Simulation::calculatePackingForcesImplicit3D(){
 	//cout<<"inside calculatePackingForcesImplicit3D, size of packing node couples: "<<pacingNodeCouples0.size()<<endl;
@@ -6021,6 +6139,93 @@ void Simulation::detectPacingCombinations(){
 		}
 	}
 	cleanUpPacingCombinations();
+}
+
+void Simulation::detectPacingToEnclosingSurfacesNodes(){
+	packingToEnclosingSurfacesThreshold = 3;  //pack to the boundary at 3 microns distance
+	packingDetectionToEnclosingSurfacesThreshold = 1.2 * packingToEnclosingSurfacesThreshold;
+	double t2 = packingDetectionToEnclosingSurfacesThreshold*packingDetectionToEnclosingSurfacesThreshold;	//threshold square for rapid calculation
+	nodesPackingToPositiveSurface.empty();
+	nodesPackingToNegativeSurface.empty();
+	initialWeightPackingToPositiveSurface.empty();
+	initialWeightPackingToNegativeSurface.empty();
+	//calculate the current boundaries:
+	if (currSimTimeSec < initialTimeToEncloseTissueBetweenSurfacesSec){
+		return;
+	}
+	else if (currSimTimeSec>=finalTimeToEncloseTissueBetweenSurfacesSec){
+		zEnclosementBoundaries[0] = finalZEnclosementBoundaries[0];
+		zEnclosementBoundaries[1] = finalZEnclosementBoundaries[1];
+	}
+	else{
+		double totalTime = finalTimeToEncloseTissueBetweenSurfacesSec - initialTimeToEncloseTissueBetweenSurfacesSec;
+		double currTimeDiff = currSimTimeSec - initialTimeToEncloseTissueBetweenSurfacesSec;
+		double zNegDifference = finalZEnclosementBoundaries[0] - initialZEnclosementBoundaries[0];
+		double zPosDifference = finalZEnclosementBoundaries[1] - initialZEnclosementBoundaries[1];
+		zEnclosementBoundaries[0] = initialZEnclosementBoundaries[0] + currTimeDiff*zNegDifference / totalTime;
+		zEnclosementBoundaries[1] = initialZEnclosementBoundaries[1] + currTimeDiff*zPosDifference / totalTime;
+
+	}
+	//go over nodes to detect packing:
+	for (vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+		if ((*itNode)->mass >0){ //node is not ablated
+			bool checkAgainstPositiveSurface = false;
+			bool checkAgainstNegativeSurface = false;
+			if ((*itNode)->atCircumference){
+				//Node is at the ciscumference, with sufficient rotation, it can pack anywhere
+				//chack against both surfaces.
+				checkAgainstPositiveSurface = true;
+				checkAgainstNegativeSurface = true;
+			}
+			else {
+				//basal node of the columnar layer is checked against the negative surface:
+				if ( (*itNode)->tissuePlacement == 0){
+					//node is basal
+					//if it is columnar layer, check against negative surface:
+					if( (*itNode)->tissueType ==0 ){
+						checkAgainstNegativeSurface = true;
+					}
+					else if((*itNode)->tissueType ==1 ){
+						//if it is peripodial layer, check against positive surface:
+						checkAgainstPositiveSurface = true;
+					}
+				}
+				//if tissue placement is apical, and the tissue tyoe is columnar,
+				//check against the positive surface:
+				if( (*itNode)->tissuePlacement == 1 && (*itNode)->tissueType ==0 ){	//Node is apical, check against positive border
+					checkAgainstPositiveSurface = true;
+				}
+			}
+			if( checkAgainstNegativeSurface ){
+				double* pos;
+				pos = new double[3];
+				(*itNode)->getCurrentPosition(pos);
+				double dz = pos[2] - zEnclosementBoundaries[0];
+				double d2 = dz*dz;
+				if (d2<t2){
+					//node is close enough to pack to surface:
+					nodesPackingToNegativeSurface.push_back((*itNode)->Id);
+					double d = pow (d2,0.5);
+					initialWeightPackingToNegativeSurface.push_back(dz/d);
+				}
+				delete[] pos;
+			}
+			if( checkAgainstPositiveSurface){
+				double* pos;
+				pos = new double[3];
+				(*itNode)->getCurrentPosition(pos);
+				double dz = pos[2] - zEnclosementBoundaries[1];
+				double d2 = dz*dz;
+				if (d2<t2){
+					//node is close enough to pack to surface:
+					nodesPackingToPositiveSurface.push_back((*itNode)->Id);
+					double d = pow (d2,0.5);
+					initialWeightPackingToPositiveSurface.push_back(dz/d);
+				}
+				delete[] pos;
+			}
+		}
+	}
 }
 
 void Simulation::detectPacingNodes(){

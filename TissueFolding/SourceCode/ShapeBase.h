@@ -121,7 +121,6 @@ protected:
 	void 		updateReferencePositionMatrixFromSave(ifstream& file);
 	virtual void calculateReferenceVolume(){ParentErrorMessage("calculateReferenceVolume");};
 
-	double		calculateEmergentShapeOrientation();
 	bool 		calculateGrowthStrainsRotMat(double* v);
 	void		calculateForces3D(vector <Node*>& Nodes,  gsl_matrix* displacementPerDt, bool recordForcesOnFixedNodes, double **FixedNodeForces);
 	gsl_matrix* calculateEForNodalForcesKirshoff(gsl_matrix* C);
@@ -219,6 +218,7 @@ public:
 	double emergentShapeLongAxis[2];
 	double emergentShapeShortAxis[2];
 
+	double plasticDeformationHalfLifeMultiplier;
     bool isMutated;
 
 	int 	getId();
@@ -284,11 +284,12 @@ public:
     void 	setViscosity(double viscosityApical,double viscosityBasal);
     void 	setViscosity(double viscosity);
     void	setCellMigration(bool migratingBool);
+	double	calculateEmergentShapeOrientation();
 
     bool isMyosinViaEllipsesAppliedToElement(bool isApical, bool isLateral, vector <int> & myosinEllipseBandIds, int numberOfMyosinAppliedEllipseBands);
-    bool isActinStiffnessChangeAppliedToElement(bool ThereIsWholeTissueStiffnessPerturbation, bool ThereIsApicalStiffnessPerturbation, bool ThereIsBasalStiffnessPerturbation, vector <int> &stiffnessPerturbationEllipseBandIds, int numberOfStiffnessPerturbationAppliesEllipseBands );
+    bool isActinStiffnessChangeAppliedToElement(bool ThereIsWholeTissueStiffnessPerturbation, bool ThereIsApicalStiffnessPerturbation, bool ThereIsBasalStiffnessPerturbation, bool ThereIsBasolateralWithApicalRelaxationStiffnessPerturbation, vector <int> &stiffnessPerturbationEllipseBandIds, int numberOfStiffnessPerturbationAppliesEllipseBands );
     bool isECMStiffnessChangeAppliedToElement(bool changeStiffnessApicalECM, bool changeStiffnessBasalECM, vector<int> &ECMStiffnessChangeEllipseBandIds, int numberOfECMStiffnessChangeEllipseBands);
-    void 	calculateStiffnessPerturbationRate(double stiffnessPerturbationBeginTimeInSec, double stiffnessPerturbationEndTimeInSec, double stiffnessChangedToFractionOfOriginal);
+    void 	calculateStiffnessPerturbationRate(bool ThereIsBasolateralWithApicalRelaxationStiffnessPerturbation, double stiffnessPerturbationBeginTimeInSec, double stiffnessPerturbationEndTimeInSec, double stiffnessChangedToFractionOfOriginal);
     void 	updateStiffnessMultiplier(double dt); ///< The funciton will update the actin multiplier as a result of stiffness perturbations.
 //    virtual void	fillLateralNeighbours();
     bool	getCellMigration();

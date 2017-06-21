@@ -435,6 +435,7 @@ public:
 	double  stiffnessChangeBeginTimeInSec;
 	double  stiffnessChangeEndTimeInSec;
 	double 	ECMStiffnessChangeFraction;
+	double  ECMRenewalHalfLifeTargetFraction;
 	bool 	changeStiffnessBasalECM;
 	bool 	changeStiffnessApicalECM;
 	int numberOfMyosinAppliedEllipseBands;
@@ -445,6 +446,7 @@ public:
 	bool ThereIsApicalStiffnessPerturbation;
 	bool ThereIsBasalStiffnessPerturbation;
 	bool ThereIsWholeTissueStiffnessPerturbation;
+	bool ThereIsBasolateralWithApicalRelaxationStiffnessPerturbation;
 	double stiffnessChangedToFractionOfOriginal;
 	double stiffnessPerturbationBeginTimeInSec;
 	double stiffnessPerturbationEndTimeInSec;
@@ -475,6 +477,19 @@ public:
 	vector<double> cloneInformationY;
 	vector<double> cloneInformationR;
 	vector<double> cloneInformationGrowth;
+
+	bool encloseTissueBetweenSurfaces;
+	double initialZEnclosementBoundaries[2];
+	double finalZEnclosementBoundaries[2];
+	double initialTimeToEncloseTissueBetweenSurfacesSec;
+	double finalTimeToEncloseTissueBetweenSurfacesSec;
+	double zEnclosementBoundaries[2];
+	double packingToEnclosingSurfacesThreshold;
+	double packingDetectionToEnclosingSurfacesThreshold;
+	vector <int> nodesPackingToPositiveSurface;
+	vector <int> nodesPackingToNegativeSurface;
+	vector <double> initialWeightPackingToPositiveSurface;
+	vector <double> initialWeightPackingToNegativeSurface;
 	//packi
 	Simulation();
 	~Simulation();
@@ -495,6 +510,7 @@ public:
     void setLateralElementsRemodellingPlaneRotationMatrices();
 
     void updateStiffnessChangeForExplicitECM();
+    void updateECMRenewalHalflifeMultiplier();
     void updateStiffnessChangeForViscosityBasedECMDefinition();
     void calculateStiffnessChangeRatesForECM();
     void checkECMStiffnessChange();
@@ -517,6 +533,11 @@ public:
    	void detectPacingNodes();
    	void detectPacingCombinations();
    	void cleanUpPacingCombinations();
+
+   	void calculatePackingToEnclosingSurfacesJacobianNumerical3D(gsl_matrix* K);
+   	void calculatePackingForcesToEnclosingSurfacesImplicit3D();
+   	void detectPacingToEnclosingSurfacesNodes();
+
     void calculatePacking();
     void calculatePackingK(gsl_matrix* K);
     void calculatePackingNumerical(gsl_matrix* K);

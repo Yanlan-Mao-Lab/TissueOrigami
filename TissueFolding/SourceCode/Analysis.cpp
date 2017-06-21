@@ -359,17 +359,30 @@ void Analysis::calculateTissueVolumeMap	(vector<ShapeBase*> &elements, int timeI
 	double totTissueEmergentVolume = 0;
 	vector<ShapeBase*>::iterator itEle;
 	for (itEle=elements.begin(); itEle<elements.end(); ++itEle){
+		//Write if explicit ECM
 		//double* c = new double[3];
 		//c = (*itEle)->getCentre();
     	(*itEle)->calculateRelativePosInBoundingBox(boundingBoxXMin, boundingBoxYMin,boundingBoxLength, boundingBoxWidth);
     	double* ReletivePos = new double[2];
-		(*itEle)->getRelativePosInBoundingBox(ReletivePos);
+    	(*itEle)->getRelativePosInBoundingBox(ReletivePos);
     	double currEmergentVolume = (*itEle) -> calculateCurrentGrownAndEmergentVolumes();
 		double currIdealVolume = (*itEle)->GrownVolume;
 		totTissueIdealVolume  += currIdealVolume;
 		totTissueEmergentVolume  += currEmergentVolume;
-		saveFileVolumeMaps<<timeInSec<<" "<<(*itEle) ->Id<<" "<<ReletivePos[0]<<" "<<ReletivePos[1]<<" "<<(*itEle)->ReferenceShape->Volume<<" "<<currIdealVolume<<" "<<currEmergentVolume<<endl;
+		(*itEle)->calculateEmergentShapeOrientation();
+		saveFileVolumeMaps<<timeInSec<<" ";
+		saveFileVolumeMaps<<(*itEle) ->Id;
+		saveFileVolumeMaps<<" "<<ReletivePos[0]<<" "<<ReletivePos[1]<<" ";
+		saveFileVolumeMaps<<(*itEle)->ReferenceShape->Volume<<" ";
+		saveFileVolumeMaps<<currIdealVolume<<" ";
+		saveFileVolumeMaps<<currEmergentVolume<<" ";
+		saveFileVolumeMaps<<(*itEle)->emergentShapeLongAxis[0]<<" "<<(*itEle)->emergentShapeLongAxis[1]<<" ";
+		saveFileVolumeMaps<<(*itEle)->emergentShapeShortAxis[0]<<" "<<(*itEle)->emergentShapeShortAxis[1]<<" ";
+		saveFileVolumeMaps<<(*itEle)->isECMMimicing<<" ";
+		saveFileVolumeMaps<<endl;
 		delete[] ReletivePos;
 	}
 	cout<<" Time: "<<timeInSec<<" total tissue ideal volume: "<<totTissueIdealVolume<<" total tissue emergent volume:" <<totTissueEmergentVolume<<endl;
 }
+
+

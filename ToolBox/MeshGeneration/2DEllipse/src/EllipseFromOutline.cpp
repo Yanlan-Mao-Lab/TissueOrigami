@@ -66,7 +66,7 @@ public:
 	void linkerReadInTesselation2D();
 	void writeVectors2D(ofstream &vectorsForGnuplot);
 	void writeNodes2D(ofstream &nodesForGnuplot);
-	void writeMeshFileForSimulation(double zHeight, int zLayers, double ECMHeight,double actinHeight, double modifiedZDueToThinActin);
+	void writeMeshFileForSimulation(double zHeight, int zLayers, double ECMHeight,double actinHeight, double modifiedZDueToThinActin, double basalLayerHeight);
 	void writeTissueWeights(ofstream& MeshFile, vector <double> &recordedPeripodialness);
 	void writeTriangleMeshFileForSimulation(double zHeight);
 	void addEquidistantRingMin();
@@ -1014,7 +1014,7 @@ void EllipseLayoutGenerator::translateLinkers(double dz, double dx){
 	}
 }
 
-void EllipseLayoutGenerator::writeMeshFileForSimulation(double zHeight, int zLayers, double ECMHeight,double actinHeight, double modifiedZDueToThinActin){	
+void EllipseLayoutGenerator::writeMeshFileForSimulation(double zHeight, int zLayers, double ECMHeight,double actinHeight, double modifiedZDueToThinActin, double basalLayerHeight){	
 	vector <double> recordedNodesX, recordedNodesY, recordedNodesZ;
 	vector <double> recordedPeripodialness;
 	cout<<" Writing triangle file, size of points: "<<posx.size()<<" size of tissue shape: "<<tissueType.size()<<endl;
@@ -1041,6 +1041,9 @@ void EllipseLayoutGenerator::writeMeshFileForSimulation(double zHeight, int zLay
 	for (int layers=0; layers<zLayers; ++layers){
 		if (layers == 0){
 			currzHeight = ECMHeight;		
+		}
+		if (layers == 1) {
+			currzHeight = ECMHeight+basalLayerHeight;
 		}
 		int nodePositionIdentifier = 2; //0=basal. 1=apical, 2=midline
 		if (layers == zLayers-1){nodePositionIdentifier=1;}
@@ -2096,6 +2099,7 @@ int main(int argc, char **argv)
 	int    	ABLayers;
 	double  ECMHeight = -1.0;
 	double	actinHeight = -1.0;
+	double  basalLayerHeight = -1.0;
 	double  modifiedZDueToThinActin = 1;
 	bool 	symmetricY = false;
 	bool 	symmetricX = false;
@@ -2105,7 +2109,7 @@ int main(int argc, char **argv)
 	// 2: wing disc 72 hr,
 	// 3: optic cup
 	// 4: x&y symmetric circle
-	int selectTissueType = 4; 
+	int selectTissueType = 1; 
 	if (selectTissueType == 0){ // 0 : wingdisc48Hr, 
 		symmetricY = true;
 		symmetricX = false; 
@@ -2147,6 +2151,7 @@ int main(int argc, char **argv)
 		if (ABLayers<3){
 			ECMHeight = ABHeight/ABLayers;
 			actinHeight = ABHeight/ABLayers;
+			basalLayerHeight = ABHeight/ABLayers;
 			modifiedZDueToThinActin  = ABHeight/ABLayers;
 		}
 		if (parameters[8] == 1 ){ 		
@@ -2157,12 +2162,12 @@ int main(int argc, char **argv)
 		}
 	}
 	EllipseLayoutGenerator Lay01(DVRadius[0],DVRadius[1], APRadius[0], APRadius[1], sideLength, symmetricX, symmetricY, 0.9);
-	bool addPeripodial = true;
+	bool addPeripodial = false;
 	double peripodialHeightFrac;
 	double lumenHeightFrac;
 	double peripodialSideCurveFrac;
 	/*parameters for different setups:*/
-	//  Wing disc :
+	// Wing disc :
 	//  	peripodial height fraction for wing disc: 0.45;
 	//  	lumen heigth fraction for wing disc: 0.25;
 	//  	peripodial side curve for 48 hrs: 5.52
@@ -2175,7 +2180,7 @@ int main(int argc, char **argv)
 	//	8.125 is 0.508 * 15 the height I am giving that includes the ECM.
 	//	**0.33333 If I want thin peripodial, as I am trying to reduce the number of elements,
 	//	2.5 is the peripodial height. Adding the ECM -> 5. 
-	//	5 is 0.33333 * 15, the height I am giving to coklumnar that includes the ECM.
+	//	5 is 0.33333 * 15, the height I am giving to columnar that includes the ECM.
 	// 	peripodial side curve for 48 hrs:  2.5+5.52
 	// 	ECM mimicing setup should have an additional layer (2.5 + 5.52 as given above)
 	// Optic Cup:
@@ -2192,17 +2197,55 @@ int main(int argc, char **argv)
 		peripodialSideCurveFrac = 5.52 /ABHeight ;
 		Lay01.symmetricY = symmetricY;
 		Lay01.symmetricX = false;
-		if (ECMHeight <0 ){
+		actinHeight = 2.0;
+		ECMHeight = 2.0; //Use ECMHeight instead of basalLayerHeight t define a basal layer in the absence of ECM
+		modifiedZDueToThinActin = (ABHeight - actinHeight - ECMHeight)/ (ABLayers-2);
+		basalLayerHeight = modifiedZDueToThinActin;
+		if (ABLayers<2){
 			ECMHeight = ABHeight/ABLayers;
-		}
-		if (actinHeight <0 ){
 			actinHeight = ABHeight/ABLayers;
+			basalLayerHeight = ABHeight/ABLayers;
+			modifiedZDueToThinActin  = ABHeight/ABLayers;		
+		}
+		else{
+			if (ECMHeight <0 ){
+				if (actinHeight <0 ){
+					ECMHeight = ABHeight/ABLayers;
+				}
+				else{	
+					
+					modifiedZDueToThinActin = (ABHeight - actinHeight)/ (ABLayers-1);
+					ECMHeight = modifiedZDueToThinActin;
+					basalLayerHeight  = modifiedZDueToThinActin;
+								
+				}
+			}
+			if (actinHeight <0 ){
+				actinHeight = ABHeight/ABLayers;
+			}
 		}
 	}
 	else if(selectTissueType == 1){ // 1: ECM mimicing wing disc 48 hr,
 		peripodialHeightFrac = 0.33333;  //0.508
 		lumenHeightFrac = 0.25;
-		peripodialSideCurveFrac = (2.5 + 5.52) /ABHeight ;
+		actinHeight = 2.0;
+		ECMHeight = 3.0;
+		basalLayerHeight = 2.0;
+		//  end of ECM options		
+		if (ABLayers<3){
+			ECMHeight = ABHeight/ABLayers;
+			actinHeight = ABHeight/ABLayers;
+			basalLayerHeight = ABHeight/ABLayers;
+			modifiedZDueToThinActin  = ABHeight/ABLayers;
+		}
+		if (basalLayerHeight<0 || ABLayers<4){
+			modifiedZDueToThinActin = (ABHeight - ECMHeight - actinHeight)/ (ABLayers-2);
+			basalLayerHeight=modifiedZDueToThinActin;
+		}
+		else{
+			modifiedZDueToThinActin = (ABHeight - ECMHeight - actinHeight -basalLayerHeight)/ (ABLayers-3);
+		}
+		peripodialSideCurveFrac = (modifiedZDueToThinActin + 5.52) /ABHeight ;
 		Lay01.symmetricY = true;
 		Lay01.symmetricX = false;
 	}
@@ -2228,17 +2271,19 @@ int main(int argc, char **argv)
 		Lay01.symmetricX = true;
 		addPeripodial = false;
 		//  without ECM:
-		ECMHeight = ABHeight/ABLayers;
-		actinHeight = ABHeight/ABLayers;
-		//  with ECM:
-		//actinHeight  = 1.0;
-		//ECMHeight = (ABHeight - actinHeight) / (ABLayers-1);
+		//ECMHeight = ABHeight/ABLayers;
+		//actinHeight = ABHeight/ABLayers;
+		//  with ECM: (this setup will add a layer to represent ECM on the apical surface
+		actinHeight  = 3.0;
+		ECMHeight = (ABHeight - actinHeight) / (ABLayers-1);
+		basalLayerHeight  = (ABHeight - actinHeight) / (ABLayers-1);
 		//  end of ECM options		
 		modifiedZDueToThinActin = (ABHeight - ECMHeight - actinHeight)/ (ABLayers-2);
 		if (ABLayers<3){
 			ECMHeight = ABHeight/ABLayers;
 			actinHeight = ABHeight/ABLayers;
 			modifiedZDueToThinActin  = ABHeight/ABLayers;
+			basalLayerHeight = ABHeight/ABLayers;
 		}
 	}
 	else{
@@ -2264,7 +2309,7 @@ int main(int argc, char **argv)
 		Lay01.calculatePeripodialAttachVectors(symmetricX, symmetricY);
 	}
 	Lay01.calculateAverageSideLength();
-	Lay01.writeMeshFileForSimulation(ABHeight,ABLayers,ECMHeight,actinHeight,modifiedZDueToThinActin);	
+	Lay01.writeMeshFileForSimulation(ABHeight,ABLayers,ECMHeight,actinHeight,modifiedZDueToThinActin,basalLayerHeight);	
 	//output the points for plotting:
 	int n=Lay01.posx.size();	
 	//cerr<<"r1: "<<Lay01.r1[0]<<" "<<Lay01.r1[1]<<" r2: "<<Lay01.r2[0]<<" "<<Lay01.r2[1]<<endl;

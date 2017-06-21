@@ -19,9 +19,9 @@ using namespace std;
  GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
  {
 	 //cout<<"initiating gl widget"<<endl;
-	 obj_pos[0] =  0.0f;//80.0f; //0.0f;
-	 obj_pos[1] = 0.0f;//-130.0f;
-	 obj_pos[2] =  250.0f;// 500.0f;
+	 obj_pos[0] =  50.0f; //80.0f;
+	 obj_pos[1] =  0.0f;//-130.0f;
+	 obj_pos[2] =   500.0f;
 	 MatRot[0]  = 1.0; MatRot[1]  = 0.0; MatRot[2]  = 0.0; MatRot[3]  = 0.0;
 	 MatRot[4]  = 0.0; MatRot[5]  = 1.0; MatRot[6]  = 0.0; MatRot[7]  = 0.0;
 	 MatRot[8]  = 0.0; MatRot[9]  = 0.0; MatRot[10] = 1.0; MatRot[11] = 0.0;
@@ -100,8 +100,8 @@ using namespace std;
      PerspectiveView = true;
      orthoViewLimits[0] = -250;
      orthoViewLimits[1] =  250;
-     orthoViewLimits[2] = -60 ;//-250;//-40;
-     orthoViewLimits[3] =  60;//250;// 40;
+     orthoViewLimits[2] = -130;//-130;//-60;
+     orthoViewLimits[3] =  130;//130;// 60;
      orthoViewLimits[4] = -1000;
      orthoViewLimits[5] =  1000;
 		 
@@ -227,9 +227,27 @@ void GLWidget::reInitialiseNodeColourList(int oldNodeNumber){
 	 drawBoundingBox();
      drawPipette();
      drawPointsForDisplay();
+     drawEnclosingShell();
 	 if (DisplayFixedNodes){
 		 drawFixedNodes();
 	 }
+	 //Drawing the analysis line:
+	 int nContourNodes = analyser01->apicalContourLineDVSelectedYPositionsX.size();
+	 //cout<<"nContourNodes: "<<nContourNodes<<endl;
+	 glLineWidth(ReferenceLineThickness);
+	 for (int i=1; i<nContourNodes; ++i){
+		glBegin(GL_LINES);
+			glColor3f(1,0,0);
+			double x = analyser01->apicalContourLineDVSelectedYPositionsX[i-1];
+			double y = analyser01->yPosForSideDVLine;
+			double z = analyser01->apicalContourLineDVSelectedYPositionsZ[i-1];
+			glVertex3f( x, y, z+0.01);
+			x = analyser01->apicalContourLineDVSelectedYPositionsX[i];
+			z = analyser01->apicalContourLineDVSelectedYPositionsZ[i];
+			glVertex3f( x, y, z+0.1);
+		glEnd();
+	 }
+	 glLineWidth(MainShapeLineThickness);
      //swapBuffers();
  }
 
@@ -496,7 +514,7 @@ void GLWidget::highlightNode(int i){
 			}
 			else if(drawMarkingEllipses){
 				if ((*itNode)->insideEllipseBand){
-					currColour[0] = 2.0;
+					currColour[0] = 1.0;
 					currColour[1] = 0.0;
 					currColour[2] = 1.0;
 				}
@@ -692,9 +710,11 @@ void GLWidget::highlightNode(int i){
 			for (int k =0; k<3; ++k){
 				int pointId = TriangleConnectivity[j][k];
 				glColor3f(NodeColours[pointId][0],NodeColours[pointId][1],NodeColours[pointId][2]);
-				//if (Sim01->Elements[i]->insideEllipseBand){
-				//	 glColor3f(1,0,1);
-				//}
+				if (drawMarkingEllipses){
+					if (Sim01->Elements[i]->insideEllipseBand){
+						 glColor3f(0,1,1);
+					}
+				}
 				float x = xMultiplier * Sim01->Elements[i]->Positions[pointId][0];
 				float y = yMultiplier * Sim01->Elements[i]->Positions[pointId][1];
 				float z = Sim01->Elements[i]->Positions[pointId][2];
@@ -704,24 +724,27 @@ void GLWidget::highlightNode(int i){
 		}
 	glEnd();
 	glDisable(GL_POLYGON_OFFSET_FILL);
-	glLineWidth(MainShapeLineThickness);
-	//Drawing the borders
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	glColor3f(0,0,0);
-	glBegin(GL_LINE_STRIP);
-		for (int j =0; j<nLineStrip;++j){
-			int pointId = BorderConnectivity[j];
-			float x = xMultiplier * Sim01->Elements[i]->Positions[pointId][0];
-			float y = yMultiplier * Sim01->Elements[i]->Positions[pointId][1];
-			float z = Sim01->Elements[i]->Positions[pointId][2];
-			glVertex3f( x, y, z);
+	bool drawMesh = true;
+	if (drawMesh){
+		glLineWidth(MainShapeLineThickness);
+		//Drawing the borders
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		glColor3f(0,0,0);
+		glBegin(GL_LINE_STRIP);
+			for (int j =0; j<nLineStrip;++j){
+				int pointId = BorderConnectivity[j];
+				float x = xMultiplier * Sim01->Elements[i]->Positions[pointId][0];
+				float y = yMultiplier * Sim01->Elements[i]->Positions[pointId][1];
+				float z = Sim01->Elements[i]->Positions[pointId][2];
+				glVertex3f( x, y, z);
+			}
+		glEnd();
+		for (int j=0; j<Sim01->Elements[i]->getNodeNumber(); ++j ){
+			//cout<<"node colours: "<<NodeColours[j][0]<<" "<<NodeColours[j][1]<<" "<<NodeColours[j][2]<<endl;
+			//cout<<"deleting node colours["<<j<<"]"<<endl;
+			delete[] NodeColours[j];
+			//cout<<"deleted node colours["<<j<<"]"<<endl;
 		}
-	glEnd();
-	for (int j=0; j<Sim01->Elements[i]->getNodeNumber(); ++j ){
-		//cout<<"node colours: "<<NodeColours[j][0]<<" "<<NodeColours[j][1]<<" "<<NodeColours[j][2]<<endl;
-		//cout<<"deleting node colours["<<j<<"]"<<endl;
-		delete[] NodeColours[j];
-		//cout<<"deleted node colours["<<j<<"]"<<endl;
 	}
 	delete[] NodeColours;
 	if (DisplayPysProp && PysPropToDisplay == 6){
@@ -2096,3 +2119,13 @@ bool GLWidget::findNode(int i){
  	}
  }
 
+void GLWidget:: drawEnclosingShell(){
+	 if (Sim01->encloseTissueBetweenSurfaces){
+		 glBegin(GL_LINES);
+		 	glVertex3f( -1000, 0, Sim01->zEnclosementBoundaries[0]);
+		 	glVertex3f( 1000, 0, Sim01->zEnclosementBoundaries[0]);
+		 	glVertex3f( -1000, 0, Sim01->zEnclosementBoundaries[1]);
+		 	glVertex3f( 1000, 0, Sim01->zEnclosementBoundaries[1]);
+		 glEnd();
+	 }
+}

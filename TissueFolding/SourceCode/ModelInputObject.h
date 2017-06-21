@@ -51,6 +51,7 @@ private:
 	bool readExplicitActinOptions(ifstream& file);
 	bool readVolumeRedistributionOptions(ifstream& file);
 	bool readMutationOptions(ifstream& file);
+	bool readEnclosementOptions(ifstream& file);
 
 public:
 	Simulation* Sim;				///< The pointer to the simulation object, for which the parameters are being read from the modelinput file.

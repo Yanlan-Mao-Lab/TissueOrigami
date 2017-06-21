@@ -197,6 +197,8 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, bool thereIsPlas
 
     isMutated = false;
     mutationGrowthRatePerSec = 0.0;
+
+    plasticDeformationHalfLifeMultiplier = 1.0;
 }
 
 Prism::~Prism(){
