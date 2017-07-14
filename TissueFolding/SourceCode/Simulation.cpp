@@ -240,16 +240,7 @@ void Simulation::setDefaultParameters(){
 	thereIsExplicitActin = false;
 
 	nMarkerEllipseRanges = 0;
-	startedStiffnessPerturbation = false;
-	ThereIsApicalStiffnessPerturbation = false;
-	ThereIsBasalStiffnessPerturbation = false;
-	ThereIsWholeTissueStiffnessPerturbation  = false;
-	ThereIsBasolateralWithApicalRelaxationStiffnessPerturbation = false;
 	ThereIsStiffnessPerturbation = false;
-	stiffnessChangedToFractionOfOriginal = 1.0;
-	stiffnessPerturbationBeginTimeInSec = 0.0;
-	stiffnessPerturbationBeginTimeInSec = -1.0;
-	numberOfStiffnessPerturbationAppliesEllipseBands = 0;
 
 	encloseTissueBetweenSurfaces =  false;
 	zEnclosementBoundaries[0] = -1000;
@@ -4265,25 +4256,25 @@ void Simulation::checkForExperimentalSetupsAfterIteration(){
 	}
 }
 
-void Simulation::calculateStiffnessChangeRatesForActin(){
-    startedStiffnessPerturbation = true;
+void Simulation::calculateStiffnessChangeRatesForActin(int idOfCurrentStiffnessPerturbation){
+    startedStiffnessPerturbation[idOfCurrentStiffnessPerturbation] = true;
     const int maxThreads = omp_get_max_threads();
 	omp_set_num_threads(maxThreads);
 	#pragma omp parallel for
 	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		bool applyToThisElement = (*itElement)->isActinStiffnessChangeAppliedToElement(ThereIsWholeTissueStiffnessPerturbation, ThereIsApicalStiffnessPerturbation, ThereIsBasalStiffnessPerturbation, ThereIsBasolateralWithApicalRelaxationStiffnessPerturbation, stiffnessPerturbationEllipseBandIds, numberOfStiffnessPerturbationAppliesEllipseBands);
+		bool applyToThisElement = (*itElement)->isActinStiffnessChangeAppliedToElement(ThereIsWholeTissueStiffnessPerturbation[idOfCurrentStiffnessPerturbation], ThereIsApicalStiffnessPerturbation[idOfCurrentStiffnessPerturbation], ThereIsBasalStiffnessPerturbation[idOfCurrentStiffnessPerturbation], ThereIsBasolateralWithApicalRelaxationStiffnessPerturbation[idOfCurrentStiffnessPerturbation],ThereIsBasolateralStiffnessPerturbation[idOfCurrentStiffnessPerturbation], stiffnessPerturbationEllipseBandIds[idOfCurrentStiffnessPerturbation], numberOfStiffnessPerturbationAppliesEllipseBands[idOfCurrentStiffnessPerturbation]);
 		if (applyToThisElement){
-            (*itElement)->calculateStiffnessPerturbationRate(ThereIsBasolateralWithApicalRelaxationStiffnessPerturbation, stiffnessPerturbationBeginTimeInSec,stiffnessPerturbationEndTimeInSec, stiffnessChangedToFractionOfOriginal);
+            (*itElement)->calculateStiffnessPerturbationRate(ThereIsBasolateralWithApicalRelaxationStiffnessPerturbation[idOfCurrentStiffnessPerturbation], stiffnessPerturbationBeginTimeInSec[idOfCurrentStiffnessPerturbation],stiffnessPerturbationEndTimeInSec[idOfCurrentStiffnessPerturbation], stiffnessChangedToFractionOfOriginal[idOfCurrentStiffnessPerturbation]);
 		}
 	}
 }
 
-void Simulation::updateStiffnessChangeForActin(){
+void Simulation::updateStiffnessChangeForActin(int idOfCurrentStiffnessPerturbation){
 	const int maxThreads = omp_get_max_threads();
 	omp_set_num_threads(maxThreads);
 	#pragma omp parallel for
 	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		bool applyToThisElement = (*itElement)->isActinStiffnessChangeAppliedToElement(ThereIsWholeTissueStiffnessPerturbation, ThereIsApicalStiffnessPerturbation, ThereIsBasalStiffnessPerturbation, ThereIsBasolateralWithApicalRelaxationStiffnessPerturbation,  stiffnessPerturbationEllipseBandIds, numberOfStiffnessPerturbationAppliesEllipseBands);
+		bool applyToThisElement = (*itElement)->isActinStiffnessChangeAppliedToElement(ThereIsWholeTissueStiffnessPerturbation[idOfCurrentStiffnessPerturbation], ThereIsApicalStiffnessPerturbation[idOfCurrentStiffnessPerturbation], ThereIsBasalStiffnessPerturbation[idOfCurrentStiffnessPerturbation], ThereIsBasolateralWithApicalRelaxationStiffnessPerturbation[idOfCurrentStiffnessPerturbation],  ThereIsBasolateralStiffnessPerturbation[idOfCurrentStiffnessPerturbation], stiffnessPerturbationEllipseBandIds[idOfCurrentStiffnessPerturbation], numberOfStiffnessPerturbationAppliesEllipseBands[idOfCurrentStiffnessPerturbation]);
 		if (applyToThisElement){
             (*itElement)->updateStiffnessMultiplier(dt);
             (*itElement)->updateElasticProperties();
@@ -4293,12 +4284,15 @@ void Simulation::updateStiffnessChangeForActin(){
 }
 
 void Simulation::checkStiffnessPerturbation(){
-	if (currSimTimeSec >=stiffnessPerturbationBeginTimeInSec && currSimTimeSec <stiffnessPerturbationEndTimeInSec){
-		if (startedStiffnessPerturbation == false){
-			calculateStiffnessChangeRatesForActin();
+	int n = stiffnessPerturbationBeginTimeInSec.size();
+	for (int idOfCurrentStiffnessPerturbation=0; idOfCurrentStiffnessPerturbation<n; ++idOfCurrentStiffnessPerturbation){
+		if (currSimTimeSec >=stiffnessPerturbationBeginTimeInSec[idOfCurrentStiffnessPerturbation] && currSimTimeSec <stiffnessPerturbationEndTimeInSec[idOfCurrentStiffnessPerturbation]){
+			if (startedStiffnessPerturbation[idOfCurrentStiffnessPerturbation] == false){
+				calculateStiffnessChangeRatesForActin(idOfCurrentStiffnessPerturbation);
+			}
+			updateStiffnessChangeForActin(idOfCurrentStiffnessPerturbation);
 		}
-		updateStiffnessChangeForActin();
-    }
+	}
 }
 
 
@@ -4532,15 +4526,11 @@ bool Simulation::runOneStep(){
 		//if ((timestep - 1)% growthRotationUpdateFrequency  == 0){
 			updateGrowthRotationMatrices();
 		//}
-		cout<<" checking if calling calculate Growth"<<endl;
         if(nGrowthFunctions>0 || numberOfClones > 0){
         	calculateGrowth();
         }
-		cout<<" checking if calling shape change"<<endl;
         if(nShapeChangeFunctions>0){
-        	cout<<" calling shape change"<<endl;
         	calculateShapeChange();
-        	cout<<" outside shape change"<<endl;
         }
     }
     if(thereIsPlasticDeformation || thereIsExplicitECM){

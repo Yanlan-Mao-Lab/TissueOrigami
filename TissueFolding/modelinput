@@ -65,7 +65,7 @@ LinkerZoneParameters:
   LinkerZoneMidlineViscosity: 0.0
 
 ExplicitECMOptions:
-  ThereIsExplicitECM(bool): 1
+  ThereIsExplicitECM(bool): 0
   ECMRemodellingHalfLife(hour): 2.0
   ECMColumnarYoungsModulus:  1000
   ECMPeripodialYoungsModulus:  3600
@@ -243,39 +243,51 @@ Pipette_Aspiration:
   Pipette_Suction_Pressure(x,y,z-unit): 0.0 0.0 25.0
 
 ECM_Perturbation:
-  ThereIsECMStiffnessChange(bool): 1
+  ThereIsECMStiffnessChange(bool): 0
   NumberOfECMPerturbations(int): 3
   
   ApplyToApicalECM(bool): 0
   ApplyToBasalECM(bool): 1
   timeOfStiffnessChange(hr): 7 8
   stiffnessChangeAppliedToEllipses(number,[ellipseId][ellipseId]): 1 0 
-  stiffnessChangeFraction(double(0-1.0):  0.8
-  ECMRenewalHalfLifeTargetFraction(double(0-1.0): 0.5
+  stiffnessChangeFraction(double(0-1.0)):  0.8
+  ECMRenewalHalfLifeTargetFraction(double(0-1.0)): 0.5
   
   ApplyToApicalECM(bool): 0
   ApplyToBasalECM(bool): 1
   timeOfStiffnessChange(hr): 1 2
   stiffnessChangeAppliedToEllipses(number,[ellipseId][ellipseId]): 1 1 
-  stiffnessChangeFraction(double(0-1.0):  0.5
-  ECMRenewalHalfLifeTargetFraction(double(0-1.0): 2
+  stiffnessChangeFraction(double(0-1.0)):  0.5
+  ECMRenewalHalfLifeTargetFraction(double(0-1.0)): 2
   
   ApplyToApicalECM(bool): 0
   ApplyToBasalECM(bool): 1
   timeOfStiffnessChange(hr): 4 5
   stiffnessChangeAppliedToEllipses(number,[ellipseId][ellipseId]): 1 2
-  stiffnessChangeFraction(double(0-1.0):  0.2
-  ECMRenewalHalfLifeTargetFraction(double(0-1.0): 10
+  stiffnessChangeFraction(double(0-1.0)):  0.2
+  ECMRenewalHalfLifeTargetFraction(double(0-1.0)): 10
 
 Stiffness_Perturbation:
-  ThereIsStiffnessPerturbation(bool): 0
+  ThereIsStiffnessPerturbation(bool): 1
+  NumberOfStiffnessPerturbations(int): 2
+  
   ApplyToApically(bool): 0
   ApplyBasally(bool): 0
   ApplyToWholeTissue(bool): 0
+  Basolateral(bool): 0
   BasolateralWithApicalRelaxation(bool): 1
-  timeOfStiffeningPerturbation(hr): 2 6
-  stiffnessPerturbationAppliedToEllipses(number,[ellipseId][ellipseId]): 2 0 1
+  timeOfStiffeningPerturbation(hr): 2 3
+  stiffnessPerturbationAppliedToEllipses(number,[ellipseId][ellipseId]): 1 0 
   stiffnessChangedToFractionOfOriginal(double):  4.0
+  
+  ApplyToApically(bool): 0
+  ApplyBasally(bool): 0
+  ApplyToWholeTissue(bool): 0
+  Basolateral(bool): 1
+  BasolateralWithApicalRelaxation(bool): 0
+  timeOfStiffeningPerturbation(hr): 7 8
+  stiffnessPerturbationAppliedToEllipses(number,[ellipseId][ellipseId]): 1 2
+  stiffnessChangedToFractionOfOriginal(double):  4
   
 ExplicitActinOptions:
   ThereIsExplicitActin(bool): 1

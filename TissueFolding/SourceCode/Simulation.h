@@ -435,7 +435,7 @@ public:
 	vector<double> markerEllipseBandR1Ranges;
 	vector<double> markerEllipseBandR2Ranges;
     bool 	thereIsECMStiffnessChange;
-	vector <int>numberOfECMStiffnessChangeEllipseBands;
+	vector <int> numberOfECMStiffnessChangeEllipseBands;
 	vector< vector<int> > ECMStiffnessChangeEllipseBandIds;
 	vector <double> stiffnessChangeBeginTimeInSec;
 	vector <double> stiffnessChangeEndTimeInSec;
@@ -447,17 +447,18 @@ public:
 	int numberOfMyosinAppliedEllipseBands;
 	vector <int> myosinEllipseBandIds;
 	
-	bool startedStiffnessPerturbation;
+	vector <bool> startedStiffnessPerturbation;
 	bool ThereIsStiffnessPerturbation;
-	bool ThereIsApicalStiffnessPerturbation;
-	bool ThereIsBasalStiffnessPerturbation;
-	bool ThereIsWholeTissueStiffnessPerturbation;
-	bool ThereIsBasolateralWithApicalRelaxationStiffnessPerturbation;
-	double stiffnessChangedToFractionOfOriginal;
-	double stiffnessPerturbationBeginTimeInSec;
-	double stiffnessPerturbationEndTimeInSec;
-	int numberOfStiffnessPerturbationAppliesEllipseBands;
-	vector <int> stiffnessPerturbationEllipseBandIds;
+	vector <bool> ThereIsApicalStiffnessPerturbation;
+	vector <bool> ThereIsBasalStiffnessPerturbation;
+	vector <bool> ThereIsWholeTissueStiffnessPerturbation;
+	vector <bool> ThereIsBasolateralStiffnessPerturbation;
+	vector <bool> ThereIsBasolateralWithApicalRelaxationStiffnessPerturbation;
+	vector <double> stiffnessChangedToFractionOfOriginal;
+	vector <double> stiffnessPerturbationBeginTimeInSec;
+	vector <double> stiffnessPerturbationEndTimeInSec;
+	vector <int> numberOfStiffnessPerturbationAppliesEllipseBands;
+	vector< vector<int> > stiffnessPerturbationEllipseBandIds;
 
 	double packingDetectionThreshold;
 	double packingThreshold;
@@ -521,8 +522,8 @@ public:
     void updateStiffnessChangeForViscosityBasedECMDefinition(int idOfCurrentECMPerturbation);
     void calculateStiffnessChangeRatesForECM(int idOfCurrentECMPerturbation);
     void checkECMStiffnessChange();
-    void updateStiffnessChangeForActin();
-    void calculateStiffnessChangeRatesForActin();
+    void updateStiffnessChangeForActin(int idOfCurrentStiffnessPerturbation);
+    void calculateStiffnessChangeRatesForActin(int idOfCurrentStiffnessPerturbation);
     void checkStiffnessPerturbation();
     bool runOneStep();
     void updatePlasticDeformation();

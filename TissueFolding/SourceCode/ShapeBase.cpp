@@ -1230,10 +1230,11 @@ bool ShapeBase::isMyosinViaEllipsesAppliedToElement(bool isApical, bool isLatera
 	return false;
 }
 
-bool ShapeBase::isActinStiffnessChangeAppliedToElement(bool ThereIsWholeTissueStiffnessPerturbation, bool ThereIsApicalStiffnessPerturbation, bool ThereIsBasalStiffnessPerturbation, bool ThereIsBasolateralWithApicalRelaxationStiffnessPerturbation, vector <int> &stiffnessPerturbationEllipseBandIds, int numberOfStiffnessPerturbationAppliesEllipseBands ){
+bool ShapeBase::isActinStiffnessChangeAppliedToElement(bool ThereIsWholeTissueStiffnessPerturbation, bool ThereIsApicalStiffnessPerturbation, bool ThereIsBasalStiffnessPerturbation, bool ThereIsBasolateralWithApicalRelaxationStiffnessPerturbation, bool ThereIsBasolateralStiffnessPerturbation, vector <int> &stiffnessPerturbationEllipseBandIds, int numberOfStiffnessPerturbationAppliesEllipseBands ){
 	if (!isECMMimicing){
 		if( ThereIsWholeTissueStiffnessPerturbation  //the whole columnar tissue is perturbed
 			|| ThereIsBasolateralWithApicalRelaxationStiffnessPerturbation	// there is relaxation on the apical surface and stiffenning on the rest of the tissue, further checks needed while calculating the rate
+			|| (ThereIsBasolateralStiffnessPerturbation && !tissuePlacement == 1) //there is only basolateral stiffness perturbation, without affecting apical sides
 			|| (tissuePlacement == 0 && ThereIsBasalStiffnessPerturbation    ) //the basal surface is perturbed and element is basal
 			|| (tissuePlacement == 1 && ThereIsApicalStiffnessPerturbation   ) // the apical surface is perturbed and element is apical
 			|| (atBasalBorderOfECM   && ThereIsBasalStiffnessPerturbation    ) //the basal surface is perturbed and element is at the layer above the "basal elements, but there is basal ECM, therefore the element is basal of the tissue (atBasalBorderOfECM)

@@ -2077,78 +2077,112 @@ bool ModelInputObject::readStiffnessPerturbation(ifstream& file){
 		cerr<<"Error in reading stiffness perturbations, curr string: "<<currHeader<<", should have been: ThereIsStiffnessPerturbation(bool):" <<endl;
 		return false;
 	}
+	int nStiffnessFunctions;
 	file >> currHeader;
-	if(currHeader == "ApplyToApically(bool):"){
-		file >> Sim->ThereIsApicalStiffnessPerturbation;
+	if(currHeader == "NumberOfStiffnessPerturbations(int):"){
+		file >>nStiffnessFunctions;
 	}
 	else{
-		cerr<<"Error in reading stiffness perturbations, curr string: "<<currHeader<<", should have been: ApplyToApically(bool):" <<endl;
+		printErrorMessage(currHeader,"ECM perturbations","NumberOfStiffnessPerturbations(int):");
 		return false;
 	}
-	file >> currHeader;
-	if(currHeader == "ApplyBasally(bool):"){
-		file >> Sim->ThereIsBasalStiffnessPerturbation;
-	}
-	else{
-		cerr<<"Error in reading stiffness perturbations, curr string: "<<currHeader<<", should have been: ApplyBasally(bool):" <<endl;
-		return false;
-	}
-	file >> currHeader;
-	if(currHeader == "ApplyToWholeTissue(bool):"){
-		file >> Sim->ThereIsWholeTissueStiffnessPerturbation;
-	}
-	else{
-		cerr<<"Error in reading stiffness perturbations, curr string: "<<currHeader<<", should have been: ApplyToWholeTissue(bool):" <<endl;
-		return false;
-	}
-	file >> currHeader;
-	if(currHeader == "BasolateralWithApicalRelaxation(bool):"){
-		file >> Sim->ThereIsBasolateralWithApicalRelaxationStiffnessPerturbation;
-	}
-	else{
-		cerr<<"Error in reading stiffness perturbations, curr string: "<<currHeader<<", should have been: BasolateralWithApicalRelaxation(bool):" <<endl;
-		return false;
-	}
-	file >> currHeader;
-	if(currHeader == "timeOfStiffeningPerturbation(hr):"){
-		double timeInHr;
-		file >> timeInHr;
-		Sim->stiffnessPerturbationBeginTimeInSec = timeInHr*3600;
-		file >> timeInHr;
-		Sim->stiffnessPerturbationEndTimeInSec = timeInHr*3600;
-	}
-	else{
-		cerr<<"Error in reading stiffness perturbations, curr string: "<<currHeader<<", should have been: timeOfStiffeningPerturbation(hr):" <<endl;
-		return false;
-	}
-	file >> currHeader;
-	if(currHeader == "stiffnessPerturbationAppliedToEllipses(number,[ellipseId][ellipseId]):"){
-		file >> Sim->numberOfStiffnessPerturbationAppliesEllipseBands;
-		double ellipseBandId;
-		for (int aa=0; aa<Sim->numberOfStiffnessPerturbationAppliesEllipseBands; ++aa){
-			file >>ellipseBandId;
-			Sim->stiffnessPerturbationEllipseBandIds.push_back(ellipseBandId);
-		}
-		//file >> Sim->ECMSofteningXRange[0];
-		//file >> Sim->ECMSofteningXRange[1];
 
-	}
-	else{
-		cerr<<"Error in reading stiffness perturbations, curr string: "<<currHeader<<", should have been: stiffnessPerturbationAppliedToEllipses(number,[ellipseId][ellipseId]):" <<endl;
-		return false;
-	}
-	file >> currHeader;
-	if(currHeader == "stiffnessChangedToFractionOfOriginal(double):"){
-		double fraction;
-		file >> fraction;
-		if (fraction <=0.0) {
-			fraction = 0.0001;
+	for (int i=0; i<nStiffnessFunctions; ++i){
+		file >> currHeader;
+		if(currHeader == "ApplyToApically(bool):"){
+			bool ThereIsApicalStiffnessPerturbation;
+			file >>ThereIsApicalStiffnessPerturbation;
+			Sim->ThereIsApicalStiffnessPerturbation.push_back(ThereIsApicalStiffnessPerturbation);
 		}
-		Sim->stiffnessChangedToFractionOfOriginal = fraction;
-	}
-	else{
-		cerr<<"Error in reading stiffness perturbations, curr string: "<<currHeader<<", should have been: stiffnessChangedToFractionOfOriginal(double):" <<endl;
-		return false;
+		else{
+			printErrorMessage(currHeader,"stiffness perturbations","ApplyToApically(bool):");
+			return false;
+		}
+		file >> currHeader;
+		if(currHeader == "ApplyBasally(bool):"){
+			bool ThereIsBasalStiffnessPerturbation;
+			file >>ThereIsBasalStiffnessPerturbation;
+			Sim->ThereIsBasalStiffnessPerturbation.push_back(ThereIsBasalStiffnessPerturbation);
+		}
+		else{
+			printErrorMessage(currHeader,"stiffness perturbations","ApplyBasally(bool):");
+			return false;
+		}
+		file >> currHeader;
+		if(currHeader == "ApplyToWholeTissue(bool):"){
+			bool ThereIsWholeTissueStiffnessPerturbation;
+			file >>ThereIsWholeTissueStiffnessPerturbation;
+			Sim->ThereIsWholeTissueStiffnessPerturbation.push_back(ThereIsWholeTissueStiffnessPerturbation);
+		}
+		else{
+			printErrorMessage(currHeader,"stiffness perturbations","ApplyToWholeTissue(bool):");
+			return false;
+		}
+		file >> currHeader;
+		if(currHeader == "Basolateral(bool):"){
+			bool basolateral;
+			file >>basolateral;
+			Sim->ThereIsBasolateralStiffnessPerturbation.push_back(basolateral);
+		}
+		else{
+			printErrorMessage(currHeader,"stiffness perturbations","BasolateralWithApicalRelaxation");
+			return false;
+		}
+		file >> currHeader;
+		if(currHeader == "BasolateralWithApicalRelaxation(bool):"){
+			bool basolateral;
+			file >>basolateral;
+			Sim->ThereIsBasolateralWithApicalRelaxationStiffnessPerturbation.push_back(basolateral);
+		}
+		else{
+			printErrorMessage(currHeader,"stiffness perturbations","BasolateralWithApicalRelaxation");
+			return false;
+		}
+		file >> currHeader;
+		if(currHeader == "timeOfStiffeningPerturbation(hr):"){
+			double timeInHr;
+			file >> timeInHr;
+			Sim->stiffnessPerturbationBeginTimeInSec.push_back(timeInHr*3600);
+			file >> timeInHr;
+			Sim->stiffnessPerturbationEndTimeInSec.push_back(timeInHr*3600);
+		}
+		else{
+			printErrorMessage(currHeader,"stiffness perturbations","timeOfStiffeningPerturbation(hr):");
+			return false;
+		}
+		file >> currHeader;
+		if(currHeader == "stiffnessPerturbationAppliedToEllipses(number,[ellipseId][ellipseId]):"){
+			int numberOfStiffnessPerturbationAppliesEllipseBands;
+			file >>numberOfStiffnessPerturbationAppliesEllipseBands;
+			Sim->numberOfStiffnessPerturbationAppliesEllipseBands.push_back(numberOfStiffnessPerturbationAppliesEllipseBands);
+			double ellipseBandId;
+			Sim->stiffnessPerturbationEllipseBandIds.push_back(vector<int>(0));
+			for (int aa=0; aa<Sim->numberOfStiffnessPerturbationAppliesEllipseBands[i]; ++aa){
+				file >>ellipseBandId;
+				Sim->stiffnessPerturbationEllipseBandIds[i].push_back(ellipseBandId);
+			}
+			//file >> Sim->ECMSofteningXRange[0];
+			//file >> Sim->ECMSofteningXRange[1];
+
+		}
+		else{
+			printErrorMessage(currHeader,"stiffness perturbations","stiffnessPerturbationAppliedToEllipses(number,[ellipseId][ellipseId]):");
+			return false;
+		}
+		file >> currHeader;
+		if(currHeader == "stiffnessChangedToFractionOfOriginal(double):"){
+			double fraction;
+			file >> fraction;
+			if (fraction <=0.0) {
+				fraction = 0.0001;
+			}
+			Sim->stiffnessChangedToFractionOfOriginal.push_back(fraction);
+		}
+		else{
+			printErrorMessage(currHeader,"stiffness perturbations","stiffnessChangedToFractionOfOriginal(double):");
+			return false;
+		}
+		Sim->startedStiffnessPerturbation.push_back(false);
 	}
 	return true;
 }
@@ -2212,9 +2246,9 @@ bool ModelInputObject::readECMPerturbation(ifstream& file){
 			file >> numberOfECMStiffnessChangeEllipseBands;
 			Sim->numberOfECMStiffnessChangeEllipseBands.push_back(numberOfECMStiffnessChangeEllipseBands);
 			int ellipseBandId;
+			Sim->ECMStiffnessChangeEllipseBandIds.push_back(vector<int>(0));
 			for (int aa=0; aa<Sim->numberOfECMStiffnessChangeEllipseBands[i]; ++aa){
 				file >>ellipseBandId;
-				Sim->ECMStiffnessChangeEllipseBandIds.push_back(vector<int>(0));
 				Sim->ECMStiffnessChangeEllipseBandIds[i].push_back(ellipseBandId);
 			}
 		}
@@ -2223,7 +2257,7 @@ bool ModelInputObject::readECMPerturbation(ifstream& file){
 			return false;
 		}
 		file >> currHeader;
-		if(currHeader == "stiffnessChangeFraction(double(0-1.0):"){
+		if(currHeader == "stiffnessChangeFraction(double(0-1.0)):"){
 			double fraction;
 			file >> fraction;
 			if (fraction <=0.0) {
@@ -2232,11 +2266,11 @@ bool ModelInputObject::readECMPerturbation(ifstream& file){
 			Sim->ECMStiffnessChangeFraction.push_back(fraction);
 		}
 		else{
-			printErrorMessage(currHeader,"ECM perturbations","stiffnessChangeFraction(double(0-1.0):");
+			printErrorMessage(currHeader,"ECM perturbations","stiffnessChangeFraction(double(0-1.0)):");
 			return false;
 		}
 		file >> currHeader;
-		if(currHeader == "ECMRenewalHalfLifeTargetFraction(double(0-1.0):"){
+		if(currHeader == "ECMRenewalHalfLifeTargetFraction(double(0-1.0)):"){
 			double fraction;
 			file >> fraction;
 			if (fraction <=0.0) {
@@ -2245,7 +2279,7 @@ bool ModelInputObject::readECMPerturbation(ifstream& file){
 			Sim->ECMRenewalHalfLifeTargetFraction.push_back(fraction);
 		}
 		else{
-			printErrorMessage(currHeader,"ECM perturbations","ECMRenewalHalfLifeTargetFraction(double(0-1.0):");
+			printErrorMessage(currHeader,"ECM perturbations","ECMRenewalHalfLifeTargetFraction(double(0-1.0)):");
 			return false;
 		}
 		Sim->changedECMStiffness.push_back(false);
