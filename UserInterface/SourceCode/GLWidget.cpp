@@ -19,7 +19,7 @@ using namespace std;
  GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
  {
 	 //cout<<"initiating gl widget"<<endl;
-	 obj_pos[0] =  50.0f; //80.0f;
+	 obj_pos[0] =  50.0f; //15.0f // 80.0f;
 	 obj_pos[1] =  0.0f;//-130.0f;
 	 obj_pos[2] =   500.0f;
 	 MatRot[0]  = 1.0; MatRot[1]  = 0.0; MatRot[2]  = 0.0; MatRot[3]  = 0.0;
@@ -39,8 +39,9 @@ using namespace std;
      aspectratio =1.0;
      ReferenceLineThickness = 1.0;
      MainShapeLineThickness = 1.0;
-     DisplayStrains = true;
+     DisplayStrains = false;
      DisplayPysProp = false;
+     //PysPropToDisplay = 4;
      DisplayFixedNodes = false;
 
      //current ranges:
@@ -48,8 +49,8 @@ using namespace std;
      DisplayPysPropRange[1][0] = 1000.0; DisplayPysPropRange[1][1] = 50000.0; 	//Internal Viscosity
      DisplayPysPropRange[2][0] = 1000.0; DisplayPysPropRange[2][1] = 5000.0; //Young's modulus
      DisplayPysPropRange[3][0] = 0.0; DisplayPysPropRange[3][1] = 0.5; 		//Poisson's ratio
-     DisplayPysPropRange[4][0] = 0.0; DisplayPysPropRange[4][1] = 12; 		//volumetric (xyz) growth rate
-     DisplayPysPropRange[5][0] = 0.0; DisplayPysPropRange[5][1] = 12.0; 	//volumetric (xyz) growth
+     DisplayPysPropRange[4][0] = 0.0; DisplayPysPropRange[4][1] = 36; 		//volumetric (xyz) growth rate
+     DisplayPysPropRange[5][0] = 0.0; DisplayPysPropRange[5][1] = 14.0; 	//volumetric (xyz) growth
      DisplayPysPropRange[6][0] = 0; DisplayPysPropRange[6][1] = 12.0; 	//Emergent size & shape
      DisplayPysPropRange[7][0] = -1.0; DisplayPysPropRange[7][1] = 10.0; 	//shape change
 
@@ -97,7 +98,7 @@ using namespace std;
      drawMarkingEllipses = false;
      ManualNodeSelection = false;
      ManualSelectedNodeId = -100;
-     PerspectiveView = true;
+     PerspectiveView = false;
      orthoViewLimits[0] = -250;
      orthoViewLimits[1] =  250;
      orthoViewLimits[2] = -130;//-130;//-60;
@@ -105,6 +106,12 @@ using namespace std;
      orthoViewLimits[4] = -1000;
      orthoViewLimits[5] =  1000;
 		 
+     /*
+	 orthoViewLimits[2] += 5.0*17;
+	 orthoViewLimits[3] -= 5.0*17;
+	 orthoViewLimits[0] = orthoViewLimits[2]*aspectratio;
+	 orthoViewLimits[1] = orthoViewLimits[3]*aspectratio;
+      */
      displayBoundingBox = false;
      xClip = 1000.0;
      yClip = 1000.0;
@@ -232,22 +239,26 @@ void GLWidget::reInitialiseNodeColourList(int oldNodeNumber){
 		 drawFixedNodes();
 	 }
 	 //Drawing the analysis line:
-	 int nContourNodes = analyser01->apicalContourLineDVSelectedYPositionsX.size();
-	 //cout<<"nContourNodes: "<<nContourNodes<<endl;
-	 glLineWidth(ReferenceLineThickness);
-	 for (int i=1; i<nContourNodes; ++i){
-		glBegin(GL_LINES);
-			glColor3f(1,0,0);
-			double x = analyser01->apicalContourLineDVSelectedYPositionsX[i-1];
-			double y = analyser01->yPosForSideDVLine;
-			double z = analyser01->apicalContourLineDVSelectedYPositionsZ[i-1];
-			glVertex3f( x, y, z+0.01);
-			x = analyser01->apicalContourLineDVSelectedYPositionsX[i];
-			z = analyser01->apicalContourLineDVSelectedYPositionsZ[i];
-			glVertex3f( x, y, z+0.1);
-		glEnd();
+	 bool drawAnalysisLine = false;
+	 if (drawAnalysisLine){
+		 int nContourNodes = analyser01->apicalContourLineDVSelectedYPositionsX.size();
+		 //cout<<"nContourNodes: "<<nContourNodes<<endl;
+		 glLineWidth(ReferenceLineThickness);
+		 for (int i=1; i<nContourNodes; ++i){
+			glBegin(GL_LINES);
+				glColor3f(1,0,0);
+				double x = analyser01->apicalContourLineDVSelectedYPositionsX[i-1];
+				double y = analyser01->yPosForSideDVLine;
+				double z = analyser01->apicalContourLineDVSelectedYPositionsZ[i-1];
+				glVertex3f( x, y, z+0.01);
+				x = analyser01->apicalContourLineDVSelectedYPositionsX[i];
+				z = analyser01->apicalContourLineDVSelectedYPositionsZ[i];
+				glVertex3f( x, y, z+0.1);
+			glEnd();
+		 }
+		 glLineWidth(MainShapeLineThickness);
 	 }
-	 glLineWidth(MainShapeLineThickness);
+
      //swapBuffers();
  }
 

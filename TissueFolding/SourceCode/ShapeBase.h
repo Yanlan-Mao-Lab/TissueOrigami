@@ -102,7 +102,7 @@ protected:
     double	stiffnessPerturbationRateInSec;	///< The rate at which the stiffness ofthe element will be perturbed, used with the model inputs from "Stiffness_Perturbation:" header in model input file
 
     double mutationGrowthRatePerSec;
-
+    double mutationGrowthFold;
     void 	setShapeType(string TypeName);				///< The function sets the type of the shape.
     void 	readNodeIds(int* tmpNodeIds);				///< The function sets the Node#Id array that constructs the shape.
     void 	setPositionMatrix(vector<Node*>& Nodes);	///< The function sets the ShapeBase#Positions matrix to define the locations of each constructing node.
@@ -241,7 +241,7 @@ public:
 	void 	updateGrowthIncrement(gsl_matrix* columnar, gsl_matrix* peripodial);
 	void 	updateGrowthByMutation(double dt);
 	void	calculateRelativePosInBoundingBox(double boundingBoxXMin, double boundingBoxYMin, double boundingBoxLength, double boundingBoxWidth);
-	void	mutateElement(double growthRatePerHour);
+	void	mutateElement(double growthFold, double growthRatePerHour);
 	//void	calculateRelativePosInBoundingBox(double columnarBoundingBoxXMin, double columnarBoundingBoxYMin, double columnarBoundingBoxLength, double columnarBoundingBoxWidth, double peipodialBoundingBoxXMin, double peipodialBoundingBoxYMin, double peipodialBoundingBoxLength, double peipodialBoundingBoxWidth);
 	void	updateReferencePositionMatrixFromInput(double** input);
 	void	displayRelativePosInBoundingBox();

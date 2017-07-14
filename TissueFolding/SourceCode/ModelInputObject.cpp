@@ -327,6 +327,8 @@ bool ModelInputObject::readGrowthType1(ifstream& file){
 	float finaltime;
 	bool applyToColumnarLayer = false;
 	bool applyToPeripodialMembrane = false;
+	bool applyToBasalECM = false;
+	bool applyToLateralECM = false;
 	float DVRate;
 	float APRate;
 	float ABRate;
@@ -364,6 +366,22 @@ bool ModelInputObject::readGrowthType1(ifstream& file){
 		return false;
 	}
 	file >> currHeader;
+	if(currHeader == "ApplyToBasalECM(bool):"){
+			file >> applyToBasalECM;
+	}
+	else{
+		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: applyToBasalECM(bool):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "ApplyToLateralECM(bool):"){
+			file >> applyToLateralECM;
+	}
+	else{
+		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: applyToLateralECM(bool):" <<endl;
+		return false;
+	}
+	file >> currHeader;
 	if(currHeader == "MaxValue(fractionPerHour-DV,AP,AB):"){
 		double timeMultiplier = 1.0 / 3600.0;
 		file >> DVRate;
@@ -390,7 +408,7 @@ bool ModelInputObject::readGrowthType1(ifstream& file){
 	GrowthFunctionBase* GSBp;
 	int Id = Sim->GrowthFunctions.size();
 	//type is 1
-	GSBp = new UniformGrowthFunction(Id, 1, initialtime, finaltime, applyToColumnarLayer, applyToPeripodialMembrane, DVRate, APRate,  ABRate, angle);
+	GSBp = new UniformGrowthFunction(Id, 1, initialtime, finaltime, applyToColumnarLayer, applyToPeripodialMembrane, applyToBasalECM, applyToLateralECM, DVRate, APRate,  ABRate, angle);
 	Sim->GrowthFunctions.push_back(GSBp);
 	return true;
 }
@@ -403,6 +421,8 @@ bool ModelInputObject::readGrowthType2(ifstream& file){
 	float finaltime;
 	bool applyToColumnarLayer = false;
 	bool applyToPeripodialMembrane = false;
+	bool applyToBasalECM = false;
+	bool applyToLateralECM = false;
 	float CentreX,CentreY;
 	float innerR, outerR;
 	float DVRate;
@@ -437,6 +457,22 @@ bool ModelInputObject::readGrowthType2(ifstream& file){
 	}
 	else{
 		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: ApplyToPeripodialMembrane(bool):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "ApplyToBasalECM(bool):"){
+			file >> applyToBasalECM;
+	}
+	else{
+		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: applyToBasalECM(bool):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "ApplyToLateralECM(bool):"){
+			file >> applyToLateralECM;
+	}
+	else{
+		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: applyToLateralECM(bool):" <<endl;
 		return false;
 	}
 	file >> currHeader;
@@ -491,7 +527,7 @@ bool ModelInputObject::readGrowthType2(ifstream& file){
 	GrowthFunctionBase* GSBp;
 	int Id = Sim->GrowthFunctions.size();
 	//type is 2
-	GSBp = new RingGrowthFunction(Id, 2, initialtime, finaltime, applyToColumnarLayer, applyToPeripodialMembrane, CentreX, CentreY, innerR,  outerR, DVRate, APRate,  ABRate, angle);
+	GSBp = new RingGrowthFunction(Id, 2, initialtime, finaltime, applyToColumnarLayer, applyToPeripodialMembrane, applyToBasalECM, applyToLateralECM, CentreX, CentreY, innerR,  outerR, DVRate, APRate,  ABRate, angle);
 	Sim->GrowthFunctions.push_back(GSBp);
 	return true;
 }
@@ -504,6 +540,8 @@ bool ModelInputObject::readGrowthType3(ifstream& file){
 	float finaltime;
 	bool applyToColumnarLayer = false;
 	bool applyToPeripodialMembrane = false;
+	bool applyToLateralECM = false;
+	bool applyToBasalECM = false;
 	int gridX, gridY;
 	double*** GrowthMatrix;
 	double**  AngleMatrix;
@@ -536,6 +574,22 @@ bool ModelInputObject::readGrowthType3(ifstream& file){
 	}
 	else{
 		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: ApplyToPeripodialMembrane(bool):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "ApplyToBasalECM(bool):"){
+			file >> applyToBasalECM;
+	}
+	else{
+		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: applyToBasalECM(bool):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "ApplyToLateralECM(bool):"){
+			file >> applyToLateralECM;
+	}
+	else{
+		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: applyToLateralECM(bool):" <<endl;
 		return false;
 	}
 	file >> currHeader;
@@ -637,7 +691,7 @@ bool ModelInputObject::readGrowthType3(ifstream& file){
 	GrowthFunctionBase* GSBp;
 	int Id = Sim->GrowthFunctions.size();
 	//type is 3
-	GSBp = new GridBasedGrowthFunction(Id, 3, initialtime, finaltime, applyToColumnarLayer, applyToPeripodialMembrane, gridX, gridY, GrowthMatrix, AngleMatrix);
+	GSBp = new GridBasedGrowthFunction(Id, 3, initialtime, finaltime, applyToColumnarLayer, applyToPeripodialMembrane, applyToBasalECM, applyToLateralECM, gridX, gridY, GrowthMatrix, AngleMatrix);
 	GSBp->zMin = zMin;
 	GSBp->zMax = zMax;
 
@@ -747,34 +801,38 @@ bool ModelInputObject::readExternalViscosityParameters(ifstream& file){
 	return true;
 }
 
+void ModelInputObject::printErrorMessage(string currentInput, string sourceFuction, string expectedInput){
+	cerr<<"Error in reading "<<sourceFuction<<" current input: "<<currentInput<<", should have been: "<<expectedInput<<endl;
+}
+
 bool ModelInputObject::readNodeFixingParameters(ifstream& file){
 	string currHeader;
 	file >> currHeader;
-	if(currHeader == "FixWithHighExternalViscosity(bool):"){
-		file >>Sim->fixWithExternalViscosity;
-	}
-	else{
-		cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: FixWithHighViscosity(bool):" <<endl;
-		return false;
-	}
-	file >> currHeader;
-	if(currHeader == "FixVis(x,y,z):"){
+	if(currHeader == "FixingViscosity(x,y,z):"){
 		file >>Sim->fixingExternalViscosity[0];
 		file >>Sim->fixingExternalViscosity[1];
 		file >>Sim->fixingExternalViscosity[2];
 	}
 	else{
-		cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: FixVis(x,y,z):" <<endl;
+		printErrorMessage(currHeader,"Fixing options","FixingViscosity(x,y,z):");
 		return false;
 	}
 	file >> currHeader;
-	if(currHeader == "ApicalSurfaceFix(bool-x,y,z):"){
+	if(currHeader == "ApicSurfaceFix(bool-x,y,z):"){
 		file >>Sim->ApicalNodeFix[0];
 		file >>Sim->ApicalNodeFix[1];
 		file >>Sim->ApicalNodeFix[2];
 	}
 	else{
-		cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: ApicalSurfaceFix(bool-x,y,z):" <<endl;
+		printErrorMessage(currHeader,"Fixing options","ApicSurfaceFix(bool-x,y,z):");
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "FixApicalExtVisc(bool):"){
+		file >>Sim->ApicalNodeFixWithExternalViscosity;
+	}
+	else{
+		printErrorMessage(currHeader,"Fixing options","FixApicalExtVisc(bool):");
 		return false;
 	}
 	file >> currHeader;
@@ -784,47 +842,15 @@ bool ModelInputObject::readNodeFixingParameters(ifstream& file){
 		file >>Sim->BasalNodeFix[2];
 	}
 	else{
-		cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: BasalSurfaceFix(bool-x,y,z):" <<endl;
+		printErrorMessage(currHeader,"Fixing options","BasalSurfaceFix(bool-x,y,z):");
 		return false;
 	}
 	file >> currHeader;
-	if(currHeader == "ApicalCircumferenceFix(bool-x,y,z):"){
-		file >>Sim->CircumferentialNodeFix[0][0];
-		file >>Sim->CircumferentialNodeFix[0][1];
-		file >>Sim->CircumferentialNodeFix[0][2];
+	if(currHeader == "FixBasalExtVisc(bool):"){
+		file >>Sim->BasalNodeFixWithExternalViscosity;
 	}
 	else{
-		cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: ApicalCircumferenceFix(bool-x,y,z):" <<endl;
-		return false;
-	}
-	file >> currHeader;
-	if(currHeader == "BasalCircumferenceFix(bool-x,y,z):"){
-		file >>Sim->CircumferentialNodeFix[1][0];
-		file >>Sim->CircumferentialNodeFix[1][1];
-		file >>Sim->CircumferentialNodeFix[1][2];
-	}
-	else{
-		cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: BasalCircumferenceFix(bool-x,y,z):" <<endl;
-		return false;
-	}
-	file >> currHeader;
-	if(currHeader == "LinkerApicalCircumferenceFix(bool-x,y,z):"){
-		file >>Sim->CircumferentialNodeFix[2][0];
-		file >>Sim->CircumferentialNodeFix[2][1];
-		file >>Sim->CircumferentialNodeFix[2][2];
-	}
-	else{
-		cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: LinkerApicalCircumferenceFix(bool-x,y,z):" <<endl;
-		return false;
-	}
-	file >> currHeader;
-	if(currHeader == "LinkerBasalCircumferenceFix(bool-x,y,z):"){
-		file >>Sim->CircumferentialNodeFix[3][0];
-		file >>Sim->CircumferentialNodeFix[3][1];
-		file >>Sim->CircumferentialNodeFix[3][2];
-	}
-	else{
-		cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: LinkerBasalCircumferenceFix(bool-x,y,z):" <<endl;
+		printErrorMessage(currHeader,"Fixing options","FixBasalExtVisc(bool):");
 		return false;
 	}
 	file >> currHeader;
@@ -834,22 +860,109 @@ bool ModelInputObject::readNodeFixingParameters(ifstream& file){
 		file >>Sim->CircumferentialNodeFix[4][2];
 	}
 	else{
-		cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: CircumferenceFix(bool-x,y,z):" <<endl;
+		printErrorMessage(currHeader,"Fixing options","CircumferenceFix(bool-x,y,z):");
 		return false;
 	}
 	file >> currHeader;
-		if(currHeader == "NotumFix(bool-x,y,z,double-xFracMin,xFracMax):"){
-			file >>Sim->NotumNodeFix[0];
-			file >>Sim->NotumNodeFix[1];
-			file >>Sim->NotumNodeFix[2];
-			file >>Sim->notumFixingRange[0];
-			file >>Sim->notumFixingRange[1];
-		}
-		else{
-			cerr<<"Error in reading notum Fixing option, curr string: "<<currHeader<<", should have been: NotumFix(bool-x,y,z,double-xFracMin,xFracMax):" <<endl;
-			return false;
-		}
-
+	if(currHeader == "FixCircWithExtVisc(bool):"){
+		file >>Sim->CircumferentialNodeFixWithHighExternalViscosity[4];
+	}
+	else{
+		printErrorMessage(currHeader,"Fixing options","FixCircWithExtVisc(bool):");
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "ApicCircumFix(bool-x,y,z):"){
+		file >>Sim->CircumferentialNodeFix[0][0];
+		file >>Sim->CircumferentialNodeFix[0][1];
+		file >>Sim->CircumferentialNodeFix[0][2];
+	}
+	else{
+		printErrorMessage(currHeader,"Fixing options","ApicCircumFix(bool-x,y,z):");
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "FixApicCircWithExtVisc(bool):"){
+		file >>Sim->CircumferentialNodeFixWithHighExternalViscosity[0];
+	}
+	else{
+		printErrorMessage(currHeader,"Fixing options","FixApicCircWithExtVisc(bool):");
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "BasalCircumFix(bool-x,y,z):"){
+		file >>Sim->CircumferentialNodeFix[1][0];
+		file >>Sim->CircumferentialNodeFix[1][1];
+		file >>Sim->CircumferentialNodeFix[1][2];
+	}
+	else{
+		printErrorMessage(currHeader,"Fixing options","BasalCircumFix(bool-x,y,z):");
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "FixBasalCircWithExtVisc(bool):"){
+		file >>Sim->CircumferentialNodeFixWithHighExternalViscosity[1];
+	}
+	else{
+		printErrorMessage(currHeader,"Fixing options","FixBasalCircWithExtVisc(bool):");
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "LinkerApicCircumFix(bool-x,y,z):"){
+		file >>Sim->CircumferentialNodeFix[2][0];
+		file >>Sim->CircumferentialNodeFix[2][1];
+		file >>Sim->CircumferentialNodeFix[2][2];
+	}
+	else{
+		printErrorMessage(currHeader,"Fixing options","LinkerApicCircumFix(bool-x,y,z):");
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "FixLinkerApicCircWithExtVisc(bool):"){
+		file >>Sim->CircumferentialNodeFixWithHighExternalViscosity[2];
+	}
+	else{
+		printErrorMessage(currHeader,"Fixing options","FixLinkerApicCircWithExtVisc(bool):");
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "LinkerBasalCircumFix(bool-x,y,z):"){
+		file >>Sim->CircumferentialNodeFix[3][0];
+		file >>Sim->CircumferentialNodeFix[3][1];
+		file >>Sim->CircumferentialNodeFix[3][2];
+	}
+	else{
+		printErrorMessage(currHeader,"Fixing options","LinkerBasalCircumFix(bool-x,y,z):");
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "FixLinkerBasalCircWithExtVisc(bool):"){
+		file >>Sim->CircumferentialNodeFixWithHighExternalViscosity[3];
+	}
+	else{
+		printErrorMessage(currHeader,"Fixing options","FixLinkerBasalCircWithExtVisc(bool):");
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "NotumFix(bool-x,y,z,double-xFracMin,xFracMax):"){
+		file >>Sim->NotumNodeFix[0];
+		file >>Sim->NotumNodeFix[1];
+		file >>Sim->NotumNodeFix[2];
+		file >>Sim->notumFixingRange[0];
+		file >>Sim->notumFixingRange[1];
+	}
+	else{
+		printErrorMessage(currHeader,"Fixing options","NotumFix(bool-x,y,z,double-xFracMin,xFracMax):");
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "FixNotumExtVisc(bool):"){
+		file >>Sim->NotumNodeFixWithExternalViscosity;
+	}
+	else{
+		printErrorMessage(currHeader,"Fixing options","FixNotumExtVisc(bool):");
+		return false;
+	}
 	return true;
 }
 
@@ -860,7 +973,7 @@ bool ModelInputObject::readManupulationParamters(ifstream& file){
 		file >>Sim->addCurvatureToTissue;
 	}
 	else{
-		cerr<<"Error in reading manipulations options, curr string: "<<currHeader<<", should have been: AddCurvature(bool):" <<endl;
+		printErrorMessage(currHeader,"Manipulation options","AddCurvature(bool):");
 		return false;
 	}
 	file >> currHeader;
@@ -1804,7 +1917,7 @@ bool ModelInputObject::readShapeChangeType1(ifstream& file){
 	GrowthFunctionBase* GSBp;
 	int Id = Sim->ShapeChangeFunctions.size();
 	//type is 1
-	GSBp = new UniformShapeChangeFunction(Id, 1, initialtime, finaltime, applyToColumnarLayer, applyToPeripodialMembrane, 1, Rate);
+	GSBp = new UniformShapeChangeFunction(Id, 1, initialtime, finaltime, applyToColumnarLayer, applyToPeripodialMembrane, false /*applyToBasalECM*/, false /*applyToLateralECM*/, 1, Rate);
 	Sim->ShapeChangeFunctions.push_back(GSBp);
 	return true;
 }
@@ -2050,76 +2163,92 @@ bool ModelInputObject::readECMPerturbation(ifstream& file){
 		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: ThereIsECMSoftening(bool):" <<endl;
 		return false;
 	}
-	file >> currHeader;
-	if(currHeader == "ApplyToApicalECM(bool):"){
-			file >> Sim->changeStiffnessApicalECM;
-	}
-	else{
-		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: ApplyToApicalECM(bool):" <<endl;
-		return false;
-	}
-	file >> currHeader;
-	if(currHeader == "ApplyToBasalECM(bool):"){
-			file >> Sim->changeStiffnessBasalECM;
-	}
-	else{
-		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: ApplyToBasalECM(bool):" <<endl;
-		return false;
-	}
-	file >> currHeader;
-	if(currHeader == "timeOfStiffnessChange(hr):"){
-		double timeInHr;
-		file >> timeInHr;
-		Sim->stiffnessChangeBeginTimeInSec = timeInHr*3600;
-		file >> timeInHr;
-		Sim->stiffnessChangeEndTimeInSec = timeInHr*3600;
-	}
-	else{
-		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: timeOfStiffnessChange(hr):" <<endl;
-		return false;
-	}
-	file >> currHeader;
-	if(currHeader == "stiffnessChangeAppliedToEllipses(number,[ellipseId][ellipseId]):"){
-		file >> Sim->numberOfECMStiffnessChangeEllipseBands;
-		double ellipseBandId;
-		for (int aa=0; aa<Sim->numberOfECMStiffnessChangeEllipseBands; ++aa){
-			file >>ellipseBandId;
-			Sim->ECMStiffnessChangeEllipseBandIds.push_back(ellipseBandId);
-		}
-		//file >> Sim->ECMSofteningXRange[0];
-		//file >> Sim->ECMSofteningXRange[1];
 
-	}
-	else{
-		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: stiffnessChangeAppliedToEllipses(number,[ellipseId][ellipseId]):" <<endl;
-		return false;
-	}
-
+	int nECMFunctions;
 	file >> currHeader;
-	if(currHeader == "stiffnessChangeFraction(double(0-1.0):"){
-		double fraction;
-		file >> fraction;
-		if (fraction <=0.0) {
-			fraction = 0.0001;
-		}
-		Sim->ECMStiffnessChangeFraction = fraction;
+	if(currHeader == "NumberOfECMPerturbations(int):"){
+		file >>nECMFunctions;
 	}
 	else{
-		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: stiffnessChangeFraction(double(0-1.0):" <<endl;
+		printErrorMessage(currHeader,"ECM perturbations","NumberOfECMPerturbations(int):");
 		return false;
 	}
-	file >> currHeader;
-	if(currHeader == "ECMRenewalHalfLifeTargetFraction(double(0-1.0):"){
-		double fraction;
-		file >> fraction;
-		if (fraction <=0.0) {
-			fraction = 0.0001;
+	for (int i=0l; i<nECMFunctions; ++i){
+		file >> currHeader;
+		if(currHeader == "ApplyToApicalECM(bool):"){
+			bool changeStiffnessApicalECM;
+			file >> changeStiffnessApicalECM;
+			Sim->changeStiffnessApicalECM.push_back(changeStiffnessApicalECM);
 		}
-		Sim->ECMRenewalHalfLifeTargetFraction = fraction;
-	}
-	else{
-		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: ECMRenewalHalfLifeTargetFraction(double(0-1.0):" <<endl;
-		return false;
+		else{
+			printErrorMessage(currHeader,"ECM perturbations","ApplyToApicalECM(bool):");
+			return false;
+		}
+		file >> currHeader;
+		if(currHeader == "ApplyToBasalECM(bool):"){
+			bool changeStiffnessBasalECM;
+			file >> changeStiffnessBasalECM;
+			Sim->changeStiffnessBasalECM.push_back(changeStiffnessBasalECM);
+		}
+		else{
+			printErrorMessage(currHeader,"ECM perturbations","ApplyToBasalECM(bool):");
+			return false;
+		}
+		file >> currHeader;
+		if(currHeader == "timeOfStiffnessChange(hr):"){
+			double timeInHr;
+			file >> timeInHr;
+			Sim->stiffnessChangeBeginTimeInSec.push_back(timeInHr*3600);
+			file >> timeInHr;
+			Sim->stiffnessChangeEndTimeInSec.push_back(timeInHr*3600);
+		}
+		else{
+			printErrorMessage(currHeader,"ECM perturbations","timeOfStiffnessChange(hr):");
+			return false;
+		}
+		file >> currHeader;
+		if(currHeader == "stiffnessChangeAppliedToEllipses(number,[ellipseId][ellipseId]):"){
+			int numberOfECMStiffnessChangeEllipseBands;
+			file >> numberOfECMStiffnessChangeEllipseBands;
+			Sim->numberOfECMStiffnessChangeEllipseBands.push_back(numberOfECMStiffnessChangeEllipseBands);
+			int ellipseBandId;
+			for (int aa=0; aa<Sim->numberOfECMStiffnessChangeEllipseBands[i]; ++aa){
+				file >>ellipseBandId;
+				Sim->ECMStiffnessChangeEllipseBandIds.push_back(vector<int>(0));
+				Sim->ECMStiffnessChangeEllipseBandIds[i].push_back(ellipseBandId);
+			}
+		}
+		else{
+			printErrorMessage(currHeader,"ECM perturbations","stiffnessChangeAppliedToEllipses(number,[ellipseId][ellipseId]):");
+			return false;
+		}
+		file >> currHeader;
+		if(currHeader == "stiffnessChangeFraction(double(0-1.0):"){
+			double fraction;
+			file >> fraction;
+			if (fraction <=0.0) {
+				fraction = 0.0001;
+			}
+			Sim->ECMStiffnessChangeFraction.push_back(fraction);
+		}
+		else{
+			printErrorMessage(currHeader,"ECM perturbations","stiffnessChangeFraction(double(0-1.0):");
+			return false;
+		}
+		file >> currHeader;
+		if(currHeader == "ECMRenewalHalfLifeTargetFraction(double(0-1.0):"){
+			double fraction;
+			file >> fraction;
+			if (fraction <=0.0) {
+				fraction = 0.0001;
+			}
+			Sim->ECMRenewalHalfLifeTargetFraction.push_back(fraction);
+		}
+		else{
+			printErrorMessage(currHeader,"ECM perturbations","ECMRenewalHalfLifeTargetFraction(double(0-1.0):");
+			return false;
+		}
+		Sim->changedECMStiffness.push_back(false);
 	}
 	return true;
 }
@@ -2221,25 +2350,27 @@ bool ModelInputObject::readMutationOptions(ifstream& file){
 		file >> Sim->numberOfClones;
 	}
 	else{
-		cerr<<"Error in reading explicit actin options: "<<currHeader<<", should have been: numberOfClones(int):" <<endl;
+		printErrorMessage(currHeader,"Mutation options","numberOfClones(int):");
 		return false;
 	}
 	file >> currHeader;
-	if(currHeader == "cloneInformation(double-relativeX,relativeY,micronRadius,growthRatepPerHour):"){
-		double relativeX, relativeY, micronRadius, growthRate;
+	if(currHeader == "cloneInformation(double-relativeX,relativeY,micronRadius,usingAbsoluteGrowth(bool),growthRatePerHour_OR_growthFoldIncrease):"){
+		double relativeX, relativeY, micronRadius, growthRateORFold,useAbsoluteGrowthRate;
 		for (int i=0; i<Sim->numberOfClones; ++i){
 			file >> relativeX;
 			file >> relativeY;
 			file >> micronRadius;
-			file >> growthRate;
+			file >> useAbsoluteGrowthRate;
+			file >> growthRateORFold;
 			Sim->cloneInformationX.push_back(relativeX);
 			Sim->cloneInformationY.push_back(relativeY);
 			Sim->cloneInformationR.push_back(micronRadius);
-			Sim->cloneInformationGrowth.push_back(growthRate);
+			Sim->cloneInformationUsingAbsolueGrowth.push_back(useAbsoluteGrowthRate);
+			Sim->cloneInformationGrowth.push_back(growthRateORFold);
 		}
 	}
 	else{
-		cerr<<"Error in reading explicit actin options: "<<currHeader<<", should have been: cloneInformation(double-relativeX,relativeY,relativeR,growthRatepPerHour):" <<endl;
+		printErrorMessage(currHeader,"Mutation options","cloneInformation(double-relativeX,relativeY,micronRadius,usingAbsoluteGrowth(bool),growthRatePerHour_OR_growthFoldIncrease):");
 		return false;
 	}
 	return true;

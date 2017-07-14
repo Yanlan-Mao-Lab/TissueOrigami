@@ -18,6 +18,7 @@ using namespace std;
 /*! ModelInputObject class */
 class ModelInputObject {
 private:
+	void printErrorMessage(string currentInput, string sourceFuction, string expectedInput); //< This function writes the error message
 	bool checkFileStatus(ifstream &file, string fileName); 	///< This function checks the health of given file.
 	bool readPysicalProperties(ifstream &file);				///< This function reads the physical parameters of the tissue from file.
 	bool readSaveOptions(ifstream &file);					///< This function reads the save options of the simulation from file.

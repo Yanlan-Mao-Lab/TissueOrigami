@@ -772,8 +772,9 @@ void MainWindow::ManualNodeSelectionReset(){
 
 void MainWindow::timerSimulationStep(){
     //cout<<"Called the function via timer"<<endl;
-	bool 	automatedSave = true;
-	int		viewSelection = 1; //0: top, 1: cross, 2: perspective.
+
+	bool 	automatedSave = false;
+	int		viewSelection = 0; //0: top, 1: cross, 2: perspective.
 	bool 	analyseResults = true;
 	bool 	slowstepsOnDisplay = false;
 	bool 	slowstepsOnRun = false;
@@ -820,7 +821,7 @@ void MainWindow::timerSimulationStep(){
 				}
 			}
 			Sim01->calculateDVDistance();
-			for (int a = 0; a<5; a++){ //11 for 6 hours with 1800 sec time step
+			for (int a = 0; a<11; a++){ //11 for 6 hours with 1800 sec time step
 				Sim01->updateOneStepFromSave();
 				Sim01->calculateDVDistance();
 			}

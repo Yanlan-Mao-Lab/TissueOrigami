@@ -1394,7 +1394,15 @@ void	ShapeBase::checkIfInsideEllipseBands(int nMarkerEllipseRanges, vector<doubl
 				for (int j =0 ; j<nNodes; ++j){
 					int currNodeId = NodeIds[j];
 					Nodes[currNodeId]->insideEllipseBand=true;
-					Nodes[currNodeId]->coveringEllipseBandId = i;			
+					Nodes[currNodeId]->coveringEllipseBandId = i;
+					cout<<"Node "<<currNodeId<<" is inside ellipse"<<i<<endl;
+					//delete later:
+					 //if the node is basal and is inside an ellipse
+					 //I will fix its z:
+					 //if(Nodes[currNodeId]->tissuePlacement == 0){
+					 //	 Nodes[currNodeId]->FixedPos[2]=true;
+					 //}
+					 //
 				}
 			}
 		}		
@@ -1647,16 +1655,33 @@ bool 	ShapeBase::calculate3DRotMatFromF(gsl_matrix* rotMat){
     return false; //none of the off - diagonal terms of the matrix are above the threshold, the current rotation is only numerical error.
 }
 
-void ShapeBase::mutateElement(double growthRatePerHour){
+void ShapeBase::mutateElement(double growthFold, double growthRatePerHour){
 	isMutated = true;
 	//growth will be uniform in x and y
 	mutationGrowthRatePerSec= growthRatePerHour/2.0/3600.0;
+	mutationGrowthFold= growthFold;
 }
 
 void ShapeBase::updateGrowthByMutation(double dt){
-	//overwriting up any growth that might be there, with uniform growth in x & y:
-	setGrowthRate(dt,mutationGrowthRatePerSec,mutationGrowthRatePerSec,0.0);
-	updateGrowthIncrementFromRate();
+	if (mutationGrowthFold>0){
+		//the fold increase is not zero, which means I should be inducing fold increase in growth:
+		//I will take the curretn increment, calculate the determinant (absolute growth).
+		//Then I will redistribute this growth to x & y:
+		double growthPerDt = determinant3by3Matrix(growthIncrement);
+		double ratePerSec = log(growthPerDt)/dt;
+		double growthPer24hrs = exp(ratePerSec*3600.0*24.0);
+		double newGrowthPer24hrs = mutationGrowthFold*growthPer24hrs;
+		double newGrowthRatePerSec = log(newGrowthPer24hrs)/24.0/3600.0/2.0;
+		//cout<<"current growth: "<<growthPerDt<<" ratePerSec: "<<ratePerSec<<" GrowthPer24hrs:" <<growthPer24hrs<<endl;
+		//cout<<" newGrowthPer24hrs: "<<newGrowthPer24hrs<<" newGrowthRatePerSec = "<<newGrowthRatePerSec<<endl;
+		setGrowthRate(dt,newGrowthRatePerSec,newGrowthRatePerSec,0.0);
+		updateGrowthIncrementFromRate();
+	}
+	else{
+		//overwriting up any growth that might be there, with uniform growth in x & y:
+		setGrowthRate(dt,mutationGrowthRatePerSec,mutationGrowthRatePerSec,0.0);
+		updateGrowthIncrementFromRate();
+	}
 }
 
 void 	ShapeBase::calculateRelativePosInBoundingBox(double boundingBoxXMin, double boundingBoxYMin, double boundingBoxLength, double boundingBoxWidth){
@@ -1735,6 +1760,7 @@ double 	ShapeBase::determinant3by3Matrix(double* rotMat){
 	det += rotMat[2]*(rotMat[3]*rotMat[7]-rotMat[4]*rotMat[6]);
 	return det;
 }
+
 double 	ShapeBase::determinant3by3Matrix(boost::numeric::ublas::matrix<double>& Mat){
 	double det =0.0;
 	det  =  Mat(0,0)*(Mat(1,1)*Mat(2,2)-Mat(1,2)*Mat(2,1));

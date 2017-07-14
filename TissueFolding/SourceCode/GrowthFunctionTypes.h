@@ -19,7 +19,7 @@ public:
 	gsl_matrix* ShearAngleRotationMatrix; ///< The rotation  matrix for the orientation of the growth on x-y plane. This matrix is constructed through  UniformGrowthFunction#angle
 	double angle;	///< The rotation angle for the orientation of the growth on x-y plane.
 
-	UniformGrowthFunction(int id, int type, float initTime, float endTime, bool applyToColumnarLayer, bool applyToPeripodialMembrane, double DVGrowth, double APGrowth, double ABGrowth, double angle) : GrowthFunctionBase(id, type, initTime, endTime, applyToColumnarLayer, applyToPeripodialMembrane ){
+	UniformGrowthFunction(int id, int type, float initTime, float endTime, bool applyToColumnarLayer, bool applyToPeripodialMembrane, bool applyToBasalECM, bool applyToLateralECM, double DVGrowth, double APGrowth, double ABGrowth, double angle) : GrowthFunctionBase(id, type, initTime, endTime, applyToColumnarLayer, applyToPeripodialMembrane, applyToBasalECM, applyToLateralECM){
 		/**
 		 *  The first six parameters will be directed to the parent constructor, GrowthFunctionBase#GrowthFunctionBase. \n
 		 *  doubles DVGrowth, APGrowth and ABGrowth will set the  UniformGrowthFunction#GrowthRate, in the given order.
@@ -102,7 +102,7 @@ private:
 
 public:
 	int ShapeChangeType;
-	UniformShapeChangeFunction(int id, int type, float initTime, float endTime, bool applyToColumnarLayer, bool applyToPeripodialMembrane, int ShapeChangeType, double ShapeChangeRate) : UniformGrowthFunction( id,  type,  initTime,  endTime,  applyToColumnarLayer,  applyToPeripodialMembrane,  0.0,  0.0,  0.0, 0.0){
+	UniformShapeChangeFunction(int id, int type, float initTime, float endTime, bool applyToColumnarLayer, bool applyToPeripodialMembrane, bool applyToBasalECM, bool applyToLateralECM, int ShapeChangeType, double ShapeChangeRate) : UniformGrowthFunction( id,  type,  initTime,  endTime,  applyToColumnarLayer,  applyToPeripodialMembrane, applyToBasalECM,  applyToLateralECM, 0.0,  0.0,  0.0, 0.0){
 		/**
 		 *  Forst six parameters will be directed to the parent constructor, UniformGrowthFunction#UniformGrowthFunction.
 		 *  The growth rates in Dv, AB and AP will be fed as 0 to the parent constructor. \n
@@ -157,7 +157,7 @@ public:
 	double GrowthRate[3]; 	///< The maximum growth rate at the RingGrowthFunction#outerRadius, in (1/sec), format: [ DV axis (x), AP axis (y), and AB axis (z)]
 	gsl_matrix* ShearAngleRotationMatrix; ///< The rotation  matrix for the orientation of the growth on x-y plane. This matrix is constructed through  UniformGrowthFunction#angle
 	double angle;	///< The rotation angle for the orientation of the growth on x-y plane.
-	RingGrowthFunction(int id, int type, float initTime, float endTime, bool applyToColumnarLayer, bool applyToPeripodialMembrane, double Cx, double Cy, double innerR, double outerR, double DVGrowth, double APGrowth, double ABGrowth, double angle) : GrowthFunctionBase(id, type, initTime, endTime, applyToColumnarLayer, applyToPeripodialMembrane){
+	RingGrowthFunction(int id, int type, float initTime, float endTime, bool applyToColumnarLayer, bool applyToPeripodialMembrane, bool applyToBasalECM, bool applyToLateralECM, double Cx, double Cy, double innerR, double outerR, double DVGrowth, double APGrowth, double ABGrowth, double angle) : GrowthFunctionBase(id, type, initTime, endTime, applyToColumnarLayer, applyToPeripodialMembrane, applyToBasalECM, applyToLateralECM){
 		/**
 		 *  The first six parameters will be directed to the parent constructor, GrowthFunctionBase#GrowthFunctionBase. \n
 		 *  doubles Cx and Cy will set RingGrowthFunction#centre[0] and RingGrowthFunction#centre[1], respectively. \n
@@ -278,7 +278,7 @@ public:
 	double***	compatibleAngles;
 	bool***		compatibleAngleEliminated;
 
-	GridBasedGrowthFunction(int id, int type, float initTime, float endTime, bool applyToColumnarLayer, bool applyToPeripodialMembrane, int nX, int nY, double*** GrowthMat, double** AngleMat) : GrowthFunctionBase(id, type, initTime, endTime, applyToColumnarLayer, applyToPeripodialMembrane){
+	GridBasedGrowthFunction(int id, int type, float initTime, float endTime, bool applyToColumnarLayer, bool applyToPeripodialMembrane, bool applyToBasalECM, bool applyToLateralECM, int nX, int nY, double*** GrowthMat, double** AngleMat) : GrowthFunctionBase(id, type, initTime, endTime, applyToColumnarLayer, applyToPeripodialMembrane, applyToBasalECM,  applyToLateralECM){
 		/**
 		 *  The first six parameters will be directed to the parent constructor, GrowthFunctionBase#GrowthFunctionBase. \n
 		 *  integers nX and nY will set GridBasedGrowthFunction#nGridX and GridBasedGrowthFunction#nGridY, respectively.  GridBasedGrowthFunction::GrowthMatrix will be initiated to point at a 2 dimensional matrix of double triplets the size(nX, nY). \n

@@ -242,6 +242,7 @@ private:
     void manualPerturbationToInitialSetup(bool deform, bool rotate);
     void pokeElement(int elementId, double dx, double dy, double dz);
     void addCurvatureToColumnar(double h);
+    void thickecECM();
     void addSoftPeriphery(double* fractions);
     void setupYsymmetricity();
     void setupXsymmetricity();
@@ -280,7 +281,7 @@ public:
 	int noiseOnPysProp[4];
 	bool zeroExternalViscosity[3]; //The boolean stating if there is zero external viscosity on any of the 3 dimensions
 	bool extendExternalViscosityToInnerTissue;
-	bool changedECMStiffness;
+	vector <bool> changedECMStiffness;
 	double externalViscosityDPApical;
 	double externalViscosityDPBasal;
 	double externalViscosityPMApical;
@@ -292,7 +293,11 @@ public:
 	int Column;
 	float SideLength;
 	float zHeight;
-	bool fixWithExternalViscosity;
+	//bool fixWithExternalViscosity;
+	bool ApicalNodeFixWithExternalViscosity;
+	bool BasalNodeFixWithExternalViscosity;
+	bool CircumferentialNodeFixWithHighExternalViscosity[5];
+	bool NotumNodeFixWithExternalViscosity;
 	double fixingExternalViscosity[3];
 	bool ApicalNodeFix[3];
 	bool BasalNodeFix[3];
@@ -430,14 +435,15 @@ public:
 	vector<double> markerEllipseBandR1Ranges;
 	vector<double> markerEllipseBandR2Ranges;
     bool 	thereIsECMStiffnessChange;
-	int numberOfECMStiffnessChangeEllipseBands;
-	vector<int> ECMStiffnessChangeEllipseBandIds;
-	double  stiffnessChangeBeginTimeInSec;
-	double  stiffnessChangeEndTimeInSec;
-	double 	ECMStiffnessChangeFraction;
-	double  ECMRenewalHalfLifeTargetFraction;
-	bool 	changeStiffnessBasalECM;
-	bool 	changeStiffnessApicalECM;
+	vector <int>numberOfECMStiffnessChangeEllipseBands;
+	vector< vector<int> > ECMStiffnessChangeEllipseBandIds;
+	vector <double> stiffnessChangeBeginTimeInSec;
+	vector <double> stiffnessChangeEndTimeInSec;
+	vector <double>	ECMStiffnessChangeFraction;
+	vector <double> ECMRenewalHalfLifeTargetFraction;
+	vector <bool> 	changeStiffnessApicalECM;
+	vector <bool> 	changeStiffnessBasalECM;
+
 	int numberOfMyosinAppliedEllipseBands;
 	vector <int> myosinEllipseBandIds;
 	
@@ -476,6 +482,7 @@ public:
 	vector<double> cloneInformationX;
 	vector<double> cloneInformationY;
 	vector<double> cloneInformationR;
+	vector<bool> cloneInformationUsingAbsolueGrowth;
 	vector<double> cloneInformationGrowth;
 
 	bool encloseTissueBetweenSurfaces;
@@ -509,10 +516,10 @@ public:
     void checkForExperimentalSetupsAfterIteration();
     void setLateralElementsRemodellingPlaneRotationMatrices();
 
-    void updateStiffnessChangeForExplicitECM();
-    void updateECMRenewalHalflifeMultiplier();
-    void updateStiffnessChangeForViscosityBasedECMDefinition();
-    void calculateStiffnessChangeRatesForECM();
+    void updateStiffnessChangeForExplicitECM(int idOfCurrentECMPerturbation);
+    void updateECMRenewalHalflifeMultiplier(int idOfCurrentECMPerturbation);
+    void updateStiffnessChangeForViscosityBasedECMDefinition(int idOfCurrentECMPerturbation);
+    void calculateStiffnessChangeRatesForECM(int idOfCurrentECMPerturbation);
     void checkECMStiffnessChange();
     void updateStiffnessChangeForActin();
     void calculateStiffnessChangeRatesForActin();

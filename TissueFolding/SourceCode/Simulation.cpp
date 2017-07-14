@@ -114,8 +114,12 @@ void Simulation::setDefaultParameters(){
 	Column = Row-2;
 	SideLength=1.0;
 	zHeight = 2.0;
-	fixWithExternalViscosity = false;
+	//fixWithExternalViscosity = false;
+	ApicalNodeFixWithExternalViscosity = false;
+	BasalNodeFixWithExternalViscosity = false;
+	NotumNodeFixWithExternalViscosity = false;
 	for (int i=0; i<5; ++i){
+		CircumferentialNodeFixWithHighExternalViscosity[i] = false;
 		for (int j=0; j<3; j++){
 			CircumferentialNodeFix[i][j] = false;
 			ApicalNodeFix[j] = false;
@@ -228,15 +232,8 @@ void Simulation::setDefaultParameters(){
 	numberOfMyosinAppliedEllipseBands = 0;
 
 
-	changedECMStiffness = false;
 	thereIsECMStiffnessChange = false;
-	numberOfECMStiffnessChangeEllipseBands = 0;
-	stiffnessChangeEndTimeInSec = -1;
-	stiffnessChangeEndTimeInSec = -1;
-	ECMStiffnessChangeFraction = 0.0;
-	ECMRenewalHalfLifeTargetFraction = 1.0;
-	changeStiffnessBasalECM = false;
-	changeStiffnessApicalECM = false;
+
 	thereIsCellMigration = false;
 	thereIsExplicitECM = false;
 	ECMRenawalHalfLife = 0.0;
@@ -961,15 +958,19 @@ void Simulation::writeECMProperties(){
 	saveFileSimulationSummary<<"	ECM remodelling half life (hour): "<<ECMRenawalHalfLife/3600.0<<endl;
 	saveFileSimulationSummary<<"	Is there perturbation to the ECM: "<<thereIsECMStiffnessChange<<endl;
 	if (thereIsECMStiffnessChange){
-		saveFileSimulationSummary<<"		stiffness alteration begins at  "<<stiffnessChangeBeginTimeInSec/3600.0<<" hrs and ends at "<<stiffnessChangeEndTimeInSec/3600.0<<endl;
-		saveFileSimulationSummary<<"		final fraction of ECM stiffness  "<<ECMStiffnessChangeFraction<<" times original values."<<endl;
-		saveFileSimulationSummary<<"		stiffness alteration applied to apical ECM: "	<<changeStiffnessApicalECM<<endl;
-		saveFileSimulationSummary<<"		stiffness alteration applied to basal  ECM: "	<<changeStiffnessBasalECM<<endl;
-		saveFileSimulationSummary<<"		stiffness alteratio applied to ellipse bands: ";
-		for (int i=0; i<numberOfECMStiffnessChangeEllipseBands; ++i){
-			saveFileSimulationSummary<<" "<<ECMStiffnessChangeEllipseBandIds[i];
+		int n = stiffnessChangeBeginTimeInSec.size();
+		saveFileSimulationSummary<<"there are "<<n<<" ECM perturbations"<<endl;
+		for (int ECMperturbationIndex =0;ECMperturbationIndex<n; ++ECMperturbationIndex ){
+			saveFileSimulationSummary<<"		stiffness alteration begins at  "<<stiffnessChangeBeginTimeInSec[ECMperturbationIndex]/3600.0<<" hrs and ends at "<<stiffnessChangeEndTimeInSec[ECMperturbationIndex]/3600.0<<endl;
+			saveFileSimulationSummary<<"		final fraction of ECM stiffness  "<<ECMStiffnessChangeFraction[ECMperturbationIndex]<<" times original values."<<endl;
+			saveFileSimulationSummary<<"		stiffness alteration applied to apical ECM: "	<<changeStiffnessApicalECM[ECMperturbationIndex]<<endl;
+			saveFileSimulationSummary<<"		stiffness alteration applied to basal  ECM: "	<<changeStiffnessBasalECM[ECMperturbationIndex]<<endl;
+			saveFileSimulationSummary<<"		stiffness alteration applied to ellipse bands: ";
+			for (int i=0; i<numberOfECMStiffnessChangeEllipseBands[ECMperturbationIndex]; ++i){
+				saveFileSimulationSummary<<" "<<ECMStiffnessChangeEllipseBandIds[ECMperturbationIndex][i];
+			}
+			saveFileSimulationSummary<<endl;
 		}
-		saveFileSimulationSummary<<endl;
 	}
 }
 
@@ -2665,9 +2666,9 @@ void Simulation::initiateSinglePrismElement(){
 	Elements.push_back(PrismPnt01);
 	nElements = Elements.size();
 	currElementId++;
-	fixZ(0, fixWithExternalViscosity);
-	fixZ(1, fixWithExternalViscosity);
-	fixZ(2, fixWithExternalViscosity);
+	fixZ(0, BasalNodeFixWithExternalViscosity);
+	fixZ(1, BasalNodeFixWithExternalViscosity);
+	fixZ(2, BasalNodeFixWithExternalViscosity);
 }
 
 
@@ -2816,13 +2817,14 @@ void Simulation::checkForNodeFixing(){
 							 (i == 4)){										  //tissuePlacement is irrelevant, fixing all
 							//The node is at circumference; if
 							if (CircumferentialNodeFix[i][0]){
-								fixX((*itNode),fixWithExternalViscosity);
+								fixX((*itNode),CircumferentialNodeFixWithHighExternalViscosity[i]);
 							}
 							if (CircumferentialNodeFix[i][1]){
-								fixY((*itNode),fixWithExternalViscosity);
+								fixY((*itNode),CircumferentialNodeFixWithHighExternalViscosity[i]);
+
 							}
 							if (CircumferentialNodeFix[i][2]){
-								fixZ((*itNode),fixWithExternalViscosity);
+								fixZ((*itNode),CircumferentialNodeFixWithHighExternalViscosity[i]);
 							}
 						}
 					}
@@ -2835,13 +2837,13 @@ void Simulation::checkForNodeFixing(){
 		for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
 			if ( (*itNode)->tissuePlacement == 0){
 				if (BasalNodeFix[0]){
-					fixX((*itNode), fixWithExternalViscosity);
+					fixX((*itNode), BasalNodeFixWithExternalViscosity);
 				}
 				if (BasalNodeFix[1]){
-					fixY((*itNode), fixWithExternalViscosity);
+					fixY((*itNode), BasalNodeFixWithExternalViscosity);
 				}
 				if (BasalNodeFix[2]){
-					fixZ((*itNode), fixWithExternalViscosity);
+					fixZ((*itNode), BasalNodeFixWithExternalViscosity);
 				}
 			}
 		}
@@ -2851,13 +2853,13 @@ void Simulation::checkForNodeFixing(){
 		for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
 			if ( (*itNode)->tissuePlacement == 1){
 				if (ApicalNodeFix[0]){
-					fixX((*itNode), fixWithExternalViscosity);
+					fixX((*itNode), ApicalNodeFixWithExternalViscosity);
 				}
 				if (ApicalNodeFix[1]){
-					fixY((*itNode), fixWithExternalViscosity);
+					fixY((*itNode), ApicalNodeFixWithExternalViscosity);
 				}
 				if (ApicalNodeFix[2]){
-					fixZ((*itNode), fixWithExternalViscosity);
+					fixZ((*itNode), ApicalNodeFixWithExternalViscosity);
 				}
 			}
 		}
@@ -2871,13 +2873,13 @@ void Simulation::checkForNodeFixing(){
 				double relativeXPos = ((*itNode)->Position[0] - boundingBoxXMin)/boundingBoxLength;
 				if ( relativeXPos >= notumFixingRange[0] && relativeXPos <= notumFixingRange[1]){
 					if (NotumNodeFix[0]){
-						fixX((*itNode), fixWithExternalViscosity);
+						fixX((*itNode), NotumNodeFixWithExternalViscosity);
 					}
 					if (NotumNodeFix[1]){
-						fixY((*itNode), fixWithExternalViscosity);
+						fixY((*itNode), NotumNodeFixWithExternalViscosity);
 					}
 					if (NotumNodeFix[2]){
-						fixZ((*itNode), fixWithExternalViscosity);
+						fixZ((*itNode), NotumNodeFixWithExternalViscosity);
 					}
 				}
 			}
@@ -2893,18 +2895,25 @@ void Simulation::induceClones(){
 		double inMicronsRadius = cloneInformationR[i];
 		//cout<<" clone: "<<i<<" position: "<<inMicronsX<<" "<<inMicronsY<<" radius: "<<inMicronsRadius<<endl;
 		double r2 = inMicronsRadius*inMicronsRadius;
-		double growthRate = cloneInformationGrowth[i];
+		double growthRateORFold = cloneInformationGrowth[i];
 		for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-			double* c = new double[3];
-			c = (*itElement)->getCentre();
-			double dx = inMicronsX - c[0];
-			double dy = inMicronsY - c[1];
-			double d2 = dx*dx + dy*dy;
-			if (d2 < r2){
-				//cout<<"mutating element: "<<(*itElement)->Id<<endl;
-				(*itElement)->mutateElement(growthRate);
+			if (!(*itElement)->isECMMimicing && !(*itElement)->IsAblated){
+				double* c = new double[3];
+				c = (*itElement)->getCentre();
+				double dx = inMicronsX - c[0];
+				double dy = inMicronsY - c[1];
+				double d2 = dx*dx + dy*dy;
+				if (d2 < r2){
+					//cout<<"mutating element: "<<(*itElement)->Id<<endl;
+					if (cloneInformationUsingAbsolueGrowth[i]){
+						(*itElement)->mutateElement(0,growthRateORFold); //the mutation is absolute, using an absolute value
+					}
+					else{
+						(*itElement)->mutateElement(growthRateORFold,0); //the mutation is not absolute, using relative values
+					}
+				}
+				delete[] c;
 			}
-			delete[] c;
 		}
 	}
 }
@@ -3334,8 +3343,7 @@ void Simulation::checkForZeroExternalViscosity(){
 void Simulation::addCurvatureToColumnar(double h){
 	//find the tips:
 	double l1 = -1000, l2 = 1000, l3 = -1000;
-	vector<Node*>::iterator itNode;
-	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+	for (vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
 		if ((*itNode)->Position[0] > l1 ){
 			l1 = (*itNode)->Position[0]; //displacement from origin to positive x tip
 		}
@@ -3351,7 +3359,7 @@ void Simulation::addCurvatureToColumnar(double h){
 	}
 	l2 *= -1.0;	//converting the displacement to distance, this is the only negative tip, the rest are already positive
 	cout<<"l1: "<<l1 <<" l2: "<<l2<<" l3: "<<l3<<endl;
-	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+	for (vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
 		double x = (*itNode)->Position[0];
 		double y = (*itNode)->Position[1];
 		double z = (*itNode)->Position[2];
@@ -3385,9 +3393,33 @@ void Simulation::addCurvatureToColumnar(double h){
 			}
 		}
 	}
+	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		(*itElement)->updatePositions(Nodes);
+		(*itElement)->updateReferencePositionsToCurentShape();
+	}
+}
 
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+void Simulation::thickecECM(){
+	double bbMinX = boundingBox[0][0];
+	double bbMaxX = boundingBox[1][0];
+	double bbXSize = bbMaxX-bbMinX;
+	double thickenDz = 0;//4.17; //make selected regions 3 micron thicker
+	double thinnerDz = 2.0;
+	for (vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+		if ((*itNode)->tissuePlacement == 0){
+			//only basal nodes
+			double x = (*itNode)->Position[0];
+			double relativeX = (x-bbMinX)/bbXSize;
+			if (relativeX < 0.4 || relativeX > 0.65){
+				//<0.4 notum, >0.65 pouch
+				(*itNode)->Position[2] -= thickenDz;
+			}
+			//else{
+				(*itNode)->Position[2] += thinnerDz;
+			//}
+		}
+	}
+	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 		(*itElement)->updatePositions(Nodes);
 		(*itElement)->updateReferencePositionsToCurentShape();
 	}
@@ -4255,7 +4287,7 @@ void Simulation::updateStiffnessChangeForActin(){
 		if (applyToThisElement){
             (*itElement)->updateStiffnessMultiplier(dt);
             (*itElement)->updateElasticProperties();
-            cout<<" element: "<<(*itElement)->Id<<" stiffness multiplier: "<<(*itElement)->getStiffnessMultiplier()<<endl;
+            //cout<<" element: "<<(*itElement)->Id<<" stiffness multiplier: "<<(*itElement)->getStiffnessMultiplier()<<endl;
 		}
 	}
 }
@@ -4303,11 +4335,11 @@ void Simulation::checkStiffnessPerturbation(){
 
 */
 
-void Simulation::updateStiffnessChangeForExplicitECM(){
+void Simulation::updateStiffnessChangeForExplicitECM(int idOfCurrentECMPerturbation){
     const int maxThreads = omp_get_max_threads();
 	#pragma omp parallel for
 	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		bool applyToThisElement = (*itElement)->isECMStiffnessChangeAppliedToElement(changeStiffnessApicalECM, changeStiffnessBasalECM, ECMStiffnessChangeEllipseBandIds, numberOfECMStiffnessChangeEllipseBands);
+		bool applyToThisElement = (*itElement)->isECMStiffnessChangeAppliedToElement(changeStiffnessApicalECM[idOfCurrentECMPerturbation], changeStiffnessBasalECM[idOfCurrentECMPerturbation], ECMStiffnessChangeEllipseBandIds[idOfCurrentECMPerturbation], numberOfECMStiffnessChangeEllipseBands[idOfCurrentECMPerturbation]);
 		if (applyToThisElement){
 			 (*itElement)->updateStiffnessMultiplier(dt);
 			 (*itElement)->updateElasticProperties();
@@ -4315,15 +4347,15 @@ void Simulation::updateStiffnessChangeForExplicitECM(){
 	}
 }
 
-void Simulation::updateStiffnessChangeForViscosityBasedECMDefinition(){
+void Simulation::updateStiffnessChangeForViscosityBasedECMDefinition(int idOfCurrentECMPerturbation){
     const int maxThreads = omp_get_max_threads();
     #pragma omp parallel for
 	for (vector<Node*>::iterator itNode = Nodes.begin(); itNode<Nodes.end(); ++itNode){
 		if (!(*itNode)->allOwnersECMMimicing){
-			if(((*itNode)->tissuePlacement == 0 && changeStiffnessBasalECM ) || ((*itNode)->tissuePlacement == 1 && changeStiffnessApicalECM )){
+			if(((*itNode)->tissuePlacement == 0 && changeStiffnessBasalECM[idOfCurrentECMPerturbation] ) || ((*itNode)->tissuePlacement == 1 && changeStiffnessApicalECM[idOfCurrentECMPerturbation] )){
 				if((*itNode)->insideEllipseBand){
-					for (int ECMReductionRangeCounter =0; ECMReductionRangeCounter<numberOfECMStiffnessChangeEllipseBands; ++ECMReductionRangeCounter){
-						if ((*itNode)->coveringEllipseBandId == ECMStiffnessChangeEllipseBandIds[ECMReductionRangeCounter]){
+					for (int ECMReductionRangeCounter =0; ECMReductionRangeCounter<numberOfECMStiffnessChangeEllipseBands[idOfCurrentECMPerturbation]; ++ECMReductionRangeCounter){
+						if ((*itNode)->coveringEllipseBandId == ECMStiffnessChangeEllipseBandIds[idOfCurrentECMPerturbation][ECMReductionRangeCounter]){
 							(*itNode)->externalViscosity[0] -= (*itNode)->ECMViscosityChangePerHour[0]/3600*dt;
 							(*itNode)->externalViscosity[1] -= (*itNode)->ECMViscosityChangePerHour[1]/3600*dt;
 							(*itNode)->externalViscosity[2] -= (*itNode)->ECMViscosityChangePerHour[2]/3600*dt;
@@ -4338,8 +4370,8 @@ void Simulation::updateStiffnessChangeForViscosityBasedECMDefinition(){
 	}
 }
 
-void Simulation::calculateStiffnessChangeRatesForECM(){
-	changedECMStiffness = true;
+void Simulation::calculateStiffnessChangeRatesForECM(int idOfCurrentECMPerturbation){
+	changedECMStiffness[idOfCurrentECMPerturbation] = true;
 	//this is the first time step I am changing the ECM stiffness.
 	//I need to calculate rates first.
 	//If there is explicit ECM, I will calculate the young modulus change via elements.
@@ -4347,50 +4379,54 @@ void Simulation::calculateStiffnessChangeRatesForECM(){
 	if( thereIsExplicitECM){
 		#pragma omp parallel for
 		for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-			bool applyToThisElement = (*itElement)->isECMStiffnessChangeAppliedToElement(changeStiffnessApicalECM, changeStiffnessBasalECM, ECMStiffnessChangeEllipseBandIds, numberOfECMStiffnessChangeEllipseBands);
+			bool applyToThisElement = (*itElement)->isECMStiffnessChangeAppliedToElement(changeStiffnessApicalECM[idOfCurrentECMPerturbation], changeStiffnessBasalECM[idOfCurrentECMPerturbation], ECMStiffnessChangeEllipseBandIds[idOfCurrentECMPerturbation], numberOfECMStiffnessChangeEllipseBands[idOfCurrentECMPerturbation]);
 			if (applyToThisElement){
 				//the first input is used for checking basolateral stiffenning combined with apical relaxation
 				//the ECM does not have such options. Will give the boolean as falsa and continue.
-				(*itElement)->calculateStiffnessPerturbationRate(false, stiffnessChangeBeginTimeInSec,stiffnessChangeEndTimeInSec, ECMStiffnessChangeFraction);
+				(*itElement)->calculateStiffnessPerturbationRate(false, stiffnessChangeBeginTimeInSec[idOfCurrentECMPerturbation],stiffnessChangeEndTimeInSec[idOfCurrentECMPerturbation], ECMStiffnessChangeFraction[idOfCurrentECMPerturbation]);
 			}
 		}
 		//now I need to check for the apical surface with viscosity based calculation:
 		#pragma omp parallel for
 		for (vector<Node*>::iterator itNode = Nodes.begin(); itNode<Nodes.end(); ++itNode){
-			double timeDifferenceInHours = (stiffnessChangeEndTimeInSec - stiffnessChangeBeginTimeInSec)/3600;
+			double timeDifferenceInHours = (stiffnessChangeEndTimeInSec[idOfCurrentECMPerturbation] - stiffnessChangeBeginTimeInSec[idOfCurrentECMPerturbation])/3600;
 			for (int i=0; i<3; ++i){
-				(*itNode)->ECMViscosityChangePerHour[i] = (*itNode)->externalViscosity[i]*(1-ECMStiffnessChangeFraction)/timeDifferenceInHours;
+				(*itNode)->ECMViscosityChangePerHour[i] = (*itNode)->externalViscosity[i]*(1-ECMStiffnessChangeFraction[idOfCurrentECMPerturbation])/timeDifferenceInHours;
 			}
 		}
 	}
 	else{
 		#pragma omp parallel for
 		for (vector<Node*>::iterator itNode = Nodes.begin(); itNode<Nodes.end(); ++itNode){
-			double timeDifferenceInHours = (stiffnessChangeEndTimeInSec - stiffnessChangeBeginTimeInSec)/3600;
+			double timeDifferenceInHours = (stiffnessChangeEndTimeInSec[idOfCurrentECMPerturbation] - stiffnessChangeBeginTimeInSec[idOfCurrentECMPerturbation])/3600;
 			for (int i=0; i<3; ++i){
-				(*itNode)->ECMViscosityChangePerHour[i] = (*itNode)->externalViscosity[i]*(1-ECMStiffnessChangeFraction)/timeDifferenceInHours;
+				(*itNode)->ECMViscosityChangePerHour[i] = (*itNode)->externalViscosity[i]*(1-ECMStiffnessChangeFraction[idOfCurrentECMPerturbation])/timeDifferenceInHours;
 			}
 		}
 	}
 }
 
-void Simulation::updateECMRenewalHalflifeMultiplier(){
+void Simulation::updateECMRenewalHalflifeMultiplier(int idOfCurrentECMPerturbation){
 	if(thereIsExplicitECM){
-		if (currSimTimeSec>stiffnessPerturbationEndTimeInSec){
+		cout<<" there is explicit ecm, checking for ecr renewal half life update"<<endl;
+		if (currSimTimeSec>stiffnessChangeBeginTimeInSec[idOfCurrentECMPerturbation]){
 			//perturbation on ECM renewal half life started
 			double currECMRenewaHalfLifeMultiplier = 1.0;
-			if (currSimTimeSec>=stiffnessPerturbationEndTimeInSec){
-				currECMRenewaHalfLifeMultiplier = ECMRenewalHalfLifeTargetFraction;
+			if (currSimTimeSec>=stiffnessChangeEndTimeInSec[idOfCurrentECMPerturbation]){
+				currECMRenewaHalfLifeMultiplier = ECMRenewalHalfLifeTargetFraction[idOfCurrentECMPerturbation];
 			}
 			else{
-				double totalTimeChange = stiffnessPerturbationEndTimeInSec - stiffnessPerturbationBeginTimeInSec;
-				double currTimeChange = currSimTimeSec - stiffnessPerturbationBeginTimeInSec;
-				double currECMRenewaHalfLifeMultiplier = 1 + (ECMRenewalHalfLifeTargetFraction - 1.0) * currTimeChange / totalTimeChange;
+				double totalTimeChange = stiffnessChangeEndTimeInSec[idOfCurrentECMPerturbation] - stiffnessChangeBeginTimeInSec[idOfCurrentECMPerturbation];
+				double currTimeChange = currSimTimeSec - stiffnessChangeBeginTimeInSec[idOfCurrentECMPerturbation];
+				currECMRenewaHalfLifeMultiplier = 1 + (ECMRenewalHalfLifeTargetFraction[idOfCurrentECMPerturbation] - 1.0) * currTimeChange / totalTimeChange;
 			}
 			#pragma omp parallel for
 			for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 				if ((*itElement)->isECMMimicing){
-					(*itElement)->plasticDeformationHalfLifeMultiplier =  currECMRenewaHalfLifeMultiplier;
+					bool applyToThisElement = (*itElement)->isECMStiffnessChangeAppliedToElement(changeStiffnessApicalECM[idOfCurrentECMPerturbation], changeStiffnessBasalECM[idOfCurrentECMPerturbation], ECMStiffnessChangeEllipseBandIds[idOfCurrentECMPerturbation], numberOfECMStiffnessChangeEllipseBands[idOfCurrentECMPerturbation]);
+					if (applyToThisElement){
+						(*itElement)->plasticDeformationHalfLifeMultiplier =  currECMRenewaHalfLifeMultiplier;
+					}
 				}
 			}
 		}
@@ -4400,19 +4436,22 @@ void Simulation::updateECMRenewalHalflifeMultiplier(){
 void Simulation::checkECMStiffnessChange(){
 	//I have not carried out any softening as yet
 	//I will if the time is after 32 hr
-	if (currSimTimeSec >=stiffnessChangeBeginTimeInSec && currSimTimeSec <stiffnessChangeEndTimeInSec){
-		if (changedECMStiffness == false){
-			calculateStiffnessChangeRatesForECM();
+	int n = stiffnessChangeBeginTimeInSec.size();
+	for (int idOfCurrentECMPerturbation=0; idOfCurrentECMPerturbation<n; ++idOfCurrentECMPerturbation){
+		if (currSimTimeSec >=stiffnessChangeBeginTimeInSec[idOfCurrentECMPerturbation] && currSimTimeSec <=stiffnessChangeEndTimeInSec[idOfCurrentECMPerturbation]){
+			if (changedECMStiffness[idOfCurrentECMPerturbation] == false){
+				calculateStiffnessChangeRatesForECM(idOfCurrentECMPerturbation);
+			}
+			if( thereIsExplicitECM){
+				updateECMRenewalHalflifeMultiplier(idOfCurrentECMPerturbation);
+				updateStiffnessChangeForExplicitECM(idOfCurrentECMPerturbation);
+			}
+			//I will check for updating the viscosity based ECM manipulation to apply to an apical
+			//viscosity based ECM if desired.
+			//else{
+				updateStiffnessChangeForViscosityBasedECMDefinition(idOfCurrentECMPerturbation);
+			//}
 		}
-		if( thereIsExplicitECM){
-			updateECMRenewalHalflifeMultiplier();
-			updateStiffnessChangeForExplicitECM();
-		}
-		//I will check for updating the viscosity based ECM manipulation to apply to an apical
-		//viscosity based ECM if desired.
-		//else{
-			updateStiffnessChangeForViscosityBasedECMDefinition();
-		//}
 	}
 }
 
@@ -4457,6 +4496,17 @@ bool Simulation::runOneStep(){
     if (ThereIsStiffnessPerturbation) {
     	checkStiffnessPerturbation();
     }
+    //DELETE LATER!!!
+   /* if (currSimTimeSec<=184400){
+		for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+			if ((*itElement)->isECMMimimcingAtCircumference){
+				double stiffnessPerturbationRateInSec = 0.00055;
+				(*itElement)->stiffnessMultiplier += stiffnessPerturbationRateInSec*dt;
+				(*itElement)->updateElasticProperties();
+			}
+		}
+    }*/
+    //END
     if (thereIsECMStiffnessChange) {
     	checkECMStiffnessChange();
     }
@@ -4482,11 +4532,15 @@ bool Simulation::runOneStep(){
 		//if ((timestep - 1)% growthRotationUpdateFrequency  == 0){
 			updateGrowthRotationMatrices();
 		//}
+		cout<<" checking if calling calculate Growth"<<endl;
         if(nGrowthFunctions>0 || numberOfClones > 0){
         	calculateGrowth();
         }
+		cout<<" checking if calling shape change"<<endl;
         if(nShapeChangeFunctions>0){
+        	cout<<" calling shape change"<<endl;
         	calculateShapeChange();
+        	cout<<" outside shape change"<<endl;
         }
     }
     if(thereIsPlasticDeformation || thereIsExplicitECM){
@@ -7510,9 +7564,10 @@ void Simulation::calculateGrowth(){
 
 void Simulation::calculateShapeChange(){
 	cleanUpShapeChangeRates();
+	//cout<<"outside cleanUpShapeChangeRates"<<endl;
 	for (int i=0; i<nShapeChangeFunctions; ++i){
-		if (GrowthFunctions[i]->Type == 1){
-			//cout<<"Calculating Uniform Growth"<<endl;
+		if (ShapeChangeFunctions[i]->Type == 1){
+			//cout<<"calling calculate Shape change"<<endl;
 			calculateShapeChangeUniform(ShapeChangeFunctions[i]);
 		}
 	}
@@ -7562,6 +7617,7 @@ void Simulation::calculateShapeChangeUniform (GrowthFunctionBase* currSCF){
 				}
 			}
 		}
+    	//cout<<"finalised shape change uniform"<<endl;
 		delete[] maxValues;
 	}
 }
@@ -7575,18 +7631,34 @@ void Simulation::calculateGrowthUniform(GrowthFunctionBase* currGF){
 		currGF->getGrowthRate(growthRates);
     	vector<ShapeBase*>::iterator itElement;
     	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-    		if ((!thereIsExplicitECM || !(*itElement)->isECMMimicing ) && !(*itElement)->isMutated){
-    			//tissue type == 0 is columnar layer, ==1 is peripodial membrane, ==2 id linker zone
-				gsl_matrix_set_identity(columnarFgIncrement);
-				gsl_matrix_set_identity(peripodialFgIncrement);
-				if (currGF->applyToColumnarLayer){
-					(*itElement)->calculateFgFromRates(dt, growthRates[0],growthRates[1],growthRates[2], currGF->getShearAngleRotationMatrix(), columnarFgIncrement, 0, currGF->zMin, currGF->zMax);
+			gsl_matrix_set_identity(columnarFgIncrement);
+			gsl_matrix_set_identity(peripodialFgIncrement);
+    		//if (!(*itElement)->isMutated){
+				if (currGF->applyToBasalECM || currGF->applyToLateralECM){
+					if (currGF->applyToBasalECM){
+						if ((*itElement)->isECMMimicing && (*itElement)->tissuePlacement == 0){
+							(*itElement)->calculateFgFromRates(dt, growthRates[0],growthRates[1],growthRates[2], currGF->getShearAngleRotationMatrix(), columnarFgIncrement, 0, currGF->zMin, currGF->zMax);
+						}
+					}
+					if (currGF->applyToLateralECM){
+						if ((*itElement)->isECMMimimcingAtCircumference && !(*itElement)->tissuePlacement == 0){ //do not grow the basal element twice
+							(*itElement)->calculateFgFromRates(dt, growthRates[0],growthRates[1],growthRates[2], currGF->getShearAngleRotationMatrix(), columnarFgIncrement, 0, currGF->zMin, currGF->zMax);
+						}
+					}
 				}
-				if (currGF->applyToPeripodialMembrane){
-					(*itElement)->calculateFgFromRates(dt, growthRates[0],growthRates[1],growthRates[2], currGF->getShearAngleRotationMatrix(), peripodialFgIncrement, 1, currGF->zMin, currGF->zMax);
+				if (!thereIsExplicitECM || !(*itElement)->isECMMimicing ){
+					//There is either no explicit ECM definition, or the element is not ECM mimicing.
+					//If there is explicit ECM, the basal elements should not grow, all others should proceed as usual
+					//If there is no explicit ecm, then all should proceed as usual.
+					if (currGF->applyToColumnarLayer){
+						(*itElement)->calculateFgFromRates(dt, growthRates[0],growthRates[1],growthRates[2], currGF->getShearAngleRotationMatrix(), columnarFgIncrement, 0, currGF->zMin, currGF->zMax);
+					}
+					if (currGF->applyToPeripodialMembrane){
+						(*itElement)->calculateFgFromRates(dt, growthRates[0],growthRates[1],growthRates[2], currGF->getShearAngleRotationMatrix(), peripodialFgIncrement, 1, currGF->zMin, currGF->zMax);
+					}
 				}
 				(*itElement)->updateGrowthIncrement(columnarFgIncrement,peripodialFgIncrement);
-    		}
+			//}
     	}
 		delete[] growthRates;
 		gsl_matrix_free(columnarFgIncrement);
@@ -7611,30 +7683,47 @@ void Simulation::calculateGrowthRing(GrowthFunctionBase* currGF){
 		gsl_matrix* peripodialFgIncrement = gsl_matrix_calloc(3,3);
     	vector<ShapeBase*>::iterator itElement;
     	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-    		if ((!thereIsExplicitECM || !(*itElement)->isECMMimicing ) && !(*itElement)->isMutated){
-				double* Elementcentre = new double[3];
-				Elementcentre = (*itElement)->getCentre();
-				//the distance is calculated in the x-y projection
-				double d[2] = {centre[0] - Elementcentre[0], centre[1] - Elementcentre[1]};
-				double dmag2 = d[0]*d[0] + d[1]*d[1];
-				if (dmag2 > innerRadius2 && dmag2 < outerRadius2){
-					//the element is within the growth zone.
-					float distance = pow(dmag2,0.5);
-					//calculating the growth rate: as a fraction increase within this time point
-					double sf = (1.0 - (distance - innerRadius) / (outerRadius - innerRadius) );
-					double growthscale[3] = {maxValues[0]*sf,maxValues[1]*sf,maxValues[2]*sf};
-					gsl_matrix_set_identity(columnarFgIncrement);
-					gsl_matrix_set_identity(peripodialFgIncrement);
-					if (currGF->applyToColumnarLayer){
-						(*itElement)->calculateFgFromRates(dt, growthscale[0],growthscale[1],growthscale[2], currGF->getShearAngleRotationMatrix(), columnarFgIncrement, 0, currGF->zMin, currGF->zMax);
+			double* Elementcentre = new double[3];
+			Elementcentre = (*itElement)->getCentre();
+			//the distance is calculated in the x-y projection
+			double d[2] = {centre[0] - Elementcentre[0], centre[1] - Elementcentre[1]};
+			double dmag2 = d[0]*d[0] + d[1]*d[1];
+			if (dmag2 > innerRadius2 && dmag2 < outerRadius2){
+				//the element is within the growth zone.
+				float distance = pow(dmag2,0.5);
+				//calculating the growth rate: as a fraction increase within this time point
+				double sf = (1.0 - (distance - innerRadius) / (outerRadius - innerRadius) );
+				double growthscale[3] = {maxValues[0]*sf,maxValues[1]*sf,maxValues[2]*sf};
+				gsl_matrix_set_identity(columnarFgIncrement);
+				gsl_matrix_set_identity(peripodialFgIncrement);
+				//if (!(*itElement)->isMutated){
+					if (currGF->applyToBasalECM || currGF->applyToLateralECM){
+						if (currGF->applyToBasalECM){
+							if ((*itElement)->isECMMimicing && (*itElement)->tissuePlacement == 0){
+								(*itElement)->calculateFgFromRates(dt, growthscale[0],growthscale[1],growthscale[2], currGF->getShearAngleRotationMatrix(), columnarFgIncrement, 0, currGF->zMin, currGF->zMax);
+							}
+						}
+						if (currGF->applyToLateralECM){
+							if ((*itElement)->isECMMimimcingAtCircumference && !(*itElement)->tissuePlacement == 0){ //do not grow the basal element twice
+								(*itElement)->calculateFgFromRates(dt, growthscale[0],growthscale[1],growthscale[2], currGF->getShearAngleRotationMatrix(), columnarFgIncrement, 0, currGF->zMin, currGF->zMax);
+							}
+						}
 					}
-					if (currGF->applyToPeripodialMembrane){
-						(*itElement)->calculateFgFromRates(dt, growthscale[0],growthscale[1],growthscale[2], currGF->getShearAngleRotationMatrix(), peripodialFgIncrement, 1, currGF->zMin, currGF->zMax);
+					if (!thereIsExplicitECM || !(*itElement)->isECMMimicing ){
+						//There is either no explicit ECM definition, or the element is not ECM mimicing.
+						//If there is explicit ECM, the basal elements should not grow, all others should proceed as usual
+						//If there is no explicit ecm, then all should proceed as usual.
+						if (currGF->applyToColumnarLayer){
+							(*itElement)->calculateFgFromRates(dt, growthscale[0],growthscale[1],growthscale[2], currGF->getShearAngleRotationMatrix(), columnarFgIncrement, 0, currGF->zMin, currGF->zMax);
+						}
+						if (currGF->applyToPeripodialMembrane){
+							(*itElement)->calculateFgFromRates(dt, growthscale[0],growthscale[1],growthscale[2], currGF->getShearAngleRotationMatrix(), peripodialFgIncrement, 1, currGF->zMin, currGF->zMax);
+						}
 					}
 					(*itElement)->updateGrowthIncrement(columnarFgIncrement,peripodialFgIncrement);
-				}
-				delete[] Elementcentre;
-    		}
+				//}
+			}
+			delete[] Elementcentre;
 		}
 		gsl_matrix_free(columnarFgIncrement);
 		gsl_matrix_free(peripodialFgIncrement);
@@ -7778,18 +7867,32 @@ void Simulation::calculateGrowthGridBased(GrowthFunctionBase* currGF){
 			else{
 				(*itElement)->getRelativePositionInTissueInGridIndex(nGridX, nGridY, IndexX, IndexY, FracX, FracY);
 			}
-    		if ((!thereIsExplicitECM || !(*itElement)->isECMMimicing ) && !(*itElement)->isMutated){
-				//There is either no explicit ECM definition, or the element is not ECM mimicing.
-				//If there is explicit ECM, the basal elements should not grow, all others should proceed as usual
-				//If there is no explicit ecm, then all should proceed as usual.
-				if (currGF->applyToColumnarLayer){
-					(*itElement)->calculateFgFromGridCorners(gridGrowthsInterpolationType, dt, currGF, columnarFgIncrement, 0, IndexX,  IndexY, FracX, FracY); 	//sourceTissue is 0 for columnar Layer
+			//if (!(*itElement)->isMutated){
+				if (currGF->applyToBasalECM || currGF->applyToLateralECM){
+					if (currGF->applyToBasalECM){
+						if ((*itElement)->isECMMimicing && (*itElement)->tissuePlacement == 0){
+							(*itElement)->calculateFgFromGridCorners(gridGrowthsInterpolationType, dt, currGF, columnarFgIncrement, 0, IndexX,  IndexY, FracX, FracY); 	//sourceTissue is 0 for columnar Layer
+						}
+					}
+					if (currGF->applyToLateralECM){
+						if ((*itElement)->isECMMimimcingAtCircumference && !(*itElement)->tissuePlacement == 0){ //do not grow the basal element twice
+							(*itElement)->calculateFgFromGridCorners(gridGrowthsInterpolationType, dt, currGF, columnarFgIncrement, 0, IndexX,  IndexY, FracX, FracY); 	//sourceTissue is 0 for columnar Layer
+						}
+					}
 				}
-				if (currGF->applyToPeripodialMembrane){
-					(*itElement)->calculateFgFromGridCorners(gridGrowthsInterpolationType, dt, currGF, peripodialFgIncrement, 1, IndexX,  IndexY, FracX, FracY); 	//sourceTissue is 1 for peripodial membrane
+				if (!thereIsExplicitECM || !(*itElement)->isECMMimicing ){
+					//There is either no explicit ECM definition, or the element is not ECM mimicing.
+					//If there is explicit ECM, the basal elements should not grow, all others should proceed as usual
+					//If there is no explicit ecm, then all should proceed as usual.
+					if (currGF->applyToColumnarLayer){
+						(*itElement)->calculateFgFromGridCorners(gridGrowthsInterpolationType, dt, currGF, columnarFgIncrement, 0, IndexX,  IndexY, FracX, FracY); 	//sourceTissue is 0 for columnar Layer
+					}
+					if (currGF->applyToPeripodialMembrane){
+						(*itElement)->calculateFgFromGridCorners(gridGrowthsInterpolationType, dt, currGF, peripodialFgIncrement, 1, IndexX,  IndexY, FracX, FracY); 	//sourceTissue is 1 for peripodial membrane
+					}
 				}
-			}
-			(*itElement)->updateGrowthIncrement(columnarFgIncrement,peripodialFgIncrement);
+				(*itElement)->updateGrowthIncrement(columnarFgIncrement,peripodialFgIncrement);
+			//}
 		}
 		gsl_matrix_free(columnarFgIncrement);
 		gsl_matrix_free(peripodialFgIncrement);

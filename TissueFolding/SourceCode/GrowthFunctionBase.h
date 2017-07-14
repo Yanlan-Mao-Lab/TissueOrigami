@@ -12,7 +12,7 @@ class GrowthFunctionBase{
 private:
 
 public:
-	GrowthFunctionBase(int id, int type, float initTime, float endTime, bool applyToColumnarLayer, bool applyToPeripodialMembrane){
+	GrowthFunctionBase(int id, int type, float initTime, float endTime, bool applyToColumnarLayer, bool applyToPeripodialMembrane, bool applyToBasalECM, bool applyToLateralECM){
 		/**
 		 *  integer id will set GrowthFunctionBase#Id. \n
 		 *  integer type will set GrowthFunctionBase#Type. \n
@@ -25,6 +25,8 @@ public:
 		this->endTime = endTime;
 		this->applyToColumnarLayer = applyToColumnarLayer;
 		this->applyToPeripodialMembrane = applyToPeripodialMembrane;
+		this->applyToBasalECM = applyToBasalECM;
+		this->applyToLateralECM = applyToLateralECM;
 		zMin = 0;
 		zMax = 1.0;
 	} ///< The constructor of GrowthFunctionBase. Different growth functions will be derived from this class
@@ -36,6 +38,8 @@ public:
 	float endTime;					///< The end time of the growth, in seconds.
 	bool applyToColumnarLayer;		///< Boolean stating if the growth should be applied to columnar layer
 	bool applyToPeripodialMembrane; ///< Boolean stating if the growth should be applied to peripodial membrane
+	bool applyToBasalECM;			///< Boolean stating if the growth should be applied to basal explicit ECM layer
+	bool applyToLateralECM ;		///< Boolean stating if the growth should be applied to lateral explicit ECM layer
 	double zMin;
 	double zMax;
 
