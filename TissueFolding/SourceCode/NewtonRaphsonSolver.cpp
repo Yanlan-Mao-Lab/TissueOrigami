@@ -20,10 +20,6 @@ NewtonRaphsonSolver::NewtonRaphsonSolver(int dim, int n){
 	numericalParametersSet = false;
 
 	un = gsl_matrix_calloc(nDim*nNodes,1);
-	//mvisc = gsl_matrix_calloc(dim*nNodes,dim*nNodes);
-	//mvisc = gsl_matrix_calloc(1,dim*nNodes);
-	//mviscPerDt = gsl_matrix_calloc(dim*nNodes,dim*nNodes);
-	//mviscPerDt = gsl_matrix_calloc(1,dim*nNodes);
 	ge = gsl_matrix_calloc(nDim*nNodes,1);
 	gvInternal = gsl_matrix_calloc(nDim*nNodes,1);
 	gvExternal = gsl_matrix_calloc(nDim*nNodes,1);
@@ -33,8 +29,8 @@ NewtonRaphsonSolver::NewtonRaphsonSolver(int dim, int n){
 	displacementPerDt = gsl_matrix_calloc(nDim*nNodes,1);
 	deltaU = gsl_vector_calloc(nDim*nNodes);
 	K = gsl_matrix_calloc(nDim*nNodes,nDim*nNodes);
-
 	Knumerical = 0;
+	boundNodesWithSlaveMasterDefinition = false;
 }
 
 NewtonRaphsonSolver::~NewtonRaphsonSolver(){
@@ -58,15 +54,10 @@ NewtonRaphsonSolver::~NewtonRaphsonSolver(){
 	cout<<" deleted displacementPerDt"<<endl;
 	gsl_vector_free(deltaU);
 	cout<<" deleted deltaU"<<endl;
-
 	//cout<<"K(0,0): "<<gsl_matrix_get(K,0,0)<<endl;
 	//cout<<"(K->size1,K->size2): "<<K->size1<<" "<<K->size2<<endl;
 	gsl_matrix_free(K);
 	cout<<" deleted K"<<endl;
-    //gsl_matrix_free(mviscPerDt);
-	//cout<<" deleted mviscPerDt"<<endl;
-    //gsl_matrix_free(mvisc);
-	//cout<<" deleted mvisc"<<endl;
 	if (Knumerical != 0){
 		gsl_matrix_free(Knumerical);
 	}
@@ -108,8 +99,6 @@ void NewtonRaphsonSolver::reInitiateMatricesAfterRefinement(int n){
 
 void NewtonRaphsonSolver::setMatricesToZeroAtTheBeginningOfIteration(bool thereIsNumericalCalculation){
 	gsl_matrix_set_zero(un);
-	//gsl_matrix_set_zero(mvisc);
-	//gsl_matrix_set_zero(mviscPerDt);
 	gsl_matrix_set_zero(ge);
 	gsl_matrix_set_zero(gvInternal);
 	gsl_matrix_set_zero(gvExternal);
@@ -153,38 +142,99 @@ void NewtonRaphsonSolver::initialteUkMatrix(){
     gsl_matrix_memcpy(uk,un);
 }
 
-/*void NewtonRaphsonSolver::constructLumpedMassExternalViscosityMatrix(vector <Node*>& Nodes){
-    for (int i = 0; i<nNodes; ++i ){
-        //double matrixValue = Nodes[i]->mass*Nodes[i]->Viscosity / dt;
-        for (int j=0; j<nDim; ++j){
-        	double matrixValue = Nodes[i]->mass*Nodes[i]->externalViscosity[j];
-            gsl_matrix_set(mvisc,0,3*i+j,matrixValue);
-        }
-
-    }
-    //gsl_matrix_memcpy(mviscPerDt,mvisc);
-    //gsl_matrix_scale(mviscPerDt,1/dt);
-}*/
 
 void NewtonRaphsonSolver::calculateDisplacementMatrix(double dt){
 	gsl_matrix_memcpy(displacementPerDt,uk);
 	gsl_matrix_sub(displacementPerDt,un);
 	gsl_matrix_scale(displacementPerDt,1.0/dt);
+}
 
-	//Implicit viscosity testing:
-	//Assigning velocity to nodes:
-	/*
-	 gsl_matrix_set_zero(displacementPerDt);
-    //int nodes[3] = {0,66,132};
-    int nodes[3] = {0,163,326};
-	int n = 3;
-	double dvel = 0.1;
-	for (int i=0;i<n;++i){
-		gsl_matrix_set(displacementPerDt,nodes[i]*3,0,dvel);
+/*
+void NewtonRaphsonSolver::calculateBoundKWithSlavesMasterDoF(){
+	if (boundNodesWithSlaveMasterDefinition){
+		cout<<" binding slaves to masters"<<endl;
+		//K_bound = N^T K N + I
+		//g_bound = N^T g
+
+		gsl_vector* tmpg = gsl_vector_calloc(gSum->size);
+		//g_bound = N^T g
+		gsl_blas_dgemv (CblasTrans, 1.0, NSlaveMasterBinding, gSum, 0.0, tmpg);
+		gsl_vector_memcpy(gSum,tmpg);
+		gsl_vector_free(tmpg);
+
+		//K_bound = N^T K N + I
+		gsl_matrix* tmpK =gsl_matrix_calloc(NSlaveMasterBinding->size1,NSlaveMasterBinding->size2);
+		gsl_blas_dgemm (CblasTrans, CblasNoTrans,1.0, NSlaveMasterBinding, K, 0.0, tmpK);
+		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, tmpK, NSlaveMasterBinding, 0.0, K);
+		gsl_matrix_add(K, ISlaveMasterBinding);
+		gsl_matrix_free(tmpK);
 	}
-	//end of assigning velocity to nodes
-	 */
+}
+*/
 
+void NewtonRaphsonSolver::calculateBoundKWithSlavesMasterDoF(){
+	if (boundNodesWithSlaveMasterDefinition){
+		cout<<" binding slaves to masters"<<endl;
+		//Original calculation necessary is carried out by matrices N and I, where:
+		//N = matrix of size (nDim*nNodes, nDim*nNodes)
+		//I = matrix of size (nDim*nNodes, nDim*nNodes)
+		//N is identity except:
+		//	For degrees of freedom  i that are slaves, the diagonal of N should be zero;
+		//	For degrees of freedom  i that are slaves to degrees of freedom  j, N(i,j) should be 1.
+		//I is zero matrix except:
+		//	For degrees of freedom  i that are slave, I(i,i) should be 1
+		//Then,
+		//	K_bound = N^T K N + I
+		//	g_bound = N^T g
+		//Due to efficient memory usage, these operations will be carried out on a row/column basis, rather than
+		//using full matrices
+		//	In other words, I do not wish to allocate two more (nDim*nNodes, nDim*nNodes) matrices in definition, and
+		//	another (nDim*nNodes, nDim*nNodes) matrix as temporary during  N^T K N calculation
+
+		int n= slaveMasterList.size();
+		int totalNumberOfDoF = K->size1; //nDim * nNodes
+		//for( int slaveIterator =0; slaveIterator <n; ++slaveIterator){
+		for (vector< vector<int> >::iterator itSlaveMasterCouple=slaveMasterList.begin(); itSlaveMasterCouple<slaveMasterList.end(); ++itSlaveMasterCouple){
+			//add all forces on slave to master, set slave forces to zero (g_bound = N^T g)
+			int slaveIndex = (*itSlaveMasterCouple)[0];
+			int masterIndex = (*itSlaveMasterCouple)[1];
+			double slaveForce = gsl_vector_get(gSum,slaveIndex);
+			double masterForce = gsl_vector_get(gSum,masterIndex);
+			masterForce +=  slaveForce;
+			gsl_vector_set(gSum,slaveIndex,0);
+			gsl_vector_set(gSum,masterIndex,masterForce);
+			//Start K manipulation - K_bound = N^T K N + I
+			//add all elements of the slave row to master row - N^T K
+			// format of view: [ matrix*, origin i, origin j, rows, columns ]
+			gsl_matrix_view KSlaveRow = gsl_matrix_submatrix (K, slaveIndex, 0, 1, totalNumberOfDoF);
+			gsl_matrix_view KMasterRow = gsl_matrix_submatrix (K, masterIndex, 0, 1, totalNumberOfDoF);
+			gsl_matrix_add(&(KMasterRow.matrix),&(KSlaveRow.matrix));
+			gsl_matrix_set_zero(&(KSlaveRow.matrix));
+			//add all elements of the slave column to master column - N^T K N
+			gsl_matrix_view KSlaveColumn = gsl_matrix_submatrix (K, 0, slaveIndex, totalNumberOfDoF,1);
+			gsl_matrix_view KMasterColumn = gsl_matrix_submatrix (K,0, masterIndex, totalNumberOfDoF,1);
+			gsl_matrix_add(&(KMasterColumn.matrix),&(KSlaveColumn.matrix));
+			gsl_matrix_set_zero(&(KSlaveColumn.matrix));
+			//make K(slave,slave) equal to 1 - N^T K N + I
+			gsl_matrix_set(K,slaveIndex,slaveIndex,1);
+			//views do not need to be freed, they are addresses to original matrices
+		}
+	}
+}
+
+void NewtonRaphsonSolver::equateSlaveDisplacementsToMasters(){
+	int n = slaveMasterList.size();
+	for( int slaveIterator = 0; slaveIterator <n; ++slaveIterator){
+		int slaveIndex = slaveMasterList[slaveIterator][0];
+		int masterIndex = slaveMasterList[slaveIterator][1];
+		double masterDisplacement = gsl_vector_get(deltaU,masterIndex);
+		double slaveDisplacement =  gsl_vector_get(deltaU,slaveIndex);
+		//cout<<" slave-master ("<<slaveIndex<<" "<<masterIndex<<") displacement before correction: "<< slaveDisplacement<<" "<<masterDisplacement<<endl;
+		gsl_vector_set(deltaU,slaveIndex,masterDisplacement);
+		masterDisplacement = gsl_vector_get(deltaU,masterIndex);
+		slaveDisplacement =  gsl_vector_get(deltaU,slaveIndex);
+		//cout<<" slave-master ("<<slaveIndex<<" "<<masterIndex<<")displacement after correction: "<< slaveDisplacement<<" "<<masterDisplacement<<endl;
+	}
 }
 
 void NewtonRaphsonSolver::calcutateFixedK(vector <Node*>& Nodes){
@@ -212,11 +262,6 @@ void NewtonRaphsonSolver::calculateForcesAndJacobianMatrixNR(vector <Node*>& Nod
 	omp_set_num_threads(maxThreads);
 	#pragma omp parallel for //private(Nodes, displacementPerDt, recordForcesOnFixedNodes, FixedNodeForces, outputFile, dt)
 		for( vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-			//int nThreads = omp_get_num_threads();
-			//int threadNum = omp_get_thread_num();
-			//int isParallel = omp_in_parallel();
-			//int levleNo = omp_get_level();
-			//cout<<" level no:" <<levleNo<<" is parallel? " <<isParallel<<" omp threads inside loop, nThreads:"<<nThreads<<" threadNum: "<<threadNum<<endl;
 			if (!(*itElement)->IsAblated){
 				(*itElement)->calculateForces(Nodes, displacementPerDt, recordForcesOnFixedNodes, FixedNodeForces);
 			}
@@ -338,6 +383,10 @@ void NewtonRaphsonSolver::solveForDeltaU(){
     writeginPardisoFormat(b,nmult);
     int error = solveWithPardiso(a, b, ia, ja, nmult);
     if (error != 0){cerr<<"Pardiso solver did not return success!!"<<endl;}
+
+    if (boundNodesWithSlaveMasterDefinition){
+    	equateSlaveDisplacementsToMasters();
+    }
     delete[] ia;
     delete[] ja;
     delete[] a;

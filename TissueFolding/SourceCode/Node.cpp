@@ -44,23 +44,6 @@ Node::~Node(){
 	delete[] FixedPos;
 }
 
-/*
-void Node::updateECMVisocityWithDeformationRate(double ECMChangeFraction, double averageDisplacement){
-	double multiplier = (1.0+ECMChangeFraction);
-	if (displacement < averageDisplacement){
-		multiplier = 1/multiplier;
-	}
-	externalViscosity[0] *= multiplier;
-	externalViscosity[1] *= multiplier;
-	externalViscosity[2] *= multiplier;
-	for (int i=0; i<nDim; ++i){
-		externalViscosity[i] *= multiplier;
-		if (externalViscosity[i] < baseExternalViscosity[i]){
-			externalViscosity[i] = baseExternalViscosity[i];
-		}
-	}
-}
-*/
 void Node::setExternalViscosity(double ApicalVisc,double BasalVisc, bool extendExternalViscosityToInnerTissue){
 	/**
 	 *  This node will take in the apical and basal external viscosities of the tissue as inputs, respectively.
@@ -71,7 +54,7 @@ void Node::setExternalViscosity(double ApicalVisc,double BasalVisc, bool extendE
 		for (int i=0; i<3; ++i){
 			if (!externalViscositySetInFixing[i]){
 				externalViscosity[i] = BasalVisc;
-				baseExternalViscosity[i] = externalViscosity[i];
+				//baseExternalViscosity[i] = externalViscosity[i];
 			}
 		}
 	}
@@ -79,7 +62,7 @@ void Node::setExternalViscosity(double ApicalVisc,double BasalVisc, bool extendE
 		for (int i=0; i<3; ++i){
 			if (!externalViscositySetInFixing[i]){
 				externalViscosity[i] = ApicalVisc;
-				baseExternalViscosity[i] = externalViscosity[i];
+				//baseExternalViscosity[i] = externalViscosity[i];
 			}
 		}
 	}
@@ -90,7 +73,7 @@ void Node::setExternalViscosity(double ApicalVisc,double BasalVisc, bool extendE
 		for (int i=0; i<3; ++i){
 			if (!externalViscositySetInFixing[i]){
 				externalViscosity[i] = minV;
-				baseExternalViscosity[i] = externalViscosity[i];
+				//baseExternalViscosity[i] = externalViscosity[i];
 			}
 		}
 	}
@@ -102,7 +85,7 @@ void Node::setExternalViscosity(double ApicalVisc,double BasalVisc, bool extendE
 			for (int i=0; i<3; ++i){
 				if (!externalViscositySetInFixing[i]){
 					externalViscosity[i] = minV; //(apicalV + basalV) /2.0;
-					baseExternalViscosity[i] = externalViscosity[i];
+					//baseExternalViscosity[i] = externalViscosity[i];
 				}
 			}
 		}

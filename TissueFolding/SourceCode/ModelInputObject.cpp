@@ -87,6 +87,12 @@ bool ModelInputObject::readParameters(){
 				 */
 				Success  = readNodeFixingParameters(parametersFile);
 			}
+			else if(currParameterHeader == "NodeBindingOptions:"){
+				/**
+				 * Inputs relating to binding the displacement the nodes of the tissue through the private function ModelInputObject#readNodeBindingParameters
+				 */
+				Success  = readNodeBindingParameters(parametersFile);
+			}
 			else if(currParameterHeader == "ExternalViscositySetup:"){
 				/**
 				 * Inputs relating to the external viscosity felt by the tissue through private function ModelInputObject#readExternalViscosityParameters
@@ -805,6 +811,57 @@ void ModelInputObject::printErrorMessage(string currentInput, string sourceFucti
 	cerr<<"Error in reading "<<sourceFuction<<" current input: "<<currentInput<<", should have been: "<<expectedInput<<endl;
 }
 
+bool ModelInputObject::readNodeBindingParameters(ifstream& file){
+	string currHeader;
+	file >> currHeader;
+	if(currHeader == "bindCircumferenceXYToBasal(bool):"){
+		file >>Sim->thereIsCircumferenceXYBinding;
+	}
+	else{
+		printErrorMessage(currHeader,"NodeBinding options","bindCircumferenceXYToBasal(bool):");
+		return false;
+	}
+	bool ellipseBinding =false;
+	int nEllipseFunctions = 0;
+	file >> currHeader;
+	if(currHeader == "bindEllipses(bool,nFunctions):"){
+		file >> ellipseBinding;
+		file >> nEllipseFunctions;
+	}
+	else{
+		printErrorMessage(currHeader,"NodeBinding options","bindEllipses(bool,nFunctions):");
+		return false;
+	}
+	for (int i=0; i<nEllipseFunctions; ++i){
+		file >> currHeader;
+		if(currHeader == "bindEllipseBases(bool-x,y,z,nEllipses,ellipseIds):"){
+			vector<bool> boundAxes;
+			for (int j=0; j<3; ++j){
+				bool axisBound = false;
+				file >>axisBound;
+				boundAxes.push_back(axisBound);
+			}
+			Sim->ellipseBasesAreBoundOnAxis.push_back(boundAxes);
+			int nEllipses = 0;
+			file >>nEllipses;
+			vector<int> ellipseIds;
+			for (int j=0; j<nEllipses; ++j){
+				int ellipseId = -1;
+				file >>ellipseId;
+				ellipseIds.push_back(ellipseId);
+			}
+			Sim->ellipseIdsForBaseAxisBinding.push_back(ellipseIds);
+		}
+		else{
+			printErrorMessage(currHeader,"NodeBinding options","bindEllipseBases(bool-x,y,z,nEllipses,ellipseIds):");
+			return false;
+		}
+	}
+	return true;
+}
+
+
+
 bool ModelInputObject::readNodeFixingParameters(ifstream& file){
 	string currHeader;
 	file >> currHeader;
@@ -1485,8 +1542,14 @@ bool ModelInputObject::readShapeChangeOptions(ifstream& file){
 				return false;
 			}
 		}
+		else if (type ==2){
+			bool success = readShapeChangeType2(file);
+			if (!success){
+				return false;
+			}
+		}
 		else{
-			cerr<<"Error in reading shape change type, please enter a valid type: {1}, current type: "<<type<<endl;
+			cerr<<"Error in reading shape change type, please enter a valid type: {1},{2} current type: "<<type<<endl;
 			return false;
 		}
 	}
@@ -1922,6 +1985,114 @@ bool ModelInputObject::readShapeChangeType1(ifstream& file){
 	return true;
 }
 
+
+bool ModelInputObject::readShapeChangeType2(ifstream& file){
+	string currHeader;
+	file >> currHeader;
+	cout<<"entered read shape change type 2, current header: "<<currHeader<<endl;
+	float initialtime;
+	float finaltime;
+	bool applyToBasalECM = false;
+	bool applyToLateralECM = false;
+	bool applyTissueApical = false;
+	bool applyTissueBasal = false;
+	bool applyTissueMidline = false;
+	bool conserveVolume = false;
+	vector <int> markerEllipses;
+	double ShapeChangeFractionPerHr;
+	if(currHeader == "InitialTime(sec):"){
+		file >> initialtime;
+	}
+	else{
+		printErrorMessage(currHeader,"shape change type 2","InitialTime(sec):");
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "FinalTime(sec):"){
+		file >> finaltime;
+		//Sim->GrowthParameters.push_back(finaltime);
+	}
+	else{
+		printErrorMessage(currHeader,"shape change type 2","FinalTime(sec):");
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "ApplyTissueApical(bool):"){
+			file >> applyTissueApical;
+	}
+	else{
+		printErrorMessage(currHeader,"shape change type 2","ApplyTissueApical(bool):");
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "ApplyTissueBasal(bool):"){
+			file >> applyTissueBasal;
+	}
+	else{
+		printErrorMessage(currHeader,"shape change type 2","ApplyTissueBasal(bool):");
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "ApplyTissueMidline(bool):"){
+			file >> applyTissueMidline;
+	}
+	else{
+		printErrorMessage(currHeader,"shape change type 2","ApplyTissueMidline(bool):");
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "ApplyToBasalECM(bool):"){
+			file >> applyToBasalECM;
+	}
+	else{
+		printErrorMessage(currHeader,"shape change type 2","ApplyToBasalECM(bool):");
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "ApplyToLateralECM(bool):"){
+			file >> applyToLateralECM;
+	}
+	else{
+		printErrorMessage(currHeader,"shape change type 2","ApplyToLateralECM(bool):");
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "ShapeChangeAppliedToEllipses(number,[ellipseId][ellipseId]):"){
+		int n;
+		file >> n;
+		for (int i=0; i<n; ++i){
+			int ellipseId;
+			file >> ellipseId;
+			markerEllipses.push_back(ellipseId);
+		}
+	}
+	else{
+		printErrorMessage(currHeader,"shape change type 2","ShapeChangeAppliedToEllipses(number,[ellipseId][ellipseId]):");
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "xyShapeChange(fractionPerHour):"){
+		file >> ShapeChangeFractionPerHr;
+	}
+	else{
+		printErrorMessage(currHeader,"shape change type 2","xyShapeChange(fractionPerHour)");
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "ConserveVolume(bool):"){
+		file >> conserveVolume;
+	}
+	else{
+		printErrorMessage(currHeader,"shape change type 2","ConserveVolume(bool)");
+		return false;
+	}
+	GrowthFunctionBase* GSBp;
+	int Id = Sim->ShapeChangeFunctions.size();
+	//type is 1
+	GSBp = new 	markerEllipseBasedShapeChangeFunction(Id, 2, initialtime, finaltime, applyTissueApical, applyTissueBasal, applyTissueMidline, applyToBasalECM, applyToLateralECM, 2, ShapeChangeFractionPerHr, markerEllipses,conserveVolume);
+	Sim->ShapeChangeFunctions.push_back(GSBp);
+	return true;
+}
 /*bool ModelInputObject::readShapeChangeType2(ifstream& file){
 	return true;
 }*/
@@ -2191,7 +2362,7 @@ bool ModelInputObject::readECMPerturbation(ifstream& file){
 	string currHeader;
 	file >> currHeader;
 	if(currHeader == "ThereIsECMStiffnessChange(bool):"){
-		file >> Sim->thereIsECMStiffnessChange;
+		file >> Sim->thereIsECMChange;
 	}
 	else{
 		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: ThereIsECMSoftening(bool):" <<endl;
@@ -2210,9 +2381,9 @@ bool ModelInputObject::readECMPerturbation(ifstream& file){
 	for (int i=0l; i<nECMFunctions; ++i){
 		file >> currHeader;
 		if(currHeader == "ApplyToApicalECM(bool):"){
-			bool changeStiffnessApicalECM;
-			file >> changeStiffnessApicalECM;
-			Sim->changeStiffnessApicalECM.push_back(changeStiffnessApicalECM);
+			bool changeApicalECM;
+			file >> changeApicalECM;
+			Sim->changeApicalECM.push_back(changeApicalECM);
 		}
 		else{
 			printErrorMessage(currHeader,"ECM perturbations","ApplyToApicalECM(bool):");
@@ -2220,9 +2391,9 @@ bool ModelInputObject::readECMPerturbation(ifstream& file){
 		}
 		file >> currHeader;
 		if(currHeader == "ApplyToBasalECM(bool):"){
-			bool changeStiffnessBasalECM;
-			file >> changeStiffnessBasalECM;
-			Sim->changeStiffnessBasalECM.push_back(changeStiffnessBasalECM);
+			bool changeBasalECM;
+			file >> changeBasalECM;
+			Sim->changeBasalECM.push_back(changeBasalECM);
 		}
 		else{
 			printErrorMessage(currHeader,"ECM perturbations","ApplyToBasalECM(bool):");
@@ -2232,9 +2403,9 @@ bool ModelInputObject::readECMPerturbation(ifstream& file){
 		if(currHeader == "timeOfStiffnessChange(hr):"){
 			double timeInHr;
 			file >> timeInHr;
-			Sim->stiffnessChangeBeginTimeInSec.push_back(timeInHr*3600);
+			Sim->ECMChangeBeginTimeInSec.push_back(timeInHr*3600);
 			file >> timeInHr;
-			Sim->stiffnessChangeEndTimeInSec.push_back(timeInHr*3600);
+			Sim->ECMChangeEndTimeInSec.push_back(timeInHr*3600);
 		}
 		else{
 			printErrorMessage(currHeader,"ECM perturbations","timeOfStiffnessChange(hr):");
@@ -2242,14 +2413,14 @@ bool ModelInputObject::readECMPerturbation(ifstream& file){
 		}
 		file >> currHeader;
 		if(currHeader == "stiffnessChangeAppliedToEllipses(number,[ellipseId][ellipseId]):"){
-			int numberOfECMStiffnessChangeEllipseBands;
-			file >> numberOfECMStiffnessChangeEllipseBands;
-			Sim->numberOfECMStiffnessChangeEllipseBands.push_back(numberOfECMStiffnessChangeEllipseBands);
+			int numberOfECMChangeEllipseBands;
+			file >> numberOfECMChangeEllipseBands;
+			Sim->numberOfECMChangeEllipseBands.push_back(numberOfECMChangeEllipseBands);
 			int ellipseBandId;
-			Sim->ECMStiffnessChangeEllipseBandIds.push_back(vector<int>(0));
-			for (int aa=0; aa<Sim->numberOfECMStiffnessChangeEllipseBands[i]; ++aa){
+			Sim->ECMChangeEllipseBandIds.push_back(vector<int>(0));
+			for (int aa=0; aa<Sim->numberOfECMChangeEllipseBands[i]; ++aa){
 				file >>ellipseBandId;
-				Sim->ECMStiffnessChangeEllipseBandIds[i].push_back(ellipseBandId);
+				Sim->ECMChangeEllipseBandIds[i].push_back(ellipseBandId);
 			}
 		}
 		else{
@@ -2282,7 +2453,20 @@ bool ModelInputObject::readECMPerturbation(ifstream& file){
 			printErrorMessage(currHeader,"ECM perturbations","ECMRenewalHalfLifeTargetFraction(double(0-1.0)):");
 			return false;
 		}
-		Sim->changedECMStiffness.push_back(false);
+		file >> currHeader;
+		if(currHeader == "ECMViscosityChangeFraction(double):"){
+			double fraction;
+			file >> fraction;
+			if (fraction <=0.0) {
+				fraction = 0.0001;
+			}
+			Sim->ECMViscosityChangeFraction.push_back(fraction);
+		}
+		else{
+			printErrorMessage(currHeader,"ECM perturbations","ECMViscosityChangeFraction(double):");
+			return false;
+		}
+		Sim->changedECM.push_back(false);
 	}
 	return true;
 }

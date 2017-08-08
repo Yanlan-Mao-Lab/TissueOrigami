@@ -27,6 +27,7 @@ private:
 	bool readLinkerZoneParameters(ifstream& file);			///< This function reads the linker zone related parameters of the tissue from file.
 	bool readExternalViscosityParameters(ifstream& file);	///< This function reads the external viscosity setup for the whole tissue.
 	bool readNodeFixingParameters(ifstream& file);			///< This function reads the inputs relating to fixing the nodes of the tissue from file.
+	bool readNodeBindingParameters(ifstream& file);
 	bool readManupulationParamters(ifstream& file);			///< This function reads the inputs relating to manipulations made on the tissue after mesh read.
 	bool readTimeParameters(ifstream &file);				///< This function reads the time related parameters of the simulation from file.
 	bool readMeshType2(ifstream& file);						///< This function reads the mesh structure details for a mesh input as columns and rows of prisms.
@@ -40,6 +41,7 @@ private:
 	bool readPlasticDeformationOptions(ifstream& file);		///< This function reads the parametrs for plastic deformation, as a response to strains and stresses in the tissue.
 	bool readGridBasedMyosinFunction(ifstream& file);		///< This function reads the myosin parameters from file (GridBased). It will utilise a separate input file storing the equilibrium myosin levels and orientations.
 	bool readShapeChangeType1(ifstream& file);				///< This function reads the shape change  parameters from file (UniformShapeChange).
+	bool readShapeChangeType2(ifstream& file);				///< This function reads the shape change  parameters from file (markerEllipseBased).
 	//bool readShapeChangeType2(ifstream& file);				///< This function reads the shape change  parameters from file (CircularShapeChange).
 	bool readMarkerEllipseBandOptions(ifstream& file);	
 	bool readShapeChangeType3(ifstream& file);				///< This function reads the shape change  parameters from file (GridBasedShapeChange).

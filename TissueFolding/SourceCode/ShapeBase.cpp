@@ -322,6 +322,14 @@ void ShapeBase::calculateFgFromRates(double dt, double x, double y, double z, gs
 	}
 }
 
+void ShapeBase::calculateShapeChangeIncrementFromRates(double dt, double rx, double ry, double rz, gsl_matrix* increment){
+    if (Id == 0){
+    	cout<<" rate: "<<rx<<" "<<ry<<" "<<rz<<" increment: "<<exp(rx*dt)<<" "<<exp(ry*dt)<<" "<<exp(rz*dt)<<endl;
+    }
+    gsl_matrix_set(increment,0,0,exp(rx*dt));
+	gsl_matrix_set(increment,1,1,exp(ry*dt));
+	gsl_matrix_set(increment,2,2,exp(rz*dt));
+}
 
 void ShapeBase::calculateFgFromGridCorners(int gridGrowthsInterpolationType, double dt, GrowthFunctionBase* currGF, gsl_matrix* increment, int sourceTissue,  int IndexX, int IndexY, double FracX, double FracY){
 	double tissueWeight;
@@ -502,6 +510,14 @@ void ShapeBase::updateGrowthIncrement(gsl_matrix* columnar, gsl_matrix* peripodi
 	gsl_matrix_free(temp);
 }
 
+void ShapeBase::updateShapeChangeIncrement(gsl_matrix* columnarShapeChangeIncrement){
+	//cout<<" Element: "<<Id<<endl;
+	//displayMatrix(columnarShapeChangeIncrement,"currIncrementalShapeChangeIncrement");
+	gsl_matrix* temp = gsl_matrix_calloc(nDim,nDim);
+	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, columnarShapeChangeIncrement, shapeChangeIncrement, 0.0, temp);
+	gsl_matrix_memcpy(shapeChangeIncrement, temp);
+	//displayMatrix(shapeChangeIncrement,"updatedShapeChangeIncrement");
+}
 
 /*
 void ShapeBase::getRelativePosInColumnarBoundingBox(double* relativePos){
@@ -1141,7 +1157,6 @@ void ShapeBase::setPlasticDeformationIncrement(double xx, double yy, double zz){
 	gsl_matrix_set(plasticDeformationIncrement,0,0,xx);
 	gsl_matrix_set(plasticDeformationIncrement,1,1,yy);
 	gsl_matrix_set(plasticDeformationIncrement,2,2,zz);
-
 }
 
 void 	ShapeBase::growShapeByFg(){
@@ -1151,16 +1166,22 @@ void 	ShapeBase::growShapeByFg(){
         gsl_matrix_transpose_memcpy(GrowthStrainsRotMatT,GrowthStrainsRotMat);
         gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, GrowthStrainsRotMatT, growthIncrement, 0.0, temp);
     	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, temp, GrowthStrainsRotMat, 0.0, growthIncrement);
-    	//gsl_matrix_memcpy(growthIncrement, temp);
+    	//rotate shape change increment:
+    	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, GrowthStrainsRotMatT, shapeChangeIncrement, 0.0, temp);
+    	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, temp, GrowthStrainsRotMat, 0.0, shapeChangeIncrement);
     	gsl_matrix_free(temp);
     	gsl_matrix_free(GrowthStrainsRotMatT);
     }
-    //incrementing Fg with current growth rate:
+    //incrementing Fg with current growth rate, plastic deformation rate, and shape changes:
     gsl_matrix* temp1 = gsl_matrix_calloc(nDim,nDim);
     gsl_matrix* temp2 = gsl_matrix_calloc(nDim,nDim);
+    gsl_matrix* temp3 = gsl_matrix_calloc(nDim,nDim);
+    //adding plastic deformation, this increment is in already in correct orientation:
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, plasticDeformationIncrement,growthIncrement, 0.0, temp1);
-    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, temp1, Fg, 0.0, temp2);
-    gsl_matrix_memcpy(Fg, temp2);
+    //adding shape change, this increment is in already in correct orientation:
+    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, shapeChangeIncrement,temp1, 0.0, temp2);
+    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, temp2, Fg, 0.0, temp3);
+    gsl_matrix_memcpy(Fg, temp3);
     gsl_matrix* tmpFgForInversion = gsl_matrix_calloc(nDim,nDim);
     createMatrixCopy(tmpFgForInversion,Fg);
     bool inverted = InvertMatrix(tmpFgForInversion, InvFg);
@@ -1173,6 +1194,7 @@ void 	ShapeBase::growShapeByFg(){
     //freeing matrices allocated in this function
     gsl_matrix_free(temp1);
     gsl_matrix_free(temp2);
+    gsl_matrix_free(temp3);
     gsl_matrix_free(tmpFgForInversion);
 }
 
@@ -1251,16 +1273,47 @@ bool ShapeBase::isActinStiffnessChangeAppliedToElement(bool ThereIsWholeTissueSt
 	return false;
 }
 
-
-bool ShapeBase::isECMStiffnessChangeAppliedToElement(bool changeStiffnessApicalECM, bool changeStiffnessBasalECM, vector<int> &ECMStiffnessChangeEllipseBandIds, int numberOfECMStiffnessChangeEllipseBands){
+bool ShapeBase::isShapeChangeAppliedToElement(vector<int> &ellipseBandIds, bool applyBasalECM, bool applyToLateralECM, bool applyApically, bool applyBasally, bool applyMidLayer ){
+	bool checkForEllipseId = false;
+	if (tissueType == 1){ //element is on the peripodial membrane, I am not applyign this to peripodial
+		return false;
+	}
 	if (isECMMimicing){
-		if  ( (changeStiffnessApicalECM && tissuePlacement == 1 ) ||
-			  (changeStiffnessBasalECM  && tissuePlacement == 0 ) ||
-			  (changeStiffnessBasalECM  && tissuePlacement == 2 )
+		if  (   (applyBasalECM  && tissuePlacement == 0 )
+			 || (applyToLateralECM && isECMMimimcingAtCircumference && !tissuePlacement == 0) //do not grow the basal element twice
+			){
+			checkForEllipseId = true;
+		}
+	}
+	else{
+		if  (   (applyBasally  && (tissuePlacement == 0 || atBasalBorderOfECM) )
+				 || (applyApically && tissuePlacement == 1)
+				 || (applyMidLayer && tissuePlacement == 2)
+			){
+				checkForEllipseId = true;
+		}
+	}
+	int nEllipseBands = ellipseBandIds.size();
+	//The element qualifies for shape change in this function, is it inside the ellipse band?
+	if(checkForEllipseId && insideEllipseBand){ //this covers the tissue type as well as the position, ellipses are applied to columnar and linker zones only.
+		for (int shapeChangeEllipseBandCounter =0; shapeChangeEllipseBandCounter<nEllipseBands; ++shapeChangeEllipseBandCounter){
+			if (coveringEllipseBandId == ellipseBandIds[shapeChangeEllipseBandCounter]){
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+bool ShapeBase::isECMChangeAppliedToElement(bool changeApicalECM, bool changeBasalECM, vector<int> &ECMChangeEllipseBandIds, int numberOfECMChangeEllipseBands){
+	if (isECMMimicing){
+		if  (    (changeApicalECM && tissuePlacement == 1 )
+			  || (changeBasalECM  && tissuePlacement == 0 )
+			  //|| (changeStiffnessBasalECM  && tissuePlacement == 2 )
 			){
 			if(insideEllipseBand){
-				for (int ECMReductionRangeCounter = 0; ECMReductionRangeCounter<numberOfECMStiffnessChangeEllipseBands; ++ECMReductionRangeCounter){
-					if (coveringEllipseBandId == ECMStiffnessChangeEllipseBandIds[ECMReductionRangeCounter]){
+				for (int ECMReductionRangeCounter = 0; ECMReductionRangeCounter<numberOfECMChangeEllipseBands; ++ECMReductionRangeCounter){
+					if (coveringEllipseBandId == ECMChangeEllipseBandIds[ECMReductionRangeCounter]){
 						return true;
 					}
 				}
@@ -1396,14 +1449,7 @@ void	ShapeBase::checkIfInsideEllipseBands(int nMarkerEllipseRanges, vector<doubl
 					int currNodeId = NodeIds[j];
 					Nodes[currNodeId]->insideEllipseBand=true;
 					Nodes[currNodeId]->coveringEllipseBandId = i;
-					cout<<"Node "<<currNodeId<<" is inside ellipse"<<i<<endl;
-					//delete later:
-					 //if the node is basal and is inside an ellipse
-					 //I will fix its z:
-					 //if(Nodes[currNodeId]->tissuePlacement == 0){
-					 //	 Nodes[currNodeId]->FixedPos[2]=true;
-					 //}
-					 //
+					//cout<<"Node "<<currNodeId<<" is inside ellipse"<<i<<endl;
 				}
 			}
 		}		
@@ -3567,6 +3613,11 @@ void ShapeBase::adjustCMyosinFromSave(){
 	//if (cMyoUnipolarEq[1] < 1E-5){cMyoUnipolar[1] = 0.0;}
 	cMyoUnipolar[0] = 0.0;
 	cMyoUnipolar[1] = 0.0;
+}
+
+
+void 	ShapeBase::setShapeChangeInrementToIdentity(){
+	gsl_matrix_set_identity(shapeChangeIncrement);
 }
 
 void 	ShapeBase::setShapeChangeRate(double x, double y, double z, double xy, double yz, double xz){

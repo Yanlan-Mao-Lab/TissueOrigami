@@ -232,7 +232,7 @@ void Simulation::setDefaultParameters(){
 	numberOfMyosinAppliedEllipseBands = 0;
 
 
-	thereIsECMStiffnessChange = false;
+	thereIsECMChange = false;
 
 	thereIsCellMigration = false;
 	thereIsExplicitECM = false;
@@ -249,6 +249,8 @@ void Simulation::setDefaultParameters(){
 	initialZEnclosementBoundaries[1] = 1000;
 	finalZEnclosementBoundaries[0] = -1000;
 	finalZEnclosementBoundaries[1] = 1000;
+
+	thereIsCircumferenceXYBinding= false;
 }
 
 bool Simulation::readExecutableInputs(int argc, char **argv){
@@ -601,7 +603,11 @@ bool Simulation::initiateSystem(){
 	//for solving the tissue dynamics
     NRSolver = new NewtonRaphsonSolver(Nodes[0]->nDim,nNodes);
 
-    if (thereIsCellMigration) {
+    //bibap
+    checkForNodeBinding();
+	//bibap
+
+	if (thereIsCellMigration) {
     	cout<<"initiation of cell migration"<<endl;
     	double cellMigrationOriginAngle = M_PI/2.0;
     	cellMigrationTool = new CellMigration(nElements,0.5); //50% leaves the tissue region per hour
@@ -615,6 +621,159 @@ bool Simulation::initiateSystem(){
     }
 
 	return Success;
+}
+
+void Simulation::checkForNodeBinding(){
+	if (thereIsCircumferenceXYBinding){
+		NRSolver->boundNodesWithSlaveMasterDefinition = true;
+		bindCircumferenceXY();
+	}
+	if (ellipseIdsForBaseAxisBinding.size()>0){
+		bool thereIsBinding = bindEllipseAxes();
+		if (thereIsBinding){
+			//I will not equate the values, if the parameter of NRSolver
+			//has been modified to be true before, it should stay true.
+			//If my decisin from abpve function is false(I have not bound any ellipses)
+			//then I should not alter this parameter;
+			NRSolver->boundNodesWithSlaveMasterDefinition = true;
+		}
+	}
+	if( NRSolver->boundNodesWithSlaveMasterDefinition == true){
+		for (int i=0;i<NRSolver->slaveMasterList.size();++i){
+			cout<<" slave master list item: "<<i<<" "<<NRSolver->slaveMasterList[i][0]<<" "<<NRSolver->slaveMasterList[i][1]<<endl;
+		}
+	}
+
+}
+
+bool Simulation::bindEllipseAxes(){
+	bool thereIsBinding = false;
+	int dim = 3;
+	int nEllipseFunctions = ellipseIdsForBaseAxisBinding.size();
+	for (int ellipseFunctionIterator=0; ellipseFunctionIterator<nEllipseFunctions; ++ellipseFunctionIterator){
+		//checking one ellipse base binding rule:
+		vector <int> nodeIds;
+		int nBoundEllipses = ellipseIdsForBaseAxisBinding[ellipseFunctionIterator].size();
+		int minNodeId = nNodes*2;
+
+		cout<<"checking binding rule :"<<ellipseFunctionIterator<<" - axis: ";
+		cout<<ellipseBasesAreBoundOnAxis[ellipseFunctionIterator][0]<<" ";
+		cout<<ellipseBasesAreBoundOnAxis[ellipseFunctionIterator][1]<<" ";
+		cout<<ellipseBasesAreBoundOnAxis[ellipseFunctionIterator][2]<<" ";
+		cout<<" - ellipses: ";
+		for (int ellipseIdIterator =0; ellipseIdIterator<nBoundEllipses;++ellipseIdIterator){
+			cout<<ellipseIdsForBaseAxisBinding[ellipseFunctionIterator][ellipseIdIterator]<<"  ";
+		}
+		cout<<endl;
+
+
+		//loop over all nodes, to see if
+		//* node is inside an ellipse band
+		//* it is basal
+		//* it is inside an ellipse of interest
+		for (vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+			if ((*itNode)->insideEllipseBand && (*itNode)->tissuePlacement == 0){//inside ellipse band and basal
+				//checking one ellipse base binding rule:
+				for (int ellipseIdIterator =0; ellipseIdIterator<nBoundEllipses;++ellipseIdIterator){
+					if ((*itNode)->coveringEllipseBandId == ellipseIdsForBaseAxisBinding[ellipseFunctionIterator][ellipseIdIterator]){
+						cout<<"Node : "<<(*itNode)->Id<<" is basal and inside ellipse band: "<<(*itNode)->coveringEllipseBandId<<endl;
+						nodeIds.push_back((*itNode)->Id);
+						if ((*itNode)->Id<minNodeId){
+							minNodeId = (*itNode)->Id;
+						}
+						break;
+					}
+				}
+			}
+		}
+		//Now I have a list of all nodes that are to be bound;
+		//I have the minimum node id, that is to be the master of this selection
+		int n= nodeIds.size();
+		int masterNodeId = minNodeId;
+		int dofXmaster  = masterNodeId*dim;
+		int dofYmaster  = dofXmaster+1;
+		int dofZmaster  = dofXmaster+2;
+		for (int i=0;i<n;++i){
+			if (nodeIds[i] != masterNodeId){
+				int slaveNodeId = nodeIds[i];
+				int dofXslave  = slaveNodeId*dim;
+				int dofYslave  = dofXslave+1;
+				int dofZslave  = dofXslave+2;
+				if (ellipseBasesAreBoundOnAxis[ellipseFunctionIterator][0]){
+					//x axis is bound:
+					vector <int> fixX;
+					fixX.push_back(dofXslave);
+					fixX.push_back(dofXmaster);
+					NRSolver->slaveMasterList.push_back(fixX);
+					thereIsBinding = true;
+				}
+				if (ellipseBasesAreBoundOnAxis[ellipseFunctionIterator][1]){
+					//y axis is bound:
+					vector <int> fixY;
+					fixY.push_back(dofYslave);
+					fixY.push_back(dofYmaster);
+					NRSolver->slaveMasterList.push_back(fixY);
+					thereIsBinding = true;
+				}
+				if (ellipseBasesAreBoundOnAxis[ellipseFunctionIterator][2]){
+					//z axis is bound:
+					vector <int> fixZ;
+					fixZ.push_back(dofZslave);
+					fixZ.push_back(dofZmaster);
+					NRSolver->slaveMasterList.push_back(fixZ);
+					thereIsBinding = true;
+				}
+			}
+		}
+	}
+	return thereIsBinding;
+}
+
+void Simulation::bindCircumferenceXY(){
+	int dim = 3;
+		vector <int> nodeIds;
+		for (int i=0; i<nNodes; ++i){
+			if (Nodes[i]->tissuePlacement == 0){
+				//basal node
+				if (Nodes[i]->atCircumference){
+					//at basal circumference:
+					nodeIds.push_back(i);
+				}
+			}
+		}
+		int n = nodeIds.size();
+		for (int i=0; i<n; ++i){
+			//cout<<" checking nodeId: "<<nodeIds[i]<<" ";
+			int masterNodeId = nodeIds[i];
+			int dofXmaster = masterNodeId*dim;
+			int dofYmaster = masterNodeId*dim+1;
+
+			int currNodeId = masterNodeId;
+			while (Nodes[currNodeId]->tissuePlacement != 1){ //while node is not apical
+				int nConnectedElements = Nodes[currNodeId]->connectedElementIds.size();
+				for (int j=0;j<nConnectedElements;++j){
+					int elementId = Nodes[currNodeId]->connectedElementIds[j];
+					bool IsBasalOwner = Elements[elementId]->IsThisNodeMyBasal(currNodeId);
+					if (IsBasalOwner){
+						int slaveNodeId = Elements[elementId]->getCorrecpondingApical(currNodeId);
+						int dofXslave  = slaveNodeId*dim;
+						int dofYslave  = slaveNodeId*dim+1;
+						vector <int> fixX;
+						vector <int> fixY;
+						fixX.push_back(dofXslave);
+						fixX.push_back(dofXmaster);
+						fixY.push_back(dofYslave);
+						fixY.push_back(dofYmaster);
+						NRSolver->slaveMasterList.push_back(fixX);
+						NRSolver->slaveMasterList.push_back(fixY);
+						currNodeId = slaveNodeId;
+						//cout<<" found slave: "<<slaveNodeId<<endl;
+						break;
+					}
+				}
+				//cout<<" tissue placement of next node: "<<Nodes[currNodeId]->tissuePlacement<<endl;
+			}
+		}
 }
 
 void Simulation::setLateralElementsRemodellingPlaneRotationMatrices(){
@@ -947,18 +1106,20 @@ void Simulation::writeECMProperties(){
 	saveFileSimulationSummary<<"	Columnar ECM Stiffness(Pa): "<<EColumnarECM<<endl;
 	saveFileSimulationSummary<<"	Peripodial ECM Stiffness(Pa): "<<EPeripodialECM<<endl;
 	saveFileSimulationSummary<<"	ECM remodelling half life (hour): "<<ECMRenawalHalfLife/3600.0<<endl;
-	saveFileSimulationSummary<<"	Is there perturbation to the ECM: "<<thereIsECMStiffnessChange<<endl;
-	if (thereIsECMStiffnessChange){
-		int n = stiffnessChangeBeginTimeInSec.size();
+	saveFileSimulationSummary<<"	Is there perturbation to the ECM: "<<thereIsECMChange<<endl;
+	if (thereIsECMChange){
+		int n = ECMChangeBeginTimeInSec.size();
 		saveFileSimulationSummary<<"there are "<<n<<" ECM perturbations"<<endl;
 		for (int ECMperturbationIndex =0;ECMperturbationIndex<n; ++ECMperturbationIndex ){
-			saveFileSimulationSummary<<"		stiffness alteration begins at  "<<stiffnessChangeBeginTimeInSec[ECMperturbationIndex]/3600.0<<" hrs and ends at "<<stiffnessChangeEndTimeInSec[ECMperturbationIndex]/3600.0<<endl;
+			saveFileSimulationSummary<<"		stiffness alteration begins at  "<<ECMChangeBeginTimeInSec[ECMperturbationIndex]/3600.0<<" hrs and ends at "<<ECMChangeEndTimeInSec[ECMperturbationIndex]/3600.0<<endl;
 			saveFileSimulationSummary<<"		final fraction of ECM stiffness  "<<ECMStiffnessChangeFraction[ECMperturbationIndex]<<" times original values."<<endl;
-			saveFileSimulationSummary<<"		stiffness alteration applied to apical ECM: "	<<changeStiffnessApicalECM[ECMperturbationIndex]<<endl;
-			saveFileSimulationSummary<<"		stiffness alteration applied to basal  ECM: "	<<changeStiffnessBasalECM[ECMperturbationIndex]<<endl;
+			saveFileSimulationSummary<<"		final fraction of ECM renewal time  "<<ECMRenewalHalfLifeTargetFraction[ECMperturbationIndex]<<" times original values."<<endl;
+			saveFileSimulationSummary<<"		final fraction of ECM viscosity  "<<ECMViscosityChangeFraction[ECMperturbationIndex]<<" times original values."<<endl;
+			saveFileSimulationSummary<<"		stiffness alteration applied to apical ECM: "	<<changeApicalECM[ECMperturbationIndex]<<endl;
+			saveFileSimulationSummary<<"		stiffness alteration applied to basal  ECM: "	<<changeBasalECM[ECMperturbationIndex]<<endl;
 			saveFileSimulationSummary<<"		stiffness alteration applied to ellipse bands: ";
-			for (int i=0; i<numberOfECMStiffnessChangeEllipseBands[ECMperturbationIndex]; ++i){
-				saveFileSimulationSummary<<" "<<ECMStiffnessChangeEllipseBandIds[ECMperturbationIndex][i];
+			for (int i=0; i<numberOfECMChangeEllipseBands[ECMperturbationIndex]; ++i){
+				saveFileSimulationSummary<<" "<<ECMChangeEllipseBandIds[ECMperturbationIndex][i];
 			}
 			saveFileSimulationSummary<<endl;
 		}
@@ -1061,9 +1222,11 @@ bool Simulation::openFilesToDisplay(){
 	saveFileString = saveDirectoryToDisplayString +"/Save_SpecificElementAndNodeTypes";
 	const char* name_saveSpecificElementAndNodeTypes = saveFileString.c_str();;
 	saveFileToDisplaySpecificNodeTypes.open(name_saveSpecificElementAndNodeTypes, ifstream::in);
+	specificElementTypesRecorded = true;
 	if (!(saveFileToDisplaySpecificNodeTypes.good() && saveFileToDisplaySpecificNodeTypes.is_open())){
 		cerr<<"Cannot open the specific node types: "<<name_saveSpecificElementAndNodeTypes<<endl;
-		return false;
+		specificElementTypesRecorded = false;
+		//return false;
 	}
 	saveFileString = saveDirectoryToDisplayString +"/Save_TensionCompression";
 	const char* name_saveFileToDisplayTenComp = saveFileString.c_str();
@@ -1138,7 +1301,9 @@ bool Simulation::initiateSavedSystem(){
 	fillInNodeNeighbourhood();
 	assignPhysicalParameters();
 	initiateSystemForces();
-	success  = readSpecificNodeTypesFromSave();
+	if (specificElementTypesRecorded){
+		success  = readSpecificNodeTypesFromSave();
+	}
 	if (!success){
 		return false;
 	}
@@ -2451,7 +2616,7 @@ void Simulation::fixAllD(Node* currNode, bool fixWithViscosity){
 	for (int j =0 ; j<currNode->nDim; ++j){
 		if(fixWithViscosity){
 			currNode->externalViscosity[j] = fixingExternalViscosity[j];
-			currNode->baseExternalViscosity[j] = currNode->externalViscosity[j];
+			//currNode->baseExternalViscosity[j] = currNode->externalViscosity[j];
 			currNode->externalViscositySetInFixing[j] = true;
 		}
 		else{
@@ -2465,7 +2630,7 @@ void Simulation::fixAllD(int i, bool fixWithViscosity){
 	for (int j =0 ; j<Nodes[i]->nDim; ++j){
 		if(fixWithViscosity){
 			Nodes[i]->externalViscosity[j] = fixingExternalViscosity[j];
-			Nodes[i]->baseExternalViscosity[j] = Nodes[i]->externalViscosity[j];
+			//Nodes[i]->baseExternalViscosity[j] = Nodes[i]->externalViscosity[j];
 			Nodes[i]->externalViscositySetInFixing[j] = true;
 		}
 		else{
@@ -2478,7 +2643,7 @@ void Simulation::fixX(Node* currNode, bool fixWithViscosity){
 	if(currNode->nDim>0){
 		if(fixWithViscosity){
 			currNode->externalViscosity[0] = fixingExternalViscosity[0];
-			currNode->baseExternalViscosity[0] = currNode->externalViscosity[0];
+			//currNode->baseExternalViscosity[0] = currNode->externalViscosity[0];
 			currNode->externalViscositySetInFixing[0] = true;
 		}
 		else{
@@ -2493,7 +2658,7 @@ void Simulation::fixX(int i, bool fixWithViscosity){
 	if(Nodes[i]->nDim>0){
 		if(fixWithViscosity){
 			Nodes[i]->externalViscosity[0] = fixingExternalViscosity[0];
-			Nodes[i]->baseExternalViscosity[0] = Nodes[i]->externalViscosity[0];
+			//Nodes[i]->baseExternalViscosity[0] = Nodes[i]->externalViscosity[0];
 			Nodes[i]->externalViscositySetInFixing[0] = true;
 		}
 		else{
@@ -2510,7 +2675,7 @@ void Simulation::fixY(Node* currNode, bool fixWithViscosity){
 	if(currNode->nDim>1){
 		if(fixWithViscosity){
 			currNode->externalViscosity[1] = fixingExternalViscosity[1];
-			currNode->baseExternalViscosity[1] = currNode->externalViscosity[1];
+			//currNode->baseExternalViscosity[1] = currNode->externalViscosity[1];
 			currNode->externalViscositySetInFixing[1] = true;
 		}
 		else{
@@ -2526,7 +2691,7 @@ void Simulation::fixY(int i, bool fixWithViscosity){
 	if(Nodes[i]->nDim>1){
 		if(fixWithViscosity){
 			Nodes[i]->externalViscosity[1] = fixingExternalViscosity[1];
-			Nodes[i]->baseExternalViscosity[1] = Nodes[i]->externalViscosity[1];
+			//Nodes[i]->baseExternalViscosity[1] = Nodes[i]->externalViscosity[1];
 			Nodes[i]->externalViscositySetInFixing[1] = true;
 		}
 		else{
@@ -2542,7 +2707,7 @@ void Simulation::fixZ(Node* currNode, bool fixWithViscosity){
 	if(currNode->nDim>2){
 		if(fixWithViscosity){
 			currNode->externalViscosity[2] = fixingExternalViscosity[2];
-			currNode->baseExternalViscosity[2] = currNode->externalViscosity[2];
+			//currNode->baseExternalViscosity[2] = currNode->externalViscosity[2];
 			currNode->externalViscositySetInFixing[2] = true;
 		}
 		else{
@@ -2558,7 +2723,7 @@ void Simulation::fixZ(int i, bool fixWithViscosity){
 	if(Nodes[i]->nDim>2){
 		if(fixWithViscosity){
 			Nodes[i]->externalViscosity[2] = fixingExternalViscosity[2];
-			Nodes[i]->baseExternalViscosity[2] = Nodes[i]->externalViscosity[2];
+			//Nodes[i]->baseExternalViscosity[2] = Nodes[i]->externalViscosity[2];
 			Nodes[i]->externalViscositySetInFixing[2] = true;
 		}
 		else{
@@ -4329,11 +4494,11 @@ void Simulation::checkStiffnessPerturbation(){
 
 */
 
-void Simulation::updateStiffnessChangeForExplicitECM(int idOfCurrentECMPerturbation){
+void Simulation::updateChangeForExplicitECM(int idOfCurrentECMPerturbation){
     const int maxThreads = omp_get_max_threads();
 	#pragma omp parallel for
 	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		bool applyToThisElement = (*itElement)->isECMStiffnessChangeAppliedToElement(changeStiffnessApicalECM[idOfCurrentECMPerturbation], changeStiffnessBasalECM[idOfCurrentECMPerturbation], ECMStiffnessChangeEllipseBandIds[idOfCurrentECMPerturbation], numberOfECMStiffnessChangeEllipseBands[idOfCurrentECMPerturbation]);
+		bool applyToThisElement = (*itElement)->isECMChangeAppliedToElement(changeApicalECM[idOfCurrentECMPerturbation], changeBasalECM[idOfCurrentECMPerturbation], ECMChangeEllipseBandIds[idOfCurrentECMPerturbation], numberOfECMChangeEllipseBands[idOfCurrentECMPerturbation]);
 		if (applyToThisElement){
 			 (*itElement)->updateStiffnessMultiplier(dt);
 			 (*itElement)->updateElasticProperties();
@@ -4341,31 +4506,33 @@ void Simulation::updateStiffnessChangeForExplicitECM(int idOfCurrentECMPerturbat
 	}
 }
 
-void Simulation::updateStiffnessChangeForViscosityBasedECMDefinition(int idOfCurrentECMPerturbation){
+void Simulation::updateChangeForViscosityBasedECMDefinition(int idOfCurrentECMPerturbation){
     const int maxThreads = omp_get_max_threads();
     #pragma omp parallel for
 	for (vector<Node*>::iterator itNode = Nodes.begin(); itNode<Nodes.end(); ++itNode){
-		if (!(*itNode)->allOwnersECMMimicing){
-			if(((*itNode)->tissuePlacement == 0 && changeStiffnessBasalECM[idOfCurrentECMPerturbation] ) || ((*itNode)->tissuePlacement == 1 && changeStiffnessApicalECM[idOfCurrentECMPerturbation] )){
+		//if (!(*itNode)->allOwnersECMMimicing){
+			if(((*itNode)->tissuePlacement == 0 && changeBasalECM[idOfCurrentECMPerturbation] ) || ((*itNode)->tissuePlacement == 1 && changeApicalECM[idOfCurrentECMPerturbation] )){
 				if((*itNode)->insideEllipseBand){
-					for (int ECMReductionRangeCounter =0; ECMReductionRangeCounter<numberOfECMStiffnessChangeEllipseBands[idOfCurrentECMPerturbation]; ++ECMReductionRangeCounter){
-						if ((*itNode)->coveringEllipseBandId == ECMStiffnessChangeEllipseBandIds[idOfCurrentECMPerturbation][ECMReductionRangeCounter]){
-							(*itNode)->externalViscosity[0] -= (*itNode)->ECMViscosityChangePerHour[0]/3600*dt;
-							(*itNode)->externalViscosity[1] -= (*itNode)->ECMViscosityChangePerHour[1]/3600*dt;
-							(*itNode)->externalViscosity[2] -= (*itNode)->ECMViscosityChangePerHour[2]/3600*dt;
-							(*itNode)->baseExternalViscosity[0] = (*itNode)->externalViscosity[0];
-							(*itNode)->baseExternalViscosity[1] = (*itNode)->externalViscosity[1];
-							(*itNode)->baseExternalViscosity[2] = (*itNode)->externalViscosity[2];
+					for (int ECMReductionRangeCounter =0; ECMReductionRangeCounter<numberOfECMChangeEllipseBands[idOfCurrentECMPerturbation]; ++ECMReductionRangeCounter){
+						if ((*itNode)->coveringEllipseBandId == ECMChangeEllipseBandIds[idOfCurrentECMPerturbation][ECMReductionRangeCounter]){
+							for (int i =0; i<(*itNode)->nDim; ++i){
+								double viscosityChange = (*itNode)->ECMViscosityChangePerHour[i]/3600*dt;
+								double newViscosity = (*itNode)->externalViscosity[i] -= viscosityChange;
+								//avoiding setting negative viscosity!
+								if (newViscosity>0){
+									(*itNode)->externalViscosity[i] = newViscosity;
+								}
+							}
 						}
 					}
 				}
 			}
-		}
+		//}
 	}
 }
 
-void Simulation::calculateStiffnessChangeRatesForECM(int idOfCurrentECMPerturbation){
-	changedECMStiffness[idOfCurrentECMPerturbation] = true;
+void Simulation::calculateChangeRatesForECM(int idOfCurrentECMPerturbation){
+	changedECM[idOfCurrentECMPerturbation] = true;
 	//this is the first time step I am changing the ECM stiffness.
 	//I need to calculate rates first.
 	//If there is explicit ECM, I will calculate the young modulus change via elements.
@@ -4373,28 +4540,28 @@ void Simulation::calculateStiffnessChangeRatesForECM(int idOfCurrentECMPerturbat
 	if( thereIsExplicitECM){
 		#pragma omp parallel for
 		for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-			bool applyToThisElement = (*itElement)->isECMStiffnessChangeAppliedToElement(changeStiffnessApicalECM[idOfCurrentECMPerturbation], changeStiffnessBasalECM[idOfCurrentECMPerturbation], ECMStiffnessChangeEllipseBandIds[idOfCurrentECMPerturbation], numberOfECMStiffnessChangeEllipseBands[idOfCurrentECMPerturbation]);
+			bool applyToThisElement = (*itElement)->isECMChangeAppliedToElement(changeApicalECM[idOfCurrentECMPerturbation], changeBasalECM[idOfCurrentECMPerturbation], ECMChangeEllipseBandIds[idOfCurrentECMPerturbation], numberOfECMChangeEllipseBands[idOfCurrentECMPerturbation]);
 			if (applyToThisElement){
 				//the first input is used for checking basolateral stiffenning combined with apical relaxation
 				//the ECM does not have such options. Will give the boolean as falsa and continue.
-				(*itElement)->calculateStiffnessPerturbationRate(false, stiffnessChangeBeginTimeInSec[idOfCurrentECMPerturbation],stiffnessChangeEndTimeInSec[idOfCurrentECMPerturbation], ECMStiffnessChangeFraction[idOfCurrentECMPerturbation]);
+				(*itElement)->calculateStiffnessPerturbationRate(false, ECMChangeBeginTimeInSec[idOfCurrentECMPerturbation],ECMChangeEndTimeInSec[idOfCurrentECMPerturbation], ECMStiffnessChangeFraction[idOfCurrentECMPerturbation]);
 			}
 		}
-		//now I need to check for the apical surface with viscosity based calculation:
+		//now I need to check for the viscosity based calculation:
 		#pragma omp parallel for
 		for (vector<Node*>::iterator itNode = Nodes.begin(); itNode<Nodes.end(); ++itNode){
-			double timeDifferenceInHours = (stiffnessChangeEndTimeInSec[idOfCurrentECMPerturbation] - stiffnessChangeBeginTimeInSec[idOfCurrentECMPerturbation])/3600;
+			double timeDifferenceInHours = (ECMChangeEndTimeInSec[idOfCurrentECMPerturbation] - ECMChangeBeginTimeInSec[idOfCurrentECMPerturbation])/3600;
 			for (int i=0; i<3; ++i){
-				(*itNode)->ECMViscosityChangePerHour[i] = (*itNode)->externalViscosity[i]*(1-ECMStiffnessChangeFraction[idOfCurrentECMPerturbation])/timeDifferenceInHours;
+				(*itNode)->ECMViscosityChangePerHour[i] = (*itNode)->externalViscosity[i]*(1-ECMViscosityChangeFraction[idOfCurrentECMPerturbation])/timeDifferenceInHours;
 			}
 		}
 	}
 	else{
 		#pragma omp parallel for
 		for (vector<Node*>::iterator itNode = Nodes.begin(); itNode<Nodes.end(); ++itNode){
-			double timeDifferenceInHours = (stiffnessChangeEndTimeInSec[idOfCurrentECMPerturbation] - stiffnessChangeBeginTimeInSec[idOfCurrentECMPerturbation])/3600;
+			double timeDifferenceInHours = (ECMChangeEndTimeInSec[idOfCurrentECMPerturbation] - ECMChangeBeginTimeInSec[idOfCurrentECMPerturbation])/3600;
 			for (int i=0; i<3; ++i){
-				(*itNode)->ECMViscosityChangePerHour[i] = (*itNode)->externalViscosity[i]*(1-ECMStiffnessChangeFraction[idOfCurrentECMPerturbation])/timeDifferenceInHours;
+				(*itNode)->ECMViscosityChangePerHour[i] = (*itNode)->externalViscosity[i]*(1-ECMViscosityChangeFraction[idOfCurrentECMPerturbation])/timeDifferenceInHours;
 			}
 		}
 	}
@@ -4403,21 +4570,21 @@ void Simulation::calculateStiffnessChangeRatesForECM(int idOfCurrentECMPerturbat
 void Simulation::updateECMRenewalHalflifeMultiplier(int idOfCurrentECMPerturbation){
 	if(thereIsExplicitECM){
 		cout<<" there is explicit ecm, checking for ecr renewal half life update"<<endl;
-		if (currSimTimeSec>stiffnessChangeBeginTimeInSec[idOfCurrentECMPerturbation]){
+		if (currSimTimeSec>ECMChangeBeginTimeInSec[idOfCurrentECMPerturbation]){
 			//perturbation on ECM renewal half life started
 			double currECMRenewaHalfLifeMultiplier = 1.0;
-			if (currSimTimeSec>=stiffnessChangeEndTimeInSec[idOfCurrentECMPerturbation]){
+			if (currSimTimeSec>=ECMChangeEndTimeInSec[idOfCurrentECMPerturbation]){
 				currECMRenewaHalfLifeMultiplier = ECMRenewalHalfLifeTargetFraction[idOfCurrentECMPerturbation];
 			}
 			else{
-				double totalTimeChange = stiffnessChangeEndTimeInSec[idOfCurrentECMPerturbation] - stiffnessChangeBeginTimeInSec[idOfCurrentECMPerturbation];
-				double currTimeChange = currSimTimeSec - stiffnessChangeBeginTimeInSec[idOfCurrentECMPerturbation];
+				double totalTimeChange = ECMChangeEndTimeInSec[idOfCurrentECMPerturbation] - ECMChangeBeginTimeInSec[idOfCurrentECMPerturbation];
+				double currTimeChange = currSimTimeSec - ECMChangeBeginTimeInSec[idOfCurrentECMPerturbation];
 				currECMRenewaHalfLifeMultiplier = 1 + (ECMRenewalHalfLifeTargetFraction[idOfCurrentECMPerturbation] - 1.0) * currTimeChange / totalTimeChange;
 			}
 			#pragma omp parallel for
 			for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 				if ((*itElement)->isECMMimicing){
-					bool applyToThisElement = (*itElement)->isECMStiffnessChangeAppliedToElement(changeStiffnessApicalECM[idOfCurrentECMPerturbation], changeStiffnessBasalECM[idOfCurrentECMPerturbation], ECMStiffnessChangeEllipseBandIds[idOfCurrentECMPerturbation], numberOfECMStiffnessChangeEllipseBands[idOfCurrentECMPerturbation]);
+					bool applyToThisElement = (*itElement)->isECMChangeAppliedToElement(changeApicalECM[idOfCurrentECMPerturbation], changeBasalECM[idOfCurrentECMPerturbation], ECMChangeEllipseBandIds[idOfCurrentECMPerturbation], numberOfECMChangeEllipseBands[idOfCurrentECMPerturbation]);
 					if (applyToThisElement){
 						(*itElement)->plasticDeformationHalfLifeMultiplier =  currECMRenewaHalfLifeMultiplier;
 					}
@@ -4427,24 +4594,20 @@ void Simulation::updateECMRenewalHalflifeMultiplier(int idOfCurrentECMPerturbati
 	}
 }
 
-void Simulation::checkECMStiffnessChange(){
+void Simulation::checkECMChange(){
 	//I have not carried out any softening as yet
 	//I will if the time is after 32 hr
-	int n = stiffnessChangeBeginTimeInSec.size();
+	int n = ECMChangeBeginTimeInSec.size();
 	for (int idOfCurrentECMPerturbation=0; idOfCurrentECMPerturbation<n; ++idOfCurrentECMPerturbation){
-		if (currSimTimeSec >=stiffnessChangeBeginTimeInSec[idOfCurrentECMPerturbation] && currSimTimeSec <=stiffnessChangeEndTimeInSec[idOfCurrentECMPerturbation]){
-			if (changedECMStiffness[idOfCurrentECMPerturbation] == false){
-				calculateStiffnessChangeRatesForECM(idOfCurrentECMPerturbation);
+		if (currSimTimeSec >=ECMChangeBeginTimeInSec[idOfCurrentECMPerturbation] && currSimTimeSec <ECMChangeEndTimeInSec[idOfCurrentECMPerturbation]){
+			if (changedECM[idOfCurrentECMPerturbation] == false){
+				calculateChangeRatesForECM(idOfCurrentECMPerturbation);
 			}
 			if( thereIsExplicitECM){
 				updateECMRenewalHalflifeMultiplier(idOfCurrentECMPerturbation);
-				updateStiffnessChangeForExplicitECM(idOfCurrentECMPerturbation);
+				updateChangeForExplicitECM(idOfCurrentECMPerturbation);
 			}
-			//I will check for updating the viscosity based ECM manipulation to apply to an apical
-			//viscosity based ECM if desired.
-			//else{
-				updateStiffnessChangeForViscosityBasedECMDefinition(idOfCurrentECMPerturbation);
-			//}
+			updateChangeForViscosityBasedECMDefinition(idOfCurrentECMPerturbation);
 		}
 	}
 }
@@ -4501,8 +4664,8 @@ bool Simulation::runOneStep(){
 		}
     }*/
     //END
-    if (thereIsECMStiffnessChange) {
-    	checkECMStiffnessChange();
+    if (thereIsECMChange) {
+    	checkECMChange();
     }
     if(nMyosinFunctions > 0){
     	checkForMyosinUpdates();
@@ -4546,7 +4709,7 @@ bool Simulation::runOneStep(){
         	//(*itElement)->updateInternalViscosityTest();
         	(*itElement)->growShapeByFg();
         	//(*itElement)->defineFgByGrowthTemplate();
-        	(*itElement)->changeShapeByFsc(dt);
+        	//(*itElement)->changeShapeByFsc(dt);
         }
     }
     //cout<<"adding mass to nodes"<<endl;
@@ -4974,6 +5137,7 @@ void Simulation::calculateNumericalJacobian(bool displayMatricesDuringNumericalC
 
 void Simulation::updateStepNR(){
     int iteratorK = 0;
+    int maxIteration = 20;
     bool converged = false;
 
     bool numericalCalculation = false;
@@ -5063,6 +5227,14 @@ void Simulation::updateStepNR(){
         NRSolver->addExernalForces();
         checkForExperimentalSetupsWithinIteration();
         NRSolver->calcutateFixedK(Nodes);
+        //Elements[0]->displayMatrix(NRSolver->NSlaveMasterBinding,"NSlaveMasterBinding before fixing");
+        //Elements[0]->displayMatrix(NRSolver->ISlaveMasterBinding,"ISlaveMasterBinding before fixing");
+        //Elements[0]->displayMatrix(NRSolver->K,"K before fixing");
+        //Elements[0]->displayMatrix(NRSolver->gSum,"gSum before fixing");
+    	NRSolver->calculateBoundKWithSlavesMasterDoF();
+        //Elements[0]->displayMatrix(NRSolver->K,"K after fixing");
+        //Elements[0]->displayMatrix(NRSolver->gSum,"gSum after fixing");
+
         //cout<<"displaying the jacobian after all additions"<<endl;
         //Elements[0]->displayMatrix(NRSolver->K,"theJacobian");
         //cout<<"checking convergence with forces"<<endl;
@@ -5075,6 +5247,8 @@ void Simulation::updateStepNR(){
         NRSolver->solveForDeltaU();
         //cout<<"checking convergence"<<endl;
         converged = NRSolver->checkConvergenceViaDeltaU();
+        //Elements[0]->displayMatrix(NRSolver->deltaU,"deltaU after fixing");
+
         NRSolver->updateUkInIteration();
         updateElementPositionsinNR(NRSolver->uk);
         updateNodePositionsNR(NRSolver->uk);
@@ -5091,7 +5265,7 @@ void Simulation::updateStepNR(){
 		//	}
         //}
         iteratorK ++;
-        if (!converged && iteratorK > 20){
+        if (!converged && iteratorK > maxIteration){
             cerr<<"Error: did not converge!!!"<<endl;
             converged = true;
         }
@@ -7560,6 +7734,10 @@ void Simulation::calculateShapeChange(){
 			//cout<<"calling calculate Shape change"<<endl;
 			calculateShapeChangeUniform(ShapeChangeFunctions[i]);
 		}
+		if (ShapeChangeFunctions[i]->Type == 2){
+			//cout<<"calling calculate Shape change"<<endl;
+			calculateShapeChangeMarkerEllipseBased(ShapeChangeFunctions[i]);
+		}
 	}
 }
 
@@ -7576,7 +7754,27 @@ void Simulation::cleanUpShapeChangeRates(){
 	vector<ShapeBase*>::iterator itElement;
 	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 		(*itElement)->setShapeChangeRate(0.0,0.0,0.0,0.0,0.0,0.0);
+		(*itElement)->setShapeChangeInrementToIdentity();
 	}
+}
+
+void Simulation::calculateShapeChangeMarkerEllipseBased (GrowthFunctionBase* currSCF){
+	if(currSimTimeSec >= currSCF->initTime && currSimTimeSec < currSCF->endTime ){
+			gsl_matrix* columnarShapeChangeIncrement = gsl_matrix_calloc(3,3);
+			double *growthRates = new double[3];
+			currSCF->getShapeChangeRateRate(growthRates);
+	    	vector<ShapeBase*>::iterator itElement;
+	    	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+				bool appliedToElement = (*itElement)->isShapeChangeAppliedToElement(currSCF->appliedEllipseBandIds, currSCF->applyToBasalECM, currSCF->applyToLateralECM, currSCF->applyTissueApical, currSCF->applyTissueBasal, currSCF->applyTissueMidLine );
+				if (appliedToElement){
+					gsl_matrix_set_identity(columnarShapeChangeIncrement);
+					(*itElement)->calculateShapeChangeIncrementFromRates(dt, growthRates[0],growthRates[1],growthRates[2],columnarShapeChangeIncrement);
+					(*itElement)->updateShapeChangeIncrement(columnarShapeChangeIncrement);
+				}
+	    	}
+			delete[] growthRates;
+			gsl_matrix_free(columnarShapeChangeIncrement);
+		}
 }
 
 void Simulation::calculateShapeChangeUniform (GrowthFunctionBase* currSCF){

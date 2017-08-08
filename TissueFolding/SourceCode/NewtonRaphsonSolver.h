@@ -40,12 +40,17 @@ public:
 	gsl_matrix* K;								//< The Jacobian matrix, derivative of sum of forces acting on each node with respect to displacements.
 	gsl_matrix* Knumerical;						//< The Jacobian calculated by numerical methods
 	bool numericalParametersSet;				//< The boolean stating if the numerical Jacobian matrix has been initiated or not. For memory management purposes, this large matrix is not initiated unless necessary.
+	bool boundNodesWithSlaveMasterDefinition;
+	//vector < int[2] > slaveMasterList;			//< The 2D integer array storing the slave-master degrees of freedom couples, such that array [i][0] = slave to array[i][1], each i representing one dim of node position ( z of node 2 is DoF i=8);
+	std::vector< std::vector<int> > slaveMasterList;//< The 2D integer array storing the slave-master degrees of freedom couples, such that array [i][0] = slave to array[i][1], each i representing one dim of node position ( z of node 2 is DoF i=8);
 
 	void setMatricesToZeroAtTheBeginningOfIteration(bool thereIsNumericalCalculation); 		//< The function setting the calculation matrices to zero at the beginning of each iteration.
 	void setMatricesToZeroInsideIteration();												//< The function setting the relevant matrices to zero at each iteration.
 	void reInitiateMatricesAfterRefinement(int n);
 	void constructUnMatrix(vector <Node*>& Nodes);											//< This function constructs NewtonRaphsonSolver#un matrix at the beginning of the iterations.
-	void initialteUkMatrix();																//< This function initiates NewtonRaphsonSolver#uk matrix at the beginning of the iterations, it is initiated to be equal to NewtonRaphsonSolver#un.
+	void initialteUkMatrix();					//< This function initiates NewtonRaphsonSolver#uk matrix at the beginning of the iterations, it is initiated to be equal to NewtonRaphsonSolver#un.
+	void calculateBoundKWithSlavesMasterDoF();
+	void equateSlaveDisplacementsToMasters();
 	//void constructLumpedMassExternalViscosityMatrix(vector <Node*>& Nodes);	//< This function constructs NewtonRaphsonSolver#mvisc and  NewtonRaphsonSolver#mviscPerDt for external viscosity related calculations.
 	void calculateDisplacementMatrix(double dt);											//< This function calculates the displacement of each node in current iteration "k", from their positions at the end of the previous step "n" (NewtonRaphsonSolver#uk - NewtonRaphsonSolver#un)
 	void calcutateFixedK(vector <Node*>& Nodes);											//< This function updates the Jacobian to account for nodes  that are fixed in certain dimensions in space, as part of boundary conditions.

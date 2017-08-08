@@ -36,6 +36,7 @@ private:
 	ofstream saveFileProteins;
 	ofstream saveFilePhysicalProp;
 	ofstream saveFileSpecificType;
+	bool specificElementTypesRecorded;
 	ofstream saveFilePacking;
 	ofstream saveFileSimulationSummary;
 	ifstream saveFileToDisplayMesh;
@@ -158,6 +159,9 @@ private:
 	void initiateNodesByRowAndColumn(int Row, int Column,  float SideLength, float zHeight);
 	void fixApicalBasalNodes(vector<int> &NodesToFix);
 	void checkForNodeFixing();
+	void checkForNodeBinding();
+	bool bindEllipseAxes();
+	void bindCircumferenceXY();
 	void induceClones();
 	void initiateElementsByRowAndColumn(int Row, int Column);
 	void assignPhysicalParameters();
@@ -219,6 +223,7 @@ private:
 	void calculateGrowthGridBased(GrowthFunctionBase* currGF);
 	//void calculatePeripodialGrowthGridBased(GrowthFunctionBase* currGF);
 	void calculateShapeChangeUniform (GrowthFunctionBase* currSCF);
+	void calculateShapeChangeMarkerEllipseBased (GrowthFunctionBase* currSCF);
 	void changeCellShapesInSystem();
 	void changeCellShapeRing(int currIndexForParameters);
 	void setStretch();
@@ -281,7 +286,7 @@ public:
 	int noiseOnPysProp[4];
 	bool zeroExternalViscosity[3]; //The boolean stating if there is zero external viscosity on any of the 3 dimensions
 	bool extendExternalViscosityToInnerTissue;
-	vector <bool> changedECMStiffness;
+	vector <bool> changedECM;
 	double externalViscosityDPApical;
 	double externalViscosityDPBasal;
 	double externalViscosityPMApical;
@@ -434,15 +439,16 @@ public:
 	vector<double> markerEllipseBandXCentres;
 	vector<double> markerEllipseBandR1Ranges;
 	vector<double> markerEllipseBandR2Ranges;
-    bool 	thereIsECMStiffnessChange;
-	vector <int> numberOfECMStiffnessChangeEllipseBands;
-	vector< vector<int> > ECMStiffnessChangeEllipseBandIds;
-	vector <double> stiffnessChangeBeginTimeInSec;
-	vector <double> stiffnessChangeEndTimeInSec;
+    bool 	thereIsECMChange;
+	vector <int> numberOfECMChangeEllipseBands;
+	vector< vector<int> > ECMChangeEllipseBandIds;
+	vector <double> ECMChangeBeginTimeInSec;
+	vector <double> ECMChangeEndTimeInSec;
 	vector <double>	ECMStiffnessChangeFraction;
 	vector <double> ECMRenewalHalfLifeTargetFraction;
-	vector <bool> 	changeStiffnessApicalECM;
-	vector <bool> 	changeStiffnessBasalECM;
+	vector <double> ECMViscosityChangeFraction;
+	vector <bool> 	changeApicalECM;
+	vector <bool> 	changeBasalECM;
 
 	int numberOfMyosinAppliedEllipseBands;
 	vector <int> myosinEllipseBandIds;
@@ -498,6 +504,12 @@ public:
 	vector <int> nodesPackingToNegativeSurface;
 	vector <double> initialWeightPackingToPositiveSurface;
 	vector <double> initialWeightPackingToNegativeSurface;
+
+
+	vector< vector<int> > ellipseIdsForBaseAxisBinding;
+	vector< vector<bool> > ellipseBasesAreBoundOnAxis;
+	bool thereIsCircumferenceXYBinding;
+
 	//packi
 	Simulation();
 	~Simulation();
@@ -517,11 +529,11 @@ public:
     void checkForExperimentalSetupsAfterIteration();
     void setLateralElementsRemodellingPlaneRotationMatrices();
 
-    void updateStiffnessChangeForExplicitECM(int idOfCurrentECMPerturbation);
+    void updateChangeForExplicitECM(int idOfCurrentECMPerturbation);
     void updateECMRenewalHalflifeMultiplier(int idOfCurrentECMPerturbation);
-    void updateStiffnessChangeForViscosityBasedECMDefinition(int idOfCurrentECMPerturbation);
-    void calculateStiffnessChangeRatesForECM(int idOfCurrentECMPerturbation);
-    void checkECMStiffnessChange();
+    void updateChangeForViscosityBasedECMDefinition(int idOfCurrentECMPerturbation);
+    void calculateChangeRatesForECM(int idOfCurrentECMPerturbation);
+    void checkECMChange();
     void updateStiffnessChangeForActin(int idOfCurrentStiffnessPerturbation);
     void calculateStiffnessChangeRatesForActin(int idOfCurrentStiffnessPerturbation);
     void checkStiffnessPerturbation();

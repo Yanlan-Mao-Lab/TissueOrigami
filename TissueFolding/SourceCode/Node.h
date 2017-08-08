@@ -24,7 +24,7 @@ public:
 	bool			externalViscositySetInFixing[3];	///< The boolean array stating if the external viscosity of any axis has been set in node fixing options. The node fixing is carried out before the physical parameter settings in most cases. The boolean check is carried out not to overwrite the existing set viscosity in normal viscosity assignment.
 	double 			externalViscosity[3];				///< External viscosity of the node, defined by its placement within the tissue. This can be defined as an external adhesion, ECM remodelling, or any other form of viscosity.
 	double 			ECMViscosityChangePerHour[3];
-	double			baseExternalViscosity[3];			///< External viscosity of the node, before any remodelling;
+	//double			baseExternalViscosity[3];			///< External viscosity of the node, before any remodelling;
 	double			displacement;						///< the displacement of the node from previous time step;
 	int 			tissuePlacement;		///< The tissue placement is 0 for basal nodes, 1 for apical nodes, and 2 for middle range
 	int 			tissueType;		 		///< The tissue type is 0 for columnar layer, 1 for peripodial membrane, and 2 for linker zone

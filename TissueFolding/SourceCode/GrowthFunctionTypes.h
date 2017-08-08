@@ -614,4 +614,91 @@ public:
 	}///< The function is to write the growth function summary to simulation summary file
 };
 
+class markerEllipseBasedShapeChangeFunction : public GrowthFunctionBase{
+private:
+
+public:
+	int nEllipseBands;
+	double GrowthRate[3];
+	int ShapeChangeType;
+	bool conserveVolume;
+	markerEllipseBasedShapeChangeFunction(int id, int type, float initTime, float endTime, bool applyTissueApical, bool applyTissueBasal, bool applyTissueMidline, bool applyToBasalECM, bool applyToLateralECM, int ShapeChangeType, double ShapeChangeFractionPerHr, vector <int> markerEllipseIds, bool conserveVolume) : GrowthFunctionBase(id, type, initTime, endTime, true, false, applyToBasalECM,  applyToLateralECM){
+		/**
+		 *  First six parameters will be directed to the parent constructor, UniformGrowthFunction#UniformGrowthFunction.
+		 *  The growth rates in Dv, AB and AP will be fed as 0 to the parent constructor. \n
+		 *  The parameter ShapeChangeType will define the type of the shape change as 1: ColumnarToSquamous change, 2: Apical shrinkage, and 2: basal shrinkage.
+		 *  The parameter ShapeChangeRate will define the rate of defined shape change. The constructor will calculate the corrected rate, as to conserve the volume
+		 *  while shape change is occurring.
+		 */
+		this->ShapeChangeType = ShapeChangeType;
+		this->applyTissueBasal = applyTissueBasal;
+		this->applyTissueApical = applyTissueApical;
+		this->applyTissueMidLine = applyTissueMidline;
+		this->conserveVolume = conserveVolume;
+		//This is change form columnar to cuboidal
+		//I have how much I want the shape to change x+y in a second.
+		//Then exp(rx*1)+exp(ry*1) = ShapeChangeFractionPerSec
+		//Then rx+ry = ln(ShapeChangeFractionPerSec)
+		//At the same time, I would like to compansate the change in x+y with
+		//the change in z, therefore:
+		//exp(rz*1) = 1/ShapeChangeFractionPerSec
+		//rz = ln(1/ShapeChangeFractionPerSec);
+		GrowthRate[0] =  0.5 * log(1.0+ShapeChangeFractionPerHr)/3600;  //xx
+		GrowthRate[1] =  0.5 * log(1.0+ShapeChangeFractionPerHr)/3600;  //yy
+		if (conserveVolume){
+			GrowthRate[2] =  log(1.0/(1.0+ShapeChangeFractionPerHr))/3600;		 //zz
+		}
+		else{
+			GrowthRate[2] = 0;
+		}
+		nEllipseBands = markerEllipseIds.size();
+		for (int i=0;i<nEllipseBands; ++i){
+			appliedEllipseBandIds.push_back(markerEllipseIds[i]);
+		}
+		cout<<" Shape Fraction change per h: "<<ShapeChangeFractionPerHr<<" rates of shape change: "<<GrowthRate[0]<<" "<<GrowthRate[1]<<" "<<GrowthRate[2]<<endl;
+	}///< The constructor of UniformShapeChangeFunction
+
+	~markerEllipseBasedShapeChangeFunction(){};
+
+	void getShapeChangeRateRate(double* rates){
+			/**
+			 *  This function will write the markerEllipseBasedShapeChangeFunction#GrowthRate of the current growth function to the input double array
+			 *  pointer. The double array pointer should be set to point at a double array of size 3 (or higher) before calling the function.
+			 */
+			rates[0] = GrowthRate[0];
+			rates[1] = GrowthRate[1];
+			rates[2] = GrowthRate[2];
+		} ///< The function is to get the 3D growth rate of the current shape change function.
+
+
+	void writeSummary(ofstream &saveFileSimulationSummary,double dt){
+		/**
+		 *  This function will write the UniformGrowthFunction details into the simulation summary file, provided as the first input.
+		 *  Time step (dt) of the simulation is provided as second input, to report the growth rates per hour.
+		 *  The output should look like: \n
+		 *			Growth Type:  Uniform (1)
+		 *			Initial time(sec): UniformGrowthFunction#initTime	FinalTime time(sec): UniformGrowthFunction#endTime	GrowthRate(fraction/hr): DVGrowth(in 1/hr)  APGrowth(in 1/hr) ABGrowth(in 1/hr)
+		 */
+		saveFileSimulationSummary<<"Shape Change Type:  MArkerEllipseBased (2)"<<endl;
+		saveFileSimulationSummary<<"	Shape change type: ";
+		saveFileSimulationSummary<<ShapeChangeType;
+		saveFileSimulationSummary<<"	Initial time(sec): ";
+		saveFileSimulationSummary<<initTime;
+		saveFileSimulationSummary<<"	FinalTime time(sec): ";
+		saveFileSimulationSummary<<endTime;
+		saveFileSimulationSummary<<"	ShapeChangeRate(fraction/hr): ";
+		saveFileSimulationSummary<<GrowthRate[0]/dt*3600.0;
+		saveFileSimulationSummary<<"  ";
+		saveFileSimulationSummary<<GrowthRate[1]/dt*3600.0;
+		saveFileSimulationSummary<<"  ";
+		saveFileSimulationSummary<<GrowthRate[2]/dt*3600.0;
+		saveFileSimulationSummary<<"	Applied ellipses: ";
+		for (int i=0;i<nEllipseBands; ++i){
+			saveFileSimulationSummary<<appliedEllipseBandIds[i]<<" ";
+		}
+		saveFileSimulationSummary<<endl;
+	}///< The function is to write the growth function summary to simulation summary file
+};
+
+
 #endif /* GROWTHFUNCTIONTYPES_H */

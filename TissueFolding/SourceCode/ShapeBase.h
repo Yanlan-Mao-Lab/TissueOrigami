@@ -52,6 +52,7 @@ protected:
 	double* 	GrowthRate;							///< Growth rate recording for display purposes only. The recorded growth rate in x, y, and z  coordinates, does not record shear deformation induced in growth. Recorded in exponential form through time step, converted to rate per hour for display within the visual interface
 	gsl_matrix* growthIncrement;					///< The matrix (3,3) representing the incremental growth in current time step. Reset to identity at the beginning of each time step, updated in growth functions, and utilised to update Fg.
 	gsl_matrix* plasticDeformationIncrement;		///< The matrix (3,3) representing the incremental plastic deformation (treated as growth) in current time step. Set in plastic deformation calculation at each step, and utilised to update Fg.
+	gsl_matrix* shapeChangeIncrement;				///< The matrix (3,3) representing the incremental shape change in current time step. Reset to identity at the beginning of each time step, updated in shape change functions, and utilised to update Fg.
 	double 		zRemodellingSoFar;
 	double  	columnarGrowthWeight;				///< The fraction defining how close to the columnar layer the element is. 1.0 for columnar layer, 0.0 for peripodial membrane elements, and scaled according to position in the elements surrounding the lumen.
 	double  	peripodialGrowthWeight;				///< The fraction defining how close to the peripodial membrane the element is. 0.0 for columnar layer, 1.0 for peripodial membrane elements, and scaled according to position in the elements surrounding the lumen.
@@ -240,6 +241,8 @@ public:
 	void 	calculateFgFromGridCorners(int gridGrowthsInterpolationType, double dt, GrowthFunctionBase* currGF, gsl_matrix* increment, int sourceTissue, int IndexX, int IndexY, double FracX, double dFracY);
 	void 	updateGrowthIncrement(gsl_matrix* columnar, gsl_matrix* peripodial);
 	void 	updateGrowthByMutation(double dt);
+	void 	calculateShapeChangeIncrementFromRates(double dt, double rx, double ry, double rz, gsl_matrix* increment);
+	void 	updateShapeChangeIncrement(gsl_matrix* columnarShapeChangeIncrement);
 	void	calculateRelativePosInBoundingBox(double boundingBoxXMin, double boundingBoxYMin, double boundingBoxLength, double boundingBoxWidth);
 	void	mutateElement(double growthFold, double growthRatePerHour);
 	//void	calculateRelativePosInBoundingBox(double columnarBoundingBoxXMin, double columnarBoundingBoxYMin, double columnarBoundingBoxLength, double columnarBoundingBoxWidth, double peipodialBoundingBoxXMin, double peipodialBoundingBoxYMin, double peipodialBoundingBoxLength, double peipodialBoundingBoxWidth);
@@ -288,7 +291,8 @@ public:
 
     bool isMyosinViaEllipsesAppliedToElement(bool isApical, bool isLateral, vector <int> & myosinEllipseBandIds, int numberOfMyosinAppliedEllipseBands);
     bool isActinStiffnessChangeAppliedToElement(bool ThereIsWholeTissueStiffnessPerturbation, bool ThereIsApicalStiffnessPerturbation, bool ThereIsBasalStiffnessPerturbation, bool ThereIsBasolateralWithApicalRelaxationStiffnessPerturbation, bool ThereIsBasolateralStiffnessPerturbation, vector <int> &stiffnessPerturbationEllipseBandIds, int numberOfStiffnessPerturbationAppliesEllipseBands );
-    bool isECMStiffnessChangeAppliedToElement(bool changeStiffnessApicalECM, bool changeStiffnessBasalECM, vector<int> &ECMStiffnessChangeEllipseBandIds, int numberOfECMStiffnessChangeEllipseBands);
+    bool isECMChangeAppliedToElement(bool changeApicalECM, bool changeBasalECM, vector<int> &ECMChangeEllipseBandIds, int numberOfECMChangeEllipseBands);
+    bool isShapeChangeAppliedToElement(vector<int> &ellipseBandIds, bool applyBasalECM, bool applyToLateralECM, bool applyApically, bool applyBasally, bool applyMidLayer );
     void 	calculateStiffnessPerturbationRate(bool ThereIsBasolateralWithApicalRelaxationStiffnessPerturbation, double stiffnessPerturbationBeginTimeInSec, double stiffnessPerturbationEndTimeInSec, double stiffnessChangedToFractionOfOriginal);
     void 	updateStiffnessMultiplier(double dt); ///< The funciton will update the actin multiplier as a result of stiffness perturbations.
 //    virtual void	fillLateralNeighbours();
@@ -343,6 +347,7 @@ public:
     virtual void distributeMyosinForcesAreaBased(bool /*isIsotropic*/, bool /*apical*/, double /*forcePerMyoMolecule*/){ParentErrorMessage("distributeMyosinAreaBased");};
     virtual void distributeMyosinForcesTotalSizeBased(bool /*isIsotropic*/, bool /*apical*/, double /*forcePerMyoMolecule*/){ParentErrorMessage("distributeMyosinToitalSizeBased");};
     void 	setShapeChangeRate(double x, double y, double z, double xy, double yz, double xz);
+    void  	setShapeChangeInrementToIdentity();
     void 	updateElementVolumesAndTissuePlacementsForSave(vector<Node*>& Nodes);
     bool 	readNodeIdData(ifstream& file);
     bool	readReferencePositionData(ifstream& file);
