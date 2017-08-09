@@ -706,14 +706,14 @@ void MainWindow::updatePysPropSpinBoxes(){
 }
 
 void MainWindow::updateTimeText(){
-	cout<<"inside updateTimeText"<<endl;
+	//cout<<"inside updateTimeText"<<endl;
 	//round to two digits:
 	QString timeStringInSec = QString::number(Sim01->currSimTimeSec);
 	QString timeStringInHr = QString::number(Sim01->currSimTimeSec/3600.0, 'f', 2);
 	QString timeStringInHrAEL = QString::number((Sim01->currSimTimeSec/3600.0 + 48), 'f', 2);
 	timeStringInSec = "Simulation Time: " + timeStringInHr + " hr ("+timeStringInHrAEL+" hr AEL) - ( "+ timeStringInSec + " sec, " + QString::number(Sim01->timestep) + " steps )"; ;
 	TimeTitle->setText(timeStringInSec);
-	cout<<"finalised updateTimeText"<<endl;
+	//cout<<"finalised updateTimeText"<<endl;
 }
 
 void MainWindow::SelectedItemChange(){
@@ -774,15 +774,15 @@ void MainWindow::timerSimulationStep(){
     //cout<<"Called the function via timer"<<endl;
 
 	bool 	automatedSave = false;
-	int		viewSelection = 0; //0: top, 1: cross, 2: perspective.
-	bool 	analyseResults = true;
+	int		viewSelection = 1; //0: top, 1: cross, 2: perspective.
+	bool 	analyseResults = false;
 	bool 	slowstepsOnDisplay = false;
 	bool 	slowstepsOnRun = false;
 	int 	slowWaitTime = 10;
 
 	if (Sim01->DisplaySave){
 		if (Sim01->timestep == 0){
-			if( automatedSave){
+			if( automatedSave ){
 				Sim01->assignTips();
 				if (viewSelection == 0){
 					MainGLWidget->updateToTopView(); //display tissue from the top view
@@ -821,7 +821,7 @@ void MainWindow::timerSimulationStep(){
 				}
 			}
 			Sim01->calculateDVDistance();
-			for (int a = 0; a<11; a++){ //11 for 6 hours with 1800 sec time step
+			for (int a = 0; a<0; a++){ //11 for 6 hours with 1800 sec time step
 				Sim01->updateOneStepFromSave();
 				Sim01->calculateDVDistance();
 			}
@@ -873,7 +873,9 @@ void MainWindow::timerSimulationStep(){
 		}
         else if(!displayedSimulationLength){
         	displayedSimulationLength = true;
+            cout<<"before wrap up: Node 152 z: "<< Sim01->Nodes[152]->Position[2]<<" node 9 z: "<< Sim01->Nodes[9]->Position[2]<<endl;
             Sim01->wrapUpAtTheEndOfSimulation();
+            cout<<"after  wrap up: Node 152 z: "<< Sim01->Nodes[152]->Position[2]<<" node 9 z: "<< Sim01->Nodes[9]->Position[2]<<endl;
             Sim01->writeRelaxedMeshFromCurrentState();
             //Sim01->writeMeshRemovingAblatedRegions();
             double durationClock = ( std::clock() - simulationStartClock ) / (double) CLOCKS_PER_SEC;
@@ -883,7 +885,6 @@ void MainWindow::timerSimulationStep(){
         }
     }
     MainGLWidget->update();
-
 }
 
 void MainWindow::takeScreenshot(){

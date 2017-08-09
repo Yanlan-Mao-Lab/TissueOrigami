@@ -67,8 +67,9 @@ int main(int argc, char **argv)
 	mw.show();
 	mw.MainGLWidget->show();
 	mw.raise();
-    mw.setGeometry(1600, 600, 1600, 900); //ubuntu two screen
-    //mw.setGeometry(50, 50, 900, 550); //mac
+    //mw.setGeometry(1600, 600, 1600, 900); //ubuntu two screen
+	mw.setGeometry(1600, 600, 2000, 900); //ubuntu two screen
+	//mw.setGeometry(50, 50, 900, 550); //mac
     mw.MainScene->update();
 
 	return app.exec();

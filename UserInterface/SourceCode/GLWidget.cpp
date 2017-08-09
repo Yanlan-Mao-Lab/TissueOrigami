@@ -19,9 +19,9 @@ using namespace std;
  GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
  {
 	 //cout<<"initiating gl widget"<<endl;
-	 obj_pos[0] =  50.0f; //15.0f // 80.0f;
+	 obj_pos[0] =  30.0f; //15.0f // 80.0f;
 	 obj_pos[1] =  0.0f;//-130.0f;
-	 obj_pos[2] =   500.0f;
+	 obj_pos[2] =  500.0f;
 	 MatRot[0]  = 1.0; MatRot[1]  = 0.0; MatRot[2]  = 0.0; MatRot[3]  = 0.0;
 	 MatRot[4]  = 0.0; MatRot[5]  = 1.0; MatRot[6]  = 0.0; MatRot[7]  = 0.0;
 	 MatRot[8]  = 0.0; MatRot[9]  = 0.0; MatRot[10] = 1.0; MatRot[11] = 0.0;
@@ -106,12 +106,14 @@ using namespace std;
      orthoViewLimits[4] = -1000;
      orthoViewLimits[5] =  1000;
 		 
-     /*
-	 orthoViewLimits[2] += 5.0*17;
-	 orthoViewLimits[3] -= 5.0*17;
+
+	 //orthoViewLimits[2] += 5.0*17;
+	 //orthoViewLimits[3] -= 5.0*17;
+	 //orthoViewLimits[2] -= 5.0*3;
+	 //orthoViewLimits[3] += 5.0*3;
 	 orthoViewLimits[0] = orthoViewLimits[2]*aspectratio;
 	 orthoViewLimits[1] = orthoViewLimits[3]*aspectratio;
-      */
+
      displayBoundingBox = false;
      xClip = 1000.0;
      yClip = 1000.0;
@@ -452,7 +454,7 @@ void GLWidget::highlightNode(int i){
 				//PysPropColour = new float[3];
 				//If the physical property is external viscosity, then get the colour directly
 				if (PysPropToDisplay == 0){
-					PysPropMag = (*itNode)->externalViscosity[2];
+					PysPropMag = (*itNode)->externalViscosity[0];
 				}
 				else{
 					int nConnectedElements = (*itNode)->connectedElementIds.size();
