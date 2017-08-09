@@ -372,7 +372,7 @@ bool Simulation::readFinalSimulationStep(){
 	while(reachedEndOfSaveFile == false){
 		//skipping the header:
 		getline(saveFileToDisplayMesh,currline);
-		cerr<<" currline in read lst step: "<<currline<<endl;
+		cerr<<" currline in read last step: "<<currline<<endl;
 		if(saveFileToDisplayMesh.eof()){
 			reachedEndOfSaveFile = true;
 			break;
@@ -401,6 +401,12 @@ bool Simulation::readFinalSimulationStep(){
         if (physicalPropertiesSaved){
         	readPhysicalPropToContinueFromSave();
         }
+    	if (ForcesSaved){
+    		updateForcesFromSave();
+    	}
+    	if (PackingSaved){
+    		updatePackingFromSave();
+    	}
 		//if (ZerothFrame){
 		//	ZerothFrame = false;
 		//	cout<<"dt after  ZerothFrame if clause "<<dt<<" timeStepCurrentSim: "<<timeStepCurrentSim<<" dataSaveInterval: "<<dataSaveInterval<<endl;
@@ -417,6 +423,8 @@ bool Simulation::readFinalSimulationStep(){
 			//skipping empty line
 			getline(saveFileToDisplayMesh,currline);
 		}
+		//Now I will save it again:
+		saveStep();
 	}
 	updateElementVolumesAndTissuePlacements();
 	updateElasticPropertiesForAllNodes();
@@ -602,11 +610,7 @@ bool Simulation::initiateSystem(){
 	//initiating the NR solver object, that generates the necessary matrices
 	//for solving the tissue dynamics
     NRSolver = new NewtonRaphsonSolver(Nodes[0]->nDim,nNodes);
-
-    //bibap
     checkForNodeBinding();
-	//bibap
-
 	if (thereIsCellMigration) {
     	cout<<"initiation of cell migration"<<endl;
     	double cellMigrationOriginAngle = M_PI/2.0;
@@ -625,8 +629,10 @@ bool Simulation::initiateSystem(){
 
 void Simulation::checkForNodeBinding(){
 	if (thereIsCircumferenceXYBinding){
-		NRSolver->boundNodesWithSlaveMasterDefinition = true;
-		bindCircumferenceXY();
+		bool thereIsBinding = bindCircumferenceXY();
+		if (thereIsBinding){
+			NRSolver->boundNodesWithSlaveMasterDefinition = true;
+		}
 	}
 	if (ellipseIdsForBaseAxisBinding.size()>0){
 		bool thereIsBinding = bindEllipseAxes();
@@ -638,12 +644,21 @@ void Simulation::checkForNodeBinding(){
 			NRSolver->boundNodesWithSlaveMasterDefinition = true;
 		}
 	}
+	clearUpRigidFixedNodesFromSlaves();
 	if( NRSolver->boundNodesWithSlaveMasterDefinition == true){
 		for (int i=0;i<NRSolver->slaveMasterList.size();++i){
 			cout<<" slave master list item: "<<i<<" "<<NRSolver->slaveMasterList[i][0]<<" "<<NRSolver->slaveMasterList[i][1]<<endl;
 		}
 	}
 
+}
+
+void Simulation::clearUpRigidFixedNodesFromSlaves(){
+	for (vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+		if ((*itNode)->FixedPos[0]){
+			//Node is fixed in x, check if it is a slave
+		}
+	}
 }
 
 bool Simulation::bindEllipseAxes(){
@@ -654,8 +669,7 @@ bool Simulation::bindEllipseAxes(){
 		//checking one ellipse base binding rule:
 		vector <int> nodeIds;
 		int nBoundEllipses = ellipseIdsForBaseAxisBinding[ellipseFunctionIterator].size();
-		int minNodeId = nNodes*2;
-
+		int masterNodeId =  nNodes*2;
 		cout<<"checking binding rule :"<<ellipseFunctionIterator<<" - axis: ";
 		cout<<ellipseBasesAreBoundOnAxis[ellipseFunctionIterator][0]<<" ";
 		cout<<ellipseBasesAreBoundOnAxis[ellipseFunctionIterator][1]<<" ";
@@ -665,7 +679,6 @@ bool Simulation::bindEllipseAxes(){
 			cout<<ellipseIdsForBaseAxisBinding[ellipseFunctionIterator][ellipseIdIterator]<<"  ";
 		}
 		cout<<endl;
-
 
 		//loop over all nodes, to see if
 		//* node is inside an ellipse band
@@ -678,18 +691,36 @@ bool Simulation::bindEllipseAxes(){
 					if ((*itNode)->coveringEllipseBandId == ellipseIdsForBaseAxisBinding[ellipseFunctionIterator][ellipseIdIterator]){
 						cout<<"Node : "<<(*itNode)->Id<<" is basal and inside ellipse band: "<<(*itNode)->coveringEllipseBandId<<endl;
 						nodeIds.push_back((*itNode)->Id);
-						if ((*itNode)->Id<minNodeId){
-							minNodeId = (*itNode)->Id;
+						if ((*itNode)->Id<masterNodeId){
+							//I will avoid making a fixed node my master:
+							bool skipThisNode = false;
+							for (int dimIterator = 0; dimIterator <3; ++dimIterator){
+								if (ellipseBasesAreBoundOnAxis[ellipseFunctionIterator][dimIterator] &&
+										(*itNode)->FixedPos[dimIterator]){
+									skipThisNode = true;
+									break;
+								}
+							}
+							if (!skipThisNode){
+								masterNodeId = (*itNode)->Id;
+							}
 						}
 						break;
 					}
 				}
 			}
 		}
+		if (masterNodeId ==  nNodes*2){
+			//I could not pick a master node, as all the nodes within the marker ellipse region
+			//are already bound in at least on of their qualifying axes. Remove this fixed axis
+			//from the requirements of the ellipse and restart simulation!
+			cout<<" skipping ellipse binding function "<<ellipseFunctionIterator<<", due to clash with node fixing!"<<endl;
+			cerr<<" skipping ellipse binding function "<<ellipseFunctionIterator<<", due to clash with node fixing!"<<endl;
+			return thereIsBinding;
+		}
 		//Now I have a list of all nodes that are to be bound;
 		//I have the minimum node id, that is to be the master of this selection
 		int n= nodeIds.size();
-		int masterNodeId = minNodeId;
 		int dofXmaster  = masterNodeId*dim;
 		int dofYmaster  = dofXmaster+1;
 		int dofZmaster  = dofXmaster+2;
@@ -701,27 +732,34 @@ bool Simulation::bindEllipseAxes(){
 				int dofZslave  = dofXslave+2;
 				if (ellipseBasesAreBoundOnAxis[ellipseFunctionIterator][0]){
 					//x axis is bound:
-					vector <int> fixX;
-					fixX.push_back(dofXslave);
-					fixX.push_back(dofXmaster);
-					NRSolver->slaveMasterList.push_back(fixX);
-					thereIsBinding = true;
+					//see explanation under bindCircumferenceXY function for this check
+					if (!Nodes[slaveNodeId]->FixedPos[0]){
+						vector <int> fixX;
+						fixX.push_back(dofXslave);
+						fixX.push_back(dofXmaster);
+						NRSolver->slaveMasterList.push_back(fixX);
+						thereIsBinding = true;
+					}
 				}
 				if (ellipseBasesAreBoundOnAxis[ellipseFunctionIterator][1]){
 					//y axis is bound:
-					vector <int> fixY;
-					fixY.push_back(dofYslave);
-					fixY.push_back(dofYmaster);
-					NRSolver->slaveMasterList.push_back(fixY);
-					thereIsBinding = true;
+					if (!Nodes[slaveNodeId]->FixedPos[1]){
+						vector <int> fixY;
+						fixY.push_back(dofYslave);
+						fixY.push_back(dofYmaster);
+						NRSolver->slaveMasterList.push_back(fixY);
+						thereIsBinding = true;
+					}
 				}
 				if (ellipseBasesAreBoundOnAxis[ellipseFunctionIterator][2]){
 					//z axis is bound:
-					vector <int> fixZ;
-					fixZ.push_back(dofZslave);
-					fixZ.push_back(dofZmaster);
-					NRSolver->slaveMasterList.push_back(fixZ);
-					thereIsBinding = true;
+					if (!Nodes[slaveNodeId]->FixedPos[2]){
+						vector <int> fixZ;
+						fixZ.push_back(dofZslave);
+						fixZ.push_back(dofZmaster);
+						NRSolver->slaveMasterList.push_back(fixZ);
+						thereIsBinding = true;
+					}
 				}
 			}
 		}
@@ -729,7 +767,8 @@ bool Simulation::bindEllipseAxes(){
 	return thereIsBinding;
 }
 
-void Simulation::bindCircumferenceXY(){
+bool Simulation::bindCircumferenceXY(){
+	bool thereIsBinding = false;
 	int dim = 3;
 		vector <int> nodeIds;
 		for (int i=0; i<nNodes; ++i){
@@ -747,7 +786,6 @@ void Simulation::bindCircumferenceXY(){
 			int masterNodeId = nodeIds[i];
 			int dofXmaster = masterNodeId*dim;
 			int dofYmaster = masterNodeId*dim+1;
-
 			int currNodeId = masterNodeId;
 			while (Nodes[currNodeId]->tissuePlacement != 1){ //while node is not apical
 				int nConnectedElements = Nodes[currNodeId]->connectedElementIds.size();
@@ -756,16 +794,36 @@ void Simulation::bindCircumferenceXY(){
 					bool IsBasalOwner = Elements[elementId]->IsThisNodeMyBasal(currNodeId);
 					if (IsBasalOwner){
 						int slaveNodeId = Elements[elementId]->getCorrecpondingApical(currNodeId);
-						int dofXslave  = slaveNodeId*dim;
-						int dofYslave  = slaveNodeId*dim+1;
-						vector <int> fixX;
-						vector <int> fixY;
-						fixX.push_back(dofXslave);
-						fixX.push_back(dofXmaster);
-						fixY.push_back(dofYslave);
-						fixY.push_back(dofYmaster);
-						NRSolver->slaveMasterList.push_back(fixX);
-						NRSolver->slaveMasterList.push_back(fixY);
+						if (Nodes[masterNodeId]->FixedPos[0]){
+							//master node is fixed in X, slave needs to be fixed as well, and no need for binding calculations.
+							Nodes[slaveNodeId]->FixedPos[0]=true;
+						}
+						if (Nodes[masterNodeId]->FixedPos[1]){
+							Nodes[slaveNodeId]->FixedPos[1]=true;
+						}
+						//If the DoF is fixed rigidly by node fixing functions, then I
+						//will not make it a slave of any node. Making it a slave leads to displacement
+						//I would need to check for fixed nodes and correct my forces/jacobian twice.
+						//First fix jacobian and forces, then bind nodes, then fix jacobian again to
+						//clear up all the fixed nodes that were slaves and bound to other nodes.
+						//If I do the binding first,without hte first fixing I will carry the load of the fixed node onto the master node unnecessarily
+						//Simpler and cleaner to not make them slaves at all.
+						if (!Nodes[slaveNodeId]->FixedPos[0]){
+							int dofXslave  = slaveNodeId*dim;
+							vector <int> fixX;
+							fixX.push_back(dofXslave);
+							fixX.push_back(dofXmaster);
+							NRSolver->slaveMasterList.push_back(fixX);
+							thereIsBinding = true;
+						}
+						if (!Nodes[slaveNodeId]->FixedPos[1]){
+							int dofYslave  = slaveNodeId*dim+1;
+							vector <int> fixY;
+							fixY.push_back(dofYslave);
+							fixY.push_back(dofYmaster);
+							NRSolver->slaveMasterList.push_back(fixY);
+							thereIsBinding = true;
+						}
 						currNodeId = slaveNodeId;
 						//cout<<" found slave: "<<slaveNodeId<<endl;
 						break;
@@ -774,6 +832,7 @@ void Simulation::bindCircumferenceXY(){
 				//cout<<" tissue placement of next node: "<<Nodes[currNodeId]->tissuePlacement<<endl;
 			}
 		}
+		return thereIsBinding;
 }
 
 void Simulation::setLateralElementsRemodellingPlaneRotationMatrices(){
@@ -4653,17 +4712,6 @@ bool Simulation::runOneStep(){
     if (ThereIsStiffnessPerturbation) {
     	checkStiffnessPerturbation();
     }
-    //DELETE LATER!!!
-   /* if (currSimTimeSec<=184400){
-		for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-			if ((*itElement)->isECMMimimcingAtCircumference){
-				double stiffnessPerturbationRateInSec = 0.00055;
-				(*itElement)->stiffnessMultiplier += stiffnessPerturbationRateInSec*dt;
-				(*itElement)->updateElasticProperties();
-			}
-		}
-    }*/
-    //END
     if (thereIsECMChange) {
     	checkECMChange();
     }
@@ -4715,7 +4763,6 @@ bool Simulation::runOneStep(){
     //cout<<"adding mass to nodes"<<endl;
     updateNodeMasses();
     updateNodeViscositySurfaces();
-    //updateNodeSurfaces();
     //cout<<"updating connected node lists"<<endl;
     updateElementToConnectedNodes(Nodes);
     //cout<<"calculate Myosin Forces"<<endl;
@@ -4762,7 +4809,7 @@ void Simulation::assignIfElementsAreInsideEllipseBands(){
 void Simulation::checkForPinningPositionsUpdate(){
 	//cout<<"checking for pinning update, currTime: "<<currSimTimeSec<<" nGrowthPinning: "<<nGrowthPinning<<" GridGrowthsPinnedOnInitialMesh? "<<GridGrowthsPinnedOnInitialMesh<<endl;
 	if (GridGrowthsPinnedOnInitialMesh){
-		cout<<" grid is pinned "<<endl;
+		//cout<<" grid is pinned "<<endl;
 		for (int i=0; i<nGrowthPinning; ++i){
 			//cout<<"growthPinUpdateTime["<<i<<"]: "<<growthPinUpdateTime[i]<<" growthPinUpdateBools["<<i<<"]: "<<growthPinUpdateBools[i]<<endl;
 			if (currSimTimeSec >= growthPinUpdateTime[i] &&  !growthPinUpdateBools[i]){
@@ -5226,7 +5273,7 @@ void Simulation::updateStepNR(){
 		}
         NRSolver->addExernalForces();
         checkForExperimentalSetupsWithinIteration();
-        NRSolver->calcutateFixedK(Nodes);
+    	NRSolver->calcutateFixedK(Nodes);
         //Elements[0]->displayMatrix(NRSolver->NSlaveMasterBinding,"NSlaveMasterBinding before fixing");
         //Elements[0]->displayMatrix(NRSolver->ISlaveMasterBinding,"ISlaveMasterBinding before fixing");
         //Elements[0]->displayMatrix(NRSolver->K,"K before fixing");
@@ -5234,7 +5281,6 @@ void Simulation::updateStepNR(){
     	NRSolver->calculateBoundKWithSlavesMasterDoF();
         //Elements[0]->displayMatrix(NRSolver->K,"K after fixing");
         //Elements[0]->displayMatrix(NRSolver->gSum,"gSum after fixing");
-
         //cout<<"displaying the jacobian after all additions"<<endl;
         //Elements[0]->displayMatrix(NRSolver->K,"theJacobian");
         //cout<<"checking convergence with forces"<<endl;
@@ -5252,18 +5298,6 @@ void Simulation::updateStepNR(){
         NRSolver->updateUkInIteration();
         updateElementPositionsinNR(NRSolver->uk);
         updateNodePositionsNR(NRSolver->uk);
-
-        //int nNodeList = 6;
-        //int nodeList[6] = {0,1,2,3,4,5};
-        //for (int nodeListIterator=0; nodeListIterator<nNodeList;nodeListIterator++){
-		//	int currNodeOfInterest = nodeList[nodeListIterator];
-		//	if (nNodes>currNodeOfInterest){
-		//		double currNodeOfInterestX = gsl_vector_get(NRSolver->deltaU,currNodeOfInterest*3);
-		//		double currNodeOfInterestY = gsl_vector_get(NRSolver->deltaU,currNodeOfInterest*3+1);
-		//		double currNodeOfInterestZ = gsl_vector_get(NRSolver->deltaU,currNodeOfInterest*3+2);
-		//		cout<<" displacement for Node "<<currNodeOfInterest<<":  "<<currNodeOfInterestX<<" "<<currNodeOfInterestY<<" "<<currNodeOfInterestZ<<endl;
-		//	}
-        //}
         iteratorK ++;
         if (!converged && iteratorK > maxIteration){
             cerr<<"Error: did not converge!!!"<<endl;
@@ -5273,7 +5307,7 @@ void Simulation::updateStepNR(){
     checkForExperimentalSetupsAfterIteration();
     //Now the calculation is converged, I update the node positions with the latest positions uk:
     updateNodePositionsNR(NRSolver->uk);
-    //Element positions are already up to date.
+     //Element positions are already up to date.
     cout<<"finished run one step"<<endl;
     if (PipetteSuction){
     	//find the max z:
@@ -7111,6 +7145,7 @@ void Simulation::alignTissueDVToXPositive(){
 		for (int i=0;i<3;++i){
 			u[i] = Nodes[ventralTipIndex]->Position[i] - Nodes[dorsalTipIndex]->Position[i];
 		}
+		//cout<<" ventralTipIndex: "<<ventralTipIndex<<" dorsalTipIndex "<<dorsalTipIndex<<endl;
 		Elements[0]->normaliseVector3D(u);
 		v[0]=1;v[1]=0;v[2]=0;
 		double c, s;

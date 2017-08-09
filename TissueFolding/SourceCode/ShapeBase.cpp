@@ -310,12 +310,11 @@ void ShapeBase::calculateFgFromRates(double dt, double x, double y, double z, gs
 		gsl_matrix_set(increment,1,1,exp(y*tissueWeight*dt));
 		gsl_matrix_set(increment,2,2,exp(z*tissueWeight*dt));
 		gsl_matrix* temp = gsl_matrix_calloc(3,3);
-		gsl_matrix* rotMatT = gsl_matrix_calloc(3,3);
-		gsl_matrix_transpose_memcpy(rotMatT,rotMat);
+		//R * increment
 		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, rotMat, increment, 0.0, temp);
-		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, temp, rotMatT, 0.0, increment);
+		//increment * R^T
+		gsl_blas_dgemm (CblasNoTrans, CblasTrans,1.0, temp, rotMat, 0.0, increment);
 		gsl_matrix_free(temp);
-		gsl_matrix_free(rotMatT);
 	}
 	else{
 		gsl_matrix_set_identity(increment);
@@ -433,7 +432,6 @@ void ShapeBase::calculateFgFromGridCorners(int gridGrowthsInterpolationType, dou
 		//Rotate the growth if the angel is not zero:
 		if (angle != 0.0){
 			gsl_matrix* rotMat  = gsl_matrix_calloc(3,3);
-			gsl_matrix* rotMatT = gsl_matrix_calloc(3,3);
 			double c = cos(angle);
 			double s = sin(angle);
 			gsl_matrix_set(rotMat,0,0,  c );
@@ -446,13 +444,12 @@ void ShapeBase::calculateFgFromGridCorners(int gridGrowthsInterpolationType, dou
 			gsl_matrix_set(rotMat,2,1,  0.0);
 			gsl_matrix_set(rotMat,2,2,  1.0);
 			gsl_matrix* temp = gsl_matrix_calloc(nDim,nDim);
-			gsl_matrix_transpose_memcpy(rotMatT,rotMat);
-
+			//R * increment
 			gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, rotMat, increment, 0.0, temp);
-			gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, temp, rotMatT, 0.0, increment);
+			//increment * R^T
+			gsl_blas_dgemm (CblasNoTrans, CblasTrans,1.0, temp, rotMat, 0.0, increment);
 			gsl_matrix_free(temp);
 			gsl_matrix_free(rotMat);
-			gsl_matrix_free(rotMatT);
 		}
 		/*if ( Id == 176 ) {//|| Id == 1 || Id == 195 || Id == 152 || Id == 48 || Id == 71){
 			cout<<"Element: "<<Id<<endl;
@@ -1056,10 +1053,8 @@ double	ShapeBase::calculateEmergentShapeOrientation(){
 	//I need to have the combination of growth gradient and deformation gradient.
 	//It will reflect how the clones would "look":
 	double currEmergentVolume = calculateCurrentGrownAndEmergentVolumes();
-	gsl_matrix* TriPointFT = gsl_matrix_alloc(nDim, nDim);
-	gsl_matrix_transpose_memcpy(TriPointFT,TriPointF);
     gsl_matrix* E;
-    gsl_matrix* C = calculateCauchyGreenDeformationTensor(TriPointF,TriPointFT);
+    gsl_matrix* C = calculateCauchyGreenDeformationTensor(TriPointF);
 	E = calculateEForNodalForcesKirshoff(C);
 	gsl_matrix* strainBackUp = gsl_matrix_calloc(6,1);
 	gsl_matrix_set_zero(Strain);
@@ -1098,7 +1093,6 @@ double	ShapeBase::calculateEmergentShapeOrientation(){
 	for (int i=0;i<5;++i){
 		gsl_matrix_set(Strain,i,0,gsl_matrix_get(strainBackUp,i,0));
 	}
-	gsl_matrix_free(TriPointFT);
 	gsl_matrix_free(C);
 	gsl_matrix_free(E);
 	gsl_matrix_free(strainBackUp);
@@ -1162,15 +1156,14 @@ void ShapeBase::setPlasticDeformationIncrement(double xx, double yy, double zz){
 void 	ShapeBase::growShapeByFg(){
     if (rotatedGrowth){
         gsl_matrix* temp = gsl_matrix_calloc(nDim,nDim);
-        gsl_matrix* GrowthStrainsRotMatT = gsl_matrix_calloc(nDim,nDim);
-        gsl_matrix_transpose_memcpy(GrowthStrainsRotMatT,GrowthStrainsRotMat);
-        gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, GrowthStrainsRotMatT, growthIncrement, 0.0, temp);
-    	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, temp, GrowthStrainsRotMat, 0.0, growthIncrement);
+        //R^T * growthIncrement
+        gsl_blas_dgemm (CblasTrans, CblasNoTrans,1.0, GrowthStrainsRotMat, growthIncrement, 0.0, temp);
+        //R^T * growthIncrement * R
+        gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, temp, GrowthStrainsRotMat, 0.0, growthIncrement);
     	//rotate shape change increment:
-    	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, GrowthStrainsRotMatT, shapeChangeIncrement, 0.0, temp);
+    	gsl_blas_dgemm (CblasTrans, CblasNoTrans,1.0, GrowthStrainsRotMat, shapeChangeIncrement, 0.0, temp);
     	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, temp, GrowthStrainsRotMat, 0.0, shapeChangeIncrement);
     	gsl_matrix_free(temp);
-    	gsl_matrix_free(GrowthStrainsRotMatT);
     }
     //incrementing Fg with current growth rate, plastic deformation rate, and shape changes:
     gsl_matrix* temp1 = gsl_matrix_calloc(nDim,nDim);
@@ -1393,12 +1386,12 @@ bool	ShapeBase::checkZCappingInRemodelling(bool volumeConserved, double zRemodel
 	//I want to do some further checks on the z axis, I
 	//need to find what the growth on z axis will be:
 	bool zCapped = false;
-	gsl_matrix* rotMatTForZCap = gsl_matrix_calloc(3,3);
 	gsl_matrix* tempForZCap = gsl_matrix_calloc(nDim,nDim);
 	gsl_matrix* incrementToTestZCapping = gsl_matrix_calloc(nDim,nDim);
-	gsl_matrix_transpose_memcpy(rotMatTForZCap,eigenVec);
+	//eigenVec * increment
 	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, eigenVec, increment, 0.0, tempForZCap);
-	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, tempForZCap, rotMatTForZCap, 0.0, incrementToTestZCapping);
+	//eigenVec * increment * eigenVec^T
+	gsl_blas_dgemm (CblasNoTrans, CblasTrans,1.0, tempForZCap, eigenVec, 0.0, incrementToTestZCapping);
 	//The increment I have calculated is non-volume conserved, and non-scaled
 	//for z. There are limitations to how much z axis can be remodelled.
 	//I will check those now and cap the z deformation if necessary:
@@ -1422,7 +1415,6 @@ bool	ShapeBase::checkZCappingInRemodelling(bool volumeConserved, double zRemodel
 			zCapped = true;
 		}
 	}
-	gsl_matrix_free(rotMatTForZCap);
 	gsl_matrix_free(tempForZCap);
 	gsl_matrix_free(incrementToTestZCapping);
 	return zCapped;
@@ -1565,11 +1557,11 @@ void	ShapeBase::calculatePlasticDeformation3D(bool volumeConserved, double dt, d
 	//In a growth setup, I calculate the rotationa matrix to be rotation by a certain angle.
 	//Here, the rotation matrix is the eigen vector matrix itself. The eigen vector matrix
 	//will rotate the identity matrix upon itself.
-	gsl_matrix* rotMatT = gsl_matrix_calloc(3,3);
 	gsl_matrix* temp = gsl_matrix_calloc(nDim,nDim);
-	gsl_matrix_transpose_memcpy(rotMatT,eigenVec);
+	//eigenVec*increment
 	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, eigenVec, increment, 0.0, temp);
-	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, temp, rotMatT, 0.0, plasticDeformationIncrement);
+	//eigenVec*increment *eigenVec^T
+	gsl_blas_dgemm (CblasNoTrans, CblasTrans,1.0, temp, eigenVec, 0.0, plasticDeformationIncrement);
 	//update z remodelling so far to keep track and not update beyond limits
 	zRemodellingSoFar *= gsl_matrix_get(plasticDeformationIncrement,2,2);
 	//if (Id == 104 || Id == 104 ){
@@ -1585,7 +1577,6 @@ void	ShapeBase::calculatePlasticDeformation3D(bool volumeConserved, double dt, d
 		//displayMatrix(Strain,"Strain");
 	//}
 	gsl_matrix_free(temp);
-	gsl_matrix_free(rotMatT);
 	gsl_matrix_free(eigenVec);
 	gsl_matrix_free(increment);
 }
@@ -1676,8 +1667,8 @@ bool 	ShapeBase::calculate3DRotMatFromF(gsl_matrix* rotMat){
     //Singular Value Decomposition of covariance matrix S
     (void) gsl_linalg_SV_decomp (Sgsl, V, Sig, workspace); //This function does have a return value, but I do not need to use it, hence cast it to void!
 
-    gsl_matrix_transpose(Sgsl); //Sgsl ended up as U, I need U^T to calculate rotation matrix as : V*U^T
-    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, V, Sgsl,0.0, rotMat);
+    //Sgsl ended up as U, I need U^T to calculate rotation matrix as : V*U^T
+    gsl_blas_dgemm (CblasNoTrans, CblasTrans,1.0, V, Sgsl,0.0, rotMat);
     double det = determinant3by3Matrix(rotMat);
     if (det<0){
         cout<<"Error! Flipped element, Id: "<<Id<<endl;
@@ -2006,10 +1997,10 @@ void	ShapeBase::calculateForces3D(vector <Node*>& Nodes,  gsl_matrix* displaceme
 }
 
 
-gsl_matrix* ShapeBase::calculateCauchyGreenDeformationTensor(gsl_matrix* Fe, gsl_matrix* FeT){
+gsl_matrix* ShapeBase::calculateCauchyGreenDeformationTensor(gsl_matrix* Fe){
 	//calculating C (C = (Fe^T*Fe):
 	gsl_matrix* C =  gsl_matrix_alloc(nDim, nDim);
-	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, FeT, Fe,0.0, C);
+	gsl_blas_dgemm (CblasTrans, CblasNoTrans,1.0, Fe, Fe,0.0, C);
 	return C;
 }
 
@@ -2085,13 +2076,13 @@ void ShapeBase::updateLagrangianElasticityTensorNeoHookean(gsl_matrix* invC, dou
     }
 }
 
-gsl_matrix* ShapeBase::calculateCompactStressForNodalForces(double detFe, gsl_matrix* Fe, gsl_matrix* S, gsl_matrix* FeT, gsl_matrix* Stress){
+gsl_matrix* ShapeBase::calculateCompactStressForNodalForces(double detFe, gsl_matrix* Fe, gsl_matrix* S, gsl_matrix* Stress){
     //calculating stress (stress = detFe^-1 Fe S Fe^T):
     //double detFe = determinant3by3Matrix(Fe);
     gsl_matrix* tmpMat1 =  gsl_matrix_calloc(nDim, nDim);
     //cout<<"detFe: "<<detFe<<endl;
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, Fe, S,0.0, tmpMat1);
-    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, tmpMat1, FeT,0.0, Stress);
+    gsl_blas_dgemm (CblasNoTrans, CblasTrans,1.0, tmpMat1, Fe,0.0, Stress);
     gsl_matrix_scale(Stress, 1.0/detFe);
     gsl_matrix* compactStress =  gsl_matrix_calloc(6,1);
     gsl_matrix_set(compactStress,0,0,gsl_matrix_get(Stress,0,0));
@@ -2141,25 +2132,12 @@ void ShapeBase::calculateInvJShFuncDerSWithFe(gsl_matrix* currFe, gsl_matrix* In
 }
 
 gsl_matrix* ShapeBase::calculateBTforNodalForces(gsl_matrix* InvJacobianStack, gsl_matrix* ShapeFuncDerStack, gsl_matrix* B, gsl_matrix *invJShFuncDerS){
-    //calculating the transpose of B:
-    //gsl_matrix* tmpMat2 = gsl_matrix_calloc(6,nDim*nDim);
-    //calculating B:
-    // gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, CoeffMat, InvJacobianStack,0.0, tmpMat2);
-    // gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, tmpMat2, ShapeFuncDerStack,0.0, B);
+     //calculating B:
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, InvJacobianStack, ShapeFuncDerStack,0.0, invJShFuncDerS);
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, CoeffMat, invJShFuncDerS,0.0, B);
-    //displayMatrix(InvJacobianStack,"InvJacobianStack");
-    //displayMatrix(ShapeFuncDerStack,"ShapeFuncDerStack");
-    //displayMatrix(invJShFuncDerS,"invJShFuncDerS");
-    //displayMatrix(ShapeFuncDerivatives[0],"ShapeFuncDerivatives[0]");
-    //displayMatrix(ShapeFuncDerivatives[1],"ShapeFuncDerivatives[1]");
-    //displayMatrix(ShapeFuncDerivatives[2],"ShapeFuncDerivatives[2]");
-
     //generating B^T:
     gsl_matrix* BT = gsl_matrix_alloc(nNodes*nDim,6);
     gsl_matrix_transpose_memcpy(BT,B);
-    //displayMatrix(BT,"BT");
-    //gsl_matrix_free(tmpMat2);
     return BT;
 }
 
@@ -2821,10 +2799,8 @@ void	ShapeBase::calculateOuterProduct(gsl_matrix* a, gsl_matrix* b, gsl_matrix* 
 	if ((int) b->size2 != size2){
 		cerr<<"matrix dimension mismatch in outer product calculation"<<endl;
 	}
-	gsl_matrix* bT = gsl_matrix_calloc(size2,size1);
-	gsl_matrix_transpose_memcpy (bT,b);
-	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, a, bT,0.0, outerProduct);
-	gsl_matrix_free(bT);
+	//a outer b =  a b^T
+	gsl_blas_dgemm (CblasNoTrans, CblasTrans,1.0, a, b,0.0, outerProduct);
 	//cout<<"finalised outer product"<<endl;
 }
 
@@ -3182,17 +3158,15 @@ void 	ShapeBase::calculatePrincipalStrainAxesOnXYPlane(double& e1, double &e2, d
 		gsl_matrix_set(rotatedStrain,0,2, 0.5 * gsl_matrix_get(Strain,5,0));
 		gsl_matrix_set(rotatedStrain,2,0, 0.5 * gsl_matrix_get(Strain,5,0));
 
-		gsl_matrix* remodellingPlaneRotationMatrixT = gsl_matrix_calloc(3,3);
 		gsl_matrix* tmp = gsl_matrix_calloc(3,3);
-		gsl_matrix_transpose_memcpy(remodellingPlaneRotationMatrixT,remodellingPlaneRotationMatrix);
-
-		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, remodellingPlaneRotationMatrixT, rotatedStrain, 0.0, tmp);
+		//R^T * rotatedStrain
+		gsl_blas_dgemm (CblasTrans, CblasNoTrans,1.0, remodellingPlaneRotationMatrix, rotatedStrain, 0.0, tmp);
+		//R^T * rotatedStrain * R
 		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, tmp, remodellingPlaneRotationMatrix, 0.0, rotatedStrain);
 		exx = gsl_matrix_get(rotatedStrain,0,0);
 		eyy = gsl_matrix_get(rotatedStrain,1,1);
 		exy = gsl_matrix_get(rotatedStrain,	0,1);
 		gsl_matrix_free(rotatedStrain);
-		gsl_matrix_free(remodellingPlaneRotationMatrixT);
 		gsl_matrix_free(tmp);
 
 	}
@@ -3635,12 +3609,11 @@ void ShapeBase::calculateCurrentGrowthIncrement(gsl_matrix* resultingGrowthIncre
 	gsl_matrix_set(resultingGrowthIncrement,0,0,exp(growthx*dt));
 	gsl_matrix_set(resultingGrowthIncrement,1,1,exp(growthy*dt));
 	gsl_matrix_set(resultingGrowthIncrement,2,2,exp(growthz*dt));
-	gsl_matrix* RotT = gsl_matrix_calloc(3,3);
 	gsl_matrix* temp = gsl_matrix_calloc(nDim,nDim);;
-	gsl_matrix_transpose_memcpy(RotT,ShearAngleRotationMatrix);
+	//R * resultingGrowthIncrement
 	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, ShearAngleRotationMatrix, resultingGrowthIncrement, 0.0, temp);
-	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, temp, RotT, 0.0, resultingGrowthIncrement);
-	gsl_matrix_free(RotT);
+	//R * resultingGrowthIncrement * R^T
+	gsl_blas_dgemm (CblasNoTrans, CblasTrans,1.0, temp, ShearAngleRotationMatrix, 0.0, resultingGrowthIncrement);
 	gsl_matrix_free(temp);
 
 }

@@ -160,8 +160,9 @@ private:
 	void fixApicalBasalNodes(vector<int> &NodesToFix);
 	void checkForNodeFixing();
 	void checkForNodeBinding();
+	void clearUpRigidFixedNodesFromSlaves();
 	bool bindEllipseAxes();
-	void bindCircumferenceXY();
+	bool bindCircumferenceXY();
 	void induceClones();
 	void initiateElementsByRowAndColumn(int Row, int Column);
 	void assignPhysicalParameters();

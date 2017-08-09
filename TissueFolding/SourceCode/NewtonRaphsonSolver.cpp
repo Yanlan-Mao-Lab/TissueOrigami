@@ -149,32 +149,9 @@ void NewtonRaphsonSolver::calculateDisplacementMatrix(double dt){
 	gsl_matrix_scale(displacementPerDt,1.0/dt);
 }
 
-/*
 void NewtonRaphsonSolver::calculateBoundKWithSlavesMasterDoF(){
 	if (boundNodesWithSlaveMasterDefinition){
-		cout<<" binding slaves to masters"<<endl;
-		//K_bound = N^T K N + I
-		//g_bound = N^T g
-
-		gsl_vector* tmpg = gsl_vector_calloc(gSum->size);
-		//g_bound = N^T g
-		gsl_blas_dgemv (CblasTrans, 1.0, NSlaveMasterBinding, gSum, 0.0, tmpg);
-		gsl_vector_memcpy(gSum,tmpg);
-		gsl_vector_free(tmpg);
-
-		//K_bound = N^T K N + I
-		gsl_matrix* tmpK =gsl_matrix_calloc(NSlaveMasterBinding->size1,NSlaveMasterBinding->size2);
-		gsl_blas_dgemm (CblasTrans, CblasNoTrans,1.0, NSlaveMasterBinding, K, 0.0, tmpK);
-		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, tmpK, NSlaveMasterBinding, 0.0, K);
-		gsl_matrix_add(K, ISlaveMasterBinding);
-		gsl_matrix_free(tmpK);
-	}
-}
-*/
-
-void NewtonRaphsonSolver::calculateBoundKWithSlavesMasterDoF(){
-	if (boundNodesWithSlaveMasterDefinition){
-		cout<<" binding slaves to masters"<<endl;
+		//cout<<" binding slaves to masters"<<endl;
 		//Original calculation necessary is carried out by matrices N and I, where:
 		//N = matrix of size (nDim*nNodes, nDim*nNodes)
 		//I = matrix of size (nDim*nNodes, nDim*nNodes)
@@ -217,6 +194,8 @@ void NewtonRaphsonSolver::calculateBoundKWithSlavesMasterDoF(){
 			gsl_matrix_set_zero(&(KSlaveColumn.matrix));
 			//make K(slave,slave) equal to 1 - N^T K N + I
 			gsl_matrix_set(K,slaveIndex,slaveIndex,1);
+			//double forceOnSlave = gsl_vector_get(gSum,slaveIndex);
+			//cout<<"slave index: "<<slaveIndex<<" force: "<<forceOnSlave<<endl;
 			//views do not need to be freed, they are addresses to original matrices
 		}
 	}
@@ -228,11 +207,11 @@ void NewtonRaphsonSolver::equateSlaveDisplacementsToMasters(){
 		int slaveIndex = slaveMasterList[slaveIterator][0];
 		int masterIndex = slaveMasterList[slaveIterator][1];
 		double masterDisplacement = gsl_vector_get(deltaU,masterIndex);
-		double slaveDisplacement =  gsl_vector_get(deltaU,slaveIndex);
+		//double slaveDisplacement =  gsl_vector_get(deltaU,slaveIndex);
 		//cout<<" slave-master ("<<slaveIndex<<" "<<masterIndex<<") displacement before correction: "<< slaveDisplacement<<" "<<masterDisplacement<<endl;
 		gsl_vector_set(deltaU,slaveIndex,masterDisplacement);
-		masterDisplacement = gsl_vector_get(deltaU,masterIndex);
-		slaveDisplacement =  gsl_vector_get(deltaU,slaveIndex);
+		//masterDisplacement = gsl_vector_get(deltaU,masterIndex);
+		//slaveDisplacement =  gsl_vector_get(deltaU,slaveIndex);
 		//cout<<" slave-master ("<<slaveIndex<<" "<<masterIndex<<")displacement after correction: "<< slaveDisplacement<<" "<<masterDisplacement<<endl;
 	}
 }
@@ -737,7 +716,7 @@ bool NewtonRaphsonSolver::checkConvergenceViaForce(){
 void NewtonRaphsonSolver::updateUkInIteration(){
     int n = uk->size1;
     for (int i=0; i<n;++i){
-        double newValue = gsl_matrix_get(uk,i,0)+gsl_vector_get(deltaU,i);
+    	double newValue = gsl_matrix_get(uk,i,0)+gsl_vector_get(deltaU,i);
         gsl_matrix_set(uk,i,0,newValue);
     }
 }

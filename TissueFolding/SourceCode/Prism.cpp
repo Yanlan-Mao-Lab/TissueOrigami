@@ -667,8 +667,6 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currge, gsl_matrix *currgv, gsl
     //gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currF, InvFg, 0.0, currFeFpFsc);	///< Removing growth
     //gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currFeFpFsc, InvFsc, 0.0, currFeFp);	///< Removing shape change
     //gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currFeFp, invFplastic, 0.0, currFe);	///< Removing plastic deformation
-	gsl_matrix* currFeT = gsl_matrix_alloc(dim, dim);
-    gsl_matrix_transpose_memcpy(currFeT,currFe);
     createMatrixCopy(FeMatrices[pointNo], currFe); // storing Fe for use in implicit elastic K calculation.
 
     //setting material type:
@@ -678,7 +676,7 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currge, gsl_matrix *currgv, gsl
     //calculating Cauchy-Green Deformation Tensor
     gsl_matrix* E;
     gsl_matrix* S;
-    gsl_matrix* C = calculateCauchyGreenDeformationTensor(currFe,currFeT);
+    gsl_matrix* C = calculateCauchyGreenDeformationTensor(currFe);
 
     //calculating S:
     double detFe = determinant3by3Matrix(currFe);
@@ -714,7 +712,7 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currge, gsl_matrix *currgv, gsl
 
     //calculating elastic stress (elastic stress = detFe^-1 Fe S Fe^T):
     gsl_matrix_set_zero(elasticStress[pointNo]);
-    gsl_matrix* compactStress  = calculateCompactStressForNodalForces(detFe, currFe,S,currFeT, elasticStress[pointNo]);
+    gsl_matrix* compactStress  = calculateCompactStressForNodalForces(detFe, currFe,S, elasticStress[pointNo]);
 
     //Now from elastic stress, I will calculate nodal forces via B.
     //Calculating the inverse Jacobian stack matrix:
@@ -744,7 +742,6 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currge, gsl_matrix *currgv, gsl
         gsl_matrix_free(d);
     }
     //freeing the matrices allocated in this function
-    gsl_matrix_free(currFeT);
     gsl_matrix_free(C);
     gsl_matrix_free(E);
     gsl_matrix_free(S);

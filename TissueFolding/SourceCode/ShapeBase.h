@@ -125,11 +125,11 @@ protected:
 	bool 		calculateGrowthStrainsRotMat(double* v);
 	void		calculateForces3D(vector <Node*>& Nodes,  gsl_matrix* displacementPerDt, bool recordForcesOnFixedNodes, double **FixedNodeForces);
 	gsl_matrix* calculateEForNodalForcesKirshoff(gsl_matrix* C);
-	gsl_matrix* calculateCauchyGreenDeformationTensor(gsl_matrix* Fe, gsl_matrix* FeT);
+	gsl_matrix* calculateCauchyGreenDeformationTensor(gsl_matrix* Fe);
 	gsl_matrix* calculateSForNodalForcesKirshoff(gsl_matrix* E);
 	gsl_matrix* calculateSForNodalForcesNeoHookean(gsl_matrix* invC, double lnJ);
 	void 		updateLagrangianElasticityTensorNeoHookean(gsl_matrix* invC,double lnJ, int pointNo);
-	gsl_matrix* calculateCompactStressForNodalForces(double detFe,gsl_matrix* Fe, gsl_matrix* S, gsl_matrix* FeT, gsl_matrix *Stress);
+	gsl_matrix* calculateCompactStressForNodalForces(double detFe,gsl_matrix* Fe, gsl_matrix* S, gsl_matrix *Stress);
     gsl_matrix* calculateInverseJacobianStackForNodalForces(gsl_matrix* Jacobian);
     gsl_matrix* calculateBTforNodalForces(gsl_matrix* InvJacobianStack, gsl_matrix* ShapeFuncDerStack, gsl_matrix *B, gsl_matrix* invJShFuncDerS);
     void		calculateInvJShFuncDerSWithFe(gsl_matrix * currFe, gsl_matrix * InvDXde, gsl_matrix* ShapeFuncDerStack, gsl_matrix *invJShFuncDerSWithF);
