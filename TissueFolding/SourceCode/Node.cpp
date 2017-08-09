@@ -54,7 +54,6 @@ void Node::setExternalViscosity(double ApicalVisc,double BasalVisc, bool extendE
 		for (int i=0; i<3; ++i){
 			if (!externalViscositySetInFixing[i]){
 				externalViscosity[i] = BasalVisc;
-				//baseExternalViscosity[i] = externalViscosity[i];
 			}
 		}
 	}
@@ -62,7 +61,6 @@ void Node::setExternalViscosity(double ApicalVisc,double BasalVisc, bool extendE
 		for (int i=0; i<3; ++i){
 			if (!externalViscositySetInFixing[i]){
 				externalViscosity[i] = ApicalVisc;
-				//baseExternalViscosity[i] = externalViscosity[i];
 			}
 		}
 	}
@@ -73,7 +71,6 @@ void Node::setExternalViscosity(double ApicalVisc,double BasalVisc, bool extendE
 		for (int i=0; i<3; ++i){
 			if (!externalViscositySetInFixing[i]){
 				externalViscosity[i] = minV;
-				//baseExternalViscosity[i] = externalViscosity[i];
 			}
 		}
 	}
@@ -85,56 +82,17 @@ void Node::setExternalViscosity(double ApicalVisc,double BasalVisc, bool extendE
 			for (int i=0; i<3; ++i){
 				if (!externalViscositySetInFixing[i]){
 					externalViscosity[i] = minV; //(apicalV + basalV) /2.0;
-					//baseExternalViscosity[i] = externalViscosity[i];
 				}
 			}
 		}
 	}
 }
 
-//void Node::setExternalViscosity(double ApicalVisc,double BasalVisc, double PeripodialApicalVisc, double PeripodialBasalVisc){
-	/**
-	 *  This node will take in the apical columnar layer, basal columnar layer, and peripodial membrane viscosities of the tissue as inputs, respectively.
-	 *  The external viscosity of the node will be assigned via its Node#tissuePlacement and Node#tissueType. On the columnar layer, nodes that are in the mid-zone of the tissue (neither on the
-	 *  apical nor on the basal surface, will take the average of the two values.
-	 */
-	/*double apicalV, basalV;
-	if (tissueType == 0){		//Columnar layer  node
-		apicalV = ApicalVisc;
-		basalV  = BasalVisc;
-	}
-	else if (tissueType == 1) {	//Peripodial Membrane node
-		apicalV = PeripodialApicalVisc;
-		basalV  = PeripodialBasalVisc;
-	}
-	else { //linker zone
-		apicalV = 0.5*(ApicalVisc + PeripodialApicalVisc);
-		basalV  = 0.5*(BasalVisc + PeripodialBasalVisc);
-	}
-	if (tissuePlacement ==0){
-		if (!externalViscositySetInFixing[0]){externalViscosity[0] = basalV;}
-		if (!externalViscositySetInFixing[1]){externalViscosity[1] = basalV;}
-		if (!externalViscositySetInFixing[2]){externalViscosity[2] = basalV;}
-	}
-	else if (tissuePlacement ==1){
-		if (!externalViscositySetInFixing[0]){externalViscosity[0] = apicalV;}
-		if (!externalViscositySetInFixing[1]){externalViscosity[1] = apicalV;}
-		if (!externalViscositySetInFixing[2]){externalViscosity[2] = apicalV;}
-	}
-	else if (tissuePlacement == 2 || tissuePlacement == 3){
-		//middle or lateral node are equal to the minimum of apical and basal values
-		double minV = apicalV;
-		if (basalV < apicalV){minV = basalV;};
-		if (!externalViscositySetInFixing[0]){externalViscosity[0] = minV;}//(apicalV + basalV) /2.0;
-		if (!externalViscositySetInFixing[2]){externalViscosity[1] = minV;}//(apicalV + basalV) /2.0;
-		if (!externalViscositySetInFixing[2]){externalViscosity[2] = minV;}//(apicalV + basalV) /2.0;
-	}
-}*/
-
 bool Node::checkIfNeighbour(int IdToCheck){
 	/**
 	 *  The function will return true if the node with the unique Node#Id equal to "IdToCheck" is an immediate neighbour of the current node.
 	 *  The search will be done through the list Node#immediateNeigs
+	 *
 	 */
 	vector<int>::iterator itInt;
 	for(itInt = immediateNeigs.begin(); itInt < immediateNeigs.end(); ++itInt){
@@ -151,7 +109,6 @@ bool Node::checkIfNodeHasPacking(){
 	 *  function Simulation#calculatePacking. It is not necessary to calculate packing under the following conditions:
 	 *  1) The node is at the middle of the columnar layer, the packing should have stopped any other node/element coming close enough to this node, as
 	 *  they would need to penetrate through the apical or basal surface of the tissue to reach this node.
-	 *
 	 */
 	if (mass == 0){ //IF the node does not have any mass, then means it is ablated, and it should not pack
 		return false;
@@ -189,7 +146,7 @@ void Node::displayConnectedElementIds(){
 
 void Node::displayConnectedElementWeights(){
 	/**
-	 *  The function will display on screen the list of weights (normalised masses) of the connected elements.
+	 *  The function will display on screen output the list of weights (normalised masses) of the connected elements.
 	 *  These weights are stored in Node#connectedElementWeights, and the order is linked to the list: Node#connectedElementIds.
 	 */
 	int n = connectedElementWeights.size();
@@ -201,38 +158,67 @@ void Node::displayConnectedElementWeights(){
 }
 
 void  Node::addToImmediateNeigs(int newNodeId){
+	/**
+	 *  The function will add the input node id to the vector of immediate neighbours of the current node (Node#immediateNeigs).
+	 */
 	immediateNeigs.push_back(newNodeId);
 }
 
 void Node::addToConnectedElements(int newElementId, double volumePerNode){
-	//
+	/**
+	 *  This function adds the input newElementId (int) to the list of elements connected by this node, updating the mass,
+	 *  and weights of mass per connected element in the process.
+	 *
+	 *  First the mass before addition of the new element is recorded. Then the Node#mass
+	 *  is updated.
+	 */
 	double oldMass = mass;
 	mass += volumePerNode;
+	/**
+	 * Each of the already recorded weights (in Node#connectedElementWeights) of the connected elements (in Node#connectedElementIds)
+	 * will be updated with the scale newMass / oldMass.
+	 */
 	double scaler = mass/oldMass;
 	int n = connectedElementIds.size();
 	for (int j=0;j<n;++j){
 		connectedElementWeights[j] /= scaler;
 	}
+	/**
+	 * Then the new element and its corresponding id will be added to the lists of the node, Node#connectedElementIds, and Node#connectedElementWeights, respectively.
+	 */
 	connectedElementIds.push_back(newElementId);
 	connectedElementWeights.push_back(volumePerNode/mass);
 }
 
 void Node::removeFromConnectedElements(int ElementId, double volumePerNode){
+	/**
+	 *  This function removes the input newElementId (int) from the list of elements connected by this node,
+	 *  updating the mass, and weights of mass per connected element in the process.
+	 *
+	 *  First the mass before addition of the new element is recorded. Then the Node#mass
+	 *  is updated.
+	 */
 	double oldMass = mass;
 	mass -= volumePerNode;
 	double scaler = mass/oldMass;
+	/**
+	 *  Each of the already recorded weights (in Node#connectedElementWeights) of the connected elements (in Node#connectedElementIds)
+	 *  will be updated with the scale newMass / oldMass. The index of the element to be deleted on vector Node#connectedElementIds
+	 *  is obtained in the process.
+	 */
 	int n = connectedElementIds.size();
 	int indextToBeDeleted = 0;
-	//cout<<" connected element ids: ";
 	for (int j=0;j<n;++j){
 		connectedElementWeights[j] /= scaler;
 		if (connectedElementIds[j] == ElementId){
 			indextToBeDeleted = j;
 		}
-		//cout<<" "<<connectedElementIds[j]<<" ";
 	}
-	//cout<<endl;
-	//cout<<"Id to be deleted: "<<ElementId<<" index to be deleted: "<<indextToBeDeleted<<endl;
+	/**
+	 *  Then the element with the obtained index is removed from the lists of connected
+	 *  element ids and weights. For efficiency, the element to be removed is swapped
+	 *  with the last element of each vector, and the vector popped back.
+	 */
 	vector<int>::iterator itElementId = connectedElementIds.begin();
 	itElementId += indextToBeDeleted;
 	if (itElementId != connectedElementIds.end()) {
@@ -258,5 +244,8 @@ void Node::removeFromConnectedElements(int ElementId, double volumePerNode){
 }
 
 int  Node::getId(){
+	/**
+	 * The function returns the Node#Id of the node.
+	 */
 	return Id;
 }
