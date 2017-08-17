@@ -2601,7 +2601,23 @@ bool ModelInputObject::readExplicitECMOptions(ifstream& file){
 		file >> Sim->thereIsExplicitECM;
 	}
 	else{
-		cerr<<"Error in reading cell migration options: "<<currHeader<<", should have been: ThereIsExplicitECM(bool):" <<endl;
+		cerr<<"Error in reading explicit ECM options: "<<currHeader<<", should have been: ThereIsExplicitECM(bool):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "AddLateralECM(bool):"){
+		file >> Sim->addLateralECMManually;
+	}
+	else{
+		cerr<<"Error in reading cell migration options: "<<currHeader<<", should have been: AddLateralECM(bool):" <<endl;
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "LateralECMThickness(microns):"){
+		file >> Sim->lateralECMThickness;
+	}
+	else{
+		cerr<<"Error in reading cell migration options: "<<currHeader<<", should have been: LateralECMThickness(micron):" <<endl;
 		return false;
 	}
 	file >> currHeader;

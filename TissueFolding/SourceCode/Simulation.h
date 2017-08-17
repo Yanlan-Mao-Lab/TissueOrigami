@@ -483,6 +483,8 @@ public:
 	vector <double> drawingPointsX, drawingPointsY, drawingPointsZ;
 
 	bool thereIsExplicitECM;
+	bool addLateralECMManually;
+	double lateralECMThickness;
 	bool thereIsExplicitActin;
 	double ECMRenawalHalfLife; //The half life for ECM renewal inside plastic deformation
 
@@ -599,7 +601,9 @@ public:
 	void calculateCurrentElementsFinalPosition(ShapeBase* currElement);
 	void fixNode0InPosition(double x, double y, double z);
 
-
+    	void addNodesForSideECMOnOuterCircumference (vector< vector<int> > &ColumnarBasedNodeArray, vector< vector<int> > &OuterNodeArray , double hColumnar);
+    	void addSideECMElements(vector< vector<int> > &ColumnarBasedNodeArray, vector< vector<int> > &OuterNodeArray);
+    	bool addSideECMLayer();
 };
 
 #endif

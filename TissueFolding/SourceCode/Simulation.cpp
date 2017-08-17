@@ -236,6 +236,8 @@ void Simulation::setDefaultParameters(){
 
 	thereIsCellMigration = false;
 	thereIsExplicitECM = false;
+	addLateralECMManually = false;
+	lateralECMThickness = 0.0;
 	ECMRenawalHalfLife = 0.0;
 	thereIsExplicitActin = false;
 
@@ -531,13 +533,15 @@ bool Simulation::initiateSystem(){
 			Success = false;
 		}
 	}
-	cout<<"after peripodial checks"<<endl;
-	if (addCurvatureToTissue){
-		addCurvatureToColumnar(tissueCurvatureDepth);
-	}
 	if (thereIsExplicitECM){
+		if (addLateralECMManually){
+			addSideECMLayer();
+		}
 		setUpECMMimicingElements();
 		//TO DO: NEED TO UPDATE THE PHYSICAL PROPERTIES AFTER THIS!
+	}
+	if (addCurvatureToTissue){
+		addCurvatureToColumnar(tissueCurvatureDepth);
 	}
 	if (thereIsExplicitActin){
 		setUpActinMimicingElements();
@@ -645,11 +649,11 @@ void Simulation::checkForNodeBinding(){
 		}
 	}
 	clearUpRigidFixedNodesFromSlaves();
-	if( NRSolver->boundNodesWithSlaveMasterDefinition == true){
-		for (int i=0;i<NRSolver->slaveMasterList.size();++i){
-			cout<<" slave master list item: "<<i<<" "<<NRSolver->slaveMasterList[i][0]<<" "<<NRSolver->slaveMasterList[i][1]<<endl;
-		}
-	}
+	//if( NRSolver->boundNodesWithSlaveMasterDefinition == true){
+	//	for (int i=0;i<NRSolver->slaveMasterList.size();++i){
+	//		cout<<" slave master list item: "<<i<<" "<<NRSolver->slaveMasterList[i][0]<<" "<<NRSolver->slaveMasterList[i][1]<<endl;
+	//	}
+	//}
 
 }
 
@@ -689,7 +693,7 @@ bool Simulation::bindEllipseAxes(){
 				//checking one ellipse base binding rule:
 				for (int ellipseIdIterator =0; ellipseIdIterator<nBoundEllipses;++ellipseIdIterator){
 					if ((*itNode)->coveringEllipseBandId == ellipseIdsForBaseAxisBinding[ellipseFunctionIterator][ellipseIdIterator]){
-						cout<<"Node : "<<(*itNode)->Id<<" is basal and inside ellipse band: "<<(*itNode)->coveringEllipseBandId<<endl;
+						//cout<<"Node : "<<(*itNode)->Id<<" is basal and inside ellipse band: "<<(*itNode)->coveringEllipseBandId<<endl;
 						nodeIds.push_back((*itNode)->Id);
 						if ((*itNode)->Id<masterNodeId){
 							//I will avoid making a fixed node my master:
@@ -4411,6 +4415,176 @@ bool Simulation::checkIfThereIsPeripodialMembrane(){
 	return Success;
 }
 
+bool Simulation::addSideECMLayer(){
+    bool Success = true;
+    //here I am calculating the height of the tissue and the discretisation layers used for columnar layer
+    double hColumnar; //The average columnar layer element height
+    hColumnar = TissueHeight/TissueHeightDiscretisationLayers;
+    //Initially, I am starting with the sides.
+    //First I want the list of nodes at the basal circumference of the columnar layer:
+    vector <int> ColumnarCircumferencialNodeList;
+    Success = generateColumnarCircumferenceNodeList(ColumnarCircumferencialNodeList);
+    if (!Success){
+        cerr<<"Error!! circumferential nodes not extracted properly"<<endl;
+    }
+    //Now I have the list, I need to sort in to rotate in one direction:
+    calculateSystemCentre();
+    //I will sort the list counter-clock-wise, while the (+)z is pointing at you
+    sortColumnarCircumferenceNodeList(ColumnarCircumferencialNodeList);
+    //Now I will create the arrays of vectors that will keep my nodes organised:
+    const int nCircumference = ColumnarCircumferencialNodeList.size();
+    vector< vector<int> > ColumnarBasedNodeArray( nCircumference , vector<int>(0) );
+    for (int i=0;i<nCircumference; ++i){
+        ColumnarBasedNodeArray[i].push_back(ColumnarCircumferencialNodeList[i]);
+    }
+    //Fill the array of node IDs upwards to cover the whole columnar layer:
+    fillColumnarBasedNodeList(ColumnarBasedNodeArray, ColumnarCircumferencialNodeList);
+    //Now add nodes for the outer layer:
+    vector< vector<int> > OuterNodeArray( nCircumference , vector<int>(0) );
+    addNodesForSideECMOnOuterCircumference (ColumnarBasedNodeArray, OuterNodeArray,hColumnar );
+    //Now I need to add the elements:
+    addSideECMElements(ColumnarBasedNodeArray, OuterNodeArray);
+    //now adding the nodes of the central region:
+    //Now correct position assignemnts at the circumference, and related node fixing:
+    correctCircumferentialNodeAssignment(OuterNodeArray);
+    return Success;
+}
+
+void Simulation::addNodesForSideECMOnOuterCircumference (vector< vector<int> > &ColumnarBasedNodeArray, vector< vector<int> > &OuterNodeArray , double hColumnar){
+    double ECMSideThickness = lateralECMThickness; //in microns
+    //Now I need the average side of an element, to add new nodes accordingly:
+    int nCircumference = ColumnarBasedNodeArray.size();
+
+    for (int i=0; i<nCircumference; ++i){
+        //cout<<"at node in the list: "<<i<<endl;
+        //adding 3 point based node:
+        int nodeId0 = ColumnarBasedNodeArray[i][0];
+        int nodeId1;
+        int nodeId2;
+        int baseIndex0 = i;
+        if( i == nCircumference - 1){
+            if (symmetricY){
+                //the node is the end tip of a tissue with symmetric y. I should not connect it in a loop, it should add
+                // the node to +x direction.
+                // the node position calculation function will catch this as a flag, and will not calculate
+                nodeId1 = -100;
+            }
+            else{
+                nodeId1 = ColumnarBasedNodeArray[0][0];
+            }
+        }
+        else{
+            nodeId1 = ColumnarBasedNodeArray[i+1][0];
+        }
+        if ( i == 0 ){
+            if (symmetricY){
+                //the node is the beginning tip of a tissue with symmetric y. I should not connect it in a loop, it should add
+                // the node to -x direction.
+                // the node position calculation function will catch this as a flag, and will not calculate
+                nodeId2 = -100;
+            }
+            else{
+                nodeId2 = ColumnarBasedNodeArray[nCircumference-1][0];
+            }
+        }
+        else{
+            nodeId2 = ColumnarBasedNodeArray[i-1][0];
+        }
+        double* pos = new double[3];
+        calculateNewNodePosForPeripodialNodeAddition(nodeId0, nodeId1, nodeId2, pos, ECMSideThickness);
+
+        //cout<<" calculated pos : "<<pos[0] <<" "<<pos[1]<<" "<<pos[2]<<endl;
+        //Adding the array of new nodes:
+
+        //adding the base:
+        int newNodeId = Nodes.size();
+        Node* tmp_nd = new Node(newNodeId, 3, pos, 0, 0); //Tissue placement basal (0), tissue type is columnar
+        Nodes.push_back(tmp_nd);
+        nNodes = Nodes.size();
+        OuterNodeArray[i].push_back(newNodeId);
+        //adding the nodes for the columnar layer:
+        for (int j=1; j<TissueHeightDiscretisationLayers+1; ++j){
+            //pos[2] += hColumnar;
+            pos[2] =  Nodes[ColumnarBasedNodeArray[baseIndex0][j]]->Position[2];
+            //cout<<" pos for columnar aligned new node: "<<pos[0] <<" "<<pos[1]<<" "<<pos[2]<<" hColumnar: "<<hColumnar<<endl;
+
+            int newNodeId = Nodes.size();
+            int tissuePlacement = 2; //midline
+            if (j == TissueHeightDiscretisationLayers){
+                tissuePlacement=1;//apical
+            }
+
+            Node* tmp_nd = new Node(newNodeId, 3, pos, tissuePlacement, 0); //Tissue placement is midlayer (2), tissue type is columnar (0)
+            Nodes.push_back(tmp_nd);
+            nNodes = Nodes.size();
+            OuterNodeArray[i].push_back(newNodeId);
+        }
+        delete[] pos;
+    }
+}
+
+void Simulation::addSideECMElements(vector< vector<int> > &ColumnarBasedNodeArray, vector< vector<int> > &OuterNodeArray){
+    // I need to add the elements:
+    // Two elements are added for each element on the side:
+    // First triangle base will be New node 0, oldNode1, oldnode0, top of the element will be read from the node id stacks
+    // Second triangle base will be: New node 0, new node 1, old node 1
+    int totalLayers = TissueHeightDiscretisationLayers;
+    int nCircumference = ColumnarBasedNodeArray.size();
+    int nLoop = nCircumference;
+    if (symmetricY){
+        //in symmetric setup, the last node is not connected to the first node, we simply ignore that step
+        nLoop--;
+    }
+    for (int i=0;i<nLoop; ++i){
+        for (int j=0;j<totalLayers; ++j){
+            //these are columnar elements, peripodialness is always zero.
+            double peripodialWeight = 0.0; //
+            //preparing the node lists:
+            int indiceTri0Corner0 = i;
+            int indiceTri0Corner1 = i+1;
+            int indiceTri0Corner2 = i;
+            int indiceTri1Corner0 = indiceTri0Corner0;
+            int indiceTri1Corner1 = i+1;
+            int indiceTri1Corner2 = indiceTri0Corner1;
+            if (indiceTri0Corner1 == nCircumference){
+                indiceTri0Corner1 = 0;
+                indiceTri1Corner2 = 0;
+                indiceTri1Corner1 = 0;
+            }
+            int* NodeIds = new int[6];
+            //adding the first element:
+            NodeIds[0] = OuterNodeArray[indiceTri0Corner0][j];
+            NodeIds[1] = ColumnarBasedNodeArray[indiceTri0Corner1][j];
+            NodeIds[2] = ColumnarBasedNodeArray[indiceTri0Corner2][j];
+            NodeIds[3] = OuterNodeArray[indiceTri0Corner0][j+1];
+            NodeIds[4] = ColumnarBasedNodeArray[indiceTri0Corner1][j+1];
+            NodeIds[5] = ColumnarBasedNodeArray[indiceTri0Corner2][j+1];
+            Prism* PrismPnt01;
+            PrismPnt01 = new Prism(NodeIds, Nodes, currElementId,thereIsPlasticDeformation);
+            PrismPnt01->setGrowthWeightsViaTissuePlacement(peripodialWeight);
+            PrismPnt01->setECMMimicing(true);
+            PrismPnt01->isECMMimimcingAtCircumference = true;
+            Elements.push_back(PrismPnt01);
+            nElements = Elements.size();
+            currElementId++;
+            //adding the second element:
+            NodeIds[0] = OuterNodeArray[indiceTri1Corner0][j];
+            NodeIds[1] = OuterNodeArray[indiceTri1Corner1][j];
+            NodeIds[2] = ColumnarBasedNodeArray[indiceTri1Corner2][j];
+            NodeIds[3] = OuterNodeArray[indiceTri1Corner0][j+1];
+            NodeIds[4] = OuterNodeArray[indiceTri1Corner1][j+1];
+            NodeIds[5] = ColumnarBasedNodeArray[indiceTri1Corner2][j+1];
+            PrismPnt01 = new Prism(NodeIds, Nodes, currElementId,thereIsPlasticDeformation);
+            PrismPnt01->setGrowthWeightsViaTissuePlacement(peripodialWeight);
+            PrismPnt01->setECMMimicing(true);
+            PrismPnt01->isECMMimimcingAtCircumference = true;
+            Elements.push_back(PrismPnt01);
+            nElements = Elements.size();
+            currElementId++;
+        }
+    }
+}
+
 bool Simulation::addStraightPeripodialMembraneToTissue(){
     //cout<<"adding peripodial membrane from scratch" <<endl;
 	bool Success = true;
@@ -7956,7 +8130,7 @@ void Simulation::calculateGrowthRing(GrowthFunctionBase* currGF){
 
 void Simulation::setUpECMMimicingElements(){
 	for(vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-		(*itNode)->	allOwnersECMMimicing = true;
+		(*itNode)->allOwnersECMMimicing = true;
 		//will be cleared in the loop for assigning the ECM mimicking elements
 	}
 
@@ -7970,7 +8144,7 @@ void Simulation::setUpECMMimicingElements(){
 			//span the whole tissue, are treated as ECM mimicing
 			(*itElement)->setECMMimicing(true);
 		}
-		else if (!thereIsPeripodialMembrane || AddPeripodialMembrane){
+		/*else if (!thereIsPeripodialMembrane || AddPeripodialMembrane){
 			double ECMThicknessSquare = 2.5*2.5; //the actual thickness is 3 but I am accounting for calculaitng through
 			//element centre
 
@@ -7978,14 +8152,14 @@ void Simulation::setUpECMMimicingElements(){
 			//If I am adding peripodial membrane in the simulation (not the sophisticated round shape but simple,
 			//rectangular addition, then I also want to assign the curcumference. Here, I need to ensure the
 			//actin mimicking element attributes are cleared once I assign an element to be ECM,
-			/*bool isElementAtCircumference = (*itElement)->areanyOfMyNodesAtCircumference(Nodes);
-			if (isElementAtCircumference){
-				(*itElement)->setECMMimicing(true);
-				(*itElement)->isECMMimimcingAtCircumference = true;
-				if ((*itElement)->isActinMimicing){
-					(*itElement)->setActinMimicing(false);
-				}
-			}*/
+			//bool isElementAtCircumference = (*itElement)->areanyOfMyNodesAtCircumference(Nodes);
+			//if (isElementAtCircumference){
+			//	(*itElement)->setECMMimicing(true);
+			//	(*itElement)->isECMMimimcingAtCircumference = true;
+			//	if ((*itElement)->isActinMimicing){
+			//		(*itElement)->setActinMimicing(false);
+			//	}
+			//}
 			double *c = (*itElement)->getCentre();
 			for(vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
 				if ( (*itNode)->atCircumference ){
@@ -8006,7 +8180,7 @@ void Simulation::setUpECMMimicingElements(){
 				}
 			}
 			delete[] c;
-		}
+		}*/
 		if (!(*itElement)->isECMMimicing){
 			//the element is not ecm mimicking, its nodes will not be ecm mimicking:
 			int n = (*itElement)->getNodeNumber();

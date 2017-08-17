@@ -1,19 +1,19 @@
 InputMeshParameters:
   MeshInputMode(int-seeDocumentation): 4
-  MeshFile(full-path): /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Exp48hr-noPeri_06.mesh
+  MeshFile(full-path): /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Exp48hr-noPeriECMThin-1micronECM_09.mesh
 
   symmetricInX(bool): 0
   symmetricInY(bool): 1
  
 TimeParameters:
-  TimeStep(sec): 900
-  SimulationLength(sec): 36000
+  TimeStep(sec): 1
+  SimulationLength(sec): 0
 
 SaveOptions:
   SaveImages(bool): 0
   SaveData(bool):   1
   ImageSaveInterval(sec): 1
-  DataSaveInterval(sec):  3600
+  DataSaveInterval(sec):  1
 
 NodeFixingOptions:
   FixingViscosity(x,y,z): 80000   80000  34000
@@ -72,7 +72,9 @@ LinkerZoneParameters:
   LinkerZoneMidlineViscosity: 0.0
 
 ExplicitECMOptions:
-  ThereIsExplicitECM(bool): 0
+  ThereIsExplicitECM(bool): 1
+  AddLateralECM(bool): 1
+  LateralECMThickness(microns): 2.0
   ECMRemodellingHalfLife(hour): 2.0
   ECMColumnarYoungsModulus:  400
   ECMPeripodialYoungsModulus:  3600
