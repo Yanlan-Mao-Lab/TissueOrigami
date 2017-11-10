@@ -353,7 +353,6 @@ bool Simulation::readOutputDirectory(int& i, int argc, char **argv){
 	//will be directed into this directory, but the frame saving will not be toggled
 	saveDirectory= string(inpstring);
 	return true;
-
 }
 
 bool Simulation::readFinalSimulationStep(){
@@ -1518,6 +1517,9 @@ bool Simulation::readSpecificNodeTypesFromSave(){
 	int currEllipseBandId;
 	saveFileToDisplaySpecificNodeTypes.read((char*) &counterForMarkerEllipsesOnElements, sizeof counterForMarkerEllipsesOnElements);
 	cout<<" counterForMarkerEllipsesOnElements "<<counterForMarkerEllipsesOnElements<<endl;
+	if (counterForMarkerEllipsesOnElements<0 || counterForMarkerEllipsesOnElements> 200000){
+		counterForMarkerEllipsesOnElements = 0;
+	}
 	for (int i=0; i<counterForMarkerEllipsesOnElements; i++){
 		saveFileToDisplaySpecificNodeTypes.read((char*) &currElementId, sizeof currElementId);
 		saveFileToDisplaySpecificNodeTypes.read((char*) &currEllipseBandId, sizeof currEllipseBandId);
@@ -1534,7 +1536,11 @@ bool Simulation::readSpecificNodeTypesFromSave(){
 	int counterForMarkerEllipsesOnNodes;
 	int currNodeId;
 	saveFileToDisplaySpecificNodeTypes.read((char*) &counterForMarkerEllipsesOnNodes, sizeof counterForMarkerEllipsesOnNodes);
+
 	cout<<" counterForMarkerEllipsesOnNodes "<<counterForMarkerEllipsesOnNodes<<endl;
+	if (counterForMarkerEllipsesOnNodes<0 || counterForMarkerEllipsesOnNodes> 200000){
+		counterForMarkerEllipsesOnNodes = 0;
+	}
 	for (int i=0; i<counterForMarkerEllipsesOnNodes; i++){
 		saveFileToDisplaySpecificNodeTypes.read((char*) &currNodeId, sizeof currNodeId);
 		saveFileToDisplaySpecificNodeTypes.read((char*) &currEllipseBandId, sizeof currEllipseBandId);
@@ -1916,8 +1922,8 @@ void Simulation::updatePackingFromSave(){
 	int n;
 	saveFileToDisplayPacking.read((char*) &n, sizeof n);
 	//emptying the packing node vectors:
-	pacingNodeCouples0.empty();
-	pacingNodeCouples1.empty();
+	pacingNodeCouples0.clear();
+	pacingNodeCouples1.clear();
 	//filling in the packing node vectors for step
 	for(int i=0; i<n; ++i){
 		int elementId;
@@ -5498,7 +5504,7 @@ void Simulation::updateStepNR(){
 }
 
 void Simulation::calculateRandomForces(){
-	randomForces.empty();
+	randomForces.clear();
 	randomForces=RandomGenerator::Obj().getNormRV( randomForceMean,randomForceVar, 3*nNodes );
 	//making the sum of forces zero:
 	double sumRandomForceX = 0.0;
@@ -6329,33 +6335,33 @@ void Simulation::detectPacingCombinations(){
 	double threshold = 7;	 //packing forces start at 4 microns - keep this lower than the force threshold!!
 	double t2 = threshold*threshold;	//threshold square for rapid calculation
 	//TO DO: make this the function  emptyPackingVectors();
-	pacingNodeSurfaceList0.empty();
-	pacingNodeSurfaceList1.empty();
-	pacingNodeSurfaceList2.empty();
-	pacingNodeSurfaceList3.empty();
-	initialSignsSurfacex.empty();
-	initialSignsSurfacey.empty();
-	initialSignsSurfacez.empty();
-	pacingNodeEdgeList0.empty();
-	pacingNodeEdgeList1.empty();
-	pacingNodeEdgeList2.empty();
-	initialSignsEdgex.empty();
-	initialSignsEdgey.empty();
-	initialSignsEdgez.empty();
-	pacingNodePointList0.empty();
-	pacingNodePointList1.empty();
-	initialSignsPointx.empty();
-	initialSignsPointy.empty();
-	initialSignsPointz.empty();
-	initialWeightSurfacex.empty();
-	initialWeightSurfacey.empty();
-	initialWeightSurfacez.empty();
-	initialWeightEdgex.empty();
-	initialWeightEdgey.empty();
-	initialWeightEdgez.empty();
-	initialWeightPointx.empty();
-	initialWeightPointy.empty();
-	initialWeightPointz.empty();
+	pacingNodeSurfaceList0.clear();
+	pacingNodeSurfaceList1.clear();
+	pacingNodeSurfaceList2.clear();
+	pacingNodeSurfaceList3.clear();
+	initialSignsSurfacex.clear();
+	initialSignsSurfacey.clear();
+	initialSignsSurfacez.clear();
+	pacingNodeEdgeList0.clear();
+	pacingNodeEdgeList1.clear();
+	pacingNodeEdgeList2.clear();
+	initialSignsEdgex.clear();
+	initialSignsEdgey.clear();
+	initialSignsEdgez.clear();
+	pacingNodePointList0.clear();
+	pacingNodePointList1.clear();
+	initialSignsPointx.clear();
+	initialSignsPointy.clear();
+	initialSignsPointz.clear();
+	initialWeightSurfacex.clear();
+	initialWeightSurfacey.clear();
+	initialWeightSurfacez.clear();
+	initialWeightEdgex.clear();
+	initialWeightEdgey.clear();
+	initialWeightEdgez.clear();
+	initialWeightPointx.clear();
+	initialWeightPointy.clear();
+	initialWeightPointz.clear();
 
 	//
 	vector<Node*>::iterator itNode;
@@ -6571,10 +6577,10 @@ void Simulation::detectPacingToEnclosingSurfacesNodes(){
 	packingToEnclosingSurfacesThreshold = 3;  //pack to the boundary at 3 microns distance
 	packingDetectionToEnclosingSurfacesThreshold = 1.2 * packingToEnclosingSurfacesThreshold;
 	double t2 = packingDetectionToEnclosingSurfacesThreshold*packingDetectionToEnclosingSurfacesThreshold;	//threshold square for rapid calculation
-	nodesPackingToPositiveSurface.empty();
-	nodesPackingToNegativeSurface.empty();
-	initialWeightPackingToPositiveSurface.empty();
-	initialWeightPackingToNegativeSurface.empty();
+	nodesPackingToPositiveSurface.clear();
+	nodesPackingToNegativeSurface.clear();
+	initialWeightPackingToPositiveSurface.clear();
+	initialWeightPackingToNegativeSurface.clear();
 	//calculate the current boundaries:
 	if (currSimTimeSec < initialTimeToEncloseTissueBetweenSurfacesSec){
 		return;
@@ -6666,11 +6672,11 @@ void Simulation::detectPacingNodes(){
 	packingMultiplier = 1000;
 	sigmoidSaturationForPacking = 5;
 	double t2 = packingDetectionThreshold*packingDetectionThreshold;	//threshold square for rapid calculation
-	pacingNodeCouples0.empty();
-	pacingNodeCouples1.empty();
-	initialWeightPointx.empty();
-	initialWeightPointy.empty();
-	initialWeightPointz.empty();
+	pacingNodeCouples0.clear();
+	pacingNodeCouples1.clear();
+	initialWeightPointx.clear();
+	initialWeightPointy.clear();
+	initialWeightPointz.clear();
 	//Added for parallelisation:
 	//node based only:
 	const int nArray = 16; //the size of array that I will divide the elements into.

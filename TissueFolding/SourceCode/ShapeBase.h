@@ -236,6 +236,7 @@ public:
 	bool 	isGrowthRateApplicable(int sourceTissue, double& weight, double zmin, double zmax);
 	void 	calculateFgFromRates(double dt, double x, double y, double z, gsl_matrix* rotMat, gsl_matrix* increment, int sourceTissue, double zMin, double zMax);
 	void 	calculateFgFromGridCorners(int gridGrowthsInterpolationType, double dt, GrowthFunctionBase* currGF, gsl_matrix* increment, int sourceTissue, int IndexX, int IndexY, double FracX, double dFracY);
+	gsl_matrix* getGrowthIncrement();
 	void 	updateGrowthIncrement(gsl_matrix* columnar, gsl_matrix* peripodial);
 	void 	updateGrowthByMutation(double dt);
 	void 	calculateShapeChangeIncrementFromRates(double dt, double rx, double ry, double rz, gsl_matrix* increment);

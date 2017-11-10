@@ -486,6 +486,10 @@ void ShapeBase::calculateFgFromGridCorners(int gridGrowthsInterpolationType, dou
 	}
 }
 
+gsl_matrix* ShapeBase::getGrowthIncrement(){
+	return growthIncrement;
+}
+
 void ShapeBase::updateGrowthIncrement(gsl_matrix* columnar, gsl_matrix* peripodial ){
 	gsl_matrix* temp = gsl_matrix_calloc(nDim,nDim);
 	if (tissueType == 0){//columnar layer element, no peripodial application necessary
