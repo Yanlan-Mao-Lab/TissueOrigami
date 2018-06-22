@@ -45,6 +45,7 @@ public:
 	void setUpContourLinesAP(vector<Node*> &nodes);
 	void calculateContourLineLengthsAP(vector<Node*> &nodes);
 	void calculateTissueVolumeMap(vector<ShapeBase*> &elements, int timeInSec, double boundingBoxXMin, double boundingBoxYMin, double boundingBoxLength, double boundingBoxWidth);
+	void markAdhesions(vector<Node*> &Nodes, vector<ShapeBase*> &Elements );
 };
 
 #endif /* ANALYSIS_H_ */

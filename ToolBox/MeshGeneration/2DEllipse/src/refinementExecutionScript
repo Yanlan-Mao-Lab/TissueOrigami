@@ -114,7 +114,7 @@ cp MeshFile.out ./Exp48hr-noPerinoSym_09.mesh
 ../triangle/triangle -rq33a10.4 Points.2
 ../triangle/triangle -rq33a5.8 Points.3
 ../triangle/triangle -rq33a2.8 Points.4
-../triangle/triangle -rq33a0.65 Points.5
+
 %genetratin the meshes:
 cp Points.2.ele Points.1.ele
 cp Points.2.node Points.1.node
@@ -149,14 +149,14 @@ cp MeshFile.out ./ECMMimic_09thin.mesh
 
 % Now with explicit ECM but no peripodial:
 %first mesh:
-%Adding 3 microns on each side to account for the circumferential ECM
-./EllipseFromOutline 1 38.56 53 30.3 30.3 12.5 9 2 0  ./inputOutlines/48hrDiscOutline
+./EllipseFromOutline 1 35.56 50 27.3 27.3 12.5 9 2 0  ./inputOutlines/48hrDiscOutline
 %further refinements, same as above:
 ../triangle/triangle -rq33a27.44 Points.1
 ../triangle/triangle -rq33a10.4 Points.2
 ../triangle/triangle -rq33a5.8 Points.3
 ../triangle/triangle -rq33a2.8 Points.4
 ../triangle/triangle -rq33a0.65 Points.5
+
 cp Points.5.ele Points.1.ele
 cp Points.5.node Points.1.node
 ./EllipseFromOutline -1 15.5 2 6 1  ./inputOutlines/48hrDiscOutline
@@ -167,6 +167,10 @@ cp MeshFile.out ./Exp48hr-noPeriECM_08.mesh
 ../triangle/triangle -rq33a Points.5.ele 
 ../triangle/showme Points.6.ele 
 
+
+./EllipseFromOutline -1 12.5 1.0 5 1  ./inputOutlines/48hrDiscOutline
+cp MeshFile.out ./Exp48hr-noPeri_09.mesh
+
 cp Points.6.ele Points.1.ele
 cp Points.6.node Points.1.node
 ./EllipseFromOutline -1 15.5 1 6 1  ./inputOutlines/48hrDiscOutline
@@ -175,6 +179,48 @@ cp MeshFile.out ./Exp48hr-noPeriECM_09.mesh
 ./EllipseFromOutline -1 15.5 1.0 5 1  ./inputOutlines/48hrDiscOutline
 cp MeshFile.out ./Exp48hr-noPeriECMThin_09.mesh
 
+%%HERE NEED TO CHANGE THE ECM THICKNESS IN SOURCE CODE:
+./EllipseFromOutline -1 13.5 1.0 5 1  ./inputOutlines/48hrDiscOutline
+cp MeshFile.out ./Exp48hr-noPeriECMThin-1micronECM_09.mesh
+
+%%HERE NEED TO CHANGE SOURCE CODE, change basal layer to 6.25 (12.5 -> 2+4.5 upper, 6.25 lower layers to grow asymmetrically):
+./EllipseFromOutline -1 15.5 1.0 4 1  ./inputOutlines/48hrDiscOutline
+cp MeshFile.out ./Exp48hr-noPeriECM_10.mesh
+
+%%HERE NEED TO CHANGE THE ECM THICKNESS IN SOURCE CODE, change basal layer to 6.25 (12.5 -> 2+4.5 upper, 6.5 lower layers to grow asymmetrically):
+./EllipseFromOutline -1 13.5 1.0 4 1  ./inputOutlines/48hrDiscOutline
+cp MeshFile.out ./Exp48hr-noPeri-1micronECM_10.mesh
+
+%%HERE NEED TO CHANGE THE ECM THICKNESS IN SOURCE CODE, change basal layer to 5.25, ECM to 5.25:
+./EllipseFromOutline -1 12.5 1 3 1  ./inputOutlines/48hrDiscOutline
+cp MeshFile.out ./Exp48hr-noPeri_10.mesh
+
+./EllipseFromOutline -1 12.7 1 4 1  ./inputOutlines/48hrDiscOutline
+cp MeshFile.out ./Exp48hr-02ECM_10.mesh
+
+%%HERE NEED TO CHANGE THE ECM THICKNESS IN SOURCE CODE, change ECM to 0.2):
+./EllipseFromOutline -1 12.7 1.0 5 1  ./inputOutlines/48hrDiscOutline
+cp MeshFile.out ./Exp48hr-noPeri-ThinECM_11.mesh
+
+%%HERE NEED TO CHANGE THE ECM THICKNESS IN SOURCE CODE, change ECM to 0.2):
+./EllipseFromOutline -1 12.5 1.0 4 1  ./inputOutlines/48hrDiscOutline
+cp MeshFile.out ./Exp48hr-noPeri_11.mesh
+
+
+rm Points.6*
+../triangle/triangle -rq33a2.0 Points.5
+%[input mesh] [xmin] [xmax] [ymax] [area constraint] [buffer zone]
+./generateTriangleBasedAreaConstraints  Points.6 0.4 0.7 0.7 0.50 0.1 > tmp
+../triangle/triangle -rq33a Points.6.ele 
+cp Points.7.ele Points.1.ele
+cp Points.7.node Points.1.node
+
+%%HERE NEED TO CHANGE THE ECM THICKNESS IN SOURCE CODE, comment out ECM thickness in tissue type 1):
+./EllipseFromOutline -1 12.5 1.0 4 1  ./inputOutlines/48hrDiscOutline
+cp MeshFile.out ./Exp48hr-noPeri_12.mesh
+%%HERE NEED TO CHANGE THE ECM THICKNESS IN SOURCE CODE, change ECM to 0.2):
+./EllipseFromOutline -1 12.5 1.0 5 1  ./inputOutlines/48hrDiscOutline
+cp MeshFile.out ./Exp48hr-noPeri-ThinECM_12.mesh
 
 
 Large 48 hours. The average is 106.5 to 64.8 microns. The cross point at 64 microns.

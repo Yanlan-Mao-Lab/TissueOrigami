@@ -61,16 +61,19 @@ protected:
     double* 	relativePosInBoundingBox;  			///< The relative position on x-y plane, within the bounding box of the tissue(x,y).
     double* 	initialRelativePosInBoundingBox; 	///< The relative position on x-y plane, within the bounding box of the tissue(x,y) at the beginning of simulation. This is used when growth rates are pinned to the initial structure of the tissue.
     double 		initialRelativePositionInZ;			///<< The relative position on z-height of tissue, taken not in z direction but in tissue layers, 0 being on the apical surface and 1 being on the basal surface.
+    int			numberOfGaussPoints;				///<< The number of Gauss points used in numerical deforamtion calculation.
+    double**	gaussPoints;						///<< The array contianing all the Gauss points for element.
+    double* 	gaussWeights;					///<< The array for storing the weights of each Gauss point for element.
     gsl_matrix 	**ShapeFuncDerivatives;				///< The array of matrices for shape function derivatives. The array stores a ShapeBase#nDim by ShapeBase#nNodes matrix for each gauss point (there are 3 Gauss points for prisms).
     gsl_matrix 	**ShapeFuncDerStacks;				///< The array of matrices of shape function derivatives in stacked format for ease of matrix operations. The array stores a (ShapeBase#nDim * ShapeBase#nDim) by (ShapeBase#nDim * ShapeBase#nNodes) matrix for each gauss point (there are 3 Gauss points for prisms).
     gsl_matrix 	**InvdXdes;							///< The array stores inverse of the matrix for derivatives of world coordinates with respect to barycentric coordinates (dX / de). The array stores an ShapeBase#nDim by ShapeBase#nDim  matrix for each gauss point (there are 3 Gauss points for prisms).
     double* detdXdes;								///< The array stores the determinants of the matrices for derivatives of world coordinates with respect to barycentric coordinates (dX / de). The array stores a double value for each gauss point (there are 3 Gauss points for prisms).
     gsl_matrix 	**Bmatrices;						///< The array stores the B matrix for the calculation of stiffness matrix, see for ShapeBase#calculateBTforNodalForces calculation. The array stores an ShapeBase#nNodes by (ShapeBase#nDim*ShapeBase#nNodes)  matrix for each Gauss point (there are 3 Gauss points for prisms).
-    gsl_matrix 	**FeMatrices;						///< The array stores the elastic part of the deformation matrix. The array stores an ShapeBase#nDim by ShapeBase#nDim  matrix for each Gauss point (there are 3 Gauss points for prisms).
+    gsl_matrix 	**FeMatrices;						///< The array stores the elastic part of the deformation matrix. The array stores an ShapeBase#nDim by ShapeBase#nDim  matrix for each Gauss point (there are 6 Gauss points for prisms).
     gsl_matrix 	**invJShapeFuncDerStack;			///< The array stores the shape function derivatives multiplied by the inverse Jacobian stack, for each Gauss point. See ShapeBase#calculateBTforNodalForces for calculation.
     gsl_matrix 	**invJShapeFuncDerStackwithFe;		///< See ShapeBase#calculateInvJShFuncDerSWithFe for calculation.
-    gsl_matrix 	**elasticStress;					///< The array of matrices for elastic stress of the element. The array stores a 6 by 6 matrix for each Gauss point (there are 3 Gauss points for prisms).
-    gsl_matrix 	**viscousStress;					///< The array of matrices for internal viscous stress of the element. The array stores a 6 by 6 matrix for each Gauss point (there are 3 Gauss points for prisms).
+    gsl_matrix 	**elasticStress;					///< The array of matrices for elastic stress of the element. The array stores a 6 by 6 matrix for each Gauss point (there are 6 Gauss points for prisms).
+    gsl_matrix 	**viscousStress;					///< The array of matrices for internal viscous stress of the element. The array stores a 6 by 6 matrix for each Gauss point (there are 6 Gauss points for prisms).
     gsl_matrix*	TriPointF;							///< The deformation matrix of the element resulting from iteration over all Gauss points. The dimensions of the matrix is ShapeBase#nDim by ShapeBase#nDim.
 	gsl_matrix*	ElementalElasticSystemForces;   	///< The matrix stores the elemental elastic forces. The dimensions of the matrix is ShapeBase#nNodes by ShapeBase#nDim.
 	gsl_matrix*	ElementalInternalViscousSystemForces; ///< The matrix stores the elemental internal viscous forces. The dimensions of the matrix is ShapeBase#nNodes by ShapeBase#nDim.
@@ -101,6 +104,8 @@ protected:
     int nSurfaceAreaNodeNumber;						///< Number of nodes that form the apical/basal surfaces for the element.
 
     double	stiffnessPerturbationRateInSec;	///< The rate at which the stiffness ofthe element will be perturbed, used with the model inputs from "Stiffness_Perturbation:" header in model input file
+    double minimumValueOfStiffnessMultiplier;
+    double maximumValueOfStiffnessMultiplier;
 
     double mutationGrowthRatePerSec;
     double mutationGrowthFold;
@@ -150,8 +155,8 @@ protected:
 
     gsl_matrix* D;
     gsl_matrix* CoeffMat;
-    double D81[3][4][4][4][4];
-
+    //double D81[3][4][4][4][4];
+    double***** D81;
     //boost::numeric::ublas::vector<double> Forces;
 
 	double E, v;
@@ -195,6 +200,7 @@ public:
     bool	isECMMimimcingAtCircumference;
     bool	atBasalBorderOfECM;
     bool	isActinMimicing;
+    bool	atApicalBorderOfActin;
 	bool	IsAblated;
 	bool	atSymetricityBoundary;
 	bool	IsClippedInDisplay;
@@ -219,6 +225,11 @@ public:
 	double plasticDeformationHalfLifeMultiplier;
     bool isMutated;
 
+    bool thereIsGrowthRedistribution;
+    bool growthRedistributionShrinksElement;
+    double growthRedistributionScale;
+
+    double* apicalNormalCurrentShape;
 	int 	getId();
 	string 	getName();
 	int 	getShapeType();
@@ -234,6 +245,8 @@ public:
 	void	getInitialRelativePositionInTissueInGridIndex(int nGridX, int nGridY, int& IndexX, int& IndexY, double& FracX, double& FracY);
 	double	getStiffnessMultiplier();
 	bool 	isGrowthRateApplicable(int sourceTissue, double& weight, double zmin, double zmax);
+	void 	updateGrowthWillBeScaledDueToApikobasalRedistribution(bool thisFunctionShrinksApical, double scale, vector<int>& ellipseBandIdsForGrowthRedistribution);
+	void 	scaleGrowthForZRedistribution( double& x, double& y, double& z,int sourceTissue);
 	void 	calculateFgFromRates(double dt, double x, double y, double z, gsl_matrix* rotMat, gsl_matrix* increment, int sourceTissue, double zMin, double zMax);
 	void 	calculateFgFromGridCorners(int gridGrowthsInterpolationType, double dt, GrowthFunctionBase* currGF, gsl_matrix* increment, int sourceTissue, int IndexX, int IndexY, double FracX, double dFracY);
 	gsl_matrix* getGrowthIncrement();
@@ -247,6 +260,7 @@ public:
 	void	updateReferencePositionMatrixFromInput(double** input);
 	void	displayRelativePosInBoundingBox();
 	void	getRelativePosInBoundingBox(double* relativePos);
+	void 	setRelativePosInBoundingBox(double x, double y);
 	void	setInitialRelativePosInBoundingBox();
 	void 	setInitialZPosition(double zMax, double TissueHeight);
 	void	getInitialRelativePosInBoundingBox(double* relativePos);
@@ -281,6 +295,7 @@ public:
 	void 	setGrowthWeightsViaTissuePlacement (double periWeight);
 	void 	setYoungsModulus(double E);
     virtual void setElasticProperties(double /*EApical*/,double /*EBasal*/, double /*EMid*/, double /*EECM*/, double /*v*/){ParentErrorMessage("setElasticProperties");};
+    virtual void checkEdgeLenghtsForBinding(vector<int>& /*masterIds*/,vector<int>& /*slaveIds*/){ParentErrorMessage("checkEdgeLenghtsForBinding");}
     void 	setViscosity(double viscosityApical,double viscosityBasal, double viscosityMid);
     void 	setViscosity(double viscosityApical,double viscosityBasal);
     void 	setViscosity(double viscosity);
@@ -296,6 +311,7 @@ public:
 //    virtual void	fillLateralNeighbours();
     bool	getCellMigration();
     virtual void calculateBasalNormal(double * /*normal*/){ParentErrorMessage("calculateBasalNormal");};
+    virtual void calculateApicalNormalCurrentShape(){ParentErrorMessage("calculateApicalNormal");};
     virtual void AlignReferenceBaseNormalToZ(){ParentErrorMessage("AlignReferenceBaseNormalToZ");};
     void 	calculateCurrentGrowthIncrement(gsl_matrix* resultingGrowthIncrement, double dt, double growthx, double growthy, double growthz, gsl_matrix* ShearAngleRotationMatrix);
     void 	updateShapeChangeRate(double x, double y, double z, double xy, double yz, double xz);
@@ -372,7 +388,7 @@ public:
     void 	displayMatrix(gsl_vector* mat, string matname);
     void 	createMatrixCopy(gsl_matrix *dest, gsl_matrix* src);
 	double	calculateMagnitudeVector3D(double* v);
-	void	normaliseVector3D(double* v);
+	double	normaliseVector3D(double* v);
 	void	normaliseVector3D(gsl_vector* v);
 	double	getNormVector3D(gsl_vector* v);
 	double 	determinant3by3Matrix(double* rotMat);
@@ -399,6 +415,7 @@ public:
     void 	addMigrationIncrementToGrowthIncrement(gsl_matrix* migrationIncrement);
     void 	displayDebuggingMatrices();
 	virtual double getApicalSideLengthAverage(){return ParentErrorMessage("getApicalSideLengthAverage",0.0);};
+	virtual double getBasalSideLengthAverage(){return ParentErrorMessage("getBasalSideLengthAverage",0.0);};
 	virtual void getApicalTriangles(vector <int> &/*ApicalTriangles*/){ParentErrorMessage("getApicalTriangles");};
 	virtual int getCorrecpondingApical(int /*currNodeId*/){return ParentErrorMessage("getCorrecpondingApical", -100);};
 	virtual bool IsThisNodeMyBasal(int /*currNodeId*/){return ParentErrorMessage("IsThisNodeMyBasal", false);};
@@ -461,7 +478,9 @@ public:
 	virtual void setBasalNeigElementId(vector<ShapeBase*>& /*elementsList*/){ParentErrorMessage("setBasalNeigElementId");};
 	void	checkVolumeRedistribution(vector<ShapeBase*>& elementsList, double dt);
 	void 	updateFgWithVolumeRedistribution(gsl_matrix*  increment);
-
+	bool 	isElementFlippedInPotentialNewShape(int nodeId, double newX, double newY, double newZ);
+	void 	checkForCollapsedNodes(int TissueHeightDiscretisationLayers, vector<Node*>& Nodes, vector<ShapeBase*>& Elements);
+	void 	assignEllipseBandIdToNodes(vector<Node*>& Nodes);
 };
 
 #endif

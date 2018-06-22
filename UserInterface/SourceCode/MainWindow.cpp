@@ -438,9 +438,21 @@ void MainWindow::setDisplayPreferences(QGridLayout *ProjectDisplayOptionsGrid){
 	connect(DisplayPreferencesCheckBoxes[8] , SIGNAL(stateChanged(int)),this,SLOT(updateMyosinCheckBox(int)));
 
 	//draw marking ellipses
-	DisplayPreferencesCheckBoxes[9] = new QCheckBox("MarkingEllipses");
+	DisplayPreferencesCheckBoxes[9] = new QCheckBox("Marking Ellipses");
 	DisplayPreferencesCheckBoxes[9]->setChecked(false);
 	connect(DisplayPreferencesCheckBoxes[9] , SIGNAL(stateChanged(int)),this,SLOT(updateMarkingEllipseCheckBox(int)));
+
+	//Draw volume redistribution checkbox:
+	DisplayPreferencesCheckBoxes[10] = new QCheckBox("Growth redistribution");
+	DisplayPreferencesCheckBoxes[10]->setChecked(false);
+	connect(DisplayPreferencesCheckBoxes[10] , SIGNAL(stateChanged(int)),this,SLOT(updateGrowthRedistributionCheckBox(int)));
+
+	//Draw node binding
+	DisplayPreferencesCheckBoxes[11] = new QCheckBox("Node binding");
+	DisplayPreferencesCheckBoxes[11]->setChecked(false);
+	connect(DisplayPreferencesCheckBoxes[11] , SIGNAL(stateChanged(int)),this,SLOT(updateDrawNodeBindingCheckBox(int)));
+
+
 
     ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[0],3,0,1,2,Qt::AlignLeft);  // display pipette
 	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[7],3,2,1,2,Qt::AlignLeft);  // display bounding box
@@ -452,6 +464,9 @@ void MainWindow::setDisplayPreferences(QGridLayout *ProjectDisplayOptionsGrid){
 	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[4],7,0,1,2,Qt::AlignLeft); // Display Peripodial Membrane
 	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[5],8,0,1,2,Qt::AlignLeft); // Display Columnar Layer
 	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[9],7,2,1,2,Qt::AlignLeft); // Display Marked Ellipses
+	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[10],8,2,1,2,Qt::AlignLeft); // Display Volume redistribution
+	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[11],9,2,1,2,Qt::AlignLeft); // Display node binding
+
 }
 
 
@@ -546,6 +561,24 @@ void  MainWindow::updateMarkingEllipseCheckBox(int s){
 	}
 	else{
 		MainGLWidget->drawMarkingEllipses = false;
+	}
+}
+
+void  MainWindow::updateGrowthRedistributionCheckBox(int s){
+	if (s ==2 ){
+		MainGLWidget->drawGrowthRedistribution = true;
+	}
+	else{
+		MainGLWidget->drawGrowthRedistribution = false;
+	}
+}
+
+void  MainWindow::updateDrawNodeBindingCheckBox(int s){
+	if (s ==2 ){
+		MainGLWidget->drawNodeBinding = true;
+	}
+	else{
+		MainGLWidget->drawNodeBinding = false;
 	}
 }
 
@@ -773,8 +806,8 @@ void MainWindow::ManualNodeSelectionReset(){
 void MainWindow::timerSimulationStep(){
     //cout<<"Called the function via timer"<<endl;
 
-	bool 	automatedSave = false;
-	int		viewSelection = 1; //0: top, 1: cross, 2: perspective.
+	bool 	automatedSave = true;
+	int		viewSelection = 0 ; //0: top, 1: cross, 2: perspective.
 	bool 	analyseResults = false;
 	bool 	slowstepsOnDisplay = false;
 	bool 	slowstepsOnRun = false;
@@ -818,6 +851,7 @@ void MainWindow::timerSimulationStep(){
 					cout<<" calculateTissueVolumeMap"<<endl;
 					analyser01->calculateTissueVolumeMap(Sim01->Elements, Sim01->currSimTimeSec,Sim01->boundingBox[0][0],Sim01->boundingBox[0][1],boundingBoxLength,boundingBoxWidth);
 					cout<<" finished analysis"<<endl;
+					//analyser01->markAdhesions(Sim01->Nodes,Sim01->Elements);
 				}
 			}
 			Sim01->calculateDVDistance();
@@ -873,9 +907,7 @@ void MainWindow::timerSimulationStep(){
 		}
         else if(!displayedSimulationLength){
         	displayedSimulationLength = true;
-            cout<<"before wrap up: Node 152 z: "<< Sim01->Nodes[152]->Position[2]<<" node 9 z: "<< Sim01->Nodes[9]->Position[2]<<endl;
             Sim01->wrapUpAtTheEndOfSimulation();
-            cout<<"after  wrap up: Node 152 z: "<< Sim01->Nodes[152]->Position[2]<<" node 9 z: "<< Sim01->Nodes[9]->Position[2]<<endl;
             Sim01->writeRelaxedMeshFromCurrentState();
             //Sim01->writeMeshRemovingAblatedRegions();
             double durationClock = ( std::clock() - simulationStartClock ) / (double) CLOCKS_PER_SEC;

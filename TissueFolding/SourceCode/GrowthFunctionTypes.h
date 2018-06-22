@@ -485,17 +485,11 @@ public:
 						break;
 					}
 				}
-				if ( IndexX == 8  && IndexY ==3){
-					cout<<" selected indice: "<<selectedIndice<<" tet: "<<tet<<endl;
-				}
 				//selected the first angle, now bring all the rest near this one:
 				//I keep a record if I need to flip the growths:
 				bool flipGrowth[4] = {false, false, false, false};
 				for (int i=selectedIndice; i<4; ++i){
 					double dtet = angles[i] - tet; // angle from selected angle (tet) to current angle (angles[i]).
-					if ( IndexX == 8  && IndexY ==3){
-						cout<<" correcting angle : "<<i<<" dtet: "<<dtet<<endl;
-					}
 					if (dtet>0){
 						//selected tetha is larger than this angle:
 						if (dtet >= M_PI/4.0 && dtet < 3.0*M_PI/4.0 ){

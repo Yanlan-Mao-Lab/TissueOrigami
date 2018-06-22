@@ -151,6 +151,16 @@ void NewtonRaphsonSolver::calculateDisplacementMatrix(double dt){
 
 void NewtonRaphsonSolver::calculateBoundKWithSlavesMasterDoF(){
 	if (boundNodesWithSlaveMasterDefinition){
+
+		/*int n =slaveMasterList.size();
+		cout<<" number of master/slave couples: "<<n<<endl;
+		for (vector< vector<int> >::iterator itSlaveMasterCouple=slaveMasterList.begin(); itSlaveMasterCouple<slaveMasterList.end(); ++itSlaveMasterCouple){
+			//add all forces on slave to master, set slave forces to zero (g_bound = N^T g)
+			int slaveIndex = (*itSlaveMasterCouple)[0];
+			int masterIndex = (*itSlaveMasterCouple)[1];
+			cout<<" slave/master: "<<slaveIndex<<" 	"<<masterIndex<<endl;
+		}*/
+
 		//cout<<" binding slaves to masters"<<endl;
 		//Original calculation necessary is carried out by matrices N and I, where:
 		//N = matrix of size (nDim*nNodes, nDim*nNodes)
@@ -168,13 +178,16 @@ void NewtonRaphsonSolver::calculateBoundKWithSlavesMasterDoF(){
 		//	In other words, I do not wish to allocate two more (nDim*nNodes, nDim*nNodes) matrices in definition, and
 		//	another (nDim*nNodes, nDim*nNodes) matrix as temporary during  N^T K N calculation
 
-		int n= slaveMasterList.size();
+		//int n= slaveMasterList.size();
 		int totalNumberOfDoF = K->size1; //nDim * nNodes
 		//for( int slaveIterator =0; slaveIterator <n; ++slaveIterator){
 		for (vector< vector<int> >::iterator itSlaveMasterCouple=slaveMasterList.begin(); itSlaveMasterCouple<slaveMasterList.end(); ++itSlaveMasterCouple){
 			//add all forces on slave to master, set slave forces to zero (g_bound = N^T g)
 			int slaveIndex = (*itSlaveMasterCouple)[0];
 			int masterIndex = (*itSlaveMasterCouple)[1];
+			//if (slaveIndex == 17631 || slaveIndex == 17633){
+			//	continue;
+			//}
 			double slaveForce = gsl_vector_get(gSum,slaveIndex);
 			double masterForce = gsl_vector_get(gSum,masterIndex);
 			masterForce +=  slaveForce;
@@ -206,6 +219,9 @@ void NewtonRaphsonSolver::equateSlaveDisplacementsToMasters(){
 	for( int slaveIterator = 0; slaveIterator <n; ++slaveIterator){
 		int slaveIndex = slaveMasterList[slaveIterator][0];
 		int masterIndex = slaveMasterList[slaveIterator][1];
+		//if (slaveIndex == 17631 || slaveIndex == 17633){
+		//	continue;
+		//}
 		double masterDisplacement = gsl_vector_get(deltaU,masterIndex);
 		//double slaveDisplacement =  gsl_vector_get(deltaU,slaveIndex);
 		//cout<<" slave-master ("<<slaveIndex<<" "<<masterIndex<<") displacement before correction: "<< slaveDisplacement<<" "<<masterDisplacement<<endl;
@@ -244,8 +260,11 @@ void NewtonRaphsonSolver::calculateForcesAndJacobianMatrixNR(vector <Node*>& Nod
 			if (!(*itElement)->IsAblated){
 				(*itElement)->calculateForces(Nodes, displacementPerDt, recordForcesOnFixedNodes, FixedNodeForces);
 			}
+			//cout<<"finished calculating forces in NR"<<endl;
 			(*itElement)->calculateImplicitKElastic(); //This is the stiffness matrix, elastic part of the jacobian matrix
+			//cout<<"finished calculating ImplicitK elastic in NR"<<endl;
 			(*itElement)->calculateImplicitKViscous(displacementPerDt, dt); //This is the viscous part of jacobian matrix
+			//cout<<"finished calculating ImplicitK viscous in NR"<<endl;
 		}
 }
 
@@ -289,6 +308,12 @@ void NewtonRaphsonSolver::calculateExternalViscousForcesForNR(vector <Node*>& No
 				double surfaceAreaTimesViscosity = Nodes[i]->viscositySurface*Nodes[i]->externalViscosity[j];
 				double displacementValue = gsl_matrix_get(displacementPerDt,3*i+j,0);
 				gsl_matrix_set(gvExternal,3*i+j,0,surfaceAreaTimesViscosity*displacementValue);
+				if (isnan(surfaceAreaTimesViscosity)){
+					cout<<" node: "<<i<<" dimention: "<<j<<" surfaceAreaTimesViscosity is nan: "<<surfaceAreaTimesViscosity<<endl;
+				}
+				if (isnan(displacementValue)){
+					cout<<" node: "<<i<<" dimention: "<<j<<" displacementValue is nan: "<<displacementValue<<endl;
+				}
 			}
 		}
 	}
@@ -343,6 +368,10 @@ void NewtonRaphsonSolver::addExernalForces(){
 	//cout<<"after random forces addition"<<endl;
 	for (int i=0; i<nDim*nNodes; ++i){
 		gsl_vector_set(gSum,i,gsl_vector_get(gSum,i)+gsl_matrix_get(gExt,i,0));
+		double value = gsl_vector_get(gSum,i);
+		if (isnan(value)){
+		      cout<<" gSUM is nan at matrix point: "<<i<<endl;
+		}
 	}
 }
 
@@ -773,5 +802,71 @@ void NewtonRaphsonSolver::displayMatrix(gsl_vector* mat, string matname){
 		cout.width(6);
 		cout<<gsl_vector_get(mat,i)<<endl;
     }
+}
+
+bool NewtonRaphsonSolver::checkIfCombinationExists(int dofSlave, int dofMaster){
+	int n= slaveMasterList.size();
+	for(int i=0; i<n;++i){
+		if(slaveMasterList[i][0] == dofSlave && slaveMasterList[i][1] == dofMaster){
+			return false; //continue addition? false
+		}
+		if(slaveMasterList[i][1] == dofSlave && slaveMasterList[i][0] == dofMaster){
+			return false; //continue addition? false
+		}
+	}
+	return true;
+}
+
+void NewtonRaphsonSolver::checkMasterUpdate(int& dofMaster, int& masterId){
+	//order is [slave][master]
+	int n= slaveMasterList.size();
+	for(int i=0; i<n;++i){
+		if(slaveMasterList[i][0] == dofMaster){
+			dofMaster = slaveMasterList[i][1];
+			int dim = dofMaster % 3;
+			masterId = (dofMaster-dim)/3;
+			break;
+		}
+	}
+}
+
+void NewtonRaphsonSolver::cleanPeripodialBindingFromMaster(int masterDoF, vector<Node*>& Nodes){
+	//order is [slave][master]
+	//cout<<" searching for master: "<<masterDoF<<endl;
+	for (vector< vector<int> >::iterator iter = slaveMasterList.begin(); iter != slaveMasterList.end(); ) {
+	    //cout<<"checking slaveMasterList of size "<<slaveMasterList.size()<<" slave/master "<< (*iter)[0]<<" / "<<(*iter)[1]<<endl;
+		bool deletedItem = false;
+		if ((*iter)[1] == masterDoF){
+	    	//I have found a couple where this is a master, is the slave a peripodiaal node?
+	    	int dofSlave = (*iter)[0];
+	    	int dim = dofSlave % 3;
+	    	int slaveId = (dofSlave-dim)/3;
+	    	if (Nodes[slaveId]->tissueType == 1){
+	    		//clearing the peripodial slave
+	    		//cout<<"deleting binding from peripodial node "<<Nodes[slaveId]<<" dim: "<<dim<<endl;
+	    		Nodes[slaveId]->slaveTo[dim] = -1;
+	    		iter = slaveMasterList.erase(iter);
+	    		deletedItem = true;
+	    	}
+	    }
+	    if(!deletedItem){
+	        ++iter;
+	    }
+	}
+
+}
+
+bool NewtonRaphsonSolver::checkIfSlaveIsAlreadyMasterOfOthers(int dofSlave, int dofMaster){
+	int n= slaveMasterList.size();
+	bool madeChange = false;
+	for(int i=0; i<n;++i){
+		if(slaveMasterList[i][1] == dofSlave){
+			cout<<"making change, slave was master of "<<slaveMasterList[i][0]<<endl;
+			//proposed slave is already a master, update the master to the proposed master
+			slaveMasterList[i][1] = dofMaster;
+			madeChange = true;
+		}
+	}
+	return madeChange;
 }
 

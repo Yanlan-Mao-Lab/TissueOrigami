@@ -52,15 +52,17 @@ using namespace std;
      int 		StrainToDisplay;
      bool 		DisplayPysProp;
      int 		PysPropToDisplay;
-     float 		DisplayPysPropRange[7][2];	//current range
-     float 		DisplayPysPropBounds[7][4];  //the minimum and maximum they can get
-     int		DisplayPysPropDecimals[7];	//the decimal points for spin boxes
-     float 		DisplayPysPropSteps[7];	//current step of the spinbox
+     float 		DisplayPysPropRange[8][2];	//current range
+     float 		DisplayPysPropBounds[8][4];  //the minimum and maximum they can get
+     int		DisplayPysPropDecimals[8];	//the decimal points for spin boxes
+     float 		DisplayPysPropSteps[8];	//current step of the spinbox
      vector <QString> SelectedPos;
      vector <QString> SelectedId;
      bool 		drawNetForces;
      bool		drawMyosinForces;
      bool		drawMarkingEllipses;
+     bool		drawGrowthRedistribution;
+     bool 		drawNodeBinding;
      int		MyosinToDisplay;		//the index of myosin to display, 1: uniform, 2: unipolar
      bool 		drawPackingForces;
      bool 		drawTissueScaleBar;
@@ -145,6 +147,7 @@ using namespace std;
      float** 	getElementColourList(int i);
      void 		drawColourbar();
      void 		drawFixedNodes();
+     void		drawBoundNodes();
      void		drawAxesArrows();
      void 		drawScaleBar();
      void 		drawForces();

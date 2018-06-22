@@ -39,15 +39,20 @@ protected:
 	void calculatePlaneNormals(double** normals);
 	void assignNodalVector(double* vec, int id0, int id1);
 	bool checkNodePlaneConsistency(double** normals);
+	void setInitialEdgeLenghts();
+	void checkEdgeLenghtsForBinding(vector<int>& masterIds, vector<int>& slaveIds);
 	double getApicalSideLengthAverage();
+	double getBasalSideLengthAverage();
 	void assignExposedSurfaceAreaIndices(vector <Node*>& Nodes);
-
+	double initialApilcalEdgeLengthsSq[3];
+	double initialBasalEdgeLengthsSq[3];
 public:
 	Prism(int* NodeIds,vector<Node*>& Nodes, int CurrId, bool thereIsPlasticDeformation);
 	~Prism();
 	void  setElasticProperties(double EApical, double EBasal, double EMid,  double EECM, double v);
 	void  fillLateralNeighbours(vector<Node*>& Nodes, vector<int>& lateralNeigbours );
 	void  calculateBasalNormal(double * normal);
+	void  calculateApicalNormalCurrentShape();
 	void  AlignReferenceBaseNormalToZ();
     void  calculateElementShapeFunctionDerivatives();
 

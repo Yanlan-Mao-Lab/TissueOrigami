@@ -87,8 +87,8 @@ void Analysis::calculateContourLineLengthsDV(vector<Node*> &nodes){
 		id0 = id1;
 	}
 	//writing the basal contour length:
-	saveFileLenghtMeasurements.width(6);
-	saveFileLenghtMeasurements.precision(3);
+	saveFileLenghtMeasurements.width(9);
+	saveFileLenghtMeasurements.precision(6);
 	saveFileLenghtMeasurements<<currContourLength<<" ";
 	//calculating apical contour length:
 	currContourLength = 0;
@@ -195,7 +195,6 @@ void Analysis::findApicalKinkPointsDV(int timeInSec,  double boundingBoxXMin, do
 			id0 = 0;
 			id1 = 1;
 		}
-		double thresholdRCurvature = 1E3;
 		for (int i=0;i<n-2;++i){
 			int id2 = apicalContourLineDVNodeIds[i+2];
 			if (DVLineIndex ==1){
@@ -251,33 +250,15 @@ void Analysis::findApicalKinkPointsDV(int timeInSec,  double boundingBoxXMin, do
 			}
 			id0 = id1;
 			id1 = id2;
-			//if ((radiusofCurvature>0 && radiusofCurvature<thresholdRCurvature) || (radiusofCurvature<0 && radiusofCurvature>(-1.0)*thresholdRCurvature)){
-				double yPos = 0;
-				if (DVLineIndex ==1){
-					yPos = yPosForSideDVLine;
-				}
-				saveFileKinkPositions<<timeInSec<<" ";
-				saveFileKinkPositions<<id1<<" ";
-				saveFileKinkPositions.width(6);
-				saveFileKinkPositions.precision(3);
-				saveFileKinkPositions<<relativeX<<" "<<yPos<<" "<<radiusofCurvature<<" "<<posId1[0]<<" "<<posId1[1]<<" "<<posId1[2]<<endl;
-			//}
-			/*if ((radiusofCurvature>0 && radiusofCurvature<thresholdRCurvature) || (radiusofCurvature<0 && radiusofCurvature>(-1.0)*thresholdRCurvature)){
-				saveFileKinkPositions<<timeInSec<<" ";
-				saveFileKinkPositions<<id1<<" ";
-				saveFileKinkPositions.width(6);
-				saveFileKinkPositions.precision(3);
-				double yPos = 0;
-				if (DVLineIndex ==1){
-					yPos = yPosForSideDVLine;
-				}
-				if (radiusofCurvature > 0){
-					saveFileKinkPositions<<yPos<<" "<<relativeX<<" -1.0 "<<radiusofCurvature<<endl; // yPos is for y position (0 for mid line, given by parameter elsewhere), a positive normal means the vectors are forming a kink on the apical surface, writing surface kink first, surface peak second, the curvature at the end]
-				}
-				else{
-					saveFileKinkPositions<<yPos<<" -1.0 "<<relativeX<<" "<<radiusofCurvature<<endl;// 0 is for y position, a negative normal means the vectors are forming a peak on the apical surface, writing surface kink first, surface peak second, radius of curvature at eh end]
-				}
-			}*/
+			double yPos = 0;
+			if (DVLineIndex ==1){
+				yPos = yPosForSideDVLine;
+			}
+			saveFileKinkPositions<<timeInSec<<" ";
+			saveFileKinkPositions<<id1<<" ";
+			saveFileKinkPositions.width(6);
+			saveFileKinkPositions.precision(3);
+			saveFileKinkPositions<<relativeX<<" "<<yPos<<" "<<radiusofCurvature<<" "<<posId1[0]<<" "<<posId1[1]<<" "<<posId1[2]<<endl;
 		}
 	}
 	cout<<" finished findApicalKinkPointsDV "<<endl;
@@ -385,4 +366,84 @@ void Analysis::calculateTissueVolumeMap	(vector<ShapeBase*> &elements, int timeI
 	cout<<" Time: "<<timeInSec<<" total tissue ideal volume: "<<totTissueIdealVolume<<" total tissue emergent volume:" <<totTissueEmergentVolume<<endl;
 }
 
+void Analysis::markAdhesions(vector<Node*>& Nodes, vector<ShapeBase*>& Elements){
+	vector<ShapeBase*>::iterator itElement;
+	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		(*itElement)->updatePositions(Nodes);
+	}
+	cout<<"inside mark adhesions"<<endl;
+	double threshold = 3;
+	for (vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+		//cout<<" inside loop, for node : "<<(*itNode)->Id<<endl;
+		bool NodeHasPacking = (*itNode)->checkIfNodeHasPacking();
+		if (NodeHasPacking){
+			double* pos;
+			pos = new double[3];
+			(*itNode)->getCurrentPosition(pos);
+			double t2 = threshold*threshold;
+			for (vector<Node*>::iterator itNodeSlave=itNode+1; itNodeSlave<Nodes.end(); ++itNodeSlave){
+				bool SlaveNodeHasPacking = (*itNodeSlave)->checkIfNodeHasPacking();
+				//bool nodesOnSeperateSurfaces = (*itNodeSlave)->tissueType != (*itNode)->tissueType;
+				//if (SlaveNodeHasPacking && nodesOnSeperateSurfaces){
+				if (SlaveNodeHasPacking){
+					if ((*itNode)->tissuePlacement == (*itNodeSlave)->tissuePlacement){
+						//nodes can pack, are they connected?
+						bool neigbours = (*itNode)->isMyNeig((*itNodeSlave)->Id);
+						if (neigbours){
+							continue;
+						}
+						//check if the master node is in the collapsed list?
+						//the vector is sorted, as I sort it to remove duplicates
+						if (binary_search((*itNode)->collapsedWith.begin(), (*itNode)->collapsedWith.end(),(*itNodeSlave)->Id)){
+							//the couple is already collapsed:
+							continue;
+						}
+						//check if the collapsed nodes of master are neigs of slave
+						neigbours = (*itNode)->isNeigWithMyCollapsedNodes((*itNodeSlave)->Id,Nodes);
+						if (neigbours){
+							continue;
+						}
+						neigbours = (*itNodeSlave)->isNeigWithMyCollapsedNodes((*itNode)->Id,Nodes);
+						if (neigbours){
+							continue;
+						}
+						//the nodes can potentially pack, are they close enough?
+						double* posSlave;
+						posSlave = new double[3];
+						(*itNodeSlave)->getCurrentPosition(posSlave);
+						double dx = pos[0] - posSlave[0];
+						double dy = pos[1] - posSlave[1];
+						double dz = pos[2] - posSlave[2];
+						double d2 = dx*dx + dy*dy + dz*dz;
+						if (d2<t2){
+							//close enough for packing , add to list:
+							//check for normals:
+							//need to control for apical/basal for peripodial or columnar;
+							//find owner element
+							int elementIdMaster = (*itNode)->connectedElementIds[0];
+							int elementIdSlave = (*itNodeSlave)->connectedElementIds[0];
+							Elements[elementIdMaster]->calculateApicalNormalCurrentShape();
+							Elements[elementIdSlave]->calculateApicalNormalCurrentShape();
+							double dotP = Elements[elementIdSlave]->dotProduct3D(Elements[elementIdMaster]->apicalNormalCurrentShape,Elements[elementIdSlave]->apicalNormalCurrentShape);
+							if((*itNode)->Id == 5319 && (*itNodeSlave)->Id == 5619){
+								cout<<" pos node "<<(*itNode)->Id<<": "<<pos[0]<<" "<<pos[1]<<" "<<pos[2]<<endl;
+								cout<<" pos node "<<(*itNodeSlave)->Id<<": "<<posSlave[0]<<" "<<posSlave[1]<<" "<<posSlave[2]<<endl;
+								cout<<"d2 "<<d2<<endl;
+								//cout<<" normal master : "<<normalMaster[0]<<" "<<normalMaster[1]<<" "<<normalMaster[2]<<" slave: "<<normalSlave[0]<<" "<<normalSlave[1]<<" "<<normalSlave[2]<<endl;
+								cout<<"dot product: "<<dotP<<endl;
+							}
+							if (dotP <0){
+								//normals point opposite directions
+								(*itNodeSlave)->slaveTo[0] = (*itNode)->Id;
+							}
+							}
+						delete[] posSlave;
+
+					}
+				}
+			}
+			delete[] pos;
+		}
+	}
+}
 

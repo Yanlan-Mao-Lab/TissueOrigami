@@ -36,7 +36,9 @@ private:
 	ofstream saveFileProteins;
 	ofstream saveFilePhysicalProp;
 	ofstream saveFileSpecificType;
-	bool specificElementTypesRecorded;
+	ofstream saveFileGrowthRedistribution;
+	ofstream saveFileNodeBinding;
+	ofstream saveFileCollapseAndAdhesion;
 	ofstream saveFilePacking;
 	ofstream saveFileSimulationSummary;
 	ifstream saveFileToDisplayMesh;
@@ -52,6 +54,9 @@ private:
 	ifstream saveFileToDisplayVel;
 	ifstream saveFileToDisplaySimSum;
 	ifstream saveFileToDisplaySpecificNodeTypes;
+	ifstream saveFileToDisplayGrowthRedistribution;
+	ifstream saveFileToDisplayNodeBinding;
+	ifstream saveFileToDisplayCollapseAndAdhesion;
 
 	bool TensionCompressionSaved;
     bool GrowthSaved;
@@ -60,6 +65,10 @@ private:
 	bool ProteinsSaved;
 	bool physicalPropertiesSaved;
 	bool PackingSaved;
+	bool growthRedistributionSaved;
+	bool nodeBindingSaved;
+	bool specificElementTypesRecorded;
+	bool collapseAndAdhesionSaved;
 	int	 nCircumferencialNodes;
 	int dorsalTipIndex,ventralTipIndex,anteriorTipIndex,posteriorTipIndex;
 	double StretchDistanceStep;
@@ -72,8 +81,6 @@ private:
     //vector <Node*> symmetricYBoundaryNodes;
     //vector <Node*> symmetricXBoundaryNodes;
     vector <int> AblatedNodes;
-
-    NewtonRaphsonSolver *NRSolver;
 
 
 
@@ -109,11 +116,17 @@ private:
     void updateProteinsFromSave();
     void updatePhysicalPropFromSave();
     void updatePackingFromSave();
+    void updateNodeBindingFromSave();
+    void  updateCollapseAndAdhesionFromSave();
+    void updateGrowthRedistributionFromSave();
 	void readTensionCompressionToContinueFromSave();
     void readGrowthToContinueFromSave();
     void readGrowthRateToContinueFromSave();
     void readProteinsToContinueFromSave();
     void readPhysicalPropToContinueFromSave();
+    void readGrowthRedistributionToContinueFromSave();
+    void readNodeBindingToContinueFromSave();
+    void readCollapseAndAdhesionToContinueFromSave();
 	bool readFinalSimulationStep();
 	void reInitiateSystemForces(int oldSize);
 	bool checkInputConsistency();
@@ -163,6 +176,15 @@ private:
 	void clearUpRigidFixedNodesFromSlaves();
 	bool bindEllipseAxes();
 	bool bindCircumferenceXY();
+	bool areNodesToCollapseOnLateralECM(int slaveNodeId, int masterNodeId);
+	bool checkEdgeLenghtsForBindingPotentiallyUnstableElements();
+	bool bindPeripodialToColumnar();
+	bool areNodesOnNeighbouingElements(int masterNoeId, int slaveNodeId);
+	void manualAdhesion(int masterNodeId,int slaveNodeId);
+	double distanceSqBetweenNodes(int id0, int id1);
+	bool isAdhesionAllowed(int masterNodeId, int slaveNodeId);
+	bool checkForElementFlippingUponNodeCollapse(vector<int> &newCollapseList, double* avrPos);
+	bool adhereNodes();
 	void induceClones();
 	void initiateElementsByRowAndColumn(int Row, int Column);
 	void assignPhysicalParameters();
@@ -207,6 +229,9 @@ private:
 	void writePacking();
 	void writeProteins();
 	void writePhysicalProp();
+	void writeNodeBinding();
+	void writeCollapseAndAdhesion();
+	void writeGrowthRedistribution();
 	void calculateMyosinForces();
 	void cleanUpMyosinForces();
 	void checkForMyosinUpdates();
@@ -216,6 +241,7 @@ private:
 	void cleanUpGrowthRates();
 	void assignIfElementsAreInsideEllipseBands();
 	void checkForPinningPositionsUpdate();
+	void updateRelativePositionsToApicalPositioning();
 	void updatePinningPositions();
     void updateGrowthRotationMatrices();
 	void cleanUpShapeChangeRates();
@@ -255,7 +281,10 @@ private:
     void ablateSpcific();
     void setUpECMMimicingElements();
     void assigneElementsAtTheBorderOfECM();
+    void assigneElementsAtTheBorderOfActin();
     void setUpActinMimicingElements();
+    void clearScaleingDueToApikobasalRedistribution();
+    void checkForVolumeRedistributionInTissue();
     //void setSymmetricNode(Node* currNode, double yLimPos);
 
 
@@ -406,6 +435,7 @@ public:
 	double boundingBox[2][3];
 	vector <int> pacingNodeCouples0;
 	vector <int> pacingNodeCouples1;
+	vector <bool> pacingNodeCouplesHaveAdhered;
 	vector <int> pacingNodeSurfaceList0; // this is the id of the base node that is packing
 	vector <int> pacingNodeSurfaceList1; // lists 1 to 3 are the edges of the triangle
 	vector <int> pacingNodeSurfaceList2;
@@ -450,6 +480,7 @@ public:
 	vector <double> ECMViscosityChangeFraction;
 	vector <bool> 	changeApicalECM;
 	vector <bool> 	changeBasalECM;
+	vector <bool> 	ECMChangeTypeIsEmergent;
 
 	int numberOfMyosinAppliedEllipseBands;
 	vector <int> myosinEllipseBandIds;
@@ -468,6 +499,7 @@ public:
 	vector< vector<int> > stiffnessPerturbationEllipseBandIds;
 
 	double packingDetectionThreshold;
+	double packingDetectionThresholdGrid[10][5];
 	double packingThreshold;
 	double packingMultiplier;
 	double sigmoidSaturationForPacking;
@@ -476,6 +508,10 @@ public:
 	double 	softDepth;
 	double 	softnessFraction;
 	bool 	softPeripheryBooleans[4]; //  [applyToApical]  [applyToBasal]  [applyToColumnar]  [applyToPeripodial]
+    bool 	thereIsAdhesion;
+    bool    collapseNodesOnAdhesion;
+    bool 	adherePeripodialToColumnar;
+    bool    thereNodeCollapsing;
 
 	bool implicitPacking;
 	bool thereIsCellMigration;
@@ -513,6 +549,17 @@ public:
 	vector< vector<bool> > ellipseBasesAreBoundOnAxis;
 	bool thereIsCircumferenceXYBinding;
 
+	int nApikobasalVolumeRedistributionFunctions;
+
+	vector<double> apikobasalVolumeRedistributionBeginTimeInSec;
+	vector<double> apikobasalVolumeRedistributionEndTimeInSec;
+	vector <bool> apikobasalVolumeRedistributionFunctionShrinksApical;
+	vector<int> apikobasalVolumeRedistributionFunctionEllipseNumbers;
+	vector<vector <int> > apikobasalVolumeRedistributionFunctionEllipseBandIds;
+	vector<double> apikobasalVolumeRedistributionScales;
+
+	NewtonRaphsonSolver *NRSolver;
+
 	//packi
 	Simulation();
 	~Simulation();
@@ -540,6 +587,7 @@ public:
     void updateStiffnessChangeForActin(int idOfCurrentStiffnessPerturbation);
     void calculateStiffnessChangeRatesForActin(int idOfCurrentStiffnessPerturbation);
     void checkStiffnessPerturbation();
+    void updateEllipseWithCollapse();
     bool runOneStep();
     void updatePlasticDeformation();
     void updateStepNR();
@@ -557,7 +605,7 @@ public:
    	void detectPacingCombinations();
    	void cleanUpPacingCombinations();
 
-   	void calculatePackingToEnclosingSurfacesJacobianNumerical3D(gsl_matrix* K);
+   	void calculatePackingToEnclosingSurfacesJacobian3D(gsl_matrix* K);
    	void calculatePackingForcesToEnclosingSurfacesImplicit3D();
    	void detectPacingToEnclosingSurfacesNodes();
 
@@ -566,9 +614,7 @@ public:
     void calculatePackingNumerical(gsl_matrix* K);
     void calculatePackingForcesImplicit3D();
     void calculatePackingForcesExplicit3D();
-    void calculatePackingJacobianNumerical3D(gsl_matrix* K);
-    void calculatePackingImplicit3DnotWorking();
-    void calculatePackingNumerical3DnotWorking(gsl_matrix* K);
+    void calculatePackingJacobian3D(gsl_matrix* K);
     void addValueToMatrix(gsl_matrix* K, int i, int j, double value);
     void addPackingForces(gsl_matrix* gExt);
 	void checkPackingToPipette(bool& packsToPip, double* pos, double* pipF,double mass);
@@ -579,6 +625,7 @@ public:
 	void bringMyosinStimuliUpToDate();
 	void redistributePeripodialMembraneForces(int RKId);
 	void updateElementPositions();
+	void updateMasterSlaveNodesInBinding();
 	void updateElementPositionsSingle(int i );
 	bool initiateSavedSystem();
 	void updateOneStepFromSave();
@@ -601,9 +648,10 @@ public:
 	void calculateCurrentElementsFinalPosition(ShapeBase* currElement);
 	void fixNode0InPosition(double x, double y, double z);
 
-    	void addNodesForSideECMOnOuterCircumference (vector< vector<int> > &ColumnarBasedNodeArray, vector< vector<int> > &OuterNodeArray , double hColumnar);
-    	void addSideECMElements(vector< vector<int> > &ColumnarBasedNodeArray, vector< vector<int> > &OuterNodeArray);
-    	bool addSideECMLayer();
+    void addNodesForSideECMOnOuterCircumference (vector< vector<int> > &ColumnarBasedNodeArray, vector< vector<int> > &OuterNodeArray , double hColumnar);
+    void addSideECMElements(vector< vector<int> > &ColumnarBasedNodeArray, vector< vector<int> > &OuterNodeArray);
+    bool addSideECMLayer();
+
 };
 
 #endif

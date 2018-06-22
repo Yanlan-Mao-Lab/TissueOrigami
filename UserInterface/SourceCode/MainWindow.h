@@ -60,6 +60,8 @@ public slots:
     void 	updateNetForceCheckBox(int);
     void	updateMyosinCheckBox(int);
     void	updateMarkingEllipseCheckBox(int);
+    void   	updateGrowthRedistributionCheckBox(int s);
+    void	updateDrawNodeBindingCheckBox(int s);
     void 	updatePackingForceCheckBox(int);
     void 	updateFixedNodesCheckBox(int);
     void  	updateScaleBarCheckBox(int);
@@ -113,7 +115,7 @@ public slots:
     QComboBox   	*PysPropComboBox;
     QDoubleSpinBox 	*PysPropSpinBoxes[2];
     QGroupBox   	*ColourCodingBox;
-    QCheckBox		*DisplayPreferencesCheckBoxes[10];
+    QCheckBox		*DisplayPreferencesCheckBoxes[12];
     QComboBox 		*MyosinComboBox;
     QLabel			*SimTime;
     QPushButton		*PerspectiveButton;

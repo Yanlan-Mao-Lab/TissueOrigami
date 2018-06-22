@@ -171,6 +171,12 @@ bool ModelInputObject::readParameters(){
 				 */
 				Success  = readStiffnessPerturbation(parametersFile);
 			}
+			else if(currParameterHeader == "ApicoBasalVolumeRedistributionOptions:"){
+				/**
+				 * Setting volume redistribution bewtten apical and basal sides of the tissue, cells redistributing their volume more apically or basally.
+				 */
+				Success  = readApicoBasalVolumeRedistribution(parametersFile);
+			}
 			else if(currParameterHeader == "Marker_Ellipses:"){
 				/**
 				 * Setting perturbations to ECM, current setup includes softening of apical or basal ECM at a given time point.
@@ -188,6 +194,18 @@ bool ModelInputObject::readParameters(){
 				 * Setting perturbations to ECM, current setup includes softening of apical or basal ECM at a given time point.
 				 */
 				Success  = readExplicitECMOptions(parametersFile);
+			}
+			else if(currParameterHeader == "AdhesionOptions:"){
+				/**
+				 * Setting the flag to activate adhesion in the model
+				 */
+				Success  = readAdhesionOptions(parametersFile);
+			}
+			else if(currParameterHeader == "NodeCollapseOptions:"){
+				/**
+				 * Setting the flag to activate node collapsing for elements dangerously close to flipping
+				 */
+				Success  = readNodeCollapseOptions(parametersFile);
 			}
 			else if(currParameterHeader == "ExplicitActinOptions:"){
 				/**
@@ -407,7 +425,7 @@ bool ModelInputObject::readGrowthType1(ifstream& file){
 		angle *= M_PI/180.0; 	 // converting to radians
 	}
 	else{
-		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: Angle(degreesPerHour):" <<endl;
+		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: Angle(degrees):" <<endl;
 		return false;
 	}
 
@@ -527,7 +545,7 @@ bool ModelInputObject::readGrowthType2(ifstream& file){
 		angle *= M_PI/180.0; 	 // converting to radians
 	}
 	else{
-		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: Angle(degreesPerHour):" <<endl;
+		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: Angle(degrees):" <<endl;
 		return false;
 	}
 	GrowthFunctionBase* GSBp;
@@ -645,7 +663,6 @@ bool ModelInputObject::readGrowthType3(ifstream& file){
 			}
 		}
 		double angle;
-		cout<<"reading angle matrix"<<endl;
 		for (int j=gridY-1; j>-1; --j){
 			for (int i=0; i<gridX; ++i){
 				GrowthRateFile >> angle;
@@ -660,25 +677,6 @@ bool ModelInputObject::readGrowthType3(ifstream& file){
 				}
 			}
 		}
-		//display:
-		cout<<"growth matrix: "<<endl;
-		for (int i=0; i<gridX; ++i){
-			for (int j=0; j<gridY; ++j){
-				for (int k=0; k<3; ++k){
-					cout<<GrowthMatrix[i][j][k]<<" ";
-				}
-				cout<<"	";
-			}
-			cout<<endl;
-		}cout<<endl;
-		cout<<"angle matrix: "<<endl;
-		for (int i=0; i<gridX; ++i){
-			for (int j=0; j<gridY; ++j){
-				cout<<AngleMatrix[i][j]<<" ";
-			}
-			cout<<endl;
-		}
-		cout<<endl;
 	}
 	else{
 		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: Filename(full-path):" <<endl;
@@ -1172,38 +1170,6 @@ bool ModelInputObject::readMeshType2(ifstream& file){
 		cerr<<"Error in reading z height, curr string: "<<currHeader<<", should have been: zHeight:" <<endl;
 		return false;
 	}
-	file >> currHeader;
-	if(currHeader == "ApicalCircumferenceFixZ:"){
-		file >> Sim->ApicalNodeFix[0];
-	}
-	else{
-		cerr<<"Error in reading nodes to fix, curr string: "<<currHeader<<", should have been: ApicalCircumferenceFixZ:" <<endl;
-		return false;
-	}
-	file >> currHeader;
-	if(currHeader == "ApicalCircumferenceFixXY:"){
-		file >> Sim->ApicalNodeFix[1];
-	}
-	else{
-		cerr<<"Error in reading nodes to fix, curr string: "<<currHeader<<", should have been: ApicalCircumferenceFixXY:" <<endl;
-		return false;
-	}
-	file >> currHeader;
-	if(currHeader == "BasalCircumferenceFixZ:"){
-		file >> Sim->BasalNodeFix[0];
-	}
-	else{
-		cerr<<"Error in reading nodes to fix, curr string: "<<currHeader<<", should have been: BasalCircumferenceFixZ:" <<endl;
-		return false;
-	}
-	file >> currHeader;
-	if(currHeader == "BasalCircumferenceFixXY:"){
-		file >> Sim->BasalNodeFix[1];
-	}
-	else{
-		cerr<<"Error in reading nodes to fix, curr string: "<<currHeader<<", should have been: BasalCircumferenceFixXY:" <<endl;
-		return false;
-	}
 	//checking consistency:
 	if (Sim->Column>Sim->Row-2){
 		Sim->Column = Sim->Row-2;
@@ -1283,6 +1249,15 @@ bool ModelInputObject::readPeripodialMembraneParameters(ifstream& file){
 		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: PeripodialMembraneMidlineViscosity:" <<endl;
 		return false;
 	}
+	file >> currHeader;
+	if(currHeader == "AdherePeripodialToColumnarInZ(bool):"){
+		file >>Sim->adherePeripodialToColumnar;
+	}
+	else{
+		printErrorMessage(currHeader,"Peripodial membrane parameters","AdherePeripodialToColumnarInZ(bool):");
+		return false;
+	}
+
 	return true;
 }
 
@@ -1366,7 +1341,7 @@ bool ModelInputObject::readTimeParameters(ifstream& file){
 }
 
 bool ModelInputObject::readPysicalProperties(ifstream& file){
-	cout<<"reading physical parameters"<<endl;
+	//cout<<"reading physical parameters"<<endl;
 	string currHeader;
 
 	file >> currHeader;
@@ -1456,7 +1431,7 @@ bool ModelInputObject::readPysicalProperties(ifstream& file){
 }
 
 bool ModelInputObject::readSaveOptions(ifstream& file){
-	cout<<"reading save options"<<endl;
+	//cout<<"reading save options"<<endl;
 	string currHeader;
 	file >> currHeader;
 	if(currHeader == "SaveImages(bool):"){
@@ -1516,7 +1491,7 @@ bool ModelInputObject::readShapeChangeOptions(ifstream& file){
 	string currHeader;
 	file >> currHeader;
 	int n;
-	cout<<"entered read shape chenge options, current header: "<<currHeader<<endl;
+	//cout<<"entered read shape change options, current header: "<<currHeader<<endl;
 	if(currHeader == "NumberofShapeChangeFunctions(int):"){
 		file >> n;
 		Sim->nShapeChangeFunctions = n;
@@ -1618,7 +1593,7 @@ bool ModelInputObject::readMyosinOptions(ifstream& file){
 	string currHeader;
 	//regardless of how many myosin functions I have, I need the diffusion constant and the force per myosin molecule
 	file >> currHeader;
-	cout<<"entered read myosin concentration options, current header: "<<currHeader<<endl;
+	//cout<<"entered read myosin concentration options, current header: "<<currHeader<<endl;
 	if(currHeader == "MyosinDiffusionRate(double-1/sec):"){
 		file >> Sim->kMyo ;
 	}
@@ -1673,7 +1648,7 @@ bool ModelInputObject::readMyosinOptions(ifstream& file){
 bool ModelInputObject::readGridBasedMyosinFunction(ifstream& file){
 	string currHeader;
 	file >> currHeader;
-	cout<<"entered read myosin, current header: "<<currHeader<<endl;
+	//cout<<"entered read myosin, current header: "<<currHeader<<endl;
 	float initialtimeInSec;
 	int initTime;
 	bool applyToColumnarLayer = false;
@@ -1717,7 +1692,6 @@ bool ModelInputObject::readGridBasedMyosinFunction(ifstream& file){
 	file >> currHeader;
 	if(currHeader == "isApical(bool):"){
 			file >> isApical;
-			cout<<"isApical: "<<isApical<<endl;
 
 	}
 	else{
@@ -1727,7 +1701,6 @@ bool ModelInputObject::readGridBasedMyosinFunction(ifstream& file){
 	file >> currHeader;
 	if(currHeader == "isPolarised(bool):"){
 			file >> isPolarised;
-			cout<<"isPolarised: "<<isPolarised<<endl;
 	}
 	else{
 		cerr<<"Error in reading  myosin stimuli options, curr string: "<<currHeader<<", should have been: isPolarised(bool):" <<endl;
@@ -1840,10 +1813,8 @@ bool ModelInputObject::readGridBasedMyosinFunction(ifstream& file){
 					return false;
 				}
 				//adding the indice of the growth matrix
-				cout<<"reading from growth file"<<endl;
 				cEqFile >> gridX;
 				cEqFile >> gridY;
-				cout<<"constructing equilibrium myosin matrix"<<endl;
 				cEqMatrix = new double*[(const int) gridX];
 				for (int i=0; i<gridX; ++i){
 					cEqMatrix[i] = new double[(const int) gridY];
@@ -1851,7 +1822,6 @@ bool ModelInputObject::readGridBasedMyosinFunction(ifstream& file){
 						cEqMatrix[i][j] = 0.0;
 					}
 				}
-				cout<<"reading equilibrium myosin matrix"<<endl;
 				for (int j=gridY-1; j>-1; --j){
 					for (int i=0; i<gridX; ++i){
 						//cout<<"i :"<<i<<" j: "<<j<<" k: "<<k<<" ";
@@ -1881,10 +1851,8 @@ bool ModelInputObject::readGridBasedMyosinFunction(ifstream& file){
 					return false;
 				}
 				//adding the indice of the growth matrix
-				cout<<"reading from orientation angle file"<<endl;
 				angleFile >> gridX;
 				angleFile >> gridY;
-				cout<<"constructing myosin orientation matrix"<<endl;
 				angleMatrix = new double*[(const int) gridX];
 				for (int i=0; i<gridX; ++i){
 					angleMatrix[i] = new double[(const int) gridY];
@@ -1892,10 +1860,8 @@ bool ModelInputObject::readGridBasedMyosinFunction(ifstream& file){
 						angleMatrix[i][j] = 0.0;
 					}
 				}
-				cout<<"reading myosin orientation matrix"<<endl;
 				for (int j=gridY-1; j>-1; --j){
 					for (int i=0; i<gridX; ++i){
-						//cout<<"i :"<<i<<" j: "<<j<<" k: "<<k<<" ";
 						angleFile >> tet;
 						angleMatrix[i][j] =  tet;
 					}
@@ -1928,7 +1894,6 @@ bool ModelInputObject::readGridBasedMyosinFunction(ifstream& file){
 bool ModelInputObject::readShapeChangeType1(ifstream& file){
 	string currHeader;
 	file >> currHeader;
-	cout<<"entered read shape chenage type 1, current header: "<<currHeader<<endl;
 	float initialtime;
 	float finaltime;
 	bool applyToColumnarLayer = false;
@@ -1989,7 +1954,6 @@ bool ModelInputObject::readShapeChangeType1(ifstream& file){
 bool ModelInputObject::readShapeChangeType2(ifstream& file){
 	string currHeader;
 	file >> currHeader;
-	cout<<"entered read shape change type 2, current header: "<<currHeader<<endl;
 	float initialtime;
 	float finaltime;
 	bool applyToBasalECM = false;
@@ -2098,7 +2062,6 @@ bool ModelInputObject::readShapeChangeType2(ifstream& file){
 }*/
 
 bool ModelInputObject::readStretcherSetup(ifstream& file){
-	cout<<"reading stretcher options"<<endl;
 	string currHeader;
 	file >> currHeader;
 	if(currHeader == "StretcherAttached(bool):"){
@@ -2190,7 +2153,7 @@ Marker_Ellipses:
 		file >> Sim->nMarkerEllipseRanges;
 	}
 	else{
-		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: numberOfMarkerEllipses(int):" <<endl;
+		cerr<<"Error in reading marker ellipses, curr string: "<<currHeader<<", should have been: numberOfMarkerEllipses(int):" <<endl;
 		return false;
 	}
 	
@@ -2203,7 +2166,7 @@ Marker_Ellipses:
 		}
 	}
 	else{
-		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: MarkerEllipseXCenters(fractionOfTissueSize):"<<endl;
+		cerr<<"Error in reading  marker ellipses, curr string: "<<currHeader<<", should have been: MarkerEllipseXCenters(fractionOfTissueSize):"<<endl;
 		return false;
 	}
 	file >> currHeader;
@@ -2217,7 +2180,7 @@ Marker_Ellipses:
 		}
 	}
 	else{
-		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: MarkerEllipseBandR1Ranges(fractionOfTissueSize-x1Low-x1High):" <<endl;
+		cerr<<"Error in reading  marker ellipses, curr string: "<<currHeader<<", should have been: MarkerEllipseBandR1Ranges(fractionOfTissueSize-x1Low-x1High):" <<endl;
 		return false;
 	}
 	file >> currHeader;
@@ -2231,12 +2194,75 @@ Marker_Ellipses:
 		}
 	}
 	else{
-		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: MarkerEllipseBandR2Ranges(fractionOfTissueSize-y2Low-y2High):" <<endl;
+		cerr<<"Error in reading  marker ellipses, curr string: "<<currHeader<<", should have been: MarkerEllipseBandR2Ranges(fractionOfTissueSize-y2Low-y2High):" <<endl;
 		return false;
 	}
 	return true;
 }
 
+bool ModelInputObject::readApicoBasalVolumeRedistribution(ifstream& file){
+	string currHeader;
+	file >> currHeader;
+	if(currHeader == "NumberOfVolumeRedistributionFunctions(int):"){
+		file >>Sim->nApikobasalVolumeRedistributionFunctions;
+	}
+	else{
+		printErrorMessage(currHeader,"Apicobasal Volume Redistribution","NumberOfVolumeRedistributionFunctions(int):");
+		return false;
+	}
+	for (int i=0; i<Sim->nApikobasalVolumeRedistributionFunctions; ++i){
+		file >> currHeader;
+		if(currHeader == "timeOfVolumeRedistribution(hr):"){
+			double timeInHr;
+			file >> timeInHr;
+			Sim->apikobasalVolumeRedistributionBeginTimeInSec.push_back(timeInHr*3600);
+			file >> timeInHr;
+			Sim->apikobasalVolumeRedistributionEndTimeInSec.push_back(timeInHr*3600);
+		}
+		else{
+			printErrorMessage(currHeader,"Apicobasal Volume Redistribution","timeOfVolumeRedistribution(hr):");
+			return false;
+		}
+		file >> currHeader;
+		if(currHeader == "shrinksApicalSide(bool):"){
+			bool shrinkApical;
+			file >> shrinkApical;
+			Sim->apikobasalVolumeRedistributionFunctionShrinksApical.push_back(shrinkApical);
+		}
+		else{
+			printErrorMessage(currHeader,"Apicobasal Volume Redistribution","shrinksApicalSide(bool):");
+			return false;
+		}
+		file >> currHeader;
+		if(currHeader == "redistributionFractionOver24Hours(double,0-1):"){
+			double fraction;
+			file >> fraction;
+			Sim->apikobasalVolumeRedistributionScales.push_back(fraction);
+		}
+		else{
+			printErrorMessage(currHeader,"Apicobasal Volume Redistribution","redistributionFractionOver24Hours(double,0-1):");
+			return false;
+		}
+
+		file >> currHeader;
+		if(currHeader == "volumeRedistributionAppliedToEllipses(number,[ellipseId][ellipseId]):"){
+			int numberOfVolumeRedistributionAppliesEllipseBands;
+			file >>numberOfVolumeRedistributionAppliesEllipseBands;
+			Sim->apikobasalVolumeRedistributionFunctionEllipseNumbers.push_back(numberOfVolumeRedistributionAppliesEllipseBands);
+			double ellipseBandId;
+			Sim->apikobasalVolumeRedistributionFunctionEllipseBandIds.push_back(vector<int>(0));
+			for (int aa=0; aa<Sim->apikobasalVolumeRedistributionFunctionEllipseNumbers[i]; ++aa){
+				file >>ellipseBandId;
+				Sim->apikobasalVolumeRedistributionFunctionEllipseBandIds[i].push_back(ellipseBandId);
+			}
+		}
+		else{
+			printErrorMessage(currHeader,"Apicobasal Volume Redistribution","volumeRedistributionAppliedToEllipses(number,[ellipseId][ellipseId]):");
+			return false;
+		}
+	}
+	return true;
+}
 
 bool ModelInputObject::readStiffnessPerturbation(ifstream& file){
 	string currHeader;
@@ -2254,7 +2280,7 @@ bool ModelInputObject::readStiffnessPerturbation(ifstream& file){
 		file >>nStiffnessFunctions;
 	}
 	else{
-		printErrorMessage(currHeader,"ECM perturbations","NumberOfStiffnessPerturbations(int):");
+		printErrorMessage(currHeader,"stiffness perturbations","NumberOfStiffnessPerturbations(int):");
 		return false;
 	}
 
@@ -2400,6 +2426,17 @@ bool ModelInputObject::readECMPerturbation(ifstream& file){
 			return false;
 		}
 		file >> currHeader;
+		if(currHeader == "AppliedElementsAreEmergent(bool):"){
+			bool emergentApplication;
+			file >> emergentApplication;
+			Sim->ECMChangeTypeIsEmergent.push_back(emergentApplication);
+		}
+		else{
+			printErrorMessage(currHeader,"ECM perturbations","AppliedElementsAreEmergent(bool):");
+			return false;
+		}
+
+		file >> currHeader;
 		if(currHeader == "timeOfStiffnessChange(hr):"){
 			double timeInHr;
 			file >> timeInHr;
@@ -2513,7 +2550,6 @@ bool ModelInputObject::readVolumeRedistributionOptions(ifstream& file){
 }
 
 bool ModelInputObject::readEnclosementOptions(ifstream& file){
-	cout<<"inside readEnclosementOptions"<<endl;
 	string currHeader;
 	file >> currHeader;
 	if(currHeader == "thereIsEnclosementOfTheTissue(bool):"){
@@ -2594,6 +2630,41 @@ bool ModelInputObject::readMutationOptions(ifstream& file){
 	return true;
 }
 
+bool ModelInputObject::readAdhesionOptions(ifstream& file){
+	string currHeader;
+	file >> currHeader;
+	if(currHeader == "ThereIsAdhesion(bool):"){
+		file >> Sim->thereIsAdhesion;
+	}
+	else{
+		printErrorMessage(currHeader,"adhesion options","ThereIsAdhesion(bool):");
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "CollapseNodesOnAdhesion(bool):"){
+		file >> Sim->collapseNodesOnAdhesion;
+	}
+	else{
+		printErrorMessage(currHeader,"adhesion options","CollapseNodesOnAdhesion(bool):");
+		return false;
+	}
+	return true;
+}
+
+bool ModelInputObject::readNodeCollapseOptions(ifstream& file){
+	string currHeader;
+	file >> currHeader;
+	if(currHeader == "ThereIsNodeCollapse(bool):"){
+		file >> Sim->thereNodeCollapsing;
+	}
+	else{
+		printErrorMessage(currHeader,"node collapse options","ThereIsNodeCollapse(bool):");
+		return false;
+	}
+	return true;
+}
+
+
 bool ModelInputObject::readExplicitECMOptions(ifstream& file){
 	string currHeader;
 	file >> currHeader;
@@ -2601,7 +2672,7 @@ bool ModelInputObject::readExplicitECMOptions(ifstream& file){
 		file >> Sim->thereIsExplicitECM;
 	}
 	else{
-		cerr<<"Error in reading explicit ECM options: "<<currHeader<<", should have been: ThereIsExplicitECM(bool):" <<endl;
+		printErrorMessage(currHeader,"explicit ECM options","ThereIsExplicitECM(bool):");
 		return false;
 	}
 	file >> currHeader;
@@ -2609,7 +2680,7 @@ bool ModelInputObject::readExplicitECMOptions(ifstream& file){
 		file >> Sim->addLateralECMManually;
 	}
 	else{
-		cerr<<"Error in reading cell migration options: "<<currHeader<<", should have been: AddLateralECM(bool):" <<endl;
+		printErrorMessage(currHeader,"explicit ECM options","AddLateralECM(bool):");
 		return false;
 	}
 	file >> currHeader;
@@ -2617,7 +2688,7 @@ bool ModelInputObject::readExplicitECMOptions(ifstream& file){
 		file >> Sim->lateralECMThickness;
 	}
 	else{
-		cerr<<"Error in reading cell migration options: "<<currHeader<<", should have been: LateralECMThickness(micron):" <<endl;
+		printErrorMessage(currHeader,"explicit ECM options","LateralECMThickness(micron):");
 		return false;
 	}
 	file >> currHeader;
@@ -2626,7 +2697,7 @@ bool ModelInputObject::readExplicitECMOptions(ifstream& file){
 		Sim->ECMRenawalHalfLife *= 3600; //converting to seconds.
 	}
 	else{
-		cerr<<"Error in reading cell migration options: "<<currHeader<<", should have been: ECMRemodellingHalfLife(hour):" <<endl;
+		printErrorMessage(currHeader,"explicit ECM options","ECMRemodellingHalfLife(hour):");
 		return false;
 	}
 	file >> currHeader;
@@ -2634,7 +2705,7 @@ bool ModelInputObject::readExplicitECMOptions(ifstream& file){
 		file >> Sim->EColumnarECM;
 	}
 	else{
-		cerr<<"Error in reading cell migration options: "<<currHeader<<", should have been: ECMColumnarYoungsModulus:" <<endl;
+		printErrorMessage(currHeader,"explicit ECM options","ECMColumnarYoungsModulus:");
 		return false;
 	}
 	file >> currHeader;
@@ -2642,7 +2713,7 @@ bool ModelInputObject::readExplicitECMOptions(ifstream& file){
 		file >> Sim->EPeripodialECM;
 	}
 	else{
-		cerr<<"Error in reading cell migration options: "<<currHeader<<", should have been: ECMPeripodialYoungsModulus:" <<endl;
+		printErrorMessage(currHeader,"explicit ECM options","ECMPeripodialYoungsModulus:");
 		return false;
 	}
 	return true;

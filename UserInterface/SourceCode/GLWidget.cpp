@@ -60,7 +60,7 @@ using namespace std;
      DisplayPysPropBounds[1][0] = 0.0; DisplayPysPropBounds[1][1] = 5000.0;     //Internal Viscosity - lower limit, min max range
      DisplayPysPropBounds[1][2] = 100.0; DisplayPysPropBounds[1][3] = 100000.0;  //Internal Viscosity - upper limit, min max range
      DisplayPysPropBounds[2][0] = 1.0; DisplayPysPropBounds[2][1] = 1000.0; 	//Young's modulus - lower limit, min max range
-     DisplayPysPropBounds[2][2] = 51.0; DisplayPysPropBounds[2][3] = 10000.0;  	//Young's modulus - upper limit, min max range
+     DisplayPysPropBounds[2][2] = 51.0; DisplayPysPropBounds[2][3] = 50000.0;  	//Young's modulus - upper limit, min max range
      DisplayPysPropBounds[3][0] = 0.0; DisplayPysPropBounds[3][1] = 0.1; 		//Poisson's ratio - lower limit, min max range
      DisplayPysPropBounds[3][2] = 0.11; DisplayPysPropBounds[3][3] = 0.5; 		//Poisson's ratio - upper limit, min max range
      DisplayPysPropBounds[4][0] = 0.0; DisplayPysPropBounds[4][1] = 10; 		//xy-planar growth rate - lower limit, min max range
@@ -96,6 +96,8 @@ using namespace std;
      drawPeripodialMembrane = true;
      drawColumnar = true;
      drawMarkingEllipses = false;
+     drawGrowthRedistribution = false;
+     drawNodeBinding = false;
      ManualNodeSelection = false;
      ManualSelectedNodeId = -100;
      PerspectiveView = false;
@@ -222,6 +224,7 @@ void GLWidget::reInitialiseNodeColourList(int oldNodeNumber){
 		 drawReferenceElement(SelectedItemIndex);
 		 highlightElement(SelectedItemIndex);
 	 }
+
 	 if (ManualNodeSelection){
 		 highlightNode(ManualSelectedNodeId);
 	 }
@@ -239,6 +242,9 @@ void GLWidget::reInitialiseNodeColourList(int oldNodeNumber){
      drawEnclosingShell();
 	 if (DisplayFixedNodes){
 		 drawFixedNodes();
+	 }
+	 if (drawNodeBinding){
+		 drawBoundNodes();
 	 }
 	 //Drawing the analysis line:
 	 bool drawAnalysisLine = false;
@@ -365,7 +371,7 @@ void GLWidget::reInitialiseNodeColourList(int oldNodeNumber){
 
 
 void GLWidget::highlightNode(int i){
-	float markerSize = 1.0;
+	float markerSize = 0.2;
 	double x = Sim01->Nodes[i]->Position[0];
 	double y = Sim01->Nodes[i]->Position[1];
 	double z[3] = {Sim01->Nodes[i]->Position[2]-markerSize,Sim01->Nodes[i]->Position[2]+markerSize,Sim01->Nodes[i]->Position[2]};
@@ -419,7 +425,7 @@ void GLWidget::highlightNode(int i){
 	for (itNode=Sim01->Nodes.begin(); itNode<Sim01->Nodes.end(); ++itNode){
 		float* currColour;
 		currColour = new float[3];
-		if(!DisplayStrains && !DisplayPysProp && !drawNetForces && !drawPackingForces && !drawMyosinForces && !drawMarkingEllipses){
+		if(!DisplayStrains && !DisplayPysProp && !drawNetForces && !drawPackingForces && !drawMyosinForces && !drawMarkingEllipses ){
 			//I am not displaying ant data on the colours, therefore I do not need any calculaitons on element basis, the colour is constant
 			if ((*itNode)->tissueType == 0){ // columnar layer
 				NodeColourList[(*itNode)->Id][0]=0.75;
@@ -444,7 +450,7 @@ void GLWidget::highlightNode(int i){
 				for (int i=0;i<nConnectedElements; ++i){
 					float TmpStrainMag =0.0;
 					Sim01->Elements[(*itNode)->connectedElementIds[i]]->getStrain(StrainToDisplay, TmpStrainMag);
-                    			StrainMag += (TmpStrainMag)*(*itNode)->connectedElementWeights[i];
+                    StrainMag += (TmpStrainMag)*(*itNode)->connectedElementWeights[i];
 				}
 				getDisplayColour(currColour, StrainMag);
 			}
@@ -527,7 +533,7 @@ void GLWidget::highlightNode(int i){
 			}
 			else if(drawMarkingEllipses){
 				if ((*itNode)->insideEllipseBand){
-					currColour[0] = 1.0;
+					currColour[0] = 0.7;
 					currColour[1] = 0.0;
 					currColour[2] = 1.0;
 				}
@@ -665,56 +671,7 @@ void GLWidget::highlightNode(int i){
 		NodeColours[l][1] = 1;
 		NodeColours[l][2] = 0.5*Sim01->cellMigrationTool->getMigrationAngleForElement(i);
 	}*/
-/*
- Drawing the arrows of rottion for the linker elemetns:
 
-	if( Sim01->Elements[i]->tissueType == 2 ){
-		double ax = 0, ay = 0, az= 0;
-		ax = Sim01->Elements[i]->Positions[0][0]+Sim01->Elements[i]->Positions[1][0]+Sim01->Elements[i]->Positions[2][0];
-		ay = Sim01->Elements[i]->Positions[0][1]+Sim01->Elements[i]->Positions[1][1]+Sim01->Elements[i]->Positions[2][1];
-		az = Sim01->Elements[i]->Positions[0][2]+Sim01->Elements[i]->Positions[1][2]+Sim01->Elements[i]->Positions[2][2];
-		ax /= 3.0;
-		ay /= 3.0;
-		az /= 3.0;
-
-		gsl_matrix* a = gsl_matrix_calloc(3,1);
-		gsl_matrix* b = gsl_matrix_calloc(3,1);
-		glBegin(GL_LINE_STRIP);
-			gsl_matrix_set_identity(b);
-			gsl_matrix_set(a,0,0,-5);
-			gsl_matrix_set(a,1,0,0);
-			gsl_matrix_set(a,2,0,0);
-			gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, Sim01->Elements[i]->remodellingPlaneRotationMatrix, a, 0.0, b);
-			glColor3f(1,0,0);
-			glVertex3f( ax, ay, az);
-			glVertex3f( ax + gsl_matrix_get(b,0,0), ay+ gsl_matrix_get(b,1,0), az+ gsl_matrix_get(b,2,0));
-		glEnd();
-		glBegin(GL_LINE_STRIP);
-			gsl_matrix_set_identity(b);
-			gsl_matrix_set(a,0,0,0);
-			gsl_matrix_set(a,1,0,-5);
-			gsl_matrix_set(a,2,0,0);
-			gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, Sim01->Elements[i]->remodellingPlaneRotationMatrix, a, 0.0, b);
-			glColor3f(0,1,0);
-			glVertex3f( ax, ay, az);
-			glVertex3f( ax + gsl_matrix_get(b,0,0), ay+ gsl_matrix_get(b,1,0), az+ gsl_matrix_get(b,2,0));
-		glEnd();
-		glBegin(GL_LINE_STRIP);
-			gsl_matrix_set_identity(b);
-			gsl_matrix_set(a,0,0,0);
-			gsl_matrix_set(a,1,0,0);
-			gsl_matrix_set(a,2,0,-5);
-			gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, Sim01->Elements[i]->remodellingPlaneRotationMatrix, a, 0.0, b);
-			glColor3f(0,0,1);
-			glVertex3f( ax, ay, az);
-			glVertex3f( ax + gsl_matrix_get(b,0,0), ay+ gsl_matrix_get(b,1,0), az+ gsl_matrix_get(b,2,0));
-		glEnd();
-		gsl_matrix_free(a);
-		gsl_matrix_free(b);
-	 }
-	 */
-	//NodeColours = new float*[n];
-	//float NodeColours[6][3] = {{0.1,0.1,0.1},{0.1,0.1,0.1},{0.1,0.1,0.1},{0.1,0.1,0.1},{0.1,0.1,0.1},{0.1,0.1,0.1}};
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glEnable(GL_POLYGON_OFFSET_FILL); // Avoid Stitching!
 	glPolygonOffset(1.0, 1.0); 	//These are necessary so the depth test can keep the lines above surfaces
@@ -723,9 +680,26 @@ void GLWidget::highlightNode(int i){
 			for (int k =0; k<3; ++k){
 				int pointId = TriangleConnectivity[j][k];
 				glColor3f(NodeColours[pointId][0],NodeColours[pointId][1],NodeColours[pointId][2]);
+
 				if (drawMarkingEllipses){
 					if (Sim01->Elements[i]->insideEllipseBand){
-						 glColor3f(0,1,1);
+						double increment = 0.33; //reduce if more then 10 ellipses.
+						double greenComponent = increment* Sim01->Elements[i]->coveringEllipseBandId;
+						double blueComponenet = 1.0;
+						if (Sim01->Elements[i]->coveringEllipseBandId>3){
+							blueComponenet = 1 - increment * (Sim01->Elements[i]->coveringEllipseBandId-3);
+						}
+						glColor3f(0,greenComponent,blueComponenet);
+					}
+				}
+				if (drawGrowthRedistribution){
+					if (Sim01->Elements[i]->thereIsGrowthRedistribution){
+						if (Sim01->Elements[i]->growthRedistributionShrinksElement){
+							glColor3f(0.5,0,0);
+						}
+						else{
+							glColor3f(0,0.5,0);
+						}
 					}
 				}
 				float x = xMultiplier * Sim01->Elements[i]->Positions[pointId][0];
@@ -936,6 +910,7 @@ void GLWidget::highlightNode(int i){
 	int TriangleConnectivity[nTriangle][3] = {{0,1,2},{3,4,5},{0,2,3},{2,3,5},{0,1,3},{1,3,4},{1,2,5},{1,5,4}};
 	const int nLineStrip = 12;
 	int BorderConnectivity[nLineStrip] = {0,2,5,3,0,1,4,3,5,4,1,2};
+	//cout<<"youngs modulus of selecter prism: "<<Sim01->Elements[i]->getYoungModulus()<<endl;
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glEnable(GL_POLYGON_OFFSET_FILL); // Avoid Stitching!
 	glPolygonOffset(1.0, 1.0); 	//These are necessary so the depth test can keep the lines above surfaces
@@ -1468,6 +1443,66 @@ bool GLWidget::findNode(int i){
 		 }
 	 glPopMatrix();
  }
+
+ void GLWidget::drawBoundNodes(){
+	 float MarkerSize = 0.2;
+	 int n = Sim01->Nodes.size();
+	 for (int i=0; i<n; ++i){
+		 float colour[3]={0.0,0.0,0.0};
+		 bool thereisBinding= false;
+		 for (int j=0; j<3; ++j){
+			 if (Sim01->Nodes[i]->slaveTo[j] > -1){
+				 colour[j] = 0.5;
+				 thereisBinding = true;
+				 glBegin(GL_LINE_STRIP);
+					float x = Sim01->Nodes[i]->Position[0];
+					float y = Sim01->Nodes[i]->Position[1];
+					float z = Sim01->Nodes[i]->Position[2];
+					glVertex3f( x, y, z);
+					x = Sim01->Nodes[Sim01->Nodes[i]->slaveTo[j]]->Position[0];
+					y = Sim01->Nodes[Sim01->Nodes[i]->slaveTo[j]]->Position[1];
+					z = Sim01->Nodes[Sim01->Nodes[i]->slaveTo[j]]->Position[2];
+					glVertex3f( x, y, z);
+				glEnd();
+			 }
+			 else if (Sim01->Nodes[i]->isMaster[j]){
+				 colour[j] = 0.8;
+				 thereisBinding = true;
+			 }
+		 }
+		 if(thereisBinding){
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			glEnable(GL_POLYGON_OFFSET_FILL); // Avoid Stitching!
+			glPolygonOffset(1.0, 1.0); 	//These are necessary so the depth test can keep the lines above surfaces
+			glDisable(GL_POLYGON_OFFSET_FILL);
+			int nodeId = i;
+			glColor3f(colour[0],colour[1],colour[2]);
+			float trianglepoints[4][3];
+			trianglepoints[0][0]=Sim01->Nodes[nodeId]->Position[0]- MarkerSize;
+			trianglepoints[0][1]=Sim01->Nodes[nodeId]->Position[1]- MarkerSize;
+			trianglepoints[0][2]=Sim01->Nodes[nodeId]->Position[2]- MarkerSize;
+			trianglepoints[1][0]=Sim01->Nodes[nodeId]->Position[0]+ MarkerSize;
+			trianglepoints[1][1]=Sim01->Nodes[nodeId]->Position[1]- MarkerSize;
+			trianglepoints[1][2]=Sim01->Nodes[nodeId]->Position[2];
+			trianglepoints[2][0]=Sim01->Nodes[nodeId]->Position[0];
+			trianglepoints[2][1]=Sim01->Nodes[nodeId]->Position[1]+ MarkerSize;
+			trianglepoints[2][2]=Sim01->Nodes[nodeId]->Position[2];
+			trianglepoints[3][0]=Sim01->Nodes[nodeId]->Position[0]- MarkerSize;
+			trianglepoints[3][1]=Sim01->Nodes[nodeId]->Position[1]- MarkerSize;
+			trianglepoints[3][2]=Sim01->Nodes[nodeId]->Position[2]+ MarkerSize;
+			int order[4][3]={{0,1,2},{0,2,3},{0,1,3},{1,2,3}};
+			glBegin(GL_TRIANGLES);
+				for (int j = 0; j < 4; ++j){
+					for (int k = 0; k < 3; ++k){
+						glVertex3f( trianglepoints[order[j][k]][0],  trianglepoints[order[j][k]][1], trianglepoints[order[j][k]][2]);
+					}
+				}
+			glEnd();
+		 }
+	 }
+
+ }
+
 
  void GLWidget::drawFixedNodes(){
  	int n = Sim01->Nodes.size();

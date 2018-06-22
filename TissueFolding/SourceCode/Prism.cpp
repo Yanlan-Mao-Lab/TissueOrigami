@@ -20,6 +20,8 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, bool thereIsPlas
     lambda = E*v /(1+v)/(1-2.0*v);
     mu = E/2.0/(1+v);
     stiffnessMultiplier = 1.0;
+    minimumValueOfStiffnessMultiplier = 0.00001;
+    maximumValueOfStiffnessMultiplier = 100000;
 
     D = gsl_matrix_calloc(6,6);
     MyoForce = new double*[6];
@@ -50,6 +52,7 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, bool thereIsPlas
 	cMyoUnipolarEq[0] = 0.0;
 	cMyoUnipolarEq[1] = 0.0;
 
+	apicalNormalCurrentShape = new double[nDim];
 	myoPolarityDir = gsl_matrix_calloc(2,3);
 	for (int i=0; i<3; ++i){
 		GrowthRate[i] = 0;
@@ -58,6 +61,7 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, bool thereIsPlas
 		BasalNormalForPacking[i] = 0;
 		relativePosInBoundingBox[i] = 0;
 		initialRelativePosInBoundingBox[i] = 0;
+		apicalNormalCurrentShape[i] = 0;
 		//columnarRelativePosInBoundingBox[i] =0;
 		//peripodialRelativePosInBoundingBox[i] =0;
 	}
@@ -87,6 +91,7 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, bool thereIsPlas
 	readNodeIds(tmpNodeIds);
 	setPositionMatrix(Nodes);
 	setReferencePositionMatrix();
+    setInitialEdgeLenghts();
 
 	//setGrowthTemplateMatrix();
 	setCoeffMat();
@@ -94,18 +99,67 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, bool thereIsPlas
 	setTissuePlacement(Nodes);
 	setTissueType(Nodes);
 
-    ShapeFuncDerivatives = new gsl_matrix*[3];
-    ShapeFuncDerStacks = new gsl_matrix*[3];
-    InvdXdes = new gsl_matrix*[3];
-    detdXdes = new double[3];
-    Bmatrices = new gsl_matrix*[3];
-    FeMatrices = new gsl_matrix*[3];
-    detFs = new double[3];
-    invJShapeFuncDerStack = new gsl_matrix*[3];
-    invJShapeFuncDerStackwithFe  = new gsl_matrix*[3];
-    elasticStress = new gsl_matrix*[3];
-    viscousStress = new gsl_matrix*[3];
-    for (int i=0; i<3; ++i){
+	numberOfGaussPoints =6;
+	const int nGauss = numberOfGaussPoints;
+	gaussWeights = new double[nGauss];
+	gaussPoints = new double*[nGauss];
+    for (int i=0; i<numberOfGaussPoints; ++i){
+    	gaussPoints[i] = new double [nDim];
+    }
+    if (numberOfGaussPoints == 3){
+    	gaussPoints[0][0]= 1.0/6.0;
+		gaussPoints[0][1]= 1.0/6.0;
+		gaussPoints[0][2]= 0;
+		gaussPoints[1][0]= 2.0/3.0;
+		gaussPoints[1][1]= 1.0/6.0;
+		gaussPoints[1][2]= 0;
+		gaussPoints[2][0]= 1.0/6.0;
+		gaussPoints[2][1]= 2.0/3.0;
+		gaussPoints[2][2]= 0;
+		gaussWeights[0] = 1.0/3.0;
+		gaussWeights[1] = 1.0/3.0;
+		gaussWeights[2] = 1.0/3.0;
+    }
+    if (numberOfGaussPoints == 6){
+		double oneOverSqrtThree = 1.0/ pow(3,0.5);
+		gaussPoints[0][0]= 1.0/6.0;
+		gaussPoints[0][1]= 1.0/6.0;
+		gaussPoints[0][2]= oneOverSqrtThree;
+		gaussPoints[1][0]= 2.0/3.0;
+		gaussPoints[1][1]= 1.0/6.0;
+		gaussPoints[1][2]= oneOverSqrtThree;
+		gaussPoints[2][0]= 1.0/6.0;
+		gaussPoints[2][1]= 2.0/3.0;
+		gaussPoints[2][2]= oneOverSqrtThree;
+		gaussPoints[3][0]= 1.0/6.0;
+		gaussPoints[3][1]= 1.0/6.0;
+		gaussPoints[3][2]= -oneOverSqrtThree;
+		gaussPoints[4][0]= 2.0/3.0;
+		gaussPoints[4][1]= 1.0/6.0;
+		gaussPoints[4][2]= -oneOverSqrtThree;
+		gaussPoints[5][0]= 1.0/6.0;
+		gaussPoints[5][1]= 2.0/3.0;
+		gaussPoints[5][2]= -oneOverSqrtThree;
+		gaussWeights[0] = 1.0/6.0;
+		gaussWeights[1] = 1.0/6.0;
+		gaussWeights[2] = 1.0/6.0;
+		gaussWeights[3] = 1.0/6.0;
+		gaussWeights[4] = 1.0/6.0;
+		gaussWeights[5] = 1.0/6.0;
+    }
+    ShapeFuncDerivatives = new gsl_matrix*[nGauss];
+    ShapeFuncDerStacks = new gsl_matrix*[nGauss];
+    InvdXdes = new gsl_matrix*[nGauss];
+    detdXdes = new double[nGauss];
+    Bmatrices = new gsl_matrix*[nGauss];
+    FeMatrices = new gsl_matrix*[nGauss];
+    detFs = new double[nGauss];
+    invJShapeFuncDerStack = new gsl_matrix*[nGauss];
+    invJShapeFuncDerStackwithFe  = new gsl_matrix*[nGauss];
+    elasticStress = new gsl_matrix*[nGauss];
+    viscousStress = new gsl_matrix*[nGauss];
+    D81 = new double****[nGauss];
+    for (int i=0; i<numberOfGaussPoints; ++i){
         ShapeFuncDerivatives[i] = gsl_matrix_calloc(nDim, nNodes);
         ShapeFuncDerStacks[i] = gsl_matrix_calloc(nDim*nDim, nDim*nNodes);
         InvdXdes[i] = gsl_matrix_calloc(nDim, nDim);
@@ -116,6 +170,17 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, bool thereIsPlas
         invJShapeFuncDerStackwithFe[i] = gsl_matrix_calloc(nDim*nDim, nDim*nNodes);
         elasticStress[i] = gsl_matrix_calloc(3,3);
         viscousStress[i] = gsl_matrix_calloc(3,3);
+        //need to reach:  D81[gauss points][4][4][4][4];
+        D81[i] = new double***[nDim];
+        for (int j=0; j<nDim; ++j){
+        	 D81[i][j] = new double**[nDim];
+        	 for (int k=0; k<nDim; ++k){
+        		 D81[i][j][k] = new double*[nDim];
+        		 for (int l=0; l<nDim; ++l){
+        			 D81[i][j][k][l] = new double[nDim];
+        		 }
+			}
+        }
     }
     Strain = gsl_matrix_calloc(6,1);
     GrowthStrainsRotMat = gsl_matrix_alloc(3,3);
@@ -128,16 +193,10 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, bool thereIsPlas
     gsl_matrix_set_identity(Fsc);
     InvFsc = gsl_matrix_calloc(3,3);
     gsl_matrix_set_identity(InvFsc);
-	/*if (thereIsPlasticDeformation){
-		 Fplastic  = gsl_matrix_calloc(3,3);
-		 gsl_matrix_set_identity(Fplastic);
-	}
-	else{
-		Fplastic = 0;
-	}
-    invFplastic  = gsl_matrix_calloc(3,3);
-    gsl_matrix_set_identity(invFplastic);
-    */growthIncrement = gsl_matrix_calloc(3,3);
+
+
+
+    growthIncrement = gsl_matrix_calloc(3,3);
     gsl_matrix_set_identity(growthIncrement);
     plasticDeformationIncrement= gsl_matrix_calloc(3,3);
     gsl_matrix_set_identity(plasticDeformationIncrement);
@@ -191,6 +250,7 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, bool thereIsPlas
     isECMMimimcingAtCircumference = false;
     atBasalBorderOfECM = false;
     isActinMimicing = false;
+    atApicalBorderOfActin = false;
     insideEllipseBand = false;
     coveringEllipseBandId = -1;
     stiffnessPerturbationRateInSec = 0;
@@ -200,7 +260,12 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, bool thereIsPlas
     isMutated = false;
     mutationGrowthRatePerSec = 0.0;
 
+    thereIsGrowthRedistribution = false;
+    growthRedistributionShrinksElement = false;
+    growthRedistributionScale = 0.5;
+
     plasticDeformationHalfLifeMultiplier = 1.0;
+
 }
 
 Prism::~Prism(){
@@ -219,6 +284,7 @@ Prism::~Prism(){
 	delete[] MyoForce;
 	delete[] GrowthRate;
     delete[] ShapeChangeRate;
+    delete[] apicalNormalCurrentShape;
 	delete	 ReferenceShape;
 
     //freeing matrices allocated
@@ -230,14 +296,13 @@ Prism::~Prism(){
     gsl_matrix_free(InvFg);
     gsl_matrix_free(Fsc);
     gsl_matrix_free(InvFsc);
-    //gsl_matrix_free(Fplastic);
-    //gsl_matrix_free(invFplastic);
     gsl_matrix_free(TriPointF);
     gsl_matrix_free(Strain);
     gsl_matrix_free(TriPointKe);
     gsl_matrix_free(TriPointKv);
     gsl_matrix_free(GrowthStrainsRotMat);
-    for (int i=0; i<3; ++i){
+    for (int i=0; i<numberOfGaussPoints; ++i){
+    	delete[] gaussPoints[i];
         gsl_matrix_free (ShapeFuncDerivatives[i]);
         gsl_matrix_free (ShapeFuncDerStacks[i]);
         gsl_matrix_free (InvdXdes[i]);
@@ -247,6 +312,22 @@ Prism::~Prism(){
         gsl_matrix_free (invJShapeFuncDerStackwithFe[i]);
         gsl_matrix_free (elasticStress[i]);
         gsl_matrix_free (viscousStress[i]);
+        for (int j=0; j<nDim; ++j){
+        	 for (int k=0; k<nDim; ++k){
+        		 for (int l=0; l<nDim; ++l){
+        			 delete[] D81[i][j][k][l];
+        		 }
+			}
+        }
+        for (int j=0; j<nDim; ++j){
+        	 for (int k=0; k<nDim; ++k){
+        		 delete[] D81[i][j][k];
+			}
+        }
+        for (int j=0; j<nDim; ++j){
+        	delete[] D81[i][j];
+        }
+        delete[] D81[i];
     }
     delete[] ShapeFuncDerivatives;
     delete[] ShapeFuncDerStacks;
@@ -259,10 +340,12 @@ Prism::~Prism(){
     delete[] invJShapeFuncDerStackwithFe;
     delete[] elasticStress;
     delete[] viscousStress;
-    //delete[] Fplastic;
-    //delete[] invFplastic;
+    delete[] D81;
+    delete[] gaussPoints;
+    delete[] gaussWeights;
     delete[] elementsIdsOnSameColumn;
     gsl_matrix_free(ECMThicknessPlaneRotationalMatrix);
+	//cout<<"finished destructor for prism class"<<endl;
 }
 
 void Prism::setCoeffMat(){
@@ -328,6 +411,30 @@ void Prism::checkRotationConsistency3D(){
 	delete[] normal;
 }
 
+void  Prism::calculateApicalNormalCurrentShape(){
+	double * u = new double[3];
+	double * v = new double[3];
+	for (int i=0; i<nDim; ++i){
+		u[i] = Positions[4][i] - Positions[3][i];
+		v[i] = Positions[5][i] - Positions[3][i];
+		apicalNormalCurrentShape[i] = 0.0;
+	}
+	crossProduct3D(u,v,apicalNormalCurrentShape);
+	double dummy = normaliseVector3D(apicalNormalCurrentShape);
+	for (int i=0; i<nDim; ++i){
+		u[i] = Positions[0][i] - Positions[3][i];
+	}
+	double  dot = dotProduct3D(u,apicalNormalCurrentShape);
+	if (dot<0){
+		for (int i=0; i<nDim; ++i){
+			apicalNormalCurrentShape[i] *=(-1.0);
+		}
+	}
+	//cerr<<"		apical normal after direction correction: "<<normal[0]<<" "<<normal[1]<<" "<<normal[2]<<endl;
+	delete[] v;
+	delete[] u;
+}
+
 void  Prism::calculateBasalNormal(double * normal){
 	double * u = new double[3];
 	double * v = new double[3];
@@ -337,7 +444,7 @@ void  Prism::calculateBasalNormal(double * normal){
 		normal[i] = 0.0;
 	}
 	crossProduct3D(u,v,normal);
-	normaliseVector3D(normal);
+	double dummy = normaliseVector3D(normal);
 	for (int i=0; i<nDim; ++i){
 		u[i] = ReferenceShape->Positions[3][i] - ReferenceShape->Positions[0][i];
 	}
@@ -597,15 +704,14 @@ void Prism::setShapeFunctionDerivativeStack(gsl_matrix* ShapeFuncDer, gsl_matrix
 
 void Prism::calculateElementShapeFunctionDerivatives(){
     //Shape Function Derivatives 3-point:
-    double points[3][3]={{1.0/6.0,1.0/6.0,0.0},{2.0/3.0,1.0/6.0,0.0},{1.0/6.0,2.0/3.0,0.0}};
-    //Setting up the current reference shape position matrix:
+	//Setting up the current reference shape position matrix:
     gsl_matrix* CurrRelaxedShape = gsl_matrix_calloc(nNodes, nDim);
     gsl_matrix* dXde  = gsl_matrix_calloc(nDim, nDim);
     getCurrRelaxedShape(CurrRelaxedShape);
-    for (int iter =0; iter<3;++iter){
-        double eta  = points[iter][0];
-        double nu   = points[iter][1];
-        double zeta = points[iter][2];
+    for (int iter =0; iter<numberOfGaussPoints;++iter){
+        double eta  = gaussPoints[iter][0];
+        double nu   = gaussPoints[iter][1];
+        double zeta = gaussPoints[iter][2];
         //calculating shape function derivatives:
         setShapeFunctionDerivatives(ShapeFuncDerivatives[iter],eta,zeta,nu);
         setShapeFunctionDerivativeStack(ShapeFuncDerivatives[iter],ShapeFuncDerStacks[iter]);
@@ -633,10 +739,11 @@ void Prism::calculateCurrTriPointFForRotation(gsl_matrix *currF,int pointNo){
 	gsl_matrix_transpose(Jacobian);
 	//calculating F:
 	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, Jacobian, InvdXde, 0.0, currF);
-
     gsl_matrix_free(CurrShape);
     gsl_matrix_free(Jacobian);
 }
+
+
 
 
 void Prism::calculateCurrNodalForces(gsl_matrix *currge, gsl_matrix *currgv, gsl_matrix *currF, gsl_matrix* displacementPerDt, int pointNo){
@@ -644,7 +751,6 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currge, gsl_matrix *currgv, gsl
     const int dim = nDim;
     gsl_matrix* currFe = gsl_matrix_alloc(dim,dim);
     gsl_matrix* CurrShape = gsl_matrix_alloc(n,dim);
-
     //Getting the current shape positions matrix:
     getPos(CurrShape);
 
@@ -658,12 +764,12 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currge, gsl_matrix *currgv, gsl
     gsl_matrix* Jacobian = gsl_matrix_calloc(dim, dim);
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, ShapeFuncDer, CurrShape, 0.0, Jacobian);
     gsl_matrix_transpose(Jacobian);
-
     //calculating F:
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, Jacobian, InvdXde, 0.0, currF);
 
     //calculating Fe:
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currF, InvFg, 0.0, currFe);	///< Removing growth
+
     //gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currF, InvFg, 0.0, currFeFpFsc);	///< Removing growth
     //gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currFeFpFsc, InvFsc, 0.0, currFeFp);	///< Removing shape change
     //gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currFeFp, invFplastic, 0.0, currFe);	///< Removing plastic deformation
@@ -680,7 +786,11 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currge, gsl_matrix *currgv, gsl
 
     //calculating S:
     double detFe = determinant3by3Matrix(currFe);
+
     double lnJ = log(detFe);
+    if(isnan(lnJ)){
+    	cout<<"element: "<<Id<<" lnJ is nan, detFe: "<<detFe<<endl;
+    }
     if (KirshoffMaterial){
     	//calculating E (E = 1/2 *(Fe^T*Fe-I):
     	E = calculateEForNodalForcesKirshoff(C);
@@ -695,11 +805,14 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currge, gsl_matrix *currgv, gsl
 			cerr<<"C not inverted!!"<<endl;
 		}
     	S = calculateSForNodalForcesNeoHookean(InvC,lnJ);
-    	updateLagrangianElasticityTensorNeoHookean(InvC,lnJ,pointNo);;
+    	updateLagrangianElasticityTensorNeoHookean(InvC,lnJ,pointNo);
+
     	//I would like to keep a record of strains, therefore I am repeating this calculation here,
     	//it does not contribute to force calculation
     	E = calculateEForNodalForcesKirshoff(C);
+    	double test1 = gsl_matrix_get(Strain,0,0);
     	gsl_matrix_set_zero(Strain);
+
 		gsl_matrix_set(Strain,0,0, gsl_matrix_get(E,0,0));
 		gsl_matrix_set(Strain,1,0, gsl_matrix_get(E,1,1));
 		gsl_matrix_set(Strain,2,0, gsl_matrix_get(E,2,2));
@@ -709,7 +822,6 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currge, gsl_matrix *currgv, gsl
 		gsl_matrix_free(tmpCforInversion);
 		gsl_matrix_free(InvC);
     }
-
     //calculating elastic stress (elastic stress = detFe^-1 Fe S Fe^T):
     gsl_matrix_set_zero(elasticStress[pointNo]);
     gsl_matrix* compactStress  = calculateCompactStressForNodalForces(detFe, currFe,S, elasticStress[pointNo]);
@@ -722,6 +834,7 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currge, gsl_matrix *currgv, gsl
     detFs[pointNo] = determinant3by3Matrix(currF);
     gsl_matrix* currBT = calculateBTforNodalForces(InvJacobianStack,ShapeFuncDerStack, B, invJShFuncDerS);
 
+
     //Calculate invJShapeFuncDerStackwithFe for K calculation (using F in inverse jacobian calculation rather than Fe):
     calculateInvJShFuncDerSWithFe(currFe, InvdXde, ShapeFuncDerStack, invJShFuncDerSWithFe);
 
@@ -729,6 +842,7 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currge, gsl_matrix *currgv, gsl
     gsl_matrix_scale(currBT,detFs[pointNo]);
     gsl_matrix_scale(currBT,detdXdes[pointNo]);
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currBT, compactStress,0.0, currge);
+
 
     //calculating viscous stress:
     gsl_matrix_set_zero(viscousStress[pointNo]);
@@ -753,7 +867,6 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currge, gsl_matrix *currgv, gsl
     gsl_matrix_free(Jacobian);
 
     //gsl_matrix_free(viscousStress);
-    //cout<<"Finished calculate nodel forces"<<endl;
 }
 
 
@@ -902,6 +1015,364 @@ void Prism::assignNodalVector(double* vec, int id0, int id1){
 	}
 }
 
+void 	Prism::setInitialEdgeLenghts(){
+	int node0 = 0, node1 = 1;
+	for (int i=0;i<3; ++i){
+		if (i ==1 ){
+			node1 = 2;
+		}
+		if (i ==2 ){
+			node0 = 1;
+		}
+		double dx = Positions[node0][0]-Positions[node1][0];
+		double dy = Positions[node0][1]-Positions[node1][1];
+		double dz = Positions[node0][2]-Positions[node1][2];
+		initialBasalEdgeLengthsSq[i] = dx*dx+dy*dy+dz*dz;
+	}
+	node0 = 3;
+	node1 = 4;
+	for (int i=0;i<3; ++i){
+		if (i ==1 ){
+			node1 = 5;
+		}
+		if (i ==2 ){
+			node0 = 4;
+		}
+		double dx = Positions[node0][0]-Positions[node1][0];
+		double dy = Positions[node0][1]-Positions[node1][1];
+		double dz = Positions[node0][2]-Positions[node1][2];
+		initialApilcalEdgeLengthsSq[i] = dx*dx+dy*dy+dz*dz;
+	}
+}
+
+void Prism::checkEdgeLenghtsForBinding(vector <int>&masterIds, vector <int>&slaveIds){
+	//cout<<"inside check edge for binding"<<endl;
+	double thresholdFraction = 0.1; //fraction of original length the edge shrunk to
+	double thresholdAngle = M_PI*8.0/9.0;// M_PI*8.0/9.0; //160 degrees, this was 100000 for most of simulations, I did not collapse based on angle
+
+	double currentBasalEdgeLengthsSq[3] = {0,0,0};
+	double currentApicalEdgeLengthsSq[3] = {0,0,0};
+	int node0 = 0, node1 = 1;
+	if (tissuePlacement == 0 || spansWholeTissue == true){
+		//check angles first, and fix if necessary:
+		double* vec01 = new double[3];
+		double* vec10 = new double[3];
+		double* vec02 = new double[3];
+		double* vec12 = new double[3];
+		vec01[0] = Positions[1][0]-Positions[0][0];
+		vec01[1] = Positions[1][1]-Positions[0][1];
+		vec01[2] = Positions[1][2]-Positions[0][2];
+		vec02[0] = Positions[2][0]-Positions[0][0];
+		vec02[1] = Positions[2][1]-Positions[0][1];
+		vec02[2] = Positions[2][2]-Positions[0][2];
+		vec12[0] = Positions[2][0]-Positions[1][0];
+		vec12[1] = Positions[2][1]-Positions[1][1];
+		vec12[2] = Positions[2][2]-Positions[1][2];
+		double L01 = normaliseVector3D(vec01);
+		double L02 = normaliseVector3D(vec02);
+		double L12 = normaliseVector3D(vec12);
+		vec10[0] = vec01[0]*-1;
+		vec10[1] = vec01[1]*-1;
+		vec10[2] = vec01[2]*-1;
+		double dot0 =dotProduct3D(vec01,vec02);
+		double dot1 =dotProduct3D(vec12,vec10);
+		double tet0 = acos(dot0);
+		double tet1 = acos(dot1);
+		if (tet0 > thresholdAngle){
+			//snap to closest
+			if (L01 < L02){
+				masterIds.push_back(NodeIds[0]);
+				slaveIds.push_back(NodeIds[1]);
+			}
+			else{
+				masterIds.push_back(NodeIds[0]);
+				slaveIds.push_back(NodeIds[2]);
+			}
+		}
+		if (tet1 > thresholdAngle){
+			if (L01 < L12){
+				masterIds.push_back(NodeIds[0]);
+				slaveIds.push_back(NodeIds[1]);
+			}
+			else{
+				masterIds.push_back(NodeIds[1]);
+				slaveIds.push_back(NodeIds[2]);
+			}
+			//checkBasalLengths = false;
+		}
+		if ( M_PI - tet0 - tet1 > thresholdAngle){
+			if (L02 < L12){
+				masterIds.push_back(NodeIds[0]);
+				slaveIds.push_back(NodeIds[2]);
+			}
+			else{
+				masterIds.push_back(NodeIds[1]);
+				slaveIds.push_back(NodeIds[2]);
+			}
+			//checkBasalLengths = false;
+		}
+		delete[] vec01;
+		delete[] vec10;
+		delete[] vec02;
+		delete[] vec12;
+		//if (checkBasalLengths) {
+		//check basal side only for the most basal section, which will belong to a basal element or an element that spans the whole tissue.
+		for (int i=0;i<3; ++i){
+			if (i ==1 ){
+				node1 = 2;
+			}
+			if (i ==2 ){
+				node0 = 1;
+			}
+			double dx = Positions[node0][0]-Positions[node1][0];
+			double dy = Positions[node0][1]-Positions[node1][1];
+			double dz = Positions[node0][2]-Positions[node1][2];
+			currentBasalEdgeLengthsSq[i] = dx*dx+dy*dy+dz*dz;
+			//checking angle:
+		}
+		//}
+	}
+	if (tissuePlacement == 1 || spansWholeTissue == true){
+		//check angles first, and fix if necessary:
+		double* vec34 = new double[3];
+		double* vec43 = new double[3];
+		double* vec35 = new double[3];
+		double* vec45 = new double[3];
+		vec34[0] = Positions[4][0]-Positions[3][0];
+		vec34[1] = Positions[4][1]-Positions[3][1];
+		vec34[2] = Positions[4][2]-Positions[3][2];
+		vec35[0] = Positions[5][0]-Positions[3][0];
+		vec35[1] = Positions[5][1]-Positions[3][1];
+		vec35[2] = Positions[5][2]-Positions[3][2];
+		vec45[0] = Positions[5][0]-Positions[4][0];
+		vec45[1] = Positions[5][1]-Positions[4][1];
+		vec45[2] = Positions[5][2]-Positions[4][2];
+		double L34 = normaliseVector3D(vec34);
+		double L35 = normaliseVector3D(vec35);
+		double L45 = normaliseVector3D(vec45);
+		vec43[0] = vec34[0]*-1;
+		vec43[1] = vec34[1]*-1;
+		vec43[2] = vec34[2]*-1;
+		double dot3 =dotProduct3D(vec34,vec35);
+		double dot4 =dotProduct3D(vec45,vec43);
+		double tet3 = acos(dot3);
+		double tet4 = acos(dot4);
+
+		if (tet3 > thresholdAngle){
+			//snap to closest
+			if (L34 < L35){
+				masterIds.push_back(NodeIds[3]);
+				slaveIds.push_back(NodeIds[4]);
+			}
+			else{
+				masterIds.push_back(NodeIds[3]);
+				slaveIds.push_back(NodeIds[5]);
+			}
+		}
+		if (tet4 > thresholdAngle){
+			if (L34 < L45){
+				masterIds.push_back(NodeIds[3]);
+				slaveIds.push_back(NodeIds[4]);
+			}
+			else{
+				masterIds.push_back(NodeIds[4]);
+				slaveIds.push_back(NodeIds[5]);
+			}
+			//checkBasalLengths = false;
+		}
+		if ( M_PI - tet3 - tet4 > thresholdAngle){
+			if (L35 < L45){
+				masterIds.push_back(NodeIds[3]);
+				slaveIds.push_back(NodeIds[5]);
+			}
+			else{
+				masterIds.push_back(NodeIds[4]);
+				slaveIds.push_back(NodeIds[5]);
+			}
+			//checkBasalLengths = false;
+		}
+		delete[] vec34;
+		delete[] vec43;
+		delete[] vec35;
+		delete[] vec45;
+
+		node0 = 3;
+		node1 = 4;
+		for (int i=0;i<3; ++i){
+			if (i ==1 ){
+				node1 = 5;
+			}
+			if (i ==2 ){
+				node0 = 4;
+			}
+			double dx = Positions[node0][0]-Positions[node1][0];
+			double dy = Positions[node0][1]-Positions[node1][1];
+			double dz = Positions[node0][2]-Positions[node1][2];
+			currentApicalEdgeLengthsSq[i] = dx*dx+dy*dy+dz*dz;
+		}
+	}
+
+	bool node1isSlave = false;
+	bool node2isSlave = false;
+	bool node4isSlave = false;
+	bool node5isSlave = false;
+	if (tissuePlacement == 0 || spansWholeTissue == true){
+		if (currentBasalEdgeLengthsSq[0]<thresholdFraction*initialBasalEdgeLengthsSq[0]){
+			//node 0 is too close to node 1, bind
+			int master = NodeIds[0];
+			int slave  = NodeIds[1];
+			masterIds.push_back(master);
+			slaveIds.push_back(slave);
+			node1isSlave = true;
+		}
+		if (currentBasalEdgeLengthsSq[1]<thresholdFraction*initialBasalEdgeLengthsSq[1]){
+			//node 0 is too close to node 2, bind
+			int master = NodeIds[0];
+			int slave  = NodeIds[2];
+			masterIds.push_back(master);
+			slaveIds.push_back(slave);
+			node2isSlave = true;
+		}
+		if (currentBasalEdgeLengthsSq[2]<thresholdFraction*initialBasalEdgeLengthsSq[2]){
+			//node 1 is too close to node 2, bind
+			if (!node1isSlave || !node2isSlave){
+				int master = NodeIds[1];
+				if (node1isSlave){
+					master = NodeIds[0];
+				}
+				int slave  = NodeIds[2];
+				masterIds.push_back(master);
+				slaveIds.push_back(slave);
+			}
+		}
+	}
+	if (tissuePlacement == 1 || spansWholeTissue == true){
+		if (currentApicalEdgeLengthsSq[0]<thresholdFraction*initialApilcalEdgeLengthsSq[0]){
+			//node 3 is too close to node 4, bind
+			int master = NodeIds[3];
+			int slave  = NodeIds[4];
+			masterIds.push_back(master);
+			slaveIds.push_back(slave);
+			node4isSlave = true;
+		}
+		if (currentApicalEdgeLengthsSq[1]<thresholdFraction*initialApilcalEdgeLengthsSq[1]){
+			//node 3 is too close to node 5, bind
+			int master = NodeIds[3];
+			int slave  = NodeIds[5];
+			masterIds.push_back(master);
+			slaveIds.push_back(slave);
+			node5isSlave = true;
+		}
+		if (currentApicalEdgeLengthsSq[2]<thresholdFraction*initialApilcalEdgeLengthsSq[2]){
+			if (!node4isSlave || !node5isSlave){
+				int master = NodeIds[4];
+				if (node1isSlave){
+					master = NodeIds[3];
+				}
+				int slave  = NodeIds[5];
+				masterIds.push_back(master);
+				slaveIds.push_back(slave);
+			}
+		}
+	}
+	/*if (tissuePlacement == 2 || spansWholeTissue == false){
+		//check lateral sides for mid elements:
+		double* vec01 = new double[3];
+		double* vec10 = new double[3];
+		double* vec02 = new double[3];
+		double* vec14 = new double[3];
+		double* vec25 = new double[3];
+		double* vec03 = new double[3];
+		getNormalVectorBetweenNodes(0,1,vec01);
+		getNormalVectorBetweenNodes(0,2,vec02);
+		getNormalVectorBetweenNodes(1,4,vec14);
+		getNormalVectorBetweenNodes(2,5,vec25);
+		getNormalVectorBetweenNodes(0,3,vec03);
+		vec10[0] = vec01[0]*-1;
+		vec10[1] = vec01[1]*-1;
+		vec10[2] = vec01[2]*-1;
+		double dot04 =dotProduct3D(vec01,vec14);
+		double dot05 =dotProduct3D(vec02,vec25);
+		double dot13 =dotProduct3D(vec10,vec03);
+		double tet04 = acos(dot04);
+		double tet05 = acos(dot05);
+		double tet13 = acos(dot13);
+		if (tet04 > thresholdAngle){
+			masterIds.push_back(NodeIds[0]);
+			slaveIds.push_back(NodeIds[1]);
+		}
+		if (tet05 > thresholdAngle){
+			masterIds.push_back(NodeIds[0]);
+			slaveIds.push_back(NodeIds[2]);
+		}
+		if (tet13 > thresholdAngle){
+			masterIds.push_back(NodeIds[0]);
+			slaveIds.push_back(NodeIds[1]);
+		}
+		delete[] vec01;
+		delete[] vec10;
+		delete[] vec02;
+		delete[] vec14;
+		delete[] vec25;
+		delete[] vec03;
+
+
+
+		double* vec34 = new double[3];
+		double* vec43 = new double[3];
+		double* vec35 = new double[3];
+		double* vec41 = new double[3];
+		double* vec52 = new double[3];
+		double* vec30 = new double[3];
+		getNormalVectorBetweenNodes(3,4,vec34);
+		getNormalVectorBetweenNodes(3,5,vec35);
+		vec43[0] = vec43[0]*-1;
+		vec43[1] = vec43[1]*-1;
+		vec43[2] = vec43[2]*-1;
+		vec41[0] = vec14[0]*-1;
+		vec41[1] = vec14[1]*-1;
+		vec41[2] = vec14[2]*-1;
+		vec52[0] = vec25[0]*-1;
+		vec52[1] = vec25[1]*-1;
+		vec52[2] = vec25[2]*-1;
+		vec30[0] = vec03[0]*-1;
+		vec30[1] = vec03[1]*-1;
+		vec30[2] = vec03[2]*-1;
+		double dot31 =dotProduct3D(vec34,vec41);
+		double dot32 =dotProduct3D(vec35,vec52);
+		double dot40 =dotProduct3D(vec43,vec30);
+		double tet31 = acos(dot31);
+		double tet32 = acos(dot32);
+		double tet40 = acos(dot40);
+		if (tet31 > thresholdAngle){
+			masterIds.push_back(NodeIds[3]);
+			slaveIds.push_back(NodeIds[4]);
+		}
+		if (tet32 > thresholdAngle){
+			masterIds.push_back(NodeIds[3]);
+			slaveIds.push_back(NodeIds[5]);
+		}
+		if (tet40 > thresholdAngle){
+			masterIds.push_back(NodeIds[3]);
+			slaveIds.push_back(NodeIds[4]);
+		}
+		delete[] vec34;
+		delete[] vec43;
+		delete[] vec35;
+		delete[] vec41;
+		delete[] vec52;
+		delete[] vec30;
+	}*/
+}
+/*
+void Prism::getNormalVectorBetweenNodes(int nodeId0, int nodeId1, double* vec){
+	vec[0] = Positions[nodeId1][0]-Positions[nodeId0][0];
+	vec[1] = Positions[nodeId1][1]-Positions[nodeId0][1];
+	vec[2] = Positions[nodeId1][2]-Positions[nodeId0][2];
+	double L01 = normaliseVector3D(vec);
+}
+*/
+
 bool Prism::checkNodePlaneConsistency(double** normals){
 	//cout<<"inside check consistency, Id: "<<Id<<endl;
 	//List of constricting planes for each node:
@@ -947,14 +1418,48 @@ bool Prism::checkNodePlaneConsistency(double** normals){
 double Prism::getApicalSideLengthAverage(){
 	double dx,dy,dz;
 	double dsum =0.0;
+	int counter = 0;
 	int pairs[3][2] = {{3,4},{3,5},{4,5}};
 	for (int i=0; i<3; ++i){
 		dx = Positions[pairs[i][0]][0] - Positions[pairs[i][1]][0];
 		dy = Positions[pairs[i][0]][1] - Positions[pairs[i][1]][1];
 		dz = Positions[pairs[i][0]][2] - Positions[pairs[i][1]][2];
-		dsum += pow((dx*dx + dy*dy+dz*dz),0.5);
+		double dsum2 = (dx*dx + dy*dy+dz*dz);
+		if(dsum2 > 0){
+			//the average side length can be zero for elements with collapsed nodes.
+			//I do not want to add the zero length in calculation of average length.
+			//I will handle the case where this function returns zero outside, in averaging all elements.
+			dsum += pow((dx*dx + dy*dy+dz*dz),0.5);
+			counter++;
+		}
 	}
-	dsum /= 3.0;
+	if (counter>0){
+		dsum /= counter;
+	}
+	return dsum;
+}
+
+double Prism::getBasalSideLengthAverage(){
+	double dx,dy,dz;
+	double dsum =0.0;
+	int counter = 0;
+	int pairs[3][2] = {{0,1},{0,2},{1,2}};
+	for (int i=0; i<3; ++i){
+		dx = Positions[pairs[i][0]][0] - Positions[pairs[i][1]][0];
+		dy = Positions[pairs[i][0]][1] - Positions[pairs[i][1]][1];
+		dz = Positions[pairs[i][0]][2] - Positions[pairs[i][1]][2];
+		double dsum2 = (dx*dx + dy*dy+dz*dz);
+		if(dsum2 > 0){
+			//the average side length can be zero for elements with collapsed nodes.
+			//I do not want to add the zero length in calculation of average length.
+			//I will handle the case where this function returns zero outside, in averaging all elements.
+			dsum += pow((dx*dx + dy*dy+dz*dz),0.5);
+			counter++;
+		}
+	}
+	if (counter>0){
+		dsum /= counter;
+	}
 	return dsum;
 }
 
@@ -1106,7 +1611,7 @@ void Prism::calculateNormalForPacking(int tissuePlacementOfNormal){
 			ApicalNormalForPacking[i] = 0.0;
 		}
 		crossProduct3D(u,v,ApicalNormalForPacking);
-		normaliseVector3D(ApicalNormalForPacking);
+		double dummy = normaliseVector3D(ApicalNormalForPacking);
 		for (int i=0; i<nDim; ++i){
 			u[i] = Positions[index5][i] - Positions[index4][i];
 		}
@@ -1142,7 +1647,7 @@ void Prism::calculateNormalForPacking(int tissuePlacementOfNormal){
 			BasalNormalForPacking[i] = 0.0;
 		}
 		crossProduct3D(u,v,BasalNormalForPacking);
-		normaliseVector3D(BasalNormalForPacking);
+		double dummy = normaliseVector3D(BasalNormalForPacking);
 		for (int i=0; i<nDim; ++i){
 			u[i] = Positions[index5][i] - Positions[index4][i];
 		}
@@ -1853,6 +2358,7 @@ void 	Prism::calculateBasalArea(){
 	double Side2 = 0.0;
 	double costet = 0.0;
 	double Area = 0.0;
+
 	for (int i = 0; i<3; ++i){
 		sideVec1[i]= Positions[id1][i] - Positions[id0][i];
 		sideVec2[i]= Positions[id2][i] - Positions[id0][i];
@@ -1864,7 +2370,11 @@ void 	Prism::calculateBasalArea(){
 		Side1 = pow(Side1,0.5);
 		Side2 = pow(Side2,0.5);
 		costet /= (Side1*Side2);
-		double sintet = pow((1-costet*costet),0.5);
+		double sinTetSq  = 1-costet*costet;
+		double sintet = 0;
+		if(sinTetSq>Threshold){
+			sintet = pow(sinTetSq,0.5);
+		}
 		Area = Side1* Side2 * sintet / 2.0;
 	}
 	BasalArea = Area;
@@ -1897,11 +2407,22 @@ void 	Prism::calculateApicalArea(){
 		Side1 = pow(Side1,0.5);
 		Side2 = pow(Side2,0.5);
 		costet /= (Side1*Side2);
-		double sintet = pow((1-costet*costet),0.5);
+		double sinTetSq  = 1-costet*costet;
+		double sintet = 0;
+		if(sinTetSq>Threshold){
+			sintet = pow(sinTetSq,0.5);
+		}
 		Area = Side1* Side2 * sintet / 2.0;
 	}
 	ApicalArea = Area;
-	//cout<<" Element "<<Id<<" apical area: "<<ApicalArea<<endl;
+	/*if (Id == 8324 || Id == 8340 || Id == 8346){
+		cout<<" node Ids: "<<id0<<" "<<id1<<" "<<id2<<endl;
+		cout<<" side vec1: "<<sideVec1[0]<<" "<<sideVec1[1]<<" "<<sideVec1[2]<<endl;
+		cout<<" side vec2: "<<sideVec2[0]<<" "<<sideVec2[1]<<" "<<sideVec2[2]<<endl;
+		cout<<" costet "<<costet<<endl;
+		//cout<<" Side1: "<<Side1<<" Side2 "<<Side2<<" sintet: "<<sintet<<" sinTetSq: "<<sinTetSq<<endl;
+		cout<<" Element "<<Id<<" apical area: "<<ApicalArea<<endl;
+	}*/
 }
 
 void Prism::setBasalNeigElementId(vector<ShapeBase*>& elementsList){

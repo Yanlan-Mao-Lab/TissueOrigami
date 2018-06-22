@@ -70,11 +70,11 @@ public:
 	virtual int			getGridX(){return ParentErrorMessage("getGridX",0);};
 	virtual int			getGridY(){return ParentErrorMessage("getGridY",0);};
 	virtual double*** 	getGrowthMatrix(){ParentErrorMessage("getGrowthMatrix");double*** a;return a;}
-	virtual double** 	getXyShearAngleMatrix(){ParentErrorMessage("getXyShearMatrix");double** a;return a;}
+	virtual double** 	getXyShearAngleMatrix(){ParentErrorMessage("getXyShearMatrix");double** a ;return a;}
 	virtual	double 		getGrowthMatrixElement(int /*i*/, int /*j*/, int /*k*/){return ParentErrorMessage("getGrowthMatrixElement",0.0);};
 	virtual	double 		getXyShearAngleMatrixElement(int /*i*/, int /*j*/){return ParentErrorMessage("getXyShearhMatrixElement",0.0);};
 	virtual bool 		isAspectRatioOverOne(int /*i*/, int /*j*/){return ParentErrorMessage("isAspectRatioOverOne",0);};
-	virtual gsl_matrix* getXyShearRotationsMatrixElement(int /*i*/, int /*j*/){ParentErrorMessage("getShearAngleRotationMatrixElement");gsl_matrix* dummy; return dummy;}; //this is used by grid based growth
+	virtual gsl_matrix* getXyShearRotationsMatrixElement(int /*i*/, int /*j*/){ParentErrorMessage("getShearAngleRotationMatrixElement");gsl_matrix* dummy ; return dummy;}; //this is used by grid based growth
 	virtual void 		getGrowthProfileAt4Corners(int /*IndexX*/, int /*IndexY*/, double */*growth0*/, double */*growth1*/, double */*growth2*/, double */*growth3*/, double */*angles*/, bool */*anglesEliminated*/){ParentErrorMessage("getGrowthProfileAt4Corners");};
 
 	virtual void		setGrowtRate(double /*ex*/, double /*ey*/, double /*ez*/){ParentErrorMessage("setGrowtRate");};

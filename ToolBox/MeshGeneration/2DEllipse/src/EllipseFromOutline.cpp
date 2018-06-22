@@ -715,8 +715,11 @@ void EllipseLayoutGenerator::calculatePeripodialMembraneParameters(double ABHeig
 	LinkerR2[0] = ABHeight * peripodialSideCurveFrac;
 	LinkerR2[1] = ABHeight * 0.5 * lumenHeightFrac;
 	calculateLinkerCircumference();
-	cout<<"LinkerSideLen: "<<linkerSideLen<<"LinkerR1: "<<LinkerR1[0]<<" "<<LinkerR1[1]<<" "<<LinkerR1[2]<<" "<<LinkerR1[3]<<" LinkerR2 "<<LinkerR2[0]<<" "<<LinkerR2[1]<<endl;
+	cout<<"LinkerSideLen: "<<linkerSideLen<<"LinkerR1: "<<LinkerR1[0]<<" "<<LinkerR1[1]<<" "<<LinkerR1[2]<<" "<<LinkerR1[3]<<" LinkerR2 "<<LinkerR2[0]<<" "<<LinkerR2[1]<<" peripodialSideCurveFrac:" <<peripodialSideCurveFrac<<endl;
 	cout<<"circumferences: "<<LinkerCircumference[0]<<" "<<LinkerCircumference[1]<<" "<<LinkerCircumference[2]<<" "<<LinkerCircumference[3]<<endl;
+	if (isnan(peripodialSideCurveFrac)){
+		return ;
+	}
 	// add the nodes on peripodial side to outer ring, go from apical to basal (do not add the borders, only the mid range)
 	// then we will add the outer loop, then we will add the nodes corresponding to columnar side, starting from basal side.
 	//the purpose is to draw a loop.
@@ -1036,7 +1039,7 @@ void EllipseLayoutGenerator::writeMeshFileForSimulation(double zHeight, int zLay
 		recordedNodesZ.push_back(0);
 	}
 	//Adding columnar nodes, midline and apical surface:
-	double  dzHeight = zHeight/zLayers;
+	double  dzHeight = modifiedZDueToThinActin;
 	double currzHeight = dzHeight;	
 	for (int layers=0; layers<zLayers; ++layers){
 		if (layers == 0){
@@ -1059,15 +1062,21 @@ void EllipseLayoutGenerator::writeMeshFileForSimulation(double zHeight, int zLay
 		else{
 			currzHeight += modifiedZDueToThinActin;
 		}
+		//cout<<"Current height after addition of one columnar layer: "<<currzHeight<<endl;
 	}
+	//cout<<"basalLayerHeight: "<<basalLayerHeight<<endl;
 	cout<<" number of recorded nodes (columnar finished) : "<<recordedNodesX.size()<<" calculated node size: "<<nNodes<<endl;
 	if(addPeripodial){
+		//cout<<"Current height before starting periposial: "<<currzHeight<<" dz: "<<dzHeight<<endl;
 		currzHeight -= dzHeight;
 		//Adding peripodial cap nodes:
 		currzHeight  += lumenHeight;
 		dzHeight = peripodialHeight/peripodialLayers;
 		double modifiedPeripodialZDueToThinActin;
-		if (peripodialLayers > 1){
+		if (peripodialLayers > 2){
+			modifiedPeripodialZDueToThinActin = (peripodialHeight-ECMHeight-actinHeight)/(peripodialLayers-2);
+		}
+		else if (peripodialLayers > 1){
 			modifiedPeripodialZDueToThinActin = (peripodialHeight-ECMHeight)/(peripodialLayers-1);
 		}
 		else{
@@ -1078,7 +1087,7 @@ void EllipseLayoutGenerator::writeMeshFileForSimulation(double zHeight, int zLay
 			int nodePositionIdentifier = 2; //0=basal, 1=apical, 2=midline
 			if (layers == 0){nodePositionIdentifier=1;} //apical for the bottom layer looking into lumen
 			else if (layers == peripodialLayers){nodePositionIdentifier=0;} //basal for the top layer
-			cout<<" adding layer : "<<layers<<" height: "<<	currzHeight<<" peripodialLayers: "<<peripodialLayers<<" nodePositionIdentifier: "<<nodePositionIdentifier<<endl;		
+			//cout<<" adding layer : "<<layers<<" height: "<<	currzHeight<<" peripodialLayers: "<<peripodialLayers<<" nodePositionIdentifier: "<<nodePositionIdentifier<<endl;		
 			for (int i=0;i<n;++i){
 				MeshFile<<posx[i]<<"	"<<posy[i]<<"	"<<currzHeight<<"    "<<nodePositionIdentifier<<"	"<<1<<"	"<<0<<endl;	//1 0 : tissue type peripodial, at border false.
 				recordedNodesX.push_back(posx[i]);
@@ -1086,8 +1095,10 @@ void EllipseLayoutGenerator::writeMeshFileForSimulation(double zHeight, int zLay
 				recordedNodesZ.push_back(currzHeight);
 			}
 			//currzHeight += dzHeight;
-			//bibap
-			if (layers == peripodialLayers-1){
+			if (layers == 0){
+				currzHeight += actinHeight;
+			}
+			else if (layers == peripodialLayers-1){
 				currzHeight += ECMHeight;		
 			}
 			else{
@@ -2197,8 +2208,8 @@ int main(int argc, char **argv)
 		peripodialSideCurveFrac = 5.52 /ABHeight ;
 		Lay01.symmetricY = symmetricY;
 		Lay01.symmetricX = false;
-		actinHeight = 2.0;
-		ECMHeight = 2.0; //Use ECMHeight instead of basalLayerHeight t define a basal layer in the absence of ECM
+		actinHeight = 0.5;
+		ECMHeight = 2.0; //Use ECMHeight instead of basalLayerHeight to define a basal layer in the absence of ECM
 		modifiedZDueToThinActin = (ABHeight - actinHeight - ECMHeight)/ (ABLayers-2);
 		basalLayerHeight = modifiedZDueToThinActin;
 		if (ABLayers<2){
@@ -2226,28 +2237,39 @@ int main(int argc, char **argv)
 		}
 	}
 	else if(selectTissueType == 1){ // 1: ECM mimicing wing disc 48 hr,
-		peripodialHeightFrac = 0.33333;  //0.508
-		lumenHeightFrac = 0.25;
+		peripodialHeightFrac = 1.0;//0.33333;  //0.508
+		lumenHeightFrac = 0.2;
 		actinHeight = 2.0;
-		ECMHeight = 3.0;
-		basalLayerHeight = 2.0;
+		ECMHeight = 0.2;
+		modifiedZDueToThinActin = ABHeight/ABLayers;
+		//basalLayerHeight = 6.25;
 		//  end of ECM options		
 		if (ABLayers<3){
 			ECMHeight = ABHeight/ABLayers;
 			actinHeight = ABHeight/ABLayers;
 			basalLayerHeight = ABHeight/ABLayers;
 			modifiedZDueToThinActin  = ABHeight/ABLayers;
-		}
-		if (basalLayerHeight<0 || ABLayers<4){
-			modifiedZDueToThinActin = (ABHeight - ECMHeight - actinHeight)/ (ABLayers-2);
-			basalLayerHeight=modifiedZDueToThinActin;
+			cout<<" if clause 1,  modifiedZDueToThinActin: "<<modifiedZDueToThinActin<<endl;
 		}
 		else{
-			modifiedZDueToThinActin = (ABHeight - ECMHeight - actinHeight -basalLayerHeight)/ (ABLayers-3);
+			double denominator = (ABLayers-3);
+			bool correctECM = false;
+			bool correctBasal = false;
+			bool correctActin = false;
+			if(ECMHeight<0){ECMHeight=0;denominator++;correctECM=true;}
+			if(basalLayerHeight<0){basalLayerHeight=0;denominator++;correctBasal=true;}
+			if(actinHeight<0){actinHeight==0;denominator++;correctActin=true;}
+			modifiedZDueToThinActin = (ABHeight - ECMHeight - actinHeight -basalLayerHeight)/ denominator;
+			if (correctECM){ECMHeight= modifiedZDueToThinActin;}
+			if (correctBasal){basalLayerHeight= modifiedZDueToThinActin;}
+			if (correctActin){actinHeight= modifiedZDueToThinActin;}
+			//modifiedZDueToThinActin = (ABHeight - ECMHeight - actinHeight -basalLayerHeight)/ (ABLayers-3);
+			cout<<" if clause 3,  modifiedZDueToThinActin: "<<modifiedZDueToThinActin<<endl;
 		}
 		peripodialSideCurveFrac = (modifiedZDueToThinActin + 5.52) /ABHeight ;
 		Lay01.symmetricY = true;
 		Lay01.symmetricX = false;
+		cout<<"peripodialSideCurveFrac: "<<peripodialSideCurveFrac<<" ABHeight: "<<ABHeight<<" modifiedZDueToThinActin: "<<modifiedZDueToThinActin<<endl;
 	}
 	else if(selectTissueType == 2){
 		peripodialHeightFrac = 0.45; 

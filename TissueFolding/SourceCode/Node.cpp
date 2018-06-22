@@ -1,5 +1,7 @@
 #include "Node.h"
 #include <math.h>
+#include <algorithm>
+
 using namespace std;
 
 Node::Node(int id, int dim, double* pos, int tissuePos, int tissueType){
@@ -19,6 +21,7 @@ Node::Node(int id, int dim, double* pos, int tissuePos, int tissueType){
 		FixedPos[i] = false;
 		externalViscositySetInFixing[i] = false;
 		externalViscosity[i] = 0.0;
+		initialExternalViscosity[i] = externalViscosity[i];
 		ECMViscosityChangePerHour[i] = 0;
 	}
 	tissuePlacement = tissuePos;
@@ -34,6 +37,21 @@ Node::Node(int id, int dim, double* pos, int tissuePos, int tissueType){
     insideEllipseBand = false;
     coveringEllipseBandId = -1;
     allOwnersECMMimicing = false;
+    slaveTo[0] = -1;
+    slaveTo[1] = -1;
+    slaveTo[2] = -1;
+    isMaster[0] = false;
+    isMaster[1] = false;
+    isMaster[2] = false;
+    adheredTo = -1;
+    maximumExternalViscosity[0] = 100000000000;
+    maximumExternalViscosity[1] = 100000000000;
+    maximumExternalViscosity[2] = 100000000000;
+    minimumExternalViscosity[0] = 0;
+    minimumExternalViscosity[1] = 0;
+    minimumExternalViscosity[2] = 0;
+    attachedToPeripodial = false;
+
    // allOwnersAblated = false;
 }
 
@@ -46,9 +64,10 @@ Node::~Node(){
 
 void Node::setExternalViscosity(double ApicalVisc,double BasalVisc, bool extendExternalViscosityToInnerTissue){
 	/**
-	 *  This node will take in the apical and basal external viscosities of the tissue as inputs, respectively.
+	 *  This function will take in the apical and basal external viscosities of the tissue as inputs, respectively.
 	 *  The external viscosity of the node will be assigned via its Node#tissuePlacement and Node#tissueType. On the columnar layer, nodes that are in the mid-zone of the tissue (neither on the
 	 *  apical nor on the basal surface, will take the average of the two values.
+	 *
 	 */
 	if (tissuePlacement ==0){
 		for (int i=0; i<3; ++i){
@@ -86,6 +105,9 @@ void Node::setExternalViscosity(double ApicalVisc,double BasalVisc, bool extendE
 			}
 		}
 	}
+	for (int i=0; i<3; ++i){
+		initialExternalViscosity[i] = externalViscosity[i];
+	}
 }
 
 bool Node::checkIfNeighbour(int IdToCheck){
@@ -109,6 +131,7 @@ bool Node::checkIfNodeHasPacking(){
 	 *  function Simulation#calculatePacking. It is not necessary to calculate packing under the following conditions:
 	 *  1) The node is at the middle of the columnar layer, the packing should have stopped any other node/element coming close enough to this node, as
 	 *  they would need to penetrate through the apical or basal surface of the tissue to reach this node.
+	 *
 	 */
 	if (mass == 0){ //IF the node does not have any mass, then means it is ablated, and it should not pack
 		return false;
@@ -125,6 +148,7 @@ bool Node::checkIfNodeHasPacking(){
 void Node::getCurrentPosition(double* pos){
 	/**
 	 *  The function will return the current position of the owner node.
+	 *
 	 */
 	pos[0] = Position[0];
 	pos[1] = Position[1];
@@ -135,6 +159,7 @@ void Node::displayConnectedElementIds(){
 	/**
 	 *  The function will display on screen the list of unique Node#Id s for the elements utilising this node.
 	 *  These elements are listed in Node#connectedElementIds.
+	 *
 	 */
 	int n = connectedElementIds.size();
 	cout<<"	Connected Element Ids: ";
@@ -148,6 +173,7 @@ void Node::displayConnectedElementWeights(){
 	/**
 	 *  The function will display on screen output the list of weights (normalised masses) of the connected elements.
 	 *  These weights are stored in Node#connectedElementWeights, and the order is linked to the list: Node#connectedElementIds.
+	 *
 	 */
 	int n = connectedElementWeights.size();
 	cout<<"	Connected Element weights: ";
@@ -160,6 +186,7 @@ void Node::displayConnectedElementWeights(){
 void  Node::addToImmediateNeigs(int newNodeId){
 	/**
 	 *  The function will add the input node id to the vector of immediate neighbours of the current node (Node#immediateNeigs).
+	 *
 	 */
 	immediateNeigs.push_back(newNodeId);
 }
@@ -177,6 +204,7 @@ void Node::addToConnectedElements(int newElementId, double volumePerNode){
 	/**
 	 * Each of the already recorded weights (in Node#connectedElementWeights) of the connected elements (in Node#connectedElementIds)
 	 * will be updated with the scale newMass / oldMass.
+	 *
 	 */
 	double scaler = mass/oldMass;
 	int n = connectedElementIds.size();
@@ -185,9 +213,294 @@ void Node::addToConnectedElements(int newElementId, double volumePerNode){
 	}
 	/**
 	 * Then the new element and its corresponding id will be added to the lists of the node, Node#connectedElementIds, and Node#connectedElementWeights, respectively.
+	 *
 	 */
 	connectedElementIds.push_back(newElementId);
 	connectedElementWeights.push_back(volumePerNode/mass);
+}
+
+bool Node::isMyNeig(int nodeId){
+	/**
+	 *  This function will take in a node id, and check if the node is an immediate neighbour of itself.
+	 *  The check is done through its Node#immediateNeigs list. The function will return true if the
+	 *  input id is a neighbour, and false otherwise.
+	 *
+	 */
+	int n = immediateNeigs.size();
+	for (int i= 0; i<n; ++i){
+		if (immediateNeigs[i] ==nodeId ){
+			return true;
+		}
+	}
+	return false;
+}
+
+bool Node::isNeigWithMyCollapsedNodes(int NodeId, vector<Node*>& Nodes){
+	/**
+	 *  This function will take in a node id, and the address of the list of node pointers in the simulation.
+	 *  It will check if the input node id is an immediate neighbour of any of the nodes it has been collapsed with.
+	 *  The check is done through  Node#immediateNeigs lists of all the nodes on its Node#collapsedWith list.
+	 *  The function will return true if the input id is a neighbour of any node this node has collapsed with, and false otherwise.
+	 *
+	 */
+	vector<int>::iterator itCollapsedWithNodeIndex;
+	for (itCollapsedWithNodeIndex = collapsedWith.begin();itCollapsedWithNodeIndex<collapsedWith.end();++itCollapsedWithNodeIndex){
+		if (find(Nodes[(*itCollapsedWithNodeIndex)]->immediateNeigs.begin(), Nodes[(*itCollapsedWithNodeIndex)]->immediateNeigs.end(),Id)!=Nodes[(*itCollapsedWithNodeIndex)]->immediateNeigs.end()){
+			//the collapsed node of master is neig to slave
+			return true;
+		}
+	}
+	return false;
+}
+
+//version without elemetn checking, and adhesion
+void Node::collapseOnNode(vector<Node*>& Nodes, int masterNodeId){
+	/**
+	 *  This function will collapse this Node with the input node id (second parameter).
+	 *  Collapse will bind the two nodes' all degrees of freedoms to each other, and bring them to the same position,
+	 *  mid point of their positions at the time of the function call.
+	 *  The function will take in the address of the list of node pointers in the simulation, and a node id.
+	 *
+	 */
+	bool debugDisplay = true;
+	//add the nodes master have collapsed with on me:
+	vector <int> newCollapseList;
+	newCollapseList.push_back(Id);
+	newCollapseList.push_back(masterNodeId);
+	int nThis = collapsedWith.size();
+	for (int i = 0; i<nThis; ++i){
+		newCollapseList.push_back(collapsedWith[i]);
+	}
+	int nMaster = Nodes[masterNodeId]->collapsedWith.size();
+	for (int i = 0; i<nMaster; ++i){
+		newCollapseList.push_back(Nodes[masterNodeId]->collapsedWith[i]);
+	}
+	//remove duplicates:
+	sort( newCollapseList.begin(), newCollapseList.end() );
+	newCollapseList.erase( unique( newCollapseList.begin(), newCollapseList.end() ), newCollapseList.end() );
+	int nNew = newCollapseList.size();
+
+	//calculate the average weighted pos:
+	double avrPos[3] = {0,0,0};
+	if(nMaster == 0){nMaster = 1;};
+	if(nThis == 0){nThis = 1;};
+	avrPos[0] = (nThis*Position[0] + nMaster*Nodes[masterNodeId]->Position[0])/(nThis+nMaster);
+	avrPos[1] = (nThis*Position[1] + nMaster*Nodes[masterNodeId]->Position[1])/(nThis+nMaster);
+	avrPos[2] = (nThis*Position[2] + nMaster*Nodes[masterNodeId]->Position[2])/(nThis+nMaster);
+	//If there is a fixed position in any of the nodes on the list, update to that pos:
+	bool fix[3] = {false, false, false};
+	for (int i = 0; i<nNew; ++i){
+		for (int j=0; j<3; ++j){
+			if(Nodes[newCollapseList[i]]->FixedPos[j]){
+				avrPos[j] = Nodes[newCollapseList[i]]->Position[j];
+				fix[j] = true;
+			}
+		}
+	}
+
+	//update adhesion:
+	int baseNode = 0;
+	int adhesionPoint = -1;
+	for (int i = 0; i<nNew; ++i){
+		if(Nodes[newCollapseList[i]]->adheredTo > -1){
+			adhesionPoint = Nodes[newCollapseList[i]]->adheredTo;
+			baseNode = newCollapseList[i];
+			break;
+		}
+	}
+	if (adhesionPoint > -1){
+		//at least on of the nodes is adheres. make all of them adhered:
+		for (int i = 0; i<nNew; ++i){
+			if(newCollapseList[i] == adhesionPoint){
+				//the adhered node is bound to be on this list, I keep that one adhered to the base
+				Nodes[newCollapseList[i]]->adheredTo = baseNode;
+			}
+			else{
+				//all other nodes on the list are adhered to the selected adheredNode
+				Nodes[newCollapseList[i]]->adheredTo = adhesionPoint;
+			}
+		}
+	}
+
+
+	if (debugDisplay){
+		cout<<"in single element collapse, masterId: "<<masterNodeId<<" slaveId: "<<Id<<endl;
+		cout<<"  nMaster "<<nMaster<<" nThis "<<nThis<<endl;
+		cout<<"  avrPos:     "<<avrPos[0]<<" "<<avrPos[1]<<" "<<avrPos[2]<<endl;
+		cout<<"  Position:   "<<Position[0]<<" "<<Position[1]<<" "<<Position[2]<<endl;
+		cout<<"  Master pos: "<<Nodes[masterNodeId]->Position[0]<<" "<<Nodes[masterNodeId]->Position[1]<<" "<<Nodes[masterNodeId]->Position[2]<<endl;
+		cout<<"  collapsed with list before update: ";
+		for(int i=0; i<collapsedWith.size(); ++i){
+			cout<<collapsedWith[i]<<" ";
+		}
+		cout<<endl;
+		cout<<"  masters collapsed list before update: ";
+		for(int i=0; i<Nodes[masterNodeId]->collapsedWith.size(); ++i){
+			cout<<Nodes[masterNodeId]->collapsedWith[i]<<" ";
+		}
+		cout<<endl;
+	}
+	//update collapsed list of all the members to be the same, update positions:
+	nNew = newCollapseList.size();
+	for (int i = 0; i<nNew; ++i){
+		Nodes[newCollapseList[i]]->collapsedWith = newCollapseList;
+		for (int j=0; j<3; ++j){
+			if(!Nodes[newCollapseList[i]]->FixedPos[j]){
+				Nodes[newCollapseList[i]]->Position[j] = avrPos[j];
+				Nodes[newCollapseList[i]]->FixedPos[j] = fix[j];
+			}
+		}
+	}
+	if (debugDisplay){
+		cout<<"  collapsed with list after update: ";
+		for(int i=0; i<collapsedWith.size(); ++i){
+			cout<<collapsedWith[i]<<" ";
+		}
+		cout<<endl;
+	}
+}
+
+void Node::clearDuplicatesFromCollapseList(){
+	//remove duplicates:
+	sort( collapsedWith.begin(), collapsedWith.end() );
+	collapsedWith.erase( unique( collapsedWith.begin(), collapsedWith.end() ), collapsedWith.end() );
+}
+
+void Node::getNewCollapseListAndAveragePos(vector<int> &newCollapseList, double* avrPos, bool* fix, vector<Node*>& Nodes, int masterNodeId){
+	for (int j=0; j<3; ++j){
+		avrPos[j] = 0;
+		fix[j] = false;
+	}
+
+	newCollapseList.push_back(Id);
+	newCollapseList.push_back(masterNodeId);
+	int nThis = collapsedWith.size();
+	for (int i = 0; i<nThis; ++i){
+		newCollapseList.push_back(collapsedWith[i]);
+	}
+	int nMaster = Nodes[masterNodeId]->collapsedWith.size();
+	for (int i = 0; i<nMaster; ++i){
+		newCollapseList.push_back(Nodes[masterNodeId]->collapsedWith[i]);
+	}
+	//remove duplicates:
+	sort( newCollapseList.begin(), newCollapseList.end() );
+	newCollapseList.erase( unique( newCollapseList.begin(), newCollapseList.end() ), newCollapseList.end() );
+	int nNew = newCollapseList.size();
+
+	//calculate the average weighted pos:
+	if(nMaster == 0){nMaster = 1;};
+	if(nThis == 0){nThis = 1;};
+	avrPos[0] = (nThis*Position[0] + nMaster*Nodes[masterNodeId]->Position[0])/(nThis+nMaster);
+	avrPos[1] = (nThis*Position[1] + nMaster*Nodes[masterNodeId]->Position[1])/(nThis+nMaster);
+	avrPos[2] = (nThis*Position[2] + nMaster*Nodes[masterNodeId]->Position[2])/(nThis+nMaster);
+	//If there is a fixed position in any of the nodes on the list, update to that pos:
+	for (int i = 0; i<nNew; ++i){
+		for (int j=0; j<3; ++j){
+			if(Nodes[newCollapseList[i]]->FixedPos[j]){
+				avrPos[j] = Nodes[newCollapseList[i]]->Position[j];
+				fix[j] = true;
+			}
+		}
+	}
+}
+
+
+//version that will check element collapse:
+bool Node::collapseOnNode(vector<int> &newCollapseList, double* avrPos, bool* fix, vector<Node*>& Nodes, int masterNodeId){
+	bool debugDisplay = true;
+	//add the nodes master have collapsed with on me:
+	/*vector <int> newCollapseList;
+	newCollapseList.push_back(Id);
+	newCollapseList.push_back(masterNodeId);
+	int nThis = collapsedWith.size();
+	for (int i = 0; i<nThis; ++i){
+		newCollapseList.push_back(collapsedWith[i]);
+	}
+	int nMaster = Nodes[masterNodeId]->collapsedWith.size();
+	for (int i = 0; i<nMaster; ++i){
+		newCollapseList.push_back(Nodes[masterNodeId]->collapsedWith[i]);
+	}
+	//remove duplicates:
+	sort( newCollapseList.begin(), newCollapseList.end() );
+	newCollapseList.erase( unique( newCollapseList.begin(), newCollapseList.end() ), newCollapseList.end() );
+	int nNew = newCollapseList.size();
+
+	//calculate the average weighted pos:
+	double avrPos[3] = {0,0,0};
+	if(nMaster == 0){nMaster = 1;};
+	if(nThis == 0){nThis = 1;};
+	avrPos[0] = (nThis*Position[0] + nMaster*Nodes[masterNodeId]->Position[0])/(nThis+nMaster);
+	avrPos[1] = (nThis*Position[1] + nMaster*Nodes[masterNodeId]->Position[1])/(nThis+nMaster);
+	avrPos[2] = (nThis*Position[2] + nMaster*Nodes[masterNodeId]->Position[2])/(nThis+nMaster);
+	//If there is a fixed position in any of the nodes on the list, update to that pos:
+	bool fix[3] = {false, false, false};
+	for (int i = 0; i<nNew; ++i){
+		for (int j=0; j<3; ++j){
+			if(Nodes[newCollapseList[i]]->FixedPos[j]){
+				avrPos[j] = Nodes[newCollapseList[i]]->Position[j];
+				fix[j] = true;
+			}
+		}
+	}*/
+	//update adhesion:
+	int nNew = newCollapseList.size();
+	int baseNode = 0;
+	int adhesionPoint = -1;
+	for (int i = 0; i<nNew; ++i){
+		if(Nodes[newCollapseList[i]]->adheredTo > -1){
+			adhesionPoint = Nodes[newCollapseList[i]]->adheredTo;
+			baseNode = newCollapseList[i];
+			break;
+		}
+	}
+	if (adhesionPoint > -1){
+		//at least on of the nodes is adheres. make all of them adhered:
+		for (int i = 0; i<nNew; ++i){
+			if(newCollapseList[i] == adhesionPoint){
+				//the adhered node is bound to be on this list, I keep that one adhered to the base
+				Nodes[newCollapseList[i]]->adheredTo = baseNode;
+			}
+			else{
+				//all other nodes on the list are adhered to the selected adheredNode
+				Nodes[newCollapseList[i]]->adheredTo = adhesionPoint;
+			}
+		}
+	}
+
+	if (debugDisplay){
+		cout<<"masterId: "<<masterNodeId<<" slaveId: "<<Id<<endl;
+		cout<<"  avrPos:     "<<avrPos[0]<<" "<<avrPos[1]<<" "<<avrPos[2]<<endl;
+		cout<<"  Position:   "<<Position[0]<<" "<<Position[1]<<" "<<Position[2]<<endl;
+		cout<<"  Master pos: "<<Nodes[masterNodeId]->Position[0]<<" "<<Nodes[masterNodeId]->Position[1]<<" "<<Nodes[masterNodeId]->Position[2]<<endl;
+		cout<<"  collapsed with list before update: ";
+		for(int i=0; i<collapsedWith.size(); ++i){
+			cout<<collapsedWith[i]<<" ";
+		}
+		cout<<endl;
+		cout<<"  masters collapsed list before update: ";
+		for(int i=0; i<Nodes[masterNodeId]->collapsedWith.size(); ++i){
+			cout<<Nodes[masterNodeId]->collapsedWith[i]<<" ";
+		}
+		cout<<endl;
+	}
+	//update collapsed list of all the members to be the same, update positions:
+	nNew = newCollapseList.size();
+	for (int i = 0; i<nNew; ++i){
+		Nodes[newCollapseList[i]]->collapsedWith = newCollapseList;
+		for (int j=0; j<3; ++j){
+			if(!Nodes[newCollapseList[i]]->FixedPos[j]){
+				Nodes[newCollapseList[i]]->Position[j] = avrPos[j];
+				Nodes[newCollapseList[i]]->FixedPos[j] = fix[j];
+			}
+		}
+	}
+	if (debugDisplay){
+		cout<<"  collapsed with list after update: ";
+		for(int i=0; i<collapsedWith.size(); ++i){
+			cout<<collapsedWith[i]<<" ";
+		}
+		cout<<endl;
+	}
 }
 
 void Node::removeFromConnectedElements(int ElementId, double volumePerNode){
@@ -249,3 +562,24 @@ int  Node::getId(){
 	 */
 	return Id;
 }
+
+bool Node::isECMChangeAppliedToNode(bool changeApicalECM, bool changeBasalECM, vector<int> &ECMChangeEllipseBandIds, int numberOfECMChangeEllipseBands){
+	if (allOwnersECMMimicing){
+		if  (    (changeApicalECM && tissuePlacement == 1 )
+			  || (changeBasalECM  && tissuePlacement == 0 )
+					  //|| (changeStiffnessBasalECM  && tissuePlacement == 2 )
+			){
+			if(insideEllipseBand){
+				for (int ECMReductionRangeCounter = 0; ECMReductionRangeCounter<numberOfECMChangeEllipseBands; ++ECMReductionRangeCounter){
+					if (coveringEllipseBandId == ECMChangeEllipseBandIds[ECMReductionRangeCounter]){
+						return true;
+					}
+				}
+			}
+
+		}
+	}
+	return false;
+}
+
+
