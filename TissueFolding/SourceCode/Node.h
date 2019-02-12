@@ -50,12 +50,19 @@ public:
 	vector<int>		collapsedWith;
 	int 			adheredTo;
 	bool			attachedToPeripodial;
+	bool			onFoldInitiation;
+	bool			checkOwnersforEllipseAsignment;    ///< When the ellipse ids are assigned to nodes nby owner elemetns, you can end up with elements that have all their nodes engulfed in an ellipse, but the element itself is not assigned into an ellipse. This flag will check for that.
+	bool			positionUpdateOngoing;
+	bool 			positionUpdateCounter;
+	bool haveCommonOwner(Node* nodeSlave);
+	int  getCommonOwnerId(Node* nodeSlave);
 	void setExternalViscosity(double ApicalVisc,double BasalVisc, bool extendExternalViscosityToInnerTissue);///< The function to set the viscosity of the node.
 	bool checkIfNeighbour(int IdToCheck); 				///< The function to check if the node with input Id (IdToCheck) is an immediate neighbour of the node
 	bool checkIfNodeHasPacking();						///< The function to check if the node is eligible for packing.
 	void getCurrentPosition(double* pos);				///< return the current position of the node
 	void displayConnectedElementIds();					///< This function will print out a list of connected element Id's
 	void displayConnectedElementWeights();				///< This function will print out the weights of the connected elements, in the order of  Id s given in connectedElementIds
+	void displayPosition();
 	void addToImmediateNeigs(int newNodeId);			///< This function adds the input node Id (int) to the list of neighbours of the node (Node#immediateNeigs)
 	void addToConnectedElements(int newElementId, double volumePerNode);	///< This function adds the input newElementId (int) to the list of elements connected by this node, updating the mass, and weights of mass per connected element in the process.
 	void removeFromConnectedElements(int newElementId, double volumePerNode);///< This function removes the input newElementId (int) from the list of elements connected by this node, updating the mass, and weights of mass per connected element in the process.
@@ -63,8 +70,10 @@ public:
 	bool isNeigWithMyCollapsedNodes(int NodeId, vector<Node*>& Nodes);
 	void getNewCollapseListAndAveragePos(vector<int> &newCollapseList, double* avrPos, bool* fix, vector<Node*>& Nodes, int masterNodeId);
 	void clearDuplicatesFromCollapseList();
-	bool collapseOnNode(vector<int> &newCollapseList, double* avrPos, bool* fix, vector<Node*>& Nodes, int masterNodeId);
+	void collapseOnNode(vector<int> &newCollapseList, double* avrPos, bool* fix, vector<Node*>& Nodes, int masterNodeId);
 	void collapseOnNode(vector<Node*>& Nodes, int masterNodeId);
+	void collapseOnNodeInStages( vector<int> &newCollapseList, double* avrPos, bool* fix, vector<Node*>& Nodes, int masterNodeId);
+	void updatePositionTowardsPoint(double* avrPos,bool* fix);
 	bool isECMChangeAppliedToNode(bool changeApicalECM, bool changeBasalECM, vector<int> &ECMChangeEllipseBandIds, int numberOfECMChangeEllipseBands);
 	int getId();										///< The function returns the Id (Node#Id) of the node
 };

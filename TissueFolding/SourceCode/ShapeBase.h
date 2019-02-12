@@ -196,6 +196,8 @@ public:
     int 	tissuePlacement; //1 -> apical, 0 -> basal, 2->middle, 3 -> lateral
     int 	tissueType;	///< The tissue type is 0 for columnar layer, 1 for peripodial membrane, and 2 for linker zone
     bool	spansWholeTissue; ///< Boolean staing is the element spans the whole tissue. This is used to identify mid-layer tagged tissues (tissuePlacement = 2), that should still have apical abd basal responses (such as myosin).
+    int 	compartmentType; ///< integer identifying the compartment of the tissue in DV axis, 0 pouch, 1 hinge, 2 notum
+    double  compartmentIdentityFraction;
     bool	isECMMimicing;
     bool	isECMMimimcingAtCircumference;
     bool	atBasalBorderOfECM;
@@ -244,6 +246,9 @@ public:
 	void	getRelativePositionInTissueInGridIndex(int nGridX, int nGridY, int& IndexX, int& IndexY, double& FracX, double& FracY);
 	void	getInitialRelativePositionInTissueInGridIndex(int nGridX, int nGridY, int& IndexX, int& IndexY, double& FracX, double& FracY);
 	double	getStiffnessMultiplier();
+	double 	getCurrentVolume();
+	gsl_matrix* getCurrentFe();
+	void 	relaxElasticForces();
 	bool 	isGrowthRateApplicable(int sourceTissue, double& weight, double zmin, double zmax);
 	void 	updateGrowthWillBeScaledDueToApikobasalRedistribution(bool thisFunctionShrinksApical, double scale, vector<int>& ellipseBandIdsForGrowthRedistribution);
 	void 	scaleGrowthForZRedistribution( double& x, double& y, double& z,int sourceTissue);
@@ -252,6 +257,8 @@ public:
 	gsl_matrix* getGrowthIncrement();
 	void 	updateGrowthIncrement(gsl_matrix* columnar, gsl_matrix* peripodial);
 	void 	updateGrowthByMutation(double dt);
+	void	scaleGrowthIncrement(double multiuplier);
+	double 	getGrowthMutationMultiplier();
 	void 	calculateShapeChangeIncrementFromRates(double dt, double rx, double ry, double rz, gsl_matrix* increment);
 	void 	updateShapeChangeIncrement(gsl_matrix* columnarShapeChangeIncrement);
 	void	calculateRelativePosInBoundingBox(double boundingBoxXMin, double boundingBoxYMin, double boundingBoxLength, double boundingBoxWidth);
@@ -437,7 +444,8 @@ public:
 	virtual double* getBasalMinViscosity(vector<Node*> /*Nodes*/){ParentErrorMessage("getBasalMinViscosity");double* dummy; return dummy;};
 	virtual void copyElementInformationAfterRefinement(ShapeBase* /*baseElement*/, int /*layers*/, bool /*thereIsPlasticDeformation*/){ParentErrorMessage("copyElementInformationAfterRefinement");};
 	virtual void checkRotationConsistency3D(){ParentErrorMessage("checkRotationConsistency3D");};
-
+	virtual void getLumenFacingNodeIds(int* /*nodeIds*/, int& /*numberOfTriangles*/){ParentErrorMessage("getLumenFacingNodeIds");};
+	virtual bool areNodesDirectlyConnected(int /*node0*/, int /*node1*/){ParentErrorMessage("areNodesDirectlyConnected");};
 	bool checkPackingToThisNodeViaState(int ColumnarLayerDiscretisationLAyers, Node* NodePointer);
 	bool DoesPointBelogToMe(int IdNode);
 	void growShape();
@@ -460,6 +468,7 @@ public:
 	bool RotatedElement;
     gsl_matrix* GrowthStrainsRotMat;
 
+    void calculateEmergentRotationAngles();//this is for test and display purposes, calculates the rotation of the element in plane
     void doesElementNeedRefinement(double areaThreshold, int surfaceidentifier);
 
 	bool 	calculateAlignmentScore(double** RefNormalised);
@@ -476,10 +485,11 @@ public:
 	void	updateUniformOrRingGrowthRate(double* NewGrowth, int GrowthId);
 	void	updateGridBasedGrowthRate(double* NewGrowth, int GrowthId, int i, int j);
 	virtual void setBasalNeigElementId(vector<ShapeBase*>& /*elementsList*/){ParentErrorMessage("setBasalNeigElementId");};
-	void	checkVolumeRedistribution(vector<ShapeBase*>& elementsList, double dt);
-	void 	updateFgWithVolumeRedistribution(gsl_matrix*  increment);
 	bool 	isElementFlippedInPotentialNewShape(int nodeId, double newX, double newY, double newZ);
 	void 	checkForCollapsedNodes(int TissueHeightDiscretisationLayers, vector<Node*>& Nodes, vector<ShapeBase*>& Elements);
+	bool 	hasEnoughNodesOnCurve(vector<Node*>&Nodes);
+	void 	assignEllipseBandIdToWholeTissueColumn(int TissueHeightDiscretisationLayers, vector<Node*>& Nodes, vector<ShapeBase*>& Elements);
+	void 	assignEllipseBandId(vector<Node*>& Nodes, int selectedEllipseBandId);
 	void 	assignEllipseBandIdToNodes(vector<Node*>& Nodes);
 };
 

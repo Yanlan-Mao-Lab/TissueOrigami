@@ -19,8 +19,8 @@ using namespace std;
  GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
  {
 	 //cout<<"initiating gl widget"<<endl;
-	 obj_pos[0] =  30.0f; //15.0f // 80.0f;
-	 obj_pos[1] =  0.0f;//-130.0f;
+	 obj_pos[0] = 65.0f; //30 for flat tissues, 65 for compact close shots without side bar
+	 obj_pos[1] =  30.0f;//30 for flat tissues, 30 compact close shots
 	 obj_pos[2] =  500.0f;
 	 MatRot[0]  = 1.0; MatRot[1]  = 0.0; MatRot[2]  = 0.0; MatRot[3]  = 0.0;
 	 MatRot[4]  = 0.0; MatRot[5]  = 1.0; MatRot[6]  = 0.0; MatRot[7]  = 0.0;
@@ -49,28 +49,28 @@ using namespace std;
      DisplayPysPropRange[1][0] = 1000.0; DisplayPysPropRange[1][1] = 50000.0; 	//Internal Viscosity
      DisplayPysPropRange[2][0] = 1000.0; DisplayPysPropRange[2][1] = 5000.0; //Young's modulus
      DisplayPysPropRange[3][0] = 0.0; DisplayPysPropRange[3][1] = 0.5; 		//Poisson's ratio
-     DisplayPysPropRange[4][0] = 0.0; DisplayPysPropRange[4][1] = 36; 		//volumetric (xyz) growth rate
+     DisplayPysPropRange[4][0] = 0.0; DisplayPysPropRange[4][1] = 12; 		//volumetric (xyz) growth rate
      DisplayPysPropRange[5][0] = 0.0; DisplayPysPropRange[5][1] = 14.0; 	//volumetric (xyz) growth
      DisplayPysPropRange[6][0] = 0; DisplayPysPropRange[6][1] = 12.0; 	//Emergent size & shape
      DisplayPysPropRange[7][0] = -1.0; DisplayPysPropRange[7][1] = 10.0; 	//shape change
 
      //the minimum and maximum they can get:
-     DisplayPysPropBounds[0][0] = 0.0; DisplayPysPropBounds[0][1] = 10000.0;     //External Viscosity - lower limit, min max range
+     DisplayPysPropBounds[0][0] = 0.0;   DisplayPysPropBounds[0][1] = 10000.0;     //External Viscosity - lower limit, min max range
      DisplayPysPropBounds[0][2] = 100.0; DisplayPysPropBounds[0][3] = 100000.0;  //External Viscosity - upper limit, min max range
-     DisplayPysPropBounds[1][0] = 0.0; DisplayPysPropBounds[1][1] = 5000.0;     //Internal Viscosity - lower limit, min max range
+     DisplayPysPropBounds[1][0] = 0.0;   DisplayPysPropBounds[1][1] = 5000.0;     //Internal Viscosity - lower limit, min max range
      DisplayPysPropBounds[1][2] = 100.0; DisplayPysPropBounds[1][3] = 100000.0;  //Internal Viscosity - upper limit, min max range
-     DisplayPysPropBounds[2][0] = 1.0; DisplayPysPropBounds[2][1] = 1000.0; 	//Young's modulus - lower limit, min max range
-     DisplayPysPropBounds[2][2] = 51.0; DisplayPysPropBounds[2][3] = 50000.0;  	//Young's modulus - upper limit, min max range
-     DisplayPysPropBounds[3][0] = 0.0; DisplayPysPropBounds[3][1] = 0.1; 		//Poisson's ratio - lower limit, min max range
-     DisplayPysPropBounds[3][2] = 0.11; DisplayPysPropBounds[3][3] = 0.5; 		//Poisson's ratio - upper limit, min max range
-     DisplayPysPropBounds[4][0] = 0.0; DisplayPysPropBounds[4][1] = 10; 		//xy-planar growth rate - lower limit, min max range
-     DisplayPysPropBounds[4][2] = 1; DisplayPysPropBounds[4][3] = 150; 			//xy-planar growth rate - upper limit, min max range
-     DisplayPysPropBounds[5][0] = 0.0; DisplayPysPropBounds[5][1] = 10; 		//xy-planar growth total - lower limit, min max range
-     DisplayPysPropBounds[5][2] = 1; DisplayPysPropBounds[5][3] = 150; 			//xy-planar growth total - upper limit, min max range
-     DisplayPysPropBounds[6][0] = 0.0; DisplayPysPropBounds[6][1] = 10.0;		//emergent shape and size - lower limit, min max range
-     DisplayPysPropBounds[6][2] = 1.0; DisplayPysPropBounds[6][3] = 150.0;		//emergent shape and size - upper limit, min max range
-     DisplayPysPropBounds[7][0] = -6.0; DisplayPysPropBounds[7][1] = 0.0;		//shape change - lower limit, min max range
-     DisplayPysPropBounds[7][2] = 0.0; DisplayPysPropBounds[7][3] = 6.0;		//shape change - upper limit, min max range
+     DisplayPysPropBounds[2][0] = 1.0;   DisplayPysPropBounds[2][1] = 1000.0; 	//Young's modulus - lower limit, min max range
+     DisplayPysPropBounds[2][2] = 51.0;  DisplayPysPropBounds[2][3] = 100000.0;  	//Young's modulus - upper limit, min max range
+     DisplayPysPropBounds[3][0] = 0.0;   DisplayPysPropBounds[3][1] = 0.1; 		//Poisson's ratio - lower limit, min max range
+     DisplayPysPropBounds[3][2] = 0.11;  DisplayPysPropBounds[3][3] = 0.5; 		//Poisson's ratio - upper limit, min max range
+     DisplayPysPropBounds[4][0] = 0.0;   DisplayPysPropBounds[4][1] = 10; 		//xy-planar growth rate - lower limit, min max range
+     DisplayPysPropBounds[4][2] = 1;     DisplayPysPropBounds[4][3] = 150; 			//xy-planar growth rate - upper limit, min max range
+     DisplayPysPropBounds[5][0] = 0.0;   DisplayPysPropBounds[5][1] = 10; 		//xy-planar growth total - lower limit, min max range
+     DisplayPysPropBounds[5][2] = 1;     DisplayPysPropBounds[5][3] = 150; 			//xy-planar growth total - upper limit, min max range
+     DisplayPysPropBounds[6][0] = 0.0;   DisplayPysPropBounds[6][1] = 10.0;		//emergent shape and size - lower limit, min max range
+     DisplayPysPropBounds[6][2] = 1.0;   DisplayPysPropBounds[6][3] = 150.0;		//emergent shape and size - upper limit, min max range
+     DisplayPysPropBounds[7][0] = -6.0;  DisplayPysPropBounds[7][1] = 0.0;		//shape change - lower limit, min max range
+     DisplayPysPropBounds[7][2] = 0.0;   DisplayPysPropBounds[7][3] = 6.0;		//shape change - upper limit, min max range
      //the decimals to display:
      DisplayPysPropDecimals[0] = 0;
      DisplayPysPropDecimals[1] = 0;
@@ -101,10 +101,11 @@ using namespace std;
      ManualNodeSelection = false;
      ManualSelectedNodeId = -100;
      PerspectiveView = false;
+     drawTissueScaleBar = true;
      orthoViewLimits[0] = -250;
      orthoViewLimits[1] =  250;
-     orthoViewLimits[2] = -130;//-130;//-60;
-     orthoViewLimits[3] =  130;//130;// 60;
+     orthoViewLimits[2] = -70;//-130;  for flat discs, 155, normal 130, close shot with no side bar: -70
+     orthoViewLimits[3] =  130;//130;
      orthoViewLimits[4] = -1000;
      orthoViewLimits[5] =  1000;
 		 
@@ -122,6 +123,7 @@ using namespace std;
      zClip = 1000.0;
      drawSymmetricity = true;
      cout<<"gl initiated"<<endl;
+
  }
 
  GLWidget::~GLWidget()
@@ -210,12 +212,17 @@ void GLWidget::reInitialiseNodeColourList(int oldNodeNumber){
 		 reInitialiseNodeColourList(currNodeNumber);
 		 currNodeNumber = Sim01->nNodes;
 	 }
+
+
+
 	 constructNodeColourList();
 	 drawColourbar();
 	 drawAxesArrows();
 	 if (drawTissueScaleBar){
 		 drawScaleBar();
 	 }
+
+
 	 glTranslatef( obj_pos[0], obj_pos[1], -obj_pos[2] );
 	 glTranslatef( Sim01->SystemCentre[0], Sim01->SystemCentre[1], -Sim01->SystemCentre[2]);
 	 glMultMatrixf(MatRot);
@@ -232,12 +239,19 @@ void GLWidget::reInitialiseNodeColourList(int oldNodeNumber){
 	 for (int i =0; i<n;i++){
 		 drawElement(i,false);
 	 }
+	 //testing polar decompostion
+	 //for (int i =0; i<n;i++){
+	 //	 Sim01->Elements[i]->calculateEmergentRotationAngles();
+	 //}
+	 //end of testingpolar decomposition
+
 	 drawForces();
 	 drawPackForces();
 	 //drawNodeVelocities();
 	 drawMyosin();
 	 drawBoundingBox();
      drawPipette();
+     //drawAFMBead();
      drawPointsForDisplay();
      drawEnclosingShell();
 	 if (DisplayFixedNodes){
@@ -266,7 +280,6 @@ void GLWidget::reInitialiseNodeColourList(int oldNodeNumber){
 		 }
 		 glLineWidth(MainShapeLineThickness);
 	 }
-
      //swapBuffers();
  }
 
@@ -568,8 +581,15 @@ void GLWidget::highlightNode(int i){
 	int* NodeIds = Sim01->Elements[i]->getNodeIds();
 	float** NodeColours;
 	NodeColours = new float*[n];
+	//if (Sim01->Elements[i]->tissuePlacement == 1 ){
+	//	Sim01->Elements[i]->isActinMimicing = true;
+	//}
+	//if (Sim01->Elements[i]->tissuePlacement == 0 ){
+	//	Sim01->Elements[i]->isECMMimicing = true;
+	//}
 	for (int j = 0; j<n; j++){
 		NodeColours[j] = new float[3];
+
 		if (DisplayPysProp && PysPropToDisplay == 4){
 			//Displaying growth rate, I want this on an elemental basis
 			float* currColour;
@@ -671,7 +691,7 @@ void GLWidget::highlightNode(int i){
 		NodeColours[l][1] = 1;
 		NodeColours[l][2] = 0.5*Sim01->cellMigrationTool->getMigrationAngleForElement(i);
 	}*/
-
+	bool drawDVCompartments = false;
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glEnable(GL_POLYGON_OFFSET_FILL); // Avoid Stitching!
 	glPolygonOffset(1.0, 1.0); 	//These are necessary so the depth test can keep the lines above surfaces
@@ -680,7 +700,36 @@ void GLWidget::highlightNode(int i){
 			for (int k =0; k<3; ++k){
 				int pointId = TriangleConnectivity[j][k];
 				glColor3f(NodeColours[pointId][0],NodeColours[pointId][1],NodeColours[pointId][2]);
-
+				if (DisplayPysProp){
+					//float* PysPropColour;
+					//PysPropColour = new float[3];
+					//If the physical property is external viscosity, then get the colour directly
+					if (PysPropToDisplay != 0){ //viscosity is node based.
+						float* currColour;
+						currColour = new float[3];
+						float PysPropMag = 0.0;
+						if ( PysPropToDisplay == 4 || PysPropToDisplay == 5 || PysPropToDisplay == 6){
+							//Growth is multiplicative, base should be 1.0:
+							PysPropMag = 1.0;
+						}
+						Sim01->Elements[i]->getPysProp(PysPropToDisplay, PysPropMag, Sim01->dt);
+						getDisplayColour(currColour,PysPropMag);
+						glColor3f(currColour[0],currColour[1],currColour[2]);
+						delete[] currColour;
+					}
+				}
+				if (drawDVCompartments){
+					double c = Sim01->Elements[i]->compartmentIdentityFraction*0.7;
+					if (Sim01->Elements[i]->compartmentType == 0){
+						glColor3f(c,0,0);
+					}
+					else if (Sim01->Elements[i]->compartmentType == 1){
+						glColor3f(0,c,0);
+					}
+					else if (Sim01->Elements[i]->compartmentType == 2){
+						glColor3f(0,0,c);
+					}
+				}
 				if (drawMarkingEllipses){
 					if (Sim01->Elements[i]->insideEllipseBand){
 						double increment = 0.33; //reduce if more then 10 ellipses.
@@ -702,6 +751,11 @@ void GLWidget::highlightNode(int i){
 						}
 					}
 				}
+
+				//if (Sim01->Elements[i]->tissuePlacement == 1){
+				//	glColor3f(0.0,0.5,0);
+				//}
+
 				float x = xMultiplier * Sim01->Elements[i]->Positions[pointId][0];
 				float y = yMultiplier * Sim01->Elements[i]->Positions[pointId][1];
 				float z = Sim01->Elements[i]->Positions[pointId][2];
@@ -1445,7 +1499,7 @@ bool GLWidget::findNode(int i){
  }
 
  void GLWidget::drawBoundNodes(){
-	 float MarkerSize = 0.2;
+	 float MarkerSize = 0.6;
 	 int n = Sim01->Nodes.size();
 	 for (int i=0; i<n; ++i){
 		 float colour[3]={0.0,0.0,0.0};
@@ -1469,7 +1523,14 @@ bool GLWidget::findNode(int i){
 				 colour[j] = 0.8;
 				 thereisBinding = true;
 			 }
+			 if(Sim01->Nodes[i]->onFoldInitiation){
+				 thereisBinding = true;
+				 colour[0] = 0.0;
+				 colour[1] = 0.0;
+				 colour[2] = 0.0;
+			 }
 		 }
+
 		 if(thereisBinding){
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 			glEnable(GL_POLYGON_OFFSET_FILL); // Avoid Stitching!
@@ -1574,10 +1635,10 @@ bool GLWidget::findNode(int i){
  void GLWidget::drawScaleBar(){
 	glPushMatrix();
 		//glTranslatef( -15.0f, +15.0f, -obj_pos[2]);
-		glTranslatef( 0.0f, 0.0f, -obj_pos[2]);
+		glTranslatef( -80.0f, 100.0f, -obj_pos[2]);
 		glMultMatrixf(MatRot);
-		float size = 5.0; //one side of the cube is 5 microns
-		float Points[8][3]={{0,0,0},{size,0,0},{size,size,0},{0,size,0},{0,0,size},{size,0,size},{size,size,size},{0,size,size}};
+		float size = 20.0; //one side of the cube is 20 microns
+		float Points[8][3]={{0,0,0},{size,0,0},{size,size/4.0,0},{0,size/4,0},{0,0,size/4},{size,0,size/4},{size,size/4,size/4},{0,size/4,size/4}};
 		int FaceConnectivity[12][3] = {{0,1,2},{0,2,3},{1,2,6},{1,6,5},{4,5,6},{4,6,7},{4,7,3},{0,3,4},{0,1,4},{1,4,5},{2,3,7},{2,7,6}};
 		int BorderConnectivity[16] = {0,1,2,3,0,4,5,1,2,6,5,4,7,3,7,6};
 		glColor3f(0,0,0);
@@ -1598,7 +1659,7 @@ bool GLWidget::findNode(int i){
 		glDisable(GL_POLYGON_OFFSET_FILL);
 
 		glColor3f(0.4,0.4,0.4);
-		glLineWidth(ReferenceLineThickness);
+		glLineWidth(ReferenceLineThickness/3.0);
 		//Drawing the borders
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		glBegin(GL_LINE_STRIP);
@@ -1895,6 +1956,36 @@ bool GLWidget::findNode(int i){
 		 }
 	 }
 
+ }
+
+ void  GLWidget::drawAFMBead(){
+	float DEG2RAD = 3.14159/180;
+	glLineWidth(ReferenceLineThickness);
+	for (int phi=0; phi < 180; phi=phi+1){
+		float phiInRad = phi*DEG2RAD;
+		for (int tet=0; tet < 180; tet=tet+1){
+			double r = Sim01->beadR+Sim01->packingToBeadThreshold;
+			float tetInRad = tet*DEG2RAD;
+			float x = r*sin(tetInRad)*cos(phiInRad) + Sim01->beadPos[0];
+			float y = r*sin(tetInRad)*sin(phiInRad) + Sim01->beadPos[1];
+			float z = r*cos(tetInRad)+ Sim01->beadPos[2];
+			//cout<<" tet, phi: "<<tet<<","<<phi<<" r2: "<<dx*dx+dy*dy+dz*dz<<" dx, dy, dz: "<<dx<<" "<<dy<<" "<<dz<<endl;
+			glBegin(GL_LINES);
+				glColor3f(0.5,0.5,0.6);
+				glVertex3f(x,y,z);
+				glVertex3f( Sim01->beadPos[0], Sim01->beadPos[1], Sim01->beadPos[2]);
+			glEnd();
+			r = Sim01->beadR;
+			x = r*sin(tetInRad)*cos(phiInRad) + Sim01->beadPos[0];
+			y = r*sin(tetInRad)*sin(phiInRad) + Sim01->beadPos[1];
+			z = r*cos(tetInRad)+ Sim01->beadPos[2];
+			glBegin(GL_LINES);
+				glColor3f(0.3,0.3,0.4);
+				glVertex3f(x,y,z);
+				glVertex3f( Sim01->beadPos[0], Sim01->beadPos[1], Sim01->beadPos[2]);
+			glEnd();
+		 }
+	}
  }
 
  void GLWidget::drawPipette(){

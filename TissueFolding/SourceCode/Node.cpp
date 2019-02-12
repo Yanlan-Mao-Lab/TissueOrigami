@@ -51,7 +51,10 @@ Node::Node(int id, int dim, double* pos, int tissuePos, int tissueType){
     minimumExternalViscosity[1] = 0;
     minimumExternalViscosity[2] = 0;
     attachedToPeripodial = false;
-
+    onFoldInitiation = false;
+    checkOwnersforEllipseAsignment = false;
+    positionUpdateOngoing = false;
+    positionUpdateCounter = 0;
    // allOwnersAblated = false;
 }
 
@@ -105,9 +108,11 @@ void Node::setExternalViscosity(double ApicalVisc,double BasalVisc, bool extendE
 			}
 		}
 	}
+	//externalViscosity[1] *= 0.5;
 	for (int i=0; i<3; ++i){
 		initialExternalViscosity[i] = externalViscosity[i];
 	}
+
 }
 
 bool Node::checkIfNeighbour(int IdToCheck){
@@ -153,6 +158,10 @@ void Node::getCurrentPosition(double* pos){
 	pos[0] = Position[0];
 	pos[1] = Position[1];
 	pos[2] = Position[2];
+}
+
+void Node::displayPosition(){
+	cout<<"Node "<<Id<<" position: "<<Position[0]<<" "<<Position[1]<<" "<<Position[2]<<endl;
 }
 
 void Node::displayConnectedElementIds(){
@@ -406,7 +415,45 @@ void Node::getNewCollapseListAndAveragePos(vector<int> &newCollapseList, double*
 
 
 //version that will check element collapse:
-bool Node::collapseOnNode(vector<int> &newCollapseList, double* avrPos, bool* fix, vector<Node*>& Nodes, int masterNodeId){
+void Node::collapseOnNodeInStages( vector<int> &newCollapseList, double* avrPos, bool* fix, vector<Node*>& Nodes, int masterNodeId){
+	//update adhesion:
+	int nNew = newCollapseList.size();
+	int baseNode = 0;
+	int adhesionPoint = -1;
+	for (int i = 0; i<nNew; ++i){
+		if(Nodes[newCollapseList[i]]->adheredTo > -1){
+			adhesionPoint = Nodes[newCollapseList[i]]->adheredTo;
+			baseNode = newCollapseList[i];
+			break;
+		}
+	}
+	if (adhesionPoint > -1){
+		//at least on of the nodes is adhered. make all of them adhered:
+		for (int i = 0; i<nNew; ++i){
+			if(newCollapseList[i] == adhesionPoint){
+				//the adhered node is bound to be on this list, I keep that one adhered to the base
+				Nodes[newCollapseList[i]]->adheredTo = baseNode;
+			}
+			else{
+				//all other nodes on the list are adhered to the selected adheredNode
+				Nodes[newCollapseList[i]]->adheredTo = adhesionPoint;
+			}
+		}
+	}
+	//update collapsed list of all the members to be the same, update positions:
+	nNew = newCollapseList.size();
+	for (int i = 0; i<nNew; ++i){
+		Nodes[newCollapseList[i]]->collapsedWith = newCollapseList;
+		for (int j=0; j<3; ++j){
+			if(!Nodes[newCollapseList[i]]->FixedPos[j]){
+				Nodes[newCollapseList[i]]->positionUpdateOngoing = true;
+			}
+		}
+		Nodes[newCollapseList[i]]->updatePositionTowardsPoint(avrPos,fix);
+	}
+}
+
+void Node::collapseOnNode(vector<int> &newCollapseList, double* avrPos, bool* fix, vector<Node*>& Nodes, int masterNodeId){
 	bool debugDisplay = true;
 	//add the nodes master have collapsed with on me:
 	/*vector <int> newCollapseList;
@@ -454,7 +501,7 @@ bool Node::collapseOnNode(vector<int> &newCollapseList, double* avrPos, bool* fi
 		}
 	}
 	if (adhesionPoint > -1){
-		//at least on of the nodes is adheres. make all of them adhered:
+		//at least on of the nodes is adhered. make all of them adhered:
 		for (int i = 0; i<nNew; ++i){
 			if(newCollapseList[i] == adhesionPoint){
 				//the adhered node is bound to be on this list, I keep that one adhered to the base
@@ -496,11 +543,44 @@ bool Node::collapseOnNode(vector<int> &newCollapseList, double* avrPos, bool* fi
 	}
 	if (debugDisplay){
 		cout<<"  collapsed with list after update: ";
+		cout<<"  Position:   "<<Position[0]<<" "<<Position[1]<<" "<<Position[2]<<endl;
+		cout<<"  Master pos: "<<Nodes[masterNodeId]->Position[0]<<" "<<Nodes[masterNodeId]->Position[1]<<" "<<Nodes[masterNodeId]->Position[2]<<endl;
 		for(int i=0; i<collapsedWith.size(); ++i){
 			cout<<collapsedWith[i]<<" ";
 		}
 		cout<<endl;
 	}
+}
+
+void Node::updatePositionTowardsPoint(double* avrPos,bool* fix){
+	//cout<<"updating "<<Id<<endl;
+	double distanceForEndingAdhesionCollapseSteps = 0.2;
+	positionUpdateCounter ++;
+	//bool reachedTarget[3] ={false,false,false};
+	for (int j=0; j<3; ++j){
+		if(!FixedPos[j]){
+			double d =  avrPos[j]- Position[j];
+			//if (d < distanceForEndingAdhesionCollapseSteps){
+			if (positionUpdateCounter>2){
+				Position[j]  = avrPos[j];
+				//reachedTarget[j] = true;
+			}
+			else{
+				//collapse at three time steps
+				d /= 2.0;
+				Position[j] += d;
+			}
+			FixedPos[j] = fix[j];
+		}
+	}
+	//if (reachedTarget[0] && reachedTarget[1] && reachedTarget[2] ){
+	if (positionUpdateCounter>2){
+		positionUpdateOngoing = false;
+		positionUpdateCounter = 0;
+	}
+
+	//}
+	//cout<<"updated "<<Id<<" towards point "<<endl;
 }
 
 void Node::removeFromConnectedElements(int ElementId, double volumePerNode){
@@ -582,4 +662,22 @@ bool Node::isECMChangeAppliedToNode(bool changeApicalECM, bool changeBasalECM, v
 	return false;
 }
 
+bool Node::haveCommonOwner(Node* nodeSlave){
+	vector<int>::iterator itOwnerId;
+	itOwnerId = find_first_of ( connectedElementIds.begin(),  connectedElementIds.end(), nodeSlave->connectedElementIds.begin(), nodeSlave->connectedElementIds.end());
+	if (itOwnerId!=connectedElementIds.end()){
+
+		return true;
+	}
+	return false;
+}
+
+int Node::getCommonOwnerId(Node* nodeSlave){
+	vector<int>::iterator itOwnerId;
+	itOwnerId = find_first_of ( connectedElementIds.begin(),  connectedElementIds.end(), nodeSlave->connectedElementIds.begin(), nodeSlave->connectedElementIds.end());
+	if (itOwnerId!=connectedElementIds.end()){
+		return (*itOwnerId);
+	}
+	return -1;
+}
 

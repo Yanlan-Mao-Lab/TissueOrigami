@@ -7,7 +7,7 @@
 #include <gsl/gsl_linalg.h>
 #include "Node.h"
 #include "ShapeBase.h"
-
+//#include <mkl.h>
 #include <omp.h>
 
 
@@ -61,6 +61,12 @@ public:
 	void checkJacobianForAblatedNodes(vector <int> & AblatedNodes);	//< This functions checks the Jacobian to ensure the diagonal terms are non-zero for ablated nodes.
 	void calculateSumOfInternalForces();			//< This function adds the ealsticity and viscosity related forces (NewtonRaphsonSolver#ge, NewtonRaphsonSolver#gvInternal, NewtonRaphsonSolver#gvExternal) to sum of forces, NewtonRaphsonSolver#gSum.
 	void addExernalForces();
+
+	//void solveForDeltaUMKL();
+	//int  solveWithPardisoMKL(double* a, double*b, int* ia, int* ja, const int n_variables);
+	//void setupControlParametersMKL(MKL_INT* iparm, MKL_INT& maxfct, MKL_INT& mnum, MKL_INT& msglvl,  MKL_INT& error);
+	//void constructiaForPardisoMKL(MKL_INT* ia, const int nmult, vector<int> &ja_vec, vector<double> &a_vec);
+	//void writeKinPardisoFormatMKL(const int nNonzero, vector<int> &ja_vec, vector<double> &a_vec, MKL_INT* ja, double* a);
 
 	void solveForDeltaU();
 	int  solveWithPardiso(double* a, double*b, int* ia, int* ja, const int n_variables);

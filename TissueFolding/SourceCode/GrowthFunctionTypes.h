@@ -616,6 +616,7 @@ public:
 	double GrowthRate[3];
 	int ShapeChangeType;
 	bool conserveVolume;
+	double ShapeChangeECMLimit;
 	markerEllipseBasedShapeChangeFunction(int id, int type, float initTime, float endTime, bool applyTissueApical, bool applyTissueBasal, bool applyTissueMidline, bool applyToBasalECM, bool applyToLateralECM, int ShapeChangeType, double ShapeChangeFractionPerHr, vector <int> markerEllipseIds, bool conserveVolume) : GrowthFunctionBase(id, type, initTime, endTime, true, false, applyToBasalECM,  applyToLateralECM){
 		/**
 		 *  First six parameters will be directed to the parent constructor, UniformGrowthFunction#UniformGrowthFunction.
@@ -629,6 +630,7 @@ public:
 		this->applyTissueApical = applyTissueApical;
 		this->applyTissueMidLine = applyTissueMidline;
 		this->conserveVolume = conserveVolume;
+		this->ShapeChangeECMLimit = ShapeChangeECMLimit;
 		//This is change form columnar to cuboidal
 		//I have how much I want the shape to change x+y in a second.
 		//Then exp(rx*1)+exp(ry*1) = ShapeChangeFractionPerSec

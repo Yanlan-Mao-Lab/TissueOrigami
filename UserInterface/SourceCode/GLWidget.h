@@ -155,6 +155,7 @@ using namespace std;
      void 		drawPackForces();
      void 		drawBoundingBox();
      void 		drawPipette();
+     void		drawAFMBead();
      void 		drawArrow3D(double* pos, double* endPoint, double r, double g, double b);
  };
 

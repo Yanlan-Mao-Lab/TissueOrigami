@@ -81,8 +81,8 @@ private:
     //vector <Node*> symmetricYBoundaryNodes;
     //vector <Node*> symmetricXBoundaryNodes;
     vector <int> AblatedNodes;
-
-
+    bool checkedForCollapsedNodesOnFoldingOnce;
+    bool boundLateralElements;
 
 	bool readModeOfSim(int& i, int argc, char **argv);
 	bool readParameters(int& i, int argc, char **argv);
@@ -185,6 +185,7 @@ private:
 	bool isAdhesionAllowed(int masterNodeId, int slaveNodeId);
 	bool checkForElementFlippingUponNodeCollapse(vector<int> &newCollapseList, double* avrPos);
 	bool adhereNodes();
+	bool updatePositionsOfNodesCollapsingInStages();
 	void induceClones();
 	void initiateElementsByRowAndColumn(int Row, int Column);
 	void assignPhysicalParameters();
@@ -256,15 +257,17 @@ private:
 	void setStretch();
 	void setUpClampBorders(vector<int>& clampedNodeIds);
 	void moveClampedNodesForStretcher();
+	void moveAFMBead();
 	void recordForcesOnClampBorders();
 	void setupPipetteExperiment();
+	void setUpAFM();
     void addPipetteForces(gsl_matrix *gExt);
     void addMyosinForces(gsl_matrix* gExt);
 	void laserAblate(double OriginX, double OriginY, double Radius);
 	void laserAblateTissueType(int ablationType);
 	void fillInNodeNeighbourhood();
 	void setBasalNeighboursForApicalElements();
-	void redistributeVolume();
+	void conserveColumnVolume();
 	void fillInElementColumnLists();
 	void updateElementVolumesAndTissuePlacements();
 	void updateElasticPropertiesForAllNodes(); //When a simulation is read from save, the modified physical properties will be read.  The elasticity calculation parameters (lambda, mu, and related matrices) should be updated after reading the files. This function is called upon finishing reading a save file, to ensure the update.
@@ -285,11 +288,12 @@ private:
     void setUpActinMimicingElements();
     void clearScaleingDueToApikobasalRedistribution();
     void checkForVolumeRedistributionInTissue();
+    void assignCompartment();
     //void setSymmetricNode(Node* currNode, double yLimPos);
 
 
 public:
-
+    bool savedStepwise;
 	ofstream outputFile;
 	bool displayIsOn;
 	bool DisplaySave;
@@ -367,6 +371,7 @@ public:
 
 	int nShapeChangeFunctions;
 	vector<GrowthFunctionBase*> ShapeChangeFunctions;
+	double shapeChangeECMLimit;
 
 	bool thereIsPlasticDeformation;
 	bool plasticDeformationAppliedToPeripodial;
@@ -403,8 +408,11 @@ public:
     bool symmetricY;
     bool symmetricX;
     bool addingRandomForces;
-    bool redistributingVolumes;
+    bool conservingColumnVolumes;
 	bool stretcherAttached;
+	bool thereIsArtificaialRelaxation;
+	bool relaxECMInArtificialRelaxation;
+	double artificialRelaxationTime;
 	vector <int> leftClampBorder;
 	vector <int> rightClampBorder;
 	double leftClampForces[3];
@@ -481,6 +489,12 @@ public:
 	vector <bool> 	changeApicalECM;
 	vector <bool> 	changeBasalECM;
 	vector <bool> 	ECMChangeTypeIsEmergent;
+	double notumECMChangeInitTime,notumECMChangeEndTime;
+	double notumECMChangeFraction;
+	double hingeECMChangeInitTime,hingeECMChangeEndTime;
+	double hingeECMChangeFraction;
+	double pouchECMChangeInitTime,pouchECMChangeEndTime;
+	double pouchECMChangeFraction;
 
 	int numberOfMyosinAppliedEllipseBands;
 	vector <int> myosinEllipseBandIds;
@@ -503,6 +517,17 @@ public:
 	double packingThreshold;
 	double packingMultiplier;
 	double sigmoidSaturationForPacking;
+
+	//AFM bead
+	vector <int> nodesPackingToBead;
+	double packingToBeadThreshold;
+	double beadR;
+	double 	beadPos[3];
+	vector <double > initialWeightPackingToBeadx;
+	vector <double > initialWeightPackingToBeady;
+	vector <double > initialWeightPackingToBeadz;
+	vector <double > distanceToBead;
+
 	//soft periphery parameters:
 	bool 	softPeriphery;
 	double 	softDepth;
@@ -511,6 +536,7 @@ public:
     bool 	thereIsAdhesion;
     bool    collapseNodesOnAdhesion;
     bool 	adherePeripodialToColumnar;
+    bool	thereIsEmergentEllipseMarking;
     bool    thereNodeCollapsing;
 
 	bool implicitPacking;
@@ -587,7 +613,14 @@ public:
     void updateStiffnessChangeForActin(int idOfCurrentStiffnessPerturbation);
     void calculateStiffnessChangeRatesForActin(int idOfCurrentStiffnessPerturbation);
     void checkStiffnessPerturbation();
+    void checkForEllipseIdUpdateWithECMDegradation();
+    void checkForEmergentEllipseFormation();
+
+    void updateOnFoldNodesFromCollapse();
+    void artificialRelax();
+    void checkEllipseAllocationWithCurvingNodes();
     void updateEllipseWithCollapse();
+    void checkForLeftOutElementsInEllipseAssignment();
     bool runOneStep();
     void updatePlasticDeformation();
     void updateStepNR();
@@ -602,12 +635,15 @@ public:
     void addToEdgeList(Node* nodePointer, ShapeBase* elementPointer, vector <int> & edgeNodeData0, vector <int> & edgeNodeData1);
     bool checkIfPointIsOnEdge(int node0, int node1, double x, double y, double z, double& vx, double& vy, double& vz);
    	void detectPacingNodes();
+   	void assignFoldRegionAndReleasePeripodial(Node* NodeMAster, Node* NodeSlave);
    	void detectPacingCombinations();
    	void cleanUpPacingCombinations();
 
    	void calculatePackingToEnclosingSurfacesJacobian3D(gsl_matrix* K);
+	void calculatePackingToAFMBeadJacobian3D(gsl_matrix* K);
    	void calculatePackingForcesToEnclosingSurfacesImplicit3D();
    	void detectPacingToEnclosingSurfacesNodes();
+   	void detectPackingToAFMBead();
 
     void calculatePacking();
     void calculatePackingK(gsl_matrix* K);

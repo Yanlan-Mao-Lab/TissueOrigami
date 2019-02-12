@@ -18,7 +18,7 @@ CXXFLAGS      = -pipe -fopenmp -O2 -Wall -W -D_REENTRANT -fPIE $(DEFINES)
 INCPATH       = -I/opt/Qt5.2.1/5.2.1/gcc_64/mkspecs/linux-g++ -I. -I/opt/Qt5.2.1/5.2.1/gcc_64/include -I/opt/Qt5.2.1/5.2.1/gcc_64/include/QtGui -I/opt/Qt5.2.1/5.2.1/gcc_64/include/QtCore -I.
 LINK          = g++
 LFLAGS        = -fopenmp -Wl,-O1 -Wl,-rpath,/opt/Qt5.2.1/5.2.1/gcc_64 -Wl,-rpath,/opt/Qt5.2.1/5.2.1/gcc_64/lib
-LIBS          = $(SUBLIBS) -L/usr/include -lgsl -lgslcblas -lpardiso500-GNU461-X86-64 -fopenmp -llapack -L/opt/Qt5.2.1/5.2.1/gcc_64/lib -lQt5Gui -lQt5Core -lGL -lpthread 
+LIBS          = $(SUBLIBS) -L/usr/include -lgsl -lgslcblas -lgomp -fopenmp -lpardiso600-GNU720-X86-64 -llapack -L/opt/Qt5.2.1/5.2.1/gcc_64/lib -lQt5Gui -lQt5Core -lGL -lpthread 
 AR            = ar cqs
 RANLIB        = 
 QMAKE         = /opt/Qt5.2.1/5.2.1/gcc_64/bin/qmake
@@ -419,7 +419,7 @@ qmake_all: FORCE
 
 dist: 
 	@test -d Debug/TissueFolding1.0.0 || mkdir -p Debug/TissueFolding1.0.0
-	$(COPY_FILE) --parents $(SOURCES) $(DIST) Debug/TissueFolding1.0.0/ && $(COPY_FILE) --parents SourceCode/Analysis.h SourceCode/CellMigration.h SourceCode/GrowthFunctionBase.h SourceCode/GrowthFunctionTypes.h SourceCode/ModelInputObject.h SourceCode/MuscleFibre.h SourceCode/MyosinFunction.h SourceCode/NewtonRaphsonSolver.h SourceCode/Node.h SourceCode/Prism.h SourceCode/RandomGenerator.h SourceCode/ReferenceShapeBase.h SourceCode/ShapeBase.h SourceCode/Simulation.h Debug/TissueFolding1.0.0/ && $(COPY_FILE) --parents SourceCode/main.cpp SourceCode/Prism.cpp SourceCode/ReferenceShapeBase.cpp SourceCode/ShapeBase.cpp SourceCode/Simulation.cpp SourceCode/Node.cpp SourceCode/ModelInputObject.cpp SourceCode/RandomGenerator.cpp SourceCode/NewtonRaphsonSolver.cpp SourceCode/Analysis.cpp SourceCode/CellMigration.cpp Debug/TissueFolding1.0.0/ && (cd `dirname Debug/TissueFolding1.0.0` && $(TAR) TissueFolding1.0.0.tar TissueFolding1.0.0 && $(COMPRESS) TissueFolding1.0.0.tar) && $(MOVE) `dirname Debug/TissueFolding1.0.0`/TissueFolding1.0.0.tar.gz . && $(DEL_FILE) -r Debug/TissueFolding1.0.0
+	$(COPY_FILE) --parents $(SOURCES) $(DIST) Debug/TissueFolding1.0.0/ && $(COPY_FILE) --parents SourceCode/Analysis.h SourceCode/CellMigration.h SourceCode/GrowthFunctionBase.h SourceCode/GrowthFunctionTypes.h SourceCode/Lumen.h SourceCode/ModelInputObject.h SourceCode/MuscleFibre.h SourceCode/MyosinFunction.h SourceCode/NewtonRaphsonSolver.h SourceCode/Node.h SourceCode/Prism.h SourceCode/RandomGenerator.h SourceCode/ReferenceShapeBase.h SourceCode/ShapeBase.h SourceCode/Simulation.h Debug/TissueFolding1.0.0/ && $(COPY_FILE) --parents SourceCode/main.cpp SourceCode/Prism.cpp SourceCode/ReferenceShapeBase.cpp SourceCode/ShapeBase.cpp SourceCode/Simulation.cpp SourceCode/Node.cpp SourceCode/ModelInputObject.cpp SourceCode/RandomGenerator.cpp SourceCode/NewtonRaphsonSolver.cpp SourceCode/Analysis.cpp SourceCode/CellMigration.cpp Debug/TissueFolding1.0.0/ && (cd `dirname Debug/TissueFolding1.0.0` && $(TAR) TissueFolding1.0.0.tar TissueFolding1.0.0 && $(COMPRESS) TissueFolding1.0.0.tar) && $(MOVE) `dirname Debug/TissueFolding1.0.0`/TissueFolding1.0.0.tar.gz . && $(DEL_FILE) -r Debug/TissueFolding1.0.0
 
 
 clean:compiler_clean 
@@ -574,6 +574,7 @@ install_sources: first FORCE
 	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/CellMigration.h $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/TissueFolding/
 	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/GrowthFunctionBase.h $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/TissueFolding/
 	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/GrowthFunctionTypes.h $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/TissueFolding/
+	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/Lumen.h $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/TissueFolding/
 	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/ModelInputObject.h $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/TissueFolding/
 	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/MuscleFibre.h $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/TissueFolding/
 	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/MyosinFunction.h $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/TissueFolding/
@@ -598,6 +599,7 @@ uninstall_sources: FORCE
 	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/TissueFolding/MyosinFunction.h
 	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/TissueFolding/MuscleFibre.h
 	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/TissueFolding/ModelInputObject.h
+	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/TissueFolding/Lumen.h
 	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/TissueFolding/GrowthFunctionTypes.h
 	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/TissueFolding/GrowthFunctionBase.h
 	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/TissueFolding/CellMigration.h

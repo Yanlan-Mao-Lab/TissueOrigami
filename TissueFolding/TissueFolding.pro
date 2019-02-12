@@ -5,7 +5,7 @@
 
 
 #the line necessary for the compilation of non-visual interface model is below. This should be in the makefile inside TissueFolding/Debug/:
-#g++ -L/usr/include/  -L/opt/Qt5.2.1/5.2.1/gcc_64/lib  -o "TissueFolding" $(OBJS) $(USER_OBJS) $(LIBS) -lgsl  -lgslcblas -lpardiso500-GNU461-X86-64 -fopenmp -llapack -lpthread
+#g++ -L/usr/include/  -L/opt/Qt5.2.1/5.2.1/gcc_64/lib  -o "TissueFolding" $(OBJS) $(USER_OBJS) $(LIBS) $(INCLUDEPATH) -lgsl  -lgslcblas -lpardiso500-GNU461-X86-64 -fopenmp -llapack -lpthread
 	
 #FOR LEGION, when you add a new source/header file to the sourcecode, you do need to update the *.mk files. 
 #These include the files under "/home/melda/Documents/TissueFolding/TissueFolding/Debug/" and check legion page
@@ -55,8 +55,14 @@ SOURCES += $$CurrPath/SourceCode/main.cpp \
 	$$CurrPath/SourceCode/Analysis.cpp \
 	$$CurrPath/SourceCode/CellMigration.cpp
 
-#libs and includes for linux:
-LIBS += -L/usr/include -lgsl -lgslcblas -lpardiso500-GNU461-X86-64  -fopenmp -llapack
+#libs and includes for linux for independent license pardiso:
+#LIBS += -L/usr/include -lgsl -lgslcblas -lpardiso500-GNU461-X86-64  -fopenmp -llapack  ---- Old pardiso
+LIBS += -L/usr/include -lgsl -lgslcblas -lgomp -fopenmp -lpardiso600-GNU720-X86-64   -llapack 
+
+#libs and includes for linux for MKL: --- clashes with gsl cblas!!!
+#LIBS += -L/usr/include -lgsl  -lpardiso500-GNU461-X86-64  -fopenmp -llapack -DMKL_ILP64 -m64 -L${MKLROOT}/lib/intel64 -Wl,--no-as-needed  -lmkl_intel_ilp64 -lmkl_gnu_thread -lmkl_core -lgomp -lpthread -lm -ldl
+#INCLUDEPATH += ${MKLROOT}/include
+
 
 # libs and includes for MacOS
 # LIBS += -L/usr/include -L/usr/local/lib/ -lgsl -lgslcblas -L/usr/local/Cellar/boost/1.58.0/include -lpardiso500-MACOS-X86-64

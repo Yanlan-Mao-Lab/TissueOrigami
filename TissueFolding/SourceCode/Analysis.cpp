@@ -14,25 +14,95 @@ Analysis::Analysis(int dim, string saveDirectoryToDisplayString, vector<Node*> &
 	nNodes = nodes.size();
 	yPosForSideDVLine = 0.1;
 	relativeYPosSideDVLine = 0.3;
-	string saveFileString = saveDirectoryToDisplayString +"/Save_AnalysisVolumeMaps";
+	saveDirectoryString  = saveDirectoryToDisplayString;
+	string saveFileString = saveDirectoryString +"/Save_AnalysisVolumeMaps";
 	const char* name_saveFileVolumeMaps = saveFileString.c_str();;
 	saveFileVolumeMaps.open(name_saveFileVolumeMaps, ofstream::out);
 	if (!(saveFileVolumeMaps.good() && saveFileVolumeMaps.is_open())){
 		cerr<<"Cannot open the save file to write analysis: "<<name_saveFileVolumeMaps<<endl;
 	}
-	string saveFileLenghtMeasurementsString = saveDirectoryToDisplayString +"/Save_AnalysisLengthMeasurements";
+	string saveFileLenghtMeasurementsString = saveDirectoryString +"/Save_AnalysisLengthMeasurements";
 	const char* name_saveFileLenghtMeasurements = saveFileLenghtMeasurementsString.c_str();;
 	saveFileLenghtMeasurements.open(name_saveFileLenghtMeasurements, ofstream::out);
 	if (!(saveFileLenghtMeasurements.good() && saveFileLenghtMeasurements.is_open())){
 		cerr<<"Cannot open the save file to write analysis: "<<name_saveFileLenghtMeasurements<<endl;
 	}
-	string saveFileKinkPositionsString = saveDirectoryToDisplayString +"/Save_AnalysisKinkPositions";
+	string saveFileKinkPositionsString = saveDirectoryString +"/Save_AnalysisKinkPositions";
 	const char* name_saveFileKinkPositions = saveFileKinkPositionsString.c_str();;
 	saveFileKinkPositions.open(name_saveFileKinkPositions, ofstream::out);
 	if (!(saveFileKinkPositions.good() && saveFileKinkPositions.is_open())){
 		cerr<<"Cannot open the save file to write analysis: "<<name_saveFileKinkPositions<<endl;
 	}
+	string saveFileCircumferenceString = saveDirectoryString +"/Save_AnalysisCircumference";
+	const char* name_saveFileCircumference = saveFileCircumferenceString.c_str();;
+	saveFileCircumference.open(name_saveFileCircumference, ofstream::out);
+	if (!(saveFileCircumference.good() && saveFileCircumference.is_open())){
+		cerr<<"Cannot open the save file to write analysis: "<<name_saveFileCircumference<<endl;
+	}
+	string saveFileFoldMarkersString = saveDirectoryString +"/Save_AnalysisNodesOnFold";
+	const char* name_saveFileFoldMarkers = saveFileFoldMarkersString.c_str();
+	saveFileFoldMarkers.open(name_saveFileFoldMarkers, ofstream::out);
+	if (!(saveFileFoldMarkers.good() && saveFileFoldMarkers.is_open())){
+		cerr<<"Cannot open the save file to write analysis: "<<name_saveFileFoldMarkers<<endl;
+	}
 	setUpContourLinesDV(nodes, boundingBoxWidth);
+	setUpConnectivityMap(nodes);
+}
+
+
+Analysis::~Analysis(){
+	for (int i=0; i<nNodes; ++i){
+		delete[] connectivityMap[i];
+	}
+    delete[] connectivityMap;
+}
+
+void Analysis::saveApicalCircumferencePosition(int timeInSec, vector<Node*> &nodes){
+	//cout<<"inside save circ" <<endl;
+	//[time] [nodeId] [at-midline] [x] [y] [z]
+	for (vector<Node*>::iterator itNode = nodes.begin(); itNode<nodes.end(); ++itNode){
+		if ((*itNode)->atCircumference && (*itNode)->tissuePlacement == 1){
+			saveFileCircumference<<timeInSec<<" ";
+			saveFileCircumference<<(*itNode)->Id<<" ";
+			if ((*itNode)->Position[1] == 0){
+				saveFileCircumference<<1<<" ";
+			}
+			else{
+				saveFileCircumference<<0<<" ";
+			}
+			saveFileCircumference<<(*itNode)->Position[0]<<" ";
+			saveFileCircumference<<(*itNode)->Position[1]<<" ";
+			saveFileCircumference<<(*itNode)->Position[2]<<endl;
+		}
+		if (!(*itNode)->atCircumference && (*itNode)->tissuePlacement == 1 && (*itNode)->Position[1] == 0 ){
+			saveFileCircumference<<timeInSec<<" ";
+			saveFileCircumference<<(*itNode)->Id<<" ";
+			saveFileCircumference<<1<<" ";
+			saveFileCircumference<<(*itNode)->Position[0]<<" ";
+			saveFileCircumference<<(*itNode)->Position[1]<<" ";
+			saveFileCircumference<<(*itNode)->Position[2]<<endl;
+		}
+
+	}
+}
+
+void Analysis::setUpConnectivityMap(vector<Node*> &nodes){
+	connectivityMap = new bool* [(const int) nNodes];
+	for (int i=0; i<nNodes; ++i){
+		connectivityMap[i] = new bool [(const int) nNodes];
+		std::fill(connectivityMap[i],connectivityMap[i]+nNodes,false);
+		connectivityMap[i][i] = true;
+	}
+	for (vector<Node*>::iterator itNode = nodes.begin(); itNode<nodes.end(); ++itNode){
+		int n = (*itNode)->immediateNeigs.size();
+		int id = (*itNode)->Id;
+		for (int i=0; i<n; ++i){
+			int currNeigId = nodes[(*itNode)->immediateNeigs[i]]->Id;
+			connectivityMap[currNeigId][id] = true;
+			connectivityMap[id][currNeigId] = true;
+		}
+	}
+	cerr<<"finished connectivity map"<<endl;
 }
 
 void Analysis::calculateBoundingBoxSizeAndAspectRatio(int timeInSec, double boundingBoxLength, double boundingBoxWidth){
@@ -68,6 +138,11 @@ void Analysis::setUpContourLinesDV(vector<Node*> &nodes, double boundingBoxWidth
 	setUpSideApicalDVContour(nodes, boundingBoxWidth);
 	sortPositionMinToMax(nodes, 0, basalContourLineDVNodeIds); //sort basalContourLineDVNodeIds with x position going from minimum to maximum
 	sortPositionMinToMax(nodes, 0, apicalContourLineDVNodeIds); //sort apicalContourLineDVNodeIds with x position going from minimum to maximum
+	cout<<" Apical contour Ids: ";
+	for (int i=0; i<apicalContourLineDVNodeIds.size(); ++i){
+		cout<<apicalContourLineDVNodeIds[i]<<" ";
+	}
+	cout<<endl;
 }
 
 
@@ -366,84 +441,79 @@ void Analysis::calculateTissueVolumeMap	(vector<ShapeBase*> &elements, int timeI
 	cout<<" Time: "<<timeInSec<<" total tissue ideal volume: "<<totTissueIdealVolume<<" total tissue emergent volume:" <<totTissueEmergentVolume<<endl;
 }
 
-void Analysis::markAdhesions(vector<Node*>& Nodes, vector<ShapeBase*>& Elements){
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		(*itElement)->updatePositions(Nodes);
-	}
-	cout<<"inside mark adhesions"<<endl;
-	double threshold = 3;
+void Analysis::saveNodesOnFold(int timeInSec, vector<Node*>& Nodes){
+	int foldIds[(const int)nNodes];
+	std::fill(foldIds,foldIds+nNodes,-1);
+	int nextFoldId = 0;
 	for (vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-		//cout<<" inside loop, for node : "<<(*itNode)->Id<<endl;
-		bool NodeHasPacking = (*itNode)->checkIfNodeHasPacking();
-		if (NodeHasPacking){
-			double* pos;
-			pos = new double[3];
-			(*itNode)->getCurrentPosition(pos);
-			double t2 = threshold*threshold;
-			for (vector<Node*>::iterator itNodeSlave=itNode+1; itNodeSlave<Nodes.end(); ++itNodeSlave){
-				bool SlaveNodeHasPacking = (*itNodeSlave)->checkIfNodeHasPacking();
-				//bool nodesOnSeperateSurfaces = (*itNodeSlave)->tissueType != (*itNode)->tissueType;
-				//if (SlaveNodeHasPacking && nodesOnSeperateSurfaces){
-				if (SlaveNodeHasPacking){
-					if ((*itNode)->tissuePlacement == (*itNodeSlave)->tissuePlacement){
-						//nodes can pack, are they connected?
-						bool neigbours = (*itNode)->isMyNeig((*itNodeSlave)->Id);
-						if (neigbours){
-							continue;
-						}
-						//check if the master node is in the collapsed list?
-						//the vector is sorted, as I sort it to remove duplicates
-						if (binary_search((*itNode)->collapsedWith.begin(), (*itNode)->collapsedWith.end(),(*itNodeSlave)->Id)){
-							//the couple is already collapsed:
-							continue;
-						}
-						//check if the collapsed nodes of master are neigs of slave
-						neigbours = (*itNode)->isNeigWithMyCollapsedNodes((*itNodeSlave)->Id,Nodes);
-						if (neigbours){
-							continue;
-						}
-						neigbours = (*itNodeSlave)->isNeigWithMyCollapsedNodes((*itNode)->Id,Nodes);
-						if (neigbours){
-							continue;
-						}
-						//the nodes can potentially pack, are they close enough?
-						double* posSlave;
-						posSlave = new double[3];
-						(*itNodeSlave)->getCurrentPosition(posSlave);
-						double dx = pos[0] - posSlave[0];
-						double dy = pos[1] - posSlave[1];
-						double dz = pos[2] - posSlave[2];
-						double d2 = dx*dx + dy*dy + dz*dz;
-						if (d2<t2){
-							//close enough for packing , add to list:
-							//check for normals:
-							//need to control for apical/basal for peripodial or columnar;
-							//find owner element
-							int elementIdMaster = (*itNode)->connectedElementIds[0];
-							int elementIdSlave = (*itNodeSlave)->connectedElementIds[0];
-							Elements[elementIdMaster]->calculateApicalNormalCurrentShape();
-							Elements[elementIdSlave]->calculateApicalNormalCurrentShape();
-							double dotP = Elements[elementIdSlave]->dotProduct3D(Elements[elementIdMaster]->apicalNormalCurrentShape,Elements[elementIdSlave]->apicalNormalCurrentShape);
-							if((*itNode)->Id == 5319 && (*itNodeSlave)->Id == 5619){
-								cout<<" pos node "<<(*itNode)->Id<<": "<<pos[0]<<" "<<pos[1]<<" "<<pos[2]<<endl;
-								cout<<" pos node "<<(*itNodeSlave)->Id<<": "<<posSlave[0]<<" "<<posSlave[1]<<" "<<posSlave[2]<<endl;
-								cout<<"d2 "<<d2<<endl;
-								//cout<<" normal master : "<<normalMaster[0]<<" "<<normalMaster[1]<<" "<<normalMaster[2]<<" slave: "<<normalSlave[0]<<" "<<normalSlave[1]<<" "<<normalSlave[2]<<endl;
-								cout<<"dot product: "<<dotP<<endl;
-							}
-							if (dotP <0){
-								//normals point opposite directions
-								(*itNodeSlave)->slaveTo[0] = (*itNode)->Id;
-							}
-							}
-						delete[] posSlave;
-
+		int id = (*itNode)->Id;
+		if ((*itNode)->onFoldInitiation){
+			int activeFoldId = nextFoldId;
+			vector<int> idsToChange;
+			//now go through connectivity map to see if any neigs have been assigned anything so far
+			for (int i=0; i<id; ++i){
+				if (connectivityMap[id][i]){
+					if (foldIds[i] != -1){
+						activeFoldId = foldIds[i];
+						idsToChange.push_back(activeFoldId);
 					}
 				}
 			}
-			delete[] pos;
+			foldIds[id] =activeFoldId;
+			int n = idsToChange.size();
+			for (int i=0; i<n; ++i){
+				for (int j=0; j<nNodes; ++j){
+					if (foldIds[j] == idsToChange[i]){
+						foldIds[j] = activeFoldId;
+					}
+				}
+			}
+			if (activeFoldId == nextFoldId){
+				nextFoldId++;
+			}
+		}
+	}
+
+	for (vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+		if ((*itNode)->onFoldInitiation){
+			saveFileFoldMarkers.width(10);
+			saveFileFoldMarkers<<timeInSec;
+			saveFileFoldMarkers.width(10);
+			saveFileFoldMarkers<<(*itNode)->Id;
+			saveFileFoldMarkers.width(10);
+			saveFileFoldMarkers.precision(3);
+			saveFileFoldMarkers<<(*itNode)->Position[0];
+			saveFileFoldMarkers.width(10);
+			saveFileFoldMarkers.precision(3);
+			saveFileFoldMarkers<<(*itNode)->Position[1];
+			saveFileFoldMarkers.width(10);
+			saveFileFoldMarkers.precision(3);
+			saveFileFoldMarkers<<(*itNode)->Position[2];
+			saveFileFoldMarkers.width(10);
+			saveFileFoldMarkers.precision(3);
+			saveFileFoldMarkers<<foldIds[(*itNode)->Id];
+			saveFileFoldMarkers<<endl;
+
+			cout.width(10);
+			cout<<timeInSec;
+			cout.width(10);
+			cout<<(*itNode)->Id;
+			cout.width(10);
+			cout.precision(3);
+			cout<<(*itNode)->Position[0];
+			cout.width(10);
+			cout.precision(3);
+			cout<<(*itNode)->Position[1];
+			cout.width(10);
+			cout.precision(3);
+			cout<<(*itNode)->Position[2];
+			cout.width(10);
+			cout.precision(3);
+			cout<<foldIds[(*itNode)->Id];
+			cout<<endl;
+
 		}
 	}
 }
+
 

@@ -24,8 +24,14 @@ protected:
 	ofstream saveFileVolumeMaps;
 	ofstream saveFileLenghtMeasurements;
 	ofstream saveFileKinkPositions;
+	ofstream saveFileFoldMarkers;
+	ofstream saveFileCircumference;
+	string saveDirectoryString;
 	vector <int> apicalContourLineDVNodeIds;
 	vector <int> basalContourLineDVNodeIds;
+	//vector<vector<bool> > connectivityMap;
+	bool** connectivityMap;
+	void setUpConnectivityMap(vector<Node*> &nodes);
 public:
 	double yPosForSideDVLine;
 	double relativeYPosSideDVLine;
@@ -33,6 +39,7 @@ public:
 	vector<double> apicalContourLineDVSelectedYPositionsZ;
 	Analysis(int dim, string saveDirectoryToDisplayString,vector<Node*> &nodes, double boundingBoxWidth);
 	~Analysis();
+
 	void calculateBoundingBoxSizeAndAspectRatio(int timeInSec,double boundingBoxLength, double boundingBoxWidth);
 	void sortPositionMinToMax(vector<Node*> &nodes, int axisToSortWith, vector <int> &linkToArrayToSort );
 	void sortPointsMinToMaxBasedFirstArray(vector<double> &x, vector<double> &z, vector<int> &baseNodeId0, vector <int> &baseNodeId1);
@@ -45,7 +52,9 @@ public:
 	void setUpContourLinesAP(vector<Node*> &nodes);
 	void calculateContourLineLengthsAP(vector<Node*> &nodes);
 	void calculateTissueVolumeMap(vector<ShapeBase*> &elements, int timeInSec, double boundingBoxXMin, double boundingBoxYMin, double boundingBoxLength, double boundingBoxWidth);
-	void markAdhesions(vector<Node*> &Nodes, vector<ShapeBase*> &Elements );
+	void saveNodesOnFold(int timeInSec, vector<Node*>& Nodes);
+	void saveApicalCircumferencePosition(int timeInSec, vector<Node*> &nodes);
+
 };
 
 #endif /* ANALYSIS_H_ */

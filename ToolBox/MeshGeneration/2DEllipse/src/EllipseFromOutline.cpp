@@ -2120,7 +2120,8 @@ int main(int argc, char **argv)
 	// 2: wing disc 72 hr,
 	// 3: optic cup
 	// 4: x&y symmetric circle
-	int selectTissueType = 1; 
+	int selectTissueType = 4; 
+	//Eliminate bluntTip function for type 4 with no x symmetricity! (half circle - not quarter)
 	if (selectTissueType == 0){ // 0 : wingdisc48Hr, 
 		symmetricY = true;
 		symmetricX = false; 
@@ -2139,7 +2140,7 @@ int main(int argc, char **argv)
 	}
 	else if(selectTissueType == 4){
 		symmetricY = true;
-		symmetricX = true; 
+		symmetricX = false; 
 	}
 	else{
 		cerr<<"Tissue type selected wrong!!"<<endl;	
@@ -2290,15 +2291,16 @@ int main(int argc, char **argv)
 		lumenHeightFrac = 1.0;
 		peripodialSideCurveFrac = 1.0 /ABHeight ;
 		Lay01.symmetricY = true;
-		Lay01.symmetricX = true;
+		Lay01.symmetricX = false;
 		addPeripodial = false;
 		//  without ECM:
 		//ECMHeight = ABHeight/ABLayers;
 		//actinHeight = ABHeight/ABLayers;
 		//  with ECM: (this setup will add a layer to represent ECM on the apical surface
-		actinHeight  = 3.0;
-		ECMHeight = (ABHeight - actinHeight) / (ABLayers-1);
-		basalLayerHeight  = (ABHeight - actinHeight) / (ABLayers-1);
+		actinHeight  = 2.0;
+		ECMHeight = 0.2;
+		//ECMHeight = (ABHeight - actinHeight) / (ABLayers-1);
+		//basalLayerHeight  = (ABHeight - actinHeight) / (ABLayers-1);
 		//  end of ECM options		
 		modifiedZDueToThinActin = (ABHeight - ECMHeight - actinHeight)/ (ABLayers-2);
 		if (ABLayers<3){
@@ -2306,6 +2308,20 @@ int main(int argc, char **argv)
 			actinHeight = ABHeight/ABLayers;
 			modifiedZDueToThinActin  = ABHeight/ABLayers;
 			basalLayerHeight = ABHeight/ABLayers;
+		}
+		else{
+			double denominator = (ABLayers-3);
+			bool correctECM = false;
+			bool correctBasal = false;
+			bool correctActin = false;
+			if(ECMHeight<0){ECMHeight=0;denominator++;correctECM=true;}
+			if(basalLayerHeight<0){basalLayerHeight=0;denominator++;correctBasal=true;}
+			if(actinHeight<0){actinHeight==0;denominator++;correctActin=true;}
+			modifiedZDueToThinActin = (ABHeight - ECMHeight - actinHeight -basalLayerHeight)/ denominator;
+			if (correctECM){ECMHeight= modifiedZDueToThinActin;}
+			if (correctBasal){basalLayerHeight= modifiedZDueToThinActin;}
+			if (correctActin){actinHeight= modifiedZDueToThinActin;}
+			//modifiedZDueToThinActin = (ABHeight - ECMHeight - actinHeight -basalLayerHeight)/ (ABLayers-3);
 		}
 	}
 	else{

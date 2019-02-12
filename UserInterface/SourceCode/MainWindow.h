@@ -48,6 +48,7 @@ public slots:
     void 	manualElementSelection(const QString &);
     void 	ManualElementSelectionReset();
     void 	ManualNodeSelectionReset();
+    void	testAdhesionsAndCurveConstruction();
     void 	timerSimulationStep();
     void 	updateStrain(int);
     void 	updateMyosinComboBox(int s);

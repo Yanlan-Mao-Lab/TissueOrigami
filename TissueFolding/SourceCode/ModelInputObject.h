@@ -55,8 +55,9 @@ private:
 	bool readAdhesionOptions(ifstream& file);
 	bool readNodeCollapseOptions(ifstream& file);
 	bool readExplicitActinOptions(ifstream& file);
-	bool readVolumeRedistributionOptions(ifstream& file);
+	bool readColumnViseVolumeConservationOptions(ifstream& file);
 	bool readMutationOptions(ifstream& file);
+	bool readartificialRelaxationOptions(ifstream& file);
 	bool readEnclosementOptions(ifstream& file);
 
 public:

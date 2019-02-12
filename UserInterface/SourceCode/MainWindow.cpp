@@ -61,6 +61,7 @@ MainWindow::MainWindow(Simulation* Sim01)
 MainWindow::~MainWindow(){
 	//cerr<<"called the destructor"<<endl;
 	delete Sim01;
+	delete analyser01;
 	delete MainGLWidget;
 	delete MainGrid;
 	delete MainScene;
@@ -99,7 +100,7 @@ void MainWindow::generateControlPanel(){
 	BottomLineBox->addWidget(QuitButton,Qt::AlignBottom| Qt::AlignRight);
 	ControlPanelMainHBox->addLayout(BottomLineBox,Qt::AlignBottom);
 
-    //Adding the control panel vertical box to the main grid of the main window.
+    	//Adding the control panel vertical box to the main grid of the main window.
 	MainGrid->addLayout(ControlPanelMainHBox,0,1,Qt::AlignLeft);
 	MainGrid->setColumnStretch(1,-2);
 }
@@ -116,8 +117,9 @@ void MainWindow::setUpGLWidget(){
     	MainGLWidget->DisplayPysPropRange[i][0] = PysPropSpinBoxes[1]->value();
     }
 	//cerr<<"From MainGLWIDGET: Element list size: "<<MainGLWidget->Sim01->Elements.size()<<endl;
-	//MainGrid->setStyleSheet("border: 1px solid red");
-	MainGrid->addWidget(MainGLWidget,0,0,Qt::AlignLeft);
+	//For background analysis, do not add the gl widget to the window, and make it tiny. It will be closed at the end of analuysis
+    MainGrid->addWidget(MainGLWidget,0,0,Qt::AlignLeft);
+    //MainGLWidget->resize(50,5);
 	//setting up time display:
 	QFont boldFont("SansSerif", 9, QFont::Bold,true);
 	TimeTitle = new QLabel("Simulation Time: 0 hr");
@@ -416,7 +418,7 @@ void MainWindow::setDisplayPreferences(QGridLayout *ProjectDisplayOptionsGrid){
 	DisplayPreferencesCheckBoxes[2]->setChecked(false);
 	connect(DisplayPreferencesCheckBoxes[2] , SIGNAL(stateChanged(int)),this,SLOT(updateFixedNodesCheckBox(int)));
 	DisplayPreferencesCheckBoxes[3] = new QCheckBox("ScaleCube");
-	DisplayPreferencesCheckBoxes[3]->setChecked(false);
+	DisplayPreferencesCheckBoxes[3]->setChecked(true);
 	connect(DisplayPreferencesCheckBoxes[3] , SIGNAL(stateChanged(int)),this,SLOT(updateScaleBarCheckBox(int)));
 	DisplayPreferencesCheckBoxes[4] = new QCheckBox("Display Peripodial Membrane");
 	DisplayPreferencesCheckBoxes[4]->setChecked(true);
@@ -803,16 +805,53 @@ void MainWindow::ManualNodeSelectionReset(){
 	NodeSelectBox->blockSignals(false);
 }
 
+void MainWindow::testAdhesionsAndCurveConstruction(){
+	//testing adhesion!!
+	Sim01->thereIsEmergentEllipseMarking = true;
+	Sim01->detectPacingNodes();
+	int n = Sim01->pacingNodeCouples0.size();
+	for(int nodeCoupleIterator = 0 ; nodeCoupleIterator<n; ++nodeCoupleIterator){
+		int slaveNodeId = Sim01->pacingNodeCouples0[nodeCoupleIterator];
+		int masterNodeId = Sim01->pacingNodeCouples1[nodeCoupleIterator];
+		cout<<"checking node pair: "<<slaveNodeId<<" "<<masterNodeId<<endl;
+		for (int i=0;i<3; ++i){
+			Sim01->Nodes[slaveNodeId]->slaveTo[i] = masterNodeId;
+			Sim01->Nodes[masterNodeId]->isMaster[i] = true;
+		}
+	}
+	for (vector<Node*>::iterator itNode= Sim01->Nodes.begin(); itNode<Sim01->Nodes.end(); ++itNode){
+		if ((*itNode)->onFoldInitiation){
+			int n = (*itNode)->connectedElementIds.size();
+			for (int i=0; i<n; ++i){
+				int currElementId = (*itNode)->connectedElementIds[i];
+				//check if at least two nodes of the element are at curves:
+				bool changeEllipseId = Sim01->Elements[currElementId]->hasEnoughNodesOnCurve(Sim01->Nodes);
+				if (changeEllipseId){
+					//cout<<"changing Id for element "<<currElementId<<endl;
+					Sim01->Elements[currElementId]->insideEllipseBand = true;
+					Sim01->Elements[currElementId]->coveringEllipseBandId = 100;
+					//Sim01->Elements[currElementId]->assignEllipseBandIdToWholeTissueColumn(Sim01->TissueHeightDiscretisationLayers,Sim01->Nodes,Sim01->Elements);
+				}
+			}
+		}
+	}
+}
 void MainWindow::timerSimulationStep(){
     //cout<<"Called the function via timer"<<endl;
 
-	bool 	automatedSave = true;
-	int		viewSelection = 0 ; //0: top, 1: cross, 2: perspective.
-	bool 	analyseResults = false;
+	bool 	automatedSave =true;
+	int	viewSelection = 2; //0: top, 1: cross, 2: perspective 3: side.
+	int 	displayAutomatedStrain = -1; //-1 no strain display, 1 display DV strains, 2 AP strains;
+	bool 	analyseResults = true;
 	bool 	slowstepsOnDisplay = false;
 	bool 	slowstepsOnRun = false;
 	int 	slowWaitTime = 10;
 
+	//display DV strains
+	if (displayAutomatedStrain>-1){
+		MainGLWidget->DisplayStrains = true;
+		MainGLWidget->StrainToDisplay =displayAutomatedStrain;
+	}
 	if (Sim01->DisplaySave){
 		if (Sim01->timestep == 0){
 			if( automatedSave ){
@@ -828,6 +867,11 @@ void MainWindow::timerSimulationStep(){
 				else if (viewSelection == 2){
 					MainGLWidget->updateToPerspectiveView(); //display tissue from the tilted view
 					MainGLWidget->drawSymmetricity = true; //show symmetric
+					MainGLWidget->drawTissueScaleBar= false;
+				}
+				else if (viewSelection == 3){
+					MainGLWidget->updateToSideView(); //display tissue from the tilted view
+					MainGLWidget->drawSymmetricity = true; //show symmetric
 				}
 				//MainGLWidget->drawPeripodialMembrane= false;
 				MainGLWidget->PerspectiveView = false; //switch to orthogoanal view type.
@@ -838,20 +882,27 @@ void MainWindow::timerSimulationStep(){
 		if(!Sim01->reachedEndOfSaveFile){
 			cout<<" updating step"<<endl;
 			Sim01->updateOneStepFromSave();
+			//testAdhesionsAndCurveConstruction();
+
+			//end of testing adhesion
 			if (Sim01->timestep >= 0){
-				double boundingBoxLength = Sim01->boundingBox[1][0] - Sim01->boundingBox[0][0];
-				double boundingBoxWidth  = Sim01->boundingBox[1][1] - Sim01->boundingBox[0][1];
 				if (analyseResults){
+					double boundingBoxLength = Sim01->boundingBox[1][0] - Sim01->boundingBox[0][0];
+					double boundingBoxWidth  = Sim01->boundingBox[1][1] - Sim01->boundingBox[0][1];
 					cout<<" calculateBoundingBoxSizeAndAspectRatio"<<endl;
 					analyser01->calculateBoundingBoxSizeAndAspectRatio(Sim01->currSimTimeSec,boundingBoxLength,boundingBoxWidth);
 					cout<<" calculateContourLineLengthsDV"<<endl;
 					analyser01->calculateContourLineLengthsDV(Sim01->Nodes);
-					cout<<" findApicalKinkPointsDV"<<endl;
-					analyser01->findApicalKinkPointsDV(Sim01->currSimTimeSec,Sim01->boundingBox[0][0], boundingBoxLength, boundingBoxWidth, Sim01->Nodes);
-					cout<<" calculateTissueVolumeMap"<<endl;
-					analyser01->calculateTissueVolumeMap(Sim01->Elements, Sim01->currSimTimeSec,Sim01->boundingBox[0][0],Sim01->boundingBox[0][1],boundingBoxLength,boundingBoxWidth);
+					analyser01->saveApicalCircumferencePosition(Sim01->currSimTimeSec,Sim01->Nodes);
+					//cout<<" findApicalKinkPointsDV"<<endl;
+					//analyser01->findApicalKinkPointsDV(Sim01->currSimTimeSec,Sim01->boundingBox[0][0], boundingBoxLength, boundingBoxWidth, Sim01->Nodes);
+					//cout<<" calculateTissueVolumeMap"<<endl;
+					//analyser01->calculateTissueVolumeMap(Sim01->Elements, Sim01->currSimTimeSec,Sim01->boundingBox[0][0],Sim01->boundingBox[0][1],boundingBoxLength,boundingBoxWidth);
+
 					cout<<" finished analysis"<<endl;
-					//analyser01->markAdhesions(Sim01->Nodes,Sim01->Elements);
+					Sim01->thereIsEmergentEllipseMarking = true;
+					Sim01->detectPacingNodes();
+					analyser01->saveNodesOnFold(Sim01->currSimTimeSec,Sim01->Nodes);
 				}
 			}
 			Sim01->calculateDVDistance();
@@ -880,6 +931,7 @@ void MainWindow::timerSimulationStep(){
 		else{
 			//close();
 			if (automatedSave){
+				MainGLWidget->close();
 				close();
 			}
 		}

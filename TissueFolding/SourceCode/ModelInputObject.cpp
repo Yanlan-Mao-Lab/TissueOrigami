@@ -213,11 +213,11 @@ bool ModelInputObject::readParameters(){
 				 */
 				Success  = readExplicitActinOptions(parametersFile);
 			}
-			else if(currParameterHeader == "VolumeRedistributionOptions:"){
+			else if(currParameterHeader == "ColumnViseVolumeConservationOptions:"){
 				/**
 				 * Setting volume redistributions options, The volume will be redistributed within a column of elements, starting from the apical surface.
 				 */
-				Success  = readVolumeRedistributionOptions(parametersFile);
+				Success  =readColumnViseVolumeConservationOptions(parametersFile);
 			}
 			else if(currParameterHeader == "MutationOptions:"){
 				/**
@@ -230,6 +230,9 @@ bool ModelInputObject::readParameters(){
 				 * Setting z enclosement options.
 				 */
 				Success  = readEnclosementOptions(parametersFile);
+			}
+			else if (currParameterHeader == "ArtificialRelaxationOptions:"){
+				Success  = readartificialRelaxationOptions(parametersFile);;
 			}
 			else {
 				/**
@@ -1500,6 +1503,14 @@ bool ModelInputObject::readShapeChangeOptions(ifstream& file){
 		cerr<<"Error in reading shape change options, curr string: "<<currHeader<<", should have been: NumberofShapeChangeFunctions(int):" <<endl;
 		return false;
 	}
+	file >> currHeader;
+	if(currHeader == "ShapeChangeStartsBelowECMLevel(fraction):"){
+			file >> Sim->shapeChangeECMLimit;
+		}
+		else{
+			printErrorMessage(currHeader,"read shape change options","ShapeChangeStartsBelowECMLevel(fraction)");
+			return false;
+		}
 	for (int i = 0; i<n; ++i){
 		file >> currHeader;
 		int type;
@@ -1791,6 +1802,9 @@ bool ModelInputObject::readGridBasedMyosinFunction(ifstream& file){
 				for (int aa=0; aa<Sim->numberOfMyosinAppliedEllipseBands; ++aa){
 					file >>ellipseBandId;
 					Sim->myosinEllipseBandIds.push_back(ellipseBandId);
+					if (ellipseBandId >= 100){
+						Sim->thereIsEmergentEllipseMarking = true;
+					}
 				}
 			}
 			else{
@@ -1956,12 +1970,12 @@ bool ModelInputObject::readShapeChangeType2(ifstream& file){
 	file >> currHeader;
 	float initialtime;
 	float finaltime;
-	bool applyToBasalECM = false;
-	bool applyToLateralECM = false;
-	bool applyTissueApical = false;
-	bool applyTissueBasal = false;
-	bool applyTissueMidline = false;
-	bool conserveVolume = false;
+	bool applyToBasalECM{false};
+	bool applyToLateralECM{false};
+	bool applyTissueApical{false};
+	bool applyTissueBasal{false};
+	bool applyTissueMidline{false};
+	bool conserveVolume{false};
 	vector <int> markerEllipses;
 	double ShapeChangeFractionPerHr;
 	if(currHeader == "InitialTime(sec):"){
@@ -2053,7 +2067,7 @@ bool ModelInputObject::readShapeChangeType2(ifstream& file){
 	GrowthFunctionBase* GSBp;
 	int Id = Sim->ShapeChangeFunctions.size();
 	//type is 1
-	GSBp = new 	markerEllipseBasedShapeChangeFunction(Id, 2, initialtime, finaltime, applyTissueApical, applyTissueBasal, applyTissueMidline, applyToBasalECM, applyToLateralECM, 2, ShapeChangeFractionPerHr, markerEllipses,conserveVolume);
+	GSBp = new 	markerEllipseBasedShapeChangeFunction(Id, 2, initialtime, finaltime, applyTissueApical, applyTissueBasal, applyTissueMidline, applyToBasalECM, applyToLateralECM, 2, ShapeChangeFractionPerHr, markerEllipses, conserveVolume);
 	Sim->ShapeChangeFunctions.push_back(GSBp);
 	return true;
 }
@@ -2254,6 +2268,9 @@ bool ModelInputObject::readApicoBasalVolumeRedistribution(ifstream& file){
 			for (int aa=0; aa<Sim->apikobasalVolumeRedistributionFunctionEllipseNumbers[i]; ++aa){
 				file >>ellipseBandId;
 				Sim->apikobasalVolumeRedistributionFunctionEllipseBandIds[i].push_back(ellipseBandId);
+				if (ellipseBandId >= 100){
+					Sim->thereIsEmergentEllipseMarking = true;
+				}
 			}
 		}
 		else{
@@ -2357,10 +2374,10 @@ bool ModelInputObject::readStiffnessPerturbation(ifstream& file){
 			for (int aa=0; aa<Sim->numberOfStiffnessPerturbationAppliesEllipseBands[i]; ++aa){
 				file >>ellipseBandId;
 				Sim->stiffnessPerturbationEllipseBandIds[i].push_back(ellipseBandId);
+				if (ellipseBandId >= 100){
+					Sim->thereIsEmergentEllipseMarking = true;
+				}
 			}
-			//file >> Sim->ECMSofteningXRange[0];
-			//file >> Sim->ECMSofteningXRange[1];
-
 		}
 		else{
 			printErrorMessage(currHeader,"stiffness perturbations","stiffnessPerturbationAppliedToEllipses(number,[ellipseId][ellipseId]):");
@@ -2404,7 +2421,8 @@ bool ModelInputObject::readECMPerturbation(ifstream& file){
 		printErrorMessage(currHeader,"ECM perturbations","NumberOfECMPerturbations(int):");
 		return false;
 	}
-	for (int i=0l; i<nECMFunctions; ++i){
+	for (int i=0; i<nECMFunctions; ++i){
+		Sim->changedECM.push_back(false);
 		file >> currHeader;
 		if(currHeader == "ApplyToApicalECM(bool):"){
 			bool changeApicalECM;
@@ -2430,6 +2448,9 @@ bool ModelInputObject::readECMPerturbation(ifstream& file){
 			bool emergentApplication;
 			file >> emergentApplication;
 			Sim->ECMChangeTypeIsEmergent.push_back(emergentApplication);
+			if (emergentApplication){
+				Sim->thereIsEmergentEllipseMarking = true;
+			}
 		}
 		else{
 			printErrorMessage(currHeader,"ECM perturbations","AppliedElementsAreEmergent(bool):");
@@ -2458,6 +2479,9 @@ bool ModelInputObject::readECMPerturbation(ifstream& file){
 			for (int aa=0; aa<Sim->numberOfECMChangeEllipseBands[i]; ++aa){
 				file >>ellipseBandId;
 				Sim->ECMChangeEllipseBandIds[i].push_back(ellipseBandId);
+				if (ellipseBandId >= 100){
+					Sim->thereIsEmergentEllipseMarking = true;
+				}
 			}
 		}
 		else{
@@ -2503,7 +2527,42 @@ bool ModelInputObject::readECMPerturbation(ifstream& file){
 			printErrorMessage(currHeader,"ECM perturbations","ECMViscosityChangeFraction(double):");
 			return false;
 		}
-		Sim->changedECM.push_back(false);
+		file >> currHeader;
+		if(currHeader == "changeNotumECM(time,fraction):"){
+			file >> Sim->notumECMChangeInitTime;
+			Sim->notumECMChangeInitTime*=3600; //convet to hrs
+			file >> Sim->notumECMChangeEndTime;
+			Sim->notumECMChangeEndTime*=3600; //convet to hrs
+			file >> Sim->notumECMChangeFraction;
+		}
+		else{
+			printErrorMessage(currHeader,"ECM perturbations","changeNotumECM(time,fraction):");
+			return false;
+		}
+		file >> currHeader;
+		if(currHeader == "changeHingeECM(time,fraction):"){
+			file >> Sim->hingeECMChangeInitTime;
+			Sim->hingeECMChangeInitTime*=3600; //convet to hrs
+			file >> Sim->hingeECMChangeEndTime;
+			Sim->hingeECMChangeEndTime*=3600; //convet to hrs
+			file >> Sim->hingeECMChangeFraction;
+		}
+		else{
+			printErrorMessage(currHeader,"ECM perturbations","changeNotumECM(time,fraction):");
+			return false;
+		}
+		file >> currHeader;
+		if(currHeader == "changePouchECM(time,fraction):"){
+			file >> Sim->pouchECMChangeInitTime;
+			Sim->pouchECMChangeInitTime*=3600; //convet to hrs
+			file >> Sim->pouchECMChangeEndTime;
+			Sim->pouchECMChangeEndTime*=3600; //convet to hrs
+			file >> Sim->pouchECMChangeFraction;
+		}
+		else{
+			printErrorMessage(currHeader,"ECM perturbations","changeNotumECM(time,fraction):");
+			return false;
+		}
 	}
 	return true;
 }
@@ -2536,14 +2595,44 @@ bool ModelInputObject::readExplicitActinOptions(ifstream& file){
 }
 
 
-bool ModelInputObject::readVolumeRedistributionOptions(ifstream& file){
+bool ModelInputObject::readColumnViseVolumeConservationOptions(ifstream& file){
 	string currHeader;
 	file >> currHeader;
-	if(currHeader == "ThereIsVolumeRedistribution(bool):"){
-		file >> Sim->redistributingVolumes;
+	if(currHeader == "ThereIsColumnViseVolumeConservation(bool):"){
+		file >> Sim->conservingColumnVolumes;
 	}
 	else{
-		cerr<<"Error in reading volume redistribution options: "<<currHeader<<", should have been: ThereIsVolumeRedistribution(bool):" <<endl;
+		cerr<<"Error in reading column-vise volume conservation options: "<<currHeader<<", should have been: ThereIsColumnViseVolumeConservation(bool):" <<endl;
+		return false;
+	}
+	return true;
+}
+
+
+bool ModelInputObject::readartificialRelaxationOptions(ifstream& file){
+	string currHeader;
+	file >> currHeader;
+	if(currHeader == "ThereIsArtificaialRelaxation(bool):"){
+		file >> Sim->thereIsArtificaialRelaxation;
+	}
+	else{
+		printErrorMessage(currHeader,"artificial relaxation options","ThereIsArtificaialRelaxation(bool):");
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "ArtificialRelaxationTime(sec):"){
+		file >> Sim->artificialRelaxationTime;
+	}
+	else{
+		printErrorMessage(currHeader,"artificial relaxation options","ArtificialRelaxationTime(sec):");
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "relaxECM(bool):"){
+		file >> Sim->relaxECMInArtificialRelaxation;
+	}
+	else{
+		printErrorMessage(currHeader,"artificial relaxation options","relaxECM(bool):");
 		return false;
 	}
 	return true;

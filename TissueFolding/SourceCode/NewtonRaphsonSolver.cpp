@@ -6,6 +6,8 @@
  */
 
 #include "NewtonRaphsonSolver.h"
+#include <math.h>
+
 //#include "Node.h"
 //#include <gsl/gsl_linalg.h>
 
@@ -376,9 +378,9 @@ void NewtonRaphsonSolver::addExernalForces(){
 }
 
 
+
 void NewtonRaphsonSolver::solveForDeltaU(){
     const int nmult  = nDim*nNodes;
-
     int *ia = new int[nmult+1];
     double *b = new double[nmult];
     vector <int> ja_vec;
@@ -401,8 +403,11 @@ void NewtonRaphsonSolver::solveForDeltaU(){
     delete[] b;
 }
 
-#include <math.h>
-/* PARDISO prototype. */
+
+
+
+
+// PARDISO prototype. //
 extern "C" void pardisoinit (void   *, int    *,   int *, int *, double *, int *);
 extern "C" void pardiso     (void   *, int    *,   int *, int *,    int *, int *, double *, int    *,    int *, int *,   int *, int *,   int *, double *, double *, int *, double *);
 extern "C" void pardiso_chkmatrix  (int *, int *, double *, int *, int *, int *);
@@ -439,7 +444,7 @@ int NewtonRaphsonSolver::solveWithPardiso(double* a, double*b, int* ia, int* ja,
     // For mkl this is :
     // export MKL_PARDISO_OOC_MAX_CORE_SIZE=10000
     // export MKL_PARDISO_OOC_MAX_SWAP_SIZE=2000
-    //
+    // fo
     // MSGLVL: the level of verbal output, 0 is no output.
 
     int    n = n_variables;
@@ -677,6 +682,7 @@ int NewtonRaphsonSolver::solveWithPardiso(double* a, double*b, int* ia, int* ja,
     return 0;
 }
 
+
 void NewtonRaphsonSolver::constructiaForPardiso(int* ia, const int nmult, vector<int> &ja_vec, vector<double> &a_vec){
     double negThreshold = -1E-13, posThreshold = 1E-13;
     //count how many elements there are on K matrix and fill up ia:
@@ -699,6 +705,10 @@ void NewtonRaphsonSolver::constructiaForPardiso(int* ia, const int nmult, vector
     }
     ia[nmult] = counter;
 }
+
+
+
+
 void NewtonRaphsonSolver::writeKinPardisoFormat(const int nNonzero, vector<int> &ja_vec, vector<double> &a_vec, int* ja, double* a){
     //now filling up the int & double arrays for ja, a
     for (int i=0 ; i<nNonzero; ++i){
@@ -869,4 +879,256 @@ bool NewtonRaphsonSolver::checkIfSlaveIsAlreadyMasterOfOthers(int dofSlave, int 
 	}
 	return madeChange;
 }
+/*
+extern int mkl_get_max_threads();
 
+void NewtonRaphsonSolver::solveForDeltaUMKL(){
+
+    const int nmult  = nDim*nNodes;
+    MKL_INT *ia = new MKL_INT[nmult+1];
+    double *b = new double[nmult];
+    vector <int> ja_vec;
+    vector <double> a_vec;
+    constructiaForPardisoMKL(ia, nmult, ja_vec, a_vec);
+    const int nNonzero = ja_vec.size();
+    MKL_INT* ja = new MKL_INT[nNonzero];
+    double* a = new double [nNonzero];
+    writeKinPardisoFormatMKL(nNonzero, ja_vec, a_vec, ja, a);
+    writeginPardisoFormat(b,nmult);
+    int error = solveWithPardisoMKL(a, b, ia, ja, nmult);
+    if (error != 0){cerr<<"Pardiso solver did not return success!!"<<endl;}
+
+    if (boundNodesWithSlaveMasterDefinition){
+    	equateSlaveDisplacementsToMasters();
+    }
+    delete[] ia;
+    delete[] ja;
+    delete[] a;
+    delete[] b;
+}
+
+void NewtonRaphsonSolver::setupControlParametersMKL(MKL_INT* iparm, MKL_INT& maxfct, MKL_INT& mnum, MKL_INT& msglvl,  MKL_INT& error){
+	for (int i = 0; i < 64; i++) {
+	    iparm[i] = 0;
+	}
+	iparm[0] = 1; // No solver default
+	iparm[1] = 2; // Fill-in reordering from METIS
+	iparm[2]  = mkl_get_max_threads(); // Numbers of processors, value of MKL_NUM_THREADS
+	iparm[3]  =  0;    	// No iterative-direct algorithm
+	iparm[4]  =  0;    	// No user fill-in reducing permutation
+	iparm[5]  =  0;    	// Write solution into x
+	iparm[7]  =  2;    	// Max numbers of iterative refinement steps
+ 	iparm[9]  =  13;   	// Perturb the pivot elements with 1E-13
+    iparm[10] =  0;   	//  no scaling  -  //THis was 1 in the original independent license version!!
+    iparm[11] =  0;   	// Use nonsymmetric permutation and scaling MPS
+    iparm[12] =  0;   	//  no matching
+	iparm[17] = -1;		// Output: Number of nonzeros in the factor LU
+	iparm[18] = -1;  	// Output: Mflops for LU factorization
+	iparm[19] =  0;   	// Output: Numbers of CG Iterations
+
+	maxfct =1 ; // Maximum number of numerical factorizations.
+	mnum= 1; // Which factorization to use.
+	msglvl = 0; // Print statistical information in file
+   	error = 0;  // Initialize error flag
+}
+
+int NewtonRaphsonSolver::solveWithPardisoMKL(double* a, double*b, int* ia, int* ja, const int n_variables){
+	//This is the mkl version
+
+    // I am copying my libraries to a different location for this to work:
+    // On MAC:
+    // cp /usr/local/lib/gcc/x86_64-apple-darwin14.4.0/4.7.4/libgfortran.3.dylib /usr/local/lib/
+    // cp /usr/local/lib/gcc/x86_64-apple-darwin14.4.0/4.7.4/libgomp.1.dylib /usr/local/lib/
+    // cp /usr/local/lib/gcc/x86_64-apple-darwin14.4.0/4.7.4/libquadmath.0.dylib /usr/local/lib/
+    // cp libpardiso500-MACOS-X86-64.dylib usr/local/lib
+    //
+    // compilation:
+    // g++ pardiso_sym.cpp -o pardiso_sym  -L./ -L/usr/local/lib -L/usr/lib/  -lpardiso500-MACOS-X86-64 -llapack
+
+
+    // On ubuntu,
+    // cp libpardiso500-GNU461-X86-64.so /usr/lib/
+    //
+    // sometimes linux cannot recognise liblapack.so.3gf or liblapack.so.3.0.1 or others like this, are essentially liblapack.so
+    // on ubuntu you can get this solved by installing liblapack-dev:
+    // sudo apt-get install liblapack-dev
+    //
+	//MKL path:
+	//	export MKLROOT=/opt/intel/compilers_and_libraries/linux/mkl/
+	//compilation - using g++ and openMP:
+	//	g++  -DMKL_ILP64 -m64 -I${MKLROOT}/include -L${MKLROOT}/lib/intel64 -Wl,--no-as-needed  -lmkl_intel_ilp64 -lmkl_gnu_thread -lmkl_core -lgomp -lpthread -lm -ldl  matrixsolver.cpp -o matrixsolver
+
+
+    //
+    // also for each terminal run:
+    // export OMP_NUM_THREADS=1
+    // For mkl this is :
+    // export MKL_PARDISO_OOC_MAX_CORE_SIZE=10000
+    // export MKL_PARDISO_OOC_MAX_SWAP_SIZE=2000
+    // MSGLVL: the level of verbal output, 0 is no output.
+
+    MKL_INT    n = n_variables;
+    int    nnz = ia[n];
+    MKL_INT    mtype = 11;        // Real unsymmetric matrix //
+
+    // RHS and solution vectors.
+    MKL_INT      nrhs = 1;          // Number of right hand sides.
+    double   x[n_variables];//, diag[n_variables];
+    // Internal solver memory pointer pt,                  //
+    // 32-bit: int pt[64]; 64-bit: long int pt[64]         //
+    // or void *pt[64] should be OK on both architectures  //
+    void    *pt[64];
+
+    // Pardiso control parameters. //
+    MKL_INT*  iparm = new MKL_INT[64];
+    double   dparm[64];
+    MKL_INT  maxfct, mnum, phase, error, msglvl, solver;
+
+    iparm[60] = 1; //use in-core version when there is enough memory, use out of core version when not.
+
+    // Number of processors. //
+    int      num_procs;
+
+    // Auxiliary variables. //
+    char    *var;
+    int      i;
+    double   ddum;              // Double dummy
+    MKL_INT  idum;              // Integer dummy.
+
+
+// --------------------------------------------------------------------
+// ..  Setup Pardiso control parameters.
+// --------------------------------------------------------------------
+    setupControlParametersMKL(iparm, maxfct, mnum, msglvl, error);d
+
+// --------------------------------------------------------------------
+// .. Initialize the internal solver memory pointer. This is only
+// necessary for the FIRST call of the PARDISO solver.
+// --------------------------------------------------------------------
+	for (i = 0; i < 64; i++) {
+	    pt[i] = 0;
+	}
+
+// -------------------------------------------------------------------- //
+// ..  Convert matrix from 0-based C-notation to Fortran 1-based        //
+//     notation.                                                        //
+// -------------------------------------------------------------------- //
+    for (i = 0; i < n+1; i++) {
+        ia[i] += 1;
+    }
+    for (i = 0; i < nnz; i++) {
+        ja[i] += 1;
+    }
+
+
+
+// --------------------------------------------------------------------
+// .. Reordering and Symbolic Factorization. This step also allocates
+// all memory that is necessary for the factorization.
+// --------------------------------------------------------------------
+	//cout<<"Reordering and symbolic factorisation"<<endl;
+	phase = 11;
+	PARDISO (pt, &maxfct, &mnum, &mtype, &phase, &n, a, ia, ja, &idum, &nrhs, iparm, &msglvl, &ddum, &ddum, &error);
+	if (error != 0) {
+		printf("\nERROR during symbolic factorization: %d", error);
+		exit(1);
+	}
+    //printf("\nReordering completed ... ");
+    //printf("\nNumber of nonzeros in factors  = %d", iparm[17]);
+    //printf("\nNumber of factorization MFLOPS = %d", iparm[18]);
+
+// --------------------------------------------------------------------
+// .. Numerical factorization
+// --------------------------------------------------------------------
+//cout<<"Numerical factorisation"<<endl;
+	phase = 22;
+	PARDISO (pt, &maxfct, &mnum, &mtype, &phase, &n, a, ia, ja, &idum, &nrhs,iparm, &msglvl, &ddum, &ddum, &error);
+	if (error != 0) {
+		printf("\nERROR during numerical factorization: %d", error);
+		exit(2);
+	}
+	//printf("\nFactorization completed ... ");
+
+
+// --------------------------------------------------------------------
+// .. Back substitution and iterative refinement.
+// --------------------------------------------------------------------
+	phase = 33;
+	iparm[7] = 2;
+	// Max numbers of iterative refinement steps.
+	PARDISO (pt, &maxfct, &mnum, &mtype, &phase, &n, a, ia, ja, &idum, &nrhs, iparm, &msglvl, b, x, &error);
+	if (error != 0) {
+		printf("\nERROR during solution: %d", error);
+ 		exit(3);
+	}
+
+	if (error != 0) {
+		printf("\nERROR during solution: %d", error);
+		exit(3);
+	}
+
+	bool displayResult = false;
+	if (displayResult){
+		printf("\nSolve completed ... ");
+		printf("\nThe solution of the system is: ");
+		for (i = 0; i < n; i++) {
+			printf("\n x [%d] = % f", i, x[i] );
+		}
+		printf ("\n");
+	}
+    //Write x into deltaU:
+    for (int i=0; i<n_variables; ++i){
+        gsl_vector_set(deltaU,i,x[i]);
+    }
+
+// -------------------------------------------------------------------- //
+// ..  Convert matrix back to 0-based C-notation.                       //
+// -------------------------------------------------------------------- //
+    for (i = 0; i < n+1; i++) {
+        ia[i] -= 1;
+    }
+    for (i = 0; i < nnz; i++) {
+        ja[i] -= 1;
+    }
+
+// -------------------------------------------------------------------- //
+// ..  Termination and release of memory.                               //
+// -------------------------------------------------------------------- //
+    phase = -1;                 // Release internal memory.
+
+// Release internal memory.
+    PARDISO (pt, &maxfct, &mnum, &mtype, &phase, &n, &ddum, ia, ja, &idum, &nrhs, iparm, &msglvl, &ddum, &ddum, &error);
+    return 0;
+}
+
+void NewtonRaphsonSolver::constructiaForPardisoMKL(MKL_INT* ia, const int nmult, vector<int> &ja_vec, vector<double> &a_vec){
+    double negThreshold = -1E-13, posThreshold = 1E-13;
+    //count how many elements there are on K matrix and fill up ia:
+    int counter = 0;
+    for (int i =0; i<nmult; ++i){
+        bool wroteiaForThisRow = false;
+        for (int j=0; j<nmult; ++j){
+            double Kvalue = gsl_matrix_get(K,i,j);
+            if (Kvalue>posThreshold || Kvalue<negThreshold){
+                ja_vec.push_back(j);
+                a_vec.push_back(Kvalue);
+                if (!wroteiaForThisRow){
+                    //cout<<"writing is for row "<<i<<" column is: "<<j<<endl;
+                    ia[i] = counter;
+                    wroteiaForThisRow = true;
+                }
+                counter++;
+            }
+        }
+    }
+    ia[nmult] = counter;
+}
+
+void NewtonRaphsonSolver::writeKinPardisoFormatMKL(const int nNonzero, vector<int> &ja_vec, vector<double> &a_vec, MKL_INT* ja, double* a){
+    //now filling up the int & double arrays for ja, a
+    for (int i=0 ; i<nNonzero; ++i){
+        ja[i] = ja_vec[i];
+        a[i]  = a_vec [i];
+    }
+}
+*/

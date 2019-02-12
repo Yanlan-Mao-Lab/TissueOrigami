@@ -313,6 +313,21 @@ cp Points.6.node Points.1.node
 ./EllipseFromOutline -1 12.5 6.5 4 1  ./inputOutlines/72hrDiscOutline
 cp MeshFile.out ./Exp72hr-noPeri_09.mesh
 
+
+Drawing Circle equivalent of 48 hr dsc:
+./EllipseFromOutline 1 33 33 33 33 12.5 4.2 4 1  ./inputOutlines/circleOutline
+../triangle/triangle -rq33a27.44 Points.1
+../triangle/triangle -rq33a10.4 Points.2
+../triangle/triangle -rq33a5.8 Points.3
+../triangle/triangle -rq33a2.8 Points.4
+../triangle/triangle -rq33a0.65 Points.5
+cp Points.6.ele Points.1.ele
+cp Points.6.node Points.1.node
+./EllipseFromOutline -1 12.5 2 4 1  ./inputOutlines/circleOutline
+cp MeshFile.out ./Circle33withECM_h125_01.mesh
+
+
+
 Drawing a circle: 
 % The pipettes will have inner diameter of 30(max) and outer diameter of 60(max)
 % I need some cushioning zone ~20microns. The radia then must be 50 microns.

@@ -357,15 +357,57 @@ void ShapeBase::scaleGrowthForZRedistribution( double& x, double& y, double& z, 
 }
 
 
+double ShapeBase::getCurrentVolume(){
+	double J = 0;
+	for (int iter =0; iter<numberOfGaussPoints;++iter){
+		J +=detFs[iter]*gaussWeights[iter];
+	}
+	double currentVolume =J * ReferenceShape->Volume;
+	return currentVolume;
+}
+
+gsl_matrix* ShapeBase::getCurrentFe(){
+	gsl_matrix* FeAvr = gsl_matrix_calloc(3,3);
+	gsl_matrix* Fetmp = gsl_matrix_calloc(3,3);
+
+	for (int iter =0; iter<numberOfGaussPoints;++iter){
+		createMatrixCopy(Fetmp, FeMatrices[iter]);
+		gsl_matrix_scale(Fetmp,gaussWeights[iter]);
+		gsl_matrix_add(FeAvr, Fetmp);
+	}
+	gsl_matrix_free(Fetmp);
+	return FeAvr;
+}
+
+void ShapeBase::relaxElasticForces(){
+	gsl_matrix* tmpFgForInversion =gsl_matrix_calloc(nDim,nDim);
+	createMatrixCopy(Fg,TriPointF);
+	createMatrixCopy(tmpFgForInversion,Fg);
+	bool inverted = InvertMatrix(tmpFgForInversion, InvFg);
+	if (!inverted){
+		cerr<<"Fg not inverted!!"<<endl;
+	}
+	double detFg = determinant3by3Matrix(Fg);
+	GrownVolume = detFg*ReferenceShape->Volume;
+	VolumePerNode = GrownVolume/nNodes;
+	gsl_matrix_free(tmpFgForInversion);
+}
 
 void ShapeBase::calculateFgFromRates(double dt, double x, double y, double z, gsl_matrix* rotMat, gsl_matrix* increment, int sourceTissue, double zMin, double zMax){
 	double tissueWeight;
 	bool continueCalaculation = isGrowthRateApplicable(sourceTissue, tissueWeight, zMin, zMax);
 	if (continueCalaculation){
 		scaleGrowthForZRedistribution(x,y,z,sourceTissue);
-		gsl_matrix_set(increment,0,0,exp(x*tissueWeight*dt));
-		gsl_matrix_set(increment,1,1,exp(y*tissueWeight*dt));
-		gsl_matrix_set(increment,2,2,exp(z*tissueWeight*dt));
+		double gx = exp(x*tissueWeight*dt);
+		double gy = exp(y*tissueWeight*dt);
+		double gz = exp(z*tissueWeight*dt);
+		//double growthMutationMultiplier = getGrowthMutationMultiplier();
+		//gx = (gx - 1)*growthMutationMultiplier + 1;
+		//gy = (gy - 1)*growthMutationMultiplier + 1;
+		//gz = (gz - 1)*growthMutationMultiplier + 1;
+		gsl_matrix_set(increment,0,0,gx);
+		gsl_matrix_set(increment,1,1,gy);
+		gsl_matrix_set(increment,2,2,gz);
 		gsl_matrix* temp = gsl_matrix_calloc(3,3);
 		//R * increment
 		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, rotMat, increment, 0.0, temp);
@@ -478,8 +520,12 @@ void ShapeBase::calculateFgFromGridCorners(int gridGrowthsInterpolationType, dou
 		scaleGrowthForZRedistribution(growth[0],growth[1],growth[2],sourceTissue);
 
 		for (int axis =0; axis<3; axis++){
-			gsl_matrix_set(increment,axis,axis,exp(growth[axis]*dt));
+			double gAxis = exp(growth[axis]*dt);
+			//double growthMutationMultiplier = getGrowthMutationMultiplier();
+			//gAxis = (gAxis - 1) * growthMutationMultiplier + 1;
+			gsl_matrix_set(increment,axis,axis,gAxis);
 		}
+
 		//Rotate the growth if the angel is not zero:
 		if (angle != 0.0){
 			gsl_matrix* rotMat  = gsl_matrix_calloc(3,3);
@@ -1357,6 +1403,8 @@ void ShapeBase::calculateStiffnessPerturbationRate(bool ThereIsBasolateralWithAp
     else{
     	maximumValueOfStiffnessMultiplier = stiffnessChangedToFractionOfOriginal;
     }
+	//cout<<"Element "<<Id<<" updated  rate: "<<stiffnessPerturbationRateInSec<<"compartment "<< compartmentType<<" identity frac "<<compartmentIdentityFraction<<endl;
+
 }
 
 void ShapeBase::updateStiffnessMultiplier(double dt){
@@ -1373,11 +1421,7 @@ void ShapeBase::updateStiffnessMultiplier(double dt){
 
 void ShapeBase::calculateStiffnessFeedback(double dt){
 	if (tissueType == 0 && tissuePlacement == 1){ //apical columnar layer element
-		gsl_matrix* Fe = gsl_matrix_calloc(3,3);
-		for (int iter =0; iter<numberOfGaussPoints;++iter){
-			gsl_matrix_add(Fe, FeMatrices[iter]);
-		}
-		gsl_matrix_scale(Fe,gaussWeights[0]);
+		gsl_matrix* Fe = getCurrentFe();
 		//taking into account only x&y deformation
 		gsl_matrix_set(Fe,2,2,1.0);
 		double detFe = determinant3by3Matrix(Fe);
@@ -1463,7 +1507,7 @@ void	ShapeBase::checkIfInsideEllipseBands(int nMarkerEllipseRanges, vector<doubl
 				for (int j =0 ; j<nNodes; ++j){
 					int currNodeId = NodeIds[j];
 					Nodes[currNodeId]->insideEllipseBand=true;
-					Nodes[currNodeId]->coveringEllipseBandId = i;
+					Nodes[currNodeId]->coveringEllipseBandId  = i;
 					//cout<<"Node "<<currNodeId<<" is inside ellipse"<<i<<endl;
 				}
 			}
@@ -1488,7 +1532,7 @@ void	ShapeBase::calculatePlasticDeformation3D(bool volumeConserved, double dt, d
 		//}
 	}
 	calculatePrincipalStrains3D(e1,e2,e3,eigenVec);
-	//cout<<"e1, e2, e3: "<<e1<<" "<<e2<<" "<<e3<<endl;
+	if (Id ==0){cout<<"e1, e2, e3: "<<e1<<" "<<e2<<" "<<e3<<endl;}
 	//displayMatrix(eigenVec,"eigenVec");
 	//NowI have the green strain in principal direction in the orientation of the element internal coordinats.
 	//I can simply grow the element in this axis, to obtain some form of plastic growth.
@@ -1589,6 +1633,8 @@ void	ShapeBase::calculatePlasticDeformation3D(bool volumeConserved, double dt, d
 	gsl_blas_dgemm (CblasNoTrans, CblasTrans,1.0, temp, eigenVec, 0.0, plasticDeformationIncrement);
 	//update z remodelling so far to keep track and not update beyond limits
 	zRemodellingSoFar *= gsl_matrix_get(plasticDeformationIncrement,2,2);
+	//cout<<"plastic deformation of element "<<Id<<endl;
+	//displayMatrix(plasticDeformationIncrement,"plasticDeformationIncrement-afternormalplasticdeformation");
 	//if (Id == 104 || Id == 104 ){
 		//cout<<" Prism "<<Id<<" e1, e2, e3: "<<e1<<" "<<e2<<" "<<e3<<endl;
 		//displayMatrix(plasticDeformationIncrement, " plasticDeformationIncrement");
@@ -1642,23 +1688,18 @@ void 	ShapeBase::calculateTriPointFForRatation(){
 }
 
 bool 	ShapeBase::disassembleRotationMatrixForZ(gsl_matrix* rotMat){
-    //For a rotation matrix R = [r11 r12 r13
-    //                          r21 r22 r23
-    //                          r31 r32 r33]
-    //The rotations in X, Y and Z are calculated as follows:
-    // tethaX = atan2(r32,r33);
-    // tethaY = atan2(-r31, sqrt(r32 * r32 + r33 * r33))
-    // tethaZ = atan2(r21,r11)
-    // then Rx = [ 1              0              0
-    //             0              cos(tethaX)   -sin(tethaX)
-    //             0              sin(tethaX)    cos(tethaX)]
-    //      Ry = [ cos(tethaY)    0              sin(tethaY)
-    //             0              1              0
-    //            -sin(tethaY)    0              cos(tethaY)]
-    //      Rz = [ cos(tethaZ)   -sin(tethaZ)    0
-    //             sin(tethaZ)    cos(tethaZ)    0
-    //             0              0              1]
-    double tethaZ = atan2(gsl_matrix_get(rotMat,1,0),gsl_matrix_get(rotMat,0,0));
+	//From Extracting euler angles from a rotation matrix by Mike Day of insomniac games:
+	//To extract a rotation of R_x(tet_1) R_y(tet_2) R_z(tet_3) from a matrix M where:
+	//  M = [ m00   m01   m02
+	//        m10   m11   m12
+	//        m20   m21   m22]
+	// and c1 denote cos(tet_1) and s1 denote sin(tet_1):
+	//
+	//	tet_1 = atan2(m12,m22) = atan2(s1c2, c1c2)
+	//     c2 = sqrt(m00*m00 + m01*m01)
+	//  tet_2 = atan2(-m02,c2)
+	//  tet_3 = atan2(m01,m00)
+    double tethaZ = atan2(gsl_matrix_get(rotMat,0,1),gsl_matrix_get(rotMat,0,0));
     //rotatedGrowth_tethaZ = tethaZ;
     if (tethaZ > 0.017 || tethaZ < -0.017){ //0.017 rad is ~1 degrees
         //rotation is more than 1 degrees, element incremental growth should be rotated
@@ -1680,6 +1721,13 @@ bool 	ShapeBase::disassembleRotationMatrixForZ(gsl_matrix* rotMat){
     }
 }
 
+void 	ShapeBase::calculateEmergentRotationAngles(){
+	calculateTriPointFForRatation();
+	gsl_matrix* rotMat = gsl_matrix_calloc(3,3);
+	calculate3DRotMatFromF(rotMat);
+	gsl_matrix_free (rotMat);
+}
+
 bool 	ShapeBase::calculate3DRotMatFromF(gsl_matrix* rotMat){
     //if (Id == 0) {displayMatrix(TriPointF,"TriPointF");}
     gsl_matrix* Sgsl = gsl_matrix_alloc (3, 3);
@@ -1687,12 +1735,51 @@ bool 	ShapeBase::calculate3DRotMatFromF(gsl_matrix* rotMat){
     gsl_matrix* R = gsl_matrix_alloc (3, 3);
     gsl_vector* Sig = gsl_vector_alloc (3);
     gsl_vector* workspace = gsl_vector_alloc (3);
+
+    /*
+    //Added to test polar decomposition:
+    gsl_vector* eigenValues = gsl_vector_calloc(3);
+    gsl_matrix* eigenVec = gsl_matrix_calloc(3,3);
+	gsl_eigen_symmv_workspace* w = gsl_eigen_symmv_alloc(3);
+	gsl_matrix* FTF = gsl_matrix_alloc (3, 3);
+	gsl_blas_dgemm (CblasTrans, CblasNoTrans,1.0, TriPointF, TriPointF,0.0, FTF);
+	gsl_eigen_symmv(FTF, eigenValues, eigenVec, w);
+	gsl_eigen_symmv_free(w);
+	gsl_eigen_symmv_sort(eigenValues, eigenVec, GSL_EIGEN_SORT_ABS_ASC);
+	gsl_matrix* U = gsl_matrix_calloc(3,3);
+	for (int i=0;i<3; ++i){
+		double Sii = gsl_vector_get(eigenValues,i);
+		Sii = pow(Sii,0.5);
+		gsl_matrix_view U2 = gsl_matrix_submatrix (eigenVec, 0, i, 3, 1);
+		gsl_matrix* Uincrement = gsl_matrix_calloc(3,3);
+		//cout<<" i, "<<i<<" Sii "<<endl;
+		gsl_blas_dgemm (CblasNoTrans, CblasTrans,1.0, &U2.matrix, &U2.matrix,0.0, Uincrement);
+		gsl_matrix_scale (Uincrement,Sii);
+		gsl_matrix_add(U,Uincrement);
+	}
+	//inversing U
+	gsl_matrix* invU = gsl_matrix_calloc(3,3);
+	bool inverted = InvertMatrix(U, invU);
+	if (!inverted){
+		cerr<<"U not inverted!!"<<endl;
+	}
+    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, TriPointF, invU,0.0, rotMat);
+    double polarTethaZNew = atan2(gsl_matrix_get(rotMat,0,1),gsl_matrix_get(rotMat,0,0));
+
+	gsl_vector_free (eigenValues);
+	gsl_matrix_free (FTF);
+	gsl_matrix_free (U);
+	gsl_matrix_free (invU);
+	gsl_matrix_free (eigenVec);
+	//End OF Polar Decomposition
+	*/
+    //Singular Value Decomposition
     createMatrixCopy (Sgsl,TriPointF);
-    //Singular Value Decomposition of covariance matrix S
     (void) gsl_linalg_SV_decomp (Sgsl, V, Sig, workspace); //This function does have a return value, but I do not need to use it, hence cast it to void!
 
-    //Sgsl ended up as U, I need U^T to calculate rotation matrix as : V*U^T
-    gsl_blas_dgemm (CblasNoTrans, CblasTrans,1.0, V, Sgsl,0.0, rotMat);
+    //Sgsl ended up as U, I need the rotation matrix U V^T in the decomposition A = U S V^T (jose writes as F = V S U^T in emails, so be careful)
+    gsl_blas_dgemm (CblasNoTrans, CblasTrans,1.0, Sgsl, V,0.0, rotMat);
+
     double det = determinant3by3Matrix(rotMat);
     if (det<0){
         cout<<"Error! Flipped element, Id: "<<Id<<endl;
@@ -1703,6 +1790,12 @@ bool 	ShapeBase::calculate3DRotMatFromF(gsl_matrix* rotMat){
     gsl_matrix_free (R);
     gsl_vector_free (Sig);
     gsl_vector_free (workspace);
+    //added to compare polar vs single value decomposition
+    //double SVDTethaZ = atan2(gsl_matrix_get(rotMat,1,0),gsl_matrix_get(rotMat,0,0));
+    //double SVDTethaZNew = atan2(gsl_matrix_get(rotMat,0,1),gsl_matrix_get(rotMat,0,0));
+    //cout<<" Element "<<Id<<" tetha from polar: "<<polarTethaZ<<" tetha from SVD: "<<SVDTethaZ<<" tetha from SVDCorrected: "<<SVDTethaZCorrected<<"new version each: "<<polarTethaZNew<<" "<<SVDTethaZNew<<" "<<SVDTethaZCorrectedNew<<endl;
+
+
     //Now I need to check if there is only numerical error accumulationg on rotMat, or there is an actual rotation (above 1 degrees):
     double threshold = 0.017; //this is sine 1 degrees
     for (int i=0;i<3;++i){
@@ -1750,6 +1843,8 @@ void 	ShapeBase::calculateRelativePosInBoundingBox(double boundingBoxXMin, doubl
 	relativePosInBoundingBox = getCentre();
 	relativePosInBoundingBox[0] = (relativePosInBoundingBox[0] -boundingBoxXMin) / boundingBoxLength;
 	relativePosInBoundingBox[1] = (relativePosInBoundingBox[1] - boundingBoxYMin) / boundingBoxWidth;
+    if (Id == 9382){ cout<<" relativePosInBoundingBox: "<<relativePosInBoundingBox[0]<<" "<<relativePosInBoundingBox[1]<<endl;}
+
 }
 /*
 void 	ShapeBase::calculateRelativePosInBoundingBox(double columnarBoundingBoxXMin, double columnarBoundingBoxYMin, double columnarBoundingBoxLength, double columnarBoundingBoxWidth, double peripodialBoundingBoxXMin, double peripodialBoundingBoxYMin, double peripodialBoundingBoxLength, double peripodialBoundingBoxWidth){
@@ -1818,12 +1913,14 @@ bool ShapeBase::isElementFlippedInPotentialNewShape(int nodeId, double newX, dou
 	return elementWillFlip;
 }
 
+
 void ShapeBase::checkForCollapsedNodes(int TissueHeightDiscretisationLayers, vector<Node*>& Nodes, vector<ShapeBase*>& Elements){
 	bool elementCollapsed = false;
-	for (int j =0 ; j<nNodes; ++j){
+		for (int j =0 ; j<nNodes; ++j){
 		int nodeId = NodeIds[j];
 		int collapsedNodeNumber = Nodes[nodeId]->collapsedWith.size();
 		if (collapsedNodeNumber>0){elementCollapsed = true;break;}
+
 		//is this node collapsed with another one of elements own nodes?
 		/*for (int k=0;k<collapsedNodeNumber; ++k){
 			for (int l = j+1 ; l<nNodes; ++l){
@@ -1841,7 +1938,7 @@ void ShapeBase::checkForCollapsedNodes(int TissueHeightDiscretisationLayers, vec
 		}*/
 	}
 	if (elementCollapsed){
-		assignEllipseBandIdToNodes(Nodes);
+		//assignEllipseBandIdToNodes(Nodes);
 		insideEllipseBand = true;
 		int selectedEllipseBandId = 100;
 		if (tissuePlacement == 1){ //apical collapse: ECM relaxation, cell shortening, volume redistribution to shrink top
@@ -1851,13 +1948,36 @@ void ShapeBase::checkForCollapsedNodes(int TissueHeightDiscretisationLayers, vec
 			selectedEllipseBandId = 101;
 		}
 		coveringEllipseBandId = selectedEllipseBandId;
-		for (int i=0; i < TissueHeightDiscretisationLayers;++i){
-			int idOfElementOnSameColumn = elementsIdsOnSameColumn[i];
-			Elements[idOfElementOnSameColumn]->insideEllipseBand = true;
-			Elements[idOfElementOnSameColumn]->coveringEllipseBandId = selectedEllipseBandId;
-			Elements[idOfElementOnSameColumn]->assignEllipseBandIdToNodes(Nodes);
+		cout<<"Id : "<<Id<<" assigned "<<selectedEllipseBandId<<" in function checkForCollapsedNodes "<<endl;
+		assignEllipseBandIdToWholeTissueColumn(TissueHeightDiscretisationLayers,Nodes,Elements);
+	}
+}
+
+bool ShapeBase::hasEnoughNodesOnCurve(vector<Node*>&Nodes){
+	int threshold = 3;
+	int nodesOnCurveCounter = 0;
+	for (int i=0;i<nNodes; i++){
+		if (Nodes[NodeIds[i]]->onFoldInitiation){
+			nodesOnCurveCounter++;
+		}
+		if (nodesOnCurveCounter>=threshold){
+			return true;
 		}
 	}
+	return false;
+}
+
+void ShapeBase::assignEllipseBandIdToWholeTissueColumn(int TissueHeightDiscretisationLayers, vector<Node*>& Nodes, vector<ShapeBase*>& Elements){
+	for (int i=0; i < TissueHeightDiscretisationLayers;++i){
+		int idOfElementOnSameColumn = elementsIdsOnSameColumn[i];
+		Elements[idOfElementOnSameColumn]->assignEllipseBandId(Nodes,coveringEllipseBandId);
+	}
+}
+
+void ShapeBase::assignEllipseBandId(vector<Node*>& Nodes, int selectedEllipseBandId){
+	insideEllipseBand = true;
+	coveringEllipseBandId = selectedEllipseBandId;
+	assignEllipseBandIdToNodes(Nodes);
 }
 
 void ShapeBase::assignEllipseBandIdToNodes(vector<Node*>& Nodes){
@@ -1865,6 +1985,7 @@ void ShapeBase::assignEllipseBandIdToNodes(vector<Node*>& Nodes){
 		int nodeId = NodeIds[j];
 		Nodes[nodeId]->insideEllipseBand = true;
 		Nodes[nodeId]->coveringEllipseBandId = coveringEllipseBandId;
+		Nodes[nodeId]->checkOwnersforEllipseAsignment = true;
 	}
 }
 
@@ -2019,7 +2140,7 @@ void  ShapeBase::rotateReferenceElementByRotationMatrix(double* rotMat){
 }
 
 void	ShapeBase::calculateForces(vector <Node*>& Nodes, gsl_matrix* displacementPerDt, bool recordForcesOnFixedNodes, double **FixedNodeForces){
-    if (ShapeDim == 3){		//3D element
+	if (ShapeDim == 3){		//3D element
         calculateForces3D(Nodes, displacementPerDt, recordForcesOnFixedNodes, FixedNodeForces);
     }
 }
@@ -2200,7 +2321,7 @@ void ShapeBase::updateLagrangianElasticityTensorNeoHookean(gsl_matrix* invC, dou
 }
 
 gsl_matrix* ShapeBase::calculateCompactStressForNodalForces(double detFe, gsl_matrix* Fe, gsl_matrix* S, gsl_matrix* Stress){
-    //calculating stress (stress = detFe^-1 Fe S Fe^T):
+    //calculating stress (stress = (detFe)^-1 Fe S Fe^T):
     //double detFe = determinant3by3Matrix(Fe);
     gsl_matrix* tmpMat1 =  gsl_matrix_calloc(nDim, nDim);
     //cout<<"detFe: "<<detFe<<endl;
@@ -3383,129 +3504,6 @@ bool	ShapeBase::checkIfXYPlaneStrainAboveThreshold(double thres){
 	return false;
 }
 
-void	ShapeBase::checkVolumeRedistribution(vector<ShapeBase*>& elementsList, double dt){
-	//cout<<"inside checkVolumeRedistribution "<<endl;
-	double rate = 0.20/3600*dt;
-	double multiplier = 10.0;
-	if (tissueType == 0 && tissuePlacement == 1){ //apical columnar layer element
-		//basal neig is set for this apical element. Start calculation:
-		gsl_matrix* FeOwn = getFe();
-		double detFeOwn = determinant3by3Matrix(FeOwn);
-		double ownCompressionLevel  = detFeOwn; //check if volume dependent!
-		double ownPressure = -1.0*log(ownCompressionLevel);
-		int  ownId = Id;
-		bool ownZModelling = true;
-		//if (ownId == 676 || ownId == 406){
-		//	cout<<"ownId: "<<ownId<<" detFeOwn: "<<detFeOwn<<" ownCompressionLevel "<<ownCompressionLevel<<" ownPressure "<<ownPressure<<endl;
-		//	displayMatrix(FeOwn,"FeOwn");
-		//	displayMatrix(Strain,"StrainOwn");
-		//}
-		if (elementsList[ownId]->isActinMimicing){
-			ownZModelling = false;
-		}
-		while (elementsList[ownId]->basalNeigElementId != -1){
-			int neighbourId = elementsList[ownId]->basalNeigElementId;
-			gsl_matrix* FeNeig = elementsList[neighbourId]->getFe();
-			double detFeNeig = determinant3by3Matrix(FeNeig);
-			double neigCompressionLevel  = detFeNeig; //check if volume dependent!
-			double neigPressure = -1.0*log(neigCompressionLevel);
-			bool neigZModelling = true;
-			if (elementsList[neighbourId]->isActinMimicing){
-				ownZModelling = false;
-			}
-			//if (ownId == 676 || ownId == 406){
-			//	cout<<"neighbourId: "<<neighbourId<<" detFeNeig "<<detFeNeig<<" neigCompressionLevel "<<neigCompressionLevel<<" neigPressure "<<neigPressure <<endl;
-			//	displayMatrix(FeNeig,"FeNeig");
-			//	displayMatrix(elementsList[neighbourId]->Strain,"StrainNeig");
-			//}
-			double dP = (ownPressure - neigPressure);
-			double dFractionOfChange = rate * multiplier* dP;
-			//select the smaller volume of the two elements
-			double selectedVolume = elementsList[ownId]->GrownVolume;
-			if (elementsList[neighbourId]->GrownVolume<selectedVolume){
-				selectedVolume = elementsList[neighbourId]->GrownVolume;
-			}
-			double dV = selectedVolume*dFractionOfChange;
-			gsl_matrix*  incrementOwn = gsl_matrix_calloc(3,3);
-			double volumeAddidionFraction = (elementsList[ownId]->GrownVolume - dV)/elementsList[ownId]->GrownVolume;
-			//if (ownId == 676 || ownId == 406){
-			//	cout<<"dP "<<dP<<" dFractionOfChange "<<dFractionOfChange<<" selectedVolume "<<selectedVolume<<" dV "<<dV<<" volumeAddidionFraction: "<<volumeAddidionFraction<<endl;
-			//}
-			if (ownZModelling){
-				//there is z modelling, use 3D:
-				double xx = pow(volumeAddidionFraction,1.0/3.0);
-				gsl_matrix_set(incrementOwn,0,0,xx);
-				gsl_matrix_set(incrementOwn,1,1,xx);
-				gsl_matrix_set(incrementOwn,2,2,xx);
-			}
-			else{
-				double xx = pow(volumeAddidionFraction,1.0/2.0);
-				gsl_matrix_set(incrementOwn,0,0,xx);
-				gsl_matrix_set(incrementOwn,1,1,xx);
-				gsl_matrix_set(incrementOwn,2,2,1.0);
-			}
-			//if (ownId == 676 || ownId == 406){
-			//	displayMatrix(incrementOwn,"incrementOwn");
-			//}
-			elementsList[ownId]->updateFgWithVolumeRedistribution(incrementOwn);
-			gsl_matrix*  incrementNeig = gsl_matrix_calloc(3,3);
-			volumeAddidionFraction = (elementsList[neighbourId]->GrownVolume + dV)/elementsList[neighbourId]->GrownVolume;
-			if (neigZModelling){
-				//there is z modelling, use 3D:
-				double xx = pow(volumeAddidionFraction,1.0/3.0);
-				gsl_matrix_set(incrementNeig,0,0,xx);
-				gsl_matrix_set(incrementNeig,1,1,xx);
-				gsl_matrix_set(incrementNeig,2,2,xx);
-			}
-			else{
-				double xx = pow(volumeAddidionFraction,1.0/2.0);
-				gsl_matrix_set(incrementNeig,0,0,xx);
-				gsl_matrix_set(incrementNeig,1,1,xx);
-				gsl_matrix_set(incrementNeig,2,2,1.0);
-			}
-			if (ownId == 144){
-				displayMatrix(incrementNeig,"incrementNeig");
-			}
-			elementsList[neighbourId]->updateFgWithVolumeRedistribution(incrementNeig);
-			gsl_matrix_free(incrementNeig);
-		    gsl_matrix_free(incrementOwn);
-			//if (ownId == 676 || ownId == 406){
-			//	cout<<"finished ownId: "<<ownId<<" neighbourId: "<<neighbourId<<" detFeOwn: "<<detFeOwn<<endl;
-			//}
-			ownId = neighbourId;
-			ownCompressionLevel = neigCompressionLevel;
-			ownPressure = neigPressure;
-			ownZModelling = neigZModelling;
-			//if (ownId == 676 || ownId == 406){
-			//	cout<<" next basal Id : "<<elementsList[ownId]->basalNeigElementId<<endl;
-			//}
-			gsl_matrix_free(FeNeig);
-		}
-		gsl_matrix_free(FeOwn);
-	}
-	//cout<<"finished checkVolumeRedistribution "<<endl;
-}
-
-void 	ShapeBase::updateFgWithVolumeRedistribution(gsl_matrix*  increment){
-    //incrementing Fg with current increment of volume change:
-    gsl_matrix* temp1 = gsl_matrix_calloc(nDim,nDim);
-    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, increment, Fg, 0.0, temp1);
-    gsl_matrix_memcpy(Fg, temp1);
-    gsl_matrix* tmpFgForInversion = gsl_matrix_calloc(nDim,nDim);
-    createMatrixCopy(tmpFgForInversion,Fg);
-    bool inverted = InvertMatrix(tmpFgForInversion, InvFg);
-    if (!inverted){
-        cerr<<"Fg not inverted!!"<<endl;
-    }
-    double detFg = determinant3by3Matrix(Fg);
-    GrownVolume = detFg*ReferenceShape->Volume;
-    VolumePerNode = GrownVolume/nNodes;
-    //freeing matrices allocated in this function
-    gsl_matrix_free(temp1);
-    gsl_matrix_free(tmpFgForInversion);
-}
-
-
 void	ShapeBase::updateEquilibriumMyoWithFeedbackFromZero(double MyosinFeedbackCap){
 	if (tissueType == 0 ){//|| tissueType == 1){
 		//the feedback is applied only in peripodial membrane or the disc proper.
@@ -4265,6 +4263,32 @@ void ShapeBase::calculateInitialECMThickness(){
 
 	}
 }*/
+
+void ShapeBase::scaleGrowthIncrement(double multiplier){
+	gsl_matrix_scale(growthIncrement,multiplier);
+}
+
+double ShapeBase::getGrowthMutationMultiplier(){
+	return 1.0;
+	/*float pouchScale= 1.0;
+	float hingeScale = 0.5;
+	float notumScale = 1.0;
+	double scale = 1.0;
+	if (compartmentType == 0){
+		scale = pouchScale;
+	}
+	else if (compartmentType == 1){
+		scale = hingeScale;
+	}
+	else if (compartmentType == 2){
+		scale = notumScale;
+	}
+	else{
+		return 1.0;
+	}
+	scale = (scale - 1)*compartmentIdentityFraction +1;
+	return scale;*/
+}
 
 void ShapeBase::setECMMimicingElementThicknessGrowthAxis(){
 	if (isECMMimicing){

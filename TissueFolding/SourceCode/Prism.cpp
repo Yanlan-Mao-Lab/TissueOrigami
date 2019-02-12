@@ -204,6 +204,7 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, bool thereIsPlas
     gsl_matrix_set_identity(shapeChangeIncrement);
     zRemodellingSoFar = 1.0;
     TriPointF = gsl_matrix_calloc(3,3);
+	gsl_matrix_set_identity(TriPointF);
     TriPointKe = gsl_matrix_calloc(nDim*nNodes,nDim*nNodes);
     TriPointKv = gsl_matrix_calloc(nDim*nNodes,nDim*nNodes);
     ElementalElasticSystemForces = gsl_matrix_calloc(nNodes,nDim);
@@ -265,7 +266,6 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, bool thereIsPlas
     growthRedistributionScale = 0.5;
 
     plasticDeformationHalfLifeMultiplier = 1.0;
-
 }
 
 Prism::~Prism(){
@@ -790,6 +790,8 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currge, gsl_matrix *currgv, gsl
     double lnJ = log(detFe);
     if(isnan(lnJ)){
     	cout<<"element: "<<Id<<" lnJ is nan, detFe: "<<detFe<<endl;
+    	cout<<" Element positions: "<<endl;
+    	displayPositions();
     }
     if (KirshoffMaterial){
     	//calculating E (E = 1/2 *(Fe^T*Fe-I):
@@ -1045,11 +1047,34 @@ void 	Prism::setInitialEdgeLenghts(){
 	}
 }
 
+bool Prism::areNodesDirectlyConnected(int node0, int node1){
+	int * node0Placement;
+	node0Placement = std::find (NodeIds, NodeIds+6, node0);
+	int node1Placement=0;
+	if (node0Placement != NodeIds+6){
+		//node is on id list:
+		ptrdiff_t pos = distance(NodeIds, node0Placement);
+		if(pos >=3){
+			node1Placement = pos-3;
+		}
+		else{
+			node1Placement = pos+3;
+		}
+		//cout<<"node0Placement "<<pos<<" node1Placement "<<node1Placement<<endl;
+		return NodeIds[node1Placement] == node1;
+	}
+	return false;
+}
+
 void Prism::checkEdgeLenghtsForBinding(vector <int>&masterIds, vector <int>&slaveIds){
 	//cout<<"inside check edge for binding"<<endl;
 	double thresholdFraction = 0.1; //fraction of original length the edge shrunk to
 	double thresholdAngle = M_PI*8.0/9.0;// M_PI*8.0/9.0; //160 degrees, this was 100000 for most of simulations, I did not collapse based on angle
-
+	//if(tissueType == 2){
+		//the element is a lateral element, I wan t the binding to happen more easily on such small elements.
+		//they will not be collapsed, as I block the positional collapse during binding
+	//	thresholdFraction *= 3;
+	//}
 	double currentBasalEdgeLengthsSq[3] = {0,0,0};
 	double currentApicalEdgeLengthsSq[3] = {0,0,0};
 	int node0 = 0, node1 = 1;
@@ -1776,6 +1801,58 @@ void  Prism::getBasalNodePos(double* posCorner){
 
 	}
 }
+void  Prism::getLumenFacingNodeIds(int* nodeIndex, int& numberOfTriangles){
+}
+/*void  Prism::getLumenFacingNodeIds(int* nodeIndex, int& numberOfTriangles){
+	int index[3];
+	if (tissueType == 0){//columnar element, lumen facing are the apical nodes
+		numberOfTriangles = 1;
+		index[0] = 3;
+		index[1] = 4;
+		index[2] = 5;
+		index[4] = 0;
+	}
+	else{
+		//peripodial element, , lumen facing are the basal nodes
+		numberOfTriangles = 1;
+		index[0] = 0;
+		index[1] = 1;
+		index[2] = 2;
+		index[4] = 3;
+
+	}
+	//Now I want to check if the nodes are ordered correctly that the normal calculated
+	//will face outside the lumen, towrds the tissue (used to apply forces).
+	double* u = new double [3];
+	double* v = new double [3];
+	double* normal = new double[3];
+	for (int i=0; i<nDim; ++i){
+		u[i] = Positions[index[1]][i] - Positions[index[0]][i];
+		v[i] = Positions[index[2]][i] - Positions[index[0]][i];
+		normal[i] = 0.0;
+	}
+	crossProduct3D(u,v,normal);
+	double dummy = normaliseVector3D(normal);
+	for (int i=0; i<nDim; ++i){
+		u[i] = Positions[index[4]][i] - Positions[index[0]][i];
+	}
+	double  dot = dotProduct3D(u,normal);
+	if (dot<0){
+		//the normal I want should be facing towards the tissue, hence be in the same direction
+		//as the vector I constructed with the 4th node. Rotate thenode order:
+		int id2 =index[2];
+		index[2] = index[1];
+		index[1] = id2;
+	}
+	nodeIndex = new double[3];
+	nodeIndex[0] = NodeIds[index[0]];
+	nodeIndex[1] = NodeIds[index[1]];
+	nodeIndex[2] = NodeIds[index[2]];
+
+	delete[] u;
+	delete[] v;
+	delete[] normal;
+}*/
 
 void Prism::getBasalCentre(double* centre){
 	centre[0] = 0;
@@ -2318,7 +2395,7 @@ void 	Prism::distributeMyosinForcesTotalSizeBased(bool isIsotropic, bool apical,
 	gsl_vector_free(vec0);
 	gsl_vector_free(vec1);
 	gsl_vector_free(vec2);
-	if (Id == 203){
+	/*if (Id == 203){
 		cout<<" element 203, Myoforces: "<<forcemag<<endl;
 		for (int i=0; i<6; i++){
 			for (int j=0; j<3; j++){
@@ -2327,7 +2404,7 @@ void 	Prism::distributeMyosinForcesTotalSizeBased(bool isIsotropic, bool apical,
 			}
 			cout<<endl;
 		}
-	}
+	}*/
 	/*cout<<" Element: "<<Id<<" forcemag: "<<forcemag<<" Myoforces: "<<endl;
 	//double sum[3] = {0,0,0};
 	for (int i=0; i<6; i++){
