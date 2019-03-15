@@ -79,9 +79,11 @@ public:
 	void constructElementStackList(const int discretisationLayers, vector<ShapeBase*>& elementsList);
 	void getApicalNodePos(double* posCorner);
 	void getBasalNodePos(double* posCorner);
+	void getApicalNodeIds(vector <int> &nodeIds);
+	void getBasalNodeIds(vector <int> &nodeIds);
+	void getApicalNodeIndicesOnElement(vector <int> &apicalNodeIndices);
 	void getApicalCentre(double* centre);
 	void getBasalCentre(double* centre);
-	void getLumenFacingNodeIds(int* nodeIds,int& numberOfTriangles);
 	void getReferenceApicalCentre(double* centre);
 	void getReferenceBasalCentre(double* centre);
 	double* getApicalMinViscosity(vector<Node*> Nodes);

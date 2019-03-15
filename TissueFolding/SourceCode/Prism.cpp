@@ -1445,6 +1445,15 @@ double Prism::getApicalSideLengthAverage(){
 	double dsum =0.0;
 	int counter = 0;
 	int pairs[3][2] = {{3,4},{3,5},{4,5}};
+	if (tissueType == 1){
+		//peripodial
+		pairs[0][0] = 0;
+		pairs[0][1] = 1;
+		pairs[1][0] = 0;
+		pairs[1][1] = 2;
+		pairs[2][0] = 1;
+		pairs[2][1] = 2;
+	}
 	for (int i=0; i<3; ++i){
 		dx = Positions[pairs[i][0]][0] - Positions[pairs[i][1]][0];
 		dy = Positions[pairs[i][0]][1] - Positions[pairs[i][1]][1];
@@ -1469,6 +1478,15 @@ double Prism::getBasalSideLengthAverage(){
 	double dsum =0.0;
 	int counter = 0;
 	int pairs[3][2] = {{0,1},{0,2},{1,2}};
+	if (tissueType == 1){
+		//peripodial
+		pairs[0][0] = 3;
+		pairs[0][1] = 4;
+		pairs[1][0] = 3;
+		pairs[1][1] = 5;
+		pairs[2][0] = 4;
+		pairs[2][1] = 5;
+	}
 	for (int i=0; i<3; ++i){
 		dx = Positions[pairs[i][0]][0] - Positions[pairs[i][1]][0];
 		dy = Positions[pairs[i][0]][1] - Positions[pairs[i][1]][1];
@@ -1489,9 +1507,16 @@ double Prism::getBasalSideLengthAverage(){
 }
 
 void Prism::getApicalTriangles(vector <int> &ApicalTriangles){
-	ApicalTriangles.push_back(NodeIds[3]);
-	ApicalTriangles.push_back(NodeIds[4]);
-	ApicalTriangles.push_back(NodeIds[5]);
+	if (tissueType == 0){
+		ApicalTriangles.push_back(NodeIds[3]);
+		ApicalTriangles.push_back(NodeIds[4]);
+		ApicalTriangles.push_back(NodeIds[5]);
+	}
+	else{
+		ApicalTriangles.push_back(NodeIds[0]);
+		ApicalTriangles.push_back(NodeIds[1]);
+		ApicalTriangles.push_back(NodeIds[2]);
+	}
 }
 
 int Prism::getCorrecpondingApical(int currNodeId){
@@ -1801,58 +1826,56 @@ void  Prism::getBasalNodePos(double* posCorner){
 
 	}
 }
-void  Prism::getLumenFacingNodeIds(int* nodeIndex, int& numberOfTriangles){
-}
-/*void  Prism::getLumenFacingNodeIds(int* nodeIndex, int& numberOfTriangles){
-	int index[3];
-	if (tissueType == 0){//columnar element, lumen facing are the apical nodes
-		numberOfTriangles = 1;
-		index[0] = 3;
-		index[1] = 4;
-		index[2] = 5;
-		index[4] = 0;
+
+void Prism::getApicalNodeIds(vector <int> &nodeIds){
+	if (tissueType == 0){//columnar element, apical surface is the top nodes
+		//I iwll rotate the nodes as I want the normal to point into the lumen:
+		nodeIds.push_back(NodeIds[3]);
+		nodeIds.push_back(NodeIds[5]);
+		nodeIds.push_back(NodeIds[4]);
 	}
 	else{
-		//peripodial element, , lumen facing are the basal nodes
-		numberOfTriangles = 1;
-		index[0] = 0;
-		index[1] = 1;
-		index[2] = 2;
-		index[4] = 3;
+		//peripodial element, apical surface is the bottom nodes
+		//the linker elements never reach this question
 
+		nodeIds.push_back(NodeIds[0]);
+		nodeIds.push_back(NodeIds[1]);
+		nodeIds.push_back(NodeIds[2]);
 	}
-	//Now I want to check if the nodes are ordered correctly that the normal calculated
-	//will face outside the lumen, towrds the tissue (used to apply forces).
-	double* u = new double [3];
-	double* v = new double [3];
-	double* normal = new double[3];
-	for (int i=0; i<nDim; ++i){
-		u[i] = Positions[index[1]][i] - Positions[index[0]][i];
-		v[i] = Positions[index[2]][i] - Positions[index[0]][i];
-		normal[i] = 0.0;
-	}
-	crossProduct3D(u,v,normal);
-	double dummy = normaliseVector3D(normal);
-	for (int i=0; i<nDim; ++i){
-		u[i] = Positions[index[4]][i] - Positions[index[0]][i];
-	}
-	double  dot = dotProduct3D(u,normal);
-	if (dot<0){
-		//the normal I want should be facing towards the tissue, hence be in the same direction
-		//as the vector I constructed with the 4th node. Rotate thenode order:
-		int id2 =index[2];
-		index[2] = index[1];
-		index[1] = id2;
-	}
-	nodeIndex = new double[3];
-	nodeIndex[0] = NodeIds[index[0]];
-	nodeIndex[1] = NodeIds[index[1]];
-	nodeIndex[2] = NodeIds[index[2]];
+}
 
-	delete[] u;
-	delete[] v;
-	delete[] normal;
-}*/
+void Prism::getApicalNodeIndicesOnElement(vector <int> &apicalNodeIndices){
+	if (tissueType == 0){//columnar element, apical surface is the top nodes
+		//I iwll rotate the nodes as I want the normal to point into the lumen:
+		apicalNodeIndices.push_back(3);
+		apicalNodeIndices.push_back(5);
+		apicalNodeIndices.push_back(4);
+	}
+	else{
+		//peripodial element, apical surface is the bottom nodes
+		//the linker elements never reach this question
+		apicalNodeIndices.push_back(0);
+		apicalNodeIndices.push_back(1);
+		apicalNodeIndices.push_back(2);
+	}
+}
+
+void Prism::getBasalNodeIds(vector <int> &nodeIds){
+	if (tissueType == 0){//columnar element, apical surface is the top nodes
+		//I iwll rotate the nodes as I want the normal to point into the lumen on the apical side
+		//and I want these to be consistent:
+		nodeIds.push_back(NodeIds[0]);
+		nodeIds.push_back(NodeIds[2]);
+		nodeIds.push_back(NodeIds[1]);
+	}
+	else{
+		//peripodial element, apical surface is the bottom nodes
+		//the linker elements never reach this question
+		nodeIds.push_back(NodeIds[3]);
+		nodeIds.push_back(NodeIds[4]);
+		nodeIds.push_back(NodeIds[5]);
+	}
+}
 
 void Prism::getBasalCentre(double* centre){
 	centre[0] = 0;

@@ -20,6 +20,7 @@ NewtonRaphsonSolver::NewtonRaphsonSolver(int dim, int n){
 	nNodes = n;
 	externalViscosityVolumeBased = false; //using external surface
 	numericalParametersSet = false;
+	thereIsLumen = false;
 
 	un = gsl_matrix_calloc(nDim*nNodes,1);
 	ge = gsl_matrix_calloc(nDim*nNodes,1);
@@ -268,7 +269,243 @@ void NewtonRaphsonSolver::calculateForcesAndJacobianMatrixNR(vector <Node*>& Nod
 			(*itElement)->calculateImplicitKViscous(displacementPerDt, dt); //This is the viscous part of jacobian matrix
 			//cout<<"finished calculating ImplicitK viscous in NR"<<endl;
 		}
+	if (thereIsLumen){
+		tissueLumen->updateMatrices(Nodes);
+		tissueLumen->calculateCurrentVolume();
+		tissueLumen->calculateResiduals(Nodes);
+		//calculateLumenNumericalJacobian(tissueLumen,Nodes,Elements);
+		/*Elements[0]->createMatrixCopy(tissueLumen->KvNumerical, tissueLumen->Kv);
+		cout<<"KvNumerical(2,1:12) ";
+		for (int i=0;i<12;++i){
+			cout<<gsl_matrix_get(tissueLumen->KvNumerical,2,i)<<" ";
+		}
+		cout<<endl;
+*/
+		tissueLumen->calculateJacobian();
+	/*	cout<<"Kv_Analytical(2,1:12)";
+		for (int i=0;i<12;++i){
+			cout<<gsl_matrix_get(tissueLumen->Kv,2,i)<<" ";
+		}
+		cout<<endl;
+		*/
+		/*double threshold = 1E-3;
+		for (int i=0; i<tissueLumen->Kv->size1;++i){
+			for (int j=i; j<tissueLumen->Kv->size2;++j){
+				double value = gsl_matrix_get(tissueLumen->Kv,i,j) - gsl_matrix_get(tissueLumen->KvNumerical,i,j);
+				if (value > threshold || value < (-1.0*threshold)){
+					cout<<" Kv  analytical and numerical are not the same for "<<i<<" "<<j<<" ana: "<<gsl_matrix_get(tissueLumen->Kv,i,j)<<" num: "<<gsl_matrix_get(tissueLumen->KvNumerical,i,j)<<endl;
+				}
+			}
+		}*/
+		tissueLumen->writeLumenJacobianToSystemJacobian(K,Nodes);
+
+	}
 }
+
+
+void NewtonRaphsonSolver::updateElementPositions(vector <Node*>& Nodes, vector <ShapeBase*>& Elements){
+	vector<ShapeBase*>::iterator itElement;
+	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		(*itElement)->updatePositions(Nodes);
+	}
+}
+
+void 	NewtonRaphsonSolver::calculateLumenNumericalJacobian(Lumen* tissueLumen, vector <Node*>& Nodes, vector <ShapeBase*>& Elements){
+	gsl_matrix_set_zero(tissueLumen->Kv);
+	double perturbation = 1E-6;
+	const int nEle = tissueLumen->encapsulatingElements.size();
+	//take backup of elemental elastic system forces and reset to zero
+	double backupElasticForces [nEle][6][3];
+	for (int i=0; i<nEle; ++i){
+		for (int j=0; j<6; j++){
+			for (int k =0; k<3;++k){
+				backupElasticForces[i][j][k] = tissueLumen->encapsulatingElements[i]->getElementalElasticForce(j,k);
+				tissueLumen->encapsulatingElements[i]->setElementalElasticForce(j,k,0.0);
+			}
+		}
+	}
+	int  nNode = tissueLumen->nodeIdsList.size();
+	gsl_matrix* gOriginal = gsl_matrix_calloc(tissueLumen->Dim*nNode,1);
+	double rVover6V0 =  tissueLumen->rV /6.0 / tissueLumen->currentIdealVolume;
+	tissueLumen->calculateLumengFromElementalResiduals(gOriginal);
+	gsl_matrix_scale(gOriginal,-1.0*tissueLumen->bulkModulus*rVover6V0);
+
+	gsl_matrix* gPerturbed = gsl_matrix_calloc(tissueLumen->Dim*nNode,1);
+	for (int nodeIndex = 0; nodeIndex<nNode; ++nodeIndex){
+		int currId = tissueLumen->nodeIdsList[nodeIndex];
+		for (int currDim = 0; currDim <3 ; ++currDim){
+			if (Nodes[currId]->FixedPos[currDim] ){
+				continue;
+			}
+			//cout<<" perturbing node "<<currId<<" at dim: "<<currDim<<endl;
+			Nodes[currId]->Position[currDim]  += perturbation;
+			updateElementPositions(Nodes, Elements);
+			tissueLumen->updateMatrices(Nodes);
+			tissueLumen->calculateCurrentVolume();
+			double rVover6V0 =  tissueLumen->rV /6.0 / tissueLumen->currentIdealVolume;
+			//reset elemental elastic forces
+			/*for (int i=0; i<nEle; ++i){
+				for (int j=0; j<6; j++){
+					for (int k =0; k<3;++k){
+						tissueLumen->encapsulatingElements[i]->setElementalElasticForce(j,k,0.0);
+					}
+				}
+			}*/
+			//reset perturbed g:
+			gsl_matrix_set_zero(gPerturbed);
+			tissueLumen->calculateResiduals(Nodes);
+			tissueLumen->calculateLumengFromElementalResiduals(gPerturbed);
+			gsl_matrix_scale(gPerturbed,-1.0*tissueLumen->bulkModulus*rVover6V0);
+			//cout<<"gPerturbed "<<nodeIndex<<" "<<currDim <<" : "<<gsl_matrix_get(gPerturbed,nodeIndex*3+currDim,0)<<" goriginal: "<<gsl_matrix_get(gOriginal,nodeIndex*3+currDim,0)<<endl;
+			//writing the perturbation to global jacobian
+			gsl_matrix_sub(gPerturbed,gOriginal);
+			gsl_matrix_scale(gPerturbed,1.0/perturbation);
+			for (int affectedNodeIndex = 0; affectedNodeIndex<nNode; ++affectedNodeIndex){
+				for (int affectedDim = 0; affectedDim <3 ; affectedDim++){
+					double numericalValueAffectedDim = -1*gsl_matrix_get(gPerturbed,affectedNodeIndex*3+affectedDim,0);
+					int affectedNodeId = tissueLumen->nodeIdsList[affectedNodeIndex];
+					if (Nodes[affectedNodeId]->FixedPos[affectedDim] ){
+						continue;
+					}
+					int currIndexOnLumenK = nodeIndex*3 + currDim;
+					int affectedIndexOnLumenK = affectedNodeIndex*3 + affectedDim;
+					double valueOnLumenK = gsl_matrix_get(tissueLumen->Kv,currIndexOnLumenK,affectedIndexOnLumenK);
+					double newValue = valueOnLumenK+numericalValueAffectedDim;
+					gsl_matrix_set(tissueLumen->Kv,currIndexOnLumenK,affectedIndexOnLumenK,newValue);
+					if (currIndexOnLumenK == 0 && affectedIndexOnLumenK == 7){
+						cout<<"numerical ["<<currIndexOnLumenK<<", "<<affectedIndexOnLumenK<<"]: value to add"<<numericalValueAffectedDim<<" valueOnLumenK "<<valueOnLumenK<<endl;
+					}
+					//int currNodeIndexOnK     = currId*3+currDim;
+					//int affectedNodeIndexOnK = affectedNodeId*3+affectedDim;
+					//double valueOnK = gsl_matrix_get(K,currNodeIndexOnK,affectedNodeIndexOnK);
+					//double newValue = valueOnK+numericalValueAffectedDim;
+					//gsl_matrix_set(K,currNodeIndexOnK,affectedNodeIndexOnK,newValue);
+					//if(currId==176 && affectedNodeId==166){
+					//	cout<<currId<<"("<<currDim<<"), "<<affectedNodeId<<"("<<affectedDim<<"): "<<newValue<<endl;
+					//  double valueOriginal = gsl_matrix_get(gOriginal,affectedNodeIndex*3+affectedDim,0);
+					//	cout<<currId<<"("<<currDim<<"), "<<affectedNodeId<<"("<<affectedDim<<"), "<<numericalValueAffectedDim<<" "<<valueOnK<<" "<<newValue<<" ValueOriginal:" <<valueOriginal<<endl;
+					//}
+				}
+			}
+			//end of writing the perturbation
+			//revert the perturbation, no need to update positions here as the loop continues
+			Nodes[currId]->Position[currDim] -= perturbation;
+		}
+	}
+	//outside the loop, correct positions and all calculated values:
+	updateElementPositions(Nodes, Elements);
+	tissueLumen->updateMatrices(Nodes);
+	tissueLumen->calculateCurrentVolume();
+	//set back the elemental elastic forces:
+	for (int i=0; i<nEle; ++i){
+		for (int j=0; j<6; j++){
+			for (int k =0; k<3;++k){
+				tissueLumen->encapsulatingElements[i]->setElementalElasticForce(j,k,backupElasticForces[i][j][k]);
+			}
+		}
+	}
+	tissueLumen->calculateResiduals(Nodes);
+	//free memory
+	gsl_matrix_free(gOriginal);
+	gsl_matrix_free(gPerturbed);
+}
+/*
+void 	NewtonRaphsonSolver::calculateLumenNumericalJacobian(Lumen* tissueLumen, vector <Node*>& Nodes, vector <ShapeBase*>& Elements){
+	double perturbation = 1E-6;
+
+	const int nEle = tissueLumen->encapsulatingElements.size();
+	//take backup of elemental elastic system forces and reset to zero
+	double backupElasticForces [nEle][6][3];
+	double nonPerturbedElasticForces[nEle][6][3];
+	for (int i=0; i<nEle; ++i){
+		for (int j=0; j<6; j++){
+			for (int k =0; k<3;++k){
+				//this is the forces as calculated from all elastic forces including lumen
+				backupElasticForces[i][j][k] = tissueLumen->encapsulatingElements[i]->getElementalElasticForce(j,k);
+				tissueLumen->encapsulatingElements[i]->setElementalElasticForce(j,k,0.0);
+			}
+		}
+	}
+	//now calculating residuals with no other elastic force:
+	tissueLumen->calculateResiduals(Nodes);
+	for (int i=0; i<nEle; ++i){
+		for (int j=0; j<6; j++){
+			for (int k =0; k<3;++k){
+				//this is the forces as calculated from only lumen, as I reset the matrices above
+				//I will keep resetting it at each perturbation, as such my perturbed values will
+				//contain only the lumen forces.
+				//At the end of the function, I will equate the matrices to the backed up value to not loose hte
+				//elastic forces from other components.
+				nonPerturbedElasticForces[i][j][k] = tissueLumen->encapsulatingElements[i]->getElementalElasticForce(j,k);
+				tissueLumen->encapsulatingElements[i]->setElementalElasticForce(j,k,0.0);
+			}
+		}
+	}
+	int  nNode = tissueLumen->nodeIdsList.size();
+	for (int nodeIndex = 0; nodeIndex<nNode; ++nodeIndex){
+		int currId = tissueLumen->nodeIdsList[nodeIndex];
+		for (int currDim = 0; currDim <3 ; ++currDim){
+			if (Nodes[currId]->FixedPos[currDim] ){
+				continue;
+			}
+			//cout<<" perturbing node "<<currId<<" at dim: "<<currDim<<endl;
+			Nodes[currId]->Position[currDim]  += perturbation;
+			updateElementPositions(Nodes, Elements);
+			tissueLumen->updateMatrices(Nodes);
+			tissueLumen->calculateCurrentVolume();
+			//reset elemental elastic forces
+			for (int i=0; i<nEle; ++i){
+				for (int j=0; j<6; j++){
+					for (int k =0; k<3;++k){
+						tissueLumen->encapsulatingElements[i]->setElementalElasticForce(j,k,0.0);
+					}
+				}
+			}
+			//reset perturbed g:
+			tissueLumen->calculateResiduals(Nodes);
+			//writing the perturbation to global jacobian
+			for (int i=0; i<nEle; ++i){
+				for (int j=0; j<3; j++){
+					for (int  affectedDim=0; affectedDim<3;++affectedDim){
+						vector <int> apicalNodeIndices;
+						tissueLumen->encapsulatingElements[i]->getApicalNodeIndicesOnElement(apicalNodeIndices);
+						vector <int> apicalNodeIds;
+						tissueLumen->encapsulatingElements[i]->getApicalNodeIds(apicalNodeIds);
+						int affectedNodeApicalNodeIndice = apicalNodeIndices[j];
+						int affectedNodeId= apicalNodeIds[affectedNodeApicalNodeIndice];
+						if (Nodes[affectedNodeId]->FixedPos[affectedDim] ){
+							continue;
+						}
+						double originalValue = nonPerturbedElasticForces[i][affectedNodeApicalNodeIndice][affectedDim];
+						double perturbedValue = tissueLumen->encapsulatingElements[i]->getElementalElasticForce(affectedNodeApicalNodeIndice,affectedDim);
+						double dKdx = (perturbedValue-originalValue)/perturbation;
+						//now add this to the relevant K position:
+
+						double valueOnK = gsl_matrix_get(K,currId*3+currDim,affectedNodeId*3+affectedDim);
+						double newValue = valueOnK+dKdx;
+						gsl_matrix_set(K,currId*3+currDim,affectedNodeId*3+affectedDim,newValue);
+					}
+				}
+			}
+			//end of writing the perturbation
+			//revert the perturbation, no need to update positions here as the loop continues
+			Nodes[currId]->Position[currDim] -= perturbation;
+		}
+	}
+	//outside the loop, correct positions and all calculated values:
+	updateElementPositions(Nodes, Elements);
+	tissueLumen->updateMatrices(Nodes);
+	tissueLumen->calculateCurrentVolume();
+	//set back the elemental elastic forces:
+	for (int i=0; i<nEle; ++i){
+		for (int j=0; j<6; j++){
+			for (int k =0; k<3;++k){
+				tissueLumen->encapsulatingElements[i]->setElementalElasticForce(j,k,backupElasticForces[i][j][k]);
+			}
+		}
+	}
+
+}*/
 
 void NewtonRaphsonSolver::writeForcesTogeAndgvInternal(vector <Node*>& Nodes, vector <ShapeBase*>& Elements, double** SystemForces){
     for(vector<ShapeBase*>::iterator  itElement=Elements.begin(); itElement<Elements.end(); ++itElement){

@@ -95,6 +95,7 @@ using namespace std;
      drawMyosinForces = false;
      drawPeripodialMembrane = true;
      drawColumnar = true;
+     drawLumen = false;
      drawMarkingEllipses = false;
      drawGrowthRedistribution = false;
      drawNodeBinding = false;
@@ -459,11 +460,18 @@ void GLWidget::highlightNode(int i){
 		else{
 			if(DisplayStrains){
 				float StrainMag = 0.0;
-				int nConnectedElements = (*itNode)->connectedElementIds.size();
-				for (int i=0;i<nConnectedElements; ++i){
-					float TmpStrainMag =0.0;
-					Sim01->Elements[(*itNode)->connectedElementIds[i]]->getStrain(StrainToDisplay, TmpStrainMag);
-                    StrainMag += (TmpStrainMag)*(*itNode)->connectedElementWeights[i];
+				if (Sim01->thereIsExplicitLumen && (*itNode)->facingLumen){
+					StrainMag = Sim01->tissueLumen->rV;
+				}
+				else{
+
+
+					int nConnectedElements = (*itNode)->connectedElementIds.size();
+					for (int i=0;i<nConnectedElements; ++i){
+						float TmpStrainMag =0.0;
+						Sim01->Elements[(*itNode)->connectedElementIds[i]]->getStrain(StrainToDisplay, TmpStrainMag);
+						StrainMag += (TmpStrainMag)*(*itNode)->connectedElementWeights[i];
+					}
 				}
 				getDisplayColour(currColour, StrainMag);
 			}
@@ -574,6 +582,17 @@ void GLWidget::highlightNode(int i){
 			delete[] currColour;
 		}
 	}
+	if (drawLumen && Sim01->thereIsExplicitLumen){
+		for (itNode=Sim01->Nodes.begin(); itNode<Sim01->Nodes.end(); ++itNode){
+			if ((*itNode)->facingLumen){
+				int dist = std::distance(Sim01->Nodes.begin(),itNode);
+					NodeColourList[dist][0]=0;
+					NodeColourList[dist][1]=0;
+					NodeColourList[dist][2]=1;
+				}
+			}
+	}
+	//cout<<" NodeColourList[1240][2]"<<NodeColourList[1240][2]<<endl;
 }
 
  float** GLWidget::getElementColourList(int i){
@@ -626,9 +645,26 @@ void GLWidget::highlightNode(int i){
 		}
 		else if (Sim01->thereIsExplicitECM && Sim01->Elements[i]->isECMMimicing){
 			if(!DisplayStrains && !DisplayPysProp && !drawNetForces && !drawPackingForces && !drawMyosinForces && !drawMarkingEllipses){
-				NodeColours[j][0]=0.6;
-				NodeColours[j][1]=0.6;
-				NodeColours[j][2]=0.0;
+				//NodeColours[j][0]=0.6;
+				//NodeColours[j][1]=0.6;
+				//NodeColours[j][2]=0.0;
+				if (Sim01->thereIsExplicitLumen){
+					if (Sim01->Nodes[NodeIds[j]]->tissuePlacement != 1){
+						NodeColours[j][0]=0.6;
+						NodeColours[j][1]=0.6;
+						NodeColours[j][2]=0.0;
+					}
+					else{
+						NodeColours[j][0]=NodeColourList[NodeIds[j]][0];
+						NodeColours[j][1]=NodeColourList[NodeIds[j]][1];
+						NodeColours[j][2]=NodeColourList[NodeIds[j]][2];
+					}
+				}
+				else{
+					NodeColours[j][0]=0.6;
+					NodeColours[j][1]=0.6;
+					NodeColours[j][2]=0.0;
+				}
 			}
 			else{
 				NodeColours[j][0]=NodeColourList[NodeIds[j]][0];
@@ -637,7 +673,7 @@ void GLWidget::highlightNode(int i){
 			}
 		}
 		else if (Sim01->thereIsExplicitActin && Sim01->Elements[i]->isActinMimicing){
-			if(!DisplayStrains && !DisplayPysProp && !drawNetForces && !drawPackingForces && !drawMyosinForces && !drawMarkingEllipses){
+			if(!DisplayStrains && !DisplayPysProp && !drawNetForces && !drawPackingForces && !drawMyosinForces && !drawMarkingEllipses && !drawLumen){
 				NodeColours[j][0]=0.0;
 				NodeColours[j][1]=0.6;
 				NodeColours[j][2]=0.0;
@@ -677,6 +713,7 @@ void GLWidget::highlightNode(int i){
 	int BorderConnectivity[nLineStrip] = {0,2,5,3,0,1,4,3,5,4,1,2};
 	float** NodeColours;
 	NodeColours = getElementColourList(i);
+
 
 	/*if( Sim01->Elements[i]->getCellMigration()){
 		for(int l=0;l<6;++l){

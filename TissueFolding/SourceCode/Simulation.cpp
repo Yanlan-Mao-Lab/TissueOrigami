@@ -7,7 +7,6 @@
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_blas.h>
 
-
 using namespace std;
 
 Simulation::Simulation(){
@@ -66,6 +65,10 @@ Simulation::~Simulation(){
     //delete[] PackingForcesPreviousStep;
     //delete[] PackingForcesTwoStepsAgoStep;
     delete[] FixedNodeForces;
+    if (thereIsPeripodialMembrane){
+    	delete tissueLumen;
+    }
+
     cout<<"deleting elements"<<endl;
 	while(!Elements.empty()){
 		ShapeBase* tmp_pt;
@@ -250,6 +253,8 @@ void Simulation::setDefaultParameters(){
 	thereIsCellMigration = false;
 	thereIsExplicitECM = false;
 	addLateralECMManually = false;
+	thereIsExplicitLumen = false;
+	lumenBulkModulus = 0;
 	lateralECMThickness = 0.0;
 	ECMRenawalHalfLife = 0.0;
 	thereIsExplicitActin = false;
@@ -283,6 +288,7 @@ void Simulation::setDefaultParameters(){
 	beadPos[0] = -1000.0;
 	beadPos[1] = -1000.0;
 	beadPos[2] = -1000;
+
 }
 
 bool Simulation::readExecutableInputs(int argc, char **argv){
@@ -540,6 +546,10 @@ bool Simulation::checkInputConsistency(){
 			}
 		}
 	}
+	if (thereIsExplicitLumen && !AddPeripodialMembrane){
+		cerr<<"There is no peripodial membrane while asking for a lumen"<<endl;
+		needPeripodialforInputConsistency = true;
+	}
 	return true;
 }
 
@@ -591,12 +601,14 @@ bool Simulation::initiateSystem(){
 			}
 		}
 	}
+
 	if (needPeripodialforInputConsistency){
 		if (!thereIsPeripodialMembrane){
-			cerr<<"There is no peripodial membrane but at least one growth function desires one"<<endl;
+			cerr<<"There is no peripodial membrane but at least one growth function or lumen desires one"<<endl;
 			Success = false;
 		}
 	}
+
 	if (thereIsExplicitECM){
 		if (addLateralECMManually){
 			addSideECMLayer();
@@ -607,6 +619,16 @@ bool Simulation::initiateSystem(){
 	if (addCurvatureToTissue){
 		addCurvatureToColumnar(tissueCurvatureDepth);
 	}
+
+	if (thereIsExplicitLumen){
+		if (!thereIsPeripodialMembrane){
+			cerr<<"There is no peripodial membrane but simulation has a lumen"<<endl;
+			thereIsExplicitLumen = false;
+			Success = false;
+		}
+		tissueLumen = new Lumen(Elements, Nodes,lumenBulkModulus);
+	}
+
 	if (thereIsExplicitActin){
 		setUpActinMimicingElements();
 	}
@@ -687,6 +709,10 @@ bool Simulation::initiateSystem(){
 	//initiating the NR solver object, that generates the necessary matrices
 	//for solving the tissue dynamics
     NRSolver = new NewtonRaphsonSolver(Nodes[0]->nDim,nNodes);
+	if (thereIsExplicitLumen){
+		NRSolver ->thereIsLumen = true;
+		NRSolver ->tissueLumen = this->tissueLumen;
+	}
     if (ContinueFromSave){
     	updateMasterSlaveNodesInBinding();
     }
@@ -698,6 +724,7 @@ bool Simulation::initiateSystem(){
 			NRSolver->boundNodesWithSlaveMasterDefinition = true;
 		}
     }
+    cout<<"before migration"<<endl;
 	if (thereIsCellMigration) {
     	cout<<"initiation of cell migration"<<endl;
     	double cellMigrationOriginAngle = M_PI/2.0;
@@ -716,12 +743,14 @@ bool Simulation::initiateSystem(){
 
 void Simulation::checkForNodeBinding(){
 	if (thereIsCircumferenceXYBinding){
+		cout<<"binding circumference"<<endl;
 		bool thereIsBinding = bindCircumferenceXY();
 		if (thereIsBinding){
 			NRSolver->boundNodesWithSlaveMasterDefinition = true;
 		}
 	}
 	if (ellipseIdsForBaseAxisBinding.size()>0){
+		cout<<"binding ellipses"<<endl;
 		bool thereIsBinding = bindEllipseAxes();
 		if (thereIsBinding){
 			//I will not equate the values, if the parameter of NRSolver
@@ -731,6 +760,7 @@ void Simulation::checkForNodeBinding(){
 			NRSolver->boundNodesWithSlaveMasterDefinition = true;
 		}
 	}
+	cout<<"finished binding"<<endl;
 }
 
 
@@ -1125,83 +1155,88 @@ bool Simulation::checkEdgeLenghtsForBindingPotentiallyUnstableElements(){
 bool Simulation::bindCircumferenceXY(){
 	bool thereIsBinding = false;
 	int dim = 3;
-		vector <int> nodeIds;
-		for (int i=0; i<nNodes; ++i){
-			if (Nodes[i]->tissuePlacement == 0){
-				//basal node
-				if (Nodes[i]->atCircumference){
-					//at basal circumference:
-					nodeIds.push_back(i);
-				}
+	vector <int> nodeIds;
+	for (int i=0; i<nNodes; ++i){
+		if (Nodes[i]->tissuePlacement == 0){
+			//basal node
+			if (Nodes[i]->atCircumference){
+				//at basal circumference:
+				nodeIds.push_back(i);
 			}
 		}
-		int n = nodeIds.size();
-		for (int i=0; i<n; ++i){
-			//cout<<" in circumference binding, checking nodeId: "<<nodeIds[i]<<" ";
-			int masterNodeId = nodeIds[i];
-			int dofXmaster = masterNodeId*dim;
-			int dofYmaster = masterNodeId*dim+1;
-			int currNodeId = masterNodeId;
-			bool reachedTop = false;
-			while (!reachedTop){
-					//Nodes[currNodeId]->tissuePlacement != 1 || (thereIsPeripodialMembrane && )){ //while node is not apical
-				int nConnectedElements = Nodes[currNodeId]->connectedElementIds.size();
-				for (int j=0;j<nConnectedElements;++j){
-					int elementId = Nodes[currNodeId]->connectedElementIds[j];
-					bool IsBasalOwner = Elements[elementId]->IsThisNodeMyBasal(currNodeId);
-					if (IsBasalOwner){
-						int slaveNodeId = Elements[elementId]->getCorrecpondingApical(currNodeId);
-						if (Nodes[masterNodeId]->FixedPos[0]){
-							//master node is fixed in X, slave needs to be fixed as well, and no need for binding calculations.
-							Nodes[slaveNodeId]->FixedPos[0]=true;
-						}
-						if (Nodes[masterNodeId]->FixedPos[1]){
-							Nodes[slaveNodeId]->FixedPos[1]=true;
-						}
-						//If the DoF is fixed rigidly by node fixing functions, then I
-						//will not make it a slave of any node. Making it a slave leads to displacement
-						//I would need to check for fixed nodes and correct my forces/jacobian twice.
-						//First fix jacobian and forces, then bind nodes, then fix jacobian again to
-						//clear up all the fixed nodes that were slaves and bound to other nodes.
-						//If I do the binding first,without the first fixing I will carry the load of the fixed node onto the master node unnecessarily
-						//Simpler and cleaner to not make them slaves at all.
-						if (!Nodes[slaveNodeId]->FixedPos[0]){
-							int dofXslave  = slaveNodeId*dim;
-							vector <int> fixX;
-							fixX.push_back(dofXslave);
-							fixX.push_back(dofXmaster);
-							NRSolver->slaveMasterList.push_back(fixX);
-							Nodes[slaveNodeId]->slaveTo[0] = masterNodeId;
-							Nodes[masterNodeId]->isMaster[0] = true;
-							thereIsBinding = true;
-						}
-						if (!Nodes[slaveNodeId]->FixedPos[1]){
-							int dofYslave  = slaveNodeId*dim+1;
-							vector <int> fixY;
-							fixY.push_back(dofYslave);
-							fixY.push_back(dofYmaster);
-							NRSolver->slaveMasterList.push_back(fixY);
-							Nodes[slaveNodeId]->slaveTo[1] = masterNodeId;
-							Nodes[masterNodeId]->isMaster[1] = true;
-							thereIsBinding = true;
-						}
-						currNodeId = slaveNodeId;
-						//cout<<" found slave: "<<slaveNodeId<<endl;
-						break;
+	}
+	int n = nodeIds.size();
+	cout<<"found the node ids for basal circumference, n: "<<n<<endl;
+	for (int i=0; i<n; ++i){
+		cout<<" in circumference binding, checking nodeId: "<<nodeIds[i]<<" "<<i<<" of "<<n<<" ";
+		int masterNodeId = nodeIds[i];
+		int dofXmaster = masterNodeId*dim;
+		int dofYmaster = masterNodeId*dim+1;
+		int currNodeId = masterNodeId;
+		bool reachedTop = false;
+		int a = 0;
+		while (!reachedTop && a<5){//bibap
+			a++;
+			int nConnectedElements = Nodes[currNodeId]->connectedElementIds.size();
+			cout<<" current node: "<<currNodeId<<" nConnectedElements "<<nConnectedElements<<endl;
+			for (int j=0;j<nConnectedElements;++j){
+				int elementId = Nodes[currNodeId]->connectedElementIds[j];
+				bool IsBasalOwner = Elements[elementId]->IsThisNodeMyBasal(currNodeId);
+				if (IsBasalOwner){
+					int slaveNodeId = Elements[elementId]->getCorrecpondingApical(currNodeId);
+					if (Nodes[masterNodeId]->FixedPos[0]){
+						//master node is fixed in X, slave needs to be fixed as well, and no need for binding calculations.
+						Nodes[slaveNodeId]->FixedPos[0]=true;
 					}
+					if (Nodes[masterNodeId]->FixedPos[1]){
+						Nodes[slaveNodeId]->FixedPos[1]=true;
+					}
+					//If the DoF is fixed rigidly by node fixing functions, then I
+					//will not make it a slave of any node. Making it a slave leads to displacement
+					//I would need to check for fixed nodes and correct my forces/jacobian twice.
+					//First fix jacobian and forces, then bind nodes, then fix jacobian again to
+					//clear up all the fixed nodes that were slaves and bound to other nodes.
+					//If I do the binding first,without the first fixing I will carry the load of the fixed node onto the master node unnecessarily
+					//Simpler and cleaner to not make them slaves at all.
+					if (!Nodes[slaveNodeId]->FixedPos[0]){
+						int dofXslave  = slaveNodeId*dim;
+						vector <int> fixX;
+						fixX.push_back(dofXslave);
+						fixX.push_back(dofXmaster);
+						NRSolver->slaveMasterList.push_back(fixX);
+						Nodes[slaveNodeId]->slaveTo[0] = masterNodeId;
+						Nodes[masterNodeId]->isMaster[0] = true;
+						thereIsBinding = true;
+					}
+					if (!Nodes[slaveNodeId]->FixedPos[1]){
+						int dofYslave  = slaveNodeId*dim+1;
+						vector <int> fixY;
+						fixY.push_back(dofYslave);
+						fixY.push_back(dofYmaster);
+						NRSolver->slaveMasterList.push_back(fixY);
+						Nodes[slaveNodeId]->slaveTo[1] = masterNodeId;
+						Nodes[masterNodeId]->isMaster[1] = true;
+						thereIsBinding = true;
+					}
+					currNodeId = slaveNodeId;
+					//cout<<" found slave: "<<slaveNodeId<<endl;
+					break;
 				}
-				if (!thereIsPeripodialMembrane && Nodes[currNodeId]->tissuePlacement == 1){
-					//there is no peripodial and I have reached apical nodes
-					reachedTop = true;
-				}
-				if (thereIsPeripodialMembrane && Nodes[currNodeId]->tissuePlacement == 0){
-					//there is peripodial and I have reached basal nodes again
-					reachedTop = true;
-				}
-				//cout<<" tissue placement of next node: "<<Nodes[currNodeId]->tissuePlacement<<endl;
 			}
+			if (!thereIsPeripodialMembrane && Nodes[currNodeId]->tissuePlacement == 1){
+				cout<<" in binding there is no peripodial, I have reached top"<<endl;
+				//there is no peripodial and I have reached apical nodes
+				reachedTop = true;
+			}
+			if (thereIsPeripodialMembrane && Nodes[currNodeId]->tissuePlacement == 0){
+				//there is peripodial and I have reached basal nodes again
+				cout<<" in binding there is peripodial, I have reached top"<<endl;
+				reachedTop = true;
+			}
+			//cout<<" tissue placement of next node: "<<Nodes[currNodeId]->tissuePlacement<<endl;
 		}
-		return thereIsBinding;
+	}
+	return thereIsBinding;
 }
 
 void Simulation::setLateralElementsRemodellingPlaneRotationMatrices(){
@@ -3026,9 +3061,8 @@ void Simulation::readInTissueWeights(){
 bool Simulation::generateColumnarCircumferenceNodeList(	vector <int> &ColumnarCircumferencialNodeList){
 	//generating a list of nodes that are at the circumference and at the basal surface
 	for (int i=0; i<nNodes; ++i){
-		if (Nodes[i]->atCircumference && Nodes[i]->tissuePlacement == 0){ // tissuePlacement = 0 -> basal node
+		if (Nodes[i]->atCircumference && Nodes[i]->tissuePlacement == 0 && Nodes[i]->tissueType == 0){ // tissuePlacement = 0 -> basal node, tissueType = 0 -> columnar node
 			ColumnarCircumferencialNodeList.push_back(i);
-
 		}
 	}
 	int n = ColumnarCircumferencialNodeList.size();
@@ -3373,7 +3407,7 @@ void Simulation::assignInitialZPositions(){
 void Simulation::calculateStiffnessMatrices(){
 	vector<ShapeBase*>::iterator itElement;
 	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		cout<<" setting up element :  "<<(*itElement)->Id<<" of "<<nElements<<endl;
+		//cout<<" setting up element :  "<<(*itElement)->Id<<" of "<<nElements<<endl;
 		(*itElement)->calculateReferenceStiffnessMatrix();
 	}
 }
@@ -3381,7 +3415,7 @@ void Simulation::calculateStiffnessMatrices(){
 void Simulation::calculateShapeFunctionDerivatives(){
 	vector<ShapeBase*>::iterator itElement;
 	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		cout<<" setting up element :  "<<(*itElement)->Id<<" of "<<nElements<<endl;
+		//cout<<" setting up element :  "<<(*itElement)->Id<<" of "<<nElements<<endl;
 		(*itElement)->calculateElementShapeFunctionDerivatives();
     }
 }
@@ -4274,13 +4308,13 @@ void Simulation::addCurvatureToColumnar(double h){
 	//find the tips:
 	double l1 = -1000, l2 = 1000, l3 = -1000;
 	for (vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-		if ((*itNode)->Position[0] > l1 ){
+		if ((*itNode)->Position[0] >= l1 ){
 			l1 = (*itNode)->Position[0]; //displacement from origin to positive x tip
 		}
-		if ((*itNode)->Position[0] < l2 ){
+		if ((*itNode)->Position[0] <= l2 ){
 			l2 = (*itNode)->Position[0]; //displacement from origin to negative x tip
 		}
-		if ((*itNode)->Position[1] > l3 ){
+		if ((*itNode)->Position[1] >= l3 ){
 			l3 = (*itNode)->Position[1];	//displacement from origin to positive y tip
 		}
 	}
@@ -4288,6 +4322,9 @@ void Simulation::addCurvatureToColumnar(double h){
 		l2 = (-1.0)*l1;	//if there is symmetricity in x, then the negative tip will be at zero. This is not correct and the symmetricity should mean the negative displacement will be -l1
 	}
 	l2 *= -1.0;	//converting the displacement to distance, this is the only negative tip, the rest are already positive
+	l1 *= 1.01;//make them slightly larger to include boundry nodes
+	l2 *= 1.01;
+	l3 *= 1.01;
 	cout<<"l1: "<<l1 <<" l2: "<<l2<<" l3: "<<l3<<endl;
 	for (vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
 		double x = (*itNode)->Position[0];
@@ -4308,19 +4345,18 @@ void Simulation::addCurvatureToColumnar(double h){
 				//there is peripodial membrane, any node above the mid-line of the lumen should be curved in the opposite direction of the columnar layer:
 				//But I have a direction choice, if the columnar is curving down, the peripodial shoul curve up
 				//If the columnar is curing up, the peripodial should still curve up!
-
 				double heightThreshold = TissueHeight + lumenHeight/2.0;
-				if ((*itNode)->Position[2] > heightThreshold) {
+				if ((*itNode)->Position[2] >= heightThreshold) {
 					if (offset > 0){
 						offset *= (-1.0);
 					}
 				}
 			}
+			//added for lumen test:
+			//if (offset<0){offset = -h;}
+			//if (offset>0){offset = h;}
+			//end of added for lumen test
 			(*itNode)->Position[2] -= offset;
-			if((*itNode)->Id ==8){
-				cout<<" a: "<<a<<" c: "<<c<<" x "<<x<<" y "<< y<<" z "<<z<<" value: "<<value<<" offset: "<<offset<<endl;
-				cout<<"Node[8] position: "<<(*itNode)->Position[0]<<" "<<(*itNode)->Position[1]<<" "<<(*itNode)->Position[2]<<endl;
-			}
 		}
 	}
 	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
@@ -4372,7 +4408,8 @@ void Simulation::fixNode0InPosition(double x, double y, double z){
 }
 
 void Simulation::manualPerturbationToInitialSetup(bool deform, bool rotate){
-	if(timestep==1){
+	//cout<<" inside manual perturbation, timestep "<<timestep<<endl;
+	if(timestep==0){
 		 for (vector<Node*>::iterator  itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
 			 //if ((*itNode)->Id <3 ){
 				//fixX((*itNode),0);
@@ -4387,6 +4424,9 @@ void Simulation::manualPerturbationToInitialSetup(bool deform, bool rotate){
 				(*itNode)->Position[0] -= 5;
 			}*/
 			//fixAllD((*itNode),0);
+			 //(*itNode)->Position[0] += 8.9550;
+			 //(*itNode)->Position[2] -= 13.75;
+			 //cout<<"updated node : "<<(*itNode)->Id<<endl;
 		}
 		//laserAblateTissueType(1);
 		//laserAblate(0.0, 0.0, 0.5);
@@ -4485,13 +4525,61 @@ void Simulation::calculateDiscretisationLayers(double &hColumnar, int& LumenHeig
 	//cout<<"Peripodial height:  "<<peripodialHeight<<" height of one peripodial element: "<<hPeripodial<<" LumenHeightDiscretisationLayers: "<<peripodialHeightDiscretisationLayers<<endl;
 }
 
+int Simulation::countPeripodialHeightDiscretisaionLayers(){
+	if (!thereIsPeripodialMembrane){
+		//there is no peripodial membrane, return 0 layers
+		return 0;
+	}
+	int peripodiallayercount = 0;
+	//addNodesForPeripodialOnOuterCircumference
+	int currNodeId = -1;
+	for (int i =0; i<nNodes; ++i){
+		if (Nodes[i]->tissueType ==1 && Nodes[i]->tissuePlacement ==1){
+			currNodeId = i; //found myself an apical peripodial node
+			break;
+		}
+	}
+	if (currNodeId<0){
+		cerr<<" there is no peripodial! error in calling this function, returning 0 layers!"<<endl;
+		return peripodiallayercount;
+	}
+
+	bool foundElement = true;
+	bool finishedTissueThickness  = false;
+	while(!finishedTissueThickness && foundElement){ //while the node is not apical, and I could find the next element
+		foundElement = false;
+		vector<ShapeBase*>::iterator itElement;
+		for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+			bool IsBasalOwner = (*itElement)->IsThisNodeMyBasal(currNodeId);
+			if (IsBasalOwner){
+				foundElement = true;
+				break;
+			}
+		}
+		//found the current node as basal node of an element
+		//get the corresponding apical node, record in the list:
+		//This is stated on an elemental basis, so it will be similar to columnar layer,
+		//the nodes at the bottom given as inputs, will point to nodes at the top.
+		currNodeId = (*itElement)->getCorrecpondingApical(currNodeId); //have the next node
+		peripodiallayercount ++;
+		if(Nodes[currNodeId]->tissuePlacement == 0) {
+			//This is for peripodial membrane
+			//Reached the basal node at the top now
+			//I can stop:
+			finishedTissueThickness = true;
+		}
+	}
+
+	return peripodiallayercount;
+}
+
 void Simulation::fillColumnarBasedNodeList(vector< vector<int> > &ColumnarBasedNodeArray, vector <int> &ColumnarCircumferencialNodeList){
 	int nCircumference = ColumnarCircumferencialNodeList.size();
 	for (int i =0; i<nCircumference; ++i){
     	int currNodeId = ColumnarBasedNodeArray[i][0];
 		bool foundElement = true;
-		bool finishedTissueThicness  = false;
-		while(!finishedTissueThicness && foundElement){ //while the node is not apical, and I could find the next element
+		bool finishedTissueThickness  = false;
+		while(!finishedTissueThickness && foundElement){ //while the node is not apical, and I could find the next element
 			foundElement = false;
 			vector<ShapeBase*>::iterator itElement;
 			for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
@@ -4505,9 +4593,24 @@ void Simulation::fillColumnarBasedNodeList(vector< vector<int> > &ColumnarBasedN
 			//get the corresponding apical node, record in the list:
 			currNodeId = (*itElement)->getCorrecpondingApical(currNodeId); //have the next node
 			ColumnarBasedNodeArray[i].push_back(currNodeId);
-			if (Nodes[currNodeId]->tissuePlacement == 1) {
-				//Added the apical node now, I can stop:
-				finishedTissueThicness = true;
+
+			if (thereIsPeripodialMembrane == false){
+				if(Nodes[currNodeId]->tissuePlacement == 1) {
+					//There is no peripodial membrane
+					//Added the apical node now,
+					//I can stop:
+					cerr<<"finished lateral node addition with apical columnar"<<endl;
+					finishedTissueThickness = true;
+				}
+			}
+			else{
+				if(Nodes[currNodeId]->tissuePlacement == 0) {
+					//There is peripodial membrane
+					//Added the basal node at the top of peripodial node now,
+					//I can stop:
+					cout<<"finished lateral node addition with basal peripodial, "<<i<<" of "<<nCircumference<<endl;
+					finishedTissueThickness = true;
+				}
 			}
 		}
     }
@@ -4640,7 +4743,7 @@ void Simulation::calculateNewNodePosForPeripodialNodeAddition(int nodeId0, int n
 	delete[] vec0;
 }
 
-void Simulation::addNodesForPeripodialOnOuterCircumference (vector< vector<int> > &ColumnarBasedNodeArray, vector< vector<int> > &OuterNodeArray, double hColumnar, int LumenHeightDiscretisationLayers, double hLumen, int peripodialHeightDiscretisationLayers, double hPeripodial ){
+void Simulation::addNodesForPeripodialOnOuterCircumference (vector< vector<int> > &ColumnarBasedNodeArray, vector< vector<int> > &OuterNodeArray, int LumenHeightDiscretisationLayers, double hLumen, int peripodialHeightDiscretisationLayers, double hPeripodial ){
 	double peripodialSideConnectionThickness =PeripodialLateralThicnessScale*TissueHeight; //in microns
 	double avrSide=0.0, dummy =0.0;
 	getAverageSideLength(dummy,avrSide);	//first term will get you the average side length of the peripodial membrane elements, second is the columnar elements
@@ -4724,6 +4827,7 @@ void Simulation::addNodesForPeripodialOnOuterCircumference (vector< vector<int> 
 			OuterNodeArray[i].push_back(newNodeId);
 		}
 		//adding nodes for lumen:
+		//cout<<" LumenHeightDiscretisationLayers: "<<LumenHeightDiscretisationLayers<<endl;
 		for (int j=1; j<LumenHeightDiscretisationLayers+1; ++j){
 			pos[2] += hLumen;
 			int newNodeId = Nodes.size();
@@ -4760,6 +4864,7 @@ void Simulation::addLateralPeripodialElements(int LumenHeightDiscretisationLayer
 		//in symmetric setup, the last node is not connected to the first node, we simply ignore that step
 		nLoop--;
 	}
+	cout<<"nElements before addition: "<<nElements<<endl;
 	for (int i=0;i<nLoop; ++i){
     	for (int j=0;j<totalLayers; ++j){
     		//calculating the fraction of peripodialness these two elements should have:
@@ -4822,6 +4927,8 @@ void Simulation::addLateralPeripodialElements(int LumenHeightDiscretisationLayer
 			}
     	}
     }
+	cout<<"nElements after lateral addition: "<<nElements<<endl;
+
 }
 
 void Simulation::addNodesForPeripodialOnCap(vector< vector<int> > &ColumnarBasedNodeArray, vector< vector<int> > &PeripodialCapNodeArray, int TissueHeightDiscretisationLayers, int LumenHeightDiscretisationLayers, int peripodialHeightDiscretisationLayers, double hPeripodial){
@@ -4881,18 +4988,20 @@ void Simulation::constructTriangleCornerListOfApicalSurface( vector< vector<int>
 	int nTri = 0;
 	vector<ShapeBase*>::iterator itElement;
 	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		vector <int> ApicalTriangles;
-		(*itElement)->getApicalTriangles(ApicalTriangles);
-		int nList = ApicalTriangles.size();
-		for (int k=0; k<nList-2; k+=3){
-			if (Nodes[ApicalTriangles[k]]->tissuePlacement == 1 &&
-				Nodes[ApicalTriangles[k+1]]->tissuePlacement == 1 &&
-				Nodes[ApicalTriangles[k+2]]->tissuePlacement == 1){
-				TriangleList.push_back(vector<int>(3));
-				TriangleList[nTri][0] = (Nodes[ApicalTriangles[k]]->Id);
-				TriangleList[nTri][1] = (Nodes[ApicalTriangles[k+1]]->Id);
-				TriangleList[nTri][2] = (Nodes[ApicalTriangles[k+2]]->Id);
-				nTri++;
+		if ((*itElement)->tissueType == 0){
+			vector <int> ApicalTriangles;
+			(*itElement)->getApicalTriangles(ApicalTriangles);
+			int nList = ApicalTriangles.size();
+			for (int k=0; k<nList-2; k+=3){
+				if (Nodes[ApicalTriangles[k]]->tissuePlacement == 1 &&
+					Nodes[ApicalTriangles[k+1]]->tissuePlacement == 1 &&
+					Nodes[ApicalTriangles[k+2]]->tissuePlacement == 1){
+					TriangleList.push_back(vector<int>(3));
+					TriangleList[nTri][0] = (Nodes[ApicalTriangles[k]]->Id);
+					TriangleList[nTri][1] = (Nodes[ApicalTriangles[k+1]]->Id);
+					TriangleList[nTri][2] = (Nodes[ApicalTriangles[k+2]]->Id);
+					nTri++;
+				}
 			}
 		}
 	}
@@ -4900,6 +5009,8 @@ void Simulation::constructTriangleCornerListOfApicalSurface( vector< vector<int>
 
 void Simulation::addCapPeripodialElements( vector< vector<int> > &TriangleList, vector< vector<int> > &PeripodialCapNodeArray, int peripodialHeightDiscretisationLayers){
 	int nTri = TriangleList.size();
+	cout<<"number of elements before periodial cap: "<<nElements<<endl;
+
 	for (int i=0; i<nTri; ++i){
 		int indiceTri0Corner0 =-1, indiceTri0Corner1=-1,indiceTri0Corner2=-1;
 		int n = PeripodialCapNodeArray.size();
@@ -4942,6 +5053,8 @@ void Simulation::addCapPeripodialElements( vector< vector<int> > &TriangleList, 
 			currElementId++;
 		}
    }
+	cout<<"number of elements after periodial cap: "<<nElements<<endl;
+
 }
 void Simulation::correctCircumferentialNodeAssignment(vector< vector<int> > OuterNodeArray){
 	//Now I added nodes and elements to the circumference of the tissue.
@@ -5136,8 +5249,6 @@ bool Simulation::checkIfThereIsPeripodialMembrane(){
 bool Simulation::addSideECMLayer(){
     bool Success = true;
     //here I am calculating the height of the tissue and the discretisation layers used for columnar layer
-    double hColumnar; //The average columnar layer element height
-    hColumnar = TissueHeight/TissueHeightDiscretisationLayers;
     //Initially, I am starting with the sides.
     //First I want the list of nodes at the basal circumference of the columnar layer:
     vector <int> ColumnarCircumferencialNodeList;
@@ -5159,7 +5270,7 @@ bool Simulation::addSideECMLayer(){
     fillColumnarBasedNodeList(ColumnarBasedNodeArray, ColumnarCircumferencialNodeList);
     //Now add nodes for the outer layer:
     vector< vector<int> > OuterNodeArray( nCircumference , vector<int>(0) );
-    addNodesForSideECMOnOuterCircumference (ColumnarBasedNodeArray, OuterNodeArray,hColumnar );
+    addNodesForSideECMOnOuterCircumference (ColumnarBasedNodeArray, OuterNodeArray );
     //Now I need to add the elements:
     addSideECMElements(ColumnarBasedNodeArray, OuterNodeArray);
     //now adding the nodes of the central region:
@@ -5168,10 +5279,11 @@ bool Simulation::addSideECMLayer(){
     return Success;
 }
 
-void Simulation::addNodesForSideECMOnOuterCircumference (vector< vector<int> > &ColumnarBasedNodeArray, vector< vector<int> > &OuterNodeArray , double hColumnar){
-    double ECMSideThickness = lateralECMThickness; //in microns
+void Simulation::addNodesForSideECMOnOuterCircumference (vector< vector<int> > &ColumnarBasedNodeArray, vector< vector<int> > &OuterNodeArray){
+	double ECMSideThickness = lateralECMThickness; //in microns
     //Now I need the average side of an element, to add new nodes accordingly:
     int nCircumference = ColumnarBasedNodeArray.size();
+    int peripodialLayers = countPeripodialHeightDiscretisaionLayers();
 
     for (int i=0; i<nCircumference; ++i){
         //cout<<"at node in the list: "<<i<<endl;
@@ -5222,8 +5334,7 @@ void Simulation::addNodesForSideECMOnOuterCircumference (vector< vector<int> > &
 		OuterNodeArray[i].push_back(newNodeId);
 
         //adding the nodes for the columnar layer:
-        for (int j=1; j<TissueHeightDiscretisationLayers+1; ++j){
-            //pos[2] += hColumnar;
+        for (int j=1; j<TissueHeightDiscretisationLayers+peripodialLayers+1; ++j){
             pos[2] =  Nodes[ColumnarBasedNodeArray[baseIndex0][j]]->Position[2];
             //cout<<" pos for columnar aligned new node: "<<pos[0] <<" "<<pos[1]<<" "<<pos[2]<<" hColumnar: "<<hColumnar<<endl;
 
@@ -5232,7 +5343,14 @@ void Simulation::addNodesForSideECMOnOuterCircumference (vector< vector<int> > &
             if (j == TissueHeightDiscretisationLayers){
                 tissuePlacement=1;//apical
             }
-
+            if (peripodialLayers>0 && j == TissueHeightDiscretisationLayers+1){
+            	//apical on peripodial side
+            	tissuePlacement=1;//apical
+            }
+            if (peripodialLayers>0 && j == TissueHeightDiscretisationLayers+peripodialLayers){
+            	//basal on peripodial side
+            	tissuePlacement=0;//basal
+            }
             Node* tmp_nd = new Node(newNodeId, 3, pos, tissuePlacement, 0); //Tissue placement is midlayer (2), tissue type is columnar (0)
             Nodes.push_back(tmp_nd);
             nNodes = Nodes.size();
@@ -5247,7 +5365,8 @@ void Simulation::addSideECMElements(vector< vector<int> > &ColumnarBasedNodeArra
     // Two elements are added for each element on the side:
     // First triangle base will be New node 0, oldNode1, oldnode0, top of the element will be read from the node id stacks
     // Second triangle base will be: New node 0, new node 1, old node 1
-    int totalLayers = TissueHeightDiscretisationLayers;
+	int peripodialLayers = countPeripodialHeightDiscretisaionLayers();
+    int totalLayers = TissueHeightDiscretisationLayers + peripodialLayers;
     int nCircumference = ColumnarBasedNodeArray.size();
     int nLoop = nCircumference;
     if (symmetricY){
@@ -5340,7 +5459,7 @@ bool Simulation::addStraightPeripodialMembraneToTissue(){
     addNodesForPeripodialOnColumnarCircumference (ColumnarBasedNodeArray, LumenHeightDiscretisationLayers, hLumen, peripodialHeightDiscretisationLayers, hPeripodial );
     //Now add nodes for the outer layer:
     vector< vector<int> > OuterNodeArray( nCircumference , vector<int>(0) );
-    addNodesForPeripodialOnOuterCircumference (ColumnarBasedNodeArray, OuterNodeArray, hColumnar, LumenHeightDiscretisationLayers, hLumen, peripodialHeightDiscretisationLayers, hPeripodial );
+    addNodesForPeripodialOnOuterCircumference (ColumnarBasedNodeArray, OuterNodeArray, LumenHeightDiscretisationLayers, hLumen, peripodialHeightDiscretisationLayers, hPeripodial );
     //Now I need to add the elements:
     addLateralPeripodialElements(LumenHeightDiscretisationLayers,peripodialHeightDiscretisationLayers, ColumnarBasedNodeArray, OuterNodeArray);
     //now adding the nodes of the central region:
@@ -5821,11 +5940,23 @@ bool Simulation::runOneStep(){
 
     bool Success = true;
 	cout<<"entered run one step, time "<<currSimTimeSec<<endl;
+
+	double apicalAreaSum = 0;
+	for (int i=0; i< nElements; ++i){
+		if (Elements[i]->tissuePlacement == 1 && Elements[i]->tissueType == 0){
+			Elements[i]->calculateApicalArea();
+			apicalAreaSum += Elements[i]->getApicalArea();
+		}
+	}
+	cout<<"Apical tissue area: "<<apicalAreaSum<<endl;
+
+
 	//ablateSpcific();
     if (currSimTimeSec == -16*3600) {
     	pokeElement(224,0,0,-0.02);
     }
     //cout<<"Position Of Node 187"<<Nodes[187]->Position[2]<<" node 246: "<<Nodes[246]->Position[2]<<endl;
+
     manualPerturbationToInitialSetup(false,false); //bool deform, bool rotate
     resetForces(true); // reset the packing forces together with all the rest of the forces here
     checkForEmergentEllipseFormation();
@@ -6315,7 +6446,7 @@ void Simulation::calculateNumericalJacobian(bool displayMatricesDuringNumericalC
 	int dim = 3;
 	gsl_matrix_set_zero(NRSolver->Knumerical);
 	NRSolver->calculateDisplacementMatrix(dt);
-	//PACKING SHOULD BE ADDED HERE If using this nuerical calculation!!!
+	//PACKING SHOULD BE ADDED HERE If using this numerical calculation!!!
 
 	//Trying to see the manual values:
 	resetForces(true); // reset the packing forces together with all the rest of the forces here

@@ -68,6 +68,7 @@ using namespace std;
      bool 		drawTissueScaleBar;
      bool 		drawPeripodialMembrane;
      bool 		drawColumnar;
+     bool		drawLumen;
      bool 		PerspectiveView;
      bool		displayBoundingBox;
      bool       displayPipette;

@@ -7,6 +7,7 @@
 #include <gsl/gsl_linalg.h>
 #include "Node.h"
 #include "ShapeBase.h"
+#include "Lumen.h"
 //#include <mkl.h>
 #include <omp.h>
 
@@ -41,6 +42,8 @@ public:
 	gsl_matrix* Knumerical;						//< The Jacobian calculated by numerical methods
 	bool numericalParametersSet;				//< The boolean stating if the numerical Jacobian matrix has been initiated or not. For memory management purposes, this large matrix is not initiated unless necessary.
 	bool boundNodesWithSlaveMasterDefinition;
+	bool thereIsLumen;
+	Lumen* tissueLumen;
 	std::vector< std::vector<int> > slaveMasterList;//< The 2D integer array storing the slave-master degrees of freedom couples, such that array [i][0] = slave to array[i][1], each i representing one dim of node position ( z of node 2 is DoF i=8);
 
 	void setMatricesToZeroAtTheBeginningOfIteration(bool thereIsNumericalCalculation); 		//< The function setting the calculation matrices to zero at the beginning of each iteration.
@@ -86,6 +89,11 @@ public:
 	void checkMasterUpdate(int& dofMaster, int& masterId); //< This function takes a degree of freedom number as input. This DOF is supposed to be a master. If, the dof is already a slave to another dof, then update the masetr dof. Anything that would be bound to the input dof can be bound to the already existing master of the input dof.
 	void cleanPeripodialBindingFromMaster(int masterDoF,vector<Node*>& Nodes);
 	bool checkIfSlaveIsAlreadyMasterOfOthers(int dofSlave, int dofMaster); //< This function checks if the slave DOF is already master of others, if so, updates the master of said slave to the new master the current slave will be bound to.
+
+	void updateElementPositions(vector <Node*>& Nodes, vector <ShapeBase*>& Elements);
+	void calculateLumenNumericalJacobian(Lumen* tissueLumen, vector <Node*>& Nodes, vector <ShapeBase*>& Elements);
+
+
 };
 
 #endif

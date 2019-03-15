@@ -1,19 +1,18 @@
 InputMeshParameters:
   MeshInputMode(int-seeDocumentation): 4
-  MeshFile(full-path): /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Exp48hr-noPeri-ThinECM_12.mesh
-
+  MeshFile(full-path): /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Exp48hr-ThinECM_12.mesh
   symmetricInX(bool): 0
   symmetricInY(bool): 1
  
 TimeParameters:
-  TimeStep(sec): 2
+  TimeStep(sec): 0.01
   SimulationLength(sec): 0
   
 SaveOptions:
-  SaveImages(bool): 0
+  SaveImages(bool): 1
   SaveData(bool):   1
   ImageSaveInterval(sec): 1
-  DataSaveInterval(sec):  900
+  DataSaveInterval(sec):  1
 
 NodeFixingOptions:
   FixingViscosity(x,y,z): 0   0  34000
@@ -27,14 +26,14 @@ NodeFixingOptions:
   NotumFix(bool-x,y,z,double-xFracMin,xFracMax): 0 0 0 -0.1 0.5  FixNotumExtVisc(bool): 1
 
 NodeBindingOptions:
-  bindCircumferenceXYToBasal(bool): 0
+  bindCircumferenceXYToBasal(bool): 1
   bindEllipses(bool,nFunctions): 1 2
   bindEllipseBases(bool-x,y,z,nEllipses,ellipseIds): 0 0 0 1 1
   bindEllipseBases(bool-x,y,z,nEllipses,ellipseIds): 0 0 0 1 2
 
 Manipulations:
-  AddCurvature(bool): 0
-  CurvatureDepthAtCentre(double-microns): -1.0
+  AddCurvature(bool): 1
+  CurvatureDepthAtCentre(double-microns): 4.0
   AddSoftPeriphery(bool): 0
   SoftPeripheryRange(double-microns): 10.0
   SoftnessFraction(double-fraction): 0.2
@@ -47,8 +46,8 @@ Manipulations:
   RandomForceVar(double): 1E-5
 
 PysicalProperties:
-  YoungsModulusApical: 100.0	YoungsModulusBasal: 25.0	YoungsModulusMid: 25.0	Noise(%-int): 0
-  PoissonsRatio: 0.29		Noise(%-int): 0
+  YoungsModulusApical: 100.0	YoungsModulusBasal: 25	YoungsModulusMid: 25	Noise(%-int): 0
+  PoissonsRatio: 0.0		Noise(%-int): 0
   ApicalViscosity:  0.0 	Noise(%-int): 0
   BasalViscosity:   0.0
   MidLineViscosity: 0.0
@@ -57,8 +56,8 @@ PeripodialMembraneParameters:
   AddPeripodialMembrane: 0
   PeripodialMembraneThickness(fractionOfTissueHeight): 0.1
   PeripodialMembraneLateralThickness(fractionOfTissueHeight): 0.2
-  LumenHeightScale(fractionOfTissueHeight): 0.2
-  PeripodialMembraneYoungsModulus: 450.0
+  LumenHeightScale(fractionOfTissueHeight): 0.0
+  PeripodialMembraneYoungsModulus: 1.0
   PeripodialMembraneApicalViscosity: 0.0
   PeripodialMembraneBasalViscosity: 0.0
   PeripodialMembraneMidlineViscosity: 0.0
@@ -66,8 +65,8 @@ PeripodialMembraneParameters:
 
 LinkerZoneParameters:
   BaseOnPeripodialness(bool): 0
-  LinkerZoneApicalYoungsModulus: 450
-  LinkerZoneBasalYoungsModulus: 450
+  LinkerZoneApicalYoungsModulus: 25
+  LinkerZoneBasalYoungsModulus: 25
   LinkerZoneApicalViscosity: 0.0
   LinkerZoneBasalViscosity: 0.0
   LinkerZoneMidlineViscosity: 0.0
@@ -76,7 +75,7 @@ ExplicitECMOptions:
   ThereIsExplicitECM(bool): 1
   AddLateralECM(bool): 1
   LateralECMThickness(microns): 0.2
-  ECMRemodellingHalfLife(hour): 1.0
+  ECMRemodellingHalfLife(hour): 8.0
   ECMColumnarYoungsModulus:  400
   ECMPeripodialYoungsModulus:  100
   
@@ -89,11 +88,11 @@ NodeCollapseOptions:
 
 ExternalViscositySetup:
   ExtendToWholeTissue: 0
-  DiscProperApicalExternalViscosity: 4000.0 
+  DiscProperApicalExternalViscosity: 16000
   DiscProperBasalExternalViscosity: 0.0 
-  PeripodialMembraneApicalExternalViscosity: 0.0
+  PeripodialMembraneApicalExternalViscosity: 16000
   PeripodialMembraneBasalExternalViscosity: 0.0 
-  LinkerZoneApicalExternalViscosity: 0.0
+  LinkerZoneApicalExternalViscosity: 1.0
   LinkerZoneBasalExternalViscosity: 0.0
   
 GrowthOptions:
@@ -103,7 +102,7 @@ GrowthOptions:
   GridGrowthsInterpolationType(0=step,1=linear): 1
 
   GrowthFunctionType(int-seeDocumentation): 1
-  InitialTime(sec): 0
+  InitialTime(sec): 1000
   FinalTime(sec):  36000
   ApplyToColumnarLayer(bool): 0
   ApplyToPeripodialMembrane(bool): 0
@@ -178,6 +177,7 @@ GrowthOptions:
   
 ShapeChangeOptions:
   NumberofShapeChangeFunctions(int): 2
+  ShapeChangeStartsBelowECMLevel(fraction): 0.3
 
   ShapeChangeFunctionType(int-seeDocumentation): 2
   InitialTime(sec):  60000
@@ -285,6 +285,9 @@ ECM_Perturbation:
   stiffnessChangeFraction(double(0-1.0)):  0.1
   ECMRenewalHalfLifeTargetFraction(double(0-1.0)): 1.0
   ECMViscosityChangeFraction(double): 1.0
+  changeNotumECM(time,fraction): 1000 1000 1.0
+  changeHingeECM(time,fraction): 1000 1000 1.0
+  changePouchECM(time,fraction): 1000 1000 1.0
   
   ApplyToApicalECM(bool): 0
   ApplyToBasalECM(bool): 0
@@ -294,6 +297,9 @@ ECM_Perturbation:
   stiffnessChangeFraction(double(0-1.0)):  0.1
   ECMRenewalHalfLifeTargetFraction(double(0-1.0)): 0.1
   ECMViscosityChangeFraction(double): 0.1
+  changeNotumECM(time,fraction): 1000 1000 1.0
+  changeHingeECM(time,fraction): 1000 1000 1.0
+  changePouchECM(time,fraction): 1000 1000 1.0
   
   ApplyToApicalECM(bool): 0
   ApplyToBasalECM(bool): 0
@@ -303,7 +309,10 @@ ECM_Perturbation:
   stiffnessChangeFraction(double(0-1.0)):  0.1
   ECMRenewalHalfLifeTargetFraction(double(0-1.0)): 0.1
   ECMViscosityChangeFraction(double): 0.1
-	
+  changeNotumECM(time,fraction): 1000 1000 1.0
+  changeHingeECM(time,fraction): 1000 1000 1.0
+  changePouchECM(time,fraction): 1000 1000 1.0
+  	
 Stiffness_Perturbation:
   ThereIsStiffnessPerturbation(bool): 0
   NumberOfStiffnessPerturbations(int): 2
@@ -365,5 +374,8 @@ Marker_Ellipses:
   MarkerEllipseBandR1Ranges(fractionOfTissueSize-x1Low-x1High): -0.01  -0.6 -0.14  -0.25 -0.32  -0.38   -0.12  -0.15 -0.28  -0.32  0.11  0.17 -0.01  -1.5  
   MarkerEllipseBandR2Ranges(fractionOfTissueSize-y2Low-y2High):  0.7    1.5  0.9    1.2   1.7    1.8     0.9    1.0   1.7    1.8    0.8   0.9  0.7    1.5
 
-
+LumenOptions:
+  thereIsLumen(bool): 1
+  LumenBulkModulus(Pa): 5000
+  
  

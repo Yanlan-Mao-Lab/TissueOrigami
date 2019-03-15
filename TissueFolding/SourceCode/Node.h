@@ -45,6 +45,7 @@ public:
 	bool			insideEllipseBand;					///< The boolean stating if the node is inside a marker ellipse
 	int				coveringEllipseBandId;				///< The id of the marker ellipse that the node is covered by. If hte node is not covered by any marker ellipse, the value is -1.
 	bool			allOwnersECMMimicing;				///< The boolean stating all the elements making use of the node are ECM mimicking elements.
+	bool 			facingLumen;
 	bool			isMaster[3];
 	int				slaveTo[3];
 	vector<int>		collapsedWith;

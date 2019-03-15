@@ -99,6 +99,10 @@ int		ShapeBase::getNodeId(int i){
 	return NodeIds[i];
 }
 
+double	ShapeBase::getApicalArea(){
+	return ApicalArea;
+}
+
 int 	ShapeBase::getDim(){
 	return nDim;
 }
@@ -1989,6 +1993,29 @@ void ShapeBase::assignEllipseBandIdToNodes(vector<Node*>& Nodes){
 	}
 }
 
+double ShapeBase::getElementalElasticForce(int nodeIndex, int dimIndex){
+	return gsl_matrix_get(ElementalElasticSystemForces,nodeIndex,dimIndex);
+}
+
+void ShapeBase::setElementalElasticForce(int nodeIndex, int dimIndex, double value){
+	 gsl_matrix_set(ElementalElasticSystemForces,nodeIndex,dimIndex,value);
+}
+
+void ShapeBase::addToElementalElasticSystemForces(int i,int j,double value){
+	double baseValue = gsl_matrix_get(ElementalElasticSystemForces,i,j);
+	baseValue +=value;
+	gsl_matrix_set(ElementalElasticSystemForces,i,j,baseValue);
+}
+
+void ShapeBase::addToTriPointKe(int i,int j,double value){
+	double baseValue = gsl_matrix_get(TriPointKe,i,j);
+	baseValue +=value;
+	gsl_matrix_set(TriPointKe,i,j,baseValue);
+	//cout<<" element id (in addToTriPointKe): "<<Id<<endl;
+	//displayMatrix(TriPointKe,"TriPointKeInsideaddToTriPointKe");
+}
+
+
 void 	ShapeBase::displayRelativePosInBoundingBox(){
 		cout<<"Element: "<<Id<<"  relative position in the tissue bounding box: "<<relativePosInBoundingBox[0]<<" "<<relativePosInBoundingBox[1]<<endl;
 }
@@ -2178,8 +2205,6 @@ void ShapeBase::writeInternalForcesTogeAndgv(gsl_matrix* ge, gsl_matrix* gvInter
         }
     }
 }
-
-
 
 void	ShapeBase::calculateForces3D(vector <Node*>& Nodes,  gsl_matrix* displacementPerDt, bool recordForcesOnFixedNodes, double **FixedNodeForces){
     int dim = nDim;

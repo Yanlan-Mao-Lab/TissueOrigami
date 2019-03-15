@@ -234,6 +234,12 @@ bool ModelInputObject::readParameters(){
 			else if (currParameterHeader == "ArtificialRelaxationOptions:"){
 				Success  = readartificialRelaxationOptions(parametersFile);;
 			}
+			else if(currParameterHeader == "LumenOptions:"){
+				/**
+				 * Inputs relating to lumen options.
+				 */
+				Success  = readLumenOptions(parametersFile);
+			}
 			else {
 				/**
 				 * In the case that the function, or any of the above listed parameter reading functions, encounters an
@@ -2608,6 +2614,26 @@ bool ModelInputObject::readColumnViseVolumeConservationOptions(ifstream& file){
 	return true;
 }
 
+bool ModelInputObject::readLumenOptions(ifstream& file){
+	string currHeader;
+	file >> currHeader;
+	if(currHeader == "thereIsLumen(bool):"){
+		file >> Sim->thereIsExplicitLumen;
+	}
+	else{
+		printErrorMessage(currHeader,"Lumen options","thereIsLumen(bool):");
+		return false;
+	}
+	file >> currHeader;
+	if(currHeader == "LumenBulkModulus(Pa):"){
+		file >> Sim->lumenBulkModulus;
+	}
+	else{
+		printErrorMessage(currHeader,"Lumen options","LumenBulkModulus(Pa)");
+		return false;
+	}
+	return true;
+}
 
 bool ModelInputObject::readartificialRelaxationOptions(ifstream& file){
 	string currHeader;

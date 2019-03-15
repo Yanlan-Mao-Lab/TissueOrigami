@@ -14,12 +14,12 @@
 #include "GrowthFunctionTypes.h"
 #include "MyosinFunction.h"
 #include "NewtonRaphsonSolver.h"
+#include "Lumen.h"
 #include "CellMigration.h"
 #include "MuscleFibre.h"
 
 
 #include <omp.h>
-//test for rici pull
 
 class ModelInputObject;
 using namespace std;
@@ -155,10 +155,11 @@ private:
 	bool addStraightPeripodialMembraneToTissue();
 	bool addCurvedPeripodialMembraneToTissue();
 	void calculateDiscretisationLayers(double &hColumnar, int& LumenHeightDiscretisationLayers, double &hLumen, double &peripodialHeight, int& peripodialHeightDiscretisationLayers, double& hPeripodial);
+	int  countPeripodialHeightDiscretisaionLayers();
 	void fillColumnarBasedNodeList(vector< vector<int> > &ColumnarBasedNodeArray, vector <int> &ColumnarCircumferencialNodeList);
 	void calculateNewNodePosForPeripodialNodeAddition(int nodeId0, int nodeId1, double* pos, double sideThickness);
 	void calculateNewNodePosForPeripodialNodeAddition(int nodeId0, int nodeId1, int nodeId2, double* pos, double sideThickness);
-	void addNodesForPeripodialOnOuterCircumference (vector< vector<int> > &ColumnarBasedNodeArray, vector< vector<int> > &OuterNodeArray, double hColumnar, int LumenHeightDiscretisationLayers, double hLumen, int peripodialHeightDiscretisationLayers, double hPeripodial);
+	void addNodesForPeripodialOnOuterCircumference (vector< vector<int> > &ColumnarBasedNodeArray, vector< vector<int> > &OuterNodeArray, int LumenHeightDiscretisationLayers, double hLumen, int peripodialHeightDiscretisationLayers, double hPeripodial);
 	void addNodesForPeripodialOnColumnarCircumference (vector< vector<int> > &ColumnarBasedNodeArray, int LumenHeightDiscretisationLayers, double hLumen, int peripodialHeightDiscretisationLayers, double hPeripodial);
 	void addLateralPeripodialElements(int LumenHeightDiscretisationLayers, int peripodialHeightDiscretisationLayers, vector< vector<int> > &ColumnarBasedNodeArray, vector< vector<int> > &OuterNodeArray);
 	void addNodesForPeripodialOnCap(vector< vector<int> > &ColumnarBasedNodeArray, vector< vector<int> > &PeripodialCapNodeArray, int TissueHeightDiscretisationLayers, int LumenHeightDiscretisationLayers, int peripodialHeightDiscretisationLayers, double hPeripodial);
@@ -350,6 +351,7 @@ public:
 	double currViscMidline;
 	double PeripodialThicnessScale;
 	double PeripodialLateralThicnessScale; //the thickness of the side region linking two layers, as a fraction of tissue thickness
+	Lumen* tissueLumen;
 	double lumenHeight;
 	double lumenHeightScale;
 	//linker zone parameters
@@ -548,6 +550,8 @@ public:
 	bool addLateralECMManually;
 	double lateralECMThickness;
 	bool thereIsExplicitActin;
+	bool thereIsExplicitLumen;
+	double lumenBulkModulus;
 	double ECMRenawalHalfLife; //The half life for ECM renewal inside plastic deformation
 
 	int numberOfClones;
@@ -625,6 +629,7 @@ public:
     void updatePlasticDeformation();
     void updateStepNR();
     void calculateNumericalJacobian(bool displayMatricesDuringNumericalCalculation);
+    void calculateLumenNumericalJacobian();
     void updateElementPositionsinNR(gsl_matrix* uk);
     void updateNodePositionsNR(gsl_matrix* uk);
     void calculateRandomForces();
@@ -684,7 +689,7 @@ public:
 	void calculateCurrentElementsFinalPosition(ShapeBase* currElement);
 	void fixNode0InPosition(double x, double y, double z);
 
-    void addNodesForSideECMOnOuterCircumference (vector< vector<int> > &ColumnarBasedNodeArray, vector< vector<int> > &OuterNodeArray , double hColumnar);
+    void addNodesForSideECMOnOuterCircumference (vector< vector<int> > &ColumnarBasedNodeArray, vector< vector<int> > &OuterNodeArray);
     void addSideECMElements(vector< vector<int> > &ColumnarBasedNodeArray, vector< vector<int> > &OuterNodeArray);
     bool addSideECMLayer();
 

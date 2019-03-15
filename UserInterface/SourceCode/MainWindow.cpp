@@ -454,6 +454,10 @@ void MainWindow::setDisplayPreferences(QGridLayout *ProjectDisplayOptionsGrid){
 	DisplayPreferencesCheckBoxes[11]->setChecked(false);
 	connect(DisplayPreferencesCheckBoxes[11] , SIGNAL(stateChanged(int)),this,SLOT(updateDrawNodeBindingCheckBox(int)));
 
+	//Draw Lumen:
+	DisplayPreferencesCheckBoxes[12] = new QCheckBox("Mark Lumen");
+	DisplayPreferencesCheckBoxes[12]->setChecked(false);
+	connect(DisplayPreferencesCheckBoxes[12] , SIGNAL(stateChanged(int)),this,SLOT(updateLumenDisplayCheckBox(int)));
 
 
     ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[0],3,0,1,2,Qt::AlignLeft);  // display pipette
@@ -468,6 +472,7 @@ void MainWindow::setDisplayPreferences(QGridLayout *ProjectDisplayOptionsGrid){
 	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[9],7,2,1,2,Qt::AlignLeft); // Display Marked Ellipses
 	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[10],8,2,1,2,Qt::AlignLeft); // Display Volume redistribution
 	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[11],9,2,1,2,Qt::AlignLeft); // Display node binding
+	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[12],9,0,1,2,Qt::AlignLeft); // Display Lumen
 
 }
 
@@ -626,6 +631,13 @@ void  MainWindow::updateColumnarLayerDisplayCheckBox(int s){
 		MainGLWidget->drawColumnar = true;
 	else
 		MainGLWidget->drawColumnar = false;
+}
+
+void  MainWindow::updateLumenDisplayCheckBox(int s){
+	if ( s == 2 )
+		MainGLWidget->drawLumen = true;
+	else
+		MainGLWidget->drawLumen = false;
 }
 
 void  MainWindow::updateBoundingBoxCheckBox(int s){
@@ -839,8 +851,8 @@ void MainWindow::testAdhesionsAndCurveConstruction(){
 void MainWindow::timerSimulationStep(){
     //cout<<"Called the function via timer"<<endl;
 
-	bool 	automatedSave =true;
-	int	viewSelection = 2; //0: top, 1: cross, 2: perspective 3: side.
+	bool 	automatedSave =false ;
+	int		viewSelection = 1; //0: top, 1: cross, 2: perspective 3: side.
 	int 	displayAutomatedStrain = -1; //-1 no strain display, 1 display DV strains, 2 AP strains;
 	bool 	analyseResults = true;
 	bool 	slowstepsOnDisplay = false;

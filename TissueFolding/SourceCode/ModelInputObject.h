@@ -58,6 +58,8 @@ private:
 	bool readColumnViseVolumeConservationOptions(ifstream& file);
 	bool readMutationOptions(ifstream& file);
 	bool readartificialRelaxationOptions(ifstream& file);
+	bool readLumenOptions(ifstream& file);
+
 	bool readEnclosementOptions(ifstream& file);
 
 public:

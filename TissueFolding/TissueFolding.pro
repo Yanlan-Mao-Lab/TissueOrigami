@@ -10,8 +10,7 @@
 #FOR LEGION, when you add a new source/header file to the sourcecode, you do need to update the *.mk files. 
 #These include the files under "/home/melda/Documents/TissueFolding/TissueFolding/Debug/" and check legion page
 # (https://wiki.rc.ucl.ac.uk/wiki/Development_Tools)
-#                              "/home/melda/Documents/TissueFolding/TissueFolding/Debug/SourceCode"
-#Install the qt module to use correct qmake first (below s for QT 4, QT 5 is different if you ever need it, :
+#to install the qt module to use correct qmake first (below s for QT 4, QT 5 is different if you ever need it, :
 #module load qt/4.8.6/gnu-4.9.2
 #then qmake: 
 #qmake -o Makefile TissueFoldingUI.pro
@@ -53,7 +52,8 @@ SOURCES += $$CurrPath/SourceCode/main.cpp \
 	$$CurrPath/SourceCode/RandomGenerator.cpp \
 	$$CurrPath/SourceCode/NewtonRaphsonSolver.cpp \
 	$$CurrPath/SourceCode/Analysis.cpp \
-	$$CurrPath/SourceCode/CellMigration.cpp
+	$$CurrPath/../TissueFolding/SourceCode/CellMigration.cpp \
+	$$CurrPath/../TissueFolding/SourceCode/Lumen.cpp
 
 #libs and includes for linux for independent license pardiso:
 #LIBS += -L/usr/include -lgsl -lgslcblas -lpardiso500-GNU461-X86-64  -fopenmp -llapack  ---- Old pardiso

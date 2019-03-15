@@ -1,3 +1,8 @@
+//g++ -std=c++11 -o ./src/EllipseFromOutline ./src/EllipseFromOutline.cpp
+// cp ./src/EllipseFromOutline ./
+//./EllipseFromOutline -1 12.5 2 5 1  ./inputOutlines/48hrDiscOutline
+
+
 using namespace std;
 #include <iostream>
 #include <fstream>
@@ -5,7 +10,10 @@ using namespace std;
 #include <cstdlib>
 #include <stdio.h>
 #include "math.h"
+#include <algorithm>
 #include <vector>
+#include <map>
+
 
 class EllipseLayoutGenerator{
 public:
@@ -46,6 +54,13 @@ public:
 	vector <int> 	LinkerTissuePlacement;
 	vector <double> LinkerVectorsOnCircumferenceX;
 	vector <double> LinkerVectorsOnCircumferenceY;
+	vector <int*>	periTriangles;
+	vector <int> 	periLinks0,periLinks1;	
+	vector <int>   	PeriAtBorder;
+	vector <double> PeriPosx, PeriPosy;
+	std::map<int,int> mapOfPeripodialApicalLayerNodesWRTColumnarBasalNodes ;
+	std::map<int,int> mapOfPeripodialApicalNonBorderNodesWRTPeripodialApicalLayer;
+	
 	vector <int> SortedCircumferenceForLinkers;
 	double dForNodeGeneration;
 	bool addPeripodial;
@@ -66,7 +81,9 @@ public:
 	void linkerReadInTesselation2D();
 	void writeVectors2D(ofstream &vectorsForGnuplot);
 	void writeNodes2D(ofstream &nodesForGnuplot);
-	void writeMeshFileForSimulation(double zHeight, int zLayers, double ECMHeight,double actinHeight, double modifiedZDueToThinActin, double basalLayerHeight);
+	void addPeripodialNodesMirroringColumnar(ofstream& meshfile, int nPeripodialNodeNumber, int nSharedNodesAtCircumference, vector<double>& recordedNodesX, vector<double>& recordedNodesY, vector<double>& recordedNodesZ, double& currzHeight, double& dzHeight, double& ECMHeight, double actinHeight, double basalLayerHeight, bool addLateralECMRing);
+	void addPeripodialNodesFromTriangulation(ofstream& meshfile, int nPeripodialNodeNumber, int nSharedNodesAtCircumference, vector<double>& recordedNodesX, vector<double>& recordedNodesY, vector<double>& recordedNodesZ, double& currzHeight, double& dzHeight, double& ECMHeight, double actinHeight, double basalLayerHeight, bool addLateralECMRing);
+	void writeMeshFileForSimulation(double zHeight, int zLayers, double ECMHeight,double actinHeight, double modifiedZDueToThinActin, double basalLayerHeight, bool addLateralECMRing);
 	void writeTissueWeights(ofstream& MeshFile, vector <double> &recordedPeripodialness);
 	void writeTriangleMeshFileForSimulation(double zHeight);
 	void addEquidistantRingMin();
@@ -75,9 +92,10 @@ public:
 	void cleanUpAgainsAlreadyExisting(double d, vector<double> &CurrPosX, vector <double> &CurrPosY);
 	void addRectangle();
 	void calculateAverageSideLength();
-	void calculatePeripodialMembraneParameters(double ABHeight, int ABLayers, double ECMHeight, double modifiedZDueToThinActin, double peripodialHeightFrac, double lumenHeightFrac, double peripodialSideCurveFrac);
+	void calculatePeripodialMembraneParameters(double ABHeight, int ABLayers, double ECMHeight, double modifiedZDueToThinActin, double peripodialHeightFrac, double lumenHeightFrac, double peripodialSideCurveFrac, bool addLateralECMRing);
 	void calculatePeripodialAttachVectors(bool symmetricX, bool symmetricY);	
 	void extractBorder(bool symmetricX, bool symmetricY, vector<double>& x, vector <double>& y, vector <int> &ids);
+	void extractBorderWithSymmetricLine(bool symmetricX, bool symmetricY, vector<double>& x, vector <double>& y, vector <int> &ids);
 	void sortPositions(bool symmetricX, bool symmetricY, vector<double>& x, vector <double>& y, vector <int> &ids);
 	void calculateVectors(bool symmetricX, bool symmetricY, vector<double>& vecx, vector <double>& vecy, vector <int>& ids );
 
@@ -98,6 +116,8 @@ public:
 	void bluntTip(vector <float>&  x, vector <float>& y);
 	void addLayersToOutline(int nLayer, double* bounidngBox, vector <float>&  x, vector <float>& y);
 	void writeInPosVectors(vector <float>&  x, vector <float>& y);
+	void peripodialSparseTesselate2D(bool symmetricX, bool symmetricY);
+	void peripodialReadInTesselation2D();
 };
 
 EllipseLayoutGenerator::EllipseLayoutGenerator(double r1_1, double r1_2, double r2_1, double r2_2, double sideLen, bool xsymmetry, bool ysymmetry, double condensation){
@@ -215,6 +235,99 @@ void EllipseLayoutGenerator::linkerTesselate2D(){
 	string sysCommand = "/home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/triangle/triangle -pq33a"+maxAreaStr+" ./LinkerPoints.poly  ";
 	cerr<<"Running triangulation with: "<<sysCommand<<endl;
 	system(sysCommand.c_str());
+}
+
+void EllipseLayoutGenerator::peripodialSparseTesselate2D(bool symmetricX, bool symmetricY){
+	vector<double> x, y;
+	vector <int> ids;
+	//extractBorderWithSymmetricLine(symmetricX, symmetricY, x,y,ids);
+	extractBorderWithSymmetricLine(0, 0, x,y,ids);
+	int n = x.size();
+	
+	ofstream pointsForTesselation;
+	pointsForTesselation.open("./PointsPeri.node",ofstream::trunc);
+	pointsForTesselation<<n<<" 2 0 1"<<endl; //dim, attribute number , border markers on or of
+	for (int i =0; i< n; ++i){
+		pointsForTesselation<<i<<" "<<x[i]<<" "<<y[i]<<" 1"<<endl;
+	}
+	string sysCommand = "/home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/triangle/triangle -Yq ./PointsPeri.node  ";
+	cerr<<"Running triangulation with: "<<sysCommand<<endl;
+	system(sysCommand.c_str());
+	
+}
+
+void EllipseLayoutGenerator::peripodialReadInTesselation2D(){
+	cout<<" start of read in peripodial tesselation, size of points: "<<posx.size()<<" size of tissue shape: "<<tissueType.size()<<endl;	
+	ifstream MeshFile;	
+	MeshFile.open("./PointsPeri.1.ele", ifstream::in);
+	//readHeader:
+	int ntri;
+	MeshFile>>ntri;
+	int nodesPerTri;
+	MeshFile>>nodesPerTri;
+	int nAttributes;
+	MeshFile>>nAttributes;
+	cout<<" ntri, nodesPerTri, nAttributes: "<<ntri<<" "<<nodesPerTri<<" "<<nAttributes<<endl;
+	for (int i=0; i<ntri; ++i){
+		int triId;
+		MeshFile>>triId;
+		int* pnts;
+		pnts = new int[3];
+		for (int j=0;j<3;++j){
+			MeshFile >> pnts[j];
+		}
+		periTriangles.push_back(pnts);
+		periLinks0.push_back(pnts[0]);
+		periLinks1.push_back(pnts[1]);
+		periLinks0.push_back(pnts[1]);
+		periLinks1.push_back(pnts[2]);
+		periLinks0.push_back(pnts[2]);
+		periLinks1.push_back(pnts[0]);
+	}
+	MeshFile.close();
+	ifstream NodeFile;	
+	NodeFile.open("./PointsPeri.1.node", ifstream::in);
+	int nNode;
+	int bordersMarked;
+	NodeFile>>nNode;
+	NodeFile>>nodesPerTri;	//dimensions
+	NodeFile>>nAttributes;	//attribute number
+	NodeFile>>bordersMarked;	//border markers on or off
+	for (int i=0; i<nNode; ++i){
+		int nodeId;
+		NodeFile>>nodeId;
+		//cerr<<"Reading node : "<<i<<"("<<nodeId<<") of "<<nNode<<endl;
+		double pnts[2];
+		for (int j=0;j<2;++j){
+			NodeFile >> pnts[j];	
+		}
+		//reading the flag for border nodes, and generating the vector for it
+		NodeFile>>bordersMarked;
+		PeriAtBorder.push_back(bordersMarked);
+		//cerr<<"		read pos: "<< pnts[0]<<" "<<pnts[1]<<" borders? "<<bordersMarked<<endl;
+		PeriPosx.push_back(pnts[0]);	
+		PeriPosy.push_back(pnts[1]);
+		
+	}
+	cout<<" end of read in tesselationfor peri, size of points: "<<PeriPosx.size()<<" size of tissue shape: "<<endl;
+	NodeFile.close();
+	double threshold = 1e-3;
+	//generate a map of circumference nodes on columnar basal to the node ids read here:
+	for (auto& nodeId : SortedCircumferenceForLinkers){
+		double positionXOfColumnarBorder = posx[nodeId];
+		double positionYOfColumnarBorder = posy[nodeId];
+		for (std::size_t i=0; i<PeriPosx.size(); ++i ){
+			cout<<" columnar pos: "<<positionXOfColumnarBorder<<" "<<positionYOfColumnarBorder<<" "<<PeriPosx[i]<<" "<<PeriPosy[i]<<endl;
+			if (positionXOfColumnarBorder > PeriPosx[i]-threshold &&  positionXOfColumnarBorder< PeriPosx[i]+threshold){
+				if(positionYOfColumnarBorder > PeriPosy[i]-threshold &&  positionYOfColumnarBorder< PeriPosy[i]+threshold ){
+					//the peripodial node is at the border, and matches the border node : nodeId
+					mapOfPeripodialApicalLayerNodesWRTColumnarBasalNodes[i] = nodeId;
+					cout<<"added peripodial node "<<i<<" as columnar node "<<nodeId<<endl;
+					break;
+				}
+			}
+		}
+	}
 }
 
 void EllipseLayoutGenerator::linkerReadInTesselation2D(){
@@ -427,7 +540,26 @@ void EllipseLayoutGenerator::calculatePeripodialAttachVectors(bool symmetricX, b
 		LinkerVectorsOnCircumferenceX.push_back(x[i]);
 		LinkerVectorsOnCircumferenceY.push_back(y[i]);
 		SortedCircumferenceForLinkers.push_back(ids[i]);
+		cout<<"SortedCircumferenceForLinkers size: "<<SortedCircumferenceForLinkers.size()<<endl;
 		cout<<"pos: "<<posx[ids[i]]<<" "<<posy[ids[i]]<<" newbase: "<<posx[ids[i]]+x[i]<<" "<<posy[ids[i]]+y[i]<<endl;
+	}
+}
+
+void EllipseLayoutGenerator::extractBorderWithSymmetricLine(bool symmetricX, bool symmetricY, vector<double>& x, vector <double>& y, vector <int> &ids){
+	int n = posx.size();
+	for(int i=0; i<n; ++i){
+		cout<<"i, x, y, boundary: "<<i<<" "<<posx[i]<<" "<<posy[i]<<" "<<atBorder[i]<<endl;
+		bool posYAtsymmetry = false;
+		bool posXAtsymmetry = false;
+		if ( posy[i]>-1E-3 && posy[i] < 1E-3)
+			posYAtsymmetry = true;
+		if ( posx[i]>-1E-3 && posx[i] < 1E-3)
+			posXAtsymmetry = true;
+		if(atBorder[i] == 1 || posXAtsymmetry || posYAtsymmetry ){
+			x.push_back(posx[i]);
+			y.push_back(posy[i]);
+			ids.push_back(i);
+		}	
 	}
 }
 
@@ -693,12 +825,14 @@ void EllipseLayoutGenerator::calculateVectors(bool symmetricX, bool symmetricY, 
 	}
 }
 
-void EllipseLayoutGenerator::calculatePeripodialMembraneParameters(double ABHeight, int ABLayers, double ECMHeight, double modifiedZDueToThinActin, double peripodialHeightFrac, double lumenHeightFrac, double peripodialSideCurveFrac){
+void EllipseLayoutGenerator::calculatePeripodialMembraneParameters(double ABHeight, int ABLayers, double ECMHeight, double modifiedZDueToThinActin, double peripodialHeightFrac, double lumenHeightFrac, double peripodialSideCurveFrac, bool addLateralECMRing){
 	lumenHeight = lumenHeightFrac*ABHeight;
 	peripodialHeight = peripodialHeightFrac*ABHeight;
+
     	linkerSideLen = ABHeight / ABLayers;	
 	peripodialLayers = ceil(peripodialHeight/linkerSideLen );
 	double dzPer = peripodialHeight/peripodialLayers;
+	cout<<" ABHeight: "<<ABHeight<<" peripodialHeightFrac: "<<peripodialHeightFrac<<" peripodialHeight: "<<peripodialHeight<<" peripodialLayers: "<<peripodialLayers<<" dzPer: "<<dzPer<<endl;
 	//if (peripodialLayers > 1){
 	//	dzPer = (peripodialHeight - ECMHeight) / (peripodialLayers -1);
 	//}
@@ -708,77 +842,79 @@ void EllipseLayoutGenerator::calculatePeripodialMembraneParameters(double ABHeig
 	double dzCol = linkerSideLen;
 	double tissueTop = ABHeight*(1+ lumenHeightFrac + peripodialHeightFrac);
 	double midPoint = ABHeight* (1+ 0.5*lumenHeightFrac);
-	LinkerR1[0] = tissueTop-midPoint;
-	LinkerR1[1] = midPoint;
-	LinkerR1[2] = ABHeight * 0.5 * lumenHeightFrac;
-	LinkerR1[3] = ABHeight * 0.5 * lumenHeightFrac;
-	LinkerR2[0] = ABHeight * peripodialSideCurveFrac;
-	LinkerR2[1] = ABHeight * 0.5 * lumenHeightFrac;
-	calculateLinkerCircumference();
-	cout<<"LinkerSideLen: "<<linkerSideLen<<"LinkerR1: "<<LinkerR1[0]<<" "<<LinkerR1[1]<<" "<<LinkerR1[2]<<" "<<LinkerR1[3]<<" LinkerR2 "<<LinkerR2[0]<<" "<<LinkerR2[1]<<" peripodialSideCurveFrac:" <<peripodialSideCurveFrac<<endl;
-	cout<<"circumferences: "<<LinkerCircumference[0]<<" "<<LinkerCircumference[1]<<" "<<LinkerCircumference[2]<<" "<<LinkerCircumference[3]<<endl;
-	if (isnan(peripodialSideCurveFrac)){
-		return ;
-	}
-	// add the nodes on peripodial side to outer ring, go from apical to basal (do not add the borders, only the mid range)
-	// then we will add the outer loop, then we will add the nodes corresponding to columnar side, starting from basal side.
-	//the purpose is to draw a loop.
-	double currZFromPeri = LinkerR1[2]+dzPer;
-	for (int i=0; i<peripodialLayers-1; ++i){
-		//LinkerOuterRingPosz.push_back(LinkerR1[2]+(i+1)*dzPer);
-		LinkerOuterRingPosz.push_back(currZFromPeri);
-		LinkerOuterRingPosx.push_back(0);
-		currZFromPeri += dzPer;
-	}
-	calculateLinkerBorderNumber();
-	calculateLinkerdtet();
-	calculateLinkerRings();	
-	double currZ = -1.0*midPoint+dzCol;
-	for (int i=0; i<ABLayers-1; ++i){
-		LinkerOuterRingPosz.push_back(currZ);
-		LinkerOuterRingPosx.push_back(0);
-		currZ += dzCol;
-	}
-	translateLinkers(midPoint,0.0); //dz, dx
-	linkerTesselate2D();
-	linkerReadInTesselation2D();
-	calculateTrianglePeripodialness(midPoint);
-	for (int i=0; i<LinkerPosz.size(); ++i){
-		cout<<"linker pos after triangulation: "<<LinkerPosz[i]<<" "<<LinkerPosx[i]<<endl;
-	}
-	for (int i=0; i<LinkerPosz.size(); ++i){
-		if (LinkerAtBorder[i] == 1){
-			if (LinkerPosx[i]>-1E-4 && LinkerPosx[i]<1E-4){
-				//this is a node that will correspond to a columnar node or peripodial cap node.
-				cout<<" LinkerPos: "<<LinkerPosx[i]<<" "<<LinkerPosz[i]<<" declared duplicate"<<endl;
-				duplicateLinkerNode.push_back(true);
-			}
-			else{
-				//this is a node that is unique
-				duplicateLinkerNode.push_back(false);
-				cout<<" LinkerPos: "<<LinkerPosx[i]<<" "<<LinkerPosz[i]<<" border but not  duplicate"<<endl;
-				nNonDuplicateLinkers++;		
-			}
-			//this is a border node on the linker list, see which border it belongs to:
-			//if the distance to midline is within smallRadius (+ -) 10%SideLen, then it is apical 
-			double dx = (LinkerPosx[i]-0.0);
-			double dz = (LinkerPosz[i]-midPoint);
-			double d = pow (dx*dx + dz*dz,0.5);
-			if (d<LinkerR1[2]+0.1*linkerSideLen){
-				LinkerTissuePlacement.push_back(1);	//apical	
-			}
-			else{
-				LinkerTissuePlacement.push_back(0);	//basal
-			}
-
+	if (addLateralECMRing){
+		LinkerR1[0] = tissueTop-midPoint;
+		LinkerR1[1] = midPoint;
+		LinkerR1[2] = ABHeight * 0.5 * lumenHeightFrac;
+		LinkerR1[3] = ABHeight * 0.5 * lumenHeightFrac;
+		LinkerR2[0] = ABHeight * peripodialSideCurveFrac;
+		LinkerR2[1] = ABHeight * 0.5 * lumenHeightFrac;
+		calculateLinkerCircumference();
+		cout<<"LinkerSideLen: "<<linkerSideLen<<"LinkerR1: "<<LinkerR1[0]<<" "<<LinkerR1[1]<<" "<<LinkerR1[2]<<" "<<LinkerR1[3]<<" LinkerR2 "<<LinkerR2[0]<<" "<<LinkerR2[1]<<" peripodialSideCurveFrac:" <<peripodialSideCurveFrac<<endl;
+		cout<<"circumferences: "<<LinkerCircumference[0]<<" "<<LinkerCircumference[1]<<" "<<LinkerCircumference[2]<<" "<<LinkerCircumference[3]<<endl;
+		if (isnan(peripodialSideCurveFrac)){
+			return ;
 		}
-		else{
-		//node is not at border, it is not duplicate, and it is midline:
-			duplicateLinkerNode.push_back(false);
-			LinkerTissuePlacement.push_back(2);
-			nNonDuplicateLinkers++;
-			cout<<" LinkerPos: "<<LinkerPosx[i]<<" "<<LinkerPosz[i]<<" not border not  duplicate"<<endl;
-		}		
+		// add the nodes on peripodial side to outer ring, go from apical to basal (do not add the borders, only the mid range)
+		// then we will add the outer loop, then we will add the nodes corresponding to columnar side, starting from basal side.
+		//the purpose is to draw a loop.
+		double currZFromPeri = LinkerR1[2]+dzPer;
+		for (int i=0; i<peripodialLayers-1; ++i){
+			//LinkerOuterRingPosz.push_back(LinkerR1[2]+(i+1)*dzPer);
+			LinkerOuterRingPosz.push_back(currZFromPeri);
+			LinkerOuterRingPosx.push_back(0);
+			currZFromPeri += dzPer;
+		}
+		calculateLinkerBorderNumber();
+		calculateLinkerdtet();
+		calculateLinkerRings();	
+		double currZ = -1.0*midPoint+dzCol;
+		for (int i=0; i<ABLayers-1; ++i){
+			LinkerOuterRingPosz.push_back(currZ);
+			LinkerOuterRingPosx.push_back(0);
+			currZ += dzCol;
+		}
+		translateLinkers(midPoint,0.0); //dz, dx
+		linkerTesselate2D();
+		linkerReadInTesselation2D();
+		calculateTrianglePeripodialness(midPoint);
+		for (int i=0; i<LinkerPosz.size(); ++i){
+			cout<<"linker pos after triangulation: "<<LinkerPosz[i]<<" "<<LinkerPosx[i]<<endl;
+		}
+		for (int i=0; i<LinkerPosz.size(); ++i){
+			if (LinkerAtBorder[i] == 1){
+				if (LinkerPosx[i]>-1E-4 && LinkerPosx[i]<1E-4){
+					//this is a node that will correspond to a columnar node or peripodial cap node.
+					cout<<" LinkerPos: "<<LinkerPosx[i]<<" "<<LinkerPosz[i]<<" declared duplicate"<<endl;
+					duplicateLinkerNode.push_back(true);
+				}
+				else{
+					//this is a node that is unique
+					duplicateLinkerNode.push_back(false);
+					cout<<" LinkerPos: "<<LinkerPosx[i]<<" "<<LinkerPosz[i]<<" border but not  duplicate"<<endl;
+					nNonDuplicateLinkers++;		
+				}
+				//this is a border node on the linker list, see which border it belongs to:
+				//if the distance to midline is within smallRadius (+ -) 10%SideLen, then it is apical 
+				double dx = (LinkerPosx[i]-0.0);
+				double dz = (LinkerPosz[i]-midPoint);
+				double d = pow (dx*dx + dz*dz,0.5);
+				if (d<LinkerR1[2]+0.1*linkerSideLen){
+					LinkerTissuePlacement.push_back(1);	//apical	
+				}
+				else{
+					LinkerTissuePlacement.push_back(0);	//basal
+				}
+
+			}
+			else{
+			//node is not at border, it is not duplicate, and it is midline:
+				duplicateLinkerNode.push_back(false);
+				LinkerTissuePlacement.push_back(2);
+				nNonDuplicateLinkers++;
+				cout<<" LinkerPos: "<<LinkerPosx[i]<<" "<<LinkerPosz[i]<<" not border not  duplicate"<<endl;
+			}		
+		}
 	}
 }
 
@@ -1017,21 +1153,266 @@ void EllipseLayoutGenerator::translateLinkers(double dz, double dx){
 	}
 }
 
-void EllipseLayoutGenerator::writeMeshFileForSimulation(double zHeight, int zLayers, double ECMHeight,double actinHeight, double modifiedZDueToThinActin, double basalLayerHeight){	
+
+
+void EllipseLayoutGenerator::addPeripodialNodesFromTriangulation(ofstream& MeshFile, int nPeripodialNodeNumber, int nSharedNodesAtCircumference, vector<double>& recordedNodesX, vector<double>& recordedNodesY, vector<double>& recordedNodesZ, double& currzHeight, double& dzHeight, double& ECMHeight, double actinHeight, double basalLayerHeight, bool addLateralECMRing){
+	//cout<<"Current height before starting peripodial: "<<currzHeight<<" dz: "<<dzHeight<<endl;
+	currzHeight -= dzHeight;
+	//Adding peripodial cap nodes:
+	currzHeight  += lumenHeight;
+	dzHeight = peripodialHeight/peripodialLayers;
+	double modifiedPeripodialZDueToThinActin;
+	if (peripodialLayers > 2){
+		modifiedPeripodialZDueToThinActin = (peripodialHeight-ECMHeight-actinHeight)/(peripodialLayers-2);
+	}
+	else if (peripodialLayers > 1){
+		modifiedPeripodialZDueToThinActin = (peripodialHeight-ECMHeight)/(peripodialLayers-1);
+	}
+	else{
+		modifiedPeripodialZDueToThinActin = dzHeight;
+		ECMHeight = dzHeight;
+	}
+	for (int layers=0; layers<peripodialLayers+1; ++layers){
+		int nodePositionIdentifier = 2; //0=basal, 1=apical, 2=midline
+		if (layers == 0){nodePositionIdentifier=1;} //apical for the bottom layer looking into lumen
+		else if (layers == peripodialLayers){nodePositionIdentifier=0;} //basal for the top layer
+		//cout<<" adding layer : "<<layers<<" height: "<<	currzHeight<<" peripodialLayers: "<<peripodialLayers<<" nodePositionIdentifier: "<<nodePositionIdentifier<<endl;
+		for (int i=0;i<nPeripodialNodeNumber;++i){
+			int peripodialNodeIndex = i;
+			int atBorderOnPeripodial = 0;
+			if (!addLateralECMRing){
+				//I am not adding a circumference, I need to identify the nodes at border;
+				atBorderOnPeripodial = PeriAtBorder[i];//it is currently same as the initial mesh
+			}
+			if (nSharedNodesAtCircumference>0 && layers == 0){
+				if (mapOfPeripodialApicalLayerNodesWRTColumnarBasalNodes.find(peripodialNodeIndex)!=mapOfPeripodialApicalLayerNodesWRTColumnarBasalNodes.end()){
+					//the key is there, the node is  at circumference
+					//there is no lumen, there are shared nodes at border
+					//this is layer zero, the circumference nodes should not be added,
+					//they are going to shared with the columnar layer
+					cout<<"continue, node: "<<peripodialNodeIndex<<" is from columnar"<<endl;
+					continue;
+				}
+			}
+			cout<<" adding node :"<<peripodialNodeIndex<<endl;
+			MeshFile<<PeriPosx[peripodialNodeIndex]<<"	"<<PeriPosy[peripodialNodeIndex]<<"	"<<currzHeight<<"    "<<nodePositionIdentifier<<"	"<<1<<"	"<<atBorderOnPeripodial<<endl;	//1 0 : tissue type peripodial, at border false.
+			if (layers == 0){
+				mapOfPeripodialApicalNonBorderNodesWRTPeripodialApicalLayer[peripodialNodeIndex] =recordedNodesX.size();
+			}
+			recordedNodesX.push_back(PeriPosx[peripodialNodeIndex]);
+			recordedNodesY.push_back(PeriPosy[peripodialNodeIndex]);
+			recordedNodesZ.push_back(currzHeight);
+			//cout<<" node at basal surface: "<<peripodialNodeIndex<<" added node index "<<recordedNodesX.size()-1<<endl;
+		}
+		//currzHeight += dzHeight;
+		if (layers == peripodialLayers-1){
+			currzHeight += ECMHeight;
+		}
+		else{
+			currzHeight += modifiedPeripodialZDueToThinActin;
+		}
+		cout<<" number of recorded nodes (peri layer "<<layers<<" finished) : "<<recordedNodesX.size()<<endl;
+
+	}
+	cout<<" number of recorded nodes (peri cap finished) : "<<recordedNodesX.size()<<endl;
+	if (addLateralECMRing){
+		//Adding peripodial loop nodes (lateral region, linker elements):
+		//trial for one:
+		//calculate centre from borders:
+		double c[2] = {0.0,0.0};
+		for (int j =0 ; j<SortedCircumferenceForLinkers.size(); ++j){
+			int id = SortedCircumferenceForLinkers[j];
+			c[0] += posx[id];
+			c[1] += posy[id];
+		}
+		c[0] /= SortedCircumferenceForLinkers.size();
+		c[1] /= SortedCircumferenceForLinkers.size();
+		if (symmetricY){
+			c[1] = 0;
+		};
+		if (symmetricX){
+			c[0] = 0;
+		};
+		int nCirc = SortedCircumferenceForLinkers.size();
+		for (int i =0 ; i<nCirc;++i){
+			int id  = SortedCircumferenceForLinkers[i];
+			//cout<<" i: "<<i<<"of "<<nCirc<<", SortedCircumferenceForLinkers[i]: " <<SortedCircumferenceForLinkers[i]<<endl;
+			//the normalised vector from centre to node position
+			//double vec[2] = {posx[id] - c[0], posy[id] - c[1]};
+			//double mag = pow(vec[0]*vec[0]+ vec[1]*vec[1],0.5);
+			//vec[0] /= mag; vec[1] /= mag;
+			double vec[2] = {1, 0};
+			//calculate the angle between the orientation of the linker vector and the vector from centre to node:
+			double c = vec[0]*LinkerVectorsOnCircumferenceX[i] +vec[1]*LinkerVectorsOnCircumferenceY[i];
+			double s = sin(acos(c));
+			//double rotMat[3][3] = {{c,-s,0},{s,c,0},{0,0,1}};
+			//rotate the node list of the linkers with rotmat
+			//translate the origin onto the base node xy
+			//add the nodes to node list
+			for (int j=0; j<LinkerPosx.size(); ++j){
+				if (!duplicateLinkerNode[j]){
+					//rotate:
+					double pos[3] = {c*LinkerPosx[j], s*LinkerPosx[j], LinkerPosz[j]};
+					//translate:
+					pos[0] += posx[id];
+					pos[1] += posy[id];
+					//add:
+					MeshFile<<pos[0]<<"	"<<pos[1]<<"	"<<pos[2]<<"    "<<LinkerTissuePlacement[j]<<"	"<<2<<"	"<<0<<endl;	//2 0 : tissue type linker, at border false.
+					//book keeping
+					recordedNodesX.push_back(pos[0]);
+					recordedNodesY.push_back(pos[1]);
+					recordedNodesZ.push_back(pos[2]);
+				}
+
+			}
+		cout<<" number of recorded nodes (after i-"<<i<<") : "<<recordedNodesX.size()<<endl;
+		}
+	}
+}
+
+void EllipseLayoutGenerator::addPeripodialNodesMirroringColumnar(ofstream& MeshFile, int nPeripodialNodeNumber, int nSharedNodesAtCircumference, vector<double>& recordedNodesX, vector<double>& recordedNodesY, vector<double>& recordedNodesZ, double& currzHeight, double& dzHeight, double& ECMHeight, double actinHeight, double basalLayerHeight, bool addLateralECMRing){
+	//cout<<"Current height before starting peripodial: "<<currzHeight<<" dz: "<<dzHeight<<endl;
+	currzHeight -= dzHeight;
+	//Adding peripodial cap nodes:
+	currzHeight  += lumenHeight;
+	dzHeight = peripodialHeight/peripodialLayers;
+	double modifiedPeripodialZDueToThinActin;
+	if (peripodialLayers > 2){
+		modifiedPeripodialZDueToThinActin = (peripodialHeight-ECMHeight-actinHeight)/(peripodialLayers-2);
+	}
+	else if (peripodialLayers > 1){
+		modifiedPeripodialZDueToThinActin = (peripodialHeight-ECMHeight)/(peripodialLayers-1);
+	}
+	else{
+		modifiedPeripodialZDueToThinActin = dzHeight;
+		ECMHeight = dzHeight;
+	}
+	for (int layers=0; layers<peripodialLayers+1; ++layers){
+		int nodePositionIdentifier = 2; //0=basal, 1=apical, 2=midline
+		if (layers == 0){nodePositionIdentifier=1;} //apical for the bottom layer looking into lumen
+		else if (layers == peripodialLayers){nodePositionIdentifier=0;} //basal for the top layer
+		//cout<<" adding layer : "<<layers<<" height: "<<	currzHeight<<" peripodialLayers: "<<peripodialLayers<<" nodePositionIdentifier: "<<nodePositionIdentifier<<endl;		
+		for (int i=0;i<nPeripodialNodeNumber;++i){
+			int peripodialNodeIndex = i;
+			int atBorderOnPeripodial = 0; 
+			if (!addLateralECMRing){
+				//I am not adding a circumference, I need to identify the nodes at border;
+				atBorderOnPeripodial = atBorder[i];//it is currently same as the initial mesh
+			}
+			if (nSharedNodesAtCircumference>0 && layers == 0){
+				bool atCircumference = 0;
+				atCircumference = (SortedCircumferenceForLinkers.end() != find(SortedCircumferenceForLinkers.begin(),SortedCircumferenceForLinkers.end(),i));
+				if( atCircumference){
+					//there is no lumen, there are shared nodes at border
+					//this is layer zero, the circumference nodes should not be added,
+					//they are going to shared with the columnar layer
+					continue;
+				}
+			}	
+			MeshFile<<posx[peripodialNodeIndex]<<"	"<<posy[peripodialNodeIndex]<<"	"<<currzHeight<<"    "<<nodePositionIdentifier<<"	"<<1<<"	"<<atBorderOnPeripodial<<endl;	//1 0 : tissue type peripodial, at border false.
+			if (layers == 0){
+				mapOfPeripodialApicalLayerNodesWRTColumnarBasalNodes[peripodialNodeIndex]=recordedNodesX.size();
+			}
+			recordedNodesX.push_back(posx[peripodialNodeIndex]);
+			recordedNodesY.push_back(posy[peripodialNodeIndex]);
+			recordedNodesZ.push_back(currzHeight);
+			//cout<<" node at basal surface: "<<peripodialNodeIndex<<" added node index "<<recordedNodesX.size()-1<<endl;
+		}
+		//currzHeight += dzHeight;
+		if (layers == peripodialLayers-1){
+			currzHeight += ECMHeight;		
+		}
+		else{
+			currzHeight += modifiedPeripodialZDueToThinActin;
+		}
+	}
+	cout<<" number of recorded nodes (peri cap finished) : "<<recordedNodesX.size()<<endl;
+	if (addLateralECMRing){
+		//Adding peripodial loop nodes (lateral region, linker elements):
+		//trial for one:
+		//calculate centre from borders:
+		double c[2] = {0.0,0.0};
+		for (int j =0 ; j<SortedCircumferenceForLinkers.size(); ++j){
+			int id = SortedCircumferenceForLinkers[j];			
+			c[0] += posx[id];	
+			c[1] += posy[id];
+		}
+		c[0] /= SortedCircumferenceForLinkers.size();
+		c[1] /= SortedCircumferenceForLinkers.size();
+		if (symmetricY){
+			c[1] = 0;
+		};
+		if (symmetricX){
+			c[0] = 0;
+		};
+		int nCirc = SortedCircumferenceForLinkers.size();
+		for (int i =0 ; i<nCirc;++i){
+			int id  = SortedCircumferenceForLinkers[i];
+			//cout<<" i: "<<i<<"of "<<nCirc<<", SortedCircumferenceForLinkers[i]: " <<SortedCircumferenceForLinkers[i]<<endl;
+			//the normalised vector from centre to node position
+			//double vec[2] = {posx[id] - c[0], posy[id] - c[1]};
+			//double mag = pow(vec[0]*vec[0]+ vec[1]*vec[1],0.5);
+			//vec[0] /= mag; vec[1] /= mag;
+			double vec[2] = {1, 0};
+			//calculate the angle between the orientation of the linker vector and the vector from centre to node:
+			double c = vec[0]*LinkerVectorsOnCircumferenceX[i] +vec[1]*LinkerVectorsOnCircumferenceY[i];
+			double s = sin(acos(c));
+			//double rotMat[3][3] = {{c,-s,0},{s,c,0},{0,0,1}};
+			//rotate the node list of the linkers with rotmat
+			//translate the origin onto the base node xy
+			//add the nodes to node list
+			for (int j=0; j<LinkerPosx.size(); ++j){
+				if (!duplicateLinkerNode[j]){
+					//rotate:			
+					double pos[3] = {c*LinkerPosx[j], s*LinkerPosx[j], LinkerPosz[j]};
+					//translate:
+					pos[0] += posx[id];
+					pos[1] += posy[id];
+					//add:
+					MeshFile<<pos[0]<<"	"<<pos[1]<<"	"<<pos[2]<<"    "<<LinkerTissuePlacement[j]<<"	"<<2<<"	"<<0<<endl;	//2 0 : tissue type linker, at border false.
+					//book keeping					
+					recordedNodesX.push_back(pos[0]);
+					recordedNodesY.push_back(pos[1]);
+					recordedNodesZ.push_back(pos[2]);
+				}
+					
+			}
+		cout<<" number of recorded nodes (after i-"<<i<<") : "<<recordedNodesX.size()<<endl;
+		}
+	}
+}
+
+void EllipseLayoutGenerator::writeMeshFileForSimulation(double zHeight, int zLayers, double ECMHeight,double actinHeight, double modifiedZDueToThinActin, double basalLayerHeight, bool addLateralECMRing){	
+	bool mirrorColumnarForPeripodial = false;
 	vector <double> recordedNodesX, recordedNodesY, recordedNodesZ;
 	vector <double> recordedPeripodialness;
 	cout<<" Writing triangle file, size of points: "<<posx.size()<<" size of tissue shape: "<<tissueType.size()<<endl;
 	ofstream MeshFile;
 	MeshFile.open("./MeshFile.out",ofstream::trunc);
-	cout<<" nNonDuplicateLinkers: "<<nNonDuplicateLinkers<<endl;
-	int nNodes = posx.size()*(zLayers+1);
-	if (addPeripodial){
-		nNodes +=  posx.size()*(peripodialLayers+1) + SortedCircumferenceForLinkers.size()*nNonDuplicateLinkers;
-	}
-	MeshFile<<nNodes<<endl;
-	cerr<<"posx.size(): "<<posx.size()<<" "<<posx.size()*(zLayers+1)<<endl;
-	//Adding the basal layer:
 	int n = posx.size();
+	int nPeripodialNodeNumber = PeriPosx.size(); //this is equal to the nodes in columnar layer
+	if (mirrorColumnarForPeripodial){
+		nPeripodialNodeNumber = n;
+	}
+	int nSharedNodesAtCircumference = 0;
+	if(lumenHeight < 0.01){
+		nSharedNodesAtCircumference = SortedCircumferenceForLinkers.size();
+	}
+	
+	int nNodes = n*(zLayers+1);
+	if (addPeripodial){
+		nNodes +=  nPeripodialNodeNumber*(peripodialLayers+1)-nSharedNodesAtCircumference;
+		if(addLateralECMRing){
+			nNodes += SortedCircumferenceForLinkers.size()*nNonDuplicateLinkers;
+		}
+	}
+	
+	MeshFile<<nNodes<<endl;
+	cout<<"columnar nodes per layer: "<<n<<" peripodial nodes per layer: "<<nPeripodialNodeNumber<<" nNonDuplicateLinkers: "<<nNonDuplicateLinkers<<" shared nodes at border : "<<nSharedNodesAtCircumference<<endl;
+	cout<<" node count expected from columnar: "<<n*(zLayers+1)<<" nodes of peri: "<< nPeripodialNodeNumber*(peripodialLayers+1)-nSharedNodesAtCircumference<<" sum: "<<n*(zLayers+1)+nPeripodialNodeNumber*(peripodialLayers+1)-nSharedNodesAtCircumference<<endl;
+	cout<<" if added, node count expected linkers: "<<SortedCircumferenceForLinkers.size()*nNonDuplicateLinkers<<endl;
+ 
+	//Adding the basal layer:
 	for (int i=0;i<n;++i){
 		MeshFile<<posx[i]<<"	"<<posy[i]<<"	"<<0<<"    0	"<<tissueType[i]<<"	"<<atBorder[i]<<endl;	//x-coord   y-coord   z-coord   basal-node identifier(0) tissueType(columnar-0, peripodium-2) flag for border nodes
 		recordedNodesX.push_back(posx[i]);
@@ -1067,104 +1448,23 @@ void EllipseLayoutGenerator::writeMeshFileForSimulation(double zHeight, int zLay
 	//cout<<"basalLayerHeight: "<<basalLayerHeight<<endl;
 	cout<<" number of recorded nodes (columnar finished) : "<<recordedNodesX.size()<<" calculated node size: "<<nNodes<<endl;
 	if(addPeripodial){
-		//cout<<"Current height before starting periposial: "<<currzHeight<<" dz: "<<dzHeight<<endl;
-		currzHeight -= dzHeight;
-		//Adding peripodial cap nodes:
-		currzHeight  += lumenHeight;
-		dzHeight = peripodialHeight/peripodialLayers;
-		double modifiedPeripodialZDueToThinActin;
-		if (peripodialLayers > 2){
-			modifiedPeripodialZDueToThinActin = (peripodialHeight-ECMHeight-actinHeight)/(peripodialLayers-2);
-		}
-		else if (peripodialLayers > 1){
-			modifiedPeripodialZDueToThinActin = (peripodialHeight-ECMHeight)/(peripodialLayers-1);
+		if (mirrorColumnarForPeripodial){
+			addPeripodialNodesMirroringColumnar(MeshFile, nPeripodialNodeNumber, nSharedNodesAtCircumference, recordedNodesX, recordedNodesY, recordedNodesZ, currzHeight, dzHeight, ECMHeight, actinHeight, basalLayerHeight, addLateralECMRing);
 		}
 		else{
-			modifiedPeripodialZDueToThinActin = dzHeight;
-			ECMHeight = dzHeight;
+			//using the generated mesh triangles for peripodial
+			addPeripodialNodesFromTriangulation(MeshFile, nPeripodialNodeNumber, nSharedNodesAtCircumference, recordedNodesX, recordedNodesY, recordedNodesZ, currzHeight, dzHeight, ECMHeight, actinHeight, basalLayerHeight, addLateralECMRing);
 		}
-		for (int layers=0; layers<peripodialLayers+1; ++layers){
-			int nodePositionIdentifier = 2; //0=basal, 1=apical, 2=midline
-			if (layers == 0){nodePositionIdentifier=1;} //apical for the bottom layer looking into lumen
-			else if (layers == peripodialLayers){nodePositionIdentifier=0;} //basal for the top layer
-			//cout<<" adding layer : "<<layers<<" height: "<<	currzHeight<<" peripodialLayers: "<<peripodialLayers<<" nodePositionIdentifier: "<<nodePositionIdentifier<<endl;		
-			for (int i=0;i<n;++i){
-				MeshFile<<posx[i]<<"	"<<posy[i]<<"	"<<currzHeight<<"    "<<nodePositionIdentifier<<"	"<<1<<"	"<<0<<endl;	//1 0 : tissue type peripodial, at border false.
-				recordedNodesX.push_back(posx[i]);
-				recordedNodesY.push_back(posy[i]);
-				recordedNodesZ.push_back(currzHeight);
-			}
-			//currzHeight += dzHeight;
-			if (layers == 0){
-				currzHeight += actinHeight;
-			}
-			else if (layers == peripodialLayers-1){
-				currzHeight += ECMHeight;		
-			}
-			else{
-				currzHeight += modifiedPeripodialZDueToThinActin;
-			}
-		}
-		cout<<" number of recorded nodes (peri cap finished) : "<<recordedNodesX.size()<<" calculated node size: "<<nNodes<<endl;
-		//Adding peripodial loop nodes:
-		//trial for one:
-		//calculate centre from borders:
-		double c[2] = {0.0,0.0};
-		for (int j =0 ; j<SortedCircumferenceForLinkers.size(); ++j){
-			int id = SortedCircumferenceForLinkers[j];			
-			c[0] += posx[id];	
-			c[1] += posy[id];
-		}
-		c[0] /= SortedCircumferenceForLinkers.size();
-		c[1] /= SortedCircumferenceForLinkers.size();
-		if (symmetricY){
-			c[1] = 0;
-		};
-		if (symmetricX){
-			c[0] = 0;
-		};
-		int nCirc = SortedCircumferenceForLinkers.size();
-		for (int i =0 ; i<nCirc;++i){
-			int id  = SortedCircumferenceForLinkers[i];
-			cout<<" i: "<<i<<"of "<<nCirc<<", SortedCircumferenceForLinkers[i]: " <<SortedCircumferenceForLinkers[i]<<endl;
-			//the normalised vector from centre to node position
-			//double vec[2] = {posx[id] - c[0], posy[id] - c[1]};
-			//double mag = pow(vec[0]*vec[0]+ vec[1]*vec[1],0.5);
-			//vec[0] /= mag; vec[1] /= mag;
-			double vec[2] = {1, 0};
-			//calculate the angle between the orientation of the linker vector and the vector from centre to node:
-			double c = vec[0]*LinkerVectorsOnCircumferenceX[i] +vec[1]*LinkerVectorsOnCircumferenceY[i];
-			double s = sin(acos(c));
-			//double rotMat[3][3] = {{c,-s,0},{s,c,0},{0,0,1}};
-			//rotate the node list of the linkers with rotmat
-			//translate the origin onto the base node xy
-			//add the nodes to node list
-			for (int j=0; j<LinkerPosx.size(); ++j){
-				if (!duplicateLinkerNode[j]){
-					//rotate:			
-					double pos[3] = {c*LinkerPosx[j], s*LinkerPosx[j], LinkerPosz[j]};
-					//translate:
-					pos[0] += posx[id];
-					pos[1] += posy[id];
-					//add:
-					MeshFile<<pos[0]<<"	"<<pos[1]<<"	"<<pos[2]<<"    "<<LinkerTissuePlacement[j]<<"	"<<2<<"	"<<0<<endl;	//2 0 : tissue type linker, at border false.
-					//book keeping					
-					recordedNodesX.push_back(pos[0]);
-					recordedNodesY.push_back(pos[1]);
-					recordedNodesZ.push_back(pos[2]);
-				}
-						
-			}
-			cout<<" number of recorded nodes (after i-"<<i<<") : "<<recordedNodesX.size()<<" calculated node size: "<<nNodes<<endl;
-		}
-
 	}
 	
 	//Adding elements:
 	int nTri = triangles.size();
 	int nLinkerTri = linkerTriangles.size()*(SortedCircumferenceForLinkers.size()-1);
-	//int nLinkerTri = linkerTriangles.size();
-	int nElements = nTri*(zLayers +peripodialLayers)+nLinkerTri;
+	int nPeripodialTri = periTriangles.size(); // later move this to the equivalent peripodial layer mesh
+	if (mirrorColumnarForPeripodial){
+		nPeripodialTri = nTri;
+	}
+	int nElements = nTri*zLayers + nPeripodialTri*peripodialLayers +nLinkerTri;
 	
 	MeshFile<<nElements<<endl;
 	int currOffset =0;
@@ -1196,16 +1496,6 @@ void EllipseLayoutGenerator::writeMeshFileForSimulation(double zHeight, int zLay
 			for (int j=0;j<6;++j){
 				MeshFile<<refPos[j][0]<<"   "<<refPos[j][1]<<"   "<<refPos[j][2]<<"    ";		
 			}
-			/*//basal nodes:
-			double currzHeight = dzHeight*layers;
-			for (int j=0;j<3;++j){
-				MeshFile<<posx[triangles[i][j]]<<"   "<<posy[triangles[i][j]]<<"   "<<currzHeight<<"    ";		
-			}
-			currzHeight = dzHeight*(layers+1);
-			//apical nodes:
-			for (int j=0;j<3;++j){
-				MeshFile<<posx[triangles[i][j]]<<"   "<<posy[triangles[i][j]]<<"   "<<currzHeight<<"   ";		
-			}*/
 			MeshFile<<endl;
 			recordedPeripodialness.push_back(0.0); //This is a columnar element, the peripodialness is zero
 		}
@@ -1214,17 +1504,85 @@ void EllipseLayoutGenerator::writeMeshFileForSimulation(double zHeight, int zLay
 	//loop for peripodial elements:
 	if(addPeripodial){
 		//move one more layer up on nodes, I do not want to connect top layer of columnar to bottom of peripodial, I want to continue on peripodial:
-		currOffset += n;
+		currOffset += n; // skipping top of columnar, therefore n
 		for (int layers=0; layers<peripodialLayers; ++layers){
 			for (int i =0; i<nTri; ++i){
 				double refPos[6][3];
 				int nodes[6];
-				for (int j=0;j<3;++j){			
-					nodes[j]=triangles[i][j]+currOffset;
+				if (!mirrorColumnarForPeripodial){
+					for (int j=0;j<3;++j){
+						if (layers == 0){
+							if (nSharedNodesAtCircumference>0){
+								std::map<int,int>::iterator it_indexOfColumnar;
+								it_indexOfColumnar = mapOfPeripodialApicalLayerNodesWRTColumnarBasalNodes.find(periTriangles[i][j]);
+								bool atCircumference = false;
+								if (it_indexOfColumnar!=mapOfPeripodialApicalLayerNodesWRTColumnarBasalNodes.end()){
+									atCircumference = true;	//the key is there, the node is  at circumference
+								}
+								if( atCircumference){
+									nodes[j]=it_indexOfColumnar->second+currOffset-n;
+									//cout<<"at layer 0 of peripodial, at circumference, equivalent of basal columnar node: "<<triangles[i][j]<<" : "<<nodes[j]<<endl;
+								}
+								else{
+									nodes[j]=mapOfPeripodialApicalNonBorderNodesWRTPeripodialApicalLayer[periTriangles[i][j]];
+									//cout<<"at layer 0 of peripodial, at middle       , equivalent of basal columnar node: "<<triangles[i][j]<<" : "<<nodes[j]<<endl;
+								}
+							}
+							else{
+								nodes[j]=periTriangles[i][j]+currOffset;
+							}
+						}
+					}
+					for (int j=3;j<6;++j){
+						if (layers == 0){
+							nodes[j]=periTriangles[i][j-3]+currOffset+nPeripodialNodeNumber-nSharedNodesAtCircumference;
+						}
+						else{
+							nodes[j]=periTriangles[i][j-3]+currOffset+nPeripodialNodeNumber;
+						}
+
+					}
+
 				}
-				for (int j=3;j<6;++j){			
-					nodes[j]=triangles[i][j-3]+currOffset+n;
+				else{
+					for (int j=0;j<3;++j){
+						if (layers == 0){
+							//This is the first layer of peripodial.
+							//If I am sharing the nodes with the circumference,
+							//then at basal side:
+							//I need to offset by currOffset - n for the borders (use columnar nodes)
+							// currOffset for all else
+							// at apical, I need to offset first layer by nPeripodialNodeNumber - nSharedNodesAtCircumference
+							// in fist loop I update the offset by nPeripodialNodeNumber - nSharedNodesAtCircumference, then all is fine
+							if (nSharedNodesAtCircumference>0){
+								bool atCircumference = 0;
+								atCircumference = (SortedCircumferenceForLinkers.end() != find(SortedCircumferenceForLinkers.begin(),SortedCircumferenceForLinkers.end(),triangles[i][j]));
+								if( atCircumference){
+									nodes[j]=triangles[i][j]+currOffset-n;
+									//cout<<"at layer 0 of peripodial, at circumference, equivalent of basal columnar node: "<<triangles[i][j]<<" : "<<nodes[j]<<endl;
+								}
+								else{
+									nodes[j]=mapOfPeripodialApicalLayerNodesWRTColumnarBasalNodes[triangles[i][j]];
+									//cout<<"at layer 0 of peripodial, at middle       , equivalent of basal columnar node: "<<triangles[i][j]<<" : "<<nodes[j]<<endl;
+								}
+							}
+							else{
+								nodes[j]=triangles[i][j]+currOffset;
+							}
+						}
+						//nodes[j]=triangles[i][j]+currOffset;
+					}
+					for (int j=3;j<6;++j){
+						if (layers == 0){
+							nodes[j]=triangles[i][j-3]+currOffset+nPeripodialNodeNumber-nSharedNodesAtCircumference;
+						}
+						else{
+							nodes[j]=triangles[i][j-3]+currOffset+nPeripodialNodeNumber;
+						}
+
+					}
 				}
+				//cout<<" selected nodes: "<<nodes[0]<<" "<<nodes[1]<<" "<<nodes[2]<<" "<<nodes[3]<<" "<<nodes[4]<<" "<<nodes[5]<<" "<<endl;
 				for (int j=0;j<6;++j){
 					refPos[j][0] = recordedNodesX[nodes[j]];
 					refPos[j][1] = recordedNodesY[nodes[j]];
@@ -1240,28 +1598,17 @@ void EllipseLayoutGenerator::writeMeshFileForSimulation(double zHeight, int zLay
 				for (int j=0;j<6;++j){
 					MeshFile<<refPos[j][0]<<"   "<<refPos[j][1]<<"   "<<refPos[j][2]<<"    ";		
 				}
-				//writing positions for reference prism:
-				//basal nodes:
-				/*double currzHeight = dzHeight*layers;
-				for (int j=0;j<3;++j){
-					MeshFile<<posx[triangles[i][j]]<<"   "<<posy[triangles[i][j]]<<"   "<<currzHeight<<"    ";		
-				}
-				currzHeight = dzHeight*(layers+1);
-				//apical nodes:
-				for (int j=0;j<3;++j){
-					MeshFile<<posx[triangles[i][j]]<<"   "<<posy[triangles[i][j]]<<"   "<<currzHeight<<"   ";		
-				}*/
 				MeshFile<<endl;
-				recordedPeripodialness.push_back(1.0); //This is a peripodial element, the peripodialness is zero
+				recordedPeripodialness.push_back(1.0); //This is a peripodial element, the peripodialness is 1
 			}
-			currOffset += n;
+			if (layers == 0){
+				currOffset += nPeripodialNodeNumber-nSharedNodesAtCircumference;
+			}
+			else{
+				currOffset += nPeripodialNodeNumber;
+			}
 		}
 		//loop for adding linker zone elements:
-		//displaying the linker nodes:
-		//for (int i=0; i<LinkerPosz.size(); i++){
-		//	cout<<"Linker: "<<i<<" pos: "<<LinkerPosx[i]<<" 0 "<<LinkerPosz[i]<<" duplicate? "<<duplicateLinkerNode[i]<<" position: "<<LinkerTissuePlacement[i]<<endl;
-		//}
-		//cout<<" number of recorded nodes: "<<recordedNodesX.size()<<" calculated node size: "<<nNodes<<endl;
 		int nCirc = SortedCircumferenceForLinkers.size();
 		for (int i =0 ; i<nCirc-1;++i){
 			int circBaseId0 = SortedCircumferenceForLinkers[i];
@@ -2120,7 +2467,7 @@ int main(int argc, char **argv)
 	// 2: wing disc 72 hr,
 	// 3: optic cup
 	// 4: x&y symmetric circle
-	int selectTissueType = 4; 
+	int selectTissueType = 1; 
 	//Eliminate bluntTip function for type 4 with no x symmetricity! (half circle - not quarter)
 	if (selectTissueType == 0){ // 0 : wingdisc48Hr, 
 		symmetricY = true;
@@ -2146,6 +2493,7 @@ int main(int argc, char **argv)
 		cerr<<"Tissue type selected wrong!!"<<endl;	
 		return 0;
 	}
+	cout<<" selectTissueType: "<<selectTissueType<<endl;
 	if (success) {
 		if (parameters[0] == -1){
 			cerr<<"preparing from ready triangulation"<<endl;
@@ -2174,9 +2522,10 @@ int main(int argc, char **argv)
 		}
 	}
 	EllipseLayoutGenerator Lay01(DVRadius[0],DVRadius[1], APRadius[0], APRadius[1], sideLength, symmetricX, symmetricY, 0.9);
-	bool addPeripodial = false;
+	bool addPeripodial = true;
 	double peripodialHeightFrac;
 	double lumenHeightFrac;
+	bool addLateralECMRing = false;
 	double peripodialSideCurveFrac;
 	/*parameters for different setups:*/
 	// Wing disc :
@@ -2204,8 +2553,10 @@ int main(int argc, char **argv)
 	//	tissue of selection (peripodial or columnar).
 
 	if (selectTissueType == 0){ // 0 : wingdisc48Hr, 
+		cout<<" in loop for tissue type(0) : "<<selectTissueType<<endl; 
 		peripodialHeightFrac = 0.45; 
 		lumenHeightFrac = 0.25;
+		addLateralECMRing = false;
 		peripodialSideCurveFrac = 5.52 /ABHeight ;
 		Lay01.symmetricY = symmetricY;
 		Lay01.symmetricX = false;
@@ -2238,10 +2589,12 @@ int main(int argc, char **argv)
 		}
 	}
 	else if(selectTissueType == 1){ // 1: ECM mimicing wing disc 48 hr,
-		peripodialHeightFrac = 1.0;//0.33333;  //0.508
-		lumenHeightFrac = 0.2;
+		cout<<" in loop for tissue type(1) : "<<selectTissueType<<endl; 
 		actinHeight = 2.0;
 		ECMHeight = 0.2;
+		peripodialHeightFrac = ECMHeight/(ABHeight-ECMHeight);//  ECM thickness is 0.2, AB height includes ECM. 0.33333;  //0.508
+		lumenHeightFrac = 0.;//0.2;
+		addLateralECMRing = false;
 		modifiedZDueToThinActin = ABHeight/ABLayers;
 		//basalLayerHeight = 6.25;
 		//  end of ECM options		
@@ -2273,22 +2626,28 @@ int main(int argc, char **argv)
 		cout<<"peripodialSideCurveFrac: "<<peripodialSideCurveFrac<<" ABHeight: "<<ABHeight<<" modifiedZDueToThinActin: "<<modifiedZDueToThinActin<<endl;
 	}
 	else if(selectTissueType == 2){
+		cout<<" in loop for tissue type(2) : "<<selectTissueType<<endl; 
 		peripodialHeightFrac = 0.45; 
 		lumenHeightFrac = 0.25;
+		addLateralECMRing = false;
 		peripodialSideCurveFrac = 7.1 /ABHeight ;
 		Lay01.symmetricY = true;
 		Lay01.symmetricX = false;
 	}
 	else if(selectTissueType == 3){
+		cout<<" in loop for tissue type(3) : "<<selectTissueType<<endl; 
 		peripodialHeightFrac = 1.0; 
 		lumenHeightFrac = 0.2;
+		addLateralECMRing = false;
 		peripodialSideCurveFrac = 30.0 /ABHeight ;
 		Lay01.symmetricY = true;
 		Lay01.symmetricX = true;
 	}
 	else if(selectTissueType == 4){
+		cout<<" in loop for tissue type(4) : "<<selectTissueType<<endl; 
 		peripodialHeightFrac = 1.0; 
 		lumenHeightFrac = 1.0;
+		addLateralECMRing = false;
 		peripodialSideCurveFrac = 1.0 /ABHeight ;
 		Lay01.symmetricY = true;
 		Lay01.symmetricX = false;
@@ -2330,7 +2689,7 @@ int main(int argc, char **argv)
 	}
 	if(addPeripodial){
 		Lay01.addPeripodial = true;
-		Lay01.calculatePeripodialMembraneParameters(ABHeight, ABLayers,  ECMHeight,  modifiedZDueToThinActin, peripodialHeightFrac, lumenHeightFrac,peripodialSideCurveFrac);
+		Lay01.calculatePeripodialMembraneParameters(ABHeight, ABLayers,  ECMHeight,  modifiedZDueToThinActin, peripodialHeightFrac, lumenHeightFrac,peripodialSideCurveFrac,addLateralECMRing);
 	}
 	if (parameters[0] != -1){
 		vector <float> x, y;	
@@ -2344,10 +2703,14 @@ int main(int argc, char **argv)
 	//Then I will calculate the vectors pointing out from each of the circumference nodes.
 	//Then I will use those values to add the elements in mesh generation.
 	if(addPeripodial){
+		//if (addLateralECMRing){
 		Lay01.calculatePeripodialAttachVectors(symmetricX, symmetricY);
+		//}
+		Lay01.peripodialSparseTesselate2D(Lay01.symmetricX , Lay01.symmetricX);
+		Lay01.peripodialReadInTesselation2D();
 	}
 	Lay01.calculateAverageSideLength();
-	Lay01.writeMeshFileForSimulation(ABHeight,ABLayers,ECMHeight,actinHeight,modifiedZDueToThinActin,basalLayerHeight);	
+	Lay01.writeMeshFileForSimulation(ABHeight,ABLayers,ECMHeight,actinHeight,modifiedZDueToThinActin,basalLayerHeight, addLateralECMRing);	
 	//output the points for plotting:
 	int n=Lay01.posx.size();	
 	//cerr<<"r1: "<<Lay01.r1[0]<<" "<<Lay01.r1[1]<<" r2: "<<Lay01.r2[0]<<" "<<Lay01.r2[1]<<endl;

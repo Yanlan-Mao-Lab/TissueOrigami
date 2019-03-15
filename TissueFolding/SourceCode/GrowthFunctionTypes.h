@@ -633,7 +633,7 @@ public:
 		this->ShapeChangeECMLimit = ShapeChangeECMLimit;
 		//This is change form columnar to cuboidal
 		//I have how much I want the shape to change x+y in a second.
-		//Then exp(rx*1)+exp(ry*1) = ShapeChangeFractionPerSec
+		//Then exp(rx*1)*exp(ry*1) = ShapeChangeFractionPerSec
 		//Then rx+ry = ln(ShapeChangeFractionPerSec)
 		//At the same time, I would like to compansate the change in x+y with
 		//the change in z, therefore:

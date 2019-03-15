@@ -247,7 +247,11 @@ public:
 	void	getInitialRelativePositionInTissueInGridIndex(int nGridX, int nGridY, int& IndexX, int& IndexY, double& FracX, double& FracY);
 	double	getStiffnessMultiplier();
 	double 	getCurrentVolume();
+	double  getElementalElasticForce(int nodeIndex, int dimIndex);
+	void    setElementalElasticForce(int nodeIndex, int dimIndex, double value);
+
 	gsl_matrix* getCurrentFe();
+	double 	getApicalArea();
 	void 	relaxElasticForces();
 	bool 	isGrowthRateApplicable(int sourceTissue, double& weight, double zmin, double zmax);
 	void 	updateGrowthWillBeScaledDueToApikobasalRedistribution(bool thisFunctionShrinksApical, double scale, vector<int>& ellipseBandIdsForGrowthRedistribution);
@@ -424,6 +428,9 @@ public:
 	virtual double getApicalSideLengthAverage(){return ParentErrorMessage("getApicalSideLengthAverage",0.0);};
 	virtual double getBasalSideLengthAverage(){return ParentErrorMessage("getBasalSideLengthAverage",0.0);};
 	virtual void getApicalTriangles(vector <int> &/*ApicalTriangles*/){ParentErrorMessage("getApicalTriangles");};
+	virtual void getApicalNodeIds(vector <int> &/*nodeIds*/){ParentErrorMessage("getApicalNodeIds");};
+	virtual void getBasalNodeIds(vector <int> &/*nodeIds*/){ParentErrorMessage("getBasalNodeIds");};
+	virtual void getApicalNodeIndicesOnElement(vector <int> &/*apicalNodeIndices*/){ParentErrorMessage("getApicalNodeIndicesOnElement");};
 	virtual int getCorrecpondingApical(int /*currNodeId*/){return ParentErrorMessage("getCorrecpondingApical", -100);};
 	virtual bool IsThisNodeMyBasal(int /*currNodeId*/){return ParentErrorMessage("IsThisNodeMyBasal", false);};
 	virtual bool IsThisNodeMyApical(int /*currNodeId*/){return ParentErrorMessage("IsThisNodeMyApical", false);};
@@ -444,7 +451,6 @@ public:
 	virtual double* getBasalMinViscosity(vector<Node*> /*Nodes*/){ParentErrorMessage("getBasalMinViscosity");double* dummy; return dummy;};
 	virtual void copyElementInformationAfterRefinement(ShapeBase* /*baseElement*/, int /*layers*/, bool /*thereIsPlasticDeformation*/){ParentErrorMessage("copyElementInformationAfterRefinement");};
 	virtual void checkRotationConsistency3D(){ParentErrorMessage("checkRotationConsistency3D");};
-	virtual void getLumenFacingNodeIds(int* /*nodeIds*/, int& /*numberOfTriangles*/){ParentErrorMessage("getLumenFacingNodeIds");};
 	virtual bool areNodesDirectlyConnected(int /*node0*/, int /*node1*/){ParentErrorMessage("areNodesDirectlyConnected");};
 	bool checkPackingToThisNodeViaState(int ColumnarLayerDiscretisationLAyers, Node* NodePointer);
 	bool DoesPointBelogToMe(int IdNode);
@@ -491,6 +497,8 @@ public:
 	void 	assignEllipseBandIdToWholeTissueColumn(int TissueHeightDiscretisationLayers, vector<Node*>& Nodes, vector<ShapeBase*>& Elements);
 	void 	assignEllipseBandId(vector<Node*>& Nodes, int selectedEllipseBandId);
 	void 	assignEllipseBandIdToNodes(vector<Node*>& Nodes);
+	void 	addToElementalElasticSystemForces(int i,int j,double value); /// the function to add the input value, to the (i,j)th element of the ElementalElasticSystemForces
+	void 	addToTriPointKe(int i,int j,double value); /// the function to add the input value, to the (i,j)th element of the triPointKe
 };
 
 #endif

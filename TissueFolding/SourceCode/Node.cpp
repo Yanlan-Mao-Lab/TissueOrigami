@@ -55,6 +55,7 @@ Node::Node(int id, int dim, double* pos, int tissuePos, int tissueType){
     checkOwnersforEllipseAsignment = false;
     positionUpdateOngoing = false;
     positionUpdateCounter = 0;
+    facingLumen = false;
    // allOwnersAblated = false;
 }
 
