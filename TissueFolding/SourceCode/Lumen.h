@@ -9,6 +9,7 @@
 #define LUMEN_H_
 
 #include <vector>
+//#include <math.h>
 #include "ShapeBase.h"
 
 class Lumen{
@@ -18,7 +19,7 @@ protected:
 	int nTriangleSize;	//the number of triangles forming the surface of lumen
 
 public:
-	Lumen(vector<ShapeBase*>& Elements,vector<Node*>& Nodes, double lumenBulkModulus);
+	Lumen(vector<ShapeBase*>& Elements,vector<Node*>& Nodes, double lumenBulkModulus, double lumenGrowthFold);
 	~Lumen();
 
 	void updateMatrices(vector<Node*>& Nodes);
@@ -27,6 +28,7 @@ public:
 	void calculateLumengFromElementalResiduals(gsl_matrix* g);
 	void calculateJacobian();
 	void writeLumenJacobianToSystemJacobian(gsl_matrix* K,vector<Node*>& Nodes);
+	void growLumen(double dt);
 
 
 	int Dim ;		//dimensions of the system, should be 3D.

@@ -149,4 +149,5 @@ NodeCollapseOptions:
 LumenOptions:
   thereIsLumen(bool): 1
   LumenBulkModulus(Pa): 9600
+  LumenGrowthRate(foldPer24hr): 1.4142
 

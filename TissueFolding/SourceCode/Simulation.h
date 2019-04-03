@@ -552,6 +552,7 @@ public:
 	bool thereIsExplicitActin;
 	bool thereIsExplicitLumen;
 	double lumenBulkModulus;
+	double lumenGrowthFold;
 	double ECMRenawalHalfLife; //The half life for ECM renewal inside plastic deformation
 
 	int numberOfClones;

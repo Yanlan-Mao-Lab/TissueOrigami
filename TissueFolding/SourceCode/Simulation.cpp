@@ -255,6 +255,7 @@ void Simulation::setDefaultParameters(){
 	addLateralECMManually = false;
 	thereIsExplicitLumen = false;
 	lumenBulkModulus = 0;
+	lumenGrowthFold = 0;
 	lateralECMThickness = 0.0;
 	ECMRenawalHalfLife = 0.0;
 	thereIsExplicitActin = false;
@@ -462,6 +463,9 @@ bool Simulation::readFinalSimulationStep(){
     	if(collapseAndAdhesionSaved){
     		readCollapseAndAdhesionToContinueFromSave();
     	}
+        if (thereIsExplicitLumen){
+        	tissueLumen->growLumen(dt*dataSaveInterval);
+        }
 		//if (ZerothFrame){
 		//	ZerothFrame = false;
 		//	cout<<"dt after  ZerothFrame if clause "<<dt<<" timeStepCurrentSim: "<<timeStepCurrentSim<<" dataSaveInterval: "<<dataSaveInterval<<endl;
@@ -626,7 +630,7 @@ bool Simulation::initiateSystem(){
 			thereIsExplicitLumen = false;
 			Success = false;
 		}
-		tissueLumen = new Lumen(Elements, Nodes,lumenBulkModulus);
+		tissueLumen = new Lumen(Elements, Nodes,lumenBulkModulus,lumenGrowthFold);
 	}
 
 	if (thereIsExplicitActin){
@@ -2754,7 +2758,9 @@ void Simulation::updateOneStepFromSave(){
 	if (collapseAndAdhesionSaved){
 		updateCollapseAndAdhesionFromSave();
 	}
-
+    if (thereIsExplicitLumen){
+    	tissueLumen->growLumen(dt*dataSaveInterval);
+    }
 	clearNodeMassLists();
 	assignNodeMasses();
 	assignConnectedElementsAndWeightsToNodes();
@@ -6014,6 +6020,9 @@ bool Simulation::runOneStep(){
         	calculateShapeChange();
         }
     }
+    if (thereIsExplicitLumen){
+    	tissueLumen->growLumen(dt);
+    }
     //cout<<"after growth and shape change"<<endl;
     if (conservingColumnVolumes){
     	conserveColumnVolume();
@@ -6581,7 +6590,7 @@ void Simulation::conserveColumnVolume(){
 void Simulation::updateStepNR(){
     int iteratorK = 0;
     int maxIteration =20;
-    bool converged = false;
+    bool converged = true;
 
     bool numericalCalculation = false;
     bool displayMatricesDuringNumericalCalculation = false;

@@ -9,12 +9,15 @@
 #include <algorithm>
 
 using namespace std;
-Lumen::Lumen(vector<ShapeBase*>& Elements,vector<Node*>& Nodes, double lumenBulkModulus){
+Lumen::Lumen(vector<ShapeBase*>& Elements,vector<Node*>& Nodes, double lumenBulkModulus, double lumenGrowthFold){
 	Dim = 3;
 	bulkModulus = lumenBulkModulus;
 	currentIdealVolume = 0;
 	currentVolume = 0;
 	growthRate = 0;
+
+	//lumenGrowthFold is the growth in 24 hours, the growth rate is in seconds:
+	growthRate = log(lumenGrowthFold)/3600/24;
 	rV = 0;
 	nTriangleSize= 0;
     for (vector<ShapeBase*>::iterator iterEle = Elements.begin();iterEle<Elements.end(); ++iterEle){
@@ -313,4 +316,9 @@ void Lumen::writeLumenJacobianToSystemJacobian(gsl_matrix* K,vector<Node*>& Node
 			}
 		}
 	}
+}
+
+void Lumen::growLumen(double dt){
+	currentIdealVolume *= exp(growthRate*dt);
+	//cout<<" lumen ideal volume: "<<currentIdealVolume<<endl;
 }

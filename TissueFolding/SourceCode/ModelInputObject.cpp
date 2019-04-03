@@ -2632,6 +2632,14 @@ bool ModelInputObject::readLumenOptions(ifstream& file){
 		printErrorMessage(currHeader,"Lumen options","LumenBulkModulus(Pa)");
 		return false;
 	}
+	file >> currHeader;
+	if(currHeader == "LumenGrowthRate(foldPer24hr):"){
+		file >> Sim->lumenGrowthFold;
+	}
+	else{
+		printErrorMessage(currHeader,"Lumen options","LumenGrowthRate(foldPer24hr):");
+		return false;
+	}
 	return true;
 }
 
