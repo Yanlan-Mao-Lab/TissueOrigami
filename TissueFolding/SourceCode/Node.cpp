@@ -255,7 +255,7 @@ bool Node::isNeigWithMyCollapsedNodes(int NodeId, vector<Node*>& Nodes){
 	 */
 	vector<int>::iterator itCollapsedWithNodeIndex;
 	for (itCollapsedWithNodeIndex = collapsedWith.begin();itCollapsedWithNodeIndex<collapsedWith.end();++itCollapsedWithNodeIndex){
-		if (find(Nodes[(*itCollapsedWithNodeIndex)]->immediateNeigs.begin(), Nodes[(*itCollapsedWithNodeIndex)]->immediateNeigs.end(),Id)!=Nodes[(*itCollapsedWithNodeIndex)]->immediateNeigs.end()){
+		if (find(Nodes[(*itCollapsedWithNodeIndex)]->immediateNeigs.begin(), Nodes[(*itCollapsedWithNodeIndex)]->immediateNeigs.end(),NodeId)!=Nodes[(*itCollapsedWithNodeIndex)]->immediateNeigs.end()){
 			//the collapsed node of master is neig to slave
 			return true;
 		}

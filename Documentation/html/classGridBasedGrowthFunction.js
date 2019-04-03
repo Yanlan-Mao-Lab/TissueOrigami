@@ -1,6 +1,6 @@
 var classGridBasedGrowthFunction =
 [
-    [ "GridBasedGrowthFunction", "classGridBasedGrowthFunction.html#aac341fa9ccdca2d089e9f341cb68ca94", null ],
+    [ "GridBasedGrowthFunction", "classGridBasedGrowthFunction.html#aed515e78b2dbcf81751b44cb0c2bef58", null ],
     [ "~GridBasedGrowthFunction", "classGridBasedGrowthFunction.html#a7894e0a63edc080662d558707375dd44", null ],
     [ "getGridX", "classGridBasedGrowthFunction.html#ae36e6ea2e7bdf41459e74d5846d6d24d", null ],
     [ "getGridY", "classGridBasedGrowthFunction.html#a4a70e9e187e3079e29115f106d30e26e", null ],
@@ -13,7 +13,7 @@ var classGridBasedGrowthFunction =
     [ "isAspectRatioOverOne", "classGridBasedGrowthFunction.html#ab07937a18f72f31f4875225c1e246032", null ],
     [ "preCalculateAnglesForCompatibleAveraging", "classGridBasedGrowthFunction.html#a92f4db6ab17ba3539f98895c500ec2d7", null ],
     [ "setGrowthMatrixElement", "classGridBasedGrowthFunction.html#a9d01fcbba5732aad966659d4f64c145b", null ],
-    [ "writeSummary", "classGridBasedGrowthFunction.html#a659418841b4a3bc8be1dec15f95d7b76", null ],
+    [ "writeSummary", "classGridBasedGrowthFunction.html#a267f45c300d9ef98c6f4fa14a5181c78", null ],
     [ "aspectRatioOverThresoldMatrix", "classGridBasedGrowthFunction.html#a56ff4380487e4d24881431f0e6ea6f2e", null ],
     [ "compatibleAngleEliminated", "classGridBasedGrowthFunction.html#addfc2d280d1fc0b0b17d7f1dfe54f873", null ],
     [ "compatibleAngles", "classGridBasedGrowthFunction.html#aac8a163bbd008d327859b488cf023c10", null ],

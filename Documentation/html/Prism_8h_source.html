@@ -126,67 +126,92 @@ $(document).ready(function(){initNavTree('Prism_8h_source.html','');});
 <div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;    <span class="keywordtype">void</span> setShapeFunctionDerivatives(gsl_matrix * ShapeFuncDer,<span class="keywordtype">double</span> eta, <span class="keywordtype">double</span> zeta, <span class="keywordtype">double</span> nu);</div>
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;    <span class="keywordtype">void</span> setShapeFunctionDerivativeStack(gsl_matrix* ShapeFuncDer, gsl_matrix* ShapeFuncDerStack);</div>
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;    <span class="keywordtype">void</span> setCoeffMat();</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;    <span class="keywordtype">void</span> calculateCurrk(boost::numeric::ublas::matrix&lt;double&gt; &amp;currk, boost::numeric::ublas::matrix&lt;double&gt; &amp;currB, boost::numeric::ublas::matrix&lt;double&gt;&amp; currBE, boost::numeric::ublas::matrix&lt;double&gt; &amp;currBo, <span class="keywordtype">double</span> eta, <span class="keywordtype">double</span> zeta, <span class="keywordtype">double</span> nu);</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classPrism.html#a606fbf422f9d652e0f697ea93dc2e088">calculateCurrNodalForces</a>(gsl_matrix *gslcurrge, gsl_matrix *gslcurrgv, gsl_matrix *gslcurrF, gsl_matrix* displacementPerDt, <span class="keywordtype">int</span> pointNo);</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;    <span class="keywordtype">void</span> calculateCurrTriPointFForRotation(gsl_matrix *currF,<span class="keywordtype">int</span> pointNo);</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;    <span class="keywordtype">void</span> calculateNormalToBottom();</div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;    <span class="keywordtype">void</span> calculateReferenceNormalToBottom();</div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;    <span class="keywordtype">void</span> calculateNormalToTop();</div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;    <span class="keywordtype">void</span> calculateReferenceNormalToTop();</div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;    <span class="keywordtype">void</span> getCurrentAlignmentSides(<span class="keywordtype">double</span>*, <span class="keywordtype">double</span>*);</div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;    <span class="keywordtype">void</span> getCurrentAlignmentFaces(<span class="keywordtype">double</span>* RefSide, <span class="keywordtype">double</span>* ShapeSide, <span class="keywordtype">double</span>* RefFace, <span class="keywordtype">double</span>* ShapeFace);</div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;    <span class="keywordtype">void</span> updateAlignmentTurn();</div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;    <span class="comment">//void updateReferenceShapeBaseFromBuffer();</span></div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;    <span class="comment">//void resetBuffersAfterGrowth();</span></div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;    <span class="comment">//void calculateZVecForTissueCoordAlignment(double* u);</span></div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;    <span class="comment">//void calculateXVecForTissueCoordAlignment(double* u);</span></div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;    <span class="keywordtype">void</span> calculateReferenceVolume();</div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;    <span class="keywordtype">void</span> calculatePlaneNormals(<span class="keywordtype">double</span>** normals);</div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;    <span class="keywordtype">void</span> assignNodalVector(<span class="keywordtype">double</span>* vec, <span class="keywordtype">int</span> id0, <span class="keywordtype">int</span> id1);</div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;    <span class="keywordtype">bool</span> checkNodePlaneConsistency(<span class="keywordtype">double</span>** normals);</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;    <span class="keywordtype">double</span> getApicalSideLengthAverage();</div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;</div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;    <a class="code" href="classPrism.html">Prism</a>(<span class="keywordtype">int</span>* NodeIds,vector&lt;Node*&gt;&amp; Nodes, <span class="keywordtype">int</span> CurrId);</div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;    ~<a class="code" href="classPrism.html">Prism</a>();</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;    <span class="keywordtype">void</span>  setElasticProperties(<span class="keywordtype">double</span> EApical, <span class="keywordtype">double</span> EBasal, <span class="keywordtype">double</span> EMid,<span class="keywordtype">double</span> v);</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;    <span class="keywordtype">void</span>  calculateBasalNormal(<span class="keywordtype">double</span> * normal);</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;    <span class="keywordtype">void</span>  AlignReferenceBaseNormalToZ();</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;    <span class="keywordtype">void</span>  calculateElementShapeFunctionDerivatives();</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;    <span class="comment">//void  calculateForces(int RKid, double** SystemForces);</span></div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;    <span class="keywordtype">void</span>  checkHealth();</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;    <span class="keywordtype">void</span> getApicalTriangles(vector &lt;int&gt; &amp;ApicalTriangles);</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;    <span class="keywordtype">int</span> getCorrecpondingApical(<span class="keywordtype">int</span> currNodeId);</div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;    <span class="keywordtype">bool</span> IsThisNodeMyBasal(<span class="keywordtype">int</span> currNodeId);</div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;    <span class="keywordtype">double</span> getElementHeight();</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;    <span class="keywordtype">void</span> AddPackingToSurface(<span class="keywordtype">int</span> tissueplacementOfPackingNode, <span class="keywordtype">double</span> Fx, <span class="keywordtype">double</span> Fy,<span class="keywordtype">double</span> Fz,  <span class="keywordtype">double</span> **PackingForces,vector&lt;Node*&gt; &amp;Nodes, <span class="keywordtype">bool</span>&amp; allCornersFixedX, <span class="keywordtype">bool</span>&amp; allCornersFixedY, <span class="keywordtype">bool</span>&amp; allCornersFixedZ);</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    <span class="keywordtype">void</span> getRelevantNodesForPacking(<span class="keywordtype">int</span> TissuePlacementOfPackingNode, <span class="keywordtype">int</span> TissueTypeOfPackingNode, <span class="keywordtype">int</span>&amp; id1, <span class="keywordtype">int</span>&amp; id2, <span class="keywordtype">int</span>&amp; id3);</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;    <span class="keywordtype">bool</span> IsPointCloseEnoughForPacking(<span class="keywordtype">double</span>* Pos,  <span class="keywordtype">float</span> threshold, <span class="keywordtype">int</span> TissuePlacementOfPackingNode, <span class="keywordtype">int</span> TissueTypeOfPackingNode);</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;    <span class="keywordtype">void</span> calculateNormalForPacking(<span class="keywordtype">int</span> tissuePlacementOfNormal);</div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;    <span class="keywordtype">void</span> calculateApicalArea();</div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;    <span class="keywordtype">void</span> calculateBasalArea();</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;    <span class="keywordtype">void</span> calculateMyosinForces(<span class="keywordtype">double</span> forcePerMyoMolecule);</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;    <span class="keywordtype">void</span> distributeMyosinForce(<span class="keywordtype">bool</span> isIsotropic, <span class="keywordtype">bool</span> apical, <span class="keywordtype">double</span> forcePerMyoMolecule);</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;    <span class="keywordtype">void</span> getApicalNodePos(<span class="keywordtype">double</span>* posCorner);</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;    <span class="keywordtype">void</span> getBasalNodePos(<span class="keywordtype">double</span>* posCorner);</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;    <span class="keywordtype">bool</span> IspointInsideTriangle(<span class="keywordtype">int</span> tissueplacement,<span class="keywordtype">double</span> x, <span class="keywordtype">double</span> y,<span class="keywordtype">double</span> z);</div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;    <span class="keywordtype">void</span> checkRotationConsistency3D();</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;</div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;};</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="ttc" id="classShapeBase_html"><div class="ttname"><a href="classShapeBase.html">ShapeBase</a></div><div class="ttdef"><b>Definition:</b> ShapeBase.h:32</div></div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;    <span class="keywordtype">void</span> calculateDVector();</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;    <span class="keywordtype">void</span> calculateD81Tensor();</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;    <span class="keywordtype">void</span> calculateCurrk(boost::numeric::ublas::matrix&lt;double&gt; &amp;currk, boost::numeric::ublas::matrix&lt;double&gt; &amp;currB, boost::numeric::ublas::matrix&lt;double&gt;&amp; currBE, boost::numeric::ublas::matrix&lt;double&gt; &amp;currBo, <span class="keywordtype">double</span> eta, <span class="keywordtype">double</span> zeta, <span class="keywordtype">double</span> nu);</div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classPrism.html#a606fbf422f9d652e0f697ea93dc2e088">calculateCurrNodalForces</a>(gsl_matrix *gslcurrge, gsl_matrix *gslcurrgv, gsl_matrix *gslcurrF, gsl_matrix* displacementPerDt, <span class="keywordtype">int</span> pointNo);</div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;    <span class="keywordtype">void</span> calculateCurrTriPointFForRotation(gsl_matrix *currF,<span class="keywordtype">int</span> pointNo);</div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;    <span class="keywordtype">void</span> calculateNormalToBottom();</div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;    <span class="keywordtype">void</span> calculateReferenceNormalToBottom();</div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;    <span class="keywordtype">void</span> calculateNormalToTop();</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;    <span class="keywordtype">void</span> calculateReferenceNormalToTop();</div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;    <span class="keywordtype">void</span> getCurrentAlignmentSides(<span class="keywordtype">double</span>*, <span class="keywordtype">double</span>*);</div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;    <span class="keywordtype">void</span> getCurrentAlignmentFaces(<span class="keywordtype">double</span>* RefSide, <span class="keywordtype">double</span>* ShapeSide, <span class="keywordtype">double</span>* RefFace, <span class="keywordtype">double</span>* ShapeFace);</div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;    <span class="keywordtype">void</span> updateAlignmentTurn();</div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;    <span class="comment">//void updateReferenceShapeBaseFromBuffer();</span></div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;    <span class="comment">//void resetBuffersAfterGrowth();</span></div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;    <span class="comment">//void calculateZVecForTissueCoordAlignment(double* u);</span></div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;    <span class="comment">//void calculateXVecForTissueCoordAlignment(double* u);</span></div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;    <span class="keywordtype">void</span> calculateReferenceVolume();</div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;    <span class="keywordtype">void</span> calculatePlaneNormals(<span class="keywordtype">double</span>** normals);</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;    <span class="keywordtype">void</span> assignNodalVector(<span class="keywordtype">double</span>* vec, <span class="keywordtype">int</span> id0, <span class="keywordtype">int</span> id1);</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;    <span class="keywordtype">bool</span> checkNodePlaneConsistency(<span class="keywordtype">double</span>** normals);</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;    <span class="keywordtype">void</span> setInitialEdgeLenghts();</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;    <span class="keywordtype">void</span> checkEdgeLenghtsForBinding(vector&lt;int&gt;&amp; masterIds, vector&lt;int&gt;&amp; slaveIds);</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;    <span class="keywordtype">double</span> getApicalSideLengthAverage();</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;    <span class="keywordtype">double</span> getBasalSideLengthAverage();</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;    <span class="keywordtype">void</span> assignExposedSurfaceAreaIndices(vector &lt;Node*&gt;&amp; Nodes);</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;    <span class="keywordtype">double</span> initialApilcalEdgeLengthsSq[3];</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;    <span class="keywordtype">double</span> initialBasalEdgeLengthsSq[3];</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;    <a class="code" href="classPrism.html">Prism</a>(<span class="keywordtype">int</span>* NodeIds,vector&lt;Node*&gt;&amp; Nodes, <span class="keywordtype">int</span> CurrId, <span class="keywordtype">bool</span> thereIsPlasticDeformation);</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;    ~<a class="code" href="classPrism.html">Prism</a>();</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;    <span class="keywordtype">void</span>  setElasticProperties(<span class="keywordtype">double</span> EApical, <span class="keywordtype">double</span> EBasal, <span class="keywordtype">double</span> EMid,  <span class="keywordtype">double</span> EECM, <span class="keywordtype">double</span> v);</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;    <span class="keywordtype">void</span>  fillLateralNeighbours(vector&lt;Node*&gt;&amp; Nodes, vector&lt;int&gt;&amp; lateralNeigbours );</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;    <span class="keywordtype">void</span>  calculateBasalNormal(<span class="keywordtype">double</span> * normal);</div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;    <span class="keywordtype">void</span>  calculateApicalNormalCurrentShape();</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;    <span class="keywordtype">void</span>  AlignReferenceBaseNormalToZ();</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    <span class="keywordtype">void</span>  calculateElementShapeFunctionDerivatives();</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;    <span class="comment">//void  calculateForces(int RKid, double** SystemForces);</span></div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;    <span class="keywordtype">void</span>  checkHealth();</div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;    <span class="keywordtype">void</span> getApicalTriangles(vector &lt;int&gt; &amp;ApicalTriangles);</div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;    <span class="keywordtype">int</span> getCorrecpondingApical(<span class="keywordtype">int</span> currNodeId);</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;    <span class="keywordtype">bool</span> IsThisNodeMyBasal(<span class="keywordtype">int</span> currNodeId);</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;    <span class="keywordtype">bool</span> IsThisNodeMyApical(<span class="keywordtype">int</span> currNodeId);</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;    <span class="keywordtype">double</span> getElementHeight();</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;    <span class="keywordtype">void</span> AddPackingToSurface(<span class="keywordtype">int</span> tissueplacementOfPackingNode, <span class="keywordtype">double</span> Fx, <span class="keywordtype">double</span> Fy,<span class="keywordtype">double</span> Fz,  <span class="keywordtype">double</span> **PackingForces,vector&lt;Node*&gt; &amp;Nodes, <span class="keywordtype">bool</span>&amp; allCornersFixedX, <span class="keywordtype">bool</span>&amp; allCornersFixedY, <span class="keywordtype">bool</span>&amp; allCornersFixedZ);</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;    <span class="keywordtype">void</span> getRelevantNodesForPacking(<span class="keywordtype">int</span> TissuePlacementOfPackingNode, <span class="keywordtype">int</span>&amp; id1, <span class="keywordtype">int</span>&amp; id2, <span class="keywordtype">int</span>&amp; id3);</div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;    <span class="keywordtype">bool</span> IsPointCloseEnoughForPacking(<span class="keywordtype">double</span>* Pos,  <span class="keywordtype">float</span> threshold, <span class="keywordtype">int</span> TissuePlacementOfPackingNode);</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;    <span class="keywordtype">void</span> calculateNormalForPacking(<span class="keywordtype">int</span> tissuePlacementOfNormal);</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;    <span class="keywordtype">void</span> calculateApicalArea();</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;    <span class="keywordtype">void</span> calculateBasalArea();</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;    <span class="keywordtype">void</span> calculateMyosinForcesAreaBased(<span class="keywordtype">double</span> forcePerMyoMolecule);</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;    <span class="keywordtype">void</span> calculateMyosinForcesTotalSizeBased(<span class="keywordtype">double</span> forcePerMyoMolecule);</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;    <span class="keywordtype">void</span> distributeMyosinForcesAreaBased(<span class="keywordtype">bool</span> isIsotropic, <span class="keywordtype">bool</span> apical, <span class="keywordtype">double</span> forcePerMyoMolecule);</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    <span class="keywordtype">void</span> distributeMyosinForcesTotalSizeBased(<span class="keywordtype">bool</span> isIsotropic, <span class="keywordtype">bool</span> apical, <span class="keywordtype">double</span> forcePerMyoMolecule);</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;    <span class="comment">//void fillLateralNeighbours();</span></div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;    <span class="keywordtype">void</span> updateElasticProperties();</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;    <span class="keywordtype">void</span> setBasalNeigElementId(vector&lt;ShapeBase*&gt;&amp; elementsList);</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    <span class="keywordtype">void</span> constructElementStackList(<span class="keyword">const</span> <span class="keywordtype">int</span> discretisationLayers, vector&lt;ShapeBase*&gt;&amp; elementsList);</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;    <span class="keywordtype">void</span> getApicalNodePos(<span class="keywordtype">double</span>* posCorner);</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    <span class="keywordtype">void</span> getBasalNodePos(<span class="keywordtype">double</span>* posCorner);</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    <span class="keywordtype">void</span> getApicalNodeIds(vector &lt;int&gt; &amp;nodeIds);</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;    <span class="keywordtype">void</span> getBasalNodeIds(vector &lt;int&gt; &amp;nodeIds);</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;    <span class="keywordtype">void</span> getApicalNodeIndicesOnElement(vector &lt;int&gt; &amp;apicalNodeIndices);</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;    <span class="keywordtype">void</span> getApicalCentre(<span class="keywordtype">double</span>* centre);</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;    <span class="keywordtype">void</span> getBasalCentre(<span class="keywordtype">double</span>* centre);</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;    <span class="keywordtype">void</span> getReferenceApicalCentre(<span class="keywordtype">double</span>* centre);</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;    <span class="keywordtype">void</span> getReferenceBasalCentre(<span class="keywordtype">double</span>* centre);</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;    <span class="keywordtype">double</span>* getApicalMinViscosity(vector&lt;Node*&gt; Nodes);</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;    <span class="keywordtype">double</span>* getBasalMinViscosity(vector&lt;Node*&gt; Nodes);</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;    <span class="keywordtype">bool</span> IspointInsideTriangle(<span class="keywordtype">int</span> tissueplacement,<span class="keywordtype">double</span> x, <span class="keywordtype">double</span> y,<span class="keywordtype">double</span> z);</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;    <span class="keywordtype">void</span> checkRotationConsistency3D();</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;    <span class="keywordtype">void</span> copyElementInformationAfterRefinement(<a class="code" href="classShapeBase.html">ShapeBase</a>* baseElement, <span class="keywordtype">int</span> layers, <span class="keywordtype">bool</span> thereIsPlasticDeformation);</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;    <span class="keywordtype">bool</span> areNodesDirectlyConnected(<span class="keywordtype">int</span> node0, <span class="keywordtype">int</span> node1);</div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;};</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;</div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="ttc" id="classShapeBase_html"><div class="ttname"><a href="classShapeBase.html">ShapeBase</a></div><div class="ttdef"><b>Definition:</b> ShapeBase.h:41</div></div>
 <div class="ttc" id="classPrism_html"><div class="ttname"><a href="classPrism.html">Prism</a></div><div class="ttdef"><b>Definition:</b> Prism.h:14</div></div>
-<div class="ttc" id="classPrism_html_a606fbf422f9d652e0f697ea93dc2e088"><div class="ttname"><a href="classPrism.html#a606fbf422f9d652e0f697ea93dc2e088">Prism::calculateCurrNodalForces</a></div><div class="ttdeci">void calculateCurrNodalForces(gsl_matrix *gslcurrge, gsl_matrix *gslcurrgv, gsl_matrix *gslcurrF, gsl_matrix *displacementPerDt, int pointNo)</div><div class="ttdef"><b>Definition:</b> Prism.cpp:478</div></div>
+<div class="ttc" id="classPrism_html_a606fbf422f9d652e0f697ea93dc2e088"><div class="ttname"><a href="classPrism.html#a606fbf422f9d652e0f697ea93dc2e088">Prism::calculateCurrNodalForces</a></div><div class="ttdeci">void calculateCurrNodalForces(gsl_matrix *gslcurrge, gsl_matrix *gslcurrgv, gsl_matrix *gslcurrF, gsl_matrix *displacementPerDt, int pointNo)</div><div class="ttdef"><b>Definition:</b> Prism.cpp:749</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_9dee18ce9f954c3c428820e89cc0b95c.html">TissueFolding</a></li><li class="navelem"><a class="el" href="dir_a91615f27caff2615e5e61189ea77e22.html">SourceCode</a></li><li class="navelem"><b>Prism.h</b></li>
-    <li class="footer">Generated on Fri Apr 15 2016 19:51:53 for Tissue Origami by
+    <li class="footer">Generated on Wed Apr 3 2019 14:19:51 for Tissue Origami by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

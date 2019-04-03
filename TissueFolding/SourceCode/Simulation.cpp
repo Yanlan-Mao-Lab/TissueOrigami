@@ -547,7 +547,7 @@ bool Simulation::checkInputConsistency(){
 		}
 	}
 	if (thereIsExplicitLumen && !AddPeripodialMembrane){
-		cerr<<"There is no peripodial membrane while asking for a lumen"<<endl;
+		cerr<<"There is no peripodial membrane while asking for a lumen, check if there is one in the input mesh before adding lumen!"<<endl;
 		needPeripodialforInputConsistency = true;
 	}
 	return true;
@@ -1128,7 +1128,8 @@ bool Simulation::checkEdgeLenghtsForBindingPotentiallyUnstableElements(){
 						bool madeChange = NRSolver->checkIfSlaveIsAlreadyMasterOfOthers(dofslave,dofmaster);
 						if (madeChange){
 							cout<<"slave "<<slaveNodeId<<" is already master of others"<<endl;
-							for (int nodeIt = 0 ; nodeIt<Nodes.size(); ++nodeIt){
+							size_t nodesSize = Nodes.size();
+							for (size_t nodeIt = 0 ; nodeIt<nodesSize; ++nodeIt){
 								if(Nodes[nodeIt]->slaveTo[i]==slaveNodeId){
 									Nodes[nodeIt]->slaveTo[i]=masterNodeId;
 								}
@@ -1166,9 +1167,9 @@ bool Simulation::bindCircumferenceXY(){
 		}
 	}
 	int n = nodeIds.size();
-	cout<<"found the node ids for basal circumference, n: "<<n<<endl;
+	//cout<<"found the node ids for basal circumference, n: "<<n<<endl;
 	for (int i=0; i<n; ++i){
-		cout<<" in circumference binding, checking nodeId: "<<nodeIds[i]<<" "<<i<<" of "<<n<<" ";
+		//cout<<" in circumference binding, checking nodeId: "<<nodeIds[i]<<" "<<i<<" of "<<n<<" ";
 		int masterNodeId = nodeIds[i];
 		int dofXmaster = masterNodeId*dim;
 		int dofYmaster = masterNodeId*dim+1;
@@ -1178,7 +1179,7 @@ bool Simulation::bindCircumferenceXY(){
 		while (!reachedTop && a<5){//bibap
 			a++;
 			int nConnectedElements = Nodes[currNodeId]->connectedElementIds.size();
-			cout<<" current node: "<<currNodeId<<" nConnectedElements "<<nConnectedElements<<endl;
+			//cout<<" current node: "<<currNodeId<<" nConnectedElements "<<nConnectedElements<<endl;
 			for (int j=0;j<nConnectedElements;++j){
 				int elementId = Nodes[currNodeId]->connectedElementIds[j];
 				bool IsBasalOwner = Elements[elementId]->IsThisNodeMyBasal(currNodeId);
@@ -1224,13 +1225,13 @@ bool Simulation::bindCircumferenceXY(){
 				}
 			}
 			if (!thereIsPeripodialMembrane && Nodes[currNodeId]->tissuePlacement == 1){
-				cout<<" in binding there is no peripodial, I have reached top"<<endl;
+				//cout<<" in binding there is no peripodial, I have reached top"<<endl;
 				//there is no peripodial and I have reached apical nodes
 				reachedTop = true;
 			}
 			if (thereIsPeripodialMembrane && Nodes[currNodeId]->tissuePlacement == 0){
 				//there is peripodial and I have reached basal nodes again
-				cout<<" in binding there is peripodial, I have reached top"<<endl;
+				//cout<<" in binding there is peripodial, I have reached top"<<endl;
 				reachedTop = true;
 			}
 			//cout<<" tissue placement of next node: "<<Nodes[currNodeId]->tissuePlacement<<endl;
@@ -3208,9 +3209,9 @@ void Simulation::removeSymmetryBorderFromColumnarCircumferenceNodeList(vector <i
 */
 void Simulation::sortColumnarCircumferenceNodeList(vector <int> &ColumnarCircumferencialNodeList){
 	//ordering the circumferencial nodes of the basal surface in clockwise rotation
-	int n = ColumnarCircumferencialNodeList.size();
+	size_t n = ColumnarCircumferencialNodeList.size();
 	vector <double> angles;
-	for (int j =0 ; j<n; ++j){
+	for (size_t j =0 ; j<n; ++j){
 		double x = Nodes[ColumnarCircumferencialNodeList[j]]->Position[0];
 		double y = Nodes[ColumnarCircumferencialNodeList[j]]->Position[1];
 		double tet = atan2(y,x);
@@ -3221,7 +3222,7 @@ void Simulation::sortColumnarCircumferenceNodeList(vector <int> &ColumnarCircumf
 	bool swapped = true;
 	while (swapped){
 		swapped = false;
-		for(int i=1; i<n; ++i){
+		for(size_t i=1; i<n; ++i){
 			if(angles[i]<angles[i-1]){
 				int temp=ColumnarCircumferencialNodeList[i-1];
 				ColumnarCircumferencialNodeList[i-1]=ColumnarCircumferencialNodeList[i];
@@ -3239,9 +3240,9 @@ void Simulation::sortColumnarCircumferenceNodeList(vector <int> &ColumnarCircumf
 void Simulation::getAverageSideLength(double& periAverageSideLength, double& colAverageSideLength){
 	double dsumPeri =0.0, dsumCol = 0.0;
 	int colCounter =0, periCounter=0;
-	double packingDetectionThresholdGridCounter[10][4];
-	for (int i=0; i<10;++i){
-		for (int j=0;j<5;++j){
+	double packingDetectionThresholdGridCounter[10][5];
+	for (size_t i=0; i<10;++i){
+		for (size_t j=0;j<5;++j){
 			packingDetectionThresholdGrid[i][j] = 0.0;
 			packingDetectionThresholdGridCounter[i][j] = 0.0;
 		}
@@ -3253,7 +3254,7 @@ void Simulation::getAverageSideLength(double& periAverageSideLength, double& col
 			if ((*itElement)->tissueType==0){ //element belongs to columnar layer
 				double currValue = (*itElement)->getApicalSideLengthAverage();
 				if(currValue>0){
-					//There may be alements with fully collapsed apical areas, where currValue will be zero
+					//There may be elements with fully collapsed apical areas, where currValue will be zero
 					//I do not wish to count them in averaging
 					dsumCol += currValue;
 					colCounter++;
@@ -3288,8 +3289,8 @@ void Simulation::getAverageSideLength(double& periAverageSideLength, double& col
 		}
 	}
 	colAverageSideLength = dsumCol / (double)colCounter;
-	for (int i=0; i<10;++i){
-		for (int j=0;j<5;++j){
+	for (size_t i=0; i<10;++i){
+		for (size_t j=0;j<5;++j){
 			if(packingDetectionThresholdGridCounter[i][j]>0){
 				packingDetectionThresholdGrid[i][j] /= packingDetectionThresholdGridCounter[i][j];
 			}
@@ -3752,7 +3753,7 @@ void Simulation::checkForNodeFixing(){
 				//cout<<"Node "<<(*itNode)->Id<<" at circumference"<<endl;
 				//The node is at circumference, I would like to fix only the columnar side,
 				bool doNotFix = false;
-				if ((*itNode)->tissueType == 1){ //the node is peripodial, no not fix this node
+				if ((*itNode)->tissueType == 1){ //the node is peripodial, do not fix this node
 					doNotFix = true;
 				}
 				/*else if ((*itNode)->tissueType == 2){ //the node is linker (as will be the case for all circumference)
@@ -4329,7 +4330,7 @@ void Simulation::addCurvatureToColumnar(double h){
 	for (vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
 		double x = (*itNode)->Position[0];
 		double y = (*itNode)->Position[1];
-		double z = (*itNode)->Position[2];
+		//double z = (*itNode)->Position[2];
 		double a = l1;
 		double c = l3;
 		if ((*itNode)->Position[0] < 0){
@@ -4599,7 +4600,7 @@ void Simulation::fillColumnarBasedNodeList(vector< vector<int> > &ColumnarBasedN
 					//There is no peripodial membrane
 					//Added the apical node now,
 					//I can stop:
-					cerr<<"finished lateral node addition with apical columnar"<<endl;
+					//cerr<<"finished lateral node addition with apical columnar"<<endl;
 					finishedTissueThickness = true;
 				}
 			}
@@ -4608,7 +4609,7 @@ void Simulation::fillColumnarBasedNodeList(vector< vector<int> > &ColumnarBasedN
 					//There is peripodial membrane
 					//Added the basal node at the top of peripodial node now,
 					//I can stop:
-					cout<<"finished lateral node addition with basal peripodial, "<<i<<" of "<<nCircumference<<endl;
+					//cout<<"finished lateral node addition with basal peripodial, "<<i<<" of "<<nCircumference<<endl;
 					finishedTissueThickness = true;
 				}
 			}
@@ -6605,7 +6606,7 @@ void Simulation::updateStepNR(){
         }
         NRSolver->calculateDisplacementMatrix(dt);
         NRSolver->calculateForcesAndJacobianMatrixNR(Nodes, Elements, dt, recordForcesOnFixedNodes, FixedNodeForces);
-	    //Writing elastic Forces and elastic Ke:
+        //Writing elastic Forces and elastic Ke:
 		NRSolver->writeForcesTogeAndgvInternal(Nodes, Elements, SystemForces);
 	    NRSolver->writeImplicitElementalKToJacobian(Elements);
 	    if (numericalCalculation){
@@ -6641,60 +6642,31 @@ void Simulation::updateStepNR(){
 		//packing can come from both encapsulation and tissue-tissue packing. I ad the forces irrespective of adhesion.
 		addPackingForces(NRSolver->gExt);
 
-		//------------------
-/*
-		int nFibres = 1;
-		vector<double> orientationAngles;
-		vector <double> fibreForceMagnitudes;
-		vector <double> initTimesInHr;
-		vector <double > matureTimesinHr;
-		vector<double> initAngle;
-		vector<double> endAngle;
-		orientationAngles.push_back(30.0);
-		fibreForceMagnitudes.push_back(1000.0);
-		initTimesInHr.push_back(2.0);
-		matureTimesinHr.push_back(4.0);
-		initAngle.push_back(0.0);
-		endAngle.push_back(45.0);
-		MuscleFibres* fibres;
-		fibres = new MuscleFibres(nFibres, orientationAngles, fibreForceMagnitudes,initTimesInHr, matureTimesinHr, initAngle, endAngle);
-		fibres->assignNodesForFibreAttachement(Nodes, symmetricX, symmetricY, SystemCentre[0], SystemCentre[1]);
-		fibres->addFibreForces(Nodes, NRSolver->gExt, currSimTimeSec/3600.0);
-		delete fibres;
-*/
-		//------------------
-
-
 		if (addingRandomForces){
 			addRandomForces(NRSolver->gExt);
 		}
         NRSolver->addExernalForces();
         checkForExperimentalSetupsWithinIteration();
     	NRSolver->calcutateFixedK(Nodes);
-        //Elements[0]->displayMatrix(NRSolver->NSlaveMasterBinding,"NSlaveMasterBinding before fixing");
-        //Elements[0]->displayMatrix(NRSolver->ISlaveMasterBinding,"ISlaveMasterBinding before fixing");
-        //Elements[0]->displayMatrix(NRSolver->K,"K before fixing");
-        //Elements[0]->displayMatrix(NRSolver->gSum,"gSum before fixing");
-    	NRSolver->calculateBoundKWithSlavesMasterDoF();
-        //Elements[0]->displayMatrix(NRSolver->K,"K after fixing");
-        //Elements[0]->displayMatrix(NRSolver->gSum,"gSum after fixing");
-        //cout<<"displaying the jacobian after all additions"<<endl;
-        //Elements[0]->displayMatrix(NRSolver->K,"theJacobian");
+       	NRSolver->calculateBoundKWithSlavesMasterDoF();
         //cout<<"checking convergence with forces"<<endl;
         //converged = NRSolver->checkConvergenceViaForce();
-        if (converged){
-            break;
-        }
+        //if (converged){
+        //    break;
+        //}
         //cout<<"solving for deltaU"<<endl;
         //Elements[0]->displayMatrix(NRSolver->K,"K");
         NRSolver->solveForDeltaU();
         //cout<<"checking convergence"<<endl;
         converged = NRSolver->checkConvergenceViaDeltaU();
         //Elements[0]->displayMatrix(NRSolver->deltaU,"deltaU after fixing");
-
+        //cout<<"updating uk"<<endl;
         NRSolver->updateUkInIteration();
+        //cout<<"updating elemental pos"<<endl;
         updateElementPositionsinNR(NRSolver->uk);
+        //cout<<"updating nodal pos"<<endl;
         updateNodePositionsNR(NRSolver->uk);
+        //cout<<"converged? "<<converged<<endl;
         iteratorK ++;
         if (!converged && iteratorK > maxIteration){
             cerr<<"Error: did not converge!!!"<<endl;
@@ -7074,7 +7046,7 @@ bool Simulation::checkForElementFlippingUponNodeCollapse(vector<int> &newCollaps
 }
 
 
-bool Simulation::updatePositionsOfNodesCollapsingInStages(){
+void Simulation::updatePositionsOfNodesCollapsingInStages(){
 	for(vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
 		if ((*itNode)->positionUpdateOngoing){
 			//cout<<"updating node "<<(*itNode)->Id<<endl;
@@ -7246,7 +7218,8 @@ bool Simulation::adhereNodes(){
 					if (continueAddition){
 						bool madeChange = NRSolver->checkIfSlaveIsAlreadyMasterOfOthers(dofslave,dofmaster);
 						if (madeChange){
-							for (int nodeIt = 0 ; nodeIt<Nodes.size(); ++nodeIt){
+							size_t nodeSize = Nodes.size();
+							for (int nodeIt = 0 ; nodeIt<nodeSize; ++nodeIt){
 								if(Nodes[nodeIt]->slaveTo[i]==slaveNodeId){
 									Nodes[nodeIt]->slaveTo[i]=masterNodeId;
 								}
@@ -7276,7 +7249,7 @@ bool Simulation::adhereNodes(){
 	return thereIsBinding;
 }
 
-
+/*
 void Simulation::calculatePackingForcesImplicit3D(){
 	//cout<<"inside calculatePackingForcesImplicit3D, size of packing node couples: "<<pacingNodeCouples0.size()<<endl;
 	int n = pacingNodeCouples0.size();
@@ -7287,14 +7260,32 @@ void Simulation::calculatePackingForcesImplicit3D(){
 		int id0 = pacingNodeCouples0[i];
 		int id1 = pacingNodeCouples1[i];
 		double multiplier = packingMultiplier;
+		double sigmoidSaturation = sigmoidSaturationForPacking;
 
+		//if packing is between peripodial and columnar:
+		bool packOnlyInZ = false;
+		if (   (Nodes[id0]->tissueType ==1 && Nodes[id1]->tissueType == 0)
+			|| (Nodes[id1]->tissueType ==1 && Nodes[id0]->tissueType == 0) ){
+			multiplier*=1.0;
+			//A normal sigmoid function saturates at a distance of 5, which is set in sigmoidSaturationForPacking
+			//I scale the distance with saturation/threshold, such that the forces will saturate
+			//at the threshold distance. For the peripodial, I can increase the threshold
+			//Then I should scale the value here, so the scaling will happen at the new threshold
+			//The code is structured such that threshold is a global value set by
+			//mesh geometry. I do not wish to alter that
+			//Scaling the sigmoid value is exactly the same, I need to modify s/t
+			//I have increased detection distance by 2
+			//I need to scale sigmoid by 1/2;
+			//search for tissueTypeDistanceSqMultiplier for the scaling value
+			sigmoidSaturation /= 2.0;
+			packOnlyInZ = true;
+		}
 		//sigmoid test:
 		double dx = Nodes[id0]->Position[0] - Nodes[id1]->Position[0];
 		double dy = Nodes[id0]->Position[1] - Nodes[id1]->Position[1];
 		double dz = Nodes[id0]->Position[2] - Nodes[id1]->Position[2];
 
 		double averageMass = 0.5 *( Nodes[id0]->mass + Nodes[id1]->mass );
-		double sigmoidSaturation = sigmoidSaturationForPacking;
 
 		if (initialWeightPointx[i]>0){
 			dx *= -1.0;
@@ -7306,6 +7297,7 @@ void Simulation::calculatePackingForcesImplicit3D(){
 			dz *= -1.0;
 		}
 
+
 		double Fx = multiplier * averageMass / (1 + exp(sigmoidSaturation / packingThreshold * (-1.0*dx)));
 		Fx *= initialWeightPointx[i];
 
@@ -7314,7 +7306,32 @@ void Simulation::calculatePackingForcesImplicit3D(){
 
 		double Fz = multiplier * averageMass / (1 + exp(sigmoidSaturation / packingThreshold * (-1.0*dz)));
 		Fz *= initialWeightPointz[i];
+		bool printForces = true;
 
+		//if (packOnlyInZ){
+			//Fx=0;Fy=0;
+			//if (Nodes[id0]->tissueType ==1){
+				//node 0 is peripodial while 1 is columnar. It must be pushed in (+)ve z.
+				//if (Fz<0){
+				//	Fz*=-1.0;cout<<"corrected Fz (-)ve "<<id0<<" "<<id1<<endl;
+					//Fx*=-1.0;
+					//Fy*=-1.0;
+				//	printForces = true;
+				//}
+			//}
+			//else{
+				//node 0 is columnar while 1 is peripodial, it must be pushed in (-ve)z.
+				//if (Fz>0){
+					//Fz*=-1.0;cout<<"corrected Fz (+)ve "<<id0<<" "<<id1<<endl;
+					//Fx*=-1.0;
+					//Fy*=-1.0;
+					//printForces = true;
+				//}
+			//}
+		//}
+		if (printForces){
+			cout<<" id0-id1: "<<id0<<"-"<<id1<<" F : "<<Fx<<" "<<Fy<<" "<<Fz<<" averageMass: "<<averageMass<<" dx,dy,dz: "<<dx<<" "<<dy<<" "<<dz<<" initialWeightPoint "<<initialWeightPointx[i]<<" "<<initialWeightPointy[i]<<" "<<initialWeightPointz[i]<<endl;
+		}
 		PackingForces[id0][0] += Fx;
 		PackingForces[id0][1] += Fy;
 		PackingForces[id0][2] += Fz;
@@ -7331,8 +7348,11 @@ void Simulation::calculatePackingForcesImplicit3D(){
 		      cout<<" packing force Fz is nan for nodes "<<pacingNodeCouples0[i]<<" - "<<pacingNodeCouples1[i]<<endl;
 		}
 	}
-}
+}*/
 
+
+
+/*
 void Simulation::calculatePackingJacobian3D(gsl_matrix* K){
 	int n = pacingNodeCouples0.size();
 	for(int i = 0 ; i<n; ++i){
@@ -7342,13 +7362,22 @@ void Simulation::calculatePackingJacobian3D(gsl_matrix* K){
 		int id0 = pacingNodeCouples0[i];
 		int id1 = pacingNodeCouples1[i];
 		double multiplier = packingMultiplier;
+		double sigmoidSaturation = sigmoidSaturationForPacking;
 
+		//if packing is between peripodial and columnar:
+		bool packOnlyInZ = false;
+		if (   (Nodes[id0]->tissueType ==1 && Nodes[id1]->tissueType == 0)
+			|| (Nodes[id1]->tissueType ==1 && Nodes[id0]->tissueType == 0) ){
+			multiplier*=1.0;
+			//See the force calculation function
+			sigmoidSaturation /= 2.0;
+			packOnlyInZ = true;
+		}
 		//sigmoid test:
 		double dx = Nodes[id0]->Position[0] - Nodes[id1]->Position[0];
 		double dy = Nodes[id0]->Position[1] - Nodes[id1]->Position[1];
 		double dz = Nodes[id0]->Position[2] - Nodes[id1]->Position[2];
 		double averageMass = 0.5 *( Nodes[id0]->mass + Nodes[id1]->mass );
-		double sigmoidSaturation = sigmoidSaturationForPacking;
 		if (initialWeightPointx[i]>0){
 			dx *= -1.0;
 		}
@@ -7358,7 +7387,33 @@ void Simulation::calculatePackingJacobian3D(gsl_matrix* K){
 		if (initialWeightPointz[i]>0){
 			dz *= -1.0;
 		}
+
 		double sigmoidx =  1 / (1 + exp(sigmoidSaturation/ packingThreshold * (-1.0 * dx) ));
+		double sigmoidy =  1 / (1 + exp(sigmoidSaturation/ packingThreshold * (-1.0 * dy) ));
+		double sigmoidz =  1 / (1 + exp(sigmoidSaturation/ packingThreshold * (-1.0 * dz) ));
+		bool printForces = true;
+		//if (packOnlyInZ){
+			//sigmoidx = 0.0;
+			//sigmoidy = 0.0;
+			//if (Nodes[id0]->tissueType ==1){
+				//node 0 is peripodial while 1 is columnar. It must be pushed in (+)ve z.
+				//if (sigmoidz*initialWeightPointz[i]<0){
+				//	sigmoidz*=-1.0;cout<<"corrected sigmoidz (-)ve "<<id0<<" "<<id1<<endl;
+					//sigmoidx*=-1.0;
+					//sigmoidy*=-1.0;
+				//	printForces = true;
+				//}
+			//}
+			//else{
+				//node 0 is columnar while 1 is peripodial, it must be pushed in (-ve)z.
+			//	if (sigmoidz*initialWeightPointz[i]>0){
+			//		sigmoidz*=-1.0;cout<<"corrected sigmoidz (+)ve "<<id0<<" "<<id1<<endl;
+					//sigmoidx*=-1.0;
+					//sigmoidy*=-1.0;
+			//		printForces = true;
+			//	}
+			//}
+		//}
 		double dFxdx0 = sigmoidx * (1 - sigmoidx) * multiplier * averageMass * initialWeightPointx[i] * (sigmoidSaturation/packingThreshold);
 		double dFxdx1 = -1.0*dFxdx0;
 		if (initialWeightPointx[i]>0){
@@ -7366,7 +7421,6 @@ void Simulation::calculatePackingJacobian3D(gsl_matrix* K){
 			dFxdx1 *= -1.0;
 		}
 
-		double sigmoidy =  1 / (1 + exp(sigmoidSaturation/ packingThreshold * (-1.0 * dy) ));
 		double dFydy0 = sigmoidy * (1 - sigmoidy) * multiplier * averageMass * initialWeightPointy[i] * (sigmoidSaturation/packingThreshold);
 		double dFydy1 = -1.0*dFydy0;
 		if (initialWeightPointy[i]>0){
@@ -7374,13 +7428,18 @@ void Simulation::calculatePackingJacobian3D(gsl_matrix* K){
 			dFydy1 *= -1.0;
 		}
 
-		double sigmoidz =  1 / (1 + exp(sigmoidSaturation/ packingThreshold * (-1.0 * dz) ));
+
 		double dFzdz0 = sigmoidz * (1 - sigmoidz) * multiplier * averageMass * initialWeightPointz[i] * (sigmoidSaturation/packingThreshold);
 		double dFzdz1 = -1.0*dFzdz0;
 		if (initialWeightPointz[i]>0){
 			dFzdz0 *= -1.0;
 			dFzdz1 *= -1.0;
 		}
+
+		if (printForces){
+			cout<<" id0-id1: "<<id0<<"-"<<id1<<" dFdX : "<<dFxdx0<<" "<<dFydy0<<" "<<dFzdz0<<endl;
+		}
+
 		//x values:
 		double value = gsl_matrix_get(K,3*id0,3*id0);
 		value -= dFxdx0;
@@ -7422,6 +7481,278 @@ void Simulation::calculatePackingJacobian3D(gsl_matrix* K){
 		value = gsl_matrix_get(K,3*id1+2,3*id0+2);
 		value -= dFzdz1;
 		gsl_matrix_set(K,3*id1+2,3*id0+2,value);
+	}
+}*/
+void Simulation::calculatePackingForcesImplicit3D(){
+	/**
+	 * This function calculates the packing forces between nodes, inside the Newton-Raphson iteration steps.
+	 * The list of nodes that can potentially pack are detected in function , and recorded in Simulation#pacingNodeCouples0 and Simulation#pacingNodeCouples1.
+	 * The applied packing force is a function of the distance between nodes, and is calculated
+	 * with an inverse logic function:
+	 *
+	  \f[ f\left( d \right) = \frac{L}{1+ e^{-k\left(d-d_{0}\right)}}
+   	    \f]
+   	 *
+	 * Here, the amplitude \f$ L \f$ is defined such that the force will scale with the average mass of the two nodes.
+	 * The steepness of the curve is the force profile will approach to zero as the distance between nodes approaches
+	 * to packing threshold. It is defined the sigmoid saturation term and the packing threshold as detected by the
+	 * current average side lengths of mesh elements as below. The sigmoid saturation is set to 5, as this is the approximate
+	 * saturation distance of the standard logistic function.
+	 *
+	 *  \f[ -k = \frac{2\:sigmoid\:saturation}{packing\:threshold}
+   	    \f]
+	 *
+	 * The distance is shifted with distance \f$ d_{0} \f$ to move the mid point of the function to approximately 60 per cent of
+	 * the packing threshold distance.
+	 *
+	 * \image html packingForce.png
+	 *
+	 * Then the forces on each node i and j become:
+	 * \f[
+	 *   \mathbf{F_{i}}\left( d \right) = f\left( d \right)\: \mathbf{e_{i}}\:\:,\:\: F_{j}\left( d \right) = f\left( d \right)\: \mathbf{e_{j}}=-f\left( d \right)\: \mathbf{e_{i}}=-F_{j}
+	 *   \f]
+	 *
+	 *   where the distance \f$ d \f$ is \f$ ||\mathbf{x_{i}}-\mathbf{x_{j}} || \f$, and the normal is \f$  \mathbf{e_{i}} = \left( \mathbf{x_{i}}-\mathbf{x_{j}} \right) / ||\mathbf{x_{i}}-\mathbf{x_{j}} || \f$.
+	 *
+	 * Procedure:
+	 */
+
+	double zeroThreshold = 1E-3;
+	/**
+	 * - Go through all the node couples that are selected to be packing in function
+	 */
+	size_t n = pacingNodeCouples0.size();
+	for(size_t node_counter = 0 ; node_counter<n; ++node_counter){
+		if (pacingNodeCouplesHaveAdhered[node_counter]){
+			continue;
+		}
+		int id0 = pacingNodeCouples0[node_counter];
+		int id1 = pacingNodeCouples1[node_counter];
+		double multiplier = packingMultiplier;
+		double sigmoidSaturation = sigmoidSaturationForPacking;
+		double distanceShiftScale  = 0.6*packingThreshold;
+		/**
+		 * - For each node pair id0 and id1, calculate the distance  \f$ d \f$ and the unit normal between them
+		 */
+		double dx = Nodes[id0]->Position[0] - Nodes[id1]->Position[0];
+		double dy = Nodes[id0]->Position[1] - Nodes[id1]->Position[1];
+		double dz = Nodes[id0]->Position[2] - Nodes[id1]->Position[2];
+		double d = pow((dx*dx + dy*dy + dz*dz),0.5);
+		double averageMass = 0.5 *( Nodes[id0]->mass + Nodes[id1]->mass );
+		double normal[3]= {1.0,0.0,0.0};
+		/**
+		 * - If the distance between the node pair is zero, then set the distance to the zero threshold value set in the function, to avoid division by zero.
+		 */
+		if (d > zeroThreshold){
+			normal[0] = dx/d;
+			normal[1] = dy/d;
+			normal[2] = dz/d;
+		}
+		else{
+			d = zeroThreshold; 
+		}
+		/**
+		 * - Shift the distance by \f$ d_{0} \f$, such that the sigmoid is 0.5 at this distance.
+		 * Currently \f$ d_{0} \f$ is set to 60 percent of Simulation#packingThreshold.
+		 * A shift of minimum of 50 per cent is necessary, as it will saturate the
+		 * sigmoid at distance zero. A higher shift will make the saturation earlier,
+		 * keeping a distance between nodes.
+		 */
+		double shifted_d = d - distanceShiftScale; //shift the distance by the selected percentage,
+		/**
+		 * - calculate the sigmoid value
+		 */
+		double sigmoid = 1 / (1 + exp(sigmoidSaturation/ packingThreshold * 2.0 * shifted_d));
+		/**
+		 * - Scale with average mass to obtain force per node. There is an additional multiplier that can be used to
+		 * scale the force under specific conditions if desired.
+		 * - Assign the forces in x, y and z  directions with the normal
+		 */
+		double Fmagnitude = multiplier * averageMass * sigmoid;
+		double Fx = Fmagnitude*normal[0];
+		double Fy = Fmagnitude*normal[1];
+		double Fz = Fmagnitude*normal[2];
+
+
+		bool printForces = false;
+		if (printForces){
+			cout<<" id0-id1: "<<id0<<"-"<<id1<<" F : "<<Fx<<" "<<Fy<<" "<<Fz<<" d: "<<d<<" packingThreshold: "<<packingThreshold<<" sigmoid: "<<sigmoid;
+			cout<<" node0pos: "<<Nodes[id0]->Position[0]<<" "<<Nodes[id0]->Position[1]<<" "<<Nodes[id0]->Position[2];
+			cout<<" node1pos: "<<Nodes[id1]->Position[0]<<" "<<Nodes[id1]->Position[1]<<" "<<Nodes[id1]->Position[2]<<endl;
+		}
+		/**
+		 * - With the direction of the normal calculation, the algorithm will calculate \f$  \mathbf{F_{0}} \f$.
+		 * 	\f$  \mathbf{F_{1}} \f$ is in the opposite direction. The forces are recorded on the Simulation#PackingForces vector.
+		 */
+		PackingForces[id0][0] += Fx;
+		PackingForces[id0][1] += Fy;
+		PackingForces[id0][2] += Fz;
+		PackingForces[id1][0] -= Fx;
+		PackingForces[id1][1] -= Fy;
+		PackingForces[id1][2] -= Fz;
+		if (isnan(Fx)){
+		      cout<<" packing force Fx is nan for nodes "<<pacingNodeCouples0[node_counter]<<" - "<<pacingNodeCouples1[node_counter]<<endl;
+		}
+		if (isnan(Fy)){
+		      cout<<" packing force Fy is nan for nodes "<<pacingNodeCouples0[node_counter]<<" - "<<pacingNodeCouples1[node_counter]<<endl;
+		}
+		if (isnan(Fz)){
+		      cout<<" packing force Fz is nan for nodes "<<pacingNodeCouples0[node_counter]<<" - "<<pacingNodeCouples1[node_counter]<<endl;
+		}
+	}
+}
+
+void Simulation::calculatePackingJacobian3D(gsl_matrix* K){
+	/**
+	 * This function calculates the derivatives of packing forces between nodes with respect to nodal positions, and fills in hte Jacobian
+	 * inside the Newton-Raphson iteration steps. The list of nodes that can potentially
+	 * pack are detected in function , and recorded in and recorded in Simulation#pacingNodeCouples0 and Simulation#pacingNodeCouples1..
+	 * The applied packing force is calculated in function Simulation#calculatePackingForcesImplicit3D.
+	 *
+	 * The derivatives are calculated as
+	 * \f[
+	 *   \frac{d\mathbf{F_{i}}}{d\mathbf{x_{i}}} =
+	 *   		\frac{f\left( d \right)}{d}\left( \mathbf{I} -  \mathbf{e_{i}} \mathbf{e_{i}^{T}}\right)
+	 *   		+\frac{df\left( d \right)}{dd} \mathbf{e_{i}} \mathbf{e_{i}^{T}}
+	 *   \f]
+	 * where distance \f$ d \f$ is \f$ ||\mathbf{x_{i}}-\mathbf{x_{j}} || \f$,
+	 * the normal is \f$  \mathbf{e_{i}} = \left( \mathbf{x_{i}}-\mathbf{x_{j}} \right) / ||\mathbf{x_{i}}-\mathbf{x_{j}} || \f$,
+	 * and  \f$  \mathbf{I} \f$ is the identity matrix. The function \f$ f\left( d \right) \f$, linking the distance between the nodes is an inverse sigmoid function,
+	 * detailed in Simulation#calculatePackingForcesImplicit3D. Its derivative is then:
+	 * \f[
+	 * \frac{df\left( d \right)}{dd} =
+	 * mass\:\frac{-2\:sigmoid\:saturation}{packing\:threshold} f\left( d \right) \left( 1 - f\left( d \right) \right)
+	 * \f]
+	 * Procedure:
+	 */
+	double zeroThreshold = 1E-3;
+	size_t n = pacingNodeCouples0.size();
+	/**
+	 * - Go through all the node couples that are selected to be packing in function
+	 */
+	for(size_t node_counter = 0 ; node_counter<n; ++node_counter){
+		if (pacingNodeCouplesHaveAdhered[node_counter]){
+			continue;
+		}
+		/**
+		 * - For each node pair id0 and id1, calculate the distance  \f$ d \f$ and the unit normal between them
+		 */
+		int id0 = pacingNodeCouples0[node_counter];
+		int id1 = pacingNodeCouples1[node_counter];
+		double multiplier = packingMultiplier;
+		double sigmoidSaturation = sigmoidSaturationForPacking;
+		double distanceShiftScale  = 0.6*packingThreshold;
+
+		double dx = Nodes[id0]->Position[0] - Nodes[id1]->Position[0];
+		double dy = Nodes[id0]->Position[1] - Nodes[id1]->Position[1];
+		double dz = Nodes[id0]->Position[2] - Nodes[id1]->Position[2];
+		double d = pow((dx*dx + dy*dy + dz*dz),0.5);
+		double averageMass = 0.5 *( Nodes[id0]->mass + Nodes[id1]->mass );
+		/**
+		 * - If the distance between the node pair is zero, then set the distance to the zero threshold value set in the function, to avoid division by zero.
+		 */
+		double normal[3]= {1.0,0.0,0.0};
+		if (d > zeroThreshold){
+			normal[0] = dx/d;
+			normal[1] = dy/d;
+			normal[2] = dz/d;
+		}
+		else{
+			d = zeroThreshold;
+		}
+		/**
+		 * - Shift the distance by \f$ d_{0} \f$, such that the sigmoid is 0.5 at this distance.
+		 * Currently \f$ d_{0} \f$ is set to 60 percent of Simulation#packingThreshold. And calculate the sigmoid function value.
+		 */
+		double shifted_d = d - distanceShiftScale; //shift the distance by the selected percentage,
+		double sigmoid = 1 / (1 + exp(sigmoidSaturation/ packingThreshold * 2.0 * shifted_d));
+		//F0 = sigmoid * mass
+		//F1 = -sigmoid *mass
+		//dFi / dXi = - dFi / dxj
+		//dFj / dXj = - dFj / dxi
+		/**
+		 * - Shift the distance by \f$ d_{0} \f$, such that the sigmoid is 0.5 at this distance.
+		 * Currently \f$ d_{0} \f$ is set to 60 percent of Simulation#packingThreshold. And calculate the sigmoid function value.
+		 * Calculate the derivative, leave the multiplication by the amplitude (mass) to the last stage.
+		 */
+		double dSdXi = (-sigmoidSaturation/ packingThreshold * 2.0) * sigmoid * (1-sigmoid);
+		gsl_matrix* normalMat = gsl_matrix_calloc(3,1);
+		gsl_matrix_set(normalMat, 0,0,normal[0]);
+		gsl_matrix_set(normalMat, 1,0,normal[1]);
+		gsl_matrix_set(normalMat, 2,0,normal[2]);
+		gsl_matrix* norm_normT = gsl_matrix_calloc(3,3);
+		gsl_blas_dgemm (CblasNoTrans, CblasTrans,1.0, normalMat, normalMat, 0.0, norm_normT);
+		gsl_matrix* dFidXi = gsl_matrix_calloc(3,3);
+		gsl_matrix_set_identity(dFidXi);
+
+		gsl_matrix_sub(dFidXi,norm_normT);  //(I - norm*norm^T)
+		gsl_matrix_scale(dFidXi,sigmoid/d);	//sigmoid/d * (I - norm*norm^T)
+		gsl_matrix_scale(norm_normT,dSdXi); // norm*norm^T * dSdXi
+		gsl_matrix_add(dFidXi,norm_normT); // sigmoid/d * (I - norm*norm^T) + norm*norm^T * dSdXi
+		gsl_matrix_scale(dFidXi,multiplier * averageMass); //scale by mass and multiplier when needed
+
+		//dFidxi = -dFidxj
+		//dFj/dxj = dFidxi = -dFj/dxi
+
+		bool printForces = false;
+		if (printForces){
+			cout<<" id0-id1: "<<id0<<endl;
+			Elements[0]->displayMatrix(dFidXi,"dFidXi");
+		}
+		//bool printForces = true;
+		/**
+		 * - Add the resulting 3 by 3 derivative matrices are added into the Jacobian in the form:
+		 * \f[
+		 *  - \frac{d\mathbf{F_{0}}}{d\mathbf{x_{0}}} \:\: \rightarrow
+		 *
+		 * K
+		 *  \begin{bmatrix}
+		 *  	      & \vdots          & \vdots   & \vdots            &        \\
+    			\dots & x_{3id0,3id0}   & \dots    & x_{3id0,3id0+2}   & \dots  \\
+    			\dots & \vdots          & \dots    & \vdots            & \dots  \\
+    			\dots & x_{3id0+2,3id0} & \dots    & x_{3id0+2,3id0+2} & \dots  \\
+    			      & \vdots          & \vdots   & \vdots             &
+			\end{bmatrix},
+			\f]
+			\f[
+			\frac{d\mathbf{F_{0}}}{d\mathbf{x_{0}}} \:\: \rightarrow
+				\begin{bmatrix}
+				x_{3id0,3id1}   & \dots\\
+				\dots           & x_{3id0+2,3id1+2}
+				\end{bmatrix},
+
+			-\frac{d\mathbf{F_{0}}}{d\mathbf{x_{0}}} \:\: \rightarrow
+				\begin{bmatrix}
+				x_{3id1,3id1}   & \dots\\
+				\dots           & x_{3id1+2,3id1+2}
+				\end{bmatrix},
+
+			\frac{d\mathbf{F_{0}}}{d\mathbf{x_{0}}} \:\: \rightarrow
+				\begin{bmatrix}
+				x_{3id1,3id0}   & \dots\\
+				\dots           & x_{3id1+2,3id0+2}
+				\end{bmatrix}.
+
+ 	 	 	\f]
+		 */
+		for (size_t i=0; i<3; ++i){
+			for (size_t j=0; j<3; ++j){
+				double derivativeij = gsl_matrix_get(dFidXi,i,j);
+				addValueToMatrix(K,3*id0+i,3*id0+j,-derivativeij);
+
+				//dFidxi = -dFidxj
+				addValueToMatrix(K,3*id0+i,3*id1+j,derivativeij);
+
+				//dFj/dxj = dFidxi
+				addValueToMatrix(K,3*id1+i,3*id1+j,-derivativeij);
+
+				//dFj/dxi = -dFidxi
+				addValueToMatrix(K,3*id1+i,3*id0+j,derivativeij);
+							}
+		}
+		gsl_matrix_free(normalMat);
+		gsl_matrix_free(dFidXi);
+		gsl_matrix_free(norm_normT);
 	}
 }
 
@@ -8409,7 +8740,14 @@ void Simulation::detectPacingNodes(){
 							double dy = pos[1] - posSlave[1];
 							double dz = pos[2] - posSlave[2];
 							double d2 = dx*dx + dy*dy + dz*dz;
-							if (d2<t2){
+							//if packing is between peripodial and columnar:
+							//I will stsrt detecting these much earlier
+							double tissueTypeDistanceSqMultiplier = 1.0;
+							if (   ( (*itNodeSlave)->tissueType ==1 && (*itNode)->tissueType == 0)
+								|| ( (*itNode)->tissueType ==1 && (*itNodeSlave)->tissueType == 0) ){
+								tissueTypeDistanceSqMultiplier=9.0; //2*2
+							}
+							if (d2<t2*tissueTypeDistanceSqMultiplier){
 								//close enough for packing , add to list:
 								arrayForParallelisationPacingNodeCouples0[a].push_back((*itNode)->Id);
 								arrayForParallelisationPacingNodeCouples1[a].push_back((*itNodeSlave)->Id);

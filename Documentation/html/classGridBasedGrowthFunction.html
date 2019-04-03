@@ -124,9 +124,9 @@ Inheritance diagram for GridBasedGrowthFunction:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:aac341fa9ccdca2d089e9f341cb68ca94"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGridBasedGrowthFunction.html#aac341fa9ccdca2d089e9f341cb68ca94">GridBasedGrowthFunction</a> (int id, int type, float <a class="el" href="classGrowthFunctionBase.html#ae92513a7b41637df8e26e7db35ddf97c">initTime</a>, float <a class="el" href="classGrowthFunctionBase.html#a3ff4db0573d354a75666a5f3ca446941">endTime</a>, bool <a class="el" href="classGrowthFunctionBase.html#a3d56771e7c145589a14e11cc331e0326">applyToColumnarLayer</a>, bool <a class="el" href="classGrowthFunctionBase.html#a08ae19f58cb98fa8e315a77f52749732">applyToPeripodialMembrane</a>, int nX, int nY, double ***GrowthMat, double **AngleMat)</td></tr>
-<tr class="memdesc:aac341fa9ccdca2d089e9f341cb68ca94"><td class="mdescLeft">&#160;</td><td class="mdescRight">The constructor of <a class="el" href="classGridBasedGrowthFunction.html">GridBasedGrowthFunction</a>.  <a href="#aac341fa9ccdca2d089e9f341cb68ca94">More...</a><br /></td></tr>
-<tr class="separator:aac341fa9ccdca2d089e9f341cb68ca94"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aed515e78b2dbcf81751b44cb0c2bef58"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGridBasedGrowthFunction.html#aed515e78b2dbcf81751b44cb0c2bef58">GridBasedGrowthFunction</a> (int id, int type, float <a class="el" href="classGrowthFunctionBase.html#ae92513a7b41637df8e26e7db35ddf97c">initTime</a>, float <a class="el" href="classGrowthFunctionBase.html#a3ff4db0573d354a75666a5f3ca446941">endTime</a>, bool <a class="el" href="classGrowthFunctionBase.html#a3d56771e7c145589a14e11cc331e0326">applyToColumnarLayer</a>, bool <a class="el" href="classGrowthFunctionBase.html#a08ae19f58cb98fa8e315a77f52749732">applyToPeripodialMembrane</a>, bool <a class="el" href="classGrowthFunctionBase.html#a9fe46fc6dde4041b79204beb48972a09">applyToBasalECM</a>, bool <a class="el" href="classGrowthFunctionBase.html#ac623b1dbe376bce5dddbe1a2e21c776f">applyToLateralECM</a>, int nX, int nY, double ***GrowthMat, double **AngleMat)</td></tr>
+<tr class="memdesc:aed515e78b2dbcf81751b44cb0c2bef58"><td class="mdescLeft">&#160;</td><td class="mdescRight">The constructor of <a class="el" href="classGridBasedGrowthFunction.html">GridBasedGrowthFunction</a>.  <a href="#aed515e78b2dbcf81751b44cb0c2bef58">More...</a><br /></td></tr>
+<tr class="separator:aed515e78b2dbcf81751b44cb0c2bef58"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae36e6ea2e7bdf41459e74d5846d6d24d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae36e6ea2e7bdf41459e74d5846d6d24d"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGridBasedGrowthFunction.html#ae36e6ea2e7bdf41459e74d5846d6d24d">getGridX</a> ()</td></tr>
 <tr class="memdesc:ae36e6ea2e7bdf41459e74d5846d6d24d"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function returns <a class="el" href="classGridBasedGrowthFunction.html#af872b9963f3a579dcd615c23bcb58a86" title="The number of grid points that discretise the tissue in x. ">GridBasedGrowthFunction::nGridX</a>. <br /></td></tr>
@@ -168,13 +168,13 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>preCalculateAnglesFor
 <tr class="memitem:a11692e47b20e812fe775f99a78480571"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a11692e47b20e812fe775f99a78480571"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>getGrowthProfileAt4Corners</b> (int IndexX, int IndexY, double *growth0, double *growth1, double *growth2, double *growth3, double *angles, bool *anglesEliminated)</td></tr>
 <tr class="separator:a11692e47b20e812fe775f99a78480571"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a659418841b4a3bc8be1dec15f95d7b76"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGridBasedGrowthFunction.html#a659418841b4a3bc8be1dec15f95d7b76">writeSummary</a> (ofstream &amp;saveFileSimulationSummary, double dt)</td></tr>
-<tr class="memdesc:a659418841b4a3bc8be1dec15f95d7b76"><td class="mdescLeft">&#160;</td><td class="mdescRight">The function is to write the growth function summary to simulation summary file.  <a href="#a659418841b4a3bc8be1dec15f95d7b76">More...</a><br /></td></tr>
-<tr class="separator:a659418841b4a3bc8be1dec15f95d7b76"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a267f45c300d9ef98c6f4fa14a5181c78"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGridBasedGrowthFunction.html#a267f45c300d9ef98c6f4fa14a5181c78">writeSummary</a> (ofstream &amp;saveFileSimulationSummary)</td></tr>
+<tr class="memdesc:a267f45c300d9ef98c6f4fa14a5181c78"><td class="mdescLeft">&#160;</td><td class="mdescRight">The function is to write the growth function summary to simulation summary file.  <a href="#a267f45c300d9ef98c6f4fa14a5181c78">More...</a><br /></td></tr>
+<tr class="separator:a267f45c300d9ef98c6f4fa14a5181c78"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classGrowthFunctionBase"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classGrowthFunctionBase')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classGrowthFunctionBase.html">GrowthFunctionBase</a></td></tr>
-<tr class="memitem:a061b31ad8a0cb228628c7104029a94bf inherit pub_methods_classGrowthFunctionBase"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGrowthFunctionBase.html#a061b31ad8a0cb228628c7104029a94bf">GrowthFunctionBase</a> (int id, int type, float <a class="el" href="classGrowthFunctionBase.html#ae92513a7b41637df8e26e7db35ddf97c">initTime</a>, float <a class="el" href="classGrowthFunctionBase.html#a3ff4db0573d354a75666a5f3ca446941">endTime</a>, bool <a class="el" href="classGrowthFunctionBase.html#a3d56771e7c145589a14e11cc331e0326">applyToColumnarLayer</a>, bool <a class="el" href="classGrowthFunctionBase.html#a08ae19f58cb98fa8e315a77f52749732">applyToPeripodialMembrane</a>)</td></tr>
-<tr class="memdesc:a061b31ad8a0cb228628c7104029a94bf inherit pub_methods_classGrowthFunctionBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">The constructor of <a class="el" href="classGrowthFunctionBase.html">GrowthFunctionBase</a>. Different growth functions will be derived from this class.  <a href="#a061b31ad8a0cb228628c7104029a94bf">More...</a><br /></td></tr>
-<tr class="separator:a061b31ad8a0cb228628c7104029a94bf inherit pub_methods_classGrowthFunctionBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5c275b3f839cc4f572b68afc5ad1064f inherit pub_methods_classGrowthFunctionBase"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGrowthFunctionBase.html#a5c275b3f839cc4f572b68afc5ad1064f">GrowthFunctionBase</a> (int id, int type, float <a class="el" href="classGrowthFunctionBase.html#ae92513a7b41637df8e26e7db35ddf97c">initTime</a>, float <a class="el" href="classGrowthFunctionBase.html#a3ff4db0573d354a75666a5f3ca446941">endTime</a>, bool <a class="el" href="classGrowthFunctionBase.html#a3d56771e7c145589a14e11cc331e0326">applyToColumnarLayer</a>, bool <a class="el" href="classGrowthFunctionBase.html#a08ae19f58cb98fa8e315a77f52749732">applyToPeripodialMembrane</a>, bool <a class="el" href="classGrowthFunctionBase.html#a9fe46fc6dde4041b79204beb48972a09">applyToBasalECM</a>, bool <a class="el" href="classGrowthFunctionBase.html#ac623b1dbe376bce5dddbe1a2e21c776f">applyToLateralECM</a>)</td></tr>
+<tr class="memdesc:a5c275b3f839cc4f572b68afc5ad1064f inherit pub_methods_classGrowthFunctionBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">The constructor of <a class="el" href="classGrowthFunctionBase.html">GrowthFunctionBase</a>. Different growth functions will be derived from this class.  <a href="#a5c275b3f839cc4f572b68afc5ad1064f">More...</a><br /></td></tr>
+<tr class="separator:a5c275b3f839cc4f572b68afc5ad1064f inherit pub_methods_classGrowthFunctionBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad5b4e88d33c4b72444c5c25c25ab68fb inherit pub_methods_classGrowthFunctionBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad5b4e88d33c4b72444c5c25c25ab68fb"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>ParentErrorMessage</b> (string functionName)</td></tr>
 <tr class="separator:ad5b4e88d33c4b72444c5c25c25ab68fb inherit pub_methods_classGrowthFunctionBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -184,27 +184,33 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>ParentErrorMessage<
 <tr class="memitem:a9097ca54f854aa0d1c8d220c971580dd inherit pub_methods_classGrowthFunctionBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9097ca54f854aa0d1c8d220c971580dd"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>ParentErrorMessage</b> (string functionName, int returnValue)</td></tr>
 <tr class="separator:a9097ca54f854aa0d1c8d220c971580dd inherit pub_methods_classGrowthFunctionBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa031bd3d28993402ee5bdb3d8cae7fa6 inherit pub_methods_classGrowthFunctionBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa031bd3d28993402ee5bdb3d8cae7fa6"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>getCentre</b> (float &amp;centreX, float &amp;centreY)</td></tr>
-<tr class="separator:aa031bd3d28993402ee5bdb3d8cae7fa6 inherit pub_methods_classGrowthFunctionBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a73b474a60caeb5b6b326ecb6a056cfe4 inherit pub_methods_classGrowthFunctionBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a73b474a60caeb5b6b326ecb6a056cfe4"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>writeSummary</b> (ofstream &amp;, double)</td></tr>
+<tr class="separator:a73b474a60caeb5b6b326ecb6a056cfe4 inherit pub_methods_classGrowthFunctionBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a93aef4238b9da5d0b06cf18c552d3ca3 inherit pub_methods_classGrowthFunctionBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a93aef4238b9da5d0b06cf18c552d3ca3"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>getCentre</b> (float &amp;, float &amp;)</td></tr>
+<tr class="separator:a93aef4238b9da5d0b06cf18c552d3ca3 inherit pub_methods_classGrowthFunctionBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a05ace7e6cb21566ad03e72e56962d58b inherit pub_methods_classGrowthFunctionBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a05ace7e6cb21566ad03e72e56962d58b"></a>
 virtual float&#160;</td><td class="memItemRight" valign="bottom"><b>getInnerRadius</b> ()</td></tr>
 <tr class="separator:a05ace7e6cb21566ad03e72e56962d58b inherit pub_methods_classGrowthFunctionBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2ba8f7659e1c0546998671458943233d inherit pub_methods_classGrowthFunctionBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2ba8f7659e1c0546998671458943233d"></a>
 virtual float&#160;</td><td class="memItemRight" valign="bottom"><b>getOuterRadius</b> ()</td></tr>
 <tr class="separator:a2ba8f7659e1c0546998671458943233d inherit pub_methods_classGrowthFunctionBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9598654cae114f6b443167898ac4d095 inherit pub_methods_classGrowthFunctionBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9598654cae114f6b443167898ac4d095"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>getGrowthRate</b> (double *maxValue)</td></tr>
-<tr class="separator:a9598654cae114f6b443167898ac4d095 inherit pub_methods_classGrowthFunctionBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2c518c297bc1bbf996f6e7df758a0cc7 inherit pub_methods_classGrowthFunctionBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2c518c297bc1bbf996f6e7df758a0cc7"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>getGrowthRate</b> (double *)</td></tr>
+<tr class="separator:a2c518c297bc1bbf996f6e7df758a0cc7 inherit pub_methods_classGrowthFunctionBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa2b72fe18b40e73b463200b7cc7f6884 inherit pub_methods_classGrowthFunctionBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa2b72fe18b40e73b463200b7cc7f6884"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>getShapeChangeRateRate</b> (double *)</td></tr>
+<tr class="separator:aa2b72fe18b40e73b463200b7cc7f6884 inherit pub_methods_classGrowthFunctionBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3c0d71849d020d29832b1aaaba87065e inherit pub_methods_classGrowthFunctionBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3c0d71849d020d29832b1aaaba87065e"></a>
 virtual gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>getShearAngleRotationMatrix</b> ()</td></tr>
 <tr class="separator:a3c0d71849d020d29832b1aaaba87065e inherit pub_methods_classGrowthFunctionBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adea116613ddb2edb7ebc0734d17c9226 inherit pub_methods_classGrowthFunctionBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adea116613ddb2edb7ebc0734d17c9226"></a>
 virtual double&#160;</td><td class="memItemRight" valign="bottom"><b>getShearAngle</b> ()</td></tr>
 <tr class="separator:adea116613ddb2edb7ebc0734d17c9226 inherit pub_methods_classGrowthFunctionBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abcfbd2e1fbad91b3f9002ef7fc7625e5 inherit pub_methods_classGrowthFunctionBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abcfbd2e1fbad91b3f9002ef7fc7625e5"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>setGrowtRate</b> (double ex, double ey, double ez)</td></tr>
-<tr class="separator:abcfbd2e1fbad91b3f9002ef7fc7625e5 inherit pub_methods_classGrowthFunctionBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac9995b11d7a4823d2d2c45a603b51916 inherit pub_methods_classGrowthFunctionBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac9995b11d7a4823d2d2c45a603b51916"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>setGrowtRate</b> (double, double, double)</td></tr>
+<tr class="separator:ac9995b11d7a4823d2d2c45a603b51916 inherit pub_methods_classGrowthFunctionBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -264,9 +270,35 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGrowthFunctionBase.html#a08ae19f58cb98fa8e315a77f52749732">applyToPeripodialMembrane</a></td></tr>
 <tr class="memdesc:a08ae19f58cb98fa8e315a77f52749732 inherit pub_attribs_classGrowthFunctionBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">Boolean stating if the growth should be applied to peripodial membrane. <br /></td></tr>
 <tr class="separator:a08ae19f58cb98fa8e315a77f52749732 inherit pub_attribs_classGrowthFunctionBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9fe46fc6dde4041b79204beb48972a09 inherit pub_attribs_classGrowthFunctionBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9fe46fc6dde4041b79204beb48972a09"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGrowthFunctionBase.html#a9fe46fc6dde4041b79204beb48972a09">applyToBasalECM</a></td></tr>
+<tr class="memdesc:a9fe46fc6dde4041b79204beb48972a09 inherit pub_attribs_classGrowthFunctionBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">Boolean stating if the growth should be applied to basal explicit ECM layer. <br /></td></tr>
+<tr class="separator:a9fe46fc6dde4041b79204beb48972a09 inherit pub_attribs_classGrowthFunctionBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac623b1dbe376bce5dddbe1a2e21c776f inherit pub_attribs_classGrowthFunctionBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac623b1dbe376bce5dddbe1a2e21c776f"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGrowthFunctionBase.html#ac623b1dbe376bce5dddbe1a2e21c776f">applyToLateralECM</a></td></tr>
+<tr class="memdesc:ac623b1dbe376bce5dddbe1a2e21c776f inherit pub_attribs_classGrowthFunctionBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">Boolean stating if the growth should be applied to lateral explicit ECM layer. <br /></td></tr>
+<tr class="separator:ac623b1dbe376bce5dddbe1a2e21c776f inherit pub_attribs_classGrowthFunctionBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a254c82be25d3648a0474c24a63d5a555 inherit pub_attribs_classGrowthFunctionBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a254c82be25d3648a0474c24a63d5a555"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>applyTissueApical</b></td></tr>
+<tr class="separator:a254c82be25d3648a0474c24a63d5a555 inherit pub_attribs_classGrowthFunctionBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afcbfd4691a386ba9dbf75888e0a4ef9e inherit pub_attribs_classGrowthFunctionBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afcbfd4691a386ba9dbf75888e0a4ef9e"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>applyTissueBasal</b></td></tr>
+<tr class="separator:afcbfd4691a386ba9dbf75888e0a4ef9e inherit pub_attribs_classGrowthFunctionBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a95cb51fffd8fbb1466510cc40853aeed inherit pub_attribs_classGrowthFunctionBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a95cb51fffd8fbb1466510cc40853aeed"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>applyTissueMidLine</b></td></tr>
+<tr class="separator:a95cb51fffd8fbb1466510cc40853aeed inherit pub_attribs_classGrowthFunctionBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa0d3867bc9072d342ca8b7f84800e04b inherit pub_attribs_classGrowthFunctionBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa0d3867bc9072d342ca8b7f84800e04b"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>zMin</b></td></tr>
+<tr class="separator:aa0d3867bc9072d342ca8b7f84800e04b inherit pub_attribs_classGrowthFunctionBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac4696285be059f2dfacd195f0bbb5328 inherit pub_attribs_classGrowthFunctionBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac4696285be059f2dfacd195f0bbb5328"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>zMax</b></td></tr>
+<tr class="separator:ac4696285be059f2dfacd195f0bbb5328 inherit pub_attribs_classGrowthFunctionBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a362abb90b107b372d558d26105957c23 inherit pub_attribs_classGrowthFunctionBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a362abb90b107b372d558d26105957c23"></a>
+vector&lt; int &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>appliedEllipseBandIds</b></td></tr>
+<tr class="separator:a362abb90b107b372d558d26105957c23 inherit pub_attribs_classGrowthFunctionBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a class="anchor" id="aac341fa9ccdca2d089e9f341cb68ca94"></a>
+<a class="anchor" id="aed515e78b2dbcf81751b44cb0c2bef58"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -312,6 +344,18 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
         <tr>
           <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>applyToBasalECM</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>applyToLateralECM</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>nX</em>, </td>
         </tr>
@@ -347,7 +391,7 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 </div><div class="memdoc">
 
 <p>The constructor of <a class="el" href="classGridBasedGrowthFunction.html">GridBasedGrowthFunction</a>. </p>
-<p>The first six parameters will be directed to the parent constructor, <a class="el" href="classGrowthFunctionBase.html#a061b31ad8a0cb228628c7104029a94bf" title="The constructor of GrowthFunctionBase. Different growth functions will be derived from this class...">GrowthFunctionBase::GrowthFunctionBase</a>. <br />
+<p>The first six parameters will be directed to the parent constructor, <a class="el" href="classGrowthFunctionBase.html#a5c275b3f839cc4f572b68afc5ad1064f" title="The constructor of GrowthFunctionBase. Different growth functions will be derived from this class...">GrowthFunctionBase::GrowthFunctionBase</a>. <br />
 integers nX and nY will set <a class="el" href="classGridBasedGrowthFunction.html#af872b9963f3a579dcd615c23bcb58a86" title="The number of grid points that discretise the tissue in x. ">GridBasedGrowthFunction::nGridX</a> and <a class="el" href="classGridBasedGrowthFunction.html#a625bc963a1f1e7d1f1a35dbd0ef51728" title="The number of grid points that discretise the tissue in y. ">GridBasedGrowthFunction::nGridY</a>, respectively. <a class="el" href="classGridBasedGrowthFunction.html#a5522d9b84fa95ebd65cdf290a4f0a65c" title="The matrix of growth rates in (1/sec). It is a matrix of double triplets for growth rate at each grid...">GridBasedGrowthFunction::GrowthMatrix</a> will be initiated to point at a 2 dimensional matrix of double triplets the size(nX, nY). <br />
 double*** GrowthMat is the pointer to the 2-dimensional matrix of double triplets, holding the 3D growth rates at each grid point. Values stored in GrowthMat will set the values in <a class="el" href="classGridBasedGrowthFunction.html#a5522d9b84fa95ebd65cdf290a4f0a65c" title="The matrix of growth rates in (1/sec). It is a matrix of double triplets for growth rate at each grid...">GridBasedGrowthFunction::GrowthMatrix</a>. The matrix storing the growth rates have been read from an input file through ModelInputObject::readGrowthOptions and related functions therein <br />
  </p>
@@ -355,7 +399,7 @@ double*** GrowthMat is the pointer to the 2-dimensional matrix of double triplet
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a class="anchor" id="a659418841b4a3bc8be1dec15f95d7b76"></a>
+<a class="anchor" id="a267f45c300d9ef98c6f4fa14a5181c78"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -366,18 +410,8 @@ double*** GrowthMat is the pointer to the 2-dimensional matrix of double triplet
           <td class="memname">void GridBasedGrowthFunction::writeSummary </td>
           <td>(</td>
           <td class="paramtype">ofstream &amp;&#160;</td>
-          <td class="paramname"><em>saveFileSimulationSummary</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
+          <td class="paramname"><em>saveFileSimulationSummary</em></td><td>)</td>
           <td></td>
-          <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>dt</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
         </tr>
       </table>
   </td>
@@ -388,7 +422,7 @@ double*** GrowthMat is the pointer to the 2-dimensional matrix of double triplet
 </div><div class="memdoc">
 
 <p>The function is to write the growth function summary to simulation summary file. </p>
-<p>This function will write the <a class="el" href="classGridBasedGrowthFunction.html">GridBasedGrowthFunction</a> details into the simulation summary file, provided as the first input. Time step (dt) of the simulation is provided as second input, to report the growth rates per hour. The output should look like: <br />
+<p>This function will write the <a class="el" href="classGridBasedGrowthFunction.html">GridBasedGrowthFunction</a> details into the simulation summary file, provided as the first input. The output should look like: <br />
  Growth Type: growth From File (3) Initial time(sec): <a class="el" href="classGrowthFunctionBase.html#ae92513a7b41637df8e26e7db35ddf97c" title="The initiation time of the growth, in seconds. ">GridBasedGrowthFunction::initTime</a> FinalTime time(sec): <a class="el" href="classGrowthFunctionBase.html#a3ff4db0573d354a75666a5f3ca446941" title="The end time of the growth, in seconds. ">GridBasedGrowthFunction::endTime</a> Growth matrix mesh size: <a class="el" href="classGridBasedGrowthFunction.html#af872b9963f3a579dcd615c23bcb58a86" title="The number of grid points that discretise the tissue in x. ">GridBasedGrowthFunction::nGridX</a> <a class="el" href="classGridBasedGrowthFunction.html#a625bc963a1f1e7d1f1a35dbd0ef51728" title="The number of grid points that discretise the tissue in y. ">GridBasedGrowthFunction::nGridY</a></p>
 
 <p>Reimplemented from <a class="el" href="classGrowthFunctionBase.html">GrowthFunctionBase</a>.</p>
@@ -404,7 +438,7 @@ double*** GrowthMat is the pointer to the 2-dimensional matrix of double triplet
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="classGridBasedGrowthFunction.html">GridBasedGrowthFunction</a></li>
-    <li class="footer">Generated on Fri Apr 15 2016 19:51:54 for Tissue Origami by
+    <li class="footer">Generated on Wed Apr 3 2019 14:19:52 for Tissue Origami by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

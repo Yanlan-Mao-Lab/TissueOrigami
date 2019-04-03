@@ -83,9 +83,11 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   </div>
   <div id="navrow4" class="tabs3">
     <ul class="tablist">
+      <li><a href="#index_a"><span>a</span></a></li>
       <li><a href="#index_c"><span>c</span></a></li>
       <li><a href="#index_d"><span>d</span></a></li>
       <li><a href="#index_g"><span>g</span></a></li>
+      <li><a href="#index_i"><span>i</span></a></li>
       <li><a href="#index_m"><span>m</span></a></li>
       <li><a href="#index_o"><span>o</span></a></li>
       <li><a href="#index_r"><span>r</span></a></li>
@@ -127,12 +129,37 @@ $(document).ready(function(){initNavTree('functions_func.html','');});
 <div class="contents">
 &#160;
 
+<h3><a class="anchor" id="index_a"></a>- a -</h3><ul>
+<li>addToConnectedElements()
+: <a class="el" href="classNode.html#a2c6f029aa3388b8fb122139b1d24b71b">Node</a>
+</li>
+<li>addToImmediateNeigs()
+: <a class="el" href="classNode.html#ac2838f50304007a7cfe3df3f2e8d1772">Node</a>
+</li>
+<li>addToTriPointKe()
+: <a class="el" href="classShapeBase.html#a2e8e11261fb35bc925259151218eebf3">ShapeBase</a>
+</li>
+</ul>
+
+
 <h3><a class="anchor" id="index_c"></a>- c -</h3><ul>
 <li>calculateCurrNodalForces()
 : <a class="el" href="classPrism.html#a606fbf422f9d652e0f697ea93dc2e088">Prism</a>
 </li>
+<li>calculateForces3D()
+: <a class="el" href="classShapeBase.html#a2b2223ed65a766c8c90fdf470a3bb93e">ShapeBase</a>
+</li>
+<li>calculateGrowthStrainsRotMat()
+: <a class="el" href="classShapeBase.html#a8bf9c7c8ae6a3195ec9c6b6bdaf847ab">ShapeBase</a>
+</li>
 <li>calculatePacking()
 : <a class="el" href="classSimulation.html#a51cb5448f660eeefc54a5d2a33ab561e">Simulation</a>
+</li>
+<li>calculatePackingForcesImplicit3D()
+: <a class="el" href="classSimulation.html#a77e76f4fe61889b9c0ae18436a7fd2fb">Simulation</a>
+</li>
+<li>calculatePackingJacobian3D()
+: <a class="el" href="classSimulation.html#a07d76a2495e1b863ab0cdb7185821bec">Simulation</a>
 </li>
 <li>calculateRateOfDeformationTensor()
 : <a class="el" href="classShapeBase.html#afbbf191777e8787a0e8307d30ce0aa9d">ShapeBase</a>
@@ -155,6 +182,9 @@ $(document).ready(function(){initNavTree('functions_func.html','');});
 <li>checkIfNodeHasPacking()
 : <a class="el" href="classNode.html#a1d80e6f467d8ca919872b6e47a882dd5">Node</a>
 </li>
+<li>collapseOnNode()
+: <a class="el" href="classNode.html#a93882af02dfebc072718e557552ef2dc">Node</a>
+</li>
 <li>constructElementalDisplacementMatrix()
 : <a class="el" href="classShapeBase.html#afcdbbe37a746ade52a1af70a9aa12b9f">ShapeBase</a>
 </li>
@@ -167,6 +197,9 @@ $(document).ready(function(){initNavTree('functions_func.html','');});
 </li>
 <li>displayConnectedElementWeights()
 : <a class="el" href="classNode.html#a755e8c3d76e7f1f0ab364fc3d4da3a9a">Node</a>
+</li>
+<li>displayName()
+: <a class="el" href="classShapeBase.html#ab8a7323c50767ecdc82d8d8ce411b264">ShapeBase</a>
 </li>
 </ul>
 
@@ -202,6 +235,9 @@ $(document).ready(function(){initNavTree('functions_func.html','');});
 : <a class="el" href="classRingGrowthFunction.html#ab3cc1858fb602ab40a74af7d0467c13b">RingGrowthFunction</a>
 , <a class="el" href="classUniformGrowthFunction.html#ad5be18ae004a3eed205ab3570e13202a">UniformGrowthFunction</a>
 </li>
+<li>getId()
+: <a class="el" href="classNode.html#a3c7b8ccf4dab44216b997c5f63f11d9f">Node</a>
+</li>
 <li>getInnerRadius()
 : <a class="el" href="classRingGrowthFunction.html#ae1f4f4cecfab3ec343c748cfe78ab70b">RingGrowthFunction</a>
 </li>
@@ -219,6 +255,9 @@ $(document).ready(function(){initNavTree('functions_func.html','');});
 </li>
 <li>getRandomStr()
 : <a class="el" href="classRandomGenerator.html#a2da3e84fb399d8af423547376a1aae42">RandomGenerator</a>
+</li>
+<li>getShapeChangeRateRate()
+: <a class="el" href="classmarkerEllipseBasedShapeChangeFunction.html#a0df657d2635e1826f23b4e3a7e327bbd">markerEllipseBasedShapeChangeFunction</a>
 </li>
 <li>getShearAngle()
 : <a class="el" href="classRingGrowthFunction.html#aa70523c66dce48e7e54360596787a629">RingGrowthFunction</a>
@@ -241,15 +280,34 @@ $(document).ready(function(){initNavTree('functions_func.html','');});
 : <a class="el" href="classGridBasedGrowthFunction.html#a85ed4f6a4b5165adf1ab8806b885f81a">GridBasedGrowthFunction</a>
 </li>
 <li>GridBasedGrowthFunction()
-: <a class="el" href="classGridBasedGrowthFunction.html#aac341fa9ccdca2d089e9f341cb68ca94">GridBasedGrowthFunction</a>
+: <a class="el" href="classGridBasedGrowthFunction.html#aed515e78b2dbcf81751b44cb0c2bef58">GridBasedGrowthFunction</a>
 </li>
 <li>GrowthFunctionBase()
-: <a class="el" href="classGrowthFunctionBase.html#a061b31ad8a0cb228628c7104029a94bf">GrowthFunctionBase</a>
+: <a class="el" href="classGrowthFunctionBase.html#a5c275b3f839cc4f572b68afc5ad1064f">GrowthFunctionBase</a>
+</li>
+</ul>
+
+
+<h3><a class="anchor" id="index_i"></a>- i -</h3><ul>
+<li>InvertMatrix()
+: <a class="el" href="classShapeBase.html#ab887eaa6a0be56e3b50f549326dbe87a">ShapeBase</a>
+</li>
+<li>isElementFlippedInPotentialNewShape()
+: <a class="el" href="classShapeBase.html#a8763ab46f90adb819ec776a5829573c5">ShapeBase</a>
+</li>
+<li>isMyNeig()
+: <a class="el" href="classNode.html#abc1e7e6c42b377c073a68c2b2ea97fa8">Node</a>
+</li>
+<li>isNeigWithMyCollapsedNodes()
+: <a class="el" href="classNode.html#a5fcd3b2e58e0cdfd817371269494e1de">Node</a>
 </li>
 </ul>
 
 
 <h3><a class="anchor" id="index_m"></a>- m -</h3><ul>
+<li>markerEllipseBasedShapeChangeFunction()
+: <a class="el" href="classmarkerEllipseBasedShapeChangeFunction.html#a194f0e273b24c79645705daa589b0960">markerEllipseBasedShapeChangeFunction</a>
+</li>
 <li>ModelInputObject()
 : <a class="el" href="classModelInputObject.html#a64b031469546b19177c0a13365058162">ModelInputObject</a>
 </li>
@@ -270,14 +328,23 @@ $(document).ready(function(){initNavTree('functions_func.html','');});
 <li>RandomGenerator()
 : <a class="el" href="classRandomGenerator.html#ad2b3256e634878160c7d8b6e865341b2">RandomGenerator</a>
 </li>
+<li>readNodeIds()
+: <a class="el" href="classShapeBase.html#a04859ea938c88369d48fa4e27bcd73f6">ShapeBase</a>
+</li>
 <li>readParameters()
 : <a class="el" href="classModelInputObject.html#a9741685527f446bd2bf66455c5b01d0c">ModelInputObject</a>
 </li>
 <li>ReferenceShapeBase()
 : <a class="el" href="classReferenceShapeBase.html#a3d27b5bf4c591a5973b466d2af08a118">ReferenceShapeBase</a>
 </li>
+<li>removeFromConnectedElements()
+: <a class="el" href="classNode.html#a6dc9c26deadb9d2ca3e248f4748d9dfc">Node</a>
+</li>
 <li>RingGrowthFunction()
-: <a class="el" href="classRingGrowthFunction.html#a2e12b527d77b74130258ad25dc18e88d">RingGrowthFunction</a>
+: <a class="el" href="classRingGrowthFunction.html#a6d4914efe62137aae9fec55401edf986">RingGrowthFunction</a>
+</li>
+<li>rotateReferenceElementByRotationMatrix()
+: <a class="el" href="classShapeBase.html#afec65d5b9fd12a8dd8f1b28152f5ee93">ShapeBase</a>
 </li>
 </ul>
 
@@ -287,7 +354,7 @@ $(document).ready(function(){initNavTree('functions_func.html','');});
 : <a class="el" href="classRandomGenerator.html#a35e84fa76d2bfaba05671aa0f79c1b0a">RandomGenerator</a>
 </li>
 <li>setExternalViscosity()
-: <a class="el" href="classNode.html#a9a3b878b16fe5be6ee707a49f3fd7d5a">Node</a>
+: <a class="el" href="classNode.html#adae4720965b558b075a91af4cf742b2a">Node</a>
 </li>
 <li>setGrowthMatrixElement()
 : <a class="el" href="classGridBasedGrowthFunction.html#a9d01fcbba5732aad966659d4f64c145b">GridBasedGrowthFunction</a>
@@ -296,25 +363,53 @@ $(document).ready(function(){initNavTree('functions_func.html','');});
 : <a class="el" href="classRingGrowthFunction.html#a051da280e649c81afff38a1a45cb035a">RingGrowthFunction</a>
 , <a class="el" href="classUniformGrowthFunction.html#aff899907569af697d47927f61b6871a5">UniformGrowthFunction</a>
 </li>
+<li>setIdentificationColour()
+: <a class="el" href="classShapeBase.html#a8dafd8524fe5aa5326173aa49a8f78a0">ShapeBase</a>
+</li>
 <li>setOrientationMatrixElement()
 : <a class="el" href="classMyosinFunction.html#a7f9b40f267049352619709243c929a25">MyosinFunction</a>
+</li>
+<li>setPositionMatrix()
+: <a class="el" href="classShapeBase.html#a93c774ad8de4f6ed3e70d98add1744b1">ShapeBase</a>
+</li>
+<li>setReferencePositionMatrix()
+: <a class="el" href="classShapeBase.html#aa260269fe9605765f5adb494d1a99737">ShapeBase</a>
+</li>
+<li>setShapeType()
+: <a class="el" href="classShapeBase.html#a740a379f345d7d8046309313b6903950">ShapeBase</a>
+</li>
+<li>setTissuePlacement()
+: <a class="el" href="classShapeBase.html#abbffef73b01ff9d09f707c2aba28a1a1">ShapeBase</a>
+</li>
+<li>setTissueType()
+: <a class="el" href="classShapeBase.html#a79d7d67d8b94081ea40c05c1c04a133a">ShapeBase</a>
 </li>
 </ul>
 
 
 <h3><a class="anchor" id="index_u"></a>- u -</h3><ul>
 <li>UniformGrowthFunction()
-: <a class="el" href="classUniformGrowthFunction.html#ab5d7f19747a71d71cec5cc6d55b93a36">UniformGrowthFunction</a>
+: <a class="el" href="classUniformGrowthFunction.html#a9ea553c72b2d5e83e98e4ec7a8c025b6">UniformGrowthFunction</a>
 </li>
 <li>UniformShapeChangeFunction()
-: <a class="el" href="classUniformShapeChangeFunction.html#a5c4c1a853ab2623416469d3e8b37245a">UniformShapeChangeFunction</a>
+: <a class="el" href="classUniformShapeChangeFunction.html#afa0eddca7000c9f270e4179f0718fd23">UniformShapeChangeFunction</a>
+</li>
+<li>updateNodeIdsFromSave()
+: <a class="el" href="classShapeBase.html#ac4c46ba7c9b89a208fafb419097494a5">ShapeBase</a>
+</li>
+<li>updateReferencePositionMatrixFromSave()
+: <a class="el" href="classShapeBase.html#a4b5cade90773535353e9b7c4da3463ae">ShapeBase</a>
+</li>
+<li>updateStiffnessMultiplier()
+: <a class="el" href="classShapeBase.html#a4eb97c0c1a988e77126809745b191c02">ShapeBase</a>
 </li>
 </ul>
 
 
 <h3><a class="anchor" id="index_w"></a>- w -</h3><ul>
 <li>writeSummary()
-: <a class="el" href="classGridBasedGrowthFunction.html#a659418841b4a3bc8be1dec15f95d7b76">GridBasedGrowthFunction</a>
+: <a class="el" href="classGridBasedGrowthFunction.html#a267f45c300d9ef98c6f4fa14a5181c78">GridBasedGrowthFunction</a>
+, <a class="el" href="classmarkerEllipseBasedShapeChangeFunction.html#a6fd27b26a930edad363aaee898c432e5">markerEllipseBasedShapeChangeFunction</a>
 , <a class="el" href="classMyosinFunction.html#ad0bfc8aafe7e54a46f04e8eeb84ce457">MyosinFunction</a>
 , <a class="el" href="classRingGrowthFunction.html#a681175045cf09fadd92921e129737e65">RingGrowthFunction</a>
 , <a class="el" href="classUniformGrowthFunction.html#a227ffb3a524779628f98f110d3811399">UniformGrowthFunction</a>
@@ -333,7 +428,7 @@ $(document).ready(function(){initNavTree('functions_func.html','');});
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Fri Apr 15 2016 19:51:55 for Tissue Origami by
+    <li class="footer">Generated on Wed Apr 3 2019 14:19:54 for Tissue Origami by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

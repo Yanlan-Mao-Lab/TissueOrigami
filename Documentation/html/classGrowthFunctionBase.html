@@ -118,18 +118,19 @@ Inheritance diagram for GrowthFunctionBase:</div>
  <div class="center">
   <img src="classGrowthFunctionBase.png" usemap="#GrowthFunctionBase_map" alt=""/>
   <map id="GrowthFunctionBase_map" name="GrowthFunctionBase_map">
-<area href="classGridBasedGrowthFunction.html" alt="GridBasedGrowthFunction" shape="rect" coords="0,56,184,80"/>
-<area href="classRingGrowthFunction.html" alt="RingGrowthFunction" shape="rect" coords="194,56,378,80"/>
-<area href="classUniformGrowthFunction.html" alt="UniformGrowthFunction" shape="rect" coords="388,56,572,80"/>
-<area href="classUniformShapeChangeFunction.html" alt="UniformShapeChangeFunction" shape="rect" coords="388,112,572,136"/>
+<area href="classGridBasedGrowthFunction.html" alt="GridBasedGrowthFunction" shape="rect" coords="0,56,252,80"/>
+<area href="classmarkerEllipseBasedShapeChangeFunction.html" alt="markerEllipseBasedShapeChangeFunction" shape="rect" coords="262,56,514,80"/>
+<area href="classRingGrowthFunction.html" alt="RingGrowthFunction" shape="rect" coords="524,56,776,80"/>
+<area href="classUniformGrowthFunction.html" alt="UniformGrowthFunction" shape="rect" coords="786,56,1038,80"/>
+<area href="classUniformShapeChangeFunction.html" alt="UniformShapeChangeFunction" shape="rect" coords="786,112,1038,136"/>
 </map>
  </div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a061b31ad8a0cb228628c7104029a94bf"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGrowthFunctionBase.html#a061b31ad8a0cb228628c7104029a94bf">GrowthFunctionBase</a> (int id, int type, float <a class="el" href="classGrowthFunctionBase.html#ae92513a7b41637df8e26e7db35ddf97c">initTime</a>, float <a class="el" href="classGrowthFunctionBase.html#a3ff4db0573d354a75666a5f3ca446941">endTime</a>, bool <a class="el" href="classGrowthFunctionBase.html#a3d56771e7c145589a14e11cc331e0326">applyToColumnarLayer</a>, bool <a class="el" href="classGrowthFunctionBase.html#a08ae19f58cb98fa8e315a77f52749732">applyToPeripodialMembrane</a>)</td></tr>
-<tr class="memdesc:a061b31ad8a0cb228628c7104029a94bf"><td class="mdescLeft">&#160;</td><td class="mdescRight">The constructor of <a class="el" href="classGrowthFunctionBase.html">GrowthFunctionBase</a>. Different growth functions will be derived from this class.  <a href="#a061b31ad8a0cb228628c7104029a94bf">More...</a><br /></td></tr>
-<tr class="separator:a061b31ad8a0cb228628c7104029a94bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5c275b3f839cc4f572b68afc5ad1064f"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGrowthFunctionBase.html#a5c275b3f839cc4f572b68afc5ad1064f">GrowthFunctionBase</a> (int id, int type, float <a class="el" href="classGrowthFunctionBase.html#ae92513a7b41637df8e26e7db35ddf97c">initTime</a>, float <a class="el" href="classGrowthFunctionBase.html#a3ff4db0573d354a75666a5f3ca446941">endTime</a>, bool <a class="el" href="classGrowthFunctionBase.html#a3d56771e7c145589a14e11cc331e0326">applyToColumnarLayer</a>, bool <a class="el" href="classGrowthFunctionBase.html#a08ae19f58cb98fa8e315a77f52749732">applyToPeripodialMembrane</a>, bool <a class="el" href="classGrowthFunctionBase.html#a9fe46fc6dde4041b79204beb48972a09">applyToBasalECM</a>, bool <a class="el" href="classGrowthFunctionBase.html#ac623b1dbe376bce5dddbe1a2e21c776f">applyToLateralECM</a>)</td></tr>
+<tr class="memdesc:a5c275b3f839cc4f572b68afc5ad1064f"><td class="mdescLeft">&#160;</td><td class="mdescRight">The constructor of <a class="el" href="classGrowthFunctionBase.html">GrowthFunctionBase</a>. Different growth functions will be derived from this class.  <a href="#a5c275b3f839cc4f572b68afc5ad1064f">More...</a><br /></td></tr>
+<tr class="separator:a5c275b3f839cc4f572b68afc5ad1064f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad5b4e88d33c4b72444c5c25c25ab68fb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad5b4e88d33c4b72444c5c25c25ab68fb"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>ParentErrorMessage</b> (string functionName)</td></tr>
 <tr class="separator:ad5b4e88d33c4b72444c5c25c25ab68fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -139,21 +140,27 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>ParentErrorMessage<
 <tr class="memitem:a9097ca54f854aa0d1c8d220c971580dd"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9097ca54f854aa0d1c8d220c971580dd"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>ParentErrorMessage</b> (string functionName, int returnValue)</td></tr>
 <tr class="separator:a9097ca54f854aa0d1c8d220c971580dd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abd31142fe0bcc9a95a39c85cb55438a8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abd31142fe0bcc9a95a39c85cb55438a8"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>writeSummary</b> (ofstream &amp;saveFileSimulationSummary, double dt)</td></tr>
-<tr class="separator:abd31142fe0bcc9a95a39c85cb55438a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa031bd3d28993402ee5bdb3d8cae7fa6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa031bd3d28993402ee5bdb3d8cae7fa6"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>getCentre</b> (float &amp;centreX, float &amp;centreY)</td></tr>
-<tr class="separator:aa031bd3d28993402ee5bdb3d8cae7fa6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2b96fbe78194d7dec43212057bbee66d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2b96fbe78194d7dec43212057bbee66d"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>writeSummary</b> (ofstream &amp;)</td></tr>
+<tr class="separator:a2b96fbe78194d7dec43212057bbee66d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a73b474a60caeb5b6b326ecb6a056cfe4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a73b474a60caeb5b6b326ecb6a056cfe4"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>writeSummary</b> (ofstream &amp;, double)</td></tr>
+<tr class="separator:a73b474a60caeb5b6b326ecb6a056cfe4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a93aef4238b9da5d0b06cf18c552d3ca3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a93aef4238b9da5d0b06cf18c552d3ca3"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>getCentre</b> (float &amp;, float &amp;)</td></tr>
+<tr class="separator:a93aef4238b9da5d0b06cf18c552d3ca3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a05ace7e6cb21566ad03e72e56962d58b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a05ace7e6cb21566ad03e72e56962d58b"></a>
 virtual float&#160;</td><td class="memItemRight" valign="bottom"><b>getInnerRadius</b> ()</td></tr>
 <tr class="separator:a05ace7e6cb21566ad03e72e56962d58b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2ba8f7659e1c0546998671458943233d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2ba8f7659e1c0546998671458943233d"></a>
 virtual float&#160;</td><td class="memItemRight" valign="bottom"><b>getOuterRadius</b> ()</td></tr>
 <tr class="separator:a2ba8f7659e1c0546998671458943233d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9598654cae114f6b443167898ac4d095"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9598654cae114f6b443167898ac4d095"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>getGrowthRate</b> (double *maxValue)</td></tr>
-<tr class="separator:a9598654cae114f6b443167898ac4d095"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2c518c297bc1bbf996f6e7df758a0cc7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2c518c297bc1bbf996f6e7df758a0cc7"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>getGrowthRate</b> (double *)</td></tr>
+<tr class="separator:a2c518c297bc1bbf996f6e7df758a0cc7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa2b72fe18b40e73b463200b7cc7f6884"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa2b72fe18b40e73b463200b7cc7f6884"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>getShapeChangeRateRate</b> (double *)</td></tr>
+<tr class="separator:aa2b72fe18b40e73b463200b7cc7f6884"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3c0d71849d020d29832b1aaaba87065e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3c0d71849d020d29832b1aaaba87065e"></a>
 virtual gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>getShearAngleRotationMatrix</b> ()</td></tr>
 <tr class="separator:a3c0d71849d020d29832b1aaaba87065e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -172,27 +179,27 @@ virtual double ***&#160;</td><td class="memItemRight" valign="bottom"><b>getGrow
 <tr class="memitem:a32e0a776bc81147dc648662440d50b0d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a32e0a776bc81147dc648662440d50b0d"></a>
 virtual double **&#160;</td><td class="memItemRight" valign="bottom"><b>getXyShearAngleMatrix</b> ()</td></tr>
 <tr class="separator:a32e0a776bc81147dc648662440d50b0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4e40d019aff99e72b1aee79d93c8e9a0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4e40d019aff99e72b1aee79d93c8e9a0"></a>
-virtual double&#160;</td><td class="memItemRight" valign="bottom"><b>getGrowthMatrixElement</b> (int i, int j, int k)</td></tr>
-<tr class="separator:a4e40d019aff99e72b1aee79d93c8e9a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adfa5e38c1b2d748c035a3bdbe8717d73"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adfa5e38c1b2d748c035a3bdbe8717d73"></a>
-virtual double&#160;</td><td class="memItemRight" valign="bottom"><b>getXyShearAngleMatrixElement</b> (int i, int j)</td></tr>
-<tr class="separator:adfa5e38c1b2d748c035a3bdbe8717d73"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a01bd724756ffac9b8c1d1693b2547588"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a01bd724756ffac9b8c1d1693b2547588"></a>
-virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>isAspectRatioOverOne</b> (int i, int j)</td></tr>
-<tr class="separator:a01bd724756ffac9b8c1d1693b2547588"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a70f43b1e57d2be8ca0e2a937da333dfa"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a70f43b1e57d2be8ca0e2a937da333dfa"></a>
-virtual gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>getXyShearRotationsMatrixElement</b> (int i, int j)</td></tr>
-<tr class="separator:a70f43b1e57d2be8ca0e2a937da333dfa"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae529d0ae06ca241d94bfa8fd831af99b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae529d0ae06ca241d94bfa8fd831af99b"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>getGrowthProfileAt4Corners</b> (int IndexX, int IndexY, double *growth0, double *growth1, double *growth2, double *growth3, double *angles, bool *anglesEliminated)</td></tr>
-<tr class="separator:ae529d0ae06ca241d94bfa8fd831af99b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abcfbd2e1fbad91b3f9002ef7fc7625e5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abcfbd2e1fbad91b3f9002ef7fc7625e5"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>setGrowtRate</b> (double ex, double ey, double ez)</td></tr>
-<tr class="separator:abcfbd2e1fbad91b3f9002ef7fc7625e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a29781080624a8ab028af36f3326b6240"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a29781080624a8ab028af36f3326b6240"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>setGrowthMatrixElement</b> (double ex, double ey, double ez, int i, int j)</td></tr>
-<tr class="separator:a29781080624a8ab028af36f3326b6240"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa70ed3e1b142f733364b8543e26e4ef8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa70ed3e1b142f733364b8543e26e4ef8"></a>
+virtual double&#160;</td><td class="memItemRight" valign="bottom"><b>getGrowthMatrixElement</b> (int, int, int)</td></tr>
+<tr class="separator:aa70ed3e1b142f733364b8543e26e4ef8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2dbab9e82dc1b1511df64c9a7cdd2dac"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2dbab9e82dc1b1511df64c9a7cdd2dac"></a>
+virtual double&#160;</td><td class="memItemRight" valign="bottom"><b>getXyShearAngleMatrixElement</b> (int, int)</td></tr>
+<tr class="separator:a2dbab9e82dc1b1511df64c9a7cdd2dac"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad3048194d1054d24d56bd4b3f178e802"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad3048194d1054d24d56bd4b3f178e802"></a>
+virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>isAspectRatioOverOne</b> (int, int)</td></tr>
+<tr class="separator:ad3048194d1054d24d56bd4b3f178e802"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3cab7817a6f6d4f117f0c0c14334b0ab"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3cab7817a6f6d4f117f0c0c14334b0ab"></a>
+virtual gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>getXyShearRotationsMatrixElement</b> (int, int)</td></tr>
+<tr class="separator:a3cab7817a6f6d4f117f0c0c14334b0ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7ce876504be72c0ed6d800aed092ac36"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7ce876504be72c0ed6d800aed092ac36"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>getGrowthProfileAt4Corners</b> (int, int, double *, double *, double *, double *, double *, bool *)</td></tr>
+<tr class="separator:a7ce876504be72c0ed6d800aed092ac36"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac9995b11d7a4823d2d2c45a603b51916"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac9995b11d7a4823d2d2c45a603b51916"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>setGrowtRate</b> (double, double, double)</td></tr>
+<tr class="separator:ac9995b11d7a4823d2d2c45a603b51916"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8cf8a1604ced5f314707fd137e9a8d3e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8cf8a1604ced5f314707fd137e9a8d3e"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>setGrowthMatrixElement</b> (double, double, double, int, int)</td></tr>
+<tr class="separator:a8cf8a1604ced5f314707fd137e9a8d3e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -220,9 +227,35 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGrowthFunctionBase.html#a08ae19f58cb98fa8e315a77f52749732">applyToPeripodialMembrane</a></td></tr>
 <tr class="memdesc:a08ae19f58cb98fa8e315a77f52749732"><td class="mdescLeft">&#160;</td><td class="mdescRight">Boolean stating if the growth should be applied to peripodial membrane. <br /></td></tr>
 <tr class="separator:a08ae19f58cb98fa8e315a77f52749732"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9fe46fc6dde4041b79204beb48972a09"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9fe46fc6dde4041b79204beb48972a09"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGrowthFunctionBase.html#a9fe46fc6dde4041b79204beb48972a09">applyToBasalECM</a></td></tr>
+<tr class="memdesc:a9fe46fc6dde4041b79204beb48972a09"><td class="mdescLeft">&#160;</td><td class="mdescRight">Boolean stating if the growth should be applied to basal explicit ECM layer. <br /></td></tr>
+<tr class="separator:a9fe46fc6dde4041b79204beb48972a09"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac623b1dbe376bce5dddbe1a2e21c776f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac623b1dbe376bce5dddbe1a2e21c776f"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGrowthFunctionBase.html#ac623b1dbe376bce5dddbe1a2e21c776f">applyToLateralECM</a></td></tr>
+<tr class="memdesc:ac623b1dbe376bce5dddbe1a2e21c776f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Boolean stating if the growth should be applied to lateral explicit ECM layer. <br /></td></tr>
+<tr class="separator:ac623b1dbe376bce5dddbe1a2e21c776f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a254c82be25d3648a0474c24a63d5a555"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a254c82be25d3648a0474c24a63d5a555"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>applyTissueApical</b></td></tr>
+<tr class="separator:a254c82be25d3648a0474c24a63d5a555"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afcbfd4691a386ba9dbf75888e0a4ef9e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afcbfd4691a386ba9dbf75888e0a4ef9e"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>applyTissueBasal</b></td></tr>
+<tr class="separator:afcbfd4691a386ba9dbf75888e0a4ef9e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a95cb51fffd8fbb1466510cc40853aeed"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a95cb51fffd8fbb1466510cc40853aeed"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>applyTissueMidLine</b></td></tr>
+<tr class="separator:a95cb51fffd8fbb1466510cc40853aeed"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa0d3867bc9072d342ca8b7f84800e04b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa0d3867bc9072d342ca8b7f84800e04b"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>zMin</b></td></tr>
+<tr class="separator:aa0d3867bc9072d342ca8b7f84800e04b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac4696285be059f2dfacd195f0bbb5328"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac4696285be059f2dfacd195f0bbb5328"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>zMax</b></td></tr>
+<tr class="separator:ac4696285be059f2dfacd195f0bbb5328"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a362abb90b107b372d558d26105957c23"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a362abb90b107b372d558d26105957c23"></a>
+vector&lt; int &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>appliedEllipseBandIds</b></td></tr>
+<tr class="separator:a362abb90b107b372d558d26105957c23"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a class="anchor" id="a061b31ad8a0cb228628c7104029a94bf"></a>
+<a class="anchor" id="a5c275b3f839cc4f572b68afc5ad1064f"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -263,7 +296,19 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">bool&#160;</td>
-          <td class="paramname"><em>applyToPeripodialMembrane</em>&#160;</td>
+          <td class="paramname"><em>applyToPeripodialMembrane</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>applyToBasalECM</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>applyToLateralECM</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -296,7 +341,7 @@ booleans applyToColumnarLayer and applyToPeripodialMembrane will set <a class="e
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="classGrowthFunctionBase.html">GrowthFunctionBase</a></li>
-    <li class="footer">Generated on Fri Apr 15 2016 19:51:54 for Tissue Origami by
+    <li class="footer">Generated on Wed Apr 3 2019 14:19:52 for Tissue Origami by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

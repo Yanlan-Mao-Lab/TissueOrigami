@@ -1,10 +1,21 @@
 var searchData=
 [
+  ['ecmviscositychangeperhour',['ECMViscosityChangePerHour',['../classNode.html#a1fbd9839d04036b5a5570e197e8e591c',1,'Node']]],
   ['elasticstress',['elasticStress',['../classShapeBase.html#acd549e0086d16194ae389ae528969596',1,'ShapeBase']]],
   ['elementalelasticsystemforces',['ElementalElasticSystemForces',['../classShapeBase.html#a94d201c88c73283f2e9711d1cc038e02',1,'ShapeBase']]],
   ['elementalinternalviscoussystemforces',['ElementalInternalViscousSystemForces',['../classShapeBase.html#a54b5ebd33ad4ed5739c0431bf0d4346d',1,'ShapeBase']]],
+  ['elementhasexposedapicalsurface',['elementHasExposedApicalSurface',['../classShapeBase.html#ab5dfa04e7a8c7f2c33bea431ca441674',1,'ShapeBase']]],
+  ['elementhasexposedbasalsurface',['elementHasExposedBasalSurface',['../classShapeBase.html#a194437fa296d9e12e58cc14fa8d66931',1,'ShapeBase']]],
+  ['elementhasexposedlateralapicalsurface',['elementHasExposedLateralApicalSurface',['../classShapeBase.html#a61b69e26e541b7965551c745bdae675e',1,'ShapeBase']]],
+  ['elementhasexposedlateralbasalsurface',['elementHasExposedLateralBasalSurface',['../classShapeBase.html#aefe2d3d8595226d22ee0b75a92f939b5',1,'ShapeBase']]],
   ['endtime',['endTime',['../classGrowthFunctionBase.html#a3ff4db0573d354a75666a5f3ca446941',1,'GrowthFunctionBase']]],
   ['equilibriummyosinmatrix',['EquilibriumMyosinMatrix',['../classMyosinFunction.html#a7332175e6d9369c02a8c569f000211e1',1,'MyosinFunction']]],
+  ['exposedapicalsurfacenodeids',['exposedApicalSurfaceNodeIds',['../classShapeBase.html#a7987e6fc21a5035fc04558f1b366406a',1,'ShapeBase']]],
+  ['exposedbasalsurfacenodeids',['exposedBasalSurfaceNodeIds',['../classShapeBase.html#a7bc7714f5622b21ec7fba51e1136803f',1,'ShapeBase']]],
+  ['exposedlateralareaapicalside',['exposedLateralAreaApicalSide',['../classShapeBase.html#ac29dcfc319798bd21b3bc2b50ac401c8',1,'ShapeBase']]],
+  ['exposedlateralareaapicalsidenodeids',['exposedLateralAreaApicalSideNodeIds',['../classShapeBase.html#a2724f82bbf8c657c075826f953f0b7f2',1,'ShapeBase']]],
+  ['exposedlateralareabasalside',['exposedLateralAreaBasalSide',['../classShapeBase.html#a3ba637ddf764ae673d616f7318270866',1,'ShapeBase']]],
+  ['exposedlateralareabasalsidenodeids',['exposedLateralAreaBasalSideNodeIds',['../classShapeBase.html#a28b58f2840dd8ffd571c647534ad9f0b',1,'ShapeBase']]],
   ['externalviscosity',['externalViscosity',['../classNode.html#a9bb34133d43eb0f29bfd0d0b65df395d',1,'Node']]],
   ['externalviscositysetinfixing',['externalViscositySetInFixing',['../classNode.html#a03f2f0310bec3504b082d0f707fa3db2',1,'Node']]]
 ];

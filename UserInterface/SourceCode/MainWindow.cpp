@@ -855,9 +855,9 @@ void MainWindow::timerSimulationStep(){
 	int		viewSelection = 1; //0: top, 1: cross, 2: perspective 3: side.
 	int 	displayAutomatedStrain = -1; //-1 no strain display, 1 display DV strains, 2 AP strains;
 	bool 	analyseResults = true;
-	bool 	slowstepsOnDisplay = false;
+	bool 	slowstepsOnDisplay = true;
 	bool 	slowstepsOnRun = false;
-	int 	slowWaitTime = 10;
+	int 	slowWaitTime = 1;
 
 	//display DV strains
 	if (displayAutomatedStrain>-1){

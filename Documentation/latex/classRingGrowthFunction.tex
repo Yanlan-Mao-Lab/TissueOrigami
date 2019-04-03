@@ -9,7 +9,7 @@ Inheritance diagram for Ring\+Growth\+Function\+:\begin{figure}[H]
 \subsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-\hyperlink{classRingGrowthFunction_a2e12b527d77b74130258ad25dc18e88d}{Ring\+Growth\+Function} (int id, int type, float \hyperlink{classGrowthFunctionBase_ae92513a7b41637df8e26e7db35ddf97c}{init\+Time}, float \hyperlink{classGrowthFunctionBase_a3ff4db0573d354a75666a5f3ca446941}{end\+Time}, bool \hyperlink{classGrowthFunctionBase_a3d56771e7c145589a14e11cc331e0326}{apply\+To\+Columnar\+Layer}, bool \hyperlink{classGrowthFunctionBase_a08ae19f58cb98fa8e315a77f52749732}{apply\+To\+Peripodial\+Membrane}, double Cx, double Cy, double inner\+R, double outer\+R, double D\+V\+Growth, double A\+P\+Growth, double A\+B\+Growth, double \hyperlink{classRingGrowthFunction_add6283d1ad999925c4202a3fa66b76ea}{angle})
+\hyperlink{classRingGrowthFunction_a6d4914efe62137aae9fec55401edf986}{Ring\+Growth\+Function} (int id, int type, float \hyperlink{classGrowthFunctionBase_ae92513a7b41637df8e26e7db35ddf97c}{init\+Time}, float \hyperlink{classGrowthFunctionBase_a3ff4db0573d354a75666a5f3ca446941}{end\+Time}, bool \hyperlink{classGrowthFunctionBase_a3d56771e7c145589a14e11cc331e0326}{apply\+To\+Columnar\+Layer}, bool \hyperlink{classGrowthFunctionBase_a08ae19f58cb98fa8e315a77f52749732}{apply\+To\+Peripodial\+Membrane}, bool \hyperlink{classGrowthFunctionBase_a9fe46fc6dde4041b79204beb48972a09}{apply\+To\+Basal\+E\+C\+M}, bool \hyperlink{classGrowthFunctionBase_ac623b1dbe376bce5dddbe1a2e21c776f}{apply\+To\+Lateral\+E\+C\+M}, double Cx, double Cy, double inner\+R, double outer\+R, double D\+V\+Growth, double A\+P\+Growth, double A\+B\+Growth, double \hyperlink{classRingGrowthFunction_add6283d1ad999925c4202a3fa66b76ea}{angle})
 \begin{DoxyCompactList}\small\item\em The constructor of \hyperlink{classRingGrowthFunction}{Ring\+Growth\+Function}. \end{DoxyCompactList}\item 
 \hypertarget{classRingGrowthFunction_aa2063170e3ee5c5f22d7beef32300e9c}{}void \hyperlink{classRingGrowthFunction_aa2063170e3ee5c5f22d7beef32300e9c}{get\+Centre} (float \&centre\+X, float \&centre\+Y)\label{classRingGrowthFunction_aa2063170e3ee5c5f22d7beef32300e9c}
 
@@ -56,7 +56,7 @@ void \hyperlink{classRingGrowthFunction_a681175045cf09fadd92921e129737e65}{write
 
 
 \subsection{Constructor \& Destructor Documentation}
-\hypertarget{classRingGrowthFunction_a2e12b527d77b74130258ad25dc18e88d}{}\index{Ring\+Growth\+Function@{Ring\+Growth\+Function}!Ring\+Growth\+Function@{Ring\+Growth\+Function}}
+\hypertarget{classRingGrowthFunction_a6d4914efe62137aae9fec55401edf986}{}\index{Ring\+Growth\+Function@{Ring\+Growth\+Function}!Ring\+Growth\+Function@{Ring\+Growth\+Function}}
 \index{Ring\+Growth\+Function@{Ring\+Growth\+Function}!Ring\+Growth\+Function@{Ring\+Growth\+Function}}
 \subsubsection[{Ring\+Growth\+Function}]{\setlength{\rightskip}{0pt plus 5cm}Ring\+Growth\+Function\+::\+Ring\+Growth\+Function (
 \begin{DoxyParamCaption}
@@ -66,6 +66,8 @@ void \hyperlink{classRingGrowthFunction_a681175045cf09fadd92921e129737e65}{write
 \item[{float}]{end\+Time, }
 \item[{bool}]{apply\+To\+Columnar\+Layer, }
 \item[{bool}]{apply\+To\+Peripodial\+Membrane, }
+\item[{bool}]{apply\+To\+Basal\+E\+C\+M, }
+\item[{bool}]{apply\+To\+Lateral\+E\+C\+M, }
 \item[{double}]{Cx, }
 \item[{double}]{Cy, }
 \item[{double}]{inner\+R, }
@@ -75,12 +77,12 @@ void \hyperlink{classRingGrowthFunction_a681175045cf09fadd92921e129737e65}{write
 \item[{double}]{A\+B\+Growth, }
 \item[{double}]{angle}
 \end{DoxyParamCaption}
-)\hspace{0.3cm}{\ttfamily [inline]}}\label{classRingGrowthFunction_a2e12b527d77b74130258ad25dc18e88d}
+)\hspace{0.3cm}{\ttfamily [inline]}}\label{classRingGrowthFunction_a6d4914efe62137aae9fec55401edf986}
 
 
 The constructor of \hyperlink{classRingGrowthFunction}{Ring\+Growth\+Function}. 
 
-The first six parameters will be directed to the parent constructor, \hyperlink{classGrowthFunctionBase_a061b31ad8a0cb228628c7104029a94bf}{Growth\+Function\+Base\+::\+Growth\+Function\+Base}. ~\newline
+The first six parameters will be directed to the parent constructor, \hyperlink{classGrowthFunctionBase_a5c275b3f839cc4f572b68afc5ad1064f}{Growth\+Function\+Base\+::\+Growth\+Function\+Base}. ~\newline
 doubles Cx and Cy will set \hyperlink{classRingGrowthFunction_a5b8f1cc72d03907bb1492e6c2f288db0}{Ring\+Growth\+Function\+::centre}\mbox{[}0\mbox{]} and \hyperlink{classRingGrowthFunction_a5b8f1cc72d03907bb1492e6c2f288db0}{Ring\+Growth\+Function\+::centre}\mbox{[}1\mbox{]}, respectively. ~\newline
 doubles inner\+R and outer\+R will set \hyperlink{classRingGrowthFunction_a4e8796fbbbe9fe18c2dcd04613effcf0}{Ring\+Growth\+Function\+::inner\+Radius} and \hyperlink{classRingGrowthFunction_a8b7d5268d9d47f112b56feef58193649}{Ring\+Growth\+Function\+::outer\+Radius}, respectively. ~\newline
 doubles D\+V\+Growth, A\+P\+Growth and A\+B\+Growth will set the \hyperlink{classRingGrowthFunction_a93b70ff6a7258c73a6bd2d888d09fc09}{Ring\+Growth\+Function\+::\+Growth\+Rate}, in the given order.

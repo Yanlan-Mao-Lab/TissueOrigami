@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['uniformgrowthfunction',['UniformGrowthFunction',['../classUniformGrowthFunction.html',1,'']]],
-  ['uniformshapechangefunction',['UniformShapeChangeFunction',['../classUniformShapeChangeFunction.html',1,'']]]
+  ['prism',['Prism',['../classPrism.html',1,'']]]
 ];

@@ -99,6 +99,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
       <li><a href="#index_r"><span>r</span></a></li>
       <li><a href="#index_s"><span>s</span></a></li>
       <li><a href="#index_t"><span>t</span></a></li>
+      <li><a href="#index_u"><span>u</span></a></li>
       <li><a href="#index_v"><span>v</span></a></li>
       <li><a href="#index_x"><span>x</span></a></li>
       <li class="current"><a href="#index_z"><span>z</span></a></li>
@@ -137,6 +138,9 @@ $(document).ready(function(){initNavTree('functions_vars.html','');});
 &#160;
 
 <h3><a class="anchor" id="index_a"></a>- a -</h3><ul>
+<li>allOwnersECMMimicing
+: <a class="el" href="classNode.html#aa9eb82543b868adc05b5543251ebb42f">Node</a>
+</li>
 <li>angle
 : <a class="el" href="classRingGrowthFunction.html#add6283d1ad999925c4202a3fa66b76ea">RingGrowthFunction</a>
 , <a class="el" href="classUniformGrowthFunction.html#a1a985ff52f9796688e00942b4d3349f8">UniformGrowthFunction</a>
@@ -144,9 +148,15 @@ $(document).ready(function(){initNavTree('functions_vars.html','');});
 <li>ApicalArea
 : <a class="el" href="classShapeBase.html#adb4227c13db7e34dd1af182d143af47b">ShapeBase</a>
 </li>
+<li>applyToBasalECM
+: <a class="el" href="classGrowthFunctionBase.html#a9fe46fc6dde4041b79204beb48972a09">GrowthFunctionBase</a>
+</li>
 <li>applyToColumnarLayer
 : <a class="el" href="classGrowthFunctionBase.html#a3d56771e7c145589a14e11cc331e0326">GrowthFunctionBase</a>
 , <a class="el" href="classMyosinFunction.html#a6a978e5577af3f6b56edda5fd825d89c">MyosinFunction</a>
+</li>
+<li>applyToLateralECM
+: <a class="el" href="classGrowthFunctionBase.html#ac623b1dbe376bce5dddbe1a2e21c776f">GrowthFunctionBase</a>
 </li>
 <li>applyToPeripodialMembrane
 : <a class="el" href="classGrowthFunctionBase.html#a08ae19f58cb98fa8e315a77f52749732">GrowthFunctionBase</a>
@@ -166,6 +176,9 @@ $(document).ready(function(){initNavTree('functions_vars.html','');});
 : <a class="el" href="classReferenceShapeBase.html#a214b89b970efa7a290dbe1533cf237ea">ReferenceShapeBase</a>
 , <a class="el" href="classShapeBase.html#a2ae2b0b1dfd0672a39897e780d861254">ShapeBase</a>
 </li>
+<li>basalNeigElementId
+: <a class="el" href="classShapeBase.html#a7515f99cadce806894a7c254186a85f7">ShapeBase</a>
+</li>
 <li>Bmatrices
 : <a class="el" href="classShapeBase.html#ace860a66508f503be2a46c351a9358c3">ShapeBase</a>
 </li>
@@ -173,8 +186,14 @@ $(document).ready(function(){initNavTree('functions_vars.html','');});
 
 
 <h3><a class="anchor" id="index_c"></a>- c -</h3><ul>
+<li>cellsMigrating
+: <a class="el" href="classShapeBase.html#a9bac41508f4c7a34d7f2a811ba4baa7c">ShapeBase</a>
+</li>
 <li>centre
 : <a class="el" href="classRingGrowthFunction.html#a5b8f1cc72d03907bb1492e6c2f288db0">RingGrowthFunction</a>
+</li>
+<li>checkOwnersforEllipseAsignment
+: <a class="el" href="classNode.html#ad41abb2d4571366c2ba8d3a0b46798b6">Node</a>
 </li>
 <li>cMyoUniform
 : <a class="el" href="classShapeBase.html#a485e95cb1e7a440e57884d4df5ee1350">ShapeBase</a>
@@ -191,11 +210,17 @@ $(document).ready(function(){initNavTree('functions_vars.html','');});
 <li>columnarGrowthWeight
 : <a class="el" href="classShapeBase.html#a134d82ba500ef829b6aa3e3a83783c9a">ShapeBase</a>
 </li>
+<li>compartmentType
+: <a class="el" href="classShapeBase.html#a47bfa280bf33fc0557e8d804aab3936c">ShapeBase</a>
+</li>
 <li>connectedElementIds
 : <a class="el" href="classNode.html#a18bae606efb025cc90b4c117776e0bf9">Node</a>
 </li>
 <li>connectedElementWeights
 : <a class="el" href="classNode.html#a7ffccd2a70d08c1a42d4701f32a266c5">Node</a>
+</li>
+<li>coveringEllipseBandId
+: <a class="el" href="classNode.html#a5a0c478d6925dc16abf3995061fda191">Node</a>
 </li>
 </ul>
 
@@ -207,10 +232,16 @@ $(document).ready(function(){initNavTree('functions_vars.html','');});
 <li>detFs
 : <a class="el" href="classShapeBase.html#ab41f6a16647607b1c898eea1c2860367">ShapeBase</a>
 </li>
+<li>displacement
+: <a class="el" href="classNode.html#a1f25afa638813548bef54299c2d756e4">Node</a>
+</li>
 </ul>
 
 
 <h3><a class="anchor" id="index_e"></a>- e -</h3><ul>
+<li>ECMViscosityChangePerHour
+: <a class="el" href="classNode.html#a1fbd9839d04036b5a5570e197e8e591c">Node</a>
+</li>
 <li>elasticStress
 : <a class="el" href="classShapeBase.html#acd549e0086d16194ae389ae528969596">ShapeBase</a>
 </li>
@@ -220,11 +251,41 @@ $(document).ready(function(){initNavTree('functions_vars.html','');});
 <li>ElementalInternalViscousSystemForces
 : <a class="el" href="classShapeBase.html#a54b5ebd33ad4ed5739c0431bf0d4346d">ShapeBase</a>
 </li>
+<li>elementHasExposedApicalSurface
+: <a class="el" href="classShapeBase.html#ab5dfa04e7a8c7f2c33bea431ca441674">ShapeBase</a>
+</li>
+<li>elementHasExposedBasalSurface
+: <a class="el" href="classShapeBase.html#a194437fa296d9e12e58cc14fa8d66931">ShapeBase</a>
+</li>
+<li>elementHasExposedLateralApicalSurface
+: <a class="el" href="classShapeBase.html#a61b69e26e541b7965551c745bdae675e">ShapeBase</a>
+</li>
+<li>elementHasExposedLateralBasalSurface
+: <a class="el" href="classShapeBase.html#aefe2d3d8595226d22ee0b75a92f939b5">ShapeBase</a>
+</li>
 <li>endTime
 : <a class="el" href="classGrowthFunctionBase.html#a3ff4db0573d354a75666a5f3ca446941">GrowthFunctionBase</a>
 </li>
 <li>EquilibriumMyosinMatrix
 : <a class="el" href="classMyosinFunction.html#a7332175e6d9369c02a8c569f000211e1">MyosinFunction</a>
+</li>
+<li>exposedApicalSurfaceNodeIds
+: <a class="el" href="classShapeBase.html#a7987e6fc21a5035fc04558f1b366406a">ShapeBase</a>
+</li>
+<li>exposedBasalSurfaceNodeIds
+: <a class="el" href="classShapeBase.html#a7bc7714f5622b21ec7fba51e1136803f">ShapeBase</a>
+</li>
+<li>exposedLateralAreaApicalSide
+: <a class="el" href="classShapeBase.html#ac29dcfc319798bd21b3bc2b50ac401c8">ShapeBase</a>
+</li>
+<li>exposedLateralAreaApicalSideNodeIds
+: <a class="el" href="classShapeBase.html#a2724f82bbf8c657c075826f953f0b7f2">ShapeBase</a>
+</li>
+<li>exposedLateralAreaBasalSide
+: <a class="el" href="classShapeBase.html#a3ba637ddf764ae673d616f7318270866">ShapeBase</a>
+</li>
+<li>exposedLateralAreaBasalSideNodeIds
+: <a class="el" href="classShapeBase.html#a28b58f2840dd8ffd571c647534ad9f0b">ShapeBase</a>
 </li>
 <li>externalViscosity
 : <a class="el" href="classNode.html#a9bb34133d43eb0f29bfd0d0b65df395d">Node</a>
@@ -245,9 +306,6 @@ $(document).ready(function(){initNavTree('functions_vars.html','');});
 <li>FixedPos
 : <a class="el" href="classNode.html#a80edc54e934bdfc08b66933d4c7fd6f4">Node</a>
 </li>
-<li>Fplastic
-: <a class="el" href="classShapeBase.html#aa0dbfe70da6938be7304934d80cb0ddf">ShapeBase</a>
-</li>
 <li>Fsc
 : <a class="el" href="classShapeBase.html#a08d7f6e8f098a7b5985c615842062014">ShapeBase</a>
 </li>
@@ -255,11 +313,20 @@ $(document).ready(function(){initNavTree('functions_vars.html','');});
 
 
 <h3><a class="anchor" id="index_g"></a>- g -</h3><ul>
+<li>gaussPoints
+: <a class="el" href="classShapeBase.html#a76ef38f3112b904a906fb8228b5ae53b">ShapeBase</a>
+</li>
+<li>gaussWeights
+: <a class="el" href="classShapeBase.html#aa0ec234a2a9235f72135ad0fbd456bd1">ShapeBase</a>
+</li>
 <li>growthIncrement
 : <a class="el" href="classShapeBase.html#af553856335d7344ea67ab10f9cc3babf">ShapeBase</a>
 </li>
 <li>GrowthMatrix
 : <a class="el" href="classGridBasedGrowthFunction.html#a5522d9b84fa95ebd65cdf290a4f0a65c">GridBasedGrowthFunction</a>
+</li>
+<li>growthPinUpdateTime
+: <a class="el" href="classSimulation.html#ad10d69d485e1a0d697bb8f1ac63565b5">Simulation</a>
 </li>
 <li>GrowthRate
 : <a class="el" href="classRingGrowthFunction.html#a93b70ff6a7258c73a6bd2d888d09fc09">RingGrowthFunction</a>
@@ -292,8 +359,17 @@ $(document).ready(function(){initNavTree('functions_vars.html','');});
 <li>immediateNeigs
 : <a class="el" href="classNode.html#ab22060fb9f61a0d93ec52e6045828782">Node</a>
 </li>
+<li>initialExternalViscosity
+: <a class="el" href="classNode.html#a60c2515f86b41fbb3d413cc416c3ee26">Node</a>
+</li>
+<li>initialPosition
+: <a class="el" href="classNode.html#a653a595186a56f86fcdb6d431daa4591">Node</a>
+</li>
 <li>initialRelativePosInBoundingBox
 : <a class="el" href="classShapeBase.html#a8825955bac10c5deabb9c02cd27577e9">ShapeBase</a>
+</li>
+<li>initialRelativePositionInZ
+: <a class="el" href="classShapeBase.html#ab6847e4087010221acd07ad298c5c0bd">ShapeBase</a>
 </li>
 <li>initTime
 : <a class="el" href="classGrowthFunctionBase.html#ae92513a7b41637df8e26e7db35ddf97c">GrowthFunctionBase</a>
@@ -302,14 +378,14 @@ $(document).ready(function(){initNavTree('functions_vars.html','');});
 <li>innerRadius
 : <a class="el" href="classRingGrowthFunction.html#a4e8796fbbbe9fe18c2dcd04613effcf0">RingGrowthFunction</a>
 </li>
+<li>insideEllipseBand
+: <a class="el" href="classNode.html#a216c4bf4af00dc77d8c88c4d2952f6ab">Node</a>
+</li>
 <li>InvdXdes
 : <a class="el" href="classShapeBase.html#a4a5fc631abba61fa2488112a7a674377">ShapeBase</a>
 </li>
 <li>InvFg
 : <a class="el" href="classShapeBase.html#afe7cb600a9316597a16512ab7b6fcd6f">ShapeBase</a>
-</li>
-<li>invFplastic
-: <a class="el" href="classShapeBase.html#aaa49d057ee26d805da5befa72c9bbf58">ShapeBase</a>
 </li>
 <li>InvFsc
 : <a class="el" href="classShapeBase.html#ad72828aab0668c993f57727123aa96be">ShapeBase</a>
@@ -323,6 +399,9 @@ $(document).ready(function(){initNavTree('functions_vars.html','');});
 <li>isApical
 : <a class="el" href="classMyosinFunction.html#a413c9a88624a97f6483efebdc5ab6fac">MyosinFunction</a>
 </li>
+<li>isLateral
+: <a class="el" href="classMyosinFunction.html#ae4176116404c97b86f7e76ee359f8499">MyosinFunction</a>
+</li>
 <li>isPolarised
 : <a class="el" href="classMyosinFunction.html#a66bf31a5b46a19e67691d67b25c03852">MyosinFunction</a>
 </li>
@@ -330,6 +409,9 @@ $(document).ready(function(){initNavTree('functions_vars.html','');});
 
 
 <h3><a class="anchor" id="index_m"></a>- m -</h3><ul>
+<li>manualStripes
+: <a class="el" href="classMyosinFunction.html#af9847dcd6e9db66662d90e3e4ba4cc0b">MyosinFunction</a>
+</li>
 <li>mass
 : <a class="el" href="classNode.html#a63e510fc9158eb15e751861bc14eae38">Node</a>
 </li>
@@ -358,9 +440,18 @@ $(document).ready(function(){initNavTree('functions_vars.html','');});
 : <a class="el" href="classGridBasedGrowthFunction.html#a625bc963a1f1e7d1f1a35dbd0ef51728">GridBasedGrowthFunction</a>
 , <a class="el" href="classMyosinFunction.html#a1652a8a0d154b136434bee037e0262a4">MyosinFunction</a>
 </li>
+<li>nLateralSurfaceAreaNodeNumber
+: <a class="el" href="classShapeBase.html#aef3f3ee95b2ac3ad11edf6723ee76ce5">ShapeBase</a>
+</li>
 <li>nNodes
 : <a class="el" href="classReferenceShapeBase.html#a1183c092056a3245a350ff6f56632633">ReferenceShapeBase</a>
 , <a class="el" href="classShapeBase.html#ae7dd93b58b3281ce90025f83d0f0e976">ShapeBase</a>
+</li>
+<li>nSurfaceAreaNodeNumber
+: <a class="el" href="classShapeBase.html#a6552406df5c7b4b1e5a96e8b9cc86b0d">ShapeBase</a>
+</li>
+<li>numberOfGaussPoints
+: <a class="el" href="classShapeBase.html#ac6da2160db5df6b777f377c5969491f0">ShapeBase</a>
 </li>
 </ul>
 
@@ -379,6 +470,9 @@ $(document).ready(function(){initNavTree('functions_vars.html','');});
 <li>peripodialGrowthWeight
 : <a class="el" href="classShapeBase.html#a3663f3220016756b1bd5a92477325ec2">ShapeBase</a>
 </li>
+<li>plasticDeformationIncrement
+: <a class="el" href="classShapeBase.html#ab61c4a1f4132f54c362ea6296389abf6">ShapeBase</a>
+</li>
 <li>Position
 : <a class="el" href="classNode.html#a8fdca7042dc0cc7e342eb3c87cbbfb56">Node</a>
 </li>
@@ -392,6 +486,9 @@ $(document).ready(function(){initNavTree('functions_vars.html','');});
 <li>relativePosInBoundingBox
 : <a class="el" href="classShapeBase.html#a7a7826fb2ce3b2e666b65d99b00eadea">ShapeBase</a>
 </li>
+<li>remodellingPlaneRotationMatrix
+: <a class="el" href="classShapeBase.html#a0e8b443e4b55479a9d2a7a7eacd62b69">ShapeBase</a>
+</li>
 <li>RKPosition
 : <a class="el" href="classNode.html#abfa97f5fa4e95c932b4e3e0daabb062a">Node</a>
 </li>
@@ -402,6 +499,9 @@ $(document).ready(function(){initNavTree('functions_vars.html','');});
 
 
 <h3><a class="anchor" id="index_s"></a>- s -</h3><ul>
+<li>shapeChangeIncrement
+: <a class="el" href="classShapeBase.html#a2db4859942429aa4e3efc26a119a5aa3">ShapeBase</a>
+</li>
 <li>ShapeChangeRate
 : <a class="el" href="classShapeBase.html#a1c6db43b0794a15e4bc42b8ca994a785">ShapeBase</a>
 </li>
@@ -425,8 +525,11 @@ $(document).ready(function(){initNavTree('functions_vars.html','');});
 <li>spansWholeTissue
 : <a class="el" href="classShapeBase.html#adafe85bbee6173d2a321408cd8b63db3">ShapeBase</a>
 </li>
-<li>surface
-: <a class="el" href="classNode.html#aab30ea418838635c21593c47f39f2699">Node</a>
+<li>stiffnessMultiplier
+: <a class="el" href="classShapeBase.html#a9cff4a8549b3399fec12309d18b6db70">ShapeBase</a>
+</li>
+<li>stiffnessPerturbationRateInSec
+: <a class="el" href="classShapeBase.html#a525290b7f6921e964666d946b5d6774d">ShapeBase</a>
 </li>
 <li>symmetricEquivalentId
 : <a class="el" href="classNode.html#ad29e0f81f8c0a5d4a3e891d3b239af7e">Node</a>
@@ -451,9 +554,16 @@ $(document).ready(function(){initNavTree('functions_vars.html','');});
 </ul>
 
 
+<h3><a class="anchor" id="index_u"></a>- u -</h3><ul>
+<li>useEllipses
+: <a class="el" href="classMyosinFunction.html#ab4855e57c0b991e97d3ed2c578728ec4">MyosinFunction</a>
+</li>
+</ul>
+
+
 <h3><a class="anchor" id="index_v"></a>- v -</h3><ul>
-<li>Velocity
-: <a class="el" href="classNode.html#ac27dee69b570030aacf8865190879845">Node</a>
+<li>viscositySurface
+: <a class="el" href="classNode.html#a7a585da74654d80d5f94805e39c1e2ad">Node</a>
 </li>
 <li>viscousStress
 : <a class="el" href="classShapeBase.html#a95733061efc2a6645fecfe5c0aa1dd93">ShapeBase</a>
@@ -487,7 +597,7 @@ $(document).ready(function(){initNavTree('functions_vars.html','');});
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Fri Apr 15 2016 19:51:55 for Tissue Origami by
+    <li class="footer">Generated on Wed Apr 3 2019 14:19:54 for Tissue Origami by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

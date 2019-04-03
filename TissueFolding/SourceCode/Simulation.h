@@ -186,7 +186,7 @@ private:
 	bool isAdhesionAllowed(int masterNodeId, int slaveNodeId);
 	bool checkForElementFlippingUponNodeCollapse(vector<int> &newCollapseList, double* avrPos);
 	bool adhereNodes();
-	bool updatePositionsOfNodesCollapsingInStages();
+	void updatePositionsOfNodesCollapsingInStages();
 	void induceClones();
 	void initiateElementsByRowAndColumn(int Row, int Column);
 	void assignPhysicalParameters();

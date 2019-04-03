@@ -56,7 +56,9 @@ Linker zone physical properties through the private function Model\+Input\+Objec
 
 Inputs relating to fixing the nodes of the tissue through the private function Model\+Input\+Object\+::read\+Node\+Fixing\+Parameters
 
-Inputs relating to the external viscosity felt by the tissue through private function Model\+Input\+Object\+::read\+Eternal\+Viscosity\+Parameters
+Inputs relating to binding the displacement the nodes of the tissue through the private function Model\+Input\+Object\+::read\+Node\+Binding\+Parameters
+
+Inputs relating to the external viscosity felt by the tissue through private function Model\+Input\+Object\+::read\+External\+Viscosity\+Parameters
 
 Inputs relating to manual manipulations to tissue after the mesh is read in
 
@@ -77,6 +79,32 @@ Myosin concentrations and related parameters of the simulation through the priva
 Stretcher experimental setup parameters of the simulation through the private function Model\+Input\+Object\+::read\+Stretcher\+Setup
 
 Pipette aspiration experimental setup parameters of the simulation through the private function Model\+Input\+Object\+::read\+Pipette\+Setup
+
+Setting perturbations to E\+C\+M, current setup includes softening of apical or basal E\+C\+M at a given time point.
+
+Setting perturbations to tissue stiffness, current setup includes changing Young\textquotesingle{}s modulus for apical, basal or whole tissue at a given time point.
+
+Setting volume redistribution bewtten apical and basal sides of the tissue, cells redistributing their volume more apically or basally.
+
+Setting perturbations to E\+C\+M, current setup includes softening of apical or basal E\+C\+M at a given time point.
+
+Setting perturbations to E\+C\+M, current setup includes softening of apical or basal E\+C\+M at a given time point.
+
+Setting perturbations to E\+C\+M, current setup includes softening of apical or basal E\+C\+M at a given time point.
+
+Setting the flag to activate adhesion in the model
+
+Setting the flag to activate node collapsing for elements dangerously close to flipping
+
+Setting explicit actin options, The actin layer will not grow in z.
+
+Setting volume redistributions options, The volume will be redistributed within a column of elements, starting from the apical surface.
+
+Setting mutation options.
+
+Setting z enclosement options.
+
+Inputs relating to lumen options.
 
 In the case that the function, or any of the above listed parameter reading functions, encounters an unexpected line in the model input file, it will throw an error with a corresponding explanatory message, and quit the simulation.
 

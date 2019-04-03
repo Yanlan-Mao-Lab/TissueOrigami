@@ -261,6 +261,7 @@ void NewtonRaphsonSolver::calculateForcesAndJacobianMatrixNR(vector <Node*>& Nod
 	#pragma omp parallel for //private(Nodes, displacementPerDt, recordForcesOnFixedNodes, FixedNodeForces, outputFile, dt)
 		for( vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 			if (!(*itElement)->IsAblated){
+				//cout<<"calculating element in jacobian: "<<(*itElement)->Id<<endl;
 				(*itElement)->calculateForces(Nodes, displacementPerDt, recordForcesOnFixedNodes, FixedNodeForces);
 			}
 			//cout<<"finished calculating forces in NR"<<endl;
@@ -270,6 +271,7 @@ void NewtonRaphsonSolver::calculateForcesAndJacobianMatrixNR(vector <Node*>& Nod
 			//cout<<"finished calculating ImplicitK viscous in NR"<<endl;
 		}
 	if (thereIsLumen){
+		//cout<<"calculating lumen"<<endl;
 		tissueLumen->updateMatrices(Nodes);
 		tissueLumen->calculateCurrentVolume();
 		tissueLumen->calculateResiduals(Nodes);
@@ -630,7 +632,6 @@ void NewtonRaphsonSolver::solveForDeltaU(){
     writeginPardisoFormat(b,nmult);
     int error = solveWithPardiso(a, b, ia, ja, nmult);
     if (error != 0){cerr<<"Pardiso solver did not return success!!"<<endl;}
-
     if (boundNodesWithSlaveMasterDefinition){
     	equateSlaveDisplacementsToMasters();
     }

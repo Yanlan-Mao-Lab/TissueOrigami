@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['shapebase',['ShapeBase',['../classShapeBase.html',1,'']]],
-  ['simulation',['Simulation',['../classSimulation.html',1,'']]]
+  ['newtonraphsonsolver',['NewtonRaphsonSolver',['../classNewtonRaphsonSolver.html',1,'']]],
+  ['node',['Node',['../classNode.html',1,'']]]
 ];

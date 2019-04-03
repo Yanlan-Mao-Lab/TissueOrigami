@@ -27,3 +27,39 @@
 \form#26:$\textbf{B}$
 \form#27:\begin{eqnarray*} \boldsymbol{l} & = \boldsymbol{B} \boldsymbol{v_{n+1}}\nonumber \\ & = \boldsymbol{B} \frac{{u_{n+1}^{k} - u_{n}}} {\delta t}. \end{eqnarray*}
 \form#28:$ u_{k}$
+\form#29:$ f\left( d \right) = \frac{L}{1+ e^{-k(d-d_{0}}} $
+\form#30:$ L $
+\form#31:$ -k = \frac{sigmoid saturation x 2}{packing threshold} $
+\form#32:$ d_{0} $
+\form#33:$ -k = \frac{2sigmoid saturation}{packing threshold} $
+\form#34:$ d $
+\form#35:$ F_{0} $
+\form#36:$ F_{1} $
+\form#37:$ f\left( d \right) = \frac{L}{1+ e^{-k\left(d-d_{0}\right)}} $
+\form#38:$ -k = \frac{2\:sigmoid\:saturation}{packing\:threshold} $
+\form#39:\[ f\left( d \right) = \frac{L}{1+ e^{-k\left(d-d_{0}\right)}} \]
+\form#40:\[ -k = \frac{2\:sigmoid\:saturation}{packing\:threshold} \]
+\form#41:\[ F_{i}\left( d \right) = f\left( d \right)\:e_{i}\:\:,\:\: F_{j}\left( d \right) = f\left( d \right)\:e_{j}=-f\left( d \right)\:e_{i}=-F_{j} \]
+\form#42:$ e_{i} = \left( x_{i}-x_{j} \right) / || x_{i}-x_{j} || $
+\form#43:$ e_{i} = \left( \mathbf{x_{i}}-\mathbf{x_{j}} \right) / ||\mathbf{x_{i}}-\mathbf{x_{j}} || $
+\form#44:$ ||\mathbf{x_{i}}-\mathbf{x_{j}} || $
+\form#45:\[ F_{i}\left( d \right) = f\left( d \right)\: \mathbf{e_{i}}\:\:,\:\: F_{j}\left( d \right) = f\left( d \right)\: \mathbf{e_{j}}=-f\left( d \right)\: \mathbf{e_{i}}=-F_{j} \]
+\form#46:$ \mathbf{e_{i}} = \left( \mathbf{x_{i}}-\mathbf{x_{j}} \right) / ||\mathbf{x_{i}}-\mathbf{x_{j}} || $
+\form#47:$ \mathbf{F_{0}} $
+\form#48:$ \mathbf{F_{1}} $
+\form#49:\[ \frac{dF_{i}}{\mathbf{x_{i}}} = \]
+\form#50:\[ \frac{dF_{i}}{d\mathbf{x_{i}}} = \frac{f\left( d \right)}{d}\left( \mathbf{I} - \mathbf{e_{i}} \mathbf{e_{i}^{T}}\right) +\frac{f\left( d \right)}{dd} \mathbf{e_{i}} \mathbf{e_{i}^{T}} \]
+\form#51:\[ \mathbf{F_{i}}\left( d \right) = f\left( d \right)\: \mathbf{e_{i}}\:\:,\:\: F_{j}\left( d \right) = f\left( d \right)\: \mathbf{e_{j}}=-f\left( d \right)\: \mathbf{e_{i}}=-F_{j} \]
+\form#52:\[ \frac{d\mathbf{F_{i}}}{d\mathbf{x_{i}}} = \frac{f\left( d \right)}{d}\left( \mathbf{I} - \mathbf{e_{i}} \mathbf{e_{i}^{T}}\right) +\frac{df\left( d \right)}{dd} \mathbf{e_{i}} \mathbf{e_{i}^{T}} \]
+\form#53:$ f\left( d \right) $
+\form#54:\[ \frac{f\left( d \right)}{d} = \frac{-2\:sigmoid\:saturation}{packing\:threshold} f\left( d \right) \left( 1 - f\left( d \right) \right) *\]
+\form#55:\[ \frac{df\left( d \right)}{d} = \frac{-2\:sigmoid\:saturation}{packing\:threshold} f\left( d \right) \left( 1 - f\left( d \right) \right) \]
+\form#56:$ \mathbf{I} $
+\form#57:\[ \frac{df\left( d \right)}{dd} = \frac{-2\:sigmoid\:saturation}{packing\:threshold} f\left( d \right) \left( 1 - f\left( d \right) \right) \]
+\form#58:\[ \frac{df\left( d \right)}{dd} = mass\:\frac{-2\:sigmoid\:saturation}{packing\:threshold} f\left( d \right) \left( 1 - f\left( d \right) \right) \]
+\form#59:\[ K \left[ \begin{bmatrix} & \vdots & \vdots & \vdots & \\ \dots & x_{3id0,3id0} & \dots & x_{3id0,3id0+2} & \dots \\ \dots & \vdots & \dots & \vdots & \dots \\ \dots & x_{3id0+2,3id0} & \dots & x_{3id0+2,3id0+2} & \dots \\ & \vdots & \vdots & \vdots & \end{bmatrix} \right] \]
+\form#60:\[ K \begin{bmatrix} & \vdots & \vdots & \vdots & \\ \dots & x_{3id0,3id0} & \dots & x_{3id0,3id0+2} & \dots \\ \dots & \vdots & \dots & \vdots & \dots \\ \dots & x_{3id0+2,3id0} & \dots & x_{3id0+2,3id0+2} & \dots \\ & \vdots & \vdots & \vdots & \end{bmatrix} \leftarrow \:\: - \frac{d\mathbf{F_{i}}}{d\mathbf{x_{i}}} \]
+\form#61:\[ - \frac{d\mathbf{F_{i}}}{d\mathbf{x_{i}}} \:\: \rightarrow K \begin{bmatrix} & \vdots & \vdots & \vdots & \\ \dots & x_{3id0,3id0} & \dots & x_{3id0,3id0+2} & \dots \\ \dots & \vdots & \dots & \vdots & \dots \\ \dots & x_{3id0+2,3id0} & \dots & x_{3id0+2,3id0+2} & \dots \\ & \vdots & \vdots & \vdots & \end{bmatrix} \]
+\form#62:\[ - \frac{d\mathbf{F_{0}}}{d\mathbf{x_{0}}} \:\: \rightarrow K \begin{bmatrix} & \vdots & \vdots & \vdots & \\ \dots & x_{3id0,3id0} & \dots & x_{3id0,3id0+2} & \dots \\ \dots & \vdots & \dots & \vdots & \dots \\ \dots & x_{3id0+2,3id0} & \dots & x_{3id0+2,3id0+2} & \dots \\ & \vdots & \vdots & \vdots & \end{bmatrix}, \frac{d\mathbf{F_{0}}}{d\mathbf{x_{0}}} \:\: \rightarrow \begin{bmatrix} x_{3id0,3id1} & \dots\\ \dots & x_{3id0+2,3id1+2} \end{bmatrix}, -\frac{d\mathbf{F_{0}}}{d\mathbf{x_{0}}} \:\: \rightarrow \begin{bmatrix} x_{3id1,3id1} & \dots\\ \dots & x_{3id1+2,3id1+2} \end{bmatrix}, \frac{d\mathbf{F_{0}}}{d\mathbf{x_{0}}} \:\: \rightarrow \begin{bmatrix} x_{3id1,3id0} & \dots\\ \dots & x_{3id1+2,3id0+2} \end{bmatrix}. \]
+\form#63:\[ - \frac{d\mathbf{F_{0}}}{d\mathbf{x_{0}}} \:\: \rightarrow K \begin{bmatrix} & \vdots & \vdots & \vdots & \\ \dots & x_{3id0,3id0} & \dots & x_{3id0,3id0+2} & \dots \\ \dots & \vdots & \dots & \vdots & \dots \\ \dots & x_{3id0+2,3id0} & \dots & x_{3id0+2,3id0+2} & \dots \\ & \vdots & \vdots & \vdots & \end{bmatrix}, \]
+\form#64:\[ \frac{d\mathbf{F_{0}}}{d\mathbf{x_{0}}} \:\: \rightarrow \begin{bmatrix} x_{3id0,3id1} & \dots\\ \dots & x_{3id0+2,3id1+2} \end{bmatrix}, -\frac{d\mathbf{F_{0}}}{d\mathbf{x_{0}}} \:\: \rightarrow \begin{bmatrix} x_{3id1,3id1} & \dots\\ \dots & x_{3id1+2,3id1+2} \end{bmatrix}, \frac{d\mathbf{F_{0}}}{d\mathbf{x_{0}}} \:\: \rightarrow \begin{bmatrix} x_{3id1,3id0} & \dots\\ \dots & x_{3id1+2,3id0+2} \end{bmatrix}. \]

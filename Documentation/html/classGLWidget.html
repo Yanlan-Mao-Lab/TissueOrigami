@@ -172,12 +172,18 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>updateToPerspectiveVi
 <tr class="memitem:af9b7537315485a04dd848ee62ac60b1e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af9b7537315485a04dd848ee62ac60b1e"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>drawPointsForDisplay</b> ()</td></tr>
 <tr class="separator:af9b7537315485a04dd848ee62ac60b1e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae613db32ea14ed70eeec575a9edf2398"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae613db32ea14ed70eeec575a9edf2398"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>drawEnclosingShell</b> ()</td></tr>
+<tr class="separator:ae613db32ea14ed70eeec575a9edf2398"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a9d11c25470e7e6d635d90b9605d54a2e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9d11c25470e7e6d635d90b9605d54a2e"></a>
 <a class="el" href="classSimulation.html">Simulation</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>Sim01</b></td></tr>
 <tr class="separator:a9d11c25470e7e6d635d90b9605d54a2e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9a56bace00b9e27479229678b11d1c31"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9a56bace00b9e27479229678b11d1c31"></a>
+<a class="el" href="classAnalysis.html">Analysis</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>analyser01</b></td></tr>
+<tr class="separator:a9a56bace00b9e27479229678b11d1c31"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a37fa0d9c8bfb720f550365da0aefccc7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a37fa0d9c8bfb720f550365da0aefccc7"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>ItemSelected</b></td></tr>
 <tr class="separator:a37fa0d9c8bfb720f550365da0aefccc7"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -193,6 +199,9 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>ManualNodeSelection</
 <tr class="memitem:a4dac57a8924f1f9feb6d6bae75fe6d13"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4dac57a8924f1f9feb6d6bae75fe6d13"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>ManualSelectedNodeId</b></td></tr>
 <tr class="separator:a4dac57a8924f1f9feb6d6bae75fe6d13"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0a4edc2e8f058a9c67080da41ca21ed4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0a4edc2e8f058a9c67080da41ca21ed4"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>DisplayFixedNodes</b></td></tr>
+<tr class="separator:a0a4edc2e8f058a9c67080da41ca21ed4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a314984029a390e02a2d4235c5c2741a5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a314984029a390e02a2d4235c5c2741a5"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>DisplayStrains</b></td></tr>
 <tr class="separator:a314984029a390e02a2d4235c5c2741a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -208,18 +217,18 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>DisplayPysProp</b></t
 <tr class="memitem:a478ab24d1ae3c646f40afedb72b725ae"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a478ab24d1ae3c646f40afedb72b725ae"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>PysPropToDisplay</b></td></tr>
 <tr class="separator:a478ab24d1ae3c646f40afedb72b725ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a04ab3aa5ad2078d0a495379907eb63ae"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a04ab3aa5ad2078d0a495379907eb63ae"></a>
-float&#160;</td><td class="memItemRight" valign="bottom"><b>DisplayPysPropRange</b> [6][2]</td></tr>
-<tr class="separator:a04ab3aa5ad2078d0a495379907eb63ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9bad9c8e609c86125850e2f83350d704"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9bad9c8e609c86125850e2f83350d704"></a>
-float&#160;</td><td class="memItemRight" valign="bottom"><b>DisplayPysPropBounds</b> [6][4]</td></tr>
-<tr class="separator:a9bad9c8e609c86125850e2f83350d704"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a93d20b91ca92dcd761870fb05291d9cd"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a93d20b91ca92dcd761870fb05291d9cd"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>DisplayPysPropDecimals</b> [6]</td></tr>
-<tr class="separator:a93d20b91ca92dcd761870fb05291d9cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae93978d9d5561027cf8697694ca695d3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae93978d9d5561027cf8697694ca695d3"></a>
-float&#160;</td><td class="memItemRight" valign="bottom"><b>DisplayPysPropSteps</b> [6]</td></tr>
-<tr class="separator:ae93978d9d5561027cf8697694ca695d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae8badd94f5ec489d9649852a1286a1b6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae8badd94f5ec489d9649852a1286a1b6"></a>
+float&#160;</td><td class="memItemRight" valign="bottom"><b>DisplayPysPropRange</b> [8][2]</td></tr>
+<tr class="separator:ae8badd94f5ec489d9649852a1286a1b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af72294a917f65c0224754f0ddba4a1aa"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af72294a917f65c0224754f0ddba4a1aa"></a>
+float&#160;</td><td class="memItemRight" valign="bottom"><b>DisplayPysPropBounds</b> [8][4]</td></tr>
+<tr class="separator:af72294a917f65c0224754f0ddba4a1aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a03b8cd23cfb65321dfdc9f0ac7adbc19"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a03b8cd23cfb65321dfdc9f0ac7adbc19"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>DisplayPysPropDecimals</b> [8]</td></tr>
+<tr class="separator:a03b8cd23cfb65321dfdc9f0ac7adbc19"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acf113e12daa0c0ab04e7ad5c1271fc10"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acf113e12daa0c0ab04e7ad5c1271fc10"></a>
+float&#160;</td><td class="memItemRight" valign="bottom"><b>DisplayPysPropSteps</b> [8]</td></tr>
+<tr class="separator:acf113e12daa0c0ab04e7ad5c1271fc10"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac238abe591ebaf2aa26a65378a65ce0f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac238abe591ebaf2aa26a65378a65ce0f"></a>
 vector&lt; QString &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>SelectedPos</b></td></tr>
 <tr class="separator:ac238abe591ebaf2aa26a65378a65ce0f"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -232,15 +241,21 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>drawNetForces</b></td
 <tr class="memitem:a993ff9e84e7837735b14743a10cd6ddd"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a993ff9e84e7837735b14743a10cd6ddd"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>drawMyosinForces</b></td></tr>
 <tr class="separator:a993ff9e84e7837735b14743a10cd6ddd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1add181def42d70e97e6f47ef246f948"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1add181def42d70e97e6f47ef246f948"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>drawMarkingEllipses</b></td></tr>
+<tr class="separator:a1add181def42d70e97e6f47ef246f948"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae9562314a829eb7d91cb2453dd444a80"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae9562314a829eb7d91cb2453dd444a80"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>drawGrowthRedistribution</b></td></tr>
+<tr class="separator:ae9562314a829eb7d91cb2453dd444a80"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa257ac8b872ae5aee83c224b58f92f53"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa257ac8b872ae5aee83c224b58f92f53"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>drawNodeBinding</b></td></tr>
+<tr class="separator:aa257ac8b872ae5aee83c224b58f92f53"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab9f882d19b598a85dc5da6201681376a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab9f882d19b598a85dc5da6201681376a"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>MyosinToDisplay</b></td></tr>
 <tr class="separator:ab9f882d19b598a85dc5da6201681376a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a667580ff60b536f89e8b693c6f043868"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a667580ff60b536f89e8b693c6f043868"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>drawPackingForces</b></td></tr>
 <tr class="separator:a667580ff60b536f89e8b693c6f043868"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae57adc8b63690ebf5bf1d3e4ab35ae44"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae57adc8b63690ebf5bf1d3e4ab35ae44"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>drawVelocities</b></td></tr>
-<tr class="separator:ae57adc8b63690ebf5bf1d3e4ab35ae44"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1198d8100d85dec3c9a106081d1465df"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1198d8100d85dec3c9a106081d1465df"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>drawTissueScaleBar</b></td></tr>
 <tr class="separator:a1198d8100d85dec3c9a106081d1465df"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -250,6 +265,9 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>drawPeripodialMembran
 <tr class="memitem:a404f4d4130a0c3ea84aeaaac6adb618b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a404f4d4130a0c3ea84aeaaac6adb618b"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>drawColumnar</b></td></tr>
 <tr class="separator:a404f4d4130a0c3ea84aeaaac6adb618b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac031c18e38cead8f2ffeeac626ea7b5c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac031c18e38cead8f2ffeeac626ea7b5c"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>drawLumen</b></td></tr>
+<tr class="separator:ac031c18e38cead8f2ffeeac626ea7b5c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac011fc6341a41ec96b9a2a332e223617"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac011fc6341a41ec96b9a2a332e223617"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>PerspectiveView</b></td></tr>
 <tr class="separator:ac011fc6341a41ec96b9a2a332e223617"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -271,6 +289,12 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>zClip</b></td></tr>
 <tr class="memitem:a50707fe8f3eb2f48a541094af67c0e2b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a50707fe8f3eb2f48a541094af67c0e2b"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>drawSymmetricity</b></td></tr>
 <tr class="separator:a50707fe8f3eb2f48a541094af67c0e2b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae4629c4862333f0daab4fbff691f9037"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae4629c4862333f0daab4fbff691f9037"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>currNodeNumber</b></td></tr>
+<tr class="separator:ae4629c4862333f0daab4fbff691f9037"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4a046f26807fc8e3be97438d5b3cd54c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4a046f26807fc8e3be97438d5b3cd54c"></a>
+float&#160;</td><td class="memItemRight" valign="bottom"><b>obj_pos</b> [3]</td></tr>
+<tr class="separator:a4a046f26807fc8e3be97438d5b3cd54c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-methods"></a>
 Protected Member Functions</h2></td></tr>
@@ -322,6 +346,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>generate3DObject</b> 
 <tr class="memitem:a30be9e529d717552be70cbad097d99e8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a30be9e529d717552be70cbad097d99e8"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>initialiseNodeColourList</b> ()</td></tr>
 <tr class="separator:a30be9e529d717552be70cbad097d99e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5dd3852a3226519f5b94389385168da2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5dd3852a3226519f5b94389385168da2"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>reInitialiseNodeColourList</b> (int oldNodeNumber)</td></tr>
+<tr class="separator:a5dd3852a3226519f5b94389385168da2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8597de4600272fb1720641fd1990f153"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8597de4600272fb1720641fd1990f153"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>checkIfDrawingElement</b> (int i)</td></tr>
 <tr class="separator:a8597de4600272fb1720641fd1990f153"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -383,7 +410,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>fillItemSelectionInfo
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="classGLWidget.html">GLWidget</a></li>
-    <li class="footer">Generated on Fri Apr 15 2016 19:51:54 for Tissue Origami by
+    <li class="footer">Generated on Wed Apr 3 2019 14:19:52 for Tissue Origami by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

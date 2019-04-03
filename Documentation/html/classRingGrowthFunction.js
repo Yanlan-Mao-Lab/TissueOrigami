@@ -1,6 +1,6 @@
 var classRingGrowthFunction =
 [
-    [ "RingGrowthFunction", "classRingGrowthFunction.html#a2e12b527d77b74130258ad25dc18e88d", null ],
+    [ "RingGrowthFunction", "classRingGrowthFunction.html#a6d4914efe62137aae9fec55401edf986", null ],
     [ "~RingGrowthFunction", "classRingGrowthFunction.html#a092217068fa89ff74aaa01326bc06f07", null ],
     [ "getCentre", "classRingGrowthFunction.html#aa2063170e3ee5c5f22d7beef32300e9c", null ],
     [ "getGrowthRate", "classRingGrowthFunction.html#ab3cc1858fb602ab40a74af7d0467c13b", null ],

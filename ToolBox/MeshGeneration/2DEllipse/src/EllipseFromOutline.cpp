@@ -258,37 +258,12 @@ void EllipseLayoutGenerator::peripodialSparseTesselate2D(bool symmetricX, bool s
 
 void EllipseLayoutGenerator::peripodialReadInTesselation2D(){
 	cout<<" start of read in peripodial tesselation, size of points: "<<posx.size()<<" size of tissue shape: "<<tissueType.size()<<endl;	
-	ifstream MeshFile;	
-	MeshFile.open("./PointsPeri.1.ele", ifstream::in);
-	//readHeader:
-	int ntri;
-	MeshFile>>ntri;
-	int nodesPerTri;
-	MeshFile>>nodesPerTri;
-	int nAttributes;
-	MeshFile>>nAttributes;
-	cout<<" ntri, nodesPerTri, nAttributes: "<<ntri<<" "<<nodesPerTri<<" "<<nAttributes<<endl;
-	for (int i=0; i<ntri; ++i){
-		int triId;
-		MeshFile>>triId;
-		int* pnts;
-		pnts = new int[3];
-		for (int j=0;j<3;++j){
-			MeshFile >> pnts[j];
-		}
-		periTriangles.push_back(pnts);
-		periLinks0.push_back(pnts[0]);
-		periLinks1.push_back(pnts[1]);
-		periLinks0.push_back(pnts[1]);
-		periLinks1.push_back(pnts[2]);
-		periLinks0.push_back(pnts[2]);
-		periLinks1.push_back(pnts[0]);
-	}
-	MeshFile.close();
 	ifstream NodeFile;	
 	NodeFile.open("./PointsPeri.1.node", ifstream::in);
 	int nNode;
 	int bordersMarked;
+	int nAttributes;
+	int nodesPerTri;
 	NodeFile>>nNode;
 	NodeFile>>nodesPerTri;	//dimensions
 	NodeFile>>nAttributes;	//attribute number
@@ -328,6 +303,49 @@ void EllipseLayoutGenerator::peripodialReadInTesselation2D(){
 			}
 		}
 	}
+	ifstream MeshFile;	
+	MeshFile.open("./PointsPeri.1.ele", ifstream::in);
+	//readHeader:
+	int ntri;
+	MeshFile>>ntri;
+	MeshFile>>nodesPerTri;
+	MeshFile>>nAttributes;
+	cout<<" ntri, nodesPerTri, nAttributes: "<<ntri<<" "<<nodesPerTri<<" "<<nAttributes<<endl;
+	for (int i=0; i<ntri; ++i){
+		int triId;
+		MeshFile>>triId;
+		int* pnts;
+		pnts = new int[3];
+		for (int j=0;j<3;++j){
+			MeshFile >> pnts[j];
+		}
+		//Now I have all the points, if all points are on the border of the columner, I will
+		//skip this triangle:
+		bool atCircumference[3] = {false};
+		for (int j=0;j<3;++j){
+			std::map<int,int>::iterator it_indexOfColumnar;
+			it_indexOfColumnar = mapOfPeripodialApicalLayerNodesWRTColumnarBasalNodes.find(pnts[j]);	
+			if (it_indexOfColumnar!=mapOfPeripodialApicalLayerNodesWRTColumnarBasalNodes.end()){
+				atCircumference[j] = true;	//the key is there, the node is  at circumference
+			}
+			else{
+				//node is not at circumference, no need to check rest, move on normally
+				break;
+			}
+		}
+		if(atCircumference[0] && atCircumference[1] && atCircumference[2]){
+			//skip this triangle
+ 			continue;
+ 		}
+		periTriangles.push_back(pnts);
+		periLinks0.push_back(pnts[0]);
+		periLinks1.push_back(pnts[1]);
+		periLinks0.push_back(pnts[1]);
+		periLinks1.push_back(pnts[2]);
+		periLinks0.push_back(pnts[2]);
+		periLinks1.push_back(pnts[0]);
+	}
+	MeshFile.close();
 }
 
 void EllipseLayoutGenerator::linkerReadInTesselation2D(){
@@ -1172,6 +1190,9 @@ void EllipseLayoutGenerator::addPeripodialNodesFromTriangulation(ofstream& MeshF
 		modifiedPeripodialZDueToThinActin = dzHeight;
 		ECMHeight = dzHeight;
 	}
+	for( auto a : mapOfPeripodialApicalLayerNodesWRTColumnarBasalNodes){
+		cout<<"mapOfPeripodialApicalLayerNodesWRTColumnarBasalNodes:" << a.first<<" "<<a.second<<endl;
+	}
 	for (int layers=0; layers<peripodialLayers+1; ++layers){
 		int nodePositionIdentifier = 2; //0=basal, 1=apical, 2=midline
 		if (layers == 0){nodePositionIdentifier=1;} //apical for the bottom layer looking into lumen
@@ -1216,6 +1237,7 @@ void EllipseLayoutGenerator::addPeripodialNodesFromTriangulation(ofstream& MeshF
 	}
 	cout<<" number of recorded nodes (peri cap finished) : "<<recordedNodesX.size()<<endl;
 	if (addLateralECMRing){
+		cout<<" Adding peripodial loop nodes (lateral region, linker elements)"<<endl;
 		//Adding peripodial loop nodes (lateral region, linker elements):
 		//trial for one:
 		//calculate centre from borders:
@@ -1503,29 +1525,35 @@ void EllipseLayoutGenerator::writeMeshFileForSimulation(double zHeight, int zLay
 	}
 	//loop for peripodial elements:
 	if(addPeripodial){
+		cout<<"adding peripodial"<<endl;
 		//move one more layer up on nodes, I do not want to connect top layer of columnar to bottom of peripodial, I want to continue on peripodial:
 		currOffset += n; // skipping top of columnar, therefore n
 		for (int layers=0; layers<peripodialLayers; ++layers){
-			for (int i =0; i<nTri; ++i){
+			for (int i =0; i<nPeripodialTri; ++i){
 				double refPos[6][3];
 				int nodes[6];
 				if (!mirrorColumnarForPeripodial){
+					cout<<"adding peripodial from triangulation, triangle "<<i<<" of "<<nPeripodialTri<<endl;
 					for (int j=0;j<3;++j){
+						cout<<"layer: "<<layers<<" adding j: 0-3: "<<j<<endl;
 						if (layers == 0){
 							if (nSharedNodesAtCircumference>0){
+								cout<<" there are shared nodes"<<endl;
+								cout<<" triangle : "<<periTriangles[i][0]<<" "<<periTriangles[i][1]<<" "<<periTriangles[i][2]<<endl;
 								std::map<int,int>::iterator it_indexOfColumnar;
 								it_indexOfColumnar = mapOfPeripodialApicalLayerNodesWRTColumnarBasalNodes.find(periTriangles[i][j]);
 								bool atCircumference = false;
 								if (it_indexOfColumnar!=mapOfPeripodialApicalLayerNodesWRTColumnarBasalNodes.end()){
 									atCircumference = true;	//the key is there, the node is  at circumference
 								}
+								cout<<"at circumference? "<<atCircumference<<endl;
 								if( atCircumference){
 									nodes[j]=it_indexOfColumnar->second+currOffset-n;
-									//cout<<"at layer 0 of peripodial, at circumference, equivalent of basal columnar node: "<<triangles[i][j]<<" : "<<nodes[j]<<endl;
+									cout<<"at layer 0 of peripodial, at circumference, equivalent of basal columnar node: "<<periTriangles[i][j]<<" : "<<nodes[j]<<endl;
 								}
 								else{
 									nodes[j]=mapOfPeripodialApicalNonBorderNodesWRTPeripodialApicalLayer[periTriangles[i][j]];
-									//cout<<"at layer 0 of peripodial, at middle       , equivalent of basal columnar node: "<<triangles[i][j]<<" : "<<nodes[j]<<endl;
+									cout<<"at layer 0 of peripodial, at middle       , equivalent of basal columnar node: "<<periTriangles[i][j]<<" : "<<nodes[j]<<endl;
 								}
 							}
 							else{
@@ -1534,6 +1562,7 @@ void EllipseLayoutGenerator::writeMeshFileForSimulation(double zHeight, int zLay
 						}
 					}
 					for (int j=3;j<6;++j){
+						cout<<"layer: "<<layers<<" adding j: 3-6"<<endl;
 						if (layers == 0){
 							nodes[j]=periTriangles[i][j-3]+currOffset+nPeripodialNodeNumber-nSharedNodesAtCircumference;
 						}
@@ -1608,6 +1637,7 @@ void EllipseLayoutGenerator::writeMeshFileForSimulation(double zHeight, int zLay
 				currOffset += nPeripodialNodeNumber;
 			}
 		}
+		cout<<"finished peripodial"<<endl;
 		//loop for adding linker zone elements:
 		int nCirc = SortedCircumferenceForLinkers.size();
 		for (int i =0 ; i<nCirc-1;++i){

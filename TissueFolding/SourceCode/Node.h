@@ -54,7 +54,7 @@ public:
 	bool			onFoldInitiation;
 	bool			checkOwnersforEllipseAsignment;    ///< When the ellipse ids are assigned to nodes nby owner elemetns, you can end up with elements that have all their nodes engulfed in an ellipse, but the element itself is not assigned into an ellipse. This flag will check for that.
 	bool			positionUpdateOngoing;
-	bool 			positionUpdateCounter;
+	int 			positionUpdateCounter;
 	bool haveCommonOwner(Node* nodeSlave);
 	int  getCommonOwnerId(Node* nodeSlave);
 	void setExternalViscosity(double ApicalVisc,double BasalVisc, bool extendExternalViscosityToInnerTissue);///< The function to set the viscosity of the node.

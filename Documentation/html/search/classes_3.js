@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['prism',['Prism',['../classPrism.html',1,'']]]
+  ['lumen',['Lumen',['../classLumen.html',1,'']]]
 ];
