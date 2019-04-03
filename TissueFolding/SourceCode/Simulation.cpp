@@ -6590,7 +6590,7 @@ void Simulation::conserveColumnVolume(){
 void Simulation::updateStepNR(){
     int iteratorK = 0;
     int maxIteration =20;
-    bool converged = true;
+    bool converged = false;
 
     bool numericalCalculation = false;
     bool displayMatricesDuringNumericalCalculation = false;
