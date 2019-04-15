@@ -1,12 +1,12 @@
 InputMeshParameters:
   MeshInputMode(int-seeDocumentation): 4
-  MeshFile(full-path):     /home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/2DEllipse/Exp48hr-ECM_06.mesh
+  MeshFile(full-path):     /media/WIN7HDD/documents/Projects/TissueFolding/TissueFoldingSimulations/bulkruns/190410/MeshFiles/Exp48hr-noPeri-ThinECM_12.mesh
   symmetricInX(bool): 0
   symmetricInY(bool): 1
  
 TimeParameters:
-  TimeStep(sec): 900
-  SimulationLength(sec): 180000
+  TimeStep(sec): 3600
+  SimulationLength(sec): 0
   
 SaveOptions:
   SaveImages(bool): 1
@@ -87,7 +87,7 @@ GrowthOptions:
   zRange: 0.0 1.0
 
   GrowthFunctionType(int-seeDocumentation): 3
-  InitialTime(sec):  57600 
+  InitialTime(sec):  57600
   FinalTime(sec):  115200
   ApplyToColumnarLayer(bool): 1
   ApplyToPeripodialMembrane(bool): 0
@@ -147,7 +147,25 @@ NodeCollapseOptions:
   ThereIsNodeCollapse(bool): 1
     
 LumenOptions:
-  thereIsLumen(bool): 1
+  thereIsLumen(bool): 0
   LumenBulkModulus(Pa): 9600
   LumenGrowthRate(foldPer24hr): 1.4142
+
+MutationOptions:
+  numberOfClones(int): 12
+  cloneInformation(double-relativeX,relativeY,micronRadius,usingAbsoluteGrowth(bool),growthRatePerHour_OR_growthFoldIncrease):
+  0.14  0.5 1.2 0 3.0
+  0.30  0.5 1   0 3.0
+  0.50  0.5 1   0 3.0
+  0.65  0.5 1   0 3.0
+  0.75  0.5 1   0 3.0
+  0.825 0.5 1   0 3.0
+  0.90  0.5 1.2 0 3.0
+  0.30  0.7 1   0 3.0
+  0.825 0.7 1   0 3.0
+  0.50  0.8 1   0 3.0
+  0.70  0.8 1   0 3.0
+  0.825 0.8 1   0 3.0
+
+  
 

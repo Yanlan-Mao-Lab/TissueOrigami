@@ -637,13 +637,8 @@ public:
     void addRandomForces(gsl_matrix* gExt);
     void smallStrainrunOneStep();
     void packToPipetteWall();
-    void calculatePacking2(double PeriThreshold, double ColThreshold);
-    void addToEdgeList(Node* nodePointer, ShapeBase* elementPointer, vector <int> & edgeNodeData0, vector <int> & edgeNodeData1);
-    bool checkIfPointIsOnEdge(int node0, int node1, double x, double y, double z, double& vx, double& vy, double& vz);
    	void detectPacingNodes();
    	void assignFoldRegionAndReleasePeripodial(Node* NodeMAster, Node* NodeSlave);
-   	void detectPacingCombinations();
-   	void cleanUpPacingCombinations();
 
    	void calculatePackingToEnclosingSurfacesJacobian3D(gsl_matrix* K);
 	void calculatePackingToAFMBeadJacobian3D(gsl_matrix* K);
@@ -651,7 +646,7 @@ public:
    	void detectPacingToEnclosingSurfacesNodes();
    	void detectPackingToAFMBead();
 
-    void calculatePacking();
+    //void calculatePacking();
     void calculatePackingK(gsl_matrix* K);
     void calculatePackingNumerical(gsl_matrix* K);
     void calculatePackingForcesImplicit3D();
@@ -660,9 +655,6 @@ public:
     void addValueToMatrix(gsl_matrix* K, int i, int j, double value);
     void addPackingForces(gsl_matrix* gExt);
 	void checkPackingToPipette(bool& packsToPip, double* pos, double* pipF,double mass);
-	void getNormalAndCornerPosForPacking(Node* NodePointer, ShapeBase* ElementPointer, double* normalForPacking,double* posCorner);
-	void getApicalNormalAndCornerPosForPacking(ShapeBase* ElementPointer, double* normalForPacking,double* posCorner);
-	void getBasalNormalAndCornerPosForPacking(ShapeBase* ElementPointer, double* normalForPacking,double* posCorner);
 	inline void CapPackingForce(double& Fmag);
 	void bringMyosinStimuliUpToDate();
 	void redistributePeripodialMembraneForces(int RKId);
@@ -674,10 +666,6 @@ public:
 	void alignTissueDVToXPositive();
 	void alignTissueAPToXYPlane();
 	bool checkFlip();
-	void flagElementsThatNeedRefinement();
-	void refineElements();
-	void addNodesForRefinement(ShapeBase* currElement, int* newNodeIdList);
-	void addElementsForRefinement(int* elementsIdsOnColumn, int* newNodeIdList);
 	void wrapUpAtTheEndOfSimulation();
 	void writeRelaxedMeshFromCurrentState();
 	void writeMeshRemovingAblatedRegions();

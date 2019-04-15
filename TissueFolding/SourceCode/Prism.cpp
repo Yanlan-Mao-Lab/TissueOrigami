@@ -74,8 +74,6 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, bool thereIsPlas
 	IsChangingShape = false;
 	//GrewInThePast = false;
 	//ChangedShapeInThePast = false;
-	ApicalNormalForPackingUpToDate = false;
-	BasalNormalForPackingUpToDate = false;
 	IsAblated = false;
 	atSymetricityBoundary = false;
 	IsClippedInDisplay = false;
@@ -243,7 +241,6 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, bool thereIsPlas
     nLateralSurfaceAreaNodeNumber = 4;
     nSurfaceAreaNodeNumber = 3;
 
-    willBeRefined = false;
     cellsMigrating = false;
     remodellingPlaneRotationMatrix = gsl_matrix_calloc(3,3);
     gsl_matrix_set_identity(remodellingPlaneRotationMatrix);
@@ -927,38 +924,6 @@ void Prism::calculateReferenceVolume(){
 		delete [] triangularFaces[i];
 	}
 	delete [] triangularFaces;
-	/*double height = 0.0;
-	for (int i = 0; i<3; ++i){
-        double d = ReferenceShape->Positions[0][i] - ReferenceShape->Positions[3][i];
-		d *= d;
-		height +=d;
-	}
-	height = pow(height,0.5);
-
-	double basesideVec1[3];
-	double basesideVec2[3];
-	double baseSide1 = 0.0;
-	double baseSide2 = 0.0;
-	double costet =0.0;
-	for (int i = 0; i<3; ++i){
-		basesideVec1[i]= ReferenceShape-> Positions[1][i] - ReferenceShape-> Positions[0][i];
-		basesideVec2[i]= ReferenceShape-> Positions[2][i] - ReferenceShape-> Positions[0][i];
-		costet += basesideVec1[i]*basesideVec2[i];
-		baseSide1 += basesideVec1[i] * basesideVec1[i];
-		baseSide2 += basesideVec2[i] * basesideVec2[i];
-	}
-	baseSide1 = pow(baseSide1,0.5);
-	baseSide2 = pow(baseSide2,0.5);
-	costet /= (baseSide1*baseSide2);
-	double sintet = pow((1-costet*costet),0.5);
-	double baseArea = baseSide1* baseSide2 * sintet / 2.0;
-	ReferenceShape->BasalArea = baseArea;
-	ReferenceShape->Volume = height * baseArea;
-    GrownVolume = ReferenceShape->Volume;
-    VolumePerNode = GrownVolume/nNodes;*/
-
-	//cout<<"baseSide1: "<<baseSide1<<" baseSide2: "<<baseSide2<<" costet: "<<costet<<" sintet: "<<sintet<<endl;
-	//cout<<"basearea: "<<baseArea<<" heignt: "<<	height<<" Volume: "<<ReferenceShape->Volume<<endl;
 }
 
 void Prism::checkHealth(){
@@ -1300,103 +1265,7 @@ void Prism::checkEdgeLenghtsForBinding(vector <int>&masterIds, vector <int>&slav
 			}
 		}
 	}
-	/*if (tissuePlacement == 2 || spansWholeTissue == false){
-		//check lateral sides for mid elements:
-		double* vec01 = new double[3];
-		double* vec10 = new double[3];
-		double* vec02 = new double[3];
-		double* vec14 = new double[3];
-		double* vec25 = new double[3];
-		double* vec03 = new double[3];
-		getNormalVectorBetweenNodes(0,1,vec01);
-		getNormalVectorBetweenNodes(0,2,vec02);
-		getNormalVectorBetweenNodes(1,4,vec14);
-		getNormalVectorBetweenNodes(2,5,vec25);
-		getNormalVectorBetweenNodes(0,3,vec03);
-		vec10[0] = vec01[0]*-1;
-		vec10[1] = vec01[1]*-1;
-		vec10[2] = vec01[2]*-1;
-		double dot04 =dotProduct3D(vec01,vec14);
-		double dot05 =dotProduct3D(vec02,vec25);
-		double dot13 =dotProduct3D(vec10,vec03);
-		double tet04 = acos(dot04);
-		double tet05 = acos(dot05);
-		double tet13 = acos(dot13);
-		if (tet04 > thresholdAngle){
-			masterIds.push_back(NodeIds[0]);
-			slaveIds.push_back(NodeIds[1]);
-		}
-		if (tet05 > thresholdAngle){
-			masterIds.push_back(NodeIds[0]);
-			slaveIds.push_back(NodeIds[2]);
-		}
-		if (tet13 > thresholdAngle){
-			masterIds.push_back(NodeIds[0]);
-			slaveIds.push_back(NodeIds[1]);
-		}
-		delete[] vec01;
-		delete[] vec10;
-		delete[] vec02;
-		delete[] vec14;
-		delete[] vec25;
-		delete[] vec03;
-
-
-
-		double* vec34 = new double[3];
-		double* vec43 = new double[3];
-		double* vec35 = new double[3];
-		double* vec41 = new double[3];
-		double* vec52 = new double[3];
-		double* vec30 = new double[3];
-		getNormalVectorBetweenNodes(3,4,vec34);
-		getNormalVectorBetweenNodes(3,5,vec35);
-		vec43[0] = vec43[0]*-1;
-		vec43[1] = vec43[1]*-1;
-		vec43[2] = vec43[2]*-1;
-		vec41[0] = vec14[0]*-1;
-		vec41[1] = vec14[1]*-1;
-		vec41[2] = vec14[2]*-1;
-		vec52[0] = vec25[0]*-1;
-		vec52[1] = vec25[1]*-1;
-		vec52[2] = vec25[2]*-1;
-		vec30[0] = vec03[0]*-1;
-		vec30[1] = vec03[1]*-1;
-		vec30[2] = vec03[2]*-1;
-		double dot31 =dotProduct3D(vec34,vec41);
-		double dot32 =dotProduct3D(vec35,vec52);
-		double dot40 =dotProduct3D(vec43,vec30);
-		double tet31 = acos(dot31);
-		double tet32 = acos(dot32);
-		double tet40 = acos(dot40);
-		if (tet31 > thresholdAngle){
-			masterIds.push_back(NodeIds[3]);
-			slaveIds.push_back(NodeIds[4]);
-		}
-		if (tet32 > thresholdAngle){
-			masterIds.push_back(NodeIds[3]);
-			slaveIds.push_back(NodeIds[5]);
-		}
-		if (tet40 > thresholdAngle){
-			masterIds.push_back(NodeIds[3]);
-			slaveIds.push_back(NodeIds[4]);
-		}
-		delete[] vec34;
-		delete[] vec43;
-		delete[] vec35;
-		delete[] vec41;
-		delete[] vec52;
-		delete[] vec30;
-	}*/
 }
-/*
-void Prism::getNormalVectorBetweenNodes(int nodeId0, int nodeId1, double* vec){
-	vec[0] = Positions[nodeId1][0]-Positions[nodeId0][0];
-	vec[1] = Positions[nodeId1][1]-Positions[nodeId0][1];
-	vec[2] = Positions[nodeId1][2]-Positions[nodeId0][2];
-	double L01 = normaliseVector3D(vec);
-}
-*/
 
 bool Prism::checkNodePlaneConsistency(double** normals){
 	//cout<<"inside check consistency, Id: "<<Id<<endl;
@@ -1630,122 +1499,6 @@ void Prism::AddPackingToSurface(int tissueplacementOfPackingNode, double Fx, dou
 		}
 		if (!Nodes[NodeIds[Id2]]->FixedPos[j]){
 			PackingForces[NodeIds[Id2]][j] -= F[j];
-		}
-	}
-}
-
-
-
-void Prism::calculateNormalForPacking(int tissuePlacementOfNormal){
-	double * u = new double[3];
-	double * v = new double[3];
-	int index0,index1, index2,index4,index5;
-	if (tissuePlacementOfNormal == 1 ){ //calculating apical packing
-		if (tissueType == 0){ //columnar layer, apical indexes should be 4&5 (use 3 as a corner)
-			index0 = 3;
-			index1 = 4;
-			index2 = 5;
-			index4 = 0;
-			index5 = 3;
-		}
-		else{//peripodial membrane, apical indexes should be 1&2 (use 0 as a corner)
-			index0 = 0;
-			index1 = 1;
-			index2 = 2;
-			index4 = 3;
-			index5 = 0;
-		}
-		for (int i=0; i<nDim; ++i){
-			u[i] = Positions[index1][i] - Positions[index0][i];
-			v[i] = Positions[index2][i] - Positions[index0][i];
-			ApicalNormalForPacking[i] = 0.0;
-		}
-		crossProduct3D(u,v,ApicalNormalForPacking);
-		double dummy = normaliseVector3D(ApicalNormalForPacking);
-		for (int i=0; i<nDim; ++i){
-			u[i] = Positions[index5][i] - Positions[index4][i];
-		}
-		//cerr<<"		vector to basal: "<<u[0]<<" "<<u[1]<<" "<<u[2]<<endl;
-		double  dot;
-		dot = dotProduct3D(u,ApicalNormalForPacking);
-		if (dot<0){
-			for (int i=0; i<nDim; ++i){
-				ApicalNormalForPacking[i] *=(-1.0);
-			}
-		}
-		ApicalNormalForPackingUpToDate = true;
-	}
-	else if (tissuePlacementOfNormal == 0 ){ //calculating basal packing
-		int index0,index1, index2;
-		if (tissueType == 0){ //columnar layer, basal indexes should be 1&2 (use 0 as a corner)
-			index0 = 0;
-			index1 = 1;
-			index2 = 2;
-			index4 = 3;
-			index5 = 0;
-		}
-		else{//peripodial membrane, basal indexes should be 4&5 (use 3 as a corner)
-			index0 = 3;
-			index1 = 4;
-			index2 = 5;
-			index4 = 0;
-			index5 = 3;
-		}
-		for (int i=0; i<nDim; ++i){
-			u[i] = Positions[index1][i] - Positions[index0][i];
-			v[i] = Positions[index2][i] - Positions[index0][i];
-			BasalNormalForPacking[i] = 0.0;
-		}
-		crossProduct3D(u,v,BasalNormalForPacking);
-		double dummy = normaliseVector3D(BasalNormalForPacking);
-		for (int i=0; i<nDim; ++i){
-			u[i] = Positions[index5][i] - Positions[index4][i];
-		}
-		//cerr<<"		vector to basal: "<<u[0]<<" "<<u[1]<<" "<<u[2]<<endl;
-		double  dot;
-		dot = dotProduct3D(u,BasalNormalForPacking);
-		if (dot<0){
-			for (int i=0; i<nDim; ++i){
-				BasalNormalForPacking[i] *=(-1.0);
-			}
-		}
-		BasalNormalForPackingUpToDate = true;
-	}
-	//cerr<<"	Element: "<<Id<<"	u: "<<u[0]<<" "<<u[1]<<" "<<u[2]<<" v: "<<v[0]<<" "<<v[1]<<" "<<v[2]<<endl;
-	//cerr<<"		normal before normalisation: "<<normal[0]<<" "<<normal[1]<<" "<<normal[2]<<endl;
-	//cerr<<"		normal after normalisation: "<<normalForPacking[0]<<" "<<normalForPacking[1]<<" "<<normalForPacking[2]<<endl;
-	delete[] v;
-	delete[] u;
-}
-
-
-void Prism::getRelevantNodesForPacking(int TissuePlacementOfPackingNode, int& id1, int& id2, int& id3){
-	if (TissuePlacementOfPackingNode == 0){
-		//tissue placement of the node is basal, should check it against basal surface nodes only
-		if(tissueType == 0){ //element is columnar, the basal nodes are nodes 0-2:
-			id1 = NodeIds[0];
-			id2 = NodeIds[1];
-			id3 = NodeIds[2];
-		}
-		else{
-			//element is peripodial, the basal nodes are 3-5
-			id1 = NodeIds[3];
-			id2 = NodeIds[4];
-			id3 = NodeIds[5];
-		}
-	}
-	else if (TissuePlacementOfPackingNode == 1){
-		//tissue placement of the node is apical, should check it against apical surface nodes  only
-		if(tissueType == 0){ //element is columnar, the apical nodes are nodes 3-5:
-			id1 = NodeIds[3];
-			id2 = NodeIds[4];
-			id3 = NodeIds[5];
-		}
-		else{
-			//element is peripodial, the  the apical nodes are nodes 0-2:
-			id1 = NodeIds[0];
-			id2 = NodeIds[1];
-			id3 = NodeIds[2];
 		}
 	}
 }
@@ -2026,141 +1779,6 @@ double* Prism::getApicalMinViscosity(vector<Node*> Nodes){
 	return ExtVisc;
 }
 
-bool  Prism::IspointInsideTriangle(int tissueplacementOfPackingNode,double x, double y,double z){
-	//double zeroThreshold = 10-10;
-	//double zeroThresholdNeg = (-1.0)*zeroThreshold;
-	//double threshold = 5;
-	bool isInside = false;
-	//Using Barycentric coordinates:
-	int  E0Index = -1, E1Index = -1, E2Index = -1;
-	if (tissueplacementOfPackingNode == 0 ){ //checking basal surface,
-		if (tissueType == 0){ //element is columnar
-			E0Index = 0;
-			E1Index = 1;
-			E2Index = 2;
-		}
-		else{//element is periodial:
-			E0Index = 3;
-			E1Index = 4;
-			E2Index = 5;
-		}
-	}
-	else if (tissueplacementOfPackingNode == 1 ){ //checking apical surface
-		if (tissueType == 0){ //element is columnar
-			E0Index = 3;
-			E1Index = 4;
-			E2Index = 5;
-		}
-		else{//element is periodial:
-			E0Index = 0;
-			E1Index = 1;
-			E2Index = 2;
-		}
-	}
-	double *E0E1 = new double[3];
-	double *E0E2 = new double[3];
-
-	//cout<<" surface positions: "<<endl;
-	//cout<<"	"<<Positions[E0Index][0]<<" "<<Positions[E0Index][1]<<" "<<Positions[E0Index][2]<<endl;
-	//cout<<"	"<<Positions[E1Index][0]<<" "<<Positions[E1Index][1]<<" "<<Positions[E1Index][2]<<endl;
-	//cout<<"	"<<Positions[E2Index][0]<<" "<<Positions[E2Index][1]<<" "<<Positions[E2Index][2]<<endl;
-	//cout<<" point: "<<x<<" "<<y<<" "<<z<<endl;
-
-	//is the projection near one of the corners?
-	/*double dx,dy,dz,d2;
-	dx = Positions[E0Index][0] == x;
-	dy = Positions[E0Index][1] == y;
-	dz = Positions[E0Index][2] == z;
-	d2 = dx*dx + dy*dy+dz*dz;
-	if (d2 < threshold*threshold){
-		//projection of the node is on top of node with index : E0Index
-		isInside =  true;
-	}
-	if (!isInside ){
-		dx = Positions[E1Index][0] == x;
-		dy = Positions[E1Index][1] == y;
-		dz = Positions[E1Index][2] == z;
-		d2 = dx*dx + dy*dy + dz*dz;
-		if (d2 < threshold*threshold){
-			//projection of the node is on top of node with index : E0Index
-			isInside =  true;
-		}
-	}
-	if (!isInside ){
-		dx = Positions[E2Index][0] == x;
-		dy = Positions[E2Index][1] == y;
-		dz = Positions[E2Index][2] == z;
-		d2 = dx*dx + dy*dy + dz*dz;
-		if (d2 < threshold*threshold){
-			//projection of the node is on top of node with index : E0Index
-			isInside =  true;
-		}
-	}
-	//is the projection near one of the edges?
-	if (!isInside ){
-		//Check corner proximity
-	}*/
-	if (!isInside ){
-		for (int i=0; i<3; ++i){
-			E0E1[i]=Positions[E1Index][i] - Positions[E0Index][i];
-			E0E2[i]=Positions[E2Index][i] - Positions[E0Index][i];
-		}
-		double *CrossPMain = new double [3];
-		crossProduct3D(E0E1,E0E2,CrossPMain);
-		double DoubleArea = calculateMagnitudeVector3D(CrossPMain);
-		double alpha =0.0, beta = 0.0, gamma = 0.0;
-		double *PE1 = new double[3];
-		PE1[0] = Positions[E1Index][0] - x;
-		PE1[1] = Positions[E1Index][1] - y;
-		PE1[2] = Positions[E1Index][2] - z;
-		double *PE2 = new double[3];
-		PE2[0] = Positions[E2Index][0] - x;
-		PE2[1] = Positions[E2Index][1] - y;
-		PE2[2] = Positions[E2Index][2] - z;
-		double *CrossP = new double [3];
-		crossProduct3D(PE1,PE2,CrossP);
-		//the vectors should look at te same direction:
-		double dotp = dotProduct3D(CrossP,CrossPMain);
-		//cout<<"dotp for alpha:  "<<dotp<<" ";
-		if (dotp>0){
-			alpha = calculateMagnitudeVector3D(CrossP);
-			alpha /= DoubleArea;
-			//cout<<" alpha: "<<alpha<<" ";
-			if (alpha >-1E-10 && alpha <= 1.0+1E-10){
-				double *PE0 = new double[3];
-				PE0[0] = Positions[E0Index][0] - x;
-				PE0[1] = Positions[E0Index][1] - y;
-				PE0[2] = Positions[E0Index][2] - z;
-				crossProduct3D(PE2,PE0,CrossP);
-				dotp = dotProduct3D(CrossP,CrossPMain);
-				//cout<<"dotp for beta:  "<<dotp<<" ";
-				if (dotp>0){
-					beta = calculateMagnitudeVector3D(CrossP);
-					beta /= DoubleArea;
-					//cout<<" beta: "<<beta<<" ";
-					if (beta >-1E-10 && beta <= 1.0+1E-10){
-						gamma = 1 - alpha - beta;
-						//cout<<" gamma: "<<gamma<<" ";
-						crossProduct3D(PE1,PE0,CrossP);
-						if (gamma >-1E-10 && gamma <1.0+1E-10){
-							isInside =  true;
-						}
-					}
-				}
-				delete[] PE0;
-			}
-			//cout<<endl;
-		}
-		delete[] CrossPMain;
-		delete[] CrossP;
-		delete[] PE1;
-		delete[] PE2;
-	}
-	delete[] E0E1;
-	delete[] E0E2;
-	return isInside;
-}
-
 void  	Prism::calculateMyosinForcesAreaBased(double forcePerMyoMolecule){
 	if (cMyoUniform[0]>0){
 		calculateApicalArea();
@@ -2418,32 +2036,8 @@ void 	Prism::distributeMyosinForcesTotalSizeBased(bool isIsotropic, bool apical,
 	gsl_vector_free(vec0);
 	gsl_vector_free(vec1);
 	gsl_vector_free(vec2);
-	/*if (Id == 203){
-		cout<<" element 203, Myoforces: "<<forcemag<<endl;
-		for (int i=0; i<6; i++){
-			for (int j=0; j<3; j++){
-				cout<<MyoForce[i][j]<<" ";
-				//sum[j] += MyoForce[i][j];
-			}
-			cout<<endl;
-		}
-	}*/
-	/*cout<<" Element: "<<Id<<" forcemag: "<<forcemag<<" Myoforces: "<<endl;
-	//double sum[3] = {0,0,0};
-	for (int i=0; i<6; i++){
-		for (int j=0; j<3; j++){
-			cout<<MyoForce[i][j]<<" ";
-			//sum[j] += MyoForce[i][j];
-		}
-		cout<<endl;
-	}
-	cout<<endl;
-	displayMatrix(myoPolarityDir,"myoPolarityDir");
-	*/
-	//cout<<"sum: "<<sum[0]<<" "<<sum[1]<<" "<<sum[2]<<endl;
-
-
 }
+
 void 	Prism::calculateBasalArea(){
     double Threshold = 1E-5;
 	int id0 = 0, id1 = 1, id2 = 2; // this is correct for basal side, I will change it for apical calculation
@@ -2515,18 +2109,9 @@ void 	Prism::calculateApicalArea(){
 		Area = Side1* Side2 * sintet / 2.0;
 	}
 	ApicalArea = Area;
-	/*if (Id == 8324 || Id == 8340 || Id == 8346){
-		cout<<" node Ids: "<<id0<<" "<<id1<<" "<<id2<<endl;
-		cout<<" side vec1: "<<sideVec1[0]<<" "<<sideVec1[1]<<" "<<sideVec1[2]<<endl;
-		cout<<" side vec2: "<<sideVec2[0]<<" "<<sideVec2[1]<<" "<<sideVec2[2]<<endl;
-		cout<<" costet "<<costet<<endl;
-		//cout<<" Side1: "<<Side1<<" Side2 "<<Side2<<" sintet: "<<sintet<<" sinTetSq: "<<sinTetSq<<endl;
-		cout<<" Element "<<Id<<" apical area: "<<ApicalArea<<endl;
-	}*/
 }
 
 void Prism::setBasalNeigElementId(vector<ShapeBase*>& elementsList){
-	//cout<<" working on prism "<<Id<<" tissueType "<<tissueType<<" atBasalBorderOfECM "<<atBasalBorderOfECM<< " isECMMimicing "<<isECMMimicing<<endl;
 	if (tissueType== 0 //columnar layer element
 			&& !tissuePlacement == 0 //not checking for basal elements, to save time
 			&& !atBasalBorderOfECM  //not checking for elements bordering ECM, same as basal
@@ -2605,94 +2190,6 @@ void Prism::constructElementStackList(const int discretisationLayers, vector<Sha
 	}
 };
 
-void Prism::copyElementInformationAfterRefinement(ShapeBase* baseElement, int layers,bool thereIsPlasticDeformation){
-	this->columnarGrowthWeight = baseElement->getColumnarness();
-	this->peripodialGrowthWeight = baseElement->getPeripodialness();
-
-	this->E = baseElement->getYoungModulus();
-	this->v = baseElement->getPoissonRatio();
-	this->internalViscosity = baseElement->getInternalViscosity();
-	this->originalInternalViscosity = baseElement->getOriginalInternalViscosity();
-
-    lambda = E*v /(1+v)/(1-2.0*v);
-    mu = E/2.0/(1+v);
-    calculateDVector();
-    calculateD81Tensor();
-	this->spansWholeTissue = baseElement->spansWholeTissue;
-	this->IsAblated = baseElement->IsAblated;
-	this->isFlipped = baseElement->isFlipped;
-	this->IsChangingShape = baseElement->IsChangingShape;
-	this->BasalNormalForPackingUpToDate = baseElement->BasalNormalForPackingUpToDate;
-	this->ApicalNormalForPackingUpToDate = baseElement->ApicalNormalForPackingUpToDate;
-	this->atSymetricityBoundary = baseElement->atSymetricityBoundary;
-	this->IsClippedInDisplay = baseElement->IsClippedInDisplay;
-	this->IsXSymmetricClippedInDisplay = baseElement->IsXSymmetricClippedInDisplay;
-	this->IsYSymmetricClippedInDisplay = baseElement->IsYSymmetricClippedInDisplay;
-	this->GrownVolume = baseElement->GrownVolume/3.0;
-	this->VolumePerNode = baseElement->VolumePerNode/3.0;
-	this->capElement = baseElement->capElement;
-	double* baseGrowthRate = baseElement->getGrowthRate();
-	double* baseShapeChangeRate = baseElement->getShapeChangeRate();
-	for (int i=0; i<3; ++i){
-		this->GrowthRate[i] = baseGrowthRate[i];
-		this->ShapeChangeRate[i] = baseShapeChangeRate[i];
-		this->ApicalNormalForPacking[i] = baseElement->ApicalNormalForPacking[i];
-		this->BasalNormalForPacking[i] = baseElement->BasalNormalForPacking[i];
-	}
-	gsl_matrix* baseFg = baseElement->getFg();
-	gsl_matrix* baseInvFg = baseElement->getInvFg();
-	gsl_matrix* baseFsc = baseElement->getFsc();
-	gsl_matrix* baseInvFsc = baseElement->getInvFsc();
-	for (int i=0; i<3; ++i){
-		for (int j=0; j<3; ++j){
-			gsl_matrix_set(this->Fg,i,j,gsl_matrix_get(baseFg,i,j));
-			gsl_matrix_set(this->InvFg,i,j,gsl_matrix_get(baseInvFg,i,j));
-			gsl_matrix_set(this->Fsc,i,j,gsl_matrix_get(baseFsc,i,j));
-			gsl_matrix_set(this->InvFsc,i,j,gsl_matrix_get(baseInvFsc,i,j));
-			/*if(thereIsPlasticDeformation){
-				gsl_matrix_set(this->Fplastic,i,j,gsl_matrix_get(baseFplastic,i,j));
-				gsl_matrix_set(this->invFplastic,i,j,gsl_matrix_get(baseInvFplastic,i,j));
-			}*/
-		}
-	}
-	gsl_matrix_free(baseFg);
-	gsl_matrix_free(baseInvFg);
-	gsl_matrix_free(baseFsc);
-	gsl_matrix_free(baseInvFsc);
-	/*if(thereIsPlasticDeformation){
-		gsl_matrix_free(baseFplastic);
-		gsl_matrix_free(baseInvFplastic);
-	}*/
-	double* initialReletivePos = new double[2];
-	double* reletivePos = new double[2];
-	baseElement->getInitialRelativePosInBoundingBox(initialReletivePos);
-	baseElement->getRelativePosInBoundingBox(reletivePos);
-	double *cmyo = new double[4];
-	baseElement->getMyosinLevels(cmyo);
-	double *cmyoEq = new double[4];
-	baseElement->getEquilibriumMyosinLevels(cmyoEq);
-	gsl_matrix* baseMyoDir = baseElement->getMyosinDirection();
-	for (int i=0; i<2; ++i){
-		this->initialRelativePosInBoundingBox[i] = initialReletivePos[i];
-		this->relativePosInBoundingBox[i] = reletivePos[i];
-		this->cMyoUniform[i] = cmyo[i];
-		this->cMyoUnipolar[i] = cmyo[i+2];
-		this->cMyoUniformEq[i] = cmyoEq[i];
-		this->cMyoUnipolarEq[i] = cmyoEq[i+2];
-		for (int j=0; j<3; ++j){
-			gsl_matrix_set(this->myoPolarityDir,i,j,gsl_matrix_get(baseMyoDir,i,j));
-		}
-	}
-	delete[] initialReletivePos;
-	delete[] reletivePos;
-	delete[] cmyo;
-	delete[] cmyoEq;
-	gsl_matrix_free(baseMyoDir);
-	elementsIdsOnSameColumn = new int [layers];
-	for(int i=0;i<layers;++i){
-		this->elementsIdsOnSameColumn[i] = baseElement->elementsIdsOnSameColumn[i];
-	}
-}
 
 void Prism::assignExposedSurfaceAreaIndices(vector <Node*>& Nodes){
 	if (tissueType == 0 || tissueType == 1){//columnar or peripodial Element
@@ -2752,15 +2249,5 @@ void Prism::assignExposedSurfaceAreaIndices(vector <Node*>& Nodes){
 			elementHasExposedLateralBasalSurface = true;
 		}
 	}
-	//cout<<" Element: "<<Id<<" has exposed apical/basal/lateral surfaces: "<<elementHasExposedApicalSurface<<" "<<elementHasExposedBasalSurface<<" "<<elementHasExposedLateralApicalSurface<<endl;
-	//if (elementHasExposedApicalSurface){
-	//	cout<<" exposed apical nodes: "<<exposedApicalSurfaceNodeIds[0]<<" "<<exposedApicalSurfaceNodeIds[1]<<" "<<exposedApicalSurfaceNodeIds[2]<<endl;
-	//}
-	//if (elementHasExposedBasalSurface){
-	//	cout<<" exposed basal nodes: "<<exposedBasalSurfaceNodeIds[0]<<" "<<exposedBasalSurfaceNodeIds[1]<<" "<<exposedBasalSurfaceNodeIds[2]<<endl;
-	//}
-	//if (elementHasExposedLateralApicalSurface){
-	//	cout<<" exposed lateral nodes: "<<exposedLateralAreaApicalSideNodeIds[0]<<" "<<exposedLateralAreaApicalSideNodeIds[1]<<" "<<exposedLateralAreaApicalSideNodeIds[2]<<" "<<exposedLateralAreaApicalSideNodeIds[3]<<endl;
-	//}
 }
 

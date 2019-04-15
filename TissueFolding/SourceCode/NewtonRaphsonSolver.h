@@ -48,7 +48,6 @@ public:
 
 	void setMatricesToZeroAtTheBeginningOfIteration(bool thereIsNumericalCalculation); 		//< The function setting the calculation matrices to zero at the beginning of each iteration.
 	void setMatricesToZeroInsideIteration();												//< The function setting the relevant matrices to zero at each iteration.
-	void reInitiateMatricesAfterRefinement(int n);
 	void constructUnMatrix(vector <Node*>& Nodes);											//< This function constructs NewtonRaphsonSolver#un matrix at the beginning of the iterations.
 	void initialteUkMatrix();					//< This function initiates NewtonRaphsonSolver#uk matrix at the beginning of the iterations, it is initiated to be equal to NewtonRaphsonSolver#un.
 	void calculateBoundKWithSlavesMasterDoF();

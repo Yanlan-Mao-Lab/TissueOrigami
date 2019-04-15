@@ -457,39 +457,6 @@ void Node::collapseOnNodeInStages( vector<int> &newCollapseList, double* avrPos,
 void Node::collapseOnNode(vector<int> &newCollapseList, double* avrPos, bool* fix, vector<Node*>& Nodes, int masterNodeId){
 	bool debugDisplay = true;
 	//add the nodes master have collapsed with on me:
-	/*vector <int> newCollapseList;
-	newCollapseList.push_back(Id);
-	newCollapseList.push_back(masterNodeId);
-	int nThis = collapsedWith.size();
-	for (int i = 0; i<nThis; ++i){
-		newCollapseList.push_back(collapsedWith[i]);
-	}
-	int nMaster = Nodes[masterNodeId]->collapsedWith.size();
-	for (int i = 0; i<nMaster; ++i){
-		newCollapseList.push_back(Nodes[masterNodeId]->collapsedWith[i]);
-	}
-	//remove duplicates:
-	sort( newCollapseList.begin(), newCollapseList.end() );
-	newCollapseList.erase( unique( newCollapseList.begin(), newCollapseList.end() ), newCollapseList.end() );
-	int nNew = newCollapseList.size();
-
-	//calculate the average weighted pos:
-	double avrPos[3] = {0,0,0};
-	if(nMaster == 0){nMaster = 1;};
-	if(nThis == 0){nThis = 1;};
-	avrPos[0] = (nThis*Position[0] + nMaster*Nodes[masterNodeId]->Position[0])/(nThis+nMaster);
-	avrPos[1] = (nThis*Position[1] + nMaster*Nodes[masterNodeId]->Position[1])/(nThis+nMaster);
-	avrPos[2] = (nThis*Position[2] + nMaster*Nodes[masterNodeId]->Position[2])/(nThis+nMaster);
-	//If there is a fixed position in any of the nodes on the list, update to that pos:
-	bool fix[3] = {false, false, false};
-	for (int i = 0; i<nNew; ++i){
-		for (int j=0; j<3; ++j){
-			if(Nodes[newCollapseList[i]]->FixedPos[j]){
-				avrPos[j] = Nodes[newCollapseList[i]]->Position[j];
-				fix[j] = true;
-			}
-		}
-	}*/
 	//update adhesion:
 	int nNew = newCollapseList.size();
 	int baseNode = 0;

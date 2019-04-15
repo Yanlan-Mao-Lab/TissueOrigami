@@ -405,10 +405,6 @@ void ShapeBase::calculateFgFromRates(double dt, double x, double y, double z, gs
 		double gx = exp(x*tissueWeight*dt);
 		double gy = exp(y*tissueWeight*dt);
 		double gz = exp(z*tissueWeight*dt);
-		//double growthMutationMultiplier = getGrowthMutationMultiplier();
-		//gx = (gx - 1)*growthMutationMultiplier + 1;
-		//gy = (gy - 1)*growthMutationMultiplier + 1;
-		//gz = (gz - 1)*growthMutationMultiplier + 1;
 		gsl_matrix_set(increment,0,0,gx);
 		gsl_matrix_set(increment,1,1,gy);
 		gsl_matrix_set(increment,2,2,gz);
@@ -525,8 +521,6 @@ void ShapeBase::calculateFgFromGridCorners(int gridGrowthsInterpolationType, dou
 
 		for (int axis =0; axis<3; axis++){
 			double gAxis = exp(growth[axis]*dt);
-			//double growthMutationMultiplier = getGrowthMutationMultiplier();
-			//gAxis = (gAxis - 1) * growthMutationMultiplier + 1;
 			gsl_matrix_set(increment,axis,axis,gAxis);
 		}
 
@@ -1826,15 +1820,26 @@ void ShapeBase::updateGrowthByMutation(double dt){
 		//the fold increase is not zero, which means I should be inducing fold increase in growth:
 		//I will take the curretn increment, calculate the determinant (absolute growth).
 		//Then I will redistribute this growth to x & y:
-		double growthPerDt = determinant3by3Matrix(growthIncrement);
-		double ratePerSec = log(growthPerDt)/dt;
+		double growthRateperDt00 = gsl_matrix_get(growthIncrement,0,0);
+		double growthRateperDt01 = gsl_matrix_get(growthIncrement,0,1);
+		double growthRateperDt10 = gsl_matrix_get(growthIncrement,1,0);
+		double growthRateperDt11 = gsl_matrix_get(growthIncrement,1,1);
+
+		//double growthPerDt = determinant3by3Matrix(growthIncrement);
+		double xy_growthPerDt = growthRateperDt00*growthRateperDt11 - growthRateperDt01*growthRateperDt10;
+		double ratePerSec = log(xy_growthPerDt)/dt;
+
 		double growthPer24hrs = exp(ratePerSec*3600.0*24.0);
 		double newGrowthPer24hrs = mutationGrowthFold*growthPer24hrs;
-		double newGrowthRatePerSec = log(newGrowthPer24hrs)/24.0/3600.0/2.0;
+		double new_xy_GrowthRatePerSec = log(newGrowthPer24hrs)/24.0/3600.0/2.0;
+		double growthRateperDt22 = gsl_matrix_get(growthIncrement,2,2);
+		double z_ratePerSec = log(growthRateperDt22)/dt;
 		//cout<<"current growth: "<<growthPerDt<<" ratePerSec: "<<ratePerSec<<" GrowthPer24hrs:" <<growthPer24hrs<<endl;
 		//cout<<" newGrowthPer24hrs: "<<newGrowthPer24hrs<<" newGrowthRatePerSec = "<<newGrowthRatePerSec<<endl;
-		setGrowthRate(dt,newGrowthRatePerSec,newGrowthRatePerSec,0.0);
+		setGrowthRate(dt,new_xy_GrowthRatePerSec,new_xy_GrowthRatePerSec,z_ratePerSec);
+		//displayMatrix(growthIncrement,"before_growthIncrement");
 		updateGrowthIncrementFromRate();
+		//displayMatrix(growthIncrement,"after_growthIncrement");
 	}
 	else{
 		//overwriting up any growth that might be there, with uniform growth in x & y:
@@ -1924,22 +1929,6 @@ void ShapeBase::checkForCollapsedNodes(int TissueHeightDiscretisationLayers, vec
 		int nodeId = NodeIds[j];
 		int collapsedNodeNumber = Nodes[nodeId]->collapsedWith.size();
 		if (collapsedNodeNumber>0){elementCollapsed = true;break;}
-
-		//is this node collapsed with another one of elements own nodes?
-		/*for (int k=0;k<collapsedNodeNumber; ++k){
-			for (int l = j+1 ; l<nNodes; ++l){
-				if (Nodes[nodeId]->collapsedWith[k] == NodeIds[l]){
-					elementCollapsed = true;
-					break;
-				}
-			}
-			if (elementCollapsed){
-				break;
-			}
-		}
-		if (elementCollapsed){
-			break;
-		}*/
 	}
 	if (elementCollapsed){
 		//assignEllipseBandIdToNodes(Nodes);
@@ -2018,35 +2007,6 @@ void ShapeBase::addToTriPointKe(int i,int j,double value){
 
 void 	ShapeBase::displayRelativePosInBoundingBox(){
 		cout<<"Element: "<<Id<<"  relative position in the tissue bounding box: "<<relativePosInBoundingBox[0]<<" "<<relativePosInBoundingBox[1]<<endl;
-}
-
-bool 	ShapeBase::checkPackingToThisNodeViaState(int ColumnarLayerDiscretisationLayers, Node* NodePointer){
-	if(IsAblated){
-		//if the element is ablated, do not pack against it
-		return false;
-	}
-	if (tissueType == 2){
-		//the element is on the lateral section of the tissue, linking peripodial to columnar, no packing on this element
-		return false;
-	}
-	if(ColumnarLayerDiscretisationLayers>1){
-		//If the columnar layer is discretised into multiple layers, the apical elements should be checked against apical nodes,
-		// and basal nodes should be checked against basal elements. The midline elements should not have packing, BUT on  a single layer tissue, all is midline, therefore
-		// this check would not be valid.
-		if ( tissuePlacement == 2 ){	//tissue placement of the element is midline in a multi-layered columnar layer, it should not pack to anything
-			return false;
-		}
-		if (NodePointer->tissuePlacement != tissuePlacement){
-			//apical nodes pack to apical elements and basal nodes pack to basal elements only
-			return false;
-		}
-	}
-	//The node and element are positioned correctly to be able to pack, then does the element belong to the node?
-	bool pointBelongsToElement = DoesPointBelogToMe(NodePointer->Id);
-	if (pointBelongsToElement){
-		return false;
-	}
-	return true;
 }
 
 bool 	ShapeBase::DoesPointBelogToMe(int IdNode){
@@ -4101,15 +4061,6 @@ void ShapeBase::assignViscositySurfaceAreaToNodes(vector <Node*>& Nodes){
 	}
 }
 
-/*
-void 	ShapeBase:: assignSurfaceAreaToNodes(vector <Node*>& Nodes){
-    double multiplier = 1.0;
-    if (ShapeType ==1 ){ multiplier = 0.5;}
-    for (int i=0; i<nNodes; i++){
-        Nodes[NodeIds[i]]->surface +=ReferenceShape->BasalArea/(multiplier*nNodes);
-	}
-}*/
-
 void 	ShapeBase::calculateZProjectedAreas(){
     double Threshold = 1E-5;
     int id0 = 0, id1 = 1, id2 = 2; // this is correct for basal side, I will change it for apical calculation
@@ -4148,8 +4099,6 @@ void 	ShapeBase::calculateZProjectedAreas(){
         }
     }
 }
-
-
 
 
 void 	ShapeBase::assignZProjectedAreas(vector <Node*> Nodes){
@@ -4221,98 +4170,8 @@ void 	ShapeBase::checkDisplayClipping(double xClip, double yClip, double zClip){
 	 }
 }
 
-void 	ShapeBase::doesElementNeedRefinement(double areaThreshold, int surfacedentifier){
-	if (surfacedentifier == 0){
-		//checking for basal surface
-		if ( BasalArea > areaThreshold){
-			willBeRefined = true;
-		}
-	}
-	else if (surfacedentifier == 1){
-		//checking for apical surface
-		if ( ApicalArea > areaThreshold){
-			willBeRefined = true;
-		}
-	}
-	if (willBeRefined){
-		cout<<" Element "<<Id<<" will be  refined: "<<willBeRefined<<" apical area: "<<ApicalArea<<" basal area: "<<BasalArea<<endl;
-	}
-}
-
-/*
-double ShapeBase::calculateECMThickness(vector <Node*>& Nodes){
-	double d;
-	if (isECMMimicing){
-		if(tissueType == 2){
-			int basalIndex = -1;
-			int apicalIndex = -2;
-			int thirdIndex = -3;
-			for (int i =0; i<3; ++i){
-				if (Nodes[NodeIds[i]]->tissuePlacement == 0 ){
-					basalIndex = i;
-					break;
-				}
-			}
-			for (int i =0; i<3; ++i){
-				if (Nodes[NodeIds[i]]->tissuePlacement != 0 ){
-					apicalIndex = i;
-					break;
-				}
-			}
-			for (int i =0; i<3; ++i){
-				if (i != apicalIndex && i!=basalIndex  ){
-					thirdIndex = i;
-					break;
-				}
-			}
-			bibap
-			double * u = new double [3];
-			double * v = new double [3];
-			u[0] = Positions[apicalIndex][0] - Positions[basalIndex][0];
-			u[1] = Positions[apicalIndex][1] - Positions[basalIndex][1];
-			u[2] = Positions[apicalIndex][2] - Positions[basalIndex][2];
-			v[0] = Positions[thirdIndex][0] - Positions[basalIndex][0];
-			v[1] = Positions[thirdIndex][1] - Positions[basalIndex][1];
-			v[2] = Positions[thirdIndex][2] - Positions[basalIndex][2];
-		}
-		else{
-			gsl_matrix_set_identity(ECMThicknessPlaneRotationalMatrix);
-		}
-	}
-	return d;
-}
-
-void ShapeBase::calculateInitialECMThickness(){
-	if (isECMMimicing){
-		initialECMThickness = calculateECMThickness();
-
-	}
-}*/
-
 void ShapeBase::scaleGrowthIncrement(double multiplier){
 	gsl_matrix_scale(growthIncrement,multiplier);
-}
-
-double ShapeBase::getGrowthMutationMultiplier(){
-	return 1.0;
-	/*float pouchScale= 1.0;
-	float hingeScale = 0.5;
-	float notumScale = 1.0;
-	double scale = 1.0;
-	if (compartmentType == 0){
-		scale = pouchScale;
-	}
-	else if (compartmentType == 1){
-		scale = hingeScale;
-	}
-	else if (compartmentType == 2){
-		scale = notumScale;
-	}
-	else{
-		return 1.0;
-	}
-	scale = (scale - 1)*compartmentIdentityFraction +1;
-	return scale;*/
 }
 
 void ShapeBase::setECMMimicingElementThicknessGrowthAxis(){

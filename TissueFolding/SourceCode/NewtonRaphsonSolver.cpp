@@ -70,36 +70,6 @@ NewtonRaphsonSolver::~NewtonRaphsonSolver(){
 	cout<<" deleted Knumerical"<<endl;
 }
 
-void NewtonRaphsonSolver::reInitiateMatricesAfterRefinement(int n){
-	//I have added nodes to the system after refinement.
-	//I need to change the number of nodes recorded in NR solver, and
-	//re-allocate the matrices with new node size.
-	nNodes = n;
-
-	gsl_matrix_free(un);
-	gsl_matrix_free(ge);
-	gsl_matrix_free(gvInternal);
-	gsl_matrix_free(gvExternal);
-	gsl_matrix_free(gExt);
-	gsl_vector_free(gSum);
-	gsl_matrix_free(uk);
-	gsl_matrix_free(displacementPerDt);
-	gsl_vector_free(deltaU);
-	gsl_matrix_free(K);
-
-	un = gsl_matrix_calloc(nDim*nNodes,1);
-	ge = gsl_matrix_calloc(nDim*nNodes,1);
-	gvInternal = gsl_matrix_calloc(nDim*nNodes,1);
-	gvExternal = gsl_matrix_calloc(nDim*nNodes,1);
-	gExt = gsl_matrix_calloc(nDim*nNodes,1);
-	gSum = gsl_vector_calloc(nDim*nNodes);
-	uk = gsl_matrix_calloc(nDim*nNodes,1);
-	displacementPerDt = gsl_matrix_calloc(nDim*nNodes,1);
-	deltaU = gsl_vector_calloc(nDim*nNodes);
-	K = gsl_matrix_calloc(nDim*nNodes,nDim*nNodes);
-}
-
-
 void NewtonRaphsonSolver::setMatricesToZeroAtTheBeginningOfIteration(bool thereIsNumericalCalculation){
 	gsl_matrix_set_zero(un);
 	gsl_matrix_set_zero(ge);

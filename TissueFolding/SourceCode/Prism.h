@@ -64,9 +64,7 @@ public:
 	bool IsThisNodeMyApical(int currNodeId);
 	double getElementHeight();
 	void AddPackingToSurface(int tissueplacementOfPackingNode, double Fx, double Fy,double Fz,  double **PackingForces,vector<Node*> &Nodes, bool& allCornersFixedX, bool& allCornersFixedY, bool& allCornersFixedZ);
-	void getRelevantNodesForPacking(int TissuePlacementOfPackingNode, int& id1, int& id2, int& id3);
 	bool IsPointCloseEnoughForPacking(double* Pos,  float threshold, int TissuePlacementOfPackingNode);
-	void calculateNormalForPacking(int tissuePlacementOfNormal);
 	void calculateApicalArea();
 	void calculateBasalArea();
 	void calculateMyosinForcesAreaBased(double forcePerMyoMolecule);
@@ -88,9 +86,7 @@ public:
 	void getReferenceBasalCentre(double* centre);
 	double* getApicalMinViscosity(vector<Node*> Nodes);
 	double* getBasalMinViscosity(vector<Node*> Nodes);
-	bool IspointInsideTriangle(int tissueplacement,double x, double y,double z);
 	void checkRotationConsistency3D();
-	void copyElementInformationAfterRefinement(ShapeBase* baseElement, int layers, bool thereIsPlasticDeformation);
 	bool areNodesDirectlyConnected(int node0, int node1);
 };
 

@@ -190,9 +190,6 @@ public:
     //bool 	IsGrowing;
     bool 	isFlipped;
     bool 	IsChangingShape;
-    bool	willBeRefined;
-    bool	ApicalNormalForPackingUpToDate;
-    bool	BasalNormalForPackingUpToDate;
     int 	tissuePlacement; //1 -> apical, 0 -> basal, 2->middle, 3 -> lateral
     int 	tissueType;	///< The tissue type is 0 for columnar layer, 1 for peripodial membrane, and 2 for linker zone
     bool	spansWholeTissue; ///< Boolean staing is the element spans the whole tissue. This is used to identify mid-layer tagged tissues (tissuePlacement = 2), that should still have apical abd basal responses (such as myosin).
@@ -262,7 +259,6 @@ public:
 	void 	updateGrowthIncrement(gsl_matrix* columnar, gsl_matrix* peripodial);
 	void 	updateGrowthByMutation(double dt);
 	void	scaleGrowthIncrement(double multiuplier);
-	double 	getGrowthMutationMultiplier();
 	void 	calculateShapeChangeIncrementFromRates(double dt, double rx, double ry, double rz, gsl_matrix* increment);
 	void 	updateShapeChangeIncrement(gsl_matrix* columnarShapeChangeIncrement);
 	void	calculateRelativePosInBoundingBox(double boundingBoxXMin, double boundingBoxYMin, double boundingBoxLength, double boundingBoxWidth);
@@ -435,13 +431,10 @@ public:
 	virtual bool IsThisNodeMyBasal(int /*currNodeId*/){return ParentErrorMessage("IsThisNodeMyBasal", false);};
 	virtual bool IsThisNodeMyApical(int /*currNodeId*/){return ParentErrorMessage("IsThisNodeMyApical", false);};
 	virtual double getElementHeight(){return ParentErrorMessage("getElementHeight", 0.0);};
-	virtual void getRelevantNodesForPacking(int /*TissuePlacementOfPackingNode*/, int& /*id1*/, int& /*id2*/, int& /*id3*/){return ParentErrorMessage("getRelevantNodesForPacking");}
 	virtual bool IsPointCloseEnoughForPacking(double* /*Pos*/,  float /*threshold*/, int /*TissuePlacementOfPackingNode*/){return ParentErrorMessage("IsPointCloseEnoughForPacking", false);};
-	virtual void calculateNormalForPacking(int /*tissuePlacementOfNormal*/){ParentErrorMessage("calculateNormalForPacking");};
 	virtual void AddPackingToSurface(int /*tissueplacement*/, double /*Fx*/, double /*Fy*/,double /*Fz*/, double **/*PackingForces*/, vector<Node*> &/*Nodes*/, bool& /*allCornersFixedX*/, bool& /*allCornersFixedY*/, bool& /*allCornersFixedZ*/){ParentErrorMessage("AddPackingToApicalSurface");};
 	virtual void getApicalNodePos(double* /*posCorner*/){ParentErrorMessage("getApicalNodePos");};
 	virtual void getBasalNodePos(double* /*posCorner*/){ParentErrorMessage("getBasalNodePos");};
-	virtual bool IspointInsideTriangle(int /*tissueplacement*/, double /*x*/, double /*y*/,double /*z*/){return ParentErrorMessage("IspointInsideTriangle",false );};
 	virtual void constructElementStackList(const int /*discretisationLayers*/, vector<ShapeBase*>& /*elementsList*/){ParentErrorMessage("constructElementStackList");};
 	virtual void getApicalCentre(double* /*centre*/){ParentErrorMessage("getApicalCentre");};
 	virtual void getBasalCentre(double* /*centre*/){ParentErrorMessage("getBasalCentre");};
@@ -449,10 +442,8 @@ public:
 	virtual void getReferenceBasalCentre(double* /*centre*/){ParentErrorMessage("getReferenceBasalCentre");};
 	virtual double* getApicalMinViscosity(vector<Node*> /*Nodes*/){ParentErrorMessage("getApicalMinViscosity");double* dummy; return dummy;};
 	virtual double* getBasalMinViscosity(vector<Node*> /*Nodes*/){ParentErrorMessage("getBasalMinViscosity");double* dummy; return dummy;};
-	virtual void copyElementInformationAfterRefinement(ShapeBase* /*baseElement*/, int /*layers*/, bool /*thereIsPlasticDeformation*/){ParentErrorMessage("copyElementInformationAfterRefinement");};
 	virtual void checkRotationConsistency3D(){ParentErrorMessage("checkRotationConsistency3D");};
 	virtual bool areNodesDirectlyConnected(int /*node0*/, int /*node1*/){ParentErrorMessage("areNodesDirectlyConnected");};
-	bool checkPackingToThisNodeViaState(int ColumnarLayerDiscretisationLAyers, Node* NodePointer);
 	bool DoesPointBelogToMe(int IdNode);
 	void growShape();
 	void assignVolumesToNodes(vector <Node*>& Nodes);
@@ -475,7 +466,6 @@ public:
     gsl_matrix* GrowthStrainsRotMat;
 
     void calculateEmergentRotationAngles();//this is for test and display purposes, calculates the rotation of the element in plane
-    void doesElementNeedRefinement(double areaThreshold, int surfaceidentifier);
 
 	bool 	calculateAlignmentScore(double** RefNormalised);
 	void 	bringShapePositionsToOrigin(double** RefNormalised, double* refCentre);
