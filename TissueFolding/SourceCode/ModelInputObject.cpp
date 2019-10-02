@@ -2450,7 +2450,8 @@ bool ModelInputObject::readStretcherSetup(ifstream& file){
 	 * parameters (setting Simulation#StretchMin and Simulation#StretchMax, the value being the relative size in the bounding box. In case of AP clamping,
 	 * the same scale applies normalised to the AP bounding box length.
 	 *
-	 * StretcherAttached(bool): 1
+	 * Stretcher:
+	 *   StretcherAttached(bool): 1
 	 *   ClampedOnDV(bool): 0
 	 *   InitialTime(sec): 100
 	 *   FinalTime(sec): 200
@@ -2984,7 +2985,9 @@ bool ModelInputObject::readCellMigrationOptions(ifstream& file){
 
 bool ModelInputObject::readExplicitActinOptions(ifstream& file){
 	/**
-	 * The setting for
+	 * This setting will declare the apical surface of the columnar layer to be
+	 * the actin layer. The decleration does not change the physical properties of the actin layer.
+	 * It changes how the layer is treated in growth functions, the actin later
 	 *
 	 * ThereIsExplicitActin(bool): 1
 	 */
@@ -3002,6 +3005,9 @@ bool ModelInputObject::readExplicitActinOptions(ifstream& file){
 
 
 bool ModelInputObject::readColumnViseVolumeConservationOptions(ifstream& file){
+	/**
+	 * The boolean sets the parameter Simulation#conservingColumnVolumes
+	 */
 	string currHeader;
 	file >> currHeader;
 	if(currHeader == "ThereIsColumnViseVolumeConservation(bool):"){
@@ -3015,6 +3021,15 @@ bool ModelInputObject::readColumnViseVolumeConservationOptions(ifstream& file){
 }
 
 bool ModelInputObject::readLumenOptions(ifstream& file){
+	/**
+	 * The first boolean states the
+	 *
+	 * LumenOptions:
+  	 *   thereIsLumen(bool): 1
+  	 *   LumenBulkModulus(Pa): 32000
+  	 *   LumenGrowthRate(foldPer24hr): 2.0
+	 *
+	 */
 	string currHeader;
 	file >> currHeader;
 	if(currHeader == "thereIsLumen(bool):"){
