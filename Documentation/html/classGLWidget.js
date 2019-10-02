@@ -44,6 +44,7 @@ var classGLWidget =
     [ "SelectedItemChanged", "classGLWidget.html#a031d84e410b07e5c8afca4ab11e06c54", null ],
     [ "sizeHint", "classGLWidget.html#a57698bc426052845b43a135a13540154", null ],
     [ "updateClipping", "classGLWidget.html#ad569f9af7f5bbbfee5f1810d07107f20", null ],
+    [ "updateToCloneCrossView", "classGLWidget.html#aca5b0613fa48975e00b61abfcd5c87b5", null ],
     [ "updateToFrontView", "classGLWidget.html#ab4dcb3e931649a5f1edb6c6cede31075", null ],
     [ "updateToPerspectiveView", "classGLWidget.html#afa3014a464a473c9ba62b22720f2d6fd", null ],
     [ "updateToSideView", "classGLWidget.html#a4930d77748cd175e349194da489c12d5", null ],

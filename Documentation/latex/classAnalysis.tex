@@ -1,0 +1,116 @@
+\hypertarget{classAnalysis}{}\section{Analysis Class Reference}
+\label{classAnalysis}\index{Analysis@{Analysis}}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{classAnalysis_a1dc55a8c5a1e73e75a326d1d58fb6ea6}{}{\bfseries Analysis} (int dim, string save\+Directory\+To\+Display\+String, vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&nodes, double bounding\+Box\+Width)\label{classAnalysis_a1dc55a8c5a1e73e75a326d1d58fb6ea6}
+
+\item 
+\hypertarget{classAnalysis_a05228992c22ff9888567ff7a4fd24e62}{}void {\bfseries calculate\+Bounding\+Box\+Size\+And\+Aspect\+Ratio} (int time\+In\+Sec, double bounding\+Box\+Length, double bounding\+Box\+Width)\label{classAnalysis_a05228992c22ff9888567ff7a4fd24e62}
+
+\item 
+\hypertarget{classAnalysis_a3100b3db6005134b3676f508185afc4f}{}void {\bfseries sort\+Position\+Min\+To\+Max} (vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&nodes, int axis\+To\+Sort\+With, vector$<$ int $>$ \&link\+To\+Array\+To\+Sort)\label{classAnalysis_a3100b3db6005134b3676f508185afc4f}
+
+\item 
+\hypertarget{classAnalysis_ae7f65777ed5b23c36efe37e8d516f65b}{}void {\bfseries sort\+Points\+Min\+To\+Max\+Based\+First\+Array} (vector$<$ double $>$ \&x, vector$<$ double $>$ \&z, vector$<$ int $>$ \&base\+Node\+Id0, vector$<$ int $>$ \&base\+Node\+Id1)\label{classAnalysis_ae7f65777ed5b23c36efe37e8d516f65b}
+
+\item 
+\hypertarget{classAnalysis_ac5d5556168335c54b4835ab3eece0ac8}{}void {\bfseries sort\+Points\+Min\+To\+Max\+Based\+On\+Initial\+Pos} (vector$<$ double $>$ \&base, vector$<$ double $>$ \&x, vector$<$ double $>$ \&z)\label{classAnalysis_ac5d5556168335c54b4835ab3eece0ac8}
+
+\item 
+\hypertarget{classAnalysis_a38f3e64e1080064bce5f67306073e24e}{}void {\bfseries set\+Up\+Contour\+Lines\+D\+V} (vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&nodes, double bounding\+Box\+Width)\label{classAnalysis_a38f3e64e1080064bce5f67306073e24e}
+
+\item 
+\hypertarget{classAnalysis_ae0cee6d9db2340652610f24edae9e831}{}void {\bfseries calculate\+Contour\+Line\+Lengths\+D\+V} (vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&nodes)\label{classAnalysis_ae0cee6d9db2340652610f24edae9e831}
+
+\item 
+\hypertarget{classAnalysis_a31c9d5b9ff7cddb6e151e5e8b960b1cd}{}void {\bfseries set\+Up\+Side\+Apical\+D\+V\+Contour} (vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&nodes, double bounding\+Box\+Width)\label{classAnalysis_a31c9d5b9ff7cddb6e151e5e8b960b1cd}
+
+\item 
+\hypertarget{classAnalysis_af9b316dcc9cb5f903371ab91706b41d1}{}void {\bfseries update\+Side\+Contour\+Position} (double bounding\+Box\+Size\+Y)\label{classAnalysis_af9b316dcc9cb5f903371ab91706b41d1}
+
+\item 
+\hypertarget{classAnalysis_ab268f8b8b4c0f433a42cbbe529bdb40b}{}void {\bfseries find\+Apical\+Kink\+Points\+D\+V} (int time\+In\+Sec, double bounding\+Box\+X\+Min, double bounding\+Box\+Length, double bounding\+Box\+Width, vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&nodes)\label{classAnalysis_ab268f8b8b4c0f433a42cbbe529bdb40b}
+
+\item 
+\hypertarget{classAnalysis_a4ec2bc25bacfc32923a8b77e17db2924}{}void {\bfseries set\+Up\+Contour\+Lines\+A\+P} (vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&nodes)\label{classAnalysis_a4ec2bc25bacfc32923a8b77e17db2924}
+
+\item 
+\hypertarget{classAnalysis_a86e13c80def0f70cc26b41a33275aef2}{}void {\bfseries calculate\+Contour\+Line\+Lengths\+A\+P} (vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&nodes)\label{classAnalysis_a86e13c80def0f70cc26b41a33275aef2}
+
+\item 
+\hypertarget{classAnalysis_a91a6753322819e3fde1fc36e8ebc1548}{}void {\bfseries calculate\+Tissue\+Volume\+Map} (vector$<$ \hyperlink{classShapeBase}{Shape\+Base} $\ast$ $>$ \&elements, int time\+In\+Sec, double bounding\+Box\+X\+Min, double bounding\+Box\+Y\+Min, double bounding\+Box\+Length, double bounding\+Box\+Width)\label{classAnalysis_a91a6753322819e3fde1fc36e8ebc1548}
+
+\item 
+\hypertarget{classAnalysis_af997396e30dce4aca35b2154e7e6f852}{}void {\bfseries save\+Nodes\+On\+Fold} (int time\+In\+Sec, vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&Nodes)\label{classAnalysis_af997396e30dce4aca35b2154e7e6f852}
+
+\item 
+\hypertarget{classAnalysis_a5e7b6a2a646eafb36f13c3c78e84c520}{}void {\bfseries save\+Apical\+Circumference\+Position} (int time\+In\+Sec, vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&nodes)\label{classAnalysis_a5e7b6a2a646eafb36f13c3c78e84c520}
+
+\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{classAnalysis_a4e9a92fdedfbfdafeb9a8d689c41bb96}{}double {\bfseries y\+Pos\+For\+Side\+D\+V\+Line}\label{classAnalysis_a4e9a92fdedfbfdafeb9a8d689c41bb96}
+
+\item 
+\hypertarget{classAnalysis_ad8cb4c16c741709c37f2c034ff535dca}{}double {\bfseries relative\+Y\+Pos\+Side\+D\+V\+Line}\label{classAnalysis_ad8cb4c16c741709c37f2c034ff535dca}
+
+\item 
+\hypertarget{classAnalysis_a837cccf723fd42fb0f16488c649f720e}{}vector$<$ double $>$ {\bfseries apical\+Contour\+Line\+D\+V\+Selected\+Y\+Positions\+X}\label{classAnalysis_a837cccf723fd42fb0f16488c649f720e}
+
+\item 
+\hypertarget{classAnalysis_ae5d3891764edbeea42889c407d3c28b4}{}vector$<$ double $>$ {\bfseries apical\+Contour\+Line\+D\+V\+Selected\+Y\+Positions\+Z}\label{classAnalysis_ae5d3891764edbeea42889c407d3c28b4}
+
+\end{DoxyCompactItemize}
+\subsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{classAnalysis_a273cdcac178e25714b0adf8aa7d70715}{}void {\bfseries set\+Up\+Connectivity\+Map} (vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&nodes)\label{classAnalysis_a273cdcac178e25714b0adf8aa7d70715}
+
+\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{classAnalysis_aa4b63b834e0f69b993cd7c553fb889ed}{}int {\bfseries Dim}\label{classAnalysis_aa4b63b834e0f69b993cd7c553fb889ed}
+
+\item 
+\hypertarget{classAnalysis_a9e3bd2d07de259cb97c9bdd074a6d12c}{}int {\bfseries n\+Nodes}\label{classAnalysis_a9e3bd2d07de259cb97c9bdd074a6d12c}
+
+\item 
+\hypertarget{classAnalysis_aca6ac275e44ea556d3ebd068879168e7}{}int {\bfseries n\+Elements}\label{classAnalysis_aca6ac275e44ea556d3ebd068879168e7}
+
+\item 
+\hypertarget{classAnalysis_a92e69c4a0ca11826eea8ef09b5ad8062}{}ofstream {\bfseries save\+File\+Volume\+Maps}\label{classAnalysis_a92e69c4a0ca11826eea8ef09b5ad8062}
+
+\item 
+\hypertarget{classAnalysis_a663cefebd46af276f8463f0ed50f6ed4}{}ofstream {\bfseries save\+File\+Lenght\+Measurements}\label{classAnalysis_a663cefebd46af276f8463f0ed50f6ed4}
+
+\item 
+\hypertarget{classAnalysis_a4ed23fc810d30c8c2afb2049aacfa2ba}{}ofstream {\bfseries save\+File\+Kink\+Positions}\label{classAnalysis_a4ed23fc810d30c8c2afb2049aacfa2ba}
+
+\item 
+\hypertarget{classAnalysis_a9797f24add837fc2cdea8b5d6ee16257}{}ofstream {\bfseries save\+File\+Fold\+Markers}\label{classAnalysis_a9797f24add837fc2cdea8b5d6ee16257}
+
+\item 
+\hypertarget{classAnalysis_a635889f9338fd1ca2052a4e7ad9c01c8}{}ofstream {\bfseries save\+File\+Circumference}\label{classAnalysis_a635889f9338fd1ca2052a4e7ad9c01c8}
+
+\item 
+\hypertarget{classAnalysis_ada1256e396c810e2e41a7426ff6a244c}{}string {\bfseries save\+Directory\+String}\label{classAnalysis_ada1256e396c810e2e41a7426ff6a244c}
+
+\item 
+\hypertarget{classAnalysis_abe81472c2406ea32d2b8de337d4413dc}{}vector$<$ int $>$ {\bfseries apical\+Contour\+Line\+D\+V\+Node\+Ids}\label{classAnalysis_abe81472c2406ea32d2b8de337d4413dc}
+
+\item 
+\hypertarget{classAnalysis_a19a3c5cc72cfda8e89381468fe6514b8}{}vector$<$ int $>$ {\bfseries basal\+Contour\+Line\+D\+V\+Node\+Ids}\label{classAnalysis_a19a3c5cc72cfda8e89381468fe6514b8}
+
+\item 
+\hypertarget{classAnalysis_ae89c1f247c29f905086a4eb9d5122a21}{}bool $\ast$$\ast$ {\bfseries connectivity\+Map}\label{classAnalysis_ae89c1f247c29f905086a4eb9d5122a21}
+
+\end{DoxyCompactItemize}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/home/melda/\+Documents/\+Tissue\+Folding/\+Tissue\+Folding/\+Source\+Code/Analysis.\+h\item 
+/home/melda/\+Documents/\+Tissue\+Folding/\+Tissue\+Folding/\+Source\+Code/Analysis.\+cpp\end{DoxyCompactItemize}

@@ -1,0 +1,96 @@
+g++ -std=c++11 -o src/EllipseFromOutline src/EllipseFromOutline.cpp
+cp ./src/EllipseFromOutline ./
+
+
+
+
+Small 48 hours. The average is 85.56 to 54.6 microns. The cross point at 50 microns.
+Without taking the curve region into account this traslates to a shape of:
+35.56 50 27.3 27.3
+
+//RUN WITHOUT PERIPODIAL GENERATION
+% Now with explicit ECM but no peripodial:
+%first mesh:
+./EllipseFromOutline 1 35.56 50 27.3 27.3 12.5 9 2 0  ./inputOutlines/48hrDiscOutline
+%further refinements, same as above:
+../triangle/triangle -rq33a27.44 Points.1
+../triangle/triangle -rq33a10.4 Points.2
+../triangle/triangle -rq33a5.8 Points.3
+../triangle/triangle -rq33a2.8 Points.4
+../triangle/triangle -rq33a0.65 Points.5
+
+cp Points.5.ele Points.1.ele
+cp Points.5.node Points.1.node
+./EllipseFromOutline -1 15.5 2 6 1  ./inputOutlines/48hrDiscOutline
+cp MeshFile.out ./Exp48hr-noPeriECM_08.mesh
+
+%[input mesh] [xmin] [xmax] [area constraint] [buffer zone]
+./generateTriangleBasedAreaConstraints  Points.5 0.5 0.7 0.7 0.63 0.1 > tmp
+../triangle/triangle -rq33a Points.5.ele 
+
+cp Points.6.ele Points.1.ele
+cp Points.6.node Points.1.node
+./EllipseFromOutline -1 15.5 1 6 1  ./inputOutlines/48hrDiscOutline
+cp MeshFile.out ./Exp48hr-noPeriECM_09.mesh
+
+./EllipseFromOutline -1 15.5 1.0 5 1  ./inputOutlines/48hrDiscOutline
+cp MeshFile.out ./Exp48hr-noPeriECMThin_09.mesh
+
+
+rm Points.6*
+../triangle/triangle -rq33a2.0 Points.5
+%[input mesh] [xmin] [xmax] [ymax] [area constraint] [buffer zone]
+./generateTriangleBasedAreaConstraints  Points.6 0.4 0.7 0.7 0.50 0.1 > tmp
+../triangle/triangle -rq33a Points.6.ele 
+cp Points.7.ele Points.1.ele
+cp Points.7.node Points.1.node
+
+%%HERE NEED TO CHANGE THE ECM THICKNESS IN SOURCE CODE, change ECM to 0.2):
+./EllipseFromOutline -1 12.5 1.0 5 1  ./inputOutlines/48hrDiscOutline
+cp MeshFile.out ./Exp48hr-noPeri-ThinECM_12.mesh
+
+
+
+//ACTIVATE PERIPODIAL IN INPUT:
+./EllipseFromOutline 1 35.56 50 27.3 27.3 12.5 9 2 0  ./inputOutlines/48hrDiscOutline
+../triangle/triangle -rq33a27.44 Points.1
+../triangle/triangle -rq33a10.4 Points.2
+../triangle/triangle -rq33a5.8 Points.3
+../triangle/triangle -rq33a2.8 Points.4
+../triangle/triangle -rq33a0.65 Points.5
+
+cp Points.3.ele Points.1.ele
+cp Points.3.node Points.1.node
+./EllipseFromOutline -1 15.5 4 3 1  ./inputOutlines/48hrDiscOutline
+cp MeshFile.out ./Exp48hr-ECM_06.mesh
+
+
+cp Points.5.ele Points.1.ele
+cp Points.5.node Points.1.node
+./EllipseFromOutline -1 15.5 2 6 1  ./inputOutlines/48hrDiscOutline
+cp MeshFile.out ./Exp48hr-ECM_08.mesh
+
+
+./generateTriangleBasedAreaConstraints  Points.5 0.5 0.7 0.7 0.63 0.1 > tmp
+../triangle/triangle -rq33a Points.5.ele 
+cp Points.6.ele Points.1.ele
+cp Points.6.node Points.1.node
+./EllipseFromOutline -1 15.5 1 6 1  ./inputOutlines/48hrDiscOutline
+cp MeshFile.out ./Exp48hr-ECM_09.mesh
+
+./EllipseFromOutline -1 15.5 1.0 5 1  ./inputOutlines/48hrDiscOutline
+cp MeshFile.out ./Exp48hr-ECMThin_09.mesh
+
+rm Points.6*
+../triangle/triangle -rq33a2.0 Points.5
+./generateTriangleBasedAreaConstraints  Points.6 0.4 0.7 0.7 0.50 0.1 > tmp
+../triangle/triangle -rq33a Points.6.ele 
+cp Points.7.ele Points.1.ele
+cp Points.7.node Points.1.node
+
+%%HERE NEED TO CHANGE THE ECM THICKNESS IN SOURCE CODE, change ECM to 0.2):
+./EllipseFromOutline -1 12.5 1.0 5 1  ./inputOutlines/48hrDiscOutline
+cp MeshFile.out ./Exp48hr-ThinECM_12.mesh
+
+
+

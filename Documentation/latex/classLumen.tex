@@ -1,0 +1,107 @@
+\hypertarget{classLumen}{}\section{Lumen Class Reference}
+\label{classLumen}\index{Lumen@{Lumen}}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{classLumen_a539fc52d0c6eab34137852c56c07e904}{}{\bfseries Lumen} (vector$<$ \hyperlink{classShapeBase}{Shape\+Base} $\ast$ $>$ \&Elements, vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&Nodes, double lumen\+Bulk\+Modulus, double lumen\+Growth\+Fold)\label{classLumen_a539fc52d0c6eab34137852c56c07e904}
+
+\item 
+\hypertarget{classLumen_a01df50e50632e4638184f9a0bee3c4df}{}void {\bfseries update\+Matrices} (vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&Nodes)\label{classLumen_a01df50e50632e4638184f9a0bee3c4df}
+
+\item 
+\hypertarget{classLumen_a963000a9fe6fe932f6b5e910f5daf643}{}void {\bfseries calculate\+Current\+Volume} ()\label{classLumen_a963000a9fe6fe932f6b5e910f5daf643}
+
+\item 
+\hypertarget{classLumen_a047825741e85cb1fdd2a2322e8eae2c7}{}void {\bfseries calculate\+Residuals} (vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&Nodes)\label{classLumen_a047825741e85cb1fdd2a2322e8eae2c7}
+
+\item 
+\hypertarget{classLumen_a2f69044deddf63801acfbf6654cad9e2}{}void {\bfseries calculate\+Lumeng\+From\+Elemental\+Residuals} (gsl\+\_\+matrix $\ast$g)\label{classLumen_a2f69044deddf63801acfbf6654cad9e2}
+
+\item 
+\hypertarget{classLumen_afdce722ed9f77c0e4b2e218387b1baa5}{}void {\bfseries calculate\+Jacobian} ()\label{classLumen_afdce722ed9f77c0e4b2e218387b1baa5}
+
+\item 
+\hypertarget{classLumen_a985f386e1f8a0bebf781fc19efb372cc}{}void {\bfseries write\+Lumen\+Jacobian\+To\+System\+Jacobian} (gsl\+\_\+matrix $\ast$K, vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&Nodes)\label{classLumen_a985f386e1f8a0bebf781fc19efb372cc}
+
+\item 
+\hypertarget{classLumen_ae5370f84caf871df7353b9326ecc3d09}{}void {\bfseries grow\+Lumen} (double current\+Time\+In\+Sec)\label{classLumen_ae5370f84caf871df7353b9326ecc3d09}
+
+\item 
+\hypertarget{classLumen_a4f2fa202e4db36eee7fd61236c23ff34}{}void {\bfseries display\+Matrix} (gsl\+\_\+matrix $\ast$mat, string matname)\label{classLumen_a4f2fa202e4db36eee7fd61236c23ff34}
+
+\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{classLumen_a2ac064313880e26bdb1a863fe3e1db0a}{}int {\bfseries Dim}\label{classLumen_a2ac064313880e26bdb1a863fe3e1db0a}
+
+\item 
+\hypertarget{classLumen_a2917eff7e386462674fc88352090a537}{}double {\bfseries r\+V}\label{classLumen_a2917eff7e386462674fc88352090a537}
+
+\item 
+\hypertarget{classLumen_a7346bd22bf12a5f9d52cc15ceb15931c}{}vector$<$ \hyperlink{classShapeBase}{Shape\+Base} $\ast$ $>$ {\bfseries encapsulating\+Elements}\label{classLumen_a7346bd22bf12a5f9d52cc15ceb15931c}
+
+\item 
+\hypertarget{classLumen_accccacf72e39440a6b0f2bf145ddff83}{}vector$<$ int $>$ {\bfseries node\+Ids\+List}\label{classLumen_accccacf72e39440a6b0f2bf145ddff83}
+
+\item 
+\hypertarget{classLumen_a098cd0bc359d34adb0e87aa71fe11c90}{}double {\bfseries growth\+Rate}\label{classLumen_a098cd0bc359d34adb0e87aa71fe11c90}
+
+\item 
+\hypertarget{classLumen_af4f3206c44cbf403fcdd8c2fe111e54d}{}double {\bfseries initial\+Ideal\+Volume}\label{classLumen_af4f3206c44cbf403fcdd8c2fe111e54d}
+
+\item 
+\hypertarget{classLumen_a22e3c941e1c76c65fef454a61dd4cff4}{}double {\bfseries current\+Ideal\+Volume}\label{classLumen_a22e3c941e1c76c65fef454a61dd4cff4}
+
+\item 
+\hypertarget{classLumen_accffa09db00c0d30da8456b8b5254f4a}{}double {\bfseries bulk\+Modulus}\label{classLumen_accffa09db00c0d30da8456b8b5254f4a}
+
+\item 
+\hypertarget{classLumen_a110a7146fb30c9eeb85f99085ecde6d9}{}double {\bfseries current\+Volume}\label{classLumen_a110a7146fb30c9eeb85f99085ecde6d9}
+
+\item 
+\hypertarget{classLumen_a17007acb891977edc971749b09ce975f}{}gsl\+\_\+matrix $\ast$ {\bfseries Kv}\label{classLumen_a17007acb891977edc971749b09ce975f}
+
+\item 
+\hypertarget{classLumen_a67749dcf6c36522b7c17e4cb7be6b212}{}gsl\+\_\+matrix $\ast$ {\bfseries Kv\+Numerical}\label{classLumen_a67749dcf6c36522b7c17e4cb7be6b212}
+
+\item 
+\hypertarget{classLumen_a0b0be209ab7a789cecbb0725c85dd1b9}{}vector$<$ gsl\+\_\+matrix $\ast$ $>$ {\bfseries x\+Cap1}\label{classLumen_a0b0be209ab7a789cecbb0725c85dd1b9}
+
+\item 
+\hypertarget{classLumen_ae11c0b7ebe33d267c45274c7821e0fd6}{}vector$<$ gsl\+\_\+matrix $\ast$ $>$ {\bfseries x\+Cap2}\label{classLumen_ae11c0b7ebe33d267c45274c7821e0fd6}
+
+\item 
+\hypertarget{classLumen_abc75889dc462cc569bdf85da2ad8d16a}{}vector$<$ gsl\+\_\+matrix $\ast$ $>$ {\bfseries x\+Cap3}\label{classLumen_abc75889dc462cc569bdf85da2ad8d16a}
+
+\item 
+\hypertarget{classLumen_ab15d88c592bdc627f36c89f070724607}{}vector$<$ gsl\+\_\+matrix $\ast$ $>$ {\bfseries x1}\label{classLumen_ab15d88c592bdc627f36c89f070724607}
+
+\item 
+\hypertarget{classLumen_af69693b0fb1610cc5f5aee815f350165}{}vector$<$ gsl\+\_\+matrix $\ast$ $>$ {\bfseries x2}\label{classLumen_af69693b0fb1610cc5f5aee815f350165}
+
+\item 
+\hypertarget{classLumen_a064ef6067b05537803626771de5a77c6}{}vector$<$ gsl\+\_\+matrix $\ast$ $>$ {\bfseries x3}\label{classLumen_a064ef6067b05537803626771de5a77c6}
+
+\item 
+\hypertarget{classLumen_a8dcd3b626910ffadd2fe8290e8a47708}{}vector$<$ gsl\+\_\+matrix $\ast$ $>$ {\bfseries g1}\label{classLumen_a8dcd3b626910ffadd2fe8290e8a47708}
+
+\item 
+\hypertarget{classLumen_a721f141482fd7f3a95a21c849ccca13f}{}vector$<$ gsl\+\_\+matrix $\ast$ $>$ {\bfseries g2}\label{classLumen_a721f141482fd7f3a95a21c849ccca13f}
+
+\item 
+\hypertarget{classLumen_accde5bf03c47d7d1c85d07438ab20d88}{}vector$<$ gsl\+\_\+matrix $\ast$ $>$ {\bfseries g3}\label{classLumen_accde5bf03c47d7d1c85d07438ab20d88}
+
+\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{classLumen_ad923315f08f43e046e82efc0743afa13}{}int {\bfseries n\+Triangle\+Size}\label{classLumen_ad923315f08f43e046e82efc0743afa13}
+
+\end{DoxyCompactItemize}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/home/melda/\+Documents/\+Tissue\+Folding/\+Tissue\+Folding/\+Source\+Code/Lumen.\+h\item 
+/home/melda/\+Documents/\+Tissue\+Folding/\+Tissue\+Folding/\+Source\+Code/Lumen.\+cpp\end{DoxyCompactItemize}

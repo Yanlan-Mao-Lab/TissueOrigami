@@ -133,7 +133,7 @@ $(document).ready(function(){initNavTree('ModelInputObject_8h_source.html','');}
 <div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;    <span class="keywordtype">bool</span> readLinkerZoneParameters(ifstream&amp; file);          </div>
 <div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;    <span class="keywordtype">bool</span> readExternalViscosityParameters(ifstream&amp; file);   </div>
 <div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;    <span class="keywordtype">bool</span> readNodeFixingParameters(ifstream&amp; file);          </div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;    <span class="keywordtype">bool</span> readNodeBindingParameters(ifstream&amp; file);</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;    <span class="keywordtype">bool</span> readNodeBindingParameters(ifstream&amp; file);         </div>
 <div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;    <span class="keywordtype">bool</span> readManupulationParamters(ifstream&amp; file);         </div>
 <div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;    <span class="keywordtype">bool</span> readTimeParameters(ifstream &amp;file);                </div>
 <div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;    <span class="keywordtype">bool</span> readMeshType2(ifstream&amp; file);                     </div>
@@ -148,50 +148,49 @@ $(document).ready(function(){initNavTree('ModelInputObject_8h_source.html','');}
 <div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;    <span class="keywordtype">bool</span> readGridBasedMyosinFunction(ifstream&amp; file);       </div>
 <div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;    <span class="keywordtype">bool</span> readShapeChangeType1(ifstream&amp; file);              </div>
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;    <span class="keywordtype">bool</span> readShapeChangeType2(ifstream&amp; file);              </div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;    <span class="comment">//bool readShapeChangeType2(ifstream&amp; file);                ///&lt; This function reads the shape change  parameters from file (CircularShapeChange).</span></div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;    <span class="keywordtype">bool</span> readMarkerEllipseBandOptions(ifstream&amp; file);  </div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;    <span class="keywordtype">bool</span> readShapeChangeType3(ifstream&amp; file);              </div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;    <span class="keywordtype">bool</span> readStretcherSetup(ifstream&amp; file);                </div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;    <span class="keywordtype">bool</span> readPipetteSetup(ifstream&amp; file);                  </div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;    <span class="keywordtype">bool</span> readECMPerturbation(ifstream&amp; file);</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;    <span class="keywordtype">bool</span> readStiffnessPerturbation(ifstream&amp; file); </div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;    <span class="keywordtype">bool</span> readApicoBasalVolumeRedistribution(ifstream&amp; file);</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;    <span class="keywordtype">bool</span> readCellMigrationOptions(ifstream&amp; file);          </div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;    <span class="keywordtype">bool</span> readExplicitECMOptions(ifstream&amp; file);            </div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;    <span class="keywordtype">bool</span> readAdhesionOptions(ifstream&amp; file);</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;    <span class="keywordtype">bool</span> readNodeCollapseOptions(ifstream&amp; file);</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    <span class="keywordtype">bool</span> readExplicitActinOptions(ifstream&amp; file);</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;    <span class="keywordtype">bool</span> readColumnViseVolumeConservationOptions(ifstream&amp; file);</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;    <span class="keywordtype">bool</span> readMutationOptions(ifstream&amp; file);</div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;    <span class="keywordtype">bool</span> readartificialRelaxationOptions(ifstream&amp; file);</div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;    <span class="keywordtype">bool</span> readLumenOptions(ifstream&amp; file);</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;    <span class="keywordtype">bool</span> readEnclosementOptions(ifstream&amp; file);</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00066"></a><span class="lineno"><a class="line" href="classModelInputObject.html#a0c5fb50d9d705bc9a9b4fafeebd1cadc">   66</a></span>&#160;    <a class="code" href="classSimulation.html">Simulation</a>* <a class="code" href="classModelInputObject.html#a0c5fb50d9d705bc9a9b4fafeebd1cadc">Sim</a>;                </div>
-<div class="line"><a name="l00067"></a><span class="lineno"><a class="line" href="classModelInputObject.html#a32fadb000159d03f6c5901ce3167ada8">   67</a></span>&#160;    <span class="keyword">const</span> <span class="keywordtype">char</span>*  <a class="code" href="classModelInputObject.html#a32fadb000159d03f6c5901ce3167ada8">parameterFileName</a>; </div>
-<div class="line"><a name="l00068"></a><span class="lineno"><a class="line" href="classModelInputObject.html#a2621e76abbd05573aea2d5471a589405">   68</a></span>&#160;    <span class="keywordtype">string</span> <a class="code" href="classModelInputObject.html#a2621e76abbd05573aea2d5471a589405">meshFileName</a>;            </div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;    <a class="code" href="classModelInputObject.html">ModelInputObject</a>();             </div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;    ~<a class="code" href="classModelInputObject.html">ModelInputObject</a>();</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;    <span class="keywordtype">bool</span> readParameters();          </div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;};</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* MODELINPUTOBJECT_H_ */</span><span class="preprocessor"></span></div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;    <span class="keywordtype">bool</span> readMarkerEllipseBandOptions(ifstream&amp; file);      </div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;    <span class="keywordtype">bool</span> readShapeChangeType3(ifstream&amp; file);              </div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;    <span class="keywordtype">bool</span> readStretcherSetup(ifstream&amp; file);                </div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;    <span class="keywordtype">bool</span> readPipetteSetup(ifstream&amp; file);                  </div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;    <span class="keywordtype">bool</span> readECMPerturbation(ifstream&amp; file);               </div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;    <span class="keywordtype">bool</span> readStiffnessPerturbation(ifstream&amp; file);         </div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;    <span class="keywordtype">bool</span> readApicoBasalVolumeRedistribution(ifstream&amp; file);</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;    <span class="keywordtype">bool</span> readCellMigrationOptions(ifstream&amp; file);          </div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;    <span class="keywordtype">bool</span> readExplicitECMOptions(ifstream&amp; file);            </div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;    <span class="keywordtype">bool</span> readAdhesionOptions(ifstream&amp; file);               </div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;    <span class="keywordtype">bool</span> readNodeCollapseOptions(ifstream&amp; file);           </div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;    <span class="keywordtype">bool</span> readExplicitActinOptions(ifstream&amp; file);          </div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    <span class="keywordtype">bool</span> readColumnViseVolumeConservationOptions(ifstream&amp; file); </div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;    <span class="keywordtype">bool</span> readMutationOptions(ifstream&amp; file);               </div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;    <span class="keywordtype">bool</span> readartificialRelaxationOptions(ifstream&amp; file);   </div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;    <span class="keywordtype">bool</span> readLumenOptions(ifstream&amp; file);                  </div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;</div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;    <span class="keywordtype">bool</span> readEnclosementOptions(ifstream&amp; file);</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00065"></a><span class="lineno"><a class="line" href="classModelInputObject.html#a0c5fb50d9d705bc9a9b4fafeebd1cadc">   65</a></span>&#160;    <a class="code" href="classSimulation.html">Simulation</a>* <a class="code" href="classModelInputObject.html#a0c5fb50d9d705bc9a9b4fafeebd1cadc">Sim</a>;                </div>
+<div class="line"><a name="l00066"></a><span class="lineno"><a class="line" href="classModelInputObject.html#a32fadb000159d03f6c5901ce3167ada8">   66</a></span>&#160;    <span class="keyword">const</span> <span class="keywordtype">char</span>*  <a class="code" href="classModelInputObject.html#a32fadb000159d03f6c5901ce3167ada8">parameterFileName</a>; </div>
+<div class="line"><a name="l00067"></a><span class="lineno"><a class="line" href="classModelInputObject.html#a2621e76abbd05573aea2d5471a589405">   67</a></span>&#160;    <span class="keywordtype">string</span> <a class="code" href="classModelInputObject.html#a2621e76abbd05573aea2d5471a589405">meshFileName</a>;            </div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;    <a class="code" href="classModelInputObject.html">ModelInputObject</a>();             </div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;    ~<a class="code" href="classModelInputObject.html">ModelInputObject</a>();</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;    <span class="keywordtype">bool</span> readParameters();          </div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;};</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* MODELINPUTOBJECT_H_ */</span><span class="preprocessor"></span></div>
 <div class="ttc" id="classModelInputObject_html"><div class="ttname"><a href="classModelInputObject.html">ModelInputObject</a></div><div class="ttdef"><b>Definition:</b> ModelInputObject.h:19</div></div>
-<div class="ttc" id="classSimulation_html"><div class="ttname"><a href="classSimulation.html">Simulation</a></div><div class="ttdef"><b>Definition:</b> Simulation.h:27</div></div>
+<div class="ttc" id="classSimulation_html"><div class="ttname"><a href="classSimulation.html">Simulation</a></div><div class="ttdef"><b>Definition:</b> Simulation.h:28</div></div>
 <div class="ttc" id="namespacestd_html"><div class="ttname"><a href="namespacestd.html">std</a></div></div>
-<div class="ttc" id="classModelInputObject_html_a0c5fb50d9d705bc9a9b4fafeebd1cadc"><div class="ttname"><a href="classModelInputObject.html#a0c5fb50d9d705bc9a9b4fafeebd1cadc">ModelInputObject::Sim</a></div><div class="ttdeci">Simulation * Sim</div><div class="ttdoc">The pointer to the simulation object, for which the parameters are being read from the modelinput fil...</div><div class="ttdef"><b>Definition:</b> ModelInputObject.h:66</div></div>
-<div class="ttc" id="classModelInputObject_html_a32fadb000159d03f6c5901ce3167ada8"><div class="ttname"><a href="classModelInputObject.html#a32fadb000159d03f6c5901ce3167ada8">ModelInputObject::parameterFileName</a></div><div class="ttdeci">const char * parameterFileName</div><div class="ttdoc">The name (including path) of the file containing the model input parameters. </div><div class="ttdef"><b>Definition:</b> ModelInputObject.h:67</div></div>
-<div class="ttc" id="classModelInputObject_html_a2621e76abbd05573aea2d5471a589405"><div class="ttname"><a href="classModelInputObject.html#a2621e76abbd05573aea2d5471a589405">ModelInputObject::meshFileName</a></div><div class="ttdeci">string meshFileName</div><div class="ttdoc">The name (including path) of the file containing the input mesh file for tissue geometry. </div><div class="ttdef"><b>Definition:</b> ModelInputObject.h:68</div></div>
+<div class="ttc" id="classModelInputObject_html_a0c5fb50d9d705bc9a9b4fafeebd1cadc"><div class="ttname"><a href="classModelInputObject.html#a0c5fb50d9d705bc9a9b4fafeebd1cadc">ModelInputObject::Sim</a></div><div class="ttdeci">Simulation * Sim</div><div class="ttdoc">The pointer to the simulation object, for which the parameters are being read from the modelinput fil...</div><div class="ttdef"><b>Definition:</b> ModelInputObject.h:65</div></div>
+<div class="ttc" id="classModelInputObject_html_a32fadb000159d03f6c5901ce3167ada8"><div class="ttname"><a href="classModelInputObject.html#a32fadb000159d03f6c5901ce3167ada8">ModelInputObject::parameterFileName</a></div><div class="ttdeci">const char * parameterFileName</div><div class="ttdoc">The name (including path) of the file containing the model input parameters. </div><div class="ttdef"><b>Definition:</b> ModelInputObject.h:66</div></div>
+<div class="ttc" id="classModelInputObject_html_a2621e76abbd05573aea2d5471a589405"><div class="ttname"><a href="classModelInputObject.html#a2621e76abbd05573aea2d5471a589405">ModelInputObject::meshFileName</a></div><div class="ttdeci">string meshFileName</div><div class="ttdoc">The name (including path) of the file containing the input mesh file for tissue geometry. </div><div class="ttdef"><b>Definition:</b> ModelInputObject.h:67</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_9dee18ce9f954c3c428820e89cc0b95c.html">TissueFolding</a></li><li class="navelem"><a class="el" href="dir_a91615f27caff2615e5e61189ea77e22.html">SourceCode</a></li><li class="navelem"><b>ModelInputObject.h</b></li>
-    <li class="footer">Generated on Wed Apr 3 2019 14:19:51 for Tissue Origami by
+    <li class="footer">Generated on Wed Oct 2 2019 13:39:26 for Tissue Origami by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

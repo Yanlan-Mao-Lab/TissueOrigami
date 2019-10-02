@@ -28,7 +28,7 @@ public:
 	void calculateLumengFromElementalResiduals(gsl_matrix* g);
 	void calculateJacobian();
 	void writeLumenJacobianToSystemJacobian(gsl_matrix* K,vector<Node*>& Nodes);
-	void growLumen(double dt);
+	void growLumen(double currentTimeInSec);
 
 
 	int Dim ;		//dimensions of the system, should be 3D.
@@ -36,6 +36,7 @@ public:
 	vector <ShapeBase*> encapsulatingElements;
 	vector <int> nodeIdsList;
 	double growthRate;	//growth rate per sec
+	double initialIdealVolume;
 	double currentIdealVolume;
 	double bulkModulus;
 	double currentVolume;

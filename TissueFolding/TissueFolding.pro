@@ -14,6 +14,8 @@
 #module load qt/4.8.6/gnu-4.9.2
 #then qmake: 
 #qmake -o Makefile TissueFoldingUI.pro
+#then just make:
+#make
 #The procedure is, you need to build the latest version (updates the *.mk files). Then go to the makefile of the non-visual version
 # under  "/home/melda/Documents/TissueFolding/TissueFolding/Debug/". Change the compiler line with the line given below. Make the latest non-visual version.
 # These steps will ensure the the subdirectory repositories are updated. Then copy all (as listed above) to Legion. The make file of Legion 
@@ -34,7 +36,7 @@ TARGET = $$CurrPath/Debug/TissueFolding
 
 QMAKE_CFLAGS_RELEASE += -fopenmp
 QMAKE_CFLAGS_DEBUG += -fopenmp
-QMAKE_CXXFLAGS += -fopenmp
+QMAKE_CXXFLAGS += -fopenmp -std=c++11
 QMAKE_LFLAGS +=  -fopenmp
  
 # Input

@@ -12,6 +12,7 @@ using namespace std;
 Lumen::Lumen(vector<ShapeBase*>& Elements,vector<Node*>& Nodes, double lumenBulkModulus, double lumenGrowthFold){
 	Dim = 3;
 	bulkModulus = lumenBulkModulus;
+	initialIdealVolume = 0;
 	currentIdealVolume = 0;
 	currentVolume = 0;
 	growthRate = 0;
@@ -23,23 +24,22 @@ Lumen::Lumen(vector<ShapeBase*>& Elements,vector<Node*>& Nodes, double lumenBulk
     for (vector<ShapeBase*>::iterator iterEle = Elements.begin();iterEle<Elements.end(); ++iterEle){
 		if ((*iterEle)->isECMMimimcingAtCircumference == false){
 			if ((*iterEle)->tissuePlacement != 3){ //not a lateral element
-				//if (!(*iterEle)->areanyOfMyNodesAtCircumference(Nodes)){
-				if(!(*iterEle)->isECMMimimcingAtCircumference){
-					if((*iterEle)->tissuePlacement == 1 ||((*iterEle)->tissuePlacement == 2 && (*iterEle)->spansWholeTissue)){
-						encapsulatingElements.push_back((*iterEle));
-						nTriangleSize++;
-						vector <int> apicalNodeIds;
-						(*iterEle)->getApicalNodeIds(apicalNodeIds);
-						for (int nodeIdIterator =0;nodeIdIterator<3; ++nodeIdIterator){
-							int currId = apicalNodeIds[nodeIdIterator];
-							if (find(nodeIdsList.begin(), nodeIdsList.end(),currId)==nodeIdsList.end()){
-								nodeIdsList.push_back(currId);
-								Nodes[currId]->facingLumen = true;
-							}
-						}
 
+				if((*iterEle)->tissuePlacement == 1 ||((*iterEle)->tissuePlacement == 2 && (*iterEle)->spansWholeTissue)){
+					encapsulatingElements.push_back((*iterEle));
+					nTriangleSize++;
+					vector <int> apicalNodeIds;
+					(*iterEle)->getApicalNodeIds(apicalNodeIds);
+					for (int nodeIdIterator =0;nodeIdIterator<3; ++nodeIdIterator){
+						int currId = apicalNodeIds[nodeIdIterator];
+						if (find(nodeIdsList.begin(), nodeIdsList.end(),currId)==nodeIdsList.end()){
+							nodeIdsList.push_back(currId);
+							Nodes[currId]->facingLumen = true;
+						}
 					}
+
 				}
+
 			}
 		}
 	}
@@ -64,6 +64,7 @@ Lumen::Lumen(vector<ShapeBase*>& Elements,vector<Node*>& Nodes, double lumenBulk
 	updateMatrices(Nodes);
 	calculateCurrentVolume();
 	currentIdealVolume = currentVolume*1.0;
+	initialIdealVolume = currentIdealVolume;
 	cout<<" in lumen constructor, currentIdealVolume "<<currentIdealVolume<<endl;
 
 }
@@ -169,7 +170,7 @@ void	Lumen::calculateResiduals(vector<Node*>& Nodes){
 					//}
 					double valueToAdd= -1.0*bulkModulus*rVover6V0*gsl_matrix_get(currentg,j,0);
 					encapsulatingElements[eleIndex]->addToElementalElasticSystemForces(indexOnElement,j,valueToAdd );
-					if (isnan(valueToAdd)){
+					if (std::isnan(valueToAdd)){
 						cout<<" element: "<<encapsulatingElements[eleIndex]->Id<<" g dimention: "<<indexOnElement<<" "<<j<<" is NaN after addition: "<<valueToAdd<<endl;
 					}
 				}
@@ -318,7 +319,7 @@ void Lumen::writeLumenJacobianToSystemJacobian(gsl_matrix* K,vector<Node*>& Node
 	}
 }
 
-void Lumen::growLumen(double dt){
-	currentIdealVolume *= exp(growthRate*dt);
-	//cout<<" lumen ideal volume: "<<currentIdealVolume<<endl;
+void Lumen::growLumen(double currentTimeInSec){
+	currentIdealVolume = initialIdealVolume * exp(growthRate*currentTimeInSec);
+	cout<<" lumen ideal volume: "<<currentIdealVolume<<endl;
 }

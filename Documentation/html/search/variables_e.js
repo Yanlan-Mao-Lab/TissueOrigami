@@ -7,6 +7,7 @@ var searchData=
   ['shapetype',['ShapeType',['../classReferenceShapeBase.html#a4831a54cffbafef4ded26fb8c50566e0',1,'ReferenceShapeBase::ShapeType()'],['../classShapeBase.html#a36aedd41e8465a186a0b0c454b5b76f3',1,'ShapeBase::ShapeType()']]],
   ['shearanglerotationmatrix',['ShearAngleRotationMatrix',['../classUniformGrowthFunction.html#afef9ac84dfe60bbf3d558fbb31946087',1,'UniformGrowthFunction::ShearAngleRotationMatrix()'],['../classRingGrowthFunction.html#a9603e5de21f7bca0c23deff2c1e9efd6',1,'RingGrowthFunction::ShearAngleRotationMatrix()']]],
   ['sim',['Sim',['../classModelInputObject.html#a0c5fb50d9d705bc9a9b4fafeebd1cadc',1,'ModelInputObject']]],
+  ['slaveto',['slaveTo',['../classNode.html#a83aeb69143ee2ddc1f6f49be4b261b44',1,'Node']]],
   ['spanswholetissue',['spansWholeTissue',['../classShapeBase.html#adafe85bbee6173d2a321408cd8b63db3',1,'ShapeBase']]],
   ['stiffnessmultiplier',['stiffnessMultiplier',['../classShapeBase.html#a9cff4a8549b3399fec12309d18b6db70',1,'ShapeBase']]],
   ['stiffnessperturbationrateinsec',['stiffnessPerturbationRateInSec',['../classShapeBase.html#a525290b7f6921e964666d946b5d6774d',1,'ShapeBase']]],

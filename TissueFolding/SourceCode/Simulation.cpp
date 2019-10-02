@@ -464,16 +464,11 @@ bool Simulation::readFinalSimulationStep(){
     		readCollapseAndAdhesionToContinueFromSave();
     	}
         if (thereIsExplicitLumen){
-        	tissueLumen->growLumen(dt*dataSaveInterval);
+        	tissueLumen->growLumen(currSimTimeSec + dt*dataSaveInterval);
+        	cout<<"lumen growth is carried out for: "<<currSimTimeSec + dt*dataSaveInterval<<endl;
         }
-		//if (ZerothFrame){
-		//	ZerothFrame = false;
-		//	cout<<"dt after  ZerothFrame if clause "<<dt<<" timeStepCurrentSim: "<<timeStepCurrentSim<<" dataSaveInterval: "<<dataSaveInterval<<endl;
-		//}
-		//else{
-			timestep = timestep + dataSaveInterval;
-			currSimTimeSec += dt*dataSaveInterval;
-		//}
+		timestep = timestep + dataSaveInterval;
+		currSimTimeSec += dt*dataSaveInterval;
 		cout<<"current time step "<<timestep<<" currSimTimeSec: "<<currSimTimeSec<<endl;
 
 		//skipping the footer:
@@ -976,14 +971,14 @@ bool Simulation::bindPeripodialToColumnar(){
 
 bool Simulation::areNodesToCollapseOnLateralECM(int slaveNodeId, int masterNodeId){
 	if(Nodes[slaveNodeId]->hasLateralElementOwner || Nodes[masterNodeId]->hasLateralElementOwner){
-		cout<<"binding nodes: "<<slaveNodeId<<" "<<masterNodeId<<" on single element collapse, but will not collapse nodes, as they are too close on lateral element"<<endl;
+		//cout<<"binding nodes: "<<slaveNodeId<<" "<<masterNodeId<<" on single element collapse, but will not collapse nodes, as they are too close on lateral element"<<endl;
 		return true;
 	}
 	int nElement = Nodes[slaveNodeId]->connectedElementIds.size();
 	for (int elementCounter = 0; elementCounter<nElement; elementCounter++){
 		int elementId = Nodes[slaveNodeId]->connectedElementIds[elementCounter];
 		if (Elements[elementId]->isECMMimimcingAtCircumference){
-			cout<<"binding nodes: "<<slaveNodeId<<" "<<masterNodeId<<" on single element collapse, but will not collapse nodes, as they are too close on circumferential element - slave"<<endl;
+			//cout<<"binding nodes: "<<slaveNodeId<<" "<<masterNodeId<<" on single element collapse, but will not collapse nodes, as they are too close on circumferential element - slave"<<endl;
 			return true;
 		}
 	}
@@ -991,7 +986,7 @@ bool Simulation::areNodesToCollapseOnLateralECM(int slaveNodeId, int masterNodeI
 	for (int elementCounter = 0; elementCounter<nElement; elementCounter++){
 		int elementId = Nodes[masterNodeId]->connectedElementIds[elementCounter];
 		if (Elements[elementId]->isECMMimimcingAtCircumference){
-			cout<<"binding nodes: "<<slaveNodeId<<" "<<masterNodeId<<" on single element collapse, but will not collapse nodes, as they are too close on circumferential element - master"<<endl;
+			//cout<<"binding nodes: "<<slaveNodeId<<" "<<masterNodeId<<" on single element collapse, but will not collapse nodes, as they are too close on circumferential element - master"<<endl;
 			return true;
 		}
 	}
@@ -1556,6 +1551,7 @@ void Simulation::writeSpecificNodeTypes(){
 			saveFileSpecificType.write((char*) &(*itNode)->coveringEllipseBandId, sizeof (*itNode)->coveringEllipseBandId);
 		}
 	}
+	saveFileSpecificType.close();
 	cout<<"wrote specific element types: "<<counterForMarkerEllipsesOnNodes<<" "<<counterForMarkerEllipsesOnElements<<" "<<counterForECMMimicingElements<<" "<<counterForActinMimicingElements<<endl;
 }
 
@@ -1869,6 +1865,17 @@ bool Simulation::initiateSavedSystem(){
     //calculateStiffnessMatrices();
     calculateShapeFunctionDerivatives();
 	updateElementPositions();
+	fillInElementColumnLists();
+	calculateBoundingBox();
+	vector<ShapeBase*>::iterator itElement;
+	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		(*itElement)->calculateRelativePosInBoundingBox(boundingBox[0][0],boundingBox[0][1],boundingBoxSize[0],boundingBoxSize[1]);
+	}
+	updateRelativePositionsToApicalPositioning();
+	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		(*itElement)->setInitialRelativePosInBoundingBox();
+	}
+	induceClones();
 	//skipping the footer:
 	getline(saveFileToDisplayMesh,currline);
 	while (currline.empty() && !saveFileToDisplayMesh.eof()){
@@ -2094,7 +2101,7 @@ void Simulation::initiateNodesFromSave(){
 	cout<<"number of nodes: "<<nNodes<<endl;
 	Node* tmp_nd;
 	for (int i=0; i<nNodes; ++i){
-		double* pos = new double[3];
+		std::array<double,3> pos;
 		int tissuePlacement, tissueType;
 		bool atCircumference;
 		saveFileToDisplayMesh >> pos[0];
@@ -2106,7 +2113,6 @@ void Simulation::initiateNodesFromSave(){
 		tmp_nd = new Node(i, 3, pos,tissuePlacement, tissueType);
 		tmp_nd-> atCircumference = atCircumference;
 		Nodes.push_back(tmp_nd);
-		delete[] pos;
 	}
 	cout<<"number of nodes: "<<nNodes<<endl;
 }
@@ -2116,7 +2122,7 @@ void Simulation::initiateNodesFromMeshInput(){
 	inputMeshFile >> n;
 	Node* tmp_nd;
 	for (int i=0; i<n; ++i){
-		double* pos = new double[3];
+		std::array<double,3> pos;
 		int tissuePos = -2;
 		int tissueType = -2;
 		int atCircumference;
@@ -2130,7 +2136,6 @@ void Simulation::initiateNodesFromMeshInput(){
 		tmp_nd->atCircumference = atCircumference;
 		Nodes.push_back(tmp_nd);
 		nNodes = Nodes.size();
-		delete[] pos;
 	}
 }
 
@@ -2298,14 +2303,10 @@ void Simulation::reInitiateSystemForces(int oldSize){
 	const int n = nNodes;
 	SystemForces = new double*[n];
 	PackingForces = new double*[n];
-	//PackingForcesPreviousStep = new double*[n];
-	//PackingForcesTwoStepsAgoStep = new double*[n];
 	FixedNodeForces = new double*[n];
 	for (int j=0;j<n;++j){
 		SystemForces[j] = new double[3];
 		PackingForces[j] = new double[3];
-		//PackingForcesPreviousStep[j] = new double[3];
-		//PackingForcesTwoStepsAgoStep[j] = new double[3];
 		FixedNodeForces[j] = new double[3];
 		SystemForces[j][0]=0.0;
 		SystemForces[j][1]=0.0;
@@ -2313,12 +2314,6 @@ void Simulation::reInitiateSystemForces(int oldSize){
 		PackingForces[j][0]=0.0;
 		PackingForces[j][1]=0.0;
 		PackingForces[j][2]=0.0;
-		//PackingForcesPreviousStep[j][0] = 0.0;
-		//PackingForcesPreviousStep[j][1] = 0.0;
-		//PackingForcesPreviousStep[j][2] = 0.0;
-		//PackingForcesTwoStepsAgoStep[j][0] = 0.0;
-		//PackingForcesTwoStepsAgoStep[j][1] = 0.0;
-		//PackingForcesTwoStepsAgoStep[j][2] = 0.0;
 		FixedNodeForces[j][0] = 0.0;
 		FixedNodeForces[j][1] = 0.0;
 		FixedNodeForces[j][2] = 0.0;
@@ -2759,7 +2754,8 @@ void Simulation::updateOneStepFromSave(){
 		updateCollapseAndAdhesionFromSave();
 	}
     if (thereIsExplicitLumen){
-    	tissueLumen->growLumen(dt*dataSaveInterval);
+    	tissueLumen->growLumen(currSimTimeSec+dt*dataSaveInterval);
+    	cout<<"in updateOneStepFromSave lumen growth is carried out for: "<<currSimTimeSec + dt*dataSaveInterval<<endl;
     }
 	clearNodeMassLists();
 	assignNodeMasses();
@@ -2800,7 +2796,7 @@ void  Simulation::updateNodeNumberFromSave(){
 	if (n>currNodeNumber){
 		Node* tmp_nd;
 		for (int i = 0; i<(n-currNodeNumber); ++i){
-			double* pos = new double[3];
+			std::array<double,3> pos;
 			pos[0]=0.0;
 			pos[1]=0.0;
 			pos[2]=0.0;
@@ -2808,7 +2804,6 @@ void  Simulation::updateNodeNumberFromSave(){
 			tmp_nd = new Node(i, 3, pos,-1, -1);
 			Nodes.push_back(tmp_nd);
 			nNodes = Nodes.size();
-			delete[] pos;
 		}
 	}
 	else{
@@ -2823,7 +2818,7 @@ void  Simulation::updateNodeNumberFromSave(){
 	n = Nodes.size();
 	if ( n != nNodes){
 		//the node number is change, I updated the node list, now I need to fix system forces:
-		reInitiateSystemForces(nElements);
+		reInitiateSystemForces(nNodes);
 	}
 	//cout<<"end of funciton, number of nodes from save file: "<<n <<" number of nodes on the vector: "<<Nodes.size()<<endl;
 }
@@ -3597,7 +3592,7 @@ void Simulation::initiateSystemForces(){
 }
 
 void Simulation::initiateSinglePrismNodes(float zHeight){
-	double *pos = new double[3];
+	std::array<double,3> pos;
 	Node* tmp_nd;
 	pos[0]=0;pos[1]=1;pos[2]=0;
 	tmp_nd = new Node(0, 3, pos,0,0);
@@ -3623,7 +3618,6 @@ void Simulation::initiateSinglePrismNodes(float zHeight){
 	tmp_nd = new Node(5, 3, pos,1,0);
 	Nodes.push_back(tmp_nd);
 	nNodes = Nodes.size();
-	delete[] pos;
 }
 
 void Simulation::initiateSinglePrismElement(){
@@ -3681,7 +3675,7 @@ void Simulation::initiateNodesByRowAndColumn(int Row, int Column, float SideLeng
 	}
 	int n =  xPos.size();
 	Node* tmp_nd;
-	double* pos = new double[3];
+	std::array<double,3> pos;
 	//Adding the basal level of nodes, all will form columnar elements:
 	for (int i =0; i< n; ++i){
 		pos[0] = xPos[i];
@@ -3701,7 +3695,6 @@ void Simulation::initiateNodesByRowAndColumn(int Row, int Column, float SideLeng
 		nNodes = Nodes.size();
 		nNodes = Nodes.size();
 	}
-	delete[] pos;
 }
 
 void Simulation::setLinkerCircumference(){
@@ -3859,7 +3852,7 @@ void Simulation::checkForNodeFixing(){
 }
 
 void Simulation::induceClones(){
-	//cout<<"inside induce clones"<<endl;
+	cout<<"inside induce clones"<<endl;
 	for (int i=0;i<numberOfClones; ++i){
 		double inMicronsX = cloneInformationX[i]*boundingBoxSize[0] + boundingBox[0][0];
 		double inMicronsY = cloneInformationY[i]*boundingBoxSize[1] + boundingBox[0][1];
@@ -3874,13 +3867,16 @@ void Simulation::induceClones(){
 				double dx = inMicronsX - c[0];
 				double dy = inMicronsY - c[1];
 				double d2 = dx*dx + dy*dy;
+
 				if (d2 < r2){
 					//cout<<"mutating element: "<<(*itElement)->Id<<endl;
 					if (cloneInformationUsingAbsolueGrowth[i]){
 						(*itElement)->mutateElement(0,growthRateORFold); //the mutation is absolute, using an absolute value
+						//cout<<"mutating element "<<(*itElement)->Id<<" with absolute growth"<<endl;
 					}
 					else{
 						(*itElement)->mutateElement(growthRateORFold,0); //the mutation is not absolute, using relative values
+						//cout<<"mutating element "<<(*itElement)->Id<<" with relative growth"<<endl;
 					}
 				}
 				delete[] c;
@@ -4628,8 +4624,7 @@ void Simulation::addNodesForPeripodialOnColumnarCircumference (vector< vector<in
 	int nCircumference = ColumnarBasedNodeArray.size();
 	for (int i=0; i<nCircumference; ++i){
 		int nodeId0 = ColumnarBasedNodeArray[i][TissueHeightDiscretisationLayers];
-		double* pos;
-		pos = new double[3];
+		std::array<double,3> pos;
 		for (int j=0; j<Nodes[nodeId0]->nDim; j++){
 			pos[j] = Nodes[nodeId0]->Position[j];
 		}
@@ -4655,10 +4650,9 @@ void Simulation::addNodesForPeripodialOnColumnarCircumference (vector< vector<in
 		}
 		//The last node should also be basal, at it is the top of the peripodial membrane, change its placement:
 		Nodes[nNodes-1]->tissuePlacement = 0; //made tissueplacement basal
-		delete pos;
 	}
 }
-void Simulation::calculateNewNodePosForPeripodialNodeAddition(int nodeId0, int nodeId1, int nodeId2, double* pos, double sideThickness){
+void Simulation::calculateNewNodePosForPeripodialNodeAddition(int nodeId0, int nodeId1, int nodeId2, std::array<double,3> &pos, double sideThickness){
 	//cout<<"nodeIDs: "<<nodeId0<<" "<<nodeId1<<" "<<nodeId2<<" sideThickness: "<<sideThickness<<endl;
 	double* vec1;
 	vec1 = new double[3];
@@ -4732,7 +4726,7 @@ void Simulation::calculateNewNodePosForPeripodialNodeAddition(int nodeId0, int n
 }
 
 
-void Simulation::calculateNewNodePosForPeripodialNodeAddition(int nodeId0, int nodeId1, double* pos, double sideThickness){
+void Simulation::calculateNewNodePosForPeripodialNodeAddition(int nodeId0, int nodeId1, std::array<double,3> &pos, double sideThickness){
 	double* vec0;
 	vec0 = new double[3];
 	double midpoint[3] = {0,0,0};
@@ -4809,7 +4803,7 @@ void Simulation::addNodesForPeripodialOnOuterCircumference (vector< vector<int> 
 		else{
 			nodeId2 = ColumnarBasedNodeArray[i-1][0];
 		}
-		double* pos = new double[3];
+		std::array<double,3> pos;
 		calculateNewNodePosForPeripodialNodeAddition(nodeId0, nodeId1, nodeId2, pos, peripodialSideConnectionThickness);
 
 		//cout<<" calculated pos : "<<pos[0] <<" "<<pos[1]<<" "<<pos[2]<<endl;
@@ -4854,7 +4848,6 @@ void Simulation::addNodesForPeripodialOnOuterCircumference (vector< vector<int> 
 		}
 		//The last node should also be basal, at it is the top of the peripodial membrane, change its placement:
 		Nodes[nNodes-1]->tissuePlacement = 0; //made tissueplacement basal
-		delete[] pos;
     }
 }
 
@@ -4968,8 +4961,7 @@ void Simulation::addNodesForPeripodialOnCap(vector< vector<int> > &ColumnarBased
 				PeripodialCapNodeArray[n].push_back(Nodes[i]->Id);
 				//now I need to add the new nodes:
 				//adding nodes for the peripodial membrane:
-				double* pos;
-				pos = new double[3];
+				std::array<double,3> pos;
 				pos[0] = Nodes[i]->Position[0];
 				pos[1] = Nodes[i]->Position[1];
 				pos[2] = Nodes[i]->Position[2]+lumenHeight;
@@ -4985,7 +4977,6 @@ void Simulation::addNodesForPeripodialOnCap(vector< vector<int> > &ColumnarBased
 				}
 				//The last node should also be basal, at it is the top of the peripodial membrane, change its placement:
 				Nodes[nNodes-1]->tissuePlacement = 0; //made tissueplacement basal
-				delete[] pos;
 			}
 		}
 	}
@@ -5327,7 +5318,7 @@ void Simulation::addNodesForSideECMOnOuterCircumference (vector< vector<int> > &
         else{
             nodeId2 = ColumnarBasedNodeArray[i-1][0];
         }
-        double* pos = new double[3];
+        std::array<double,3> pos;
         calculateNewNodePosForPeripodialNodeAddition(nodeId0, nodeId1, nodeId2, pos, ECMSideThickness);
 
         //cout<<" calculated pos : "<<pos[0] <<" "<<pos[1]<<" "<<pos[2]<<endl;
@@ -5363,7 +5354,6 @@ void Simulation::addNodesForSideECMOnOuterCircumference (vector< vector<int> > &
             nNodes = Nodes.size();
             OuterNodeArray[i].push_back(newNodeId);
         }
-        delete[] pos;
     }
 }
 
@@ -5790,7 +5780,7 @@ void Simulation::checkECMChange(){
 }
 
 void Simulation::checkEllipseAllocationWithCurvingNodes(){
-	cout<<"checking ellipse allocation with curving nodes, thereIsEmergentEllipseMarking? "<<thereIsEmergentEllipseMarking<<endl;
+	//cout<<"checking ellipse allocation with curving nodes, thereIsEmergentEllipseMarking? "<<thereIsEmergentEllipseMarking<<endl;
 	int selectedEllipseBandId =100;
 	for (vector<Node*>::iterator itNode= Nodes.begin(); itNode<Nodes.end(); ++itNode){
 		if ((*itNode)->onFoldInitiation){
@@ -5870,6 +5860,7 @@ void Simulation::checkForEllipseIdUpdateWithECMDegradation(){
 		if ((*itEle)->isECMMimicing && (*itEle)->coveringEllipseBandId == 100){
 			if ((*itEle)->stiffnessMultiplier<shapeChangeECMLimit){
 				(*itEle)->coveringEllipseBandId = 102;
+				cout<<" Id : "<<currElementId<<" assigned "<<102<<" in function checkForEllipseIdUpdateWithECMDegradation"<<endl;
 				(*itEle)->assignEllipseBandIdToWholeTissueColumn(TissueHeightDiscretisationLayers,Nodes,Elements);
 			}
 		}
@@ -5877,7 +5868,7 @@ void Simulation::checkForEllipseIdUpdateWithECMDegradation(){
 }
 
 void Simulation::updateOnFoldNodesFromCollapse(){
-	cout<<"calling updateOnFoldNodesFromCollapse"<<endl;
+	//cout<<"calling updateOnFoldNodesFromCollapse"<<endl;
 	if (checkedForCollapsedNodesOnFoldingOnce){
 		return;
 	}
@@ -6009,7 +6000,8 @@ bool Simulation::runOneStep(){
         }
     }
     if (thereIsExplicitLumen){
-    	tissueLumen->growLumen(dt);
+    	tissueLumen->growLumen(currSimTimeSec+dt);
+    	cout<<"in runOneStep lumen growth is carried out for: "<<currSimTimeSec+dt<<endl;
     }
     //cout<<"after growth and shape change"<<endl;
     if (conservingColumnVolumes){
@@ -6030,10 +6022,7 @@ bool Simulation::runOneStep(){
    // cout<<" after volume redistribution"<<endl;
     for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
         if (!(*itElement)->IsAblated){
-        	//(*itElement)->updateInternalViscosityTest();
         	(*itElement)->growShapeByFg();
-        	//(*itElement)->defineFgByGrowthTemplate();
-        	//(*itElement)->changeShapeByFsc(dt);
         }
     }
     //cout<<"after grow by Fg"<<endl;
@@ -6079,16 +6068,7 @@ bool Simulation::runOneStep(){
     updateStepNR();
     //cout<<" after NR "<<endl;
 
-    /* double xx, yy, zz;
-    xx = gsl_matrix_get(Elements[0]->Strain,0,0);
-    yy = gsl_matrix_get(Elements[0]->Strain,1,0);
-    zz = gsl_matrix_get(Elements[0]->Strain,2,0);
-	cout<<"Element[0] strains: " <<xx<<" "<<yy<<" "<<zz<<endl;
-    */
-
     calculateBoundingBox();
-
-    //calculateColumnarLayerBoundingBox();
     //cout<<" step: "<<timestep<<" Pressure: "<<SuctionPressure[2]<<" Pa, maximum z-height: "<<boundingBox[1][2]<<" L/a: "<<(boundingBox[1][2]-50)/(2.0*pipetteRadius)<<endl;
     Success = checkFlip();
     if (thereIsArtificaialRelaxation && artificialRelaxationTime == currSimTimeSec){
@@ -6362,7 +6342,7 @@ void Simulation::conserveColumnVolume(){
 void Simulation::updateStepNR(){
     int iteratorK = 0;
     int maxIteration =20;
-    bool converged = true;
+    bool converged = false;
 
     bool numericalCalculation = false;
     bool displayMatricesDuringNumericalCalculation = false;
@@ -6876,7 +6856,7 @@ bool Simulation::adhereNodes(){
 	}
 	for(int nodeCoupleIterator = 0 ; nodeCoupleIterator<n; ++nodeCoupleIterator){
 		if (!adhesionAllowedList[nodeCoupleIterator]){
-			cout<<" pair : "<<pacingNodeCouples0[nodeCoupleIterator]<<" "<<pacingNodeCouples1[nodeCoupleIterator]<<" adhesion not feasible"<<endl;
+			//cout<<" pair : "<<pacingNodeCouples0[nodeCoupleIterator]<<" "<<pacingNodeCouples1[nodeCoupleIterator]<<" adhesion not feasible"<<endl;
 			continue;
 		}
 		//cout<<" checking pair for adhesion : "<<pacingNodeCouples0[nodeCoupleIterator]<<" "<<pacingNodeCouples1[nodeCoupleIterator]<<endl;
@@ -7030,240 +7010,6 @@ bool Simulation::adhereNodes(){
 	return thereIsBinding;
 }
 
-/*
-void Simulation::calculatePackingForcesImplicit3D(){
-	//cout<<"inside calculatePackingForcesImplicit3D, size of packing node couples: "<<pacingNodeCouples0.size()<<endl;
-	int n = pacingNodeCouples0.size();
-	for(int i = 0 ; i<n; ++i){
-		if (pacingNodeCouplesHaveAdhered[i]){
-			continue;
-		}
-		int id0 = pacingNodeCouples0[i];
-		int id1 = pacingNodeCouples1[i];
-		double multiplier = packingMultiplier;
-		double sigmoidSaturation = sigmoidSaturationForPacking;
-
-		//if packing is between peripodial and columnar:
-		bool packOnlyInZ = false;
-		if (   (Nodes[id0]->tissueType ==1 && Nodes[id1]->tissueType == 0)
-			|| (Nodes[id1]->tissueType ==1 && Nodes[id0]->tissueType == 0) ){
-			multiplier*=1.0;
-			//A normal sigmoid function saturates at a distance of 5, which is set in sigmoidSaturationForPacking
-			//I scale the distance with saturation/threshold, such that the forces will saturate
-			//at the threshold distance. For the peripodial, I can increase the threshold
-			//Then I should scale the value here, so the scaling will happen at the new threshold
-			//The code is structured such that threshold is a global value set by
-			//mesh geometry. I do not wish to alter that
-			//Scaling the sigmoid value is exactly the same, I need to modify s/t
-			//I have increased detection distance by 2
-			//I need to scale sigmoid by 1/2;
-			//search for tissueTypeDistanceSqMultiplier for the scaling value
-			sigmoidSaturation /= 2.0;
-			packOnlyInZ = true;
-		}
-		//sigmoid test:
-		double dx = Nodes[id0]->Position[0] - Nodes[id1]->Position[0];
-		double dy = Nodes[id0]->Position[1] - Nodes[id1]->Position[1];
-		double dz = Nodes[id0]->Position[2] - Nodes[id1]->Position[2];
-
-		double averageMass = 0.5 *( Nodes[id0]->mass + Nodes[id1]->mass );
-
-		if (initialWeightPointx[i]>0){
-			dx *= -1.0;
-		}
-		if (initialWeightPointy[i]>0){
-			dy *= -1.0;
-		}
-		if (initialWeightPointz[i]>0){
-			dz *= -1.0;
-		}
-
-
-		double Fx = multiplier * averageMass / (1 + exp(sigmoidSaturation / packingThreshold * (-1.0*dx)));
-		Fx *= initialWeightPointx[i];
-
-		double Fy = multiplier * averageMass / (1 + exp(sigmoidSaturation / packingThreshold * (-1.0*dy)));
-		Fy *= initialWeightPointy[i];
-
-		double Fz = multiplier * averageMass / (1 + exp(sigmoidSaturation / packingThreshold * (-1.0*dz)));
-		Fz *= initialWeightPointz[i];
-		bool printForces = true;
-
-		//if (packOnlyInZ){
-			//Fx=0;Fy=0;
-			//if (Nodes[id0]->tissueType ==1){
-				//node 0 is peripodial while 1 is columnar. It must be pushed in (+)ve z.
-				//if (Fz<0){
-				//	Fz*=-1.0;cout<<"corrected Fz (-)ve "<<id0<<" "<<id1<<endl;
-					//Fx*=-1.0;
-					//Fy*=-1.0;
-				//	printForces = true;
-				//}
-			//}
-			//else{
-				//node 0 is columnar while 1 is peripodial, it must be pushed in (-ve)z.
-				//if (Fz>0){
-					//Fz*=-1.0;cout<<"corrected Fz (+)ve "<<id0<<" "<<id1<<endl;
-					//Fx*=-1.0;
-					//Fy*=-1.0;
-					//printForces = true;
-				//}
-			//}
-		//}
-		if (printForces){
-			cout<<" id0-id1: "<<id0<<"-"<<id1<<" F : "<<Fx<<" "<<Fy<<" "<<Fz<<" averageMass: "<<averageMass<<" dx,dy,dz: "<<dx<<" "<<dy<<" "<<dz<<" initialWeightPoint "<<initialWeightPointx[i]<<" "<<initialWeightPointy[i]<<" "<<initialWeightPointz[i]<<endl;
-		}
-		PackingForces[id0][0] += Fx;
-		PackingForces[id0][1] += Fy;
-		PackingForces[id0][2] += Fz;
-		PackingForces[id1][0] -= Fx;
-		PackingForces[id1][1] -= Fy;
-		PackingForces[id1][2] -= Fz;
-		if (isnan(Fx)){
-		      cout<<" packing force Fx is nan for nodes "<<pacingNodeCouples0[i]<<" - "<<pacingNodeCouples1[i]<<endl;
-		}
-		if (isnan(Fy)){
-		      cout<<" packing force Fy is nan for nodes "<<pacingNodeCouples0[i]<<" - "<<pacingNodeCouples1[i]<<endl;
-		}
-		if (isnan(Fz)){
-		      cout<<" packing force Fz is nan for nodes "<<pacingNodeCouples0[i]<<" - "<<pacingNodeCouples1[i]<<endl;
-		}
-	}
-}*/
-
-
-
-/*
-void Simulation::calculatePackingJacobian3D(gsl_matrix* K){
-	int n = pacingNodeCouples0.size();
-	for(int i = 0 ; i<n; ++i){
-		if (pacingNodeCouplesHaveAdhered[i]){
-			continue;
-		}
-		int id0 = pacingNodeCouples0[i];
-		int id1 = pacingNodeCouples1[i];
-		double multiplier = packingMultiplier;
-		double sigmoidSaturation = sigmoidSaturationForPacking;
-
-		//if packing is between peripodial and columnar:
-		bool packOnlyInZ = false;
-		if (   (Nodes[id0]->tissueType ==1 && Nodes[id1]->tissueType == 0)
-			|| (Nodes[id1]->tissueType ==1 && Nodes[id0]->tissueType == 0) ){
-			multiplier*=1.0;
-			//See the force calculation function
-			sigmoidSaturation /= 2.0;
-			packOnlyInZ = true;
-		}
-		//sigmoid test:
-		double dx = Nodes[id0]->Position[0] - Nodes[id1]->Position[0];
-		double dy = Nodes[id0]->Position[1] - Nodes[id1]->Position[1];
-		double dz = Nodes[id0]->Position[2] - Nodes[id1]->Position[2];
-		double averageMass = 0.5 *( Nodes[id0]->mass + Nodes[id1]->mass );
-		if (initialWeightPointx[i]>0){
-			dx *= -1.0;
-		}
-		if (initialWeightPointy[i]>0){
-			dy *= -1.0;
-		}
-		if (initialWeightPointz[i]>0){
-			dz *= -1.0;
-		}
-
-		double sigmoidx =  1 / (1 + exp(sigmoidSaturation/ packingThreshold * (-1.0 * dx) ));
-		double sigmoidy =  1 / (1 + exp(sigmoidSaturation/ packingThreshold * (-1.0 * dy) ));
-		double sigmoidz =  1 / (1 + exp(sigmoidSaturation/ packingThreshold * (-1.0 * dz) ));
-		bool printForces = true;
-		//if (packOnlyInZ){
-			//sigmoidx = 0.0;
-			//sigmoidy = 0.0;
-			//if (Nodes[id0]->tissueType ==1){
-				//node 0 is peripodial while 1 is columnar. It must be pushed in (+)ve z.
-				//if (sigmoidz*initialWeightPointz[i]<0){
-				//	sigmoidz*=-1.0;cout<<"corrected sigmoidz (-)ve "<<id0<<" "<<id1<<endl;
-					//sigmoidx*=-1.0;
-					//sigmoidy*=-1.0;
-				//	printForces = true;
-				//}
-			//}
-			//else{
-				//node 0 is columnar while 1 is peripodial, it must be pushed in (-ve)z.
-			//	if (sigmoidz*initialWeightPointz[i]>0){
-			//		sigmoidz*=-1.0;cout<<"corrected sigmoidz (+)ve "<<id0<<" "<<id1<<endl;
-					//sigmoidx*=-1.0;
-					//sigmoidy*=-1.0;
-			//		printForces = true;
-			//	}
-			//}
-		//}
-		double dFxdx0 = sigmoidx * (1 - sigmoidx) * multiplier * averageMass * initialWeightPointx[i] * (sigmoidSaturation/packingThreshold);
-		double dFxdx1 = -1.0*dFxdx0;
-		if (initialWeightPointx[i]>0){
-			dFxdx0 *= -1.0;
-			dFxdx1 *= -1.0;
-		}
-
-		double dFydy0 = sigmoidy * (1 - sigmoidy) * multiplier * averageMass * initialWeightPointy[i] * (sigmoidSaturation/packingThreshold);
-		double dFydy1 = -1.0*dFydy0;
-		if (initialWeightPointy[i]>0){
-			dFydy0 *= -1.0;
-			dFydy1 *= -1.0;
-		}
-
-
-		double dFzdz0 = sigmoidz * (1 - sigmoidz) * multiplier * averageMass * initialWeightPointz[i] * (sigmoidSaturation/packingThreshold);
-		double dFzdz1 = -1.0*dFzdz0;
-		if (initialWeightPointz[i]>0){
-			dFzdz0 *= -1.0;
-			dFzdz1 *= -1.0;
-		}
-
-		if (printForces){
-			cout<<" id0-id1: "<<id0<<"-"<<id1<<" dFdX : "<<dFxdx0<<" "<<dFydy0<<" "<<dFzdz0<<endl;
-		}
-
-		//x values:
-		double value = gsl_matrix_get(K,3*id0,3*id0);
-		value -= dFxdx0;
-		gsl_matrix_set(K,3*id0,3*id0,value);
-		value = gsl_matrix_get(K,3*id0,3*id1);
-		value -= dFxdx1;
-		gsl_matrix_set(K,3*id0,3*id1,value);
-		value = gsl_matrix_get(K,3*id1,3*id1);
-		value -= dFxdx0;
-		gsl_matrix_set(K,3*id1,3*id1,value);
-		value = gsl_matrix_get(K,3*id1,3*id0);
-		value -= dFxdx1;
-		gsl_matrix_set(K,3*id1,3*id0,value);
-
-		//y values:
-		value = gsl_matrix_get(K,3*id0+1,3*id0+1);
-		value -= dFydy0;
-		gsl_matrix_set(K,3*id0+1,3*id0+1,value);
-		value = gsl_matrix_get(K,3*id0+1,3*id1+1);
-		value -= dFydy1;
-		gsl_matrix_set(K,3*id0+1,3*id1+1,value);
-		value = gsl_matrix_get(K,3*id1+1,3*id1+1);
-		value -= dFydy0;
-		gsl_matrix_set(K,3*id1+1,3*id1+1,value);
-		value = gsl_matrix_get(K,3*id1+1,3*id0+1);
-		value -= dFydy1;
-		gsl_matrix_set(K,3*id1+1,3*id0+1,value);
-
-		//z values:
-		value = gsl_matrix_get(K,3*id0+2,3*id0+2);
-		value -= dFzdz0;
-		gsl_matrix_set(K,3*id0+2,3*id0+2,value);
-		value = gsl_matrix_get(K,3*id0+2,3*id1+2);
-		value -= dFzdz1;
-		gsl_matrix_set(K,3*id0+2,3*id1+2,value);
-		value = gsl_matrix_get(K,3*id1+2,3*id1+2);
-		value -= dFzdz0;
-		gsl_matrix_set(K,3*id1+2,3*id1+2,value);
-		value = gsl_matrix_get(K,3*id1+2,3*id0+2);
-		value -= dFzdz1;
-		gsl_matrix_set(K,3*id1+2,3*id0+2,value);
-	}
-}*/
 void Simulation::calculatePackingForcesImplicit3D(){
 	/**
 	 * This function calculates the packing forces between nodes, inside the Newton-Raphson iteration steps.
@@ -7371,13 +7117,13 @@ void Simulation::calculatePackingForcesImplicit3D(){
 		PackingForces[id1][0] -= Fx;
 		PackingForces[id1][1] -= Fy;
 		PackingForces[id1][2] -= Fz;
-		if (isnan(Fx)){
+		if (std::isnan(Fx)){
 		      cout<<" packing force Fx is nan for nodes "<<pacingNodeCouples0[node_counter]<<" - "<<pacingNodeCouples1[node_counter]<<endl;
 		}
-		if (isnan(Fy)){
+		if (std::isnan(Fy)){
 		      cout<<" packing force Fy is nan for nodes "<<pacingNodeCouples0[node_counter]<<" - "<<pacingNodeCouples1[node_counter]<<endl;
 		}
-		if (isnan(Fz)){
+		if (std::isnan(Fz)){
 		      cout<<" packing force Fz is nan for nodes "<<pacingNodeCouples0[node_counter]<<" - "<<pacingNodeCouples1[node_counter]<<endl;
 		}
 	}
@@ -7964,9 +7710,7 @@ void Simulation::detectPackingToAFMBead(){
 	for (vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
 		if ((*itNode)->mass >0){ //node is not ablated
 			if ((*itNode)->tissuePlacement == 0){
-				double* pos;
-				pos = new double[3];
-				(*itNode)->getCurrentPosition(pos);
+				std::array<double,3> pos = (*itNode)->getCurrentPosition();
 				double dx = pos[0] - beadPos[0];
 				double dy = pos[1] - beadPos[1];
 				double dz = pos[2] - beadPos[2];
@@ -7985,7 +7729,6 @@ void Simulation::detectPackingToAFMBead(){
 					initialWeightPackingToBeadz.push_back(dz/dGap);
 					distanceToBead.push_back(dGap);
 				}
-				delete[] pos;
 			}
 		}
 	}
@@ -8049,9 +7792,7 @@ void Simulation::detectPacingToEnclosingSurfacesNodes(){
 				}
 			}
 			if( checkAgainstNegativeSurface ){
-				double* pos;
-				pos = new double[3];
-				(*itNode)->getCurrentPosition(pos);
+				std::array<double,3> pos = (*itNode)->getCurrentPosition();
 				double dz = pos[2] - zEnclosementBoundaries[0];
 				double d2 = dz*dz;
 				if (d2<t2){
@@ -8060,12 +7801,9 @@ void Simulation::detectPacingToEnclosingSurfacesNodes(){
 					double d = pow (d2,0.5);
 					initialWeightPackingToNegativeSurface.push_back(dz/d);
 				}
-				delete[] pos;
 			}
 			if( checkAgainstPositiveSurface){
-				double* pos;
-				pos = new double[3];
-				(*itNode)->getCurrentPosition(pos);
+				std::array<double,3> pos = (*itNode)->getCurrentPosition();
 				double dz = pos[2] - zEnclosementBoundaries[1];
 				double d2 = dz*dz;
 				if (d2<t2){
@@ -8074,7 +7812,6 @@ void Simulation::detectPacingToEnclosingSurfacesNodes(){
 					double d = pow (d2,0.5);
 					initialWeightPackingToPositiveSurface.push_back(dz/d);
 				}
-				delete[] pos;
 			}
 		}
 	}
@@ -8253,9 +7990,7 @@ void Simulation::detectPacingNodes(){
 		for (vector<Node*>::iterator itNode=Nodes.begin()+ initialpoint; itNode<Nodes.begin()+breakpoint; ++itNode){
 			bool NodeHasPacking = (*itNode)->checkIfNodeHasPacking();
 			if (NodeHasPacking){//702 - 596
-				double* pos;
-				pos = new double[3];
-				(*itNode)->getCurrentPosition(pos);
+				std::array<double,3> pos = (*itNode)->getCurrentPosition();
 				int masterXGridIndex = floor( (pos[0] - boundingBox[0][0])/boundingBoxSize[0] );
 				int masterYGridIndex = floor( (pos[1] - boundingBox[0][1])/boundingBoxSize[1] );
 				t2 = packingDetectionThresholdGridSq[masterXGridIndex][masterYGridIndex];
@@ -8286,9 +8021,7 @@ void Simulation::detectPacingNodes(){
 								continue;
 							}
 							//the nodes can potentially pack, are they close enough?
-							double* posSlave;
-							posSlave = new double[3];
-							(*itNodeSlave)->getCurrentPosition(posSlave);
+							std::array<double,3> posSlave = (*itNodeSlave)->getCurrentPosition();
 							double dx = pos[0] - posSlave[0];
 							double dy = pos[1] - posSlave[1];
 							double dz = pos[2] - posSlave[2];
@@ -8355,11 +8088,9 @@ void Simulation::detectPacingNodes(){
 									assignFoldRegionAndReleasePeripodial((*itNode),(*itNodeSlave));
 								}
 							}
-							delete[] posSlave;
 						}
 					}
 				}
-				delete[] pos;
 			}
 		}
 		//calculate packing here
@@ -9224,6 +8955,7 @@ void Simulation::calculateShapeChangeMarkerEllipseBased (GrowthFunctionBase* cur
 	    	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 				bool appliedToElement = (*itElement)->isShapeChangeAppliedToElement(currSCF->appliedEllipseBandIds, currSCF->applyToBasalECM, currSCF->applyToLateralECM, currSCF->applyTissueApical, currSCF->applyTissueBasal, currSCF->applyTissueMidLine );
 				if (appliedToElement){
+					cout<<" shape chenge is applied to element "<<(*itElement)->Id<<endl;
 					gsl_matrix_set_identity(columnarShapeChangeIncrement);
 					(*itElement)->calculateShapeChangeIncrementFromRates(dt, growthRates[0],growthRates[1],growthRates[2],columnarShapeChangeIncrement);
 					(*itElement)->updateShapeChangeIncrement(columnarShapeChangeIncrement);

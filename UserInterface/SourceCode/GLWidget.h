@@ -14,6 +14,7 @@
 #include <vector>
 #include <string.h>
 #include <math.h>
+#include <array>
 using namespace std;
 
 #include "../TissueFolding/SourceCode/Simulation.h"
@@ -39,6 +40,7 @@ using namespace std;
      void		updateToFrontView();
      void		updateToSideView();
      void		updateToPerspectiveView();
+     void		updateToCloneCrossView();
      void		drawPointsForDisplay();
      void		drawEnclosingShell();
      bool 		ItemSelected;
@@ -157,7 +159,7 @@ using namespace std;
      void 		drawBoundingBox();
      void 		drawPipette();
      void		drawAFMBead();
-     void 		drawArrow3D(double* pos, double* endPoint, double r, double g, double b);
+     void 		drawArrow3D(const std::array<double,3> &pos, const std::array<double,3> &endPoint, double r, double g, double b);
  };
 
 

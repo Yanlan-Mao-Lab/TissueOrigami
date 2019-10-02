@@ -96,9 +96,6 @@ Inheritance diagram for Shape\+Base\+:\begin{figure}[H]
 \hypertarget{classShapeBase_a33c8d69e858be0ad6414f4f5f64eeb3b}{}void {\bfseries scale\+Growth\+Increment} (double multiuplier)\label{classShapeBase_a33c8d69e858be0ad6414f4f5f64eeb3b}
 
 \item 
-\hypertarget{classShapeBase_a62ed1f44e3cd14f58ddbbb332064f1ee}{}double {\bfseries get\+Growth\+Mutation\+Multiplier} ()\label{classShapeBase_a62ed1f44e3cd14f58ddbbb332064f1ee}
-
-\item 
 \hypertarget{classShapeBase_a2423a7dd85ab25b7eb38b5a954d732ab}{}void {\bfseries calculate\+Shape\+Change\+Increment\+From\+Rates} (double dt, double rx, double ry, double rz, gsl\+\_\+matrix $\ast$increment)\label{classShapeBase_a2423a7dd85ab25b7eb38b5a954d732ab}
 
 \item 
@@ -571,13 +568,7 @@ void \hyperlink{classShapeBase_a5409de18ee9e47af0bb977f4a1e608fb}{change\+Shape\
 \hypertarget{classShapeBase_a995a5e6a553ed0cdaadf74dab4f88822}{}virtual double {\bfseries get\+Element\+Height} ()\label{classShapeBase_a995a5e6a553ed0cdaadf74dab4f88822}
 
 \item 
-\hypertarget{classShapeBase_a3fd943415e0e35cb8f19e88bb5e67fe4}{}virtual void {\bfseries get\+Relevant\+Nodes\+For\+Packing} (int, int \&, int \&, int \&)\label{classShapeBase_a3fd943415e0e35cb8f19e88bb5e67fe4}
-
-\item 
 \hypertarget{classShapeBase_a44db2ec9cd790c4fa9782c4117f9d0fe}{}virtual bool {\bfseries Is\+Point\+Close\+Enough\+For\+Packing} (double $\ast$, float, int)\label{classShapeBase_a44db2ec9cd790c4fa9782c4117f9d0fe}
-
-\item 
-\hypertarget{classShapeBase_a75ec5e0c21ee757e72bd9327c35fbdc5}{}virtual void {\bfseries calculate\+Normal\+For\+Packing} (int)\label{classShapeBase_a75ec5e0c21ee757e72bd9327c35fbdc5}
 
 \item 
 \hypertarget{classShapeBase_afedefe13ce568fa19e5a2ae46a1de4ed}{}virtual void {\bfseries Add\+Packing\+To\+Surface} (int, double, double, double, double $\ast$$\ast$, vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&, bool \&, bool \&, bool \&)\label{classShapeBase_afedefe13ce568fa19e5a2ae46a1de4ed}
@@ -587,9 +578,6 @@ void \hyperlink{classShapeBase_a5409de18ee9e47af0bb977f4a1e608fb}{change\+Shape\
 
 \item 
 \hypertarget{classShapeBase_a8ec7f1e3c34a834ce5f76b20f4c15910}{}virtual void {\bfseries get\+Basal\+Node\+Pos} (double $\ast$)\label{classShapeBase_a8ec7f1e3c34a834ce5f76b20f4c15910}
-
-\item 
-\hypertarget{classShapeBase_a60e19fb23a181504a4eeda5a4267b89d}{}virtual bool {\bfseries Ispoint\+Inside\+Triangle} (int, double, double, double)\label{classShapeBase_a60e19fb23a181504a4eeda5a4267b89d}
 
 \item 
 \hypertarget{classShapeBase_a078cd384ddb67d188da518806394d73d}{}virtual void {\bfseries construct\+Element\+Stack\+List} (const int, vector$<$ \hyperlink{classShapeBase}{Shape\+Base} $\ast$ $>$ \&)\label{classShapeBase_a078cd384ddb67d188da518806394d73d}
@@ -613,16 +601,10 @@ void \hyperlink{classShapeBase_a5409de18ee9e47af0bb977f4a1e608fb}{change\+Shape\
 \hypertarget{classShapeBase_a16af853ecfeb1557e296f804cfe522f6}{}virtual double $\ast$ {\bfseries get\+Basal\+Min\+Viscosity} (vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$)\label{classShapeBase_a16af853ecfeb1557e296f804cfe522f6}
 
 \item 
-\hypertarget{classShapeBase_ac3cdc2a33b35c048087b47ce3a9f109f}{}virtual void {\bfseries copy\+Element\+Information\+After\+Refinement} (\hyperlink{classShapeBase}{Shape\+Base} $\ast$, int, bool)\label{classShapeBase_ac3cdc2a33b35c048087b47ce3a9f109f}
-
-\item 
 \hypertarget{classShapeBase_a4e33b4fea2d126f59ca0bcf73e07a253}{}virtual void {\bfseries check\+Rotation\+Consistency3\+D} ()\label{classShapeBase_a4e33b4fea2d126f59ca0bcf73e07a253}
 
 \item 
 \hypertarget{classShapeBase_aae5ef32d56aa383108f2d6912469138f}{}virtual bool {\bfseries are\+Nodes\+Directly\+Connected} (int, int)\label{classShapeBase_aae5ef32d56aa383108f2d6912469138f}
-
-\item 
-\hypertarget{classShapeBase_a4d7bfb4ed03b7633e02e753a485fbf01}{}bool {\bfseries check\+Packing\+To\+This\+Node\+Via\+State} (int Columnar\+Layer\+Discretisation\+L\+Ayers, \hyperlink{classNode}{Node} $\ast$Node\+Pointer)\label{classShapeBase_a4d7bfb4ed03b7633e02e753a485fbf01}
 
 \item 
 \hypertarget{classShapeBase_aed4c893952a6afad718a2037e0635296}{}bool {\bfseries Does\+Point\+Belog\+To\+Me} (int Id\+Node)\label{classShapeBase_aed4c893952a6afad718a2037e0635296}
@@ -671,9 +653,6 @@ void \hyperlink{classShapeBase_a5409de18ee9e47af0bb977f4a1e608fb}{change\+Shape\
 
 \item 
 \hypertarget{classShapeBase_af616bee3616ec9d1f99628745f330ad7}{}void {\bfseries calculate\+Emergent\+Rotation\+Angles} ()\label{classShapeBase_af616bee3616ec9d1f99628745f330ad7}
-
-\item 
-\hypertarget{classShapeBase_ac776b9eb4079c175721ca1363bcde77c}{}void {\bfseries does\+Element\+Need\+Refinement} (double area\+Threshold, int surfaceidentifier)\label{classShapeBase_ac776b9eb4079c175721ca1363bcde77c}
 
 \item 
 \hypertarget{classShapeBase_a1578faef4bfc3c8de9f8f94fd9e6b52d}{}bool {\bfseries calculate\+Alignment\+Score} (double $\ast$$\ast$Ref\+Normalised)\label{classShapeBase_a1578faef4bfc3c8de9f8f94fd9e6b52d}
@@ -775,15 +754,6 @@ bool \hyperlink{classShapeBase_a8763ab46f90adb819ec776a5829573c5}{is\+Element\+F
 
 \item 
 \hypertarget{classShapeBase_a994acea5e6f2cf92c94f485e7ba5afc9}{}bool {\bfseries Is\+Changing\+Shape}\label{classShapeBase_a994acea5e6f2cf92c94f485e7ba5afc9}
-
-\item 
-\hypertarget{classShapeBase_ac10b50666bb82b8dc7b08ce954402b02}{}bool {\bfseries will\+Be\+Refined}\label{classShapeBase_ac10b50666bb82b8dc7b08ce954402b02}
-
-\item 
-\hypertarget{classShapeBase_ac2bab1161a08d0d953702b7c8d1ff032}{}bool {\bfseries Apical\+Normal\+For\+Packing\+Up\+To\+Date}\label{classShapeBase_ac2bab1161a08d0d953702b7c8d1ff032}
-
-\item 
-\hypertarget{classShapeBase_a189180583fb224af63900411b2da53c6}{}bool {\bfseries Basal\+Normal\+For\+Packing\+Up\+To\+Date}\label{classShapeBase_a189180583fb224af63900411b2da53c6}
 
 \item 
 \hypertarget{classShapeBase_aff63b1fcb823bbfdb5b19fe78dea59b8}{}int {\bfseries tissue\+Placement}\label{classShapeBase_aff63b1fcb823bbfdb5b19fe78dea59b8}

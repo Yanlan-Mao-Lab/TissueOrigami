@@ -259,6 +259,11 @@ bool ModelInputObject::readParameters(){
 }
 
 bool ModelInputObject::checkFileStatus(ifstream& file, string fileName){
+	/**
+	 * This function will check the status of the input file that was provided. It will
+	 * return true if the file is opened successfully, and false otherwise.
+	 *
+	 */
 	if (!file.is_open()) {
 		cout<<"Cannot open parameter input file, "<<fileName<<endl;
 		return false;
@@ -272,10 +277,14 @@ bool ModelInputObject::checkFileStatus(ifstream& file, string fileName){
 
 
 bool ModelInputObject::readGrowthOptions(ifstream& file){
+	/**
+	 * This function will read the growth options. The generic growth related parameters will be read here, followed by
+	 * growth type specific parameters read in specialised functions.
+	 * The first parameter to read will be the number of growth options.
+	 */
 	string currHeader;
 	file >> currHeader;
 	int n;
-	cout<<"entered read growth options, current header: "<<currHeader<<endl;
 	if(currHeader == "NumberofGrowthFunctions(int):"){
 		file >> n;
 		Sim->nGrowthFunctions = n;
@@ -284,6 +293,11 @@ bool ModelInputObject::readGrowthOptions(ifstream& file){
 		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: NumberofGrowthFunctions(int):" <<endl;
 		return false;
 	}
+	/**
+	 * The second parameter will identify if the relative positions of elements that identify their growth inputs are pinned to the initial
+	 * mesh or is updated at each time step through the simulation.
+	 * There will be an option to update the pinned values next.
+	 */
 	file >> currHeader;
 	if(currHeader == "GridGrowthsPinnedOnInitialMesh(bool):"){
 		bool tmpBool;
@@ -294,6 +308,9 @@ bool ModelInputObject::readGrowthOptions(ifstream& file){
 		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: GridGrowthsPinnedOnInitialMesh(bool):" <<endl;
 		return false;
 	}
+	/**
+	 * Then the following set of parameters defines at which time points the pinning is updated, and the timing of those updates, in seconds.
+	 */
 	file >> currHeader;
 	if(currHeader == "PinningUpdateTimes(number-times(sec)):"){
 		file >> Sim->nGrowthPinning;
@@ -311,6 +328,12 @@ bool ModelInputObject::readGrowthOptions(ifstream& file){
 		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: PinningUpdateTimes(number-times(sec)):" <<endl;
 		return false;
 	}
+	/**
+	 * The final generic growth parameter will define the interpolation type of growth value read from the grid, given the relative position
+	 * of the mesh. Option 0 is a step function, that applies the exact growth rate that is given for the grid point the element finds itself in.
+	 * Option 1 carries out a linear interpolation between the nearest 4 corners.
+	 *
+	 */
 	file >> currHeader;
 	if (currHeader == "GridGrowthsInterpolationType(0=step,1=linear):"){
 		file >> Sim->gridGrowthsInterpolationType;
@@ -319,10 +342,16 @@ bool ModelInputObject::readGrowthOptions(ifstream& file){
 		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: GridGrowthsInterpolationType(0=step,1=linear):" <<endl;
 		return false;
 	}
+	/**
+	 * Next, the individual specialised growth options are read. The first parameter will read the growth type, and a related specialised function will read
+	 * the rest. Growth option types:
+	 * 	1: Uniform
+	 * 	2: Ring
+	 * 	3: From input file grid.
+	 */
 	for (int i = 0; i<n; ++i){
 		file >> currHeader;
 		int type;
-		cout<<"inside the loop, read growth options, current header: "<<currHeader<<endl;
 		if(currHeader == "GrowthFunctionType(int-seeDocumentation):"){
 			file >> type;
 		}
@@ -332,12 +361,21 @@ bool ModelInputObject::readGrowthOptions(ifstream& file){
 		}
 		bool Success = true;
 		if (type == 1){
+			/***
+			 * Reading uniform growth options
+			 */
 			Success = readGrowthType1(file);
 		}
 		else if (type == 2){
+			/***
+			 * Reading ring type growth options
+			 */
 			Success = readGrowthType2(file);
 		}
 		else if (type == 3){
+			/***
+			 * Reading grid type growth options
+			 */
 			Success = readGrowthType3(file);
 		}
 		else{
@@ -348,11 +386,23 @@ bool ModelInputObject::readGrowthOptions(ifstream& file){
 			return false;
 		}
 	}
-	cout<<"finalised reading growths"<<endl;
+	std::cout<<"Finalised reading growth options"<<endl;
 	return true;
 }
 
 bool ModelInputObject::readGrowthType1(ifstream& file){
+	/**
+	 * This funtion reads in uniform growth options.
+	 * The format with placeholder values:
+	 *   InitialTime(sec): 100
+	 *   FinalTime(sec): 200
+	 *   ApplyToColumnarLayer(bool): 1
+	 *   ApplyToPeripodialMembrane(bool): 0
+	 *   ApplyToBasalECM(bool): 0
+	 *   ApplyToLateralECM(bool): 1
+	 *   MaxValue(fractionPerHour-DV,AP,AB): 0.002 0.001 0.000
+	 *   Angle(degrees): 45.0
+	 */
 	string currHeader;
 	file >> currHeader;
 	cout<<"entered read growth type 1, current header: "<<currHeader<<endl;
@@ -376,7 +426,6 @@ bool ModelInputObject::readGrowthType1(ifstream& file){
 	file >> currHeader;
 	if(currHeader == "FinalTime(sec):"){
 		file >> finaltime;
-		//Sim->GrowthParameters.push_back(finaltime);
 	}
 	else{
 		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: FinalTime(sec):" <<endl;
@@ -416,6 +465,11 @@ bool ModelInputObject::readGrowthType1(ifstream& file){
 	}
 	file >> currHeader;
 	if(currHeader == "MaxValue(fractionPerHour-DV,AP,AB):"){
+		/**
+		 * The three values required for the MaxValue represent growth in dorsal-ventral, anterior-posterior and apical-basal axes, respectively.
+		 * The growth rate is input per hour but converted to per second for ease in calculation, as the time step of simulation is recorded
+		 * in seconds.
+		 */
 		double timeMultiplier = 1.0 / 3600.0;
 		file >> DVRate;
 		DVRate *= timeMultiplier;
@@ -430,6 +484,9 @@ bool ModelInputObject::readGrowthType1(ifstream& file){
 	}
 	file >> currHeader;
 	if(currHeader == "Angle(degrees):"){
+		/**
+		 * The growth orientation angle is input in degrees, but converted to radians for further calculations.
+		 */
 		file >> angle;
 		angle *= M_PI/180.0; 	 // converting to radians
 	}
@@ -437,7 +494,10 @@ bool ModelInputObject::readGrowthType1(ifstream& file){
 		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: Angle(degrees):" <<endl;
 		return false;
 	}
-
+	/**
+	 * Once all input parameters are gathered, a new growth function object is initiated with the constructor of UniformGrowthFunction# class.
+	 * The pointer to the generated object is recorded in the vector of Growth function objects that the simulation object keeps, Simulation#GrowthFunctions.
+	 */
 	GrowthFunctionBase* GSBp;
 	int Id = Sim->GrowthFunctions.size();
 	//type is 1
@@ -447,6 +507,23 @@ bool ModelInputObject::readGrowthType1(ifstream& file){
 }
 
 bool ModelInputObject::readGrowthType2(ifstream& file){
+	/**
+	 * This function reads in ring shaped growth options. This implements a growth gradient.
+	 * Here, the growth is max at the inner radius of the ring
+	 * and decays to zero at the outer radius.
+	 * The format with placeholder values:
+	 *   InitialTime(sec): 100
+	 *   FinalTime(sec): 200
+	 *   ApplyToColumnarLayer(bool): 1
+	 *   ApplyToPeripodialMembrane(bool): 0
+	 *   ApplyToBasalECM(bool): 0
+	 *   ApplyToLateralECM(bool): 1
+	 *   Centre: 5 3
+	 *   InnerRadius: 0
+	 *   OuterRadius: 10
+	 *   MaxValue(fractionPerHour-DV,AP,AB): 0.002 0.001 0.000
+	 *   Angle(degrees): 45.0
+	 */
 	string currHeader;
 	file >> currHeader;
 	cout<<"entered read growth type 2, current header: "<<currHeader<<endl;
@@ -510,6 +587,9 @@ bool ModelInputObject::readGrowthType2(ifstream& file){
 	}
 	file >> currHeader;
 	if(currHeader == "Centre:"){
+		/**
+		 * The centre of the ring is given in plane of the tissue with x 7 y coordinates in absolute microns (not relative units).
+		 */
 		file >> CentreX;
 		file >> CentreY;
 	}
@@ -519,6 +599,11 @@ bool ModelInputObject::readGrowthType2(ifstream& file){
 	}
 	file >> currHeader;
 	if(currHeader == "InnerRadius:"){
+		/**
+		 * The inner radius gives the inner radius of the growth ring, given in absolute micrometers, not relative coordinates.
+		 * A value of zero would implement circular growth with max value on the origin.
+		 * Note that the inner radius will be the point of maximum growth rate value.
+		 */
 		file >> innerR;
 	}
 	else{
@@ -527,6 +612,10 @@ bool ModelInputObject::readGrowthType2(ifstream& file){
 	}
 	file >> currHeader;
 	if(currHeader == "OuterRadius:"){
+		/**
+		 * The outer radius gives the inner radius of the growth ring, , given in absolute micrometers, not relative coordinates.
+		 * This is the radius where the implemented growth rate will decay to zero. The gradient is linear.
+		 */
 		file >> outerR;
 	}
 	else{
@@ -535,6 +624,11 @@ bool ModelInputObject::readGrowthType2(ifstream& file){
 	}
 	file >> currHeader;
 	if(currHeader == "MaxValue(fractionPerHour-DV,AP,AB):"){
+		/**
+		 * The three values required for the MaxValue represent growth in dorsal-ventral, anterior-posterior and apical-basal axes, respectively.
+		 * The growth rate is input per hour but converted to per second for ease in calculation, as the time step of simulation is recorded
+		 * in seconds.
+		 */
 		double timeMultiplier = 1.0 / 3600.0;
 		file >> DVRate;
 		DVRate *= timeMultiplier;
@@ -550,6 +644,9 @@ bool ModelInputObject::readGrowthType2(ifstream& file){
 	double angle;
 	file >> currHeader;
 	if(currHeader == "Angle(degrees):"){
+		/**
+		 * The growth orientation angle is input in degrees, but converted to radians for further calculations.
+		 */
 		file >> angle;
 		angle *= M_PI/180.0; 	 // converting to radians
 	}
@@ -557,6 +654,10 @@ bool ModelInputObject::readGrowthType2(ifstream& file){
 		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: Angle(degrees):" <<endl;
 		return false;
 	}
+	/**
+	 * Once all input parameters are gathered, a new growth function object is initiated with the constructor of UniformGrowthFunction# class.
+	 * The pointer to the generated object is recorded in the vector of Growth function objects that the simulation object keeps, Simulation#GrowthFunctions.
+	 */
 	GrowthFunctionBase* GSBp;
 	int Id = Sim->GrowthFunctions.size();
 	//type is 2
@@ -566,9 +667,20 @@ bool ModelInputObject::readGrowthType2(ifstream& file){
 }
 
 bool ModelInputObject::readGrowthType3(ifstream& file){
+	/**
+	 * This function reads in the grid based growth options.
+	 * The format with placeholder values:
+	 *   InitialTime(sec): 100
+	 *   FinalTime(sec): 200
+	 *   ApplyToColumnarLayer(bool): 1
+	 *   ApplyToPeripodialMembrane(bool): 0
+	 *   ApplyToBasalECM(bool): 0
+	 *   ApplyToLateralECM(bool): 1
+	 *   Filename(full-path): /path/toWhere/GrowhtIs/myGrowthFile
+	 *   zRange: 0 0.5
+	 */
 	string currHeader;
 	file >> currHeader;
-	cout<<"entered read growth type 3, current header: "<<currHeader<<endl;
 	float initialtime;
 	float finaltime;
 	bool applyToColumnarLayer = false;
@@ -627,6 +739,9 @@ bool ModelInputObject::readGrowthType3(ifstream& file){
 	}
 	file >> currHeader;
 	if(currHeader == "Filename(full-path):"){
+		/**
+		 * The file path should be a readable path from where the executable is lounced. It can handle relative paths, but full paths are encouraged.
+		 */
 		string filepath;
 		file >> filepath;
 		cerr<<" filename is: "<<filepath<<endl;
@@ -634,16 +749,31 @@ bool ModelInputObject::readGrowthType3(ifstream& file){
 		ifstream GrowthRateFile;
 		GrowthRateFile.open(name_growthRates, ifstream::in);
 		if (!(GrowthRateFile.good() && GrowthRateFile.is_open())){
+			/**
+			 * Once the file is attempted to be open, it is checked to make sure it is actually open.
+			 * Most common case of a file error is that the path is wrong.
+			 * If you checked the file name, check it 5 more times before assuming the error is something else.
+			 * No, seriously, it is the file path that is wrong, you have a typo.
+			 */
 			cerr<<"could not open growth rate file file: "<<name_growthRates<<endl;
 			return false;
 		}
 		//adding the indice of the growth matrix
-		cout<<"reading from growth file"<<endl;
+		/**
+		 * The growth grid will contain the size of the grid matrix as the first two
+		 * parameters, first these are read.
+		 */
+		std::cout<<"reading from growth file"<<endl;
 		GrowthRateFile >> gridX;
 		GrowthRateFile >> gridY;
 		float rate;
-        //double timeMultiplier = Sim->dt / 3600.0;
         cout<<"initiating growth and angle matrices"<<endl;
+        /**
+         * Then the stacked arrays are generated for the growth rate and the growth orientation matrices, if I have time, I will convert these to vectors, which are
+         * much more cleaner then new double arrays. Growth matrix has three layers, x & y coordinates on the bounding box and the 3D growth.
+         * Orientation angles have 2 laters, x & y directions only, followed by a single angle value.
+         * All initiated as zeros.
+         */
 		GrowthMatrix = new double**[(const int) gridX];
 		AngleMatrix = new double*[(const int) gridX];
 		for (int i=0; i<gridX; ++i){
@@ -658,16 +788,19 @@ bool ModelInputObject::readGrowthType3(ifstream& file){
 			}
 		}
 		double timeMultiplier = 1.0 / 3600.0; // converting rate per hour to rate per second
+		/**
+		 * Then the growth rates and angles are read in.
+		 */
 		cout<<"reading growth matrix"<<endl;
 		for (int j=gridY-1; j>-1; --j){
 			for (int i=0; i<gridX; ++i){
 				for (int k=0; k<3; ++k){
-					//cout<<"i :"<<i<<" j: "<<j<<" k: "<<k<<" ";
+					//std::cout<<"i :"<<i<<" j: "<<j<<" k: "<<k<<" ";
 					GrowthRateFile >> rate;
-					//cout<<"rate: "<<rate<<" ";
+					//std::cout<<"rate: "<<rate<<" ";
 					//GrowthMatrix[i][j][k] = rate*timeMultiplier;
 					GrowthMatrix[i][j][k] = rate;
-					//cout<<"matrix value: "<<GrowthMatrix[i][j][k]<<endl;
+					//std::cout<<"matrix value: "<<GrowthMatrix[i][j][k]<<endl;
 				}
 			}
 		}
@@ -678,6 +811,10 @@ bool ModelInputObject::readGrowthType3(ifstream& file){
 				AngleMatrix[i][j] = angle; // angles in degrees!
 			}
 		}
+		/**
+		 * Now the reading from the file is over, I will close the file. All necessary content is copied over to the memory.
+		 * I will convert growth rates to be per second for consistency with time step.
+		 */
 		GrowthRateFile.close();
 		for (int i=0; i<gridX; ++i){
 			for (int j=0; j<gridY; ++j){
@@ -691,6 +828,12 @@ bool ModelInputObject::readGrowthType3(ifstream& file){
 		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: Filename(full-path):" <<endl;
 		return false;
 	}
+	/**
+	 * The normalised z range of a grid based growth function defined to which height of the tissue the growth function should be applied in.
+	 * Note that this is on top of the booleans specifying which components of the tissue the growth function will be applied to.
+	 * The z starts from the basal surface of columnar (z=0 is basal columnar surface) and z=1.0 is either the apical surface of the columnar layer
+	 * or the basal surface of the peripodial layer (if there is one).
+	 */
 	double zMin, zMax;
 	file >> currHeader;
 	if(currHeader == "zRange:"){
@@ -701,6 +844,10 @@ bool ModelInputObject::readGrowthType3(ifstream& file){
 		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: zRange:" <<endl;
 		return false;
 	}
+	/**
+	 * Once all input parameters are gathered, a new growth function object is initiated with the constructor of UniformGrowthFunction# class.
+	 * The pointer to the generated object is recorded in the vector of Growth function objects that the simulation object keeps, Simulation#GrowthFunctions.
+	 */
 	GrowthFunctionBase* GSBp;
 	int Id = Sim->GrowthFunctions.size();
 	//type is 3
@@ -713,6 +860,10 @@ bool ModelInputObject::readGrowthType3(ifstream& file){
 }
 
 bool ModelInputObject::readMeshParameters(ifstream& file){
+	/**
+	 * This function reads in the mesh parameters, first by obtaining the type of the mesh, and then
+	 * calling the specialised mesh reading functions.
+	 */
 	string currHeader;
 	file >> currHeader;
 	if(currHeader == "MeshInputMode(int-seeDocumentation):"){
@@ -723,18 +874,30 @@ bool ModelInputObject::readMeshParameters(ifstream& file){
 		return false;
 	}
 	if ( Sim->MeshType == 2 ){
+		/**
+		 * If the mesh type is 2, it will be writing a simple diamond shaped mesh. This was used only in test scenarios.
+		 */
 		bool Success  = readMeshType2(file);
 		if (!Success){
 			return false;
 		}
 	}
 	else if ( Sim->MeshType == 4){
+		/**
+		 * If the mesh type is 4, it will read in the mesh from an input file. This is the main path of
+		 * doing things. The specialised function for reading the input mesh file is ModelInputObject#readMeshType4
+		 */
 		bool Success  = readMeshType4(file);
 		if (!Success){
 			return false;
 		}
 	}
 	file >> currHeader;
+	/**
+	 * Once the mesh input is specified, the function reads in the symmetricity options Simulation#symmetricX and Simulation#symmetricY.
+	 * If the mesh is symmetric in a specified axis, the code will identify the nodes facing that surface, and fix their position on that given axis.
+	 * The selection is relatively crude, and depends on absolute positions wrt to the origin.
+	 */
 	if(currHeader == "symmetricInX(bool):"){
 		file >> Sim->symmetricX;
 	}
@@ -754,6 +917,20 @@ bool ModelInputObject::readMeshParameters(ifstream& file){
 }
 
 bool ModelInputObject::readExternalViscosityParameters(ifstream& file){
+	/**
+	 * This function reads in the external viscosity parameters, and the form is:
+	 * ExternalViscositySetup:
+  	 *   ExtendToWholeTissue: 0
+  	 *   DiscProperApicalExternalViscosity: 16000.0
+  	 *   DiscProperBasalExternalViscosity: 10.0
+  	 *   PeripodialMembraneApicalExternalViscosity: 0.0
+  	 *   PeripodialMembraneBasalExternalViscosity: 0.0
+  	 *   LinkerZoneApicalExternalViscosity: 0.0
+  	 *   LinkerZoneBasalExternalViscosity: 0.0
+	 *
+	 * The identifier line was read to reach this function. The parameter ExtendToWholeTissue will set Simulation#extendExternalViscosityToInnerTissue.
+	 * The external viscosity is applied wrt to the movement velocity of the node and its exposed surface.
+	 */
 	string currHeader;
 	file >> currHeader;
 	if(currHeader == "ExtendToWholeTissue:"){
@@ -763,6 +940,11 @@ bool ModelInputObject::readExternalViscosityParameters(ifstream& file){
 		cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: DiscProperApicalExternalViscosity:" <<endl;
 		return false;
 	}
+	/**
+	 * The next set of parameters will define the disc proper and peripodial external viscosities. The
+	 * linker zone is a specific tissue type that is used when the peripodial and columnar layers are
+	 * linked with an explicit layer of mesh elements.
+	 */
 	file >> currHeader;
 	if(currHeader == "DiscProperApicalExternalViscosity:"){
 		file >>Sim->externalViscosityDPApical;
@@ -819,6 +1001,29 @@ void ModelInputObject::printErrorMessage(string currentInput, string sourceFucti
 }
 
 bool ModelInputObject::readNodeBindingParameters(ifstream& file){
+	/**
+	 * This function gives the option to bind the degrees of freedom of nodes.
+	 * The sample would be:
+	 *
+	 * NodeBindingOptions:
+	 *  bindCircumferenceXYToBasal(bool): 1
+  	 *  bindEllipses(bool,nFunctions): 1 2
+	 *   bindEllipseBases(bool-x,y,z,nEllipses,ellipseIds): 1 1 0 2 0 1
+	 *   bindEllipseBases(bool-x,y,z,nEllipses,ellipseIds): 0 0 1 3 0 1 2
+	 * The first boolean binds the circumference of the tissue such that the x&y coordinates of
+	 * each column of nodes are bound together, and the circumference cannot bend.
+	 * The second boolean gives the option to bind the degrees of freedoms of specified ellipse band
+	 * Ids. For ellipse bands, the binding is only at the basal surface.
+	 * To help visualise the working of the code, this was initially coded to mimic the attachemt of
+	 * the tisue basal surface to the underlying trachea.
+	 * The ellipse bands can be explicitly specified in the input, or selected to be emergent with
+	 * fold initiation, through the function ModelInputObject#readMarkerEllipseBandOptions.
+	 *
+	 * Following options provide the selected number of ellipse binding options,
+	 * specified to be 2 in the above example (bindEllipses(bool,nFunctions): 1 [2]).
+	 * Each function specified the axes to be bound, number of ellipse band ids that are to be bound, and the ids themselves.
+	 * such that the second function specifies only the binding of the z degrees of freedom for 3 specified bands: 0 1 and 2.
+	 */
 	string currHeader;
 	file >> currHeader;
 	if(currHeader == "bindCircumferenceXYToBasal(bool):"){
@@ -868,8 +1073,35 @@ bool ModelInputObject::readNodeBindingParameters(ifstream& file){
 }
 
 
-
 bool ModelInputObject::readNodeFixingParameters(ifstream& file){
+	/**
+	 * This function sets fixing of the nodes. There are two options to limit the
+	 * degrees of freedom of specified nodes. A high external viscosity can be applied for
+	 * fixing the node, the value specified for x, y & z axes in "FixingViscosity(x,y,z):".
+	 * For each of the specified node groups, if the Fix(...)ExtVisc(bool) term is true, the
+	 * given external viscosity will be applied. If the boolean is false, the node will be rigidly fixed in position.
+	 * Each specified node group is given the option to fix each x,y & z direction independently.
+	 * Apical surface will encompass all apical surface including the peripodial if available.
+	 * Same with Basal surface. The circumference refers to all the nodes at the boundary of the tissue, excluding
+	 * those at symmetricity boundaries (in effect, these are not circumferential).
+	 *
+	 * Yhe NotumFix option fixes the basal surface only, and the extent of notum is specified in the xFracMin,xFracMax
+	 * options, fraction covering the normalised tissue length, notup tip being 0 and pouch tip being 1, at
+	 * the DV midline (y-symmetricity border).
+	 *
+	 * The example would have the syntax:
+	 *
+	 * NodeFixingOptions:
+	 * FixingViscosity(x,y,z): 0   0  32000
+  	 * ApicSurfaceFix(bool-x,y,z):   0 0 0   FixApicalExtVisc(bool): 0
+  	 * BasalSurfaceFix(bool-x,y,z):  0 0 0   FixBasalExtVisc(bool):  0
+  	 * CircumferenceFix(bool-x,y,z): 0 0 0   FixCircWithExtVisc(bool): 0
+  	 * ApicCircumFix(bool-x,y,z):    0 0 0   FixApicCircWithExtVisc(bool):  0
+  	 * BasalCircumFix(bool-x,y,z):   0 0 0   FixBasalCircWithExtVisc(bool): 0
+  	 * LinkerApicCircumFix(bool-x,y,z):  0 0 0  FixLinkerApicCircWithExtVisc(bool):  0
+  	 * LinkerBasalCircumFix(bool-x,y,z): 0 0 0  FixLinkerBasalCircWithExtVisc(bool): 0
+  	 * NotumFix(bool-x,y,z,double-xFracMin,xFracMax): 0 0 0 -0.1 0.5  FixNotumExtVisc(bool): 0
+	 */
 	string currHeader;
 	file >> currHeader;
 	if(currHeader == "FixingViscosity(x,y,z):"){
@@ -1031,6 +1263,26 @@ bool ModelInputObject::readNodeFixingParameters(ifstream& file){
 }
 
 bool ModelInputObject::readManupulationParamters(ifstream& file){
+	/**
+	 * This option group allows for an ensemble of additional
+	 * manipulations on the simulation options, from stiffness perturbations to random forces.
+	 * I find it highly unlikely you will use these, probably will remove them soon.
+	 *
+	 * Manipulations:
+	 * AddCurvature(bool): 1
+	 * CurvatureDepthAtCentre(double-microns): 2.0
+	 * AddSoftPeriphery(bool): 0
+	 * SoftPeripheryRange(double-microns): 30.0
+	 * SoftnessFraction(double-fraction): 0.1
+	 * ApplyToApicalSurface(bool): 1
+	 * ApplyToBasalSurface(bool): 0
+	 * ApplyToColumnarLayer(bool): 1
+	 * ApplyToPeripodialMembrane(bool): 1
+	 * AddRandomForce(bool): 0
+	 * RandomForceMean(double): 0.0
+	 * RandomForceVar(double): 1E-5
+	 *
+	 */
 	string currHeader;
 	file >> currHeader;
 	if(currHeader == "AddCurvature(bool):"){
@@ -1131,6 +1383,12 @@ bool ModelInputObject::readManupulationParamters(ifstream& file){
 }
 
 bool ModelInputObject::readMeshType4(ifstream& file){
+	/**
+	 * The specific function reading the input mesh file name to Simulation#inputMeshFileName
+	 * so that the mesh can be read in.
+	 *
+	 * MeshFile(full-path): <path>
+	 */
 	string currHeader;
 	file >> currHeader;
 	if(currHeader == "MeshFile(full-path):"){
@@ -1145,6 +1403,16 @@ bool ModelInputObject::readMeshType4(ifstream& file){
 
 
 bool ModelInputObject::readMeshType2(ifstream& file){
+	/**
+	 * The options for letting the model write a simple single layered diamond shaped mesh are read in
+	 * this function. The user identifies the rows and columns of the deisred mesh, side length of each equilateral triangle
+	 * forming the prisms in micrometers and the z height of the prism in micrometers.
+	 *
+	 * MeshRow(int): 6
+	 * MeshColumn(int): 4
+	 * SideLength: 1
+	 * zHeight: 2
+	 */
 	string currHeader;
 	file >> currHeader;
 	if(currHeader == "MeshRow(int):"){
@@ -1193,6 +1461,22 @@ bool ModelInputObject::readMeshType2(ifstream& file){
 }
 
 bool ModelInputObject::readPeripodialMembraneParameters(ifstream& file){
+	/**
+	 * This section gives the used the option to add a peripodial membrane to the tissue.
+	 * The thickness will define the z height of the peripodial layer, and the lateral thickness will
+	 * define the thickness of the laterall element layer to be used in peripodial membrane definition.
+	 * The lumen height scale will give the empty space height at the centre of the tissue. All length scales
+	 * are fractions with respect to the columnar tissue height.
+	 *
+	 * PeripodialMembraneParameters:
+  	 *   AddPeripodialMembrane: 0
+  	 *   PeripodialMembraneThickness(fractionOfTissueHeight): 0.45
+  	 *   PeripodialMembraneLateralThickness(fractionOfTissueHeight): 0.5
+  	 *   LumenHeightScale(fractionOfTissueHeight): 0.25
+  	 *   PeripodialMembraneYoungsModulus: 1000.0
+  	 *   PeripodialMembraneApicalViscosity: 0.0
+  	 *   PeripodialMembraneBasalViscosity: 0.0
+	 */
 	string currHeader;
 	file >> currHeader;
 	if(currHeader == "AddPeripodialMembrane:"){
@@ -1271,6 +1555,9 @@ bool ModelInputObject::readPeripodialMembraneParameters(ifstream& file){
 }
 
 bool ModelInputObject::readLinkerZoneParameters(ifstream& file){
+	/**
+	 * Most likely will be deleted.
+	 */
 	string currHeader;
 	file >> currHeader;
 	if(currHeader == "BaseOnPeripodialness(bool):"){
@@ -1324,6 +1611,15 @@ bool ModelInputObject::readLinkerZoneParameters(ifstream& file){
 }
 
 bool ModelInputObject::readTimeParameters(ifstream& file){
+	/**
+	 * The time scale parameters of the simulation, giving the
+	 * time step and total simulation lenght in seconds.
+	 *
+	 *  TimeParameters:
+  	 *   TimeStep(sec): 120
+  	 *   SimulationLength(sec):  147600
+	 *
+	 */
 	string currHeader;
 
 	file >> currHeader;
@@ -1350,7 +1646,20 @@ bool ModelInputObject::readTimeParameters(ifstream& file){
 }
 
 bool ModelInputObject::readPysicalProperties(ifstream& file){
-	//cout<<"reading physical parameters"<<endl;
+	/**
+	 * The physical properties of the columnar layer are set in this input parameter section.
+	 * The Young modulus can be specified independently for apical and basal layers as well as the
+	 * remaining tissue in between. There is an option to add random noise to tissue stiffness.
+	 * The poisson ratio is uniform for the entire tissue, except for the ECM elements, where it is set to be
+	 * 0 (ECM is modelled as compressible - with multiple new safety checks implemented since the addition of this rule, it may be worth to try if it can be relaxed).
+	 * The internal viscosity can be set for apical and basal layers independently, the mid line will interpolate.
+	 *
+	 * PysicalProperties:
+	 *   YoungsModulusApical: 1000.0   YoungsModulusBasal: 1000.0      YoungsModulusMid: 1000.0        Noise(%-int): 0
+	 *   PoissonsRatio: 0.3            Noise(%-int): 0
+	 *   ApicalViscosity: 0.0  Noise(%-int): 0
+	 *   BasalViscosity: 0.0
+	 */
 	string currHeader;
 
 	file >> currHeader;
@@ -1440,6 +1749,20 @@ bool ModelInputObject::readPysicalProperties(ifstream& file){
 }
 
 bool ModelInputObject::readSaveOptions(ifstream& file){
+	/**
+	 * The save options are specified below. The first two booleans declare the choice to save the
+	 * images and data. the second two options identify the frequency (in sec) of saving independently for both.
+	 * Since there is a display only version of the model, in most large scale simulations, the options would
+	 * be set as below, with the data saved during simulaton and images not saved. For the iterface-free version of
+	 * the code, the option to save images will have no functionality.
+	 *
+	 * SaveOptions:
+  	 *   SaveImages(bool): 0
+  	 *   SaveData(bool):   1
+  	 *   ImageSaveInterval(sec): 1
+  	 *   DataSaveInterval(sec):  1800
+	 *
+	 */
 	//cout<<"reading save options"<<endl;
 	string currHeader;
 	file >> currHeader;
@@ -1497,6 +1820,9 @@ bool ModelInputObject::readSaveOptions(ifstream& file){
 }
 
 bool ModelInputObject::readShapeChangeOptions(ifstream& file){
+	/**
+	 * Will change soon.
+	 */
 	string currHeader;
 	file >> currHeader;
 	int n;
@@ -1549,6 +1875,21 @@ bool ModelInputObject::readShapeChangeOptions(ifstream& file){
 }
 
 bool ModelInputObject::readPlasticDeformationOptions(ifstream& file){
+	/**
+	 *
+	 * The plastic defprmation - also termed remodelling - allows for the relaxation of
+	 * element elastic deformation to permenant plastic deformation, with the selected
+	 * rate. There is a boolean to allow for volume conserved or non-conserved plastic deformation.
+	 *
+	 * ECM elements always have remodelling, and the remodelling rate is specified with the half-life.
+	 * These are set under ModelInputObject#readExplicitECMOption
+	 *
+	 * PlasticDeformationOptions:
+	 *   ThereIsPlasticDeformation(bool): 0
+	 *   VolumeConserved(bool): 1
+	 *   DeformationRate(FractionPerHour): 0.1
+	 *
+	 */
 	string currHeader;
 	file >> currHeader;
 	if(currHeader == "ThereIsPlasticDeformation(bool):"){
@@ -1607,6 +1948,10 @@ bool ModelInputObject::readPlasticDeformationOptions(ifstream& file){
 }
 
 bool ModelInputObject::readMyosinOptions(ifstream& file){
+	/**
+	 * This is not working properly so should not be included.
+	 * We have oscillatoy behaviour.
+	 */
 	string currHeader;
 	//regardless of how many myosin functions I have, I need the diffusion constant and the force per myosin molecule
 	file >> currHeader;
@@ -1663,6 +2008,10 @@ bool ModelInputObject::readMyosinOptions(ifstream& file){
 
 
 bool ModelInputObject::readGridBasedMyosinFunction(ifstream& file){
+	/**
+	 * Myosin functionality is not working properly so should not be included.
+	 * We have oscillatoy behaviour.
+	 */
 	string currHeader;
 	file >> currHeader;
 	//cout<<"entered read myosin, current header: "<<currHeader<<endl;
@@ -1912,6 +2261,9 @@ bool ModelInputObject::readGridBasedMyosinFunction(ifstream& file){
 }
 
 bool ModelInputObject::readShapeChangeType1(ifstream& file){
+	/**
+	 * This will change.
+	 */
 	string currHeader;
 	file >> currHeader;
 	float initialtime;
@@ -1972,6 +2324,9 @@ bool ModelInputObject::readShapeChangeType1(ifstream& file){
 
 
 bool ModelInputObject::readShapeChangeType2(ifstream& file){
+	/**
+	 * This will change.
+	 */
 	string currHeader;
 	file >> currHeader;
 	float initialtime;
@@ -2077,11 +2432,32 @@ bool ModelInputObject::readShapeChangeType2(ifstream& file){
 	Sim->ShapeChangeFunctions.push_back(GSBp);
 	return true;
 }
-/*bool ModelInputObject::readShapeChangeType2(ifstream& file){
-	return true;
-}*/
+
 
 bool ModelInputObject::readStretcherSetup(ifstream& file){
+	/**
+	 * The options to attach a stretcher to the tissue are included here.
+	 *
+	 * The first boolean states if the stretcher will be attached or not, and will set
+	 * Simulation#stretcherAttached boolean. The second boolean states the direction of
+	 * clamping and sets Simulation#DVClamp. If the value is 1, the tissue is stretched
+	 * from the dorsal and ventral tips. If false, the stretch is in the anterior-posterior
+	 * direction. The stretching active during the time frame set by InitialTime(sec) and
+	 * FinalTime(sec), setting the parameters Simulation#StretcInitialTime and
+	 * Simulation#StretchEndTime respectively. The maximum amount of strain in set by  MaxStrain
+	 * setting the parameter Simulation#StretchStrain. The maximum is reached linearly during
+	 * the stretching period. The scale of clamping is given by the DVClampMin and DVClampMax
+	 * parameters (setting Simulation#StretchMin and Simulation#StretchMax, the value being the relative size in the bounding box. In case of AP clamping,
+	 * the same scale applies normalised to the AP bounding box length.
+	 *
+	 * StretcherAttached(bool): 1
+	 *   ClampedOnDV(bool): 0
+	 *   InitialTime(sec): 100
+	 *   FinalTime(sec): 200
+	 *   DVClampMin: 0.3
+	 *   DVClampMax: 0.7
+	 *   MaxStrain: 1.5
+	 */
 	string currHeader;
 	file >> currHeader;
 	if(currHeader == "StretcherAttached(bool):"){
@@ -2158,15 +2534,21 @@ bool ModelInputObject::readStretcherSetup(ifstream& file){
 
 
 bool ModelInputObject::readMarkerEllipseBandOptions(ifstream& file){
-/*
-The parameter set that would perfectly cover the low growth zones of the initial 
-growth rate are as follows:
-Marker_Ellipses:
-  numberOfMarkerEllipses(int): 2
-  MarkerEllipseXCenters(fractionOfTissueSize): 0.85 0.75
-  MarkerEllipseBandR1Ranges(fractionOfTissueSize-x1Low-x1High): 0.22  0.25 0.2  0.25
-  MarkerEllipseBandR2Ranges(fractionOfTissueSize-y2Low-y2High): 1.2   1.3   1.2  1.3
-*/
+	/**
+	 * There is a way to draw patterns on the mesh surface, using ellipse bands.
+	 * You first set ellipse band number, then give the centres of the ellipses in relative x,
+	 * then the inner radia, and outer radia. Positive radia will draw the bands towards the left hand side
+	 * of the tissue, whereas negative radia values will draw towards the right-hand-side. The radia are all in relative tissue
+	 * length and width, and can be larger than 1 to achieve flat bands.
+
+	 * The parameter set that would perfectly cover the low growth zones of the initial
+	 * growth rate are as follows:
+	 * Marker_Ellipses:
+	 *   numberOfMarkerEllipses(int): 2
+	 *   MarkerEllipseXCenters(fractionOfTissueSize): 0.85 0.75
+	 *   MarkerEllipseBandR1Ranges(fractionOfTissueSize-x1Low-x1High): 0.22  0.25 0.2  0.25
+	 *   MarkerEllipseBandR2Ranges(fractionOfTissueSize-y2Low-y2High): 1.2   1.3   1.2  1.3
+    */
 	string currHeader;
 	file >> currHeader;
 	if(currHeader == "numberOfMarkerEllipses(int):"){
@@ -2221,6 +2603,10 @@ Marker_Ellipses:
 }
 
 bool ModelInputObject::readApicoBasalVolumeRedistribution(ifstream& file){
+	/**
+	 * will change
+	 *
+	 */
 	string currHeader;
 	file >> currHeader;
 	if(currHeader == "NumberOfVolumeRedistributionFunctions(int):"){
@@ -2288,6 +2674,9 @@ bool ModelInputObject::readApicoBasalVolumeRedistribution(ifstream& file){
 }
 
 bool ModelInputObject::readStiffnessPerturbation(ifstream& file){
+	/**
+	 * Will change
+	 */
 	string currHeader;
 	file >> currHeader;
 	if(currHeader == "ThereIsStiffnessPerturbation(bool):"){
@@ -2408,6 +2797,9 @@ bool ModelInputObject::readStiffnessPerturbation(ifstream& file){
 }
 
 bool ModelInputObject::readECMPerturbation(ifstream& file){
+	/**
+	 * Will change
+	 */
 	string currHeader;
 	file >> currHeader;
 	if(currHeader == "ThereIsECMStiffnessChange(bool):"){
@@ -2574,6 +2966,9 @@ bool ModelInputObject::readECMPerturbation(ifstream& file){
 }
 
 bool ModelInputObject::readCellMigrationOptions(ifstream& file){
+	/**
+	 * Will delete
+	 */
 	string currHeader;
 	file >> currHeader;
 	if(currHeader == "ThereIsCellMigration(bool):"){
@@ -2588,6 +2983,11 @@ bool ModelInputObject::readCellMigrationOptions(ifstream& file){
 
 
 bool ModelInputObject::readExplicitActinOptions(ifstream& file){
+	/**
+	 * The setting for
+	 *
+	 * ThereIsExplicitActin(bool): 1
+	 */
 	string currHeader;
 	file >> currHeader;
 	if(currHeader == "ThereIsExplicitActin(bool):"){

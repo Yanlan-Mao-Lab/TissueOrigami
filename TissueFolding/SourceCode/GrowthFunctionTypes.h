@@ -47,8 +47,9 @@ public:
 
 	void getGrowthRate(double* maxValues){
 		/**
+		 *
 		 *  This function will write the UniformGrowthFunction#GrowthRate of the current growth function to the input double array
-		 *  pointer. The double array pointer should be set to point at a double array of size 3 (or higher) before calling the fucntion.
+		 *  pointer. The double array pointer should be set to point at a double array of size 3 (or higher) before calling the function.
 		 */
 		maxValues[0] = GrowthRate[0];
 		maxValues[1] = GrowthRate[1];
@@ -104,18 +105,18 @@ public:
 	int ShapeChangeType;
 	UniformShapeChangeFunction(int id, int type, float initTime, float endTime, bool applyToColumnarLayer, bool applyToPeripodialMembrane, bool applyToBasalECM, bool applyToLateralECM, int ShapeChangeType, double ShapeChangeRate) : UniformGrowthFunction( id,  type,  initTime,  endTime,  applyToColumnarLayer,  applyToPeripodialMembrane, applyToBasalECM,  applyToLateralECM, 0.0,  0.0,  0.0, 0.0){
 		/**
-		 *  Forst six parameters will be directed to the parent constructor, UniformGrowthFunction#UniformGrowthFunction.
+		 *  First six parameters will be directed to the parent constructor, UniformGrowthFunction#UniformGrowthFunction.
 		 *  The growth rates in Dv, AB and AP will be fed as 0 to the parent constructor. \n
 		 *  The parameter ShapeChangeType will define the type of the shape change as 1: ColumnarToSquamous change, 2: Apical shrinkage, and 2: basal shrinkage.
-		 *  The paremeter ShapeChangeRate will define the rate of defined shape change. The constructor will calculate the corrected rate, as to conserve the volume
-		 *  while shape change is occuring.
+		 *  The parameter ShapeChangeRate will define the rate of defined shape change. The constructor will calculate the corrected rate, as to conserve the volume
+		 *  while shape change occurs.
 		 */
 		this->ShapeChangeType = ShapeChangeType;
 		if (ShapeChangeType == 1){
-			//Thisis change form columnat to cuboidal
+			//This is change form columnar to cuboidal
 			GrowthRate[0] =   0.5 * ShapeChangeRate;  //xx
 			GrowthRate[1] =   0.5 * ShapeChangeRate;  //yy
-			GrowthRate[2] =  -1.0 *ShapeChangeRate;		  //zz
+			GrowthRate[2] =  -1.0 *ShapeChangeRate;	  //zz
 		}
 	}///< The constructor of UniformShapeChangeFunction
 
@@ -151,12 +152,12 @@ class RingGrowthFunction : public GrowthFunctionBase{
 private:
 
 public:
-	double centre[2];		///< The double array of 2, giving the centre of the ring in micro-meters, format [x, y].
-	double innerRadius;		///< The inner radius of the ring, inner boundary of the growth region in micro-meters. The growth will be zero at and inside the inner radius. This value can be set to zero to have circular growth.
-	double outerRadius; 	///< The outer radius of the ring, outer boundary of the growth region in micro-meters. The growth will be at the maximum value set by RingGrowthFunction#GrowthRate at the outer radius.
-	double GrowthRate[3]; 	///< The maximum growth rate at the RingGrowthFunction#outerRadius, in (1/sec), format: [ DV axis (x), AP axis (y), and AB axis (z)]
-	gsl_matrix* ShearAngleRotationMatrix; ///< The rotation  matrix for the orientation of the growth on x-y plane. This matrix is constructed through  UniformGrowthFunction#angle
-	double angle;	///< The rotation angle for the orientation of the growth on x-y plane.
+	double centre[2];						///< The double array of 2, giving the centre of the ring in micro-meters, format [x, y].
+	double innerRadius;						///< The inner radius of the ring, inner boundary of the growth region in micro-meters. The growth will be zero at and inside the inner radius. This value can be set to zero to have circular growth.
+	double outerRadius; 					///< The outer radius of the ring, outer boundary of the growth region in micro-meters. The growth will be at the maximum value set by RingGrowthFunction#GrowthRate at the outer radius.
+	double GrowthRate[3]; 					///< The maximum growth rate at the RingGrowthFunction#outerRadius, in (1/sec), format: [ DV axis (x), AP axis (y), and AB axis (z)]
+	gsl_matrix* ShearAngleRotationMatrix; 	///< The rotation  matrix for the orientation of the growth on x-y plane. This matrix is constructed through  UniformGrowthFunction#angle
+	double angle;							///< The rotation angle for the orientation of the growth on x-y plane.
 	RingGrowthFunction(int id, int type, float initTime, float endTime, bool applyToColumnarLayer, bool applyToPeripodialMembrane, bool applyToBasalECM, bool applyToLateralECM, double Cx, double Cy, double innerR, double outerR, double DVGrowth, double APGrowth, double ABGrowth, double angle) : GrowthFunctionBase(id, type, initTime, endTime, applyToColumnarLayer, applyToPeripodialMembrane, applyToBasalECM, applyToLateralECM){
 		/**
 		 *  The first six parameters will be directed to the parent constructor, GrowthFunctionBase#GrowthFunctionBase. \n
@@ -271,11 +272,16 @@ public:
 	int nGridY;	///< The number of grid points that discretise the tissue in y
 	double ***GrowthMatrix;	///<The matrix of growth rates in (1/sec). It is a matrix of double triplets for growth rate at each grid point. The dimensions of the matrix are equal to (GridBasedGrowthFunction::nGridX, GridBasedGrowthFunction::nGridY), and set in constructor of the GridBasedGrowthFunction. The triplets store the growth rate in [ DV axis (x), AP axis (y), and AB axis (z)].
 	double **xyShearAngleMatrix; ///<The matrix of xy shear rate (rad/sec). It is a matrix of doubles at each grid point. he dimensions of the matrix are equal to (GridBasedGrowthFunction::nGridX, GridBasedGrowthFunction::nGridY), and set in constructor of the GridBasedGrowthFunction.
+	//xyShearRotationsMatrix : [grid_i] [grid_j][orientation rotation mat ]
 	gsl_matrix*** xyShearRotationsMatrix;
+	//aspectRatioOverThresoldMatrix : [grid_i] [grid_j][AR over threshold bool]
 	bool** aspectRatioOverThresoldMatrix;
 
+	//[grid_i] [grid_j][4-corners][x,y,z]
 	double****	compatibleGrowths;
+	//[grid_i] [grid_j][4-corners][(bool)]
 	double***	compatibleAngles;
+	//[grid_i] [grid_j][4-corners][(double) angles ]
 	bool***		compatibleAngleEliminated;
 
 	GridBasedGrowthFunction(int id, int type, float initTime, float endTime, bool applyToColumnarLayer, bool applyToPeripodialMembrane, bool applyToBasalECM, bool applyToLateralECM, int nX, int nY, double*** GrowthMat, double** AngleMat) : GrowthFunctionBase(id, type, initTime, endTime, applyToColumnarLayer, applyToPeripodialMembrane, applyToBasalECM,  applyToLateralECM){
@@ -296,7 +302,7 @@ public:
 		compatibleAngles 	 		= new double**[(const int) nGridX];
 		compatibleGrowths  			= new double***[(const int) nGridX];
 
-
+		//GrowthMatrix : [grid_i] [grid_j][x,y,z]
 		for (int i=0; i<nGridX; ++i){
 			GrowthMatrix[i] = new double*[(const int) nGridY];
 			xyShearAngleMatrix[i] = new double[(const int) nGridY];
@@ -309,22 +315,13 @@ public:
 				xyShearAngleMatrix[i][j] = AngleMat[i][j]*M_PI/180.0; //converting to radians
 				aspectRatioOverThresoldMatrix[i][j] = true; //setting all aspect ratios to be over threshold
 				for (int k=0; k<3; ++k){
-					//double scaleGrowth[3] = {1.427,2.806,1.0};
 					double scaleGrowth[3] = {1.0,1.0,1.0};
-					//the experimental size at 72 hours should be 210 - 130.
-					//The model results in a size of 160 - 70
-					//The experimental tissue size at 48 hours is 84 - 46
-					//I will scale the rates to give the experimental size:
-					//rx' / rx = ln(210/84)/ln(160/84) = 1.427
-					//ry' / ry = ln(130/46)/ln(70/46) = 2.806
 					GrowthMatrix[i][j][k] = scaleGrowth[k]*GrowthMat[i][j][k];
 				}
-				//cout<<"set the growth matrix for: "<<i<<" "<<j<<endl;
-				compatibleAngleEliminated[i][j] = new bool[4];	//booleans stating if the angle will be added in compatible averaging in for 4 corners
+				compatibleAngleEliminated[i][j] = new bool[4];			//booleans stating if the angle will be added in compatible averaging in for 4 corners
 				compatibleAngles[i][j] 			= new double[4];		//angles compatible for averaging in for 4 corners
 				compatibleGrowths[i][j]			= new double*[4];		//growth rates [rx,ry,rz] compatible for averaging in for 4 corners
 				for (int k=0; k<4; ++k){
-					//cout<<"set default values of  compatibleAngleEliminated for: "<<i<<" "<<j<<" "<<k<<endl;
 					compatibleAngleEliminated[i][j][k] = false;	//by default all angles are added
 					compatibleAngles[i][j][k] = 0.0;			//by default all angles are zero
 					compatibleGrowths[i][j][k]= new double[3];	//growth rates [rx,ry,rz] at index point [i][j], for corner [k]
@@ -345,7 +342,6 @@ public:
 				}
 				if(AR < aspectRatioThreshold){
 					aspectRatioOverThresoldMatrix[i][j] = false;
-					//cout<<" [i][j]: ["<<i<<"]["<<j<<"], aspect ratio too small: "<<AR<<endl;
 				}
 			}
 		}
@@ -358,7 +354,6 @@ public:
 				xyShearRotationsMatrix[i][j] = gsl_matrix_calloc(3,3);
 				double c = cos(xyShearAngleMatrix[i][j]);
 				double s = sin(xyShearAngleMatrix[i][j]);
-				//cout<<"xyShearRotationsMatrix ["<<i<<"]["<<j<<"], angle: "<<xyShearAngleMatrix[i][j]<<" cos: "<<c<<" sin "<<s<<endl;
 				gsl_matrix_set(xyShearRotationsMatrix[i][j],0,0,  c );
 				gsl_matrix_set(xyShearRotationsMatrix[i][j],0,1, -1.0*s);
 				gsl_matrix_set(xyShearRotationsMatrix[i][j],0,2,  0.0);

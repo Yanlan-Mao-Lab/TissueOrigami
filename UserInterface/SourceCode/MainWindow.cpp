@@ -479,7 +479,6 @@ void MainWindow::setDisplayPreferences(QGridLayout *ProjectDisplayOptionsGrid){
 
 
 void  MainWindow::xClipChange(int k){
-
 	MainGLWidget->xClip = Sim01->boundingBox[0][0] +( ( Sim01->boundingBox[1][0] - Sim01->boundingBox[0][0] ) * (double) (k+10)/100.0 );
 	MainGLWidget->updateClipping();
 	//cout<<"x:" <<k<<" "<<MainGLWidget->xClip<<endl;
@@ -492,7 +491,8 @@ void  MainWindow::yClipChange(int k){
 }
 
 void  MainWindow::zClipChange(int k){
-	MainGLWidget->zClip = Sim01->boundingBox[0][2] +( ( Sim01->boundingBox[1][2] - Sim01->boundingBox[0][2] ) * (double) (k+10)/100.0 );
+	//MainGLWidget->zClip = Sim01->boundingBox[0][2] +( ( Sim01->boundingBox[1][2] - Sim01->boundingBox[0][2] ) * (double) (k+10)/100.0 );
+	MainGLWidget->zClip = Sim01->boundingBox[0][0] +( ( Sim01->boundingBox[1][0] - Sim01->boundingBox[0][0] ) * (double) (k+10)/100.0 );
 	MainGLWidget->updateClipping();
 	//cout<<"z:" <<k<<" "<<MainGLWidget->zClip<<endl;
 }
@@ -852,18 +852,18 @@ void MainWindow::timerSimulationStep(){
     //cout<<"Called the function via timer"<<endl;
 
 	bool 	automatedSave =false ;
-	int		viewSelection = 1; //0: top, 1: cross, 2: perspective 3: side.
+	int		viewSelection = 4; //0: top, 1: cross, 2: perspective 3: side, 4: clone cross-section
 	int 	displayAutomatedStrain = -1; //-1 no strain display, 1 display DV strains, 2 AP strains;
 	bool 	analyseResults = true;
 	bool 	slowstepsOnDisplay = true;
 	bool 	slowstepsOnRun = false;
-	int 	slowWaitTime = 1;
-
+	int 	slowWaitTime = 0;
 	//display DV strains
 	if (displayAutomatedStrain>-1){
 		MainGLWidget->DisplayStrains = true;
 		MainGLWidget->StrainToDisplay =displayAutomatedStrain;
 	}
+	float zClipValueForCloneCross =99;
 	if (Sim01->DisplaySave){
 		if (Sim01->timestep == 0){
 			if( automatedSave ){
@@ -885,11 +885,36 @@ void MainWindow::timerSimulationStep(){
 					MainGLWidget->updateToSideView(); //display tissue from the tilted view
 					MainGLWidget->drawSymmetricity = true; //show symmetric
 				}
+				else if (viewSelection == 4){
+					//MainGLWidget->updateToCloneCrossView();
+					MainGLWidget->updateToTopView();
+					MainGLWidget->drawSymmetricity = false;
+
+					double *c = Sim01->Elements[14415]->getCentre();
+					zClipValueForCloneCross = c[0]+c[1]+12.5;
+					MainGLWidget->zClip=zClipValueForCloneCross;
+					xClipChange(99);
+					yClipChange(99);
+					MainGLWidget->updateClipping();
+				}
 				//MainGLWidget->drawPeripodialMembrane= false;
 				MainGLWidget->PerspectiveView = false; //switch to orthogoanal view type.
 				Sim01->saveImages = true;
 				Sim01->saveDirectory = Sim01->saveDirectoryToDisplayString;
 			}
+		}
+		if( automatedSave && viewSelection == 4){
+			//
+
+			double *c = Sim01->Elements[14415]->getCentre();
+			zClipValueForCloneCross = c[0]+c[1]+12.5;
+			MainGLWidget->zClip=zClipValueForCloneCross;
+			delete c;
+
+			//
+			xClipChange(99);
+			yClipChange(99);
+			MainGLWidget->updateClipping();
 		}
 		if(!Sim01->reachedEndOfSaveFile){
 			cout<<" updating step"<<endl;
@@ -906,10 +931,6 @@ void MainWindow::timerSimulationStep(){
 					cout<<" calculateContourLineLengthsDV"<<endl;
 					analyser01->calculateContourLineLengthsDV(Sim01->Nodes);
 					analyser01->saveApicalCircumferencePosition(Sim01->currSimTimeSec,Sim01->Nodes);
-					//cout<<" findApicalKinkPointsDV"<<endl;
-					//analyser01->findApicalKinkPointsDV(Sim01->currSimTimeSec,Sim01->boundingBox[0][0], boundingBoxLength, boundingBoxWidth, Sim01->Nodes);
-					//cout<<" calculateTissueVolumeMap"<<endl;
-					//analyser01->calculateTissueVolumeMap(Sim01->Elements, Sim01->currSimTimeSec,Sim01->boundingBox[0][0],Sim01->boundingBox[0][1],boundingBoxLength,boundingBoxWidth);
 
 					cout<<" finished analysis"<<endl;
 					Sim01->thereIsEmergentEllipseMarking = true;
@@ -976,8 +997,9 @@ void MainWindow::timerSimulationStep(){
             //Sim01->writeMeshRemovingAblatedRegions();
             double durationClock = ( std::clock() - simulationStartClock ) / (double) CLOCKS_PER_SEC;
             double durationTime = std::difftime(std::time(0), simulationStartTime);
-            cout<<"Simulation time: "<<durationTime<<" sec, Simulation clock: "<<durationClock<<" sec"<<endl;
-            //close();
+            //cout<<"Simulation time: "<<durationTime<<" sec, Simulation clock: "<<durationClock<<" sec"<<endl;
+            //cout<<" Final lumen volume: "<<Sim01->tissueLumen->currentIdealVolume<<endl;
+            close();
         }
     }
     MainGLWidget->update();

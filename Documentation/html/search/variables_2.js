@@ -7,6 +7,7 @@ var searchData=
   ['cmyouniformeq',['cMyoUniformEq',['../classShapeBase.html#aa32b4675de014e09732e7ab89719e679',1,'ShapeBase']]],
   ['cmyounipolar',['cMyoUnipolar',['../classShapeBase.html#a2a1e584564ef617fa1d18eb591c84a67',1,'ShapeBase']]],
   ['cmyounipolareq',['cMyoUnipolarEq',['../classShapeBase.html#a59c3af9d1dcfe4749d33ba168c5bda53',1,'ShapeBase']]],
+  ['collapsedwith',['collapsedWith',['../classNode.html#a099baa33319712e8ff03063385f8e095',1,'Node']]],
   ['columnargrowthweight',['columnarGrowthWeight',['../classShapeBase.html#a134d82ba500ef829b6aa3e3a83783c9a',1,'ShapeBase']]],
   ['compartmenttype',['compartmentType',['../classShapeBase.html#a47bfa280bf33fc0557e8d804aab3936c',1,'ShapeBase']]],
   ['connectedelementids',['connectedElementIds',['../classNode.html#a18bae606efb025cc90b4c117776e0bf9',1,'Node']]],

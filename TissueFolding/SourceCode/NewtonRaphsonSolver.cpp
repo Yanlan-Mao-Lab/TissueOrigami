@@ -519,10 +519,10 @@ void NewtonRaphsonSolver::calculateExternalViscousForcesForNR(vector <Node*>& No
 				double surfaceAreaTimesViscosity = Nodes[i]->viscositySurface*Nodes[i]->externalViscosity[j];
 				double displacementValue = gsl_matrix_get(displacementPerDt,3*i+j,0);
 				gsl_matrix_set(gvExternal,3*i+j,0,surfaceAreaTimesViscosity*displacementValue);
-				if (isnan(surfaceAreaTimesViscosity)){
+				if (std::isnan(surfaceAreaTimesViscosity)){
 					cout<<" node: "<<i<<" dimention: "<<j<<" surfaceAreaTimesViscosity is nan: "<<surfaceAreaTimesViscosity<<endl;
 				}
-				if (isnan(displacementValue)){
+				if (std::isnan(displacementValue)){
 					cout<<" node: "<<i<<" dimention: "<<j<<" displacementValue is nan: "<<displacementValue<<endl;
 				}
 			}
@@ -580,7 +580,7 @@ void NewtonRaphsonSolver::addExernalForces(){
 	for (int i=0; i<nDim*nNodes; ++i){
 		gsl_vector_set(gSum,i,gsl_vector_get(gSum,i)+gsl_matrix_get(gExt,i,0));
 		double value = gsl_vector_get(gSum,i);
-		if (isnan(value)){
+		if (std::isnan(value)){
 		      cout<<" gSUM is nan at matrix point: "<<i<<endl;
 		}
 	}

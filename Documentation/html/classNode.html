@@ -117,14 +117,16 @@ $(document).ready(function(){initNavTree('classNode.html','');});
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ac84926c5a9cf2883665f00382781b932"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac84926c5a9cf2883665f00382781b932"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Node</b> (int id, int dim, double *pos, int tissuePos, int <a class="el" href="classNode.html#ae621097f98f1d33d283cf65a0a02d29a">tissueType</a>)</td></tr>
-<tr class="separator:ac84926c5a9cf2883665f00382781b932"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af90d470ff04c571a16cd56a7061100ff"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af90d470ff04c571a16cd56a7061100ff"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Node</b> (int id, int dim, std::array&lt; double, 3 &gt; &amp;pos, int tissuePos, int <a class="el" href="classNode.html#ae621097f98f1d33d283cf65a0a02d29a">tissueType</a>)</td></tr>
+<tr class="separator:af90d470ff04c571a16cd56a7061100ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab165125d2f0e60b9030468a4152c3ccb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab165125d2f0e60b9030468a4152c3ccb"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>haveCommonOwner</b> (<a class="el" href="classNode.html">Node</a> *nodeSlave)</td></tr>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#ab165125d2f0e60b9030468a4152c3ccb">haveCommonOwner</a> (<a class="el" href="classNode.html">Node</a> *nodeSlave)</td></tr>
+<tr class="memdesc:ab165125d2f0e60b9030468a4152c3ccb"><td class="mdescLeft">&#160;</td><td class="mdescRight">The function to check if the node pointed by the input pointer (nodeSlave) has common owner with this node (returns boolean). <br /></td></tr>
 <tr class="separator:ab165125d2f0e60b9030468a4152c3ccb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a52d23c3e39f6de623ed0aad9bc225c14"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a52d23c3e39f6de623ed0aad9bc225c14"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>getCommonOwnerId</b> (<a class="el" href="classNode.html">Node</a> *nodeSlave)</td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a52d23c3e39f6de623ed0aad9bc225c14">getCommonOwnerId</a> (<a class="el" href="classNode.html">Node</a> *nodeSlave)</td></tr>
+<tr class="memdesc:a52d23c3e39f6de623ed0aad9bc225c14"><td class="mdescLeft">&#160;</td><td class="mdescRight">The function to return the ShapeBase::Id the owner element this node shares with the node pointed by the input pointer (nodeSlave). <br /></td></tr>
 <tr class="separator:a52d23c3e39f6de623ed0aad9bc225c14"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adae4720965b558b075a91af4cf742b2a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#adae4720965b558b075a91af4cf742b2a">setExternalViscosity</a> (double ApicalVisc, double BasalVisc, bool extendExternalViscosityToInnerTissue)</td></tr>
 <tr class="memdesc:adae4720965b558b075a91af4cf742b2a"><td class="mdescLeft">&#160;</td><td class="mdescRight">The function to set the viscosity of the node.  <a href="#adae4720965b558b075a91af4cf742b2a">More...</a><br /></td></tr>
@@ -135,9 +137,9 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>getCommonOwnerId</b> (
 <tr class="memitem:a1d80e6f467d8ca919872b6e47a882dd5"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a1d80e6f467d8ca919872b6e47a882dd5">checkIfNodeHasPacking</a> ()</td></tr>
 <tr class="memdesc:a1d80e6f467d8ca919872b6e47a882dd5"><td class="mdescLeft">&#160;</td><td class="mdescRight">The function to check if the node is eligible for packing.  <a href="#a1d80e6f467d8ca919872b6e47a882dd5">More...</a><br /></td></tr>
 <tr class="separator:a1d80e6f467d8ca919872b6e47a882dd5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae4a2d9e601432a998efe24e1ac4a86cd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#ae4a2d9e601432a998efe24e1ac4a86cd">getCurrentPosition</a> (double *pos)</td></tr>
-<tr class="memdesc:ae4a2d9e601432a998efe24e1ac4a86cd"><td class="mdescLeft">&#160;</td><td class="mdescRight">return the current position of the node  <a href="#ae4a2d9e601432a998efe24e1ac4a86cd">More...</a><br /></td></tr>
-<tr class="separator:ae4a2d9e601432a998efe24e1ac4a86cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7c6a8e48ca7eda39cfb4b83699181cce"><td class="memItemLeft" align="right" valign="top">std::array&lt; double, 3 &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a7c6a8e48ca7eda39cfb4b83699181cce">getCurrentPosition</a> ()</td></tr>
+<tr class="memdesc:a7c6a8e48ca7eda39cfb4b83699181cce"><td class="mdescLeft">&#160;</td><td class="mdescRight">return the current position of the node  <a href="#a7c6a8e48ca7eda39cfb4b83699181cce">More...</a><br /></td></tr>
+<tr class="separator:a7c6a8e48ca7eda39cfb4b83699181cce"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3030a518aa97bd50060b8733e87540f7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a3030a518aa97bd50060b8733e87540f7">displayConnectedElementIds</a> ()</td></tr>
 <tr class="memdesc:a3030a518aa97bd50060b8733e87540f7"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function will print out a list of connected element Id's.  <a href="#a3030a518aa97bd50060b8733e87540f7">More...</a><br /></td></tr>
 <tr class="separator:a3030a518aa97bd50060b8733e87540f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -145,7 +147,8 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>getCommonOwnerId</b> (
 <tr class="memdesc:a755e8c3d76e7f1f0ab364fc3d4da3a9a"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function will print out the weights of the connected elements, in the order of Id s given in connectedElementIds.  <a href="#a755e8c3d76e7f1f0ab364fc3d4da3a9a">More...</a><br /></td></tr>
 <tr class="separator:a755e8c3d76e7f1f0ab364fc3d4da3a9a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a39d2419d4de14f0d0ecffc7c7809e705"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a39d2419d4de14f0d0ecffc7c7809e705"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>displayPosition</b> ()</td></tr>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a39d2419d4de14f0d0ecffc7c7809e705">displayPosition</a> ()</td></tr>
+<tr class="memdesc:a39d2419d4de14f0d0ecffc7c7809e705"><td class="mdescLeft">&#160;</td><td class="mdescRight">The helper function to display the position of the node during debugging or in catasthropic failure. <br /></td></tr>
 <tr class="separator:a39d2419d4de14f0d0ecffc7c7809e705"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac2838f50304007a7cfe3df3f2e8d1772"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#ac2838f50304007a7cfe3df3f2e8d1772">addToImmediateNeigs</a> (int newNodeId)</td></tr>
 <tr class="memdesc:ac2838f50304007a7cfe3df3f2e8d1772"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function adds the input node Id (int) to the list of neighbours of the node (<a class="el" href="classNode.html#ab22060fb9f61a0d93ec52e6045828782" title="The list of Id&#39;s for immediate neighbours of the node, i.e. the nodes that are shared by the elements...">Node::immediateNeigs</a>)  <a href="#ac2838f50304007a7cfe3df3f2e8d1772">More...</a><br /></td></tr>
@@ -157,39 +160,44 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>displayPosition</b> (
 <tr class="memdesc:a6dc9c26deadb9d2ca3e248f4748d9dfc"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function removes the input newElementId (int) from the list of elements connected by this node, updating the mass, and weights of mass per connected element in the process.  <a href="#a6dc9c26deadb9d2ca3e248f4748d9dfc">More...</a><br /></td></tr>
 <tr class="separator:a6dc9c26deadb9d2ca3e248f4748d9dfc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abc1e7e6c42b377c073a68c2b2ea97fa8"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#abc1e7e6c42b377c073a68c2b2ea97fa8">isMyNeig</a> (int nodeId)</td></tr>
+<tr class="memdesc:abc1e7e6c42b377c073a68c2b2ea97fa8"><td class="mdescLeft">&#160;</td><td class="mdescRight">The function to check if the node with the input node id is a neighbour of this node (returns boolean).  <a href="#abc1e7e6c42b377c073a68c2b2ea97fa8">More...</a><br /></td></tr>
 <tr class="separator:abc1e7e6c42b377c073a68c2b2ea97fa8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5fcd3b2e58e0cdfd817371269494e1de"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a5fcd3b2e58e0cdfd817371269494e1de">isNeigWithMyCollapsedNodes</a> (int NodeId, vector&lt; <a class="el" href="classNode.html">Node</a> * &gt; &amp;Nodes)</td></tr>
+<tr class="memdesc:a5fcd3b2e58e0cdfd817371269494e1de"><td class="mdescLeft">&#160;</td><td class="mdescRight">The function to check if the node with the input <a class="el" href="classNode.html#a1bd379569cc1a8b96432e61971aed4d9" title="The unique identification number of the node. ">Node::Id</a> (nodeId) is collapsed with a neighbour of this node (returns boolean).  <a href="#a5fcd3b2e58e0cdfd817371269494e1de">More...</a><br /></td></tr>
 <tr class="separator:a5fcd3b2e58e0cdfd817371269494e1de"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7d04a300d7a019d11183776a05e34d97"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7d04a300d7a019d11183776a05e34d97"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>getNewCollapseListAndAveragePos</b> (vector&lt; int &gt; &amp;newCollapseList, double *avrPos, bool *fix, vector&lt; <a class="el" href="classNode.html">Node</a> * &gt; &amp;Nodes, int masterNodeId)</td></tr>
-<tr class="separator:a7d04a300d7a019d11183776a05e34d97"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6761411f4226c354f2c117560f93a373"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6761411f4226c354f2c117560f93a373"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a6761411f4226c354f2c117560f93a373">getNewCollapseListAndAveragePos</a> (std::vector&lt; int &gt; &amp;newCollapseList, double *avrPos, bool *fix, vector&lt; <a class="el" href="classNode.html">Node</a> * &gt; &amp;Nodes, int masterNodeId)</td></tr>
+<tr class="memdesc:a6761411f4226c354f2c117560f93a373"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function appends the list of node Ids this node is collapsed with to the input array. <br /></td></tr>
+<tr class="separator:a6761411f4226c354f2c117560f93a373"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7256e876aa188a55e16ef5df1aa89c0f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7256e876aa188a55e16ef5df1aa89c0f"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>clearDuplicatesFromCollapseList</b> ()</td></tr>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a7256e876aa188a55e16ef5df1aa89c0f">clearDuplicatesFromCollapseList</a> ()</td></tr>
+<tr class="memdesc:a7256e876aa188a55e16ef5df1aa89c0f"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function clears the <a class="el" href="classNode.html#a099baa33319712e8ff03063385f8e095" title="The vector of int storing the ids of the nodes this node is collapsed and bound with. ">Node::collapsedWith</a> array from duplicates. <br /></td></tr>
 <tr class="separator:a7256e876aa188a55e16ef5df1aa89c0f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae584b51c8ad1943d93d43c6338b1172b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae584b51c8ad1943d93d43c6338b1172b"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>collapseOnNode</b> (vector&lt; int &gt; &amp;newCollapseList, double *avrPos, bool *fix, vector&lt; <a class="el" href="classNode.html">Node</a> * &gt; &amp;Nodes, int masterNodeId)</td></tr>
-<tr class="separator:ae584b51c8ad1943d93d43c6338b1172b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a93882af02dfebc072718e557552ef2dc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a93882af02dfebc072718e557552ef2dc">collapseOnNode</a> (vector&lt; <a class="el" href="classNode.html">Node</a> * &gt; &amp;Nodes, int masterNodeId)</td></tr>
-<tr class="separator:a93882af02dfebc072718e557552ef2dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afa1f19c0cccff374422d79387d18038e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afa1f19c0cccff374422d79387d18038e"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>collapseOnNodeInStages</b> (vector&lt; int &gt; &amp;newCollapseList, double *avrPos, bool *fix, vector&lt; <a class="el" href="classNode.html">Node</a> * &gt; &amp;Nodes, int masterNodeId)</td></tr>
-<tr class="separator:afa1f19c0cccff374422d79387d18038e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae7e743eb067730a476ad2b8b27a6b137"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae7e743eb067730a476ad2b8b27a6b137"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>updatePositionTowardsPoint</b> (double *avrPos, bool *fix)</td></tr>
-<tr class="separator:ae7e743eb067730a476ad2b8b27a6b137"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3bbd413f099443fbffb1de65523f0bac"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3bbd413f099443fbffb1de65523f0bac"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>isECMChangeAppliedToNode</b> (bool changeApicalECM, bool changeBasalECM, vector&lt; int &gt; &amp;ECMChangeEllipseBandIds, int numberOfECMChangeEllipseBands)</td></tr>
-<tr class="separator:a3bbd413f099443fbffb1de65523f0bac"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abf7a4917252fff90bd2ff2c50bfc5d21"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abf7a4917252fff90bd2ff2c50bfc5d21"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#abf7a4917252fff90bd2ff2c50bfc5d21">isECMChangeAppliedToNode</a> (bool changeApicalECM, bool changeBasalECM, std::vector&lt; int &gt; &amp;ECMChangeEllipseBandIds, int numberOfECMChangeEllipseBands)</td></tr>
+<tr class="memdesc:abf7a4917252fff90bd2ff2c50bfc5d21"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function checks if the node falls within the range of the marker ellipse band ids for the ECM property perturbations. <br /></td></tr>
+<tr class="separator:abf7a4917252fff90bd2ff2c50bfc5d21"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3c7b8ccf4dab44216b997c5f63f11d9f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a3c7b8ccf4dab44216b997c5f63f11d9f">getId</a> ()</td></tr>
 <tr class="memdesc:a3c7b8ccf4dab44216b997c5f63f11d9f"><td class="mdescLeft">&#160;</td><td class="mdescRight">The function returns the Id (<a class="el" href="classNode.html#a1bd379569cc1a8b96432e61971aed4d9" title="The unique identification number of the node. ">Node::Id</a>) of the node.  <a href="#a3c7b8ccf4dab44216b997c5f63f11d9f">More...</a><br /></td></tr>
 <tr class="separator:a3c7b8ccf4dab44216b997c5f63f11d9f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adc2de7b09bea87a469266d0905561d21"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adc2de7b09bea87a469266d0905561d21"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#adc2de7b09bea87a469266d0905561d21">collapseOnNode</a> (std::vector&lt; int &gt; &amp;newCollapseList, double *avrPos, bool *fix, std::vector&lt; <a class="el" href="classNode.html">Node</a> * &gt; &amp;Nodes, int masterNodeId)</td></tr>
+<tr class="memdesc:adc2de7b09bea87a469266d0905561d21"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function collapses this node on the node with the <a class="el" href="classNode.html#a1bd379569cc1a8b96432e61971aed4d9" title="The unique identification number of the node. ">Node::Id</a> with input masterNodeId, at one time step. <br /></td></tr>
+<tr class="separator:adc2de7b09bea87a469266d0905561d21"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af15e6e7d10efc3543d387d2240f938af"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af15e6e7d10efc3543d387d2240f938af"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>collapseOnNode</b> (std::vector&lt; <a class="el" href="classNode.html">Node</a> * &gt; &amp;Nodes, int masterNodeId)</td></tr>
+<tr class="separator:af15e6e7d10efc3543d387d2240f938af"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab33f36d9f71182f47581584be84e1e14"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab33f36d9f71182f47581584be84e1e14"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#ab33f36d9f71182f47581584be84e1e14">collapseOnNodeInStages</a> (std::vector&lt; int &gt; &amp;newCollapseList, double *avrPos, bool *fix, std::vector&lt; <a class="el" href="classNode.html">Node</a> * &gt; &amp;Nodes, int masterNodeId)</td></tr>
+<tr class="memdesc:ab33f36d9f71182f47581584be84e1e14"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function collapses this node on the node with the <a class="el" href="classNode.html#a1bd379569cc1a8b96432e61971aed4d9" title="The unique identification number of the node. ">Node::Id</a> with input masterNodeId, at multiple time steps, perturbing the position of the node smoothly to ensure stability. <br /></td></tr>
+<tr class="separator:ab33f36d9f71182f47581584be84e1e14"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae7e743eb067730a476ad2b8b27a6b137"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae7e743eb067730a476ad2b8b27a6b137"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#ae7e743eb067730a476ad2b8b27a6b137">updatePositionTowardsPoint</a> (double *avrPos, bool *fix)</td></tr>
+<tr class="memdesc:ae7e743eb067730a476ad2b8b27a6b137"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function moves this node towards the coordinates given in input array avrPos, excluding movement of fixed position. <br /></td></tr>
+<tr class="separator:ae7e743eb067730a476ad2b8b27a6b137"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a80edc54e934bdfc08b66933d4c7fd6f4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a80edc54e934bdfc08b66933d4c7fd6f4"></a>
-bool *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a80edc54e934bdfc08b66933d4c7fd6f4">FixedPos</a></td></tr>
-<tr class="memdesc:a80edc54e934bdfc08b66933d4c7fd6f4"><td class="mdescLeft">&#160;</td><td class="mdescRight">The boolean array stating if the node's position is fixed in any direction, format: [x y z], true = fixed. <br /></td></tr>
-<tr class="separator:a80edc54e934bdfc08b66933d4c7fd6f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1bd379569cc1a8b96432e61971aed4d9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1bd379569cc1a8b96432e61971aed4d9"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a1bd379569cc1a8b96432e61971aed4d9">Id</a></td></tr>
 <tr class="memdesc:a1bd379569cc1a8b96432e61971aed4d9"><td class="mdescLeft">&#160;</td><td class="mdescRight">The unique identification number of the node. <br /></td></tr>
@@ -198,40 +206,46 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class
 int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#ae23958d63ecbf80559c307c955be8227">nDim</a></td></tr>
 <tr class="memdesc:ae23958d63ecbf80559c307c955be8227"><td class="mdescLeft">&#160;</td><td class="mdescRight">The number of dimensions of the node, (2 or 3) <br /></td></tr>
 <tr class="separator:ae23958d63ecbf80559c307c955be8227"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8fdca7042dc0cc7e342eb3c87cbbfb56"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8fdca7042dc0cc7e342eb3c87cbbfb56"></a>
-double *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a8fdca7042dc0cc7e342eb3c87cbbfb56">Position</a></td></tr>
-<tr class="memdesc:a8fdca7042dc0cc7e342eb3c87cbbfb56"><td class="mdescLeft">&#160;</td><td class="mdescRight">The pointer to the position array of the node. The array itself is declared within the constructor, depending on nDim. <br /></td></tr>
-<tr class="separator:a8fdca7042dc0cc7e342eb3c87cbbfb56"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a653a595186a56f86fcdb6d431daa4591"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a653a595186a56f86fcdb6d431daa4591"></a>
-double *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a653a595186a56f86fcdb6d431daa4591">initialPosition</a></td></tr>
-<tr class="memdesc:a653a595186a56f86fcdb6d431daa4591"><td class="mdescLeft">&#160;</td><td class="mdescRight">The pointer to the initial position array of the node. The array itself is declared within the constructor, depending on nDim. <br /></td></tr>
-<tr class="separator:a653a595186a56f86fcdb6d431daa4591"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abfa97f5fa4e95c932b4e3e0daabb062a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abfa97f5fa4e95c932b4e3e0daabb062a"></a>
-double *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#abfa97f5fa4e95c932b4e3e0daabb062a">RKPosition</a></td></tr>
-<tr class="memdesc:abfa97f5fa4e95c932b4e3e0daabb062a"><td class="mdescLeft">&#160;</td><td class="mdescRight">The pointer to the position array for position during a Runge-Kutta step array of the node. The array itself is declared within the constructor, depending on nDim. <br /></td></tr>
-<tr class="separator:abfa97f5fa4e95c932b4e3e0daabb062a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a03f2f0310bec3504b082d0f707fa3db2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a03f2f0310bec3504b082d0f707fa3db2"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a03f2f0310bec3504b082d0f707fa3db2">externalViscositySetInFixing</a> [3]</td></tr>
-<tr class="memdesc:a03f2f0310bec3504b082d0f707fa3db2"><td class="mdescLeft">&#160;</td><td class="mdescRight">The boolean array stating if the external viscosity of any axis has been set in node fixing options. The node fixing is carried out before the physical parameter settings in most cases. The boolean check is carried out not to overwrite the existing set viscosity in normal viscosity assignment. <br /></td></tr>
-<tr class="separator:a03f2f0310bec3504b082d0f707fa3db2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9bb34133d43eb0f29bfd0d0b65df395d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9bb34133d43eb0f29bfd0d0b65df395d"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a9bb34133d43eb0f29bfd0d0b65df395d">externalViscosity</a> [3]</td></tr>
-<tr class="memdesc:a9bb34133d43eb0f29bfd0d0b65df395d"><td class="mdescLeft">&#160;</td><td class="mdescRight">External viscosity of the node, defined by its placement within the tissue. This can be defined as an external adhesion, ECM remodelling, or any other form of viscosity. <br /></td></tr>
-<tr class="separator:a9bb34133d43eb0f29bfd0d0b65df395d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a60c2515f86b41fbb3d413cc416c3ee26"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a60c2515f86b41fbb3d413cc416c3ee26"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a60c2515f86b41fbb3d413cc416c3ee26">initialExternalViscosity</a> [3]</td></tr>
-<tr class="memdesc:a60c2515f86b41fbb3d413cc416c3ee26"><td class="mdescLeft">&#160;</td><td class="mdescRight">External viscosity of the node before any modifications by perturbation (for example ECM stiffness/ viscosity change) <br /></td></tr>
-<tr class="separator:a60c2515f86b41fbb3d413cc416c3ee26"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6ea381457b01d655a8d67bfd9755e5b6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6ea381457b01d655a8d67bfd9755e5b6"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>maximumExternalViscosity</b> [3]</td></tr>
-<tr class="separator:a6ea381457b01d655a8d67bfd9755e5b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a226bd3eaa57c1317716193a02bd04187"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a226bd3eaa57c1317716193a02bd04187"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>minimumExternalViscosity</b> [3]</td></tr>
-<tr class="separator:a226bd3eaa57c1317716193a02bd04187"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1fbd9839d04036b5a5570e197e8e591c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1fbd9839d04036b5a5570e197e8e591c"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a1fbd9839d04036b5a5570e197e8e591c">ECMViscosityChangePerHour</a> [3]</td></tr>
-<tr class="memdesc:a1fbd9839d04036b5a5570e197e8e591c"><td class="mdescLeft">&#160;</td><td class="mdescRight">The change in ECM viscosity per one hour. The double array of size (1,3) stores the viscosity change in x, y, and z directions, respectively. <br /></td></tr>
-<tr class="separator:a1fbd9839d04036b5a5570e197e8e591c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a70e54350ca21406946b8e1b34360dbae"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a70e54350ca21406946b8e1b34360dbae"></a>
+std::array&lt; double, 3 &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a70e54350ca21406946b8e1b34360dbae">Position</a></td></tr>
+<tr class="memdesc:a70e54350ca21406946b8e1b34360dbae"><td class="mdescLeft">&#160;</td><td class="mdescRight">The position array of the node. The declaration is 3D, node can be 2D. <br /></td></tr>
+<tr class="separator:a70e54350ca21406946b8e1b34360dbae"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9be696870819e43f033b984c2592d539"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9be696870819e43f033b984c2592d539"></a>
+std::array&lt; double, 3 &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a9be696870819e43f033b984c2592d539">initialPosition</a></td></tr>
+<tr class="memdesc:a9be696870819e43f033b984c2592d539"><td class="mdescLeft">&#160;</td><td class="mdescRight">The initial position array of the node. The declaration is 3D, node can be 2D. <br /></td></tr>
+<tr class="separator:a9be696870819e43f033b984c2592d539"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a34061bba1f26ce526f8cb17ed2bab561"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a34061bba1f26ce526f8cb17ed2bab561"></a>
+std::array&lt; double, 3 &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a34061bba1f26ce526f8cb17ed2bab561">RKPosition</a></td></tr>
+<tr class="memdesc:a34061bba1f26ce526f8cb17ed2bab561"><td class="mdescLeft">&#160;</td><td class="mdescRight">The pointer to the position array for position during a Runge-Kutta step array of the node. The declaration is 3D, node can be 2D. <br /></td></tr>
+<tr class="separator:a34061bba1f26ce526f8cb17ed2bab561"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8f3a763935fb67e34784d060c0ea76f8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8f3a763935fb67e34784d060c0ea76f8"></a>
+std::array&lt; bool, 3 &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a8f3a763935fb67e34784d060c0ea76f8">FixedPos</a></td></tr>
+<tr class="memdesc:a8f3a763935fb67e34784d060c0ea76f8"><td class="mdescLeft">&#160;</td><td class="mdescRight">The boolean array stating if the node's position is fixed in any direction, format: [x y z], true = fixed. <br /></td></tr>
+<tr class="separator:a8f3a763935fb67e34784d060c0ea76f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6c133172953bbe1451075ef7b78db6b7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6c133172953bbe1451075ef7b78db6b7"></a>
+std::array&lt; bool, 3 &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a6c133172953bbe1451075ef7b78db6b7">externalViscositySetInFixing</a></td></tr>
+<tr class="memdesc:a6c133172953bbe1451075ef7b78db6b7"><td class="mdescLeft">&#160;</td><td class="mdescRight">The boolean array stating if the external viscosity of any axis has been set in node fixing options. The node fixing is carried out before the physical parameter settings in most cases. The boolean check is carried out not to overwrite the existing set viscosity in normal viscosity assignment. <br /></td></tr>
+<tr class="separator:a6c133172953bbe1451075ef7b78db6b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6377f135c12aae0dd776107c2628516e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6377f135c12aae0dd776107c2628516e"></a>
+std::array&lt; double, 3 &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a6377f135c12aae0dd776107c2628516e">externalViscosity</a></td></tr>
+<tr class="memdesc:a6377f135c12aae0dd776107c2628516e"><td class="mdescLeft">&#160;</td><td class="mdescRight">External viscosity of the node, defined by its placement within the tissue. This can be defined as an external adhesion, ECM remodelling, or any other form of viscosity. <br /></td></tr>
+<tr class="separator:a6377f135c12aae0dd776107c2628516e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1d6adc185162f9fea733839c4e7230f7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1d6adc185162f9fea733839c4e7230f7"></a>
+std::array&lt; double, 3 &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a1d6adc185162f9fea733839c4e7230f7">initialExternalViscosity</a></td></tr>
+<tr class="memdesc:a1d6adc185162f9fea733839c4e7230f7"><td class="mdescLeft">&#160;</td><td class="mdescRight">External viscosity of the node before any modifications by perturbation (for example ECM stiffness/ viscosity change) <br /></td></tr>
+<tr class="separator:a1d6adc185162f9fea733839c4e7230f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a78523720b4a1758f38d4e8b1703ad6c3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a78523720b4a1758f38d4e8b1703ad6c3"></a>
+std::array&lt; double, 3 &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a78523720b4a1758f38d4e8b1703ad6c3">maximumExternalViscosity</a></td></tr>
+<tr class="memdesc:a78523720b4a1758f38d4e8b1703ad6c3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Minimum external viscosity of the node as a result of perturbation and modifications. <br /></td></tr>
+<tr class="separator:a78523720b4a1758f38d4e8b1703ad6c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a59528693432e71fa9b9e7ecfef6ee274"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a59528693432e71fa9b9e7ecfef6ee274"></a>
+std::array&lt; double, 3 &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a59528693432e71fa9b9e7ecfef6ee274">minimumExternalViscosity</a></td></tr>
+<tr class="memdesc:a59528693432e71fa9b9e7ecfef6ee274"><td class="mdescLeft">&#160;</td><td class="mdescRight">Maximum external viscosity of the node as a result of perturbation and modifications. <br /></td></tr>
+<tr class="separator:a59528693432e71fa9b9e7ecfef6ee274"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a58afaee3d71a2c122396265c91acda04"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a58afaee3d71a2c122396265c91acda04"></a>
+std::array&lt; double, 3 &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a58afaee3d71a2c122396265c91acda04">ECMViscosityChangePerHour</a></td></tr>
+<tr class="memdesc:a58afaee3d71a2c122396265c91acda04"><td class="mdescLeft">&#160;</td><td class="mdescRight">The change in ECM viscosity per one hour. The double array of size (1,3) stores the viscosity change in x, y, and z directions, respectively. <br /></td></tr>
+<tr class="separator:a58afaee3d71a2c122396265c91acda04"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1f25afa638813548bef54299c2d756e4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1f25afa638813548bef54299c2d756e4"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a1f25afa638813548bef54299c2d756e4">displacement</a></td></tr>
 <tr class="memdesc:a1f25afa638813548bef54299c2d756e4"><td class="mdescLeft">&#160;</td><td class="mdescRight">the displacement of the node from previous time step; <br /></td></tr>
@@ -290,43 +304,52 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="separator:a216c4bf4af00dc77d8c88c4d2952f6ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5a0c478d6925dc16abf3995061fda191"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5a0c478d6925dc16abf3995061fda191"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a5a0c478d6925dc16abf3995061fda191">coveringEllipseBandId</a></td></tr>
-<tr class="memdesc:a5a0c478d6925dc16abf3995061fda191"><td class="mdescLeft">&#160;</td><td class="mdescRight">The id of the marker ellipse that the node is covered by. If hte node is not covered by any marker ellipse, the value is -1. <br /></td></tr>
+<tr class="memdesc:a5a0c478d6925dc16abf3995061fda191"><td class="mdescLeft">&#160;</td><td class="mdescRight">The id of the marker ellipse that the node is covered by. If the node is not covered by any marker ellipse, the value is -1. <br /></td></tr>
 <tr class="separator:a5a0c478d6925dc16abf3995061fda191"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa9eb82543b868adc05b5543251ebb42f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa9eb82543b868adc05b5543251ebb42f"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#aa9eb82543b868adc05b5543251ebb42f">allOwnersECMMimicing</a></td></tr>
 <tr class="memdesc:aa9eb82543b868adc05b5543251ebb42f"><td class="mdescLeft">&#160;</td><td class="mdescRight">The boolean stating all the elements making use of the node are ECM mimicking elements. <br /></td></tr>
 <tr class="separator:aa9eb82543b868adc05b5543251ebb42f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a377cb501b279a025c1c53f24572ed415"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a377cb501b279a025c1c53f24572ed415"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>facingLumen</b></td></tr>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a377cb501b279a025c1c53f24572ed415">facingLumen</a></td></tr>
+<tr class="memdesc:a377cb501b279a025c1c53f24572ed415"><td class="mdescLeft">&#160;</td><td class="mdescRight">The boolean stating if the node is facing the lumen or not.c. <br /></td></tr>
 <tr class="separator:a377cb501b279a025c1c53f24572ed415"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af96140b8fa2e7abffd79a040c6972309"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af96140b8fa2e7abffd79a040c6972309"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>isMaster</b> [3]</td></tr>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#af96140b8fa2e7abffd79a040c6972309">isMaster</a> [3]</td></tr>
+<tr class="memdesc:af96140b8fa2e7abffd79a040c6972309"><td class="mdescLeft">&#160;</td><td class="mdescRight">The boolean array stating if the corresponding degree of freedom of the node is a master of any other degree of freedom. <br /></td></tr>
 <tr class="separator:af96140b8fa2e7abffd79a040c6972309"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a83aeb69143ee2ddc1f6f49be4b261b44"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a83aeb69143ee2ddc1f6f49be4b261b44"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>slaveTo</b> [3]</td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a83aeb69143ee2ddc1f6f49be4b261b44">slaveTo</a> [3]</td></tr>
+<tr class="memdesc:a83aeb69143ee2ddc1f6f49be4b261b44"><td class="mdescLeft">&#160;</td><td class="mdescRight">The int array storing the master node ids if the corresponding degree of freedom of the node is a slave to the respective degree of freedom of another node. <br /></td></tr>
 <tr class="separator:a83aeb69143ee2ddc1f6f49be4b261b44"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae887e306a904ed17f26851ece9357bbb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae887e306a904ed17f26851ece9357bbb"></a>
-vector&lt; int &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>collapsedWith</b></td></tr>
-<tr class="separator:ae887e306a904ed17f26851ece9357bbb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a099baa33319712e8ff03063385f8e095"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a099baa33319712e8ff03063385f8e095"></a>
+std::vector&lt; int &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a099baa33319712e8ff03063385f8e095">collapsedWith</a></td></tr>
+<tr class="memdesc:a099baa33319712e8ff03063385f8e095"><td class="mdescLeft">&#160;</td><td class="mdescRight">The vector of int storing the ids of the nodes this node is collapsed and bound with. <br /></td></tr>
+<tr class="separator:a099baa33319712e8ff03063385f8e095"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a484ea8b4f71ea5fdfa1036ed1fabfae0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a484ea8b4f71ea5fdfa1036ed1fabfae0"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>adheredTo</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a484ea8b4f71ea5fdfa1036ed1fabfae0">adheredTo</a></td></tr>
+<tr class="memdesc:a484ea8b4f71ea5fdfa1036ed1fabfae0"><td class="mdescLeft">&#160;</td><td class="mdescRight">The id of the node this node is adhered to. <br /></td></tr>
 <tr class="separator:a484ea8b4f71ea5fdfa1036ed1fabfae0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a62f609723e0516ff02232727575b0a15"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a62f609723e0516ff02232727575b0a15"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>attachedToPeripodial</b></td></tr>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a62f609723e0516ff02232727575b0a15">attachedToPeripodial</a></td></tr>
+<tr class="memdesc:a62f609723e0516ff02232727575b0a15"><td class="mdescLeft">&#160;</td><td class="mdescRight">The boolean stating if the node is attached to peripodial membrane. <br /></td></tr>
 <tr class="separator:a62f609723e0516ff02232727575b0a15"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a913bf9335efdbd81a352b1ef80654f95"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a913bf9335efdbd81a352b1ef80654f95"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>onFoldInitiation</b></td></tr>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#a913bf9335efdbd81a352b1ef80654f95">onFoldInitiation</a></td></tr>
+<tr class="memdesc:a913bf9335efdbd81a352b1ef80654f95"><td class="mdescLeft">&#160;</td><td class="mdescRight">The boolean stating if this node is on a fold initiation region, automatically detected via curvature. <br /></td></tr>
 <tr class="separator:a913bf9335efdbd81a352b1ef80654f95"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad41abb2d4571366c2ba8d3a0b46798b6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad41abb2d4571366c2ba8d3a0b46798b6"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#ad41abb2d4571366c2ba8d3a0b46798b6">checkOwnersforEllipseAsignment</a></td></tr>
-<tr class="memdesc:ad41abb2d4571366c2ba8d3a0b46798b6"><td class="mdescLeft">&#160;</td><td class="mdescRight">When the ellipse ids are assigned to nodes nby owner elemetns, you can end up with elements that have all their nodes engulfed in an ellipse, but the element itself is not assigned into an ellipse. This flag will check for that. <br /></td></tr>
+<tr class="memdesc:ad41abb2d4571366c2ba8d3a0b46798b6"><td class="mdescLeft">&#160;</td><td class="mdescRight">When the ellipse ids are assigned to nodes by owner elemetns, you can end up with elements that have all their nodes engulfed in an ellipse, but the element itself is not assigned into an ellipse. This flag will check for that. <br /></td></tr>
 <tr class="separator:ad41abb2d4571366c2ba8d3a0b46798b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acf1e1353abc605a027ca492f44cd15bf"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acf1e1353abc605a027ca492f44cd15bf"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>positionUpdateOngoing</b></td></tr>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#acf1e1353abc605a027ca492f44cd15bf">positionUpdateOngoing</a></td></tr>
+<tr class="memdesc:acf1e1353abc605a027ca492f44cd15bf"><td class="mdescLeft">&#160;</td><td class="mdescRight">The boolean stating if this node has its in the process of updating its position during staged collapse of nodes upon adhesion. <br /></td></tr>
 <tr class="separator:acf1e1353abc605a027ca492f44cd15bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a73ca1bf9c28cc2ce53177e7722c8fc05"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a73ca1bf9c28cc2ce53177e7722c8fc05"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>positionUpdateCounter</b></td></tr>
-<tr class="separator:a73ca1bf9c28cc2ce53177e7722c8fc05"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac19c4820651632467a0d7f913f002b56"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac19c4820651632467a0d7f913f002b56"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNode.html#ac19c4820651632467a0d7f913f002b56">positionUpdateCounter</a></td></tr>
+<tr class="memdesc:ac19c4820651632467a0d7f913f002b56"><td class="mdescLeft">&#160;</td><td class="mdescRight">The counter for steps the nodes position update upon collapse with another node has been ongoing. <br /></td></tr>
+<tr class="separator:ac19c4820651632467a0d7f913f002b56"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>The node class </p>
@@ -415,34 +438,7 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>positionUpdateCounter
 </div><div class="memdoc">
 
 <p>The function to check if the node is eligible for packing. </p>
-<p>The function will return true if the node is eligible for packing calculation. This packing will ensure volume exclusion, and is calculated via function <a class="el" href="classSimulation.html#a51cb5448f660eeefc54a5d2a33ab561e">Simulation::calculatePacking</a>. It is not necessary to calculate packing under the following conditions: 1) The node is at the middle of the columnar layer, the packing should have stopped any other node/element coming close enough to this node, as they would need to penetrate through the apical or basal surface of the tissue to reach this node.</p>
-
-</div>
-</div>
-<a class="anchor" id="a93882af02dfebc072718e557552ef2dc"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void Node::collapseOnNode </td>
-          <td>(</td>
-          <td class="paramtype">vector&lt; <a class="el" href="classNode.html">Node</a> * &gt; &amp;&#160;</td>
-          <td class="paramname"><em>Nodes</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>masterNodeId</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>This function will collapse this <a class="el" href="classNode.html">Node</a> with the input node id (second parameter). Collapse will bind the two nodes' all degrees of freedoms to each other, and bring them to the same position, mid point of their positions at the time of the function call. The function will take in the address of the list of node pointers in the simulation, and a node id.</p>
+<p>The function will return true if the node is eligible for packing calculation. This packing will ensure volume exclusion, and is calculated via function Simulation::calculatePacking. It is not necessary to calculate packing under the following conditions: 1) The node is at the middle of the columnar layer, the packing should have stopped any other node/element coming close enough to this node, as they would need to penetrate through the apical or basal surface of the tissue to reach this node.</p>
 
 </div>
 </div>
@@ -482,15 +478,14 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>positionUpdateCounter
 
 </div>
 </div>
-<a class="anchor" id="ae4a2d9e601432a998efe24e1ac4a86cd"></a>
+<a class="anchor" id="a7c6a8e48ca7eda39cfb4b83699181cce"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void Node::getCurrentPosition </td>
+          <td class="memname">std::array&lt; double, 3 &gt; Node::getCurrentPosition </td>
           <td>(</td>
-          <td class="paramtype">double *&#160;</td>
-          <td class="paramname"><em>pos</em></td><td>)</td>
+          <td class="paramname"></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -532,6 +527,8 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>positionUpdateCounter
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>The function to check if the node with the input node id is a neighbour of this node (returns boolean). </p>
 <p>This function will take in a node id, and check if the node is an immediate neighbour of itself. The check is done through its <a class="el" href="classNode.html#ab22060fb9f61a0d93ec52e6045828782" title="The list of Id&#39;s for immediate neighbours of the node, i.e. the nodes that are shared by the elements...">Node::immediateNeigs</a> list. The function will return true if the input id is a neighbour, and false otherwise.</p>
 
 </div>
@@ -559,7 +556,9 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>positionUpdateCounter
         </tr>
       </table>
 </div><div class="memdoc">
-<p>This function will take in a node id, and the address of the list of node pointers in the simulation. It will check if the input node id is an immediate neighbour of any of the nodes it has been collapsed with. The check is done through <a class="el" href="classNode.html#ab22060fb9f61a0d93ec52e6045828782" title="The list of Id&#39;s for immediate neighbours of the node, i.e. the nodes that are shared by the elements...">Node::immediateNeigs</a> lists of all the nodes on its Node::collapsedWith list. The function will return true if the input id is a neighbour of any node this node has collapsed with, and false otherwise.</p>
+
+<p>The function to check if the node with the input <a class="el" href="classNode.html#a1bd379569cc1a8b96432e61971aed4d9" title="The unique identification number of the node. ">Node::Id</a> (nodeId) is collapsed with a neighbour of this node (returns boolean). </p>
+<p>This function will take in a node id, and the address of the list of node pointers in the simulation. It will check if the input node id is an immediate neighbour of any of the nodes it has been collapsed with. The check is done through <a class="el" href="classNode.html#ab22060fb9f61a0d93ec52e6045828782" title="The list of Id&#39;s for immediate neighbours of the node, i.e. the nodes that are shared by the elements...">Node::immediateNeigs</a> lists of all the nodes on its <a class="el" href="classNode.html#a099baa33319712e8ff03063385f8e095" title="The vector of int storing the ids of the nodes this node is collapsed and bound with. ">Node::collapsedWith</a> list. The function will return true if the input id is a neighbour of any node this node has collapsed with, and false otherwise.</p>
 
 </div>
 </div>
@@ -640,7 +639,7 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>positionUpdateCounter
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="classNode.html">Node</a></li>
-    <li class="footer">Generated on Wed Apr 3 2019 14:19:52 for Tissue Origami by
+    <li class="footer">Generated on Wed Oct 2 2019 13:39:31 for Tissue Origami by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

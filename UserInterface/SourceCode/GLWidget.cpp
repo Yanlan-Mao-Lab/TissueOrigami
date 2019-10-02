@@ -64,7 +64,7 @@ using namespace std;
      DisplayPysPropBounds[3][0] = 0.0;   DisplayPysPropBounds[3][1] = 0.1; 		//Poisson's ratio - lower limit, min max range
      DisplayPysPropBounds[3][2] = 0.11;  DisplayPysPropBounds[3][3] = 0.5; 		//Poisson's ratio - upper limit, min max range
      DisplayPysPropBounds[4][0] = 0.0;   DisplayPysPropBounds[4][1] = 10; 		//xy-planar growth rate - lower limit, min max range
-     DisplayPysPropBounds[4][2] = 1;     DisplayPysPropBounds[4][3] = 150; 			//xy-planar growth rate - upper limit, min max range
+     DisplayPysPropBounds[4][2] = 1;     DisplayPysPropBounds[4][3] = 150000; 			//xy-planar growth rate - upper limit, min max range
      DisplayPysPropBounds[5][0] = 0.0;   DisplayPysPropBounds[5][1] = 10; 		//xy-planar growth total - lower limit, min max range
      DisplayPysPropBounds[5][2] = 1;     DisplayPysPropBounds[5][3] = 150; 			//xy-planar growth total - upper limit, min max range
      DisplayPysPropBounds[6][0] = 0.0;   DisplayPysPropBounds[6][1] = 10.0;		//emergent shape and size - lower limit, min max range
@@ -240,19 +240,11 @@ void GLWidget::reInitialiseNodeColourList(int oldNodeNumber){
 	 for (int i =0; i<n;i++){
 		 drawElement(i,false);
 	 }
-	 //testing polar decompostion
-	 //for (int i =0; i<n;i++){
-	 //	 Sim01->Elements[i]->calculateEmergentRotationAngles();
-	 //}
-	 //end of testingpolar decomposition
-
 	 drawForces();
 	 drawPackForces();
-	 //drawNodeVelocities();
 	 drawMyosin();
 	 drawBoundingBox();
      drawPipette();
-     //drawAFMBead();
      drawPointsForDisplay();
      drawEnclosingShell();
 	 if (DisplayFixedNodes){
@@ -476,7 +468,7 @@ void GLWidget::highlightNode(int i){
 				getDisplayColour(currColour, StrainMag);
 			}
 			else if (DisplayPysProp){
-				float PysPropMag = 0.0;
+				double PysPropMag = 0.0;
 				//float* PysPropColour;
 				//PysPropColour = new float[3];
 				//If the physical property is external viscosity, then get the colour directly
@@ -484,8 +476,8 @@ void GLWidget::highlightNode(int i){
 					PysPropMag = (*itNode)->externalViscosity[0];
 				}
 				else{
-					int nConnectedElements = (*itNode)->connectedElementIds.size();
-					for (int i=0;i<nConnectedElements; ++i){
+					size_t nConnectedElements = (*itNode)->connectedElementIds.size();
+					for (size_t i=0;i<nConnectedElements; ++i){
 						float TmpPysPropMag = 0.0;
 						if ( PysPropToDisplay == 4 || PysPropToDisplay == 5 || PysPropToDisplay == 6){
 							//Growth is multiplicative, base should be 1.0:
@@ -606,6 +598,7 @@ void GLWidget::highlightNode(int i){
 	//if (Sim01->Elements[i]->tissuePlacement == 0 ){
 	//	Sim01->Elements[i]->isECMMimicing = true;
 	//}
+	//cout<<"is Mutated? "<<i<<" "<<Sim01->Elements[i]->isMutated<<endl;
 	for (int j = 0; j<n; j++){
 		NodeColours[j] = new float[3];
 
@@ -674,9 +667,16 @@ void GLWidget::highlightNode(int i){
 		}
 		else if (Sim01->thereIsExplicitActin && Sim01->Elements[i]->isActinMimicing){
 			if(!DisplayStrains && !DisplayPysProp && !drawNetForces && !drawPackingForces && !drawMyosinForces && !drawMarkingEllipses && !drawLumen){
-				NodeColours[j][0]=0.0;
-				NodeColours[j][1]=0.6;
-				NodeColours[j][2]=0.0;
+				if(Sim01->Elements[i]->isMutated){
+					NodeColours[j][0]=1.0;
+					NodeColours[j][1]=0.0;
+					NodeColours[j][2]=1.0;
+				}
+				else{
+					NodeColours[j][0]=0.0;
+					NodeColours[j][1]=0.6;
+					NodeColours[j][2]=0.0;
+				}
 			}
 			else{
 				NodeColours[j][0]=NodeColourList[NodeIds[j]][0];
@@ -688,6 +688,11 @@ void GLWidget::highlightNode(int i){
 			NodeColours[j][0]=1.0;
 			NodeColours[j][1]=0.0;
 			NodeColours[j][2]=0.0;
+		}
+		else if(Sim01->Elements[i]->isMutated){
+			NodeColours[j][0]=1.0;
+			NodeColours[j][1]=0.0;
+			NodeColours[j][2]=1.0;
 		}
 		else{
 			NodeColours[j][0]=NodeColourList[NodeIds[j]][0];
@@ -714,20 +719,6 @@ void GLWidget::highlightNode(int i){
 	float** NodeColours;
 	NodeColours = getElementColourList(i);
 
-
-	/*if( Sim01->Elements[i]->getCellMigration()){
-		for(int l=0;l<6;++l){
-			NodeColours[l][0] = 0.75 + Sim01->cellMigrationTool->getRateFractionForElement(i)/ (1-0.75);
-			NodeColours[l][1] = 1 - Sim01->cellMigrationTool->getRateFractionForElement(i);
-			NodeColours[l][2] = 1 - Sim01->cellMigrationTool->getRateFractionForElement(i);
-		}
-	}*/
-
-	/*for(int l=0;l<6;++l){
-		NodeColours[l][0] = 0;
-		NodeColours[l][1] = 1;
-		NodeColours[l][2] = 0.5*Sim01->cellMigrationTool->getMigrationAngleForElement(i);
-	}*/
 	bool drawDVCompartments = false;
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glEnable(GL_POLYGON_OFFSET_FILL); // Avoid Stitching!
@@ -1824,8 +1815,7 @@ bool GLWidget::findNode(int i){
 		 for (int i =0; i<n; ++i){
 			 bool drawCurrentNode = checkIfDrawingNode(i);
 			 if (drawCurrentNode){
-				 double* F;
-				 F = new double[3];
+				 std::array<double,3> F;
 				 F[0] = Sim01->SystemForces[i][0];
 				 F[1] = Sim01->SystemForces[i][1];
 				 F[2] = Sim01->SystemForces[i][2];
@@ -1849,7 +1839,6 @@ bool GLWidget::findNode(int i){
 					 F[2] =  F[2]/currscale + Sim01->Nodes[i]->Position[2];
 					 drawArrow3D(Sim01->Nodes[i]->Position, F, r, 0.0, 0.0);
 				 }
-				 delete[] F;
 			 }
 		 }
 	 }
@@ -1868,8 +1857,7 @@ bool GLWidget::findNode(int i){
 			 int* NodeIds = Sim01->Elements[i]->getNodeIds();
 			 for (int nodeIter = 0; nodeIter<6; nodeIter++){
 				 int currNodeId = NodeIds[nodeIter];
-				 double* F;
-				 F = new double[3];
+				 std::array<double,3> F;
 				 F[0] = Sim01->Elements[i]->MyoForce[nodeIter][0];
 				 F[1] = Sim01->Elements[i]->MyoForce[nodeIter][1];
 				 F[2] = Sim01->Elements[i]->MyoForce[nodeIter][2];
@@ -1892,7 +1880,6 @@ bool GLWidget::findNode(int i){
 					 F[2] =  F[2]/currscale + Sim01->Nodes[currNodeId]->Position[2];
 					 drawArrow3D(Sim01->Nodes[currNodeId]->Position, F, 0.0, 0.0, b);
 				 }
-				 delete[] F;
 			 }
 		 }
 	 }
@@ -1964,8 +1951,7 @@ bool GLWidget::findNode(int i){
 		 for (int i =0; i<n; ++i){
 			 bool drawCurrentNode = checkIfDrawingNode(i);
 			 if (drawCurrentNode){
-				 double* F;
-				 F = new double[3];
+				 std::array<double,3> F;
 				 F[0] = Sim01->PackingForces[i][0];
 				 F[1] = Sim01->PackingForces[i][1];
 				 F[2] = Sim01->PackingForces[i][2];
@@ -1988,7 +1974,6 @@ bool GLWidget::findNode(int i){
 					 F[2] =  F[2]/currscale + Sim01->Nodes[i]->Position[2];
 					 drawArrow3D(Sim01->Nodes[i]->Position, F, r, 0.0, 0.0);
 				 }
-				 delete[] F;
 			 }
 		 }
 	 }
@@ -2133,7 +2118,7 @@ bool GLWidget::findNode(int i){
 	 }
  }
 
- void GLWidget::drawArrow3D(double* pos, double* endPoint, double r, double g, double b){
+ void GLWidget::drawArrow3D(const std::array<double,3> &pos, const std::array<double,3> &endPoint, double r, double g, double b){
 	glColor3f(r,g,b);
 	double v[3],u[3],cross[3];
 	v[0]= 0.2 * (endPoint[0]-pos[0]);
@@ -2208,6 +2193,21 @@ bool GLWidget::findNode(int i){
 	glEnd();
  }
 
+ void GLWidget::updateToCloneCrossView(){
+	 Qcurr[0] = 0.661;
+	 Qcurr[1] = -0.663;
+	 Qcurr[2] = 0.256;
+	 Qcurr[3] = 0.242;
+	 normaliseCurrentRotationAngle(Qcurr);
+	 rotateMatrix();
+	 Qlast[0] = Qcurr[0];
+	 Qlast[1] = Qcurr[1];
+	 Qlast[2] = Qcurr[2];
+	 Qlast[3] = Qcurr[3];
+	 cout<<" current Qcurr: "<<Qcurr[0]<<"  "<<Qcurr[1]<<"  "<<Qcurr[2]<<"  "<<Qcurr[3]<<endl;
+
+ }
+
  void GLWidget::updateToTopView(){
 	 //MatRot[0]  = 1.0; MatRot[1]  = 0.0; MatRot[2]  = 0.0; MatRot[3]  = 0.0;
 	 //MatRot[4]  = 0.0; MatRot[5]  = 1.0; MatRot[6]  = 0.0; MatRot[7]  = 0.0;
@@ -2223,7 +2223,7 @@ bool GLWidget::findNode(int i){
 	 Qlast[1] = Qcurr[1];
 	 Qlast[2] = Qcurr[2];
 	 Qlast[3] = Qcurr[3];
- }
+}
 
  void GLWidget::updateToFrontView(){
 	 //MatRot[0]  = 1.0; MatRot[1]  = 0.0; MatRot[2]  = 0.0; MatRot[3]  = 0.0;

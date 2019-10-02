@@ -1530,7 +1530,6 @@ void	ShapeBase::calculatePlasticDeformation3D(bool volumeConserved, double dt, d
 		//}
 	}
 	calculatePrincipalStrains3D(e1,e2,e3,eigenVec);
-	if (Id ==0){cout<<"e1, e2, e3: "<<e1<<" "<<e2<<" "<<e3<<endl;}
 	//displayMatrix(eigenVec,"eigenVec");
 	//NowI have the green strain in principal direction in the orientation of the element internal coordinats.
 	//I can simply grow the element in this axis, to obtain some form of plastic growth.
@@ -1843,7 +1842,9 @@ void ShapeBase::updateGrowthByMutation(double dt){
 	}
 	else{
 		//overwriting up any growth that might be there, with uniform growth in x & y:
-		setGrowthRate(dt,mutationGrowthRatePerSec,mutationGrowthRatePerSec,0.0);
+		double growthRateperDt22 = gsl_matrix_get(growthIncrement,2,2);
+		double z_ratePerSec = log(growthRateperDt22)/dt;
+		setGrowthRate(dt,mutationGrowthRatePerSec,mutationGrowthRatePerSec,z_ratePerSec);
 		updateGrowthIncrementFromRate();
 	}
 }
@@ -2141,7 +2142,7 @@ void ShapeBase::writeInternalForcesTogeAndgv(gsl_matrix* ge, gsl_matrix* gvInter
         	int indexI = nDim*NodeIds[i]+j;
         	double elementalvalue = gsl_matrix_get(ElementalElasticSystemForces,i,j);
         	double matrixValue = gsl_matrix_get(ge,indexI,0);
-        	//if (isnan(elementalvalue)){
+        	//if (std::isnan(elementalvalue)){
         	//	cout<<" element: "<<Id<<" ge dimention: "<<j<<" is NaN: "<<elementalvalue<<endl;
         	//}
             gsl_matrix_set(ge, indexI,0,matrixValue + elementalvalue);
@@ -2196,13 +2197,13 @@ void	ShapeBase::calculateForces3D(vector <Node*>& Nodes,  gsl_matrix* displaceme
             		double value = gsl_matrix_get(ElementalElasticSystemForces,i,j);
             		value -= gsl_matrix_get(TriPointge,counter,0);
             		gsl_matrix_set(ElementalElasticSystemForces,i,j,value);
-            		if(isnan(value)){
+            		if(std::isnan(value)){
 						cout<<"force from ElementalElasticSystemForces for element "<<Id<<" dim: "<<j<<" is nan"<<endl;
 					}
             		value = gsl_matrix_get(ElementalInternalViscousSystemForces,i,j);
             		value -= gsl_matrix_get(TriPointgv,counter,0);
             		gsl_matrix_set(ElementalInternalViscousSystemForces,i,j,value);
-            		if(isnan(value)){
+            		if(std::isnan(value)){
             			cout<<"force from ElementalInternalViscousSystemForces for element "<<Id<<" dim: "<<j<<" is nan"<<endl;
             		}
 				}
@@ -2292,13 +2293,6 @@ void ShapeBase::updateLagrangianElasticityTensorNeoHookean(gsl_matrix* invC, dou
                 for (int L = 0; L<nDim; ++L){
                     double Iijkl = 0.5* (gsl_matrix_get(invC,I,K)*gsl_matrix_get(invC,J,L) + gsl_matrix_get(invC,I,L)*gsl_matrix_get(invC,J,K));
                     D81[pointNo][I][J][K][L] = lambda*gsl_matrix_get(invC,I,J)*gsl_matrix_get(invC,K,L) + multiplier * Iijkl;
-                    //cout<<"D81["<<pointNo<<"]["<<I<<"]["<<J<<"]["<<K<<"]["<<L<<"]"<<D81[pointNo][I][J][K][L]<<endl;
-                    /*if (isnan(D81[pointNo][I][J][K][L])){
-                    	double invCIJ = gsl_matrix_get(invC,I,J);
-                    	double invCKL = gsl_matrix_get(invC,K,L);
-                    	cout<<" element: "<<Id<<" D81[pointNo][I][J][K][L] is nan in initial calculation. inverseC[I,J]: "<<invCIJ<<" invCKL: "<<invCKL<<" Iijkl "<<Iijkl<<" multiplier: "<<multiplier<<" lambda: "<<lambda<<" mu: "<<mu<<" lnJ: "<<lnJ<<endl;
-                    }*/
-                    //D81[I][J][K][L] = lambda*gsl_matrix_get(invC,I,J)*gsl_matrix_get(invC,K,L) + multiplier * gsl_matrix_get(invC,I,K)*gsl_matrix_get(invC,J,L);
                 }
             }
         }
@@ -2705,7 +2699,7 @@ void ShapeBase::writeKelasticToMainKatrix(gsl_matrix* K){
                     double valueij = gsl_matrix_get(K,NodeId1+i,NodeId2+j);
 					valueij	+= gsl_matrix_get(TriPointKe,a*nDim+i,b*nDim+j);
                     gsl_matrix_set(K,NodeId1+i,NodeId2+j,valueij);
-                	if (isnan(valueij)){
+                	if (std::isnan(valueij)){
                 		double tripointvalue = gsl_matrix_get(TriPointKe,a*nDim+i,b*nDim+j);
                 		cout<<" element: "<<Id<<" K elastic dimention: "<<i<<" "<<j<<" is NaN after addition: "<<valueij<<" tri point value: "<<tripointvalue<<endl;
                 	}
@@ -2731,7 +2725,7 @@ void ShapeBase::writeKviscousToMainKatrix(gsl_matrix* K){
 						double valueij = gsl_matrix_get(K,NodeId1+i,NodeId2+j);
 						valueij	+= gsl_matrix_get(TriPointKv,a*nDim+i,b*nDim+j);
 						gsl_matrix_set(K,NodeId1+i,NodeId2+j,valueij);
-	                	if (isnan(valueij)){
+	                	if (std::isnan(valueij)){
 	                		double tripointvalue = gsl_matrix_get(TriPointKv,a*nDim+i,b*nDim+j);
 	                		cout<<" element: "<<Id<<" K viscous dimention: "<<i<<" "<<j<<" is NaN after addition: "<<valueij<<" tri point value: "<<tripointvalue<<endl;
 	                	}
@@ -2775,16 +2769,16 @@ void	ShapeBase::calculateElasticKIntegral1(gsl_matrix* currElementalK,int pointN
     gsl_matrix* Fe = FeMatrices[pointNo];
 	double detFe = determinant3by3Matrix(Fe);
     //finished calculating 4th order tensor D
-	/*if(isnan(detF) || detF == 0){
+	/*if(std::isnan(detF) || detF == 0){
 		cout<<"element "<<Id<<" detF at 1st integration is nan/zero "<<detF<<endl;
 	}
-	if(isnan(detFe) || detFe == 0){
+	if(std::isnan(detFe) || detFe == 0){
 		cout<<"element "<<Id<<" detFe at 1st integration is nan/zero "<<detFe<<endl;
 	}
 	for (int i=0;i<3;++i){
 		for (int j=0;j<3;++j){
 			double value = gsl_matrix_get(Fe,i,j);
-			if(isnan(value)){
+			if(std::isnan(value)){
 				cout<<"element "<<Id<<" Fe at 1st integration is nan at dim: "<<i<<" "<<j<<endl;
 			}
 		}
@@ -2898,9 +2892,6 @@ void ShapeBase::calculateVelocityGradient( gsl_matrix* velocityGradient, gsl_mat
 		gsl_matrix_free(DNc);
 		gsl_matrix_free(vc);
 	}
-	/*if (Id == 0 ){
-		displayMatrix(velocityGradient,"DelV");
-	}*/
 }
 
 void ShapeBase::calculateViscousKIntegral1(gsl_matrix* currElementalK, gsl_matrix* paranthesisTermForKv1, int pointNo){
@@ -4148,6 +4139,7 @@ void 	ShapeBase::checkDisplayClipping(double xClip, double yClip, double zClip){
 	IsClippedInDisplay=false;
 	IsXSymmetricClippedInDisplay=false;
 	IsYSymmetricClippedInDisplay=false;
+
 	for (int j=0; j<nNodes; ++j){
 		 if((-1.0)*Positions[j][0]>xClip){
 			 IsXSymmetricClippedInDisplay = true;
@@ -4163,11 +4155,21 @@ void 	ShapeBase::checkDisplayClipping(double xClip, double yClip, double zClip){
 			 IsClippedInDisplay = true;
 			 return;
 		 }
-		 if(Positions[j][2]>zClip){
+
+		//convert zclip back to percentage:
+		//if (Id ==0){ cout<<"zClip pre: "<<zClip;}
+		 double currentThres = -10.0+zClip - Positions[j][1];
+		 if(Positions[j][0]<currentThres){
 			 IsClippedInDisplay = true;
 			 return;
 		 }
+
+		 //if(Positions[j][2]>zClip){
+		 //	 IsClippedInDisplay = true;
+		 //	 return;
+		 //}
 	 }
+
 }
 
 void ShapeBase::scaleGrowthIncrement(double multiplier){

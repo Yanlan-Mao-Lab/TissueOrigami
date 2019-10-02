@@ -14,7 +14,7 @@ CC            = gcc
 CXX           = g++
 DEFINES       = -DQT_NO_DEBUG -DQT_GUI_LIB -DQT_CORE_LIB
 CFLAGS        = -pipe -O2 -fopenmp -Wall -W -D_REENTRANT -fPIE $(DEFINES)
-CXXFLAGS      = -pipe -fopenmp -O2 -Wall -W -D_REENTRANT -fPIE $(DEFINES)
+CXXFLAGS      = -pipe -fopenmp -std=c++11 -O2 -Wall -W -D_REENTRANT -fPIE $(DEFINES)
 INCPATH       = -I/opt/Qt5.2.1/5.2.1/gcc_64/mkspecs/linux-g++ -I. -I/opt/Qt5.2.1/5.2.1/gcc_64/include -I/opt/Qt5.2.1/5.2.1/gcc_64/include/QtGui -I/opt/Qt5.2.1/5.2.1/gcc_64/include/QtCore -I.
 LINK          = g++
 LFLAGS        = -fopenmp -Wl,-O1 -Wl,-rpath,/opt/Qt5.2.1/5.2.1/gcc_64 -Wl,-rpath,/opt/Qt5.2.1/5.2.1/gcc_64/lib

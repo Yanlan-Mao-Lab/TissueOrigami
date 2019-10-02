@@ -213,9 +213,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>updateGrowthByMutatio
 <tr class="memitem:a33c8d69e858be0ad6414f4f5f64eeb3b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a33c8d69e858be0ad6414f4f5f64eeb3b"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>scaleGrowthIncrement</b> (double multiuplier)</td></tr>
 <tr class="separator:a33c8d69e858be0ad6414f4f5f64eeb3b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a62ed1f44e3cd14f58ddbbb332064f1ee"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a62ed1f44e3cd14f58ddbbb332064f1ee"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>getGrowthMutationMultiplier</b> ()</td></tr>
-<tr class="separator:a62ed1f44e3cd14f58ddbbb332064f1ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2423a7dd85ab25b7eb38b5a954d732ab"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2423a7dd85ab25b7eb38b5a954d732ab"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateShapeChangeIncrementFromRates</b> (double dt, double rx, double ry, double rz, gsl_matrix *increment)</td></tr>
 <tr class="separator:a2423a7dd85ab25b7eb38b5a954d732ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -689,15 +686,9 @@ virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>IsThisNodeMyA
 <tr class="memitem:a995a5e6a553ed0cdaadf74dab4f88822"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a995a5e6a553ed0cdaadf74dab4f88822"></a>
 virtual double&#160;</td><td class="memItemRight" valign="bottom"><b>getElementHeight</b> ()</td></tr>
 <tr class="separator:a995a5e6a553ed0cdaadf74dab4f88822"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3fd943415e0e35cb8f19e88bb5e67fe4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3fd943415e0e35cb8f19e88bb5e67fe4"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>getRelevantNodesForPacking</b> (int, int &amp;, int &amp;, int &amp;)</td></tr>
-<tr class="separator:a3fd943415e0e35cb8f19e88bb5e67fe4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a44db2ec9cd790c4fa9782c4117f9d0fe"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a44db2ec9cd790c4fa9782c4117f9d0fe"></a>
 virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>IsPointCloseEnoughForPacking</b> (double *, float, int)</td></tr>
 <tr class="separator:a44db2ec9cd790c4fa9782c4117f9d0fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a75ec5e0c21ee757e72bd9327c35fbdc5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a75ec5e0c21ee757e72bd9327c35fbdc5"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateNormalForPacking</b> (int)</td></tr>
-<tr class="separator:a75ec5e0c21ee757e72bd9327c35fbdc5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afedefe13ce568fa19e5a2ae46a1de4ed"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afedefe13ce568fa19e5a2ae46a1de4ed"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>AddPackingToSurface</b> (int, double, double, double, double **, vector&lt; <a class="el" href="classNode.html">Node</a> * &gt; &amp;, bool &amp;, bool &amp;, bool &amp;)</td></tr>
 <tr class="separator:afedefe13ce568fa19e5a2ae46a1de4ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -707,9 +698,6 @@ virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>getApicalNode
 <tr class="memitem:a8ec7f1e3c34a834ce5f76b20f4c15910"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8ec7f1e3c34a834ce5f76b20f4c15910"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>getBasalNodePos</b> (double *)</td></tr>
 <tr class="separator:a8ec7f1e3c34a834ce5f76b20f4c15910"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a60e19fb23a181504a4eeda5a4267b89d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a60e19fb23a181504a4eeda5a4267b89d"></a>
-virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>IspointInsideTriangle</b> (int, double, double, double)</td></tr>
-<tr class="separator:a60e19fb23a181504a4eeda5a4267b89d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a078cd384ddb67d188da518806394d73d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a078cd384ddb67d188da518806394d73d"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>constructElementStackList</b> (const int, vector&lt; <a class="el" href="classShapeBase.html">ShapeBase</a> * &gt; &amp;)</td></tr>
 <tr class="separator:a078cd384ddb67d188da518806394d73d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -731,18 +719,12 @@ virtual double *&#160;</td><td class="memItemRight" valign="bottom"><b>getApical
 <tr class="memitem:a16af853ecfeb1557e296f804cfe522f6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a16af853ecfeb1557e296f804cfe522f6"></a>
 virtual double *&#160;</td><td class="memItemRight" valign="bottom"><b>getBasalMinViscosity</b> (vector&lt; <a class="el" href="classNode.html">Node</a> * &gt;)</td></tr>
 <tr class="separator:a16af853ecfeb1557e296f804cfe522f6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac3cdc2a33b35c048087b47ce3a9f109f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac3cdc2a33b35c048087b47ce3a9f109f"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>copyElementInformationAfterRefinement</b> (<a class="el" href="classShapeBase.html">ShapeBase</a> *, int, bool)</td></tr>
-<tr class="separator:ac3cdc2a33b35c048087b47ce3a9f109f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4e33b4fea2d126f59ca0bcf73e07a253"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4e33b4fea2d126f59ca0bcf73e07a253"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>checkRotationConsistency3D</b> ()</td></tr>
 <tr class="separator:a4e33b4fea2d126f59ca0bcf73e07a253"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aae5ef32d56aa383108f2d6912469138f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aae5ef32d56aa383108f2d6912469138f"></a>
 virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>areNodesDirectlyConnected</b> (int, int)</td></tr>
 <tr class="separator:aae5ef32d56aa383108f2d6912469138f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4d7bfb4ed03b7633e02e753a485fbf01"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4d7bfb4ed03b7633e02e753a485fbf01"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>checkPackingToThisNodeViaState</b> (int ColumnarLayerDiscretisationLAyers, <a class="el" href="classNode.html">Node</a> *NodePointer)</td></tr>
-<tr class="separator:a4d7bfb4ed03b7633e02e753a485fbf01"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aed4c893952a6afad718a2037e0635296"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aed4c893952a6afad718a2037e0635296"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>DoesPointBelogToMe</b> (int IdNode)</td></tr>
 <tr class="separator:aed4c893952a6afad718a2037e0635296"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -791,9 +773,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>assignViscositySurfac
 <tr class="memitem:af616bee3616ec9d1f99628745f330ad7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af616bee3616ec9d1f99628745f330ad7"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>calculateEmergentRotationAngles</b> ()</td></tr>
 <tr class="separator:af616bee3616ec9d1f99628745f330ad7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac776b9eb4079c175721ca1363bcde77c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac776b9eb4079c175721ca1363bcde77c"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>doesElementNeedRefinement</b> (double areaThreshold, int surfaceidentifier)</td></tr>
-<tr class="separator:ac776b9eb4079c175721ca1363bcde77c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1578faef4bfc3c8de9f8f94fd9e6b52d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1578faef4bfc3c8de9f8f94fd9e6b52d"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>calculateAlignmentScore</b> (double **RefNormalised)</td></tr>
 <tr class="separator:a1578faef4bfc3c8de9f8f94fd9e6b52d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -899,15 +878,6 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>isFlipped</b></td></t
 <tr class="memitem:a994acea5e6f2cf92c94f485e7ba5afc9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a994acea5e6f2cf92c94f485e7ba5afc9"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>IsChangingShape</b></td></tr>
 <tr class="separator:a994acea5e6f2cf92c94f485e7ba5afc9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac10b50666bb82b8dc7b08ce954402b02"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac10b50666bb82b8dc7b08ce954402b02"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>willBeRefined</b></td></tr>
-<tr class="separator:ac10b50666bb82b8dc7b08ce954402b02"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac2bab1161a08d0d953702b7c8d1ff032"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac2bab1161a08d0d953702b7c8d1ff032"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>ApicalNormalForPackingUpToDate</b></td></tr>
-<tr class="separator:ac2bab1161a08d0d953702b7c8d1ff032"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a189180583fb224af63900411b2da53c6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a189180583fb224af63900411b2da53c6"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>BasalNormalForPackingUpToDate</b></td></tr>
-<tr class="separator:a189180583fb224af63900411b2da53c6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aff63b1fcb823bbfdb5b19fe78dea59b8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aff63b1fcb823bbfdb5b19fe78dea59b8"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>tissuePlacement</b></td></tr>
 <tr class="separator:aff63b1fcb823bbfdb5b19fe78dea59b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -1945,7 +1915,7 @@ gsl_matrix *&#160;</td><td class="memItemRight" valign="bottom"><b>TriPointKv</b
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="classShapeBase.html">ShapeBase</a></li>
-    <li class="footer">Generated on Wed Apr 3 2019 14:19:53 for Tissue Origami by
+    <li class="footer">Generated on Wed Oct 2 2019 13:39:32 for Tissue Origami by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

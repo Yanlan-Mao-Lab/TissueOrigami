@@ -1,0 +1,174 @@
+\hypertarget{classNewtonRaphsonSolver}{}\section{Newton\+Raphson\+Solver Class Reference}
+\label{classNewtonRaphsonSolver}\index{Newton\+Raphson\+Solver@{Newton\+Raphson\+Solver}}
+
+
+{\ttfamily \#include $<$Newton\+Raphson\+Solver.\+h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{classNewtonRaphsonSolver_a3cd02ecd63a37d6b621ece7f781aeefd}{}{\bfseries Newton\+Raphson\+Solver} (int n\+Dim, int n\+Nodes)\label{classNewtonRaphsonSolver_a3cd02ecd63a37d6b621ece7f781aeefd}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_af399a29680227186a6f029ba70b05abf}{}void {\bfseries set\+Matrices\+To\+Zero\+At\+The\+Beginning\+Of\+Iteration} (bool there\+Is\+Numerical\+Calculation)\label{classNewtonRaphsonSolver_af399a29680227186a6f029ba70b05abf}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_a36d647a13f9942e90e288a42c5444c4d}{}void {\bfseries set\+Matrices\+To\+Zero\+Inside\+Iteration} ()\label{classNewtonRaphsonSolver_a36d647a13f9942e90e288a42c5444c4d}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_a5f8a13d46729cc7fcd1054955375018d}{}void {\bfseries construct\+Un\+Matrix} (vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&Nodes)\label{classNewtonRaphsonSolver_a5f8a13d46729cc7fcd1054955375018d}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_a48b7753542f36889cd030104937d76a3}{}void {\bfseries initialte\+Uk\+Matrix} ()\label{classNewtonRaphsonSolver_a48b7753542f36889cd030104937d76a3}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_aa1e2ec4519853c9acfaf120c4b513651}{}void {\bfseries calculate\+Bound\+K\+With\+Slaves\+Master\+Do\+F} ()\label{classNewtonRaphsonSolver_aa1e2ec4519853c9acfaf120c4b513651}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_ad1670a14238d705e839d7bd80fb42c13}{}void {\bfseries equate\+Slave\+Displacements\+To\+Masters} ()\label{classNewtonRaphsonSolver_ad1670a14238d705e839d7bd80fb42c13}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_aa0ce333a40397fd113f9b9fc47bcb6ca}{}void {\bfseries calculate\+Displacement\+Matrix} (double dt)\label{classNewtonRaphsonSolver_aa0ce333a40397fd113f9b9fc47bcb6ca}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_a6301430b351e65b2bcf8b0d1dc1ef903}{}void {\bfseries calcutate\+Fixed\+K} (vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&Nodes)\label{classNewtonRaphsonSolver_a6301430b351e65b2bcf8b0d1dc1ef903}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_aa0752205679f10e145b042089ecdbd77}{}void {\bfseries calculate\+Forces\+And\+Jacobian\+Matrix\+N\+R} (vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&Nodes, vector$<$ \hyperlink{classShapeBase}{Shape\+Base} $\ast$ $>$ \&Elements, double dt, bool record\+Forces\+On\+Fixed\+Nodes, double $\ast$$\ast$Fixed\+Node\+Forces)\label{classNewtonRaphsonSolver_aa0752205679f10e145b042089ecdbd77}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_aab9e4e32675e111fcb7b651bc5252404}{}void {\bfseries write\+Forces\+Toge\+Andgv\+Internal} (vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&Nodes, vector$<$ \hyperlink{classShapeBase}{Shape\+Base} $\ast$ $>$ \&Elements, double $\ast$$\ast$System\+Forces)\label{classNewtonRaphsonSolver_aab9e4e32675e111fcb7b651bc5252404}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_aa56100b5f87948b19dc9f1e1ac4086c2}{}void {\bfseries write\+Implicit\+Elemental\+K\+To\+Jacobian} (vector$<$ \hyperlink{classShapeBase}{Shape\+Base} $\ast$ $>$ \&Elements)\label{classNewtonRaphsonSolver_aa56100b5f87948b19dc9f1e1ac4086c2}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_ad84f9e93e68998691a3c235d4ca3f895}{}void {\bfseries calculate\+External\+Viscous\+Forces\+For\+N\+R} (vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&Nodes)\label{classNewtonRaphsonSolver_ad84f9e93e68998691a3c235d4ca3f895}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_a7a6c2da404281b1cbd3d43fc0a8a0baa}{}void {\bfseries add\+Implicit\+K\+Viscous\+External\+To\+Jacobian} (vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&Nodes, double dt)\label{classNewtonRaphsonSolver_a7a6c2da404281b1cbd3d43fc0a8a0baa}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_ae78feecb9e6461ce644a7b5b063d0739}{}void {\bfseries check\+Jacobian\+For\+Ablated\+Nodes} (vector$<$ int $>$ \&Ablated\+Nodes)\label{classNewtonRaphsonSolver_ae78feecb9e6461ce644a7b5b063d0739}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_aba9098983f90b6237a9d32ea633bcb7f}{}void {\bfseries calculate\+Sum\+Of\+Internal\+Forces} ()\label{classNewtonRaphsonSolver_aba9098983f90b6237a9d32ea633bcb7f}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_a24f8fb47b9c29dd9856228ba0602f69e}{}void {\bfseries add\+Exernal\+Forces} ()\label{classNewtonRaphsonSolver_a24f8fb47b9c29dd9856228ba0602f69e}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_a8efb09b253b7d19bd978296314d65c24}{}void {\bfseries solve\+For\+Delta\+U} ()\label{classNewtonRaphsonSolver_a8efb09b253b7d19bd978296314d65c24}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_a710aa89593ea0236da8bf6e4594dbe3d}{}int {\bfseries solve\+With\+Pardiso} (double $\ast$a, double $\ast$b, int $\ast$ia, int $\ast$ja, const int n\+\_\+variables)\label{classNewtonRaphsonSolver_a710aa89593ea0236da8bf6e4594dbe3d}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_a35b0bc520d4a1662e98df5cf8e4df60b}{}void {\bfseries constructia\+For\+Pardiso} (int $\ast$ia, const int nmult, vector$<$ int $>$ \&ja\+\_\+vec, vector$<$ double $>$ \&a\+\_\+vec)\label{classNewtonRaphsonSolver_a35b0bc520d4a1662e98df5cf8e4df60b}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_a17a608992fe423b85fe4f461381339fb}{}void {\bfseries write\+Kin\+Pardiso\+Format} (const int n\+Nonzero, vector$<$ int $>$ \&ja\+\_\+vec, vector$<$ double $>$ \&a\+\_\+vec, int $\ast$ja, double $\ast$a)\label{classNewtonRaphsonSolver_a17a608992fe423b85fe4f461381339fb}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_a78957a2905c38a9170a5c27d6f49326d}{}void {\bfseries writegin\+Pardiso\+Format} (double $\ast$b, const int n)\label{classNewtonRaphsonSolver_a78957a2905c38a9170a5c27d6f49326d}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_a3653a563e32649e0c90407aa089a995b}{}bool {\bfseries check\+Convergence\+Via\+Delta\+U} ()\label{classNewtonRaphsonSolver_a3653a563e32649e0c90407aa089a995b}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_a16edb5206c079476a0d6c2c956c65f25}{}bool {\bfseries check\+Convergence\+Via\+Force} ()\label{classNewtonRaphsonSolver_a16edb5206c079476a0d6c2c956c65f25}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_a5e457b3608c6fbd71767cd6eed07b2f7}{}void {\bfseries update\+Uk\+In\+Iteration} ()\label{classNewtonRaphsonSolver_a5e457b3608c6fbd71767cd6eed07b2f7}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_a6cc1ea27b707135cad7f5af378d716b5}{}void {\bfseries use\+Numerical\+Jacobian\+In\+Iteration} ()\label{classNewtonRaphsonSolver_a6cc1ea27b707135cad7f5af378d716b5}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_a0b340995ccc191634bd1b9ca05104735}{}void {\bfseries calculate\+Difference\+Between\+Numerical\+And\+Analytical\+Jacobian} (vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&Nodes, bool display\+M\+Atrices\+During\+Numerical\+Calculation)\label{classNewtonRaphsonSolver_a0b340995ccc191634bd1b9ca05104735}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_aa70b80e58bc0c5126b660d9c0686418c}{}void {\bfseries display\+Matrix} (gsl\+\_\+matrix $\ast$mat, string matname)\label{classNewtonRaphsonSolver_aa70b80e58bc0c5126b660d9c0686418c}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_a59e1acc3e0dcb3fb69e4453923c50902}{}void {\bfseries display\+Matrix} (gsl\+\_\+vector $\ast$mat, string matname)\label{classNewtonRaphsonSolver_a59e1acc3e0dcb3fb69e4453923c50902}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_a9cdedabbc023ac182c924b1ec6c3804d}{}bool {\bfseries check\+If\+Combination\+Exists} (int dof\+Slave, int dof\+Master)\label{classNewtonRaphsonSolver_a9cdedabbc023ac182c924b1ec6c3804d}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_a1cc04a2a1d6132eb01437f318bcb5103}{}void {\bfseries check\+Master\+Update} (int \&dof\+Master, int \&master\+Id)\label{classNewtonRaphsonSolver_a1cc04a2a1d6132eb01437f318bcb5103}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_a801b9a0287b310a1d4ceba35672f7508}{}void {\bfseries clean\+Peripodial\+Binding\+From\+Master} (int master\+Do\+F, vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&Nodes)\label{classNewtonRaphsonSolver_a801b9a0287b310a1d4ceba35672f7508}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_ab4dd0fae0f0d56355521fbd22875bda8}{}bool {\bfseries check\+If\+Slave\+Is\+Already\+Master\+Of\+Others} (int dof\+Slave, int dof\+Master)\label{classNewtonRaphsonSolver_ab4dd0fae0f0d56355521fbd22875bda8}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_adc82019981a741147db480366e79a53f}{}void {\bfseries update\+Element\+Positions} (vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&Nodes, vector$<$ \hyperlink{classShapeBase}{Shape\+Base} $\ast$ $>$ \&Elements)\label{classNewtonRaphsonSolver_adc82019981a741147db480366e79a53f}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_ac3e678abdc149db73c340c9afc73f970}{}void {\bfseries calculate\+Lumen\+Numerical\+Jacobian} (\hyperlink{classLumen}{Lumen} $\ast$tissue\+Lumen, vector$<$ \hyperlink{classNode}{Node} $\ast$ $>$ \&Nodes, vector$<$ \hyperlink{classShapeBase}{Shape\+Base} $\ast$ $>$ \&Elements)\label{classNewtonRaphsonSolver_ac3e678abdc149db73c340c9afc73f970}
+
+\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{classNewtonRaphsonSolver_a89a6e2f583c785b77b967e6f0e9f5893}{}gsl\+\_\+matrix $\ast$ {\bfseries un}\label{classNewtonRaphsonSolver_a89a6e2f583c785b77b967e6f0e9f5893}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_a3b2a215e49d3c1d6d12eb7c8c73e9ff6}{}gsl\+\_\+matrix $\ast$ {\bfseries ge}\label{classNewtonRaphsonSolver_a3b2a215e49d3c1d6d12eb7c8c73e9ff6}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_a79fd12919ceb329bc177f16f3ce897b6}{}gsl\+\_\+matrix $\ast$ {\bfseries gv\+Internal}\label{classNewtonRaphsonSolver_a79fd12919ceb329bc177f16f3ce897b6}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_a80160d7bfb04a39e3b8910b68f66aa6d}{}gsl\+\_\+matrix $\ast$ {\bfseries gv\+External}\label{classNewtonRaphsonSolver_a80160d7bfb04a39e3b8910b68f66aa6d}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_afee5ceb54c8d439c1044ad3997d079ea}{}gsl\+\_\+matrix $\ast$ {\bfseries g\+Ext}\label{classNewtonRaphsonSolver_afee5ceb54c8d439c1044ad3997d079ea}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_a843bd105e92dfa1c9205e4efa134a406}{}gsl\+\_\+vector $\ast$ {\bfseries g\+Sum}\label{classNewtonRaphsonSolver_a843bd105e92dfa1c9205e4efa134a406}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_ad217268afdeb4838d3b58f075762de95}{}gsl\+\_\+matrix $\ast$ {\bfseries uk}\label{classNewtonRaphsonSolver_ad217268afdeb4838d3b58f075762de95}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_a5c25883f25c52190ea88893ede622e6b}{}gsl\+\_\+matrix $\ast$ {\bfseries displacement\+Per\+Dt}\label{classNewtonRaphsonSolver_a5c25883f25c52190ea88893ede622e6b}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_a064de5e752631defb9dc1b33d5c115f2}{}gsl\+\_\+vector $\ast$ {\bfseries delta\+U}\label{classNewtonRaphsonSolver_a064de5e752631defb9dc1b33d5c115f2}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_a4e9ffc424dd37c6c00f9de3d7ac455ed}{}gsl\+\_\+matrix $\ast$ {\bfseries K}\label{classNewtonRaphsonSolver_a4e9ffc424dd37c6c00f9de3d7ac455ed}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_a08b1f04a341e956ea5245a1359b27530}{}gsl\+\_\+matrix $\ast$ {\bfseries Knumerical}\label{classNewtonRaphsonSolver_a08b1f04a341e956ea5245a1359b27530}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_a9c505bede5b8a216007f1a683ad18321}{}bool {\bfseries numerical\+Parameters\+Set}\label{classNewtonRaphsonSolver_a9c505bede5b8a216007f1a683ad18321}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_ac00970bee6f2c4e1ed503e9c8df65e6d}{}bool {\bfseries bound\+Nodes\+With\+Slave\+Master\+Definition}\label{classNewtonRaphsonSolver_ac00970bee6f2c4e1ed503e9c8df65e6d}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_aa77c77519d63bc3477d1e1cb6299af9f}{}bool {\bfseries there\+Is\+Lumen}\label{classNewtonRaphsonSolver_aa77c77519d63bc3477d1e1cb6299af9f}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_aae59752692242a0dff31dc20257d8fe6}{}\hyperlink{classLumen}{Lumen} $\ast$ {\bfseries tissue\+Lumen}\label{classNewtonRaphsonSolver_aae59752692242a0dff31dc20257d8fe6}
+
+\item 
+\hypertarget{classNewtonRaphsonSolver_a08e76823173b89fe71fac26ba4edc191}{}std\+::vector$<$ std\+::vector$<$ int $>$ $>$ {\bfseries slave\+Master\+List}\label{classNewtonRaphsonSolver_a08e76823173b89fe71fac26ba4edc191}
+
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+The Newton-\/\+Raphson solver class 
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/home/melda/\+Documents/\+Tissue\+Folding/\+Tissue\+Folding/\+Source\+Code/Newton\+Raphson\+Solver.\+h\item 
+/home/melda/\+Documents/\+Tissue\+Folding/\+Tissue\+Folding/\+Source\+Code/Newton\+Raphson\+Solver.\+cpp\end{DoxyCompactItemize}

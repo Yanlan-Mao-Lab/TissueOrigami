@@ -28,7 +28,7 @@ TARGET = $$CurrPath/Debug/TissueFoldingUI
 
 QMAKE_CFLAGS_RELEASE += -fopenmp
 QMAKE_CFLAGS_DEBUG += -fopenmp
-QMAKE_CXXFLAGS += -fopenmp
+QMAKE_CXXFLAGS += -fopenmp -std=c++11
 QMAKE_LFLAGS +=  -fopenmp
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets

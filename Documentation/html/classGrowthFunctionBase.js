@@ -25,7 +25,7 @@ var classGrowthFunctionBase =
     [ "setGrowtRate", "classGrowthFunctionBase.html#ac9995b11d7a4823d2d2c45a603b51916", null ],
     [ "writeSummary", "classGrowthFunctionBase.html#a2b96fbe78194d7dec43212057bbee66d", null ],
     [ "writeSummary", "classGrowthFunctionBase.html#a73b474a60caeb5b6b326ecb6a056cfe4", null ],
-    [ "appliedEllipseBandIds", "classGrowthFunctionBase.html#a362abb90b107b372d558d26105957c23", null ],
+    [ "appliedEllipseBandIds", "classGrowthFunctionBase.html#a905a7ac474d6d5340a357ea282d50581", null ],
     [ "applyTissueApical", "classGrowthFunctionBase.html#a254c82be25d3648a0474c24a63d5a555", null ],
     [ "applyTissueBasal", "classGrowthFunctionBase.html#afcbfd4691a386ba9dbf75888e0a4ef9e", null ],
     [ "applyTissueMidLine", "classGrowthFunctionBase.html#a95cb51fffd8fbb1466510cc40853aeed", null ],

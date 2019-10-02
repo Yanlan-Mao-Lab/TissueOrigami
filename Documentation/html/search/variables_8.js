@@ -3,8 +3,8 @@ var searchData=
   ['id',['Id',['../classGrowthFunctionBase.html#aa669a940ab77009f9b2b9c9885e9cd9e',1,'GrowthFunctionBase::Id()'],['../classMyosinFunction.html#a718e298e9ed8eee2b037fd08d7bd4373',1,'MyosinFunction::Id()'],['../classNode.html#a1bd379569cc1a8b96432e61971aed4d9',1,'Node::Id()'],['../classReferenceShapeBase.html#af0da93cee3f17800d7aa90b21b1b81c7',1,'ReferenceShapeBase::Id()']]],
   ['identifiercolour',['IdentifierColour',['../classShapeBase.html#a02035767d6d169d4a2c1db5f6af8a218',1,'ShapeBase']]],
   ['immediateneigs',['immediateNeigs',['../classNode.html#ab22060fb9f61a0d93ec52e6045828782',1,'Node']]],
-  ['initialexternalviscosity',['initialExternalViscosity',['../classNode.html#a60c2515f86b41fbb3d413cc416c3ee26',1,'Node']]],
-  ['initialposition',['initialPosition',['../classNode.html#a653a595186a56f86fcdb6d431daa4591',1,'Node']]],
+  ['initialexternalviscosity',['initialExternalViscosity',['../classNode.html#a1d6adc185162f9fea733839c4e7230f7',1,'Node']]],
+  ['initialposition',['initialPosition',['../classNode.html#a9be696870819e43f033b984c2592d539',1,'Node']]],
   ['initialrelativeposinboundingbox',['initialRelativePosInBoundingBox',['../classShapeBase.html#a8825955bac10c5deabb9c02cd27577e9',1,'ShapeBase']]],
   ['initialrelativepositioninz',['initialRelativePositionInZ',['../classShapeBase.html#ab6847e4087010221acd07ad298c5c0bd',1,'ShapeBase']]],
   ['inittime',['initTime',['../classGrowthFunctionBase.html#ae92513a7b41637df8e26e7db35ddf97c',1,'GrowthFunctionBase::initTime()'],['../classMyosinFunction.html#a5bf0e10f1e37ef01762fe72305d2e4d2',1,'MyosinFunction::initTime()']]],
@@ -17,5 +17,6 @@ var searchData=
   ['invjshapefuncderstackwithfe',['invJShapeFuncDerStackwithFe',['../classShapeBase.html#a490391c781e50cfc7e2f1a0814bb6d25',1,'ShapeBase']]],
   ['isapical',['isApical',['../classMyosinFunction.html#a413c9a88624a97f6483efebdc5ab6fac',1,'MyosinFunction']]],
   ['islateral',['isLateral',['../classMyosinFunction.html#ae4176116404c97b86f7e76ee359f8499',1,'MyosinFunction']]],
+  ['ismaster',['isMaster',['../classNode.html#af96140b8fa2e7abffd79a040c6972309',1,'Node']]],
   ['ispolarised',['isPolarised',['../classMyosinFunction.html#a66bf31a5b46a19e67691d67b25c03852',1,'MyosinFunction']]]
 ];

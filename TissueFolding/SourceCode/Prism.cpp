@@ -767,9 +767,6 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currge, gsl_matrix *currgv, gsl
     //calculating Fe:
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currF, InvFg, 0.0, currFe);	///< Removing growth
 
-    //gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currF, InvFg, 0.0, currFeFpFsc);	///< Removing growth
-    //gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currFeFpFsc, InvFsc, 0.0, currFeFp);	///< Removing shape change
-    //gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, currFeFp, invFplastic, 0.0, currFe);	///< Removing plastic deformation
     createMatrixCopy(FeMatrices[pointNo], currFe); // storing Fe for use in implicit elastic K calculation.
 
     //setting material type:
@@ -785,7 +782,7 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currge, gsl_matrix *currgv, gsl
     double detFe = determinant3by3Matrix(currFe);
 
     double lnJ = log(detFe);
-    if(isnan(lnJ)){
+    if(std::isnan(lnJ)){
     	cout<<"element: "<<Id<<" lnJ is nan, detFe: "<<detFe<<endl;
     	cout<<" Element positions: "<<endl;
     	displayPositions();
@@ -809,7 +806,6 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currge, gsl_matrix *currgv, gsl
     	//I would like to keep a record of strains, therefore I am repeating this calculation here,
     	//it does not contribute to force calculation
     	E = calculateEForNodalForcesKirshoff(C);
-    	double test1 = gsl_matrix_get(Strain,0,0);
     	gsl_matrix_set_zero(Strain);
 
 		gsl_matrix_set(Strain,0,0, gsl_matrix_get(E,0,0));

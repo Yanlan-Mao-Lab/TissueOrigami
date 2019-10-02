@@ -24,7 +24,6 @@ public:
 	double 		height; 	///< Now being used as Reference element height in reference element area calculation for myosin forces. Slab height for 2D elements, value is -100 for 3D elements. Is obsolete now, must be deleted together with any 2D element option. Mesh file reading should be cleared in parallel.
 	ReferenceShapeBase(string SyapeType, int Id); ///<Constructer of the ReferenceShapeBase class
 	~ReferenceShapeBase();	 ///<Destructor of the ReferenceShapeBase class
-	//int getShapeType();
 };
 
 #endif
