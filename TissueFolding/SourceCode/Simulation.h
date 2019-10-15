@@ -677,11 +677,6 @@ public:
 	void calculatePackingToEnclosingSurfacesJacobian3D(gsl_matrix* K);	///< Update the system jaconbian with the derivatives of forces due to packing to enclosing surfaces, with respect to positions.
 	void detectPackingToAFMBead();
 
-    //void calculatePacking();
-    void calculatePackingK(gsl_matrix* K);
-    void calculatePackingNumerical(gsl_matrix* K);
-    void calculatePackingForcesExplicit3D();
-
     void addValueToMatrix(gsl_matrix* K, int i, int j, double value);	///< Helper function, adds value to matrix K, in indices (i,j).
     void addPackingForces(gsl_matrix* gExt);							///< Add al packing forces to external foces vector.
     void checkPackingToPipette(bool& packsToPip, double* pos, double* pipF,double mass);

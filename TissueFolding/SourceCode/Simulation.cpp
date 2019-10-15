@@ -31,7 +31,6 @@ Simulation::Simulation(){
     nNodes = 0;
     if (growthRotationUpdateFrequency<1) {growthRotationUpdateFrequency =1;}
 	setDefaultParameters();
-	implicitPacking = true;
 	thereIsAdhesion = false;
 	collapseNodesOnAdhesion = false;
 	thereNodeCollapsing = false;
@@ -2898,12 +2897,7 @@ void Simulation::updateOneStepFromSave(){
 		return;
 	}
 	//cout<<"skipped header: "<<currline<<endl;
-    if (implicitPacking){
-        resetForces(true);	// reset packing forces
-    }
-    else{
-        resetForces(false);	// do not reset packing forces
-    }
+    resetForces(true);	// reset packing forces
     updateNodeNumberFromSave();
 	updateNodePositionsFromSave();
 	updateElementStatesFromSave();
@@ -6288,9 +6282,6 @@ bool Simulation::runOneStep(){
     if (encloseTissueBetweenSurfaces){
     	detectPacingToEnclosingSurfacesNodes();
     }
-    if (implicitPacking == false){
-    	calculatePackingForcesExplicit3D();
-    }
     if (addingRandomForces){
     	calculateRandomForces();
     }
@@ -6493,13 +6484,8 @@ void Simulation::calculateNumericalJacobian(bool displayMatricesDuringNumericalC
 	gsl_matrix_memcpy(uk_original,NRSolver->uk);
 	for (int i=0; i<nNodes; ++i){
 		for (int j=0; j<3; ++j){
-	        if (implicitPacking){
-	            resetForces(true);	// reset packing forces
-	        }
-	        else{
-	            resetForces(false);	// do not reset packing forces
-	        }
-	        gsl_matrix_set(NRSolver->uk,i*3+j,0,gsl_matrix_get(NRSolver->uk,i*3+j,0)+1E-6);
+			resetForces(true);	// reset packing forces
+			gsl_matrix_set(NRSolver->uk,i*3+j,0,gsl_matrix_get(NRSolver->uk,i*3+j,0)+1E-6);
 			NRSolver->calculateDisplacementMatrix(dt);
 			Nodes[i]->Position[j] += 1E-6;
 			updateElementPositions();
@@ -6644,12 +6630,7 @@ void Simulation::updateStepNR(){
           * the system Jacobian in NewtonRaphsonSolver#addImplicitKViscousExternalToJacobian. \n
           */
         cout<<"iteration: "<<iteratorK<<endl;
-        if (implicitPacking){
-            resetForces(true);	// reset packing forces
-        }
-        else{
-            resetForces(false);	// do not reset packing forces
-        }
+        resetForces(true);	// reset packing forces
         NRSolver->setMatricesToZeroInsideIteration();
         if (numericalCalculation){
         	calculateNumericalJacobian(displayMatricesDuringNumericalCalculation);
@@ -6667,21 +6648,21 @@ void Simulation::updateStepNR(){
 		NRSolver->calculateExternalViscousForcesForNR(Nodes);
 	    NRSolver->addImplicitKViscousExternalToJacobian(Nodes,dt);
         /**
-         * If the packing forces calculated implicitely (default) they are updated via Simulation#calculatePackingForcesImplicit3D and
+         * The packing forces calculated implicitely, they are updated via Simulation#calculatePackingForcesImplicit3D and
          * the corresponding Jacobian update is carried out with Simulation#calculatePackingJacobian3D. The packing for enclosing surfaces and the pipette
          * are also carried out here (Simulation#calculatePackingForcesToEnclosingSurfacesImplicit3D,
          * Simulation#calculatePackingToEnclosingSurfacesJacobian3D, Simulation#calculatePackingToPipetteForcesImplicit3D
          * and Simulation#calculatePackingToPipetteJacobian3D).
          */
-	    if (implicitPacking){
-			calculatePackingForcesImplicit3D();
-			calculatePackingJacobian3D(NRSolver->K);
-			//calculatePackingToAFMBeadJacobian3D(NRSolver->K);
-	        if (encloseTissueBetweenSurfaces){
-	        	calculatePackingForcesToEnclosingSurfacesImplicit3D();
-	        	calculatePackingToEnclosingSurfacesJacobian3D(NRSolver->K);
-	        }
-	    }
+
+		calculatePackingForcesImplicit3D();
+		calculatePackingJacobian3D(NRSolver->K);
+		//calculatePackingToAFMBeadJacobian3D(NRSolver->K);
+		if (encloseTissueBetweenSurfaces){
+			calculatePackingForcesToEnclosingSurfacesImplicit3D();
+			calculatePackingToEnclosingSurfacesJacobian3D(NRSolver->K);
+		}
+
         /**
          * All the internal forces and the external viscous resistance forces are collated in NewtonRaphsonSolver#gSum
          * via NewtonRaphsonSolver#calculateSumOfInternalForces. The external forceas from the pipette suction if set up, all packing,
@@ -6805,39 +6786,6 @@ void Simulation::updateElementPositionsinNR(gsl_matrix* uk){
             (*itElement)->Positions[j][2] = z;
         }
     }
-}
-
-void Simulation::calculatePackingForcesExplicit3D(){ //to do I am using this?
-	//cout<<"inside calculatePackingForcesExplicit3D, size of packing node couples: "<<pacingNodeCouples0.size()<<endl;
-	int n = pacingNodeCouples0.size();
-	for(int i = 0 ; i<n; ++i){
-		if (pacingNodeCouplesHaveAdhered[i]){
-			continue;
-		}
-		int id0 = pacingNodeCouples0[i];
-		int id1 = pacingNodeCouples1[i];
-
-		double dx = Nodes[id0]->Position[0] - Nodes[id1]->Position[0];
-		double dy = Nodes[id0]->Position[1] - Nodes[id1]->Position[1];
-		double dz = Nodes[id0]->Position[2] - Nodes[id1]->Position[2];
-
-		double d = pow((dx*dx + dy*dy + dz*dz),0.5);
-
-		double averageMass = 0.5 *( Nodes[id0]->mass + Nodes[id1]->mass );
-		double sigmoidSaturation = 5;
-
-		double F = 5000.0 * averageMass / (1 + exp(sigmoidSaturation* d / packingThreshold));
-
-		double Fx = F * initialWeightPointx[i];
-		double Fy = F * initialWeightPointy[i];
-		double Fz = F * initialWeightPointz[i];
-		PackingForces[id0][0] += Fx;
-		PackingForces[id0][1] += Fy;
-		PackingForces[id0][2] += Fz;
-		PackingForces[id1][0] -= Fx;
-		PackingForces[id1][1] -= Fy;
-		PackingForces[id1][2] -= Fz;
-	}
 }
 
 void Simulation::calculatePackingForcesToEnclosingSurfacesImplicit3D(){
@@ -7583,159 +7531,6 @@ void Simulation::calculatePackingJacobian3D(gsl_matrix* K){
 void Simulation::addValueToMatrix(gsl_matrix* K, int i, int j , double value){
 	value += gsl_matrix_get(K,i,j);
 	gsl_matrix_set(K,i,j,value);
-}
-
-void Simulation::calculatePackingNumerical(gsl_matrix* K){
-	int n = pacingNodeCouples0.size();
-	for(int i = 0 ; i<n; ++i){
-		if (pacingNodeCouplesHaveAdhered[i]){
-			continue;
-		}
-		int id0 = pacingNodeCouples0[i];
-		int id1 = pacingNodeCouples1[i];
-		double averageMass = 0.5 *( Nodes[id0]->mass + Nodes[id1]->mass );
-		double multiplier = 1;
-		double c = multiplier * averageMass;
-		double p = 2; //the power of the division (d/t);
-		double threshold = 6.0; //packing threshold;
-
-		double perturbation = 0.0000001;
-		double dz = Nodes[id0]->Position[2] - Nodes[id1]->Position[2];
-		double Fmag = c * (1 - pow(dz/threshold,p));
-		double F0[3] = {0, 0, Fmag};
-		
-		dz += perturbation;
-		Fmag = c * (1 - pow(dz/threshold,p));
-		double F3[3] = {0 , 0 , Fmag};
-
-		double dgczz = (F3[2]-F0[2])/ perturbation;
-
-		//cout<<"dgczz: "<<dgczz<<endl;//" dgcxy: "<<dgcxy<<" dgcyx: "<<dgcyx<<" c: "<<c<<endl;
-		//cout<<"K matrix "<<3*id0+2<<" , "<<3*id0+2<<" : "<<gsl_matrix_get(K,3*id0+2,3*id0+2)<<endl;
-		double value = gsl_matrix_get(K,3*id0+2,3*id0+2);
-		value += dgczz;
-		gsl_matrix_set(K,3*id0+2,3*id0+2,value);
-		//cout<<"K matrix "<<3*id0+2<<" , "<<3*id0+2<<" : "<<gsl_matrix_get(K,3*id0+2,3*id0+2)<<endl;
-		//cout<<"K matrix "<<3*id0+2<<" , "<<3*id1+2<<" : "<<gsl_matrix_get(K,3*id0+2,3*id1+2)<<endl;
-		value = gsl_matrix_get(K,3*id0+2,3*id1+2);
-		value -= dgczz;
-		gsl_matrix_set(K,3*id0+2,3*id1+2,value);
-		//cout<<"K matrix "<<3*id0+2<<" , "<<3*id1+2<<" : "<<gsl_matrix_get(K,3*id0+2,3*id1+2)<<endl;
-
-		value = gsl_matrix_get(K,3*id1+2,3*id1+2);
-		value += dgczz;
-		gsl_matrix_set(K,3*id1+2,3*id1+2,value);
-
-		value = gsl_matrix_get(K,3*id1+2,3*id0+2);
-		value -= dgczz;
-		gsl_matrix_set(K,3*id1+2,3*id0+2,value);
-
-	}
-}
-
-void Simulation::calculatePackingK(gsl_matrix* K){
-	int n = pacingNodeCouples0.size();
-	for(int i = 0 ; i<n; ++i){
-		 if (pacingNodeCouplesHaveAdhered[i]){
-			continue;
-		 }
-		 int id0 = pacingNodeCouples0[i];
-		 int id1 = pacingNodeCouples1[i];
-		 double multiplier = 1.0;
-		 double p = 0.3; //the power of the division (d/t);
-		 double threshold = 10.0; //packing threshold;
-		 double tp = pow(threshold,p);
-
-		 double dx = Nodes[id0]->Position[0] - Nodes[id1]->Position[0];
-		 double dy = Nodes[id0]->Position[1] - Nodes[id1]->Position[1];
-		 double dz = Nodes[id0]->Position[2] - Nodes[id1]->Position[2];
-		 double d = dx*dx + dy*dy + dz*dz;  //distance between the two nodes at current itertion
-		 d = pow(d,0.5);
-		 double averageMass = 0.5 *( Nodes[id0]->mass + Nodes[id1]->mass );
-		 double c = multiplier * averageMass;
-		 //cout<<"C: "<<c<<endl;
-		 double dp = pow(d,p);
-
-		 double ddx = dx / d;
-		 double ddy = dy / d;
-		 double ddz = dz / d;
-
-		 double dgcxx = (-1.0 * c/d/d * ddx - (p-1)/tp*dp/d/d*ddx) * dx + c/d*(1.0 + dp/tp);
-		 double dgcxy = (-1.0 * c/d/d * ddy - (p-1)/tp*dp/d/d*ddy) * dx;
-		 double dgcxz = (-1.0 * c/d/d * ddz - (p-1)/tp*dp/d/d*ddz) * dx;
-		 double dgcyy = (-1.0 * c/d/d * ddy - (p-1)/tp*dp/d/d*ddy) * dy + c/d*(1.0 + dp/tp);
-		 double dgcyz = (-1.0 * c/d/d * ddz - (p-1)/tp*dp/d/d*ddz) * dy;
-		 double dgczz = (-1.0 * c/d/d * ddz - (p-1)/tp*dp/d/d*ddz) * dz + c/d*(1.0 + dp/tp);
-		 // cout<<"dgcxx: "<<dgcxx<<" dgcyy: "<<dgcyy<<" dgcxy: "<<dgcxy<<endl;
-		 //x_i x_i
-		 double value = gsl_matrix_get(K,3*id0,3*id0);
-		 value +=dgcxx;
-		 gsl_matrix_set(K,3*id0,3*id0,value);
-		 //y_i y_i
-		 value = gsl_matrix_get(K,3*id0+1,3*id0+1);
-		 value +=dgcyy;
-		 gsl_matrix_set(K,3*id0+1,3*id0+1,value);
-		 //z_i z_i
-		 value = gsl_matrix_get(K,3*id0+2,3*id0+2);
-		 value +=dgczz;
-		 gsl_matrix_set(K,3*id0+2,3*id0+2,value);
-		 //x_i y_i  && y_i x_i
-		 value = gsl_matrix_get(K,3*id0,3*id0+1);
-		 value +=dgcxy;
-		 gsl_matrix_set(K,3*id0,3*id0+1,value);
-		 value = gsl_matrix_get(K,3*id0+1,3*id0);
-		 value +=dgcxy;
-		 gsl_matrix_set(K,3*id0+1,3*id0,value);
-		 //x_i z_i  && z_i x_i
-		 value = gsl_matrix_get(K,3*id0,3*id0+2);
-		 value +=dgcxz;
-		 gsl_matrix_set(K,3*id0,3*id0+2,value);
-		 value = gsl_matrix_get(K,3*id0+2,3*id0);
-		 value +=dgcxz;
-		 gsl_matrix_set(K,3*id0+2,3*id0,value);
-		 //y_i z_i  && z_i y_i
-		 value = gsl_matrix_get(K,3*id0+1,3*id0+2);
-		 value +=dgcyz;
-		 gsl_matrix_set(K,3*id0+1,3*id0+2,value);
-		 value = gsl_matrix_get(K,3*id0+2,3*id0+1);
-		 value +=dgcyz;
-		 gsl_matrix_set(K,3*id0+2,3*id0+1,value);
-
-		 //add the negative values to the slave:
-		 //x_i x_slave
-		 value = gsl_matrix_get(K,3*id0,3*id1);
-		 value -=dgcxx;
-		 gsl_matrix_set(K,3*id0,3*id1,value);
-		 //y_i y_slave
-		 value = gsl_matrix_get(K,3*id0+1,3*id1+1);
-		 value -=dgcyy;
-		 gsl_matrix_set(K,3*id0+1,3*id0+1,value);
-		 //z_i z_slave
-		 value = gsl_matrix_get(K,3*id0+2,3*id1+2);
-		 value -=dgczz;
-		 gsl_matrix_set(K,3*id0+2,3*id0+2,value);
-		 //x_i y_slave  && y_i x_slave
-		 value = gsl_matrix_get(K,3*id0,3*id1+1);
-		 value -=dgcxy;
-		 gsl_matrix_set(K,3*id0,3*id1+1,value);
-		 value = gsl_matrix_get(K,3*id0+1,3*id1);
-		 value -=dgcxy;
-		 gsl_matrix_set(K,3*id0+1,3*id1,value);
-		 //x_i z_slave  && z_i x_slave
-		 value = gsl_matrix_get(K,3*id0,3*id1+2);
-		 value -=dgcxz;
-		 gsl_matrix_set(K,3*id0,3*id1+2,value);
-		 value = gsl_matrix_get(K,3*id0+2,3*id1);
-		 value -=dgcxz;
-		 gsl_matrix_set(K,3*id0+2,3*id1,value);
-		 //y_i z_slave  && z_i y_slave
-		 value = gsl_matrix_get(K,3*id0+1,3*id1+2);
-		 value -=dgcyz;
-		 gsl_matrix_set(K,3*id0+1,3*id1+2,value);
-		 value = gsl_matrix_get(K,3*id0+2,3*id1+1);
-		 value -=dgcyz;
-		 gsl_matrix_set(K,3*id0+2,3*id1+1,value);
-	}
 }
 
 void Simulation::processDisplayDataAndSave(){
