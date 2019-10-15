@@ -95,7 +95,7 @@ int* 	ShapeBase::getNodeIds(){
 	return NodeIds;
 }
 
-int		ShapeBase::getNodeId(int i){
+int	ShapeBase::getNodeId(int i){
 	return NodeIds[i];
 }
 
@@ -137,8 +137,8 @@ double** ShapeBase::getReferencePos(){
 }
 
 void ShapeBase::getPos(gsl_matrix* Pos){
-    for (int i=0; i<nNodes; ++i){
-        for (int j =0; j<nDim; ++j){
+    for (size_t i=0; i<nNodes; ++i){
+        for (size_t j =0; j<nDim; ++j){
             gsl_matrix_set (Pos, i, j, Positions[i][j]);
         }
     }
@@ -244,8 +244,8 @@ double* ShapeBase::getShapeChangeRate(){
 double* ShapeBase::getCentre(){
 	double* d = new double[3];
 	d[0]= 0.0; d[1]= 0.0; d[2]=0.0;
-	for (int i = 0; i<nNodes; ++i ){
-		for (int j = 0; j< nDim; ++j){
+	for (size_t i = 0; i<nNodes; ++i ){
+		for (size_t j = 0; j< nDim; ++j){
 			d[j] += Positions[i][j];
 		}
 	}
@@ -263,7 +263,13 @@ double ShapeBase::getColumnarness(){
 
 
 void ShapeBase::getRelativePositionInTissueInGridIndex(int nGridX, int nGridY , int& IndexX, int& IndexY, double& FracX, double& FracY){
-	//cout<<"inside getRelativePositionInTissueInGridIndex"<<endl;
+    /**
+     *  This function provides the relative position within the bounding box of the tissue, and
+     * calculates which point on the growth maps should be read. The relative position is calculated through
+     * the function ShapeBase#getRelativePosInBoundingBox, and converted to grid indices through
+     * ShapeBase#convertRelativePosToGridIndex.
+     *
+     */
 	double* reletivePos = new double[2];
 	getRelativePosInBoundingBox(reletivePos);
 	convertRelativePosToGridIndex(reletivePos, IndexX, IndexY, FracX, FracY, nGridX, nGridY);
@@ -271,6 +277,13 @@ void ShapeBase::getRelativePositionInTissueInGridIndex(int nGridX, int nGridY , 
 }
 
 void ShapeBase::getInitialRelativePositionInTissueInGridIndex(int nGridX, int nGridY, int& IndexX, int& IndexY, double& FracX, double& FracY){
+    /**
+     *  This function provides the relative initial position within the bounding box of the tissue, and
+     * calculates which point on the growth maps should be read. The relative position is calculated through
+     * the function ShapeBase#getInitialRelativePosInBoundingBox, and converted to grid indices through
+     * ShapeBase#convertRelativePosToGridIndex.
+     *
+     */
 	double* reletivePos = new double[2];
 	getInitialRelativePosInBoundingBox(reletivePos);
 	convertRelativePosToGridIndex(reletivePos, IndexX, IndexY, FracX, FracY, nGridX, nGridY);
@@ -279,16 +292,28 @@ void ShapeBase::getInitialRelativePositionInTissueInGridIndex(int nGridX, int nG
 }
 
 bool ShapeBase::isGrowthRateApplicable( int sourceTissue, double& weight, double zmin, double zmax){
-	//weight is the weight of the current tissue in linker sites
-	if (initialRelativePositionInZ < zmin ||  initialRelativePositionInZ > zmax){
+	/**
+	* This function checks if the  current growth is appliable tothe element. The input sourceTissue defines which tissue
+	* compartment the growth is applicable to. The weight is needed for elements that are in transition zones
+	* between compartments, giving the weight of the growth that should be applide to the element, should be below
+	* 1.0 by definition. \n
+	*
+	* The code first chacks if the relative z coordinate of teh element is within the limits of growth application.
+	*/
+     	if (initialRelativePositionInZ < zmin ||  initialRelativePositionInZ > zmax){
 		return false;
 	}
+	/**
+	* Then the tissue type is checked. If compartments match, the weight is zero, if they don't it is 0 and growth is
+	* not applied. If the element is in a transition compartment, the weight is assigned dependent on the
+	* source tissue type.
+	*/
 	if (sourceTissue == 0){//columnar layer growth
 		if (tissueType == 0){ //columnar
 			weight = 1.0;
 			return true;
 		}
-		else if(tissueType == 2){ //linker
+		else if(tissueType == 2){ //linker in transition zone
 			weight = columnarGrowthWeight;
 			return true;
 		}
@@ -298,7 +323,7 @@ bool ShapeBase::isGrowthRateApplicable( int sourceTissue, double& weight, double
 			weight = 1.0;
 			return  true;
 		}
-		else if ( tissueType == 2) { //linker
+		else if ( tissueType == 2) { //linker in transition zone
 			weight = peripodialGrowthWeight;
 			return true;
 		}
@@ -334,11 +359,24 @@ void ShapeBase::updateGrowthWillBeScaledDueToApikobasalRedistribution(bool thisF
 }
 
 void ShapeBase::scaleGrowthForZRedistribution( double& x, double& y, double& z, int sourceTissue){
+    /** This function will modify the incremental growth deformation gradient of the element to reflect the
+     * volume redistribution in the height of the tissue. First check point id for if there is such
+     * redistribution in simulaiton. \n
+     *
+     */
 	if(thereIsGrowthRedistribution){ //columnar tissue
-		double growthRedistributionTime = 24*3600; //apply in terms of the effect in 24 hours
+	/** This function will modify the incremental growth deformation gradient of the element to reflect the
+     	* volume redistribution in the height of the tissue. First check point id for if there is such
+	* redistribution in simulaiton. \n
+ 	*
+	*/
+     	double growthRedistributionTime = 24*3600; //apply in terms of the effect in 24 hours
 		double shrunkRates[3] = {0,0,0}, increasedRates[3] = {0,0,0};
 		double xyGrowth = exp((x+y)*growthRedistributionTime);
 		if (growthRedistributionShrinksElement){
+			/**
+             		* If the element should be loosing volume (shrunk) due to redistrtibution, the shrink rate is applied.
+             		*/
 			double scaleFactorShrinkage = log((xyGrowth-1)*growthRedistributionScale + 1)/(x+y)/growthRedistributionTime;
 			shrunkRates[0] = scaleFactorShrinkage*x;
 			shrunkRates[1] = scaleFactorShrinkage*y;
@@ -348,6 +386,9 @@ void ShapeBase::scaleGrowthForZRedistribution( double& x, double& y, double& z, 
 			z = shrunkRates[2];
 		}
 		else{
+			/**
+			* If the element should be loosing volume (shrunk) due to redistrtibution, the shrink rate is applied.
+			*/
 			double growthRedistributionScaleComplementary = 2-growthRedistributionScale;
 			double scaleFactorExpansion = log((xyGrowth-1)*growthRedistributionScaleComplementary + 1)/(x+y)/growthRedistributionTime;
 			increasedRates[0] = scaleFactorExpansion*x;
@@ -362,7 +403,14 @@ void ShapeBase::scaleGrowthForZRedistribution( double& x, double& y, double& z, 
 
 
 double ShapeBase::getCurrentVolume(){
-	double J = 0;
+	/**
+     * The current volume of the element is calculated from the determinant of the deformation
+     * gradient and the initial volume at relaxed state. As the determinants are already recorded, this is cheaper than
+     * calculation of a compex deformed shape calculation. First the average of the determinants at all Gauss points
+     * (ShapeBase#numberOfGaussPoints with weights in ShapeBase#gaussWeights), as recorded in ShapeBase#detFs is calculated.
+     * Then the reference shape volume is scaled.
+     */
+     	double J = 0;
 	for (int iter =0; iter<numberOfGaussPoints;++iter){
 		J +=detFs[iter]*gaussWeights[iter];
 	}
@@ -371,6 +419,11 @@ double ShapeBase::getCurrentVolume(){
 }
 
 gsl_matrix* ShapeBase::getCurrentFe(){
+    /**
+     * The current elastic deformation gradient is calculated the average at all Gauss points
+     * (ShapeBase#numberOfGaussPoints with weights in ShapeBase#gaussWeights), as recorded in
+     * ShapeBase#FeMatrices is calculated.
+     */
 	gsl_matrix* FeAvr = gsl_matrix_calloc(3,3);
 	gsl_matrix* Fetmp = gsl_matrix_calloc(3,3);
 
@@ -384,6 +437,10 @@ gsl_matrix* ShapeBase::getCurrentFe(){
 }
 
 void ShapeBase::relaxElasticForces(){
+    /**
+     * The current elastic deformation gradient is copied over growth deformation gradient
+     * to relax all elastic forces.
+     */
 	gsl_matrix* tmpFgForInversion =gsl_matrix_calloc(nDim,nDim);
 	createMatrixCopy(Fg,TriPointF);
 	createMatrixCopy(tmpFgForInversion,Fg);
@@ -398,7 +455,13 @@ void ShapeBase::relaxElasticForces(){
 }
 
 void ShapeBase::calculateFgFromRates(double dt, double x, double y, double z, gsl_matrix* rotMat, gsl_matrix* increment, int sourceTissue, double zMin, double zMax){
-	double tissueWeight;
+    /**
+     * The current growth deformation gradient increment is calculated from rates and rotation.\n
+     * First check point is for cheking if the growth function is applicable to the element, via
+     * ShapeBase#isGrowthRateApplicable. If the element is growing, the diagonal of the growth increment
+     * is obtained. Then the increment is rotated with a tensor rotation (M' = R M R^T), using the input rotation matrix.
+     */
+     	double tissueWeight;
 	bool continueCalaculation = isGrowthRateApplicable(sourceTissue, tissueWeight, zMin, zMax);
 	if (continueCalaculation){
 		scaleGrowthForZRedistribution(x,y,z,sourceTissue);
@@ -421,30 +484,36 @@ void ShapeBase::calculateFgFromRates(double dt, double x, double y, double z, gs
 }
 
 void ShapeBase::calculateShapeChangeIncrementFromRates(double dt, double rx, double ry, double rz, gsl_matrix* increment){
-    if (Id == 0){
-    	cout<<" rate: "<<rx<<" "<<ry<<" "<<rz<<" increment: "<<exp(rx*dt)<<" "<<exp(ry*dt)<<" "<<exp(rz*dt)<<endl;
-    }
-    gsl_matrix_set(increment,0,0,exp(rx*dt));
+    	gsl_matrix_set(increment,0,0,exp(rx*dt));
 	gsl_matrix_set(increment,1,1,exp(ry*dt));
 	gsl_matrix_set(increment,2,2,exp(rz*dt));
 }
 
 void ShapeBase::calculateFgFromGridCorners(int gridGrowthsInterpolationType, double dt, GrowthFunctionBase* currGF, gsl_matrix* increment, int sourceTissue,  int IndexX, int IndexY, double FracX, double FracY){
+     /**
+     * The current growth deformation gradient increment is calculated from the input growth magnitude and rotations map in a grid \n
+     * First check point is for cheking if the growth function is applicable to the element, via
+     * ShapeBase#isGrowthRateApplicable. If the element is growing, the four corners of the grid that are closest
+     * to the relative position of the element are extracted from the input grid. The growth rates are obtained at four
+     * the corners via the function GrowthBase#getGrowthProfileAt4Corners.
+     * Depending on th einterpolation method chosen, the growth of the point can be mapped to the closest corner,
+     * or can be interpolated between the points depending on the distance the relative position of the element
+     * centre falls within the grid: \n
+     * \verbatim
+             [point 2] ------------- [point 3]
+                |                        |
+                |<--fracX----> (o)       |
+                |               |        |
+                |               |        |
+                |             fracY      |
+                |               |        |
+             [point 0] ------------- [point 1]
+      \endverbatim
+     */
 	double tissueWeight;
 	bool continueCalaculation = isGrowthRateApplicable(sourceTissue,tissueWeight,currGF->zMin,currGF->zMax);
 	if (continueCalaculation){
 		//taking growth data around 4 grid points
-		//
-		// Grid shape:
-		//    [point 2] ------------- [point 3]
-		//       |                        |
-		//       |<--fracX----> (o)       |
-		//       |               |        |
-		//       |               |        |
-		//       |             fracY      |
-		//       |               |        |
-		//    [point 0] ------------- [point 1]
-		//
 		double *growth0, *growth1, *growth2, *growth3;
 		growth0 = new double[3];
 		growth1 = new double[3];
@@ -487,6 +556,9 @@ void ShapeBase::calculateFgFromGridCorners(int gridGrowthsInterpolationType, dou
 			}
 		}
 		else if (gridGrowthsInterpolationType == 1){
+			/**  In the interpolation schenario, the angles are checked and for the corners that have an aspect ratio over
+             		* the threshold the angle is included in the averaging.
+            		*/
 			//calculating the angle fraction eliminated, if any:
 			double FracEliminated = 0.0;
 			if (angleEliminated[0]){ FracEliminated += (1.0-FracX)*(1.0-FracY);	}
@@ -503,20 +575,22 @@ void ShapeBase::calculateFgFromGridCorners(int gridGrowthsInterpolationType, dou
 					angle /= (1.0-FracEliminated); //normalising the sum to the eliminated averaging
 				}
 			}
+			/** A linera interpolation with the distances are carried out for the growth rates and orientation angles:
+             		*/
 			//taking the linear interpolation of 4 growth rates at 4 grid points
 			for (int axis =0; axis<3; axis++){
 				growth[axis]  = growth0[axis]*(1.0-FracX)*(1.0-FracY)+growth1[axis]*FracX*(1.0-FracY)+growth2[axis]*(1.0-FracX)*FracY+growth3[axis]*FracX*FracY;
 				growth[axis] *= tissueWeight;
-				//if (tissuePlacement == 0){
-					//Prevented basal element z growth! Correct this later!!!
-					//growth[2] = 0;
-				//}
 			}
 		}
 		//write the increment from obtained growth:
 		if (isActinMimicing){
+			/** If the element is ShapeBase#isActinMimicing, then growth in the tissue height is ignored.
+             		*/
 			growth[2] = 0; //no z-growth in actin mimicing apical surfaces.
 		}
+		/** Then growth is scaled if there is any distribution of tissue volume in z axis, thourgh ShapeBase#scaleGrowthForZRedistribution.
+         	*/
 		scaleGrowthForZRedistribution(growth[0],growth[1],growth[2],sourceTissue);
 
 		for (int axis =0; axis<3; axis++){
@@ -563,7 +637,11 @@ gsl_matrix* ShapeBase::getGrowthIncrement(){
 }
 
 void ShapeBase::updateGrowthIncrement(gsl_matrix* columnar, gsl_matrix* peripodial ){
-	gsl_matrix* temp = gsl_matrix_calloc(nDim,nDim);
+	/** This function will update the elemental growth deformation gradient from the current
+	* growth deformation gradient increment. The inputs to the function provides growht for two dostonct tissue types,
+	* and the growth is distributed according to the ShapeBase#tissueType.
+	*/
+     	gsl_matrix* temp = gsl_matrix_calloc(nDim,nDim);
 	if (tissueType == 0){//columnar layer element, no peripodial application necessary
 		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, columnar, growthIncrement, 0.0, temp);
 		createMatrixCopy(growthIncrement, temp);
@@ -629,7 +707,6 @@ void ShapeBase::getInitialRelativePosInBoundingBox(double* relativePos){
 }
 
 void ShapeBase::convertRelativePosToGridIndex(double* relpos, int& indexX, int &indexY, double &fracX, double &fracY, int nGridX, int nGridY){
-	//cout<<"relpos: "<<relpos[0]<<" "<<relpos[1]<<endl;
 	relpos[0] *= (float) (nGridX-1);
 	relpos[1] *= (float) (nGridY-1);
 	indexX = floor(relpos[0]);
@@ -670,6 +747,7 @@ void 	ShapeBase::readNodeIds(int* inpNodeIds){
 }
 
 void 	ShapeBase::updateNodeIdsForRefinement(int* inpNodeIds){
+	//TO DO = remove all refinement
 	readNodeIds(inpNodeIds);
 }
 
@@ -779,11 +857,12 @@ void 	ShapeBase::setTissuePlacement(vector<Node*>& Nodes){
 }
 
 void ShapeBase::setECMMimicing(bool IsECMMimicing){
+	/** While setting the element to ECM mimicking, the Poisson's ratio is also set to zero.
+	* The physical definition of the ECM material requires so.
+	*/
 	this->isECMMimicing = IsECMMimicing;
 	//setting poisson ratio to be zero, so the ECM elements will not be thinning.
 	this->v = 0;
-	//calculateInitialThickness();
-	//setECMMimicingElementThicknessGrowthAxis();
 }
 
 void ShapeBase::setActinMimicing(bool isActinMimicing){
@@ -791,7 +870,14 @@ void ShapeBase::setActinMimicing(bool isActinMimicing){
 }
 
 void 	ShapeBase::setTissueType(vector<Node*>& Nodes){
-	bool hasColumnarNode = false;
+	/**
+	* The tissue can be of columnar epithelum type, peripodial type, or be connecting the two.
+	* Depending on the owner nodes of the element, if the element has any linker type nodes, it will be a linker node.
+	* If there are no linker elements, but there are peripodial elements, then assign peripodial, as some peripodial
+	* elements can contain columnar nodes wehen the mesh does not have linkers. Only when all hte nodes are of columnar type, the element
+	* is columnar.
+	*/
+     	bool hasColumnarNode = false;
 	bool hasPeripodialNode = false;
 	bool hasLinkerNode = false;
 	for (int i = 0; i<nNodes; ++i){
@@ -852,6 +938,7 @@ void 	ShapeBase::setReferencePositionMatrix(){
 }
 
 void ShapeBase::setFg(gsl_matrix* currFg){
+
     gsl_matrix_memcpy (Fg, currFg);
     gsl_matrix* tmpFgForInversion =gsl_matrix_calloc(nDim,nDim);
     createMatrixCopy(tmpFgForInversion, Fg);
@@ -879,7 +966,10 @@ bool ShapeBase::getCellMigration(){
 }
 
 void ShapeBase::setViscosity(double viscosityApical,double viscosityBasal, double viscosityMid){
-	this -> internalViscosity = viscosityMid;
+	/** Start by setting the viscosity to the mid layer value. If the element has a specific
+	* node placement (ShapeBase#tissuePlacement is apical or basal) then alter accordingly.
+	*/
+     	this -> internalViscosity = viscosityMid;
 	if (tissuePlacement == 0 ){
 		this -> internalViscosity = viscosityBasal;
 	}
@@ -890,6 +980,10 @@ void ShapeBase::setViscosity(double viscosityApical,double viscosityBasal, doubl
 }
 
 void ShapeBase::setViscosity(double viscosityApical,double viscosityBasal){
+	/** Start by setting the viscosity to the mid layer value to the average of apical and basal values.
+	* If the element has a specific
+	* node placement (ShapeBase#tissuePlacement is apical or basal) then alter accordingly.
+	*/
 	this -> internalViscosity = 0.5*(viscosityApical+viscosityBasal);
 	if (tissuePlacement == 0 ){
 		this -> internalViscosity = viscosityBasal;
@@ -1010,11 +1104,6 @@ int*	ShapeBase::getIdentifierColour(){
 void 	ShapeBase::getStrain(int type, float &StrainMag){
 	StrainMag = 0.0;
 	if (type == 0){
-		//this is the average strain
-        //for (int i=0; i<3; ++i){
-        //   StrainMag += gsl_matrix_get(Strain,i,0) ;
-        //}
-		//StrainMag /= 3;
 		//This is volumetric strain, the total volume change:
 		gsl_matrix* Fe = getFe();
 		StrainMag = determinant3by3Matrix(Fe)-1 ;
@@ -1083,9 +1172,6 @@ void 	ShapeBase::getPysProp(int type, float &PysPropMag, double dt){
 			double value = exp(log(growth[i])/dt*timescale);
 			PysPropMag *= value;
 		}
-        //converting to percentage increase per 24 hours:
-        //PysPropMag -= 1.0;
-        //PysPropMag *= 100.0;
 	}
 	else if (type == 5){
 		PysPropMag = GrownVolume/ReferenceShape->Volume;
@@ -1102,15 +1188,18 @@ void 	ShapeBase::getPysProp(int type, float &PysPropMag, double dt){
 }
 
 double	ShapeBase::calculateEmergentShapeOrientation(){
-	//cout<<"calculating emergent shape orientation"<<endl;
-	//I want to know in which direction the emergent shape is oriented.
-	//I need to have the combination of growth gradient and deformation gradient.
-	//It will reflect how the clones would "look":
+	/** The function calculates in which direction the emergent shape is oriented.
+	* We need to have the combination of growth gradient and deformation gradient.
+	* It will reflect how the clones would "look":
+	*/
 	double currEmergentVolume = calculateCurrentGrownAndEmergentVolumes();
-    gsl_matrix* E;
-    gsl_matrix* C = calculateCauchyGreenDeformationTensor(TriPointF);
+	gsl_matrix* E;
+	gsl_matrix* C = calculateCauchyGreenDeformationTensor(TriPointF);
 	E = calculateEForNodalForcesKirshoff(C);
 	gsl_matrix* strainBackUp = gsl_matrix_calloc(6,1);
+	/** We keep a copy of the original ShapeBase#Strain to utilise the Strain matrix in eigen value
+	* decomposition.
+	*/
 	for (int i=0;i<5;++i){
 		gsl_matrix_set(strainBackUp,i,0,gsl_matrix_get(Strain,i,0));
 	}
@@ -1124,15 +1213,18 @@ double	ShapeBase::calculateEmergentShapeOrientation(){
 	double e1 = 0.0, e2 = 0.0, e3 = 0.0;
 	gsl_matrix* eigenVec = gsl_matrix_calloc(3,3);
 	calculatePrincipalStrains2D(e1,e2,e3,eigenVec);
-	//The Eigen vector matrix is a 3 by 3 matrix, but only stores the 2D vectors in its upper corner 2x2 terms
-	//The vectors are written in columns of the matrix.
-	//the strain I have here is Green strain, I would like to convert it back to deformation
-	//gradient terms. Since  E = 1/2 *(Fe^T*Fe-I):
+	/** Calculated by the funciton ShapeBase#calculatePrincipalStrains2D, the Eigen vector matrix is
+	* a 3 by 3 matrix, but only stores the 2D vectors in its upper corner 2x2 terms. The vectors are
+	* written in columns of the matrix. The strain I have here is Green strain, I would like to convert
+	* it back to deformation gradient terms. Since  \f$ E = 1/2 *(Fe^T*Fe-I): \f$
+	* \f$  F_{ii} = \sqrt{e_{i} \times 2 + 1}
+	* \f$
+	*/
 	double F11 = pow(e1*2+1,0.5);
 	double F22 = pow(e2*2+1,0.5);
 	double AR = F11/F22;
-	//cout<<"AR is : "<<AR<<endl;
-	//cout<<" currEmergentVolume "<<currEmergentVolume<<endl;
+	/** Then with the aspect ratio, the emergent long and short axes are calculated.
+	*/
 	if (AR < 1.0){
 		AR = 1.0/AR;
 		emergentShapeLongAxis[0] = AR * gsl_matrix_get(eigenVec,0,1);
@@ -1146,6 +1238,8 @@ double	ShapeBase::calculateEmergentShapeOrientation(){
 		emergentShapeShortAxis[0] = gsl_matrix_get(eigenVec,0,1);
 		emergentShapeShortAxis[1] = gsl_matrix_get(eigenVec,1,1);
 	}
+	/** Finally, the original ShapeBase#Strain are copied over back to the Strains matrix
+	*/
 	//copy the real strains back on the strains matrix
 	for (int i=0;i<5;++i){
 		gsl_matrix_set(Strain,i,0,gsl_matrix_get(strainBackUp,i,0));
@@ -1154,23 +1248,16 @@ double	ShapeBase::calculateEmergentShapeOrientation(){
 	gsl_matrix_free(E);
 	gsl_matrix_free(strainBackUp);
 	gsl_matrix_free(eigenVec);
+	/** The function returns the volumentric strain (ratio of emergent volume to reference shape volume)
+	* as output.
+	*/
 	return currEmergentVolume/ReferenceShape->Volume;
-
-
 }
 
 void 	ShapeBase::displayIdentifierColour(){
 	cout <<" IdentifierColour:  "<<IdentifierColour[0]<<" "<<IdentifierColour[1]<<" "<<IdentifierColour[2]<<endl;
 }
-/*
-void 	ShapeBase::resetCurrStepShapeChangeData(){
-	for (int i=0;i<3;++i){
-		CurrShapeChangeToAdd[i] = 0.0;
-	}
-	CurrShapeChangeStrainsUpToDate = false;
-	IsChangingShape = false;
-}
-*/
+
 void 	ShapeBase::changeShapeByFsc(double dt){
     gsl_matrix* FscIncrement = gsl_matrix_calloc(nDim,nDim); ///< The increment of shape change that will be induced this step
     if (rotatedGrowth){
@@ -1211,7 +1298,17 @@ void ShapeBase::setPlasticDeformationIncrement(double xx, double yy, double zz){
 }
 
 void 	ShapeBase::growShapeByFg(){
+	/** This function updates the current growth deformaiton gradient with the growt/shape
+	* change/plastic deformation increments and their respective rotations.
+	*/
     if (rotatedGrowth){
+	/** If the growth is rotated (ShapeBase#rotatedGrowth), the current growth increment
+	*  in rotated with a tensor rotation: \f$ \mathbf{R}^{T} \mathbf{F}^{G}_{increment} \mathbf{R}  \f$.\n
+	*  Where \f$ \mathbf{F}^{G}_{increment} \f$
+	* is ShapeBase#growthIncrement and the rotation matrix is ShapeBase#GrowthStrainsRotMat. A similar
+	* rotation is applied on shape change increment defined in ShapeBase#shapeChangeIncrement and
+	* ShapeBase#GrowthStrainsRotMat.
+	*/
         gsl_matrix* temp = gsl_matrix_calloc(nDim,nDim);
         //R^T * growthIncrement
         gsl_blas_dgemm (CblasTrans, CblasNoTrans,1.0, GrowthStrainsRotMat, growthIncrement, 0.0, temp);
@@ -1226,6 +1323,9 @@ void 	ShapeBase::growShapeByFg(){
     gsl_matrix* temp1 = gsl_matrix_calloc(nDim,nDim);
     gsl_matrix* temp2 = gsl_matrix_calloc(nDim,nDim);
     gsl_matrix* temp3 = gsl_matrix_calloc(nDim,nDim);
+    /** The plastic deformation increment is already in the correct orientation by definiton. The increments
+    * are then merged and added on the current growth deformation gradient \f$ F^{G} \f$
+    */
     //adding plastic deformation, this increment is in already in correct orientation:
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, plasticDeformationIncrement,growthIncrement, 0.0, temp1);
     //adding shape change, this increment is in already in correct orientation:
@@ -1238,6 +1338,10 @@ void 	ShapeBase::growShapeByFg(){
     if (!inverted){
         cerr<<"Fg not inverted!!"<<endl;
     }
+    /**
+    * The volumentric change induced by growth is calculated via the determinant of the growth deformation
+    * gradient. The current prefered volume is updated accordingly.
+    */
     double detFg = determinant3by3Matrix(Fg);
     GrownVolume = detFg*ReferenceShape->Volume;
     VolumePerNode = GrownVolume/nNodes;
@@ -1249,18 +1353,17 @@ void 	ShapeBase::growShapeByFg(){
 }
 
 void ShapeBase::displayDebuggingMatrices(){
-	//double a = gsl_matrix_get(FeMatrices[0],0,0);
-	//if (a>(1.0+10E-4) || a <(1-1E-5) ){
-		cout<<" Prism "<<Id<<" rotatedGrowth: "<<rotatedGrowth<<endl;
-		displayMatrix(Fg, " Fg");
-		displayMatrix(FeMatrices[0], " FeMatrices[0]");
-		displayMatrix(FeMatrices[1], " FeMatrices[1]");
-		displayMatrix(FeMatrices[2], " FeMatrices[2]");
-		displayMatrix(GrowthStrainsRotMat, " GrowthStrainsRotMat");
-	//}
+	cout<<" Prism "<<Id<<" rotatedGrowth: "<<rotatedGrowth<<endl;
+	displayMatrix(Fg, " Fg");
+	displayMatrix(FeMatrices[0], " FeMatrices[0]");
+	displayMatrix(FeMatrices[1], " FeMatrices[1]");
+	displayMatrix(FeMatrices[2], " FeMatrices[2]");
+	displayMatrix(GrowthStrainsRotMat, " GrowthStrainsRotMat");
+	
 }
 
 void ShapeBase::addMigrationIncrementToGrowthIncrement(gsl_matrix* migrationIncrement){
+		//TO DO : delete all migration
 		gsl_matrix* temp1 = gsl_matrix_calloc(3,3);
 		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, migrationIncrement,growthIncrement, 0.0, temp1);
 		gsl_matrix_memcpy(growthIncrement, temp1);
@@ -1269,21 +1372,23 @@ void ShapeBase::addMigrationIncrementToGrowthIncrement(gsl_matrix* migrationIncr
 
 
 double 	ShapeBase::calculateCurrentGrownAndEmergentVolumes(){
+	/** Once the reference volume is calculated, the current prefered volume is obtained by
+	* scaling the reference shape volume by the determinant of the growth deformation gradinet ShapeBase#Fg.
+	* On the other hand, current emergent volume is the deformed volume and should be obtained by scaling
+	* the reference volume with the determinant of the total deformation gradient, including both
+	* growth and deformation.
+	*/
 	calculateReferenceVolume();
 	double detFg = determinant3by3Matrix(Fg);
-    GrownVolume = detFg*ReferenceShape->Volume;
-    /*if (Id == 302){
-    	cout<<"Element: "<<Id<<" For displaySave, detFg: "<<detFg<<endl;
-    	displayMatrix(Fg,"FgForDebugging");
-    }*/
+	GrownVolume = detFg*ReferenceShape->Volume;
 	calculateTriPointFForRatation();
 	double detF =determinant3by3Matrix(TriPointF);
 	double emergentVolume = detF*ReferenceShape->Volume;
-    return emergentVolume;
-
+	return emergentVolume;
 }
 
 bool ShapeBase::isMyosinViaEllipsesAppliedToElement(bool isApical, bool isLateral, vector <int> & myosinEllipseBandIds, int numberOfMyosinAppliedEllipseBands){
+	//TO DO: delete all myosin
 	if (!isECMMimicing){
 		if ( isLateral //all elements will feel the myosin regardless of placement
 			 || (tissuePlacement == 1 && isApical ) //the myosin function is apical, and the element is apical
@@ -1303,7 +1408,12 @@ bool ShapeBase::isMyosinViaEllipsesAppliedToElement(bool isApical, bool isLatera
 }
 
 bool ShapeBase::isActinStiffnessChangeAppliedToElement(bool ThereIsWholeTissueStiffnessPerturbation, bool ThereIsApicalStiffnessPerturbation, bool ThereIsBasalStiffnessPerturbation, bool ThereIsBasolateralWithApicalRelaxationStiffnessPerturbation, bool ThereIsBasolateralStiffnessPerturbation, vector <int> &stiffnessPerturbationEllipseBandIds, int numberOfStiffnessPerturbationAppliesEllipseBands ){
-	if (!isECMMimicing){
+	/** The function regulating stiffness perturbations to tissue and ECM are distinct. Therefore first chack is tissue
+	* specific characterisation, ShapeBase#isECMMimicing. If the the element is not, the positional coupling between
+	* the input perturbation adn the element tissue properties are checked to see if the perturbation is applied to
+	* this element.
+	*/
+ 	if (!isECMMimicing){
 		if( ThereIsWholeTissueStiffnessPerturbation  //the whole columnar tissue is perturbed
 			|| ThereIsBasolateralWithApicalRelaxationStiffnessPerturbation	// there is relaxation on the apical surface and stiffenning on the rest of the tissue, further checks needed while calculating the rate
 			|| (ThereIsBasolateralStiffnessPerturbation && !tissuePlacement == 1) //there is only basolateral stiffness perturbation, without affecting apical sides
@@ -1360,7 +1470,6 @@ bool ShapeBase::isECMChangeAppliedToElement(bool changeApicalECM, bool changeBas
 		if  (    (changeApicalECM && tissuePlacement == 1 )
 			  || (changeBasalECM  && tissuePlacement == 0 )
 			  || (isECMMimimcingAtCircumference)
-			  //|| (changeStiffnessBasalECM  && tissuePlacement == 2 )
 			){
 			if(insideEllipseBand){
 				for (int ECMReductionRangeCounter = 0; ECMReductionRangeCounter<numberOfECMChangeEllipseBands; ++ECMReductionRangeCounter){
@@ -1377,20 +1486,25 @@ bool ShapeBase::isECMChangeAppliedToElement(bool changeApicalECM, bool changeBas
 
 
 void ShapeBase::calculateStiffnessPerturbationRate(bool ThereIsBasolateralWithApicalRelaxationStiffnessPerturbation, double stiffnessPerturbationBeginTimeInSec, double stiffnessPerturbationEndTimeInSec, double stiffnessChangedToFractionOfOriginal){
+    /**
+     * This function will calciulate the stiffness perturbation rate.
+     */
     double totalTimePerturbationWillBeAppliedInSec = stiffnessPerturbationEndTimeInSec-stiffnessPerturbationBeginTimeInSec;
     if (totalTimePerturbationWillBeAppliedInSec <0){
         stiffnessPerturbationRateInSec = 0;
         return;
     }
     if (ThereIsBasolateralWithApicalRelaxationStiffnessPerturbation){
-    	//the used rate will be different for apical elements and all the remaining elements.
-    	//I do not need to check for ECM, as this is called for only the elements that has
-    	//applied stiffness perturbations, which already excluded ECM elements.
+ 	/** The used rate will be different for apical elements and all the remaining elements.
+         * I do not need to check for ECM, as this is called for only the elements that has
+         * applied stiffness perturbations, which already excluded ECM elements.
+         */
     	if(tissuePlacement == 1){ //element is apical.
-    		//This will not be feasible for elements that span the whole disc. Then you cannot
-    		//do a baso-lateral change for elements that cover the whole tissue!
-    		//the element is apical, whatever I am applying to the basal side, I will apply the inverse to the apical side.
-    		// If the baso-lateral side is doubling, apical surface will halve.
+		/** If the element is apical, whatever I am applying to the basal side, I will apply the
+		* inverse to the apical side. If the baso-lateral side is doubling, apical surface will halve.
+		* Please note this will not be feasible for elements that span the whole disc. You cannot
+		* do a baso-lateral change for elements that cover the whole tissue!
+		*/
     		stiffnessChangedToFractionOfOriginal = 1.0/stiffnessChangedToFractionOfOriginal;
     	}
     }
@@ -1401,12 +1515,9 @@ void ShapeBase::calculateStiffnessPerturbationRate(bool ThereIsBasolateralWithAp
     else{
     	maximumValueOfStiffnessMultiplier = stiffnessChangedToFractionOfOriginal;
     }
-	//cout<<"Element "<<Id<<" updated  rate: "<<stiffnessPerturbationRateInSec<<"compartment "<< compartmentType<<" identity frac "<<compartmentIdentityFraction<<endl;
-
 }
 
 void ShapeBase::updateStiffnessMultiplier(double dt){
-    //stiffnessMultiplier *= ( 1.0 + stiffnessPerturbationRateInSec*dt);
 	stiffnessMultiplier += stiffnessPerturbationRateInSec*dt;
 	if (stiffnessMultiplier<minimumValueOfStiffnessMultiplier){
 		stiffnessMultiplier = minimumValueOfStiffnessMultiplier;
@@ -1414,7 +1525,6 @@ void ShapeBase::updateStiffnessMultiplier(double dt){
 	if (stiffnessMultiplier>maximumValueOfStiffnessMultiplier){
 		stiffnessMultiplier = maximumValueOfStiffnessMultiplier;
 	}
-	//cout<<" element:  "<<Id<<" stiffnessMultiplier: "<<stiffnessMultiplier<<endl;
 }
 
 void ShapeBase::calculateStiffnessFeedback(double dt){
@@ -1438,7 +1548,7 @@ void ShapeBase::calculateStiffnessFeedback(double dt){
 	}
 }
 
-bool	ShapeBase::assignSoftHinge(double lowHingeLimit, double highHingeLimit,double softnessLevel){
+void	ShapeBase::assignSoftHinge(double lowHingeLimit, double highHingeLimit,double softnessLevel){
 	if (!isECMMimicing){
 		if (relativePosInBoundingBox[0]>lowHingeLimit && relativePosInBoundingBox[0] < highHingeLimit){
 			stiffnessMultiplier *= softnessLevel;
@@ -1448,8 +1558,9 @@ bool	ShapeBase::assignSoftHinge(double lowHingeLimit, double highHingeLimit,doub
 }
 
 bool	ShapeBase::checkZCappingInRemodelling(bool volumeConserved, double zRemodellingLowerThreshold, double zRemodellingUpperThreshold, gsl_matrix* increment, gsl_matrix* eigenVec){
-	//I want to do some further checks on the z axis, I
-	//need to find what the growth on z axis will be:
+    /** This function checks if the remodelling of the element in z axis have reached the specified cap.
+     * First step is to figure out what the gorwth on z axis will be upon the application of perturbation.
+     */
 	bool zCapped = false;
 	gsl_matrix* tempForZCap = gsl_matrix_calloc(nDim,nDim);
 	gsl_matrix* incrementToTestZCapping = gsl_matrix_calloc(nDim,nDim);
@@ -1457,9 +1568,11 @@ bool	ShapeBase::checkZCappingInRemodelling(bool volumeConserved, double zRemodel
 	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, eigenVec, increment, 0.0, tempForZCap);
 	//eigenVec * increment * eigenVec^T
 	gsl_blas_dgemm (CblasNoTrans, CblasTrans,1.0, tempForZCap, eigenVec, 0.0, incrementToTestZCapping);
-	//The increment I have calculated is non-volume conserved, and non-scaled
-	//for z. There are limitations to how much z axis can be remodelled.
-	//I will check those now and cap the z deformation if necessary:
+    /** Once the growth increment in a non is non-volume conserved and non-scaled for z
+     * approach, I will have the potential new z deformation. There are limitations to how much z axis
+     * can be remodelled. I check those limits provided as inputs to the funciton and cap the z
+     * deformation if necessary.
+     */
 	double Fzz = gsl_matrix_get(incrementToTestZCapping,2,2);
 	if (volumeConserved){
 		double det = determinant3by3Matrix(incrementToTestZCapping);
@@ -1514,39 +1627,38 @@ void	ShapeBase::checkIfInsideEllipseBands(int nMarkerEllipseRanges, vector<doubl
 }
 
 void	ShapeBase::calculatePlasticDeformation3D(bool volumeConserved, double dt, double plasticDeformationHalfLife, double zRemodellingLowerThreshold, double zRemodellingUpperThreshold){
-	double e1 = 0.0, e2 = 0.0, e3 = 0.0;
+    /**
+     * This function calculates the plastic deformation (remodelling) from the current elastic deformation
+     * gradient. First check is against tissue specific compartments and z remodelling capping. The linker zone of the tissue and ECM mimicking
+     * elements should be able to remodel in z regardless of currently active caps.
+     */
+    double e1 = 0.0, e2 = 0.0, e3 = 0.0;
 	gsl_matrix* eigenVec = gsl_matrix_calloc(3,3);
-	//by default, I will ignore z deformations for columnat tissue.
-	//If the element is mimicing an explicit ECM, then it should be able to deform in z too,.
-	//Linker zone elements are allowed to deform in z, as we have no information on what they are doing.
-	//They do change their z height, and grow in weird patterns. So let them be...
-	//bool ignoreZ = false;
 	bool checkZCapping = true;
 	if( isECMMimicing || tissueType == 2){
-		//ignoreZ = false;
 		checkZCapping = false;
-		//if( Id == 42){
-		//	cout<<" Id : "<<Id<<" isECMMimicing: "<<isECMMimicing<<" tissueType: "<<tissueType<<endl;
-		//}
 	}
+	/** The principal strains on the element are then calculated through eigen value decomposition
+	* via ShapeBase#calculatePrincipalStrains3D.
+	*/
 	calculatePrincipalStrains3D(e1,e2,e3,eigenVec);
-	//displayMatrix(eigenVec,"eigenVec");
-	//NowI have the green strain in principal direction in the orientation of the element internal coordinats.
-	//I can simply grow the element in this axis, to obtain some form of plastic growth.
-	//the strain I have here is Green strain, I would like to convert it back to deformation
-	//gradient terms. Since  E = 1/2 *(Fe^T*Fe-I):
+	/** This gives the green strain in principal direction in the orientation of the element
+	* internal coordinates. One can simply grow the element in this axis, to obtain some
+	* form of plastic deformation/remodelling. Now the Green stains need to be converted
+	* to deformation gradient terms. Since  \f$ E = 1/2 *(Fe^T*Fe-I): \f$
+	* \f$  F_{ii} = \sqrt{e_{i} \times 2 + 1}
+	* \f$
+	*/
 	double F11 = pow(e1*2+1,0.5);
 	double F22 = pow(e2*2+1,0.5);
 	double F33 = pow(e3*2+1,0.5);
-	//half life of plastic deformation:
-	//Maria's aspect ratio data shows, normalised to initial aspect ratio, if a tissue
-	//is stretched to an aspect ratio of 2.0, and relaxed in 20 minutes, it relaxes back to original shape.
-	//On the other hand, if it is stretched for 3 hr, it relaxed to an aspect ratio of 1.2.
-	//Then the elastic deformation gradient, starting from 2.0, relaxes to a values such that
-	//1.2 * Fe = 2.0 -> Fe = 1.6667. Then the deformation I am calculating decays from 1.0 to 0.66667
-	//N(0) = 1.0, N(3hr) = 0.66667, then this gives me
-	//a half life of 5.12 hr ( N(t) = N(0) * 2 ^ (-t/t_{1/2}) )
-	//This is the value set into modelinput file
+	/** Then remodelling with a decay half-life ShapeBase#plasticDeformationHalfLife
+	* becomes: \n
+	* \f$ N(t+\Delta t) = N(t) * 2 ^ (-\Delta t/\tau_{1/2})
+	* \f$
+	* where \f$ \tau_{1/2} = plasticDeformationHalfLifeMultiplier * plasticDeformationHalfLife/(log(2)) \f$.
+	* Here the multiplier term reflects perturbations.
+	*/
 	double tau = plasticDeformationHalfLifeMultiplier * plasticDeformationHalfLife/(log(2)); // (mean lifetime tau is half life / ln(2))
 	double F11t = (F11-1)*exp(-1.0*dt/tau) + 1;
 	double F22t = (F22-1)*exp(-1.0*dt/tau) + 1;
@@ -1554,7 +1666,9 @@ void	ShapeBase::calculatePlasticDeformation3D(bool volumeConserved, double dt, d
 	F11 = F11/F11t;
 	F22 = F22/F22t;
 	F33 = F33/F33t;
-	//writing onto an incremental matrix:
+	/** The obtained remodelling increment is then checked against capping in z remodelling via
+	* ShapeBase#checkZCappingInRemodelling.
+	*/
 	gsl_matrix*  increment = gsl_matrix_calloc(3,3);
 	gsl_matrix_set(increment,0,0,F11);
 	gsl_matrix_set(increment,1,1,F22);
@@ -1575,6 +1689,9 @@ void	ShapeBase::calculatePlasticDeformation3D(bool volumeConserved, double dt, d
 			}
 		}
 	}
+	/** If there is z capping the procedure is repeated in 2D, with the strains calculated via
+	* ShapeBase#calculatePrincipalStrains2D.
+	*/
 	if (zCapped){
 		calculatePrincipalStrains2D(e1,e2,e3,eigenVec);
 		F11 = pow(e1*2+1,0.5);
@@ -1589,10 +1706,8 @@ void	ShapeBase::calculatePlasticDeformation3D(bool volumeConserved, double dt, d
 		gsl_matrix_set(increment,1,1,F22);
 		gsl_matrix_set(increment,2,2,F33);
 	}
-	//if( Id == 42){
-	//	cout<<" Id : "<<Id<<" volumeConserved: "<<volumeConserved<<" zCapped: "<<zCapped<<endl;
-	//}
-	//If I am conserving the volume, I need to scale:
+	/** If the volume is conserved, the incremeent is sclaed to have a determinant of unity.
+	*/
 	if (volumeConserved){
 		double det = determinant3by3Matrix(increment);
 		if (zCapped){
@@ -1629,21 +1744,11 @@ void	ShapeBase::calculatePlasticDeformation3D(bool volumeConserved, double dt, d
 	//eigenVec*increment *eigenVec^T
 	gsl_blas_dgemm (CblasNoTrans, CblasTrans,1.0, temp, eigenVec, 0.0, plasticDeformationIncrement);
 	//update z remodelling so far to keep track and not update beyond limits
+	/** The total z remodelling up to the current time step (ShapeBase#zRemodellingSoFar) is then updated
+	* for z remodelling capping checks in following time points.
+	*/
 	zRemodellingSoFar *= gsl_matrix_get(plasticDeformationIncrement,2,2);
-	//cout<<"plastic deformation of element "<<Id<<endl;
-	//displayMatrix(plasticDeformationIncrement,"plasticDeformationIncrement-afternormalplasticdeformation");
-	//if (Id == 104 || Id == 104 ){
-		//cout<<" Prism "<<Id<<" e1, e2, e3: "<<e1<<" "<<e2<<" "<<e3<<endl;
-		//displayMatrix(plasticDeformationIncrement, " plasticDeformationIncrement");
-		//displayMatrix(eigenVec," eigenVec");
-		//displayMatrix(temp," temp");
-		//cout<<"    F11,  F22,  F33 : "<<F11<<" "<<F22<<" "<<F33<<endl;
-		//cout<<"    F11t, F22t, F33t: "<<F11t<<" "<<F22t<<" "<<F33t<<endl;
-		//cout<<"    plasticDeformationHalfLife: "<<plasticDeformationHalfLife<<" tau: "<<tau<<" exp(-1.0*dt/tau): "<<exp(-1.0*dt/tau)<<endl;
-		//cout<<"    zRemodellingSoFar: "<<zRemodellingSoFar<<" zCapped: "<<zCapped<<" limits: "<<zRemodellingLowerThreshold<<" "<<zRemodellingUpperThreshold<<endl;
-		//displayMatrix(Fg,"FgBeforeUpdateByPlasticity");
-		//displayMatrix(Strain,"Strain");
-	//}
+
 	gsl_matrix_free(temp);
 	gsl_matrix_free(eigenVec);
 	gsl_matrix_free(increment);
@@ -1651,11 +1756,13 @@ void	ShapeBase::calculatePlasticDeformation3D(bool volumeConserved, double dt, d
 
 
 void 	ShapeBase::CalculateGrowthRotationByF(){
+	/** The rigid body rotation is extracted from the deformation gradient, and the
+	* rotation around the z-axis is stored. The disassembling of the rigid body rotation is carried out via
+	* ShapeBase#disassembleRotationMatrixForZ.
+	*/
     gsl_matrix* rotMat = gsl_matrix_alloc(3,3);
     gsl_matrix_set_identity(rotMat);
-    //rotatedGrowth = false;
-    //updating the F for the current shape positions
-    //(not using leftovers from previous iteration)
+    
     calculateTriPointFForRatation();
     rotatedGrowth = calculate3DRotMatFromF(rotMat);
     if (rotatedGrowth){
@@ -1685,19 +1792,27 @@ void 	ShapeBase::calculateTriPointFForRatation(){
 }
 
 bool 	ShapeBase::disassembleRotationMatrixForZ(gsl_matrix* rotMat){
-	//From Extracting euler angles from a rotation matrix by Mike Day of insomniac games:
-	//To extract a rotation of R_x(tet_1) R_y(tet_2) R_z(tet_3) from a matrix M where:
-	//  M = [ m00   m01   m02
-	//        m10   m11   m12
-	//        m20   m21   m22]
-	// and c1 denote cos(tet_1) and s1 denote sin(tet_1):
-	//
-	//	tet_1 = atan2(m12,m22) = atan2(s1c2, c1c2)
-	//     c2 = sqrt(m00*m00 + m01*m01)
-	//  tet_2 = atan2(-m02,c2)
-	//  tet_3 = atan2(m01,m00)
+    /**  This function extracts the z rotation from a rotation matrix. From Extracting euler angles from
+     * a rotation matrix by Mike Day of insomniac games: \n
+     *
+     * To extract a rotation of \f$ \mathbf{R}_{x}(\theta_{1}) \mathbf{R}_{y}(\theta_{2}) \mathbf{R}_{z}(\theta_{3})\f$ from a matrix
+     * M where:
+     * 	\f{eqnarray*}{
+      \mathbf{M} = \begin{bmatrix}
+                   m_{00} &  m_{01} &  m_{02} \\
+                   m_{10} &  m_{11} &  m_{12} \\
+                   m_{20} &  m_{21} &  m_{22}]
+                   \end{bmatrix}
+       \f}
+    * and \f$ c_{1} \f$  denote \f$ cos(\theta_{1}) \f$ and \f$ s_{1} \f$ denote \f$ sin(\theta_{1}) \f$:
+    * \f{eqnarray*}{
+    *   tet_1 & = & atan2(m_{12},m_{22}) = atan2(s_1c_2, c_1c_2) \\
+    *   c_2 & = & \sqrt{m_{00}*m_{00} + m_{01}*m_{01}}  \\
+    *   tet_2 & = & atan2(-m_{02},c_2) \\
+    *   tet_3 & = & atan2(m_{01},m_{00})
+    * \f}
+    */
     double tethaZ = atan2(gsl_matrix_get(rotMat,0,1),gsl_matrix_get(rotMat,0,0));
-    //rotatedGrowth_tethaZ = tethaZ;
     if (tethaZ > 0.017 || tethaZ < -0.017){ //0.017 rad is ~1 degrees
         //rotation is more than 1 degrees, element incremental growth should be rotated
         double c = cos(tethaZ);
@@ -1726,54 +1841,22 @@ void 	ShapeBase::calculateEmergentRotationAngles(){
 }
 
 bool 	ShapeBase::calculate3DRotMatFromF(gsl_matrix* rotMat){
-    //if (Id == 0) {displayMatrix(TriPointF,"TriPointF");}
+    /** The rigid body rotation of the element is extracted via single value decomposition.
+     */
     gsl_matrix* Sgsl = gsl_matrix_alloc (3, 3);
     gsl_matrix* V = gsl_matrix_alloc (3, 3);
     gsl_matrix* R = gsl_matrix_alloc (3, 3);
     gsl_vector* Sig = gsl_vector_alloc (3);
     gsl_vector* workspace = gsl_vector_alloc (3);
 
-    /*
-    //Added to test polar decomposition:
-    gsl_vector* eigenValues = gsl_vector_calloc(3);
-    gsl_matrix* eigenVec = gsl_matrix_calloc(3,3);
-	gsl_eigen_symmv_workspace* w = gsl_eigen_symmv_alloc(3);
-	gsl_matrix* FTF = gsl_matrix_alloc (3, 3);
-	gsl_blas_dgemm (CblasTrans, CblasNoTrans,1.0, TriPointF, TriPointF,0.0, FTF);
-	gsl_eigen_symmv(FTF, eigenValues, eigenVec, w);
-	gsl_eigen_symmv_free(w);
-	gsl_eigen_symmv_sort(eigenValues, eigenVec, GSL_EIGEN_SORT_ABS_ASC);
-	gsl_matrix* U = gsl_matrix_calloc(3,3);
-	for (int i=0;i<3; ++i){
-		double Sii = gsl_vector_get(eigenValues,i);
-		Sii = pow(Sii,0.5);
-		gsl_matrix_view U2 = gsl_matrix_submatrix (eigenVec, 0, i, 3, 1);
-		gsl_matrix* Uincrement = gsl_matrix_calloc(3,3);
-		//cout<<" i, "<<i<<" Sii "<<endl;
-		gsl_blas_dgemm (CblasNoTrans, CblasTrans,1.0, &U2.matrix, &U2.matrix,0.0, Uincrement);
-		gsl_matrix_scale (Uincrement,Sii);
-		gsl_matrix_add(U,Uincrement);
-	}
-	//inversing U
-	gsl_matrix* invU = gsl_matrix_calloc(3,3);
-	bool inverted = InvertMatrix(U, invU);
-	if (!inverted){
-		cerr<<"U not inverted!!"<<endl;
-	}
-    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, TriPointF, invU,0.0, rotMat);
-    double polarTethaZNew = atan2(gsl_matrix_get(rotMat,0,1),gsl_matrix_get(rotMat,0,0));
 
-	gsl_vector_free (eigenValues);
-	gsl_matrix_free (FTF);
-	gsl_matrix_free (U);
-	gsl_matrix_free (invU);
-	gsl_matrix_free (eigenVec);
-	//End OF Polar Decomposition
-	*/
     //Singular Value Decomposition
     createMatrixCopy (Sgsl,TriPointF);
     (void) gsl_linalg_SV_decomp (Sgsl, V, Sig, workspace); //This function does have a return value, but I do not need to use it, hence cast it to void!
-
+    /** The decomposition isdone by the gsl routine gsl_linalg_SV_decomp, and here, the output gives
+     * Sgsl as \f$ \mathbf{U} \f$ , the rotation matrix \f$ \mathbf{U} \mathbf{V}^{T}  \f$ in the
+     * decomposition \f$ \mathbf{A} = \mathbf{U} \mathbf{S} \mathbf{V}^{T} \f$
+    */
     //Sgsl ended up as U, I need the rotation matrix U V^T in the decomposition A = U S V^T (jose writes as F = V S U^T in emails, so be careful)
     gsl_blas_dgemm (CblasNoTrans, CblasTrans,1.0, Sgsl, V,0.0, rotMat);
 
@@ -1787,13 +1870,7 @@ bool 	ShapeBase::calculate3DRotMatFromF(gsl_matrix* rotMat){
     gsl_matrix_free (R);
     gsl_vector_free (Sig);
     gsl_vector_free (workspace);
-    //added to compare polar vs single value decomposition
-    //double SVDTethaZ = atan2(gsl_matrix_get(rotMat,1,0),gsl_matrix_get(rotMat,0,0));
-    //double SVDTethaZNew = atan2(gsl_matrix_get(rotMat,0,1),gsl_matrix_get(rotMat,0,0));
-    //cout<<" Element "<<Id<<" tetha from polar: "<<polarTethaZ<<" tetha from SVD: "<<SVDTethaZ<<" tetha from SVDCorrected: "<<SVDTethaZCorrected<<"new version each: "<<polarTethaZNew<<" "<<SVDTethaZNew<<" "<<SVDTethaZCorrectedNew<<endl;
-
-
-    //Now I need to check if there is only numerical error accumulationg on rotMat, or there is an actual rotation (above 1 degrees):
+    
     double threshold = 0.017; //this is sine 1 degrees
     for (int i=0;i<3;++i){
         for (int j=0;j<3;++j){
@@ -1815,6 +1892,12 @@ void ShapeBase::mutateElement(double growthFold, double growthRatePerHour){
 }
 
 void ShapeBase::updateGrowthByMutation(double dt){
+    /** Mutation can be defined in a scaled growth increase, stored in ShapeBase#mutationGrowthFold, or a
+     * direct overwriting of the growth, with ShapeBase#mutationGrowthRatePerSec. If the growth fold in non-zero,
+     * growth in xy plane is scaled accordingly, and set in the rates ShapeBase#setGrowthRate.
+     * If the growth is set directly, then the increment is updated directly to the given value.
+     * Then the increment is updated via ShapeBase#updateGrowthIncrementFromRate.
+     */
 	if (mutationGrowthFold>0){
 		//the fold increase is not zero, which means I should be inducing fold increase in growth:
 		//I will take the curretn increment, calculate the determinant (absolute growth).
@@ -1853,39 +1936,21 @@ void 	ShapeBase::calculateRelativePosInBoundingBox(double boundingBoxXMin, doubl
 	relativePosInBoundingBox = getCentre();
 	relativePosInBoundingBox[0] = (relativePosInBoundingBox[0] -boundingBoxXMin) / boundingBoxLength;
 	relativePosInBoundingBox[1] = (relativePosInBoundingBox[1] - boundingBoxYMin) / boundingBoxWidth;
-    if (Id == 9382){ cout<<" relativePosInBoundingBox: "<<relativePosInBoundingBox[0]<<" "<<relativePosInBoundingBox[1]<<endl;}
+}
 
-}
-/*
-void 	ShapeBase::calculateRelativePosInBoundingBox(double columnarBoundingBoxXMin, double columnarBoundingBoxYMin, double columnarBoundingBoxLength, double columnarBoundingBoxWidth, double peripodialBoundingBoxXMin, double peripodialBoundingBoxYMin, double peripodialBoundingBoxLength, double peripodialBoundingBoxWidth){
-	columnarRelativePosInBoundingBox = getCentre();
-	if (tissueType != 0){ //the tissue is not columnar, so there is peripodial membrane
-		peripodialRelativePosInBoundingBox[0] = columnarRelativePosInBoundingBox[0];
-		peripodialRelativePosInBoundingBox[1] = columnarRelativePosInBoundingBox[1];
-		peripodialRelativePosInBoundingBox[0] = (peripodialRelativePosInBoundingBox[0] - peripodialBoundingBoxXMin) / peripodialBoundingBoxLength;
-		peripodialRelativePosInBoundingBox[1] = (peripodialRelativePosInBoundingBox[1] - peripodialBoundingBoxYMin) / peripodialBoundingBoxWidth;
-		columnarRelativePosInBoundingBox[0] = peripodialRelativePosInBoundingBox[0];
-		columnarRelativePosInBoundingBox[1] = peripodialRelativePosInBoundingBox[1];
-	}
-	else{
-		columnarRelativePosInBoundingBox[0] = (columnarRelativePosInBoundingBox[0] - columnarBoundingBoxXMin) / columnarBoundingBoxLength;
-		columnarRelativePosInBoundingBox[1] = (columnarRelativePosInBoundingBox[1] - columnarBoundingBoxYMin) / columnarBoundingBoxWidth;
-	}
-	//cout<<"Element: "<<Id<<" RelPos: "<<columnarRelativePosInBoundingBox[0]<<" "<<columnarRelativePosInBoundingBox[1]<<" "<<peripodialRelativePosInBoundingBox[0]<<" "<<peripodialRelativePosInBoundingBox[1]<<endl;
-	//double* a = new double[3];
-	//a = getRelativePosInBoundingBox();
-	//cout<<" a: "<< a[0]<<" "<<a[1]<<endl;
-	//delete[] a;
-}
-*/
 bool ShapeBase::isElementFlippedInPotentialNewShape(int nodeId, double newX, double newY, double newZ){
+    /**
+     * The current positions are taken on a temporary matrix, and the position update is carried out to the new
+     * position specified in the funciton input. Then the new elastic deformation gradient is calculated
+     * through the standard procedure. If the determinant of the deformation gradient  is negative, then the
+     * element is flipped and the node position update the the new position should be avoided.
+     */
     const int n = nNodes;
     const int dim = nDim;
     gsl_matrix* currF = gsl_matrix_alloc(dim,dim);
     gsl_matrix* currFe = gsl_matrix_alloc(dim,dim);
     gsl_matrix* CurrShape = gsl_matrix_alloc(n,dim);
     getPos(CurrShape);
-    //displayMatrix(CurrShape, "CurrShape_beforeUpdate");
     for (int i=0;i<n;++i){
     	if (NodeIds[i] == nodeId){
     		gsl_matrix_set(CurrShape,i,0,newX);
@@ -1893,8 +1958,6 @@ bool ShapeBase::isElementFlippedInPotentialNewShape(int nodeId, double newX, dou
     		gsl_matrix_set(CurrShape,i,2,newZ);
     	}
     }
-    //displayMatrix(CurrShape, "CurrShape_afterUpdate");
-    //displayNodeIds();
     bool elementWillFlip = false;
     for (int pointNo =0; pointNo<numberOfGaussPoints;++pointNo){
 		//calculating dx/de (Jacobian) and reading out dX/de, shape function derivaties:
@@ -1925,7 +1988,11 @@ bool ShapeBase::isElementFlippedInPotentialNewShape(int nodeId, double newX, dou
 
 
 void ShapeBase::checkForCollapsedNodes(int TissueHeightDiscretisationLayers, vector<Node*>& Nodes, vector<ShapeBase*>& Elements){
-	bool elementCollapsed = false;
+    /** If the element has any nodes that are collapsed with any other node, then the element is
+     * considered collapsed. This definition does not make any distinction betwenn elements collapsing on
+     * themselves to avoid flips, or the nodal collapse due to adhesion of two elements.
+     */
+     	bool elementCollapsed = false;
 		for (int j =0 ; j<nNodes; ++j){
 		int nodeId = NodeIds[j];
 		int collapsedNodeNumber = Nodes[nodeId]->collapsedWith.size();
@@ -1998,7 +2065,10 @@ void ShapeBase::addToElementalElasticSystemForces(int i,int j,double value){
 }
 
 void ShapeBase::addToTriPointKe(int i,int j,double value){
-	double baseValue = gsl_matrix_get(TriPointKe,i,j);
+    /** This funciton adds the input value to the elemental stiffness matrix, elastic part of the elemental
+     * Jacobian, ShapeBase#TriPointKe, at the input indices (i,j).
+     */
+     	double baseValue = gsl_matrix_get(TriPointKe,i,j);
 	baseValue +=value;
 	gsl_matrix_set(TriPointKe,i,j,baseValue);
 	//cout<<" element id (in addToTriPointKe): "<<Id<<endl;
@@ -2159,9 +2229,6 @@ void ShapeBase::writeInternalForcesTogeAndgv(gsl_matrix* ge, gsl_matrix* gvInter
                 SystemForces[NodeIds[i]][j] = SystemForces[NodeIds[i]][j] + gsl_matrix_get(ElementalElasticSystemForces,i,j) + gsl_matrix_get(ElementalInternalViscousSystemForces,i,j);
 
             }
-            /*else if(recordForcesOnFixedNodes){
-                FixedNodeForces[NodeIds[i]][j] = FixedNodeForces[NodeIds[i]][j] - gsl_matrix_get(TriPointg,counter,0);
-            }*/
             counter++;
         }
     }
@@ -2179,9 +2246,13 @@ void	ShapeBase::calculateForces3D(vector <Node*>& Nodes,  gsl_matrix* displaceme
     gsl_matrix* currge = gsl_matrix_calloc(dim*n,1);
     gsl_matrix* currgv = gsl_matrix_calloc(dim*n,1);
     gsl_matrix* currF = gsl_matrix_calloc(dim,dim);
-    //The point order is established in shape function derivative calculation!
-    //Make sure the weights fir in with the order - eta zeta nu:
-    for (int iter =0; iter<numberOfGaussPoints;++iter){
+     /** The nodal forces are calculated as an average of all Gauss Points. The number of Gauss Points
+     * and their weights are stored in ShapeBase#numberOfGaussPoints and ShapeBase#gaussWeights, respectively.
+     * The order of points weights should be consistent with point definition order in shape function derivative
+     * calculation. The nodal forces for the selected Gauss point are calculated via ShapeBase#calculateCurrNodalForces.
+     * Then the output nodal elastic forces, viscous forces, and the deformation gradient are scaled with weights.
+     */
+    for (size_t iter =0; iter<numberOfGaussPoints;++iter){
     	calculateCurrNodalForces(currge, currgv, currF, displacementPerDt, iter);
         gsl_matrix_scale(currge,gaussWeights[iter]);
         gsl_matrix_add(TriPointge, currge);
@@ -2190,6 +2261,9 @@ void	ShapeBase::calculateForces3D(vector <Node*>& Nodes,  gsl_matrix* displaceme
         gsl_matrix_scale(currF,gaussWeights[iter]);
         gsl_matrix_add(TriPointF, currF);
     }
+    /**
+     * Then the elemental forces are written on the system forces.
+     */
     int counter = 0;
     for (int i = 0; i<nNodes; ++i){
             for (int j = 0; j<nDim; ++j){
@@ -2222,6 +2296,10 @@ void	ShapeBase::calculateForces3D(vector <Node*>& Nodes,  gsl_matrix* displaceme
 
 
 gsl_matrix* ShapeBase::calculateCauchyGreenDeformationTensor(gsl_matrix* Fe){
+	/** The Cauchy Green deformation Tensor \f$ \mathbf{C} \f$ is defned as: \n
+	* \f$ \mathbf{C}  = \left( \mathbf{F}^{eT} \mathbf{F}^{e}  \right) \f$
+	* where \f$ \mathbf{F}^{e} \f$  is the elastic part of the deformation gradient.
+	*/
 	//calculating C (C = (Fe^T*Fe):
 	gsl_matrix* C =  gsl_matrix_alloc(nDim, nDim);
 	gsl_blas_dgemm (CblasTrans, CblasNoTrans,1.0, Fe, Fe,0.0, C);
@@ -2229,19 +2307,28 @@ gsl_matrix* ShapeBase::calculateCauchyGreenDeformationTensor(gsl_matrix* Fe){
 }
 
 gsl_matrix* ShapeBase::calculateEForNodalForcesKirshoff(gsl_matrix* C){
-    //calculating E ( E = 1/2 *(Fe^T*Fe-I) ; E = 1/2 *(C-I):):
-    gsl_matrix* E =  gsl_matrix_alloc(nDim, nDim);
+	/** \f$ \mathbf{E} \f$ for Kirshoff material is: \n
+	* \f$ \mathbf{E}  = \frac{1}{2} \times \left( \mathbf{C}- \mathbf{I}  \right) \f$
+	* where \f$ \mathbf{C} \f$  is the Cauchy Green deformation Tensor calculated in
+	* ShapeBase#calculateCauchyGreenDeformationTensor and \f$ \mathbf{I} \f$ is identity.
+	*/    //calculating E ( E = 1/2 *(Fe^T*Fe-I) ; E = 1/2 *(C-I):):
+	gsl_matrix* E =  gsl_matrix_alloc(nDim, nDim);
 	createMatrixCopy(E,C);
-    gsl_matrix* I = gsl_matrix_alloc(nDim, nDim);
-    gsl_matrix_set_identity(I);
-    gsl_matrix_sub(E,I);
-    gsl_matrix_scale(E, 0.5);
-    gsl_matrix_free(I);
-    return E;
+	gsl_matrix* I = gsl_matrix_alloc(nDim, nDim);
+	gsl_matrix_set_identity(I);
+	gsl_matrix_sub(E,I);
+	gsl_matrix_scale(E, 0.5);
+	gsl_matrix_free(I);
+	return E;
 }
 
 gsl_matrix* ShapeBase::calculateSForNodalForcesKirshoff(gsl_matrix* E){
-    //calculating S: (S = D:E)
+	/** The Second order Piola- Kirshoff Stress Tensor \f$ \mathbf{S} \f$ for Kirshoff material is: \n
+	* \f$ \mathbf{S}  =  \mathbf{D}: \mathbf{E} \f$
+	* where \f$ \mathbf{E} \f$  is calculated in
+	* ShapeBase#calculateEForNodalForcesKirshoff and \f$ \mathbf{D} \f$ is ShapeBase#D.
+	*/
+     //calculating S: (S = D:E)
     gsl_matrix_set_zero(Strain);
     gsl_matrix* compactS = gsl_matrix_calloc(6,1);
     gsl_matrix_set(Strain,0,0, gsl_matrix_get(E,0,0));
@@ -2268,25 +2355,33 @@ gsl_matrix* ShapeBase::calculateSForNodalForcesKirshoff(gsl_matrix* E){
 }
 
 gsl_matrix* ShapeBase::calculateSForNodalForcesNeoHookean(gsl_matrix* invC, double lnJ){
+	/** The Second order Piola- Kirshoff Stress Tensor for a Neo-Hookean material is:
+	* \f$
+	\mathbf{S}^e  = \mu (\mathbf {I} - \mathbf {C^{-1}}) + \lambda (ln J^e) \mathbf {C^{-1}}
+	* \f$
+	*/	
 	//S = mu (I - C^-1) + lambda (lnJ) C^-1
 	gsl_matrix* S =  gsl_matrix_alloc(nDim, nDim);
 	createMatrixCopy(S,invC);
 	//displayMatrix(S,"S1");
 	gsl_matrix* I = gsl_matrix_alloc(nDim, nDim);
 	gsl_matrix_set_identity(I);
-    gsl_matrix_sub(I,invC);  //(I - C^-1)
-    gsl_matrix_scale(I, mu); // mu (I - C^-1)
-    gsl_matrix_scale(S, lambda*lnJ); //lambda (lnJ) C^-1
-    gsl_matrix_add(S,I); // mu (I - C^-1) + lambda (lnJ) C^-1
-    gsl_matrix_free(I);
+	gsl_matrix_sub(I,invC);  //(I - C^-1)
+	gsl_matrix_scale(I, mu); // mu (I - C^-1)
+	gsl_matrix_scale(S, lambda*lnJ); //lambda (lnJ) C^-1
+	gsl_matrix_add(S,I); // mu (I - C^-1) + lambda (lnJ) C^-1
+	gsl_matrix_free(I);
 	return S;
 }
 
 void ShapeBase::updateLagrangianElasticityTensorNeoHookean(gsl_matrix* invC, double lnJ, int pointNo){
-    //calculating 4th order tensor C, for convenience the matrix D81 is used for both Kirshoff materials and neo-Hookean materials in the code.
-    //The documentation lists  Lagrangian Elasticity Tensor with C for neo-Hookean, and with D for Kirshoff materials.
-    //lambda is Lame s first parameter and mu is the shear modulus .
-	double multiplier = 2*(mu - lambda*lnJ);
+     /** The voigt notation of the transformed elasticity tensor \f$ \mathcal D \f$ is calculated  via
+     * \f$ \mathcal{D}_{ijkl}  = \lambda \boldsymbol{C}^{-1}_{ij} \boldsymbol{C}^{-1}_{kl} + 2 \left( \mu - \lambda ln(J)\right) \mathcal{I}_{ijkl} \f$ \n
+     * where \f$ \lambda \f$ Lame's first parameter and \f$ \mu \f$ is the shear modulus. Each value at index ijkl is
+     * calculated for each Gauss Point and the information is stored in an array of
+     * D[gauss points] [system dimension (3D)] [system dimension (3D)] [system dimension (3D)] [system dimension (3D)].
+     */
+     double multiplier = 2*(mu - lambda*lnJ);
 	for (int I = 0; I<nDim; ++I){
         for (int J = 0; J<nDim; ++J){
             for (int K = 0; K<nDim; ++K){
@@ -2300,7 +2395,10 @@ void ShapeBase::updateLagrangianElasticityTensorNeoHookean(gsl_matrix* invC, dou
 }
 
 gsl_matrix* ShapeBase::calculateCompactStressForNodalForces(double detFe, gsl_matrix* Fe, gsl_matrix* S, gsl_matrix* Stress){
-    //calculating stress (stress = (detFe)^-1 Fe S Fe^T):
+    /** Stress is calculated via: \n
+     * \f$ \mathbf{\sigma}^e  = J^{e-1} \mathbf{F}^{e} \mathbf{S}^{e} \mathbf{F}^{eT}  \f$
+     */
+     //calculating stress (stress = (detFe)^-1 Fe S Fe^T):
     //double detFe = determinant3by3Matrix(Fe);
     gsl_matrix* tmpMat1 =  gsl_matrix_calloc(nDim, nDim);
     //cout<<"detFe: "<<detFe<<endl;
@@ -2618,13 +2716,14 @@ void ShapeBase::calculateImplicitKElastic(){
 }
 
 void ShapeBase::calculateImplicitKViscous(gsl_matrix* displacementPerDt, double dt){
-	//This is a function called over each element
-	//First function is the function to calculate the sum of all integrals,
-	//each integral calculation will be listed below, individually.
-	//The inputs are:
-	//1) the displacement per dt for all nodes (uk-un)/dt,
-	//2) the time step
-	//the object has access to all the necessary matrices to carry out the calculation.
+	/**	The viscous part of the elemental Jacobian will be calculated over the sum of two integrals, via
+	* ShapeBase#calculateViscousKIntegral1 and ShapeBase#calculateViscousKIntegral2.
+	* The inputs are: \n
+	* 1) the displacement between the current N-R iteration positions \f$ \mathbf{u}_k^{t+\Delta t} \f$ and
+	* the nodal positions at teh end of previous step \f$ \mathbf{u}_n^{t} \f$. \n
+	* 2) the time step, \f$ \Delta t \f$. \n
+	* The calculation is carried out over all Gauss Points.
+	*/
 	int dim = nDim;
 	int n = nNodes;
 	if (IsAblated || internalViscosity == 0){
@@ -2710,9 +2809,6 @@ void ShapeBase::writeKelasticToMainKatrix(gsl_matrix* K){
 }
 
 void ShapeBase::writeKviscousToMainKatrix(gsl_matrix* K){
-	//if (Id == 0) {
-	//	displayMatrix(TriPointKv,"TriPointKvWhileWriting");
-	//}
 	if (internalViscosity != 0){
 		for (int a=0; a<nNodes; ++a){
 			for (int b=0; b<nNodes; ++b){
@@ -2760,30 +2856,13 @@ void	ShapeBase::calculateForceFromStress(int nodeId, gsl_matrix* Externalstress,
         gsl_matrix_free(Bb);
         gsl_matrix_free(NodeForces);
     }
-    //displayMatrix(ExternalNodalForces,"ExternalNodalForces");
 }
 void	ShapeBase::calculateElasticKIntegral1(gsl_matrix* currElementalK,int pointNo){
     gsl_matrix* invJShFuncDerS = invJShapeFuncDerStack[pointNo];
     double detF = detFs[pointNo];
     double detdXde = detdXdes[pointNo];
     gsl_matrix* Fe = FeMatrices[pointNo];
-	double detFe = determinant3by3Matrix(Fe);
-    //finished calculating 4th order tensor D
-	/*if(std::isnan(detF) || detF == 0){
-		cout<<"element "<<Id<<" detF at 1st integration is nan/zero "<<detF<<endl;
-	}
-	if(std::isnan(detFe) || detFe == 0){
-		cout<<"element "<<Id<<" detFe at 1st integration is nan/zero "<<detFe<<endl;
-	}
-	for (int i=0;i<3;++i){
-		for (int j=0;j<3;++j){
-			double value = gsl_matrix_get(Fe,i,j);
-			if(std::isnan(value)){
-				cout<<"element "<<Id<<" Fe at 1st integration is nan at dim: "<<i<<" "<<j<<endl;
-			}
-		}
-	}
-	 */
+    double detFe = determinant3by3Matrix(Fe);
     for (int a =0; a<nNodes; ++a){
         for (int b=0; b<nNodes; ++b){
             gsl_matrix* Keab = gsl_matrix_calloc(3,3);
@@ -2791,12 +2870,9 @@ void	ShapeBase::calculateElasticKIntegral1(gsl_matrix* currElementalK,int pointN
             double DNb[3] = {0.0,0.0,0.0};
 
             for (int i=0;i<nDim;++i){
-                // original version: DNa[i] = gsl_matrix_get(invJShFuncDerS,i,nDim*a);
-                // original version: DNb[i] = gsl_matrix_get(invJShFuncDerS,i,nDim*b);
-            	DNa[i] = gsl_matrix_get(invJShFuncDerS,i,nDim*a);
+                DNa[i] = gsl_matrix_get(invJShFuncDerS,i,nDim*a);
                 DNb[i] = gsl_matrix_get(invJShFuncDerS,i,nDim*b);
             }
-            //cout<<" DNb from Fe: "<<DNb[0]<<" "<<DNb[1]<<" "<<DNb[2]<<" DNb from F: "<<DNbold[0]<<" "<<DNbold[1]<<" "<<DNbold[2]<<endl;
             //writing Kab:
             for (int i = 0 ; i<nDim; ++i){
                 for (int k=0; k<nDim; ++k){
@@ -2896,108 +2972,73 @@ void ShapeBase::calculateVelocityGradient( gsl_matrix* velocityGradient, gsl_mat
 
 void ShapeBase::calculateViscousKIntegral1(gsl_matrix* currElementalK, gsl_matrix* paranthesisTermForKv1, int pointNo){
 	gsl_matrix* BaT = gsl_matrix_calloc(nDim,6);
-    gsl_matrix* Bb = gsl_matrix_calloc(6,nDim);
-    gsl_matrix* BaTBb = gsl_matrix_calloc(nDim,nDim);
-    gsl_matrix* KvabInt1 = gsl_matrix_calloc(nDim,nDim); //First integral in calculation of Kv for nodes a and b
-    gsl_matrix* B = Bmatrices[pointNo];
-    for (int a=0;a<nNodes;++a){
-    	for (int b=0; b<nNodes; ++b){
-    		consturctBaTBb(B, BaT,Bb,a,b);
-    		//Bb matrix should have the last three rows as 0.5, this matrix stems from the
-    		//"d" matrix, as opposed to viscous stresses, therefore the definition
-    		//should have 0.5 on off diagonal terms, therefore the last three rows of Bb.
-    		for (int i=3; i<6; ++i){
-    			for (int j=0; j<nDim; ++j){
-    				double value = gsl_matrix_get(Bb, i,j);
-    				gsl_matrix_set(Bb,i,j,0.5*value);
-    			}
-    		}
-    		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, BaT, Bb,0.0, BaTBb);
-    		//if (a == 3 && b ==3){
-    		//	displayMatrix(BaTBb,"BaTBb_33");
-    		//}
-    		//the paranthesis term is: ( I / dt - velocityGradient)
-    		//calculate all multiplication: BaT*Bb* (I/dt - \Del v):
-			gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, BaTBb, paranthesisTermForKv1,0.0, KvabInt1);
-			//if (Id == 0){// && a == 3 && b ==3){
-			//	//displayMatrix(KvabInt1,"KvabInt1_beforeVolumeIntegraiton_33");
-			//	cout<<"a,b: "<<a<<", "<<b<<" detF: "<<detFs[pointNo]<<" detdXde: "<<detdXdes[pointNo]<<" dV: "<<detFs[pointNo]*detdXdes[pointNo]<<" element volume "<<ReferenceShape->Volume<<endl;
-			//	displayMatrix(BaTBb,"BaTBb");
-			//}
-			//volume integration:
-    	    gsl_matrix_scale(KvabInt1,detFs[pointNo]);
-    	    gsl_matrix_scale(KvabInt1,detdXdes[pointNo]);
-    	    //scaling by viscosity:
-    	    gsl_matrix_scale(KvabInt1,internalViscosity);
-    	    //if (Id == 0 && a == 0 && b == 0){
-    	    //	displayMatrix(KvabInt1,"KvabInt1_afterVolumeIntegraiton_00Element0");
-    	    //	cout<<"dV: "<<detFs[pointNo]*detdXdes[pointNo];
-    	    //	displayMatrix(BaTBb,"BaTBb");
-    	    //}
-    	    //Now KabvInt1 is a 3x3 (dim x dim) matrix, while currK is 18 x 18 (dim*n_node x dim*n_nodes)
-    	    //currK is composed of 3x3 Kab matrices placed into the blocks (a,b), with indexing from zero,
-    	    //for a = 1 and b=2, Kab will be placed in the 3x3 block covering indices (3,4,5) x (6,7,8) on K matrix.
-			/*if (a == 3 && b == 3){
-				cout<<"a: "<<a<<" b: "<<b<<endl;
-				displayMatrix(KvabInt1,"KvabInt1");
-			}*/
-    	    for (int i=0; i<nDim; ++i){
-        	    for (int j=0; j<nDim; ++j){
-        	    	int index2 = a*nDim+i;
-        	    	int index1 = b*nDim+j;
-        	    	double value = gsl_matrix_get(KvabInt1,i,j);
-        	    	double addedValue = gsl_matrix_get(currElementalK,index1,index2) + value; //adding the calculated value to current K matrix
-        	    	gsl_matrix_set(currElementalK,index1,index2,addedValue);
-        	    }
+	gsl_matrix* Bb = gsl_matrix_calloc(6,nDim);
+	gsl_matrix* BaTBb = gsl_matrix_calloc(nDim,nDim);
+	gsl_matrix* KvabInt1 = gsl_matrix_calloc(nDim,nDim); //First integral in calculation of Kv for nodes a and b
+	gsl_matrix* B = Bmatrices[pointNo];
+	for (int a=0;a<nNodes;++a){
+		for (int b=0; b<nNodes; ++b){
+			consturctBaTBb(B, BaT,Bb,a,b);
+			//Bb matrix should have the last three rows as 0.5, this matrix stems from the
+			//"d" matrix, as opposed to viscous stresses, therefore the definition
+			//should have 0.5 on off diagonal terms, therefore the last three rows of Bb.
+			for (int i=3; i<6; ++i){
+				for (int j=0; j<nDim; ++j){
+					double value = gsl_matrix_get(Bb, i,j);
+					gsl_matrix_set(Bb,i,j,0.5*value);
+				}
 			}
-    	}
-    }
-    //if (Id ==0 ){displayMatrix(KvabInt1,"KvabInt1");}
-    gsl_matrix_free(BaT);
-    gsl_matrix_free(Bb);
-    gsl_matrix_free(BaTBb);
-    gsl_matrix_free(KvabInt1);
+			gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, BaT, Bb,0.0, BaTBb);
+			//the paranthesis term is: ( I / dt - velocityGradient)
+			//calculate all multiplication: BaT*Bb* (I/dt - \Del v):
+			gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, BaTBb, paranthesisTermForKv1,0.0, KvabInt1);
+			//volume integration:
+			gsl_matrix_scale(KvabInt1,detFs[pointNo]);
+			gsl_matrix_scale(KvabInt1,detdXdes[pointNo]);
+			//scaling by viscosity:
+			gsl_matrix_scale(KvabInt1,internalViscosity);
+			//Now KabvInt1 is a 3x3 (dim x dim) matrix, while currK is 18 x 18 (dim*n_node x dim*n_nodes)
+			//currK is composed of 3x3 Kab matrices placed into the blocks (a,b), with indexing from zero,
+			//for a = 1 and b=2, Kab will be placed in the 3x3 block covering indices (3,4,5) x (6,7,8) on K matrix.
+			for (int i=0; i<nDim; ++i){
+				for (int j=0; j<nDim; ++j){
+					int index2 = a*nDim+i;
+					int index1 = b*nDim+j;
+					double value = gsl_matrix_get(KvabInt1,i,j);
+					double addedValue = gsl_matrix_get(currElementalK,index1,index2) + value; //adding the calculated value to current K matrix
+					gsl_matrix_set(currElementalK,index1,index2,addedValue);
+				}
+			}
+		}
+ 	}
+	gsl_matrix_free(BaT);
+	gsl_matrix_free(Bb);
+	gsl_matrix_free(BaTBb);
+	gsl_matrix_free(KvabInt1);
 }
 
 void ShapeBase::calculateViscousKIntegral2(gsl_matrix* currElementalK,int pointNo){
-    gsl_matrix* invJShFuncDerS = invJShapeFuncDerStack[pointNo];
-    gsl_matrix* Stress = viscousStress[pointNo];
-    gsl_matrix* DNa = gsl_matrix_calloc(nDim,1);
-    gsl_matrix* DNb = gsl_matrix_calloc(nDim,1);
-    gsl_matrix* KvabInt2 = gsl_matrix_calloc(nDim,nDim);
-    for (int a =0; a<nNodes; ++a){
-        for (int b=0; b<nNodes; ++b){
-            for (int i=0;i<nDim;++i){
-                gsl_matrix_set(DNa,i,0,gsl_matrix_get(invJShFuncDerS,i,nDim*a));
-                gsl_matrix_set(DNb,i,0,gsl_matrix_get(invJShFuncDerS,i,nDim*b));
-            }
-            gsl_matrix* DNaDNbOuterProduct = gsl_matrix_calloc(nDim, nDim);
-            gsl_matrix* DNbDNaOuterProduct = gsl_matrix_calloc(nDim, nDim);
-            calculateOuterProduct(DNa, DNb, DNaDNbOuterProduct);
-            calculateOuterProduct(DNb, DNa, DNbDNaOuterProduct);
-            gsl_matrix* paranthesisTerm = gsl_matrix_calloc(nDim, nDim);
-            gsl_matrix_memcpy(paranthesisTerm,DNaDNbOuterProduct);
-            gsl_matrix_sub(paranthesisTerm,DNbDNaOuterProduct);
-            //gsl_matrix_add(paranthesisTerm,DNbDNaOuterProduct);
-            //gsl_matrix_scale(paranthesisTerm, 0.5);
+	gsl_matrix* invJShFuncDerS = invJShapeFuncDerStack[pointNo];
+	gsl_matrix* Stress = viscousStress[pointNo];
+	gsl_matrix* DNa = gsl_matrix_calloc(nDim,1);
+	gsl_matrix* DNb = gsl_matrix_calloc(nDim,1);
+	gsl_matrix* KvabInt2 = gsl_matrix_calloc(nDim,nDim);
+	for (int a =0; a<nNodes; ++a){
+		for (int b=0; b<nNodes; ++b){
+			for (int i=0;i<nDim;++i){
+				gsl_matrix_set(DNa,i,0,gsl_matrix_get(invJShFuncDerS,i,nDim*a));
+				gsl_matrix_set(DNb,i,0,gsl_matrix_get(invJShFuncDerS,i,nDim*b));
+			}
+			gsl_matrix* DNaDNbOuterProduct = gsl_matrix_calloc(nDim, nDim);
+			gsl_matrix* DNbDNaOuterProduct = gsl_matrix_calloc(nDim, nDim);
+			calculateOuterProduct(DNa, DNb, DNaDNbOuterProduct);
+			calculateOuterProduct(DNb, DNa, DNbDNaOuterProduct);
+			gsl_matrix* paranthesisTerm = gsl_matrix_calloc(nDim, nDim);
+			gsl_matrix_memcpy(paranthesisTerm,DNaDNbOuterProduct);
+			gsl_matrix_sub(paranthesisTerm,DNbDNaOuterProduct);
 			gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, Stress, paranthesisTerm,0.0, KvabInt2);
-			/*if (Id == 0){
-				//displayMatrix(paranthesisTerm,"paranthesisTerm");
-				displayMatrix(Stress,"Stress");
-				//displayMatrix(KvabInt2,"KvabInt2-beforeVolumeIntegration");
-			}*/
 			gsl_matrix_scale(KvabInt2, detFs[pointNo]);
 			gsl_matrix_scale(KvabInt2, detdXdes[pointNo]);
-			/*if (a == 3 && b == 3){
-				cout<<"a: "<<a<<" b: "<<b<<endl;
-				displayMatrix(DNaDNbOuterProduct,"DNaDNbOuterProduct");
-				displayMatrix(DNbDNaOuterProduct,"DNbDNaOuterProduct");
-				displayMatrix(paranthesisTerm,"paranthesisTerm");
-				displayMatrix(Stress,"Stress");
-				cout<<"detFs[pointNo]: "<<detFs[pointNo]<<endl;
-				cout<<"detdXdes[pointNo]: "<<detdXdes[pointNo]<<endl;
-				displayMatrix(KvabInt2,"KvabInt2");
-			}*/
 			for (int i=0; i<nDim; ++i){
 				for (int j=0; j<nDim; ++j){
 					int index2 = a*nDim+i;
@@ -3007,29 +3048,20 @@ void ShapeBase::calculateViscousKIntegral2(gsl_matrix* currElementalK,int pointN
 					gsl_matrix_set(currElementalK,index1,index2,addedValue);
 				}
 			}
-            gsl_matrix_free(DNaDNbOuterProduct);
-            gsl_matrix_free(DNbDNaOuterProduct);
-            gsl_matrix_free(paranthesisTerm);
-        }
-    }
-    gsl_matrix_free(DNa);
-    gsl_matrix_free(DNb);
-    gsl_matrix_free(KvabInt2);
-	/*if (Id == 0){
-		displayMatrix(DNa,"DNa");
-		displayMatrix(DNaT,"DNaT");
-		displayMatrix(DNb,"DNb");
-		displayMatrix(DNbT,"DNbT");
-		displayMatrix(DNaDNbT,"DNaDNbT");
-		displayMatrix(DNbDNaT,"DNbDNaT");
-		//displayMatrix(paranthesisTerm,"paranthesisTerm");
-		displayMatrix(Stress,"Stress");
-		displayMatrix(KvabInt2,"KvabInt2-beforeVolumeIntegration");
-	}*/
+			gsl_matrix_free(DNaDNbOuterProduct);
+			gsl_matrix_free(DNbDNaOuterProduct);
+			gsl_matrix_free(paranthesisTerm);
+		}
+	}
+	gsl_matrix_free(DNa);
+	gsl_matrix_free(DNb);
+	gsl_matrix_free(KvabInt2);
 }
 
 void	ShapeBase::calculateOuterProduct(gsl_matrix* a, gsl_matrix* b, gsl_matrix* outerProduct){
-	//cout<<"inside outer product"<<endl;
+	/** The outer product is defined as: \n
+	* \f$ \mathbf{a} outer \mathbf{b} = \mathbf{a} \mathbf{b}^{T}
+	*/
 	int size1 = a->size1;
 	int size2 = a->size2;
 	if ((int) b->size2 != size2){
@@ -3037,7 +3069,6 @@ void	ShapeBase::calculateOuterProduct(gsl_matrix* a, gsl_matrix* b, gsl_matrix* 
 	}
 	//a outer b =  a b^T
 	gsl_blas_dgemm (CblasNoTrans, CblasTrans,1.0, a, b,0.0, outerProduct);
-	//cout<<"finalised outer product"<<endl;
 }
 
 gsl_matrix*	ShapeBase::calculateSymmetricisedTensorProduct(gsl_matrix* a, gsl_matrix* b){
@@ -3380,7 +3411,6 @@ void 	ShapeBase::calculatePrincipalStrainAxesOnXYPlane(double& e1, double &e2, d
 	// tan (2*tetha) = (2 exy ) / ( exx - eyy )
 
 
-	//remodellingPlaneRotationMatrix
 	double exx, eyy, exy;
 	if (tissueType == 2 && ShapeType == 1){ //the matrix is only calculated for prisms of lateral tissue type
 		gsl_matrix* rotatedStrain = gsl_matrix_calloc(3,3);

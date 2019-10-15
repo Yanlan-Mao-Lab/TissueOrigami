@@ -302,7 +302,7 @@ public:
 		compatibleAngles 	 		= new double**[(const int) nGridX];
 		compatibleGrowths  			= new double***[(const int) nGridX];
 
-		//GrowthMatrix : [grid_i] [grid_j][x,y,z]
+
 		for (int i=0; i<nGridX; ++i){
 			GrowthMatrix[i] = new double*[(const int) nGridY];
 			xyShearAngleMatrix[i] = new double[(const int) nGridY];
@@ -318,10 +318,12 @@ public:
 					double scaleGrowth[3] = {1.0,1.0,1.0};
 					GrowthMatrix[i][j][k] = scaleGrowth[k]*GrowthMat[i][j][k];
 				}
-				compatibleAngleEliminated[i][j] = new bool[4];			//booleans stating if the angle will be added in compatible averaging in for 4 corners
+				//cout<<"set the growth matrix for: "<<i<<" "<<j<<endl;
+				compatibleAngleEliminated[i][j] = new bool[4];	//booleans stating if the angle will be added in compatible averaging in for 4 corners
 				compatibleAngles[i][j] 			= new double[4];		//angles compatible for averaging in for 4 corners
 				compatibleGrowths[i][j]			= new double*[4];		//growth rates [rx,ry,rz] compatible for averaging in for 4 corners
 				for (int k=0; k<4; ++k){
+					//cout<<"set default values of  compatibleAngleEliminated for: "<<i<<" "<<j<<" "<<k<<endl;
 					compatibleAngleEliminated[i][j][k] = false;	//by default all angles are added
 					compatibleAngles[i][j][k] = 0.0;			//by default all angles are zero
 					compatibleGrowths[i][j][k]= new double[3];	//growth rates [rx,ry,rz] at index point [i][j], for corner [k]
@@ -342,6 +344,7 @@ public:
 				}
 				if(AR < aspectRatioThreshold){
 					aspectRatioOverThresoldMatrix[i][j] = false;
+					//cout<<" [i][j]: ["<<i<<"]["<<j<<"], aspect ratio too small: "<<AR<<endl;
 				}
 			}
 		}
@@ -354,6 +357,7 @@ public:
 				xyShearRotationsMatrix[i][j] = gsl_matrix_calloc(3,3);
 				double c = cos(xyShearAngleMatrix[i][j]);
 				double s = sin(xyShearAngleMatrix[i][j]);
+				//cout<<"xyShearRotationsMatrix ["<<i<<"]["<<j<<"], angle: "<<xyShearAngleMatrix[i][j]<<" cos: "<<c<<" sin "<<s<<endl;
 				gsl_matrix_set(xyShearRotationsMatrix[i][j],0,0,  c );
 				gsl_matrix_set(xyShearRotationsMatrix[i][j],0,1, -1.0*s);
 				gsl_matrix_set(xyShearRotationsMatrix[i][j],0,2,  0.0);

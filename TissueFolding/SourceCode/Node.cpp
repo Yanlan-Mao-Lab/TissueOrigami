@@ -116,7 +116,7 @@ bool Node::checkIfNeighbour(int IdToCheck){
 	 *  The search will be done through the list Node#immediateNeigs
 	 *
 	 */
-	vector<int>::iterator itInt;
+	//vector<int>::iterator itInt;
 	for(auto immediateNeigId : immediateNeigs){
 		if (immediateNeigId == IdToCheck){
 			return true;

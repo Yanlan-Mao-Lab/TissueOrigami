@@ -266,38 +266,35 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, bool thereIsPlas
 }
 
 Prism::~Prism(){
-	//cout<<"called the destructor for prism class"<<endl;
 	for (int i=0; i<nNodes; ++i){
 		delete[] Positions[i];
 		delete[] MyoForce[i];
 	}
-    delete[] Positions;
+	delete[] Positions;
 	delete[] relativePosInBoundingBox;
 	delete[] initialRelativePosInBoundingBox;
-    //delete[] columnarRelativePosInBoundingBox;
-	//delete[] peripodialRelativePosInBoundingBox;
-    delete[] NodeIds;
+	delete[] NodeIds;
 	delete[] IdentifierColour;
 	delete[] MyoForce;
 	delete[] GrowthRate;
-    delete[] ShapeChangeRate;
-    delete[] apicalNormalCurrentShape;
+	delete[] ShapeChangeRate;
+	delete[] apicalNormalCurrentShape;
 	delete	 ReferenceShape;
 
     //freeing matrices allocated
 	gsl_matrix_free(growthIncrement);
 	gsl_matrix_free(plasticDeformationIncrement);
-    gsl_matrix_free(D);
-    gsl_matrix_free(CoeffMat);
-    gsl_matrix_free(Fg);
-    gsl_matrix_free(InvFg);
-    gsl_matrix_free(Fsc);
-    gsl_matrix_free(InvFsc);
-    gsl_matrix_free(TriPointF);
-    gsl_matrix_free(Strain);
-    gsl_matrix_free(TriPointKe);
-    gsl_matrix_free(TriPointKv);
-    gsl_matrix_free(GrowthStrainsRotMat);
+	gsl_matrix_free(D);
+	gsl_matrix_free(CoeffMat);
+	gsl_matrix_free(Fg);
+	gsl_matrix_free(InvFg);
+	gsl_matrix_free(Fsc);
+	gsl_matrix_free(InvFsc);
+	gsl_matrix_free(TriPointF);
+	gsl_matrix_free(Strain);
+	gsl_matrix_free(TriPointKe);
+	gsl_matrix_free(TriPointKv);
+	gsl_matrix_free(GrowthStrainsRotMat);
     for (int i=0; i<numberOfGaussPoints; ++i){
     	delete[] gaussPoints[i];
         gsl_matrix_free (ShapeFuncDerivatives[i]);
@@ -342,10 +339,42 @@ Prism::~Prism(){
     delete[] gaussWeights;
     delete[] elementsIdsOnSameColumn;
     gsl_matrix_free(ECMThicknessPlaneRotationalMatrix);
-	//cout<<"finished destructor for prism class"<<endl;
 }
 
 void Prism::setCoeffMat(){
+   /** The coefficient matrix collating the calculated stresses in the form of the vector
+     * form of elemental strss and strain vectors:
+     *
+     * \f{eqnarray*}{
+        \boldsymbol{c} =
+        \begin{bmatrix}
+        1	& 0	& 0	& 0	& 0	& 0	& 0	& 0	& 0	\\
+        0	& 0	& 0	& 0	& 1	& 0	& 0	& 0	& 0	\\
+        0	& 0	& 0	& 0	& 0	& 0	& 0	& 0	& 1	\\
+        0	& 1	& 0	& 1	& 0	& 0	& 0	& 0	& 0	\\
+        0	& 0	& 0	& 0	& 0	& 1	& 0	& 1	& 0	\\
+        0	& 0	& 1	& 0	& 0	& 0	& 1	& 0	& 0	\\
+        \end{bmatrix}
+        \sim
+        \begin{bmatrix}
+        \epsilon_{x} \\
+        \epsilon_{y} \\
+        \epsilon_{z}\\
+        \gamma_{x,y} \\
+        \gamma_{x,z} \\
+        \gamma_{y,z}
+        \end{bmatrix}
+        \sim
+        \begin{bmatrix}
+        \sigma_{x} \\
+        \sigma_{y} \\
+        \sigma_{z}\\
+        \sigma_{x,y} \\
+        \sigma_{x,z} \\
+        \sigma_{y,z}
+        \end{bmatrix}.
+        \f}
+      */
     CoeffMat = gsl_matrix_calloc(6, nDim*nDim);
     gsl_matrix_set(CoeffMat,0,0,1);
     gsl_matrix_set(CoeffMat,1,4,1);
@@ -486,93 +515,79 @@ void  Prism::AlignReferenceBaseNormalToZ(){
 
 
 void  Prism::setElasticProperties(double EApical, double EBasal, double EMid, double EECM, double v){
+	/** This function takes the Young's moduli for apical and basal surfaces, the tissue midline, 
+	 *  and the ECM. It also accepts the Poisson's ratio. The choice of the element being 
+	 *  a peripodial or columnar layer is made before calling this function. /n
+	 * 
+	 * Initially, the element's Young's modulus is set to the tissue mid layer. First check is for ECM,
+	 * if the element is representing ECM (ShapeBase#isECMMimicing), then the stiffness is set to 
+	 * \f$ E_{ECM} \f$. If it is not an ECM element, the tissue placement is checked. 
+	*/
 	this -> E = EMid;
 	if (isECMMimicing){
 		this -> E = EECM;
 	}
 	else{
+		/**  
+		 * If the element is on the basal surface, or at the basal border of ECM, its stiffness is set
+		 * to \f$ E_{basal} \f$. The double check is necessary, as in the case of a mesh with ECM, the 
+		 * ECM elements will take up the basal flag (ShapeBase#tissuePlacement = 0). The actual cellular basal layer will be the first 
+		 * layer of elements that are immediately above the ECM, that are flagged as being at 
+		 * basal border of ECM (ShapeBase#atBasalBorderOfECM).
+		 */
 		if (tissuePlacement == 0 || atBasalBorderOfECM){
 			this -> E = EBasal;
 		}
 		else if(tissuePlacement == 1 ){
+		/**
+		* If the element has an apical tissue placement (ShapeBase#tissuePlacement = 1), then 
+		* its stiffness will be set to \f$ E_{apical} \f$. \n
+		*/
 			this -> E = EApical;
 		}
 	}
+	/**
+	* The poisson ratio is set to the user input, followed by a sanity check, such taht if the value is 
+	* bounded to the interval [0.0, 0.5].
+	*/
 	this -> v = v; //poisson ratio
 	if (this -> v>0.5){this -> v= 0.5;}
 	else if (this -> v<0.0){this -> v = 0.0;}
-
+	/**
+	* Once the Young's modulus and the Poisson's ratio of the element are set, the Lame's parameters, 
+	* ShapeBase#lambda and ShapeBase#mu, are calculated and the mechanical model is simulated over these parameters.
+	* This detail highlights the importance of structured parameter updates. At any instance the 
+	* the Young's modulus or Poisson's ratio of an element is altered during the simulation, Prism#updateElasticProperties
+	* function must be called to update the Lame parameter, the shear modulus, then the Lagrangian elasticity tensor (ShapeBase#D81)
+	* (the tensor for elastic force calculation, depending on the material model). 
+	* Otherwise the changes will not be reflected in the mechanical model.
+	*/
     lambda = E*v/(1+v)/(1-2.0*v);
     mu = E/2.0/(1+v);
-
-    //mu = 0.001*mu;
-
     calculateDVector();
     calculateD81Tensor();
-    //cout<<" Element: "<<Id<<" E : "<<E<<" v: "<<v<<" lambda: "<<lambda<< " mu: "<<mu<<" atBasalBorderOfECM "<<atBasalBorderOfECM<<endl;
 }
 
 
 void  Prism::updateElasticProperties(){
+    /**
+     * This function updates the Lame's parameters and the related tensors for elastic stress calculation
+     * with the current Young's moduli and Poisson's ratio. Of note, for ease of tracking the extent of change,
+     * during modifications of stiffness, the initial Young's modulus is not altered, nad the modifications are 
+     * stored in ShapeBase#stiffnessMultiplier.
+     */
     lambda = stiffnessMultiplier*E*v/(1+v)/(1-2.0*v);
     mu = stiffnessMultiplier*E/2.0/(1+v);
-    //These two updates are not really necessary for a neo-Hookean material, as the calculation for
-    //D81 vector is carried out at each Newton-Raphson iteration. I do not know the material type now,
-    //therefore I dont know if I should skip this or not. Can be eliminated for efficiency later on!
+    /** The two tensor updates are not necessary for a neo-Hookean material, as the calculation for
+    * ShapeBase#D81 tensor is carried out at each Newton-Raphson iteration. At this point, the material model is
+    * not known,  therefore the values will be updated. 
+    */
     calculateDVector();
     calculateD81Tensor();
 }
-/*
-void Prism::fillLateralNeighbours(){
-	if (tissueType == 0 || tissueType ==1){ //peripodial or columnar element
-		//This is a peripodial or columnar element, The lateral neighbours are those that will
-		//share two nodes on the apical side and two nodes on the basal side:
-		//I go over the apical surface, each elemetn here should be connected to the equivalent node on the apical side, so that
-		//these elements will be connected on the rectangular side
-		Continue from here!
-		NodeIds[0]->connectedElementIds == NodeIds[3]->connectedElementIds
-		NodeIds[1]->connectedElementIds == NodeIds[4]->connectedElementIds
-		NodeIds[2]->connectedElementIds == NodeIds[5]->connectedElementIds
-
-	}
-}
-
-void Prism::fillLateralNeighbours(vector<Nodes>& Nodes){
-	//generate a list of element that are connected to this element
-	vector <int> connectedElementList;
-	vector <int> connectedElementEncounterCounter;
-	for (int i=0; i<nNodes; ++i){
-		int nConnectedElement = Nodes[NodeIds[i]]->connectedElementIds.size();
-		for (int j=0; j<nConnectedElement; ++j){
-			int currElementId = Nodes[NodeIds[i]]->connectedElementIds[j];
-			if (currElementId != this->Id){
-				//the connected element of the node is not this element itself
-				int currListSize = connectedElementList.size();
-				bool alreadyRecorded = false;
-				for (int k=0; k<currListSize; ++k){
-					if (connectedElementList[k] == currElementId){
-						connectedElementEncounterCounter[k]++;
-						alreadyRecorded = true;
-						break;
-					}
-				}
-				if (!alreadyRecorded){
-					connectedElementList.push_back(currElementId);
-					connectedElementEncounterCounter.push_back(1);
-				}
-			}
-		}
-	}
-	//If the element id have been encoiuntered 4 times, then it is a lateral neighbour:
-	int currListSize = connectedElementList.size();
-	for (int k=0; k<currListSize; ++k){
-		if (connectedElementEncounterCounter[k] == 4){
-			bibap
-		}
-	}
-}*/
 
 void Prism::fillLateralNeighbours(vector<Node*>& Nodes, vector<int>& lateralNeigbours){
+	// to do: do i use this?
 	//generate a list of element that are connected to this element
 	vector <int> connectedElementList;
 	vector <int> connectedElementEncounterCounter;
@@ -625,8 +640,23 @@ void Prism::calculateDVector(){
 }
 
 void Prism::calculateD81Tensor(){
-	//calculating 4th order tensor D
-	// lambda is Lame s first parameter and mu is the shear modulus .
+ /**
+    * This function calculates the Lagrangian elasticity tensor for a neo-hookean material.
+    * The Lagrangian elasticity tensor depends on the deformation gradient through the
+    * Cauchy-Green Deformation tensor, and the physical material properties, namely Lame's second
+    * parameter \f$ \lambda \f$ and the sheer modulus \f$ \mu \f$. \n
+    * \f$\boldsymbol {\mathcal D} \f$ can be obtained in the Voigt notation:
+    * \f{eqnarray*}{
+            \mathcal{D}_{ijkl}  = \lambda \boldsymbol{C}^{-1}_{ij} \boldsymbol{C}^{-1}_{kl} + 2 \left( \mu - \lambda ln(J)\right) \mathcal{I}_{ijkl}
+      \f}
+    * where \f$ \mathcal{I}_{ijkl} \f$ is defined as:
+      \f{eqnarray*}{
+            \mathcal{I}_{ijkl}  = \frac{1}{2} \left[ \boldsymbol{C}^{-1}_{ik} \boldsymbol{C}^{-1}_{jl} + \boldsymbol{C}^{-1}_{il} \boldsymbol{C}^{-1}_{jk}\right]
+      \f}
+    * where the indices $ i,j,k,l $ go through 3 dimensions.\n
+    *
+    */
+    	// lambda is Lame s first parameter and mu is the shear modulus .
 	double Idouble[3][3] = {{1.0,0.0,0.0} , {0.0,1.0,0.0}, {0.0,0.0,1.0}};
 	for (int pointNo = 0; pointNo<3; pointNo++){
 		for (int I = 0; I<nDim; ++I){
@@ -642,6 +672,11 @@ void Prism::calculateD81Tensor(){
 }
 
 void Prism::getCurrRelaxedShape(gsl_matrix* CurrRelaxedShape){
+    /** This function writes the current relaxed shape of the element in the gsl_matrix
+     * pointed by the provided input gsl_matrix pointer. The matrix must be allocated before
+     * the call to the function.
+     *
+     */
 	for (int i =0; i<nNodes; ++i){
 		for (int j=0; j<nDim; ++j){
             gsl_matrix_set(CurrRelaxedShape,i,j,ReferenceShape->Positions[i][j]);
@@ -650,6 +685,36 @@ void Prism::getCurrRelaxedShape(gsl_matrix* CurrRelaxedShape){
 }
 
 void Prism::setShapeFunctionDerivatives(gsl_matrix* ShapeFuncDer, double eta, double zeta, double nu){
+   /** This function calculates and writes the shape function derivatives on
+     * the gsl_matrix pointed by the provided input gsl_matrix pointer,
+     * for the provided barycentric coordinates. The matrix must be allocated prior to
+     * calling the function. \n
+     * For the prism, the shape functions and their derivatives are given as:
+     *
+     * \f{tabular}{{|c|c|c|c|c|}
+            \multicolumn{5}{|c|}{ $\lambda = 1 - \xi - \eta$ }            \\
+            \multicolumn{5}{|c|}{ $\alpha = \left( 1-\zeta \right) /2$  } \\
+            \multicolumn{5}{|c|}{ $b = \left(1+\zeta\right)/2$ }          \\
+            Node & Shape function.    & Shape function         	 & Shape function 	  	   & Shape function.         \\
+                 & 			        & derivative wrt $\xi$      	 &  derivative wrt $\zeta$      & derivative wrt $\eta$ \\
+                 & 		$N$ 	        & $\frac{\partial{N}}{ \partial \xi}$     & $\frac{\partial{N}}{\partial \zeta}$  &  $\frac{\partial{N}}{\partial \eta}$ \\
+            1       & $\lambda \alpha$  & $- \alpha$         		 & $- \alpha$	  	   	    & $ \frac{-\lambda} {2}$        \\
+            2	 & $\xi \alpha$           & $\alpha$     		 	& 0  	  	   			    & $\frac{-\xi} {2} $        \\
+            3  	& $\eta \alpha$  	& 0         		 		& $\alpha$ 	  	   	    & $\frac{-\nu} {2} $        \\
+            4    	& $\lambda b$  		&  $-b$      			& $-b$ 	  	   		    & $\frac{\lambda} {2} $         \\
+            5	& $\xi b$  			& $b$         		 	&0 	  	   			    & $\frac{\xi} {2} $         \\
+            6 	 & $\eta b$  		& 0    		 		& $b$   	  	   		    & $\frac{\eta} {2} $        \\
+         \f}
+     *
+     * The shape function derivatives matrix has the form:
+     * 	\f{eqnarray*}{
+        \begin{bmatrix}
+            \frac{\partial N_0}{ \partial \xi}      & ... 	& \frac{\partial N_n}{ \partial \xi}    \\
+            \frac{\partial N_0}{ \partial \zeta}    & ...   & \frac{\partial N_n}{ \partial \zeta}  \\
+            \frac{\partial N_0}{ \partial \eta}     & ...   & \frac{\partial N_n}{ \partial \eta}
+        \end{bmatrix}
+        \f}
+     */
 	double alpha  = (1 - zeta)/2;
 	double beta = (1 + zeta)/2;
 	double lambda = 1-eta-nu;
@@ -677,7 +742,30 @@ void Prism::setShapeFunctionDerivatives(gsl_matrix* ShapeFuncDer, double eta, do
 }
 
 void Prism::setShapeFunctionDerivativeStack(gsl_matrix* ShapeFuncDer, gsl_matrix* ShapeFuncDerStack){
-	int n = nNodes;
+    /** This function writes the input gsl_matrix ShapeFuncDer into a stack form, in the
+     * matrix ShapeFuncDerStack. Both matrices must be allocated prior to calling the function.
+     * This stack is for direct multiplication with B matrix during calculation of stresses.
+     * with the notation  \f$ N_{i, \xi} \f$ being the short hand for
+     * \f$ \partial \boldsymbol{x_{i}} / \partial {\xi} \f$
+     * for node i, the stack for of the shape function derivatives in open form is:
+     *
+     *
+     *\f{eqnarray*}{
+        \begin{bmatrix}
+            N_{0,\xi} 		& 0 			& 0			& N_{1,\xi} 	& \cdots &N_{n-1,\xi} 		& 0 			& 0			\\
+            N_{0,\zeta} 	& 0 			& 0 		& N_{1,\zeta}  	& \cdots &N_{n-1,\zeta}       & 0 			& 0			\\
+            N_{0,\nu} 		& 0			& 0 			& N_{1,\nu}  	& \cdots &N_{n-1,\nu} 		& 0 			& 0			\\
+            0 			& N_{0,\xi} 	& 0 			& 0 			& \cdots &0                 & N_{n-1,\xi} 	& 0			\\
+            0 			& N_{0,\zeta} 	& 0 			& 0 	 		& \cdots &0                 & N_{n-1,\zeta} 	& 0			\\
+            0 			& N_{0,\nu} 	& 0 			& 0  			& \cdots &0                 & N_{n-1,\nu} 	& 0			\\
+            0 			& 0			& N_{0,\xi}         & 0  			& \cdots &0                 &0			& N_{n-1,\xi} 	\\
+            0 			& 0			& N_{0,\zeta}       & 0 	 		& \cdots &0                 &0			& N_{n-1,\zeta}	\\
+            0 			& 0			& N_{0,\nu}         & 0   			& \cdots &0                 &0			& N_{n-1,\nu} 	.
+        \end{bmatrix}
+        \f}
+     *
+     */	
+     	int n = nNodes;
 	int dim = nDim;
 	for (int i=0; i<n;++i){
         for (int k=0; k<dim; ++k){
@@ -695,17 +783,27 @@ void Prism::setShapeFunctionDerivativeStack(gsl_matrix* ShapeFuncDer, gsl_matrix
             gsl_matrix_set(ShapeFuncDerStack,k,m,gsl_matrix_get(ShapeFuncDerStack,k-dim,m-1));
         }
     }
-    //subrange(ShapeFuncDerStack, dim,2*dim,1,dim*n) = subrange(ShapeFuncDerStack, 0,dim,0,dim*n-1);
-    //subrange(ShapeFuncDerStack, 2*dim,3*dim,1,dim*n) = subrange(ShapeFuncDerStack, dim,2*dim,0,dim*n-1);
 }
 
 void Prism::calculateElementShapeFunctionDerivatives(){
-    //Shape Function Derivatives 3-point:
-	//Setting up the current reference shape position matrix:
+    /** This function calculates the Shape Function Derivatives for all Gauss points,
+     * and then calculates the derivative of reference coordiantes with respect to barycentric coordinates
+     * \f$ \frac{\partial \boldsymbol{X}}{\partial \boldsymbol{\zeta}} \f$. The determnant of htis derivative is recorded for next steps of calculation.\n
+     * First the matrices for the reference shape and the \f$ \frac{\partial \boldsymbol{X}}{\partial \boldsymbol{\zeta}} \f$
+     * for one gauss point are allocated.
+     */
     gsl_matrix* CurrRelaxedShape = gsl_matrix_calloc(nNodes, nDim);
     gsl_matrix* dXde  = gsl_matrix_calloc(nDim, nDim);
+    /** The reference shape cordinates are obtained through function ShapeBase#getCurrRelaxedShape.
+    */
     getCurrRelaxedShape(CurrRelaxedShape);
-    for (int iter =0; iter<numberOfGaussPoints;++iter){
+    for (size_t iter =0; iter<numberOfGaussPoints;++iter){
+	/**
+	 * Looping over all the gauss points as listed in constructor Prism#Prism,
+	 * the shape function derivatives are obtained in stack form via ShapeBase#setShapeFunctionDerivatives and
+	 * ShapeBase#setShapeFunctionDerivativeStack functions. Then \f$ \frac{\partial \boldsymbol{X}}{\partial \boldsymbol{\zeta}} \f$,
+	 *its determinant recorded in the array  ShapeBase#detdXdes.
+	 */
         double eta  = gaussPoints[iter][0];
         double nu   = gaussPoints[iter][1];
         double zeta = gaussPoints[iter][2];
@@ -725,7 +823,19 @@ void Prism::calculateElementShapeFunctionDerivatives(){
 }
 
 void Prism::calculateCurrTriPointFForRotation(gsl_matrix *currF,int pointNo){
-	const int n = nNodes;
+    /**
+     * This function calcultes the defrmation gradient \f$ \boldsymbol{F} \f$ for the input
+     * gauss point number pointNo. The calculated deformation gradient is recorded in the in input
+     * gsl_matrix pointer currF, the matrix must be allocated prior to calling the function. \n
+     * The deformation gradient is the derivative of current nodal positions of an element ( \f$ \boldsymbol{x} \f$ )
+     * with respect to the reference shape positions ( \f$ \boldsymbol{X} \f$ ).
+     *
+     * \f{eqnarray*}{
+        \frac{\partial \boldsymbol{x}} {\partial \boldsymbol{X}}
+        \f}
+     *
+     */
+     	const int n = nNodes;
 	const int dim = nDim;
     gsl_matrix* CurrShape = gsl_matrix_alloc(n,dim);
     getPos(CurrShape);
@@ -960,9 +1070,6 @@ void Prism::calculatePlaneNormals(double** normals){
 		assignNodalVector(u,List[i][0],List[i][1]);
 		assignNodalVector(v,List[i][0],List[i][2]);
 		crossProduct3D(u,v,normals[i]);
-		//cout<<" Id: "<<Id<<" u "<<u[0]<<" "<<u[1]<<" "<<u[2]<<endl;
-		//cout<<" Id: "<<Id<<" v "<<v[0]<<" "<<v[1]<<" "<<v[2]<<endl;
-		//cout<<" Id: "<<Id<<" normals["<<i<<"] "<<normals[i][0]<<" "<<normals[i][1]<<" "<<normals[i][2]<<endl;
 	}
 	delete[] u;
 	delete[] v;
@@ -1021,24 +1128,25 @@ bool Prism::areNodesDirectlyConnected(int node0, int node1){
 		else{
 			node1Placement = pos+3;
 		}
-		//cout<<"node0Placement "<<pos<<" node1Placement "<<node1Placement<<endl;
 		return NodeIds[node1Placement] == node1;
 	}
 	return false;
 }
 
 void Prism::checkEdgeLenghtsForBinding(vector <int>&masterIds, vector <int>&slaveIds){
-	//cout<<"inside check edge for binding"<<endl;
+	/**
+	* This function returns the nodes to collapse together if any of the element surfaces
+	* are shrinking below the set threshold of 10% of the original side length (set in thresholdFraction variable).\n
+	*/
 	double thresholdFraction = 0.1; //fraction of original length the edge shrunk to
 	double thresholdAngle = M_PI*8.0/9.0;// M_PI*8.0/9.0; //160 degrees, this was 100000 for most of simulations, I did not collapse based on angle
-	//if(tissueType == 2){
-		//the element is a lateral element, I wan t the binding to happen more easily on such small elements.
-		//they will not be collapsed, as I block the positional collapse during binding
-	//	thresholdFraction *= 3;
-	//}
 	double currentBasalEdgeLengthsSq[3] = {0,0,0};
 	double currentApicalEdgeLengthsSq[3] = {0,0,0};
 	int node0 = 0, node1 = 1;
+	/**
+	* The top side of the element will only be checked if the element top surface is at the exposed top surface of the tissue (apical
+	* surface, ShapeBase#tissuePlacement = 0 or the element spans the whole tissue, ShapeBase#spansWholeTissue = true).
+	*/
 	if (tissuePlacement == 0 || spansWholeTissue == true){
 		//check angles first, and fix if necessary:
 		double* vec01 = new double[3];
@@ -1101,7 +1209,7 @@ void Prism::checkEdgeLenghtsForBinding(vector <int>&masterIds, vector <int>&slav
 		delete[] vec10;
 		delete[] vec02;
 		delete[] vec12;
-		//if (checkBasalLengths) {
+
 		//check basal side only for the most basal section, which will belong to a basal element or an element that spans the whole tissue.
 		for (int i=0;i<3; ++i){
 			if (i ==1 ){
@@ -1114,10 +1222,12 @@ void Prism::checkEdgeLenghtsForBinding(vector <int>&masterIds, vector <int>&slav
 			double dy = Positions[node0][1]-Positions[node1][1];
 			double dz = Positions[node0][2]-Positions[node1][2];
 			currentBasalEdgeLengthsSq[i] = dx*dx+dy*dy+dz*dz;
-			//checking angle:
 		}
-		//}
 	}
+	/**
+	* The bottom side of the element will only be checked if the element bottom surface is at the exposed bottom surface of the tissue (basal
+	* surface, ShapeBase#tissuePlacement = 1 or the element spans the whole tissue, ShapeBase#spansWholeTissue = true).
+	*/
 	if (tissuePlacement == 1 || spansWholeTissue == true){
 		//check angles first, and fix if necessary:
 		double* vec34 = new double[3];
@@ -2108,7 +2218,14 @@ void 	Prism::calculateApicalArea(){
 }
 
 void Prism::setBasalNeigElementId(vector<ShapeBase*>& elementsList){
-	if (tissueType== 0 //columnar layer element
+    /**
+     * This function sets the basal neighbours of all elemetns qualifying for a basal neighbour element.
+     * The check is only carried out on the apical elements of the  coumnar tissue (ShapeBase#tissuePlacement = 0, ShapeBase#TissueType = 0).
+     * The columnar elements bordering the basal extracellualar matrix (ShapeBase#atBasalBorderOfECM = true),
+     * and the basal extracellular matrix itself (ShapeBase#isECMMimicing) are not
+     * labelled, as these elements do not hold a basal neighbour that is a tissue piece.
+     */
+     	if (tissueType== 0 //columnar layer element
 			&& !tissuePlacement == 0 //not checking for basal elements, to save time
 			&& !atBasalBorderOfECM  //not checking for elements bordering ECM, same as basal
 			&& !isECMMimicing		 //not checking for ECM mimicking elements
@@ -2116,6 +2233,8 @@ void Prism::setBasalNeigElementId(vector<ShapeBase*>& elementsList){
 		//I am setting this only for columnar elements.
 		//I do not need to check for spanning the whole tissue, as those elements
 		//will not have a basal neighbour of relevance.
+		/** Basal nodes of a prism are hte  nodes recorded in ShapeBase#NodeIds array indices 0-2.
+		*/
 		int currBasalNodes[3] = {NodeIds[0], NodeIds[1],NodeIds[2]};
 		for( vector<ShapeBase*>::iterator itElement=elementsList.begin(); itElement<elementsList.end(); ++itElement){
 			bool isApicalOwner  = (*itElement)->IsThisNodeMyApical(currBasalNodes[0]);
@@ -2126,15 +2245,17 @@ void Prism::setBasalNeigElementId(vector<ShapeBase*>& elementsList){
 					//node 0 & 1 are owned by this element, is node 2?
 					isApicalOwner  = (*itElement)->IsThisNodeMyApical(currBasalNodes[2]);
 					if (isApicalOwner){
-						//all thress nodes are owned as apical nodes,
-						//this element in the neighbour I am looking for.
-						//Is this element ECM?
+						/** When all three nodes are owned as apical nodes by another element, this is the
+						* neighbour I am looking for. If the element is NOT an explicit ECM element (ShapeBase#isECMMimicing = false),
+						* then the new Id is recorded into the ShapeBase#basalNeigElementId.
+						*/
 						if (!(*itElement)-> isECMMimicing){
 							basalNeigElementId = (*itElement)->getId();
 						}
-						//break the loop regardless of the ECM status. If I have reached an ECM element
-						//then this element does not have a basal bordering tissue. I should not
-						//have this case anyway, as I skip elemetns atBasalBorderOfECM.
+						/** Once the element is found, break the loop regardless of the ECM status. If the loop has
+						*  reached an ECM element then this element does not have a basal bordering tissue. It should not
+						* have this case anyway, as elemetns atBasalBorderOfECM are skipped.
+						*/
 						break;
 					}
 				}
@@ -2150,7 +2271,7 @@ void Prism::constructElementStackList(const int discretisationLayers, vector<Sha
 	int currElementId = Id;
 	//Starting the list with the basal element
 	elementsIdsOnSameColumn[0] = currElementId;
-	for (int i=1; i<  discretisationLayers; ++i ){
+	for (size_t i=1; i<  discretisationLayers; ++i ){
 		//cout<<" starting to fill the list item: "<<i <<" of "<< discretisationLayers-1<<endl;
 		for( vector<ShapeBase*>::iterator itElement=elementsList.begin(); itElement<elementsList.end(); ++itElement){
 			int checkedElementId = (*itElement)->getId();
@@ -2178,9 +2299,9 @@ void Prism::constructElementStackList(const int discretisationLayers, vector<Sha
 	}
 	//Now I have the list for the basal element.
 	//I should construct it for at midline and apical elements:
-	for (int i=1; i<  discretisationLayers; ++i ){
+	for (size_t i=1; i<  discretisationLayers; ++i ){
 		elementsList[elementsIdsOnSameColumn[i]]->elementsIdsOnSameColumn = new int[discretisationLayers];
-		for (int j=0; j<  discretisationLayers; ++j ){
+		for (size_t j=0; j<  discretisationLayers; ++j ){
 			elementsList[elementsIdsOnSameColumn[i]]->elementsIdsOnSameColumn[j] = elementsIdsOnSameColumn[j];
 		}
 	}

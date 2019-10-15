@@ -15,9 +15,6 @@
 #include <boost/numeric/ublas/lu.hpp>
 #include <boost/numeric/ublas/triangular.hpp>
 #include <boost/numeric/ublas/io.hpp>
-//this was the working version in linux. It should be working with correct addition of the path to INCLUDEPATH in .pro file
-//#include </usr/include/gsl/gsl_matrix.h>
-//#include </usr/include/gsl/gsl_linalg.h>
 
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_linalg.h>
@@ -34,7 +31,7 @@
  *  	exposedBasalSurfaceNodeIds[3];				///< The int array of size 3, listing the node IDs of element that form the exposed basal surface. The IDs are the node IDs on the element (0-5 for prism), not the actual Node::Id.
  *  	exposedLateralAreaApicalSideNodeIds[4];		///< The int array of size 4, listing the node IDs of element that form the lateral surface exposed apically. The IDs are the node IDs on the element (0-5 for prism), not the actual Node::Id.
  *  	exposedLateralAreaBasalSideNodeIds[4];		///< The int array of size 4, listing the node IDs of element that form the lateral surface exposed basally. The IDs are the node IDs on the element (0-5 for prism), not the actual Node::Id.
- * 		The actual numbers 3 & 4 are already stored in variables and used as such (nLateralSurfaceAreaNodeNumber, nSurfaceAreaNodeNumber);
+ * 	The actual numbers 3 & 4 are already stored in variables and used as such (nLateralSurfaceAreaNodeNumber, nSurfaceAreaNodeNumber);
  */
 using namespace std;
 
@@ -63,11 +60,11 @@ protected:
     double 		initialRelativePositionInZ;			///<< The relative position on z-height of tissue, taken not in z direction but in tissue layers, 0 being on the apical surface and 1 being on the basal surface.
     int			numberOfGaussPoints;				///<< The number of Gauss points used in numerical deforamtion calculation.
     double**	gaussPoints;						///<< The array contianing all the Gauss points for element.
-    double* 	gaussWeights;					///<< The array for storing the weights of each Gauss point for element.
+    double* 	gaussWeights;						///<< The array for storing the weights of each Gauss point for element.
     gsl_matrix 	**ShapeFuncDerivatives;				///< The array of matrices for shape function derivatives. The array stores a ShapeBase#nDim by ShapeBase#nNodes matrix for each gauss point (there are 3 Gauss points for prisms).
     gsl_matrix 	**ShapeFuncDerStacks;				///< The array of matrices of shape function derivatives in stacked format for ease of matrix operations. The array stores a (ShapeBase#nDim * ShapeBase#nDim) by (ShapeBase#nDim * ShapeBase#nNodes) matrix for each gauss point (there are 3 Gauss points for prisms).
     gsl_matrix 	**InvdXdes;							///< The array stores inverse of the matrix for derivatives of world coordinates with respect to barycentric coordinates (dX / de). The array stores an ShapeBase#nDim by ShapeBase#nDim  matrix for each gauss point (there are 3 Gauss points for prisms).
-    double* detdXdes;								///< The array stores the determinants of the matrices for derivatives of world coordinates with respect to barycentric coordinates (dX / de). The array stores a double value for each gauss point (there are 3 Gauss points for prisms).
+    double* 	detdXdes;								///< The array stores the determinants of the matrices for derivatives of world coordinates with respect to barycentric coordinates (dX / de). The array stores a double value for each gauss point (there are 3 Gauss points for prisms).
     gsl_matrix 	**Bmatrices;						///< The array stores the B matrix for the calculation of stiffness matrix, see for ShapeBase#calculateBTforNodalForces calculation. The array stores an ShapeBase#nNodes by (ShapeBase#nDim*ShapeBase#nNodes)  matrix for each Gauss point (there are 3 Gauss points for prisms).
     gsl_matrix 	**FeMatrices;						///< The array stores the elastic part of the deformation matrix. The array stores an ShapeBase#nDim by ShapeBase#nDim  matrix for each Gauss point (there are 6 Gauss points for prisms).
     gsl_matrix 	**invJShapeFuncDerStack;			///< The array stores the shape function derivatives multiplied by the inverse Jacobian stack, for each Gauss point. See ShapeBase#calculateBTforNodalForces for calculation.
@@ -92,403 +89,391 @@ protected:
     bool		cellsMigrating;						///< The boolean stating if the cells inside the element are migrating
 
 
-    bool elementHasExposedApicalSurface;			///< The boolean stating if the element has any apical surface exposed to the environment
-    bool elementHasExposedBasalSurface;				///< The boolean stating if the element has any basal surface exposed to the environment
-    bool elementHasExposedLateralApicalSurface;		///< The boolean stating if the element has any lateral surfaces exposed to the environment on the apical side of the tissue
-    bool elementHasExposedLateralBasalSurface;		///< The boolean stating if the element has any lateral surfaces exposed to the environment on the basal side of the tissue
-    int exposedApicalSurfaceNodeIds[3];				///< The int array of size 3, listing the node IDs of element that form the exposed apical surface. The IDs are the node IDs on the element (0-5 for prism), not the actual Node#Id.
-    int exposedBasalSurfaceNodeIds[3];				///< The int array of size 3, listing the node IDs of element that form the exposed basal surface. The IDs are the node IDs on the element (0-5 for prism), not the actual Node#Id.
-    int exposedLateralAreaApicalSideNodeIds[4];		///< The int array of size 4, listing the node IDs of element that form the lateral surface exposed apically. The IDs are the node IDs on the element (0-5 for prism), not the actual Node::Id.
-    int exposedLateralAreaBasalSideNodeIds[4];		///< The int array of size 4, listing the node IDs of element that form the lateral surface exposed basally. The IDs are the node IDs on the element (0-5 for prism), not the actual Node::Id.
-    int nLateralSurfaceAreaNodeNumber;				///< Number of nodes that form the lateral surfaces for the element.
-    int nSurfaceAreaNodeNumber;						///< Number of nodes that form the apical/basal surfaces for the element.
+    bool 		elementHasExposedApicalSurface;				///< The boolean stating if the element has any apical surface exposed to the environment
+    bool 		elementHasExposedBasalSurface;				///< The boolean stating if the element has any basal surface exposed to the environment
+    bool 		elementHasExposedLateralApicalSurface;		///< The boolean stating if the element has any lateral surfaces exposed to the environment on the apical side of the tissue
+    bool 		elementHasExposedLateralBasalSurface;		///< The boolean stating if the element has any lateral surfaces exposed to the environment on the basal side of the tissue
+    int 		exposedApicalSurfaceNodeIds[3];				///< The int array of size 3, listing the node IDs of element that form the exposed apical surface. The IDs are the node IDs on the element (0-5 for prism), not the actual Node#Id.
+    int 		exposedBasalSurfaceNodeIds[3];				///< The int array of size 3, listing the node IDs of element that form the exposed basal surface. The IDs are the node IDs on the element (0-5 for prism), not the actual Node#Id.
+    int 		exposedLateralAreaApicalSideNodeIds[4];		///< The int array of size 4, listing the node IDs of element that form the lateral surface exposed apically. The IDs are the node IDs on the element (0-5 for prism), not the actual Node::Id.
+    int 		exposedLateralAreaBasalSideNodeIds[4];		///< The int array of size 4, listing the node IDs of element that form the lateral surface exposed basally. The IDs are the node IDs on the element (0-5 for prism), not the actual Node::Id.
+    int 		nLateralSurfaceAreaNodeNumber;				///< Number of nodes that form the lateral surfaces for the element.
+    int 		nSurfaceAreaNodeNumber;						///< Number of nodes that form the apical/basal surfaces for the element.
 
-    double	stiffnessPerturbationRateInSec;	///< The rate at which the stiffness ofthe element will be perturbed, used with the model inputs from "Stiffness_Perturbation:" header in model input file
-    double minimumValueOfStiffnessMultiplier;
-    double maximumValueOfStiffnessMultiplier;
+    double		stiffnessPerturbationRateInSec;				///< The rate at which the stiffness ofthe element will be perturbed, used with the model inputs from "Stiffness_Perturbation:" header in model input file
+    double 		minimumValueOfStiffnessMultiplier;			///< The lower bound of stiffness modification multiplier, exists to prevent elements reaching unintended zero or negative stiffness values.
+    double 		maximumValueOfStiffnessMultiplier;			///< The upper bound of stiffness modification multiplier, exists to prevent elements reaching unrealistic hard stiffness values.
 
-    double mutationGrowthRatePerSec;
-    double mutationGrowthFold;
-    void 	setShapeType(string TypeName);				///< The function sets the type of the shape.
-    void 	readNodeIds(int* tmpNodeIds);				///< The function sets the Node#Id array that constructs the shape.
-    void 	setPositionMatrix(vector<Node*>& Nodes);	///< The function sets the ShapeBase#Positions matrix to define the locations of each constructing node.
-    void 	setTissuePlacement(vector<Node*>& Nodes);	///< The function sets the placement of the element within the tissue
-    void 	setTissueType(vector<Node*>& Nodes);		///< The function sets the tissue type of the element
-    void 	setReferencePositionMatrix();				///< The function sets the RefereneceShapeBase#Positions matrix to define the reference positions of the element.
-    void 	setIdentificationColour();					///< The function sets the unique ShapeBase#IdentifierColour colour for the element, which is used in element picking from the user interface.
-    void 	rotateReferenceElementByRotationMatrix(double* rotMat); ///< The function rotates the reference of the element (ShapeBase#ReferenceShape) by input rotation matrix, provided as a double pointer of 9 doubles.
-    bool 	InvertMatrix(boost::numeric::ublas::matrix<double>& input, boost::numeric::ublas::matrix<double>& inverse); ///< The function takes the first input matrix, and writes the inverse on the second input. False is returned if the matrix is not inverted. Input format is ublas matrices (slow).
-    bool 	InvertMatrix(gsl_matrix* input, gsl_matrix* inverse); ///< The function takes the first input matrix, and writes the inverse on the second input. False is returned if the matrix is not inverted. Input format is gsl matrices (fast).
 
-	void 		updateNodeIdsFromSave(ifstream& file);	///< The function reads the ShapeBase#NodeIds of the current shape from save file provided as input.
-	void 		updateReferencePositionMatrixFromSave(ifstream& file); ///< The function reads and updates the ShapeBase#ReferenceShape positions (ReferenceShapeBase#Positions) of the current shape from save file provided as input.
-	virtual void calculateReferenceVolume(){ParentErrorMessage("calculateReferenceVolume");};  ///<Virtual function of the ShapeBase class to calculate volume of the ShapeBase#ReferenceShape
+    double 		mutationGrowthRatePerSec;					///< The growth rate set by a mutant clone covering this element.
+    double 		mutationGrowthFold;							///< The rate of fold change in growth rate set by a mutant clone covering this element.
+    void 		setShapeType(string TypeName);				///< The function sets the type of the shape.
+    void 		readNodeIds(int* tmpNodeIds);				///< The function sets the Node#Id array that constructs the shape.
+    void 		setPositionMatrix(vector<Node*>& Nodes);	///< The function sets the ShapeBase#Positions matrix to define the locations of each constructing node.
+    void 		setTissuePlacement(vector<Node*>& Nodes);	///< The function sets the placement of the element within the tissue
+    void 		setTissueType(vector<Node*>& Nodes);		///< The function sets the tissue type of the element
+    void 		setReferencePositionMatrix();				///< The function sets the RefereneceShapeBase#Positions matrix to define the reference positions of the element.
+    void 		setIdentificationColour();					///< The function sets the unique ShapeBase#IdentifierColour colour for the element, which is used in element picking from the user interface.
+    void 		rotateReferenceElementByRotationMatrix(double* rotMat); 	///< The function rotates the reference of the element (ShapeBase#ReferenceShape) by input rotation matrix, provided as a double pointer of 9 doubles.
+    bool 		InvertMatrix(boost::numeric::ublas::matrix<double>& input, boost::numeric::ublas::matrix<double>& inverse); ///< The function takes the first input matrix, and writes the inverse on the second input. False is returned if the matrix is not inverted. Input format is ublas matrices (slow).
+    bool 		InvertMatrix(gsl_matrix* input, gsl_matrix* inverse); 												///< The function takes the first input matrix, and writes the inverse on the second input. False is returned if the matrix is not inverted. Input format is gsl matrices (fast).
+	void 		updateNodeIdsFromSave(ifstream& file);															///< The function reads the ShapeBase#NodeIds of the current shape from save file provided as input.
+	void 		updateReferencePositionMatrixFromSave(ifstream& file); 											///< The function reads and updates the ShapeBase#ReferenceShape positions (ReferenceShapeBase#Positions) of the current shape from save file provided as input.
+	virtual void 	calculateReferenceVolume(){ParentErrorMessage("calculateReferenceVolume");};  					///<Virtual function of the ShapeBase class to calculate volume of the ShapeBase#ReferenceShape
+	bool 			calculateGrowthStrainsRotMat(double* v);													///< The function calculates the rotation matrix to apply on growth strains to align growth with the current x axis of the tissue.
+	void			calculateForces3D(vector <Node*>& Nodes,  gsl_matrix* displacementPerDt, bool recordForcesOnFixedNodes, double **FixedNodeForces); ///< The function calculates the viscous and elastic forces generated by the element.
+	gsl_matrix* 	calculateEForNodalForcesKirshoff(gsl_matrix* C);											///< This function calculates the green strains for a Kirshoff material model.
+	gsl_matrix* 	calculateCauchyGreenDeformationTensor(gsl_matrix* Fe);										///< This function calculates the Caucy-Green deformation tensor, from the elastic part of the deformation gradient
+	gsl_matrix* 	calculateSForNodalForcesKirshoff(gsl_matrix* E);											///< This function calculates the Secons order Piola-Kirshoff stress tensor for Kirshoff material model.
+	gsl_matrix* 	calculateSForNodalForcesNeoHookean(gsl_matrix* invC, double lnJ);							///< This function calculates the Secons order Piola-Kirshoff stress tensor for Neo-Hookean material model.
+	void 			updateLagrangianElasticityTensorNeoHookean(gsl_matrix* invC,double lnJ, int pointNo); 		///< This function calcualtes the Lagrangian elasticity tensor for Neo-Hookean material model.
+	gsl_matrix* 	calculateCompactStressForNodalForces(double detFe,gsl_matrix* Fe, gsl_matrix* S, gsl_matrix *Stress);	///< This function calculates elemental stress in Voigt notation.
+    gsl_matrix* 	calculateInverseJacobianStackForNodalForces(gsl_matrix* Jacobian);  						///< This function calculates the stack matrix of inverse Jacobians, used to calculate the nodal forces.
+    gsl_matrix* 	calculateBTforNodalForces(gsl_matrix* InvJacobianStack, gsl_matrix* ShapeFuncDerStack, gsl_matrix *B, gsl_matrix* invJShFuncDerS);  ///< This function calculates the B matrix, to calculate the nodal force.
+    void			calculateInvJShFuncDerSWithFe(gsl_matrix * currFe, gsl_matrix * InvDXde, gsl_matrix* ShapeFuncDerStack, gsl_matrix *invJShFuncDerSWithF); ///< This function calculates the collated matrix from inverse jaconians and shape function derivatives.
+    gsl_matrix* 	calculateVelocityGradientTensor(gsl_matrix* B, gsl_matrix* displacementPerDt);  				///< This function calculates the velocity gradient tensor.
+    gsl_matrix* 	constructElementalDisplacementMatrix(gsl_matrix* displacement); 								///< The function will assemble elemental node displacement matrix from the input displacement matrix for the whole system.
+    gsl_matrix* 	calculateRateOfDeformationTensor(gsl_matrix* l);												///< The function will calculate rate of deformation tensor from velocity gradient tensor
+    void 			calculateViscousStress(gsl_matrix* d, gsl_matrix* viscousStress);								///< The function will calculate internal viscous stress of the element from rate of deformation matrix.
+    void 			calculateViscousForces(gsl_matrix*  gv, gsl_matrix*  BTdetFdetdXde, gsl_matrix* viscousStress); ///< The function  will calculate the elemental viscous forces from viscous stress.
 
-	bool 		calculateGrowthStrainsRotMat(double* v);	///< The function calculates the rotation matrix to apply on growth strains to align growth with the current x axis of the tissue.
-	void		calculateForces3D(vector <Node*>& Nodes,  gsl_matrix* displacementPerDt, bool recordForcesOnFixedNodes, double **FixedNodeForces); ///< The function calculates the viscous and elastic forces generated by the element.
-	gsl_matrix* calculateEForNodalForcesKirshoff(gsl_matrix* C);
-	gsl_matrix* calculateCauchyGreenDeformationTensor(gsl_matrix* Fe);
-	gsl_matrix* calculateSForNodalForcesKirshoff(gsl_matrix* E);
-	gsl_matrix* calculateSForNodalForcesNeoHookean(gsl_matrix* invC, double lnJ);
-	void 		updateLagrangianElasticityTensorNeoHookean(gsl_matrix* invC,double lnJ, int pointNo);
-	gsl_matrix* calculateCompactStressForNodalForces(double detFe,gsl_matrix* Fe, gsl_matrix* S, gsl_matrix *Stress);
-    gsl_matrix* calculateInverseJacobianStackForNodalForces(gsl_matrix* Jacobian);
-    gsl_matrix* calculateBTforNodalForces(gsl_matrix* InvJacobianStack, gsl_matrix* ShapeFuncDerStack, gsl_matrix *B, gsl_matrix* invJShFuncDerS);
-    void		calculateInvJShFuncDerSWithFe(gsl_matrix * currFe, gsl_matrix * InvDXde, gsl_matrix* ShapeFuncDerStack, gsl_matrix *invJShFuncDerSWithF);
-    gsl_matrix* calculateVelocityGradientTensor(gsl_matrix* B, gsl_matrix* displacementPerDt);
-    gsl_matrix* constructElementalDisplacementMatrix(gsl_matrix* displacement); 		///< The function will assemble elemental node displacement matrix from the input displacement matrix for the whole system.
-    gsl_matrix* calculateRateOfDeformationTensor(gsl_matrix* l);						///< The function will calculate rate of deformation tensor from velocity gradient tensor
-    void 		calculateViscousStress(gsl_matrix* d, gsl_matrix* viscousStress);		///< The function will calculate internal viscous stress of the element from rate of deformation matrix.
-    void 		calculateViscousForces(gsl_matrix*  gv, gsl_matrix*  BTdetFdetdXde, gsl_matrix* viscousStress); ///< The function  will calculate the elemental viscous forces from viscous stress.
+    void    		consturctBaTBb(gsl_matrix* B, gsl_matrix* BaT, gsl_matrix* Bb, int a, int b);							///< This function constructs nodal subrange of B matrix for node couple a & b.
+    void   			calculateElasticKIntegral1(gsl_matrix* currElementalK,int pointNo);										///< This function calculates the first part of the integral for the stiffness matirx, the elastic part of the system Jacobian.
+    void			calculateElasticKIntegral2(gsl_matrix* currElementalK,int pointNo);            		 					///< This function calculates the second part of the integral for the stiffness matirx, the elastic part of the system Jacobian.
+    void			calculateViscousKIntegral1(gsl_matrix* currElementalK, gsl_matrix* paranthesisTermForKv1, int pointNo);	///< This function calculates the first part of the integral for the internal viscous part of the system Jacobian.
+    void			calculateViscousKIntegral2(gsl_matrix* currElementalK,int pointNo);             						///< This function calculates the second part of the integral for the viscous part of the system Jacobian.
+    void			calculateVelocityGradient( gsl_matrix* velocityGradient, gsl_matrix* displacementPerDt, int pointNo);	///< This function calculates the velocity gradient.
+    void			calculateOuterProduct(gsl_matrix* a, gsl_matrix* b, gsl_matrix* outerProduct);							///< Calculates the outer product, maths helper function.
+    gsl_matrix* 	calculateSymmetricisedTensorProduct(gsl_matrix* a, gsl_matrix* b);          							///< Calculates the symetricised tensor product, maths helper function.
+    bool 			disassembleRotationMatrixForZ(gsl_matrix* rotMat);
+    bool 			calculate3DRotMatFromF(gsl_matrix* rotMat);
 
-    void    	consturctBaTBb(gsl_matrix* B, gsl_matrix* BaT, gsl_matrix* Bb, int a, int b);
-    void   		calculateElasticKIntegral1(gsl_matrix* currElementalK,int pointNo);
-    void		calculateElasticKIntegral2(gsl_matrix* currElementalK,int pointNo);
-    void		calculateViscousKIntegral1(gsl_matrix* currElementalK, gsl_matrix* paranthesisTermForKv1, int pointNo);
-    void		calculateViscousKIntegral2(gsl_matrix* currElementalK,int pointNo);
-    void		calculateVelocityGradient( gsl_matrix* velocityGradient, gsl_matrix* displacementPerDt, int pointNo);
-    void		calculateOuterProduct(gsl_matrix* a, gsl_matrix* b, gsl_matrix* outerProduct);
-    gsl_matrix* calculateSymmetricisedTensorProduct(gsl_matrix* a, gsl_matrix* b);
-
-    bool 	disassembleRotationMatrixForZ(gsl_matrix* rotMat);
-    bool 	calculate3DRotMatFromF(gsl_matrix* rotMat);
-
-    gsl_matrix* D;
-    gsl_matrix* CoeffMat;
+    gsl_matrix* 		D;                                                      ///< elasticity tensor for Kirshoff material
+    gsl_matrix* 		CoeffMat;                                               ///< The coefficient matrix relating the shape function derivative stack to the Voigt notation of elemental stress nad strain.
     //double D81[3][4][4][4][4];
-    double***** D81;
-    //boost::numeric::ublas::vector<double> Forces;
-
-	double E, v;
-	double internalViscosity;
-	double originalInternalViscosity;
-    double lambda, mu;
-
-    gsl_matrix* InvFg;		///< Inverse of growth matrix
-    gsl_matrix* Fsc;		///< Shape change matrix
-    gsl_matrix* InvFsc;		///< Inverse of shape change matrix
-
-    gsl_matrix* TriPointKe;
-    gsl_matrix* TriPointKv;
+    double***** 	D81;
+    double 			E;                                                          ///< Young's modulus of the element.
+    double			v;                                                          ///< Poisson's ratio of the element.
+    double 			internalViscosity;                                          ///< Current internal viscosity of the element.
+    double 			originalInternalViscosity;                                  ///< The internal viscosity of the element at the beginning of the simulation, prior to physical property perturbations.
+    double 			lambda;                                                     ///< Lame's second parameter, driven from Young's modulus and Poisson's ratio of the element
+    double			mu;                                                         ///< Sheer modulus of the element.
+    gsl_matrix* 	InvFg;														///< Inverse of growth matrix
+    gsl_matrix* 	Fsc;														///< Shape change matrix
+    gsl_matrix* 	InvFsc;														///< Inverse of shape change matrix
+    gsl_matrix* 	TriPointKe;                                                 ///< Current elastic part of the Jacobian (stiffness matrix) of the system, averaged over all Gauss Points.
+    gsl_matrix* 	TriPointKv;                                                 ///< Current viscous part of the Jacobian of the system, averaged over all Gauss Points.
 
 public:
-    double 	stiffnessMultiplier;						///< The double for the multiplier that will define Young's modulus stress stiffening.
+    double 			stiffnessMultiplier;					///< The double for the multiplier that will define Young's modulus stress stiffening.
+    gsl_matrix*		remodellingPlaneRotationMatrix;			///< The rotation matrix converting the xyz coordinate system to the plane of remodelling for the lateral elements.
+    gsl_matrix* 	Fg;										///< Growth matrix
+    int 			Id;										///< The unique ID of the element, without remodelling, equal to its indes on the Simulation#Elements vector.
+    int				ShapeDim;								///< The dimension of the shape in workd coordiantes (2D vs 3D).
+    int* 			NodeIds;								///< The vector storing the unique IDs (Node#Id) of nodes constructing this element. Their order is consistent for a given shape type.
 
-    gsl_matrix*	remodellingPlaneRotationMatrix;			///< The rotation matrix converting the xyz coordinate system to the plane of remodelling for the lateral elements.
-    gsl_matrix* Fg;			///< Growth matrix
-
-    int 	Id;
-    int		ShapeDim;
-    int* 	NodeIds;
-    virtual ~ShapeBase(){
+    virtual ~ShapeBase(){								/// The ShapeBase destructor. This destructor should not be called uner healthy conditions.
         //while deleting a ShapeBase* that happens to point a child, this destructor will be called after the child destructor
     };
-    double** Positions;
-    ReferenceShapeBase* ReferenceShape;
-    gsl_matrix* Strain;
-
-    //bool 	IsGrowing;
-    bool 	isFlipped;
-    bool 	IsChangingShape;
-    int 	tissuePlacement; //1 -> apical, 0 -> basal, 2->middle, 3 -> lateral
-    int 	tissueType;	///< The tissue type is 0 for columnar layer, 1 for peripodial membrane, and 2 for linker zone
-    bool	spansWholeTissue; ///< Boolean staing is the element spans the whole tissue. This is used to identify mid-layer tagged tissues (tissuePlacement = 2), that should still have apical abd basal responses (such as myosin).
-    int 	compartmentType; ///< integer identifying the compartment of the tissue in DV axis, 0 pouch, 1 hinge, 2 notum
-    double  compartmentIdentityFraction;
-    bool	isECMMimicing;
-    bool	isECMMimimcingAtCircumference;
-    bool	atBasalBorderOfECM;
-    bool	isActinMimicing;
-    bool	atApicalBorderOfActin;
-	bool	IsAblated;
-	bool	atSymetricityBoundary;
-	bool	IsClippedInDisplay;
-	bool 	IsXSymmetricClippedInDisplay;
-	bool	IsYSymmetricClippedInDisplay;
-	double 	CurrShapeChangeToAdd[3];
-	double* ApicalNormalForPacking;
-	double* BasalNormalForPacking;
-    double  GrownVolume;
-	double  VolumePerNode;
-	bool 	capElement;
-	double** MyoForce;
-	int* 	elementsIdsOnSameColumn;
-	int 	basalNeigElementId; 	///<This is recorded only for apical nodes of the columnar layer. If not recorded, id is -1.
-	bool 	insideEllipseBand;
-	int 	coveringEllipseBandId;
-    gsl_matrix* ECMThicknessPlaneRotationalMatrix;
-
-	double emergentShapeLongAxis[2];
-	double emergentShapeShortAxis[2];
-
-	double plasticDeformationHalfLifeMultiplier;
-    bool isMutated;
-
-    bool thereIsGrowthRedistribution;
-    bool growthRedistributionShrinksElement;
-    double growthRedistributionScale;
-
-    double* apicalNormalCurrentShape;
-	int 	getId();
-	string 	getName();
-	int 	getShapeType();
-	int 	getNodeNumber();
-	int* 	getNodeIds();
-	int		getNodeId(int i);
-	int 	getDim();
-	int* 	getIdentifierColour();
-	double* getCentre();
-	double	getPeripodialness();
-	double	getColumnarness();
-	void	getRelativePositionInTissueInGridIndex(int nGridX, int nGridY, int& IndexX, int& IndexY, double& FracX, double& FracY);
-	void	getInitialRelativePositionInTissueInGridIndex(int nGridX, int nGridY, int& IndexX, int& IndexY, double& FracX, double& FracY);
-	double	getStiffnessMultiplier();
-	double 	getCurrentVolume();
-	double  getElementalElasticForce(int nodeIndex, int dimIndex);
-	void    setElementalElasticForce(int nodeIndex, int dimIndex, double value);
-
-	gsl_matrix* getCurrentFe();
-	double 	getApicalArea();
-	void 	relaxElasticForces();
-	bool 	isGrowthRateApplicable(int sourceTissue, double& weight, double zmin, double zmax);
-	void 	updateGrowthWillBeScaledDueToApikobasalRedistribution(bool thisFunctionShrinksApical, double scale, vector<int>& ellipseBandIdsForGrowthRedistribution);
-	void 	scaleGrowthForZRedistribution( double& x, double& y, double& z,int sourceTissue);
-	void 	calculateFgFromRates(double dt, double x, double y, double z, gsl_matrix* rotMat, gsl_matrix* increment, int sourceTissue, double zMin, double zMax);
-	void 	calculateFgFromGridCorners(int gridGrowthsInterpolationType, double dt, GrowthFunctionBase* currGF, gsl_matrix* increment, int sourceTissue, int IndexX, int IndexY, double FracX, double dFracY);
-	gsl_matrix* getGrowthIncrement();
-	void 	updateGrowthIncrement(gsl_matrix* columnar, gsl_matrix* peripodial);
-	void 	updateGrowthByMutation(double dt);
-	void	scaleGrowthIncrement(double multiuplier);
-	void 	calculateShapeChangeIncrementFromRates(double dt, double rx, double ry, double rz, gsl_matrix* increment);
-	void 	updateShapeChangeIncrement(gsl_matrix* columnarShapeChangeIncrement);
-	void	calculateRelativePosInBoundingBox(double boundingBoxXMin, double boundingBoxYMin, double boundingBoxLength, double boundingBoxWidth);
-	void	mutateElement(double growthFold, double growthRatePerHour);
-	//void	calculateRelativePosInBoundingBox(double columnarBoundingBoxXMin, double columnarBoundingBoxYMin, double columnarBoundingBoxLength, double columnarBoundingBoxWidth, double peipodialBoundingBoxXMin, double peipodialBoundingBoxYMin, double peipodialBoundingBoxLength, double peipodialBoundingBoxWidth);
-	void	updateReferencePositionMatrixFromInput(double** input);
-	void	displayRelativePosInBoundingBox();
-	void	getRelativePosInBoundingBox(double* relativePos);
-	void 	setRelativePosInBoundingBox(double x, double y);
-	void	setInitialRelativePosInBoundingBox();
-	void 	setInitialZPosition(double zMax, double TissueHeight);
-	void	getInitialRelativePosInBoundingBox(double* relativePos);
-	//void	getRelativePosInColumnarBoundingBox(double* relativePos);
-	//void	getRelativePosInPeripodialBoundingBox(double* relativePos);
-	void 	convertRelativePosToGridIndex(double* relpos, int& indexX, int &indexY, double &fracX, double &fracY, int nGridX, int nGridY);
-	void 	getStrain(int type, float &StrainMag);
-	void 	getNodeBasedPysProp(int type, int NodeNo, vector<Node*>& Nodes, float& PysPropMag);
-    void 	getPysProp(int type, float &PysPropMag, double dt);
-    double	getInternalViscosity();
-    double	getOriginalInternalViscosity();
-    void updateInternalViscosityTest();
-    double 	getYoungModulus();
-	double 	getPoissonRatio();
-	double* getGrowthRate();
-	double* getShapeChangeRate();
-	double** getReferencePos();
-    void    getPos(gsl_matrix* Pos);
-    gsl_matrix* getFg();
-    gsl_matrix* getInvFg();
-    gsl_matrix* getFsc();
-    gsl_matrix* getInvFsc();
-    gsl_matrix* getFe();
-    double 	getZRemodellingSoFar();
-    void 	setZRemodellingSoFar(double zRemodellingSoFar);
-	void 	displayName();
-	void	displayNodeIds();
-	void 	displayPositions();
-	void 	displayReferencePositions();
-	void 	displayIdentifierColour();
-    void    setFg(gsl_matrix* currFg);
-	void 	setGrowthWeightsViaTissuePlacement (double periWeight);
-	void 	setYoungsModulus(double E);
-    virtual void setElasticProperties(double /*EApical*/,double /*EBasal*/, double /*EMid*/, double /*EECM*/, double /*v*/){ParentErrorMessage("setElasticProperties");};
-    virtual void checkEdgeLenghtsForBinding(vector<int>& /*masterIds*/,vector<int>& /*slaveIds*/){ParentErrorMessage("checkEdgeLenghtsForBinding");}
-    void 	setViscosity(double viscosityApical,double viscosityBasal, double viscosityMid);
-    void 	setViscosity(double viscosityApical,double viscosityBasal);
-    void 	setViscosity(double viscosity);
-    void	setCellMigration(bool migratingBool);
-	double	calculateEmergentShapeOrientation();
-
-    bool isMyosinViaEllipsesAppliedToElement(bool isApical, bool isLateral, vector <int> & myosinEllipseBandIds, int numberOfMyosinAppliedEllipseBands);
-    bool isActinStiffnessChangeAppliedToElement(bool ThereIsWholeTissueStiffnessPerturbation, bool ThereIsApicalStiffnessPerturbation, bool ThereIsBasalStiffnessPerturbation, bool ThereIsBasolateralWithApicalRelaxationStiffnessPerturbation, bool ThereIsBasolateralStiffnessPerturbation, vector <int> &stiffnessPerturbationEllipseBandIds, int numberOfStiffnessPerturbationAppliesEllipseBands );
-    bool isECMChangeAppliedToElement(bool changeApicalECM, bool changeBasalECM, vector<int> &ECMChangeEllipseBandIds, int numberOfECMChangeEllipseBands);
-    bool isShapeChangeAppliedToElement(vector<int> &ellipseBandIds, bool applyBasalECM, bool applyToLateralECM, bool applyApically, bool applyBasally, bool applyMidLayer );
-    void 	calculateStiffnessPerturbationRate(bool ThereIsBasolateralWithApicalRelaxationStiffnessPerturbation, double stiffnessPerturbationBeginTimeInSec, double stiffnessPerturbationEndTimeInSec, double stiffnessChangedToFractionOfOriginal);
-    void 	updateStiffnessMultiplier(double dt); ///< The funciton will update the actin multiplier as a result of stiffness perturbations.
-//    virtual void	fillLateralNeighbours();
-    bool	getCellMigration();
-    virtual void calculateBasalNormal(double * /*normal*/){ParentErrorMessage("calculateBasalNormal");};
-    virtual void calculateApicalNormalCurrentShape(){ParentErrorMessage("calculateApicalNormal");};
-    virtual void AlignReferenceBaseNormalToZ(){ParentErrorMessage("AlignReferenceBaseNormalToZ");};
-    void 	calculateCurrentGrowthIncrement(gsl_matrix* resultingGrowthIncrement, double dt, double growthx, double growthy, double growthz, gsl_matrix* ShearAngleRotationMatrix);
-    void 	updateShapeChangeRate(double x, double y, double z, double xy, double yz, double xz);
-    virtual void calculateReferenceStiffnessMatrix(){ParentErrorMessage("calculateReferenceStiffnessMatrix");};
-    virtual void calculateElementShapeFunctionDerivatives(){ParentErrorMessage("calculateElementShapeFunctionDerivatives");};
-    virtual void calculateCurrNodalForces(gsl_matrix */*gslcurrge*/, gsl_matrix */*gslcurrgv*/, gsl_matrix */*gslcurrF*/, gsl_matrix* /*displacementPerDt*/, int /*pointNo*/){ParentErrorMessage("calculateCurrNodalForces");};
-    virtual void calculateCurrTriPointFForRotation(gsl_matrix */*currF*/,int /*pointNo*/){ParentErrorMessage("calculateCurrTriPointFForRotation");};
-    virtual void copyElementInformationAfterRefinement(ShapeBase* /*baseElement*/){ParentErrorMessage("copyElementInformationAfterRefinement");};
-    virtual void calculateApicalArea(){ParentErrorMessage("calculateApicalArea");};
-    virtual void calculateBasalArea(){ParentErrorMessage("calculateBasalArea");};
-    double 		calculateCurrentGrownAndEmergentVolumes();
-    void 	updateNodeIdsForRefinement(int* tmpNodeIds);
-    virtual void updateElasticProperties(){ParentErrorMessage("updateElasticProperties");};
-    virtual void  fillLateralNeighbours(vector<Node*>& /*Nodes*/, vector<int>& /*lateralNeigbours*/ ){ParentErrorMessage("fillInLateralNeigbours");};
-    void	calculateStiffnessFeedback(double dt);
-    void 	writeInternalForcesTogeAndgv(gsl_matrix* ge, gsl_matrix* gvInternal, double** SystemForces, vector <Node*>& Nodes);
+    double** 			Positions;						///< The vector storing the positions of the nodes constructing the element.
+    ReferenceShapeBase* ReferenceShape;					///< The pointer to the reference shape object that defines th reference shape of this element.
+    gsl_matrix* 		Strain;							///< The gsl_matrix pointer, storing the address of the current strains on the element.
+    
+    bool 			isFlipped;							///< Boolean stating if the element is flipped. The simulation will be stopped if there are flipped elements.
+    bool 			IsChangingShape;
+    int 			tissuePlacement;					///< 1 -> apical, 0 -> basal, 2->middle, 3 -> lateral
+    int 			tissueType;							///< The tissue type is 0 for columnar layer, 1 for peripodial membrane, and 2 for linker zone
+    bool			spansWholeTissue; 					///< Boolean staing is the element spans the whole tissue. This is used to identify mid-layer tagged tissues (tissuePlacement = 2), that should still have apical abd basal responses (such as myosin).
+    int 			compartmentType; 					///< integer identifying the compartment of the tissue in DV axis, 0 pouch, 1 hinge, 2 notum
+    double 			compartmentIdentityFraction;		///< The weight defining the constibution of each compartment to the physical identity of this element.
+    bool			isECMMimicing;						///< Boolean stating if the element is an ECM element.
+    bool			isECMMimimcingAtCircumference;		///< Boolean stating if the element is an ECM element at the circumference of the tissue.
+    bool			atBasalBorderOfECM;					///< Boolean stating if the element is at the basal border of the cellular layer, linking to ECM elements.
+    bool			isActinMimicing;					///< Boolean stating if the element is forming the actin dense layer on the apical surface.
+    bool			atApicalBorderOfActin;				///< Boolean stating if the element is at the apical border of the soft cellular layer, linking to actin dense layer.
+    bool			IsAblated;							///< Boolean stating if the element is laser ablated, therefore dead.
+    bool			atSymetricityBoundary;				///< Boolean stating if the element is at the symmetricity boundary.
+    bool			IsClippedInDisplay;					///< Boolean stating if the element is clipped out of the view in openGL rendering
+    bool 			IsXSymmetricClippedInDisplay;		///< Boolean stating if the X symmetric version of the element is clipped in openGL rendering.
+    bool			IsYSymmetricClippedInDisplay;		///< Boolean stating if the Y symmetric version of the element is clipped in openGL rendering.
+    double 			CurrShapeChangeToAdd[3];			///< The current shape change to be applied to the element, in form of 3D rates.
+    double* 		ApicalNormalForPacking;				///< The normal of the apical surface for calcuating packing.
+    double* 		BasalNormalForPacking;				///< The normal of the basal surface for calculating packing.
+    double  		GrownVolume;						///< Current volume of the element after growth.
+    double  		VolumePerNode;						///< Volume per node of the element.
+    bool 			capElement;							///< Boolean stating if the element is capped at its remodelling due to restrictions in z remodelling (avoiding too thin ot too thick layers due to numerical error).
+	double** 		MyoForce;	//TO DO: delete everything myo
+    int* 	     	elementsIdsOnSameColumn;			///< The vector storing the unique element IDs of each element that is on the same columnar region of the tissue, i.e. the elements share apical/basal surfaces.
+    int 			basalNeigElementId;					///< This is recorded only for apical nodes of the columnar layer. If not recorded, id is -1.
+    bool 			insideEllipseBand;					///< Boolean stating if the element is marked by any identifier bands for physical perturbation.
+    int 			coveringEllipseBandId;				///< The unique ID of the covering perturbation band.
+    gsl_matrix* 	ECMThicknessPlaneRotationalMatrix;	//TO DO: do I use this now?
+    double 			emergentShapeLongAxis[2];			///< The long axis of the emergent shape. This is necessary for analysis of emergent growth orientations.
+    double 			emergentShapeShortAxis[2];			///< The short axis of the emergent shape. This is necessary for analysis of emergent growth orientations.
+    double* 		apicalNormalCurrentShape;			///< The apical normal of the current shape. //TO DO: why do I have two apical normals, should I merge these?
+    double 			plasticDeformationHalfLifeMultiplier;
+    bool			isMutated;
+    bool 			thereIsGrowthRedistribution;
+    bool 			growthRedistributionShrinksElement;
+    double 			growthRedistributionScale;
+    int				getId();							///< The function returns the unique ID of the element.
+    std::string		getName();							///< The function returns the name of the element.
+    int				getShapeType();						///< The function returns the shape type of the element.
+    int				getNodeNumber();					///< The function returns the number of nodes o the element.
+    int* 			getNodeIds();						///< The function returns the vector of node IDs.
+    int				getNodeId(int i);					///< The function returns the input i^{th} node's ID.
+    int				getDim();							///< The function returns the dimensions of the node, ShapeBase#Dim.
+    int*			getIdentifierColour();				///< The unique [r,g,b] identifier colour of the element, utilised in picking in the user interface.
+    double*			getCentre();						///< This function returns the centre of the element in world spave.
+    double			getPeripodialness();				///< This function returns the relative influence of the peripodial physical characteristics to this element.
+    double			getColumnarness();					///< This function returns the relative influence of the columnar  physical characteristics ot this element.
+    void			getRelativePositionInTissueInGridIndex(int nGridX, int nGridY, int& IndexX, int& IndexY, double& FracX, double& FracY); 	///< Provides the relative position within the bounding box of the tissue, and calculates which point on the growth maps should be read.
+    void			getInitialRelativePositionInTissueInGridIndex(int nGridX, int nGridY, int& IndexX, int& IndexY, double& FracX, double& FracY); 	///< The relative positions of the iitial configuration of the element within the bounding box of the tissue.
+    double			getStiffnessMultiplier();			///< This function returns the current stiffness multiplier as a result of perturbations to physical properties.
+    double			getCurrentVolume();					///< This function returns the current volume of the element.
+    double			getElementalElasticForce(int nodeIndex, int dimIndex);					///< This function returns the calculated elastic force for the node nodeIndex, in coordinate dimIndex.
+    void			setElementalElasticForce(int nodeIndex, int dimIndex, double value);	///< This functions sets the calculated elastic force for the node nodeIndex, dimension dimIndex, to the input value.
 
 
-    void 	calculateForces(vector <Node*>& Nodes, gsl_matrix* displacementPerDt, bool recordForcesOnFixedNodes, double** FixedNodeForces);
-    void 	updatePositions(vector<Node*>& Nodes);
-    void	updateReferencePositionsToCurentShape();
-    void 	setGrowthRate(double dt, double rx, double ry, double rz);
-    void 	setGrowthRateExpFromInput(double x, double y, double z);
-    void 	updateGrowthIncrementFromRate();
-    void 	cleanMyosinForce();
-    void	updateUniformEquilibriumMyosinConcentration(bool isApical, double cEqUniform);
-	void	updateUnipolarEquilibriumMyosinConcentration(bool isApical, double cEqUnipolar, double orientationX, double orientationY);
-	void	adjustCMyosinFromSave();
-	void	updateMyosinConcentration(double dt, double kMyo, bool thereIsMyosinFeedback, double MyosinFeedbackCap);
-	double  calculateVolumeForInputShapeStructure(double** shapePositions, int nTriangularFaces, int** triangularFaces, double* midPoint );
-	void 	calculatePrincipalStrains3D(double& e1, double &e2,  double &e3, gsl_matrix* eigenVec);
-	void 	calculatePrincipalStrains2D(double& e1, double &e2,  double &e3, gsl_matrix* eigenVec);
-	void 	calculatePrincipalStrainAxesOnXYPlane(double& e1, double &e2, double& tet);
-	void	updateEquilibriumMyoWithFeedbackFromZero(double MyosinFeedbackCap);
-	void	updateEquilibriumMyoWithFeedbackFromFixedTotal(double totalMyosinLevel);
-	bool	checkIfXYPlaneStrainAboveThreshold(double thres);
-	bool 	calculateIfInsideActiveStripe(double initialPoint,double endPoint, double stripeSize1, double stripeSize2);
-	double	getCmyosinUniformForNode (int TissuePlacement);
-	double	getCmyosinUnipolarForNode (int TissuePlacement);
-	void 	getMyosinLevels (double *cMyo);
-	void 	getEquilibriumMyosinLevels (double *cMyoEq);
-	gsl_matrix* getMyosinDirection();
-	void 	setMyosinLevels (double cUni0, double cUni1, double cPol0, double cPol1);
-	void 	setEquilibriumMyosinLevels (double cUni0, double cUni1, double cPol0, double cPol1);
-	virtual void calculateMyosinForcesAreaBased(double /*forcePerMyoMolecule*/){ParentErrorMessage("calculateMyosinForces");};
-	virtual void calculateMyosinForcesTotalSizeBased(double /*forcePerMyoMolecule*/){ParentErrorMessage("calculateMyosinForces");};
-    virtual void distributeMyosinForcesAreaBased(bool /*isIsotropic*/, bool /*apical*/, double /*forcePerMyoMolecule*/){ParentErrorMessage("distributeMyosinAreaBased");};
-    virtual void distributeMyosinForcesTotalSizeBased(bool /*isIsotropic*/, bool /*apical*/, double /*forcePerMyoMolecule*/){ParentErrorMessage("distributeMyosinToitalSizeBased");};
-    void 	setShapeChangeRate(double x, double y, double z, double xy, double yz, double xz);
-    void  	setShapeChangeInrementToIdentity();
-    void 	updateElementVolumesAndTissuePlacementsForSave(vector<Node*>& Nodes);
-    bool 	readNodeIdData(ifstream& file);
-    bool	readReferencePositionData(ifstream& file);
-    void 	convertPlasticStrainToGrowthStrain();
-    void 	setLateralElementsRemodellingPlaneRotationMatrix(double systemCentreX, double systemCentreY);
-    void	setECMMimicingElementThicknessGrowthAxis();
+    gsl_matrix*             getCurrentFe();													///< This function returns the current elastic part of the deformation gradient.
+    double                  getApicalArea();												///< This function returns the current apical area of the element.
+    void                    relaxElasticForces();											///< This function relaxes all teh accumulated elastic forces in the system.
+    bool					isGrowthRateApplicable(int sourceTissue, double& weight, double zmin, double zmax);	///< The function checks if the element if affected by the current growth functions.
+    void 		    		updateGrowthWillBeScaledDueToApikobasalRedistribution(bool thisFunctionShrinksApical, double scale, std::vector<int>& ellipseBandIdsForGrowthRedistribution); ///< This function decide if the growth will be redistirbuted in the height of the tissue.
+    void 		    		scaleGrowthForZRedistribution( double& x, double& y, double& z,int sourceTissue); ///< This function will modify the incremental growth deformation gradient of the element to reflect the volume redistribution in the height of the tissue.
+    void 		    		calculateFgFromRates(double dt, double x, double y, double z, gsl_matrix* rotMat, gsl_matrix* increment, int sourceTissue, double zMin, double zMax); ///< This function will calculate the incremental growth deformation gradient change for the current time step, from input growth rates
+    void 		    		calculateFgFromGridCorners(int gridGrowthsInterpolationType, double dt, GrowthFunctionBase* currGF, gsl_matrix* increment, int sourceTissue, int IndexX, int IndexY, double FracX, double dFracY); /////< This function will calculate the incremental growth deformation gradient change for the current time step by reading it from the grid, and interpolating on 4 corners.
+    gsl_matrix*             getGrowthIncrement();											///< This function will return the current growth deformation gradient increment
+    void                    updateGrowthIncrement(gsl_matrix* columnar, gsl_matrix* peripodial);		///< This function will update the elemental growth deformation gradient from the current growth deformation gradient increment.
+    void                    updateGrowthByMutation(double dt);								///< This function will update the growth growth deformaton gradient increment of the element due to a mutation.
+    void                    scaleGrowthIncrement(double multiuplier);						///< This function will scale the growth growth deformaton gradient increment by input double.
+    void                    calculateShapeChangeIncrementFromRates(double dt, double rx, double ry, double rz, gsl_matrix* increment); ///< This function will calculate the current shape change deformation gradient increment due to elemental active shape change, from input rates.
+    void                    updateShapeChangeIncrement(gsl_matrix* columnarShapeChangeIncrement);		///< This function updates the growth increment of the element with the current shape change increment
+    void                    calculateRelativePosInBoundingBox(double boundingBoxXMin, double boundingBoxYMin, double boundingBoxLength, double boundingBoxWidth); ///< This function will calculate the relative positions of the element in the xy-plane bounding box of the tissue.
+    void                    mutateElement(double growthFold, double growthRatePerHour);			///< This function will set the element as a mutant, the mutant growth rates will be set.
+    void                    updateReferencePositionMatrixFromInput(double** input);				///< This function will update the reference position matrix. Not used under healthy, continuous simulations, to preserve continuity of the mesh.
+    void                    displayRelativePosInBoundingBox();									///< Helper function to display the relative position of the element in the bounding box of the tissue.
+    void		    		getRelativePosInBoundingBox(double* relativePos);							///< This function will return the relative position of the element in the xy bounding box of the tissue
+    void 					setRelativePosInBoundingBox(double x, double y);				///< This functoin will set the relative position of the element in the bounding box of the tissue to the input coordinates.
+    void					setInitialRelativePosInBoundingBox();						///< This function sets the initial relative position in bounding box of the tissue to current reference position.
+    void 					setInitialZPosition(double zMax, double TissueHeight);				///< This fucntion sets the initial relative z position of the tissue in tissue height.
+    void					getInitialRelativePosInBoundingBox(double* relativePos);						///< This function will return the initial relative position of the element in the xy bounding box of the tissue
+    void 					convertRelativePosToGridIndex(double* relpos, int& indexX, int &indexY, double &fracX, double &fracY, int nGridX, int nGridY); ///< This function will convert the relative position of the tissue in xy plane bounding box to growth map grid indices.
+    void 					getStrain(int type, float &StrainMag);						///< This function will return the selected strain component of the element.
+    void 					getNodeBasedPysProp(int type, int NodeNo, vector<Node*>& Nodes, float& PysPropMag);		///< This function will return the selected physical properties of the element on a nodal basis.
+    void 					getPysProp(int type, float &PysPropMag, double dt);				///< This function will return the selected physical properties of the element.
+    double					getInternalViscosity();								///< This function will return the internal viscosity of the element.
+    double					getOriginalInternalViscosity();							///<  This function will return the internal viscosity of the element prior to any perturbations.
+    void   					updateInternalViscosityTest();
+    double 					getYoungModulus();								///< This function will return the Young's modulus of the element
+    double 					getPoissonRatio();								///< This function will return the Poissons's ratio of the element
+    double* 				getGrowthRate();								///< This function will return the current growth rate of the element.
+    double* 				getShapeChangeRate();								///< This function will return the current shape change rate of the element.
+    double**     			getReferencePos();							///< This function will return the reference positions of the element.
+    void    				getPos(gsl_matrix* Pos);							///< This function will write the position of the element into input matrix.
+    gsl_matrix* 			getFg();									///< This function will return the growth component of the deformation gradient.
+    gsl_matrix* 			getInvFg();									///< This function calculates the inverse of the growth deformation gradient matrix.
+    gsl_matrix* 			getFsc();									///< This function will return the shape change component of the deformation gradient.
+    gsl_matrix* 			getInvFsc();									///< This function calculates the inverse of the shape change deformation gradient matrix.
+    gsl_matrix* 			getFe();									///< This function will return the elastic component of the deformation gradient.
+    double 					getZRemodellingSoFar();								///< This function will return the z remodelling applied to the element so far, to cap the z remodelling.
+    void 					setZRemodellingSoFar(double zRemodellingSoFar); 				///< This function will set the z remodelling applied to the element so far to input value. This is needed during saved input reading.
+    void 					displayName();									///< Helper function, display the name of the element
+    void					displayNodeIds();								///< Helper function, display the Ids of the nodes of the element
+    void 					displayPositions();								///< Helper function, display the nodal positions of the element
+    void 					displayReferencePositions();							///< Helper function, display the nodal positions of the reference element
+    void 					displayIdentifierColour();							///< Helper function, display the unique identifier colour, for picking in user interface.
+    void  		  			setFg(gsl_matrix* currFg);							///< This function sets the current grwoth deformation gradient matrix equal to input matrix
+    void 					setGrowthWeightsViaTissuePlacement (double periWeight);				///< This function sets the weight for growth rate scaling depending on tissue type
+    void 					setYoungsModulus(double E);							///< This function sets the Young's modulus of the shape to inout double.
 
-    bool areanyOfMyNodesAtCircumference(vector<Node*>& Nodes);
+    virtual void 			setElasticProperties(double /*EApical*/,double /*EBasal*/, double /*EMid*/, double /*EECM*/, double /*v*/){ParentErrorMessage("setElasticProperties");} ///< This is the parent virtual function for setting up the elasticity properties of the shape depending on its tissue type placement.
+    virtual void 			checkEdgeLenghtsForBinding(std::vector<int>& /*masterIds*/, std::vector<int>& /*slaveIds*/){ParentErrorMessage("checkEdgeLenghtsForBinding");} ///< The virt
+    void 					setViscosity(double viscosityApical,double viscosityBasal, double viscosityMid);///< This function sets the viscosity of the element depending on its placement in the tissue.
+    void 					setViscosity(double viscosityApical,double viscosityBasal);			///< This function sets the viscosity of the element depending on its placement in the tissue.
+    void 					setViscosity(double viscosity);							///< This function sets the viscosity of the element depending on its placement in the tissue.
+    double					calculateEmergentShapeOrientation();						///< This fucntion calculates the orientation of the emergent shape of an element in the xy plane of the tissue.
+    bool 					isActinStiffnessChangeAppliedToElement(bool ThereIsWholeTissueStiffnessPerturbation, bool ThereIsApicalStiffnessPerturbation, bool ThereIsBasalStiffnessPerturbation, bool ThereIsBasolateralWithApicalRelaxationStiffnessPerturbation, bool ThereIsBasolateralStiffnessPerturbation, std::vector <int> &stiffnessPerturbationEllipseBandIds, int numberOfStiffnessPerturbationAppliesEllipseBands ); ///< This function decides if the actin stiffness perturbation is applied to this element.
+    bool 					isECMChangeAppliedToElement(bool changeApicalECM, bool changeBasalECM, std::vector<int> &ECMChangeEllipseBandIds, int numberOfECMChangeEllipseBands);				///< This function decides if the ECM perturbation is applied to this element
+    bool 					isShapeChangeAppliedToElement(std::vector<int> &ellipseBandIds, bool applyBasalECM, bool applyToLateralECM, bool applyApically, bool applyBasally, bool applyMidLayer );	///< This function decides if the shape change perturbation is applied to this element
+    void 					calculateStiffnessPerturbationRate(bool ThereIsBasolateralWithApicalRelaxationStiffnessPerturbation, double stiffnessPerturbationBeginTimeInSec, double stiffnessPerturbationEndTimeInSec, double stiffnessChangedToFractionOfOriginal); ///< This function will calciulate the stiffness perturbation rate.
+    void 					updateStiffnessMultiplier(double dt); ///< The function will update the actin multiplier as a result of stiffness perturbations.
+    bool					getCellMigration(); //TO DO : delete all migration
+    virtual void 			calculateBasalNormal(double * /*normal*/){ParentErrorMessage("calculateBasalNormal");}; 	///< The virtual function of the parent for basal normal calculation. The value is dependent on node topology of the element and defined for eac individual child class.
+    virtual void 			calculateApicalNormalCurrentShape(){ParentErrorMessage("calculateApicalNormal");}							///< The virtual function of the parent for apical normal calculation. The value is dependent on node topology of the element and defined for eac individual child class.
+    virtual void 			AlignReferenceBaseNormalToZ(){ParentErrorMessage("AlignReferenceBaseNormalToZ");}; //TO DO: DO I use this?
+    void 					calculateCurrentGrowthIncrement(gsl_matrix* resultingGrowthIncrement, double dt, double growthx, double growthy, double growthz, gsl_matrix* ShearAngleRotationMatrix); ///< The function calculates the current growth increment from the input of growth rate and the orientation rotation matrix.
+    void 					updateShapeChangeRate(double x, double y, double z, double xy, double yz, double xz);
+    virtual void			calculateReferenceStiffnessMatrix(){ParentErrorMessage("calculateReferenceStiffnessMatrix");};
+    virtual void 			calculateElementShapeFunctionDerivatives(){ParentErrorMessage("calculateElementShapeFunctionDerivatives");}	///< The virtual function of the parent for calculation of shape function derivatives. This is topology dependent and implemented in each child shape type.
+    virtual void 			calculateCurrNodalForces(gsl_matrix */*gslcurrge*/, gsl_matrix */*gslcurrgv*/, gsl_matrix */*gslcurrF*/, gsl_matrix* /*displacementPerDt*/, int /*pointNo*/){ParentErrorMessage("calculateCurrNodalForces");} ///< The virtual function to calculate nodal force. This is topology dependent and implemented in each child shape type.
+    virtual void 			calculateCurrTriPointFForRotation(gsl_matrix */*currF*/,int /*pointNo*/){ParentErrorMessage("calculateCurrTriPointFForRotation");}
+    virtual void 			calculateApicalArea(){ParentErrorMessage("calculateApicalArea");}                           ///< The virtual function to calculate apical area of element. This is topology dependent and implemented in each child shape type.
+    virtual void 			calculateBasalArea(){ParentErrorMessage("calculateBasalArea");}                             ///< The virtual function to calculate basal area of element. This is topology dependent and implemented in each child shape type.
+    double 					calculateCurrentGrownAndEmergentVolumes();                                                  ///< This is the function to calculate hte current ideal volume of the element and its current apparent volume.
+    virtual void 			updateElasticProperties(){ParentErrorMessage("updateElasticProperties");}                   ///< This functions updates elastic propertiesand their dependent tensors upon alteration of a physical property.
+    void 					writeInternalForcesTogeAndgv(gsl_matrix* ge, gsl_matrix* gvInternal, double** SystemForces, vector <Node*>& Nodes);
+    void 					calculateForces(vector <Node*>& Nodes, gsl_matrix* displacementPerDt, bool recordForcesOnFixedNodes, double** FixedNodeForces);  ///< This function writes the elemental elastic and viscous forces to the system scale force vector.
+    void 					updatePositions(vector<Node*>& Nodes);							///< This function updates the position array of the element from the updated nodal posiitons.
+    void					updateReferencePositionsToCurentShape();	// TO DO: DO I USE THIS?
+    void 					setGrowthRate(double dt, double rx, double ry, double rz);                                      ///< This function sets the growth of the element from the tome step and the input rates
+    void 					setGrowthRateExpFromInput(double x, double y, double z);					///< This function sets the growht rate to pre-calculated rates given as input.
+    void 					updateGrowthIncrementFromRate();                                                                ///< This function fills th egrowht increment matirx from the current growth rate matrix
+    
+    double  				calculateVolumeForInputShapeStructure(double** shapePositions, int nTriangularFaces, int** triangularFaces, double* midPoint );	///< This function calculates the volume of the shape, it is generalised such that the shape is defined as an array of triengles forming a convex hull.
+    void 					calculatePrincipalStrains3D(double& e1, double &e2,  double &e3, gsl_matrix* eigenVec);         ///< This function calculates the principal components of the strains through eigen values and eigen vectors in 3D.
+    void 					calculatePrincipalStrains2D(double& e1, double &e2,  double &e3, gsl_matrix* eigenVec);         ///< This function calculates the principal components of the strains through eigen values and eigen vectors in 2D.
+    void 					calculatePrincipalStrainAxesOnXYPlane(double& e1, double &e2, double& tet);	//< This function calculates the princiapal strains on the xy plane of the element. //TO DO: DO I use this?
 
-    virtual void  checkHealth(){ParentErrorMessage("checkHealth");};
-    void 	resetCurrStepShapeChangeData();
-    void    writeKelasticToMainKatrix(gsl_matrix* K);
-    void    writeKviscousToMainKatrix(gsl_matrix* K);
-    void    calculateImplicitKElastic();
-    void 	calculateImplicitKViscous(gsl_matrix* displacementPerDt, double dt);
-    void	calculateForceFromStress(int nodeId, gsl_matrix* Externalstress, gsl_matrix* ExternalNodalForces);
+    void 					setShapeChangeRate(double x, double y, double z, double xy, double yz, double xz);                  ///< This function sets the shape change rate to pre-calculated rates given as input.
+    void  					setShapeChangeInrementToIdentity();                                                                 ///< This function sets the shape change deformation gradient increment to identity
+    void 					updateElementVolumesAndTissuePlacementsForSave(vector<Node*>& Nodes);   			    ///< This function calculates the reference volume, tissue placement and tissue type from nodal information
+    bool 					readNodeIdData(std::ifstream& file);                                                                ///< This function reads in the node Ids for the element from save file
+    bool					readReferencePositionData(std::ifstream& file);                                                     ///< This function reads the reference element positions from save file
+    bool 					areanyOfMyNodesAtCircumference(vector<Node*>& Nodes);                  		 		   ///< This function check if the element owns any node at tissue circumference
+    virtual void 			checkHealth(){ParentErrorMessage("checkHealth");}                                              ///< The virtual function in parent to check if element is flipped, implemented for each child as it is node topology dependent.
+    void    				writeKelasticToMainKatrix(gsl_matrix* K);                                                       ///< This function writes the elemental elastic component of the Jacobian to system Jacobian.
+    void    				writeKviscousToMainKatrix(gsl_matrix* K);                                                       ///< This function writes the elemental viscous component of the Jacobian to system Jacobian.
+    void    				calculateImplicitKElastic();                                                                    ///< This function calculates the elemental elastic component of the Jacobian for implicit NR itaration.
+    void 					calculateImplicitKViscous(gsl_matrix* displacementPerDt, double dt);                                ///< This function calculates the elemental viscous component of the Jacobian for implicit NR itaration.
+    void					calculateForceFromStress(int nodeId, gsl_matrix* Externalstress, gsl_matrix* ExternalNodalForces);  ///< This function calculates the elemental nodal forces from an input external stress matrix
 
 
-	void 	updateShapeFromSave(ifstream& file);
-	void 	displayMatrix(boost::numeric::ublas::matrix<double>& mat, string matname);
-	void 	displayMatrix(boost::numeric::ublas::matrix<int>& mat, string matname);
-	void 	displayMatrix(boost::numeric::ublas::vector<double>& vec, string matname);
-    void 	displayMatrix(gsl_matrix* mat, string matname);
-    void 	displayMatrix(gsl_vector* mat, string matname);
-    void 	createMatrixCopy(gsl_matrix *dest, gsl_matrix* src);
-	double	calculateMagnitudeVector3D(double* v);
-	double	normaliseVector3D(double* v);
-	void	normaliseVector3D(gsl_vector* v);
-	double	getNormVector3D(gsl_vector* v);
-	double 	determinant3by3Matrix(double* rotMat);
-	double 	determinant3by3Matrix(boost::numeric::ublas::matrix<double>& Mat);
-    double 	determinant3by3Matrix(gsl_matrix* Mat);
-	double 	determinant2by2Matrix(boost::numeric::ublas::matrix<double>& Mat);
-	void	calculateRotationAngleSinCos(double* u, double* v, double& c, double& s);
-	void	calculateRotationAxis(double* u, double* v,double* rotAx, double c);
-	void	constructRotationMatrix(double c, double s, double* rotAx, double* rotMat);
-	void	rotateVectorByRotationMatrix(double* u,double* rotMat);
-	void	rotateVectorByRotationMatrix(double* u,gsl_matrix* rotMat);
+    void 					updateShapeFromSave(std::ifstream& file);                                           ///< This function updates the element geometric poroerties from save file.
+    void 					displayMatrix(boost::numeric::ublas::matrix<double>& mat, std::string matname);     ///< Helper function, displays the input blas (double) matrix with the input name.
+    void 					displayMatrix(boost::numeric::ublas::matrix<int>& mat, std::string matname);        ///< Helper function, displays the input blas (int) matrix with the input name.
+    void 					displayMatrix(boost::numeric::ublas::vector<double>& vec, std::string matname);     ///< Helper function, displays the input blas (double) vector with the input name.
+    void 					displayMatrix(gsl_matrix* mat, std::string matname);                                ///< Helper function, displays the input gsl matrix with the input name.
+    void 					displayMatrix(gsl_vector* mat, std::string matname);                                ///< Helper function, displays the input gsl vector with the input name.
+    void 					createMatrixCopy(gsl_matrix *dest, gsl_matrix* src);                                ///< Helper function, creates a copy of the gsl matrix on new memory locaiton.
+    double  				calculateMagnitudeVector3D(double* v);                                 		   ///< Helper algebraic function, calculates norm of the vector defined in the array<double,3>;
+    void					normaliseVector3D(gsl_vector* v);                                                   ///< Helper algebraic function, normalises the input gsl vector (the input vector is modified)
+    double					normaliseVector3D(double* v);                                         		///< Helper algebraic function, normalises the input array<double,3> (the input vector is modified)
+    double					getNormVector3D(gsl_vector* v);                                                     ///< Helper algebraic function, calculates norm of the vector defined in the gsl vector, the vector is not modified.
+    double 					determinant3by3Matrix(double* rotMat);                                              ///< Helper algebraic function, calculates determinant of 3by3 matrix stored in the double array pointed by the input pointer
+    double 					determinant3by3Matrix(boost::numeric::ublas::matrix<double>& Mat);                  ///< Helper algebraic function, calculates determinant of 3by3 boost matrix
+    double 					determinant3by3Matrix(gsl_matrix* Mat);                                             ///< Helper algebraic function, calculates determinant of 3by3 gsl matrix
+    double 					determinant2by2Matrix(boost::numeric::ublas::matrix<double>& Mat);                  ///< Helper algebraic function, calculates determinant of 2by2 boost matrix
+    void					calculateRotationAngleSinCos(double* u, double* v, double& c, double& s);      	    /// Helper algebraic function calculates the sine and cosine of the rotation angle needed to align vector u onto v.
+    void					calculateRotationAxis(double* u, double* v,double* rotAx, double c); /// Helper algebraic function calculates the rotation axis needed to align vector u onto v.
+    void					constructRotationMatrix(double c, double s, double* rotAx, double* rotMat);         ///< Helper algebraic functio calculates the rotation matrix from input sine, cosine of the rotation angle and the rotation axis. Writes the matrix into the input rotMat
+    //void			constructRotationMatrix(double c, double s, std::array<double,3>& rotAx, std::array<double,9>& rotMat); ///< Helper algebraic functio calculates the rotation matrix from input sine, cosine of the rotation angle and the rotation axis. Writes the matrix into the input rotMat
+    void					rotateVectorByRotationMatrix(double* u,double* rotMat);                             ///< Helper algebraic function rotates the input vector v by rotation matrix rotMat
+    void					rotateVectorByRotationMatrix(double* u,gsl_matrix* rotMat);                         ///< Helper algebraic function rotates the input vector v by rotation matrix rotMat
+    //void					rotateVectorByRotationMatrix(std::array<double,3>& u, std::array<double,9> rotMat); ///< Helper algebraic function rotates the input vector v by rotation matrix rotMat
+    void    				CalculateGrowthRotationByF();                                                       ///< This function calculates the rigid body rotation of the element around the z axis of the tissue from hte fecormation gradient.
+    void 					calculateTriPointFForRatation();                                                    ///< This function calculates the current deformaiton gradient as averaged at all Gauss points, for rigid body rotation extraction
+    void 					setPlasticDeformationIncrement(double xx, double yy, double zz);                    ///< This function sets diagonal of the plastic deformation gradient increment from input values
+    void 					growShapeByFg();                                                                    ///< This function updates the current growth deformaiton gradient with the growt/shape change/plastic deformation increments and their respective rotations.
+    void 					changeShapeByFsc(double dt);                                                        ///< This function calculates the shape change increment from shape change rates
+    void					checkIfInsideEllipseBands(int nMarkerEllipseRanges, std::vector<double> markerEllipseBandXCentres, std::vector<double> markerEllipseBandR1Ranges, std::vector<double> markerEllipseBandR2Ranges, vector<Node*>& Nodes); ///< This function checks if the element is inside any marker bands for perturbatins.
+    void					assignSoftHinge(double lowHingeLimit, double highHingeLimit,double softnessLevel);  ///< This function modulates the stiffness of the hinge domain of the tissue with the input level. The domain is defined in relative x position boundaries.
+    bool					checkZCappingInRemodelling(bool volumeConserved, double zRemodellingLowerThreshold, double zRemodellingUpperThreshold, gsl_matrix* increment, gsl_matrix* eigenVec);    ///< This function checks if the remodelling of the element in z axis have reached the specified cap.
+    void					calculatePlasticDeformation3D(bool volumeConserved, double dt, double plasticDeformationHalfLife, double zRemodellingLowerThreshold, double zRemodellingUpperThreshold); ///< This function calculates the plastic deformation (remodelling) from the current elastic deformation gradient.
+    void 					displayDebuggingMatrices();                                                                     ///< This function displays a selected set of matricex for debugging purposes.
+    virtual double 			getApicalSideLengthAverage(){return ParentErrorMessage("getApicalSideLengthAverage",0.0);}  ///< The virtual function of the parent to calculate average apical side length, dependent on nodal topology, defined in each child.
+    virtual double 			getBasalSideLengthAverage(){return ParentErrorMessage("getBasalSideLengthAverage",0.0);}    ///< The virtual function of the parent to calculate average basal side length, dependent on nodal topology, defined in each child.
+    virtual void 			getApicalTriangles(vector <int> &/*ApicalTriangles*/){ParentErrorMessage("getApicalTriangles");};		///< The virtual function of the parent to return apical triangles, dependent on node topology, defined in each child.
+    virtual void			getApicalNodeIds(vector <int> &/*nodeIds*/){ParentErrorMessage("getApicalNodeIds");};			///< The virtual function of the parent to return apical node IDs, dependent on node topology, defined in each child.
+    virtual void 			getBasalNodeIds(vector <int> &/*nodeIds*/){ParentErrorMessage("getBasalNodeIds");};			///< The virtual function of the parent to return basal node IDs, dependent on node topology, defined in each child.
+    virtual void			getApicalNodeIndicesOnElement(vector <int> &/*apicalNodeIndices*/){ParentErrorMessage("getApicalNodeIndicesOnElement");}; ///< The virtual function of the parent to return apical node indices, dependent on node topology, defined in each child.
+    virtual int				getCorrecpondingApical(int /*currNodeId*/){return ParentErrorMessage("getCorrecpondingApical",-100);};
+    virtual bool			IsThisNodeMyBasal(int /*currNodeId*/){return ParentErrorMessage("IsThisNodeMyBasal", false);}   ///< The virtual function of the parent to check if the input node ID is a basal node of the element, dependent on nodal topology, defined in each child.
+    virtual bool			IsThisNodeMyApical(int /*currNodeId*/){return ParentErrorMessage("IsThisNodeMyApical", false);} ///< The virtual function of the parent to check if the input node ID is an apical node of the element, dependent on nodal topology, defined in each child.
+    virtual double	 		getElementHeight(){return ParentErrorMessage("getElementHeight", 0.0);};	///< The virtual function of the parent to return element height, dependent on shape type.
+    virtual bool 			IsPointCloseEnoughForPacking(double* /*Pos*/,  float /*threshold*/, int /*TissuePlacementOfPackingNode*/){return ParentErrorMessage("IsPointCloseEnoughForPacking", false);};	///< The virtual function of the parent for checking proximity in packing, dependent on node topology.
+    virtual void 			AddPackingToSurface(int /*tissueplacement*/, double /*Fx*/, double /*Fy*/,double /*Fz*/, double **/*PackingForces*/, vector<Node*> &/*Nodes*/, bool& /*allCornersFixedX*/, bool& /*allCornersFixedY*/, bool& /*allCornersFixedZ*/){ParentErrorMessage("AddPackingToApicalSurface");}; ///< The virtual function of parent to add packing to external surfaces, dependent on node topology.
+    virtual void 			getApicalNodePos(double* /*posCorner*/){ParentErrorMessage("getApicalNodePos");};	///< The virtual function of the parent to return the position for one apical node, dependent on node topology
+    virtual void 			getBasalNodePos(double* /*posCorner*/){ParentErrorMessage("getBasalNodePos");};		///< The virtual function of the parent to return the position for one basal node, dependent on node topology
+    virtual void 			constructElementStackList(const int /*discretisationLayers*/, vector<ShapeBase*>& /*elementsList*/){ParentErrorMessage("constructElementStackList");};
+	
+    virtual void			getApicalCentre(double* /*centre*/){ParentErrorMessage("getApicalCentre");};			///< The virtual function of the parent to return apical surface centre, dependent on node topology.
+    virtual void			getBasalCentre(double* /*centre*/){ParentErrorMessage("getBasalCentre");};				///< The virtual function of the parent to return basal surface centre, dependent on node topology.
+    virtual void			getReferenceApicalCentre(double* /*centre*/){ParentErrorMessage("getReferenceApicalCentre");};	///< The virtual function of the parent to return apical surface centre on reference element, dependent on node topology.
+    virtual void			getReferenceBasalCentre(double* /*centre*/){ParentErrorMessage("getReferenceBasalCentre");};	///< The virtual function of the parent to return basal surface centre on reference element, dependent on node topology.
+    virtual double*			getApicalMinViscosity(vector<Node*> /*Nodes*/){ParentErrorMessage("getApicalMinViscosity");double* dummy; return dummy;};///< The virtual function of the parent to return minimum apical external viscosity.
+    virtual double*			getBasalMinViscosity(vector<Node*> /*Nodes*/){ParentErrorMessage("getBasalMinViscosity");double* dummy; return dummy;};///< The virtual function of the parent to return minimum basal external viscosity.
+    virtual void 			checkRotationConsistency3D(){ParentErrorMessage("checkRotationConsistency3D");}                                         ///< The virtual function of the parent to check if the two input nodes of the element are directly connected on one of the elemental surfaces, dependent on nodal topology, defined in each child.
+    virtual bool 			areNodesDirectlyConnected(int /*node0*/, int /*node1*/){return ParentErrorMessage("areNodesDirectlyConnected",false);} ///< The virtual function of the parent to check if the rotation of the nodes of the element are consistent, dependent on nodal topology, defined in each child.
+    bool 					DoesPointBelogToMe(int IdNode);                             ///< This function checks if the input node belogs to the element.
+	
+    void growShape();		// TO DO: check where this is called??
+    void 					assignVolumesToNodes(vector <Node*>& Nodes);	///< This function distributes element's total volume among its owner nodes.
+    void 					calculateZProjectedAreas();                                         ///< This function calculated the z-projected (to world xy plane) apical and basal areas of the element.
+    void 					assignZProjectedAreas(vector <Node*> Nodes); ///< This function distributes element's z-projected areas among its owner nodes.
+    void 					assignElementToConnectedNodes(vector <Node*>& Nodes); ///< This function assigns the element to the nodes it owns, necessary to construc the owner and connectivity list of nodes.
+    void 					removeMassFromNodes(vector <Node*>& Nodes);	///< This function removes mass from nodes as their owner elements are ablated.
+    void 					setECMMimicing(bool IsECMMimicing);                         ///< This funciton sets the element as an ECM mimicking element (distinct domain in terms of physical characteristics).
+    void 					setActinMimicing(bool isActinMimicing);                     ///< This funciton sets the element as an actin mimicking element (distinct domain in terms of physical characteristics).
+    void 					convertLocalStrainToTissueStrain(double* strainsToAdd);	/// TO DO: do i use this?
+    virtual void 			assignExposedSurfaceAreaIndices(vector <Node*>& /*Nodes*/){ParentErrorMessage("assignExposedSurfaceAreaIndices");} ///< The virtual function on parent assigns the nodes of the surfaces that are exposed to external world, dependent on topology, defined for each child.
+    void 					calculateViscositySurfaces();                               ///< This function calls for the assignment of exposed surfaces if the element has viscosity
+    void 					assignViscositySurfaceAreaToNodes(vector <Node*>&  Nodes); ///< This function distributes elemenbt's exposed surfaces to nodes.
+    bool	 				RotatedElement;		///< Boolean stating if the element is rotated during its deformation, to apply the growth orinttaions correctly.
+    gsl_matrix* 			GrowthStrainsRotMat;	///< The rotation due to growth strains //TO DO: explain better
+    void 					calculateEmergentRotationAngles();///< This is for test and display purposes, calculates the rotation of the element in plane
 
-	void    CalculateGrowthRotationByF();
-	void 	calculateTriPointFForRatation();
-	void 	setPlasticDeformationIncrement(double xx, double yy, double zz);
-    void 	growShapeByFg();
-    void 	changeShapeByFsc(double dt);
-    void	checkIfInsideEllipseBands(int nMarkerEllipseRanges, vector<double> markerEllipseBandXCentres, vector<double> markerEllipseBandR1Ranges, vector<double> markerEllipseBandR2Ranges, vector<Node*>& Nodes);
-    bool	checkZCappingInRemodelling(bool volumeConserved, double zRemodellingLowerThreshold, double zRemodellingUpperThreshold, gsl_matrix* increment, gsl_matrix* eigenVec);
 
-    bool	assignSoftHinge(double lowHingeLimit, double highHingeLimit,double softnessLevel);
 
-    void	calculatePlasticDeformation3D(bool volumeConserved, double dt, double plasticDeformationHalfLife, double zRemodellingLowerThreshold, double zRemodellingUpperThreshold);
-    void 	addMigrationIncrementToGrowthIncrement(gsl_matrix* migrationIncrement);
-    void 	displayDebuggingMatrices();
-	virtual double getApicalSideLengthAverage(){return ParentErrorMessage("getApicalSideLengthAverage",0.0);};
-	virtual double getBasalSideLengthAverage(){return ParentErrorMessage("getBasalSideLengthAverage",0.0);};
-	virtual void getApicalTriangles(vector <int> &/*ApicalTriangles*/){ParentErrorMessage("getApicalTriangles");};
-	virtual void getApicalNodeIds(vector <int> &/*nodeIds*/){ParentErrorMessage("getApicalNodeIds");};
-	virtual void getBasalNodeIds(vector <int> &/*nodeIds*/){ParentErrorMessage("getBasalNodeIds");};
-	virtual void getApicalNodeIndicesOnElement(vector <int> &/*apicalNodeIndices*/){ParentErrorMessage("getApicalNodeIndicesOnElement");};
-	virtual int getCorrecpondingApical(int /*currNodeId*/){return ParentErrorMessage("getCorrecpondingApical", -100);};
-	virtual bool IsThisNodeMyBasal(int /*currNodeId*/){return ParentErrorMessage("IsThisNodeMyBasal", false);};
-	virtual bool IsThisNodeMyApical(int /*currNodeId*/){return ParentErrorMessage("IsThisNodeMyApical", false);};
-	virtual double getElementHeight(){return ParentErrorMessage("getElementHeight", 0.0);};
-	virtual bool IsPointCloseEnoughForPacking(double* /*Pos*/,  float /*threshold*/, int /*TissuePlacementOfPackingNode*/){return ParentErrorMessage("IsPointCloseEnoughForPacking", false);};
-	virtual void AddPackingToSurface(int /*tissueplacement*/, double /*Fx*/, double /*Fy*/,double /*Fz*/, double **/*PackingForces*/, vector<Node*> &/*Nodes*/, bool& /*allCornersFixedX*/, bool& /*allCornersFixedY*/, bool& /*allCornersFixedZ*/){ParentErrorMessage("AddPackingToApicalSurface");};
-	virtual void getApicalNodePos(double* /*posCorner*/){ParentErrorMessage("getApicalNodePos");};
-	virtual void getBasalNodePos(double* /*posCorner*/){ParentErrorMessage("getBasalNodePos");};
-	virtual void constructElementStackList(const int /*discretisationLayers*/, vector<ShapeBase*>& /*elementsList*/){ParentErrorMessage("constructElementStackList");};
-	virtual void getApicalCentre(double* /*centre*/){ParentErrorMessage("getApicalCentre");};
-	virtual void getBasalCentre(double* /*centre*/){ParentErrorMessage("getBasalCentre");};
-	virtual void getReferenceApicalCentre(double* /*centre*/){ParentErrorMessage("getReferenceApicalCentre");};
-	virtual void getReferenceBasalCentre(double* /*centre*/){ParentErrorMessage("getReferenceBasalCentre");};
-	virtual double* getApicalMinViscosity(vector<Node*> /*Nodes*/){ParentErrorMessage("getApicalMinViscosity");double* dummy; return dummy;};
-	virtual double* getBasalMinViscosity(vector<Node*> /*Nodes*/){ParentErrorMessage("getBasalMinViscosity");double* dummy; return dummy;};
-	virtual void checkRotationConsistency3D(){ParentErrorMessage("checkRotationConsistency3D");};
-	virtual bool areNodesDirectlyConnected(int /*node0*/, int /*node1*/){ParentErrorMessage("areNodesDirectlyConnected");};
-	bool DoesPointBelogToMe(int IdNode);
-	void growShape();
-	void assignVolumesToNodes(vector <Node*>& Nodes);
-	//void assignSurfaceAreaToNodes(vector <Node*>& Nodes);
-    void calculateZProjectedAreas();
-    void assignZProjectedAreas(vector <Node*> Nodes);
-	void assignElementToConnectedNodes(vector <Node*>& Nodes);
-	void removeMassFromNodes(vector <Node*>& Nodes);
-	void setECMMimicing(bool IsECMMimicing);
-	void setActinMimicing(bool isActinMimicing);
+    void 					updateElementsNodePositions(int RKId, double ***SystemForces, vector <Node*>& Nodes, double dt);
+    
+    void 					updateReferencePositionMatrixFromMeshInput(std::ifstream& file);    ///< This function updates the reference position of the element from save file
+    void					fillNodeNeighbourhood(vector<Node*>& Nodes); ///< This function fills in the node neightbourhood, needed for constrction of the connectivity of nodes
+    void 					checkDisplayClipping(double xClip, double yClip, double zClip); ///< This function checks if the element is clipped in the openGL rendering.
+    //double 				dotProduct3D(std::array<double,3>& u, std::array<double,3>& v); ///< Helper algebraic function, calculates dot product of two arrays <double,3>
+    double 					dotProduct3D(double* u, double* v); ///< Helper algebraic function, calculates dot product of two arrays <double,3>
+    void					crossProduct3D(gsl_vector* u, gsl_vector* v, gsl_vector* cross); ///< Helper algebraic function, calculates cross product of two gsl_vectors, writes into the third input gls vector.
+    void					crossProduct3D(double* u, double* v, double* cross); ///< Helper algebraic function, calculates cross product of two arrays <double,3>
+    //std::array<double,3> 	crossProduct3D(std::array<double,3> u, std::array<double,3> v); ///< Helper algebraic function, calculates cross product of two arrays <double,3>	
 
-	void 	convertLocalStrainToTissueStrain(double* strainsToAdd);
-	virtual void assignExposedSurfaceAreaIndices(vector <Node*>& /*Nodes*/){ParentErrorMessage("assignExposedSurfaceAreaIndices");};
-	void	calculateExposedLateralAreaApicalSide();
-	void 	calculateExposedLateralAreaBasalSide();
-	void 	calculateViscositySurfaces();
-	void 	assignViscositySurfaceAreaToNodes(vector <Node*>& Nodes);
+    virtual void 			setBasalNeigElementId(vector<ShapeBase*>& /*elementsList*/){ParentErrorMessage("setBasalNeigElementId");};
+    bool 					isElementFlippedInPotentialNewShape(int nodeId, double newX, double newY, double newZ); ///< This function checks if the element will plip in the case that its node (nodeID) is moved to the new x,y,z coordintes specified in the input. Necessary in node collapsing.
+    void 					checkForCollapsedNodes(int TissueHeightDiscretisationLayers, vector<Node*>& Nodes, vector<ShapeBase*>& Elements); ///< This function checks if any of the edges of the element is shortened to the extent that it should be collapsed.
+    bool 					hasEnoughNodesOnCurve(vector<Node*>&Nodes);    				///< This function checks if the majority of the nodes of teh element reside in a curved region, to assign it to specific curvature dependent perturbations.
+    void 					assignEllipseBandIdToWholeTissueColumn(int TissueHeightDiscretisationLayers, vector<Node*>& Nodes, vector<ShapeBase*>& Elements); ///< This function assigns the marker ID of the apical elemetn ot all its connected elements in the tissue
+    void 					assignEllipseBandId(vector<Node*>& Nodes, int selectedEllipseBandId); 	///< This function assigns the marking ellipse band ID of the element depending on the definition of nodes it is consturcted of.
+    void 					assignEllipseBandIdToNodes(vector<Node*>& Nodes); 			///< This function assigns the marker ID of the elemetn to all its nodes.
+    void 					addToElementalElasticSystemForces(int i,int j,double value); 		/// This function is to add the input value, to the (i,j)th element of the ElementalElasticSystemForces
+    void 					addToTriPointKe(int i,int j,double value); 				/// This function is to add the input value, to the (i,j)th element of the triPointKe
 
-	bool RotatedElement;
-    gsl_matrix* GrowthStrainsRotMat;
 
-    void calculateEmergentRotationAngles();//this is for test and display purposes, calculates the rotation of the element in plane
-
-	bool 	calculateAlignmentScore(double** RefNormalised);
-	void 	bringShapePositionsToOrigin(double** RefNormalised, double* refCentre);
-	void 	updateElementsNodePositions(int RKId, double ***SystemForces, vector <Node*>& Nodes, double dt);
-	void 	updateReferencePositionMatrixFromMeshInput(ifstream& file);
-	void	fillNodeNeighbourhood(vector<Node*>& Nodes);
-	void 	checkDisplayClipping(double xClip, double yClip, double zClip);
-	double  dotProduct3D(double* u, double* v);
-	void	crossProduct3D(double* u, double* v, double* cross);
-	void	crossProduct3D(gsl_vector* u, gsl_vector* v, gsl_vector* cross);
-	void	alignGrowthCalculationOnReference();
-	void	readNewGrowthRate(double* NewGrowth, double& ex, double&ey, double& ez, double& exy, double& exz, double& eyz);
-	void	updateUniformOrRingGrowthRate(double* NewGrowth, int GrowthId);
-	void	updateGridBasedGrowthRate(double* NewGrowth, int GrowthId, int i, int j);
-	virtual void setBasalNeigElementId(vector<ShapeBase*>& /*elementsList*/){ParentErrorMessage("setBasalNeigElementId");};
-	bool 	isElementFlippedInPotentialNewShape(int nodeId, double newX, double newY, double newZ);
-	void 	checkForCollapsedNodes(int TissueHeightDiscretisationLayers, vector<Node*>& Nodes, vector<ShapeBase*>& Elements);
-	bool 	hasEnoughNodesOnCurve(vector<Node*>&Nodes);
-	void 	assignEllipseBandIdToWholeTissueColumn(int TissueHeightDiscretisationLayers, vector<Node*>& Nodes, vector<ShapeBase*>& Elements);
-	void 	assignEllipseBandId(vector<Node*>& Nodes, int selectedEllipseBandId);
-	void 	assignEllipseBandIdToNodes(vector<Node*>& Nodes);
-	void 	addToElementalElasticSystemForces(int i,int j,double value); /// the function to add the input value, to the (i,j)th element of the ElementalElasticSystemForces
-	void 	addToTriPointKe(int i,int j,double value); /// the function to add the input value, to the (i,j)th element of the triPointKe
+	void 					addMigrationIncrementToGrowthIncrement(gsl_matrix* migrationIncrement); //TO DO: delete all migration
+	void					updateEquilibriumMyoWithFeedbackFromZero(double MyosinFeedbackCap); //TO DO: clear myo
+	void					updateEquilibriumMyoWithFeedbackFromFixedTotal(double totalMyosinLevel);  //TO DO: clear myo
+	bool					checkIfXYPlaneStrainAboveThreshold(double thres); //TO DO: do I use this?
+	bool 					calculateIfInsideActiveStripe(double initialPoint,double endPoint, double stripeSize1, double stripeSize2);  //TO DO: clear myo
+	double					getCmyosinUniformForNode (int TissuePlacement);  //TO DO: clear myo
+	double					getCmyosinUnipolarForNode (int TissuePlacement);  //TO DO: clear myo
+	void 					getMyosinLevels (double *cMyo);  //TO DO: clear myo
+	void 					getEquilibriumMyosinLevels (double *cMyoEq);  //TO DO: clear myo
+	gsl_matrix* 			getMyosinDirection();  //TO DO: clear myo
+	void 					setMyosinLevels (double cUni0, double cUni1, double cPol0, double cPol1);  //TO DO: clear myo
+	void 					setEquilibriumMyosinLevels (double cUni0, double cUni1, double cPol0, double cPol1);  //TO DO: clear myo
+	virtual void 			calculateMyosinForcesAreaBased(double /*forcePerMyoMolecule*/){ParentErrorMessage("calculateMyosinForces");};  //TO DO: clear myo
+	virtual void 			calculateMyosinForcesTotalSizeBased(double /*forcePerMyoMolecule*/){ParentErrorMessage("calculateMyosinForces");};  //TO DO: clear myo
+    virtual void			distributeMyosinForcesAreaBased(bool /*isIsotropic*/, bool /*apical*/, double /*forcePerMyoMolecule*/){ParentErrorMessage("distributeMyosinAreaBased");};  //TO DO: clear myo
+    virtual void			distributeMyosinForcesTotalSizeBased(bool /*isIsotropic*/, bool /*apical*/, double /*forcePerMyoMolecule*/){ParentErrorMessage("distributeMyosinToitalSizeBased");};  //TO DO: clear myo
+    void					updateMyosinConcentration(double dt, double kMyo, bool thereIsMyosinFeedback, double MyosinFeedbackCap); //TO DO: delete all myo
+	void					setCellMigration(bool migratingBool); //TO DO: clear all migration
+	bool 					isMyosinViaEllipsesAppliedToElement(bool isApical, bool isLateral, vector <int> & myosinEllipseBandIds, int numberOfMyosinAppliedEllipseBands); //TO DO: clear all myosin
+    void					updateNodeIdsForRefinement(int* tmpNodeIds);	//TO DO: delete all refinement,
+	void 					cleanMyosinForce();	//TO DO: delete all myo
+    void					updateUniformEquilibriumMyosinConcentration(bool isApical, double cEqUniform); //TO DO: delete all myo
+    void					updateUnipolarEquilibriumMyosinConcentration(bool isApical, double cEqUnipolar, double orientationX, double orientationY); //TO DO: delete all myo
+    void					adjustCMyosinFromSave();  //TO DO: delete all myo
+    void					calculateStiffnessFeedback(double dt); //TO DO: DO I keep feedback?
+    virtual void  			fillLateralNeighbours(vector<Node*>& /*Nodes*/, vector<int>& /*lateralNeigbours*/ ){ParentErrorMessage("fillInLateralNeigbours");}; //TO DO: do I use this?
+	
+    	  
+    void					calculateExposedLateralAreaApicalSide(); /// TO DO: do i use this?
+	void 					calculateExposedLateralAreaBasalSide(); /// TO DO: do i use this?
+	
+	void 					setLateralElementsRemodellingPlaneRotationMatrix(double systemCentreX, double systemCentreY); //TO DO: DO I use this? defined but NO
+    void					setECMMimicingElementThicknessGrowthAxis();	//TO DO: DO I USE THIS? defined but NO
+    //void 	convertPlasticStrainToGrowthStrain(); //TO DO: DO I use this?
+	//void 	resetCurrStepShapeChangeData();	//TO DO: DO I use this? 
+	//bool 	calculateAlignmentScore(double** RefNormalised);	// TO DO: DO i use this?
+	//void 	bringShapePositionsToOrigin(double** RefNormalised, double* refCentre); // TO DO: DO I USE THIS?
 };
 
 #endif

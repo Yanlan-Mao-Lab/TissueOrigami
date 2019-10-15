@@ -14,8 +14,12 @@
 using namespace std;
 
 NewtonRaphsonSolver::NewtonRaphsonSolver(int dim, int n){
-    threshold = 1E-8;
-
+	/**
+	*  The function initiates (memory allocates) the necessary matrices for
+	*  the numerical solver.
+	*
+	*/
+	threshold = 1E-8;
 	nDim = dim;
 	nNodes = n;
 	externalViscosityVolumeBased = false; //using external surface
@@ -37,11 +41,9 @@ NewtonRaphsonSolver::NewtonRaphsonSolver(int dim, int n){
 }
 
 NewtonRaphsonSolver::~NewtonRaphsonSolver(){
-	cout<<"inside deleting NR solver"<<endl;
-
 	gsl_matrix_free(uk);
 	cout<<" deleted uk"<<endl;
-    gsl_matrix_free(un);
+   	gsl_matrix_free(un);
 	cout<<" deleted un"<<endl;
 	gsl_matrix_free(ge);
 	cout<<" deleted ge"<<endl;
@@ -57,8 +59,6 @@ NewtonRaphsonSolver::~NewtonRaphsonSolver(){
 	cout<<" deleted displacementPerDt"<<endl;
 	gsl_vector_free(deltaU);
 	cout<<" deleted deltaU"<<endl;
-	//cout<<"K(0,0): "<<gsl_matrix_get(K,0,0)<<endl;
-	//cout<<"(K->size1,K->size2): "<<K->size1<<" "<<K->size2<<endl;
 	gsl_matrix_free(K);
 	cout<<" deleted K"<<endl;
 	if (Knumerical != 0){
@@ -117,6 +117,9 @@ void NewtonRaphsonSolver::initialteUkMatrix(){
 
 
 void NewtonRaphsonSolver::calculateDisplacementMatrix(double dt){
+	/**
+	* The displacement of nodes per Simulation#dt, for each iteration defined as \f$ \frac{\boldsymbol{u_k} - \boldsymbol{u_n}}{dt} \f$
+	*/
 	gsl_matrix_memcpy(displacementPerDt,uk);
 	gsl_matrix_sub(displacementPerDt,un);
 	gsl_matrix_scale(displacementPerDt,1.0/dt);
@@ -124,64 +127,56 @@ void NewtonRaphsonSolver::calculateDisplacementMatrix(double dt){
 
 void NewtonRaphsonSolver::calculateBoundKWithSlavesMasterDoF(){
 	if (boundNodesWithSlaveMasterDefinition){
-
-		/*int n =slaveMasterList.size();
-		cout<<" number of master/slave couples: "<<n<<endl;
-		for (vector< vector<int> >::iterator itSlaveMasterCouple=slaveMasterList.begin(); itSlaveMasterCouple<slaveMasterList.end(); ++itSlaveMasterCouple){
-			//add all forces on slave to master, set slave forces to zero (g_bound = N^T g)
-			int slaveIndex = (*itSlaveMasterCouple)[0];
-			int masterIndex = (*itSlaveMasterCouple)[1];
-			cout<<" slave/master: "<<slaveIndex<<" 	"<<masterIndex<<endl;
-		}*/
-
-		//cout<<" binding slaves to masters"<<endl;
-		//Original calculation necessary is carried out by matrices N and I, where:
-		//N = matrix of size (nDim*nNodes, nDim*nNodes)
-		//I = matrix of size (nDim*nNodes, nDim*nNodes)
-		//N is identity except:
-		//	For degrees of freedom  i that are slaves, the diagonal of N should be zero;
-		//	For degrees of freedom  i that are slaves to degrees of freedom  j, N(i,j) should be 1.
-		//I is zero matrix except:
-		//	For degrees of freedom  i that are slave, I(i,i) should be 1
-		//Then,
-		//	K_bound = N^T K N + I
-		//	g_bound = N^T g
-		//Due to efficient memory usage, these operations will be carried out on a row/column basis, rather than
-		//using full matrices
-		//	In other words, I do not wish to allocate two more (nDim*nNodes, nDim*nNodes) matrices in definition, and
-		//	another (nDim*nNodes, nDim*nNodes) matrix as temporary during  N^T K N calculation
-
-		//int n= slaveMasterList.size();
+        /** The matrix calculation for node binding is in the form: \n
+         * \f{eqnarray*}
+          \boldsymbol{K}_{bound} & = & \boldsymbol{N^{T}} \boldsymbol{K} \boldsymbol{N} + \boldsymbol{\bar{I}}\\
+          \boldsymbol{g}_{bound} & = & \boldsymbol{N^{T}}  \boldsymbol{g} \\
+          \boldsymbol{N_{ij}} &= & \left\{ \begin{matrix}
+                                        1 & if		& i = j \text{ and } i \text{ is not a slave}\\
+                                        1 & if 	& i  \text{ is slave to } j \\
+                                        0 &		& \text{elsewhere}
+                                    \end{matrix} \right. \\
+          \boldsymbol{\bar{I}_{ij}} & = &  \left\{ \begin{matrix}
+                                             1 & if		& i = j \text{ and } i \text{ is a slave}\\
+                                             0 &		& \text{elsewhere}
+                                           \end{matrix} \right. \\
+         * \f} \n
+         * As this actual matrix calculation requires a significant memory allocation, these operations are
+         *carried out on a row/column basis, rather than using full matrices. \n
+         */
 		int totalNumberOfDoF = K->size1; //nDim * nNodes
-		//for( int slaveIterator =0; slaveIterator <n; ++slaveIterator){
 		for (vector< vector<int> >::iterator itSlaveMasterCouple=slaveMasterList.begin(); itSlaveMasterCouple<slaveMasterList.end(); ++itSlaveMasterCouple){
-			//add all forces on slave to master, set slave forces to zero (g_bound = N^T g)
+			/** First all forces on slave to master, set slave forces to zero on NewtonRaphsonSolver#gSum,
+			*equivalent of \f$ \boldsymbol{g}_{bound} = \boldsymbol{N^{T}}  \boldsymbol{g} \f$.
+			*/
 			int slaveIndex = (*itSlaveMasterCouple)[0];
 			int masterIndex = (*itSlaveMasterCouple)[1];
-			//if (slaveIndex == 17631 || slaveIndex == 17633){
-			//	continue;
-			//}
 			double slaveForce = gsl_vector_get(gSum,slaveIndex);
 			double masterForce = gsl_vector_get(gSum,masterIndex);
 			masterForce +=  slaveForce;
 			gsl_vector_set(gSum,slaveIndex,0);
 			gsl_vector_set(gSum,masterIndex,masterForce);
-			//Start K manipulation - K_bound = N^T K N + I
-			//add all elements of the slave row to master row - N^T K
-			// format of view: [ matrix*, origin i, origin j, rows, columns ]
+			/** Then start the manipulation of the Jacobian, by adding all elements of the slave degrees of freedom
+			* row to master degrees of freedom row on NewtonRaphsonSolver#K, equivalent of operation \f$ \boldsymbol{N^{T}} \boldsymbol{K} \f$.
+			*/
+             		// format of view: [ matrix*, origin i, origin j, rows, columns ]
 			gsl_matrix_view KSlaveRow = gsl_matrix_submatrix (K, slaveIndex, 0, 1, totalNumberOfDoF);
 			gsl_matrix_view KMasterRow = gsl_matrix_submatrix (K, masterIndex, 0, 1, totalNumberOfDoF);
 			gsl_matrix_add(&(KMasterRow.matrix),&(KSlaveRow.matrix));
 			gsl_matrix_set_zero(&(KSlaveRow.matrix));
 			//add all elements of the slave column to master column - N^T K N
+			/** Followed by adding all elements of the slave degrees of freedom column to master degrees of freedom
+			*  columno n NewtonRaphsonSolver#K, equivalent of operation  (cumulatively) \f$ \boldsymbol{N^{T}} \boldsymbol{K} \boldsymbol{N} \f$.
+			*/
 			gsl_matrix_view KSlaveColumn = gsl_matrix_submatrix (K, 0, slaveIndex, totalNumberOfDoF,1);
 			gsl_matrix_view KMasterColumn = gsl_matrix_submatrix (K,0, masterIndex, totalNumberOfDoF,1);
 			gsl_matrix_add(&(KMasterColumn.matrix),&(KSlaveColumn.matrix));
 			gsl_matrix_set_zero(&(KSlaveColumn.matrix));
-			//make K(slave,slave) equal to 1 - N^T K N + I
+			/** Finally, make the diagonal element of NewtonRaphsonSolver#K, \f$ \boldsymbol{K}_{DOFslave,DOFslave} \f$ to unity,
+			* equivalent of operation  (cumulatively)
+			* \f$ \boldsymbol{N^{T}} \boldsymbol{K} \boldsymbol{N} + \boldsymbol{\bar{I}}\f$.
+			*/
 			gsl_matrix_set(K,slaveIndex,slaveIndex,1);
-			//double forceOnSlave = gsl_vector_get(gSum,slaveIndex);
-			//cout<<"slave index: "<<slaveIndex<<" force: "<<forceOnSlave<<endl;
 			//views do not need to be freed, they are addresses to original matrices
 		}
 	}
@@ -192,29 +187,27 @@ void NewtonRaphsonSolver::equateSlaveDisplacementsToMasters(){
 	for( int slaveIterator = 0; slaveIterator <n; ++slaveIterator){
 		int slaveIndex = slaveMasterList[slaveIterator][0];
 		int masterIndex = slaveMasterList[slaveIterator][1];
-		//if (slaveIndex == 17631 || slaveIndex == 17633){
-		//	continue;
-		//}
 		double masterDisplacement = gsl_vector_get(deltaU,masterIndex);
-		//double slaveDisplacement =  gsl_vector_get(deltaU,slaveIndex);
-		//cout<<" slave-master ("<<slaveIndex<<" "<<masterIndex<<") displacement before correction: "<< slaveDisplacement<<" "<<masterDisplacement<<endl;
 		gsl_vector_set(deltaU,slaveIndex,masterDisplacement);
-		//masterDisplacement = gsl_vector_get(deltaU,masterIndex);
-		//slaveDisplacement =  gsl_vector_get(deltaU,slaveIndex);
-		//cout<<" slave-master ("<<slaveIndex<<" "<<masterIndex<<")displacement after correction: "<< slaveDisplacement<<" "<<masterDisplacement<<endl;
 	}
 }
 
 void NewtonRaphsonSolver::calcutateFixedK(vector <Node*>& Nodes){
-    int dim = 3;
-    int Ksize = K->size1;
-    for(int i=0; i<nNodes; i++){
-        for (int j=0; j<dim; ++j){
-            //if ( (Xfixed && j == 0) || (Yfixed && j == 1) || (Zfixed && j == 2) ){
+    /** Some degrees of freedom are fixed for some nodes, as defined by the user input boundary conditions.
+     * this will be recorded in the 3 dimensional boolean array of each node Node#FixedPos
+     * for x,y and z coordinates. In the node has a fixed degree of freedom, then the  sum of
+     * elastic and viscous forces recorded on NewtonRaphsonSolver#gSum is made zero. Then in the Jacobian, the
+     * diagonal term for the degree of freedom is set to unity, all remaining terms of the column and row of
+     * the degree of freedom is set to zero.
+     */
+    size_t dim = 3;
+    size_t Ksize = K->size1;
+    for(size_t i=0; i<nNodes; i++){
+        for (size_t j=0; j<dim; ++j){
             if (Nodes[i]->FixedPos[j]){
                 int index1 = i*dim+j;
                 gsl_vector_set(gSum,index1,0.0); // making the forces zero
-                for (int k =0; k<Ksize; ++k){
+                for (size_t k =0; k<Ksize; ++k){
                     double value =0.0;
                     if (index1 == k ){value =1.0;}
                     gsl_matrix_set(K, index1, k, value);
@@ -229,48 +222,25 @@ void NewtonRaphsonSolver::calculateForcesAndJacobianMatrixNR(vector <Node*>& Nod
 	const int maxThreads = omp_get_max_threads();
 	omp_set_num_threads(maxThreads);
 	#pragma omp parallel for //private(Nodes, displacementPerDt, recordForcesOnFixedNodes, FixedNodeForces, outputFile, dt)
-		for( vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-			if (!(*itElement)->IsAblated){
-				//cout<<"calculating element in jacobian: "<<(*itElement)->Id<<endl;
-				(*itElement)->calculateForces(Nodes, displacementPerDt, recordForcesOnFixedNodes, FixedNodeForces);
-			}
-			//cout<<"finished calculating forces in NR"<<endl;
-			(*itElement)->calculateImplicitKElastic(); //This is the stiffness matrix, elastic part of the jacobian matrix
-			//cout<<"finished calculating ImplicitK elastic in NR"<<endl;
-			(*itElement)->calculateImplicitKViscous(displacementPerDt, dt); //This is the viscous part of jacobian matrix
-			//cout<<"finished calculating ImplicitK viscous in NR"<<endl;
+	for( vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		/** The calculation of foces and their derivatives in each element starts with
+		 * calculation of forces via ShapeBase#calculateForces. A series of calculations necessary for
+		 * Jacobian calculation are obtained at this stage. Then the Elastic and Viscous parts of the elemetnal Jacobian
+		 * are calculates through ShapeBase#calculateImplicitKElastic and ShapeBase#calculateImplicitKViscous ,respectively
+		  */
+          	if (!(*itElement)->IsAblated){
+			(*itElement)->calculateForces(Nodes, displacementPerDt, recordForcesOnFixedNodes, FixedNodeForces);
 		}
+		(*itElement)->calculateImplicitKElastic(); //This is the stiffness matrix, elastic part of the jacobian matrix
+		(*itElement)->calculateImplicitKViscous(displacementPerDt, dt); //This is the viscous part of jacobian matrix
+	}
 	if (thereIsLumen){
-		//cout<<"calculating lumen"<<endl;
 		tissueLumen->updateMatrices(Nodes);
 		tissueLumen->calculateCurrentVolume();
 		tissueLumen->calculateResiduals(Nodes);
 		//calculateLumenNumericalJacobian(tissueLumen,Nodes,Elements);
-		/*Elements[0]->createMatrixCopy(tissueLumen->KvNumerical, tissueLumen->Kv);
-		cout<<"KvNumerical(2,1:12) ";
-		for (int i=0;i<12;++i){
-			cout<<gsl_matrix_get(tissueLumen->KvNumerical,2,i)<<" ";
-		}
-		cout<<endl;
-*/
 		tissueLumen->calculateJacobian();
-	/*	cout<<"Kv_Analytical(2,1:12)";
-		for (int i=0;i<12;++i){
-			cout<<gsl_matrix_get(tissueLumen->Kv,2,i)<<" ";
-		}
-		cout<<endl;
-		*/
-		/*double threshold = 1E-3;
-		for (int i=0; i<tissueLumen->Kv->size1;++i){
-			for (int j=i; j<tissueLumen->Kv->size2;++j){
-				double value = gsl_matrix_get(tissueLumen->Kv,i,j) - gsl_matrix_get(tissueLumen->KvNumerical,i,j);
-				if (value > threshold || value < (-1.0*threshold)){
-					cout<<" Kv  analytical and numerical are not the same for "<<i<<" "<<j<<" ana: "<<gsl_matrix_get(tissueLumen->Kv,i,j)<<" num: "<<gsl_matrix_get(tissueLumen->KvNumerical,i,j)<<endl;
-				}
-			}
-		}*/
 		tissueLumen->writeLumenJacobianToSystemJacobian(K,Nodes);
-
 	}
 }
 
@@ -314,21 +284,12 @@ void 	NewtonRaphsonSolver::calculateLumenNumericalJacobian(Lumen* tissueLumen, v
 			updateElementPositions(Nodes, Elements);
 			tissueLumen->updateMatrices(Nodes);
 			tissueLumen->calculateCurrentVolume();
-			double rVover6V0 =  tissueLumen->rV /6.0 / tissueLumen->currentIdealVolume;
-			//reset elemental elastic forces
-			/*for (int i=0; i<nEle; ++i){
-				for (int j=0; j<6; j++){
-					for (int k =0; k<3;++k){
-						tissueLumen->encapsulatingElements[i]->setElementalElasticForce(j,k,0.0);
-					}
-				}
-			}*/
+			double rVover6V0 =  tissueLumen->rV /6.0 / tissueLumen->currentIdealVolume;			
 			//reset perturbed g:
 			gsl_matrix_set_zero(gPerturbed);
 			tissueLumen->calculateResiduals(Nodes);
 			tissueLumen->calculateLumengFromElementalResiduals(gPerturbed);
 			gsl_matrix_scale(gPerturbed,-1.0*tissueLumen->bulkModulus*rVover6V0);
-			//cout<<"gPerturbed "<<nodeIndex<<" "<<currDim <<" : "<<gsl_matrix_get(gPerturbed,nodeIndex*3+currDim,0)<<" goriginal: "<<gsl_matrix_get(gOriginal,nodeIndex*3+currDim,0)<<endl;
 			//writing the perturbation to global jacobian
 			gsl_matrix_sub(gPerturbed,gOriginal);
 			gsl_matrix_scale(gPerturbed,1.0/perturbation);
@@ -347,16 +308,6 @@ void 	NewtonRaphsonSolver::calculateLumenNumericalJacobian(Lumen* tissueLumen, v
 					if (currIndexOnLumenK == 0 && affectedIndexOnLumenK == 7){
 						cout<<"numerical ["<<currIndexOnLumenK<<", "<<affectedIndexOnLumenK<<"]: value to add"<<numericalValueAffectedDim<<" valueOnLumenK "<<valueOnLumenK<<endl;
 					}
-					//int currNodeIndexOnK     = currId*3+currDim;
-					//int affectedNodeIndexOnK = affectedNodeId*3+affectedDim;
-					//double valueOnK = gsl_matrix_get(K,currNodeIndexOnK,affectedNodeIndexOnK);
-					//double newValue = valueOnK+numericalValueAffectedDim;
-					//gsl_matrix_set(K,currNodeIndexOnK,affectedNodeIndexOnK,newValue);
-					//if(currId==176 && affectedNodeId==166){
-					//	cout<<currId<<"("<<currDim<<"), "<<affectedNodeId<<"("<<affectedDim<<"): "<<newValue<<endl;
-					//  double valueOriginal = gsl_matrix_get(gOriginal,affectedNodeIndex*3+affectedDim,0);
-					//	cout<<currId<<"("<<currDim<<"), "<<affectedNodeId<<"("<<affectedDim<<"), "<<numericalValueAffectedDim<<" "<<valueOnK<<" "<<newValue<<" ValueOriginal:" <<valueOriginal<<endl;
-					//}
 				}
 			}
 			//end of writing the perturbation
@@ -381,103 +332,6 @@ void 	NewtonRaphsonSolver::calculateLumenNumericalJacobian(Lumen* tissueLumen, v
 	gsl_matrix_free(gOriginal);
 	gsl_matrix_free(gPerturbed);
 }
-/*
-void 	NewtonRaphsonSolver::calculateLumenNumericalJacobian(Lumen* tissueLumen, vector <Node*>& Nodes, vector <ShapeBase*>& Elements){
-	double perturbation = 1E-6;
-
-	const int nEle = tissueLumen->encapsulatingElements.size();
-	//take backup of elemental elastic system forces and reset to zero
-	double backupElasticForces [nEle][6][3];
-	double nonPerturbedElasticForces[nEle][6][3];
-	for (int i=0; i<nEle; ++i){
-		for (int j=0; j<6; j++){
-			for (int k =0; k<3;++k){
-				//this is the forces as calculated from all elastic forces including lumen
-				backupElasticForces[i][j][k] = tissueLumen->encapsulatingElements[i]->getElementalElasticForce(j,k);
-				tissueLumen->encapsulatingElements[i]->setElementalElasticForce(j,k,0.0);
-			}
-		}
-	}
-	//now calculating residuals with no other elastic force:
-	tissueLumen->calculateResiduals(Nodes);
-	for (int i=0; i<nEle; ++i){
-		for (int j=0; j<6; j++){
-			for (int k =0; k<3;++k){
-				//this is the forces as calculated from only lumen, as I reset the matrices above
-				//I will keep resetting it at each perturbation, as such my perturbed values will
-				//contain only the lumen forces.
-				//At the end of the function, I will equate the matrices to the backed up value to not loose hte
-				//elastic forces from other components.
-				nonPerturbedElasticForces[i][j][k] = tissueLumen->encapsulatingElements[i]->getElementalElasticForce(j,k);
-				tissueLumen->encapsulatingElements[i]->setElementalElasticForce(j,k,0.0);
-			}
-		}
-	}
-	int  nNode = tissueLumen->nodeIdsList.size();
-	for (int nodeIndex = 0; nodeIndex<nNode; ++nodeIndex){
-		int currId = tissueLumen->nodeIdsList[nodeIndex];
-		for (int currDim = 0; currDim <3 ; ++currDim){
-			if (Nodes[currId]->FixedPos[currDim] ){
-				continue;
-			}
-			//cout<<" perturbing node "<<currId<<" at dim: "<<currDim<<endl;
-			Nodes[currId]->Position[currDim]  += perturbation;
-			updateElementPositions(Nodes, Elements);
-			tissueLumen->updateMatrices(Nodes);
-			tissueLumen->calculateCurrentVolume();
-			//reset elemental elastic forces
-			for (int i=0; i<nEle; ++i){
-				for (int j=0; j<6; j++){
-					for (int k =0; k<3;++k){
-						tissueLumen->encapsulatingElements[i]->setElementalElasticForce(j,k,0.0);
-					}
-				}
-			}
-			//reset perturbed g:
-			tissueLumen->calculateResiduals(Nodes);
-			//writing the perturbation to global jacobian
-			for (int i=0; i<nEle; ++i){
-				for (int j=0; j<3; j++){
-					for (int  affectedDim=0; affectedDim<3;++affectedDim){
-						vector <int> apicalNodeIndices;
-						tissueLumen->encapsulatingElements[i]->getApicalNodeIndicesOnElement(apicalNodeIndices);
-						vector <int> apicalNodeIds;
-						tissueLumen->encapsulatingElements[i]->getApicalNodeIds(apicalNodeIds);
-						int affectedNodeApicalNodeIndice = apicalNodeIndices[j];
-						int affectedNodeId= apicalNodeIds[affectedNodeApicalNodeIndice];
-						if (Nodes[affectedNodeId]->FixedPos[affectedDim] ){
-							continue;
-						}
-						double originalValue = nonPerturbedElasticForces[i][affectedNodeApicalNodeIndice][affectedDim];
-						double perturbedValue = tissueLumen->encapsulatingElements[i]->getElementalElasticForce(affectedNodeApicalNodeIndice,affectedDim);
-						double dKdx = (perturbedValue-originalValue)/perturbation;
-						//now add this to the relevant K position:
-
-						double valueOnK = gsl_matrix_get(K,currId*3+currDim,affectedNodeId*3+affectedDim);
-						double newValue = valueOnK+dKdx;
-						gsl_matrix_set(K,currId*3+currDim,affectedNodeId*3+affectedDim,newValue);
-					}
-				}
-			}
-			//end of writing the perturbation
-			//revert the perturbation, no need to update positions here as the loop continues
-			Nodes[currId]->Position[currDim] -= perturbation;
-		}
-	}
-	//outside the loop, correct positions and all calculated values:
-	updateElementPositions(Nodes, Elements);
-	tissueLumen->updateMatrices(Nodes);
-	tissueLumen->calculateCurrentVolume();
-	//set back the elemental elastic forces:
-	for (int i=0; i<nEle; ++i){
-		for (int j=0; j<6; j++){
-			for (int k =0; k<3;++k){
-				tissueLumen->encapsulatingElements[i]->setElementalElasticForce(j,k,backupElasticForces[i][j][k]);
-			}
-		}
-	}
-
-}*/
 
 void NewtonRaphsonSolver::writeForcesTogeAndgvInternal(vector <Node*>& Nodes, vector <ShapeBase*>& Elements, double** SystemForces){
     for(vector<ShapeBase*>::iterator  itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
@@ -488,18 +342,14 @@ void NewtonRaphsonSolver::writeForcesTogeAndgvInternal(vector <Node*>& Nodes, ve
 }
 
 void NewtonRaphsonSolver::writeImplicitElementalKToJacobian(vector <ShapeBase*>& Elements){
-    //writing all elements K values into big K matrix:
+    /** All elemental elastic (ShapeBase#Ke) and internal viscous (ShapeBase#Kv) jacobians are added onto the
+     * system Jacobian (NewtonRaphsonSolver#K) in this function.
+     */
     for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-    	//if element is ablated, current elemental K matrix will be identity
-    	//(*itElement)->writeKelasticToMainKatrix(K);
-    	//activate this for internal viscosity
     	(*itElement)->writeKviscousToMainKatrix(K);
     }
-    //Elements[0]->displayMatrix(K,"normalKonlyViscous");
     for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-    	//if element is ablated, current elemental K matrix will be identity
     	(*itElement)->writeKelasticToMainKatrix(K);
-    	//activate this for internal viscosity
     }
 }
 
@@ -507,9 +357,15 @@ void NewtonRaphsonSolver::calculateExternalViscousForcesForNR(vector <Node*>& No
     //the mass is already updated for symmetricity boundary nodes, and the viscous forces will be calculated correctly,
 	//as mvisdt is already accounting for the doubling of mass
     //gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, mvisc, displacementPerDt,0.0, gvExternal);
-	for (int i = 0; i<nNodes; ++i ){
-		for (int j=0; j<nDim; ++j){
-			//double matrixValue = gsl_matrix_get(mvisc,0,3*i+j);
+	for (size_t i = 0; i<nNodes; ++i ){
+		for (size_t j=0; j<nDim; ++j){
+			/** For all nodes of the system, the external viscous forces will depend on the
+			* exposed surface associated with each node (Node#viscositySurface),
+			* calculated through ShapeBase::assignViscositySurfaceAreaToNodes. This surface
+			* will be muliplied by the local viscosity Node#externalViscosity and the
+			* displacement of the node in current iteration k, from its position at the end of
+			* previous time step n.
+			*/
 			if (externalViscosityVolumeBased){
 				double massTimesViscosity = Nodes[i]->mass*Nodes[i]->externalViscosity[j];
 				double displacementValue = gsl_matrix_get(displacementPerDt,3*i+j,0);
@@ -528,13 +384,17 @@ void NewtonRaphsonSolver::calculateExternalViscousForcesForNR(vector <Node*>& No
 			}
 		}
 	}
-	//added this line with sign change
-    gsl_matrix_scale(gvExternal,-1.0);
+	/** Once all the viscous forces are calculated, the force direction will be inverted, as I am interested in the visouc
+	* drag applied by the meida to the node.
+	*/
+ 	gsl_matrix_scale(gvExternal,-1.0);
 }
 
 void NewtonRaphsonSolver::addImplicitKViscousExternalToJacobian(vector <Node*>& Nodes, double dt){
-    //gsl_matrix_add(K,mviscPerDt);
-	//cout<<"Jacobian due to explicit viscosity" <<endl;
+	/** This function will add the derivatives of external viscous drag forces with respect to
+	* nodal displacement onto the system Jacobian.
+	*
+	*/
 	for (int i = 0; i<nNodes; ++i ){
 		if (externalViscosityVolumeBased){
 			double massPerDt = Nodes[i]->mass/dt;
@@ -556,7 +416,10 @@ void NewtonRaphsonSolver::addImplicitKViscousExternalToJacobian(vector <Node*>& 
 	}
 }
 
-void NewtonRaphsonSolver::checkJacobianForAblatedNodes(vector <int> & AblatedNodes){
+void NewtonRaphsonSolver::checkJacobianForAblatedNodes(std::vector <int> & AblatedNodes){
+	/** If there are ablated nodes, as recorded in the input vector AblatedNodes,
+	* these nodes should have identity Jacobians. The Jacobian is cleared accordingly. 
+	*/
 	int nAblatedNode = AblatedNodes.size();
 	for (int a = 0; a<nAblatedNode; ++a){
 		int NodeId = AblatedNodes[a]*3;
@@ -576,7 +439,8 @@ void NewtonRaphsonSolver::calculateSumOfInternalForces(){
 }
 
 void NewtonRaphsonSolver::addExernalForces(){
-	//cout<<"after random forces addition"<<endl;
+	/** This function adds the external forces on the system sum of forces, NewtonRaphsonSolver#gSum)
+	*/
 	for (int i=0; i<nDim*nNodes; ++i){
 		gsl_vector_set(gSum,i,gsl_vector_get(gSum,i)+gsl_matrix_get(gExt,i,0));
 		double value = gsl_vector_get(gSum,i);
@@ -589,31 +453,31 @@ void NewtonRaphsonSolver::addExernalForces(){
 
 
 void NewtonRaphsonSolver::solveForDeltaU(){
-    const int nmult  = nDim*nNodes;
-    int *ia = new int[nmult+1];
-    double *b = new double[nmult];
-    vector <int> ja_vec;
-    vector <double> a_vec;
-    constructiaForPardiso(ia, nmult, ja_vec, a_vec);
-    const int nNonzero = ja_vec.size();
-    int* ja = new int[nNonzero];
-    double* a = new double [nNonzero];
-    writeKinPardisoFormat(nNonzero, ja_vec, a_vec, ja, a);
-    writeginPardisoFormat(b,nmult);
-    int error = solveWithPardiso(a, b, ia, ja, nmult);
-    if (error != 0){cerr<<"Pardiso solver did not return success!!"<<endl;}
-    if (boundNodesWithSlaveMasterDefinition){
-    	equateSlaveDisplacementsToMasters();
-    }
-    delete[] ia;
-    delete[] ja;
-    delete[] a;
-    delete[] b;
+	/** This function will solve for new displacements from the system forces and the Jacobian.
+	*This requires solving a sparse system of linear equations, and the operation is handled by Pardiso solver.
+	*Please refer to the manual of Pardiso to follow the necessary steps in this function/
+	*/
+	const int nmult  = nDim*nNodes;
+	int *ia = new int[nmult+1];
+	double *b = new double[nmult];
+	vector <int> ja_vec;
+	vector <double> a_vec;
+	constructiaForPardiso(ia, nmult, ja_vec, a_vec);
+	const int nNonzero = ja_vec.size();
+	int* ja = new int[nNonzero];
+	double* a = new double [nNonzero];
+	writeKinPardisoFormat(nNonzero, ja_vec, a_vec, ja, a);
+	writeginPardisoFormat(b,nmult);
+	int error = solveWithPardiso(a, b, ia, ja, nmult);
+	if (error != 0){cerr<<"Pardiso solver did not return success!!"<<endl;}
+	if (boundNodesWithSlaveMasterDefinition){
+		equateSlaveDisplacementsToMasters();
+	}
+	delete[] ia;
+	delete[] ja;
+	delete[] a;
+	delete[] b;
 }
-
-
-
-
 
 // PARDISO prototype. //
 extern "C" void pardisoinit (void   *, int    *,   int *, int *, double *, int *);
@@ -933,42 +797,59 @@ void NewtonRaphsonSolver::writeginPardisoFormat(double* b, const int n){
 
 
 bool NewtonRaphsonSolver::checkConvergenceViaDeltaU(){
-    bool converged = true;
+	/**
+	* This function checks the norm of NewtonRaphsonSolver#deltaU, the change in
+	*nodal positions from previous iteration to this one. If the norm is below the threshold of convergence
+	*NewtonRaphsonSolver#threshold, then the solution has been achieved for the current time step.
+	*/
+	bool converged = true;
 
-    double d = gsl_blas_dnrm2 (deltaU);
-    //displayMatrix(deltaU,"deltaUInConvergence");
-    if (d>threshold){
-        converged = false;
-        cout<<" not  yet converged via du: norm "<<d<<endl;
-    }
-    else{
-        cout<<"converged with displacement: norm"<<d<<endl;
-    }
-    return converged;
+	double d = gsl_blas_dnrm2 (deltaU);
+
+	if (d>threshold){
+		converged = false;
+		cout<<" not  yet converged via du: norm "<<d<<endl;
+	}
+	else{
+		cout<<"converged with displacement: norm"<<d<<endl;
+	}
+	return converged;
 }
 
 bool NewtonRaphsonSolver::checkConvergenceViaForce(){
-    bool converged = true;
-    double d = gsl_blas_dnrm2 (gSum);
-    if (d>threshold){
-        converged = false;
-        cout<<" not  yet converged via forces: norm "<<d<<endl;
-    }
-    else{
-        cout<<"converged with forces: norm"<<d<<endl;
-    }
-    return converged;
+	/** The system can converge with zero forces as well. This function
+	* will check the norm of the sum of all nodal forces against the threshold. This check
+	* is not currently used.
+	*/
+	bool converged = true;
+	double d = gsl_blas_dnrm2 (gSum);
+	if (d>threshold){
+		converged = false;
+		cout<<" not  yet converged via forces: norm "<<d<<endl;
+	}
+	else{
+		cout<<"converged with forces: norm"<<d<<endl;
+	}
+	return converged;
 }
 
 void NewtonRaphsonSolver::updateUkInIteration(){
-    int n = uk->size1;
-    for (int i=0; i<n;++i){
-    	double newValue = gsl_matrix_get(uk,i,0)+gsl_vector_get(deltaU,i);
-        gsl_matrix_set(uk,i,0,newValue);
-    }
+	/**
+	* This function updates the positions of nodes for next iteration $ \f \boldsymbol{u}_{k+1} $ \f
+	*from the positions of current iteration the $ \f \boldsymbol{u}_{k} $ \f and $ \f \boldsymbol{\delta u}_{k} $ \f.
+	*/
+	int n = uk->size1;
+	for (int i=0; i<n;++i){
+		double newValue = gsl_matrix_get(uk,i,0)+gsl_vector_get(deltaU,i);
+		gsl_matrix_set(uk,i,0,newValue);
+	}
 }
 
 void NewtonRaphsonSolver::calculateDifferenceBetweenNumericalAndAnalyticalJacobian(vector <Node*>& Nodes, bool displayMatricesDuringNumericalCalculation){
+	/**
+	 * This function calculates the difference between the numerical and analytical Jacobians.
+	 * It is here for debugging purposes only, it should be used with caution as it displays the difference matrix.
+	 */
 	//The normal K still includes the values for fixed nodes. Should correct the fixed nodes,
 	//then calculate the difference
 	calcutateFixedK(Nodes);
@@ -987,7 +868,7 @@ void NewtonRaphsonSolver::calculateDifferenceBetweenNumericalAndAnalyticalJacobi
 		displayMatrix(K,"normalK");
 		displayMatrix(Kdiff,"differenceKMatrix");
 	}
-	cout<<"norm of difference between numerical and analytical K: "<<d<<endl;
+	std::cout<<"norm of difference between numerical and analytical K: "<<d<<endl;
 	gsl_matrix_free(Kdiff);
 }
 
@@ -1013,7 +894,6 @@ void NewtonRaphsonSolver::displayMatrix(gsl_matrix* mat, string matname){
 
 void NewtonRaphsonSolver::displayMatrix(gsl_vector* mat, string matname){
     int m = mat->size;
-    //int n = mat->size2;
     cout<<matname<<": "<<endl;
     for (int i =0; i<m; i++){
 		cout.precision(4);
@@ -1023,6 +903,10 @@ void NewtonRaphsonSolver::displayMatrix(gsl_vector* mat, string matname){
 }
 
 bool NewtonRaphsonSolver::checkIfCombinationExists(int dofSlave, int dofMaster){
+	/**
+	 * The input gives a potential new slave degrees of freedom, and its potential new master.
+	 * This function checks if the pair is already recorded.
+	 */
 	int n= slaveMasterList.size();
 	for(int i=0; i<n;++i){
 		if(slaveMasterList[i][0] == dofSlave && slaveMasterList[i][1] == dofMaster){
@@ -1036,7 +920,14 @@ bool NewtonRaphsonSolver::checkIfCombinationExists(int dofSlave, int dofMaster){
 }
 
 void NewtonRaphsonSolver::checkMasterUpdate(int& dofMaster, int& masterId){
-	//order is [slave][master]
+	/**
+	 * The input gives a potential new master degrees of freedom, and its node Id.
+	 * This function will check if the master is already slave to other degrees of freedom.
+	 * If the master is indeed a slave (recorded in the NewtonRaphsonSolver#slaveMasterList
+	 * 2D array's first dimension), then the master degree of freedom, and the master nod eid are
+	 * updated to be the original potential master's existing master.
+	 */
+	//order in NewtonRaphsonSolver#slaveMasterList [slave][master]
 	int n= slaveMasterList.size();
 	for(int i=0; i<n;++i){
 		if(slaveMasterList[i][0] == dofMaster){
@@ -1075,6 +966,13 @@ void NewtonRaphsonSolver::cleanPeripodialBindingFromMaster(int masterDoF, vector
 }
 
 bool NewtonRaphsonSolver::checkIfSlaveIsAlreadyMasterOfOthers(int dofSlave, int dofMaster){
+	/**
+	 * The input gives a potential new slave degrees of freedom, and its potential new master.
+	 * This function will check if the slave is already master of other degrees of freedom.
+	 * If the slave is indeed a master (recorded in the NewtonRaphsonSolver#slaveMasterList
+	 * 2D array's second dimension), then the master of those nodes are assigned to be the
+	 * new master. The function informs the caller that it has made changes.
+	 */
 	int n= slaveMasterList.size();
 	bool madeChange = false;
 	for(int i=0; i<n;++i){
@@ -1087,256 +985,3 @@ bool NewtonRaphsonSolver::checkIfSlaveIsAlreadyMasterOfOthers(int dofSlave, int 
 	}
 	return madeChange;
 }
-/*
-extern int mkl_get_max_threads();
-
-void NewtonRaphsonSolver::solveForDeltaUMKL(){
-
-    const int nmult  = nDim*nNodes;
-    MKL_INT *ia = new MKL_INT[nmult+1];
-    double *b = new double[nmult];
-    vector <int> ja_vec;
-    vector <double> a_vec;
-    constructiaForPardisoMKL(ia, nmult, ja_vec, a_vec);
-    const int nNonzero = ja_vec.size();
-    MKL_INT* ja = new MKL_INT[nNonzero];
-    double* a = new double [nNonzero];
-    writeKinPardisoFormatMKL(nNonzero, ja_vec, a_vec, ja, a);
-    writeginPardisoFormat(b,nmult);
-    int error = solveWithPardisoMKL(a, b, ia, ja, nmult);
-    if (error != 0){cerr<<"Pardiso solver did not return success!!"<<endl;}
-
-    if (boundNodesWithSlaveMasterDefinition){
-    	equateSlaveDisplacementsToMasters();
-    }
-    delete[] ia;
-    delete[] ja;
-    delete[] a;
-    delete[] b;
-}
-
-void NewtonRaphsonSolver::setupControlParametersMKL(MKL_INT* iparm, MKL_INT& maxfct, MKL_INT& mnum, MKL_INT& msglvl,  MKL_INT& error){
-	for (int i = 0; i < 64; i++) {
-	    iparm[i] = 0;
-	}
-	iparm[0] = 1; // No solver default
-	iparm[1] = 2; // Fill-in reordering from METIS
-	iparm[2]  = mkl_get_max_threads(); // Numbers of processors, value of MKL_NUM_THREADS
-	iparm[3]  =  0;    	// No iterative-direct algorithm
-	iparm[4]  =  0;    	// No user fill-in reducing permutation
-	iparm[5]  =  0;    	// Write solution into x
-	iparm[7]  =  2;    	// Max numbers of iterative refinement steps
- 	iparm[9]  =  13;   	// Perturb the pivot elements with 1E-13
-    iparm[10] =  0;   	//  no scaling  -  //THis was 1 in the original independent license version!!
-    iparm[11] =  0;   	// Use nonsymmetric permutation and scaling MPS
-    iparm[12] =  0;   	//  no matching
-	iparm[17] = -1;		// Output: Number of nonzeros in the factor LU
-	iparm[18] = -1;  	// Output: Mflops for LU factorization
-	iparm[19] =  0;   	// Output: Numbers of CG Iterations
-
-	maxfct =1 ; // Maximum number of numerical factorizations.
-	mnum= 1; // Which factorization to use.
-	msglvl = 0; // Print statistical information in file
-   	error = 0;  // Initialize error flag
-}
-
-int NewtonRaphsonSolver::solveWithPardisoMKL(double* a, double*b, int* ia, int* ja, const int n_variables){
-	//This is the mkl version
-
-    // I am copying my libraries to a different location for this to work:
-    // On MAC:
-    // cp /usr/local/lib/gcc/x86_64-apple-darwin14.4.0/4.7.4/libgfortran.3.dylib /usr/local/lib/
-    // cp /usr/local/lib/gcc/x86_64-apple-darwin14.4.0/4.7.4/libgomp.1.dylib /usr/local/lib/
-    // cp /usr/local/lib/gcc/x86_64-apple-darwin14.4.0/4.7.4/libquadmath.0.dylib /usr/local/lib/
-    // cp libpardiso500-MACOS-X86-64.dylib usr/local/lib
-    //
-    // compilation:
-    // g++ pardiso_sym.cpp -o pardiso_sym  -L./ -L/usr/local/lib -L/usr/lib/  -lpardiso500-MACOS-X86-64 -llapack
-
-
-    // On ubuntu,
-    // cp libpardiso500-GNU461-X86-64.so /usr/lib/
-    //
-    // sometimes linux cannot recognise liblapack.so.3gf or liblapack.so.3.0.1 or others like this, are essentially liblapack.so
-    // on ubuntu you can get this solved by installing liblapack-dev:
-    // sudo apt-get install liblapack-dev
-    //
-	//MKL path:
-	//	export MKLROOT=/opt/intel/compilers_and_libraries/linux/mkl/
-	//compilation - using g++ and openMP:
-	//	g++  -DMKL_ILP64 -m64 -I${MKLROOT}/include -L${MKLROOT}/lib/intel64 -Wl,--no-as-needed  -lmkl_intel_ilp64 -lmkl_gnu_thread -lmkl_core -lgomp -lpthread -lm -ldl  matrixsolver.cpp -o matrixsolver
-
-
-    //
-    // also for each terminal run:
-    // export OMP_NUM_THREADS=1
-    // For mkl this is :
-    // export MKL_PARDISO_OOC_MAX_CORE_SIZE=10000
-    // export MKL_PARDISO_OOC_MAX_SWAP_SIZE=2000
-    // MSGLVL: the level of verbal output, 0 is no output.
-
-    MKL_INT    n = n_variables;
-    int    nnz = ia[n];
-    MKL_INT    mtype = 11;        // Real unsymmetric matrix //
-
-    // RHS and solution vectors.
-    MKL_INT      nrhs = 1;          // Number of right hand sides.
-    double   x[n_variables];//, diag[n_variables];
-    // Internal solver memory pointer pt,                  //
-    // 32-bit: int pt[64]; 64-bit: long int pt[64]         //
-    // or void *pt[64] should be OK on both architectures  //
-    void    *pt[64];
-
-    // Pardiso control parameters. //
-    MKL_INT*  iparm = new MKL_INT[64];
-    double   dparm[64];
-    MKL_INT  maxfct, mnum, phase, error, msglvl, solver;
-
-    iparm[60] = 1; //use in-core version when there is enough memory, use out of core version when not.
-
-    // Number of processors. //
-    int      num_procs;
-
-    // Auxiliary variables. //
-    char    *var;
-    int      i;
-    double   ddum;              // Double dummy
-    MKL_INT  idum;              // Integer dummy.
-
-
-// --------------------------------------------------------------------
-// ..  Setup Pardiso control parameters.
-// --------------------------------------------------------------------
-    setupControlParametersMKL(iparm, maxfct, mnum, msglvl, error);d
-
-// --------------------------------------------------------------------
-// .. Initialize the internal solver memory pointer. This is only
-// necessary for the FIRST call of the PARDISO solver.
-// --------------------------------------------------------------------
-	for (i = 0; i < 64; i++) {
-	    pt[i] = 0;
-	}
-
-// -------------------------------------------------------------------- //
-// ..  Convert matrix from 0-based C-notation to Fortran 1-based        //
-//     notation.                                                        //
-// -------------------------------------------------------------------- //
-    for (i = 0; i < n+1; i++) {
-        ia[i] += 1;
-    }
-    for (i = 0; i < nnz; i++) {
-        ja[i] += 1;
-    }
-
-
-
-// --------------------------------------------------------------------
-// .. Reordering and Symbolic Factorization. This step also allocates
-// all memory that is necessary for the factorization.
-// --------------------------------------------------------------------
-	//cout<<"Reordering and symbolic factorisation"<<endl;
-	phase = 11;
-	PARDISO (pt, &maxfct, &mnum, &mtype, &phase, &n, a, ia, ja, &idum, &nrhs, iparm, &msglvl, &ddum, &ddum, &error);
-	if (error != 0) {
-		printf("\nERROR during symbolic factorization: %d", error);
-		exit(1);
-	}
-    //printf("\nReordering completed ... ");
-    //printf("\nNumber of nonzeros in factors  = %d", iparm[17]);
-    //printf("\nNumber of factorization MFLOPS = %d", iparm[18]);
-
-// --------------------------------------------------------------------
-// .. Numerical factorization
-// --------------------------------------------------------------------
-//cout<<"Numerical factorisation"<<endl;
-	phase = 22;
-	PARDISO (pt, &maxfct, &mnum, &mtype, &phase, &n, a, ia, ja, &idum, &nrhs,iparm, &msglvl, &ddum, &ddum, &error);
-	if (error != 0) {
-		printf("\nERROR during numerical factorization: %d", error);
-		exit(2);
-	}
-	//printf("\nFactorization completed ... ");
-
-
-// --------------------------------------------------------------------
-// .. Back substitution and iterative refinement.
-// --------------------------------------------------------------------
-	phase = 33;
-	iparm[7] = 2;
-	// Max numbers of iterative refinement steps.
-	PARDISO (pt, &maxfct, &mnum, &mtype, &phase, &n, a, ia, ja, &idum, &nrhs, iparm, &msglvl, b, x, &error);
-	if (error != 0) {
-		printf("\nERROR during solution: %d", error);
- 		exit(3);
-	}
-
-	if (error != 0) {
-		printf("\nERROR during solution: %d", error);
-		exit(3);
-	}
-
-	bool displayResult = false;
-	if (displayResult){
-		printf("\nSolve completed ... ");
-		printf("\nThe solution of the system is: ");
-		for (i = 0; i < n; i++) {
-			printf("\n x [%d] = % f", i, x[i] );
-		}
-		printf ("\n");
-	}
-    //Write x into deltaU:
-    for (int i=0; i<n_variables; ++i){
-        gsl_vector_set(deltaU,i,x[i]);
-    }
-
-// -------------------------------------------------------------------- //
-// ..  Convert matrix back to 0-based C-notation.                       //
-// -------------------------------------------------------------------- //
-    for (i = 0; i < n+1; i++) {
-        ia[i] -= 1;
-    }
-    for (i = 0; i < nnz; i++) {
-        ja[i] -= 1;
-    }
-
-// -------------------------------------------------------------------- //
-// ..  Termination and release of memory.                               //
-// -------------------------------------------------------------------- //
-    phase = -1;                 // Release internal memory.
-
-// Release internal memory.
-    PARDISO (pt, &maxfct, &mnum, &mtype, &phase, &n, &ddum, ia, ja, &idum, &nrhs, iparm, &msglvl, &ddum, &ddum, &error);
-    return 0;
-}
-
-void NewtonRaphsonSolver::constructiaForPardisoMKL(MKL_INT* ia, const int nmult, vector<int> &ja_vec, vector<double> &a_vec){
-    double negThreshold = -1E-13, posThreshold = 1E-13;
-    //count how many elements there are on K matrix and fill up ia:
-    int counter = 0;
-    for (int i =0; i<nmult; ++i){
-        bool wroteiaForThisRow = false;
-        for (int j=0; j<nmult; ++j){
-            double Kvalue = gsl_matrix_get(K,i,j);
-            if (Kvalue>posThreshold || Kvalue<negThreshold){
-                ja_vec.push_back(j);
-                a_vec.push_back(Kvalue);
-                if (!wroteiaForThisRow){
-                    //cout<<"writing is for row "<<i<<" column is: "<<j<<endl;
-                    ia[i] = counter;
-                    wroteiaForThisRow = true;
-                }
-                counter++;
-            }
-        }
-    }
-    ia[nmult] = counter;
-}
-
-void NewtonRaphsonSolver::writeKinPardisoFormatMKL(const int nNonzero, vector<int> &ja_vec, vector<double> &a_vec, MKL_INT* ja, double* a){
-    //now filling up the int & double arrays for ja, a
-    for (int i=0 ; i<nNonzero; ++i){
-        ja[i] = ja_vec[i];
-        a[i]  = a_vec [i];
-    }
-}
-*/

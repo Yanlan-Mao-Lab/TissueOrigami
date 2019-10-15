@@ -25,8 +25,6 @@ Simulation::Simulation(){
 	conservingColumnVolumes = false;
 	lumenHeight = -20;
 	boundingBoxSize[0]=1000.0; boundingBoxSize[1]=1000.0; boundingBoxSize[2]=1000.0;
-	//columnarBoundingBoxSize[0]=1000.0; columnarBoundingBoxSize[1]=1000.0; columnarBoundingBoxSize[2]=1000.0;
-	//peripodialBoundingBoxSize[0]=1000.0; peripodialBoundingBoxSize[1]=1000.0; peripodialBoundingBoxSize[2]=1000.0;
 	ContinueFromSave = false;
     growthRotationUpdateFrequency = 60.0/dt;
     nElements = 0;
@@ -46,7 +44,6 @@ Simulation::Simulation(){
 }
 
 Simulation::~Simulation(){
-    cerr<<"destructor for simulation called"<<endl;
 	delete ModInp;
 	if (nGrowthPinning>0){
 		delete [] growthPinUpdateTime;
@@ -56,14 +53,10 @@ Simulation::~Simulation(){
 	for (int j=0;j<nNodes;++j){
 		delete[] SystemForces[j];
 		delete[] PackingForces[j];
-		//delete[] PackingForcesPreviousStep[j];
-		//delete[] PackingForcesTwoStepsAgoStep[j];
 		delete[] FixedNodeForces[j];
 	}
 	delete[] SystemForces;
     delete[] PackingForces;
-    //delete[] PackingForcesPreviousStep;
-    //delete[] PackingForcesTwoStepsAgoStep;
     delete[] FixedNodeForces;
     if (thereIsPeripodialMembrane){
     	delete tissueLumen;
@@ -75,7 +68,6 @@ Simulation::~Simulation(){
 		tmp_pt = Elements.back();
 		Elements.pop_back();
 		delete tmp_pt;
-        //cerr<<"Element list size: "<<Elements.size()<<endl;
 	}
     cout<<"deleting nodes"<<endl;
 	while(!Nodes.empty()){
@@ -90,7 +82,6 @@ Simulation::~Simulation(){
 		tmp_GF = GrowthFunctions.back();
 		GrowthFunctions.pop_back();
 		delete tmp_GF;
-        //cerr<<"GrowtFuncitons list size: "<<GrowthFunctions.size()<<endl;
 	}
     cout<<"deleting NRSolver"<<endl;
     delete NRSolver;
@@ -99,13 +90,13 @@ Simulation::~Simulation(){
 }
 
 void Simulation::setDefaultParameters(){
-	dt = 0.01;				//sec
-	SimLength = 10.0; 		//10 sec of simulation
-	saveImages = false;		//do not save simulation images by default
-	saveData = false;		//do not save simulation data by default
+	dt = 0.01;						//sec
+	SimLength = 10.0; 				//10 sec of simulation
+	saveImages = false;				//do not save simulation images by default
+	saveData = false;				//do not save simulation data by default
 	imageSaveInterval = 60.0/dt;	//save images every minute
     dataSaveInterval  = 60.0/dt;	//save data every minute
-	saveDirectory = "Not-Set";	//the directory to save the images and data points
+	saveDirectory = "Not-Set";		//the directory to save the images and data points
 	saveDirectoryToDisplayString  = "Not-Set"; //the file whcih will be read and displayed - no simulation
 	EApical = 10.0;
 	EBasal = 10.0;
@@ -119,7 +110,7 @@ void Simulation::setDefaultParameters(){
 	for (int i=0; i<3; ++i){
 		zeroExternalViscosity[i] = true;
 	}
-	memset(noiseOnPysProp,0,4*sizeof(int));
+	noiseOnPysProp.fill(0.0);
 	// The default input is a calculated mesh of width 4 elements, each element being 2.0 unit high
 	// and having 1.0 unit sides of the triangles.
 	MeshType = 2;
@@ -127,7 +118,6 @@ void Simulation::setDefaultParameters(){
 	Column = Row-2;
 	SideLength=1.0;
 	zHeight = 2.0;
-	//fixWithExternalViscosity = false;
 	ApicalNodeFixWithExternalViscosity = false;
 	BasalNodeFixWithExternalViscosity = false;
 	NotumNodeFixWithExternalViscosity = false;
@@ -298,15 +288,33 @@ bool Simulation::readExecutableInputs(int argc, char **argv){
 	while(i<argc){
 		const char *inptype = argv[i];
 		if (string(inptype) == "-mode"){
+            /**
+             * The mode of simulation can be "DisplaySave","SimulationOnTheGo" or "ContinueFromSave". As the
+             *nemas suggest, "DisplaySave" option will dsplay a simulation from saved files, without running the
+             *simulation. "SimulationOnTheGo" will start a fresh simulation and "ContinueFromSave" will continue simulating
+             *from a save file.\n
+             *
+              */
 			Success = readModeOfSim(i, argc, argv);
 		}
 		else if (string(inptype) == "-i"){
+            /**
+             * The tag "-i" defines the input file, this should be a modelinput file
+             * detailing the parameters of the simulation.\n
+             */
 			Success = readParameters(i, argc, argv);
 		}
 		else if (string(inptype) == "-od"){
+            /**
+             * If the input file requires saving, then an output direcotry should be specified with the "-od" tag.
+             */
 			Success = readOutputDirectory(i, argc, argv);
 		}
 		else if (string(inptype) == "-dInput"){
+            /**
+             * In case of simulations contining from save or when the tool is called to display an existing simulation,
+             * the input directory should be specified, with the tag "-dInput".
+             */
 			Success = readSaveDirectoryToDisplay(i, argc, argv);
 		}
 		else {
@@ -355,11 +363,9 @@ bool Simulation::readParameters(int& i, int argc, char **argv){
 		cerr<<" input the model input file"<<endl;
 		return false;
 	}
-	//cerr<<"Reading parameter input file"<<endl;
 	const char* inpstring = argv[i];
 	ModInp->Sim=this;
 	ModInp->parameterFileName =  inpstring;
-	//cerr<<" Reading parameters from file: "<<ModInp->parameterFileName<<endl;
 	bool Success = ModInp->readParameters();
 	if (!Success){
 		return Success;
@@ -379,15 +385,17 @@ bool Simulation::readSaveDirectoryToDisplay(int& i, int argc, char **argv){
 }
 
 bool Simulation::readOutputDirectory(int& i, int argc, char **argv){
+    /**
+     * This function will read in the save directory. The boolean for saving files will
+     * not be toggles. If your model input file states no saving, then the error and output files
+     * will be directed into this directory, but the frame saving must be toggled independently.
+     */
 	i++;
 	if (i >= argc){
 		cerr<<" input the save directory"<<endl;
 		return false;
 	}
 	const char* inpstring = argv[i];
-	//This will set the save directory, but will not change the safe file boolean.
-	//If your model input file states no saving, then the error and output files
-	//will be directed into this directory, but the frame saving will not be toggled
 	saveDirectory= string(inpstring);
 	return true;
 }
@@ -397,69 +405,72 @@ bool Simulation::readFinalSimulationStep(){
 	if (!success){
 		return false;
 	}
-	//backing up data save interval and time step before reading the system summary:
+    /**
+     * The data save interval and time step from the model input file
+     * are backed up, then the properties of the saved system are read.
+     */
 	double timeStepCurrentSim = dt;
 	int dataSaveIntervalCurrentSim = dataSaveInterval;
-	//bool ZerothFrame = true;
-	//reading system properties:
 	success  = readSystemSummaryFromSave();
 	if (!success){
 		return false;
 	}
 	string currline;
 	while(reachedEndOfSaveFile == false){
-		//skipping the header:
+        /**
+         * Each frame is then read until the end of Simulation is reached. For each fraom first
+         * line is discarded as it is the header.
+         */
 		getline(saveFileToDisplayMesh,currline);
 		cerr<<" currline in read last step: "<<currline<<endl;
 		if(saveFileToDisplayMesh.eof()){
 			reachedEndOfSaveFile = true;
 			break;
 		}
+        /**
+         * If end of file is not reached, the node data is read.
+         */
 		success = readNodeDataToContinueFromSave();
 		cout<<"dt after  readNodeDataToContinueFromSave "<<dt<<" timeStepCurrentSim: "<<timeStepCurrentSim<<" dataSaveInterval: "<<dataSaveInterval<<" dataSaveIntervalCurrentSim: "<<dataSaveIntervalCurrentSim<<endl;
 		if (!success){
 			return false;
 		}
+        /**
+         * If node data is successfully read, then element data is read.
+         */
 		readElementDataToContinueFromSave();
 		cout<<"dt after  readElementDataToContinueFromSave "<<dt<<" timeStepCurrentSim: "<<timeStepCurrentSim<<" dataSaveInterval: "<<dataSaveInterval<<" dataSaveIntervalCurrentSim: "<<dataSaveIntervalCurrentSim<<endl;
-		//assignPhysicalParameters();
-		//cout<<" reading tension"<<endl;
+        /**
+         * Depending on which properties are saved, all the trmainder physocal porperies and
+         * states of the tissue are read.
+         */
 		if (TensionCompressionSaved){
 			readTensionCompressionToContinueFromSave();
 		}
-		//cout<<" reading growth"<<endl;
         if (GrowthSaved){
             readGrowthToContinueFromSave();
         }
-		//cout<<" reading growth rates"<<endl;
         if (GrowthRateSaved){
             readGrowthRateToContinueFromSave();
         }
-		//cout<<" reading proteins"<<endl;
         if (ProteinsSaved){
         	readProteinsToContinueFromSave();
 		}
-		//cout<<" reading physical properties"<<endl;
         if (physicalPropertiesSaved){
         	readPhysicalPropToContinueFromSave();
         }
-		//cout<<" reading forces"<<endl;
 		if (ForcesSaved){
     		updateForcesFromSave();
     	}
-		//cout<<" reading packing"<<endl;
     	if (PackingSaved){
     		updatePackingFromSave();
     	}
-		//cout<<" reading growth redistribution"<<endl;
     	if (growthRedistributionSaved){
     		readGrowthRedistributionToContinueFromSave();
     	}
-		//cout<<" reading node binding"<<endl;
     	if (nodeBindingSaved){
     		readNodeBindingToContinueFromSave();
     	}
-		//cout<<" reading collapse and adhesion"<<endl;
     	if(collapseAndAdhesionSaved){
     		readCollapseAndAdhesionToContinueFromSave();
     	}
@@ -467,21 +478,33 @@ bool Simulation::readFinalSimulationStep(){
         	tissueLumen->growLumen(currSimTimeSec + dt*dataSaveInterval);
         	cout<<"lumen growth is carried out for: "<<currSimTimeSec + dt*dataSaveInterval<<endl;
         }
+        /**
+         * The time step are iterated with the save time step read from the save summary.
+         */
 		timestep = timestep + dataSaveInterval;
 		currSimTimeSec += dt*dataSaveInterval;
-		cout<<"current time step "<<timestep<<" currSimTimeSec: "<<currSimTimeSec<<endl;
-
-		//skipping the footer:
+		std::cout<<"current time step "<<timestep<<" currSimTimeSec: "<<currSimTimeSec<<endl;
+        /**
+         * Finally the footer is skipped.
+         */
 		getline(saveFileToDisplayMesh,currline);
 		while (currline.empty() && !saveFileToDisplayMesh.eof()){
 			//skipping empty line
 			getline(saveFileToDisplayMesh,currline);
 		}
-		//Now I will save it again:
-		cout<<"saving"<<endl;
+        /**
+         * Now with all this information, we will save the file again, as such, we can keep all the Simulation
+         * in a continuous file and don't work on appending folders later. This reduces significant amount of book keeping,
+         * specifically for the simulations that are run on high throughput servers at muliple steps.
+         */
+		std::cout<<"saving"<<std::endl;
 		saveStep();
 	}
-	cout<<"carry out updates"<<endl;
+    /**
+     * One the last step is reached, the element positions, volumes, physical properties, nodal masses, and other geometry dependent properties such as
+     * the shape function derivatives, and bounding box are updated.
+     */
+	std::cout<<"carry out updates"<<std::endl;
 	updateElementVolumesAndTissuePlacements();
 	updateElasticPropertiesForAllNodes();
 	clearNodeMassLists();
@@ -491,13 +514,11 @@ bool Simulation::readFinalSimulationStep(){
     calculateShapeFunctionDerivatives();
 	updateElementPositions();
 	calculateBoundingBox();
-	bringMyosinStimuliUpToDate();
-	//During a simulation, the data is saved after the step is run, and the time step is incremented after the save. Now I have read in the final step,
-	//I need to increment my time step to continue the next time step from here.
-	//currSimTimeSec += dt*dataSaveInterval;
-	//timestep++;
-
-	//bring the time step and data save time steps to the main modelinput:
+	bringMyosinStimuliUpToDate(); //to do : delete all myo
+    /**
+     * Finally, the data save interval and time step from the model input of the current simulation are
+     * instated back.
+     */
 	dataSaveInterval = dataSaveIntervalCurrentSim;
 	dt = timeStepCurrentSim;
 
@@ -561,31 +582,50 @@ bool Simulation::initiateSystem(){
 		Success = initiateMesh(MeshType, zHeight); //zHeight
 	}
 	else if (MeshType == 2){
+        /**
+         * If the mesh type is 2, then a mesh with selected number of rows and columns will be initiated.
+         *This is the default option is no input file is provided to the system.
+         */
 		Success = initiateMesh(MeshType, Row, Column,  SideLength,  zHeight);
 	}
 	else if(MeshType == 4){
-		cout<<"mesh type : 4"<<endl;
+	   /**
+		 * Most commonly used input mesh type requires an input mesh file.
+		 */
 		Success = initiateMesh(MeshType);
 	}
 	if (!Success){
 		return Success;
 	}
 	if (symmetricY || symmetricX){
+        /**
+         * If there is symetricity in the system, a checkpoint for circumferential node definitions
+         * is in place. The symmetricity boundary should not be considered as at the outer circumference.
+         */
 		 clearCircumferenceDataFromSymmetricityLine();
 	}
-	cout<<"cleared symmetricity"<<endl;
-
+    /**
+     * Then the existance of the peripodial membrane in the system is checked.
+     */
 	Success = checkIfThereIsPeripodialMembrane();
-	cout<<"calculating tissue height"<<endl;
+   /**
+	 * The tissue height is calculated and the tissue bounding box is obtained. Then the relative z positions
+	 * of the elements are calculated.
+	 */
 	Success = calculateTissueHeight(); //Calculating how many layers the columnar layer has, and what the actual height is.
-	cout<<"calculating bounding box"<<endl;
 	calculateBoundingBox();
-	cout<<"assigning Initial Z Positions"<<endl;
-
 	assignInitialZPositions();
 	if (!Success){
 		return Success;
 	}
+    /**
+     * If the model input file asks for a peripodial membrane addition, first the mesh flag
+     * Simulation#thereIsPeripodialMembrane is checked to see if there is alread a peripodial
+     * defined in the input mesh file, and will generate an error accordingly if there is. If
+     * there is no peripodial in the input mesh, a straigt peripodial membrane will be added.
+     * The current version is calibrated for lumen simulations. There are options to add curved peripodial to
+     * the tissue, albeit using heavy resources.
+     */
 	if (AddPeripodialMembrane){
 		if (thereIsPeripodialMembrane){
 			Success = false;
@@ -600,14 +640,20 @@ bool Simulation::initiateSystem(){
 			}
 		}
 	}
-
+    /**
+     * At this point consistency is checked again to see if the model inputs necessiate a peripodial membane, and if they do, if
+     * it has been implemented.
+     */
 	if (needPeripodialforInputConsistency){
 		if (!thereIsPeripodialMembrane){
 			cerr<<"There is no peripodial membrane but at least one growth function or lumen desires one"<<endl;
 			Success = false;
 		}
 	}
-
+    /**
+     * If the model inputs enable an explicit definition of extracellular matrix, this is labelled on the
+     * mesh here via Simulation#setUpECMMimicingElements.
+     */
 	if (thereIsExplicitECM){
 		if (addLateralECMManually){
 			addSideECMLayer();
@@ -615,70 +661,106 @@ bool Simulation::initiateSystem(){
 		setUpECMMimicingElements();
 		//TO DO: NEED TO UPDATE THE PHYSICAL PROPERTIES AFTER THIS!
 	}
+    /**
+     * Then with curvature is added to the tissue, with Simulation#addCurvatureToColumnar, which will add
+     * the specified corvature to the columnar, and bend the peripodial the other direction. Therefore,
+     * it is important this function is called after initiation of a peripodial. This curvature means the
+     * curving of the entire tissue surface.
+     */
 	if (addCurvatureToTissue){
 		addCurvatureToColumnar(tissueCurvatureDepth);
 	}
-
+	/**
+	 * Once the tissue curvature is added, If the model inputs enable an explicit definition the lumen,
+	 * the lumen will be generated. The lumen necessiates definition of a peripodial, therefore this will be
+	 * checked first, and a corresponding error will be generated if there is no peripodial.
+	 */
 	if (thereIsExplicitLumen){
 		if (!thereIsPeripodialMembrane){
-			cerr<<"There is no peripodial membrane but simulation has a lumen"<<endl;
+			std::cerr<<"There is no peripodial membrane but simulation has a lumen"<<std::endl;
 			thereIsExplicitLumen = false;
 			Success = false;
 		}
 		tissueLumen = new Lumen(Elements, Nodes,lumenBulkModulus,lumenGrowthFold);
 	}
-
+    /**
+     * If the model inputs enable an explicit definition of an actin rich top layer, this is labelled on the
+     * mesh here via Simulation#setUpActinMimicingElements.
+     */
 	if (thereIsExplicitActin){
 		setUpActinMimicingElements();
 	}
+    /**
+     * Then element neighbourhoods are filled in.
+     */
 	setBasalNeighboursForApicalElements();
 	fillInNodeNeighbourhood();
 	fillInElementColumnLists();
+    /**
+     * The simulation can fix degrees of freedom for certain nodes, as boundary condition. These
+     * node fixing options are set up via function Simulation#checkForNodeFixing.
+     */
 	checkForNodeFixing();
+    /**
+     * The tip nodes are assigned via Simulation#assignTips.
+     */
 	assignTips();
 	if (!Success){
 		return Success;
 	}
+    /**
+     * If all the initiation setup conpleted without errors up to this point, then the mesh is characterised with flags, and now
+     * the actual physical parametrs are set up. First the system forces matrix is set with the sytem node size, via function
+     * Simulation#initiateSystemForces. Then the system center is calcualted, and physical parameters are assigned to the elements via
+     * Simulation#assignPhysicalParameters. \n
+     */
 	initiateSystemForces();
 	calculateSystemCentre();
 	assignPhysicalParameters();
+    /**
+     * Once the viscoelastic properties are set, thje system is checked against zero external viscosity. If there is no external
+     * viscosity in the system, then additional boundry conditions should e implemented to reach a unique solution in the NR iteration to
+     * solve for nodal displacements. Once viscosities are updated, the node massess, and the surfaces that are expoed the the external
+     * friction are set in Simulation#assignNodeMasses, Simulation#assignElementalSurfaceAreaIndices, and
+     * Simulation#assignConnectedElementsAndWeightsToNodes functions.
+     */
 	checkForZeroExternalViscosity();
 	calculateShapeFunctionDerivatives();
 	assignNodeMasses();
 	assignElementalSurfaceAreaIndices();
 	assignConnectedElementsAndWeightsToNodes();
-    alignTissueDVToXPositive();
-    //alignTissueAPToXYPlane();
-    calculateBoundingBox();
+	/**
+	 * The tissue DV axis is aligned to X axis, although this is assumed to be the case for the input matrix.
+	 */
+	alignTissueDVToXPositive();
+    /**
+     * Then the bounding box of the tissue is calculated and the relative positions are set.
+     */
+	calculateBoundingBox();
     calculateDVDistance();
     assignCompartment();
 	vector<ShapeBase*>::iterator itElement;
     for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
     	(*itElement)->calculateRelativePosInBoundingBox(boundingBox[0][0],boundingBox[0][1],boundingBoxSize[0],boundingBoxSize[1]);
     }
-    cout<<" positions in relative bounding box calculated"<<endl;
-
+    /**
+     * During relative position calculation, the positions of non-apical elements are assigned to be equal to their apical
+     * neighbours. This way, in a tilted tissue (such can arise with buckling), the read physical properties and growth within a column
+     * of elements would be equal.
+     */
     updateRelativePositionsToApicalPositioning();
-
-    cout<<" positions are update to apical"<<endl;
-
     for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
         (*itElement)->setInitialRelativePosInBoundingBox();
     }
-    cout<<" initial positions in relative bounding box set"<<endl;
+    /**
+     * If there are any additional manipulations, they are implemented next. These include growth mutant induction, experimental stretcher attachement,
+     * experimental pippete aspiration setup, the AFM, and setting up symmetric axes of the tissue to have fixed boundaries, and assigningn labelling by
+     * ellipse bands for further manipulation if these are implemented.
+     */
     induceClones();
-    //bool softHinge = true;
-    //double hingeLimits[2] ={0.40, 0.65};
-    //double softnessLevel = 0.5;
-    //if (softHinge){
-    //	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-    //		(*itElement)->assignSoftHinge(hingeLimits[0], hingeLimits[1],softnessLevel);
-    //	}
-    //}
 	if (stretcherAttached){
 		setStretch();
 	}
-    cout<<"setting the pipette"<<endl;
     //setUpAFM();
 	if(PipetteSuction){
 		setupPipetteExperiment();
@@ -691,6 +773,10 @@ bool Simulation::initiateSystem(){
 		setupXsymmetricity();
 	}
 	assignIfElementsAreInsideEllipseBands();
+    /**
+     * If the simultion is continuing from an already saved setup (Simualtion#ContinueFromSave = true), the last
+     * frame of the save is read via Simulation#readFinalSimulationStep.
+     */
 	if (ContinueFromSave){
 		cout<<"Reading Final SimulationStep: "<<endl;
 		Success = readFinalSimulationStep();
@@ -698,15 +784,19 @@ bool Simulation::initiateSystem(){
 			return Success;
 		}
 	}
+    /**
+     * If data is being saved, then the simulation summary will be written next.
+     */
 	if (saveData){
 		cout<<"writing the summary current simulation parameters"<<endl;
 		writeSimulationSummary();
 		writeSpecificNodeTypes();
 	}
+    /**
+     * Fianlly, the Newton Raphson solver object is initiated, and node DoF bonding as boundary condition is checked.
+     */
 	nNodes = Nodes.size();
 	nElements = Elements.size();
-	//initiating the NR solver object, that generates the necessary matrices
-	//for solving the tissue dynamics
     NRSolver = new NewtonRaphsonSolver(Nodes[0]->nDim,nNodes);
 	if (thereIsExplicitLumen){
 		NRSolver ->thereIsLumen = true;
@@ -715,14 +805,23 @@ bool Simulation::initiateSystem(){
     if (ContinueFromSave){
     	updateMasterSlaveNodesInBinding();
     }
+    /*
+     * Nodal binding will be checked here as the binding information is stored in N-R object, and is easier to
+     * check the initiated mesh for specific case binding, such as those of the extrmely thin and long ECM elements.
+     */
     checkForNodeBinding();
 	//peripodial z binding
+    /**
+     * If there is adhesion of the columnar to peripodial memebrane, (Simulation#adherePeripodialToColumnar),
+     * the binding will be implemented here.
+     */
     if (adherePeripodialToColumnar){
 		bool thereIsBinding = bindPeripodialToColumnar();
 		if (thereIsBinding){
 			NRSolver->boundNodesWithSlaveMasterDefinition = true;
 		}
     }
+    //to do: delete all migration
     cout<<"before migration"<<endl;
 	if (thereIsCellMigration) {
     	cout<<"initiation of cell migration"<<endl;
@@ -733,6 +832,9 @@ bool Simulation::initiateSystem(){
         cellMigrationTool->assignElementConnectivity(Nodes,Elements);
         cellMigrationTool->generateListOfRateFractions(Elements);
     }
+	/**
+	 * If there is plastic deformation, the lateral elements will record their rotation matrices. to do: do I use this?
+	 */
     if (thereIsPlasticDeformation){
     	setLateralElementsRemodellingPlaneRotationMatrices();
     }
@@ -741,6 +843,10 @@ bool Simulation::initiateSystem(){
 }
 
 void Simulation::checkForNodeBinding(){
+    /**
+     * If the model inputs require node binding to eliminate rotation at tissue boundary (Simulation#thereIsCircumferenceXYBinding = true),
+     * then this is implemented in here. The nodes are updated via Simulation#bindCircumferenceXY, and the NR solver data is updated.
+     */
 	if (thereIsCircumferenceXYBinding){
 		cout<<"binding circumference"<<endl;
 		bool thereIsBinding = bindCircumferenceXY();
@@ -754,7 +860,7 @@ void Simulation::checkForNodeBinding(){
 		if (thereIsBinding){
 			//I will not equate the values, if the parameter of NRSolver
 			//has been modified to be true before, it should stay true.
-			//If my decisin from abpve function is false(I have not bound any ellipses)
+			//If my decision from above function is false (I have not bound any ellipses)
 			//then I should not alter this parameter;
 			NRSolver->boundNodesWithSlaveMasterDefinition = true;
 		}
@@ -765,6 +871,11 @@ void Simulation::checkForNodeBinding(){
 
 
 bool Simulation::bindEllipseAxes(){
+	/**
+	 * The binding with ellipses are implemented here, going through all the ellipse Ids specified for
+	 * binding basal surfaces (Simulation#ellipseIdsForBaseAxisBinding).
+	 *
+	 */
 	bool thereIsBinding = false;
 	int dim = 3;
 	int nEllipseFunctions = ellipseIdsForBaseAxisBinding.size();
@@ -773,26 +884,29 @@ bool Simulation::bindEllipseAxes(){
 		vector <int> nodeIds;
 		int nBoundEllipses = ellipseIdsForBaseAxisBinding[ellipseFunctionIterator].size();
 		int masterNodeId =  nNodes*2;
-		cout<<"checking binding rule :"<<ellipseFunctionIterator<<" - axis: ";
-		cout<<ellipseBasesAreBoundOnAxis[ellipseFunctionIterator][0]<<" ";
-		cout<<ellipseBasesAreBoundOnAxis[ellipseFunctionIterator][1]<<" ";
-		cout<<ellipseBasesAreBoundOnAxis[ellipseFunctionIterator][2]<<" ";
-		cout<<" - ellipses: ";
+		std::cout<<"checking binding rule :"<<ellipseFunctionIterator<<" - axis: ";
+		std::cout<<ellipseBasesAreBoundOnAxis[ellipseFunctionIterator][0]<<" ";
+		std::cout<<ellipseBasesAreBoundOnAxis[ellipseFunctionIterator][1]<<" ";
+		std::cout<<ellipseBasesAreBoundOnAxis[ellipseFunctionIterator][2]<<" ";
+		std::cout<<" - ellipses: ";
 		for (int ellipseIdIterator =0; ellipseIdIterator<nBoundEllipses;++ellipseIdIterator){
-			cout<<ellipseIdsForBaseAxisBinding[ellipseFunctionIterator][ellipseIdIterator]<<"  ";
+			std::cout<<ellipseIdsForBaseAxisBinding[ellipseFunctionIterator][ellipseIdIterator]<<"  ";
 		}
-		cout<<endl;
-
-		//loop over all nodes, to see if
-		//* node is inside an ellipse band
-		//* it is basal
-		//* it is inside an ellipse of interest
+		std::cout<<std::endl;
+		/**
+		 * For each binding request, first I will loop over all nodes and select the bounded region.
+		 * Meanwhile I will also pick a master node in the region to bind all the other onto.
+		 * the candidate node is:
+		 *  - inside an ellipse band (Node#insideEllipseBand)
+		 *  - is basal (Node#tissuePlacement)
+		 *  - is inside an ellipse of interest (Node#coveringEllipseBandId is equal to current id being checked)
+		 *  - the master node does not have a fixed position on the axis ellipse is attempting to bind.
+		 */
 		for (vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
 			if ((*itNode)->insideEllipseBand && (*itNode)->tissuePlacement == 0){//inside ellipse band and basal
 				//checking one ellipse base binding rule:
 				for (int ellipseIdIterator =0; ellipseIdIterator<nBoundEllipses;++ellipseIdIterator){
 					if ((*itNode)->coveringEllipseBandId == ellipseIdsForBaseAxisBinding[ellipseFunctionIterator][ellipseIdIterator]){
-						//cout<<"Node : "<<(*itNode)->Id<<" is basal and inside ellipse band: "<<(*itNode)->coveringEllipseBandId<<endl;
 						nodeIds.push_back((*itNode)->Id);
 						if ((*itNode)->Id<masterNodeId){
 							//I will avoid making a fixed node my master:
@@ -814,15 +928,23 @@ bool Simulation::bindEllipseAxes(){
 			}
 		}
 		if (masterNodeId ==  nNodes*2){
-			//I could not pick a master node, as all the nodes within the marker ellipse region
-			//are already bound in at least on of their qualifying axes. Remove this fixed axis
-			//from the requirements of the ellipse and restart simulation!
+			/** In case I could not find a master node, then I will generate an error, and skip this
+			 * binding. The might be due to all the nodes within the marker ellipse region
+			 * are already bound in at least on of their qualifying axes. The solution is to remove this fixed axis
+			 * from the requirements of the ellipse and restart simulation.
+			 */
 			cout<<" skipping ellipse binding function "<<ellipseFunctionIterator<<", due to clash with node fixing!"<<endl;
 			cerr<<" skipping ellipse binding function "<<ellipseFunctionIterator<<", due to clash with node fixing!"<<endl;
 			return thereIsBinding;
 		}
 		//Now I have a list of all nodes that are to be bound;
 		//I have the minimum node id, that is to be the master of this selection
+		/**
+		 * Now I have a master node and the list of all nodes in the region. I will go through all degrees of
+		 * freedom and generate the binding list. If the non-master on the list does not have a fixed position
+		 * on the axis of interest, then the degree of freedom of the slave and the master will be added to the list
+		 * of nodes to be bound (NRSolver#slaveMasterList).
+		 */
 		int n= nodeIds.size();
 		int dofXmaster  = masterNodeId*dim;
 		int dofYmaster  = dofXmaster+1;
@@ -877,6 +999,12 @@ bool Simulation::bindEllipseAxes(){
 }
 
 bool Simulation::bindPeripodialToColumnar(){
+	/**
+	 * The peripodial nodes that are on the cap (not lateral regions) are bound to their
+	 * columnar counterparts. Both the peripodial and columnar nodes of interest should be apical.
+	 * The accompanying columnar node is selected with a proximity in the x-y plane. The ids are recorded in the
+	 * vectors to be given to NRSolver later on, and the binding flag is updated (Node#attachedToPeripodial)
+	 */
 	bool thereIsBinding = false;
 	int dim = 3;
 	vector<int> masterIds,slaveIds;
@@ -910,6 +1038,9 @@ bool Simulation::bindPeripodialToColumnar(){
 			}
 		}
 	}
+	/**
+	 * Once the lists are generated, binding flexibility is checked.
+	 */
 	//Now go through the list, check if the binding is feasible:
 	int n = masterIds.size();
 	for (int idMasterSlaveCouple=0;idMasterSlaveCouple<n;++idMasterSlaveCouple){
@@ -970,6 +1101,10 @@ bool Simulation::bindPeripodialToColumnar(){
 }
 
 bool Simulation::areNodesToCollapseOnLateralECM(int slaveNodeId, int masterNodeId){
+	/**
+	 * If any of the nodes to be bound are on the lateral side, or they are ECM mimicking at the circumference,
+	 * the function returns true.
+	 */
 	if(Nodes[slaveNodeId]->hasLateralElementOwner || Nodes[masterNodeId]->hasLateralElementOwner){
 		//cout<<"binding nodes: "<<slaveNodeId<<" "<<masterNodeId<<" on single element collapse, but will not collapse nodes, as they are too close on lateral element"<<endl;
 		return true;
@@ -994,20 +1129,30 @@ bool Simulation::areNodesToCollapseOnLateralECM(int slaveNodeId, int masterNodeI
 }
 
 bool Simulation::checkEdgeLenghtsForBindingPotentiallyUnstableElements(){
+    /**
+     * This function checks the side lengths of elements, and if they are shrinking below the collapse threshold, the
+     * nodes of the element are collapsed to avoid flipping.
+     */
 	bool thereIsBinding = false;
 	int dim = 3;
 	vector<int> masterIdsBulk,slaveIdsBulk;
 	if (boundLateralElements == false){
+        /**
+          * During the check, the corner ECM elements are treated specially. These elements are very thin, they are prone to flips,
+          * therefore their apical and basal surfaces are bound to convert them effectively into sheet elements.
+          * They are bound without collapse as they are very thin. This is carried out once at
+          * the beginning of the simulation, and the operation is flagged with Simulation#boundLateralElements boolean.
+          */
 		for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 			boundLateralElements = true;
-			//cout<<"checking element "<<(*itElement)->Id<<endl;
+			/**
+			 * The length is checked with ShapeBase#checkEdgeLenghtsForBinding.
+			 */
 			(*itElement)->checkEdgeLenghtsForBinding(masterIdsBulk,slaveIdsBulk);
-			//if ((*itElement)->Id == 17851){
-			//	cout<<" diaplaying node positions for element 17851"<<endl;
-			//	(*itElement)->displayPositions();
-			//}
 			int selectedPair[2] = {0,0};
 			if((*itElement)->isECMMimimcingAtCircumference && (*itElement)->tissuePlacement == 0){//check lateral elements and bind them:
+                /** Then in the following loop the corner ECM elements are listed to be bound.
+                 */
 				int* nodeIds = (*itElement)->getNodeIds();
 				double* vec= new double[3];
 				for (int idim =0; idim<3; idim++){
@@ -1048,19 +1193,11 @@ bool Simulation::checkEdgeLenghtsForBindingPotentiallyUnstableElements(){
 			}
 		}
 	}
-
-	//masterIdsBulk.push_back(11124);
-	//masterIdsBulk.push_back(11130);
-
-	//slaveIdsBulk.push_back(5);
-	//slaveIdsBulk.push_back(543);
-
-	//clean duplicates:
+    /**
+     * Once the potential collapse list is obtained, the duplicates are cleaned.
+     */
 	vector<int> masterIds,slaveIds;
 	int n = masterIdsBulk.size();
-	//n=0;
-	//masterIds.push_back(5467);
-	//slaveIds.push_back(5659);
 	for (int i=0;i<n;++i){
 		bool duplicate = false;
 		for (unsigned int j=0; j<masterIds.size(); ++j){
@@ -1076,7 +1213,10 @@ bool Simulation::checkEdgeLenghtsForBindingPotentiallyUnstableElements(){
 			slaveIds.push_back(slaveIdsBulk[i]);
 		}
 	}
-	//Now go through the list, check if the binding is feasible:
+    /**
+     * In the clean list, the node degree of freedom couples are checked to see if they are already bound, or already flagged as masters or slaves
+     * to other degrees of freedoms. The collapse is managed by function Node#collapseOnNode.
+     */
 	n = masterIds.size();
 	for (int idMasterSlaveCouple=0;idMasterSlaveCouple<n;++idMasterSlaveCouple){
 		int masterNodeId = masterIds[idMasterSlaveCouple];
@@ -1094,6 +1234,8 @@ bool Simulation::checkEdgeLenghtsForBindingPotentiallyUnstableElements(){
 		}
 		//cout<<" arranging positions"<<endl;
 		for(int i=0; i<dim; ++i){
+            /** The fixed node degree of freedoms of the master node are reflected on the slave.
+             */
 			if (Nodes[masterNodeId]->FixedPos[i]){
 				Nodes[slaveNodeId]->FixedPos[i]=true;
 			}
@@ -1101,11 +1243,14 @@ bool Simulation::checkEdgeLenghtsForBindingPotentiallyUnstableElements(){
 			if (!Nodes[slaveNodeId]->FixedPos[i]){
 				int dofmaster = masterNodeId*dim+i;
 				int dofslave  = slaveNodeId*dim+i;
-				//if slave is already slave of another node
-				//make the master of the slave the new slave
-				//   algorithm will take care of the rest.
+                /**
+                 * If the slave is alrady slave to another node (Node#slaveTo is not set to -1, the default non-slave indice), then the master of this processed couple is set to
+                 * be the slave of the existing master of the slave, and all three degree of freedoms are bound to each other.
+                 */
 				if (Nodes[slaveNodeId]->slaveTo[i] > -1){
-					//Current slave has a master. If this master is the current master, or the master of current maste, than dont do anything, all is fine:
+                    /**
+                     * One possiblity is that the potential slave is already a slave to the potential master, then nothing is needed to be done.
+                     */
 					if(Nodes[slaveNodeId]->slaveTo[i] == masterNodeId || Nodes[slaveNodeId]->slaveTo[i] == Nodes[masterNodeId]->slaveTo[i] ){
 						cout<<"slave "<<slaveNodeId<<" is already bound to master "<<masterNodeId<<endl;
 						continue;
@@ -1113,17 +1258,29 @@ bool Simulation::checkEdgeLenghtsForBindingPotentiallyUnstableElements(){
 					dofslave = Nodes[slaveNodeId]->slaveTo[i]*dim+i;
 					slaveNodeId = Nodes[slaveNodeId]->slaveTo[i];
 				}
-				//cout<<"DOF not fixed,  initial              : "<<dofmaster<<" "<<dofslave<<endl;
-				//check if the master dof is already bound to something:
+                /**
+                 * If the potential master node is already a slave to another node, then the potential master is moved to
+                 * the original master of the potential master DoF in function NewtonRaphsonSolver#checkMasterUpdate.
+                 */
 				NRSolver->checkMasterUpdate(dofmaster,masterNodeId);
-				//It may have been that the slave was the master of the master node.
-				//Now I have updated the master to the slave, and they are equal.
-				//I do not need to add anything, as the master-slave relation is already implemented.
-				//cout<<"DOF not fixed, after master update   : "<<dofmaster<<" "<<dofslave<<endl;
+                /**
+                 * In this last check point, if the original couple was flipped such that the potential master vas the slave of the potential slave,
+                 * then now both master and slave nodes are equal to the initial potential slave id ( as it has been the master prior to this step).
+                 * Then again, nothing needs to be implemented, slave master coupling is already in place.
+                 */
 				if (dofmaster != dofslave){
+                    /**
+                     * If this is not the case and the implementation shoulf continue, the next check point is for duplicate couples, to check
+                     * if this couple already exists, via  NewtonRaphsonSolver#checkIfCombinationExists.
+                     */
 					bool continueAddition =  NRSolver->checkIfCombinationExists(dofslave,dofmaster);
-					//cout<<"DOF not fixed, continueAddition? : "<<continueAddition<<endl;
 					if (continueAddition){
+						/**
+						 * If the couple is not implemented, then the check for the status of the slave is carried out, if the slave is already master of
+						 * other nodes, the coupling is checked and corrected in function NewtonRaphsonSolver#checkIfSlaveIsAlreadyMasterOfOthers. If the
+						 * function updates the node couple, then the potential slave was a master, and now is a slave to the potential master.
+						 * All slaves of the potential master are moved on to the potential master. \n
+						 */
 						bool madeChange = NRSolver->checkIfSlaveIsAlreadyMasterOfOthers(dofslave,dofmaster);
 						if (madeChange){
 							cout<<"slave "<<slaveNodeId<<" is already master of others"<<endl;
@@ -1147,12 +1304,24 @@ bool Simulation::checkEdgeLenghtsForBindingPotentiallyUnstableElements(){
 		}
 	}
 	if(thereIsBinding){
+        /**
+         * After finalisation of all node binding checks, if there has been binding, then node positions are updated to bring the positions of
+         * the collapsed nodes together.\m
+         * Please note there is no hierarchy between master and slaves, the choice siply defines which array of the
+         * sparse matrix will be utilised in solving the cumulative forces of all master-slave groups.
+         */
 		updateElementPositions();
 	}
 	return thereIsBinding;
 }
 
 bool Simulation::bindCircumferenceXY(){
+    /**
+     * This is a boundary condition setup function, where a special case of node binding is implemented. For each column of nodes art tissue
+     * circumference, the x and y degrees of freedom of each node is bound. The most basal (bottom - min z) node is declared as the master of the
+     * remaining nodes, and they slaves. Please note there is no hierarchy between master and slaves, the choice siply defines which array of the
+     * sparse matrix will be utilised in solving the cumulative forces of all master-slave groups.
+     */
 	bool thereIsBinding = false;
 	int dim = 3;
 	vector <int> nodeIds;
@@ -1257,6 +1426,9 @@ void Simulation::setLateralElementsRemodellingPlaneRotationMatrices(){
 }
 
 void Simulation::assignNodeMasses(){
+    /**
+     * Masses to all nodes are asigned through thier owner elements via ShapeBase#assignVolumesToNodes.
+     */
 	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 	    (*itElement)->assignVolumesToNodes(Nodes);
 		//(*itElement)->assignSurfaceAreaToNodes(Nodes);
@@ -1264,6 +1436,9 @@ void Simulation::assignNodeMasses(){
 }
 
 void Simulation::assignElementalSurfaceAreaIndices(){
+    /**
+     * Exposed surface indices to all elements are asigned via ShapeBase#assignExposedSurfaceAreaIndices.
+     */
 	const int maxThreads = omp_get_max_threads();
 	omp_set_num_threads(maxThreads);
 	#pragma omp parallel for
@@ -1273,6 +1448,9 @@ void Simulation::assignElementalSurfaceAreaIndices(){
 }
 
 void Simulation::assignConnectedElementsAndWeightsToNodes(){
+    /**
+     * All connected elements are asigned nodes via ShapeBase#assignElementToConnectedNodes.
+     */
 	vector<ShapeBase*>::iterator itElement;
 	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 		(*itElement)->assignElementToConnectedNodes(Nodes);
@@ -1805,6 +1983,10 @@ bool Simulation::openFilesToDisplay(){
 }
 
 bool Simulation::initiateSavedSystem(){
+    /**
+     * This function follows the logic of the Simulation#initiateSystem function, please refer to its documentation for details.
+     * The element and node properties are read from saveed files where available.
+     */
 	bool success  = openFilesToDisplay();
 	if (!success){
 		return false;
@@ -2072,6 +2254,11 @@ int Simulation::getNodeArrayIndexFromId(int currId){
 }
 
 bool Simulation::readNodeDataToContinueFromSave(){
+    /**
+     * The order of the node data is : \n
+     * [number of nodes] \n
+     * [pos_x] [pos_y] [pos_z] [Node#tissuePlacement] [Node#tissueType] [Node#atCircumference]
+     */
 	int n;
 	saveFileToDisplayMesh >> n;
 	cout<<"number of nodes: "<<n<<endl;
@@ -2174,6 +2361,11 @@ void Simulation::initiateElementsFromSave(){
 }
 
 bool Simulation::readElementDataToContinueFromSave(){
+    /**
+     * The order of the element data is : \n
+     * [number of elements] \n
+     * [ShapeBase#ShapeType] [shape type specific data read by Simulation#readShapeData]
+     */
 	int n;
 	saveFileToDisplayMesh >> n;
 	if (nElements != n){
@@ -2223,9 +2415,10 @@ bool Simulation::readElementDataToContinueFromSave(){
 }
 
 void Simulation::initiatePrismFromSave(){
-	//inserts a new prism at order k into elements vector
-	//the node ids and reference shape positions
-	//will be updated in function: updateShapeFromSave
+    /**
+      * Inserts a new prism at order k into elements vector, ShapeBase#NodeIds and reference shape positions
+      * ShapeBase#updateShapeFromSave
+      */
 	int* NodeIds;
 	NodeIds = new int[6];
 	for (int i =0 ;i<6; ++i){
@@ -2238,12 +2431,13 @@ void Simulation::initiatePrismFromSave(){
 	nElements = Elements.size();
 	currElementId++;
 	delete[] NodeIds;
-	//cout<<"Element: "<<PrismPnt01->Id<<endl;
-	//Elements[Elements.size()-1]->displayPositions();
-	//Elements[Elements.size()-1]->displayReferencePositions();
 }
 
 bool Simulation::readShapeData(int i){
+    /**
+     * The order of the element shape specific information is : \n
+     * [ShapeBase#IsAblated] [node ids read by ShapeBase#readNodeIdData] [reference positions read by ShapeBase#readReferencePositionData]
+     */
 	bool IsAblated;
 	saveFileToDisplayMesh >> IsAblated;
 	if ( Elements[i]->IsAblated != IsAblated){
@@ -2280,10 +2474,7 @@ void Simulation::initiatePrismFromMeshInput(){
 	nElements = Elements.size();
 	currElementId++;
 	delete[] NodeIds;
-	//Elements[Elements.size()-1]->displayReferencePositions();
 }
-
-
 
 void Simulation::reInitiateSystemForces(int oldSize){
 	//deleting the old system forces:
@@ -2459,6 +2650,10 @@ void Simulation::updateGrowthFromSave(){
 }
 
 void Simulation::updateGrowthRateFromSave(){
+   /** For each element, the format is: \n
+	 * growth rate [r_x] [r_y] [r_z] \n
+	 * Then the shape information is updated with correct timestep length in ShapeBase#setGrowthRateViaInputTimeMultipliedMagnitude.
+	 */
 	vector<ShapeBase*>::iterator itElement;
 	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 		double rx=0.0,ry=0.0,rz=0.0;
@@ -2652,6 +2847,14 @@ void Simulation::readProteinsToContinueFromSave(){
 }
 
 void Simulation::readPhysicalPropToContinueFromSave(){
+    /**
+     * For each element, the format is: \n
+     * [Young's modulus] [internal viscosity] [zRemodelling] \n
+     * The values are assigned to elemetns via functions: ShapeBase#setYoungsModulus,
+     * ShapeBase#setViscosity, ShapeBase#setZRemodellingSoFar. \n
+     * Then for each node: \n
+     * [external viscosity_x] [external viscosity_y] [external viscosity_z]
+     */
 	vector<ShapeBase*>::iterator itElement;
 	double E;
 	double internalViscposity;
@@ -2675,9 +2878,10 @@ void Simulation::readPhysicalPropToContinueFromSave(){
 }
 
 void Simulation::initiatePrismFromSaveForUpdate(int k){
-	//inserts a new prism at order k into elements vector
-	//the node ids and reference shape positions
-	//will be updated in function: updateShapeFromSave
+    /**
+      * Inserts a new prism at order k into elements vector, ShapeBase#NodeIds and reference shape positions
+      * ShapeBase#updateShapeFromSave
+      */
 	int* NodeIds;
 	NodeIds = new int[6];
 	for (int i =0 ;i<6; ++i){
@@ -2824,25 +3028,27 @@ void  Simulation::updateNodeNumberFromSave(){
 }
 
 void  Simulation::updateElementStatesFromSave(){
-	//cout<<"Updating element states from save"<<endl;
 	int n;
 	saveFileToDisplayMesh >> n;
 	int currElementNumber = Elements.size();
 	//The elements list is bigger than necessary, I am deleting elements form the end of the list
 	//cout<<"number of elements from save file: "<<nElements <<" number of element on the Elements vector: "<<currElementNumber<<endl;
 	while(currElementNumber>n){
-		//cout<<"removing elements from list, current number vector length: "<<currElementNumber<<endl;
+        /** If the elements list is longer than necessary, elements will be removed from list via Simulation#removeElementFromEndOfList.
+        */
 		removeElementFromEndOfList();
 		currElementNumber = Elements.size();
 	}
 	for (int i=0; i<currElementNumber; ++i){
-		//cout<<"reading element: "<<i<<endl;
+        /**
+          * Once existing element list size is shorter or equal to the size on save file,
+          * the shape properties will be updated from the save files. The format is
+          * detailed in Simulartion#readElementDataToContinueFromSave.
+          */
 		int shapeType;
 		saveFileToDisplayMesh >> shapeType;
 		int currShapeType = Elements[i]->getShapeType();
 		if (shapeType == currShapeType || shapeType == 2 || shapeType ==4){
-			//cout<<"shape type is correct, moving on to update"<<endl;
-			//The current shape on the list, and the shape I am reading are of same type, I can read it:
 			if (shapeType ==4){
 				double height;
 				saveFileToDisplayMesh >> height;
@@ -2850,8 +3056,12 @@ void  Simulation::updateElementStatesFromSave(){
 			Elements[i]->updateShapeFromSave(saveFileToDisplayMesh);
 		}
 		else{
-			//cout<<"shape type is wrong"<<endl;
-			//the current element is a different type, I need to insert generate a new element, and insert it here:
+		/**
+         * If the element type does not match the one read from save a new element is initiated and inseted here
+         * (Simulation#initiatePrismFromSaveForUpdate), followed by
+         * an element removed from the end of the list (Simulation#removeElementFromEndOfList) to preserve element
+         * number consistency.
+         */
 			if (shapeType == 1){
 				//the new shape is a prism, I will add it now;
 				initiatePrismFromSaveForUpdate(i);
@@ -2861,14 +3071,18 @@ void  Simulation::updateElementStatesFromSave(){
 		}
 	}
 	while(n>currElementNumber){
+        /**
+         * If there are more elements saved than I have in my elemetn list new elements will be initiated and updated.
+         * (Simulation#initiatePrismFromSaveForUpdate).
+         */
 		int shapeType;
 		saveFileToDisplayMesh >> shapeType;
 		if (shapeType == 1){
 			int i = Elements.size()-1;
-			//this will initiate a prism at the current point in the Elements vector
-			//then it will read the node ids and reference positions from the save file
-			//it will update the node ids, and reference positions.
-			//the normal positions will be updated using function updatePositions, called by updateOneStepFromSave
+            /**
+             * Only the initiation will be carried out in this function, the
+             * positions will be updated in Simulation#updatePositions called via Simulation#updateOneStepFromSave.
+             */
 			initiatePrismFromSaveForUpdate(i);
 			currElementNumber = Elements.size();
 		}
@@ -2885,10 +3099,9 @@ void Simulation::removeElementFromEndOfList(){
 }
 
 void Simulation::updateNodePositionsFromSave(){
-	//cout<<"Updating node positions from save"<<endl;
-	//I have already read the current number of nodes in function "updateNodeNumberFromSave",
-	//and I updated the number of nodes where necessary
-	//the "cursor" in the file progressed, and is at the beginning of positions now
+    /** The formatting is detailed in , Simulation#readNodeDataToContinueFromSave,
+     * the main difference is that the node numebr is already read once this function is called.
+     */
 	for (int i=0; i<nNodes; ++i){
 		saveFileToDisplayMesh >> Nodes[i]->Position[0];
 		saveFileToDisplayMesh >> Nodes[i]->Position[1];
@@ -2905,6 +3118,11 @@ bool Simulation::initiateMesh(int MeshType, float zHeight){
 		initiateSinglePrismElement();
 	}
 	else if (MeshType == 2){
+        /**
+         * This call will initiate the nodes first, with the selected side length and height via
+         * Simulation#initiateNodesByRowAndColumn, then the elemetns will be initiated
+         * via Simulation#initiateElementsByRowAndColumn accordingly.
+         */
 		cerr<<"Error: Too few arguments for mesh by dimensions"<<endl;
 		return false;
 	}
@@ -2954,33 +3172,6 @@ bool Simulation::initiateMesh(int MeshType, int Row, int Column, float SideLengt
 	return true;
 }
 
-/*bool Simulation::initiateMesh(int MeshType, string inputtype, float SideLength, float zHeight ){
-	if ( MeshType == 1 ){
-		cerr<<"Error: Too many arguments for a single element system"<<endl;
-		return false;
-	}
-	if ( MeshType == 2){
-		cerr<<"Error: Too few arguments for mesh by dimensions"<<endl;
-		return false;
-	}
-	else if ( MeshType == 3 ){
-		//this will be inputting circumference of the tissue, and the sidelength and z-height
-		//generate mesh by triangulation
-		return false;
-	}
-	else if ( MeshType == 4 ){
-		cerr<<"Error: Too many arguments for reading the mesh from file"<<endl;
-		return false;
-		//this will be reading full mesh data
-		//read mesh data from file
-	}
-	else {
-		cerr<<"Error: Mesh Type not recognised"<<endl;
-		return false;
-	}
-	return true;
-}*/
-
 bool Simulation::initiateMesh(int MeshType){
 	if ( MeshType == 1 ){
 		cerr<<"Error: Too many arguments for a single element system"<<endl;
@@ -2995,6 +3186,13 @@ bool Simulation::initiateMesh(int MeshType){
 		return false;
 	}
 	else if ( MeshType ==4 ){
+        /**
+         * The mesh information will be read form the file read into Simulation#inputMeshFileName parameter.
+         * The nodes and elements will be initiated through functions Simulation#initiateNodesFromMeshInput and
+         * Simulation#initiateElementsFromMeshInput. Then if the tissue type weights are recorded, then they will be read in
+         * via Simulation#readInTissueWeights, the recorded value is peripodialness weight, ShapeBase#peripodialGrowthWeight.
+         * The input maseh file will be closed at teh end of the function.
+         */
 		//this will be reading full mesh data
 		//read mesh data from file
 		const char* name_inputMeshFile = inputMeshFileName.c_str();;
@@ -3033,10 +3231,6 @@ bool Simulation::initiateMesh(int MeshType){
 				}
 			}
 		}
-		//generate new node list
-		//generate new elemetn list
-		//update element ids
-		//update node ids
 	}
 	else {
 		cerr<<"Error: Mesh Type not recognised"<<endl;
@@ -3052,6 +3246,11 @@ bool Simulation::checkIfTissueWeightsRecorded(){
 }
 
 void Simulation::readInTissueWeights(){
+    /**
+     * The tissue type weigths for all elemetns are read from mesh input, via the function
+     * ShapeBase#setGrowthWeightsViaTissuePlacement. The recorded value is
+     * peripodialness weight, ShapeBase#peripodialGrowthWeight.
+     */
 	vector<ShapeBase*>::iterator itEle;
 	double wPeri;
 	for (itEle=Elements.begin(); itEle<Elements.end(); ++itEle){
@@ -3078,7 +3277,25 @@ bool Simulation::generateColumnarCircumferenceNodeList(	vector <int> &ColumnarCi
 }
 
 void Simulation::clearCircumferenceDataFromSymmetricityLine(){
-	//I will take out anything that was at the border of symmetry, but I need the nodes at the tips. So find the x tips first:
+
+    /**
+      * The input mesh can be specified to be symmetric in x, y or both x&y axes. This means the actual
+      * tissue of interest is a larger, but symmetric tissue. Examples are one half of the fly winf, where the
+      * tissue is assummed to be symmetric in its long axis, or simulations of a circular tissue pathc, where
+      * only one quadrant of the tissue is simulated. The mesh input file most likely will report the borders of
+      * the symmetrticity axes to be at circumference. But in real terms, these nodes are not at the circumference,
+      * they are not exposed to the outer world, they are part of a continuing tissue. The circumference flags
+      * should thenbe cleaned from these nodes prior to simulation intiation. \n
+      *
+      * First, the tips are detected.
+      * The y-symmetry is at the y=0 line and similarly x-symmetry is at the x=0 line. Therefore, any node recorded to be
+      * at circumference, but is part of a symmetric tissue and within the relevant distance limit, they should have their
+      * Node#atCircumference flag set to false. The nodes at the tip should be an exception, as the nodes at the tips of the tissue,
+      * will still be at the circumference, although they are at the limits of the symetricity line. One specific case is the
+      * origin in case of x&y symmetry. The origin will be a tissue tip, but will reside at t he centre of the tissue,
+      * therefore should not be symmetric.
+      *
+      */
 	if (symmetricY){
 		double xTipPos = -1000, xTipNeg = 1000;
 		vector<Node*>::iterator itNode;
@@ -3163,51 +3380,7 @@ void Simulation::clearCircumferenceDataFromSymmetricityLine(){
 		}
 	}
 }
-/*
-void Simulation::removeSymmetryBorderFromColumnarCircumferenceNodeList(vector <int> &ColumnarCircumferencialNodeList){
-	//I will take out anything that was at the border of symmetry, but I need the nodes at the tips. So find the x tips first:
-	double xTipPos = -1000, xTipNeg = 1000;
-	vector<Node*>::iterator itNode;
-	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-		if ((*itNode)->Position[0] > xTipPos ){
-			xTipPos = (*itNode)->Position[0];
-		}
-		if ((*itNode)->Position[0] < xTipNeg ){
-			xTipNeg = (*itNode)->Position[0];
-		}
-	}
-	double yLimPos = 0.1;
-	double yLimNeg = (-1.0)*yLimPos;
-	int n = ColumnarCircumferencialNodeList.size();
-	int i=0;
-	while (i<n){
-		double x = Nodes[ColumnarCircumferencialNodeList[i]]->Position[0];
-		double y = Nodes[ColumnarCircumferencialNodeList[i]]->Position[1];
-		if ( y < yLimPos){
-			if ( y  > yLimNeg){
-				Nodes[ColumnarCircumferencialNodeList[i]]->atSymmetricityBorder = true;
-				fixY(Nodes[ColumnarCircumferencialNodeList[i]]);
-				//the node is indeed at the border, BUT, I will remove it only if it is not at the tip:
-				bool atTip = false;
-				if ( x < xTipPos+yLimPos && x >xTipPos+yLimNeg){
-					atTip = true;
-				}
-				if ( x > xTipNeg+yLimNeg && x < xTipNeg+yLimPos){
-					atTip = true;
-				}
-				if (!atTip){
-					//removing node from list:
-					ColumnarCircumferencialNodeList.erase (ColumnarCircumferencialNodeList.begin()+i);
-					Nodes[ColumnarCircumferencialNodeList[i]]->atCircumference = false;
-					n--;
-					i--;
-				}
-			}
-		}
-		i++;
-	}
-}
-*/
+
 void Simulation::sortColumnarCircumferenceNodeList(vector <int> &ColumnarCircumferencialNodeList){
 	//ordering the circumferencial nodes of the basal surface in clockwise rotation
 	size_t n = ColumnarCircumferencialNodeList.size();
@@ -3255,8 +3428,11 @@ void Simulation::getAverageSideLength(double& periAverageSideLength, double& col
 			if ((*itElement)->tissueType==0){ //element belongs to columnar layer
 				double currValue = (*itElement)->getApicalSideLengthAverage();
 				if(currValue>0){
-					//There may be elements with fully collapsed apical areas, where currValue will be zero
-					//I do not wish to count them in averaging
+				   /**
+					  * There may be alements with fully collapsed areas, where currValue will be zero.
+					  * These are not counted in averaging the side length, as the zero length is not relevant for packing
+					  * distance calculations.
+					  */
 					dsumCol += currValue;
 					colCounter++;
 				}
@@ -3264,12 +3440,13 @@ void Simulation::getAverageSideLength(double& periAverageSideLength, double& col
 				if((*itElement)->tissuePlacement == 0 || (*itElement)->spansWholeTissue){
 					currValue = (*itElement)->getBasalSideLengthAverage();
 					if(currValue>0){
-						//There may be alements with fully collapsed apical areas, where currValue will be zero
-						//I do not wish to count them in averaging
 						dsumCol += currValue;
 						colCounter++;
 					}
 				}
+	            /** The local side length data is recorded in a
+	             * 10x5 grid, Simulation#packingDetectionThresholdGrid.
+	             */
 				double* reletivePos = new double[2];
 				(*itElement)->getRelativePosInBoundingBox(reletivePos);
 				int relX = floor(reletivePos[0]);
@@ -3315,12 +3492,18 @@ bool  Simulation::isColumnarLayer3D(){
 }
 
 bool Simulation::calculateTissueHeight(){
-	//check if the columnar layer is made of 3D elements:
+    /**
+     * First check will be if the tissue is made up of 3D elements. If the tissue is 3D, then the height
+     * will be calculated accordingly. If the tissue is made up of 2D elements, then the
+     * height will simply be the assigned heigt of the elements, ReferenceShapeBase#height. \n
+     */
 	bool ColumnarLayer3D = isColumnarLayer3D();
 	TissueHeight = 0;
 	//cout<<"inside calculateTissueHeight"<<endl;
 	if (ColumnarLayer3D){
-		//cout<<"tissue is 3d"<<endl;
+        /**
+         * The calculation for tissue height will find the first basal node on Simulation#Nodes.
+         */
 		//Find the first basal node on the Nodes List
 		//Find the first element that has this node on the elements list
 		//Move apically through the elements until you reach the apical surface - an apical node
@@ -3342,6 +3525,14 @@ bool Simulation::calculateTissueHeight(){
 		vector<ShapeBase*>::iterator itElement;
 		bool foundElement = true;
 		TissueHeightDiscretisationLayers = 0;
+		double currentH =0;
+        /**
+         * Then the first element on Simulation#Elements that utilises the found node as a basal node will be identified.
+         * Once the element is identified, an apical node of this element will be selected as the current search node,
+         * the Simulation#TissueHeight and Simulation#TissueHeightDiscretisationLayers will be incremented up, and
+         * the search will continue to find the first element to utilise the new search node as its apicel. The loopo
+         * will continue until and apical node is readhed (Node#tissuePlacement == 1).
+         */
 		while(Nodes[currNodeId]->tissuePlacement != 1 && foundElement){ //while the node is not apical, and I could find the next element
 			foundElement = false;
 			for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
@@ -3545,7 +3736,10 @@ void Simulation::fixZ(int i, bool fixWithViscosity){
 	}
 }
 
-void Simulation::zeroForcesOnNode(int i){
+void Simulation::zeroForcesOnNode(size_t i){
+   /**
+	 * The forces corresponding to node indexed at input i on Simulation#Nodes will be set to zero.
+	 */
 	double ForceBalance[3];
 	ForceBalance[0] = SystemForces[i][0];
 	ForceBalance[1] = SystemForces[i][1];
@@ -3578,16 +3772,9 @@ void Simulation::initiateSystemForces(){
 		PackingForces[j][0]=0.0;
 		PackingForces[j][1]=0.0;
 		PackingForces[j][2]=0.0;
-		//PackingForcesPreviousStep[j][0]=0.0;
-		//PackingForcesPreviousStep[j][1]=0.0;
-		//PackingForcesPreviousStep[j][2]=0.0;
-		//PackingForcesTwoStepsAgoStep[j][0]=0.0;
-		//PackingForcesTwoStepsAgoStep[j][1]=0.0;
-		//PackingForcesTwoStepsAgoStep[j][2]=0.0;
 		FixedNodeForces[j][0] = 0.0;
 		FixedNodeForces[j][1] = 0.0;
 		FixedNodeForces[j][2] = 0.0;
-		//cout<<"systemforces[i][j]: "<<SystemForces[i][0]<<" "<<SystemForces[i][0]<<" "<<SystemForces[i][0]<<endl;
 	}
 }
 
@@ -3638,6 +3825,12 @@ void Simulation::initiateSinglePrismElement(){
 
 
 void Simulation::initiateNodesByRowAndColumn(int Row, int Column, float SideLength, float zHeight){
+    /**
+     * This function will place nodes in space to form the triangles to generate a hexagonal mesh of input rows and
+     * columns at its widest point. First in a simple geometric calculation, the height of of the equilateral triangle
+     * with the input side length is calculated. Then the nodes will be placed at a h difference in y for each column.
+     * The nodes position in x will be shifted by half the side length between columns.
+     */
 	dorsalTipIndex = Row;
 	ventralTipIndex = 0;
 	//The height of the equilateral triangle with side length: SideLength
@@ -3729,7 +3922,16 @@ void Simulation::setLinkerCircumference(){
 }
 
 void Simulation::checkForNodeFixing(){
-	//Are there any circumferential node fixing options enabled:
+    /**
+     * The Simulation#CircumferentialNodeFix array gives fixing options as booleans for [5options][in 3D] : \n
+     * [option = 0] : apical circumference fixing options [fix_x][ix_y][fix_z]. \n
+     * [option = 1] : basal  circumference fixing options [fix_x][ix_y][fix_z]. \n
+     * [option = 2] : linker apical circumference fixing options [fix_x][ix_y][fix_z]. \n
+     * [option = 3] : linker basal circumference fixing options [fix_x][ix_y][fix_z]. \n
+     * [option = 4] : ALL circumference fixing options [fix_x][ix_y][fix_z]. \n
+     * \n
+     * First check point will be for checking if there is circumferential fixing for any part of the tissue.
+     */
 	bool thereIsCircumFix = false;
 	if (!thereIsCircumFix){
 		for (int i=0;i<5; ++i){
@@ -3744,27 +3946,18 @@ void Simulation::checkForNodeFixing(){
 			}
 		}
 	}
-	//If there is any circumferential Node fixing:
+    /** If there is any fixing option active in any dimention, then the detailed check will continue.
+     */
 	if (thereIsCircumFix){
 		vector<Node*>::iterator itNode;
 		for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
 			if ( (*itNode)->atCircumference){
-				//cout<<"Node "<<(*itNode)->Id<<" at circumference"<<endl;
-				//The node is at circumference, I would like to fix only the columnar side,
+                /** The node is protected from fixing if it is at peripodial tissue.
+                 */
 				bool doNotFix = false;
-				if ((*itNode)->tissueType == 1){ //the node is peripodial, do not fix this node
+				if ((*itNode)->tissueType == 1){
 					doNotFix = true;
 				}
-				/*else if ((*itNode)->tissueType == 2){ //the node is linker (as will be the case for all circumference)
-					//I will check if any of its neigs are peripodial:
-					int nNeig = (*itNode)->immediateNeigs.size();
-					for (int k = 0; k<nNeig; ++k){
-						if (Nodes[(*itNode)->immediateNeigs[k]]->tissueType == 1){
-							doNotFix = true;
-							break;
-						}
-					}
-				}*/
 				if (!doNotFix){
 					//cout<<"Node "<<(*itNode)->Id<<" in fix options"<<endl;
 					//Node is at the circumference, now checking for all possibilities:
@@ -3773,7 +3966,10 @@ void Simulation::checkForNodeFixing(){
 					// if i == 2 , I am checking for the linker apical circumference
 					// if i == 3 , I am checking for the linker basal circumference
 					// if i == 4 , I am checking for all    circumference
-					for (int i=0;i<5; ++i){
+                    /** Then checking all options against Node#tissuePlacement and Node#tissueType, the node fixing is assigned accordingly,
+                     * through functions Node#fixX, Node#fixY, Node#fixZ.
+                     */
+					for (size_t i=0;i<5; ++i){
 						if ( (i == 0 && (*itNode)->tissuePlacement == 1 ) ||  //tissuePlacement == 1 is apical
 							 (i == 1 && (*itNode)->tissuePlacement == 0 ) ||  //tissuePlacement == 0 is basal
 							 (i == 2 && (*itNode)->tissueType == 2 && (*itNode)->tissuePlacement == 1 ) ||  //tissuePlacement == 1 is apical
@@ -3796,6 +3992,10 @@ void Simulation::checkForNodeFixing(){
 			}
 		}
 	}
+    /** Once checking the circumference fixing is complete, then fixing whole surfaces are checked,
+     * (Simulation#BasalNodeFix and Simulation#ApicalNodeFix) for instance when the tissue is stuck
+     * on glass for a pipette aspiration experiment.
+     */
 	if (BasalNodeFix[0] || BasalNodeFix[1] || BasalNodeFix[2] ){
 		vector<Node*>::iterator itNode;
 		for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
@@ -3828,6 +4028,10 @@ void Simulation::checkForNodeFixing(){
 			}
 		}
 	}
+    /** The tissue can be fixed basally through tissue domain specification, specifically for th notum,
+     * which is set by tissue relative position and the parameters
+     * Siumulation#notumFixingRange and Simulation#NotumNodeFix.
+     */
 	if (NotumNodeFix[0] || NotumNodeFix[1]  || NotumNodeFix[2]){
 		vector<Node*>::iterator itNode;
 		for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
@@ -3852,12 +4056,16 @@ void Simulation::checkForNodeFixing(){
 }
 
 void Simulation::induceClones(){
+    /**
+      * Growth of a subset of elemetns can be manipulated as mutant clones. These are set with
+      * positional information from model input file, and the mutation growth influence type, which can be
+      * an absolute growth value input, or scaling the existing growth rate.
+      */
 	cout<<"inside induce clones"<<endl;
-	for (int i=0;i<numberOfClones; ++i){
+	for (size_t i=0;i<numberOfClones; ++i){
 		double inMicronsX = cloneInformationX[i]*boundingBoxSize[0] + boundingBox[0][0];
 		double inMicronsY = cloneInformationY[i]*boundingBoxSize[1] + boundingBox[0][1];
 		double inMicronsRadius = cloneInformationR[i];
-		//cout<<" clone: "<<i<<" position: "<<inMicronsX<<" "<<inMicronsY<<" radius: "<<inMicronsRadius<<endl;
 		double r2 = inMicronsRadius*inMicronsRadius;
 		double growthRateORFold = cloneInformationGrowth[i];
 		for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
@@ -3869,14 +4077,11 @@ void Simulation::induceClones(){
 				double d2 = dx*dx + dy*dy;
 
 				if (d2 < r2){
-					//cout<<"mutating element: "<<(*itElement)->Id<<endl;
 					if (cloneInformationUsingAbsolueGrowth[i]){
 						(*itElement)->mutateElement(0,growthRateORFold); //the mutation is absolute, using an absolute value
-						//cout<<"mutating element "<<(*itElement)->Id<<" with absolute growth"<<endl;
 					}
 					else{
 						(*itElement)->mutateElement(growthRateORFold,0); //the mutation is not absolute, using relative values
-						//cout<<"mutating element "<<(*itElement)->Id<<" with relative growth"<<endl;
 					}
 				}
 				delete[] c;
@@ -3969,6 +4174,14 @@ void Simulation::calculateSystemCentre(){
 }
 
 void Simulation::addSoftPeriphery(double* fractions){
+    /**
+     * The elemetns within the range of soft periphery are identified first with their
+     * distance from the nearest circumference node. This calculation will be noisy as the
+     * side length of elements and node positions sill influence the cut-off, but this is
+     * an acceptable noise given the noise in biological systems. \n
+     * The array of booleans states:
+     * [applied ot apical side] [applied to basal side] [applied to columnar tissue] [applied to peripodial tissue]
+     */
 	double t2 = softDepth*softDepth;
 	double midlineFraction = 0.0;
 	double currSoftnessFraction = softnessFraction;
@@ -3979,8 +4192,6 @@ void Simulation::addSoftPeriphery(double* fractions){
 	else if (softPeripheryBooleans[0] || softPeripheryBooleans[1]){
 		midlineFraction = 1.0 - (1.0-softnessFraction)*0.5;
 	}
-
-
 	for(vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
 		if ( (*itNode)->atCircumference ){
 			//this node is at circumference, I will calculate the distance of all elements to this node
@@ -4047,24 +4258,35 @@ void Simulation::addSoftPeriphery(double* fractions){
 }
 
 void Simulation::assignPhysicalParameters(){
-
+    /** This funcition starts by generating the array of stiffness fractions to allow for perturbation implementation at the same time with the
+     * setting up of all elastic properties.
+     */
 	double* fractions;
 	fractions = new double[(const int) nElements];
 	for (int i=0; i<nElements; ++i){
 		fractions[i] = 1.0;
 	}
 	if(softPeriphery){
+        /** If there is a soft periphery implemented in the system, this is scaled here by modigying the fractions array via function
+         * Simulation#addSoftPeriphery.
+         */
 		addSoftPeriphery(fractions);
 	}
-	//now I have softness fraction table, I can scale the element properties:
 	vector<ShapeBase*>::iterator itElement;
 	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+        /** If there is noise on the physical proerties, this is randomly assigned first.
+         */
 		double r = (rand() % 200) / 100.0;	//random number between 0.00 and 2.00
-		r = r - 1.0; 						//random number between -1.00 and 1.00
+		r = r - 1.0;						//random number between -1.00 and 1.00
 		float noise1 = r*noiseOnPysProp[0];	//percent noise on current element
 		r = (rand() % 200) / 100.0;
 		r = r - 1.0;
 		float noise2 = r*noiseOnPysProp[1];
+        /** The input Young's moduli are scaled for the stiffness scaling of the current element.
+         * The noise is added on at the same step, and the Poission's ratio is set to zero for ECM mimicking elements.
+         * Then the elastic properties of the elemetn are set and necessary tensors updated via ShapeBase#setElasticProperties and
+         * ShapeBase#setViscosity functions.
+         */
 		if ((*itElement)->tissueType == 0){ //Element is on the columnar layer
 			double currEApical 	= fractions[(*itElement)->Id] * EApical*(1 + noise1/100.0);
 			double currEBasal	= fractions[(*itElement)->Id] * EBasal*(1 + noise1/100.0);
@@ -4139,6 +4361,8 @@ void Simulation::assignPhysicalParameters(){
 			}
 		}
 	}
+    /** Once all elemental properties are set, the nodal viscosities are asssigned through their owenr elements.
+     */
 	vector<Node*>::iterator itNode;
 	for(itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
 		double r = (rand() % 200) / 100.0;
@@ -4151,15 +4375,12 @@ void Simulation::assignPhysicalParameters(){
 				double currExternalViscApical = 0.5*(externalViscosityDPApical + externalViscosityPMApical);
 				double currExternalViscBasal  = 0.5*(externalViscosityDPBasal  + externalViscosityPMBasal);
 				(*itNode)->setExternalViscosity(currExternalViscApical,currExternalViscBasal, extendExternalViscosityToInnerTissue);
-				//(*itNode)->setExternalViscosity(externalViscosityDPApical*noise3, externalViscosityDPBasal*noise3, externalViscosityPMApical*noise3, externalViscosityPMBasal*noise3);
 			}
 			else{
 				(*itNode)->setExternalViscosity(externalViscosityLZApical*noise3, externalViscosityLZBasal*noise3, extendExternalViscosityToInnerTissue);
-				//(*itNode)->setExternalViscosity(externalViscosityLZApical*noise3, externalViscosityLZBasal*noise3, externalViscosityLZApical*noise3, externalViscosityLZBasal*noise3);
 			}
 		}else if ((*itNode)->tissueType == 0){ //disc proper
 			(*itNode)->setExternalViscosity(externalViscosityDPApical*noise3, externalViscosityDPBasal*noise3, extendExternalViscosityToInnerTissue);
-			//(*itNode)->setExternalViscosity(externalViscosityDPApical*noise3, externalViscosityDPBasal*noise3, externalViscosityPMApical*noise3, externalViscosityPMBasal*noise3);
 		}else if ((*itNode)->tissueType == 1){
 			(*itNode)->setExternalViscosity(externalViscosityPMApical*noise3, externalViscosityPMBasal*noise3, extendExternalViscosityToInnerTissue);
 		}
@@ -4168,6 +4389,10 @@ void Simulation::assignPhysicalParameters(){
 }
 
 void Simulation::checkForZeroExternalViscosity(){
+    /**
+     * Among all nodes, if there is at least one node with external viscosity in a given dimension, then the
+     * viscosity is not zero in that dimension.
+     */
 	vector<Node*>::iterator itNode;
 	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
 		for (int i=0; i<3; ++i){
@@ -4176,29 +4401,20 @@ void Simulation::checkForZeroExternalViscosity(){
 			}
 		}
 	}
+    /**
+     * If after checking all nodes, there is at least one dimension of x, y & z that has zero viscosity, at
+     * least one degree of freedom in that dimension should be fixed to have a unique displacement
+     * solution to the system in the given dimension. In other words, if no node feels external resistanc ein x, then
+     * the forces can fix the relative movement of all nodes in x, but nothing prevents the tissue rigid body displacement
+     * in x, therefore resulting in infinite number of solutions.
+     */
     if (zeroExternalViscosity[0] || zeroExternalViscosity[1] || zeroExternalViscosity[2]){
     	//At least one of the dimensions have zero viscosity
     	if(nNodes < 3) {
     		cerr<<"Cannot run zero viscosity simulation with less than 3 nodes, run simulation at your own risk!"<<endl;
     	}
-        //fix x,y,z for 0
-        /*Nodes[0]->FixedPos[0] = true;
-        Nodes[0]->FixedPos[1] = true;
-        Nodes[0]->FixedPos[2] = true;
-        //fix x and z for 1
-        Nodes[1]->FixedPos[0] = true;
-        Nodes[1]->FixedPos[2] = true;
-        //fix z for 2
-        Nodes[2]->FixedPos[2] = true;
 
-        //Nodes[4]->FixedPos[0] = true;
-        //Nodes[4]->FixedPos[1] = true;
-        //Nodes[4]->FixedPos[2] = true;
-
-        */
         if (!symmetricY){
-        	//TO DO!! In the node fixing options, there should be at least 2 different axes fixed.
-        	//If there are any node fixes, on the surfaces in z, then I do not need to do fix z:
         	bool sufficientXFix = false;
         	bool sufficientYFix = false;
         	bool sufficientZFix = false;
@@ -4282,27 +4498,6 @@ void Simulation::checkForZeroExternalViscosity(){
 				Nodes[ventralTipIndex]->FixedPos[2] = true;
 				Nodes[dorsalTipIndex]->FixedPos[2] = true;
 			}
-			//cout<<"node fixing sufficiency, sufficientXFix: "<<sufficientXFix<<" sufficientZFix: "<<sufficientZFix<<endl;
-/*
-				vector<ShapeBase*>::iterator itElement;
-				bool foundElement = false;
-				int apicalId = 0;
-				//find the apical node corresponding to the basal ventral tip:
-				for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-					bool IsBasalOwner = (*itElement)->IsThisNodeMyBasal(ventralTipIndex);
-					if (IsBasalOwner){
-						foundElement = true;
-						apicalId = (*itElement)->getCorrecpondingApical(ventralTipIndex); //have the next node
-						break;
-					}
-				}
-				if (foundElement){
-					Nodes[apicalId]->FixedPos[2] = true;
-				}
-				else{
-					cerr<<"Cannot run zero viscosity simulation, could not find the apical node corresponding to the basal ventral tip, run simulation at your own risk!"<<endl;
-				}
-*/
         }
     }
 }
@@ -4368,7 +4563,7 @@ void Simulation::addCurvatureToColumnar(double h){
 	}
 }
 
-void Simulation::thickecECM(){
+void Simulation::thickenECM(){
 	double bbMinX = boundingBox[0][0];
 	double bbMaxX = boundingBox[1][0];
 	double bbXSize = bbMaxX-bbMinX;
@@ -4411,26 +4606,13 @@ void Simulation::fixNode0InPosition(double x, double y, double z){
 }
 
 void Simulation::manualPerturbationToInitialSetup(bool deform, bool rotate){
-	//cout<<" inside manual perturbation, timestep "<<timestep<<endl;
+    /**
+     * This function allows the developer to add manual perturbations to initial setup.
+     * The simple positonal perturbations are self-explanatory, the function is used
+     * to test the response of any system to impulse perturbations. It also allows for
+     * rigid body rotation adn translations.
+     */
 	if(timestep==0){
-		 for (vector<Node*>::iterator  itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-			 //if ((*itNode)->Id <3 ){
-				//fixX((*itNode),0);
-				//fixY((*itNode),0);
-			 //}
-			/*if ((*itNode)->Id != 3 && (*itNode)->Id != 10){
-				//fixAllD((*itNode),0);
-			}
-			else{
-				//fixZ((*itNode),0);
-				//fixY((*itNode),0);
-				(*itNode)->Position[0] -= 5;
-			}*/
-			//fixAllD((*itNode),0);
-			 //(*itNode)->Position[0] += 8.9550;
-			 //(*itNode)->Position[2] -= 13.75;
-			 //cout<<"updated node : "<<(*itNode)->Id<<endl;
-		}
 		//laserAblateTissueType(1);
 		//laserAblate(0.0, 0.0, 0.5);
         double scaleX = 2.0;
@@ -4447,11 +4629,6 @@ void Simulation::manualPerturbationToInitialSetup(bool deform, bool rotate){
         		(*itNode)->Position[0] *=scaleX;
         		(*itNode)->Position[1] *=scaleY;
                 (*itNode)->Position[2] *=scaleZ;
-                //if ((*itNode)->tissuePlacement ==0 ){
-                //	(*itNode)->Position[2]  += 2.0;
-                	//double fold = -1.0/(scaleX*scaleY*scaleZ) -1;
-                	//(*itNode)->Position[2]  = 12.5/3.0 *scaleZ *fold;
-				//}
             }
         }
         if (rotate){
@@ -4500,6 +4677,9 @@ void Simulation::manualPerturbationToInitialSetup(bool deform, bool rotate){
 }
 
 void Simulation::updateGrowthRotationMatrices(){
+    /**
+     * Growth rotation matrices are updated for each element via ShapeBase#CalculateGrowthRotationByF.
+     */
 	vector<ShapeBase*>::iterator itElement;
 	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
         if (!(*itElement)->IsAblated){
@@ -5492,6 +5672,11 @@ void Simulation::checkForExperimentalSetupsAfterIteration(){
 }
 
 void Simulation::calculateStiffnessChangeRatesForActin(int idOfCurrentStiffnessPerturbation){
+    /**
+      * If the actin layer has perturbations, the elements are checked if they are influenced via
+      * ShapeBase#isActinStiffnessChangeAppliedToElement and
+      * rates are set in this function via ShapeBase#calculateStiffnessPerturbationRate.
+      */
     startedStiffnessPerturbation[idOfCurrentStiffnessPerturbation] = true;
     const int maxThreads = omp_get_max_threads();
 	omp_set_num_threads(maxThreads);
@@ -5505,6 +5690,12 @@ void Simulation::calculateStiffnessChangeRatesForActin(int idOfCurrentStiffnessP
 }
 
 void Simulation::updateStiffnessChangeForActin(int idOfCurrentStiffnessPerturbation){
+    /**
+      * If the actin layer has perturbations, the elements are checked if they are influenced via
+      * ShapeBase#isActinStiffnessChangeAppliedToElement, the ShapeBase#stiffnessMultiplier is altered via
+      * ShapeBase#updateStiffnessMultiplier and elastic property tensors are updated
+      * via ShapeBase#updateElasticProperties.
+      */
 	const int maxThreads = omp_get_max_threads();
 	omp_set_num_threads(maxThreads);
 	#pragma omp parallel for
@@ -5513,12 +5704,18 @@ void Simulation::updateStiffnessChangeForActin(int idOfCurrentStiffnessPerturbat
 		if (applyToThisElement){
             (*itElement)->updateStiffnessMultiplier(dt);
             (*itElement)->updateElasticProperties();
-            //cout<<" element: "<<(*itElement)->Id<<" stiffness multiplier: "<<(*itElement)->getStiffnessMultiplier()<<endl;
 		}
 	}
 }
 
 void Simulation::checkStiffnessPerturbation(){
+    /**
+     * For all input stiffness perturbations, the perturbation activity time is checked from the Simulation#currSimTimeSec
+     * being between the selected Simulation#stiffnessPerturbationBeginTimeInSec and Simulation#stiffnessPerturbationEndTimeInSec.
+     * If this is the first time the perturbation is being called (checked via Simulation#startedStiffnessPerturbation flag) then
+     * the rate is calculated via Simulation#calculateStiffnessChangeRatesForActin. Then stiffnesses are uodated via
+     * Simulation#updateStiffnessChangeForActin.
+     */
 	int n = stiffnessPerturbationBeginTimeInSec.size();
 	for (int idOfCurrentStiffnessPerturbation=0; idOfCurrentStiffnessPerturbation<n; ++idOfCurrentStiffnessPerturbation){
 		if (currSimTimeSec >=stiffnessPerturbationBeginTimeInSec[idOfCurrentStiffnessPerturbation] && currSimTimeSec <stiffnessPerturbationEndTimeInSec[idOfCurrentStiffnessPerturbation]){
@@ -5531,40 +5728,13 @@ void Simulation::checkStiffnessPerturbation(){
 }
 
 
-/*
-void Simulation::checkStiffnessPerturbation(){
-    if (currSimTimeSec >=stiffnessPerturbationBeginTimeInSec && currSimTimeSec <stiffnessPerturbationEndTimeInSec){    
-        const int maxThreads = omp_get_max_threads();
-        omp_set_num_threads(maxThreads);
-        #pragma omp parallel for
-        for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-            if((*itElement)->insideEllipseBand){ //this covers the tissue type as well as the position, ellipses are applied to columnar and linker zones only.
-                if( ThereIsWholeTissueStiffnessPerturbation  //the whole columnar tissue is perturbed
-                   || ((*itElement)->tissuePlacement == 0 && ThereIsBasalStiffnessPerturbation  ) //the basal surface is perturbed and element is basal
-                   || ((*itElement)->tissuePlacement == 1 && ThereIsApicalStiffnessPerturbation ) // the apical surface is perturbed and element is apical
-                  ){
-                    for (int stiffnessPerturbationRangeCounter =0; stiffnessPerturbationRangeCounter<numberOfStiffnessPerturbationAppliesEllipseBands; ++stiffnessPerturbationRangeCounter){
-                        if ((*itElement)->coveringEllipseBandId == stiffnessPerturbationEllipseBandIds[stiffnessPerturbationRangeCounter]){
-                            if (startedStiffnessPerturbation == false){
-                                //this is the first time step I am applying stiffenning.
-                                //I need to calculate rates per element first:ß
-                                (*itElement)->calculateStiffnessPerturbationRate(stiffnessPerturbationBeginTimeInSec,stiffnessPerturbationEndTimeInSec, stiffnessChangedToFractionOfOriginal);
-                            }                        
-                            (*itElement)->updateStiffnessMultiplier(dt);
-                            (*itElement)->updateElasticProperties();
-                        }
-                    }
-                }
-            }
-        }
-        //I have entered the time loop once, therefore, the stiffness change rates have been calculated.
-        startedStiffnessPerturbation = true;
-    }
-}
-
-*/
-
 void Simulation::updateChangeForExplicitECM(int idOfCurrentECMPerturbation){
+    /**
+      * If the ECM has perturbationson elasticity, the elements are checked if they are influenced via
+      * ShapeBase#isECMChangeAppliedToElement, the ShapeBase#stiffnessMultiplier is altered via
+      * ShapeBase#updateStiffnessMultiplier and elastic property tensors are updated
+      * via ShapeBase#updateElasticProperties.
+      */
     const int maxThreads = omp_get_max_threads();
 	#pragma omp parallel for
 	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
@@ -5577,11 +5747,17 @@ void Simulation::updateChangeForExplicitECM(int idOfCurrentECMPerturbation){
 }
 
 void Simulation::updateChangeForViscosityBasedECMDefinition(int idOfCurrentECMPerturbation){
+    /**
+      * If the ECM has perturbations on viscosity, the nodes are checked if they are influenced via
+      * Node#tissuePlacement and Simulation#changeBasalECM - Simulation#changeApicalECM boolean arrays,
+      * as well as the marker ellipse Ids. The visocisties of each node are updated via
+      * Node#ECMViscosityChangePerHour and the time step Simulation#dt (in sec). Once new viscosity is
+      * calculated, it is capped to be positive and at most equal to the maximum external viscosity.
+      */
 	cout<<"in viscosity update"<<endl;
     //const int maxThreads = omp_get_max_threads();
     #pragma omp parallel for
 	for (vector<Node*>::iterator itNode = Nodes.begin(); itNode<Nodes.end(); ++itNode){
-		//if (!(*itNode)->allOwnersECMMimicing){
 			if(((*itNode)->tissuePlacement == 0 && changeBasalECM[idOfCurrentECMPerturbation] ) || ((*itNode)->tissuePlacement == 1 && changeApicalECM[idOfCurrentECMPerturbation] )){
 				if((*itNode)->insideEllipseBand){
 					for (int ECMReductionRangeCounter =0; ECMReductionRangeCounter<numberOfECMChangeEllipseBands[idOfCurrentECMPerturbation]; ++ECMReductionRangeCounter){
@@ -5600,17 +5776,20 @@ void Simulation::updateChangeForViscosityBasedECMDefinition(int idOfCurrentECMPe
 									(*itNode)->externalViscosity[i] = newViscosity;
 								}
 							}
-							//cout<<" updated external viscosity: "<<(*itNode)->externalViscosity[0]<<" change per hr: "<<(*itNode)->ECMViscosityChangePerHour[0]<<" min: "<< (*itNode)->minimumExternalViscosity[0]<<" max: "<<(*itNode)->maximumExternalViscosity[0] <<endl;
 						}
 					}
 				}
 			}
-		//}
 	}
-	//cout<<"finished viscosity update"<<endl;
 }
 
 void Simulation::calculateChangeRatesForECM(int idOfCurrentECMPerturbation){
+
+    /**
+      * If the ECM has perturbations, the elements are checked if they are influenced via
+      * ShapeBase#isECMChangeAppliedToElement and
+      * rates are set in this function via ShapeBase#calculateStiffnessPerturbationRate.
+      */
 	changedECM[idOfCurrentECMPerturbation] = true; //this will not be used for emergent ecm perturbations
 	//this is the first time step I am changing the ECM stiffness.
 	//I need to calculate rates first.
@@ -5628,6 +5807,12 @@ void Simulation::calculateChangeRatesForECM(int idOfCurrentECMPerturbation){
 			}
 		}
 		//now I need to check for the viscosity based calculation:
+        //not using range based loops here to ensure openMP comaptibility
+        /**
+         * For each node, the applicability of ECM change is checked via Node#isECMChangeAppliedToNode, and the rate
+         * Node#ECMViscosityChangePerHour per dimension is calculated via the change fraction Simulation#ECMViscosityChangeFraction, the
+         * total time of applied change obtined from Simulation#ECMChangeBeginTimeInSec and Simulation#ECMChangeEndTimeInSec.
+         */
 		#pragma omp parallel for
 		for (vector<Node*>::iterator itNode = Nodes.begin(); itNode<Nodes.end(); ++itNode){
 			bool applyToThisNode = (*itNode)->isECMChangeAppliedToNode(changeApicalECM[idOfCurrentECMPerturbation], changeBasalECM[idOfCurrentECMPerturbation], ECMChangeEllipseBandIds[idOfCurrentECMPerturbation], numberOfECMChangeEllipseBands[idOfCurrentECMPerturbation]);
@@ -5646,6 +5831,9 @@ void Simulation::calculateChangeRatesForECM(int idOfCurrentECMPerturbation){
 		}
 	}
 	else{
+        /**
+         * The viscosity based ECM perturbation can be applied for ECM definitions beyond explicit ECM, and this is purely on nodal viscosity basis.
+         */
 		double timeDifferenceInHours = (ECMChangeEndTimeInSec[idOfCurrentECMPerturbation] - ECMChangeBeginTimeInSec[idOfCurrentECMPerturbation])/3600;
 		#pragma omp parallel for
 		for (vector<Node*>::iterator itNode = Nodes.begin(); itNode<Nodes.end(); ++itNode){
@@ -5666,6 +5854,11 @@ void Simulation::calculateChangeRatesForECM(int idOfCurrentECMPerturbation){
 }
 
 void Simulation::updateECMRenewalHalflifeMultiplier(int idOfCurrentECMPerturbation){
+    /**
+     * If there is perturbation on ECM renewal halflife, the type of perturbation emergence is checked,
+     * if the perturbation initiation is emergend based on topology (active at fold grove basal sides), then
+     * the rate is calculated from the total application time.
+     */
 	if(thereIsExplicitECM){
 		if (ECMChangeTypeIsEmergent[idOfCurrentECMPerturbation]){
 			double totalTimeChange = ECMChangeEndTimeInSec[idOfCurrentECMPerturbation] - ECMChangeBeginTimeInSec[idOfCurrentECMPerturbation];
@@ -5713,7 +5906,12 @@ void Simulation::updateECMRenewalHalflifeMultiplier(int idOfCurrentECMPerturbati
 }
 
 void Simulation::checkECMChange(){
-	//First chak via compartments:
+    /**
+     * If there is explicit ECM, then first the compartment based perturbations are checked.
+     * Then each perturbation based on tissue placement, such as apical, basal or emergnt with markers, are checked.
+     * The stiffness, viscosity and half life updates are carried out via ShapeBase#updateStiffnessMultiplier,
+     * ShapeBase#updateChangeForViscosityBasedECMDefinition, ShapeBase#updateChangeForExplicitECM and ShapeBase#updateECMRenewalHalflifeMultiplier.
+     */
 	if( thereIsExplicitECM){
 		#pragma omp parallel for
 		for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
@@ -5780,7 +5978,18 @@ void Simulation::checkECMChange(){
 }
 
 void Simulation::checkEllipseAllocationWithCurvingNodes(){
-	//cout<<"checking ellipse allocation with curving nodes, thereIsEmergentEllipseMarking? "<<thereIsEmergentEllipseMarking<<endl;
+    /**
+     * The emergent curved regions of the tissue are marked via ellipse ban ids.
+     * These bands can be defined by the user, as such marker ellipse band Ids 100, 101 and 102 are reserved
+     * for emergent band initiation. \n
+     * - If a surface is on the apical fold initiation surface, then it acquires Id 100. \n
+     * - If a surface is on the basal fold initiation, then is acquires Id 101. \n
+     * - If there are emergent perturbations, and initiation of perturbation is conditional (
+     * tissue shape change perturbation starts only after the ECM is reduced below a certain fraction of its original value), then
+     * the elements initially tagged 100 are updated to tag 102 once htis threshold (Simulation#shapeChangeECMLimit) is reached. The
+     * function Simulation#checkForEllipseIdUpdateWithECMDegradation
+     * will carry out this operation.
+     */
 	int selectedEllipseBandId =100;
 	for (vector<Node*>::iterator itNode= Nodes.begin(); itNode<Nodes.end(); ++itNode){
 		if ((*itNode)->onFoldInitiation){
@@ -5812,6 +6021,11 @@ void Simulation::checkEllipseAllocationWithCurvingNodes(){
 }
 
 void Simulation::checkForLeftOutElementsInEllipseAssignment(){
+    /**
+     * When elements are assigned emergent marker identities, their nodes will follow.
+     * As a result, in densly folding regions, an element can have all its nodes assigned to a specific marker
+     * by its neighbours, without itself being assigned to it. These elements themselves will be tagged via their nodes.
+     */
 	for (vector<Node*>::iterator itNode = Nodes.begin(); itNode < Nodes.end(); ++itNode){
 		if ((*itNode)->checkOwnersforEllipseAsignment){
 			int currentEllipseId = (*itNode)->coveringEllipseBandId;
@@ -5845,6 +6059,12 @@ void Simulation::checkForLeftOutElementsInEllipseAssignment(){
 
 
 void Simulation::updateEllipseWithCollapse(){
+    /**
+     * If there is an apical collapse of nodes, then this elemetn must be on a curving surface, thus the emergent marker ids are updated.
+     * The element is not checked if it is already assigned to a fold via emergent mariking (ShapeBase#coveringEllipseBandId is 100 or 101).
+     * Lateral ECM elements are not modified. If the element is not already assigned to an emergent marker group (on fold initiation), then
+     * its collapse status is checked via ShapeBase#checkForCollapsedNodes.
+     */
 	for (vector<ShapeBase*>::iterator itEle=Elements.begin(); itEle<Elements.end(); itEle++){
 		if ((*itEle)->coveringEllipseBandId == 100 || (*itEle)->coveringEllipseBandId == 101 || (*itEle)->isECMMimimcingAtCircumference){
 			continue;
@@ -5856,6 +6076,11 @@ void Simulation::updateEllipseWithCollapse(){
 }
 
 void Simulation::checkForEllipseIdUpdateWithECMDegradation(){
+    /**
+     * If there are emergent marker allocations, and initiation of a perturbation is conditional (
+     * tissue shape change perturbation starts only after the ECM is reduced below a certain fraction of its original value), then
+     * the elements initially tagged 100 are updated to tag 102 once this threshold (Simulation#shapeChangeECMLimit) is reached.
+     */
 	for (vector<ShapeBase*>::iterator itEle=Elements.begin(); itEle<Elements.end(); itEle++){
 		if ((*itEle)->isECMMimicing && (*itEle)->coveringEllipseBandId == 100){
 			if ((*itEle)->stiffnessMultiplier<shapeChangeECMLimit){
@@ -5868,6 +6093,10 @@ void Simulation::checkForEllipseIdUpdateWithECMDegradation(){
 }
 
 void Simulation::updateOnFoldNodesFromCollapse(){
+    /**
+     * When an element collapses its nodes, it is a sign that it is residing on a fold. These elements
+     * assign their nodes to be on folds, by flagging the boolean Node#onFold.
+     */
 	//cout<<"calling updateOnFoldNodesFromCollapse"<<endl;
 	if (checkedForCollapsedNodesOnFoldingOnce){
 		return;
@@ -5908,6 +6137,15 @@ void Simulation::updateOnFoldNodesFromCollapse(){
 }
 
 void Simulation::checkForEmergentEllipseFormation(){
+    /**
+     * The emergent marker ellipse Ids, reserved 100, 101 and 102, are assigned to
+     * curved surfaces of hte tissue. This information can be obtained via
+     * collapse of an elemental surface, or adhesion of two nodes. Once the
+     * identity is assigned, it can be updated to mark ECM relaxation threshold.
+     * The respnsible functions are Simulation#updateEllipseWithCollapse,
+     * Simulation#updateOnFoldNodesFromCollapse, Simulation#checkEllipseAllocationWithCurvingNodes,
+     *  Simulation#checkForLeftOutElementsInEllipseAssignment and Simulation#checkForEllipseIdUpdateWithECMDegradation.
+     */
 	updateEllipseWithCollapse();
 	updateOnFoldNodesFromCollapse();
 
@@ -5917,6 +6155,11 @@ void Simulation::checkForEmergentEllipseFormation(){
 }
 
 void Simulation::artificialRelax(){
+    /**
+     * This function relaxes all accumulated forces on elements of the tissue by transfering the current elastic deformation
+     * gradient onto growth gradient. The relaxation can optionally be extended to ECM, or be applied to only
+     * cellular material of the tissue.
+     */
 	for (vector<ShapeBase*>::iterator itEle=Elements.begin(); itEle<Elements.end(); itEle++){
 		bool relaxElement = false;
 		if ((*itEle)->isECMMimicing){
@@ -5935,44 +6178,44 @@ void Simulation::artificialRelax(){
 
 
 bool Simulation::runOneStep(){
-
+    /**
+     * The core function in the Simulation class is the function to update the whole system from one time step to the next.
+     */
     bool Success = true;
-	cout<<"entered run one step, time "<<currSimTimeSec<<endl;
 
-	double apicalAreaSum = 0;
-	for (int i=0; i< nElements; ++i){
-		if (Elements[i]->tissuePlacement == 1 && Elements[i]->tissueType == 0){
-			Elements[i]->calculateApicalArea();
-			apicalAreaSum += Elements[i]->getApicalArea();
-		}
-	}
-	cout<<"Apical tissue area: "<<apicalAreaSum<<endl;
-
-
-	//ablateSpcific();
+	//use the below two functions for manual perturpations of various sorts.
     if (currSimTimeSec == -16*3600) {
     	pokeElement(224,0,0,-0.02);
     }
-    //cout<<"Position Of Node 187"<<Nodes[187]->Position[2]<<" node 246: "<<Nodes[246]->Position[2]<<endl;
-
     manualPerturbationToInitialSetup(false,false); //bool deform, bool rotate
+    /**
+     * The process starts by resetting all forces of the current time step via Simulation#resetForces. Then emergent marker initiation is checked,
+     * (Simulation#checkForEmergentEllipseFormation) as this could initiate physical property changes and should be carried out before the relavent updates. \n
+     */
     resetForces(true); // reset the packing forces together with all the rest of the forces here
     checkForEmergentEllipseFormation();
-    int freq = 10.0/dt ;
-    if (freq <1 ){freq =1;}
-    if ((timestep - 1)% freq  == 0){
-        cout<<"At time -- "<<currSimTimeSec<<" sec ("<<currSimTimeSec/3600<<" hours - "<<timestep<<" timesteps)"<<endl;
-        alignTissueDVToXPositive();
-        //alignTissueAPToXYPlane();
-        calculateBoundingBox();
-        calculateDVDistance();
-        vector<ShapeBase*>::iterator itElement;
-        for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-        	(*itElement)->calculateRelativePosInBoundingBox(boundingBox[0][0],boundingBox[0][1],boundingBoxSize[0],boundingBoxSize[1]);
-        }
-        updateRelativePositionsToApicalPositioning();
-    }
-    //cout<<"after bounding box"<<endl;
+    /**
+     * Then the relative position updates of the tissue are carreid out.  First the tissue long axis is aligned on
+     * the x axis (Simulation#alignTissueDVToXPositive), then the bounsing box is calculated (ShapeBase#calculateBoundingBox),
+     * and the relative positions of apical (top layer) elements are obtained (ShapeBase#calculateRelativePosInBoundingBox). The
+     * relative positions of the midline and bottom elements are updated to be the same as the apical layer, as growth should
+     * not differ in the z-axis, the relative positions should read the same grid point from growth maps.
+     */
+	cout<<"At time -- "<<currSimTimeSec<<" sec ("<<currSimTimeSec/3600<<" hours - "<<timestep<<" timesteps)"<<endl;
+	alignTissueDVToXPositive();
+	calculateBoundingBox();
+	calculateDVDistance();
+	vector<ShapeBase*>::iterator itElement;
+	for(const auto& itElement : Elements){
+		itElement->calculateRelativePosInBoundingBox(boundingBox[0][0],boundingBox[0][1],boundingBoxSize[0],boundingBoxSize[1]);
+	}
+	updateRelativePositionsToApicalPositioning();
+    /**
+     * Any experimental setup, that requires an update prior to entring the NR iterations for the
+     * time step are carried out by the function Simulation#checkForExperimentalSetupsBeforeIteration. This is folllowed by
+     * any existing perturbation on physical properties, through functions Simulation#checkStiffnessPerturbation and
+     * Simulation#checkECMChange. \n
+     */
     checkForExperimentalSetupsBeforeIteration();
     if (ThereIsStiffnessPerturbation) {
     	checkStiffnessPerturbation();
@@ -5980,18 +6223,21 @@ bool Simulation::runOneStep(){
     if (thereIsECMChange) {
     	checkECMChange();
     }
+    //to do : delete all myo
     if(nMyosinFunctions > 0){
     	checkForMyosinUpdates();
     }
-
-    //cout<<"after checking for myosin"<<endl;
-
+    /**
+     * Once the physical proerties are updated, the growth of each element is calculated. For growth functions based on reading
+     * gorwht maps (the main attribute utilised in morphogenesis simulations), the relative position in usecan be updated less
+     * frequently then each step, this update is checked in Simulation#checkForPinningPositionsUpdate. Then the rigid body rotations
+     * around z axis are extracted to be eliminated through ShapeBase#updateGrowthRotationMatrices. For all growth functions and
+     * induced mutant clones the growth is calculated in Simulation#calculateGrowth. Simularly, shape changes are updated via
+     * Simulation#calculateShapeChange. \n
+     */
     if(nGrowthFunctions>0 || nShapeChangeFunctions >0 || numberOfClones >0 ){
     	checkForPinningPositionsUpdate();
-        //outputFile<<"calculating growth"<<endl;
-		//if ((timestep - 1)% growthRotationUpdateFrequency  == 0){
-			updateGrowthRotationMatrices();
-		//}
+		updateGrowthRotationMatrices();
         if(nGrowthFunctions>0 || numberOfClones > 0){
         	calculateGrowth();
         }
@@ -6003,38 +6249,57 @@ bool Simulation::runOneStep(){
     	tissueLumen->growLumen(currSimTimeSec+dt);
     	cout<<"in runOneStep lumen growth is carried out for: "<<currSimTimeSec+dt<<endl;
     }
-    //cout<<"after growth and shape change"<<endl;
+    /**
+     * Based on user preferences, the volumes of the elements can be conserved individually (default), or the volume can be
+     * conserved through the column, but volume exchange is allowed between elements of the same column, this is stated
+     * by the boolean Simulation#conservingColumnVolumes and operation is handled by the function Simulation#conserveColumnVolume. \n
+     */
     if (conservingColumnVolumes){
     	conserveColumnVolume();
     }
-    //cout<<"after volume conservation"<<endl;
+    /**
+     * Following potential volume exchange, the remodelling (plastic deformation) is updated. All explicit ECM elements (ShapeBase#isECMMimicing = true)
+     * do have remodelling by default. Remodelling of cellular elements (all the rest) can be defiend by the user preferences
+     * and is defined in Simulation#thereIsPlasticDeformation. The remodelling function is Simulation#updatePlasticDeformation.
+     */
     if(thereIsPlasticDeformation || thereIsExplicitECM){
     	updatePlasticDeformation();
     }
-    //cout<<"after plastic deformation"<<endl;
+    //to do : delete all migration
     if(thereIsCellMigration){
     	cellMigrationTool->updateMigratingElements(Elements);
     	cellMigrationTool->updateMigrationLists(Elements, dt);
     	cellMigrationTool->updateVolumesWithMigration(Elements);
     }
-    //cout<<"after migration"<<endl;
     checkForVolumeRedistributionInTissue();
-   // cout<<" after volume redistribution"<<endl;
-    for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-        if (!(*itElement)->IsAblated){
-        	(*itElement)->growShapeByFg();
-        }
-    }
-    //cout<<"after grow by Fg"<<endl;
+
+	/**
+	* The growth, shape change, volume exchange and remodelling all induce theri effects eventually through growth of the elements. Once
+	* all these options are covered, the elemetns are grown in ShapeBase#growShapeByFg, which updated the growth deformation gradient of the element. \n
+	*/
+	for(const auto &itElement: Elements){
+		 if (!itElement->IsAblated){
+			 itElement->growShapeByFg();
+		 }
+	}
+    /**
+    * As the shape size is changed, nodal masses (volumes) (Simulation#updateNodeMasses) and
+    * exposed surfaces  (Simulation#updateNodeViscositySurfaces) are updated, then the
+    * weight of each elements contribution on the nodes are updated (Simulation#updateElementToConnectedNodes). Then
+    * the collapse nodes positions are updated, if the collapse is being carried out in stages. \n
+    */
     updateNodeMasses();
     updateNodeViscositySurfaces();
-    //cout<<"updating connected node lists"<<endl;
     updateElementToConnectedNodes(Nodes);
-    //cout<<"calculate Myosin Forces"<<endl;
-    calculateMyosinForces();
-    //cout<<"before update position of collapsing nodes"<<endl;
+    calculateMyosinForces();//to do : delete all myo
     updatePositionsOfNodesCollapsingInStages();
-    //cout<<"after update position of collapsing nodes"<<endl;
+    /**
+      * Then packing to all posssible surfaces are detected, while the actual packing forces are calculated in the NR iterations as
+      * they are position dependent. This initial check creates a list of potential packing nodes, to check only these through
+      * the NR itaration, rather than checking all nodes at all times. Packing is checked against self contact (Simulation#detectPacingNodes)
+      * then to enclosing surfaces (Simulation#detectPacingToEnclosingSurfacesNodes) and pipette (Simulation#detectPackingToPipette)
+      * if they are implemented. \n
+      */
     detectPacingNodes();
 	//detectPackingToAFMBead();
     //cout<<"after detect packing"<<endl;
@@ -6047,33 +6312,45 @@ bool Simulation::runOneStep(){
     if (addingRandomForces){
     	calculateRandomForces();
     }
-    //cout<<"collapse check "<<endl;
+    /**
+     * Then collapse of elemental surfaces are checked (Simulation#checkEdgeLenghtsForBindingPotentiallyUnstableElementss),
+     * and the NR solver is notified if there are changes made.
+     */
     bool thereIsBinding = false;
     if (thereNodeCollapsing){
     	thereIsBinding = checkEdgeLenghtsForBindingPotentiallyUnstableElements();
     }
-    //cout<<"binding check "<<endl;
     if (thereIsBinding){
 		NRSolver->boundNodesWithSlaveMasterDefinition = true;
 	}
-   // cout<<"adhesion check "<<endl;
+    /**
+     * After the collapse check, the nodal adhesion is updated (Simulation#adhereNodes), makinguse of the detected packing, as any node couple close enough
+     * to adhere must be close enough to activate self-contact. \n
+     */
     if (thereIsAdhesion){
     	thereIsBinding = adhereNodes();
     }
-    //cout<<"bind nodes on matrix "<<endl;
     if (thereIsBinding){
     	NRSolver->boundNodesWithSlaveMasterDefinition = true;
     }
-    //cout<<" beginning NR "<<endl;
+    /**
+     * The actual positional updates are delegated to teh newton-Raphson solver object via function Simulation#updateStepNR. \n
+     */
     updateStepNR();
-    //cout<<" after NR "<<endl;
-
+    /**
+     * Once the positions are updated, the bounding box is calculated again, the elements are checked agains flipping (Simulation#checkFlip).
+     */
     calculateBoundingBox();
-    //cout<<" step: "<<timestep<<" Pressure: "<<SuctionPressure[2]<<" Pa, maximum z-height: "<<boundingBox[1][2]<<" L/a: "<<(boundingBox[1][2]-50)/(2.0*pipetteRadius)<<endl;
     Success = checkFlip();
+    /**
+     * If there is artificial relaxation defined by the user, this is done at the end of the time step via Simulation#artificialRelax.
+     */
     if (thereIsArtificaialRelaxation && artificialRelaxationTime == currSimTimeSec){
 		artificialRelax();
 	}
+    /**
+     * Then the time step is updated, and the data is saved if necessary in Simulation#processDisplayDataAndSave.
+     */
     timestep++;
     currSimTimeSec += dt;
     if (Success){
@@ -6083,27 +6360,31 @@ bool Simulation::runOneStep(){
 }
 
 void Simulation::assignIfElementsAreInsideEllipseBands(){
-	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		if (!(*itElement)->IsAblated && ((*itElement)->tissueType == 0 || (*itElement)->tissueType == 2)){
-			//The element is not ablated, it is either a columnar or a linker element.
-			//Peripodial elements are not counted in the ellipses, as the perturbations of
-			// interest are not applied to them			
-			(*itElement)->checkIfInsideEllipseBands(nMarkerEllipseRanges, markerEllipseBandXCentres,markerEllipseBandR1Ranges, markerEllipseBandR2Ranges, Nodes);
+	for(const auto& itElement : Elements){
+		if (!itElement->IsAblated && (itElement->tissueType == 0 || itElement->tissueType == 2)){
+			 //The element is not ablated, it is either a columnar or a linker element.
+			 //Peripodial elements are not counted in the ellipses, as the perturbations of
+			 // interest are not applied to them
+			itElement->checkIfInsideEllipseBands(nMarkerEllipseRanges, markerEllipseBandXCentres,markerEllipseBandR1Ranges, markerEllipseBandR2Ranges, Nodes);
 		}
 	}
 }
 
 void Simulation::updateRelativePositionsToApicalPositioning(){
-	for( vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		if ( (*itElement)->tissuePlacement == 1 && (*itElement)->tissueType == 0){//apical element of columnar layer
+    /**
+     * All the elements of a single column are stored in ShapeBase#elementsIdsOnSameColumn vector for each element.
+     * Going through the apical (top layer) elements of the tissue, the relative position of the apical element
+     * is assigned to all the elements on the same column.
+     */
+	for( const auto& itElement : Elements){
+		if ( itElement->tissuePlacement == 1 && itElement->tissueType == 0){//apical element of columnar layer
 			//I have all the elements on this column stored in "elementsIdsOnSameColumn", first id of the stack
 			//being the basal element and the last being the apical element. This is an apical element.
 			//I will equate tissue positioning of this element to all other elements on the list:
 			double* ReletivePos = new double[2];
-			(*itElement)->getRelativePosInBoundingBox(ReletivePos);
-
-			for (int i=0; i < TissueHeightDiscretisationLayers-2;++i){
-				int idOfElementBelowThisApicalElement = (*itElement)->elementsIdsOnSameColumn[i];
+			itElement->getRelativePosInBoundingBox(ReletivePos);
+			for (size_t i=0; i < TissueHeightDiscretisationLayers-2;++i){
+				int idOfElementBelowThisApicalElement = itElement->elementsIdsOnSameColumn[i];
 				Elements[idOfElementBelowThisApicalElement]->setRelativePosInBoundingBox(ReletivePos[0],ReletivePos[1]);
 			}
 			delete[] ReletivePos;
@@ -6126,22 +6407,22 @@ void Simulation::checkForPinningPositionsUpdate(){
 }
 
 void Simulation::updatePinningPositions(){
-	for( vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		(*itElement)->setInitialRelativePosInBoundingBox();
+	for( const auto& itElement : Elements){
+		itElement->setInitialRelativePosInBoundingBox();
 	}
 }
 
 bool Simulation::checkFlip(){
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		if ((*itElement)->isFlipped){
+	for(const auto& itElement : Elements){
+		if (itElement->isFlipped){
 			//there is a flipped element:
-			outputFile<<"There is A flipped element: "<<(*itElement)->Id<<endl;
+			outputFile<<"There is A flipped element: "<<itElement->Id<<endl;
 			return false;
 		}
 	}
 	return true;
 }
+
 void Simulation::wrapUpAtTheEndOfSimulation(){
     alignTissueDVToXPositive();
     //alignTissueAPToXYPlane();
@@ -6149,26 +6430,28 @@ void Simulation::wrapUpAtTheEndOfSimulation(){
 
 
 void Simulation::clearProjectedAreas(){
-    for (int i=0;i<nNodes; ++i){
-        Nodes[i]->zProjectedArea = 0.0;
+	for (const auto& currNode : Nodes){
+    	currNode->zProjectedArea = 0.0;
     }
 }
 
 void Simulation::correctzProjectedAreaForMidNodes(){
-    for (int i=0;i<nNodes; ++i){
-        if (Nodes[i]->tissuePlacement == 2 ){ // the node is on midlayer
-            //For the midline nodes, the area is added from apical and basal surfaces of elemetns on both sides.
-            Nodes[i]->zProjectedArea /= 2.0;
-        }
-    }
+	for (const auto& currNode : Nodes){
+		if (currNode->tissuePlacement == 2 ){ // the node is on midlayer
+		/**
+		 * For the nodes in mid-line nodes the area is added from apical and basal surfaces of elemetns on both sides.
+		 * This is corrected in this function. !! A more efficient approach would be to calculate these areas only once!!
+		 */
+		currNode->zProjectedArea /= 2.0;
+		}
+	}
 }
 
 void Simulation::calculateZProjectedAreas(){
     clearProjectedAreas();
-    vector<ShapeBase*>::iterator itElement;
-    for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-    	(*itElement)->calculateZProjectedAreas();
-        (*itElement)->assignZProjectedAreas(Nodes);
+    for(const auto& itElement : Elements){
+    	itElement->calculateZProjectedAreas();
+        itElement->assignZProjectedAreas(Nodes);
     }
     correctzProjectedAreaForMidNodes();
 }
@@ -6179,19 +6462,20 @@ void Simulation::updatePlasticDeformation(){
 	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 		if (!(*itElement)->IsAblated ){
 			if (thereIsExplicitECM &&  (*itElement)->isECMMimicing){
-				//The simulation is defining an explicit ECM layer. All basal elements
-				//should be subject to non-volum econserving plastic deformation.
-				//The volume conservation should be false (first inout)
-				//the half time used should be the ecm remodelling half time
-				//there should not be thresholds for z remodelling, there is no
-				//volume conservation, therefore these are not relevant anyway.
+	            /**
+	             * The ezplicitely defined ECM elements are always subject to non-volume econserving plastic deformation.
+	             * The remodelling is calculated by ShaopeBase#calculatePlasticDeformation3D.
+	             */
 				(*itElement)->calculatePlasticDeformation3D(false,dt,ECMRenawalHalfLife, 0.1, 10.0);
 			}
 			else if (thereIsPlasticDeformation){
-				//The ECM will always have plastic deformation, hence this function will be called.
-				//Then for all other elements, I should first check if there is plastic deformation in the first place
-				//Then I will check the tissue types
-				//the lateral elements will have plastic deformation if either columnar or peripodial elemetns have the deformation.
+	            /**
+	             * If there is user preferred remodelling on elements other than the ECM then the ShapeBase#tissueType is
+	             * checked against the parameters Simulation#plasticDeformationAppliedToColumnar and
+	             * Simulation#plasticDeformationAppliedToPeripodial. The parameters of the ShapeBase#calculatePlasticDeformation3D
+	             * are again defined by the user, such as the Simulation#volumeConservedInPlasticDeformation, Simulation#plasticDeformationHalfLife
+	             * Simulation#zRemodellingLowerThreshold and Simulation#zRemodellingUpperThreshold. See function documentation for further details.
+	             */
 				if(( ((*itElement)->tissueType == 0 || (*itElement)->tissueType == 2) && plasticDeformationAppliedToColumnar) || ( ((*itElement)->tissueType == 1 || (*itElement)->tissueType == 2) && plasticDeformationAppliedToPeripodial))
 				{
 					(*itElement)->calculatePlasticDeformation3D(volumeConservedInPlasticDeformation,dt,plasticDeformationHalfLife, zRemodellingLowerThreshold, zRemodellingUpperThreshold);
@@ -6199,6 +6483,9 @@ void Simulation::updatePlasticDeformation(){
 			}
 		}
 		else{
+            /**
+             * If there is no remodelling, then the elements plastic deformation increment is set to identity in ShapeBase#setPlasticDeformationIncrement.
+             */
 			(*itElement)->setPlasticDeformationIncrement(1.0,1.0,1.0);
 		}
 	}
@@ -6279,7 +6566,7 @@ void Simulation::conserveColumnVolume(){
     	vector <int> elementIdsForRedistribution;
     	if ((*itElement)->tissueType == 0 && (*itElement)->tissuePlacement == 1){
     		//columnar apical element, take the elements on same column
-    		for (int i=0; i < TissueHeightDiscretisationLayers;++i){
+    		for (size_t i=0; i < TissueHeightDiscretisationLayers;++i){
     			int idOfElementOnSameColumn = (*itElement)->elementsIdsOnSameColumn[i];
     			if (Elements[idOfElementOnSameColumn]->tissueType != 0){
     				//must be columnar
@@ -6295,6 +6582,10 @@ void Simulation::conserveColumnVolume(){
 				}
     			elementIdsForRedistribution.push_back(idOfElementOnSameColumn);
     		}
+            /**
+             * The column-vise volume conservation requires volume redistribution amongst cell layer of the tissue,
+             * and a diffusion based volume exchange where the most compressed elements give volume to least compressed.
+             */
     		//now I have a list of elements that I would like to redistribute the volumes of:
     		//get sum of ideal volumes:
     		const int n = elementIdsForRedistribution.size();
@@ -6340,6 +6631,14 @@ void Simulation::conserveColumnVolume(){
 }
 
 void Simulation::updateStepNR(){
+    /**
+     * The iteration will be carried out for 20 steps, if upon 20 trials the simulation have not converged, an error will be
+     * generated. The iteration starts by clearing all force, displacement and Jacobian matrices of the NR solver in
+     * NewtonRaphsonSolver#setMatricesToZeroAtTheBeginningOfIteration. Then the vector containing the positions of teh nodes at the
+     * end of the previous time step "n", \f$ \boldsymbol{u_n} \f$ is calculated in NewtonRaphsonSolver#constructUnMatrix. The positions
+     * of the current iteration "k", \f$ \boldsymbol{u_k} \f$ are initiated equal to \f$ \boldsymbol{u_n} \f$ via
+     * NewtonRaphsonSolver#initialteUkMatrix. \n
+     */
     int iteratorK = 0;
     int maxIteration =20;
     bool converged = false;
@@ -6348,12 +6647,20 @@ void Simulation::updateStepNR(){
     bool displayMatricesDuringNumericalCalculation = false;
     bool useNumericalKIncalculation = false;
 
-    //double clock0 = ( std::clock() - simulationStartClock ) / (double) CLOCKS_PER_SEC;
     NRSolver->setMatricesToZeroAtTheBeginningOfIteration(numericalCalculation);
     NRSolver->constructUnMatrix(Nodes);
-    //NRSolver->constructLumpedMassExternalViscosityMatrix(Nodes);
     NRSolver->initialteUkMatrix();
     while (!converged){
+        /**
+          * While the system has not converged, all the forces are rest at the beginning of each iteration with Simulation#resetForces.
+          * Then the matrices to be cumulated from scratch in each iteration are reset in NewtonRaphsonSolver#setMatricesToZeroInsideIteration().
+          * The displacement matrix per time step Simulation#dt is calculated for use in external viscous forces in
+          * NewtonRaphsonSolver#calculateDisplacementMatrix. Then all the internal elemental and nodal forces are calculated in NewtonRaphsonSolver#calculateForcesAndJacobianMatrixNR.
+          * The forces are moved from the elements and nodes to the system vectors in NewtonRaphsonSolver#writeForcesTogeAndgvInternal, the elastic and viscous
+          * terms of the elemental Jacobians are mapped and added onto the system Jacobian in  NewtonRaphsonSolver#writeImplicitElementalKToJacobian.
+          * The external forces are calculated in NewtonRaphsonSolver#calculateExternalViscousForcesForNR and their derivatives are added to
+          * the system Jacobian in NewtonRaphsonSolver#addImplicitKViscousExternalToJacobian. \n
+          */
         cout<<"iteration: "<<iteratorK<<endl;
         if (implicitPacking){
             resetForces(true);	// reset packing forces
@@ -6367,7 +6674,6 @@ void Simulation::updateStepNR(){
         }
         NRSolver->calculateDisplacementMatrix(dt);
         NRSolver->calculateForcesAndJacobianMatrixNR(Nodes, Elements, dt, recordForcesOnFixedNodes, FixedNodeForces);
-        //Writing elastic Forces and elastic Ke:
 		NRSolver->writeForcesTogeAndgvInternal(Nodes, Elements, SystemForces);
 	    NRSolver->writeImplicitElementalKToJacobian(Elements);
 	    if (numericalCalculation){
@@ -6378,20 +6684,28 @@ void Simulation::updateStepNR(){
 		}
 		NRSolver->calculateExternalViscousForcesForNR(Nodes);
 	    NRSolver->addImplicitKViscousExternalToJacobian(Nodes,dt);
-	    //These are the calculation of packing forces that would work if I wanted implicit packing
+        /**
+         * If the packing forces calculated implicitely (default) they are updated via Simulation#calculatePackingForcesImplicit3D and
+         * the corresponding Jacobian update is carried out with Simulation#calculatePackingJacobian3D. The packing for enclosing surfaces and the pipette
+         * are also carried out here (Simulation#calculatePackingForcesToEnclosingSurfacesImplicit3D,
+         * Simulation#calculatePackingToEnclosingSurfacesJacobian3D, Simulation#calculatePackingToPipetteForcesImplicit3D
+         * and Simulation#calculatePackingToPipetteJacobian3D).
+         */
 	    if (implicitPacking){
-	    	//if (!thereIsAdhesion){
-	    		calculatePackingForcesImplicit3D();
-	    		calculatePackingJacobian3D(NRSolver->K);
-	    		//calculatePackingToAFMBeadJacobian3D(NRSolver->K);
-	    	//}
+			calculatePackingForcesImplicit3D();
+			calculatePackingJacobian3D(NRSolver->K);
+			//calculatePackingToAFMBeadJacobian3D(NRSolver->K);
 	        if (encloseTissueBetweenSurfaces){
 	        	calculatePackingForcesToEnclosingSurfacesImplicit3D();
 	        	calculatePackingToEnclosingSurfacesJacobian3D(NRSolver->K);
 	        }
 	    }
-	    //End of packing forces.
-        //Now I will check if there are any nodes with zero mass, then I will be able to fill in the zero K matrix with identity if necessary.
+        /**
+         * All the internal forces and the external viscous resistance forces are collated in NewtonRaphsonSolver#gSum
+         * via NewtonRaphsonSolver#calculateSumOfInternalForces. The external forceas from the pipette suction if set up, all packing,
+         * and random forces if assigned are collated in NewtonRaphsonSolver#gExt, and these are added to system forces in
+         * NewtonRaphsonSolver#addExernalForces(). \n
+         */
         NRSolver->checkJacobianForAblatedNodes(AblatedNodes);
         NRSolver->calculateSumOfInternalForces();
         if (PipetteSuction && timestep >= PipetteInitialStep){
@@ -6399,7 +6713,7 @@ void Simulation::updateStepNR(){
 			calculateZProjectedAreas();
 			addPipetteForces(NRSolver->gExt);
 		}
-		addMyosinForces(NRSolver->gExt);
+		addMyosinForces(NRSolver->gExt); //to do: delete all myo
 		//packing can come from both encapsulation and tissue-tissue packing. I ad the forces irrespective of adhesion.
 		addPackingForces(NRSolver->gExt);
 
@@ -6408,26 +6722,23 @@ void Simulation::updateStepNR(){
 		}
         NRSolver->addExernalForces();
         checkForExperimentalSetupsWithinIteration();
+        /**
+         * Once all forces and their derivatives are collated in system forces and Jacobian, then degrees of freedom fixing is
+         * reflected on these matrices in  NewtonRaphsonSolver#calcutateFixedK and NewtonRaphsonSolver#calculateBoundKWithSlavesMasterDoF.
+         */
     	NRSolver->calcutateFixedK(Nodes);
        	NRSolver->calculateBoundKWithSlavesMasterDoF();
-        //cout<<"checking convergence with forces"<<endl;
-        //converged = NRSolver->checkConvergenceViaForce();
-        //if (converged){
-        //    break;
-        //}
-        //cout<<"solving for deltaU"<<endl;
-        //Elements[0]->displayMatrix(NRSolver->K,"K");
+        /** Then NewtonRaphsonSolver#solveForDeltaU function arranges the matrices and solves for the incremental displacements via
+         * PARDISO sparse matrix solver. The convergence is checked via the norm of incremental displacements in
+         * NewtonRaphsonSolver#checkConvergenceViaDeltaU, the position of the nodes in the iteration, \f $ \boldsymbol{u_k} \f $ are updated
+         * in NewtonRaphsonSolver#updateUkInIteration. The nodal and elemental positions are updated (Simulation#updateElementPositionsinNR,
+         * Simulation#updateNodePositionsNR) with the new node positions of the iteration.
+         */
         NRSolver->solveForDeltaU();
-        //cout<<"checking convergence"<<endl;
         converged = NRSolver->checkConvergenceViaDeltaU();
-        //Elements[0]->displayMatrix(NRSolver->deltaU,"deltaU after fixing");
-        //cout<<"updating uk"<<endl;
         NRSolver->updateUkInIteration();
-        //cout<<"updating elemental pos"<<endl;
         updateElementPositionsinNR(NRSolver->uk);
-        //cout<<"updating nodal pos"<<endl;
         updateNodePositionsNR(NRSolver->uk);
-        //cout<<"converged? "<<converged<<endl;
         iteratorK ++;
         if (!converged && iteratorK > maxIteration){
             cerr<<"Error: did not converge!!!"<<endl;
@@ -6449,7 +6760,7 @@ void Simulation::updateStepNR(){
     			idMax = (*itNode)->Id;
     		}
     	}
-    	cout<<"Pipette suction: "<<SuctionPressure[2]<<" max suction: "<<zMax<<" from node "<<idMax<<endl;
+    	std::cout<<"Pipette suction: "<<SuctionPressure[2]<<" max suction: "<<zMax<<" from node "<<idMax<<std::endl;
     }
 }
 
@@ -6487,13 +6798,15 @@ void Simulation::addRandomForces(gsl_matrix* gExt){
 }
 
 void Simulation::updateNodePositionsNR(gsl_matrix* uk){
+    /**
+     * The nodal positions vector contains each position of each node in a single vector, and indexing is carried out accordingly.
+     */
     int dim = 3;
     for (int i = 0; i<nNodes; ++i){
     	for (int j=0; j<dim; ++j){
             Nodes[i]->Position[j]=gsl_matrix_get(uk,dim*i+j,0);
         }
     }
-    //cout<<"finised node pos update"<<endl;
 }
 
 void Simulation::updateElementPositionsinNR(gsl_matrix* uk){
@@ -6512,7 +6825,7 @@ void Simulation::updateElementPositionsinNR(gsl_matrix* uk){
     }
 }
 
-void Simulation::calculatePackingForcesExplicit3D(){
+void Simulation::calculatePackingForcesExplicit3D(){ //to do I am using this?
 	//cout<<"inside calculatePackingForcesExplicit3D, size of packing node couples: "<<pacingNodeCouples0.size()<<endl;
 	int n = pacingNodeCouples0.size();
 	for(int i = 0 ; i<n; ++i){
@@ -6542,18 +6855,14 @@ void Simulation::calculatePackingForcesExplicit3D(){
 		PackingForces[id1][0] -= Fx;
 		PackingForces[id1][1] -= Fy;
 		PackingForces[id1][2] -= Fz;
-		//if (id0 == 3444 || id0 == 3444 || id1 == 3444 || id1 == 3444){
-			//cout<<"id0: "<<id0<<" id1: "<<id1<<endl;
-			//cout<<" dx: "<<dx<<" dy: "<<dy<<" dz: "<<dz<<" d: "<<d<<endl;
-			//cout<<" Fz: "<<Fx<<" Fy: "<<Fy<<" Fz: "<<Fz<<" F: "<<F<<endl;
-			//cout<<" initialWeightPoins: "<<initialWeightPointx[i]<<" "<<initialWeightPointy[i]<<" "<<initialWeightPointz[i]<<endl;
-			//cout<<" PackingForces["<<id0<<"]: "<<PackingForces[id0][0]<<" "<<PackingForces[id0][1]<<" "<<PackingForces[id0][2]<<endl;
-			//cout<<" PackingForces["<<id1<<"]: "<<PackingForces[id1][0]<<" "<<PackingForces[id1][1]<<" "<<PackingForces[id1][2]<<endl;
-		//}
 	}
 }
 
 void Simulation::calculatePackingForcesToEnclosingSurfacesImplicit3D(){
+    /**
+     * See the documentation for Simulation#calculatePackingForcesImplicit3D. The methodology is the same,
+     * with rigid wall positions in two z coordinates instead of a second node position.
+     */
 	int nPositive=nodesPackingToPositiveSurface.size();
 	int nNegative=nodesPackingToNegativeSurface.size();
 	double multiplier = packingMultiplier;
@@ -6583,6 +6892,10 @@ void Simulation::calculatePackingForcesToEnclosingSurfacesImplicit3D(){
 }
 
 void Simulation::calculatePackingToEnclosingSurfacesJacobian3D(gsl_matrix* K){
+    /**
+     * See the documentation for Simulation#calculatePackingJacobian3D. The methodology is the same,
+     * with rigid wall positions in two z coordinates instead of a second node position.
+     */
 	int nPositive=nodesPackingToPositiveSurface.size();
 	int nNegative=nodesPackingToNegativeSurface.size();
 	double sigmoidSaturation = sigmoidSaturationForPacking;
@@ -6716,63 +7029,62 @@ void Simulation::manualAdhesion(int masterNodeId,int slaveNodeId){
 }
 
 bool Simulation::isAdhesionAllowed(int masterNodeId, int slaveNodeId){
-	//if node has an ongoing movement due to staged collapse, do not adhere further:
+    /**
+     * Two nodes are being attempted to adhere. Certain criteria must be met before operation
+     * can proceed. \n
+     * If any of the nodes is already in the process of being moved due to an adhesion collapse
+     * a new adhesion cannot be formed at this step.
+     */
 	if(Nodes[slaveNodeId]->positionUpdateOngoing || Nodes[masterNodeId]->positionUpdateOngoing){
-		//do not adhere columnar to peripodial sections
-		//cout<<"position update ongoing"<<endl;
 		return false;
 	}
-	//Do not adhere element at circumference, they have further limitations on them in most cases
+    /**
+     * The nodes must be of the same tissue type, peripodial elements cannot bind to columner elements.
+     */
 	if(Nodes[slaveNodeId]->tissueType != Nodes[masterNodeId]->tissueType){
-		//do not adhere columnar to peripodial sections
-		//cout<<"tissue types different!"<<endl;
 		return false;
 	}
-	//the ecm mimicking nodes at the circumference should only adhere to other circumrefernce nodes
-	//otherwise, the thin nodes will adhere to nodes further away. This is to allow for adhesion of two outer surfaces on the lateral side.
+    /**
+     * The nodes at circumference can only adhere with each other, there are biological resoans with the structure of the matrix for this.
+     */
 	if(  (Nodes[slaveNodeId]->atCircumference && !Nodes[masterNodeId]->atCircumference)
 		||(!Nodes[slaveNodeId]->atCircumference && Nodes[masterNodeId]->atCircumference) )
 	{
-		//cout<<"one is circumferential other is not"<<endl;
 		return false;
 	}
-	//do not adhere lateral elements, they are too thin in most cases.
-	//if(Nodes[slaveNodeId]->hasLateralElementOwner || Nodes[masterNodeId]->hasLateralElementOwner){
-	//	continue;
-	//}
-	//one to one adhesion is linked to collapse now, if I dont have collapse, I dont limit to one-to-one adhesion
+   /**
+	 * If the nodes are collapsed on adhesion, then the adhesion can only be one to one, and an alrady adhered node
+	 * cannot adhere a another node. The default adhesion id is "-1" indicating no adhesion.
+	 */
 	if(collapseNodesOnAdhesion){
 		if (Nodes[slaveNodeId]->adheredTo > -1 || Nodes[masterNodeId]->adheredTo > -1) {
-			//cout<<"one is already adhered"<<endl;
 			return false;
 		}
 	}
-	//Need to check these again as the lists are updated since the last step
-	//check if the master node is in the collapsed list?
+    /**
+     * If this couple have already been adhered, no need to continue the operation. This is done by checking the
+     * slave node id in the list of collapsed nodes for master id (Node#collapsedWith)
+     */
 	if (binary_search(Nodes[masterNodeId]->collapsedWith.begin(), Nodes[masterNodeId]->collapsedWith.end(),slaveNodeId)){
-		//the couple is already collapsed:
-		//cout<<"Master/slave couple: "<<masterNodeId<<"/"<<slaveNodeId<<" already collapsed"<<endl;
-		//cout<<"master node is in the collapsed list"<<endl;
+		//std::cout<<"Master/slave couple: "<<masterNodeId<<"/"<<slaveNodeId<<" already collapsed"<<std::endl;
 		return false;
 	}
-	//does this node belong to a neighbour element of mine?
+    /**
+     * If this node couple belong to neightbouring elements, do not collapse.
+     */
 	bool nodeIsOnNeigElement = areNodesOnNeighbouingElements(masterNodeId,slaveNodeId);
 	if (nodeIsOnNeigElement){
-		//cout<<"node are neighbours"<<endl;
 		return false;
 	}
 	bool collapedNodeIsNeig = false;
-	//check if the collapsed nodes of master are neigs of slave
 	collapedNodeIsNeig = Nodes[masterNodeId]->isNeigWithMyCollapsedNodes(slaveNodeId,Nodes);
 	if (collapedNodeIsNeig){
-		//cout<<"Master/slave couple: "<<masterNodeId<<"/"<<slaveNodeId<<" already neig (masters collapsed is neig of slave)"<<endl;
-		//cout<<"node are collapsed with neighbours (master)"<<endl;
+		//std::cout<<"Master/slave couple: "<<masterNodeId<<"/"<<slaveNodeId<<" already neig (masters collapsed is neig of slave)"<<std::endl;
 		return false;
 	}
 	collapedNodeIsNeig = Nodes[slaveNodeId]->isNeigWithMyCollapsedNodes(masterNodeId,Nodes);
 	if (collapedNodeIsNeig){
-		//cout<<"Master/slave couple: "<<masterNodeId<<"/"<<slaveNodeId<<" already neig (slaves collapsed is neig of master)"<<endl;
-		//cout<<"node are collapsed with neighbours (slave)"<<endl;
+		//std::cout<<"Master/slave couple: "<<masterNodeId<<"/"<<slaveNodeId<<" already neig (slaves collapsed is neig of master)"<<std::endl;
 		return false;
 	}
 	return true;
@@ -6787,18 +7099,19 @@ double Simulation::distanceSqBetweenNodes(int id0, int id1){
 }
 
 bool Simulation::checkForElementFlippingUponNodeCollapse(vector<int> &newCollapseList, double* avrPos){
-	//check for element flipping after adhesion collapse:
-	//loop over elements:
+    /**
+     * If the collapse of two nodes will move the nodes (there is collapse) the owner elemetns are first checked to see if
+     * this movement will cause element flipping. The adhesion is avoided if it will.
+     */
 	int nCollapsedList = newCollapseList.size();
 	bool elementWillCollapse = false;
 	for (int nodeIterator=0; nodeIterator<nCollapsedList;++nodeIterator){
 		int currNodeId = newCollapseList[nodeIterator];
 		int nElements=  Nodes[currNodeId]->connectedElementIds.size();
 		for (int i=0; i<nElements;++i){
-			//cout<<"checking element : "<< Nodes[currNodeId]->connectedElementIds[i]<<" from node : "<< currNodeId<<endl;
 			elementWillCollapse = Elements[Nodes[currNodeId]->connectedElementIds[i]]->isElementFlippedInPotentialNewShape(currNodeId, avrPos[0], avrPos[1], avrPos[2]);
 			if (elementWillCollapse){
-				cout<<" element "<<Nodes[currNodeId]->connectedElementIds[i]<<" will flip if adhered"<<endl;
+				sd::cout<<" element "<<Nodes[currNodeId]->connectedElementIds[i]<<" will flip if adhered"<<std::endl;
 				return false;
 			}
 		}
@@ -6841,30 +7154,33 @@ void Simulation::updatePositionsOfNodesCollapsingInStages(){
 }
 
 bool Simulation::adhereNodes(){
-	for(vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-		 (*itNode)->clearDuplicatesFromCollapseList();
+	for(const auto& itNode : Nodes){
+		 itNode->clearDuplicatesFromCollapseList();
 	}
-	int n = pacingNodeCouples0.size();
+	size_t n = pacingNodeCouples0.size();
 	int dim = 3;
 	bool thereIsBinding = false;
 	vector<bool> adhesionAllowedList;
 	//I am constructing a list to track if the adhesion between the recorded couples would be allowed
-	for(int nodeCoupleIterator = 0 ; nodeCoupleIterator<n; ++nodeCoupleIterator){
+    /**
+     * The node couples identified as potentially packing to each other Simulation#pacingNodeCouples0 and Simulation#pacingNodeCouples1
+     * are checked for adhesion. First if the adhesion between the pair is feasible is checked via Simulation#isAdhesionAllowed and recorded in a
+     * vector (adhesionAllowedList).
+     */
+	for(size_t nodeCoupleIterator = 0 ; nodeCoupleIterator<n; ++nodeCoupleIterator){
 		bool adhesionAllowed = isAdhesionAllowed(pacingNodeCouples0[nodeCoupleIterator], pacingNodeCouples1[nodeCoupleIterator]);
 		adhesionAllowedList.push_back(adhesionAllowed);
-		//cout<<" pair : "<<pacingNodeCouples0[nodeCoupleIterator]<<" "<<pacingNodeCouples1[nodeCoupleIterator]<<" adhesion feasible? "<<adhesionAllowed<<endl;
 	}
-	for(int nodeCoupleIterator = 0 ; nodeCoupleIterator<n; ++nodeCoupleIterator){
+	for(size_t nodeCoupleIterator = 0 ; nodeCoupleIterator<n; ++nodeCoupleIterator){
 		if (!adhesionAllowedList[nodeCoupleIterator]){
-			//cout<<" pair : "<<pacingNodeCouples0[nodeCoupleIterator]<<" "<<pacingNodeCouples1[nodeCoupleIterator]<<" adhesion not feasible"<<endl;
 			continue;
 		}
-		//cout<<" checking pair for adhesion : "<<pacingNodeCouples0[nodeCoupleIterator]<<" "<<pacingNodeCouples1[nodeCoupleIterator]<<endl;
 		int masterNodeId = pacingNodeCouples0[nodeCoupleIterator];
 		int slaveNodeId = pacingNodeCouples1[nodeCoupleIterator];
-		//Is there a closer pair for any of the selected master and slave?
-		//I will not allow multi-pair adhesion if there is collapse, therefore I need to check the closest if possible
 		if (collapseNodesOnAdhesion){
+            /**
+             * If the adhesion collapses nodes, then the adhesion is one-to-one, and should be carried out between the closest couples.
+             */
 			for (int nodeCoupleIteratorFromHereOn = nodeCoupleIterator+1; nodeCoupleIteratorFromHereOn<n; ++nodeCoupleIteratorFromHereOn){
 				if (masterNodeId == pacingNodeCouples0[nodeCoupleIteratorFromHereOn] ||
 					masterNodeId == pacingNodeCouples1[nodeCoupleIteratorFromHereOn] ||
@@ -6873,63 +7189,51 @@ bool Simulation::adhereNodes(){
 					){
 					//one of the node couples occurs somewhere else, is this occurance viable?
 					if (adhesionAllowedList[nodeCoupleIteratorFromHereOn]){
+						/**
+						 * If the adhesion is allowed for this pair, then all the coming pairs are checked to see if there is a pair involving these two
+						 * nodes that is closer then this one.
+						 */
 						//yes this adhesion is possible, compare distances:
 						double dSqOriginal = distanceSqBetweenNodes(masterNodeId, slaveNodeId);
 						double dSqNext = distanceSqBetweenNodes(pacingNodeCouples0[nodeCoupleIteratorFromHereOn],pacingNodeCouples1[nodeCoupleIteratorFromHereOn]);
 						cout<<"two occurrences, distances are: "<<dSqOriginal<<" "<<dSqNext<<endl;
 						if (dSqNext < dSqOriginal){
 							//the next couple I will reach is closer, adhere them (or another one that may be further down the list and even closer)
+                            /**
+                             * If a consequent pair I will reach is closer, they should be adhered (or they will also be surpassed by yet another
+                             * closer pair). Declare this pari cannot adhere, and continue.
+                             */
 							adhesionAllowedList[nodeCoupleIterator] = false;
 							cout<<"I will adhere the next pair";
 							break;
 						}
 						else{
+							/**
+							* Alternatively, if a consequent pair is further away, then they should be flagged as not feasible to avoid
+							* re-calculation. The current pair will be adhered and there will be no need to check the following one. \n
+							*/
 							//this couple is further away than my original couple, adhere my original, this is not viable any more
 							adhesionAllowedList[nodeCoupleIteratorFromHereOn] = false;
-							cout<<"I will adhere this pair";
 						}
 					}
 				}
 			}
-			//I may have decided to check the next adhesion couple first, this one is eliminated this time
 			if (!adhesionAllowedList[nodeCoupleIterator]){
 				continue;
 			}
 		}
-
-		//check if collapse is feasible from elements perspective, i.e. will any element flip if I move the node(s)
-		bool isAdhesionCollapseFeasible = true;
+        /**
+         * If the current pair is still adhering, then the average position in the middle will be calculated and the nodes will be collapsed.
+         */
 		if (collapseNodesOnAdhesion){
 			vector<int> newCollapseList;
 			double* avrPos = new double[3];
 			bool* fix = new bool[3];
 			Nodes[slaveNodeId]->getNewCollapseListAndAveragePos(newCollapseList, avrPos, fix,Nodes, masterNodeId);
-			isAdhesionCollapseFeasible = checkForElementFlippingUponNodeCollapse(newCollapseList, avrPos);
-			/*if (isAdhesionCollapseFeasible){
-				//Adhering the nodes
-				Nodes[slaveNodeId]->adheredTo = masterNodeId;
-				Nodes[masterNodeId]->adheredTo = slaveNodeId;
-				//collapse nodes if needed
-				if (collapseNodesOnAdhesion){
-					Nodes[slaveNodeId]->collapseOnNode(newCollapseList, avrPos, fix,Nodes, masterNodeId);
-				}
-			}
-			delete[] avrPos;
-			delete[] fix;
-			if (!isAdhesionCollapseFeasible){
-				cout<<"adhesion would cause element flipping, no adhesion"<<endl;
-				adhesionAllowedList[nodeCoupleIterator] = false;
-				continue;
-			}*/
 			Nodes[slaveNodeId]->adheredTo = masterNodeId;
 			Nodes[masterNodeId]->adheredTo = slaveNodeId;
 			if (collapseNodesOnAdhesion){
-				//if (isAdhesionCollapseFeasible){
-				//	Nodes[slaveNodeId]->collapseOnNode(newCollapseList, avrPos, fix,Nodes, masterNodeId);
-				//}
-				//else{
-					Nodes[slaveNodeId]->collapseOnNodeInStages(newCollapseList, avrPos, fix,Nodes, masterNodeId);
-				//}
+				Nodes[slaveNodeId]->collapseOnNodeInStages(newCollapseList, avrPos, fix,Nodes, masterNodeId);
 			}
 			delete[] avrPos;
 			delete[] fix;
@@ -6939,8 +7243,13 @@ bool Simulation::adhereNodes(){
 			Nodes[slaveNodeId]->adheredTo = masterNodeId;
 			Nodes[masterNodeId]->adheredTo = slaveNodeId;
 		}
+        /**
+         * The pair will be flagged as adhered in Simulation#pacingNodeCouplesHaveAdhered, and packing forces will not be calculated for them.
+         */
 		pacingNodeCouplesHaveAdhered[nodeCoupleIterator] = true;
-		//cout<<"after main checks"<<endl;
+        /**
+         * If any of the pair have fixed dimensions, this will be reflected on the other.
+         */
 		for (int i =0 ; i<3; ++i){
 			//if the dimension is fixed in space, fix the other and move on.
 			if (Nodes[masterNodeId]->FixedPos[i]){
@@ -6953,34 +7262,44 @@ bool Simulation::adhereNodes(){
 			if (!Nodes[slaveNodeId]->FixedPos[i]){
 				int dofmaster = masterNodeId*dim+i;
 				int dofslave  = slaveNodeId*dim+i;
-				//if slave is already slave of another node
-				//   make the master of the slave the new slave
-				//   algorithm will take care of the rest.
+                /**
+                 * If the slave is alrady slave to another node (Node#slaveTo is not set to -1, the default non-slave indice), then the master of this processed couple is set to
+                 * be the slave of the existing master of the slave, and all three degree of freedoms are bound to each other.
+                 */
 				if (Nodes[slaveNodeId]->slaveTo[i] > -1){
-					//Current slave has a master. If this master is the current master, or the master of current master, than dont do anything, all is fine:
+					/**
+					* One possiblity is that the potential slave is already a slave to the potential master, then nothing is needed to be done.
+					*/
 					if(Nodes[slaveNodeId]->slaveTo[i] == masterNodeId || Nodes[slaveNodeId]->slaveTo[i] == Nodes[masterNodeId]->slaveTo[i] ){
 						pacingNodeCouplesHaveAdhered[nodeCoupleIterator] = true;
-						//cout<<" eliminated, same numbers"<<endl;
 						continue;
 					}
 					dofslave = Nodes[slaveNodeId]->slaveTo[i]*dim+i;
 					slaveNodeId = Nodes[slaveNodeId]->slaveTo[i];
 				}
-				//check if the master dof is already bound to something:
-				//cout<<"check master update"<<endl;
+                /**
+                 * If the potential master node is already a slave to another node, then the potential master is moved to
+                 * the original master of the potential master DoF in function NewtonRaphsonSolver#checkMasterUpdate.
+                 */
 				NRSolver->checkMasterUpdate(dofmaster,masterNodeId);
-				//It may have been that the slave was the master of the master node.
-				//Now I have updated the master to the slave, and they are equal.
-				//I do not need to add anything, as the master-slave relation is already implemented.
-				//cout<<"DOF not fixed, after master update   : "<<dofmaster<<" "<<dofslave<<endl;
+				/**
+				* In this last check point, if the original couple was flipped such that the potential master vas the slave of the potential slave,
+				* then now both master and slave nodes are equal to the initial potential slave id ( as it has been the master prior to this step).
+				* Then again, nothing needs to be implemented, slave master coupling is already in place.
+				*/
 				if (dofmaster != dofslave){
 					bool continueAddition =  NRSolver->checkIfCombinationExists(dofslave,dofmaster);
-					//cout<<"DOF not fixed, continueAddition? : "<<continueAddition<<endl;
 					if (continueAddition){
+                        /**
+                         * If the couple is not implemented, then the check for the status of the slave is carried out, if the slave is already master of
+                         * other nodes, the coupling is checked and corrected in function NewtonRaphsonSolver#checkIfSlaveIsAlreadyMasterOfOthers. If the
+                         * function updates the node couple, then the potential slave was a master, and now is a slave to the potential master.
+                         * All slaves of the potential master are moved on to the potential master. \n
+                         */
 						bool madeChange = NRSolver->checkIfSlaveIsAlreadyMasterOfOthers(dofslave,dofmaster);
 						if (madeChange){
 							size_t nodeSize = Nodes.size();
-							for (int nodeIt = 0 ; nodeIt<nodeSize; ++nodeIt){
+							for (size_t nodeIt = 0 ; nodeIt<nodeSize; ++nodeIt){
 								if(Nodes[nodeIt]->slaveTo[i]==slaveNodeId){
 									Nodes[nodeIt]->slaveTo[i]=masterNodeId;
 								}
@@ -7218,15 +7537,11 @@ void Simulation::calculatePackingJacobian3D(gsl_matrix* K){
 		gsl_matrix_add(dFidXi,norm_normT); // sigmoid/d * (I - norm*norm^T) + norm*norm^T * dSdXi
 		gsl_matrix_scale(dFidXi,multiplier * averageMass); //scale by mass and multiplier when needed
 
-		//dFidxi = -dFidxj
-		//dFj/dxj = dFidxi = -dFj/dxi
-
 		bool printForces = false;
 		if (printForces){
 			cout<<" id0-id1: "<<id0<<endl;
 			Elements[0]->displayMatrix(dFidXi,"dFidXi");
 		}
-		//bool printForces = true;
 		/**
 		 * - Add the resulting 3 by 3 derivative matrices are added into the Jacobian in the form:
 		 * \f[
@@ -7333,84 +7648,6 @@ void Simulation::calculatePackingNumerical(gsl_matrix* K){
 		value -= dgczz;
 		gsl_matrix_set(K,3*id1+2,3*id0+2,value);
 
-		/*
-		double value = gsl_matrix_get(K,3*id0,3*id0);
-		value +=dgcxx;
-		gsl_matrix_set(K,3*id0,3*id0,value);
-		//y_i y_i
-		value = gsl_matrix_get(K,3*id0+1,3*id0+1);
-		value +=dgcyy;
-		gsl_matrix_set(K,3*id0+1,3*id0+1,value);
-		//z_i z_i
-		value = gsl_matrix_get(K,3*id0+2,3*id0+2);
-		value +=dgczz;
-		cout<<"K matrix 92,92: "<<gsl_matrix_get(K,92,92)<<endl;
-		gsl_matrix_set(K,3*id0+2,3*id0+2,value);
-		cout<<"K matrix 92,92: "<<gsl_matrix_get(K,92,92)<<endl;
-		//x_i y_i  
-		value = gsl_matrix_get(K,3*id0,3*id0+1);
-		value +=dgcxy;
-		gsl_matrix_set(K,3*id0,3*id0+1,value);
-		//y_i x_i
-		value = gsl_matrix_get(K,3*id0+1,3*id0);
-		value +=dgcyx;
-		gsl_matrix_set(K,3*id0+1,3*id0,value);
-		//x_i z_i  
-		value = gsl_matrix_get(K,3*id0,3*id0+2);
-		value +=dgcxz;
-		gsl_matrix_set(K,3*id0,3*id0+2,value);
-		//z_i x_i
-		value = gsl_matrix_get(K,3*id0+2,3*id0);
-		value +=dgczx;
-		gsl_matrix_set(K,3*id0+2,3*id0,value);
-		//y_i z_i  
-		value = gsl_matrix_get(K,3*id0+1,3*id0+2);
-		value +=dgcyz;
-		gsl_matrix_set(K,3*id0+1,3*id0+2,value);
-		//z_i y_i
-		value = gsl_matrix_get(K,3*id0+2,3*id0+1);
-		value +=dgczy;
-		gsl_matrix_set(K,3*id0+2,3*id0+1,value);
-
-		cout<<"K matrix 92,92: before adding to slave "<<gsl_matrix_get(K,92,92)<<endl;
-		//add the negative values to the slave:
-		//x_i x_slave
-		value = gsl_matrix_get(K,3*id0,3*id1);
-		value -=dgcxx;
-		gsl_matrix_set(K,3*id0,3*id1,value);
-		//y_i y_slave
-		value = gsl_matrix_get(K,3*id0+1,3*id1+1);
-		value -=dgcyy;
-		gsl_matrix_set(K,3*id0+1,3*id1+1,value);
-		//z_i z_slave
-		value = gsl_matrix_get(K,3*id0+2,3*id1+2);
-		value -=dgczz;
-		gsl_matrix_set(K,3*id0+2,3*id1+2,value);
-		//x_i y_slave  
-		value = gsl_matrix_get(K,3*id0,3*id1+1);
-		value -=dgcxy;
-		gsl_matrix_set(K,3*id0,3*id1+1,value);
-		//y_i x_slave
-		value = gsl_matrix_get(K,3*id0+1,3*id1);
-		value -=dgcyx;
-		gsl_matrix_set(K,3*id0+1,3*id1,value);
-		//x_i z_slave  
-		value = gsl_matrix_get(K,3*id0,3*id1+2);
-		value -=dgcxz;
-		gsl_matrix_set(K,3*id0,3*id1+2,value);
-		//z_i x_slave
-		value = gsl_matrix_get(K,3*id0+2,3*id1);
-		value -=dgczx;
-		gsl_matrix_set(K,3*id0+2,3*id1,value);
-		//y_i z_slave  
-		value = gsl_matrix_get(K,3*id0+1,3*id1+2);
-		value -=dgcyz;
-		gsl_matrix_set(K,3*id0+1,3*id1+2,value);
-		//z_i y_slave
-		value = gsl_matrix_get(K,3*id0+2,3*id1+1);
-		value -=dgczy;
-		gsl_matrix_set(K,3*id0+2,3*id1+1,value);
-*/
 	}
 }
 
@@ -7440,13 +7677,6 @@ void Simulation::calculatePackingK(gsl_matrix* K){
 		 double ddx = dx / d;
 		 double ddy = dy / d;
 		 double ddz = dz / d;
-
-		 //double dgcxx = ( -1.0 * c /tp *p *dp /d * ddx) * dx/d + (c * (1 - dp/tp)) * ( 1.0 / d - dx /d/d * ddx );
-		 //double dgcxy = ( -1.0 * c /tp *p *dp /d * ddy) * dx/d - (c * (1 - dp/tp)) * dx /d/d * ddy;
-		 //double dgcxz = ( -1.0 * c /tp *p *dp /d * ddz) * dx/d - (c * (1 - dp/tp)) * dx /d/d * ddz;
-		 //double dgcyy = ( -1.0 * c /tp *p *dp /d * ddy) * dy/d + (c * (1 - dp/tp)) * (1.0 / d - dy /d/d * ddy);
-		 //double dgcyz = ( -1.0 * c /tp *p *dp /d * ddz) * dy/d - (c * (1 - dp/tp)) * dy /d/d * ddz;
-		 //double dgczz = ( -1.0 * c /tp *p *dp /d * ddz) * dz/d + (c * (1 - dp/tp)) * (1.0 / d - dz /d/d * ddz);
 
 		 double dgcxx = (-1.0 * c/d/d * ddx - (p-1)/tp*dp/d/d*ddx) * dx + c/d*(1.0 + dp/tp);
 		 double dgcxy = (-1.0 * c/d/d * ddy - (p-1)/tp*dp/d/d*ddy) * dx;
@@ -7527,12 +7757,6 @@ void Simulation::calculatePackingK(gsl_matrix* K){
 }
 
 void Simulation::processDisplayDataAndSave(){
-    //if (displayIsOn && !DisplaySave){
-        //The simulation is not displaying a saved setup, it is running and displaying
-        //I need to correct the values to be displayed, and store averages, otherwise
-        //the displayed values will be from artificial setups of different RK steps. (RK1 or RK4 depending on parameter)
-        //updateDisplaySaveValuesFromRK();
-    //}
 	if (saveData && ( (int) (currSimTimeSec/dt) )% dataSaveInterval == 0){ //timestep % dataSaveInterval == 0){
 		saveStep();
     }
@@ -7590,6 +7814,8 @@ void Simulation::fillInNodeNeighbourhood(){
 }
 
 void Simulation::setBasalNeighboursForApicalElements(){
+    /** The basal neighbours are set with ShapeBase#setBasalNeigElementId function.
+     */
 	const int maxThreads = omp_get_max_threads();
 	omp_set_num_threads(maxThreads);
 	#pragma omp parallel for //private(Nodes, displacementPerDt, recordForcesOnFixedNodes, FixedNodeForces, outputFile, dt)
@@ -7735,6 +7961,11 @@ void Simulation::detectPackingToAFMBead(){
 }
 
 void Simulation::detectPacingToEnclosingSurfacesNodes(){
+    /**
+     * The current disctance of packing surfaces are stored in Simulation#zEnclosementBoundaries. The z distance of
+     * nodes to these surfaces are checked against the threshold for packing detection Simulation#packingDetectionToEnclosingSurfacesThreshold.
+     * The actual forces of packing are not calculate4d here, this is for detection of potentially packing nodes.
+     */
 	packingToEnclosingSurfacesThreshold = 3;  //pack to the boundary at 3 microns distance
 	packingDetectionToEnclosingSurfacesThreshold = 1.2 * packingToEnclosingSurfacesThreshold;
 	double t2 = packingDetectionToEnclosingSurfacesThreshold*packingDetectionToEnclosingSurfacesThreshold;	//threshold square for rapid calculation
@@ -7759,7 +7990,7 @@ void Simulation::detectPacingToEnclosingSurfacesNodes(){
 		zEnclosementBoundaries[1] = initialZEnclosementBoundaries[1] + currTimeDiff*zPosDifference / totalTime;
 
 	}
-	cout<<"curr time in sec: "<<currSimTimeSec<<" z enclosement boundaries: "<<zEnclosementBoundaries[0]<<" "<<zEnclosementBoundaries[1]<<" initial boundaries: "<<initialZEnclosementBoundaries[0]<<" "<<initialZEnclosementBoundaries[1]<<" final boundaries: "<<finalZEnclosementBoundaries[0]<<" "<<finalZEnclosementBoundaries[1]<<endl;
+	std::cout<<"curr time in sec: "<<currSimTimeSec<<" z enclosement boundaries: "<<zEnclosementBoundaries[0]<<" "<<zEnclosementBoundaries[1]<<" initial boundaries: "<<initialZEnclosementBoundaries[0]<<" "<<initialZEnclosementBoundaries[1]<<" final boundaries: "<<finalZEnclosementBoundaries[0]<<" "<<finalZEnclosementBoundaries[1]<<std::endl;
 
 	//go over nodes to detect packing:
 	for (vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
@@ -7820,12 +8051,16 @@ void Simulation::detectPacingToEnclosingSurfacesNodes(){
 
 void 	Simulation::assignFoldRegionAndReleasePeripodial(Node* NodeMaster, Node* NodeSlave ){
 	int nDim  = 3;
-	int masterXGridIndex = floor( (NodeMaster->Position[0] - boundingBox[0][0])/boundingBoxSize[0] );
-	int masterYGridIndex = floor( (NodeMaster->Position[1] - boundingBox[0][1])/boundingBoxSize[1] );
-
+	size_t masterXGridIndex = floor( (NodeMaster->Position[0] - boundingBox[0][0])/boundingBoxSize[0] );
+	size_t masterYGridIndex = floor( (NodeMaster->Position[1] - boundingBox[0][1])/boundingBoxSize[1] );
+    /**
+     * If two nodes are adhered they are on an indenting surface and therefore on a fold initiation surface.
+     * The Node#onFoldInitiation booleans are set to true. Then all the nodes falling in between these two nodes
+     * are also declared to be on fold initiation.
+     */
 	NodeMaster->onFoldInitiation = true;
 	NodeSlave->onFoldInitiation = true;
-	//cout<<"assigning to fold initiation, nodes "<<(*itNode)->Id <<" and "<<(*itNodeSlave)->Id<<endl;
+	//std::cout<<"assigning to fold initiation, nodes "<<(*itNode)->Id <<" and "<<(*itNodeSlave)->Id<<std::endl;
 	//check for other nodes in the vicinity:
 	//if I am on the apical side, I will check the borders from basal sides
 	//If I am on the basal side, I will chack from apical sides:
@@ -7871,10 +8106,6 @@ void 	Simulation::assignFoldRegionAndReleasePeripodial(Node* NodeMaster, Node* N
 	double xmax = max(masterCorrespondingX, slaveCorrespoindingX);
 	double ymin = min(masterCorrespondingY, slaveCorrespoindingY);
 	double ymax = max(masterCorrespondingY, slaveCorrespoindingY);
-	//double xmin = min((*itNode)->Position[0], (*itNodeSlave)->Position[0]);
-	//double xmax = max((*itNode)->Position[0], (*itNodeSlave)->Position[0]);
-	//double ymin = min((*itNode)->Position[1], (*itNodeSlave)->Position[1]);
-	//double ymax = max((*itNode)->Position[1], (*itNodeSlave)->Position[1]);
 	double zmax = max(NodeMaster->Position[2], NodeSlave->Position[2]);
 	double zmin = min(NodeMaster->Position[2], NodeSlave->Position[2]);
 	ymin -= 4.0*packingDetectionThresholdGrid[masterXGridIndex][masterYGridIndex];
@@ -7923,6 +8154,10 @@ void 	Simulation::assignFoldRegionAndReleasePeripodial(Node* NodeMaster, Node* N
 
 
 void Simulation::detectPacingNodes(){
+    /**
+     * The current distance of node-node packing is dependent on the local average side length and
+     * is sored in a 10x5 grid Simulation#packingDetectionThresholdGrid.
+     */
 	double periAverageSideLength = 0,colAverageSideLength = 0;
 	getAverageSideLength(periAverageSideLength, colAverageSideLength);
 
@@ -8111,29 +8346,19 @@ void Simulation::detectPacingNodes(){
 }
 
 void Simulation::addPackingForces(gsl_matrix* gExt){
+    /**
+     * The packing forces calculated in Simulation#calculatePackingForcesImplicit3D are added to the
+     * system force vector. The vector containd all dimensions of all nodes in one column, therefore indexing is carried out
+     * accordingly.
+     */
 	double sumPack[3] = {0.0,0.0,0.0};
-	//double sumPackPre[3] = {0.0,0.0,0.0};
-	//double sumAv[3] = {0.0,0.0,0.0};
-	//double sumgExt[3] = {0.0,0.0,0.0};
-	//cout<<"in add packing forces"<<endl;
 	for (int j=0; j<nNodes; ++j){
-		//cout<<"calculating node: "<<j<<" of "<<nNodes<<endl;
-		//double Fx = 0.333* ( PackingForces[j][0] + PackingForcesPreviousStep[j][0] + PackingForcesTwoStepsAgoStep[j][0] );
-		//double Fy = 0.333* ( PackingForces[j][1] + PackingForcesPreviousStep[j][1] + PackingForcesTwoStepsAgoStep[j][1] );
-		//double Fz = 0.333* ( PackingForces[j][2] + PackingForcesPreviousStep[j][2] + PackingForcesTwoStepsAgoStep[j][2] );
 		double Fx = PackingForces[j][0];
 		double Fy = PackingForces[j][1];
 		double Fz = PackingForces[j][2];
 		sumPack[0] += PackingForces[j][0];
-		//sumPackPre[0] += PackingForcesPreviousStep[j][0];
-		//sumAv[0] += Fx;
 		sumPack[1] += PackingForces[j][1];
-		//sumPackPre[1] += PackingForcesPreviousStep[j][1];
-		//sumAv[1] += Fy;
 		sumPack[2] += PackingForces[j][2];
-		//sumPackPre[2] += PackingForcesPreviousStep[j][2];
-		//sumAv[2] += Fz;
-		//cout<<"node: "<<j<<" after summation"<<endl;
 		int indice = j*3;
 		Fx += gsl_matrix_get(gExt,indice,0);
 		gsl_matrix_set(gExt,indice,0,Fx);
@@ -8141,12 +8366,7 @@ void Simulation::addPackingForces(gsl_matrix* gExt){
 		gsl_matrix_set(gExt,indice+1,0,Fy);
 		Fz += gsl_matrix_get(gExt,indice+2,0);
 		gsl_matrix_set(gExt,indice+2,0,Fz);
-		//sumgExt[0] += gsl_matrix_get(gExt,indice,0);
-		//sumgExt[1] += gsl_matrix_get(gExt,indice+1,0);
-		//sumgExt[2] += gsl_matrix_get(gExt,indice+2,0);
 	}
-	//cout<<" sum pack: "<<sumPack[0]<<" "<<sumPack[1]<<" "<<sumPack[2]<<endl;
-	//cout<<" sum gExt: "<<sumgExt[0]<<" "<<sumgExt[1]<<" "<<sumgExt[2]<<endl;
 }
 
 void Simulation::updateElementPositions(){
@@ -8157,7 +8377,7 @@ void Simulation::updateElementPositions(){
 }
 
 
-void Simulation::updateElementPositionsSingle(int i ){
+void Simulation::updateElementPositionsSingle(size_t i ){
 	Elements[i]->updatePositions(Nodes);
 }
 
@@ -8227,6 +8447,11 @@ void Simulation::assignTips(){
 }
 
 void Simulation::alignTissueDVToXPositive(){
+    /**
+     * The bounding box calculateion is relies on the fact that the tissue is lying parallel to the x axis in its initial long axis.
+     * Bring the long axis defined by Simulation#ventralTipIndex and Simulation#dorsalTipIndex Node#Ids parallel to the x axis with a rigid
+     * body rotation.
+     */
 	if (!symmetricX){
 		double* u = new double[3];
 		double* v = new double[3];
@@ -8235,7 +8460,7 @@ void Simulation::alignTissueDVToXPositive(){
 			u[i] = Nodes[ventralTipIndex]->Position[i] - Nodes[dorsalTipIndex]->Position[i];
 		}
 		//cout<<" ventralTipIndex: "<<ventralTipIndex<<" dorsalTipIndex "<<dorsalTipIndex<<endl;
-		double dummy = Elements[0]->normaliseVector3D(u);
+		(void) = Elements[0]->normaliseVector3D(u);
 		v[0]=1;v[1]=0;v[2]=0;
 		double c, s;
 		Elements[0]->calculateRotationAngleSinCos(u,v,c,s);
@@ -9133,119 +9358,103 @@ void Simulation::calculateGrowthRing(GrowthFunctionBase* currGF){
 }
 
 void Simulation::setUpECMMimicingElements(){
-	for(vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-		(*itNode)->allOwnersECMMimicing = true;
-		//will be cleared in the loop for assigning the ECM mimicking elements
+	/**
+	* First all nodes are assigned as if they are owne explicitly by ECM mimicking elements (Node#allOwnersECMMimicing = true), then
+	* the flags is cleared through the elemtns.
+	*/
+	for(const auto& itNode : Nodes){
+		itNode->allOwnersECMMimicing = true;
 	}
-
-	for(vector<ShapeBase*>::iterator  itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		if ( (*itElement)->tissuePlacement == 0 ){
-			if((*itElement)->tissueType == 0){
-				//basal elements are mimicing the ECM:
-				(*itElement)->setECMMimicing(true);
+	for(const auto& itElement : Elements){
+		if ( itElement->tissuePlacement == 0 ){
+			if(itElement->tissueType == 0){
+                /**
+                 * The basal elements (ShapeBase#tissuePlacement = 0) are ECM, their identity is set accordingly.
+                 */
+				itElement->setECMMimicing(true);
 			}
 		}
-		else if ( (*itElement)->tissuePlacement == 1 ){
-			if((*itElement)->tissueType == 1){
-				//apical elements are mimicing the ECM on peripodial:
-				(*itElement)->setECMMimicing(true);
+		else if ( itElement->tissuePlacement == 1 ){
+			if(itElement->tissueType == 1){
+                /**
+                 * On the peripodial tissue, conversly apical elements  (ShapeBase#tissuePlacement = 1) are ECM.
+                 */
+				itElement->setECMMimicing(true);
 			}
 		}
-		else if ( (*itElement)->tissuePlacement == 2 && (*itElement)->spansWholeTissue ){
-			//elements that  are called mid -line, as they
-			//span the whole tissue, are treated as ECM mimicing
-			(*itElement)->setECMMimicing(true);
+		else if ( itElement->tissuePlacement == 2 && itElement->spansWholeTissue ){
+            /**
+             * If the elements are spanning the whole tissue, (ShapeBase#tissuePlacement = 2), then they are ECM. This
+             * scenario simulates a layer of ECM only, without any cell material.
+             */
+			itElement->setECMMimicing(true);
 		}
 		if (AddPeripodialMembrane){
-			/*double peripodialSideConnectionThickness =PeripodialLateralThicnessScale*TissueHeight; //in microns
-			double ECMThicknessSquare = peripodialSideConnectionThickness*peripodialSideConnectionThickness;
-
-			//element centre
-
-			//If there is no peripodial membrane, I would like to have a circumferential region as ECM as well:
-			//If I am adding peripodial membrane in the simulation (not the sophisticated round shape but simple,
-			//rectangular addition, then I also want to assign the curcumference. Here, I need to ensure the
-			//actin mimicking element attributes are cleared once I assign an element to be ECM,
-			//bool isElementAtCircumference = (*itElement)->areanyOfMyNodesAtCircumference(Nodes);
-			//if (isElementAtCircumference){
-			//	(*itElement)->setECMMimicing(true);
-			//	(*itElement)->isECMMimimcingAtCircumference = true;
-			//	if ((*itElement)->isActinMimicing){
-			//		(*itElement)->setActinMimicing(false);
-			//	}
-			//}
-			double *c = (*itElement)->getCentre();
-			for(vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-				if ( (*itNode)->atCircumference ){
-					//The node is at circumference. Calculate distance of the element to this node.
-					//If The distance is lower than the ECM thickness, then assign the element as
-					//ECM mimicking.
-					double dx = c[0]-(*itNode)->Position[0];
-					double dy = c[1]-(*itNode)->Position[1];
-					double d = dx*dx + dy*dy;
-					if (d<ECMThicknessSquare){
-						(*itElement)->setECMMimicing(true);
-						(*itElement)->isECMMimimcingAtCircumference = true;
-						if ((*itElement)->isActinMimicing){
-							(*itElement)->setActinMimicing(false);
-						}
-						break;
-					}
-				}
-			}
-			delete[] c;*/
-			if ((*itElement)->isECMMimimcingAtCircumference){
+			if (itElement->isECMMimimcingAtCircumference){
 				//I have already assigned this in setting up peripodial membrane
-				(*itElement)->setECMMimicing(true);
-				(*itElement)->isECMMimimcingAtCircumference = true;
-				if ((*itElement)->isActinMimicing){
-					(*itElement)->setActinMimicing(false);
+				itElement->setECMMimicing(true);
+				itElement->isECMMimimcingAtCircumference = true;
+				if (itElement->isActinMimicing){
+					itElement->setActinMimicing(false);
 				}
 			}
 		}
-		if (!(*itElement)->isECMMimicing){
+		if (!itElement->isECMMimicing){
+            /**
+             * At the end of element ECM status update, if the element is NOT part of the ECM, then its nodes are not
+             * owned exclusively by ECM elements, therefore their flag Node#allOwnersECMMimicing is set false.
+             */
 			//the element is not ecm mimicking, its nodes will not be ecm mimicking:
-			int n = (*itElement)->getNodeNumber();
+			int n = itElement->getNodeNumber();
 			int* nodeIds;
-			nodeIds = (*itElement)->getNodeIds();
+			nodeIds = itElement->getNodeIds();
 			for (int i =0; i<n; ++i){
 				Nodes[nodeIds[i]]->allOwnersECMMimicing = false;
 				//cout<<"Node ["<<nodeIds[i]<<" is not ECM mimicking"<<endl;
 			}
 		}
 	}
+    /**
+     * If there is explicit ECM, then all basal elements will be ECM, then I need another marker to identify cell material at he most
+     * basal side, attached to ECM. This is done in Simulation#assigneElementsAtTheBorderOfECM.
+     */
 	assigneElementsAtTheBorderOfECM();
 }
 
 
 void Simulation::assigneElementsAtTheBorderOfECM(){
+    /**
+     * If there is explicit ECM, then all basal elements will be ECM, then I need another marker to identify cell material at he most
+     * basal side, attached to ECM. If an element is ECM, all its nodes are recorded. Then all the elements owning this node, but are not
+     * ECM themselves become new basal elements, and their status is recorded in ShapeBase#atBasalBorderOfECM.
+     */
 	vector<int> nodeListToCheck;
-	for(vector<ShapeBase*>::iterator  itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		if ( (*itElement)->isECMMimicing  && !(*itElement)->isECMMimimcingAtCircumference){ //I do not want to track the elements at the side borders
+	for(const auto& itElement : Elements){
+		if ( itElement->isECMMimicing  && !itElement->isECMMimimcingAtCircumference){ //I do not want to track the elements at the side borders
 			//The element is ECM mimicking. All elements that share nodes with this element, but are
 			//not ECMMimicking themselves, should be treated as basal (or whole tissue spanning) elements:
-			int n = (*itElement)->getNodeNumber();
+			int n = itElement->getNodeNumber();
 			for (int i=0; i<n; ++i){
 				bool alreadyRecorded = false;
 				int nVector = nodeListToCheck.size();
 				for (int j=0 ;j< nVector; ++j){
-					if (nodeListToCheck[j] ==(*itElement)->NodeIds[i] ){
+					if (nodeListToCheck[j] ==itElement->NodeIds[i] ){
 						alreadyRecorded = true;
 						break;
 					}
 				}
 				if (!alreadyRecorded){
-					nodeListToCheck.push_back((*itElement)->NodeIds[i]);
+					nodeListToCheck.push_back(itElement->NodeIds[i]);
 				}
 			}
 		}
 	}
 	int nVector = nodeListToCheck.size();
-	for(vector<ShapeBase*>::iterator  itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		if (!(*itElement)->isECMMimicing && !(*itElement)->atBasalBorderOfECM){
+	for(const auto& itElement : Elements){
+		if (!itElement->isECMMimicing && !itElement->atBasalBorderOfECM){
 			for (int j=0 ;j< nVector; ++j){
-				if ((*itElement)->DoesPointBelogToMe(nodeListToCheck[j])){
-					(*itElement)->atBasalBorderOfECM = true;
+				if (itElement->DoesPointBelogToMe(nodeListToCheck[j])){
+					itElement->atBasalBorderOfECM = true;
 					break;
 				}
 			}
@@ -9254,33 +9463,37 @@ void Simulation::assigneElementsAtTheBorderOfECM(){
 }
 
 void Simulation::assigneElementsAtTheBorderOfActin(){
+    /**
+     * If there is explicit actin, then all apical elements will be actin rich, I want another marker to identify non-actin material
+     * at the most apical (top)  side of the tissue.
+     * If an element is actin rich, all its nodes are recorded. Then all the elements owning this node, but are not
+     * actin-rich themselves become new basal elements, and their status is recorded in ShapeBase#atApicalBorderOfActin.
+     */
 	vector<int> nodeListToCheck;
-	for(vector<ShapeBase*>::iterator  itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		if ( (*itElement)->isActinMimicing  ){
-			//The element is actin mimicking. All elements that share nodes with this element, but are
-			//not ActinMimicing themselves, and are not ECM mimicing, should be treated as basal (or whole tissue spanning) elements:
-			int n = (*itElement)->getNodeNumber();
+	for(const auto& itElement : Elements){
+		if ( itElement->isActinMimicing  ){
+			int n = itElement->getNodeNumber();
 			for (int i=0; i<n; ++i){
 				bool alreadyRecorded = false;
 				int nVector = nodeListToCheck.size();
 				for (int j=0 ;j< nVector; ++j){
-					if (nodeListToCheck[j] ==(*itElement)->NodeIds[i] ){
+					if (nodeListToCheck[j] ==itElement->NodeIds[i] ){
 						alreadyRecorded = true;
 						break;
 					}
 				}
 				if (!alreadyRecorded){
-					nodeListToCheck.push_back((*itElement)->NodeIds[i]);
+					nodeListToCheck.push_back(itElement->NodeIds[i]);
 				}
 			}
 		}
 	}
 	int nVector = nodeListToCheck.size();
-	for(vector<ShapeBase*>::iterator  itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		if (!(*itElement)->isActinMimicing && !(*itElement)->isECMMimicing && !(*itElement)->atBasalBorderOfECM){
+	for(const auto& itElement : Elements){
+		if (!itElement->isActinMimicing && !itElement->isECMMimicing && !itElement->atBasalBorderOfECM){
 			for (int j=0 ;j< nVector; ++j){
-				if ((*itElement)->DoesPointBelogToMe(nodeListToCheck[j])){
-					(*itElement)->atApicalBorderOfActin = true;
+				if (itElement->DoesPointBelogToMe(nodeListToCheck[j])){
+					itElement->atApicalBorderOfActin = true;
 					break;
 				}
 			}
@@ -9289,21 +9502,30 @@ void Simulation::assigneElementsAtTheBorderOfActin(){
 }
 
 void Simulation::setUpActinMimicingElements(){
-	for(vector<ShapeBase*>::iterator  itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		if ( (*itElement)->tissuePlacement == 1 ){
+    /**
+     * All elements on the apical side (ShapeBase#tissuePlacement = 1) are actin-rich elements.
+     */
+	for(const auto& itElement : Elements){
+		if ( itElement->tissuePlacement == 1 ){
 			//apical elements are mimicing actin:
-			if (!(*itElement)->isECMMimimcingAtCircumference){
-				(*itElement)->setActinMimicing(true);
+			if (!itElement->isECMMimimcingAtCircumference){
+				itElement->setActinMimicing(true);
 			}
 		}
-		if ( (*itElement)->tissuePlacement == 2 && (*itElement)->spansWholeTissue ){
-			//elemetns that  are called mid -line, as they
-			//span the whole tissue, are treated as Actin mimicing
-			if (!(*itElement)->isECMMimimcingAtCircumference){
-				(*itElement)->setActinMimicing(true);
+		if ( itElement->tissuePlacement == 2 && itElement->spansWholeTissue ){
+            /**
+             * If the elements are spanning the whole tissue, (ShapeBase#tissuePlacement = 2), then they are actin-rich. This
+             * scenario simulates a layer of actin mesh only, without any softer material.
+             */
+			if (!itElement->isECMMimimcingAtCircumference){
+				itElement->setActinMimicing(true);
 			}
 		}
 	}
+    /**
+     * If there is explicit actin, then all apical elements will be actin rich, I want another marker to identify non-actin material
+     * at the most apical (top)  side of the tissue. This is done via Simulation#assigneElementsAtTheBorderOfActin.
+     */
 	assigneElementsAtTheBorderOfActin();
 }
 
@@ -9402,7 +9624,11 @@ void Simulation::coordinateDisplay(){
 }
 
 void Simulation::setStretch(){
-	cout<<"setting the stretcher"<<endl;
+    /**
+     * The clap orientation is set in Simulation#DVClamp boolean, where if true, the tissue is stretched in x axis, and stretched in
+     * y axis otherwise.
+     */
+	std::cout<<"setting the stretcher"<<std::endl;
 	recordForcesOnFixedNodes = true;
 	for (int i=0;i<3;i++){
 		leftClampForces[i] = 0.0;
@@ -9410,8 +9636,9 @@ void Simulation::setStretch(){
 	}
 	vector <int> clampedNodeIds;
 	double distance = 0;
-
-
+    /**
+     * The initial distance is calculated to set the stretched distance at maximum stretch Simulation#StretchStrain.
+     */
 	if (DVClamp){
 		distance = fabs(Nodes[ventralTipIndex]->Position[0] - Nodes[dorsalTipIndex]->Position[0]);
 		cerr<<"Total DV distance: "<<distance<<" ";
@@ -9422,23 +9649,30 @@ void Simulation::setStretch(){
 		cerr<<"Total AP distance: "<<distance<<" ";
 		distanceIndex = 1; //if the clamp is on AP axis, then the direction of interest is y, index is 1.
 	}
-	for (int i=0; i<nNodes; ++i){
-		if (Nodes[i]->Position[distanceIndex]> StretchMax || Nodes[i]->Position[distanceIndex] < StretchMin){
-			Nodes[i]->FixedPos[0]=1;
-			Nodes[i]->FixedPos[1]=1;
-			Nodes[i]->FixedPos[2]=1;
-			clampedNodeIds.push_back(Nodes[i]->Id);
+    /**
+     * For each node falling under a clamp, their Ids are recorded to move with clamp, their movement is fixed otherwise.
+     */
+	for (const auto& currNode : Nodes){
+		if (currNode->Position[distanceIndex]> StretchMax || currNode->Position[distanceIndex] < StretchMin){
+			currNode->FixedPos[0]=1;
+			currNode->FixedPos[1]=1;
+			currNode->FixedPos[2]=1;
+			clampedNodeIds.push_back(currNode->Id);
 		}
 	}
 	setUpClampBorders(clampedNodeIds);
 	//the distance that is to be moved:
 	distance *= StretchStrain;
-	cerr<<"the distance that is to be moved: "<<distance<<" ";
+    /**
+     * Then with the time steps of stretch identified by the user input, the stretch distance at each time step to move the clamped nodes is
+     * obtained.
+     */
+	std::cout<<"the distance that is to be moved: "<<distance<<" ";
 	//the time steps that the stretch operation should take place in:
 	double StretchTimeSteps = (StretchEndTime - StretchInitialTime)/dt;
-	cerr<<"stretchTimeSteps: "<<StretchTimeSteps<<" ";
+	std::cout<<"stretchTimeSteps: "<<StretchTimeSteps<<" ";
 	StretchDistanceStep = 0.5* (distance / StretchTimeSteps);
-	cerr<<"StretchDistanceStep: "<<StretchDistanceStep<<endl;
+	std::cout<<"StretchDistanceStep: "<<StretchDistanceStep<<std::endl;
 }
 
 void Simulation::setUpClampBorders(vector<int>& clampedNodeIds){
@@ -9565,17 +9799,21 @@ void Simulation::setupPipetteExperiment(){
 	pipetteInnerRadiusSq = pipetteInnerRadius*pipetteInnerRadius;
 	effectLimitsInZ[0] = pipetteCentre[2] - pipetteDepth;
 	effectLimitsInZ[1] = pipetteCentre[2] + pipetteDepth;
-	//Now I set up the upper and lower boundaries to cover both apical and basal suction, but I need to extend the boundary
-	//inside the tube, such that the nodes will not stop being suced in after they go inside a certain length into the tube
-	//This means increasing the upper boundary for apical suction, and reducing the lower boundary for basal suction:
+    /**
+     * When setting the effectiveness boundaries of the suction pipette, the boundary inside the tube needs to be extended,
+     * such that the nodes will not stop being suced in after they go inside a certain length into the tube.
+     * This means increasing the upper boundary for apical suction, and reducing the lower boundary for basal suction.
+     */
 	if(ApicalSuction){
 		effectLimitsInZ[1] += 1000;
 	}
 	else{
 		effectLimitsInZ[0] -= 1000;
 	}
-	//cout<<"set the system, fixing nodes:"<<endl;
     //Now I am sticking the other side of the tissue to a surface
+    /**
+     * If the other side of the tissue is attached to a surface, the nodesa re fixed accordingly.
+     */
 	if (TissueStuckOnGlassDuringPipetteAspiration){
 		if (ApicalSuction){
 			for (int i=0; i<nNodes; ++i){
@@ -9595,7 +9833,7 @@ void Simulation::setupPipetteExperiment(){
 		}
 	}
 }
-
+//to do: delete all myo
 void Simulation::addMyosinForces(gsl_matrix* gExt){
 	vector<ShapeBase*>::iterator itElement;
 	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
@@ -9617,7 +9855,6 @@ void Simulation::addMyosinForces(gsl_matrix* gExt){
 }
 
 void Simulation::addPipetteForces(gsl_matrix* gExt){
-    //cout<<"in add pipette forces, pipette pos: "<<pipetteCentre[0]<<" "<<pipetteCentre[1]<<endl;
 	for (int i=0; i<nPipetteSuctionSteps; ++i){
 		if (currSimTimeSec >= pipetteSuctionTimes[i]){
 			SuctionPressure[2] = pipetteSuctionPressures[i];
@@ -9627,24 +9864,25 @@ void Simulation::addPipetteForces(gsl_matrix* gExt){
 		}
 	}
 	int dim = 3;
-	for (int i=0; i<nNodes; ++i){
-        //cout<<"Node "<<i<<" z pos: "<<Nodes[i]->Position[2]<<" effectLimitsInZ: "<<effectLimitsInZ[0]<<" "<<effectLimitsInZ[1]<<endl;
-		//The node is apical and the suction is apical OR the suction is basal and the node is basal!
-		//Should not fix midline nodes just because they are coming close to the pipette border
+	for (size_t i=0; i<nNodes; ++i){
+        /**
+         * Each node is checked agains the pipette boundaries. If the node is apical and the suction
+         * is apical OR the suction is basal and the node is basal, the position is checked.
+         */
 		if( ( ApicalSuction && Nodes[i]->tissuePlacement == 1) || ( !ApicalSuction && Nodes[i]->tissuePlacement == 0)){
 			if (Nodes[i]->Position[2]> effectLimitsInZ[0] &&  Nodes[i]->Position[2]< effectLimitsInZ[1]){
-				//cout<<"Node "<<i<<" is within z range"<<endl;
 				double dx = pipetteCentre[0] - Nodes[i]->Position[0];
 				double dy = pipetteCentre[1] - Nodes[i]->Position[1];
-				//cout<<"dx: "<<dx<<" dy: "<<dy<<" dx*dx+dy*dy: "<<dx*dx+dy*dy<<endl;
 				double d2 = dx*dx+dy*dy ;
 				if (d2 < pipetteInnerRadiusSq){
-					//cout<<"Node "<<i<<" is within planar range"<<endl;
+                    /**
+                     * The suction pressure of the pipette is applied to the Node#zProjectedArea and added as an
+                     * external force to the nodal force vector.
+                     */
 					double multiplier = 1.0;
 					bool scalePressure = false;
 					if(scalePressure){ multiplier = (1 - d2/pipetteInnerRadiusSq);}
 					double LocalPressure[3] = { multiplier*SuctionPressure[0], multiplier*SuctionPressure[1],multiplier*SuctionPressure[2]};
-					//cout<<"Node: "<<i<<" being sucked into pipette, force: "<<SuctionPressure[0]*Nodes[i]->surface<<" "<<SuctionPressure[1]*Nodes[i]->surface<<" "<<SuctionPressure[2]*Nodes[i]->surface<<endl;
 					//node is within suciton range
 					if(!Nodes[i]->FixedPos[0]){
 						double value = gsl_matrix_get(gExt,i*dim,0);
@@ -9661,7 +9899,6 @@ void Simulation::addPipetteForces(gsl_matrix* gExt){
 						value +=LocalPressure[2]*Nodes[i]->zProjectedArea;
 						gsl_matrix_set(gExt,i*dim+2,0,value);
 					}
-					//Elements[0]->displayMatrix(gExt,"gExtInsidePipetteFunc");
 				}
 			}
 		}
@@ -9669,7 +9906,12 @@ void Simulation::addPipetteForces(gsl_matrix* gExt){
 }
 
 void Simulation::packToPipetteWall(){
-	//Fixing the z-height of nodes near the pipette wall:
+    /**
+     * The current tip of the pipette is defined as the range starting Simulation#pipetteInnerRadius going for Simulation#pipetteThickness, and
+     * the centre of the pipette tip is recorded in Simulation#pipetteCentre. Any node falling within this threshold on the corect surface
+     * can potentially pack to the pipette.
+     *
+     */
 	double pipLim[2] = {0.95*pipetteInnerRadius, 1.2*(pipetteInnerRadius+pipetteThickness)};
 	double pipLim2[2] = {pipLim[0] *pipLim[0], pipLim[1]* pipLim[1]};
 	bool croppedTipPipette = false;
@@ -9680,21 +9922,13 @@ void Simulation::packToPipetteWall(){
 	TransientZFixListForPipette.clear();
 	for (int currId=0; currId<nNodes;currId++){
 		if (Nodes[currId]->FixedPos[2] == 0){
-			//The node is apical and the suction is apical OR the suction is basal and the node is basal!
-			//Should not fix midline nodes just because they are coming close to the pipette border
 			if( ( ApicalSuction && Nodes[currId]->tissuePlacement == 1) || ( !ApicalSuction && Nodes[currId]->tissuePlacement == 0)){
 				bool freezeNodeZ = false;
-				//the node is not already fixed in z
-				//I will check if it is in the range of the tip of pipette:
 				double zLimits[2] = {-2.0,2.0}; //the range in z to freeze nodes
 				double v0[3] = {Nodes[currId]->Position[0]-pipetteCentre[0], Nodes[currId]->Position[1]-pipetteCentre[1], Nodes[currId]->Position[2]-pipetteCentre[2]};
 				if (v0[2] < zLimits[1] && v0[2]> zLimits[0]){
-					//node is in Z range, is it in x-y range?
 					double xydist2 = v0[0]*v0[0]+v0[1]*v0[1];
 					if (xydist2>pipLim2[0] && xydist2<pipLim2[1]){
-						//node is within x-y range,
-						//Now I want to know if I am using cropped pipette tip, and if so,
-						//I will check z limit again:
 						if (croppedTipPipette){
 							double R = pow(xydist2,0.5);
 							double CroppedZAtCurrentR =  zLimits[0] + ((zLimits[1] - zLimits[0])/(pipLim[1] - pipLim[0]) * (R - pipLim[0] ));
@@ -10073,13 +10307,6 @@ void Simulation::assignCompartment(){
 	double b_pouch0 = pouch_p0[1] - m_pouch0 * pouch_p0[0];
 	double m_pouch1 = (pouch_p1[1]-pouch_p2[1])/(pouch_p1[0] - pouch_p2[0]);
 	double b_pouch1 = pouch_p1[1] - m_pouch1 * pouch_p1[0];
-	//cout<<" notum0: "<<notum_p0[0]<<" "<<notum_p0[1]<<endl;
-	//cout<<" notum1: "<<notum_p1[0]<<" "<<notum_p1[1]<<endl;
-	//cout<<" pouch0: "<<pouch_p0[0]<<" "<<pouch_p0[1]<<endl;
-	//cout<<" pouch1: "<<pouch_p1[0]<<" "<<pouch_p1[1]<<endl;
-	//cout<<" pouch2: "<<pouch_p2[0]<<" "<<pouch_p2[1]<<endl;
-	//cout<<" m_notum, b_notum, m_pouch0, b_pouch0, m_pouch1, b_pouch1"<<endl;
-	//cout<< m_notum<<" "<< b_notum<<" "<< m_pouch0<<" "<< b_pouch0<<" "<< m_pouch1<<" "<< b_pouch1<<endl;
 
 	for (vector<ShapeBase*>::iterator itEle = Elements.begin(); itEle<Elements.end(); ++itEle){
 		if ((*itEle) -> tissueType == 0){ //columnar layer
