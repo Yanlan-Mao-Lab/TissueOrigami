@@ -55,7 +55,6 @@ public:
     Prism(int* NodeIds,vector<Node*>& Nodes, int CurrId, bool thereIsPlasticDeformation);	//< constructor
     ~Prism(); //< destructor
     void  setElasticProperties(double EApical, double EBasal, double EMid,  double EECM, double v); ///< This function sets the elastic properties of the prism.
-    void  fillLateralNeighbours(vector<Node*>& Nodes, vector<int>& lateralNeigbours ); //< to do: do i use this?
     void  AlignReferenceBaseNormalToZ();// to do: do i use this?
 
     void  calculateBasalNormal(double * normal);       ///< This function calculates the normal of the basal surface of the element.

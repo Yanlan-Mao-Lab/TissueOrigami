@@ -53,7 +53,6 @@ SOURCES += $$CurrPath/SourceCode/main.cpp \
 	$$CurrPath/../TissueFolding/SourceCode/RandomGenerator.cpp \
 	$$CurrPath/../TissueFolding/SourceCode/NewtonRaphsonSolver.cpp \
 	$$CurrPath/../TissueFolding/SourceCode/Analysis.cpp \
-	$$CurrPath/../TissueFolding/SourceCode/CellMigration.cpp \
 	$$CurrPath/../TissueFolding/SourceCode/Lumen.cpp
 
 #libs and includes for linux for independent license pardiso:

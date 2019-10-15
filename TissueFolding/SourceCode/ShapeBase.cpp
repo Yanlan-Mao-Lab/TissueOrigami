@@ -746,11 +746,6 @@ void 	ShapeBase::readNodeIds(int* inpNodeIds){
 	}
 }
 
-void 	ShapeBase::updateNodeIdsForRefinement(int* inpNodeIds){
-	//TO DO = remove all refinement
-	readNodeIds(inpNodeIds);
-}
-
 void 	ShapeBase::displayName(){
 	/**
 	 *  This function will write the shape type and shape id to standard output.
@@ -877,7 +872,7 @@ void 	ShapeBase::setTissueType(vector<Node*>& Nodes){
 	* elements can contain columnar nodes wehen the mesh does not have linkers. Only when all hte nodes are of columnar type, the element
 	* is columnar.
 	*/
-     	bool hasColumnarNode = false;
+	bool hasColumnarNode = false;
 	bool hasPeripodialNode = false;
 	bool hasLinkerNode = false;
 	for (int i = 0; i<nNodes; ++i){
@@ -955,14 +950,6 @@ void ShapeBase::setYoungsModulus(double E){
 
 void ShapeBase::setViscosity(double viscosity){
 	this -> internalViscosity = viscosity;
-}
-
-void ShapeBase::setCellMigration(bool migratingBool){
-	cellsMigrating = migratingBool;
-}
-
-bool ShapeBase::getCellMigration(){
-	return cellsMigrating;
 }
 
 void ShapeBase::setViscosity(double viscosityApical,double viscosityBasal, double viscosityMid){
@@ -1361,15 +1348,6 @@ void ShapeBase::displayDebuggingMatrices(){
 	displayMatrix(GrowthStrainsRotMat, " GrowthStrainsRotMat");
 	
 }
-
-void ShapeBase::addMigrationIncrementToGrowthIncrement(gsl_matrix* migrationIncrement){
-		//TO DO : delete all migration
-		gsl_matrix* temp1 = gsl_matrix_calloc(3,3);
-		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, migrationIncrement,growthIncrement, 0.0, temp1);
-		gsl_matrix_memcpy(growthIncrement, temp1);
-		gsl_matrix_free( temp1 );
-}
-
 
 double 	ShapeBase::calculateCurrentGrownAndEmergentVolumes(){
 	/** Once the reference volume is calculated, the current prefered volume is obtained by

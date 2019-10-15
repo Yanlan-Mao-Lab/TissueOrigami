@@ -49,7 +49,6 @@ private:
 	bool readECMPerturbation(ifstream& file);				///< This function reads the ECM perturbation options parameters
 	bool readStiffnessPerturbation(ifstream& file);			///< This function reads the stiffness perturbation options parameters
 	bool readApicoBasalVolumeRedistribution(ifstream& file);///< This funciton reads the options for apical-basal volume redistribution
-	bool readCellMigrationOptions(ifstream& file);			///< This function reads cell migration related parameters of the simulation from file.
 	bool readExplicitECMOptions(ifstream& file);			///< This function reads parameters relating to the definitin of an explicit ECM layer.
 	bool readAdhesionOptions(ifstream& file);				///< This function reads the adhesion options
 	bool readNodeCollapseOptions(ifstream& file);			///< This function reads the options for collapsing the nodes

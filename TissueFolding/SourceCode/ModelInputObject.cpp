@@ -183,12 +183,6 @@ bool ModelInputObject::readParameters(){
 				 */
 				Success  = readMarkerEllipseBandOptions(parametersFile);
 			}
-			else if(currParameterHeader == "Cell_Migration:"){
-				/**
-				 * Setting perturbations to ECM, current setup includes softening of apical or basal ECM at a given time point.
-				 */
-				Success  = readCellMigrationOptions(parametersFile);
-			}
 			else if(currParameterHeader == "ExplicitECMOptions:"){
 				/**
 				 * Setting perturbations to ECM, current setup includes softening of apical or basal ECM at a given time point.
@@ -2962,22 +2956,6 @@ bool ModelInputObject::readECMPerturbation(ifstream& file){
 			printErrorMessage(currHeader,"ECM perturbations","changeNotumECM(time,fraction):");
 			return false;
 		}
-	}
-	return true;
-}
-
-bool ModelInputObject::readCellMigrationOptions(ifstream& file){
-	/**
-	 * Will delete
-	 */
-	string currHeader;
-	file >> currHeader;
-	if(currHeader == "ThereIsCellMigration(bool):"){
-		file >> Sim->thereIsCellMigration;
-	}
-	else{
-		cerr<<"Error in reading cell migration options: "<<currHeader<<", should have been: ThereIsCellMigration(bool):" <<endl;
-		return false;
 	}
 	return true;
 }

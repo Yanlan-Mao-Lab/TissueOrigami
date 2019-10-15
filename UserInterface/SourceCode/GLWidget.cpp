@@ -684,11 +684,6 @@ void GLWidget::highlightNode(int i){
 				NodeColours[j][2]=NodeColourList[NodeIds[j]][2];
 			}
 		}
-		else if (Sim01->thereIsCellMigration && Sim01->Elements[i]->getCellMigration()){
-			NodeColours[j][0]=1.0;
-			NodeColours[j][1]=0.0;
-			NodeColours[j][2]=0.0;
-		}
 		else if(Sim01->Elements[i]->isMutated){
 			NodeColours[j][0]=1.0;
 			NodeColours[j][1]=0.0;

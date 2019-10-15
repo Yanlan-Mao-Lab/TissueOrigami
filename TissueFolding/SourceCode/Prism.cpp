@@ -241,7 +241,6 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, bool thereIsPlas
     nLateralSurfaceAreaNodeNumber = 4;
     nSurfaceAreaNodeNumber = 3;
 
-    cellsMigrating = false;
     remodellingPlaneRotationMatrix = gsl_matrix_calloc(3,3);
     gsl_matrix_set_identity(remodellingPlaneRotationMatrix);
     isECMMimicing = false;
@@ -585,43 +584,6 @@ void  Prism::updateElasticProperties(){
     calculateDVector();
     calculateD81Tensor();
 }
-
-void Prism::fillLateralNeighbours(vector<Node*>& Nodes, vector<int>& lateralNeigbours){
-	// to do: do i use this?
-	//generate a list of element that are connected to this element
-	vector <int> connectedElementList;
-	vector <int> connectedElementEncounterCounter;
-	for (int i=0; i<nNodes; ++i){
-		int nConnectedElement = Nodes[NodeIds[i]]->connectedElementIds.size();
-		for (int j=0; j<nConnectedElement; ++j){
-			int currElementId = Nodes[NodeIds[i]]->connectedElementIds[j];
-			if (currElementId != this->Id){
-				//the connected element of the node is not this element itself
-				int currListSize = connectedElementList.size();
-				bool alreadyRecorded = false;
-				for (int k=0; k<currListSize; ++k){
-					if (connectedElementList[k] == currElementId){
-						connectedElementEncounterCounter[k]++;
-						alreadyRecorded = true;
-						break;
-					}
-				}
-				if (!alreadyRecorded){
-					connectedElementList.push_back(currElementId);
-					connectedElementEncounterCounter.push_back(1);
-				}
-			}
-		}
-	}
-	//If the element id have been encoiuntered 4 times, then it is a lateral neighbour:
-	int currListSize = connectedElementList.size();
-	for (int k=0; k<currListSize; ++k){
-		if (connectedElementEncounterCounter[k] == 4){
-			lateralNeigbours.push_back(connectedElementList[k]);
-		}
-	}
-}
-
 
 void Prism::calculateDVector(){
 	double multiplier = E/((1+v)*(1-2*v));

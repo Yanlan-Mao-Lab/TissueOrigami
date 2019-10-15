@@ -15,7 +15,6 @@
 #include "MyosinFunction.h"
 #include "NewtonRaphsonSolver.h"
 #include "Lumen.h"
-#include "CellMigration.h"
 #include "MuscleFibre.h"
 #include <array>
 
@@ -724,8 +723,6 @@ public:
 	double MyosinFeedbackCap; 	//to do: delete all myo
 	int numberOfMyosinAppliedEllipseBands;	//to do delete all myo
 	vector <int> myosinEllipseBandIds;//to do delete all myo
-	bool thereIsCellMigration; // to do : delete all cell migration
-	CellMigration* cellMigrationTool;  // to do : delete all cell migration
 };
 
 #endif

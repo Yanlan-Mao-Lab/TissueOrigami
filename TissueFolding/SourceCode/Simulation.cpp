@@ -240,7 +240,6 @@ void Simulation::setDefaultParameters(){
 
 	thereIsECMChange = false;
 
-	thereIsCellMigration = false;
 	thereIsExplicitECM = false;
 	addLateralECMManually = false;
 	thereIsExplicitLumen = false;
@@ -820,17 +819,6 @@ bool Simulation::initiateSystem(){
 		if (thereIsBinding){
 			NRSolver->boundNodesWithSlaveMasterDefinition = true;
 		}
-    }
-    //to do: delete all migration
-    cout<<"before migration"<<endl;
-	if (thereIsCellMigration) {
-    	cout<<"initiation of cell migration"<<endl;
-    	double cellMigrationOriginAngle = M_PI/2.0;
-    	cellMigrationTool = new CellMigration(nElements,0.5); //50% leaves the tissue region per hour
-        cellMigrationTool->assignElementRadialVectors(Elements);
-        cellMigrationTool->assignOriginOfMigration(Elements, cellMigrationOriginAngle);
-        cellMigrationTool->assignElementConnectivity(Nodes,Elements);
-        cellMigrationTool->generateListOfRateFractions(Elements);
     }
 	/**
 	 * If there is plastic deformation, the lateral elements will record their rotation matrices. to do: do I use this?
@@ -6265,12 +6253,6 @@ bool Simulation::runOneStep(){
     if(thereIsPlasticDeformation || thereIsExplicitECM){
     	updatePlasticDeformation();
     }
-    //to do : delete all migration
-    if(thereIsCellMigration){
-    	cellMigrationTool->updateMigratingElements(Elements);
-    	cellMigrationTool->updateMigrationLists(Elements, dt);
-    	cellMigrationTool->updateVolumesWithMigration(Elements);
-    }
     checkForVolumeRedistributionInTissue();
 
 	/**
@@ -7111,7 +7093,7 @@ bool Simulation::checkForElementFlippingUponNodeCollapse(vector<int> &newCollaps
 		for (int i=0; i<nElements;++i){
 			elementWillCollapse = Elements[Nodes[currNodeId]->connectedElementIds[i]]->isElementFlippedInPotentialNewShape(currNodeId, avrPos[0], avrPos[1], avrPos[2]);
 			if (elementWillCollapse){
-				sd::cout<<" element "<<Nodes[currNodeId]->connectedElementIds[i]<<" will flip if adhered"<<std::endl;
+				std::cout<<" element "<<Nodes[currNodeId]->connectedElementIds[i]<<" will flip if adhered"<<std::endl;
 				return false;
 			}
 		}
@@ -8460,7 +8442,7 @@ void Simulation::alignTissueDVToXPositive(){
 			u[i] = Nodes[ventralTipIndex]->Position[i] - Nodes[dorsalTipIndex]->Position[i];
 		}
 		//cout<<" ventralTipIndex: "<<ventralTipIndex<<" dorsalTipIndex "<<dorsalTipIndex<<endl;
-		(void) = Elements[0]->normaliseVector3D(u);
+		double dummy = Elements[0]->normaliseVector3D(u);
 		v[0]=1;v[1]=0;v[2]=0;
 		double c, s;
 		Elements[0]->calculateRotationAngleSinCos(u,v,c,s);

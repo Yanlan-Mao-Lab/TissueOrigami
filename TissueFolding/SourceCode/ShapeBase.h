@@ -86,8 +86,6 @@ protected:
     double 		cMyoUniformEq[2]; 					///< The equilibrium level of myosin concentration in uniformly distributed pool, array of 2: [apical][basal]
     double 		cMyoUnipolarEq[2]; 					///< The equilibrium level of myosin concentration in polarised pool, array of 2: [apical][basal]
     gsl_matrix*	myoPolarityDir;						///< The orientation of myosin polarity, unit vector in world coordinates.
-    bool		cellsMigrating;						///< The boolean stating if the cells inside the element are migrating
-
 
     bool 		elementHasExposedApicalSurface;				///< The boolean stating if the element has any apical surface exposed to the environment
     bool 		elementHasExposedBasalSurface;				///< The boolean stating if the element has any basal surface exposed to the environment
@@ -298,7 +296,6 @@ public:
     bool 					isShapeChangeAppliedToElement(std::vector<int> &ellipseBandIds, bool applyBasalECM, bool applyToLateralECM, bool applyApically, bool applyBasally, bool applyMidLayer );	///< This function decides if the shape change perturbation is applied to this element
     void 					calculateStiffnessPerturbationRate(bool ThereIsBasolateralWithApicalRelaxationStiffnessPerturbation, double stiffnessPerturbationBeginTimeInSec, double stiffnessPerturbationEndTimeInSec, double stiffnessChangedToFractionOfOriginal); ///< This function will calciulate the stiffness perturbation rate.
     void 					updateStiffnessMultiplier(double dt); ///< The function will update the actin multiplier as a result of stiffness perturbations.
-    bool					getCellMigration(); //TO DO : delete all migration
     virtual void 			calculateBasalNormal(double * /*normal*/){ParentErrorMessage("calculateBasalNormal");}; 	///< The virtual function of the parent for basal normal calculation. The value is dependent on node topology of the element and defined for eac individual child class.
     virtual void 			calculateApicalNormalCurrentShape(){ParentErrorMessage("calculateApicalNormal");}							///< The virtual function of the parent for apical normal calculation. The value is dependent on node topology of the element and defined for eac individual child class.
     virtual void 			AlignReferenceBaseNormalToZ(){ParentErrorMessage("AlignReferenceBaseNormalToZ");}; //TO DO: DO I use this?
@@ -436,8 +433,6 @@ public:
     void 					addToElementalElasticSystemForces(int i,int j,double value); 		/// This function is to add the input value, to the (i,j)th element of the ElementalElasticSystemForces
     void 					addToTriPointKe(int i,int j,double value); 				/// This function is to add the input value, to the (i,j)th element of the triPointKe
 
-
-	void 					addMigrationIncrementToGrowthIncrement(gsl_matrix* migrationIncrement); //TO DO: delete all migration
 	void					updateEquilibriumMyoWithFeedbackFromZero(double MyosinFeedbackCap); //TO DO: clear myo
 	void					updateEquilibriumMyoWithFeedbackFromFixedTotal(double totalMyosinLevel);  //TO DO: clear myo
 	bool					checkIfXYPlaneStrainAboveThreshold(double thres); //TO DO: do I use this?
@@ -454,15 +449,13 @@ public:
     virtual void			distributeMyosinForcesAreaBased(bool /*isIsotropic*/, bool /*apical*/, double /*forcePerMyoMolecule*/){ParentErrorMessage("distributeMyosinAreaBased");};  //TO DO: clear myo
     virtual void			distributeMyosinForcesTotalSizeBased(bool /*isIsotropic*/, bool /*apical*/, double /*forcePerMyoMolecule*/){ParentErrorMessage("distributeMyosinToitalSizeBased");};  //TO DO: clear myo
     void					updateMyosinConcentration(double dt, double kMyo, bool thereIsMyosinFeedback, double MyosinFeedbackCap); //TO DO: delete all myo
-	void					setCellMigration(bool migratingBool); //TO DO: clear all migration
 	bool 					isMyosinViaEllipsesAppliedToElement(bool isApical, bool isLateral, vector <int> & myosinEllipseBandIds, int numberOfMyosinAppliedEllipseBands); //TO DO: clear all myosin
-    void					updateNodeIdsForRefinement(int* tmpNodeIds);	//TO DO: delete all refinement,
 	void 					cleanMyosinForce();	//TO DO: delete all myo
     void					updateUniformEquilibriumMyosinConcentration(bool isApical, double cEqUniform); //TO DO: delete all myo
     void					updateUnipolarEquilibriumMyosinConcentration(bool isApical, double cEqUnipolar, double orientationX, double orientationY); //TO DO: delete all myo
     void					adjustCMyosinFromSave();  //TO DO: delete all myo
     void					calculateStiffnessFeedback(double dt); //TO DO: DO I keep feedback?
-    virtual void  			fillLateralNeighbours(vector<Node*>& /*Nodes*/, vector<int>& /*lateralNeigbours*/ ){ParentErrorMessage("fillInLateralNeigbours");}; //TO DO: do I use this?
+    //virtual void  			fillLateralNeighbours(vector<Node*>& /*Nodes*/, vector<int>& /*lateralNeigbours*/ ){ParentErrorMessage("fillInLateralNeigbours");}; //TO DO: do I use this?
 	
     	  
     void					calculateExposedLateralAreaApicalSide(); /// TO DO: do i use this?
