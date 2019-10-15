@@ -218,27 +218,27 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, bool thereIsPlas
     ZProjectedApicalArea=0.0;
     BasalArea=0.0;
     ApicalArea=0.0;
-    exposedLateralAreaApicalSide = 0;
-    exposedLateralAreaApicalSide = 0;
+    //exposedLateralAreaApicalSide = 0;
+   // exposedLateralAreaApicalSide = 0;
     elementHasExposedApicalSurface = false;
     elementHasExposedBasalSurface = false;
-    elementHasExposedLateralApicalSurface = false;
-    elementHasExposedLateralBasalSurface = false;
+    //elementHasExposedLateralApicalSurface = false;
+   // elementHasExposedLateralBasalSurface = false;
     exposedApicalSurfaceNodeIds[0] = 0;
     exposedApicalSurfaceNodeIds[1] = 0;
     exposedApicalSurfaceNodeIds[2] = 0;
     exposedBasalSurfaceNodeIds[0] = 0;
     exposedBasalSurfaceNodeIds[1] = 0;
     exposedBasalSurfaceNodeIds[2] = 0;
-    exposedLateralAreaApicalSideNodeIds[0] = 0;
-    exposedLateralAreaApicalSideNodeIds[1] = 0;
-    exposedLateralAreaApicalSideNodeIds[2] = 0;
-    exposedLateralAreaApicalSideNodeIds[3] = 0;
-    exposedLateralAreaBasalSideNodeIds[0] = 0;
-    exposedLateralAreaBasalSideNodeIds[1] = 0;
-    exposedLateralAreaBasalSideNodeIds[2] = 0;
-    exposedLateralAreaBasalSideNodeIds[3] = 0;
-    nLateralSurfaceAreaNodeNumber = 4;
+    //exposedLateralAreaApicalSideNodeIds[0] = 0;
+    //exposedLateralAreaApicalSideNodeIds[1] = 0;
+    //exposedLateralAreaApicalSideNodeIds[2] = 0;
+    //exposedLateralAreaApicalSideNodeIds[3] = 0;
+    //exposedLateralAreaBasalSideNodeIds[0] = 0;
+    //exposedLateralAreaBasalSideNodeIds[1] = 0;
+    //exposedLateralAreaBasalSideNodeIds[2] = 0;
+    //exposedLateralAreaBasalSideNodeIds[3] = 0;
+    //nLateralSurfaceAreaNodeNumber = 4;
     nSurfaceAreaNodeNumber = 3;
 
     remodellingPlaneRotationMatrix = gsl_matrix_calloc(3,3);
@@ -2308,7 +2308,7 @@ void Prism::assignExposedSurfaceAreaIndices(vector <Node*>& Nodes){
 			exposedBasalSurfaceNodeIds[2] = basalIds[2];
 		}
 	}
-	else if (tissueType == 2){//linker element
+	/*else if (tissueType == 2){//linker element
 		int numberOfApicalNodes = 0;
 		int numberOfBasalNodes = 0;
 		for (int i=0; i<nNodes; ++i){
@@ -2327,6 +2327,6 @@ void Prism::assignExposedSurfaceAreaIndices(vector <Node*>& Nodes){
 		if (numberOfBasalNodes>3){
 			elementHasExposedLateralBasalSurface = true;
 		}
-	}
+	}*/
 }
 

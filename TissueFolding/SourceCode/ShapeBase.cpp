@@ -3925,110 +3925,7 @@ void 	ShapeBase::assignVolumesToNodes(vector <Node*>& Nodes){
 	}
 }
 
-void 	ShapeBase::calculateExposedLateralAreaBasalSide(){
-	double Threshold = 1E-5;
-	exposedLateralAreaBasalSide = 0;
-	int id0 = exposedLateralAreaBasalSideNodeIds[0];
-	int id1 = exposedLateralAreaBasalSideNodeIds[1];
-	int id2 = exposedLateralAreaBasalSideNodeIds[2];
-	int id3 = exposedLateralAreaBasalSideNodeIds[3];
-
-	double sideVec1[3];
-	double sideVec2[3];
-	double Side1 = 0.0;
-	double Side2 = 0.0;
-	double costet = 0.0;
-	double Area = 0.0;
-	for (int i = 0; i<3; ++i){
-		sideVec1[i]= Positions[id1][i] - Positions[id0][i];
-		sideVec2[i]= Positions[id2][i] - Positions[id0][i];
-		costet += sideVec1[i] * sideVec2[i];
-		Side1  += sideVec1[i] * sideVec1[i];
-		Side2  += sideVec2[i] * sideVec2[i];
-	}
-	if (Side1 > Threshold && Side2 > Threshold){
-		Side1 = pow(Side1,0.5);
-		Side2 = pow(Side2,0.5);
-		costet /= (Side1*Side2);
-		double sintet = pow((1-costet*costet),0.5);
-		Area = Side1* Side2 * sintet / 2.0;
-	}
-	exposedLateralAreaBasalSide += Area;
-	for (int i = 0; i<3; ++i){
-		sideVec1[i]= Positions[id3][i] - Positions[id2][i];
-		sideVec2[i]= Positions[id0][i] - Positions[id2][i];
-		costet += sideVec1[i] * sideVec2[i];
-		Side1  += sideVec1[i] * sideVec1[i];
-		Side2  += sideVec2[i] * sideVec2[i];
-	}
-	if (Side1 > Threshold && Side2 > Threshold){
-		Side1 = pow(Side1,0.5);
-		Side2 = pow(Side2,0.5);
-		costet /= (Side1*Side2);
-		double sintet = pow((1-costet*costet),0.5);
-		Area = Side1* Side2 * sintet / 2.0;
-	}
-	exposedLateralAreaBasalSide  += Area;
-	//cout<<" Element "<<Id<<" exposedLateralAreaBasalSide: "<<exposedLateralAreaBasalSide<<endl;
-
-}
-
-void 	ShapeBase::calculateExposedLateralAreaApicalSide(){
-	double Threshold = 1E-5;
-	exposedLateralAreaApicalSide = 0;
-	int id0 = exposedLateralAreaApicalSideNodeIds[0];
-	int id1 = exposedLateralAreaApicalSideNodeIds[1];
-	int id2 = exposedLateralAreaApicalSideNodeIds[2];
-	int id3 = exposedLateralAreaApicalSideNodeIds[3];
-
-	double sideVec1[3];
-	double sideVec2[3];
-	double Side1 = 0.0;
-	double Side2 = 0.0;
-	double costet = 0.0;
-	double Area = 0.0;
-	for (int i = 0; i<3; ++i){
-		sideVec1[i]= Positions[id1][i] - Positions[id0][i];
-		sideVec2[i]= Positions[id2][i] - Positions[id0][i];
-		costet += sideVec1[i] * sideVec2[i];
-		Side1  += sideVec1[i] * sideVec1[i];
-		Side2  += sideVec2[i] * sideVec2[i];
-	}
-	if (Side1 > Threshold && Side2 > Threshold){
-		Side1 = pow(Side1,0.5);
-		Side2 = pow(Side2,0.5);
-		costet /= (Side1*Side2);
-		double sintet = pow((1-costet*costet),0.5);
-		Area = Side1* Side2 * sintet / 2.0;
-	}
-	exposedLateralAreaApicalSide += Area;
-	for (int i = 0; i<3; ++i){
-		sideVec1[i]= Positions[id3][i] - Positions[id2][i];
-		sideVec2[i]= Positions[id0][i] - Positions[id2][i];
-		costet += sideVec1[i] * sideVec2[i];
-		Side1  += sideVec1[i] * sideVec1[i];
-		Side2  += sideVec2[i] * sideVec2[i];
-	}
-	if (Side1 > Threshold && Side2 > Threshold){
-		Side1 = pow(Side1,0.5);
-		Side2 = pow(Side2,0.5);
-		costet /= (Side1*Side2);
-		double sintet = pow((1-costet*costet),0.5);
-		Area = Side1* Side2 * sintet / 2.0;
-	}
-	exposedLateralAreaApicalSide  += Area;
-	//cout<<" Element "<<Id<<" exposedLateralAreaApicalSide: "<<exposedLateralAreaApicalSide<<endl;
-
-}
-
-
 void 	ShapeBase::calculateViscositySurfaces(){
-	if (elementHasExposedLateralApicalSurface){
-		calculateExposedLateralAreaApicalSide();
-	}
-	if (elementHasExposedLateralBasalSurface){
-		calculateExposedLateralAreaBasalSide();
-	}
 	if (elementHasExposedApicalSurface){
 		calculateApicalArea();
 	}
@@ -4038,16 +3935,6 @@ void 	ShapeBase::calculateViscositySurfaces(){
 }
 
 void ShapeBase::assignViscositySurfaceAreaToNodes(vector <Node*>& Nodes){
-	if (elementHasExposedLateralApicalSurface){
-		for(int i=0;i<nLateralSurfaceAreaNodeNumber; ++i){
-			Nodes[NodeIds[exposedLateralAreaApicalSideNodeIds[i]]]->viscositySurface+=exposedLateralAreaApicalSide/nLateralSurfaceAreaNodeNumber;
-		}
-	}
-	if (elementHasExposedLateralBasalSurface){
-		for(int i=0;i<nLateralSurfaceAreaNodeNumber; ++i){
-			Nodes[NodeIds[exposedLateralAreaBasalSideNodeIds[i]]]->viscositySurface+=exposedLateralAreaBasalSide/nLateralSurfaceAreaNodeNumber;
-		}
-	}
 	if (elementHasExposedApicalSurface){
 		for(int i=0;i<nSurfaceAreaNodeNumber; ++i){
 			Nodes[NodeIds[exposedApicalSurfaceNodeIds[i]]]->viscositySurface+=ApicalArea/nSurfaceAreaNodeNumber;

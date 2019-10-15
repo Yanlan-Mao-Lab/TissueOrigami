@@ -30,17 +30,13 @@ protected:
     void calculateReferenceVolume();                                        ///< This function calculateds the volume of the reference element.
 
     void calculatePlaneNormals(double** normals);       	///< This function calculates the plane normals for the triangular surfaces constructing the prism.
-    //std::array<std::array<double,3>,8> calculatePlaneNormals();             ///< This function calculates the plane normals for the triangular surfaces constructing the prism.
     void assignNodalVector(double* vec, int id0, int id1);		///< This function calculates the 3D vector from nodes indexed at id0 to id1.
-    //std::array<double,3> assignNodalVector(size_t id0, size_t id1);         ///< This function calculates the 3D vector from nodes indexed at id0 to id1.
     bool checkNodePlaneConsistency(double** normals);		///< This functions checks the planes of the elemetn as part of health check.
-    //bool checkNodePlaneConsistency(std::array<std::array<double,3>,8>& normals);    ///< This functions checks the planes of the elemetn as part of health check
     void setInitialEdgeLenghts();                                           ///< This function sets the initial edge lengths of the element, will be essential in deciding if the elemetn should collapse its surfaces to avoid flipping.
     void checkEdgeLenghtsForBinding(std::vector<int>& masterIds, std::vector<int>& slaveIds);   ///< This function checks the edge lengths of the prism to decide if the elemetn should collapse its surfaces to avoid flipping.
     double getApicalSideLengthAverage();    			///< This function returns the average edge length of the apical surface.
     double getBasalSideLengthAverage();     				///< This function returns the average edge length of the basal surface.
     void assignExposedSurfaceAreaIndices(vector <Node*>& Nodes);  ///< This function assigns the indices of externally exposed surfaces of the prism.
-    //void assignExposedSurfaceAreaIndices(const std::vector<std::unique_ptr<Node>>& Nodes);
 
 	
 void calculateNormalToBottom();	// TO DO: is this differnet then apical/basal normals? do I use this?
@@ -58,7 +54,6 @@ public:
     void  AlignReferenceBaseNormalToZ();// to do: do i use this?
 
     void  calculateBasalNormal(double * normal);       ///< This function calculates the normal of the basal surface of the element.
-    //std::array<double,3>  calculateBasalNormal();       ///< This function calculates the normal of the basal surface of the element.
     void  calculateApicalNormalCurrentShape();          ///< This function calculates the normal of the apical surface of the element.
     void  calculateElementShapeFunctionDerivatives();   ///< This function calculates the shape function derivatives of the prism.
     void  checkHealth(); ///< This function checks the health of the element, against fliiping.
@@ -75,9 +70,7 @@ public:
 
     void updateElasticProperties();             ///< This function updates the elastic properties of the prism upon perturbation.
     void setBasalNeigElementId(vector<ShapeBase*>& elementsList); ///< This function sets the basal neighboiur of this element, which has an apical surface overlapping completely with teh basal surface of this prism.
-    //void setBasalNeigElementId(const std::vector<std::unique_ptr<ShapeBase>>& elementsList); ///< This function sets the basal neighboiur of this element, which has an apical surface overlapping completely with teh basal surface of this prism.
     void constructElementStackList(const int discretisationLayers, vector<ShapeBase*>& elementsList);		///< This function constructs the apical-basal element stack list that this prosm resides in.	
-    //void constructElementStackList(const int discretisationLayers, const std::vector<std::unique_ptr<ShapeBase>>& elementsList); ///< This function constructs the apical-basal element stack list that this prosm resides in.
     void getApicalNodeIds(vector <int> &nodeIds); //< This function writes the apical node ids to the input vector
     void getApicalNodeIndicesOnElement(vector <int> &apicalNodeIndices); //< This function writes the apical node indices of the lement to the input vector	
     void checkRotationConsistency3D();          ///< This function checks if the nodes of the prosm rotate counter-clock vise, and corrects if not.

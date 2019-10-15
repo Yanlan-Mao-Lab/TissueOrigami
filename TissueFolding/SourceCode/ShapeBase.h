@@ -24,15 +24,6 @@
 #include "GrowthFunctionBase.h"
 #include "GrowthFunctionTypes.h"
 
-
-/* TO DO
- *  The variables are defined for prisms only, convert them to be generic:
- *  	exposedApicalSurfaceNodeIds[3];				///< The int array of size 3, listing the node IDs of element that form the exposed apical surface. The IDs are the node IDs on the element (0-5 for prism), not the actual Node::Id.
- *  	exposedBasalSurfaceNodeIds[3];				///< The int array of size 3, listing the node IDs of element that form the exposed basal surface. The IDs are the node IDs on the element (0-5 for prism), not the actual Node::Id.
- *  	exposedLateralAreaApicalSideNodeIds[4];		///< The int array of size 4, listing the node IDs of element that form the lateral surface exposed apically. The IDs are the node IDs on the element (0-5 for prism), not the actual Node::Id.
- *  	exposedLateralAreaBasalSideNodeIds[4];		///< The int array of size 4, listing the node IDs of element that form the lateral surface exposed basally. The IDs are the node IDs on the element (0-5 for prism), not the actual Node::Id.
- * 	The actual numbers 3 & 4 are already stored in variables and used as such (nLateralSurfaceAreaNodeNumber, nSurfaceAreaNodeNumber);
- */
 using namespace std;
 
 class ShapeBase{
@@ -79,9 +70,7 @@ protected:
     double 		ZProjectedApicalArea;				///< The z-projected area of the apical surface of the element.
     double 		BasalArea;							///< The area of the basal surface of the element.
     double 		ApicalArea;							///< The area of the apical surface of the element.
-    double		exposedLateralAreaApicalSide;		///< The area of the element on a linker position, and has lateral sides exposed to outside of the tissue, on the apical side, therefore should feel external viscosity.
-    double		exposedLateralAreaBasalSide;		///< The area of the element on a linker position, and has lateral sides exposed to outside of the tissue, on the basal side, therefore should feel external viscosity.
-    double 		cMyoUniform[2]; 					///< Myosin concentration in the uniformly distributed pool, array of 2: [apical][basal]
+     double 		cMyoUniform[2]; 					///< Myosin concentration in the uniformly distributed pool, array of 2: [apical][basal]
     double 		cMyoUnipolar[2]; 					///< Myosin concentration in the polarised pool, array of 2: [apical][basal]
     double 		cMyoUniformEq[2]; 					///< The equilibrium level of myosin concentration in uniformly distributed pool, array of 2: [apical][basal]
     double 		cMyoUnipolarEq[2]; 					///< The equilibrium level of myosin concentration in polarised pool, array of 2: [apical][basal]
@@ -89,13 +78,8 @@ protected:
 
     bool 		elementHasExposedApicalSurface;				///< The boolean stating if the element has any apical surface exposed to the environment
     bool 		elementHasExposedBasalSurface;				///< The boolean stating if the element has any basal surface exposed to the environment
-    bool 		elementHasExposedLateralApicalSurface;		///< The boolean stating if the element has any lateral surfaces exposed to the environment on the apical side of the tissue
-    bool 		elementHasExposedLateralBasalSurface;		///< The boolean stating if the element has any lateral surfaces exposed to the environment on the basal side of the tissue
     int 		exposedApicalSurfaceNodeIds[3];				///< The int array of size 3, listing the node IDs of element that form the exposed apical surface. The IDs are the node IDs on the element (0-5 for prism), not the actual Node#Id.
     int 		exposedBasalSurfaceNodeIds[3];				///< The int array of size 3, listing the node IDs of element that form the exposed basal surface. The IDs are the node IDs on the element (0-5 for prism), not the actual Node#Id.
-    int 		exposedLateralAreaApicalSideNodeIds[4];		///< The int array of size 4, listing the node IDs of element that form the lateral surface exposed apically. The IDs are the node IDs on the element (0-5 for prism), not the actual Node::Id.
-    int 		exposedLateralAreaBasalSideNodeIds[4];		///< The int array of size 4, listing the node IDs of element that form the lateral surface exposed basally. The IDs are the node IDs on the element (0-5 for prism), not the actual Node::Id.
-    int 		nLateralSurfaceAreaNodeNumber;				///< Number of nodes that form the lateral surfaces for the element.
     int 		nSurfaceAreaNodeNumber;						///< Number of nodes that form the apical/basal surfaces for the element.
 
     double		stiffnessPerturbationRateInSec;				///< The rate at which the stiffness ofthe element will be perturbed, used with the model inputs from "Stiffness_Perturbation:" header in model input file
@@ -455,18 +439,9 @@ public:
     void					updateUnipolarEquilibriumMyosinConcentration(bool isApical, double cEqUnipolar, double orientationX, double orientationY); //TO DO: delete all myo
     void					adjustCMyosinFromSave();  //TO DO: delete all myo
     void					calculateStiffnessFeedback(double dt); //TO DO: DO I keep feedback?
-    //virtual void  			fillLateralNeighbours(vector<Node*>& /*Nodes*/, vector<int>& /*lateralNeigbours*/ ){ParentErrorMessage("fillInLateralNeigbours");}; //TO DO: do I use this?
-	
-    	  
-    void					calculateExposedLateralAreaApicalSide(); /// TO DO: do i use this?
-	void 					calculateExposedLateralAreaBasalSide(); /// TO DO: do i use this?
-	
+
 	void 					setLateralElementsRemodellingPlaneRotationMatrix(double systemCentreX, double systemCentreY); //TO DO: DO I use this? defined but NO
     void					setECMMimicingElementThicknessGrowthAxis();	//TO DO: DO I USE THIS? defined but NO
-    //void 	convertPlasticStrainToGrowthStrain(); //TO DO: DO I use this?
-	//void 	resetCurrStepShapeChangeData();	//TO DO: DO I use this? 
-	//bool 	calculateAlignmentScore(double** RefNormalised);	// TO DO: DO i use this?
-	//void 	bringShapePositionsToOrigin(double** RefNormalised, double* refCentre); // TO DO: DO I USE THIS?
 };
 
 #endif

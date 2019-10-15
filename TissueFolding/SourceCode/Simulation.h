@@ -665,7 +665,6 @@ public:
     void calculateRandomForces();                           ///< Calculate the random forces on elements.
     void addRandomForces(gsl_matrix* gExt);                 ///< Add random forces to system forces.
 
-    //void smallStrainrunOneStep();
     void packToPipetteWall();
 	void detectPacingNodes();                                           ///< Detect nodes potentially packing to each other
     void calculatePackingForcesImplicit3D();                            ///< Calculate packing forces on nodes due to packing to each other.
@@ -706,10 +705,10 @@ public:
 
 
 
-	void correctTiltedGrowthForGrowthFunction(GrowthFunctionBase* currGF); // to do: declared not defined
-	void calculateTiltedElementPositionOnBase(ShapeBase* currElement); // to do: declared not defined
-	void calculateBaseElementsFinalPosition(int Id,double DVGrowth, double APGrowth, double ABGrowth); // to do: declared not defined
-	void calculateCurrentElementsFinalPosition(ShapeBase* currElement); // to do: declared not defined
+	//void correctTiltedGrowthForGrowthFunction(GrowthFunctionBase* currGF); // to do: declared not defined
+	//void calculateTiltedElementPositionOnBase(ShapeBase* currElement); // to do: declared not defined
+	//void calculateBaseElementsFinalPosition(int Id,double DVGrowth, double APGrowth, double ABGrowth); // to do: declared not defined
+	//void calculateCurrentElementsFinalPosition(ShapeBase* currElement); // to do: declared not defined
     int nMyosinFunctions;	//to do: delete all myo
 	vector<MyosinFunction*> myosinFunctions; 	//to do: delete all myo
 	double kMyo;		//to do: delete all myo
