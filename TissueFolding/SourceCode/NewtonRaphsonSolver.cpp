@@ -219,9 +219,15 @@ void NewtonRaphsonSolver::calcutateFixedK(vector <Node*>& Nodes){
 }
 
 void NewtonRaphsonSolver::calculateForcesAndJacobianMatrixNR(vector <Node*>& Nodes, vector <ShapeBase*>& Elements, double dt, bool recordForcesOnFixedNodes, double **FixedNodeForces){
+#ifndef DO_NOT_USE_OMP
+    /** If DO_NOT_USE_OMP is not defined,I will be using omp. This
+     * is necessary as omp is not set up on mac
+     */
 	const int maxThreads = omp_get_max_threads();
 	omp_set_num_threads(maxThreads);
 	#pragma omp parallel for //private(Nodes, displacementPerDt, recordForcesOnFixedNodes, FixedNodeForces, outputFile, dt)
+#endif
+
 	for( vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 		/** The calculation of foces and their derivatives in each element starts with
 		 * calculation of forces via ShapeBase#calculateForces. A series of calculations necessary for

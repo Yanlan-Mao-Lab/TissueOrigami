@@ -18,11 +18,14 @@
 #include "MuscleFibre.h"
 #include <array>
 
+#ifndef DO_NOT_USE_OMP
+    //USING OMP, do not use omp not defined!
+	#include <omp.h>
+#endif
 
-#include <omp.h>
 
 class ModelInputObject;
-using namespace std;
+//using namespace std;
 
 class Simulation {
 private:
@@ -275,23 +278,12 @@ private:
 	void checkForVolumeRedistributionInTissue();					///< This function applies the volume resdistribution functions.
 	void assignCompartment();										///< This function assigns pouch, hinge and notum compartments to the tissue, as defined by fold positions of the successful simulations published in dev cell 2019 paper.
 
-	//void setSymmetricNode(Node* currNode, double yLimPos);
-	//void updateDisplaySaveValuesFromRK();
-    //void initiateTriangleFromSave(double height); //TO DO: declared not defined.
-	//void initiateTetrahedraFromMeshInput(); //TO DO: declared not defined.
-	//void initiateTriangleFromMeshInput();//TO DO: declared not defined.
-	//void initiateTriangleFromSaveForUpdate(int k,double height);//TO DO: declared not defined.
-	//bool initiateMesh(int MeshType, string inputtype, float SideLength, float zHeight );
-	//void removeSymmetryBorderFromColumnarCircumferenceNodeList(vector <int> &ColumnarCircumferencialNodeList);
 	void writeMyosinSummary();	//TO DO: delete all myo
 	void calculateMyosinForces(); //To Do: delete all myo
 	void cleanUpMyosinForces();	//To Do: delete all myo
 	void checkForMyosinUpdates();//To Do: delete all myo
 	void addMyosinForces(gsl_matrix* gExt);	//to do: delete all myo
 	void updateEquilibriumMyosinsFromInputSignal(MyosinFunction* currMF);//To Do: delete all myo
-	void changeCellShapesInSystem(); ///< to do : declared not defined
-	void changeCellShapeRing(int currIndexForParameters); //to do : declared not defined
-	bool reOpenOutputFile();	//To DO: defined but never called
 	void ablateSpcific();		//to do: defined but not called, seems temporary fordebugging, delete
 
 public:
@@ -467,7 +459,7 @@ public:
 	std::vector <bool> pacingNodeCouplesHaveAdhered;            ///< The boolean vector stating if the potentially packing node couple have adheres (couple stored in Simulation#///< The vector storing the Node#Id list of packing node couples, coupled with Simulation#pacingNodeCouples0 and Simulation#///< The vector storing the Node#Id list of packing node couples, coupled with Simulation#pacingNodeCouples1).
 
 	//to do: delete all surface packing
-	vector <int> pacingNodeSurfaceList0; // this is the id of the base node that is packing
+	/*vector <int> pacingNodeSurfaceList0; // this is the id of the base node that is packing
 	vector <int> pacingNodeSurfaceList1; // lists 1 to 3 are the edges of the triangle
 	vector <int> pacingNodeSurfaceList2;
 	vector <int> pacingNodeSurfaceList3;
@@ -490,7 +482,7 @@ public:
 	vector <double> initialWeightSurfacez;
 	vector <double> initialWeightEdgex;
 	vector <double> initialWeightEdgey;
-	vector <double> initialWeightEdgez;
+	vector <double> initialWeightEdgez;*/
 	vector <double> initialWeightPointx;
 	vector <double> initialWeightPointy;
 	vector <double> initialWeightPointz;
@@ -633,7 +625,7 @@ public:
 	void checkForExperimentalSetupsBeforeIteration();   ///< This macro function checks for all experimental setup updates at the beginning of a time step, prior to iterations.
 	void checkForExperimentalSetupsWithinIteration();   ///< This macro function checks for all experimental setup updates at each N-R iteration.
 	void checkForExperimentalSetupsAfterIteration();    ///< This macro function checks for all experimental setup updates at the end of iterations, post convergence.
-    void setLateralElementsRemodellingPlaneRotationMatrices(); //to do: I am using this?
+    void setLateralElementsRemodellingPlaneRotationMatrices();
 
 	void checkECMChange(); ///< Check if there is ECM perturbation.
 	void updateChangeForExplicitECM(int idOfCurrentECMPerturbation);                    ///< Update physical properties of the ECM with the ECM perturbaiton function of input ID.
@@ -703,12 +695,6 @@ public:
 	void addSideECMElements(vector< vector<int> > &ColumnarBasedNodeArray, vector< vector<int> > &OuterNodeArray); 							///< This function adds the elements for the side ECM layer.
 	bool addSideECMLayer();												///< This function adds an ECM to the columnar layer sides only. The tissue is assumed to have a basal ECM, and there will be no peripodial componenents.
 
-
-
-	//void correctTiltedGrowthForGrowthFunction(GrowthFunctionBase* currGF); // to do: declared not defined
-	//void calculateTiltedElementPositionOnBase(ShapeBase* currElement); // to do: declared not defined
-	//void calculateBaseElementsFinalPosition(int Id,double DVGrowth, double APGrowth, double ABGrowth); // to do: declared not defined
-	//void calculateCurrentElementsFinalPosition(ShapeBase* currElement); // to do: declared not defined
     int nMyosinFunctions;	//to do: delete all myo
 	vector<MyosinFunction*> myosinFunctions; 	//to do: delete all myo
 	double kMyo;		//to do: delete all myo

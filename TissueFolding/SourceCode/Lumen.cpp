@@ -119,7 +119,12 @@ void	Lumen::updateMatrices(vector<Node*>& Nodes){
 void	Lumen::calculateCurrentVolume(){
 	//cout<<"in calculate matrices"<<endl;
 	double currentElementalVolume[(const int) nTriangleSize];
+	#ifndef DO_NOT_USE_OMP
+	/** If DO_NOT_USE_OMP is not defined,I will be using omp. This
+	 * is necessary as omp is not set up on mac
+	 */
 	#pragma omp parallel for
+	#endif
 	for (int eleIndex=0; eleIndex<nTriangleSize; ++eleIndex){
 		gsl_matrix* tmp = gsl_matrix_calloc(Dim, 1);
 		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, xCap3[eleIndex], x1[eleIndex],0.0, tmp);
@@ -148,7 +153,12 @@ void	Lumen::calculateCurrentVolume(){
 void	Lumen::calculateResiduals(vector<Node*>& Nodes){
 	//cout<<"in calculate residuals for Lumen"<<endl;
 	double rVover6V0 =  rV /6.0 / currentIdealVolume;
+	#ifndef DO_NOT_USE_OMP
+	/** If DO_NOT_USE_OMP is not defined,I will be using omp. This
+	 * is necessary as omp is not set up on mac
+	 */
 	#pragma omp parallel for
+	#endif
 	for (int eleIndex=0; eleIndex<nTriangleSize; ++eleIndex){
 		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans, 1.0, xCap2[eleIndex], x3[eleIndex],0.0, g1[eleIndex]);
 		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans, 1.0, xCap3[eleIndex], x1[eleIndex],0.0, g2[eleIndex]);

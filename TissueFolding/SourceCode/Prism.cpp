@@ -25,7 +25,7 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, bool thereIsPlas
 
     D = gsl_matrix_calloc(6,6);
     MyoForce = new double*[6];
-	GrowthRate = new double[3];
+	GrowthRate.fill(0);
 	ShapeChangeRate  = new double[6];
 	//CurrGrowthStrainAddition = new double[6];
 
@@ -275,7 +275,6 @@ Prism::~Prism(){
 	delete[] NodeIds;
 	delete[] IdentifierColour;
 	delete[] MyoForce;
-	delete[] GrowthRate;
 	delete[] ShapeChangeRate;
 	delete[] apicalNormalCurrentShape;
 	delete	 ReferenceShape;
@@ -483,35 +482,6 @@ void  Prism::calculateBasalNormal(double * normal){
 	delete[] v;
 	delete[] u;
 }
-
-void  Prism::AlignReferenceBaseNormalToZ(){
-	//getting the normal of the reference element basal surface
-	double * normal = new double[3];
-	cerr<<"Element: "<<Id<<endl;
-	calculateBasalNormal(normal);
-	//Now I have the normal pointing towards the apical surface, I need to align it with (+ve)z vector
-	double* z = new double[3];
-	z[0] = 0;
-	z[1] = 0;
-	z[2] = 1;
-	double c, s;
-	calculateRotationAngleSinCos(normal,z,c,s); //align normal onto z
-	if (c<0.9998){
-		double *rotAx;
-		rotAx = new double[3];
-		double *rotMat;
-		rotMat = new double[9]; //matrix is written in one row
-		calculateRotationAxis(normal,z,rotAx,c);	//calculating the rotation axis that is perpendicular to both u and v
-		//calculateRotationAxis(normal,z,rotAx);	//calculating the rotation axis that is perpendicular to both u and v
-		constructRotationMatrix(c,s,rotAx,rotMat);
-		rotateReferenceElementByRotationMatrix(rotMat);
-		delete[] rotAx;
-		delete[] rotMat;
-	}
-	delete[] normal;
-	delete[] z;
-}
-
 
 void  Prism::setElasticProperties(double EApical, double EBasal, double EMid, double EECM, double v){
 	/** This function takes the Young's moduli for apical and basal surfaces, the tissue midline, 
@@ -1445,11 +1415,19 @@ double Prism::getBasalSideLengthAverage(){
 
 void Prism::getApicalTriangles(vector <int> &ApicalTriangles){
 	if (tissueType == 0){
+		/**
+		 * For columnar layer, the apical surface is on the top, therefore
+		 * defined by node id's 3-5
+		 */
 		ApicalTriangles.push_back(NodeIds[3]);
 		ApicalTriangles.push_back(NodeIds[4]);
 		ApicalTriangles.push_back(NodeIds[5]);
 	}
 	else{
+		/**
+		 * For peripodial layer, the apical surface is on the top, therefore
+		 * defined by node id's 3-5
+		 */
 		ApicalTriangles.push_back(NodeIds[0]);
 		ApicalTriangles.push_back(NodeIds[1]);
 		ApicalTriangles.push_back(NodeIds[2]);
@@ -1492,162 +1470,6 @@ double Prism::getElementHeight(){
 	return pow((dx*dx + dy*dy + dz*dz),0.5);
 }
 
-
-void Prism::AddPackingToSurface(int tissueplacementOfPackingNode, double Fx, double Fy,double Fz, double **PackingForces, vector<Node*> &Nodes, bool& allCornersFixedX, bool& allCornersFixedY, bool& allCornersFixedZ){
-	int Id0 = -1, Id1= -1, Id2 = -1;
-	if (tissueplacementOfPackingNode == 0){//basal node, packing to basal surface:
-		if (tissueType == 0){ //element is columnar, basal surface is bottom
-			Id0 = 0;
-			Id1 = 1;
-			Id2 = 2;
-		}
-		else {//element is peripodial, basal surface is top
-			Id0 = 3;
-			Id1 = 4;
-			Id2 = 5;
-		}
-	}
-	if (tissueplacementOfPackingNode == 1){//apical node, packing to apical surface:
-		if (tissueType == 0){ //element is columnar, apical surface is top
-			Id0 = 3;
-			Id1 = 4;
-			Id2 = 5;
-		}
-		else {//element is peripodial, apical surface is bottom
-			Id0 = 0;
-			Id1 = 1;
-			Id2 = 2;
-		}
-	}
-	double F[3];
-	//F[0] = Fx / 3.0;
-	//F[1] = Fy / 3.0;
-	//F[2] = Fz / 3.0;
-	//checking how many corners are fixed
-	int numberOfNonFixedCorners[3] = {0,0,0};
-	for(int j=0; j<nDim; ++j){
-		if (!Nodes[NodeIds[Id0]]->FixedPos[j]){
-			numberOfNonFixedCorners[j]++;
-		}
-		if (!Nodes[NodeIds[Id1]]->FixedPos[j]){
-			numberOfNonFixedCorners[j]++;
-		}
-		if (!Nodes[NodeIds[Id2]]->FixedPos[j]){
-			numberOfNonFixedCorners[j]++;
-		}
-	}
-	if (numberOfNonFixedCorners[0] == 0){
-		allCornersFixedX = true;
-		F[0] = 0.0;
-	}
-	else{
-		F[0] = Fx / numberOfNonFixedCorners[0];
-	}
-	if (numberOfNonFixedCorners[1] == 0){
-		allCornersFixedY = true;
-		F[1] = 0.0;
-	}
-	else{
-		F[1] = Fy / numberOfNonFixedCorners[1];
-	}
-	if (numberOfNonFixedCorners[2] == 0){
-		allCornersFixedZ = true;
-		F[2] = 0.0;
-	}
-	else{
-		F[2] = Fz / numberOfNonFixedCorners[2];
-	}
-
-	for(int j=0; j<nDim; ++j){
-		if (!Nodes[NodeIds[Id0]]->FixedPos[j]){
-            PackingForces[NodeIds[Id0]][j] -= F[j];
-		}
-		if (!Nodes[NodeIds[Id1]]->FixedPos[j]){
-			PackingForces[NodeIds[Id1]][j] -= F[j];
-		}
-		if (!Nodes[NodeIds[Id2]]->FixedPos[j]){
-			PackingForces[NodeIds[Id2]][j] -= F[j];
-		}
-	}
-}
-
-bool Prism::IsPointCloseEnoughForPacking(double* Pos,  float threshold, int TissuePlacementOfPackingNode){
-	int initial =0, final = 6;
-	if (TissuePlacementOfPackingNode == 0){
-		//tissue placement of the node is basal, should check it against basal surface nodes only
-		if(tissueType == 0){ //element is columnar, the basal nodes are nodes 0-2:
-			final = 3;
-		}
-		else{
-			//element is peripodial, the basal nodes are 3-5
-			initial = 3;
-		}
-	}
-	else if (TissuePlacementOfPackingNode == 1){
-		//tissue placement of the node is apical, should check it against apical surface nodes  only
-		if(tissueType == 0){ //element is columnar, the apical nodes are nodes 3-5:
-			initial = 3;
-		}
-		else{
-			//element is peripodial, the  the apical nodes are nodes 0-2:
-			final = 3;
-		}
-	}
-	//cout<<" initial : "<<initial<<" final: "<<final<<endl;
-	float dmin = threshold;
-	float dminNeg = (-1.0)*threshold;
-	for (int i=initial; i<final; ++i){
-		//cout<<"	checking against node: "<<NodeIds[i]<<endl;
-		float dx =100.0, dy = 100.0, dz = 100.0;
-		dx = Pos[0]-Positions[i][0];
-		//cout<<" dx: "<<dx<<endl;
-		if ((dx >=0 && dx < dmin) || (dx <=0 && dx >dminNeg)){
-			dy = Pos[1]-Positions[i][1];
-			//cout<<" dy: "<<dy<<endl;
-			if ((dy >=0 && dy < dmin) || (dy <=0 && dy >dminNeg)){
-				dz = Pos[2]-Positions[i][2];
-				//cout<<" dz: "<<dz<<endl;
-				if ((dz >=0 && dz < dmin) || (dz <=0 && dz >dminNeg)){
-					return true;
-				}
-			}
-		}
-	}
-	return false;
-}
-
-void  Prism::getApicalNodePos(double* posCorner){
-	if (tissueType == 0){//columnar element, apical surface is the top nodes
-		posCorner[0] = Positions[3][0];
-		posCorner[1] = Positions[3][1];
-		posCorner[2] = Positions[3][2];
-	}
-	else{
-		//peripodial element, apical surface is the bottom nodes
-		//the linker elements never reach this question
-		posCorner[0] = Positions[0][0];
-		posCorner[1] = Positions[0][1];
-		posCorner[2] = Positions[0][2];
-
-	}
-}
-
-void  Prism::getBasalNodePos(double* posCorner){
-	if (tissueType == 0){//columnar element, basal surface is the bottom nodes
-		posCorner[0] = Positions[0][0];
-		posCorner[1] = Positions[0][1];
-		posCorner[2] = Positions[0][2];
-	}
-	else{
-		//peripodial element, basal surface is the top nodes
-		//the linker elements never reach this question
-		posCorner[0] = Positions[3][0];
-		posCorner[1] = Positions[3][1];
-		posCorner[2] = Positions[3][2];
-
-	}
-}
-
 void Prism::getApicalNodeIds(vector <int> &nodeIds){
 	if (tissueType == 0){//columnar element, apical surface is the top nodes
 		//I iwll rotate the nodes as I want the normal to point into the lumen:
@@ -1679,172 +1501,6 @@ void Prism::getApicalNodeIndicesOnElement(vector <int> &apicalNodeIndices){
 		apicalNodeIndices.push_back(1);
 		apicalNodeIndices.push_back(2);
 	}
-}
-
-void Prism::getBasalNodeIds(vector <int> &nodeIds){
-	if (tissueType == 0){//columnar element, apical surface is the top nodes
-		//I iwll rotate the nodes as I want the normal to point into the lumen on the apical side
-		//and I want these to be consistent:
-		nodeIds.push_back(NodeIds[0]);
-		nodeIds.push_back(NodeIds[2]);
-		nodeIds.push_back(NodeIds[1]);
-	}
-	else{
-		//peripodial element, apical surface is the bottom nodes
-		//the linker elements never reach this question
-		nodeIds.push_back(NodeIds[3]);
-		nodeIds.push_back(NodeIds[4]);
-		nodeIds.push_back(NodeIds[5]);
-	}
-}
-
-void Prism::getBasalCentre(double* centre){
-	centre[0] = 0;
-	centre[1] = 0;
-	centre[2] = 0;
-	if (tissueType == 0){
-		for (int j=0; j<3; ++j){
-			for (int i=0; i<3; ++i){ //columnar element, basal surface is the bottom nodes, (first 3 nodes)
-				centre[j] += Positions[i][j];
-			}
-			centre[j] /= 3.0;
-		}
-	}
-	else{
-		//
-		//the linker elements never reach this question
-		for (int j=0; j<3; ++j){
-			for (int i=3; i<6; ++i){//peripodial element, basal surface is the top nodes, (last 3 nodes)
-				centre[j] += Positions[i][j];
-			}
-			centre[j] /= 3.0;
-		}
-	}
-}
-
-void Prism::getApicalCentre(double* centre){
-	centre[0] = 0;
-	centre[1] = 0;
-	centre[2] = 0;
-	if (tissueType == 0){
-		for (int j=0; j<3; ++j){
-			for (int i=3; i<6; ++i){ //columnar element, apical surface is the top nodes, (last 3 nodes)
-				centre[j] += Positions[i][j];
-			}
-			centre[j] /= 3.0;
-		}
-	}
-	else{
-		//
-		//the linker elements never reach this question
-		for (int j=0; j<3; ++j){
-			for (int i=0; i<3; ++i){//peripodial element, apical surface is the bottom nodes, (first 3 nodes)
-				centre[j] += Positions[i][j];
-			}
-			centre[j] /= 3.0;
-		}
-	}
-}
-
-void Prism::getReferenceBasalCentre(double* centre){
-	centre[0] = 0;
-	centre[1] = 0;
-	centre[2] = 0;
-	if (tissueType == 0){
-		for (int j=0; j<3; ++j){
-			for (int i=0; i<3; ++i){ //columnar element, basal surface is the bottom nodes, (first 3 nodes)
-				centre[j] += ReferenceShape->Positions[i][j];
-			}
-			centre[j] /= 3.0;
-		}
-	}
-	else{
-		//
-		//the linker elements never reach this question
-		for (int j=0; j<3; ++j){
-			for (int i=3; i<6; ++i){//peripodial element, basal surface is the top nodes, (last 3 nodes)
-				centre[j] += ReferenceShape->Positions[i][j];
-			}
-			centre[j] /= 3.0;
-		}
-	}
-}
-
-void Prism::getReferenceApicalCentre(double* centre){
-	centre[0] = 0;
-	centre[1] = 0;
-	centre[2] = 0;
-	if (tissueType == 0){
-		for (int j=0; j<3; ++j){
-			for (int i=3; i<6; ++i){ //columnar element, apical surface is the top nodes, (last 3 nodes)
-				centre[j] += ReferenceShape->Positions[i][j];
-			}
-			centre[j] /= 3.0;
-		}
-	}
-	else{
-		//
-		//the linker elements never reach this question
-		for (int j=0; j<3; ++j){
-			for (int i=0; i<3; ++i){//peripodial element, apical surface is the bottom nodes, (first 3 nodes)
-				centre[j] += ReferenceShape->Positions[i][j];
-			}
-			centre[j] /= 3.0;
-		}
-	}
-}
-
-double* Prism::getBasalMinViscosity(vector<Node*> Nodes){
-	double* ExtVisc = new double[3];
-	ExtVisc[0] = 10000000.0;
-	ExtVisc[1] = 10000000.0;
-	ExtVisc[2] = 10000000.0;
-
-	if (tissueType == 0){
-		for (int i=0; i<3; ++i){
-			for (int j= 0; j<nDim; ++j){
-				if (ExtVisc[j] > Nodes[NodeIds[i]]->externalViscosity[j]){
-					ExtVisc[j] = Nodes[NodeIds[i]]->externalViscosity[j];
-				}
-			}
-		}
-	}
-	else{
-		for (int i=3; i<6; ++i){//peripodial element, apical surface is the bottom nodes, (first 3 nodes)
-			for (int j= 0; j<nDim; ++j){
-				if (ExtVisc[j] > Nodes[NodeIds[i]]->externalViscosity[j]){
-					ExtVisc[j] = Nodes[NodeIds[i]]->externalViscosity[j];
-				}
-			}
-		}
-	}
-	return ExtVisc;
-}
-
-double* Prism::getApicalMinViscosity(vector<Node*> Nodes){
-	double* ExtVisc = new double[3];
-	ExtVisc[0] = 10000000.0;
-	ExtVisc[1] = 10000000.0;
-	ExtVisc[2] = 10000000.0;
-	if (tissueType == 0){
-		for (int i=3; i<6; ++i){
-			for (int j= 0; j<nDim; ++j){
-				if (ExtVisc[j] > Nodes[NodeIds[i]]->externalViscosity[j]){
-					ExtVisc[j] = Nodes[NodeIds[i]]->externalViscosity[j];
-				}
-			}
-		}
-	}
-	else{
-		for (int i=0; i<3; ++i){//peripodial element, apical surface is the bottom nodes, (first 3 nodes)
-			for (int j= 0; j<nDim; ++j){
-				if (ExtVisc[j] > Nodes[NodeIds[i]]->externalViscosity[j]){
-					ExtVisc[j] = Nodes[NodeIds[i]]->externalViscosity[j];
-				}
-			}
-		}
-	}
-	return ExtVisc;
 }
 
 void  	Prism::calculateMyosinForcesAreaBased(double forcePerMyoMolecule){

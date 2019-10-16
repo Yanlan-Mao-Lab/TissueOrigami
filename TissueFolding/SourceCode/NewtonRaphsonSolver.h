@@ -8,7 +8,11 @@
 #include "Node.h"
 #include "ShapeBase.h"
 #include "Lumen.h"
-#include <omp.h>
+#ifndef DO_NOT_USE_OMP
+    //USING OMP, do not use omp not defined!
+	#include <omp.h>
+#endif
+
 
 
 using namespace std;

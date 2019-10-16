@@ -185,7 +185,7 @@ double 	ShapeBase::getPoissonRatio(){
 	return v;
 }
 
-double* ShapeBase::getGrowthRate(){
+std::array<double,3> ShapeBase::getGrowthRate(){
 	//cout<<"Element "<<Id<<" Growth rate: "<<GrowthRate[0]<<" "<<GrowthRate[1]<<" "<<GrowthRate[2]<<endl;
 	return GrowthRate;
 }
@@ -1148,7 +1148,7 @@ void 	ShapeBase::getPysProp(int type, float &PysPropMag, double dt){
 		PysPropMag = getPoissonRatio();
 	}
 	else if (type == 4){
-		double* growth;
+		std::array<double,3> growth{0};
 		growth = getGrowthRate();
         double timescale = 24*60.0*60.0; //reporting per 24 hours
         //for (int i =0 ; i< nDim-1 ; ++i){ //reporting only x & y

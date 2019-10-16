@@ -14,7 +14,7 @@ CC            = gcc
 CXX           = g++
 DEFINES       = -DQT_NO_DEBUG -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB
 CFLAGS        = -pipe -O2 -fopenmp -Wall -W -D_REENTRANT -fPIE $(DEFINES)
-CXXFLAGS      = -pipe -fopenmp -std=c++11 -O2 -Wall -W -D_REENTRANT -fPIE $(DEFINES)
+CXXFLAGS      = -pipe -fopenmp -std=c++11 -D DO_NOT_USE_OMP -D DO_NOT_SOLVE_SYSTEM_OF_EQUATIONS -O2 -Wall -W -D_REENTRANT -fPIE $(DEFINES)
 INCPATH       = -I/opt/Qt5.2.1/5.2.1/gcc_64/mkspecs/linux-g++ -I. -I/opt/Qt5.2.1/5.2.1/gcc_64/include -I/opt/Qt5.2.1/5.2.1/gcc_64/include/QtOpenGL -I/opt/Qt5.2.1/5.2.1/gcc_64/include/QtWidgets -I/opt/Qt5.2.1/5.2.1/gcc_64/include/QtGui -I/opt/Qt5.2.1/5.2.1/gcc_64/include/QtCore -I.
 LINK          = g++
 LFLAGS        = -fopenmp -Wl,-O1 -Wl,-rpath,/opt/Qt5.2.1/5.2.1/gcc_64 -Wl,-rpath,/opt/Qt5.2.1/5.2.1/gcc_64/lib
@@ -433,7 +433,7 @@ qmake_all: FORCE
 
 dist: 
 	@test -d .tmp/TissueFoldingUI1.0.0 || mkdir -p .tmp/TissueFoldingUI1.0.0
-	$(COPY_FILE) --parents $(SOURCES) $(DIST) .tmp/TissueFoldingUI1.0.0/ && $(COPY_FILE) --parents SourceCode/MainWindow.h SourceCode/GLWidget.h ../TissueFolding/SourceCode/Analysis.h ../TissueFolding/SourceCode/CellMigration.h ../TissueFolding/SourceCode/GrowthFunctionBase.h ../TissueFolding/SourceCode/GrowthFunctionTypes.h ../TissueFolding/SourceCode/Lumen.h ../TissueFolding/SourceCode/ModelInputObject.h ../TissueFolding/SourceCode/MuscleFibre.h ../TissueFolding/SourceCode/MyosinFunction.h ../TissueFolding/SourceCode/NewtonRaphsonSolver.h ../TissueFolding/SourceCode/Node.h ../TissueFolding/SourceCode/Prism.h ../TissueFolding/SourceCode/RandomGenerator.h ../TissueFolding/SourceCode/ReferenceShapeBase.h ../TissueFolding/SourceCode/ShapeBase.h ../TissueFolding/SourceCode/Simulation.h .tmp/TissueFoldingUI1.0.0/ && $(COPY_FILE) --parents SourceCode/main.cpp SourceCode/MainWindow.cpp SourceCode/GLWidget.cpp ../TissueFolding/SourceCode/Prism.cpp ../TissueFolding/SourceCode/ReferenceShapeBase.cpp ../TissueFolding/SourceCode/ShapeBase.cpp ../TissueFolding/SourceCode/Simulation.cpp ../TissueFolding/SourceCode/Node.cpp ../TissueFolding/SourceCode/ModelInputObject.cpp ../TissueFolding/SourceCode/RandomGenerator.cpp ../TissueFolding/SourceCode/NewtonRaphsonSolver.cpp ../TissueFolding/SourceCode/Analysis.cpp ../TissueFolding/SourceCode/Lumen.cpp .tmp/TissueFoldingUI1.0.0/ && (cd `dirname .tmp/TissueFoldingUI1.0.0` && $(TAR) TissueFoldingUI1.0.0.tar TissueFoldingUI1.0.0 && $(COMPRESS) TissueFoldingUI1.0.0.tar) && $(MOVE) `dirname .tmp/TissueFoldingUI1.0.0`/TissueFoldingUI1.0.0.tar.gz . && $(DEL_FILE) -r .tmp/TissueFoldingUI1.0.0
+	$(COPY_FILE) --parents $(SOURCES) $(DIST) .tmp/TissueFoldingUI1.0.0/ && $(COPY_FILE) --parents SourceCode/MainWindow.h SourceCode/GLWidget.h ../TissueFolding/SourceCode/Analysis.h ../TissueFolding/SourceCode/GrowthFunctionBase.h ../TissueFolding/SourceCode/GrowthFunctionTypes.h ../TissueFolding/SourceCode/Lumen.h ../TissueFolding/SourceCode/ModelInputObject.h ../TissueFolding/SourceCode/MuscleFibre.h ../TissueFolding/SourceCode/MyosinFunction.h ../TissueFolding/SourceCode/NewtonRaphsonSolver.h ../TissueFolding/SourceCode/Node.h ../TissueFolding/SourceCode/Prism.h ../TissueFolding/SourceCode/RandomGenerator.h ../TissueFolding/SourceCode/ReferenceShapeBase.h ../TissueFolding/SourceCode/ShapeBase.h ../TissueFolding/SourceCode/Simulation.h .tmp/TissueFoldingUI1.0.0/ && $(COPY_FILE) --parents SourceCode/main.cpp SourceCode/MainWindow.cpp SourceCode/GLWidget.cpp ../TissueFolding/SourceCode/Prism.cpp ../TissueFolding/SourceCode/ReferenceShapeBase.cpp ../TissueFolding/SourceCode/ShapeBase.cpp ../TissueFolding/SourceCode/Simulation.cpp ../TissueFolding/SourceCode/Node.cpp ../TissueFolding/SourceCode/ModelInputObject.cpp ../TissueFolding/SourceCode/RandomGenerator.cpp ../TissueFolding/SourceCode/NewtonRaphsonSolver.cpp ../TissueFolding/SourceCode/Analysis.cpp ../TissueFolding/SourceCode/Lumen.cpp .tmp/TissueFoldingUI1.0.0/ && (cd `dirname .tmp/TissueFoldingUI1.0.0` && $(TAR) TissueFoldingUI1.0.0.tar TissueFoldingUI1.0.0 && $(COMPRESS) TissueFoldingUI1.0.0.tar) && $(MOVE) `dirname .tmp/TissueFoldingUI1.0.0`/TissueFoldingUI1.0.0.tar.gz . && $(DEL_FILE) -r .tmp/TissueFoldingUI1.0.0
 
 
 clean:compiler_clean 
@@ -2909,7 +2909,6 @@ install_sources: first FORCE
 	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/UserInterface/SourceCode/MainWindow.h $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
 	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/UserInterface/SourceCode/GLWidget.h $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
 	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/Analysis.h $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
-	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/CellMigration.h $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
 	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/GrowthFunctionBase.h $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
 	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/GrowthFunctionTypes.h $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
 	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/Lumen.h $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
@@ -2940,7 +2939,6 @@ uninstall_sources: FORCE
 	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/Lumen.h
 	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/GrowthFunctionTypes.h
 	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/GrowthFunctionBase.h
-	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/CellMigration.h
 	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/Analysis.h
 	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/GLWidget.h
 	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/MainWindow.h

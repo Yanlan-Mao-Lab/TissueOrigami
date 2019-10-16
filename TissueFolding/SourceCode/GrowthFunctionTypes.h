@@ -45,15 +45,15 @@ public:
 
 	~UniformGrowthFunction(){};
 
-	void getGrowthRate(double* maxValues){
+	std::array<double,3> getGrowthRate(){
 		/**
-		 *
-		 *  This function will write the UniformGrowthFunction#GrowthRate of the current growth function to the input double array
-		 *  pointer. The double array pointer should be set to point at a double array of size 3 (or higher) before calling the function.
+		 *  This function will return the UniformGrowthFunction#GrowthRate of the current growth function.
 		 */
+		std::array<double,3> maxValues {0};
 		maxValues[0] = GrowthRate[0];
 		maxValues[1] = GrowthRate[1];
 		maxValues[2] = GrowthRate[2];
+		return maxValues;
 	} ///< The function is to get the 3D growth rate of the current growth function.
 	void setGrowtRate(double ex, double ey, double ez){
 		/**
@@ -202,14 +202,16 @@ public:
 	float 	getOuterRadius(){
 		return outerRadius;
 	}///< This function returns RingGrowthFunction#outerRadius.
-	void getGrowthRate(double* maxValues){
+
+	std::array<double,3> getGrowthRate(){
 		/**
-		 *  This function will write the RingGrowthFunction#GrowthRate of the current growth function to the input double array
-		 *  pointer. The double array pointer should be set to point at a double array of size 3 (or higher) before calling the function.
+		 *  This function will return the RingGrowthFunction#GrowthRate of the current growth function.
 		 */
+		std::array<double,3> maxValues {0};
 		maxValues[0] = GrowthRate[0];
 		maxValues[1] = GrowthRate[1];
 		maxValues[2] = GrowthRate[2];
+		return maxValues;
 	}///< The function is to set the 3D maximum growth rate of the current ring growth function.
 
 	void setGrowtRate(double ex, double ey, double ez){
@@ -399,14 +401,6 @@ public:
 	int getGridY(){
 		return nGridY;
 	}///< This function returns GridBasedGrowthFunction#nGridY.
-
-	double*** getGrowthMatrix(){
-		return GrowthMatrix;
-	}///< This function returns GridBasedGrowthFunction#GrowthMatrix.
-
-	double** getXyShearAngleMatrix(){
-		return xyShearAngleMatrix;
-	}///< This function returns GridBasedGrowthFunction#xyShearAngleMatrix.
 
 	double getGrowthMatrixElement(int i, int j, int k){
 		return GrowthMatrix[i][j][k];
@@ -655,14 +649,16 @@ public:
 
 	~markerEllipseBasedShapeChangeFunction(){};
 
-	void getShapeChangeRateRate(double* rates){
+	std::array<double,3> getShapeChangeRateRate(){
 			/**
 			 *  This function will write the markerEllipseBasedShapeChangeFunction#GrowthRate of the current growth function to the input double array
 			 *  pointer. The double array pointer should be set to point at a double array of size 3 (or higher) before calling the function.
 			 */
+			std::array<double,3> rates;
 			rates[0] = GrowthRate[0];
 			rates[1] = GrowthRate[1];
 			rates[2] = GrowthRate[2];
+			return rates;
 		} ///< The function is to get the 3D growth rate of the current shape change function.
 
 

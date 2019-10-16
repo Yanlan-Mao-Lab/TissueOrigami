@@ -1414,7 +1414,7 @@ void Simulation::setLateralElementsRemodellingPlaneRotationMatrices(){
 
 void Simulation::assignNodeMasses(){
     /**
-     * Masses to all nodes are asigned through thier owner elements via ShapeBase#assignVolumesToNodes.
+     * Masses to all nodes are assigned through their owner elements via ShapeBase#assignVolumesToNodes.
      */
 	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 	    (*itElement)->assignVolumesToNodes(Nodes);
@@ -1426,9 +1426,19 @@ void Simulation::assignElementalSurfaceAreaIndices(){
     /**
      * Exposed surface indices to all elements are asigned via ShapeBase#assignExposedSurfaceAreaIndices.
      */
+	#ifndef DO_NOT_USE_OMP
+	/** If DO_NOT_USE_OMP is not defined,I will be using omp. This
+	 * is necessary as omp is not set up on mac
+	 * For mac, the sample line to add to the .pro file is
+     * CONFIG += -std=c++11 -D DO_NOT_USE_OMP -D DO_NOT_SOLVE_SYSTEM_OF_EQUATIONS
+     * For ubuntu & server, it is
+     * QMAKE_CXXFLAGS += -fopenmp -std=c++11 -D DO_NOT_USE_OMP -D DO_NOT_SOLVE_SYSTEM_OF_EQUATIONS
+	 *
+	 */
 	const int maxThreads = omp_get_max_threads();
 	omp_set_num_threads(maxThreads);
 	#pragma omp parallel for
+	#endif
 	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 		(*itElement)->assignExposedSurfaceAreaIndices(Nodes);
 	}
@@ -1624,17 +1634,6 @@ bool Simulation::openFiles(){
 		Success = false;
 	}
 	return Success;
-}
-
-bool Simulation::reOpenOutputFile(){
-	outputFile.close();
-	const char* name_outputFile = outputFileString.c_str();
-	outputFile.open(name_outputFile, ofstream::out);
-	if (!(outputFile.good() && outputFile.is_open())){
-		cerr<<"at step: "<<currSimTimeSec<<" could not open file: "<<name_outputFile<<endl;
-		return false;
-	}
-	return true;
 }
 
 void Simulation::writeSimulationSummary(){
@@ -5660,9 +5659,14 @@ void Simulation::calculateStiffnessChangeRatesForActin(int idOfCurrentStiffnessP
       * rates are set in this function via ShapeBase#calculateStiffnessPerturbationRate.
       */
     startedStiffnessPerturbation[idOfCurrentStiffnessPerturbation] = true;
-    const int maxThreads = omp_get_max_threads();
+	#ifndef DO_NOT_USE_OMP
+	/** If DO_NOT_USE_OMP is not defined,I will be using omp. This
+	 * is necessary as omp is not set up on mac
+	 */
+	const int maxThreads = omp_get_max_threads();
 	omp_set_num_threads(maxThreads);
 	#pragma omp parallel for
+	#endif
 	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 		bool applyToThisElement = (*itElement)->isActinStiffnessChangeAppliedToElement(ThereIsWholeTissueStiffnessPerturbation[idOfCurrentStiffnessPerturbation], ThereIsApicalStiffnessPerturbation[idOfCurrentStiffnessPerturbation], ThereIsBasalStiffnessPerturbation[idOfCurrentStiffnessPerturbation], ThereIsBasolateralWithApicalRelaxationStiffnessPerturbation[idOfCurrentStiffnessPerturbation],ThereIsBasolateralStiffnessPerturbation[idOfCurrentStiffnessPerturbation], stiffnessPerturbationEllipseBandIds[idOfCurrentStiffnessPerturbation], numberOfStiffnessPerturbationAppliesEllipseBands[idOfCurrentStiffnessPerturbation]);
 		if (applyToThisElement){
@@ -5678,9 +5682,14 @@ void Simulation::updateStiffnessChangeForActin(int idOfCurrentStiffnessPerturbat
       * ShapeBase#updateStiffnessMultiplier and elastic property tensors are updated
       * via ShapeBase#updateElasticProperties.
       */
+	#ifndef DO_NOT_USE_OMP
+	/** If DO_NOT_USE_OMP is not defined,I will be using omp. This
+	 * is necessary as omp is not set up on mac
+	 */
 	const int maxThreads = omp_get_max_threads();
 	omp_set_num_threads(maxThreads);
 	#pragma omp parallel for
+	#endif
 	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 		bool applyToThisElement = (*itElement)->isActinStiffnessChangeAppliedToElement(ThereIsWholeTissueStiffnessPerturbation[idOfCurrentStiffnessPerturbation], ThereIsApicalStiffnessPerturbation[idOfCurrentStiffnessPerturbation], ThereIsBasalStiffnessPerturbation[idOfCurrentStiffnessPerturbation], ThereIsBasolateralWithApicalRelaxationStiffnessPerturbation[idOfCurrentStiffnessPerturbation],  ThereIsBasolateralStiffnessPerturbation[idOfCurrentStiffnessPerturbation], stiffnessPerturbationEllipseBandIds[idOfCurrentStiffnessPerturbation], numberOfStiffnessPerturbationAppliesEllipseBands[idOfCurrentStiffnessPerturbation]);
 		if (applyToThisElement){
@@ -5717,8 +5726,14 @@ void Simulation::updateChangeForExplicitECM(int idOfCurrentECMPerturbation){
       * ShapeBase#updateStiffnessMultiplier and elastic property tensors are updated
       * via ShapeBase#updateElasticProperties.
       */
-    const int maxThreads = omp_get_max_threads();
+	#ifndef DO_NOT_USE_OMP
+	/** If DO_NOT_USE_OMP is not defined,I will be using omp. This
+	 * is necessary as omp is not set up on mac
+	 */
+	const int maxThreads = omp_get_max_threads();
+	omp_set_num_threads(maxThreads);
 	#pragma omp parallel for
+	#endif
 	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 		bool applyToThisElement = (*itElement)->isECMChangeAppliedToElement(changeApicalECM[idOfCurrentECMPerturbation], changeBasalECM[idOfCurrentECMPerturbation], ECMChangeEllipseBandIds[idOfCurrentECMPerturbation], numberOfECMChangeEllipseBands[idOfCurrentECMPerturbation]);
 		if (applyToThisElement){
@@ -5738,7 +5753,14 @@ void Simulation::updateChangeForViscosityBasedECMDefinition(int idOfCurrentECMPe
       */
 	cout<<"in viscosity update"<<endl;
     //const int maxThreads = omp_get_max_threads();
-    #pragma omp parallel for
+	#ifndef DO_NOT_USE_OMP
+	/** If DO_NOT_USE_OMP is not defined,I will be using omp. This
+	 * is necessary as omp is not set up on mac
+	 */
+	const int maxThreads = omp_get_max_threads();
+	omp_set_num_threads(maxThreads);
+	#pragma omp parallel for
+	#endif
 	for (vector<Node*>::iterator itNode = Nodes.begin(); itNode<Nodes.end(); ++itNode){
 			if(((*itNode)->tissuePlacement == 0 && changeBasalECM[idOfCurrentECMPerturbation] ) || ((*itNode)->tissuePlacement == 1 && changeApicalECM[idOfCurrentECMPerturbation] )){
 				if((*itNode)->insideEllipseBand){
@@ -5779,7 +5801,14 @@ void Simulation::calculateChangeRatesForECM(int idOfCurrentECMPerturbation){
 	//If there is no explicit ECM, the viscosity reflects the ECM stiffness, and I will change the viscosity on a nodal basis.
 	if( thereIsExplicitECM){
 		cout<<" there is explicit ECM for rate calculation"<<endl;
+		#ifndef DO_NOT_USE_OMP
+		/** If DO_NOT_USE_OMP is not defined,I will be using omp. This
+		 * is necessary as omp is not set up on mac
+		 */
+		const int maxThreads = omp_get_max_threads();
+		omp_set_num_threads(maxThreads);
 		#pragma omp parallel for
+		#endif
 		for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 			bool applyToThisElement = (*itElement)->isECMChangeAppliedToElement(changeApicalECM[idOfCurrentECMPerturbation], changeBasalECM[idOfCurrentECMPerturbation], ECMChangeEllipseBandIds[idOfCurrentECMPerturbation], numberOfECMChangeEllipseBands[idOfCurrentECMPerturbation]);
 			if (applyToThisElement){
@@ -5795,7 +5824,12 @@ void Simulation::calculateChangeRatesForECM(int idOfCurrentECMPerturbation){
          * Node#ECMViscosityChangePerHour per dimension is calculated via the change fraction Simulation#ECMViscosityChangeFraction, the
          * total time of applied change obtined from Simulation#ECMChangeBeginTimeInSec and Simulation#ECMChangeEndTimeInSec.
          */
+		#ifndef DO_NOT_USE_OMP
+		/** If DO_NOT_USE_OMP is not defined,I will be using omp. This
+		 * is necessary as omp is not set up on mac
+		 */
 		#pragma omp parallel for
+		#endif
 		for (vector<Node*>::iterator itNode = Nodes.begin(); itNode<Nodes.end(); ++itNode){
 			bool applyToThisNode = (*itNode)->isECMChangeAppliedToNode(changeApicalECM[idOfCurrentECMPerturbation], changeBasalECM[idOfCurrentECMPerturbation], ECMChangeEllipseBandIds[idOfCurrentECMPerturbation], numberOfECMChangeEllipseBands[idOfCurrentECMPerturbation]);
 			if(applyToThisNode){
@@ -5817,7 +5851,12 @@ void Simulation::calculateChangeRatesForECM(int idOfCurrentECMPerturbation){
          * The viscosity based ECM perturbation can be applied for ECM definitions beyond explicit ECM, and this is purely on nodal viscosity basis.
          */
 		double timeDifferenceInHours = (ECMChangeEndTimeInSec[idOfCurrentECMPerturbation] - ECMChangeBeginTimeInSec[idOfCurrentECMPerturbation])/3600;
+		#ifndef DO_NOT_USE_OMP
+		/** If DO_NOT_USE_OMP is not defined,I will be using omp. This
+		 * is necessary as omp is not set up on mac
+		 */
 		#pragma omp parallel for
+		#endif
 		for (vector<Node*>::iterator itNode = Nodes.begin(); itNode<Nodes.end(); ++itNode){
 			bool applyToThisNode = (*itNode)->isECMChangeAppliedToNode(changeApicalECM[idOfCurrentECMPerturbation], changeBasalECM[idOfCurrentECMPerturbation], ECMChangeEllipseBandIds[idOfCurrentECMPerturbation], numberOfECMChangeEllipseBands[idOfCurrentECMPerturbation]);
 			if(applyToThisNode){
@@ -5845,7 +5884,12 @@ void Simulation::updateECMRenewalHalflifeMultiplier(int idOfCurrentECMPerturbati
 		if (ECMChangeTypeIsEmergent[idOfCurrentECMPerturbation]){
 			double totalTimeChange = ECMChangeEndTimeInSec[idOfCurrentECMPerturbation] - ECMChangeBeginTimeInSec[idOfCurrentECMPerturbation];
 			double incrementPerSec = (ECMRenewalHalfLifeTargetFraction[idOfCurrentECMPerturbation] - 1.0) / totalTimeChange;
+			#ifndef DO_NOT_USE_OMP
+			/** If DO_NOT_USE_OMP is not defined,I will be using omp. This
+			 * is necessary as omp is not set up on mac
+			 */
 			#pragma omp parallel for
+			#endif
 			for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 				if ((*itElement)->isECMMimicing){
 					bool applyToThisElement = (*itElement)->isECMChangeAppliedToElement(changeApicalECM[idOfCurrentECMPerturbation], changeBasalECM[idOfCurrentECMPerturbation], ECMChangeEllipseBandIds[idOfCurrentECMPerturbation], numberOfECMChangeEllipseBands[idOfCurrentECMPerturbation]);
@@ -5873,7 +5917,12 @@ void Simulation::updateECMRenewalHalflifeMultiplier(int idOfCurrentECMPerturbati
 					double currTimeChange = currSimTimeSec - ECMChangeBeginTimeInSec[idOfCurrentECMPerturbation];
 					currECMRenewaHalfLifeMultiplier = 1 + (ECMRenewalHalfLifeTargetFraction[idOfCurrentECMPerturbation] - 1.0) * currTimeChange / totalTimeChange;
 				}
+				#ifndef DO_NOT_USE_OMP
+				/** If DO_NOT_USE_OMP is not defined,I will be using omp. This
+				* is necessary as omp is not set up on mac
+				*/
 				#pragma omp parallel for
+				#endif
 				for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 					if ((*itElement)->isECMMimicing){
 						bool applyToThisElement = (*itElement)->isECMChangeAppliedToElement(changeApicalECM[idOfCurrentECMPerturbation], changeBasalECM[idOfCurrentECMPerturbation], ECMChangeEllipseBandIds[idOfCurrentECMPerturbation], numberOfECMChangeEllipseBands[idOfCurrentECMPerturbation]);
@@ -5895,7 +5944,12 @@ void Simulation::checkECMChange(){
      * ShapeBase#updateChangeForViscosityBasedECMDefinition, ShapeBase#updateChangeForExplicitECM and ShapeBase#updateECMRenewalHalflifeMultiplier.
      */
 	if( thereIsExplicitECM){
+		#ifndef DO_NOT_USE_OMP
+		/** If DO_NOT_USE_OMP is not defined,I will be using omp. This
+		 * is necessary as omp is not set up on mac
+		 */
 		#pragma omp parallel for
+		#endif
 		for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 			bool updateStiffness = false;
 			if( (*itElement)->isECMMimicing && (*itElement)->tissuePlacement == 0 && (*itElement)->tissueType ==0 ){//columnar basal ecmmimicking element
@@ -6431,7 +6485,14 @@ void Simulation::calculateZProjectedAreas(){
 
 void Simulation::updatePlasticDeformation(){
 	//double rate = plasticDeformationRate/3600.0*dt; //convert from per hour to per de(in sec)
-	#pragma omp parallel for //private(Nodes, displacementPerDt, recordForcesOnFixedNodes, FixedNodeForces, outputFile, dt)
+	#ifndef DO_NOT_USE_OMP
+	/** If DO_NOT_USE_OMP is not defined,I will be using omp. This
+	 * is necessary as omp is not set up on mac
+	 */
+	const int maxThreads = omp_get_max_threads();
+	omp_set_num_threads(maxThreads);
+	#pragma omp parallel for
+	#endif
 	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 		if (!(*itElement)->IsAblated ){
 			if (thereIsExplicitECM &&  (*itElement)->isECMMimicing){
@@ -6527,10 +6588,7 @@ void Simulation::calculateNumericalJacobian(bool displayMatricesDuringNumericalC
 }
 
 void Simulation::conserveColumnVolume(){
-	const int maxThreads = omp_get_max_threads();
-	omp_set_num_threads(maxThreads);
-	//#pragma omp parallel for //private(Nodes, displacementPerDt, recordForcesOnFixedNodes, FixedNodeForces, outputFile, dt)
-    for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
     	vector <int> elementIdsForRedistribution;
     	if ((*itElement)->tissueType == 0 && (*itElement)->tissuePlacement == 1){
     		//columnar apical element, take the elements on same column
@@ -6611,6 +6669,21 @@ void Simulation::updateStepNR(){
     int maxIteration =20;
     bool converged = false;
 
+
+
+#ifdef DO_NOT_SOLVE_SYSTEM_OF_EQUATIONS
+    /** If DO_NOT_SOLVE_SYSTEM_OF_EQUATIONS is defined,I will
+     * not go into the Newton-Rapson iterations. This has two purposes:
+     * Either I am debugging, with a setup that is potentially crashing during calculations, or
+     * I am on a machine that can not utilise PARDISO.
+     * It is necessary on a Mac that does not have omp, as PARDISO demands omp.
+     * For mac, the sample line to add to the .pro file is
+     * CONFIG += -std=c++11 -D DO_NOT_USE_OMP -D DO_NOT_SOLVE_SYSTEM_OF_EQUATIONS
+     * For ubuntu & server, it is
+     * QMAKE_CXXFLAGS += -fopenmp -std=c++11 -D DO_NOT_USE_OMP -D DO_NOT_SOLVE_SYSTEM_OF_EQUATIONS
+     */
+    converged = true;
+	#endif
     bool numericalCalculation = false;
     bool displayMatricesDuringNumericalCalculation = false;
     bool useNumericalKIncalculation = false;
@@ -6830,7 +6903,19 @@ void Simulation::calculatePackingToEnclosingSurfacesJacobian3D(gsl_matrix* K){
 	int nNegative=nodesPackingToNegativeSurface.size();
 	double sigmoidSaturation = sigmoidSaturationForPacking;
 	double multiplier = packingMultiplier;
+	#ifndef DO_NOT_USE_OMP
+	/** If DO_NOT_USE_OMP is not defined,I will be using omp. This
+	 * is necessary as omp is not set up on mac
+	 * For mac, the sample line to add to the .pro file is
+     * CONFIG += -std=c++11 -D DO_NOT_USE_OMP DO_NOT_SOLVE_SYSTEM_OF_EQUATIONS
+     * For ubuntu & server, it is
+     * QMAKE_CXXFLAGS += -fopenmp -std=c++11 -D DO_NOT_USE_OMP DO_NOT_SOLVE_SYSTEM_OF_EQUATIONS
+	 *
+	 */
+	const int maxThreads = omp_get_max_threads();
+	omp_set_num_threads(maxThreads);
 	#pragma omp parallel for
+	#endif
 	for(int i = 0 ; i<nPositive; ++i){
 		int id0 =  nodesPackingToPositiveSurface[i];
 		//sigmoid test:
@@ -6849,7 +6934,12 @@ void Simulation::calculatePackingToEnclosingSurfacesJacobian3D(gsl_matrix* K){
 		value -= dFzdz0;
 		gsl_matrix_set(K,3*id0+2,3*id0+2,value);
 	}
+	#ifndef DO_NOT_USE_OMP
+	/** If DO_NOT_USE_OMP is not defined,I will be using omp. This
+	 * is necessary as omp is not set up on mac
+	 */
 	#pragma omp parallel for
+	#endif
 	for(int i = 0 ; i<nNegative; ++i){
 		int id0 =  nodesPackingToNegativeSurface[i];
 		//sigmoid test:
@@ -6874,7 +6964,14 @@ void Simulation::calculatePackingToAFMBeadJacobian3D(gsl_matrix* K){
 	int n=nodesPackingToBead.size();
 	double sigmoidSaturation = sigmoidSaturationForPacking;
 	double multiplier = packingMultiplier;
+	#ifndef DO_NOT_USE_OMP
+	/** If DO_NOT_USE_OMP is not defined,I will be using omp. This
+	 * is necessary as omp is not set up on mac
+	 */
+	const int maxThreads = omp_get_max_threads();
+	omp_set_num_threads(maxThreads);
 	#pragma omp parallel for
+	#endif
 	for(int i = 0 ; i<n; ++i){
 		int id0 =  nodesPackingToBead[i];
 		double dGap = distanceToBead[i];
@@ -7551,9 +7648,14 @@ void Simulation::updateNodeMasses(){
 }
 
 void Simulation::updateNodeViscositySurfaces(){
+	#ifndef DO_NOT_USE_OMP
+	/** If DO_NOT_USE_OMP is not defined,I will be using omp. This
+	 * is necessary as omp is not set up on mac
+	 */
 	const int maxThreads = omp_get_max_threads();
 	omp_set_num_threads(maxThreads);
 	#pragma omp parallel for
+	#endif
     for( vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 		if (!(*itElement)->IsAblated){
 			(*itElement)->calculateViscositySurfaces();
@@ -7593,18 +7695,28 @@ void Simulation::fillInNodeNeighbourhood(){
 void Simulation::setBasalNeighboursForApicalElements(){
     /** The basal neighbours are set with ShapeBase#setBasalNeigElementId function.
      */
+	#ifndef DO_NOT_USE_OMP
+	/** If DO_NOT_USE_OMP is not defined,I will be using omp. This
+	 * is necessary as omp is not set up on mac
+	 */
 	const int maxThreads = omp_get_max_threads();
 	omp_set_num_threads(maxThreads);
-	#pragma omp parallel for //private(Nodes, displacementPerDt, recordForcesOnFixedNodes, FixedNodeForces, outputFile, dt)
+	#pragma omp parallel for
+	#endif
 	for( vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 		(*itElement)->setBasalNeigElementId(Elements);
 	}
 }
 
 void Simulation::fillInElementColumnLists(){
+	#ifndef DO_NOT_USE_OMP
+	/** If DO_NOT_USE_OMP is not defined,I will be using omp. This
+	 * is necessary as omp is not set up on mac
+	 */
 	const int maxThreads = omp_get_max_threads();
 	omp_set_num_threads(maxThreads);
-	#pragma omp parallel for //private(Nodes, displacementPerDt, recordForcesOnFixedNodes, FixedNodeForces, outputFile, dt)
+	#pragma omp parallel for
+	#endif
 	for( vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 		if (!(*itElement)->IsAblated && (*itElement)->tissueType ==0 ){//Check only the columnar layer elements.
 			if ((*itElement)->tissuePlacement == 0){
@@ -7962,7 +8074,14 @@ void Simulation::detectPacingNodes(){
 	initialWeightPointx.clear();
 	initialWeightPointy.clear();
 	initialWeightPointz.clear();
+	#ifndef DO_NOT_USE_OMP
+	/** If DO_NOT_USE_OMP is not defined,I will be using omp. This
+	 * is necessary as omp is not set up on mac
+	 */
+	const int maxThreads = omp_get_max_threads();
+	omp_set_num_threads(maxThreads);
 	#pragma omp parallel for
+	#endif
 	for (vector<ShapeBase*>::iterator itEle = Elements.begin(); itEle<Elements.end(); ++itEle){
 		if ((*itEle)->tissueType == 0 && ((*itEle)->tissuePlacement == 1 || (*itEle)->spansWholeTissue)){
 			//columnar element at the apical surface or spans whole tissue
@@ -7992,9 +8111,6 @@ void Simulation::detectPacingNodes(){
 	vector <vector<double> > arrayForParallelisationInitialWeightPointz(nSegments, vector <double>(0));
 	//parallelise this loop:
 	//cout<<" at parallelisation loop for packing, within detectPacingNodes"<<endl;
-	const int maxThreads = omp_get_max_threads();
-	omp_set_num_threads(maxThreads);
-	//#pragma omp parallel for //private(arrayForParallelisationPacingNodeCouples0, arrayForParallelisationPacingNodeCouples1, arrayForParallelisationInitialWeightPointx, arrayForParallelisationInitialWeightPointy, arrayForParallelisationInitialWeightPointz)
 	for (int a =0; a<nSegments; ++a){
 		int initialpoint = parallellisationSegmentBoundaries[a];
 		int breakpoint =  parallellisationSegmentBoundaries[a+1];
@@ -8683,7 +8799,7 @@ void Simulation::writeGrowth(){
 	vector<ShapeBase*>::iterator itElement;
 	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
         gsl_matrix* currFg = (*itElement)->getFg();
-        double* growthRate = (*itElement)->getGrowthRate();
+        std::array<double,3> growthRate = (*itElement)->getGrowthRate();
         for (int j=0; j<3; ++j){
             for (int k=0; k<3; ++k){
                 double Fgjk = gsl_matrix_get(currFg,j,k);
@@ -8951,8 +9067,8 @@ void Simulation::cleanUpShapeChangeRates(){
 void Simulation::calculateShapeChangeMarkerEllipseBased (GrowthFunctionBase* currSCF){
 	if(currSimTimeSec >= currSCF->initTime && currSimTimeSec < currSCF->endTime ){
 			gsl_matrix* columnarShapeChangeIncrement = gsl_matrix_calloc(3,3);
-			double *growthRates = new double[3];
-			currSCF->getShapeChangeRateRate(growthRates);
+			std::array<double,3> growthRates;
+			growthRates= currSCF->getShapeChangeRateRate();
 	    	vector<ShapeBase*>::iterator itElement;
 	    	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 				bool appliedToElement = (*itElement)->isShapeChangeAppliedToElement(currSCF->appliedEllipseBandIds, currSCF->applyToBasalECM, currSCF->applyToLateralECM, currSCF->applyTissueApical, currSCF->applyTissueBasal, currSCF->applyTissueMidLine );
@@ -8963,7 +9079,6 @@ void Simulation::calculateShapeChangeMarkerEllipseBased (GrowthFunctionBase* cur
 					(*itElement)->updateShapeChangeIncrement(columnarShapeChangeIncrement);
 				}
 	    	}
-			delete[] growthRates;
 			gsl_matrix_free(columnarShapeChangeIncrement);
 		}
 }
@@ -8971,9 +9086,8 @@ void Simulation::calculateShapeChangeMarkerEllipseBased (GrowthFunctionBase* cur
 void Simulation::calculateShapeChangeUniform (GrowthFunctionBase* currSCF){
 	if(currSimTimeSec >= currSCF->initTime && currSimTimeSec < currSCF->endTime ){
 		//cout<<"calculating shape change uniform"<<endl;
-		double *maxValues;
-        maxValues = new double[3];
-        currSCF->getGrowthRate(maxValues);
+		std::array<double,3> maxValues{0};
+        maxValues = currSCF->getGrowthRate();
     	vector<ShapeBase*>::iterator itElement;
     	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 			//tissue type == 0 is columnar layer, ==1 is peripodial membrane, ==2 id linker zone
@@ -8996,8 +9110,6 @@ void Simulation::calculateShapeChangeUniform (GrowthFunctionBase* currSCF){
 				}
 			}
 		}
-    	//cout<<"finalised shape change uniform"<<endl;
-		delete[] maxValues;
 	}
 }
 
@@ -9006,8 +9118,8 @@ void Simulation::calculateGrowthUniform(GrowthFunctionBase* currGF){
 	if(currSimTimeSec >= currGF->initTime && currSimTimeSec < currGF->endTime ){
 		gsl_matrix* columnarFgIncrement = gsl_matrix_calloc(3,3);
 		gsl_matrix* peripodialFgIncrement = gsl_matrix_calloc(3,3);
-		double *growthRates = new double[3];
-		currGF->getGrowthRate(growthRates);
+		std::array<double,3> growthRates{0};
+		growthRates = currGF->getGrowthRate();
     	vector<ShapeBase*>::iterator itElement;
     	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 			gsl_matrix_set_identity(columnarFgIncrement);
@@ -9039,7 +9151,6 @@ void Simulation::calculateGrowthUniform(GrowthFunctionBase* currGF){
 				(*itElement)->updateGrowthIncrement(columnarFgIncrement,peripodialFgIncrement);
 			//}
     	}
-		delete[] growthRates;
 		gsl_matrix_free(columnarFgIncrement);
 		gsl_matrix_free(peripodialFgIncrement);
 	}
@@ -9053,9 +9164,8 @@ void Simulation::calculateGrowthRing(GrowthFunctionBase* currGF){
 		currGF->getCentre(centre[0], centre[1]);
 		float innerRadius = currGF->getInnerRadius();
 		float outerRadius = currGF->getOuterRadius();
-		double* maxValues;
-        maxValues = new double[3];
-		currGF->getGrowthRate(maxValues);
+		std::array<double,3> maxValues{0};
+		maxValues = currGF->getGrowthRate();
 		float innerRadius2 = innerRadius*innerRadius;
 		float outerRadius2 = outerRadius*outerRadius;
 		gsl_matrix* columnarFgIncrement = gsl_matrix_calloc(3,3);
@@ -9072,30 +9182,6 @@ void Simulation::calculateGrowthRing(GrowthFunctionBase* currGF){
 				float distance = pow(dmag2,0.5);
 				//calculating the growth rate: as a fraction increase within this time point
 				double sf = (1.0 - (distance - innerRadius) / (outerRadius - innerRadius) );
-
-				/*sf = 0.0;
-				int arrayOfInterest[30];
-				arrayOfInterest[0] = 3509;
-				arrayOfInterest[1] = 3511;
-				arrayOfInterest[2] = 3838;
-				arrayOfInterest[3] = 3747;
-				arrayOfInterest[4] = 3751;
-				arrayOfInterest[5] = 3427;
-				for (int aa=0;aa<4;++aa){
-					for (int bb=0;bb<6; ++bb){
-						arrayOfInterest[(aa+1)*6+bb] = arrayOfInterest[aa+bb] - 848;
-					}
-				}
-				for (int aa=0;aa<30;++aa){
-					cout<<"arrayOfInterest["<<aa<<"]: "<<arrayOfInterest[aa]<<endl;
-				}
-				for (int aa=0;aa<30;++aa){
-					if((*itElement)->Id == arrayOfInterest[aa]){
-						sf = 1.0;
-						break;
-					}
-				}
-				*/
 				double growthscale[3] = {maxValues[0]*sf,maxValues[1]*sf,maxValues[2]*sf};
 				gsl_matrix_set_identity(columnarFgIncrement);
 				gsl_matrix_set_identity(peripodialFgIncrement);
@@ -9130,7 +9216,6 @@ void Simulation::calculateGrowthRing(GrowthFunctionBase* currGF){
 		}
 		gsl_matrix_free(columnarFgIncrement);
 		gsl_matrix_free(peripodialFgIncrement);
-		delete[] maxValues;
 	}
 }
 
@@ -10039,9 +10124,14 @@ void Simulation::checkForVolumeRedistributionInTissue(){
 		if (currSimTimeSec >= apikobasalVolumeRedistributionBeginTimeInSec[i] && currSimTimeSec < apikobasalVolumeRedistributionEndTimeInSec[i]){
 			bool thisFunctionShrinksApical = apikobasalVolumeRedistributionFunctionShrinksApical[i];
 			double scale =apikobasalVolumeRedistributionScales[i];
+			#ifndef DO_NOT_USE_OMP
+			/** If DO_NOT_USE_OMP is not defined,I will be using omp. This
+			 * is necessary as omp is not set up on mac
+			 */
 			const int maxThreads = omp_get_max_threads();
 			omp_set_num_threads(maxThreads);
 			#pragma omp parallel for
+			#endif
 			for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 				(*itElement)->updateGrowthWillBeScaledDueToApikobasalRedistribution(thisFunctionShrinksApical, scale, apikobasalVolumeRedistributionFunctionEllipseBandIds[i]);
 			}
@@ -10050,9 +10140,14 @@ void Simulation::checkForVolumeRedistributionInTissue(){
 }
 
 void Simulation::clearScaleingDueToApikobasalRedistribution(){
+	#ifndef DO_NOT_USE_OMP
+	/** If DO_NOT_USE_OMP is not defined,I will be using omp. This
+	 * is necessary as omp is not set up on mac
+	 */
 	const int maxThreads = omp_get_max_threads();
 	omp_set_num_threads(maxThreads);
 	#pragma omp parallel for
+	#endif
 	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
 		(*itElement)->thereIsGrowthRedistribution = false;
 		(*itElement)->growthRedistributionScale = 0.0;

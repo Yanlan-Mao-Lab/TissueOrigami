@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <vector>
+#include <array>
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/io.hpp>
 #include <boost/numeric/ublas/operation.hpp>
@@ -17,7 +18,6 @@ protected:
     double initialApilcalEdgeLengthsSq[3];  ///< The array storing the squares of the apical edge lengths.
     double initialBasalEdgeLengthsSq[3];    ///< The array storing the squares of the apical edge lengths.
 
-    void setTissueCoordsRotationsBuffers();			//< TO DO: explain this
     void getCurrRelaxedShape(gsl_matrix * CurrRelaxedShape);	//< This function writes the nodal positions of the element's reference shape into the input matrix pointer. The input matrix must be initiated before calling the function.
     void setShapeFunctionDerivatives(gsl_matrix * ShapeFuncDer,double eta, double zeta, double nu); ///< This function calculates and writes the shape function derivatives on the gsl_matrix pointed by the provided input gsl_matrix pointer, for the provided barycentric coordinates.
     void setShapeFunctionDerivativeStack(gsl_matrix* ShapeFuncDer, gsl_matrix* ShapeFuncDerStack);  ///<This function writes the input gsl_matrix ShapeFuncDer into a stack form, in the matrix ShapeFuncDerStack. Both matrices must be allocated prior to calling the function.
@@ -38,33 +38,21 @@ protected:
     double getBasalSideLengthAverage();     				///< This function returns the average edge length of the basal surface.
     void assignExposedSurfaceAreaIndices(vector <Node*>& Nodes);  ///< This function assigns the indices of externally exposed surfaces of the prism.
 
-	
-void calculateNormalToBottom();	// TO DO: is this differnet then apical/basal normals? do I use this?
-void calculateReferenceNormalToBottom(); // TO DO: is this differnet then apical/basal normals? do I use this?
-void calculateNormalToTop(); // TO DO: is this differnet then apical/basal normals? do I use this?
-void calculateReferenceNormalToTop(); // TO DO: do i use this?
-void getCurrentAlignmentSides(double*, double*); // TO DO: do i use this?
-void getCurrentAlignmentFaces(double* RefSide, double* ShapeSide, double* RefFace, double* ShapeFace); // TO DO: do i use this?
-void updateAlignmentTurn(); // TO DO: do i use this?
-
 public:
     Prism(int* NodeIds,vector<Node*>& Nodes, int CurrId, bool thereIsPlasticDeformation);	//< constructor
     ~Prism(); //< destructor
     void  setElasticProperties(double EApical, double EBasal, double EMid,  double EECM, double v); ///< This function sets the elastic properties of the prism.
-    void  AlignReferenceBaseNormalToZ();// to do: do i use this?
 
-    void  calculateBasalNormal(double * normal);       ///< This function calculates the normal of the basal surface of the element.
+    void  calculateBasalNormal(double * normal);		///< This function calculates the normal of the basal surface of the element.
     void  calculateApicalNormalCurrentShape();          ///< This function calculates the normal of the apical surface of the element.
     void  calculateElementShapeFunctionDerivatives();   ///< This function calculates the shape function derivatives of the prism.
-    void  checkHealth(); ///< This function checks the health of the element, against fliiping.
+    void  checkHealth(); 								///< This function checks the health of the element, against fliiping.
 
-    void getApicalTriangles(vector <int> &ApicalTriangles); //< To do: do i use this? This function adds the apical triangles of teh element into the input vector
-    void AddPackingToSurface(int tissueplacementOfPackingNode, double Fx, double Fy,double Fz,  double **PackingForces,vector<Node*> &Nodes, bool& allCornersFixedX, bool& allCornersFixedY, bool& allCornersFixedZ); // to do: do i use this?
+    void getApicalTriangles(vector <int> &ApicalTriangles); //< This function adds the apical triangles of teh element into the input vector
     int getCorrecpondingApical(int currNodeId); ///< This function returns the corresponding connected apical node of a basal input node on the prism.
     bool IsThisNodeMyBasal(int currNodeId);     ///< This function checks if the input Node#Id is a basal node of the prism.
     bool IsThisNodeMyApical(int currNodeId);    ///< This function checks if the input Node#Id is an apical node of the prism.
     double getElementHeight();                  ///< This function returns the apical-basal (z) height of this prism.
-    bool IsPointCloseEnoughForPacking(double* Pos,  float threshold, int TissuePlacementOfPackingNode); ///< This function returns the boolean stating if the input position is packing to this element. to do: do i use this?
     void calculateApicalArea();                 ///< This function calculates the apical area of the prism.
     void calculateBasalArea();                  ///< This function calculates the basal area of the prism.
 
@@ -76,15 +64,6 @@ public:
     void checkRotationConsistency3D();          ///< This function checks if the nodes of the prosm rotate counter-clock vise, and corrects if not.
     bool areNodesDirectlyConnected(int node0, int node1); ///< This function checks if the two nodes with input Node#Id values are directly connected to each other in topology of the prism.
 
-	void getApicalNodePos(double* posCorner); // to do: defined but not used
-	void getBasalNodePos(double* posCorner); // to do: defined but not used
-	void getBasalNodeIds(vector <int> &nodeIds); // to do: defined but not used
-	void getApicalCentre(double* centre);// to do: defined but not used
-	void getBasalCentre(double* centre); // to do: defined but not used
-	void getReferenceApicalCentre(double* centre); // to do: defined but not used
-	void getReferenceBasalCentre(double* centre); // to do: defined but not used
-	double* getApicalMinViscosity(vector<Node*> Nodes); // to do: defined but not used
-	double* getBasalMinViscosity(vector<Node*> Nodes);  // to do: defined but not used
 	void calculateMyosinForcesAreaBased(double forcePerMyoMolecule); // to do : delete all myosin
 	void calculateMyosinForcesTotalSizeBased(double forcePerMyoMolecule);  // to do : delete all myosin
 	void distributeMyosinForcesAreaBased(bool isIsotropic, bool apical, double forcePerMyoMolecule);  // to do : delete all myosin

@@ -5,6 +5,7 @@
 #include <iostream>
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_blas.h>
+#include <array>
 //#include <vector>
 using namespace std;
 
@@ -58,20 +59,21 @@ public:
 		cerr<<"You are calling the function: "<<functionName<<" from a parent here, check declaration is via pointers"<<endl;
 		return returnValue;
 	}
-
+	std::array<double,3> 	ParentErrorMessage(string functionName, std::array<double,3> returnValue){
+		cerr<<"You are calling the function: "<<functionName<<" from a parent here, check declaration is via pointers"<<endl;
+		return returnValue;
+	}
 	virtual void		writeSummary(ofstream&/*saveFileSimulationSummary*/){ParentErrorMessage("writeSummary_no_dt");}; /// Virtual function of the parent to write the summary of growthFunction.
 	virtual void		writeSummary(ofstream&/*saveFileSimulationSummary*/, double /*dt*/){ParentErrorMessage("writeSummary_with_dt");}; /// Virtual function of the parent to write the summary of growthFunction.
 	virtual void 		getCentre(float &/*centreX*/, float &/*centreY*/){ParentErrorMessage("getCentre");}; /// Virtual function of the parent to get centre of the growth function definition.
 	virtual float 		getInnerRadius(){return ParentErrorMessage("getInnerRadius",0.0);}; /// Virtual function of the parent to get inner radius of the growth function definition.
 	virtual float 		getOuterRadius(){return ParentErrorMessage("getOuterRadius",0.0);}; /// Virtual function of the parent to get outer radius of the growth function definition.
-	virtual void 		getGrowthRate(double* /*maxValue*/){ParentErrorMessage("getGrowthRate");}; /// Virtual function of the parent to get growth rate of the growth function definition.
-	virtual void 		getShapeChangeRateRate(double* /*rates*/){ParentErrorMessage("getShapeChangeRateRate");}; /// Virtual function of the parent to get shape change rate of the growth function definition.
+	virtual std::array<double,3> 		getGrowthRate(){ParentErrorMessage("getGrowthRate");return std::array<double,3>{0.0};}; /// Virtual function of the parent to get growth rate of the growth function definition.
+	virtual std::array<double,3>		getShapeChangeRateRate(){ParentErrorMessage("getShapeChangeRateRate"); return std::array<double,3>{0.0};}; /// Virtual function of the parent to get shape change rate of the growth function definition.
 	virtual gsl_matrix* getShearAngleRotationMatrix(){ParentErrorMessage("getShearAngleRotationMatrix"); gsl_matrix* dummy; return dummy;}; //// Virtual function of the parent to get rotation angle matrix of the growth function definition.
 	virtual double 		getShearAngle(){ParentErrorMessage("getShearAngle");return 0.0;}; /// Virtual function of the parent to get rotation angle of the growth function definition.
 	virtual int			getGridX(){return ParentErrorMessage("getGridX",0);}; /// Virtual function of the parent to get gridX of the growth function definition.
 	virtual int			getGridY(){return ParentErrorMessage("getGridY",0);}; /// Virtual function of the parent to get gridY of the growth function definition.
-	virtual double*** 	getGrowthMatrix(){ParentErrorMessage("getGrowthMatrix");double*** a;return a;}
-	virtual double** 	getXyShearAngleMatrix(){ParentErrorMessage("getXyShearMatrix");double** a ;return a;}
 	virtual	double 		getGrowthMatrixElement(int /*i*/, int /*j*/, int /*k*/){return ParentErrorMessage("getGrowthMatrixElement",0.0);}; /// Virtual function of the parent to get grid matrix element of the growth function definition.
 	virtual	double 		getXyShearAngleMatrixElement(int /*i*/, int /*j*/){return ParentErrorMessage("getXyShearhMatrixElement",0.0);}; /// Virtual function of the parent to get grid matrix element of the growth function definition.
 	virtual bool 		isAspectRatioOverOne(int /*i*/, int /*j*/){return ParentErrorMessage("isAspectRatioOverOne",0);}; /// Virtual function of the parent to check aspect ratio of the growth function definition.
@@ -81,8 +83,6 @@ public:
 	virtual void		setGrowtRate(double /*ex*/, double /*ey*/, double /*ez*/){ParentErrorMessage("setGrowtRate");}; /// Virtual function of the parent to set growth rateof the growth function definition.
 	virtual void		setGrowthMatrixElement(double /*ex*/, double /*ey*/, double /*ez*/, int /*i*/, int /*j*/){ParentErrorMessage("setGrowtRate");}; /// Virtual function of the parent to set growth rateof the growth function definition.
 
-  //virtual std::array<double,3> 		getGrowthRate(){ParentErrorMessage("getGrowthRate");return std::array<double,3>{0.0};} /// Virtual function of the parent to get growth rate of the growth function definition.
-  //virtual std::array<double,3> 		getShapeChangeRateRate(){ParentErrorMessage("getShapeChangeRateRate");return std::array<double,3>{0.0};} /// Virtual function of the parent to get shape change rate of the growth function definition.
   //virtual size_t      getGridX(){return ParentErrorMessage("getGridX",0);} /// Virtual function of the parent to get gridX of the growth function definition.
   //virtual size_t      getGridY(){return ParentErrorMessage("getGridY",0);} /// Virtual function of the parent to get gridY of the growth function definition.
 

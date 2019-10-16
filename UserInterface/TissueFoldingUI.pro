@@ -27,9 +27,13 @@ CurrPath = /home/melda/Documents/TissueFolding/UserInterface/
 TARGET = $$CurrPath/Debug/TissueFoldingUI
 
 QMAKE_CFLAGS_RELEASE += -fopenmp
-QMAKE_CFLAGS_DEBUG += -fopenmp
-QMAKE_CXXFLAGS += -fopenmp -std=c++11
+QMAKE_CFLAGS_DEBUG += -fopenmp 
+QMAKE_CXXFLAGS += -fopenmp -std=c++11 -D  DO_NOT_USE_OMP -D DO_NOT_SOLVE_SYSTEM_OF_EQUATIONS
 QMAKE_LFLAGS +=  -fopenmp
+
+#QMAKE_CXXFLAGS += -fopenmp -std=c++11 -D DO_NOT_USE_OMP -D DO_NOT_SOLVE_SYSTEM_OF_EQUATIONS
+#qt creator on mac can read config not QMAKE_CXXFLAGS, ubuntu canr read QMAKE_CXXFLAGS, not CONFIG
+#CONFIG += -std=c++11 -D DO_NOT_USE_OMP -D DO_NOT_SOLVE_SYSTEM_OF_EQUATIONS
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 QT += opengl

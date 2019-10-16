@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <string>
 #include <vector>
+#include <array>
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/matrix_proxy.hpp>
 #include <boost/numeric/ublas/vector.hpp>
@@ -37,7 +38,7 @@ protected:
 	int 		nNodes;								///< The number of nodes of the element, it is based on ShapeBase#ShapeType
 	int 		nDim;								///< The number of dimensions for the positions of each of the nodes of the element
 	int* 		IdentifierColour;					///< The unique identifier colour of the element, this is used for "picking" in the visual interface.
-	double* 	GrowthRate;							///< Growth rate recording for display purposes only. The recorded growth rate in x, y, and z  coordinates, does not record shear deformation induced in growth. Recorded in exponential form through time step, converted to rate per hour for display within the visual interface
+	std::array<double,3> 	GrowthRate;							///< Growth rate recording for display purposes only. The recorded growth rate in x, y, and z  coordinates, does not record shear deformation induced in growth. Recorded in exponential form through time step, converted to rate per hour for display within the visual interface
 	gsl_matrix* growthIncrement;					///< The matrix (3,3) representing the incremental growth in current time step. Reset to identity at the beginning of each time step, updated in growth functions, and utilised to update Fg.
 	gsl_matrix* plasticDeformationIncrement;		///< The matrix (3,3) representing the incremental plastic deformation (treated as growth) in current time step. Set in plastic deformation calculation at each step, and utilised to update Fg.
 	gsl_matrix* shapeChangeIncrement;				///< The matrix (3,3) representing the incremental shape change in current time step. Reset to identity at the beginning of each time step, updated in shape change functions, and utilised to update Fg.
@@ -249,7 +250,7 @@ public:
     void   					updateInternalViscosityTest();
     double 					getYoungModulus();								///< This function will return the Young's modulus of the element
     double 					getPoissonRatio();								///< This function will return the Poissons's ratio of the element
-    double* 				getGrowthRate();								///< This function will return the current growth rate of the element.
+    std::array<double,3> 	getGrowthRate();								///< This function will return the current growth rate of the element.
     double* 				getShapeChangeRate();								///< This function will return the current shape change rate of the element.
     double**     			getReferencePos();							///< This function will return the reference positions of the element.
     void    				getPos(gsl_matrix* Pos);							///< This function will write the position of the element into input matrix.
@@ -282,7 +283,6 @@ public:
     void 					updateStiffnessMultiplier(double dt); ///< The function will update the actin multiplier as a result of stiffness perturbations.
     virtual void 			calculateBasalNormal(double * /*normal*/){ParentErrorMessage("calculateBasalNormal");}; 	///< The virtual function of the parent for basal normal calculation. The value is dependent on node topology of the element and defined for eac individual child class.
     virtual void 			calculateApicalNormalCurrentShape(){ParentErrorMessage("calculateApicalNormal");}							///< The virtual function of the parent for apical normal calculation. The value is dependent on node topology of the element and defined for eac individual child class.
-    virtual void 			AlignReferenceBaseNormalToZ(){ParentErrorMessage("AlignReferenceBaseNormalToZ");}; //TO DO: DO I use this?
     void 					calculateCurrentGrowthIncrement(gsl_matrix* resultingGrowthIncrement, double dt, double growthx, double growthy, double growthz, gsl_matrix* ShearAngleRotationMatrix); ///< The function calculates the current growth increment from the input of growth rate and the orientation rotation matrix.
     void 					updateShapeChangeRate(double x, double y, double z, double xy, double yz, double xz);
     virtual void			calculateReferenceStiffnessMatrix(){ParentErrorMessage("calculateReferenceStiffnessMatrix");};
@@ -362,8 +362,6 @@ public:
     virtual bool			IsThisNodeMyBasal(int /*currNodeId*/){return ParentErrorMessage("IsThisNodeMyBasal", false);}   ///< The virtual function of the parent to check if the input node ID is a basal node of the element, dependent on nodal topology, defined in each child.
     virtual bool			IsThisNodeMyApical(int /*currNodeId*/){return ParentErrorMessage("IsThisNodeMyApical", false);} ///< The virtual function of the parent to check if the input node ID is an apical node of the element, dependent on nodal topology, defined in each child.
     virtual double	 		getElementHeight(){return ParentErrorMessage("getElementHeight", 0.0);};	///< The virtual function of the parent to return element height, dependent on shape type.
-    virtual bool 			IsPointCloseEnoughForPacking(double* /*Pos*/,  float /*threshold*/, int /*TissuePlacementOfPackingNode*/){return ParentErrorMessage("IsPointCloseEnoughForPacking", false);};	///< The virtual function of the parent for checking proximity in packing, dependent on node topology.
-    virtual void 			AddPackingToSurface(int /*tissueplacement*/, double /*Fx*/, double /*Fy*/,double /*Fz*/, double **/*PackingForces*/, vector<Node*> &/*Nodes*/, bool& /*allCornersFixedX*/, bool& /*allCornersFixedY*/, bool& /*allCornersFixedZ*/){ParentErrorMessage("AddPackingToApicalSurface");}; ///< The virtual function of parent to add packing to external surfaces, dependent on node topology.
     virtual void 			getApicalNodePos(double* /*posCorner*/){ParentErrorMessage("getApicalNodePos");};	///< The virtual function of the parent to return the position for one apical node, dependent on node topology
     virtual void 			getBasalNodePos(double* /*posCorner*/){ParentErrorMessage("getBasalNodePos");};		///< The virtual function of the parent to return the position for one basal node, dependent on node topology
     virtual void 			constructElementStackList(const int /*discretisationLayers*/, vector<ShapeBase*>& /*elementsList*/){ParentErrorMessage("constructElementStackList");};
