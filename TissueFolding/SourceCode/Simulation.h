@@ -35,7 +35,6 @@ private:
 	std::ofstream saveFileGrowth;							///< Output file to save the growth.
 	std::ofstream saveFileGrowthRate;						///< Output file to save the growth rates.
 	std::ofstream saveFileForces;							///< Output file to save the forces
-	std::ofstream saveFileProteins;							///< Output file to save the protein levels
 	std::ofstream saveFilePhysicalProp;						///< Output file to save the physical properties of elements.
  	std::ofstream saveFileSpecificType;						///< Output file to save the specific node types, such as the ECM, actin, marker ellipses.
 	std::ofstream saveFileGrowthRedistribution;				///< Output file to save the volume redistribution.
@@ -49,7 +48,6 @@ private:
     std::ifstream saveFileToDisplayGrowth;					///< Input file to display of saved growth.
     std::ifstream saveFileToDisplayGrowthRate;				///< Input file to display of save growth rates.
 	std::ifstream saveFileToDisplayForce;					///< Input file to display of saved forces on elements.
-	std::ifstream saveFileToDisplayProteins;				///< Input file to display of saved proteins on elements.
 	std::ifstream saveFileToDisplayPhysicalProp;			///< Input file to display of saved physical properties of elements.
 	std::ifstream saveFileToDisplayPacking;					///< Input file to display of saved packing forces.
 	std::ifstream saveFileToDisplayVel;						///< Input file to display of saved velocities.
@@ -64,7 +62,6 @@ private:
 	bool	GrowthSaved;									///< Boolean stating if the growth is saved.
 	bool	GrowthRateSaved;								///< Boolean stating if the growth rates are saved.
 	bool	ForcesSaved;									///< Boolean stating if the forces are saved.
-	bool	ProteinsSaved;									///< Boolean stating if protein information is saved.
 	bool	physicalPropertiesSaved;						///< Boolean stating if the physical properties of the elements are saved.
 	bool	PackingSaved;									///< Boolean stating if the packing is  saved.
 	bool	growthRedistributionSaved;						///< Boolean stating if the volume redistribution is saved.
@@ -110,7 +107,6 @@ private:
 	void updateTensionCompressionFromSave();						///< This function updates system strains from save file to display.
 	void updateGrowthFromSave();									///< This function updates system growths from save file to display.
 	void updateGrowthRateFromSave();								///< This function updates system growth rates from save file to display.
-    void updateProteinsFromSave();									///< This function updates nodal protein levels from save file to display.
 	void updatePhysicalPropFromSave();								///< This function updates system physical properties from save file to display.
     void updatePackingFromSave();									///< This function updates system packing forces from save file to display.
 	void updateNodeBindingFromSave();								///< This function updates node binding information from save file to display.
@@ -118,8 +114,7 @@ private:
 	void updateCollapseAndAdhesionFromSave();						///< This function updates collapsed and adhered nodes from save file to display.
 	void readTensionCompressionToContinueFromSave();				///< This function updates system strains from save file to continue from save.
 	void readGrowthToContinueFromSave();							///< This function updates system growths from save file to continue from save.
-	void readGrowthRateToContinueFromSave();						///< This function updates nodal proteins from save file to continue from save.
-	void readProteinsToContinueFromSave();							///< This function updates system growth rates from save file to continue from save.
+	void readGrowthRateToContinueFromSave();						///< This function updates system growth rates from save file to continue from save.
 	void readPhysicalPropToContinueFromSave();						///< This function updates system physical properties from save file to continue from save.
 	void readGrowthRedistributionToContinueFromSave();				///< This function updates system volume redistribution from save file to continue from save.
 	void readNodeBindingToContinueFromSave();						///< This function updates system node binding data from save file to continue from save.
@@ -130,7 +125,7 @@ private:
 	void setDefaultParameters();									///< This function sets the default parameters to the simulation parameters.
 	bool openFiles();												///< This function opens the save files.
 	void initiateSystemForces(); 									///< This function initiates system force arrays.
-	bool initiateMesh(int MeshType, float zHeight);					///< This funciton initiates a single element mesh through functions Simulation#initiateSinglePrismNodes and Simulation#initiateSinglePrismElement.
+	bool initiateMesh(int MeshType, float zHeight);					///< This function initiates a single element mesh through functions Simulation#initiateSinglePrismNodes and Simulation#initiateSinglePrismElement.
 	bool initiateMesh(int MeshType, int Row, int Column, float SideLength, float zHeight);		/// This function initiates a hexagonal mesh of single element height, with input number of rows and 2xcolumns, each with given side length and z height.
 	bool initiateMesh(int MeshType);								///< This function initiates the simulation mesh depending on the input mesh type.
 	void readInTissueWeights();										///< This function reads in the tissue type weight of elements, peripodialness is recorded.
@@ -228,7 +223,6 @@ private:
     void writeGrowthRedistribution();                               ///< Write the volume redistribution of the simulation to the output directory specified by the user input
     void writeForces();												///< Write the nodal forces to save file at each time step.
 	void writePacking();											///< Write the packing forces to save file at each time step.
-	void writeProteins();											///< Write the nodal protein levels to save file at each time step.
 	void writeCollapseAndAdhesion();								///< Write collapsed and adhered nodes to save file at each time step.
 	void calculateGrowth();                                         ///< Calculates the growths of each element from input growth functions as specified in the model input file.
     void calculateShapeChange();                                    ///< Calculates the shape change of each element from input growth functions as specified in the model input file.

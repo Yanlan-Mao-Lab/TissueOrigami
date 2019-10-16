@@ -132,7 +132,6 @@ void Simulation::setDefaultParameters(){
     GrowthSaved = true;
     GrowthRateSaved = true;
 	ForcesSaved = true;
-	ProteinsSaved = true;
 	PackingSaved = true;
 	growthRedistributionSaved = true;
 	nodeBindingSaved = true;
@@ -434,9 +433,6 @@ bool Simulation::readFinalSimulationStep(){
         if (GrowthRateSaved){
             readGrowthRateToContinueFromSave();
         }
-        if (ProteinsSaved){
-        	readProteinsToContinueFromSave();
-		}
         if (physicalPropertiesSaved){
         	readPhysicalPropToContinueFromSave();
         }
@@ -1523,17 +1519,6 @@ bool Simulation::openFiles(){
 			cerr<<"could not open file: "<<name_saveFilePacking<<endl;
 			Success = false;
 		}
-		//opening the protein information file:
-		saveFileString = saveDirectory +"/Save_Proteins";
-		const char* name_saveFileProteins = saveFileString.c_str();
-		saveFileProteins.open(name_saveFileProteins, ofstream::binary);
-		if (saveFileProteins.good() && saveFileProteins.is_open()){
-			Success = true;
-		}
-		else{
-			cerr<<"could not open file: "<<name_saveFileProteins<<endl;
-			Success = false;
-		}
 		//opening the physical property information file:
 		saveFileString = saveDirectory +"/Save_PhysicalProp";
 		const char* name_saveFilePhysicalProp = saveFileString.c_str();
@@ -1895,13 +1880,6 @@ bool Simulation::openFilesToDisplay(){
 	if (!(saveFileToDisplayForce.good() && saveFileToDisplayForce.is_open())){
 		cerr<<"Cannot open the save file to display: "<<name_saveFileToDisplayForce<<endl;
 		ForcesSaved = false;
-	}
-	saveFileString = saveDirectoryToDisplayString +"/Save_Proteins";
-	const char* name_saveFileToDisplayProteins = saveFileString.c_str();;
-	saveFileToDisplayProteins.open(name_saveFileToDisplayProteins, ifstream::in);
-	if (!(saveFileToDisplayProteins.good() && saveFileToDisplayProteins.is_open())){
-		cerr<<"Cannot open the save file to display: "<<name_saveFileToDisplayProteins<<endl;
-		ProteinsSaved = false;
 	}
 	saveFileString = saveDirectoryToDisplayString +"/Save_Packing";
 	const char* name_saveFileToDisplayPacking = saveFileString.c_str();;
@@ -2608,8 +2586,6 @@ void Simulation::updateGrowthRateFromSave(){
 	}
 }
 
-void Simulation::updateProteinsFromSave(){
-}
 
 void Simulation::updatePhysicalPropFromSave(){
 	readPhysicalPropToContinueFromSave();
@@ -2760,10 +2736,6 @@ void Simulation::readGrowthRateToContinueFromSave(){
 	updateGrowthRateFromSave();
 }
 
-
-void Simulation::readProteinsToContinueFromSave(){
-}
-
 void Simulation::readPhysicalPropToContinueFromSave(){
     /**
      * For each element, the format is: \n
@@ -2849,9 +2821,6 @@ void Simulation::updateOneStepFromSave(){
     }
 	if (ForcesSaved){
 		updateForcesFromSave();
-	}
-	if(ProteinsSaved){
-		updateProteinsFromSave();
 	}
 	if(physicalPropertiesSaved){
 		updatePhysicalPropFromSave();
@@ -8549,7 +8518,6 @@ void Simulation::saveStep(){
     writeGrowth();
 	writeForces();
 	writePacking();
-	writeProteins();
 	writePhysicalProp();
 	writeGrowthRedistribution();
 	writeNodeBinding();
@@ -8760,9 +8728,6 @@ void Simulation::writePacking(){
 		saveFilePacking.write((char*) &PackingForces[pacingNodeCouples1[i]][2], sizeof PackingForces[pacingNodeCouples1[i]][2]);
 	}
 	saveFilePacking.flush();
-}
-
-void Simulation::writeProteins(){
 }
 
 void Simulation::writePhysicalProp(){
