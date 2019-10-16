@@ -35,7 +35,6 @@ MainWindow::MainWindow(Simulation* Sim01)
     this->analyser01 = new Analysis(3, Sim01->saveDirectoryToDisplayString, Sim01->Nodes, boundingBoxWidth);
 
     nCoordBox = 6;
-
     setWindowTitle(tr("Tissue Origami"));
     generateControlPanel();
     setUpGLWidget();
@@ -100,9 +99,10 @@ void MainWindow::generateControlPanel(){
 	BottomLineBox->addWidget(QuitButton,Qt::AlignBottom| Qt::AlignRight);
 	ControlPanelMainHBox->addLayout(BottomLineBox,Qt::AlignBottom);
 
-    	//Adding the control panel vertical box to the main grid of the main window.
+	//Adding the control panel vertical box to the main grid of the main window.
 	MainGrid->addLayout(ControlPanelMainHBox,0,1,Qt::AlignLeft);
 	MainGrid->setColumnStretch(1,-2);
+
 }
 
 void MainWindow::setUpGLWidget(){
@@ -454,10 +454,10 @@ void MainWindow::setDisplayPreferences(QGridLayout *ProjectDisplayOptionsGrid){
 	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[3],6,0,1,2,Qt::AlignLeft); // Scale Bar
 	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[4],7,0,1,2,Qt::AlignLeft); // Display Peripodial Membrane
 	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[5],8,0,1,2,Qt::AlignLeft); // Display Columnar Layer
-	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[9],7,2,1,2,Qt::AlignLeft); // Display Marked Ellipses
-	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[10],8,2,1,2,Qt::AlignLeft); // Display Volume redistribution
-	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[11],9,2,1,2,Qt::AlignLeft); // Display node binding
-	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[12],9,0,1,2,Qt::AlignLeft); // Display Lumen
+	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[8],7,2,1,2,Qt::AlignLeft); // Display Marked Ellipses
+	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[9],8,2,1,2,Qt::AlignLeft); // Display Volume redistribution
+	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[10],9,2,1,2,Qt::AlignLeft); // Display node binding
+	ProjectDisplayOptionsGrid->addWidget(DisplayPreferencesCheckBoxes[11],9,0,1,2,Qt::AlignLeft); // Display Lumen
 
 }
 

@@ -2363,9 +2363,6 @@ bool Simulation::readElementDataToContinueFromSave(){
 		}
 
 	}
-	//string line;
-	//getline(saveFileToDisplayMesh, line);
-
 	return true;
 }
 

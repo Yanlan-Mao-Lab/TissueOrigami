@@ -114,7 +114,7 @@ public slots:
     QComboBox   	*PysPropComboBox;
     QDoubleSpinBox 	*PysPropSpinBoxes[2];
     QGroupBox   	*ColourCodingBox;
-    QCheckBox		*DisplayPreferencesCheckBoxes[13];
+    QCheckBox		*DisplayPreferencesCheckBoxes[12];
     QLabel			*SimTime;
     QPushButton		*PerspectiveButton;
     QPushButton		*TopViewButton;
