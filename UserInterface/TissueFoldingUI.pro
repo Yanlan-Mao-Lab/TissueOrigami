@@ -28,7 +28,7 @@ TARGET = $$CurrPath/Debug/TissueFoldingUI
 
 QMAKE_CFLAGS_RELEASE += -fopenmp
 QMAKE_CFLAGS_DEBUG += -fopenmp 
-QMAKE_CXXFLAGS += -fopenmp -std=c++11 -D  DO_NOT_USE_OMP -D DO_NOT_SOLVE_SYSTEM_OF_EQUATIONS
+QMAKE_CXXFLAGS += -fopenmp -std=c++17
 QMAKE_LFLAGS +=  -fopenmp
 
 #QMAKE_CXXFLAGS += -fopenmp -std=c++11 -D DO_NOT_USE_OMP -D DO_NOT_SOLVE_SYSTEM_OF_EQUATIONS

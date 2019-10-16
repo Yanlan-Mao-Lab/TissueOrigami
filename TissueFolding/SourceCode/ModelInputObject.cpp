@@ -13,6 +13,7 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <memory>
 
 using namespace std;
 
@@ -492,12 +493,14 @@ bool ModelInputObject::readGrowthType1(ifstream& file){
 	 * Once all input parameters are gathered, a new growth function object is initiated with the constructor of UniformGrowthFunction# class.
 	 * The pointer to the generated object is recorded in the vector of Growth function objects that the simulation object keeps, Simulation#GrowthFunctions.
 	 */
-	GrowthFunctionBase* GSBp;
+	//GrowthFunctionBase* GSBp;
 	int Id = Sim->GrowthFunctions.size();
 	//type is 1
-	GSBp = new UniformGrowthFunction(Id, 1, initialtime, finaltime, applyToColumnarLayer, applyToPeripodialMembrane, applyToBasalECM, applyToLateralECM, DVRate, APRate,  ABRate, angle);
-	Sim->GrowthFunctions.push_back(GSBp);
-	return true;
+	//GSBp = new UniformGrowthFunction(Id, 1, initialtime, finaltime, applyToColumnarLayer, applyToPeripodialMembrane, applyToBasalECM, applyToLateralECM, DVRate, APRate,  ABRate, angle);
+	//Sim->GrowthFunctions.push_back(GSBp);
+    std::unique_ptr<GrowthFunctionBase> GSBp = std::make_unique<UniformGrowthFunction>(Id, 1, initialtime, finaltime, applyToColumnarLayer, applyToPeripodialMembrane, applyToBasalECM, applyToLateralECM, DVRate, APRate,  ABRate, angle);
+    Sim->GrowthFunctions.push_back(std::move(GSBp));
+    return true;
 }
 
 bool ModelInputObject::readGrowthType2(ifstream& file){
@@ -652,12 +655,15 @@ bool ModelInputObject::readGrowthType2(ifstream& file){
 	 * Once all input parameters are gathered, a new growth function object is initiated with the constructor of UniformGrowthFunction# class.
 	 * The pointer to the generated object is recorded in the vector of Growth function objects that the simulation object keeps, Simulation#GrowthFunctions.
 	 */
-	GrowthFunctionBase* GSBp;
+	//GrowthFunctionBase* GSBp;
 	int Id = Sim->GrowthFunctions.size();
 	//type is 2
-	GSBp = new RingGrowthFunction(Id, 2, initialtime, finaltime, applyToColumnarLayer, applyToPeripodialMembrane, applyToBasalECM, applyToLateralECM, CentreX, CentreY, innerR,  outerR, DVRate, APRate,  ABRate, angle);
-	Sim->GrowthFunctions.push_back(GSBp);
-	return true;
+	//GSBp = new RingGrowthFunction(Id, 2, initialtime, finaltime, applyToColumnarLayer, applyToPeripodialMembrane, applyToBasalECM, applyToLateralECM, CentreX, CentreY, innerR,  outerR, DVRate, APRate,  ABRate, angle);
+	//Sim->GrowthFunctions.push_back(GSBp);
+
+    std::unique_ptr<GrowthFunctionBase> GSBp = std::make_unique<RingGrowthFunction>(Id, 2, initialtime, finaltime, applyToColumnarLayer, applyToPeripodialMembrane, applyToBasalECM, applyToLateralECM, CentreX, CentreY, innerR,  outerR, DVRate, APRate,  ABRate, angle);
+    Sim->GrowthFunctions.push_back(std::move(GSBp));
+    return true;
 }
 
 bool ModelInputObject::readGrowthType3(ifstream& file){
@@ -682,8 +688,8 @@ bool ModelInputObject::readGrowthType3(ifstream& file){
 	bool applyToLateralECM = false;
 	bool applyToBasalECM = false;
 	int gridX, gridY;
-	double*** GrowthMatrix;
-	double**  AngleMatrix;
+	std::vector<std::vector<std::array<double,3>>> GrowthMatrix; //[grid_i][grid_j][x,y,z]
+	std::vector<std::vector<double>>  AngleMatrix; //[grid_i][grid_j][tetha]
 	if(currHeader == "InitialTime(sec):"){
 		file >> initialtime;
 	}
@@ -738,7 +744,7 @@ bool ModelInputObject::readGrowthType3(ifstream& file){
 		 */
 		string filepath;
 		file >> filepath;
-		cerr<<" filename is: "<<filepath<<endl;
+		std::cerr<<" filename is: "<<filepath<<std::endl;
 		const char* name_growthRates = filepath.c_str();
 		ifstream GrowthRateFile;
 		GrowthRateFile.open(name_growthRates, ifstream::in);
@@ -749,7 +755,7 @@ bool ModelInputObject::readGrowthType3(ifstream& file){
 			 * If you checked the file name, check it 5 more times before assuming the error is something else.
 			 * No, seriously, it is the file path that is wrong, you have a typo.
 			 */
-			cerr<<"could not open growth rate file file: "<<name_growthRates<<endl;
+			std::cerr<<"could not open growth rate file file: "<<name_growthRates<<std::endl;
 			return false;
 		}
 		//adding the indice of the growth matrix
@@ -757,29 +763,22 @@ bool ModelInputObject::readGrowthType3(ifstream& file){
 		 * The growth grid will contain the size of the grid matrix as the first two
 		 * parameters, first these are read.
 		 */
-		std::cout<<"reading from growth file"<<endl;
+		std::cout<<"reading from growth file"<<std::endl;
 		GrowthRateFile >> gridX;
 		GrowthRateFile >> gridY;
 		float rate;
-        cout<<"initiating growth and angle matrices"<<endl;
+        cout<<"initiating growth and angle matrices"<<std::endl;
         /**
          * Then the stacked arrays are generated for the growth rate and the growth orientation matrices, if I have time, I will convert these to vectors, which are
          * much more cleaner then new double arrays. Growth matrix has three layers, x & y coordinates on the bounding box and the 3D growth.
          * Orientation angles have 2 laters, x & y directions only, followed by a single angle value.
          * All initiated as zeros.
          */
-		GrowthMatrix = new double**[(const int) gridX];
-		AngleMatrix = new double*[(const int) gridX];
-		for (int i=0; i<gridX; ++i){
-			GrowthMatrix[i] = new double*[(const int) gridY];
-			AngleMatrix[i] = new double[(const int) gridY];
-			for (int j=0; j<gridY; ++j){
-				GrowthMatrix[i][j] = new double[3];
-				for (int k=0; k<3; ++k){
-					GrowthMatrix[i][j][k] = 0.0;
-				}
-				AngleMatrix[i][j] = 0.0;
-			}
+        for (size_t i= 0; i<gridX; ++i){
+            std::vector<std::array<double,3>> tmpGridMatrixY(gridY,std::array<double,3>{0.0});
+            GrowthMatrix.push_back(tmpGridMatrixY);
+            std::vector<double> tmpShearY(gridY,0.0);
+            AngleMatrix.push_back(tmpShearY);
 		}
 		double timeMultiplier = 1.0 / 3600.0; // converting rate per hour to rate per second
 		/**
@@ -842,14 +841,18 @@ bool ModelInputObject::readGrowthType3(ifstream& file){
 	 * Once all input parameters are gathered, a new growth function object is initiated with the constructor of UniformGrowthFunction# class.
 	 * The pointer to the generated object is recorded in the vector of Growth function objects that the simulation object keeps, Simulation#GrowthFunctions.
 	 */
-	GrowthFunctionBase* GSBp;
+	//GrowthFunctionBase* GSBp;
 	int Id = Sim->GrowthFunctions.size();
 	//type is 3
-	GSBp = new GridBasedGrowthFunction(Id, 3, initialtime, finaltime, applyToColumnarLayer, applyToPeripodialMembrane, applyToBasalECM, applyToLateralECM, gridX, gridY, GrowthMatrix, AngleMatrix);
+	//GSBp = new GridBasedGrowthFunction(Id, 3, initialtime, finaltime, applyToColumnarLayer, applyToPeripodialMembrane, applyToBasalECM, applyToLateralECM, gridX, gridY, GrowthMatrix, AngleMatrix);
+	//GSBp->zMin = zMin;
+	//GSBp->zMax = zMax;
+
+	//Sim->GrowthFunctions.push_back(GSBp);
+	std::unique_ptr<GrowthFunctionBase> GSBp = std::make_unique<GridBasedGrowthFunction>(Id, 3, initialtime, finaltime, applyToColumnarLayer, applyToPeripodialMembrane, applyToBasalECM, applyToLateralECM, gridX, gridY, GrowthMatrix, AngleMatrix);
 	GSBp->zMin = zMin;
 	GSBp->zMax = zMax;
-
-	Sim->GrowthFunctions.push_back(GSBp);
+	Sim->GrowthFunctions.push_back(std::move(GSBp));
 	return true;
 }
 
@@ -2308,11 +2311,16 @@ bool ModelInputObject::readShapeChangeType1(ifstream& file){
 		return false;
 	}
 	cerr<<"Shape change of type : 1, from time: "<<initialtime<<" to "<<finaltime<<" applicable to (C, P) "<<applyToColumnarLayer <<" "<<applyToPeripodialMembrane<<" Rate: "<<Rate<<endl;
-	GrowthFunctionBase* GSBp;
-	int Id = Sim->ShapeChangeFunctions.size();
+	//GrowthFunctionBase* GSBp;
+	//int Id = Sim->ShapeChangeFunctions.size();
 	//type is 1
-	GSBp = new UniformShapeChangeFunction(Id, 1, initialtime, finaltime, applyToColumnarLayer, applyToPeripodialMembrane, false /*applyToBasalECM*/, false /*applyToLateralECM*/, 1, Rate);
-	Sim->ShapeChangeFunctions.push_back(GSBp);
+	//GSBp = new UniformShapeChangeFunction(Id, 1, initialtime, finaltime, applyToColumnarLayer, applyToPeripodialMembrane, false /*applyToBasalECM*/, false /*applyToLateralECM*/, 1, Rate);
+	//Sim->ShapeChangeFunctions.push_back(GSBp);
+
+    int Id = Sim->ShapeChangeFunctions.size();
+    //type is 1
+    unique_ptr<GrowthFunctionBase> GSBp = std::make_unique<UniformShapeChangeFunction>(Id, 1, initialtime, finaltime, applyToColumnarLayer, applyToPeripodialMembrane, false /*applyToBasalECM*/, false /*applyToLateralECM*/, 1, Rate);
+    Sim->ShapeChangeFunctions.push_back(std::move(GSBp));
 	return true;
 }
 
@@ -2419,11 +2427,17 @@ bool ModelInputObject::readShapeChangeType2(ifstream& file){
 		printErrorMessage(currHeader,"shape change type 2","ConserveVolume(bool)");
 		return false;
 	}
-	GrowthFunctionBase* GSBp;
-	int Id = Sim->ShapeChangeFunctions.size();
+	//GrowthFunctionBase* GSBp;
+	//int Id = Sim->ShapeChangeFunctions.size();
 	//type is 1
-	GSBp = new 	markerEllipseBasedShapeChangeFunction(Id, 2, initialtime, finaltime, applyTissueApical, applyTissueBasal, applyTissueMidline, applyToBasalECM, applyToLateralECM, 2, ShapeChangeFractionPerHr, markerEllipses, conserveVolume);
-	Sim->ShapeChangeFunctions.push_back(GSBp);
+	//GSBp = new 	markerEllipseBasedShapeChangeFunction(Id, 2, initialtime, finaltime, applyTissueApical, applyTissueBasal, applyTissueMidline, applyToBasalECM, applyToLateralECM, 2, ShapeChangeFractionPerHr, markerEllipses, conserveVolume);
+	//Sim->ShapeChangeFunctions.push_back(GSBp);
+
+	int Id = Sim->ShapeChangeFunctions.size();
+	//type is 2
+	std::unique_ptr<GrowthFunctionBase> GSBp = std::make_unique<markerEllipseBasedShapeChangeFunction>(Id, 2, initialtime, finaltime, applyTissueApical, applyTissueBasal, applyTissueMidline, applyToBasalECM, applyToLateralECM, 2, ShapeChangeFractionPerHr, markerEllipses, conserveVolume);
+	Sim->ShapeChangeFunctions.push_back(std::move(GSBp));
+
 	return true;
 }
 

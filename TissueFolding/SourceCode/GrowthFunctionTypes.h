@@ -272,21 +272,23 @@ private:
 public:
 	int nGridX;	///< The number of grid points that discretise the tissue in x
 	int nGridY;	///< The number of grid points that discretise the tissue in y
-	double ***GrowthMatrix;	///<The matrix of growth rates in (1/sec). It is a matrix of double triplets for growth rate at each grid point. The dimensions of the matrix are equal to (GridBasedGrowthFunction::nGridX, GridBasedGrowthFunction::nGridY), and set in constructor of the GridBasedGrowthFunction. The triplets store the growth rate in [ DV axis (x), AP axis (y), and AB axis (z)].
-	double **xyShearAngleMatrix; ///<The matrix of xy shear rate (rad/sec). It is a matrix of doubles at each grid point. he dimensions of the matrix are equal to (GridBasedGrowthFunction::nGridX, GridBasedGrowthFunction::nGridY), and set in constructor of the GridBasedGrowthFunction.
-	//xyShearRotationsMatrix : [grid_i] [grid_j][orientation rotation mat ]
-	gsl_matrix*** xyShearRotationsMatrix;
-	//aspectRatioOverThresoldMatrix : [grid_i] [grid_j][AR over threshold bool]
-	bool** aspectRatioOverThresoldMatrix;
+	//GrowthMatrix : [grid_i] [grid_j][x,y,z]
+	std::vector<std::vector<std::array<double,3>>> GrowthMatrix;	///<The matrix of growth rates in (1/sec). It is a matrix of double triplets for growth rate at each grid point. The dimensions of the matrix are equal to (GridBasedGrowthFunction::nGridX, GridBasedGrowthFunction::nGridY), and set in constructor of the GridBasedGrowthFunction. The triplets store the growth rate in [ DV axis (x), AP axis (y), and AB axis (z)].
+	//xyShearAngleMatrix : [grid_i] [grid_j][orientation angle]
+	std::vector<std::vector<double>> xyShearAngleMatrix; ///<The matrix of xy shear rate (rad/sec). It is a matrix of doubles at each grid point. he dimensions of the matrix are equal to (GridBasedGrowthFunction::nGridX, GridBasedGrowthFunction::nGridY), and set in constructor of the GridBasedGrowthFunction.
+    //xyShearRotationsMatrix : [grid_i] [grid_j][orientation rotation mat ]
+    gsl_matrix*** xyShearRotationsMatrix;
+    //aspectRatioOverThresoldMatrix : [grid_i] [grid_j][AR over threshold bool]
+    std::vector<std::vector<bool>> aspectRatioOverThresoldMatrix;
 
-	//[grid_i] [grid_j][4-corners][x,y,z]
-	double****	compatibleGrowths;
-	//[grid_i] [grid_j][4-corners][(bool)]
-	double***	compatibleAngles;
-	//[grid_i] [grid_j][4-corners][(double) angles ]
-	bool***		compatibleAngleEliminated;
+    //[grid_i] [grid_j][4-corners][x,y,z]
+    std::vector<std::vector<std::array<std::array<double,3>,4>>> compatibleGrowths;
+    //[grid_i] [grid_j][4-corners][(bool)]
+    std::vector<std::vector<std::array<bool,4>>> compatibleAngleEliminated;
+    //[grid_i] [grid_j][4-corners][(double) angles ]
+    std::vector<std::vector<std::array<double,4>>> compatibleAngles;
 
-	GridBasedGrowthFunction(int id, int type, float initTime, float endTime, bool applyToColumnarLayer, bool applyToPeripodialMembrane, bool applyToBasalECM, bool applyToLateralECM, int nX, int nY, double*** GrowthMat, double** AngleMat) : GrowthFunctionBase(id, type, initTime, endTime, applyToColumnarLayer, applyToPeripodialMembrane, applyToBasalECM,  applyToLateralECM){
+	GridBasedGrowthFunction(int id, int type, float initTime, float endTime, bool applyToColumnarLayer, bool applyToPeripodialMembrane, bool applyToBasalECM, bool applyToLateralECM, int nX, int nY, std::vector<std::vector<std::array<double,3>>>& GrowthMat, std::vector<std::vector<double>>& AngleMat) : GrowthFunctionBase(id, type, initTime, endTime, applyToColumnarLayer, applyToPeripodialMembrane, applyToBasalECM,  applyToLateralECM){
 		/**
 		 *  The first six parameters will be directed to the parent constructor, GrowthFunctionBase#GrowthFunctionBase. \n
 		 *  integers nX and nY will set GridBasedGrowthFunction#nGridX and GridBasedGrowthFunction#nGridY, respectively.  GridBasedGrowthFunction::GrowthMatrix will be initiated to point at a 2 dimensional matrix of double triplets the size(nX, nY). \n
@@ -296,44 +298,29 @@ public:
 		double aspectRatioThreshold = 1.1;
 		this ->nGridX = nX;
 		this ->nGridY = nY;
-		GrowthMatrix = new double**[(const int) nGridX];
-		xyShearAngleMatrix  = new double*[(const int) nGridX];
-		aspectRatioOverThresoldMatrix = new bool*[(const int) nGridX];
 
-		compatibleAngleEliminated 	= new bool**[(const int) nGridX];
-		compatibleAngles 	 		= new double**[(const int) nGridX];
-		compatibleGrowths  			= new double***[(const int) nGridX];
+		for (size_t i= 0; i<nGridX; ++i){
+			std::vector<std::array<double,3>> tmpGridMatrixY(nGridY,std::array<double,3>{0.0});
+			GrowthMatrix.push_back(tmpGridMatrixY);
+			std::vector<double> tmpShearY(nGridY,0.0);
+			xyShearAngleMatrix.push_back(tmpShearY);
+			std::vector<bool> tmpAROverThresY (nGridY,true); //set AR to be significant, and assign it to be too small if necesarry
+			aspectRatioOverThresoldMatrix.push_back(tmpAROverThresY);
 
-
-		for (int i=0; i<nGridX; ++i){
-			GrowthMatrix[i] = new double*[(const int) nGridY];
-			xyShearAngleMatrix[i] = new double[(const int) nGridY];
-			aspectRatioOverThresoldMatrix[i] = new bool[(const int) nGridY];
-			compatibleAngleEliminated[i] 	= new bool*[(const int) nGridY];
-			compatibleAngles[i] 	 		= new double*[(const int) nGridY];
-			compatibleGrowths[i]  			= new double**[(const int) nGridY];
-			for (int j=0; j<nGridY; ++j){
-				GrowthMatrix[i][j] = new double[3];
+			//matrices with 4 corners,for compatable averaging:
+			std::vector<std::array<std::array<double,3>,4>> tmpGrid4CornerMatrixY(nGridY,std::array<std::array<double,3>,4>{std::array<double,3>{0.0}});
+			compatibleGrowths.push_back(tmpGrid4CornerMatrixY);
+			std::vector<std::array<bool,4>> tmpGrid4CornerAngleEliminatedY(nGridY,std::array<bool,4>{false});
+			compatibleAngleEliminated.push_back(tmpGrid4CornerAngleEliminatedY);
+			std::vector<std::array<double,4>> tmpGrid4CornerAngleY(nGridY,std::array<double,4>{0.0});
+			compatibleAngles.push_back(tmpGrid4CornerAngleY);
+		}
+		for (size_t i=0; i<nGridX; ++i){
+			for (size_t j=0; j<nGridY; ++j){
 				xyShearAngleMatrix[i][j] = AngleMat[i][j]*M_PI/180.0; //converting to radians
-				aspectRatioOverThresoldMatrix[i][j] = true; //setting all aspect ratios to be over threshold
-				for (int k=0; k<3; ++k){
-					double scaleGrowth[3] = {1.0,1.0,1.0};
-					GrowthMatrix[i][j][k] = scaleGrowth[k]*GrowthMat[i][j][k];
+				for (size_t k=0; k<3; ++k){
+					GrowthMatrix[i][j][k] = GrowthMat[i][j][k];
 				}
-				//cout<<"set the growth matrix for: "<<i<<" "<<j<<endl;
-				compatibleAngleEliminated[i][j] = new bool[4];	//booleans stating if the angle will be added in compatible averaging in for 4 corners
-				compatibleAngles[i][j] 			= new double[4];		//angles compatible for averaging in for 4 corners
-				compatibleGrowths[i][j]			= new double*[4];		//growth rates [rx,ry,rz] compatible for averaging in for 4 corners
-				for (int k=0; k<4; ++k){
-					//cout<<"set default values of  compatibleAngleEliminated for: "<<i<<" "<<j<<" "<<k<<endl;
-					compatibleAngleEliminated[i][j][k] = false;	//by default all angles are added
-					compatibleAngles[i][j][k] = 0.0;			//by default all angles are zero
-					compatibleGrowths[i][j][k]= new double[3];	//growth rates [rx,ry,rz] at index point [i][j], for corner [k]
-					for (int l=0; l<3; ++l){
-						compatibleGrowths[i][j][k][l] = 0.0;
-					}
-				}
-				//cout<<" [i][j]: ["<<i<<"]["<<j<<"], Growth_x&y: "<<GrowthMatrix[i][j][0]<<" "<<GrowthMatrix[i][j][1]<<endl;
 				double AR = GrowthMatrix[i][j][0] / GrowthMatrix[i][j][1];
 				if (AR < 0 ){
 					//some of the growth rates have higher aspect ratio than their nuclei count, for instance, an aspect ratio of 5 with nuclei count 4
@@ -346,7 +333,6 @@ public:
 				}
 				if(AR < aspectRatioThreshold){
 					aspectRatioOverThresoldMatrix[i][j] = false;
-					//cout<<" [i][j]: ["<<i<<"]["<<j<<"], aspect ratio too small: "<<AR<<endl;
 				}
 			}
 		}
@@ -359,7 +345,6 @@ public:
 				xyShearRotationsMatrix[i][j] = gsl_matrix_calloc(3,3);
 				double c = cos(xyShearAngleMatrix[i][j]);
 				double s = sin(xyShearAngleMatrix[i][j]);
-				//cout<<"xyShearRotationsMatrix ["<<i<<"]["<<j<<"], angle: "<<xyShearAngleMatrix[i][j]<<" cos: "<<c<<" sin "<<s<<endl;
 				gsl_matrix_set(xyShearRotationsMatrix[i][j],0,0,  c );
 				gsl_matrix_set(xyShearRotationsMatrix[i][j],0,1, -1.0*s);
 				gsl_matrix_set(xyShearRotationsMatrix[i][j],0,2,  0.0);
@@ -378,20 +363,9 @@ public:
 	~GridBasedGrowthFunction(){
 		for (int i=0; i<nGridX; ++i){
 			for (int j=0; j<nGridY; ++j){
-				delete[] GrowthMatrix[i][j];
 				gsl_matrix_free(xyShearRotationsMatrix[i][j]);
 			}
 		}
-		for (int i=0; i<nGridX; ++i){
-			delete[] GrowthMatrix[i];
-			delete[] xyShearRotationsMatrix[i];
-			delete[] xyShearAngleMatrix[i];
-			delete[] aspectRatioOverThresoldMatrix[i];
-		}
-		delete[] GrowthMatrix;
-		delete[] xyShearAngleMatrix;
-		delete[] xyShearRotationsMatrix;
-		delete[] aspectRatioOverThresoldMatrix;
 	}
 
 	int getGridX(){

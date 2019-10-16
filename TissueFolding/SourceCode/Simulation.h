@@ -372,12 +372,12 @@ public:
 	bool* growthPinUpdateBools;									///< The vector storing the booleans to check the pinning update has been carried out.
 	int gridGrowthsInterpolationType;                           ///< The type of interpolation done on growth map grid, 0 = no interpolation, step function, 1 = linear interpolation (default = 1).
 	vector <double***> GrowthMatrices;							///< The stack of growth grids.
-	//std::vector<std::unique_ptr<GrowthFunctionBase>> GrowthFunctions;   ///< The vector containing the unique pointers to the growth functions active in the simulation
-	vector<GrowthFunctionBase*> GrowthFunctions;				///< The vector containing the unique pointers to the growth functions active in the simulation
+	std::vector<std::unique_ptr<GrowthFunctionBase>> GrowthFunctions;   ///< The vector containing the unique pointers to the growth functions active in the simulation
+	//vector<GrowthFunctionBase*> GrowthFunctions;				///< The vector containing the unique pointers to the growth functions active in the simulation
 
 	int nShapeChangeFunctions;                                  ///< The number of shape change functions active in the simulation.
-    //std::vector<std::unique_ptr<GrowthFunctionBase>> ShapeChangeFunctions; ///< The vector containing the unique pointers to the shape change functions active in the simulation
-	vector<GrowthFunctionBase*> ShapeChangeFunctions;			///< The vector containing the unique pointers to the shape change functions active in the simulation
+    std::vector<std::unique_ptr<GrowthFunctionBase>> ShapeChangeFunctions; ///< The vector containing the unique pointers to the shape change functions active in the simulation
+	//vector<GrowthFunctionBase*> ShapeChangeFunctions;			///< The vector containing the unique pointers to the shape change functions active in the simulation
 	double shapeChangeECMLimit;                                 ///< The threshold of ECM density upon which emergent shape change will be activated (reduction of ECM strength inducing shape change).
 
 	bool thereIsPlasticDeformation;								///< The boolean stating that there is plastic deformation (remodelling) in the tissue.
@@ -606,7 +606,7 @@ public:
 	vector<double> apikobasalVolumeRedistributionScales;
 
 	//std::unique_ptr<NewtonRaphsonSolver> NRSolver; ///< The pointer to the newton raphson solver
-	NewtonRaphsonSolver *NRSolver;	///< The pointer to the newton raphson solver
+	std::unique_ptr<NewtonRaphsonSolver> NRSolver;  ///< The pointer to the newton raphson solver
 
 	//packi
 	Simulation();                                       ///< Constructor

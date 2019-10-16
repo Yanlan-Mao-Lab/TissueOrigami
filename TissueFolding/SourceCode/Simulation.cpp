@@ -75,15 +75,6 @@ Simulation::~Simulation(){
 		Nodes.pop_back();
 		delete tmp_pt;
 	}
-    cout<<"deleting GrowthFunctions"<<endl;
-	while(!GrowthFunctions.empty()){
-		GrowthFunctionBase* tmp_GF;
-		tmp_GF = GrowthFunctions.back();
-		GrowthFunctions.pop_back();
-		delete tmp_GF;
-	}
-    cout<<"deleting NRSolver"<<endl;
-    delete NRSolver;
     cout<<"deletion complete"<<endl;
 
 }
@@ -795,7 +786,7 @@ bool Simulation::initiateSystem(){
      */
 	nNodes = Nodes.size();
 	nElements = Elements.size();
-    NRSolver = new NewtonRaphsonSolver(Nodes[0]->nDim,nNodes);
+	NRSolver = make_unique<NewtonRaphsonSolver>(Nodes[0]->nDim,nNodes);
 	if (thereIsExplicitLumen){
 		NRSolver ->thereIsLumen = true;
 		NRSolver ->tissueLumen = this->tissueLumen;
@@ -9016,13 +9007,13 @@ void Simulation::calculateGrowth(){
 	for (int i=0; i<nGrowthFunctions; ++i){
 		if (GrowthFunctions[i]->Type == 1){
 			//cout<<"Calculating Uniform Growth, function: "<<i<<endl;
-			calculateGrowthUniform(GrowthFunctions[i]);
+			calculateGrowthUniform(GrowthFunctions[i].get());
 		}
 		else if(GrowthFunctions[i]->Type == 2){
-			calculateGrowthRing(GrowthFunctions[i]);
+			calculateGrowthRing(GrowthFunctions[i].get());
 		}
 		else if(GrowthFunctions[i]->Type == 3){
-			calculateGrowthGridBased(GrowthFunctions[i]);
+			calculateGrowthGridBased(GrowthFunctions[i].get());
 		}
 	}
 	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
@@ -9038,15 +9029,14 @@ void Simulation::calculateShapeChange(){
 	for (int i=0; i<nShapeChangeFunctions; ++i){
 		if (ShapeChangeFunctions[i]->Type == 1){
 			//cout<<"calling calculate Shape change"<<endl;
-			calculateShapeChangeUniform(ShapeChangeFunctions[i]);
+			calculateShapeChangeUniform(ShapeChangeFunctions[i].get());
 		}
 		if (ShapeChangeFunctions[i]->Type == 2){
 			//cout<<"calling calculate Shape change"<<endl;
-			calculateShapeChangeMarkerEllipseBased(ShapeChangeFunctions[i]);
+			calculateShapeChangeMarkerEllipseBased(ShapeChangeFunctions[i].get());
 		}
 	}
 }
-
 
 void Simulation::cleanUpGrowthRates(){
 	vector<ShapeBase*>::iterator itElement;

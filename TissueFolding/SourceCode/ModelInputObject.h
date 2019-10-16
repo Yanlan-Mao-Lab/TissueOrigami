@@ -10,7 +10,8 @@
 
 #include <stdio.h>
 #include <iostream>
-#include "Simulation.h"
+#include <memory>
+//#include "Simulation.h"
 
 class Simulation;
 using namespace std;
