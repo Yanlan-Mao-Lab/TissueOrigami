@@ -12,7 +12,6 @@
 #include "Node.h"
 #include "GrowthFunctionBase.h"
 #include "GrowthFunctionTypes.h"
-#include "MyosinFunction.h"
 #include "NewtonRaphsonSolver.h"
 #include "Lumen.h"
 #include "MuscleFibre.h"
@@ -278,12 +277,6 @@ private:
 	void checkForVolumeRedistributionInTissue();					///< This function applies the volume resdistribution functions.
 	void assignCompartment();										///< This function assigns pouch, hinge and notum compartments to the tissue, as defined by fold positions of the successful simulations published in dev cell 2019 paper.
 
-	void writeMyosinSummary();	//TO DO: delete all myo
-	void calculateMyosinForces(); //To Do: delete all myo
-	void cleanUpMyosinForces();	//To Do: delete all myo
-	void checkForMyosinUpdates();//To Do: delete all myo
-	void addMyosinForces(gsl_matrix* gExt);	//to do: delete all myo
-	void updateEquilibriumMyosinsFromInputSignal(MyosinFunction* currMF);//To Do: delete all myo
 	void ablateSpcific();		//to do: defined but not called, seems temporary fordebugging, delete
 
 public:
@@ -672,7 +665,6 @@ public:
     void addPackingForces(gsl_matrix* gExt);							///< Add al packing forces to external foces vector.
     void checkPackingToPipette(bool& packsToPip, double* pos, double* pipF,double mass);
 	inline void CapPackingForce(double& Fmag);
-	void bringMyosinStimuliUpToDate();
 	void redistributePeripodialMembraneForces(int RKId);
     void updateElementPositions();                                      ///< Update element positions, from the nodal positions.
     void updateMasterSlaveNodesInBinding();                             ///< Update node degrees of freedom binding information stored in N-R solver to the saved data.
@@ -695,14 +687,6 @@ public:
 	void addSideECMElements(vector< vector<int> > &ColumnarBasedNodeArray, vector< vector<int> > &OuterNodeArray); 							///< This function adds the elements for the side ECM layer.
 	bool addSideECMLayer();												///< This function adds an ECM to the columnar layer sides only. The tissue is assumed to have a basal ECM, and there will be no peripodial componenents.
 
-    int nMyosinFunctions;	//to do: delete all myo
-	vector<MyosinFunction*> myosinFunctions; 	//to do: delete all myo
-	double kMyo;		//to do: delete all myo
-	double forcePerMyoMolecule; 	//to do: delete all myo
-	bool thereIsMyosinFeedback; 	//to do: delete all myo
-	double MyosinFeedbackCap; 	//to do: delete all myo
-	int numberOfMyosinAppliedEllipseBands;	//to do delete all myo
-	vector <int> myosinEllipseBandIds;//to do delete all myo
 };
 
 #endif

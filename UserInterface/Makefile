@@ -907,7 +907,6 @@ moc_MainWindow.cpp: /opt/Qt5.2.1/5.2.1/gcc_64/include/QtGui/QtGui \
 		../TissueFolding/SourceCode/ReferenceShapeBase.h \
 		../TissueFolding/SourceCode/GrowthFunctionBase.h \
 		../TissueFolding/SourceCode/GrowthFunctionTypes.h \
-		../TissueFolding/SourceCode/MyosinFunction.h \
 		../TissueFolding/SourceCode/NewtonRaphsonSolver.h \
 		../TissueFolding/SourceCode/Lumen.h \
 		../TissueFolding/SourceCode/MuscleFibre.h \
@@ -1370,7 +1369,6 @@ moc_GLWidget.cpp: /opt/Qt5.2.1/5.2.1/gcc_64/include/QtOpenGL/QGLWidget \
 		../TissueFolding/SourceCode/ReferenceShapeBase.h \
 		../TissueFolding/SourceCode/GrowthFunctionBase.h \
 		../TissueFolding/SourceCode/GrowthFunctionTypes.h \
-		../TissueFolding/SourceCode/MyosinFunction.h \
 		../TissueFolding/SourceCode/NewtonRaphsonSolver.h \
 		../TissueFolding/SourceCode/Lumen.h \
 		../TissueFolding/SourceCode/MuscleFibre.h \
@@ -1841,7 +1839,6 @@ main.o: SourceCode/main.cpp /opt/Qt5.2.1/5.2.1/gcc_64/include/QtWidgets/QGraphic
 		../TissueFolding/SourceCode/ReferenceShapeBase.h \
 		../TissueFolding/SourceCode/GrowthFunctionBase.h \
 		../TissueFolding/SourceCode/GrowthFunctionTypes.h \
-		../TissueFolding/SourceCode/MyosinFunction.h \
 		../TissueFolding/SourceCode/NewtonRaphsonSolver.h \
 		../TissueFolding/SourceCode/Lumen.h \
 		../TissueFolding/SourceCode/MuscleFibre.h \
@@ -2312,7 +2309,6 @@ MainWindow.o: SourceCode/MainWindow.cpp /opt/Qt5.2.1/5.2.1/gcc_64/include/QtGui/
 		../TissueFolding/SourceCode/ReferenceShapeBase.h \
 		../TissueFolding/SourceCode/GrowthFunctionBase.h \
 		../TissueFolding/SourceCode/GrowthFunctionTypes.h \
-		../TissueFolding/SourceCode/MyosinFunction.h \
 		../TissueFolding/SourceCode/NewtonRaphsonSolver.h \
 		../TissueFolding/SourceCode/Lumen.h \
 		../TissueFolding/SourceCode/MuscleFibre.h \
@@ -2789,7 +2785,6 @@ GLWidget.o: SourceCode/GLWidget.cpp /opt/Qt5.2.1/5.2.1/gcc_64/include/QtGui/QtGu
 		../TissueFolding/SourceCode/ReferenceShapeBase.h \
 		../TissueFolding/SourceCode/GrowthFunctionBase.h \
 		../TissueFolding/SourceCode/GrowthFunctionTypes.h \
-		../TissueFolding/SourceCode/MyosinFunction.h \
 		../TissueFolding/SourceCode/NewtonRaphsonSolver.h \
 		../TissueFolding/SourceCode/Lumen.h \
 		../TissueFolding/SourceCode/MuscleFibre.h \
@@ -2821,7 +2816,6 @@ Simulation.o: ../TissueFolding/SourceCode/Simulation.cpp ../TissueFolding/Source
 		../TissueFolding/SourceCode/ReferenceShapeBase.h \
 		../TissueFolding/SourceCode/GrowthFunctionBase.h \
 		../TissueFolding/SourceCode/GrowthFunctionTypes.h \
-		../TissueFolding/SourceCode/MyosinFunction.h \
 		../TissueFolding/SourceCode/NewtonRaphsonSolver.h \
 		../TissueFolding/SourceCode/Lumen.h \
 		../TissueFolding/SourceCode/MuscleFibre.h \
@@ -2839,7 +2833,6 @@ ModelInputObject.o: ../TissueFolding/SourceCode/ModelInputObject.cpp ../TissueFo
 		../TissueFolding/SourceCode/ReferenceShapeBase.h \
 		../TissueFolding/SourceCode/GrowthFunctionBase.h \
 		../TissueFolding/SourceCode/GrowthFunctionTypes.h \
-		../TissueFolding/SourceCode/MyosinFunction.h \
 		../TissueFolding/SourceCode/NewtonRaphsonSolver.h \
 		../TissueFolding/SourceCode/Lumen.h \
 		../TissueFolding/SourceCode/MuscleFibre.h

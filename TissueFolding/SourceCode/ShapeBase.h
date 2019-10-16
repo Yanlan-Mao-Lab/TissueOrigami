@@ -71,11 +71,6 @@ protected:
     double 		ZProjectedApicalArea;				///< The z-projected area of the apical surface of the element.
     double 		BasalArea;							///< The area of the basal surface of the element.
     double 		ApicalArea;							///< The area of the apical surface of the element.
-     double 		cMyoUniform[2]; 					///< Myosin concentration in the uniformly distributed pool, array of 2: [apical][basal]
-    double 		cMyoUnipolar[2]; 					///< Myosin concentration in the polarised pool, array of 2: [apical][basal]
-    double 		cMyoUniformEq[2]; 					///< The equilibrium level of myosin concentration in uniformly distributed pool, array of 2: [apical][basal]
-    double 		cMyoUnipolarEq[2]; 					///< The equilibrium level of myosin concentration in polarised pool, array of 2: [apical][basal]
-    gsl_matrix*	myoPolarityDir;						///< The orientation of myosin polarity, unit vector in world coordinates.
 
     bool 		elementHasExposedApicalSurface;				///< The boolean stating if the element has any apical surface exposed to the environment
     bool 		elementHasExposedBasalSurface;				///< The boolean stating if the element has any basal surface exposed to the environment
@@ -166,7 +161,7 @@ public:
     bool 			IsChangingShape;
     int 			tissuePlacement;					///< 1 -> apical, 0 -> basal, 2->middle, 3 -> lateral
     int 			tissueType;							///< The tissue type is 0 for columnar layer, 1 for peripodial membrane, and 2 for linker zone
-    bool			spansWholeTissue; 					///< Boolean staing is the element spans the whole tissue. This is used to identify mid-layer tagged tissues (tissuePlacement = 2), that should still have apical abd basal responses (such as myosin).
+    bool			spansWholeTissue; 					///< Boolean staing is the element spans the whole tissue. This is used to identify mid-layer tagged tissues (tissuePlacement = 2), that should still have apical and basal responses.
     int 			compartmentType; 					///< integer identifying the compartment of the tissue in DV axis, 0 pouch, 1 hinge, 2 notum
     double 			compartmentIdentityFraction;		///< The weight defining the constibution of each compartment to the physical identity of this element.
     bool			isECMMimicing;						///< Boolean stating if the element is an ECM element.
@@ -185,7 +180,6 @@ public:
     double  		GrownVolume;						///< Current volume of the element after growth.
     double  		VolumePerNode;						///< Volume per node of the element.
     bool 			capElement;							///< Boolean stating if the element is capped at its remodelling due to restrictions in z remodelling (avoiding too thin ot too thick layers due to numerical error).
-	double** 		MyoForce;	//TO DO: delete everything myo
     int* 	     	elementsIdsOnSameColumn;			///< The vector storing the unique element IDs of each element that is on the same columnar region of the tissue, i.e. the elements share apical/basal surfaces.
     int 			basalNeigElementId;					///< This is recorded only for apical nodes of the columnar layer. If not recorded, id is -1.
     bool 			insideEllipseBand;					///< Boolean stating if the element is marked by any identifier bands for physical perturbation.
@@ -415,27 +409,7 @@ public:
     void 					addToElementalElasticSystemForces(int i,int j,double value); 		/// This function is to add the input value, to the (i,j)th element of the ElementalElasticSystemForces
     void 					addToTriPointKe(int i,int j,double value); 				/// This function is to add the input value, to the (i,j)th element of the triPointKe
 
-	void					updateEquilibriumMyoWithFeedbackFromZero(double MyosinFeedbackCap); //TO DO: clear myo
-	void					updateEquilibriumMyoWithFeedbackFromFixedTotal(double totalMyosinLevel);  //TO DO: clear myo
 	bool					checkIfXYPlaneStrainAboveThreshold(double thres); //TO DO: do I use this?
-	bool 					calculateIfInsideActiveStripe(double initialPoint,double endPoint, double stripeSize1, double stripeSize2);  //TO DO: clear myo
-	double					getCmyosinUniformForNode (int TissuePlacement);  //TO DO: clear myo
-	double					getCmyosinUnipolarForNode (int TissuePlacement);  //TO DO: clear myo
-	void 					getMyosinLevels (double *cMyo);  //TO DO: clear myo
-	void 					getEquilibriumMyosinLevels (double *cMyoEq);  //TO DO: clear myo
-	gsl_matrix* 			getMyosinDirection();  //TO DO: clear myo
-	void 					setMyosinLevels (double cUni0, double cUni1, double cPol0, double cPol1);  //TO DO: clear myo
-	void 					setEquilibriumMyosinLevels (double cUni0, double cUni1, double cPol0, double cPol1);  //TO DO: clear myo
-	virtual void 			calculateMyosinForcesAreaBased(double /*forcePerMyoMolecule*/){ParentErrorMessage("calculateMyosinForces");};  //TO DO: clear myo
-	virtual void 			calculateMyosinForcesTotalSizeBased(double /*forcePerMyoMolecule*/){ParentErrorMessage("calculateMyosinForces");};  //TO DO: clear myo
-    virtual void			distributeMyosinForcesAreaBased(bool /*isIsotropic*/, bool /*apical*/, double /*forcePerMyoMolecule*/){ParentErrorMessage("distributeMyosinAreaBased");};  //TO DO: clear myo
-    virtual void			distributeMyosinForcesTotalSizeBased(bool /*isIsotropic*/, bool /*apical*/, double /*forcePerMyoMolecule*/){ParentErrorMessage("distributeMyosinToitalSizeBased");};  //TO DO: clear myo
-    void					updateMyosinConcentration(double dt, double kMyo, bool thereIsMyosinFeedback, double MyosinFeedbackCap); //TO DO: delete all myo
-	bool 					isMyosinViaEllipsesAppliedToElement(bool isApical, bool isLateral, vector <int> & myosinEllipseBandIds, int numberOfMyosinAppliedEllipseBands); //TO DO: clear all myosin
-	void 					cleanMyosinForce();	//TO DO: delete all myo
-    void					updateUniformEquilibriumMyosinConcentration(bool isApical, double cEqUniform); //TO DO: delete all myo
-    void					updateUnipolarEquilibriumMyosinConcentration(bool isApical, double cEqUnipolar, double orientationX, double orientationY); //TO DO: delete all myo
-    void					adjustCMyosinFromSave();  //TO DO: delete all myo
     void					calculateStiffnessFeedback(double dt); //TO DO: DO I keep feedback?
 
 	void 					setLateralElementsRemodellingPlaneRotationMatrix(double systemCentreX, double systemCentreY); //TO DO: DO I use this? defined but NO

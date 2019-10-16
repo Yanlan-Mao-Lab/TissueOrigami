@@ -63,11 +63,6 @@ public:
     void getApicalNodeIndicesOnElement(vector <int> &apicalNodeIndices); //< This function writes the apical node indices of the lement to the input vector	
     void checkRotationConsistency3D();          ///< This function checks if the nodes of the prosm rotate counter-clock vise, and corrects if not.
     bool areNodesDirectlyConnected(int node0, int node1); ///< This function checks if the two nodes with input Node#Id values are directly connected to each other in topology of the prism.
-
-	void calculateMyosinForcesAreaBased(double forcePerMyoMolecule); // to do : delete all myosin
-	void calculateMyosinForcesTotalSizeBased(double forcePerMyoMolecule);  // to do : delete all myosin
-	void distributeMyosinForcesAreaBased(bool isIsotropic, bool apical, double forcePerMyoMolecule);  // to do : delete all myosin
-	void distributeMyosinForcesTotalSizeBased(bool isIsotropic, bool apical, double forcePerMyoMolecule);  // to do : delete all myosin
 	
 };
 

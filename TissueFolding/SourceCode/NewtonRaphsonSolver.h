@@ -34,7 +34,7 @@ public:
 	gsl_matrix* ge;										///< The matrix containing elastic forces on each node, size (nDim*nNodes,1). Organisation is [Node0,x ; Node0,y ; Node0,z; ... ; Noden,x ; Noden,y ; Noden,z]
 	gsl_matrix* gvInternal;								///< The matrix containing internal viscous forces on each node, size (nDim*nNodes,1). Organisation is [Node0,x ; Node0,y ; Node0,z; ... ; Noden,x ; Noden,y ; Noden,z]
 	gsl_matrix* gvExternal;								///< The matrix containing external viscous forces on each node, size (nDim*nNodes,1). Organisation is [Node0,x ; Node0,y ; Node0,z; ... ; Noden,x ; Noden,y ; Noden,z]
-	gsl_matrix* gExt;									///< The matrix containing external forces on each node (currently includes packing and myosin forces), size (nDim*nNodes,1). Organisation is [Node0,x ; Node0,y ; Node0,z; ... ; Noden,x ; Noden,y ; Noden,z]
+	gsl_matrix* gExt;									///< The matrix containing external forces on each node (currently includes packing forces), size (nDim*nNodes,1). Organisation is [Node0,x ; Node0,y ; Node0,z; ... ; Noden,x ; Noden,y ; Noden,z]
 	gsl_vector* gSum;									///< The matrix containing sum of NewtonRaphsonSolver#ge, NewtonRaphsonSolver#gvInternal, NewtonRaphsonSolver#gvExternal, NewtonRaphsonSolver#gExt. Organisation is [Node0,x ; Node0,y ; Node0,z; ... ; Noden,x ; Noden,y ; Noden,z]
 	gsl_matrix* uk;										///< The matrix storing the position of each node at iteration "k". Initiated in function NewtonRaphsonSolver#initialteUkMatrix at the beginning of each step, and updated by function NewtonRaphsonSolver#updateUkInIteration during the iteartions.
 	gsl_matrix* displacementPerDt;						///< The displacement per time step of each node in current iteration "k", from its position at the end of the last time step "n"

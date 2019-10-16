@@ -3,7 +3,7 @@
 using namespace std;
 
 ReferenceShapeBase::ReferenceShapeBase(string ShapeType, int id){
-	height = -100;
+	//height = -100;
 	BasalArea = 0.0;
 	Volume = 0.0;
 	this->Id = id;

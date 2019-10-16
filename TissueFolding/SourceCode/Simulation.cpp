@@ -206,11 +206,6 @@ void Simulation::setDefaultParameters(){
 	zRemodellingLowerThreshold = 0.5;
 	zRemodellingUpperThreshold = 2.0;
 
-	kMyo = 0.09873;
-	forcePerMyoMolecule = 1.0;
-	thereIsMyosinFeedback = false;
-	MyosinFeedbackCap = 0.0;
-
 	BaseLinkerZoneParametersOnPeripodialness = true;
 	LinkerZoneApicalElasticity = 0.0;
 	LinkerZoneBasalYoungsModulus = 0.0;
@@ -224,9 +219,6 @@ void Simulation::setDefaultParameters(){
 	externalViscosityPMBasal  = 0.0;
 	externalViscosityLZApical = 0.0;
 	externalViscosityLZBasal  = 0.0;
-
-	numberOfMyosinAppliedEllipseBands = 0;
-
 
 	thereIsECMChange = false;
 
@@ -503,7 +495,6 @@ bool Simulation::readFinalSimulationStep(){
     calculateShapeFunctionDerivatives();
 	updateElementPositions();
 	calculateBoundingBox();
-	bringMyosinStimuliUpToDate(); //to do : delete all myo
     /**
      * Finally, the data save interval and time step from the model input of the current simulation are
      * instated back.
@@ -1639,7 +1630,6 @@ void Simulation::writeSimulationSummary(){
 	saveFileSimulationSummary<<"	Symmetricity-x: "<<symmetricX<<" Symmetricity-y: "<<symmetricY<<endl;
 	writeMeshFileSummary();
 	writeGrowthRatesSummary();
-	writeMyosinSummary();
 	writeECMSummary();
 	writeActinSummary();
 	writeExperimentalSummary();
@@ -1740,14 +1730,6 @@ void Simulation::writeGrowthRatesSummary(){
 		}
 	}
 }
-
-void Simulation::writeMyosinSummary(){
-	saveFileSimulationSummary<<endl;
-	for (int i=0; i<nMyosinFunctions; ++i){
-		myosinFunctions[i]->writeSummary(saveFileSimulationSummary);
-	}
-}
-
 
 void Simulation::writeECMSummary(){
 	saveFileSimulationSummary<<endl;
@@ -2370,10 +2352,6 @@ bool Simulation::readElementDataToContinueFromSave(){
 		else if (shapeType == 4){
 			double height = 0.0;
 			saveFileToDisplayMesh >> height;
-			if (Elements[i]->ReferenceShape->height != height){
-				cerr<<"The element height from save file and model input are not consistent - cannot continue simulation from save"<<endl;
-				return false;
-			}
 			bool success = readShapeData(i);
 			if (!success){
 				cerr<<"Error reading shape data, element: "<<i<<endl;
@@ -2493,14 +2471,6 @@ void Simulation::updateForcesFromSave(){
 		saveFileToDisplayForce.read((char*) &SystemForces[i][0], sizeof SystemForces[i][0]);
 		saveFileToDisplayForce.read((char*) &SystemForces[i][1], sizeof SystemForces[i][1]);
 		saveFileToDisplayForce.read((char*) &SystemForces[i][2], sizeof SystemForces[i][2]);
-	}
-	for (int i=0;i<nElements;++i){
-		int n = Elements[i]->getNodeNumber();
-		for (int j=0; j<n; ++j){
-			saveFileToDisplayForce.read((char*) &Elements[i]->MyoForce[j][0], sizeof &Elements[i]->MyoForce[j][0]);
-			saveFileToDisplayForce.read((char*) &Elements[i]->MyoForce[j][1], sizeof &Elements[i]->MyoForce[j][1]);
-			saveFileToDisplayForce.read((char*) &Elements[i]->MyoForce[j][2], sizeof &Elements[i]->MyoForce[j][2]);
-		}
 	}
 }
 
@@ -2642,19 +2612,6 @@ void Simulation::updateGrowthRateFromSave(){
 }
 
 void Simulation::updateProteinsFromSave(){
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		double c[4];
-		double cEq[4];
-		for (int j = 0; j<4; j++){
-			saveFileToDisplayProteins.read((char*) &c[j], sizeof c[j]);
-		}
-		for (int j = 0; j<4; j++){
-			saveFileToDisplayProteins.read((char*) &cEq[j], sizeof cEq[j]);
-		}
-		(*itElement)->setMyosinLevels(c[0], c[1], c[2], c[3]);
-		(*itElement)->setEquilibriumMyosinLevels(cEq[0], cEq[1], cEq[2], cEq[3]);
-	}
 }
 
 void Simulation::updatePhysicalPropFromSave(){
@@ -2808,19 +2765,6 @@ void Simulation::readGrowthRateToContinueFromSave(){
 
 
 void Simulation::readProteinsToContinueFromSave(){
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		double c[4];
-		double cEq[4];
-		for (int j = 0; j<4; j++){
-			saveFileToDisplayProteins.read((char*) &c[j], sizeof c[j]);
-		}
-		for (int j = 0; j<4; j++){
-			saveFileToDisplayProteins.read((char*) &cEq[j], sizeof cEq[j]);
-		}
-		(*itElement)->setMyosinLevels(c[0], c[1], c[2], c[3]);
-		(*itElement)->setEquilibriumMyosinLevels(cEq[0], cEq[1], cEq[2], cEq[3]);
-	}
 }
 
 void Simulation::readPhysicalPropToContinueFromSave(){
@@ -3526,7 +3470,6 @@ bool Simulation::calculateTissueHeight(){
 		}
 	}
 	else{
-		TissueHeight = Elements[0]->ReferenceShape->height;
 		if (TissueHeight == 0){
 			cout<<"The coulmanr layer is 2D, but the tissue height of the elements is not assigned properly, cannot obtain TissueHeight"<<endl;
 			return false;
@@ -6250,12 +6193,9 @@ bool Simulation::runOneStep(){
     if (thereIsECMChange) {
     	checkECMChange();
     }
-    //to do : delete all myo
-    if(nMyosinFunctions > 0){
-    	checkForMyosinUpdates();
-    }
+
     /**
-     * Once the physical proerties are updated, the growth of each element is calculated. For growth functions based on reading
+     * Once the physical properties are updated, the growth of each element is calculated. For growth functions based on reading
      * gorwht maps (the main attribute utilised in morphogenesis simulations), the relative position in usecan be updated less
      * frequently then each step, this update is checked in Simulation#checkForPinningPositionsUpdate. Then the rigid body rotations
      * around z axis are extracted to be eliminated through ShapeBase#updateGrowthRotationMatrices. For all growth functions and
@@ -6312,7 +6252,6 @@ bool Simulation::runOneStep(){
     updateNodeMasses();
     updateNodeViscositySurfaces();
     updateElementToConnectedNodes(Nodes);
-    calculateMyosinForces();//to do : delete all myo
     updatePositionsOfNodesCollapsingInStages();
     /**
       * Then packing to all posssible surfaces are detected, while the actual packing forces are calculated in the NR iterations as
@@ -6740,7 +6679,6 @@ void Simulation::updateStepNR(){
 			calculateZProjectedAreas();
 			addPipetteForces(NRSolver->gExt);
 		}
-		addMyosinForces(NRSolver->gExt); //to do: delete all myo
 		//packing can come from both encapsulation and tissue-tissue packing. I ad the forces irrespective of adhesion.
 		addPackingForces(NRSolver->gExt);
 
@@ -8541,17 +8479,6 @@ void Simulation::calculateBoundingBox(){
 	}
 }
 
-
-void Simulation::bringMyosinStimuliUpToDate(){
-	//need to go throug all myosin functions and apply them to here:
-	//for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-	//	(*itElement)->bringMyosinStimuliUpToDate();
-	//}
-	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		(*itElement)->adjustCMyosinFromSave();
-	}
-}
-
 /*
 void Simulation::calculateColumnarLayerBoundingBox(){
 	columnarBoundingBox[0][0] =  100000.0;	//lower left x
@@ -8813,15 +8740,6 @@ void Simulation::writeForces(){
 		saveFileForces.write((char*) &SystemForces[i][1], sizeof SystemForces[i][1]);
 		saveFileForces.write((char*) &SystemForces[i][2], sizeof SystemForces[i][2]);
 	}
-	//Then write myosin forces
-	for (int i=0;i<nElements;++i){
-		int n=Elements[i]->getNodeNumber();
-		for (int j=0; j<n; ++j){
-			saveFileForces.write((char*) &Elements[i]->MyoForce[j][0], sizeof Elements[i]->MyoForce[j][0]);
-			saveFileForces.write((char*) &Elements[i]->MyoForce[j][1], sizeof Elements[i]->MyoForce[j][1]);
-			saveFileForces.write((char*) &Elements[i]->MyoForce[j][2], sizeof Elements[i]->MyoForce[j][2]);
-		}
-	}
 	saveFileForces.flush();
 }
 
@@ -8848,24 +8766,6 @@ void Simulation::writePacking(){
 }
 
 void Simulation::writeProteins(){
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		double* cMyo = new double[4];
-		double* cMyoEq = new double[4];
-		(*itElement)->getMyosinLevels(cMyo);
-		(*itElement)->getEquilibriumMyosinLevels(cMyoEq);
-		saveFileProteins.write((char*) &cMyo[0], sizeof cMyo[0]);
-		saveFileProteins.write((char*) &cMyo[1], sizeof cMyo[1]);
-		saveFileProteins.write((char*) &cMyo[2], sizeof cMyo[2]);
-		saveFileProteins.write((char*) &cMyo[3], sizeof cMyo[3]);
-		saveFileProteins.write((char*) &cMyoEq[0], sizeof cMyoEq[0]);
-		saveFileProteins.write((char*) &cMyoEq[1], sizeof cMyoEq[1]);
-		saveFileProteins.write((char*) &cMyoEq[2], sizeof cMyoEq[2]);
-		saveFileProteins.write((char*) &cMyoEq[3], sizeof cMyoEq[3]);
-		delete[] cMyo;
-		delete[] cMyoEq;
-	}
-	saveFileProteins.flush();
 }
 
 void Simulation::writePhysicalProp(){
@@ -8886,120 +8786,6 @@ void Simulation::writePhysicalProp(){
 	}
 	saveFilePhysicalProp.flush();
 }
-
-void Simulation::calculateMyosinForces(){
-	//cout<<"Entered calculateMyosinForces"<<endl;
-	cleanUpMyosinForces();
-	bool basedOnArea = false;
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		(*itElement)->updateMyosinConcentration(dt, kMyo, thereIsMyosinFeedback, MyosinFeedbackCap);
-		if (basedOnArea){
-			//The forces are based on the total apical/basal area of the element, it may cause oscillations with rapid shape changes driven by myosin itself.
-			(*itElement)->calculateMyosinForcesAreaBased(forcePerMyoMolecule);
-		}
-		else{
-			//The forces are based on the total size of the element, it does not fluctuate with rapid shape changes, based on the grown volume
-			(*itElement)->calculateMyosinForcesTotalSizeBased(forcePerMyoMolecule);
-		}
-	}
-}
-
-void Simulation::cleanUpMyosinForces(){
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		(*itElement)->cleanMyosinForce();
-	}
-}
-
-void Simulation::checkForMyosinUpdates(){
-	for (int i=0; i<nMyosinFunctions; ++i){
-		if(currSimTimeSec == myosinFunctions[i]->initTime  ){ //the application time of the signal is given in seconds.
-			updateEquilibriumMyosinsFromInputSignal(myosinFunctions[i]);
-		}
-	}
-}
-
-
-void Simulation::updateEquilibriumMyosinsFromInputSignal(MyosinFunction* currMF){
-	//cout<<"inside updateEquilibriumMyosinsFromInputSignal "<<endl;
-	int nGridX = currMF->getGridX();
-	int nGridY = currMF->getGridY();
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		if ((currMF->applyToColumnarLayer && (*itElement)->tissueType == 0) || (currMF->applyToPeripodialMembrane && (*itElement)->tissueType == 1) ){//|| (*itElement)->tissueType == 2){
-			if ( (*itElement)->spansWholeTissue
-			     || (currMF->isApical && (*itElement)->tissuePlacement == 1)
-			     || (!currMF->isApical && !(*itElement)->isECMMimicing && ( (*itElement)->tissuePlacement == 0 || (*itElement)->atBasalBorderOfECM) )
-			     || currMF->isLateral
-				){
-				// 1) The element spans the whole tissue therefore both apical and basal responses should be applied
-				// 2) The myosin response is applicable to apical surface, and the tissue placement of the element is apical,
-				// 3) The myosin response is applicable to basal surface, and the tissue placement of the lement is basal.
-				// 4) The myosin response is applied laterally, all elements should be checked
-				if (currMF->manualStripes){
-					//Here, I need to check if all the nodes of the element fall into the stripe of myosin up-regulations.
-					//double stripeSize1, stripeSize2;
-					//double initialPoint, endPoint;
-					bool inActiveZone = (*itElement)->calculateIfInsideActiveStripe(currMF->initialPoint,currMF->endPoint,currMF->stripeSize1,currMF->stripeSize2);
-					if (inActiveZone){
-						if (currMF->isPolarised){
-							(*itElement)->updateUnipolarEquilibriumMyosinConcentration(currMF->isApical,currMF->manualCMyoEq, currMF->manualOrientation[0], currMF->manualOrientation[1]);
-						}
-						else{
-							(*itElement)->updateUniformEquilibriumMyosinConcentration(currMF->isApical, currMF->manualCMyoEq);
-						}
-					}
-				}
-				else if(currMF->useEllipses){
-					bool applyToThisElement = (*itElement)->isMyosinViaEllipsesAppliedToElement(currMF->isApical, currMF->isLateral, myosinEllipseBandIds, numberOfMyosinAppliedEllipseBands);
-					if (applyToThisElement){
-						(*itElement)->updateUniformEquilibriumMyosinConcentration(currMF->isApical, currMF->manualCMyoEq);
-					}
-				}
-				else{
-					//calculating the grid indices:
-					double* ReletivePos = new double[2];
-					//normalising the element centre position with bounding box
-					(*itElement)->getRelativePosInBoundingBox(ReletivePos);
-					/*if ((*itElement)->tissueType == 0){
-						(*itElement)->getRelativePosInColumnarBoundingBox(ReletivePos);
-					}
-					else{
-						(*itElement)->getRelativePosInPeripodialBoundingBox(ReletivePos);
-					}*/
-					int indexX, indexY;
-					double fracX, fracY;
-					(*itElement)->convertRelativePosToGridIndex(ReletivePos, indexX, indexY, fracX, fracY, nGridX, nGridY);
-					//reading the equilibrium myosin value
-					double cEqYmid[2]= {0.0,0.0};
-					double cEq;
-					cEqYmid[0] = currMF->getEquilibriumMyoMatrixElement(indexX,indexY)*(1.0-fracX) + currMF->getEquilibriumMyoMatrixElement(indexX+1,indexY)*fracX;
-					cEqYmid[1] = currMF->getEquilibriumMyoMatrixElement(indexX,indexY+1)*(1.0-fracX) + currMF->getEquilibriumMyoMatrixElement(indexX+1,indexY+1)*fracX;
-					cEq = cEqYmid[0]*(1.0-fracY) + cEqYmid[1]*fracY;
-					if (currMF->isPolarised){
-						//If the function is polarised, reading the orientation
-						double orientation[2];
-						for (int axis=0; axis<2; ++axis){
-							cEqYmid[0] = currMF->getOrientationMatrixElement(indexX,indexY,axis)*(1.0-fracX) + currMF->getOrientationMatrixElement(indexX+1,indexY,axis)*fracX;
-							cEqYmid[1] = currMF->getOrientationMatrixElement(indexX,indexY+1,axis)*(1.0-fracX) + currMF->getOrientationMatrixElement(indexX+1,indexY+1,axis)*fracX;
-							orientation[axis] = cEqYmid[0]*(1.0-fracY) + cEqYmid[1]*fracY;
-					}
-					//updating the values of the shape for polarised myosin:
-					(*itElement)->updateUnipolarEquilibriumMyosinConcentration(currMF->isApical, cEq, orientation[0], orientation[1]);
-					}
-					else{
-						//updating the values of the shape for uniform contractile:
-						(*itElement)->updateUniformEquilibriumMyosinConcentration(currMF->isApical, cEq);
-					}
-					delete[] ReletivePos;
-				}
-			}
-		}
-	}
-	//cout<<"finalised updateEquilibriumMyosinsFromInputSignal "<<endl;
-}
-
 
 void Simulation::calculateGrowth(){
 	//cout<<"Calculating Growth"<<endl;
@@ -9683,26 +9469,6 @@ void Simulation::setupPipetteExperiment(){
 				}
 			}
 		}
-	}
-}
-//to do: delete all myo
-void Simulation::addMyosinForces(gsl_matrix* gExt){
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-	    int* nodeIds = (*itElement)->getNodeIds();
-	    int nNodes= (*itElement)->getNodeNumber();
-	    for (int j=0; j<nNodes; ++j){
-			double Fx = (*itElement)->MyoForce[j][0];
-			double Fy = (*itElement)->MyoForce[j][1];
-			double Fz = (*itElement)->MyoForce[j][2];
-			int indice = nodeIds[j]*3;
-			Fx += gsl_matrix_get(gExt,indice,0);
-			gsl_matrix_set(gExt,indice,0,Fx);
-			Fy += gsl_matrix_get(gExt,indice+1,0);
-			gsl_matrix_set(gExt,indice+1,0,Fy);
-			Fz += gsl_matrix_get(gExt,indice+2,0);
-			gsl_matrix_set(gExt,indice+2,0,Fz);
-	    }
 	}
 }
 
