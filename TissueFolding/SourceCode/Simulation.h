@@ -14,7 +14,6 @@
 #include "GrowthFunctionTypes.h"
 #include "NewtonRaphsonSolver.h"
 #include "Lumen.h"
-#include "MuscleFibre.h"
 #include <array>
 
 #ifndef DO_NOT_USE_OMP
@@ -39,7 +38,6 @@ private:
  	std::ofstream saveFileSpecificType;						///< Output file to save the specific node types, such as the ECM, actin, marker ellipses.
 	std::ofstream saveFileGrowthRedistribution;				///< Output file to save the volume redistribution.
 	std::ofstream saveFileNodeBinding;						///< Output file to save node binding.
-	std::ofstream saveFileCollapseAndAdhesion;				///< Output file to save collapsing and adhering nodes, can be buggy, delete if there are problems.
 	std::ofstream saveFilePacking;							///< Output file to save packing forces
 	std::ofstream saveFileSimulationSummary;				///< Output file to save the simulation inputs summary.
 	std::ifstream saveFileToDisplayMesh;					///< Input file of saved mesh coordinate data.
@@ -55,7 +53,6 @@ private:
 	std::ifstream saveFileToDisplaySpecificNodeTypes;		///< Input file to display of saved specific node types, such as the ECM, actin, marker ellipses.
 	std::ifstream saveFileToDisplayGrowthRedistribution;	///< Input file to display of saved volume redistribution.
 	std::ifstream saveFileToDisplayNodeBinding;				///< Input file to display of saved node binding.
-	std::ifstream saveFileToDisplayCollapseAndAdhesion;		///< Input file to display of saved collapsed and adhered nodes.
 	bool 	ContinueFromSave;								///< Model input boolean stating if the simualitons is continuing from stretch.
 
 	bool	TensionCompressionSaved;						///< Boolean stating if the strains are saved.
@@ -67,7 +64,6 @@ private:
 	bool	growthRedistributionSaved;						///< Boolean stating if the volume redistribution is saved.
 	bool	nodeBindingSaved;								///< Boolean stating if the node binding is saved.
 	bool	specificElementTypesRecorded;					///< Boolean stating if the specific node types, such as the ECM, actin, marker ellipses are saved.
-	bool	collapseAndAdhesionSaved;						///< Boolean stating if the strains are saved.
 	int		nCircumferencialNodes;							///< Boolean stating if the collapse and adhesion are saved.
 	int		dorsalTipIndex;									///< The Node#Id for the dorsal tip (-x) of the tissue on xy plane.
 	int		ventralTipIndex;								///< The Node#Id for the ventral tip (+x) of the tissue on xy plane.
@@ -111,22 +107,20 @@ private:
     void updatePackingFromSave();									///< This function updates system packing forces from save file to display.
 	void updateNodeBindingFromSave();								///< This function updates node binding information from save file to display.
 	void updateGrowthRedistributionFromSave();						///< This function updates volume redistribution from save file to display.
-	void updateCollapseAndAdhesionFromSave();						///< This function updates collapsed and adhered nodes from save file to display.
 	void readTensionCompressionToContinueFromSave();				///< This function updates system strains from save file to continue from save.
 	void readGrowthToContinueFromSave();							///< This function updates system growths from save file to continue from save.
 	void readGrowthRateToContinueFromSave();						///< This function updates system growth rates from save file to continue from save.
 	void readPhysicalPropToContinueFromSave();						///< This function updates system physical properties from save file to continue from save.
 	void readGrowthRedistributionToContinueFromSave();				///< This function updates system volume redistribution from save file to continue from save.
 	void readNodeBindingToContinueFromSave();						///< This function updates system node binding data from save file to continue from save.
-	void readCollapseAndAdhesionToContinueFromSave();				///< This function updates adhered and collapsed nodes from save file to continue from save.
 	bool readFinalSimulationStep();									///< This function reads a saved simulation all at once up to the end point.
-	void reInitiateSystemForces(int oldSize);						///< This function re-initiates arrays to store system forces in the scenario where system size may change (remeshing)
+	void reInitiateSystemForces();						///< This function re-initiates arrays to store system forces in the scenario where system size may change (remeshing)
 	bool checkInputConsistency();									///< This function checks the consistency of model inputs.
 	void setDefaultParameters();									///< This function sets the default parameters to the simulation parameters.
 	bool openFiles();												///< This function opens the save files.
 	void initiateSystemForces(); 									///< This function initiates system force arrays.
 	bool initiateMesh(int MeshType, float zHeight);					///< This function initiates a single element mesh through functions Simulation#initiateSinglePrismNodes and Simulation#initiateSinglePrismElement.
-	bool initiateMesh(int MeshType, int Row, int Column, float SideLength, float zHeight);		/// This function initiates a hexagonal mesh of single element height, with input number of rows and 2xcolumns, each with given side length and z height.
+	bool initiateMesh(int MeshType, size_t Row, size_t Column, float SideLength, float zHeight);		/// This function initiates a hexagonal mesh of single element height, with input number of rows and 2xcolumns, each with given side length and z height.
 	bool initiateMesh(int MeshType);								///< This function initiates the simulation mesh depending on the input mesh type.
 	void readInTissueWeights();										///< This function reads in the tissue type weight of elements, peripodialness is recorded.
 	bool checkIfTissueWeightsRecorded();							///< This function checks if the tissue type weights are recorded.
@@ -161,7 +155,7 @@ private:
 
 	void initiateSinglePrismNodes(float zHeight);
 	void initiateSinglePrismElement();
-	void initiateNodesByRowAndColumn(int Row, int Column,  float SideLength, float zHeight);
+	void initiateNodesByRowAndColumn(size_t Row, size_t Column,  float SideLength, float zHeight);
 	void fixApicalBasalNodes(vector<int> &NodesToFix);
 	void checkForNodeFixing();										///< This function checks for fixed nodes with the model input parametrs.
 	void checkForNodeBinding();										///< This function checks for node binding as boundary condition with the model input parametrs.
@@ -175,7 +169,6 @@ private:
 	void manualAdhesion(int masterNodeId,int slaveNodeId);			///< This function forces adhesion between the two input nodes.
 	double distanceSqBetweenNodes(int id0, int id1);				///< Helper funciton calculates the square of the distance between the two nodes with input node IDs.
 	bool isAdhesionAllowed(int masterNodeId, int slaveNodeId);		///< This function checks if the two nodes can adhere.
-	//bool checkForElementFlippingUponNodeCollapse(std::vector<int> &newCollapseList, std::array<double,3>  avrPos); ///< This function checks all elements on the potential collapse list against flipping.
 	bool checkForElementFlippingUponNodeCollapse(vector<int> &newCollapseList, double* avrPos);///< This function checks all elements on the potential collapse list against flipping.
 	bool adhereNodes();												///< This function adheres the nodes on the proximity lists if there is no rule against the adhesion.
 	void updatePositionsOfNodesCollapsingInStages();				///< This function brings the adhred node couples closer to each other in stages, to avoid too large movements and causing instabilities ata  single step.
@@ -189,8 +182,7 @@ private:
 	void updateNodeMasses();										///< This function updates masses of the nodes.
 	void assignElementalSurfaceAreaIndices();						///< This function assigns the indices of externally exposed surfaces in elemetns.
 	void updateNodeViscositySurfaces();								///< This function calculates the surfaces feeling viscosity ojn teh elements and assign the surfaces to constructing nodes.
-	//void updateElementToConnectedNodes(const std::vector <std::unique_ptr<Node>>& Nodes);   ///< This function updates the connectivity of the elemetns.
-	void updateElementToConnectedNodes(vector <Node*>& Nodes);		///< This function updates the connectivity of the elemetns.
+	void updateElementToConnectedNodes(const std::vector <std::unique_ptr<Node>>& Nodes);   ///< This function updates the connectivity of the elemetns.
 	void assignConnectedElementsAndWeightsToNodes();				///< This function assigns the wighted contribution of elemental properties on the nodes.
 	void fixAllD(int i, bool fixWithViscosity);						///< Fixes 3D degrees of freedom of node, can be rigid fixing or fixing with increased viscosity.
 	void fixAllD(Node* currNode, bool fixWithViscosity);			///< Fixes 3D degrees of freedom of node, can be rigid fixing or fixing with increased viscosity.
@@ -223,7 +215,6 @@ private:
     void writeGrowthRedistribution();                               ///< Write the volume redistribution of the simulation to the output directory specified by the user input
     void writeForces();												///< Write the nodal forces to save file at each time step.
 	void writePacking();											///< Write the packing forces to save file at each time step.
-	void writeCollapseAndAdhesion();								///< Write collapsed and adhered nodes to save file at each time step.
 	void calculateGrowth();                                         ///< Calculates the growths of each element from input growth functions as specified in the model input file.
     void calculateShapeChange();                                    ///< Calculates the shape change of each element from input growth functions as specified in the model input file.
     void cleanUpGrowthRates();                                      ///< Set growths increments of each element to zero at the beginning of each time step.
@@ -290,7 +281,6 @@ public:
 
 	bool saveImages;                                            ///< Boolean stating if the screenshot images should be saved.
 	bool saveData;                                              ///< Boolean stating if the simulation data should be saved.
-	//std::string name_saveFile;                                ///< The name of the save file
 	int imageSaveInterval;                                      ///< The interval to save screenshot images, in time step counts.
 	int dataSaveInterval;                                       ///< The interval to save simalation data, in time step counts.
 	double EApical;                                             ///< Young's modulus of the apical section of tissue
@@ -353,18 +343,13 @@ public:
 	int nGrowthFunctions;										///< The number of growth functions active in the simulation.
 	bool GridGrowthsPinnedOnInitialMesh;						///< The boolean stating if the grid based gorwth is pinned on the mesh for prolonged periods, the timings stored in Simulation#growthPinUpdateTime
 	int nGrowthPinning;                                         ///< The number of times growth pinning positions will be updated, the relative positions of elements in tissue.
-    //std::vector<int> growthPinUpdateTime;                     ///< The vector storing the growth rate pinning update times, as Simulation#timestep counters.
-    //std::vector<bool> growthPinUpdateBools;                   ///< The vector storing the booleans to check the pinning update has been carried out.
-	int* growthPinUpdateTime;									///< The vector storing the growth rate pinning update times, as Simulation#timestep counters.
-	bool* growthPinUpdateBools;									///< The vector storing the booleans to check the pinning update has been carried out.
+    std::vector<int> growthPinUpdateTime;                     ///< The vector storing the growth rate pinning update times, as Simulation#timestep counters.
+    std::vector<bool> growthPinUpdateBools;                   ///< The vector storing the booleans to check the pinning update has been carried out.
 	int gridGrowthsInterpolationType;                           ///< The type of interpolation done on growth map grid, 0 = no interpolation, step function, 1 = linear interpolation (default = 1).
-	vector <double***> GrowthMatrices;							///< The stack of growth grids.
 	std::vector<std::unique_ptr<GrowthFunctionBase>> GrowthFunctions;   ///< The vector containing the unique pointers to the growth functions active in the simulation
-	//vector<GrowthFunctionBase*> GrowthFunctions;				///< The vector containing the unique pointers to the growth functions active in the simulation
 
 	int nShapeChangeFunctions;                                  ///< The number of shape change functions active in the simulation.
     std::vector<std::unique_ptr<GrowthFunctionBase>> ShapeChangeFunctions; ///< The vector containing the unique pointers to the shape change functions active in the simulation
-	//vector<GrowthFunctionBase*> ShapeChangeFunctions;			///< The vector containing the unique pointers to the shape change functions active in the simulation
 	double shapeChangeECMLimit;                                 ///< The threshold of ECM density upon which emergent shape change will be activated (reduction of ECM strength inducing shape change).
 
 	bool thereIsPlasticDeformation;								///< The boolean stating that there is plastic deformation (remodelling) in the tissue.
@@ -378,20 +363,17 @@ public:
 	bool addCurvatureToTissue;
 	double tissueCurvatureDepth;
 
-	//std::vector <std::unique_ptr<Node>> Nodes;                  ///< The vector storing the unique pointers ot the nodes of the simulation.
-	//std::vector <std::unique_ptr<ShapeBase>> Elements;          ///< The vector storing the unique pointers ot the elements of the simulation.
-	//size_t nElements;                                           ///< The number of elements of the simulation.
-	//size_t nNodes;                                              ///< The number of nodes of the simulation.
-	 //std::vector<std::array<double,3>> SystemForces;             ///< The vector storing the system forces applied on each node [Simulation#nNodes][3D]
-	 //std::vector<std::array<double,3>> PackingForces;            ///< The vector storing the packing forces applied on each node [Simulation#nNodes][3D]
-
-	vector <Node*> Nodes;										///< The vector storing the unique pointers ot the nodes of the simulation.
-	vector <ShapeBase*> Elements;								///< The vector storing the unique pointers ot the elements of the simulation.
-	int nElements;												///< The number of elements of the simulation.
-	int nNodes;													///< The number of nodes of the simulation.
-	double** SystemForces;										///< The vector storing the system forces applied on each node [Simulation#nNodes][3D]
-	double** PackingForces;										///< The vector storing the packing forces applied on each node [Simulation#nNodes][3D]
-	double** FixedNodeForces;
+	std::vector <std::unique_ptr<Node>> Nodes;                  ///< The vector storing the unique pointers ot the nodes of the simulation.
+	std::vector <std::unique_ptr<ShapeBase>> Elements;          ///< The vector storing the unique pointers ot the elements of the simulation.
+	size_t nElements;                                           ///< The number of elements of the simulation.
+	size_t nNodes;                                              ///< The number of nodes of the simulation.
+	std::vector<std::array<double,3>> SystemForces;             ///< The vector storing the system forces applied on each node [Simulation#nNodes][3D]
+	std::vector<std::array<double,3>> PackingForces;            ///< The vector storing the packing forces applied on each node [Simulation#nNodes][3D]
+	std::vector<std::array<double,3>> FixedNodeForces;
+	//vector <Node*> Nodes;										///< The vector storing the unique pointers ot the nodes of the simulation.
+	//vector <ShapeBase*> Elements;								///< The vector storing the unique pointers ot the elements of the simulation.
+	//int nElements;												///< The number of elements of the simulation.
+	//int nNodes;													///< The number of nodes of the simulation.
 	bool addingRandomForces;                                    ///< The boolean stating if random forces are added as noise.
 	std::vector <double> randomForces;                          ///< The vector storing the random forces applied on each node, stored in vector form [Simulation#nNodes * 3D].
     double randomForceMean;                                     ///< The mean of the random forces
@@ -439,37 +421,12 @@ public:
 	vector <int*> TrianglesToDraw;
 	vector <double*> NodesToDraw;
     double TissueHeight;                                        ///< The height of the tissue
-    size_t TissueHeightDiscretisationLayers;                    ///< The number of elemetns the tissue height is discretisized to.
+    int TissueHeightDiscretisationLayers;                    ///< The number of elemetns the tissue height is discretisized to.
 	double boundingBox[2][3];                                   ///< The bounding box of the tissue [lower left corner [x][y][z]] [upper right corner[x][y][z]]
 	std::vector <int> pacingNodeCouples0;                       ///< The vector storing the Node#Id list of packing node couples, coupled with Simulation#pacingNodeCouples1.
 	std::vector <int> pacingNodeCouples1;                       ///< The vector storing the Node#Id list of packing node couples, coupled with Simulation#pacingNodeCouples0.
 	std::vector <bool> pacingNodeCouplesHaveAdhered;            ///< The boolean vector stating if the potentially packing node couple have adheres (couple stored in Simulation#///< The vector storing the Node#Id list of packing node couples, coupled with Simulation#pacingNodeCouples0 and Simulation#///< The vector storing the Node#Id list of packing node couples, coupled with Simulation#pacingNodeCouples1).
 
-	//to do: delete all surface packing
-	/*vector <int> pacingNodeSurfaceList0; // this is the id of the base node that is packing
-	vector <int> pacingNodeSurfaceList1; // lists 1 to 3 are the edges of the triangle
-	vector <int> pacingNodeSurfaceList2;
-	vector <int> pacingNodeSurfaceList3;
-	vector <int> pacingNodeEdgeList0; // this is the id of the base node that is packing
-	vector <int> pacingNodeEdgeList1; // lists 1 to 2 are the nodes of the packing edge
-	vector <int> pacingNodeEdgeList2;
-	vector <int> pacingNodePointList0; // this is the id of the base node that is packing
-	vector <int> pacingNodePointList1; // list 1 is the packing node
-	vector <int> initialSignsSurfacex;
-	vector <int> initialSignsSurfacey;
-	vector <int> initialSignsSurfacez;
-	vector <int> initialSignsEdgex;
-	vector <int> initialSignsEdgey;
-	vector <int> initialSignsEdgez;
-	vector <int> initialSignsPointx;
-	vector <int> initialSignsPointy;
-	vector <int> initialSignsPointz;
-	vector <double> initialWeightSurfacex;
-	vector <double> initialWeightSurfacey;
-	vector <double> initialWeightSurfacez;
-	vector <double> initialWeightEdgex;
-	vector <double> initialWeightEdgey;
-	vector <double> initialWeightEdgez;*/
 	vector <double> initialWeightPointx;
 	vector <double> initialWeightPointy;
 	vector <double> initialWeightPointz;
@@ -480,7 +437,7 @@ public:
 	std::vector<double> markerEllipseBandR2Ranges;              ///< The vecotr storing the outer radia of the marker ellipse bands used in perturbation activation
 	bool 	thereIsECMChange;                                   ///< There is perturnaton on ECM
 
-	std::vector <int> numberOfECMChangeEllipseBands;            ///< Number of marker ellipses used in perturbation of the ECM
+	std::vector <size_t> numberOfECMChangeEllipseBands;         ///< Number of marker ellipses used in perturbation of the ECM
 	std::vector< vector<int> > ECMChangeEllipseBandIds;         ///< The band Ids of marker ellipses used in perturbation of the ECM
 	std::vector <double> ECMChangeBeginTimeInSec;               ///< The time point where ECM change is activated.
 	std::vector <double> ECMChangeEndTimeInSec;                 ///< The time point where ECM change is ended.

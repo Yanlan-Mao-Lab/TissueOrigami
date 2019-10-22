@@ -9,7 +9,7 @@
 #include <algorithm>
 
 using namespace std;
-Lumen::Lumen(vector<ShapeBase*>& Elements,vector<Node*>& Nodes, double lumenBulkModulus, double lumenGrowthFold){
+Lumen::Lumen(const std::vector <std::unique_ptr<ShapeBase>>& Elements, const std::vector <std::unique_ptr<Node>>& Nodes, double lumenBulkModulus, double lumenGrowthFold){
 	Dim = 3;
 	bulkModulus = lumenBulkModulus;
 	initialIdealVolume = 0;
@@ -21,15 +21,15 @@ Lumen::Lumen(vector<ShapeBase*>& Elements,vector<Node*>& Nodes, double lumenBulk
 	growthRate = log(lumenGrowthFold)/3600/24;
 	rV = 0;
 	nTriangleSize= 0;
-    for (vector<ShapeBase*>::iterator iterEle = Elements.begin();iterEle<Elements.end(); ++iterEle){
-		if ((*iterEle)->isECMMimimcingAtCircumference == false){
-			if ((*iterEle)->tissuePlacement != 3){ //not a lateral element
+    for (const auto & iterEle : Elements){
+		if (iterEle->isECMMimimcingAtCircumference == false){
+			if (iterEle->tissuePlacement != 3){ //not a lateral element
 
-				if((*iterEle)->tissuePlacement == 1 ||((*iterEle)->tissuePlacement == 2 && (*iterEle)->spansWholeTissue)){
-					encapsulatingElements.push_back((*iterEle));
+				if(iterEle->tissuePlacement == 1 ||(iterEle->tissuePlacement == 2 && iterEle->spansWholeTissue)){
+					encapsulatingElementIds.push_back(iterEle->Id);
 					nTriangleSize++;
 					vector <int> apicalNodeIds;
-					(*iterEle)->getApicalNodeIds(apicalNodeIds);
+					iterEle->getApicalNodeIds(apicalNodeIds);
 					for (int nodeIdIterator =0;nodeIdIterator<3; ++nodeIdIterator){
 						int currId = apicalNodeIds[nodeIdIterator];
 						if (find(nodeIdsList.begin(), nodeIdsList.end(),currId)==nodeIdsList.end()){
@@ -61,7 +61,7 @@ Lumen::Lumen(vector<ShapeBase*>& Elements,vector<Node*>& Nodes, double lumenBulk
 	int nNode = nodeIdsList.size();
 	Kv = gsl_matrix_calloc(Dim*nNode,Dim*nNode);
 	KvNumerical = gsl_matrix_calloc(Dim*nNode,Dim*nNode);
-	updateMatrices(Nodes);
+	updateMatrices(Nodes, Elements);
 	calculateCurrentVolume();
 	currentIdealVolume = currentVolume*1.0;
 	initialIdealVolume = currentIdealVolume;
@@ -71,9 +71,6 @@ Lumen::Lumen(vector<ShapeBase*>& Elements,vector<Node*>& Nodes, double lumenBulk
 
 
 Lumen::~Lumen(){
-	while(!encapsulatingElements.empty()){
-		encapsulatingElements.pop_back();
-	}
 	for (int i=0; i<nTriangleSize; ++i){
 		gsl_matrix_free (xCap1[i]);
 		gsl_matrix_free (xCap2[i]);
@@ -89,11 +86,12 @@ Lumen::~Lumen(){
 	gsl_matrix_free (KvNumerical);
 }
 
-void	Lumen::updateMatrices(vector<Node*>& Nodes){
+void	Lumen::updateMatrices(const std::vector <std::unique_ptr<Node>>& Nodes, const std::vector <std::unique_ptr<ShapeBase>>& Elements){
 	//cout<<"in update matrices"<<endl;
 	for (int eleIndex=0; eleIndex<nTriangleSize; ++eleIndex){
 		vector <int> apicalNodeIds;
-		encapsulatingElements[eleIndex]->getApicalNodeIds(apicalNodeIds);
+		int elementId = encapsulatingElementIds[eleIndex];
+		Elements[elementId]->getApicalNodeIds(apicalNodeIds);
 		for (int k=0; k<3; ++k){//going over trienagle corners
 			gsl_matrix* tmpPos; //pointer to the vector for position of corner k
 			gsl_matrix* tmpPosCap; //pointer to the matrix of position of corner k
@@ -136,21 +134,17 @@ void	Lumen::calculateCurrentVolume(){
 			dotP += gsl_matrix_get(tmp,k,0)*gsl_matrix_get(x2[eleIndex],k,0);
 		}
 		currentElementalVolume[eleIndex] = 1.0/6.0*dotP;
-		//cout<<" currentElementalVolume for element "<<encapsulatingElements[eleIndex]->Id<<" "<<currentElementalVolume[eleIndex] <<endl;
-
 	}
 	currentVolume=0;
 	for (int eleIndex=0; eleIndex<nTriangleSize; ++eleIndex){
 		currentVolume +=currentElementalVolume[eleIndex];
-		//cout<<" total volume: "<<currentVolume<<" for element "<<encapsulatingElements[eleIndex]->Id<<" "<<currentElementalVolume[eleIndex] <<endl;
 	}
 	//currentIdealVolume = currentVolume;
 	rV =  (currentVolume - currentIdealVolume)/currentIdealVolume;
 	//cout<<"current Volume of Lumen: "<<currentVolume<<" ideal volume: "<<currentIdealVolume <<" rV "<<rV<<endl;
 }
 
-
-void	Lumen::calculateResiduals(vector<Node*>& Nodes){
+void	Lumen::calculateResiduals(const std::vector <std::unique_ptr<Node>>& Nodes, const std::vector <std::unique_ptr<ShapeBase>>& Elements){
 	//cout<<"in calculate residuals for Lumen"<<endl;
 	double rVover6V0 =  rV /6.0 / currentIdealVolume;
 	#ifndef DO_NOT_USE_OMP
@@ -165,23 +159,23 @@ void	Lumen::calculateResiduals(vector<Node*>& Nodes){
 		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans, 1.0, xCap1[eleIndex], x2[eleIndex],0.0, g3[eleIndex]);
 		//now write to elastic g:
 		vector <int> apicalNodeIndices;
-		encapsulatingElements[eleIndex]->getApicalNodeIndicesOnElement(apicalNodeIndices);
+		int eleId = encapsulatingElementIds[eleIndex];
+		Elements[eleId]->getApicalNodeIndicesOnElement(apicalNodeIndices);
 		for (int i=0; i<3; ++i){//triangle corners for apical nodes
 			int indexOnElement = apicalNodeIndices[i];
 			gsl_matrix* currentg;
 			if (i == 0){currentg = g1[eleIndex];}
 			else if (i == 1){currentg = g2[eleIndex];}
 			else if (i == 2){currentg = g3[eleIndex];}
-			//cout<<" element: "<<encapsulatingElements[eleIndex]->Id<<" indexOnElement "<<indexOnElement<<endl;
 			for (int j=0; j<Dim; ++j){
-				if (!Nodes[encapsulatingElements[eleIndex]->NodeIds[indexOnElement]]->FixedPos[j]){
+				if (!Nodes[Elements[eleId]->NodeIds[indexOnElement]]->FixedPos[j]){
 					//if (encapsulatingElements[eleIndex]->NodeIds[indexOnElement] == 176){
 					//	cout<<" from element: "<<encapsulatingElements[eleIndex]->Id<<" node "<<encapsulatingElements[eleIndex]->NodeIds[indexOnElement]<<" g"<<i+1<<"["<<j<<"]: "<<gsl_matrix_get(currentg,j,0)<<endl;
 					//}
 					double valueToAdd= -1.0*bulkModulus*rVover6V0*gsl_matrix_get(currentg,j,0);
-					encapsulatingElements[eleIndex]->addToElementalElasticSystemForces(indexOnElement,j,valueToAdd );
+					Elements[eleId]->addToElementalElasticSystemForces(indexOnElement,j,valueToAdd );
 					if (std::isnan(valueToAdd)){
-						cout<<" element: "<<encapsulatingElements[eleIndex]->Id<<" g dimention: "<<indexOnElement<<" "<<j<<" is NaN after addition: "<<valueToAdd<<endl;
+						cout<<" element: "<<eleId<<" g dimention: "<<indexOnElement<<" "<<j<<" is NaN after addition in lumen forces: "<<valueToAdd<<endl;
 					}
 				}
 				else{
@@ -194,11 +188,12 @@ void	Lumen::calculateResiduals(vector<Node*>& Nodes){
 }
 
 
-void 	Lumen::calculateLumengFromElementalResiduals(gsl_matrix* g){
+void 	Lumen::calculateLumengFromElementalResiduals(gsl_matrix* g, const std::vector <std::unique_ptr<ShapeBase>>& Elements){
 	gsl_matrix* tmpg;
 	for (int eleIndex= 0; eleIndex<nTriangleSize; ++eleIndex){
 		vector <int> apicalNodeIds;
-		encapsulatingElements[eleIndex]->getApicalNodeIds(apicalNodeIds);
+		int eleId = encapsulatingElementIds[eleIndex];
+		Elements[eleId]->getApicalNodeIds(apicalNodeIds);
 		for (int nodeIterator = 0; nodeIterator<3; nodeIterator++){
 			if 		(nodeIterator==0)	{tmpg =g1[eleIndex];}
 			else if (nodeIterator==1)	{tmpg =g2[eleIndex];}
@@ -217,7 +212,7 @@ void 	Lumen::calculateLumengFromElementalResiduals(gsl_matrix* g){
 	//cout<<"finished calculateLumengFromElementalResiduals "<<endl;
 }
 
-void	Lumen::calculateJacobian(){
+void	Lumen::calculateJacobian(const std::vector <std::unique_ptr<ShapeBase>>& Elements){
 	gsl_matrix_set_zero(Kv);
 	double KbulkrVover6V0 =  bulkModulus*rV /6.0 / currentIdealVolume;
 	double KbulkoneOver36V0Sq = bulkModulus/currentIdealVolume/currentIdealVolume/36;
@@ -225,12 +220,13 @@ void	Lumen::calculateJacobian(){
 	//get number of Nodes, make node list
 	int  nNode = nodeIdsList.size();
 	gsl_matrix* g = gsl_matrix_calloc(Dim*nNode,1);
-	calculateLumengFromElementalResiduals(g);
+	calculateLumengFromElementalResiduals(g, Elements);
 	gsl_blas_dgemm (CblasNoTrans, CblasTrans,KbulkoneOver36V0Sq, g, g,0.0, Kv);
 	for (int eleIndex=0; eleIndex<nTriangleSize; ++eleIndex){
 		gsl_matrix* scaledxij = gsl_matrix_calloc(3,3);
 		vector <int> apicalNodeIndices;
-		encapsulatingElements[eleIndex]->getApicalNodeIndicesOnElement(apicalNodeIndices);
+		int eleId= encapsulatingElementIds[eleIndex];
+		Elements[eleId]->getApicalNodeIndicesOnElement(apicalNodeIndices);
 		for (int i=0; i<Dim; ++i){
 			for (int j=0; j<Dim; ++j){
 				if (i==j){
@@ -238,37 +234,37 @@ void	Lumen::calculateJacobian(){
 					continue;
 				}
 				else if (i==0 && j==1){
-					encapsulatingElements[eleIndex]->createMatrixCopy(scaledxij,  xCap3[eleIndex]);
+					Elements[eleId]->createMatrixCopy(scaledxij,  xCap3[eleIndex]);
 					gsl_matrix_scale(scaledxij,(-1.0)*KbulkrVover6V0);
 				}
 				else if (i==0 && j==2){
-					encapsulatingElements[eleIndex]->createMatrixCopy(scaledxij,  xCap2[eleIndex]);
+					Elements[eleId]->createMatrixCopy(scaledxij,  xCap2[eleIndex]);
 					gsl_matrix_scale(scaledxij,KbulkrVover6V0);
 				}
 				else if (i==1 && j==0){
-					encapsulatingElements[eleIndex]->createMatrixCopy(scaledxij,  xCap3[eleIndex]);
+					Elements[eleId]->createMatrixCopy(scaledxij,  xCap3[eleIndex]);
 					gsl_matrix_scale(scaledxij,KbulkrVover6V0);
 				}
 				else if (i==1 && j==2){
-					encapsulatingElements[eleIndex]->createMatrixCopy(scaledxij,  xCap1[eleIndex]);
+					Elements[eleId]->createMatrixCopy(scaledxij,  xCap1[eleIndex]);
 					gsl_matrix_scale(scaledxij,(-1.0)*KbulkrVover6V0);
 				}
 				else if (i==2 && j==0){
-					encapsulatingElements[eleIndex]->createMatrixCopy(scaledxij,  xCap2[eleIndex]);
+					Elements[eleId]->createMatrixCopy(scaledxij,  xCap2[eleIndex]);
 					gsl_matrix_scale(scaledxij,(-1.0)*KbulkrVover6V0);
 				}
 				else if (i==2 && j==1){
-					encapsulatingElements[eleIndex]->createMatrixCopy(scaledxij,  xCap1[eleIndex]);
+					Elements[eleId]->createMatrixCopy(scaledxij,  xCap1[eleIndex]);
 					gsl_matrix_scale(scaledxij,KbulkrVover6V0);
 				}
 				//Now I have the tile ij that is to be written on the elemental K.
 				//The corresponding tile on elemental K will depend on the element node index, depending on where the apical surface lies
 				//I will get the index of nodes 1-3 of the triangle, they are either 0-2 or 3-5 for prisims
-				int indexOfiOnElement = apicalNodeIndices[i];
-				int indexOfjOnElement = apicalNodeIndices[j];
+				//int indexOfiOnElement = apicalNodeIndices[i];
+				//int indexOfjOnElement = apicalNodeIndices[j];
 
 				vector <int> apicalNodeIds;
-				encapsulatingElements[eleIndex]->getApicalNodeIds(apicalNodeIds);
+				Elements[eleId]->getApicalNodeIds(apicalNodeIds);
 				int currNodeIdi = apicalNodeIds[i];
 				std::vector<int>::iterator iteratorToCurrNodei = find(nodeIdsList.begin(), nodeIdsList.end(),currNodeIdi);
 				int indexOfCurrNodeiOnnodeIdsList = std::distance(nodeIdsList.begin(),iteratorToCurrNodei);
@@ -301,7 +297,7 @@ void	Lumen::calculateJacobian(){
 	gsl_matrix_free(g);
 }
 
-void Lumen::writeLumenJacobianToSystemJacobian(gsl_matrix* K,vector<Node*>& Nodes){
+void Lumen::writeLumenJacobianToSystemJacobian(gsl_matrix* K, const std::vector <std::unique_ptr<Node>>& Nodes){
 	int nNode=nodeIdsList.size();
 	for (int nodeiIndex = 0; nodeiIndex<nNode; ++nodeiIndex){
 		for (int nodejIndex = 0; nodejIndex<nNode; ++nodejIndex){

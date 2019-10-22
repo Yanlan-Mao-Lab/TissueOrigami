@@ -21,8 +21,8 @@ using namespace std;
  *  */
 class NewtonRaphsonSolver{
 private:
-	int nDim;											///< Dimension of the space (3D)
-	int nNodes;											///< Number of nodes of the system
+	size_t nDim;											///< Dimension of the space (3D)
+	size_t nNodes;											///< Number of nodes of the system
 	double threshold;									///< Convergence threshold for iterations
 	bool externalViscosityVolumeBased;					///< Boolean stating if the external viscosity calculation is volume based (true) or surface area based (false)
 
@@ -51,17 +51,17 @@ public:
 	void setMatricesToZeroAtTheBeginningOfIteration(bool thereIsNumericalCalculation); 	///< The function setting the calculation matrices to zero at the beginning of each iteration.
 	void setMatricesToZeroInsideIteration();			///< The function setting the relevant matrices to zero at each iteration.
 
-	void constructUnMatrix(vector <Node*>& Nodes);		///< This function constructs NewtonRaphsonSolver#un matrix at the beginning of the iterations											//< This function constructs NewtonRaphsonSolver#un matrix at the beginning of the iterations.
+	void constructUnMatrix(const std::vector<std::unique_ptr<Node>>& Nodes);		///< This function constructs NewtonRaphsonSolver#un matrix at the beginning of the iterations											//< This function constructs NewtonRaphsonSolver#un matrix at the beginning of the iterations.
 	void initialteUkMatrix();							///< This function initiates NewtonRaphsonSolver#uk matrix at the beginning of the iterations, it is initiated to be equal to NewtonRaphsonSolver#un.
 	void calculateBoundKWithSlavesMasterDoF();			///< This function updates the Jacobian of the system, NewtonRaphsonSolver#K, to reflect degrees of freedom binding.
 	void equateSlaveDisplacementsToMasters();			///< This function moves the slaves of bound couples with a displacement equivalent to the masters'.
     void calculateDisplacementMatrix(double dt);		///< This function calculates the displacement of each node in current iteration "k", from their positions at the end of the previous step "n" (NewtonRaphsonSolver#uk - NewtonRaphsonSolver#un)
-	void calcutateFixedK(vector <Node*>& Nodes);		///< This function updates the Jacobian to account for nodes  that are fixed in certain dimensions in space, as part of boundary conditions.
-	void calculateForcesAndJacobianMatrixNR(vector <Node*>& Nodes, vector <ShapeBase*>& Elements, double dt, bool recordForcesOnFixedNodes, double **FixedNodeForces );	///< This function calculates elemental forces and Jacobians, later to be combined in NewtonRaphsonSolver#K and NewtonRaphsonSolver#gSum
-	void writeForcesTogeAndgvInternal(vector <Node*>& Nodes, vector <ShapeBase*>& Elements, double** SystemForces);	//< This function writes the values of elemental elastic (ShapeBase#ge) and internal viscous forces (ShapeBase#gvInternal) into the system elastic and internal viscous forces, NewtonRaphsonSolver#ge, and NewtonRaphsonSolver#gvInternal, respectively.
-	void writeImplicitElementalKToJacobian(vector <ShapeBase*>& Elements);			//< This function writes the elemental values for elastic part of the Jacobian - stiffness matrix - (ShapeBase#TriPointKe) and for viscous part of Jacobian (ShapeBase#TriPointKv) into the system Jacobian NewtonRaphsonSolver#K.
-	void calculateExternalViscousForcesForNR(vector <Node*>& Nodes);				//< This function calculates the external viscous forces acting on each node, the values are sotred in NewtonRaphsonSolver#gvExternal
-	void addImplicitKViscousExternalToJacobian(vector <Node*>& Nodes, double dt);	//< This function adds the external related terms of the Jacobian to the system Jacobian NewtonRaphsonSolver#K.
+	void calcutateFixedK(const std::vector<std::unique_ptr<Node>>& Nodes);		///< This function updates the Jacobian to account for nodes  that are fixed in certain dimensions in space, as part of boundary conditions.
+	void calculateForcesAndJacobianMatrixNR(const std::vector<std::unique_ptr<Node>>& Nodes, const std::vector <std::unique_ptr<ShapeBase>>& Elements, double dt);	///< This function calculates elemental forces and Jacobians, later to be combined in NewtonRaphsonSolver#K and NewtonRaphsonSolver#gSum
+	void writeForcesTogeAndgvInternal(const std::vector<std::unique_ptr<Node>>& Nodes, const std::vector <std::unique_ptr<ShapeBase>>& Elements, std::vector<std::array<double,3>>& SystemForces);	//< This function writes the values of elemental elastic (ShapeBase#ge) and internal viscous forces (ShapeBase#gvInternal) into the system elastic and internal viscous forces, NewtonRaphsonSolver#ge, and NewtonRaphsonSolver#gvInternal, respectively.
+	void writeImplicitElementalKToJacobian(const std::vector <std::unique_ptr<ShapeBase>>& Elements);			//< This function writes the elemental values for elastic part of the Jacobian - stiffness matrix - (ShapeBase#TriPointKe) and for viscous part of Jacobian (ShapeBase#TriPointKv) into the system Jacobian NewtonRaphsonSolver#K.
+	void calculateExternalViscousForcesForNR(const std::vector<std::unique_ptr<Node>>& Nodes);				//< This function calculates the external viscous forces acting on each node, the values are sotred in NewtonRaphsonSolver#gvExternal
+	void addImplicitKViscousExternalToJacobian(const std::vector<std::unique_ptr<Node>>& Nodes, double dt);	//< This function adds the external related terms of the Jacobian to the system Jacobian NewtonRaphsonSolver#K.
 	void checkJacobianForAblatedNodes(vector <int> & AblatedNodes);					//< This functions checks the Jacobian to ensure the diagonal terms are non-zero for ablated nodes.
 	void calculateSumOfInternalForces();											//< This function adds the ealsticity and viscosity related forces (NewtonRaphsonSolver#ge, NewtonRaphsonSolver#gvInternal, NewtonRaphsonSolver#gvExternal) to sum of forces, NewtonRaphsonSolver#gSum.
 	void addExernalForces();
@@ -76,16 +76,16 @@ public:
 	bool checkConvergenceViaForce();											///< Check for convergence with the norm of forces vector,against the threshold NewtonRaphsonSolver#threshold.
 	void updateUkInIteration();													///< Calculate the nodal displacements at the kth iteration of NR solver.
 	void useNumericalJacobianInIteration();										///< This function uses a numerically calculated Jacobian for iteration. It is here for debugging purposes. Numerical calculation of the Jacobian is extremely computationally heavy and slow.
-	void calculateDifferenceBetweenNumericalAndAnalyticalJacobian(vector <Node*>& Nodes, bool displayMAtricesDuringNumericalCalculation); ///< When utilising a numerical Jacobian, this function calculates the difference between the numerical and "analytical" Jacobians. 
+	void calculateDifferenceBetweenNumericalAndAnalyticalJacobian(const std::vector<std::unique_ptr<Node>>& Nodes, bool displayMAtricesDuringNumericalCalculation); ///< When utilising a numerical Jacobian, this function calculates the difference between the numerical and "analytical" Jacobians.
 	void displayMatrix(gsl_matrix* mat, string matname);						///< Helper function to display a gsl matrix.
 	void displayMatrix(gsl_vector* mat, string matname);						///< Helper function to display a gsl vector.
 	bool checkIfCombinationExists(int dofSlave, int dofMaster);					///< This function checks if the slave - master node id pair is already recorded, returns the answer as  boolean.
 	void checkMasterUpdate(int& dofMaster, int& masterId); 						///< This function takes a degree of freedom number as input. This DOF is supposed to be a master. If, the dof is already a slave to another dof, then update the masetr dof. Anything that would be bound to the input dof can be bound to the already existing master of the input dof.
-	void cleanPeripodialBindingFromMaster(int masterDoF,vector<Node*>& Nodes);	///< If there is peripodial binding, this function will clear the peripodial binding from the slave master pair.
+	void cleanPeripodialBindingFromMaster(int masterDoF,const std::vector<std::unique_ptr<Node>>& Nodes);	///< If there is peripodial binding, this function will clear the peripodial binding from the slave master pair.
 	bool checkIfSlaveIsAlreadyMasterOfOthers(int dofSlave, int dofMaster); 		///< This function checks if the slave DOF is already master of others, if so, updates the master of said slave to the new master the current slave will be bound to.
 
-	void updateElementPositions(vector <Node*>& Nodes, vector <ShapeBase*>& Elements);
-	void calculateLumenNumericalJacobian(Lumen* tissueLumen, vector <Node*>& Nodes, vector <ShapeBase*>& Elements); ///< This is a function for debugging purposes, it calculated the jacobian terms related ot the lumen numerically. Numerical jacobian calcuation is extremely computationally heavy and slow. Should only be used while attempting to find the source of a bug.
+	void updateElementPositions(const std::vector<std::unique_ptr<Node>>& Nodes, const std::vector <std::unique_ptr<ShapeBase>>& Elements);
+	void calculateLumenNumericalJacobian(Lumen* tissueLumen, const std::vector<std::unique_ptr<Node>>& Nodes, const std::vector <std::unique_ptr<ShapeBase>>& Elements); ///< This is a function for debugging purposes, it calculated the jacobian terms related ot the lumen numerically. Numerical jacobian calcuation is extremely computationally heavy and slow. Should only be used while attempting to find the source of a bug.
 	// The smart pointer versions, will try to update before I leave.
 	//void updateElementPositions(const std::vector<std::unique_ptr<Node> > &Nodes, const std::vector <std::unique_ptr<ShapeBase>>&  Elements);
 	//void calcutateFixedK(const std::vector <std::unique_ptr<Node>>& Nodes);					///< This function updates the Jacobian to account for nodes  that are fixed in certain dimensions in space, as part of boundary conditions.

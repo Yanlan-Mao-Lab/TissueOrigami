@@ -6,14 +6,14 @@
 
 using namespace std;
 
-Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, bool thereIsPlasticDeformation){
-	//cout<<"constructing prism"<<endl;
+Prism::Prism(int* tmpNodeIds, const std::vector<std::unique_ptr<Node>>& Nodes, int CurrId){
+	//std::cout<<"constructing prism"<<std::endl;
 	nNodes = 6;
 	nDim = 3;
 	Id = CurrId;
 	ShapeDim = 3;	//3D shape
 	NodeIds = new int[6];
-	IdentifierColour = new int[3];
+	IdentifierColour.fill(0);
 	E = 10.0;
 	v = 0.3;
     internalViscosity = 0;
@@ -25,7 +25,8 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, bool thereIsPlas
 
     D = gsl_matrix_calloc(6,6);
 	GrowthRate.fill(0);
-	ShapeChangeRate  = new double[6];
+	apicalNormalCurrentShape.fill(0.0);
+	ShapeChangeRate.fill(0.0);
 	//CurrGrowthStrainAddition = new double[6];
 
     ApicalNormalForPacking =  new double[3];
@@ -34,17 +35,11 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, bool thereIsPlas
 	initialRelativePosInBoundingBox = new double[3];
 	initialRelativePositionInZ = 1.0;
 
-	apicalNormalCurrentShape = new double[nDim];
 	for (int i=0; i<3; ++i){
-		GrowthRate[i] = 0;
-		ShapeChangeRate[i] =0;
 		ApicalNormalForPacking[i] = 0;
 		BasalNormalForPacking[i] = 0;
 		relativePosInBoundingBox[i] = 0;
 		initialRelativePosInBoundingBox[i] = 0;
-		apicalNormalCurrentShape[i] = 0;
-		//columnarRelativePosInBoundingBox[i] =0;
-		//peripodialRelativePosInBoundingBox[i] =0;
 	}
 	columnarGrowthWeight = 1.0;
 	peripodialGrowthWeight = 0.0;
@@ -82,7 +77,7 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, bool thereIsPlas
 	const int nGauss = numberOfGaussPoints;
 	gaussWeights = new double[nGauss];
 	gaussPoints = new double*[nGauss];
-    for (int i=0; i<numberOfGaussPoints; ++i){
+    for (size_t i=0; i<numberOfGaussPoints; ++i){
     	gaussPoints[i] = new double [nDim];
     }
     if (numberOfGaussPoints == 3){
@@ -138,7 +133,7 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, bool thereIsPlas
     elasticStress = new gsl_matrix*[nGauss];
     viscousStress = new gsl_matrix*[nGauss];
     D81 = new double****[nGauss];
-    for (int i=0; i<numberOfGaussPoints; ++i){
+    for (size_t i=0; i<numberOfGaussPoints; ++i){
         ShapeFuncDerivatives[i] = gsl_matrix_calloc(nDim, nNodes);
         ShapeFuncDerStacks[i] = gsl_matrix_calloc(nDim*nDim, nDim*nNodes);
         InvdXdes[i] = gsl_matrix_calloc(nDim, nDim);
@@ -151,11 +146,11 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, bool thereIsPlas
         viscousStress[i] = gsl_matrix_calloc(3,3);
         //need to reach:  D81[gauss points][4][4][4][4];
         D81[i] = new double***[nDim];
-        for (int j=0; j<nDim; ++j){
+        for (size_t j=0; j<nDim; ++j){
         	 D81[i][j] = new double**[nDim];
-        	 for (int k=0; k<nDim; ++k){
+        	 for (size_t k=0; k<nDim; ++k){
         		 D81[i][j][k] = new double*[nDim];
-        		 for (int l=0; l<nDim; ++l){
+        		 for (size_t l=0; l<nDim; ++l){
         			 D81[i][j][k][l] = new double[nDim];
         		 }
 			}
@@ -246,16 +241,13 @@ Prism::Prism(int* tmpNodeIds, vector<Node*>& Nodes, int CurrId, bool thereIsPlas
 }
 
 Prism::~Prism(){
-	for (int i=0; i<nNodes; ++i){
+	for (size_t i=0; i<nNodes; ++i){
 		delete[] Positions[i];
 	}
 	delete[] Positions;
 	delete[] relativePosInBoundingBox;
 	delete[] initialRelativePosInBoundingBox;
 	delete[] NodeIds;
-	delete[] IdentifierColour;
-	delete[] ShapeChangeRate;
-	delete[] apicalNormalCurrentShape;
 	delete	 ReferenceShape;
 
     //freeing matrices allocated
@@ -272,7 +264,7 @@ Prism::~Prism(){
 	gsl_matrix_free(TriPointKe);
 	gsl_matrix_free(TriPointKv);
 	gsl_matrix_free(GrowthStrainsRotMat);
-    for (int i=0; i<numberOfGaussPoints; ++i){
+    for (size_t i=0; i<numberOfGaussPoints; ++i){
     	delete[] gaussPoints[i];
         gsl_matrix_free (ShapeFuncDerivatives[i]);
         gsl_matrix_free (ShapeFuncDerStacks[i]);
@@ -283,19 +275,19 @@ Prism::~Prism(){
         gsl_matrix_free (invJShapeFuncDerStackwithFe[i]);
         gsl_matrix_free (elasticStress[i]);
         gsl_matrix_free (viscousStress[i]);
-        for (int j=0; j<nDim; ++j){
-        	 for (int k=0; k<nDim; ++k){
-        		 for (int l=0; l<nDim; ++l){
+        for (size_t j=0; j<nDim; ++j){
+        	 for (size_t k=0; k<nDim; ++k){
+        		 for (size_t l=0; l<nDim; ++l){
         			 delete[] D81[i][j][k][l];
         		 }
 			}
         }
-        for (int j=0; j<nDim; ++j){
-        	 for (int k=0; k<nDim; ++k){
+        for (size_t j=0; j<nDim; ++j){
+        	 for (size_t k=0; k<nDim; ++k){
         		 delete[] D81[i][j][k];
 			}
         }
-        for (int j=0; j<nDim; ++j){
+        for (size_t j=0; j<nDim; ++j){
         	delete[] D81[i][j];
         }
         delete[] D81[i];
@@ -375,7 +367,7 @@ void Prism::checkRotationConsistency3D(){
 	double *vec2   = new double[3];
 	double *view   = new double[3];
 	double *normal = new double[3];
-	for (int i= 0; i<nDim; ++i){
+	for (size_t i= 0; i<nDim; ++i){
 		vec1[i] = Positions[1][i] - Positions[0][i];
 		vec2[i] = Positions[2][i] - Positions[0][i];
 		view[i] = Positions[0][i] - Positions[3][i];
@@ -383,8 +375,8 @@ void Prism::checkRotationConsistency3D(){
 	crossProduct3D(vec1,vec2,normal);
 	double  dot = dotProduct3D(view,normal);
 	if (dot > 0) {
-		cerr<<"prism: "<<Id<<" nodes are ordered clockwise, correcting"<<endl;
-		cout<<"Positions before swap, element: "<<Id<<endl;
+		std::cerr<<"prism: "<<Id<<" nodes are ordered clockwise, correcting"<<std::endl;
+		std::cout<<"Positions before swap, element: "<<Id<<std::endl;
 		displayPositions();
 		//swapping node ids:
 		int ids[2] = { NodeIds[1], NodeIds[4]};
@@ -393,7 +385,7 @@ void Prism::checkRotationConsistency3D(){
 		NodeIds[2] = ids[0];
 		NodeIds[5] = ids[1];
 		//swapping positions:
-		for (int i = 0; i<nDim; ++i){
+		for (size_t i = 0; i<nDim; ++i){
 			double pos[2] = {Positions[1][i],Positions[4][i]};
 			double refpos[2] = {ReferenceShape->Positions[1][i],ReferenceShape->Positions[4][i]};
 			Positions[1][i] = Positions[2][i];
@@ -405,7 +397,7 @@ void Prism::checkRotationConsistency3D(){
 			ReferenceShape->Positions[2][i] = refpos[0];
 			ReferenceShape->Positions[5][i] = refpos[1];
 		}
-		cout<<"Positions after swap, element: "<<Id<<endl;
+		std::cout<<"Positions after swap, element: "<<Id<<std::endl;
 		displayPositions();
 	}
 	delete[] vec1;
@@ -415,49 +407,46 @@ void Prism::checkRotationConsistency3D(){
 }
 
 void  Prism::calculateApicalNormalCurrentShape(){
-	double * u = new double[3];
-	double * v = new double[3];
-	for (int i=0; i<nDim; ++i){
+	std::array<double,3> u;
+	std::array<double,3> v;
+	for (size_t i=0; i<nDim; ++i){
 		u[i] = Positions[4][i] - Positions[3][i];
 		v[i] = Positions[5][i] - Positions[3][i];
 		apicalNormalCurrentShape[i] = 0.0;
 	}
-	crossProduct3D(u,v,apicalNormalCurrentShape);
-	double dummy = normaliseVector3D(apicalNormalCurrentShape);
-	for (int i=0; i<nDim; ++i){
+	apicalNormalCurrentShape = crossProduct3D(u,v);
+	(void) normaliseVector3D(apicalNormalCurrentShape);
+	for (size_t i=0; i<nDim; ++i){
 		u[i] = Positions[0][i] - Positions[3][i];
 	}
 	double  dot = dotProduct3D(u,apicalNormalCurrentShape);
 	if (dot<0){
-		for (int i=0; i<nDim; ++i){
+		for (size_t i=0; i<nDim; ++i){
 			apicalNormalCurrentShape[i] *=(-1.0);
 		}
 	}
-	//cerr<<"		apical normal after direction correction: "<<normal[0]<<" "<<normal[1]<<" "<<normal[2]<<endl;
-	delete[] v;
-	delete[] u;
 }
 
 void  Prism::calculateBasalNormal(double * normal){
 	double * u = new double[3];
 	double * v = new double[3];
-	for (int i=0; i<nDim; ++i){
+	for (size_t i=0; i<nDim; ++i){
 		u[i] = ReferenceShape->Positions[1][i] - ReferenceShape->Positions[0][i];
 		v[i] = ReferenceShape->Positions[2][i] - ReferenceShape->Positions[0][i];
 		normal[i] = 0.0;
 	}
 	crossProduct3D(u,v,normal);
-	double dummy = normaliseVector3D(normal);
-	for (int i=0; i<nDim; ++i){
+	(void) normaliseVector3D(normal);
+	for (size_t i=0; i<nDim; ++i){
 		u[i] = ReferenceShape->Positions[3][i] - ReferenceShape->Positions[0][i];
 	}
 	double  dot = dotProduct3D(u,normal);
 	if (dot<0){
-		for (int i=0; i<nDim; ++i){
+		for (size_t i=0; i<nDim; ++i){
 			normal[i] *=(-1.0);
 		}
 	}
-	cerr<<"		normal after direction correction: "<<normal[0]<<" "<<normal[1]<<" "<<normal[2]<<endl;
+	std::cerr<<"		normal after direction correction: "<<normal[0]<<" "<<normal[1]<<" "<<normal[2]<<std::endl;
 	delete[] v;
 	delete[] u;
 }
@@ -569,11 +558,11 @@ void Prism::calculateD81Tensor(){
     */
     	// lambda is Lame s first parameter and mu is the shear modulus .
 	double Idouble[3][3] = {{1.0,0.0,0.0} , {0.0,1.0,0.0}, {0.0,0.0,1.0}};
-	for (int pointNo = 0; pointNo<3; pointNo++){
-		for (int I = 0; I<nDim; ++I){
-			for (int J = 0; J<nDim; ++J){
-				for (int K = 0; K<nDim; ++K){
-					for (int L = 0; L<nDim; ++L){
+	for (size_t pointNo = 0; pointNo<3; pointNo++){
+		for (size_t I = 0; I<nDim; ++I){
+			for (size_t J = 0; J<nDim; ++J){
+				for (size_t K = 0; K<nDim; ++K){
+					for (size_t L = 0; L<nDim; ++L){
 						D81[pointNo][I][J][K][L] = lambda*Idouble[K][L]*Idouble[I][J] + mu * ( Idouble[I][K]*Idouble[J][L] + Idouble[I][L]*Idouble[J][K] );
 					}
 				}
@@ -588,8 +577,8 @@ void Prism::getCurrRelaxedShape(gsl_matrix* CurrRelaxedShape){
      * the call to the function.
      *
      */
-	for (int i =0; i<nNodes; ++i){
-		for (int j=0; j<nDim; ++j){
+	for (size_t i =0; i<nNodes; ++i){
+		for (size_t j=0; j<nDim; ++j){
             gsl_matrix_set(CurrRelaxedShape,i,j,ReferenceShape->Positions[i][j]);
 		}
 	}
@@ -726,7 +715,7 @@ void Prism::calculateElementShapeFunctionDerivatives(){
         detdXdes[iter] = determinant3by3Matrix(dXde);
         bool inverted = InvertMatrix(dXde, InvdXdes[iter]);
         if (!inverted){
-            cerr<<"dXde not inverted at point "<<iter<<"!!"<<endl;
+            std::cerr<<"dXde not inverted at point "<<iter<<"!!"<<std::endl;
         }
     }
     gsl_matrix_free(CurrRelaxedShape);
@@ -804,8 +793,8 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currge, gsl_matrix *currgv, gsl
 
     double lnJ = log(detFe);
     if(std::isnan(lnJ)){
-    	cout<<"element: "<<Id<<" lnJ is nan, detFe: "<<detFe<<endl;
-    	cout<<" Element positions: "<<endl;
+    	std::cout<<"element: "<<Id<<" lnJ is nan, detFe: "<<detFe<<std::endl;
+    	std::cout<<" Element positions: "<<std::endl;
     	displayPositions();
     }
     if (KirshoffMaterial){
@@ -819,7 +808,7 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currge, gsl_matrix *currgv, gsl
 		createMatrixCopy(tmpCforInversion,C);
 		bool inverted = InvertMatrix(tmpCforInversion, InvC);
 		if (!inverted){
-			cerr<<"C not inverted!!"<<endl;
+			std::cerr<<"C not inverted!!"<<std::endl;
 		}
     	S = calculateSForNodalForcesNeoHookean(InvC,lnJ);
     	updateLagrangianElasticityTensorNeoHookean(InvC,lnJ,pointNo);
@@ -909,12 +898,12 @@ void Prism::calculateReferenceVolume(){
 	centre[0] = 0.0;
 	centre[1] = 0.0;
 	centre[2] = 0.0;
-	for (int i = 0; i < nNodes; ++i){
-		for (int j = 0 ;j < nDim; ++j){
+	for (size_t i = 0; i < nNodes; ++i){
+		for (size_t j = 0 ;j < nDim; ++j){
 			centre[j] += ReferenceShape->Positions[i][j];
 		}
 	}
-	for (int j = 0 ;j < nDim; ++j){
+	for (size_t j = 0 ;j < nDim; ++j){
 		centre[j] /= nNodes;
 	}
 	ReferenceShape->Volume = calculateVolumeForInputShapeStructure(ReferenceShape->Positions, nTriangularFaces, triangularFaces,centre);
@@ -925,7 +914,7 @@ void Prism::calculateReferenceVolume(){
 	double* vec1 = new double [(const int) nDim];
 	double* vec2 = new double [(const int) nDim];
 	double* baseVec = new double [(const int) nDim];
-	for (int j=0 ;j < nDim; ++j){
+	for (size_t j=0 ;j < nDim; ++j){
 			vec1 [j] = ReferenceShape->Positions[1][j] - ReferenceShape->Positions[0][j];
 			vec2 [j] = ReferenceShape->Positions[2][j] - ReferenceShape->Positions[0][j];
 	}
@@ -955,7 +944,7 @@ void Prism::checkHealth(){
 	calculatePlaneNormals(normals);
 	bool elementsAreHealthy = checkNodePlaneConsistency(normals);
 	if (!elementsAreHealthy){
-		cerr<<" Element not healthy! : "<<Id<<endl;
+		std::cerr<<" Element not healthy! : "<<Id<<std::endl;
 	}
 	for (int i=0; i<8;++i){
 		delete[] normals[i];
@@ -973,11 +962,11 @@ void Prism::calculatePlaneNormals(double** normals){
 	//plane 5 -> normal 5 - > normal for nodes 3  2  5
 	//plane 6 -> normal 6 - > normal for nodes 1  2  4
 	//plane 7 -> normal 7 - > normal for nodes 2  4  5
-	int List[8][3]={{0,1,2},{0,3,1},{0,2,3},{3,5,4},{3,4,1},{3,2,5},{1,4,2},{2,4,5}};
+	size_t List[8][3]={{0,1,2},{0,3,1},{0,2,3},{3,5,4},{3,4,1},{3,2,5},{1,4,2},{2,4,5}};
 	double *u,*v;
 	u = new double[3];
 	v = new double[3];
-	for (int i=0; i<8; ++i){
+	for (size_t i=0; i<8; ++i){
 		assignNodalVector(u,List[i][0],List[i][1]);
 		assignNodalVector(v,List[i][0],List[i][2]);
 		crossProduct3D(u,v,normals[i]);
@@ -986,12 +975,12 @@ void Prism::calculatePlaneNormals(double** normals){
 	delete[] v;
 }
 
-void Prism::assignNodalVector(double* vec, int id0, int id1){
+void Prism::assignNodalVector(double* vec, size_t id0, size_t id1){
 	//vector from NodeId id0 to NodeId id1
-	if (id0 <0 || id1 <0 || id0>=nNodes || id1>= nNodes){
-		cerr<<"Error in node input in nodal vector assignment!"<<endl;
+	if (id0>=nNodes || id1>= nNodes){
+		std::cerr<<"Error in node input in nodal vector assignment!"<<std::endl;
 	}
-	for (int i=0; i<nDim; ++i){
+	for (size_t i=0; i<nDim; ++i){
         vec[i] = Positions[id1][i] - Positions[id0][i];
 	}
 }
@@ -1285,39 +1274,39 @@ void Prism::checkEdgeLenghtsForBinding(vector <int>&masterIds, vector <int>&slav
 }
 
 bool Prism::checkNodePlaneConsistency(double** normals){
-	//cout<<"inside check consistency, Id: "<<Id<<endl;
+	//std::cout<<"inside check consistency, Id: "<<Id<<std::endl;
 	//List of constricting planes for each node:
 	//format is for each node (0->5): [plane1, plane2, plane3, node id for plane1, node id  for plane2&3]
 	//int ListOfBorder[6][3] = {{4,1,5},{3,0,5},{3,0,4},{4,1,5},{3,0,5},{3,0,4}};
-	int List[6][5] = {{3,6,7,3,2},{3,2,5,4,2},{3,1,4,5,1},{0,6,7,0,2},{0,2,5,1,2},{0,1,4,2,1}};
+	size_t List[6][5] = {{3,6,7,3,2},{3,2,5,4,2},{3,1,4,5,1},{0,6,7,0,2},{0,2,5,1,2},{0,1,4,2,1}};
 	bool elementHealthy = true;
 	double *u;
 	u = new double[3];
-	for (int i =0; i<nNodes; ++i){
+	for (size_t i =0; i<nNodes; ++i){
 		assignNodalVector(u,List[i][3],i);
 		double dotp[3];
 		dotp[0] = dotProduct3D(u,normals[List[i][0]]);
 		if (dotp[0]<0){
-			cerr <<"The element is not consistent! - top/bottom plane, Id: "<<Id<<endl;
-			cerr<<"i: "<<i<<endl;
-			cerr<<"normals["<<List[i][0]<<"]: "<<normals[List[i][0]][0]<<" "<<normals[List[i][0]][1]<<" "<<normals[List[i][0]][2]<<endl;
-			cerr<<"u: "<<u[0]<<" "<<u[1]<<" "<<u[2]<<endl;
-			cerr<<"dotp: "<<dotp[0]<<endl;
+			cerr <<"The element is not consistent! - top/bottom plane, Id: "<<Id<<std::endl;
+			std::cerr<<"i: "<<i<<std::endl;
+			std::cerr<<"normals["<<List[i][0]<<"]: "<<normals[List[i][0]][0]<<" "<<normals[List[i][0]][1]<<" "<<normals[List[i][0]][2]<<std::endl;
+			std::cerr<<"u: "<<u[0]<<" "<<u[1]<<" "<<u[2]<<std::endl;
+			std::cerr<<"dotp: "<<dotp[0]<<std::endl;
 			elementHealthy =  false;
 		}
 		assignNodalVector(u,List[i][4],i);
 		dotp[1] = dotProduct3D(u,normals[List[i][1]]);
 		dotp[2] = dotProduct3D(u,normals[List[i][2]]);
 		if(dotp[1]<0 ||  dotp[2]<0){
-			cerr <<"The element is not consistent! side planes, Id: "<<Id<<endl;
-			cerr<<"dot 1: "<<dotp[1]<<" dot2 :"<<dotp[2]<<endl;
-			cerr<<"1 : normals["<<List[i][1]<<"]: "<<normals[List[i][1]][0]<<" "<<normals[List[i][1]][1]<<" "<<normals[List[i][1]][2]<<endl;
-			cerr<<"2 : normals["<<List[i][2]<<"]: "<<normals[List[i][2]][0]<<" "<<normals[List[i][2]][1]<<" "<<normals[List[i][2]][2]<<endl;
-			for (int i=0; i<nNodes;++i){
-				for (int j =0; j<nDim; ++j){
-					cout<<Positions[i][j]<<"  ";
+			std::cerr<<"The element is not consistent! side planes, Id: "<<Id<<std::endl;
+			std::cerr<<"dot 1: "<<dotp[1]<<" dot2 :"<<dotp[2]<<std::endl;
+			std::cerr<<"1 : normals["<<List[i][1]<<"]: "<<normals[List[i][1]][0]<<" "<<normals[List[i][1]][1]<<" "<<normals[List[i][1]][2]<<std::endl;
+			std::cerr<<"2 : normals["<<List[i][2]<<"]: "<<normals[List[i][2]][0]<<" "<<normals[List[i][2]][1]<<" "<<normals[List[i][2]][2]<<std::endl;
+			for (size_t i=0; i<nNodes;++i){
+				for (size_t j =0; j<nDim; ++j){
+					std::cout<<Positions[i][j]<<"  ";
 				}
-				cout<<endl;
+				std::cout<<std::endl;
 			}
 			elementHealthy =  false;
 		}
@@ -1516,7 +1505,7 @@ void 	Prism::calculateBasalArea(){
 		Area = Side1* Side2 * sintet / 2.0;
 	}
 	BasalArea = Area;
-	//cout<<" Element "<<Id<<" basal area: "<<BasalArea<<endl;
+	//std::cout<<" Element "<<Id<<" basal area: "<<BasalArea<<std::endl;
 	//ApicalArea = Area;
 }
 
@@ -1555,7 +1544,7 @@ void 	Prism::calculateApicalArea(){
 	ApicalArea = Area;
 }
 
-void Prism::setBasalNeigElementId(vector<ShapeBase*>& elementsList){
+void Prism::setBasalNeigElementId(const std::vector <std::unique_ptr<ShapeBase>>& elementsList){
     /**
      * This function sets the basal neighbours of all elemetns qualifying for a basal neighbour element.
      * The check is only carried out on the apical elements of the  coumnar tissue (ShapeBase#tissuePlacement = 0, ShapeBase#TissueType = 0).
@@ -1574,21 +1563,21 @@ void Prism::setBasalNeigElementId(vector<ShapeBase*>& elementsList){
 		/** Basal nodes of a prism are hte  nodes recorded in ShapeBase#NodeIds array indices 0-2.
 		*/
 		int currBasalNodes[3] = {NodeIds[0], NodeIds[1],NodeIds[2]};
-		for( vector<ShapeBase*>::iterator itElement=elementsList.begin(); itElement<elementsList.end(); ++itElement){
-			bool isApicalOwner  = (*itElement)->IsThisNodeMyApical(currBasalNodes[0]);
+		for(const auto& itElement : elementsList){
+			bool isApicalOwner  = itElement->IsThisNodeMyApical(currBasalNodes[0]);
 			if (isApicalOwner){
 				//node 0 is owned by this element, is node 1?
-				isApicalOwner  = (*itElement)->IsThisNodeMyApical(currBasalNodes[1]);
+				isApicalOwner  = itElement->IsThisNodeMyApical(currBasalNodes[1]);
 				if (isApicalOwner){
 					//node 0 & 1 are owned by this element, is node 2?
-					isApicalOwner  = (*itElement)->IsThisNodeMyApical(currBasalNodes[2]);
+					isApicalOwner  = itElement->IsThisNodeMyApical(currBasalNodes[2]);
 					if (isApicalOwner){
 						/** When all three nodes are owned as apical nodes by another element, this is the
 						* neighbour I am looking for. If the element is NOT an explicit ECM element (ShapeBase#isECMMimicing = false),
 						* then the new Id is recorded into the ShapeBase#basalNeigElementId.
 						*/
-						if (!(*itElement)-> isECMMimicing){
-							basalNeigElementId = (*itElement)->getId();
+						if (!itElement-> isECMMimicing){
+							basalNeigElementId = itElement->getId();
 						}
 						/** Once the element is found, break the loop regardless of the ECM status. If the loop has
 						*  reached an ECM element then this element does not have a basal bordering tissue. It should not
@@ -1602,32 +1591,33 @@ void Prism::setBasalNeigElementId(vector<ShapeBase*>& elementsList){
 	}
 }
 
-void Prism::constructElementStackList(const int discretisationLayers, vector<ShapeBase*>& elementsList){
+void Prism::constructElementStackList(const int discretisationLayers, const std::vector <std::unique_ptr<ShapeBase>>& elementsList){
 	//This is a basal element. I will take my basal nodes, and find elements that have them as apical nodes.
 	elementsIdsOnSameColumn	= new int[discretisationLayers];
 	int currApicalNodes[3] = {NodeIds[3], NodeIds[4],NodeIds[5]};
 	int currElementId = Id;
 	//Starting the list with the basal element
 	elementsIdsOnSameColumn[0] = currElementId;
-	for (size_t i=1; i<  discretisationLayers; ++i ){
-		//cout<<" starting to fill the list item: "<<i <<" of "<< discretisationLayers-1<<endl;
-		for( vector<ShapeBase*>::iterator itElement=elementsList.begin(); itElement<elementsList.end(); ++itElement){
-			int checkedElementId = (*itElement)->getId();
+	for (int i=1; i<  discretisationLayers; ++i ){
+		//std::cout<<" starting to fill the list item: "<<i <<" of "<< discretisationLayers-1<<std::endl;
+		for( const auto& itElement : elementsList){
+			int checkedElementId = itElement->getId();
 			if (checkedElementId != currElementId){ //the iterator is not this element
 				//I will find the elemetns that have this elements apical nodes as basal. All three ndes should match;
-				bool IsBasalOwner = (*itElement)->IsThisNodeMyBasal(currApicalNodes[0]);
+				bool IsBasalOwner = itElement->IsThisNodeMyBasal(currApicalNodes[0]);
 				if (IsBasalOwner){
-					IsBasalOwner = (*itElement)->IsThisNodeMyBasal(currApicalNodes[1]);
+					IsBasalOwner = itElement->IsThisNodeMyBasal(currApicalNodes[1]);
 				}
 				if (IsBasalOwner){
-					IsBasalOwner = (*itElement)->IsThisNodeMyBasal(currApicalNodes[2]);
+					IsBasalOwner = itElement->IsThisNodeMyBasal(currApicalNodes[2]);
 				}
 				//If IsBasalOwner is true at this point, then I found the matching element.
 				if (IsBasalOwner){
 					//I found the element:
+
 					elementsIdsOnSameColumn[i] = checkedElementId;
 					for (int j=0; j<3; ++j){
-						currApicalNodes[j] = (*itElement)->getCorrecpondingApical(currApicalNodes[j]);
+						currApicalNodes[j] = itElement->getCorrecpondingApical(currApicalNodes[j]);
 					}
 					currElementId = checkedElementId;
 					break;
@@ -1637,16 +1627,16 @@ void Prism::constructElementStackList(const int discretisationLayers, vector<Sha
 	}
 	//Now I have the list for the basal element.
 	//I should construct it for at midline and apical elements:
-	for (size_t i=1; i<  discretisationLayers; ++i ){
+	for (int i=1; i<  discretisationLayers; ++i ){
 		elementsList[elementsIdsOnSameColumn[i]]->elementsIdsOnSameColumn = new int[discretisationLayers];
-		for (size_t j=0; j<  discretisationLayers; ++j ){
+		for (int j=0; j<  discretisationLayers; ++j ){
 			elementsList[elementsIdsOnSameColumn[i]]->elementsIdsOnSameColumn[j] = elementsIdsOnSameColumn[j];
 		}
 	}
 };
 
 
-void Prism::assignExposedSurfaceAreaIndices(vector <Node*>& Nodes){
+void Prism::assignExposedSurfaceAreaIndices(){
 	if (tissueType == 0 || tissueType == 1){//columnar or peripodial Element
 		//these are written for columnar tissue, should be swapped for peorpodial tissue:
 		int apicalIds[3] = {3,4,5};

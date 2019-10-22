@@ -795,11 +795,11 @@ void MainWindow::testAdhesionsAndCurveConstruction(){
 			Sim01->Nodes[masterNodeId]->isMaster[i] = true;
 		}
 	}
-	for (vector<Node*>::iterator itNode= Sim01->Nodes.begin(); itNode<Sim01->Nodes.end(); ++itNode){
-		if ((*itNode)->onFoldInitiation){
-			int n = (*itNode)->connectedElementIds.size();
+	for (const auto& itNode : Sim01->Nodes){
+		if (itNode->onFoldInitiation){
+			int n = itNode->connectedElementIds.size();
 			for (int i=0; i<n; ++i){
-				int currElementId = (*itNode)->connectedElementIds[i];
+				int currElementId = itNode->connectedElementIds[i];
 				//check if at least two nodes of the element are at curves:
 				bool changeEllipseId = Sim01->Elements[currElementId]->hasEnoughNodesOnCurve(Sim01->Nodes);
 				if (changeEllipseId){
@@ -959,11 +959,11 @@ void MainWindow::timerSimulationStep(){
             Sim01->wrapUpAtTheEndOfSimulation();
             Sim01->writeRelaxedMeshFromCurrentState();
             //Sim01->writeMeshRemovingAblatedRegions();
-            double durationClock = ( std::clock() - simulationStartClock ) / (double) CLOCKS_PER_SEC;
-            double durationTime = std::difftime(std::time(0), simulationStartTime);
+            //double durationClock = ( std::clock() - simulationStartClock ) / (double) CLOCKS_PER_SEC;
+            //double durationTime = std::difftime(std::time(0), simulationStartTime);
             //cout<<"Simulation time: "<<durationTime<<" sec, Simulation clock: "<<durationClock<<" sec"<<endl;
             //cout<<" Final lumen volume: "<<Sim01->tissueLumen->currentIdealVolume<<endl;
-            close();
+            //close();
         }
     }
     MainGLWidget->update();

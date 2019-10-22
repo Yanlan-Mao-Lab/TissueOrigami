@@ -5,6 +5,7 @@
 #include <iostream>
 #include <vector>
 #include <array>
+#include <memory>
 
 using namespace std;
 class ShapeBase;
@@ -18,7 +19,7 @@ public:
 	Node(int id, int dim, std::array<double,3> &pos, int tissuePos, int tissueType);	//<Constructer of the node
 	~Node();
 	int 					Id;									///< The unique identification number of the node
-	int 					nDim;								///< The number of dimensions of the node, (2 or 3)
+	size_t 					nDim;								///< The number of dimensions of the node, (2 or 3)
 	std::array<double,3> 	Position;							///< The position array of the node. The declaration is 3D, node can be 2D.
 	std::array<double,3> 	initialPosition;					///< The initial position array of the node. The declaration is 3D, node can be 2D.
 	std::array<double,3> 	RKPosition;							///< The pointer to the position array for position during a Runge-Kutta step array of the node. The declaration is 3D, node can be 2D.
@@ -68,14 +69,14 @@ public:
     void                    addToConnectedElements(int newElementId, double volumePerNode);	///< This function adds the input newElementId (int) to the list of elements connected by this node, updating the mass, and weights of mass per connected element in the process.
     void                    removeFromConnectedElements(int newElementId, double volumePerNode);///< This function removes the input newElementId (int) from the list of elements connected by this node, updating the mass, and weights of mass per connected element in the process.
     bool                    isMyNeig(int nodeId);               ///< The function to check if the node with the input node id is a neighbour of this node (returns boolean).
-    bool 					isNeigWithMyCollapsedNodes(int NodeId, vector<Node*>& Nodes); ///< The function to check if the node with the input Node#Id (nodeId) is collapsed with a neighbour of this node (returns boolean).
-    void 					getNewCollapseListAndAveragePos(std::vector<int> &newCollapseList, double* avrPos, bool* fix, vector<Node*>& Nodes, int masterNodeId); ///< This function appends the list of node Ids this node is collapsed with to the input array.
+    bool 					isNeigWithMyCollapsedNodes(int NodeId, const std::vector <std::unique_ptr<Node>>& Nodes); ///< The function to check if the node with the input Node#Id (nodeId) is collapsed with a neighbour of this node (returns boolean).
+    void 					getNewCollapseListAndAveragePos(std::vector<int> &newCollapseList, double* avrPos, bool* fix, const std::vector <std::unique_ptr<Node>>&  Nodes, int masterNodeId); ///< This function appends the list of node Ids this node is collapsed with to the input array.
     void                    clearDuplicatesFromCollapseList();  ///< This function clears the Node#collapsedWith array from duplicates.
-    bool                    isECMChangeAppliedToNode(bool changeApicalECM, bool changeBasalECM, std::vector<int> &ECMChangeEllipseBandIds, int numberOfECMChangeEllipseBands); ///< This function checks if the node falls within the range of the marker ellipse band ids for the ECM property perturbations.
+    bool                    isECMChangeAppliedToNode(bool changeApicalECM, bool changeBasalECM, std::vector<int> &ECMChangeEllipseBandIds, size_t numberOfECMChangeEllipseBands); ///< This function checks if the node falls within the range of the marker ellipse band ids for the ECM property perturbations.
     int                     getId();                            ///< The function returns the Id (Node#Id) of the node
-	void 					collapseOnNode(std::vector<int> &newCollapseList, double* avrPos, bool* fix, std::vector<Node*>& Nodes, int masterNodeId); ///< This function collapses this node on the node with the Node#Id with input masterNodeId, at one time step.
-	void 					collapseOnNode(std::vector<Node*>& Nodes, int masterNodeId);
-	void 					collapseOnNodeInStages( std::vector<int> &newCollapseList, double* avrPos, bool* fix, std::vector<Node*>& Nodes, int masterNodeId); ///< This function collapses this node on the node with the Node#Id with input masterNodeId, at multiple time steps, perturbing the position of the node smoothly to ensure stability.
+	void 					collapseOnNode(std::vector<int> &newCollapseList, double* avrPos, bool* fix, const std::vector <std::unique_ptr<Node>>& Nodes, int masterNodeId); ///< This function collapses this node on the node with the Node#Id with input masterNodeId, at one time step.
+	void 					collapseOnNode(const std::vector <std::unique_ptr<Node>>& Nodes, int masterNodeId);
+	void 					collapseOnNodeInStages(std::vector<int> &newCollapseList, double* avrPos, bool* fix, const std::vector <std::unique_ptr<Node>>& Nodes); ///< This function collapses this node on the node with the Node#Id with input masterNodeId, at multiple time steps, perturbing the position of the node smoothly to ensure stability.
 	void 					updatePositionTowardsPoint(double* avrPos,bool* fix); ///< This function moves this node towards the coordinates given in input array avrPos, excluding movement of fixed position.
   //bool                    isNeigWithMyCollapsedNodes(int NodeId, const std::vector <std::unique_ptr<Node>>& Nodes);   ///< The function to check if the node with the input Node#Id (nodeId) is collapsed with a neighbour of this node (returns boolean).
   //void                    getNewCollapseListAndAveragePos(std::vector<int> &newCollapseList, std::array<double,3> avrPos, std::array<bool,3> fix, const std::vector<std::unique_ptr<Node>> &Nodes, int masterNodeId); ///< This function appends the list of node Ids this node is collapsed with to the input array.

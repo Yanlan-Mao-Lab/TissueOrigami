@@ -35,22 +35,22 @@ private:
 	int ParentErrorMessage(string functionName, int returnValue);		///<Error message displayed when a virtual function is called through the ShapeBase(parent), while it should have been called through a child (eg. Prism). For functions taking in string and int inputs, returning int.
 protected:
 	int 		ShapeType;							///< The integer defining the type of the shape, Prisms shape type = 1;
-	int 		nNodes;								///< The number of nodes of the element, it is based on ShapeBase#ShapeType
-	int 		nDim;								///< The number of dimensions for the positions of each of the nodes of the element
-	int* 		IdentifierColour;					///< The unique identifier colour of the element, this is used for "picking" in the visual interface.
-	std::array<double,3> 	GrowthRate;							///< Growth rate recording for display purposes only. The recorded growth rate in x, y, and z  coordinates, does not record shear deformation induced in growth. Recorded in exponential form through time step, converted to rate per hour for display within the visual interface
+	size_t 		nNodes;								///< The number of nodes of the element, it is based on ShapeBase#ShapeType
+	size_t 		nDim;								///< The number of dimensions for the positions of each of the nodes of the element
+	std::array<int,3> 	IdentifierColour;					///< The unique identifier colour of the element, this is used for "picking" in the visual interface.
+	std::array<double,3> 	GrowthRate;				///< Growth rate recording for display purposes only. The recorded growth rate in x, y, and z  coordinates, does not record shear deformation induced in growth. Recorded in exponential form through time step, converted to rate per hour for display within the visual interface
 	gsl_matrix* growthIncrement;					///< The matrix (3,3) representing the incremental growth in current time step. Reset to identity at the beginning of each time step, updated in growth functions, and utilised to update Fg.
 	gsl_matrix* plasticDeformationIncrement;		///< The matrix (3,3) representing the incremental plastic deformation (treated as growth) in current time step. Set in plastic deformation calculation at each step, and utilised to update Fg.
 	gsl_matrix* shapeChangeIncrement;				///< The matrix (3,3) representing the incremental shape change in current time step. Reset to identity at the beginning of each time step, updated in shape change functions, and utilised to update Fg.
 	double 		zRemodellingSoFar;
 	double  	columnarGrowthWeight;				///< The fraction defining how close to the columnar layer the element is. 1.0 for columnar layer, 0.0 for peripodial membrane elements, and scaled according to position in the elements surrounding the lumen.
 	double  	peripodialGrowthWeight;				///< The fraction defining how close to the peripodial membrane the element is. 0.0 for columnar layer, 1.0 for peripodial membrane elements, and scaled according to position in the elements surrounding the lumen.
-	double* 	ShapeChangeRate;					///< Shape change rate of the elements, only orthagonal shape changes are allowed (x, y, z). Shape changes will be scaled to conserve volume, thus three values will not be independent.
+	std::array<double,6> ShapeChangeRate;			///< Shape change rate of the elements, only orthagonal shape changes are allowed (x, y, z). Shape changes will be scaled to conserve volume, thus three values will not be independent.
     bool    	rotatedGrowth;						///< The boolean stating if the element has rotated from the growth axis, hence the calculated growth requires further rotation to follow tissue axes.
     double* 	relativePosInBoundingBox;  			///< The relative position on x-y plane, within the bounding box of the tissue(x,y).
     double* 	initialRelativePosInBoundingBox; 	///< The relative position on x-y plane, within the bounding box of the tissue(x,y) at the beginning of simulation. This is used when growth rates are pinned to the initial structure of the tissue.
     double 		initialRelativePositionInZ;			///<< The relative position on z-height of tissue, taken not in z direction but in tissue layers, 0 being on the apical surface and 1 being on the basal surface.
-    int			numberOfGaussPoints;				///<< The number of Gauss points used in numerical deforamtion calculation.
+    size_t		numberOfGaussPoints;				///<< The number of Gauss points used in numerical deforamtion calculation.
     double**	gaussPoints;						///<< The array contianing all the Gauss points for element.
     double* 	gaussWeights;						///<< The array for storing the weights of each Gauss point for element.
     gsl_matrix 	**ShapeFuncDerivatives;				///< The array of matrices for shape function derivatives. The array stores a ShapeBase#nDim by ShapeBase#nNodes matrix for each gauss point (there are 3 Gauss points for prisms).
@@ -87,9 +87,9 @@ protected:
     double 		mutationGrowthFold;							///< The rate of fold change in growth rate set by a mutant clone covering this element.
     void 		setShapeType(string TypeName);				///< The function sets the type of the shape.
     void 		readNodeIds(int* tmpNodeIds);				///< The function sets the Node#Id array that constructs the shape.
-    void 		setPositionMatrix(vector<Node*>& Nodes);	///< The function sets the ShapeBase#Positions matrix to define the locations of each constructing node.
-    void 		setTissuePlacement(vector<Node*>& Nodes);	///< The function sets the placement of the element within the tissue
-    void 		setTissueType(vector<Node*>& Nodes);		///< The function sets the tissue type of the element
+    void 		setPositionMatrix(const std::vector<std::unique_ptr<Node>>& Nodes);	///< The function sets the ShapeBase#Positions matrix to define the locations of each constructing node.
+    void 		setTissuePlacement(const std::vector<std::unique_ptr<Node>>& Nodes);	///< The function sets the placement of the element within the tissue
+    void 		setTissueType(const std::vector<std::unique_ptr<Node>>& Nodes);		///< The function sets the tissue type of the element
     void 		setReferencePositionMatrix();				///< The function sets the RefereneceShapeBase#Positions matrix to define the reference positions of the element.
     void 		setIdentificationColour();					///< The function sets the unique ShapeBase#IdentifierColour colour for the element, which is used in element picking from the user interface.
     void 		rotateReferenceElementByRotationMatrix(double* rotMat); 	///< The function rotates the reference of the element (ShapeBase#ReferenceShape) by input rotation matrix, provided as a double pointer of 9 doubles.
@@ -99,7 +99,7 @@ protected:
 	void 		updateReferencePositionMatrixFromSave(ifstream& file); 											///< The function reads and updates the ShapeBase#ReferenceShape positions (ReferenceShapeBase#Positions) of the current shape from save file provided as input.
 	virtual void 	calculateReferenceVolume(){ParentErrorMessage("calculateReferenceVolume");};  					///<Virtual function of the ShapeBase class to calculate volume of the ShapeBase#ReferenceShape
 	bool 			calculateGrowthStrainsRotMat(double* v);													///< The function calculates the rotation matrix to apply on growth strains to align growth with the current x axis of the tissue.
-	void			calculateForces3D(vector <Node*>& Nodes,  gsl_matrix* displacementPerDt, bool recordForcesOnFixedNodes, double **FixedNodeForces); ///< The function calculates the viscous and elastic forces generated by the element.
+	void			calculateForces3D(const std::vector<std::unique_ptr<Node>>& Nodes,  gsl_matrix* displacementPerDt ); ///< The function calculates the viscous and elastic forces generated by the element.
 	gsl_matrix* 	calculateEForNodalForcesKirshoff(gsl_matrix* C);											///< This function calculates the green strains for a Kirshoff material model.
 	gsl_matrix* 	calculateCauchyGreenDeformationTensor(gsl_matrix* Fe);										///< This function calculates the Caucy-Green deformation tensor, from the elastic part of the deformation gradient
 	gsl_matrix* 	calculateSForNodalForcesKirshoff(gsl_matrix* E);											///< This function calculates the Secons order Piola-Kirshoff stress tensor for Kirshoff material model.
@@ -161,7 +161,7 @@ public:
     bool 			IsChangingShape;
     int 			tissuePlacement;					///< 1 -> apical, 0 -> basal, 2->middle, 3 -> lateral
     int 			tissueType;							///< The tissue type is 0 for columnar layer, 1 for peripodial membrane, and 2 for linker zone
-    bool			spansWholeTissue; 					///< Boolean staing is the element spans the whole tissue. This is used to identify mid-layer tagged tissues (tissuePlacement = 2), that should still have apical and basal responses.
+    bool			spansWholeTissue; 					///< Boolean staing is the element spans the whole tissue. This is used to identify mid-layer tagged tissues (tissuePlacement = 2), that should still have apical abd basal responses.
     int 			compartmentType; 					///< integer identifying the compartment of the tissue in DV axis, 0 pouch, 1 hinge, 2 notum
     double 			compartmentIdentityFraction;		///< The weight defining the constibution of each compartment to the physical identity of this element.
     bool			isECMMimicing;						///< Boolean stating if the element is an ECM element.
@@ -187,7 +187,7 @@ public:
     gsl_matrix* 	ECMThicknessPlaneRotationalMatrix;	//TO DO: do I use this now?
     double 			emergentShapeLongAxis[2];			///< The long axis of the emergent shape. This is necessary for analysis of emergent growth orientations.
     double 			emergentShapeShortAxis[2];			///< The short axis of the emergent shape. This is necessary for analysis of emergent growth orientations.
-    double* 		apicalNormalCurrentShape;			///< The apical normal of the current shape. //TO DO: why do I have two apical normals, should I merge these?
+    std::array<double,3> 	apicalNormalCurrentShape;	///< The apical normal of the current shape. //TO DO: why do I have two apical normals, should I merge these?
     double 			plasticDeformationHalfLifeMultiplier;
     bool			isMutated;
     bool 			thereIsGrowthRedistribution;
@@ -200,7 +200,7 @@ public:
     int* 			getNodeIds();						///< The function returns the vector of node IDs.
     int				getNodeId(int i);					///< The function returns the input i^{th} node's ID.
     int				getDim();							///< The function returns the dimensions of the node, ShapeBase#Dim.
-    int*			getIdentifierColour();				///< The unique [r,g,b] identifier colour of the element, utilised in picking in the user interface.
+    std::array<int,3>	getIdentifierColour();				///< The unique [r,g,b] identifier colour of the element, utilised in picking in the user interface.
     double*			getCentre();						///< This function returns the centre of the element in world spave.
     double			getPeripodialness();				///< This function returns the relative influence of the peripodial physical characteristics to this element.
     double			getColumnarness();					///< This function returns the relative influence of the columnar  physical characteristics ot this element.
@@ -216,8 +216,8 @@ public:
     double                  getApicalArea();												///< This function returns the current apical area of the element.
     void                    relaxElasticForces();											///< This function relaxes all teh accumulated elastic forces in the system.
     bool					isGrowthRateApplicable(int sourceTissue, double& weight, double zmin, double zmax);	///< The function checks if the element if affected by the current growth functions.
-    void 		    		updateGrowthWillBeScaledDueToApikobasalRedistribution(bool thisFunctionShrinksApical, double scale, std::vector<int>& ellipseBandIdsForGrowthRedistribution); ///< This function decide if the growth will be redistirbuted in the height of the tissue.
-    void 		    		scaleGrowthForZRedistribution( double& x, double& y, double& z,int sourceTissue); ///< This function will modify the incremental growth deformation gradient of the element to reflect the volume redistribution in the height of the tissue.
+    void 		    		updateGrowthWillBeScaledDueToApikobasalRedistribution(bool thisFunctionShrinksApical, std::vector<int>& ellipseBandIdsForGrowthRedistribution); ///< This function decide if the growth will be redistirbuted in the height of the tissue.
+    void 		    		scaleGrowthForZRedistribution( double& x, double& y, double& z); ///< This function will modify the incremental growth deformation gradient of the element to reflect the volume redistribution in the height of the tissue.
     void 		    		calculateFgFromRates(double dt, double x, double y, double z, gsl_matrix* rotMat, gsl_matrix* increment, int sourceTissue, double zMin, double zMax); ///< This function will calculate the incremental growth deformation gradient change for the current time step, from input growth rates
     void 		    		calculateFgFromGridCorners(int gridGrowthsInterpolationType, double dt, GrowthFunctionBase* currGF, gsl_matrix* increment, int sourceTissue, int IndexX, int IndexY, double FracX, double dFracY); /////< This function will calculate the incremental growth deformation gradient change for the current time step by reading it from the grid, and interpolating on 4 corners.
     gsl_matrix*             getGrowthIncrement();											///< This function will return the current growth deformation gradient increment
@@ -237,7 +237,7 @@ public:
     void					getInitialRelativePosInBoundingBox(double* relativePos);						///< This function will return the initial relative position of the element in the xy bounding box of the tissue
     void 					convertRelativePosToGridIndex(double* relpos, int& indexX, int &indexY, double &fracX, double &fracY, int nGridX, int nGridY); ///< This function will convert the relative position of the tissue in xy plane bounding box to growth map grid indices.
     void 					getStrain(int type, float &StrainMag);						///< This function will return the selected strain component of the element.
-    void 					getNodeBasedPysProp(int type, int NodeNo, vector<Node*>& Nodes, float& PysPropMag);		///< This function will return the selected physical properties of the element on a nodal basis.
+    void 					getNodeBasedPysProp(int type, int NodeNo, const std::vector<std::unique_ptr<Node>>& Nodes, float& PysPropMag);		///< This function will return the selected physical properties of the element on a nodal basis.
     void 					getPysProp(int type, float &PysPropMag, double dt);				///< This function will return the selected physical properties of the element.
     double					getInternalViscosity();								///< This function will return the internal viscosity of the element.
     double					getOriginalInternalViscosity();							///<  This function will return the internal viscosity of the element prior to any perturbations.
@@ -245,7 +245,7 @@ public:
     double 					getYoungModulus();								///< This function will return the Young's modulus of the element
     double 					getPoissonRatio();								///< This function will return the Poissons's ratio of the element
     std::array<double,3> 	getGrowthRate();								///< This function will return the current growth rate of the element.
-    double* 				getShapeChangeRate();								///< This function will return the current shape change rate of the element.
+    std::array<double,6>	getShapeChangeRate();								///< This function will return the current shape change rate of the element.
     double**     			getReferencePos();							///< This function will return the reference positions of the element.
     void    				getPos(gsl_matrix* Pos);							///< This function will write the position of the element into input matrix.
     gsl_matrix* 			getFg();									///< This function will return the growth component of the deformation gradient.
@@ -287,9 +287,9 @@ public:
     virtual void 			calculateBasalArea(){ParentErrorMessage("calculateBasalArea");}                             ///< The virtual function to calculate basal area of element. This is topology dependent and implemented in each child shape type.
     double 					calculateCurrentGrownAndEmergentVolumes();                                                  ///< This is the function to calculate hte current ideal volume of the element and its current apparent volume.
     virtual void 			updateElasticProperties(){ParentErrorMessage("updateElasticProperties");}                   ///< This functions updates elastic propertiesand their dependent tensors upon alteration of a physical property.
-    void 					writeInternalForcesTogeAndgv(gsl_matrix* ge, gsl_matrix* gvInternal, double** SystemForces, vector <Node*>& Nodes);
-    void 					calculateForces(vector <Node*>& Nodes, gsl_matrix* displacementPerDt, bool recordForcesOnFixedNodes, double** FixedNodeForces);  ///< This function writes the elemental elastic and viscous forces to the system scale force vector.
-    void 					updatePositions(vector<Node*>& Nodes);							///< This function updates the position array of the element from the updated nodal posiitons.
+    void 					writeInternalForcesTogeAndgv(gsl_matrix* ge, gsl_matrix* gvInternal,std::vector<std::array<double,3>>& SystemForces, const std::vector<std::unique_ptr<Node>>& Nodes);
+    void 					calculateForces(const std::vector<std::unique_ptr<Node>>& Nodes, gsl_matrix* displacementPerDt);  ///< This function writes the elemental elastic and viscous forces to the system scale force vector.
+    void 					updatePositions(const std::vector<std::unique_ptr<Node>>& Nodes);							///< This function updates the position array of the element from the updated nodal posiitons.
     void					updateReferencePositionsToCurentShape();	// TO DO: DO I USE THIS?
     void 					setGrowthRate(double dt, double rx, double ry, double rz);                                      ///< This function sets the growth of the element from the tome step and the input rates
     void 					setGrowthRateExpFromInput(double x, double y, double z);					///< This function sets the growht rate to pre-calculated rates given as input.
@@ -302,10 +302,10 @@ public:
 
     void 					setShapeChangeRate(double x, double y, double z, double xy, double yz, double xz);                  ///< This function sets the shape change rate to pre-calculated rates given as input.
     void  					setShapeChangeInrementToIdentity();                                                                 ///< This function sets the shape change deformation gradient increment to identity
-    void 					updateElementVolumesAndTissuePlacementsForSave(vector<Node*>& Nodes);   			    ///< This function calculates the reference volume, tissue placement and tissue type from nodal information
+    void 					updateElementVolumesAndTissuePlacementsForSave(const std::vector<std::unique_ptr<Node>>& Nodes);   			    ///< This function calculates the reference volume, tissue placement and tissue type from nodal information
     bool 					readNodeIdData(std::ifstream& file);                                                                ///< This function reads in the node Ids for the element from save file
     bool					readReferencePositionData(std::ifstream& file);                                                     ///< This function reads the reference element positions from save file
-    bool 					areanyOfMyNodesAtCircumference(vector<Node*>& Nodes);                  		 		   ///< This function check if the element owns any node at tissue circumference
+    bool 					areanyOfMyNodesAtCircumference(const std::vector<std::unique_ptr<Node>>& Nodes);                  		 		   ///< This function check if the element owns any node at tissue circumference
     virtual void 			checkHealth(){ParentErrorMessage("checkHealth");}                                              ///< The virtual function in parent to check if element is flipped, implemented for each child as it is node topology dependent.
     void    				writeKelasticToMainKatrix(gsl_matrix* K);                                                       ///< This function writes the elemental elastic component of the Jacobian to system Jacobian.
     void    				writeKviscousToMainKatrix(gsl_matrix* K);                                                       ///< This function writes the elemental viscous component of the Jacobian to system Jacobian.
@@ -321,9 +321,10 @@ public:
     void 					displayMatrix(gsl_matrix* mat, std::string matname);                                ///< Helper function, displays the input gsl matrix with the input name.
     void 					displayMatrix(gsl_vector* mat, std::string matname);                                ///< Helper function, displays the input gsl vector with the input name.
     void 					createMatrixCopy(gsl_matrix *dest, gsl_matrix* src);                                ///< Helper function, creates a copy of the gsl matrix on new memory locaiton.
-    double  				calculateMagnitudeVector3D(double* v);                                 		   ///< Helper algebraic function, calculates norm of the vector defined in the array<double,3>;
+    double  				calculateMagnitudeVector3D(double* v);                                 		   		///< Helper algebraic function, calculates norm of the vector defined in the array<double,3>;
     void					normaliseVector3D(gsl_vector* v);                                                   ///< Helper algebraic function, normalises the input gsl vector (the input vector is modified)
-    double					normaliseVector3D(double* v);                                         		///< Helper algebraic function, normalises the input array<double,3> (the input vector is modified)
+    double					normaliseVector3D(double* v);                                         				///< Helper algebraic function, normalises the input array<double,3> (the input vector is modified)
+    double 					normaliseVector3D(std::array<double,3>& v);											///< Helper algebraic function, normalises the input array<double,3> (the input vector is modified)
     double					getNormVector3D(gsl_vector* v);                                                     ///< Helper algebraic function, calculates norm of the vector defined in the gsl vector, the vector is not modified.
     double 					determinant3by3Matrix(double* rotMat);                                              ///< Helper algebraic function, calculates determinant of 3by3 matrix stored in the double array pointed by the input pointer
     double 					determinant3by3Matrix(boost::numeric::ublas::matrix<double>& Mat);                  ///< Helper algebraic function, calculates determinant of 3by3 boost matrix
@@ -341,7 +342,7 @@ public:
     void 					setPlasticDeformationIncrement(double xx, double yy, double zz);                    ///< This function sets diagonal of the plastic deformation gradient increment from input values
     void 					growShapeByFg();                                                                    ///< This function updates the current growth deformaiton gradient with the growt/shape change/plastic deformation increments and their respective rotations.
     void 					changeShapeByFsc(double dt);                                                        ///< This function calculates the shape change increment from shape change rates
-    void					checkIfInsideEllipseBands(int nMarkerEllipseRanges, std::vector<double> markerEllipseBandXCentres, std::vector<double> markerEllipseBandR1Ranges, std::vector<double> markerEllipseBandR2Ranges, vector<Node*>& Nodes); ///< This function checks if the element is inside any marker bands for perturbatins.
+    void					checkIfInsideEllipseBands(int nMarkerEllipseRanges, std::vector<double> markerEllipseBandXCentres, std::vector<double> markerEllipseBandR1Ranges, std::vector<double> markerEllipseBandR2Ranges, const std::vector<std::unique_ptr<Node>>& Nodes); ///< This function checks if the element is inside any marker bands for perturbatins.
     void					assignSoftHinge(double lowHingeLimit, double highHingeLimit,double softnessLevel);  ///< This function modulates the stiffness of the hinge domain of the tissue with the input level. The domain is defined in relative x position boundaries.
     bool					checkZCappingInRemodelling(bool volumeConserved, double zRemodellingLowerThreshold, double zRemodellingUpperThreshold, gsl_matrix* increment, gsl_matrix* eigenVec);    ///< This function checks if the remodelling of the element in z axis have reached the specified cap.
     void					calculatePlasticDeformation3D(bool volumeConserved, double dt, double plasticDeformationHalfLife, double zRemodellingLowerThreshold, double zRemodellingUpperThreshold); ///< This function calculates the plastic deformation (remodelling) from the current elastic deformation gradient.
@@ -358,61 +359,58 @@ public:
     virtual double	 		getElementHeight(){return ParentErrorMessage("getElementHeight", 0.0);};	///< The virtual function of the parent to return element height, dependent on shape type.
     virtual void 			getApicalNodePos(double* /*posCorner*/){ParentErrorMessage("getApicalNodePos");};	///< The virtual function of the parent to return the position for one apical node, dependent on node topology
     virtual void 			getBasalNodePos(double* /*posCorner*/){ParentErrorMessage("getBasalNodePos");};		///< The virtual function of the parent to return the position for one basal node, dependent on node topology
-    virtual void 			constructElementStackList(const int /*discretisationLayers*/, vector<ShapeBase*>& /*elementsList*/){ParentErrorMessage("constructElementStackList");};
+    virtual void 			constructElementStackList(const int /*discretisationLayers*/, const std::vector <std::unique_ptr<ShapeBase>>& /*elementsList*/){ParentErrorMessage("constructElementStackList");};
 	
     virtual void			getApicalCentre(double* /*centre*/){ParentErrorMessage("getApicalCentre");};			///< The virtual function of the parent to return apical surface centre, dependent on node topology.
     virtual void			getBasalCentre(double* /*centre*/){ParentErrorMessage("getBasalCentre");};				///< The virtual function of the parent to return basal surface centre, dependent on node topology.
     virtual void			getReferenceApicalCentre(double* /*centre*/){ParentErrorMessage("getReferenceApicalCentre");};	///< The virtual function of the parent to return apical surface centre on reference element, dependent on node topology.
     virtual void			getReferenceBasalCentre(double* /*centre*/){ParentErrorMessage("getReferenceBasalCentre");};	///< The virtual function of the parent to return basal surface centre on reference element, dependent on node topology.
-    virtual double*			getApicalMinViscosity(vector<Node*> /*Nodes*/){ParentErrorMessage("getApicalMinViscosity");double* dummy; return dummy;};///< The virtual function of the parent to return minimum apical external viscosity.
-    virtual double*			getBasalMinViscosity(vector<Node*> /*Nodes*/){ParentErrorMessage("getBasalMinViscosity");double* dummy; return dummy;};///< The virtual function of the parent to return minimum basal external viscosity.
+    virtual double*			getApicalMinViscosity(const std::vector<std::unique_ptr<Node>>& /*Nodes*/){ParentErrorMessage("getApicalMinViscosity");return 0;/*double* dummy; return dummy;*/};///< The virtual function of the parent to return minimum apical external viscosity.
+    virtual double*			getBasalMinViscosity(const std::vector<std::unique_ptr<Node>>& /*Nodes*/){ParentErrorMessage("getBasalMinViscosity");return 0; /*double* dummy; return dummy;*/};///< The virtual function of the parent to return minimum basal external viscosity.
     virtual void 			checkRotationConsistency3D(){ParentErrorMessage("checkRotationConsistency3D");}                                         ///< The virtual function of the parent to check if the two input nodes of the element are directly connected on one of the elemental surfaces, dependent on nodal topology, defined in each child.
     virtual bool 			areNodesDirectlyConnected(int /*node0*/, int /*node1*/){return ParentErrorMessage("areNodesDirectlyConnected",false);} ///< The virtual function of the parent to check if the rotation of the nodes of the element are consistent, dependent on nodal topology, defined in each child.
     bool 					DoesPointBelogToMe(int IdNode);                             ///< This function checks if the input node belogs to the element.
 	
     void growShape();		// TO DO: check where this is called??
-    void 					assignVolumesToNodes(vector <Node*>& Nodes);	///< This function distributes element's total volume among its owner nodes.
+    void 					assignVolumesToNodes(const std::vector<std::unique_ptr<Node>>& Nodes);	///< This function distributes element's total volume among its owner nodes.
     void 					calculateZProjectedAreas();                                         ///< This function calculated the z-projected (to world xy plane) apical and basal areas of the element.
-    void 					assignZProjectedAreas(vector <Node*> Nodes); ///< This function distributes element's z-projected areas among its owner nodes.
-    void 					assignElementToConnectedNodes(vector <Node*>& Nodes); ///< This function assigns the element to the nodes it owns, necessary to construc the owner and connectivity list of nodes.
-    void 					removeMassFromNodes(vector <Node*>& Nodes);	///< This function removes mass from nodes as their owner elements are ablated.
+    void 					assignZProjectedAreas(const std::vector<std::unique_ptr<Node>>& Nodes); ///< This function distributes element's z-projected areas among its owner nodes.
+    void 					assignElementToConnectedNodes(const std::vector<std::unique_ptr<Node>>& Nodes); ///< This function assigns the element to the nodes it owns, necessary to construc the owner and connectivity list of nodes.
+    void 					removeMassFromNodes(const std::vector<std::unique_ptr<Node>>& Nodes);	///< This function removes mass from nodes as their owner elements are ablated.
     void 					setECMMimicing(bool IsECMMimicing);                         ///< This funciton sets the element as an ECM mimicking element (distinct domain in terms of physical characteristics).
     void 					setActinMimicing(bool isActinMimicing);                     ///< This funciton sets the element as an actin mimicking element (distinct domain in terms of physical characteristics).
     void 					convertLocalStrainToTissueStrain(double* strainsToAdd);	/// TO DO: do i use this?
-    virtual void 			assignExposedSurfaceAreaIndices(vector <Node*>& /*Nodes*/){ParentErrorMessage("assignExposedSurfaceAreaIndices");} ///< The virtual function on parent assigns the nodes of the surfaces that are exposed to external world, dependent on topology, defined for each child.
+    virtual void 			assignExposedSurfaceAreaIndices(){ParentErrorMessage("assignExposedSurfaceAreaIndices");} ///< The virtual function on parent assigns the nodes of the surfaces that are exposed to external world, dependent on topology, defined for each child.
     void 					calculateViscositySurfaces();                               ///< This function calls for the assignment of exposed surfaces if the element has viscosity
-    void 					assignViscositySurfaceAreaToNodes(vector <Node*>&  Nodes); ///< This function distributes elemenbt's exposed surfaces to nodes.
+    void 					assignViscositySurfaceAreaToNodes(const std::vector<std::unique_ptr<Node>>&  Nodes); ///< This function distributes elemenbt's exposed surfaces to nodes.
     bool	 				RotatedElement;		///< Boolean stating if the element is rotated during its deformation, to apply the growth orinttaions correctly.
     gsl_matrix* 			GrowthStrainsRotMat;	///< The rotation due to growth strains //TO DO: explain better
     void 					calculateEmergentRotationAngles();///< This is for test and display purposes, calculates the rotation of the element in plane
-
-
-
-    void 					updateElementsNodePositions(int RKId, double ***SystemForces, vector <Node*>& Nodes, double dt);
     
     void 					updateReferencePositionMatrixFromMeshInput(std::ifstream& file);    ///< This function updates the reference position of the element from save file
-    void					fillNodeNeighbourhood(vector<Node*>& Nodes); ///< This function fills in the node neightbourhood, needed for constrction of the connectivity of nodes
+    void					fillNodeNeighbourhood(const std::vector<std::unique_ptr<Node>>& Nodes); ///< This function fills in the node neightbourhood, needed for constrction of the connectivity of nodes
     void 					checkDisplayClipping(double xClip, double yClip, double zClip); ///< This function checks if the element is clipped in the openGL rendering.
-    //double 				dotProduct3D(std::array<double,3>& u, std::array<double,3>& v); ///< Helper algebraic function, calculates dot product of two arrays <double,3>
+    double 					dotProduct3D(std::array<double,3>& u, std::array<double,3>& v); ///< Helper algebraic function, calculates dot product of two arrays <double,3>
     double 					dotProduct3D(double* u, double* v); ///< Helper algebraic function, calculates dot product of two arrays <double,3>
+    std::array<double,3> 	crossProduct3D(std::array<double,3>  u, std::array<double,3> v); ///< Helper algebraic function, calculates cross product of two arrays, outputs the result array.
     void					crossProduct3D(gsl_vector* u, gsl_vector* v, gsl_vector* cross); ///< Helper algebraic function, calculates cross product of two gsl_vectors, writes into the third input gls vector.
     void					crossProduct3D(double* u, double* v, double* cross); ///< Helper algebraic function, calculates cross product of two arrays <double,3>
     //std::array<double,3> 	crossProduct3D(std::array<double,3> u, std::array<double,3> v); ///< Helper algebraic function, calculates cross product of two arrays <double,3>	
 
-    virtual void 			setBasalNeigElementId(vector<ShapeBase*>& /*elementsList*/){ParentErrorMessage("setBasalNeigElementId");};
+    virtual void 			setBasalNeigElementId(const std::vector <std::unique_ptr<ShapeBase>>& /*elementsList*/){ParentErrorMessage("setBasalNeigElementId");};
     bool 					isElementFlippedInPotentialNewShape(int nodeId, double newX, double newY, double newZ); ///< This function checks if the element will plip in the case that its node (nodeID) is moved to the new x,y,z coordintes specified in the input. Necessary in node collapsing.
-    void 					checkForCollapsedNodes(int TissueHeightDiscretisationLayers, vector<Node*>& Nodes, vector<ShapeBase*>& Elements); ///< This function checks if any of the edges of the element is shortened to the extent that it should be collapsed.
-    bool 					hasEnoughNodesOnCurve(vector<Node*>&Nodes);    				///< This function checks if the majority of the nodes of teh element reside in a curved region, to assign it to specific curvature dependent perturbations.
-    void 					assignEllipseBandIdToWholeTissueColumn(int TissueHeightDiscretisationLayers, vector<Node*>& Nodes, vector<ShapeBase*>& Elements); ///< This function assigns the marker ID of the apical elemetn ot all its connected elements in the tissue
-    void 					assignEllipseBandId(vector<Node*>& Nodes, int selectedEllipseBandId); 	///< This function assigns the marking ellipse band ID of the element depending on the definition of nodes it is consturcted of.
-    void 					assignEllipseBandIdToNodes(vector<Node*>& Nodes); 			///< This function assigns the marker ID of the elemetn to all its nodes.
+    void 					checkForCollapsedNodes(int TissueHeightDiscretisationLayers, const std::vector<std::unique_ptr<Node>>& Nodes, const std::vector <std::unique_ptr<ShapeBase>>& Elements); ///< This function checks if any of the edges of the element is shortened to the extent that it should be collapsed.
+    bool 					hasEnoughNodesOnCurve(const std::vector<std::unique_ptr<Node>>& Nodes);    				///< This function checks if the majority of the nodes of teh element reside in a curved region, to assign it to specific curvature dependent perturbations.
+    void 					assignEllipseBandIdToWholeTissueColumn(int TissueHeightDiscretisationLayers, const std::vector<std::unique_ptr<Node>>& Nodes, const std::vector <std::unique_ptr<ShapeBase>>& Elements); ///< This function assigns the marker ID of the apical elemetn ot all its connected elements in the tissue
+    void 					assignEllipseBandId(const std::vector<std::unique_ptr<Node>>& Nodes, int selectedEllipseBandId); 	///< This function assigns the marking ellipse band ID of the element depending on the definition of nodes it is consturcted of.
+    void 					assignEllipseBandIdToNodes(const std::vector<std::unique_ptr<Node>>& Nodes); 			///< This function assigns the marker ID of the elemetn to all its nodes.
     void 					addToElementalElasticSystemForces(int i,int j,double value); 		/// This function is to add the input value, to the (i,j)th element of the ElementalElasticSystemForces
     void 					addToTriPointKe(int i,int j,double value); 				/// This function is to add the input value, to the (i,j)th element of the triPointKe
 
 	bool					checkIfXYPlaneStrainAboveThreshold(double thres); //TO DO: do I use this?
     void					calculateStiffnessFeedback(double dt); //TO DO: DO I keep feedback?
 
-	void 					setLateralElementsRemodellingPlaneRotationMatrix(double systemCentreX, double systemCentreY); //TO DO: DO I use this? defined but NO
+	void 					setLateralElementsRemodellingPlaneRotationMatrix(); //TO DO: DO I use this? defined but NO
     void					setECMMimicingElementThicknessGrowthAxis();	//TO DO: DO I USE THIS? defined but NO
 };
 

@@ -173,8 +173,8 @@ using namespace std;
      }
  }
 
-void GLWidget::reInitialiseNodeColourList(int oldNodeNumber){
-	 for (int i=0; i<oldNodeNumber; ++i){
+void GLWidget::reInitialiseNodeColourList(size_t oldNodeNumber){
+	 for (size_t i=0; i<oldNodeNumber; ++i){
 		delete[] NodeColourList[i];
 	 }
 	 delete[] NodeColourList;
@@ -329,7 +329,7 @@ void GLWidget::reInitialiseNodeColourList(int oldNodeNumber){
  	 return drawthisNode;
  }
 
- void GLWidget::drawElement(int i, bool picking){
+ void GLWidget::drawElement(size_t i, bool picking){
 	 bool drawCurrentElement = checkIfDrawingElement(i);
 	 if (drawCurrentElement){
 		 int ShapeType = Sim01->Elements[i]->getShapeType();
@@ -425,42 +425,41 @@ void GLWidget::highlightNode(int i){
 
  void GLWidget::constructNodeColourList(){
 	float threshold = 1E-10;
-	vector<Node*>::iterator itNode;
-	for (itNode=Sim01->Nodes.begin(); itNode<Sim01->Nodes.end(); ++itNode){
+	for (const auto& itNode : Sim01->Nodes){
 		float* currColour;
 		currColour = new float[3];
 		if(!DisplayStrains && !DisplayPysProp && !drawNetForces && !drawPackingForces && !drawMarkingEllipses ){
 			//I am not displaying ant data on the colours, therefore I do not need any calculaitons on element basis, the colour is constant
-			if ((*itNode)->tissueType == 0){ // columnar layer
-				NodeColourList[(*itNode)->Id][0]=0.75;
-				NodeColourList[(*itNode)->Id][1]=1.0;
-				NodeColourList[(*itNode)->Id][2]=1.0;
+			if (itNode->tissueType == 0){ // columnar layer
+				NodeColourList[itNode->Id][0]=0.75;
+				NodeColourList[itNode->Id][1]=1.0;
+				NodeColourList[itNode->Id][2]=1.0;
 			}
-			else if ((*itNode)->tissueType == 1){ // Peripodial membrane
-				NodeColourList[(*itNode)->Id][0]=1.0;
-				NodeColourList[(*itNode)->Id][1]=1.0;
-				NodeColourList[(*itNode)->Id][2]=0.75;
+			else if (itNode->tissueType == 1){ // Peripodial membrane
+				NodeColourList[itNode->Id][0]=1.0;
+				NodeColourList[itNode->Id][1]=1.0;
+				NodeColourList[itNode->Id][2]=0.75;
 			}
-			else if ((*itNode)->tissueType == 2){ // Linker Zone
-				NodeColourList[(*itNode)->Id][0]=0.87;
-				NodeColourList[(*itNode)->Id][1]=1.0;
-				NodeColourList[(*itNode)->Id][2]=0.87;
+			else if (itNode->tissueType == 2){ // Linker Zone
+				NodeColourList[itNode->Id][0]=0.87;
+				NodeColourList[itNode->Id][1]=1.0;
+				NodeColourList[itNode->Id][2]=0.87;
 			}
 		}
 		else{
 			if(DisplayStrains){
 				float StrainMag = 0.0;
-				if (Sim01->thereIsExplicitLumen && (*itNode)->facingLumen){
+				if (Sim01->thereIsExplicitLumen && itNode->facingLumen){
 					StrainMag = Sim01->tissueLumen->rV;
 				}
 				else{
 
 
-					int nConnectedElements = (*itNode)->connectedElementIds.size();
+					int nConnectedElements = itNode->connectedElementIds.size();
 					for (int i=0;i<nConnectedElements; ++i){
 						float TmpStrainMag =0.0;
-						Sim01->Elements[(*itNode)->connectedElementIds[i]]->getStrain(StrainToDisplay, TmpStrainMag);
-						StrainMag += (TmpStrainMag)*(*itNode)->connectedElementWeights[i];
+						Sim01->Elements[itNode->connectedElementIds[i]]->getStrain(StrainToDisplay, TmpStrainMag);
+						StrainMag += (TmpStrainMag)*itNode->connectedElementWeights[i];
 					}
 				}
 				getDisplayColour(currColour, StrainMag);
@@ -471,18 +470,18 @@ void GLWidget::highlightNode(int i){
 				//PysPropColour = new float[3];
 				//If the physical property is external viscosity, then get the colour directly
 				if (PysPropToDisplay == 0){
-					PysPropMag = (*itNode)->externalViscosity[0];
+					PysPropMag = itNode->externalViscosity[0];
 				}
 				else{
-					size_t nConnectedElements = (*itNode)->connectedElementIds.size();
+					size_t nConnectedElements = itNode->connectedElementIds.size();
 					for (size_t i=0;i<nConnectedElements; ++i){
 						float TmpPysPropMag = 0.0;
 						if ( PysPropToDisplay == 4 || PysPropToDisplay == 5 || PysPropToDisplay == 6){
 							//Growth is multiplicative, base should be 1.0:
 							TmpPysPropMag = 1.0;
 						}
-                        Sim01->Elements[(*itNode)->connectedElementIds[i]]->getPysProp(PysPropToDisplay, TmpPysPropMag, Sim01->dt);
-						PysPropMag += TmpPysPropMag*(*itNode)->connectedElementWeights[i];
+                        Sim01->Elements[itNode->connectedElementIds[i]]->getPysProp(PysPropToDisplay, TmpPysPropMag, Sim01->dt);
+						PysPropMag += TmpPysPropMag*itNode->connectedElementWeights[i];
 					}
 				}
 				getDisplayColour(currColour,PysPropMag);
@@ -490,9 +489,9 @@ void GLWidget::highlightNode(int i){
 			else if(drawNetForces){
 				float ForceMag = 0.0;
 				double F[3];
-				F[0] = Sim01->SystemForces[(*itNode)->Id][0];
-				F[1] = Sim01->SystemForces[(*itNode)->Id][1];
-				F[2] = Sim01->SystemForces[(*itNode)->Id][2];
+				F[0] = Sim01->SystemForces[itNode->Id][0];
+				F[1] = Sim01->SystemForces[itNode->Id][1];
+				F[2] = Sim01->SystemForces[itNode->Id][2];
 				ForceMag = F[0]* F[0] + F[1]*F[1] + F[2]* F[2];
 				ForceMag = pow(ForceMag,(float)0.5);
 				if (ForceMag>threshold){
@@ -508,9 +507,9 @@ void GLWidget::highlightNode(int i){
                 		//cout<<"Drawing Packing Forces"<<endl;
 				float ForceMag = 0.0;
 				double F[3];
-				F[0] = Sim01->PackingForces[(*itNode)->Id][0];
-				F[1] = Sim01->PackingForces[(*itNode)->Id][1];
-				F[2] = Sim01->PackingForces[(*itNode)->Id][2];
+				F[0] = Sim01->PackingForces[itNode->Id][0];
+				F[1] = Sim01->PackingForces[itNode->Id][1];
+				F[2] = Sim01->PackingForces[itNode->Id][2];
 				ForceMag = F[0]* F[0] + F[1]*F[1] + F[2]* F[2];
 				ForceMag = pow(ForceMag,(float)0.5);
 				//cout<<"PAcking Force: "<<F[0]<<" "<<F[1]<<" "<<F[2]<<endl;
@@ -524,44 +523,45 @@ void GLWidget::highlightNode(int i){
 				}
 			}
 			else if(drawMarkingEllipses){
-				if ((*itNode)->insideEllipseBand){
+				if (itNode->insideEllipseBand){
 					currColour[0] = 0.7;
 					currColour[1] = 0.0;
 					currColour[2] = 1.0;
 				}
 				else{
-					if ((*itNode)->tissueType == 0){ // columnar 
+					if (itNode->tissueType == 0){ // columnar
 						currColour[0] = 0.75;
 						currColour[1] = 1.0;
 						currColour[2] = 1.0;
 					}
-					else if ((*itNode)->tissueType == 1){ // Peripodial membrane
+					else if (itNode->tissueType == 1){ // Peripodial membrane
 						currColour[0] = 1.0;
 						currColour[1] = 1.0;
 						currColour[2] = 0.75;
 					}
-					else if ((*itNode)->tissueType == 2){ // Linker Zone
+					else if (itNode->tissueType == 2){ // Linker Zone
 						currColour[0] = 0.87;
 						currColour[1] = 1.0;
 						currColour[2] = 0.87;
 					}	
 				}
 			}
-			NodeColourList[(*itNode)->Id][0]=currColour[0];
-			NodeColourList[(*itNode)->Id][1]=currColour[1];
-			NodeColourList[(*itNode)->Id][2]=currColour[2];
+			NodeColourList[itNode->Id][0]=currColour[0];
+			NodeColourList[itNode->Id][1]=currColour[1];
+			NodeColourList[itNode->Id][2]=currColour[2];
 			delete[] currColour;
 		}
 	}
 	if (drawLumen && Sim01->thereIsExplicitLumen){
-		for (itNode=Sim01->Nodes.begin(); itNode<Sim01->Nodes.end(); ++itNode){
-			if ((*itNode)->facingLumen){
-				int dist = std::distance(Sim01->Nodes.begin(),itNode);
-					NodeColourList[dist][0]=0;
-					NodeColourList[dist][1]=0;
-					NodeColourList[dist][2]=1;
-				}
+		for (size_t i=0; i<Sim01->nNodes; ++i){
+			if (Sim01->Nodes[i]->facingLumen){
+				NodeColourList[i][0]=0;
+				NodeColourList[i][1]=0;
+				NodeColourList[i][2]=1;
 			}
+
+
+		}
 	}
 	//cout<<" NodeColourList[1240][2]"<<NodeColourList[1240][2]<<endl;
 }
@@ -571,12 +571,6 @@ void GLWidget::highlightNode(int i){
 	int* NodeIds = Sim01->Elements[i]->getNodeIds();
 	float** NodeColours;
 	NodeColours = new float*[n];
-	//if (Sim01->Elements[i]->tissuePlacement == 1 ){
-	//	Sim01->Elements[i]->isActinMimicing = true;
-	//}
-	//if (Sim01->Elements[i]->tissuePlacement == 0 ){
-	//	Sim01->Elements[i]->isECMMimicing = true;
-	//}
 	//cout<<"is Mutated? "<<i<<" "<<Sim01->Elements[i]->isMutated<<endl;
 	for (int j = 0; j<n; j++){
 		NodeColours[j] = new float[3];
@@ -1369,7 +1363,7 @@ void GLWidget::highlightNode(int i){
  void GLWidget::findElement(){
 	 int n = Sim01->Elements.size();
 	 for (int i =0; i<n;i++){
-		 int* ElementColour = Sim01->Elements[i]->getIdentifierColour();
+		 std::array<int,3> ElementColour = Sim01->Elements[i]->getIdentifierColour();
 		 ItemSelected = checkPickedColour(ElementColour);
 		 if (ItemSelected){
 			fillItemSelectionInfo(i);
@@ -1619,7 +1613,7 @@ bool GLWidget::findNode(int i){
 		glTranslatef( -80.0f, 100.0f, -obj_pos[2]);
 		glMultMatrixf(MatRot);
 		float size = 20.0; //one side of the cube is 20 microns
-		float Points[8][3]={{0,0,0},{size,0,0},{size,size/4.0,0},{0,size/4,0},{0,0,size/4},{size,0,size/4},{size,size/4,size/4},{0,size/4,size/4}};
+		double Points[8][3]={{0,0,0},{size,0,0},{size,size/4.0,0},{0,size/4,0},{0,0,size/4},{size,0,size/4},{size,size/4,size/4},{0,size/4,size/4}};
 		int FaceConnectivity[12][3] = {{0,1,2},{0,2,3},{1,2,6},{1,6,5},{4,5,6},{4,6,7},{4,7,3},{0,3,4},{0,1,4},{1,4,5},{2,3,7},{2,7,6}};
 		int BorderConnectivity[16] = {0,1,2,3,0,4,5,1,2,6,5,4,7,3,7,6};
 		glColor3f(0,0,0);
@@ -1679,7 +1673,7 @@ bool GLWidget::findNode(int i){
 	glPopMatrix();
  }
 
- bool GLWidget::checkPickedColour(int* ElementColour){
+ bool GLWidget::checkPickedColour(std::array<int,3> ElementColour){
 	 for (int i=0; i<3; ++i){
 		 if (ElementColour[i] != PickedColour[i]){
 			  return false;
@@ -1690,7 +1684,7 @@ bool GLWidget::findNode(int i){
  }
 
  void GLWidget::drawForPicking(){
-	 for (int i =0; i<Sim01->nElements;i++){
+	 for (size_t i =0; i<Sim01->nElements;i++){
 		drawElement(i,true);
 	 }
       //To debug, you can actually draw the colour buffer to the screen, and see the change in behaviour
@@ -1703,7 +1697,7 @@ bool GLWidget::findNode(int i){
  	const int nTriangle = 8; //top + bottom + 2 for each side.
  	int TriangleConnectivity[nTriangle][3] = {{0,1,2},{3,4,5},{0,2,3},{2,3,5},{0,1,3},{1,3,4},{1,2,5},{1,5,4}};
 
- 	int* ElementColour;
+ 	std::array<int,3> ElementColour;
  	ElementColour = Sim01->Elements[i]->getIdentifierColour();
  	//cout<<"Element "<<i<<" Color: "<<ElementColour[0]<<" "<<ElementColour[1]<<" "<<ElementColour[2]<<endl;
 	glDisable(GL_DITHER);
@@ -1732,7 +1726,7 @@ bool GLWidget::findNode(int i){
 	const int nTriangle = 1; //a triangle with 3 points needs 1 actual triangle to draw
 	int TriangleConnectivity[nTriangle][3] = {{0,1,2}};
 
-   	int* ElementColour;
+	std::array<int,3> ElementColour;
    	ElementColour = Sim01->Elements[i]->getIdentifierColour();
    	//cout<<"Element "<<i<<" Color: "<<ElementColour[0]<<" "<<ElementColour[1]<<" "<<ElementColour[2]<<endl;
   	glDisable(GL_DITHER);

@@ -28,7 +28,7 @@ public:
 	double condensation;
 	double sideLen;
 	double sideLenInit; 
-	vector <double> posx,posy;//,posz;
+    vector <double> posx,posy,posz;
 	vector <int> tissueType; //0: columnar layer, 1: peripodium
 	vector <int> atBorder;	//1 id the node is at the circumference of the setup, 0 otherwise
 	double tetha;
@@ -77,6 +77,7 @@ public:
 	void addMidLine();
 	void Tesselate2D();
 	void readInTesselation2D();
+    void readInTesselation3D();
 	void linkerTesselate2D();
 	void linkerReadInTesselation2D();
 	void writeVectors2D(ofstream &vectorsForGnuplot);
@@ -433,6 +434,71 @@ void EllipseLayoutGenerator::Tesselate2D(){
 	system(sysCommand.c_str());
 	
 }
+
+void EllipseLayoutGenerator::readInTesselation3D(){
+    cout<<" start of read in tesselation3D, size of points: "<<posx.size()<<" size of tissue shape: "<<tissueType.size()<<endl;
+
+    ifstream SphereTesselationFile;
+    SphereTesselationFile.open("./SphericalTriangulation", ifstream::in);
+
+    int nNode;
+    int bordersMarked=1;
+    SphereTesselationFile>>nNode;
+    cout<<"nNode: "<<nNode<<endl;
+    for (int i=0; i<nNode; ++i){
+        int nodeId;
+        SphereTesselationFile>>nodeId;
+        //cerr<<"Reading node : "<<i<<"("<<nodeId<<") of "<<nNode<<endl;
+        double pnts[3];
+        for (int j=0;j<3;++j){
+            SphereTesselationFile >> pnts[j];
+        }
+        //reading the flag for border nodes, and generating the vector for it
+        SphereTesselationFile>>bordersMarked;
+        atBorder.push_back(bordersMarked);
+        cerr<<"		read pos: "<< pnts[0]<<" "<<pnts[1]<<" "<<pnts[2]<<" borders? "<<bordersMarked<<endl;
+        if (nodeId<posx.size()){
+            //cerr<<"		overwriting existing placement on vector"<<endl;
+            posx[nodeId]=pnts[0];
+            posy[nodeId]=pnts[1];
+            posz[nodeId]=pnts[2];
+            tissueType[nodeId] = 0; //all nodes are columnar at this stage
+        }
+        else{
+            //cerr<<"		adding points to system"<<endl;
+            posx.push_back(pnts[0]);
+            posy.push_back(pnts[1]);
+            posz.push_back(pnts[2]);
+            tissueType.push_back(0); //all nodes are columnar at this stage
+        }
+    }
+    cout<<" end of read in tesselation3D nodes, size of points: "<<posx.size()<<" size of tissue shape: "<<tissueType.size()<<endl;
+    int ntri;
+    SphereTesselationFile>>ntri;
+    for (int i=0; i<ntri; ++i){
+        int* pnts;
+        pnts = new int[3];
+        for (int j=0;j<3;++j){
+            SphereTesselationFile >> pnts[j];
+        }
+        triangles.push_back(pnts);
+        Links0.push_back(pnts[0]);
+        Links1.push_back(pnts[1]);
+        Links0.push_back(pnts[1]);
+        Links1.push_back(pnts[2]);
+        Links0.push_back(pnts[2]);
+        Links1.push_back(pnts[0]);
+    }
+    cout<<" end of read in tesselation3D triangles, size of points: "<<posx.size()<<" size of tissue shape: "<<tissueType.size()<<endl;
+    SphereTesselationFile.close();
+    //writing for gnuplot vectors:
+    ofstream vectorsForGnuplot,nodesForGnuplot;;
+    vectorsForGnuplot.open("./VectorsPostTesselation.out",ofstream::trunc);
+    nodesForGnuplot.open("./NodesPostTesselation.out",ofstream::trunc);
+    writeVectors2D(vectorsForGnuplot);
+    writeNodes2D(nodesForGnuplot);
+}
+
 
 void EllipseLayoutGenerator::readInTesselation2D(){
 	cout<<" start of read in tesselation, size of points: "<<posx.size()<<" size of tissue shape: "<<tissueType.size()<<endl;
@@ -1433,13 +1499,21 @@ void EllipseLayoutGenerator::writeMeshFileForSimulation(double zHeight, int zLay
 	cout<<"columnar nodes per layer: "<<n<<" peripodial nodes per layer: "<<nPeripodialNodeNumber<<" nNonDuplicateLinkers: "<<nNonDuplicateLinkers<<" shared nodes at border : "<<nSharedNodesAtCircumference<<endl;
 	cout<<" node count expected from columnar: "<<n*(zLayers+1)<<" nodes of peri: "<< nPeripodialNodeNumber*(peripodialLayers+1)-nSharedNodesAtCircumference<<" sum: "<<n*(zLayers+1)+nPeripodialNodeNumber*(peripodialLayers+1)-nSharedNodesAtCircumference<<endl;
 	cout<<" if added, node count expected linkers: "<<SortedCircumferenceForLinkers.size()*nNonDuplicateLinkers<<endl;
- 
+    bool generatingSphere = true;
 	//Adding the basal layer:
 	for (int i=0;i<n;++i){
-		MeshFile<<posx[i]<<"	"<<posy[i]<<"	"<<0<<"    0	"<<tissueType[i]<<"	"<<atBorder[i]<<endl;	//x-coord   y-coord   z-coord   basal-node identifier(0) tissueType(columnar-0, peripodium-2) flag for border nodes
-		recordedNodesX.push_back(posx[i]);
-		recordedNodesY.push_back(posy[i]);
-		recordedNodesZ.push_back(0);
+        if (generatingSphere){
+            MeshFile<<posx[i]<<"	"<<posy[i]<<"	"<<posz[i]<<"    0	"<<tissueType[i]<<"	"<<atBorder[i]<<endl;	//x-coord   y-coord   z-coord   basal-node identifier(0) tissueType(columnar-0, peripodium-2) flag for border nodes
+            recordedNodesX.push_back(posx[i]);
+            recordedNodesY.push_back(posy[i]);
+            recordedNodesZ.push_back(posz[i]);
+        }
+        else{
+            MeshFile<<posx[i]<<"	"<<posy[i]<<"	"<<0<<"    0	"<<tissueType[i]<<"	"<<atBorder[i]<<endl;	//x-coord   y-coord   z-coord   basal-node identifier(0) tissueType(columnar-0, peripodium-2) flag for border nodes
+            recordedNodesX.push_back(posx[i]);
+            recordedNodesY.push_back(posy[i]);
+            recordedNodesZ.push_back(0);
+        }
 	}
 	//Adding columnar nodes, midline and apical surface:
 	double  dzHeight = modifiedZDueToThinActin;
@@ -1454,10 +1528,35 @@ void EllipseLayoutGenerator::writeMeshFileForSimulation(double zHeight, int zLay
 		int nodePositionIdentifier = 2; //0=basal. 1=apical, 2=midline
 		if (layers == zLayers-1){nodePositionIdentifier=1;}
 		for (int i=0;i<n;++i){
-			MeshFile<<posx[i]<<"	"<<posy[i]<<"	"<<currzHeight<<"    "<<nodePositionIdentifier<<"	"<<tissueType[i]<<"	"<<atBorder[i]<<endl;	
-			recordedNodesX.push_back(posx[i]);
-			recordedNodesY.push_back(posy[i]);
-			recordedNodesZ.push_back(currzHeight);	
+            if (generatingSphere){
+                //calculate the normalised vector from origin to the base point I read from mesh,
+                //then make it the magnitude of current z:
+                //The vector must point towards the ventre of the organoid, which is assumed to be
+                //at origin. The mesh I have is the basal layer.
+                double vec[3] = {-posx[i],-posy[i],-posz[i]};
+                double magVec = sqrt(vec[0]*vec[0] + vec[1]*vec[1] + vec[2]*vec[2]);
+                vec[0] = vec[0]/magVec*currzHeight;
+                vec[1] = vec[1]/magVec*currzHeight;
+                vec[2] = vec[2]/magVec*currzHeight;
+                //now the new node position should be moved from base position towards
+                //the core of the organoid
+                //the calculated vector
+                double currX = posx[i]+vec[0];
+                double currY = posy[i]+vec[1];
+                double currZ = posz[i]+vec[2];
+                recordedNodesX.push_back(currX);
+                recordedNodesY.push_back(currY);
+                recordedNodesZ.push_back(currZ);
+                MeshFile<<currX<<"	"<<currY<<"	"<<currZ<<"    "<<nodePositionIdentifier<<"	"<<tissueType[i]<<"	"<<atBorder[i]<<endl;
+
+            }
+            else{
+                MeshFile<<posx[i]<<"	"<<posy[i]<<"	"<<currzHeight<<"    "<<nodePositionIdentifier<<"	"<<tissueType[i]<<"	"<<atBorder[i]<<endl;
+                recordedNodesX.push_back(posx[i]);
+                recordedNodesY.push_back(posy[i]);
+                recordedNodesZ.push_back(currzHeight);
+            }
+
 		}
 		if (layers == zLayers-2){
 			currzHeight += actinHeight;		
@@ -1983,21 +2082,6 @@ void EllipseLayoutGenerator::smooth(int pointAvr, vector <float>&  x, vector <fl
 	int n = x.size();
 	float tmpCoord[(const int) n][2];
 	float range = (pointAvr-1.0)/2.0;
-	/*for (int i=range; i<n-range; ++i){
-		float currSum[2] = {0.0,0.0};
-		for (int j=-range; j<=range; ++j){
-			currSum[0] += x[i+j];
-			currSum[1] += y[i+j];
-		}
-		currSum[0] /=pointAvr;
-		currSum[1] /=pointAvr;
-		tmpCoord[i][0] = currSum[0];
-		tmpCoord[i][1] = currSum[1];
-	}
-	for (int i=range; i<n-range; ++i){
-		x[i] = tmpCoord[i][0];
-		y[i] = tmpCoord[i][1];	
-	}*/
 	for (int i=0; i<n; ++i){
 		float currSum[2] = {0.0,0.0};
 		for (int j=-range; j<=range; ++j){
@@ -2015,10 +2099,7 @@ void EllipseLayoutGenerator::smooth(int pointAvr, vector <float>&  x, vector <fl
 		currSum[1] /=pointAvr;
 		tmpCoord[i][0] = currSum[0];
 		tmpCoord[i][1] = currSum[1];
-		//x[i] = currSum[0];
-		//y[i] = currSum[1];	
 	}
-	//for (int i=range; i<n-range; ++i){
 	for (int i=0; i<n; ++i){
 		x[i] = tmpCoord[i][0];
 		y[i] = tmpCoord[i][1];	
@@ -2027,11 +2108,11 @@ void EllipseLayoutGenerator::smooth(int pointAvr, vector <float>&  x, vector <fl
 
 void EllipseLayoutGenerator::scaleToTissueSize(double* boundingBox, vector <float>&  x, vector <float>& y){
 	//bounding box format: [minX , minY, maxX, maxY]	
-	float sizeOutline[2] = {boundingBox[2] - boundingBox[0],  boundingBox[3] - boundingBox[1]};
-	float sizeTissue[2] = {r1[0]+r1[1],  r2[0]+r2[1]};
+    double sizeOutline[2] = {boundingBox[2] - boundingBox[0],  boundingBox[3] - boundingBox[1]};
+    double sizeTissue[2] = {r1[0]+r1[1],  r2[0]+r2[1]};
 	cout<<"desired size: " <<sizeTissue[0]<<" "<<sizeTissue[1]<<endl;
-	float xMultiplier = sizeTissue[0] / sizeOutline[0];
-	float yMultiplier = sizeTissue[1] / sizeOutline[1];
+    double xMultiplier = sizeTissue[0] / sizeOutline[0];
+    double yMultiplier = sizeTissue[1] / sizeOutline[1];
 	int n = x.size();	
 	for (int i=0; i<n; ++i){
 		x[i] *= xMultiplier;
@@ -2366,7 +2447,11 @@ void EllipseLayoutGenerator::arrangeSideLength(vector <float>&  x, vector <float
 
 bool readinputs (int argc, char **argv, double* parameters, ifstream& inputOutline){
 	if (argc<2){
-		cerr<<"Please give shape type: 1  = ellipse, 2 = rectangle or -1 for input tesselation(input files MUST BE Points.1.ele and Points.1.node)"<<endl;
+		cerr<<"Please give shape type: "<<endl;
+		cerr<<"		1  = ellipse,"<<endl;
+		cerr<<"		2  = rectangle"<<endl;
+		cerr<<"		-1 for input tesselation 2D(input files MUST BE Points.1.ele and Points.1.node)"<<endl;
+        cerr<<"		-2 for input tesselation 3D(input files MUST BE SphericalMeshTesselation)"<<endl;
 		return 0;	
 	}
 	else {
@@ -2376,6 +2461,10 @@ bool readinputs (int argc, char **argv, double* parameters, ifstream& inputOutli
 	int offset = 0;
 	if (parameters[0] == -1){
 		cerr<<"Will read tesselation from Points.1.node and Points.1.ele, the side length input and the outline will not be used, but must be valid"<<endl;
+		offset = 2;	
+	}
+	if (parameters[0] == -2){
+		cerr<<"Will read tesselation from SphericalMeshTesselation, the side length input and the outline will not be used, but must be valid"<<endl;
 		offset = 2;	
 	}
 	else if (parameters[0] == 1){
@@ -2497,7 +2586,8 @@ int main(int argc, char **argv)
 	// 2: wing disc 72 hr,
 	// 3: optic cup
 	// 4: x&y symmetric circle
-	int selectTissueType = 1; 
+	// 5: spherical organoid
+    int selectTissueType = 5;
 	//Eliminate bluntTip function for type 4 with no x symmetricity! (half circle - not quarter)
 	if (selectTissueType == 0){ // 0 : wingdisc48Hr, 
 		symmetricY = true;
@@ -2518,6 +2608,10 @@ int main(int argc, char **argv)
 	else if(selectTissueType == 4){
 		symmetricY = true;
 		symmetricX = false; 
+	}
+	else if(selectTissueType == 5){
+		symmetricY = true;
+		symmetricX = true; 
 	}
 	else{
 		cerr<<"Tissue type selected wrong!!"<<endl;	
@@ -2713,6 +2807,37 @@ int main(int argc, char **argv)
 			//modifiedZDueToThinActin = (ABHeight - ECMHeight - actinHeight -basalLayerHeight)/ (ABLayers-3);
 		}
 	}
+    else if (selectTissueType == 5){
+		//spherical organoid
+		addPeripodial = false;
+		addLateralECMRing = false;
+		actinHeight = 2.0;
+		ECMHeight = 0.2;
+		modifiedZDueToThinActin = ABHeight/ABLayers;
+		if (ABLayers<3){
+			ECMHeight = ABHeight/ABLayers;
+			actinHeight = ABHeight/ABLayers;
+			basalLayerHeight = ABHeight/ABLayers;
+			modifiedZDueToThinActin  = ABHeight/ABLayers;
+			cout<<" if clause 1,  modifiedZDueToThinActin: "<<modifiedZDueToThinActin<<endl;
+		}
+		else{
+			double denominator = (ABLayers-3);
+			bool correctECM = false;
+			bool correctBasal = false;
+			bool correctActin = false;
+			if(ECMHeight<0){ECMHeight=0;denominator++;correctECM=true;}
+			if(basalLayerHeight<0){basalLayerHeight=0;denominator++;correctBasal=true;}
+			if(actinHeight<0){actinHeight==0;denominator++;correctActin=true;}
+			modifiedZDueToThinActin = (ABHeight - ECMHeight - actinHeight -basalLayerHeight)/ denominator;
+			if (correctECM){ECMHeight= modifiedZDueToThinActin;}
+			if (correctBasal){basalLayerHeight= modifiedZDueToThinActin;}
+			if (correctActin){actinHeight= modifiedZDueToThinActin;}
+			cout<<" if clause 2,  modifiedZDueToThinActin: "<<modifiedZDueToThinActin<<endl;
+		}
+		Lay01.symmetricY = true;
+		Lay01.symmetricX = true;
+	}
 	else{
 		cerr<<"Tissue type selected wrong!!"<<endl;	
 		return 0;
@@ -2721,14 +2846,18 @@ int main(int argc, char **argv)
 		Lay01.addPeripodial = true;
 		Lay01.calculatePeripodialMembraneParameters(ABHeight, ABLayers,  ECMHeight,  modifiedZDueToThinActin, peripodialHeightFrac, lumenHeightFrac,peripodialSideCurveFrac,addLateralECMRing);
 	}
-	if (parameters[0] != -1){
+	if (parameters[0] != -1 && parameters[0] != -2){//I am not using a ready made triangulation
 		vector <float> x, y;	
 		readInOutline(x,y,inputOutline);
 		Lay01.scaleInputOutline(x,y);
-		//cout<<"before Tesselate2D, n =  "<<	Lay01.posx.size()<<endl;
 		Lay01.Tesselate2D();
 	}
-	Lay01.readInTesselation2D();
+    if(parameters[0] == -1){
+        Lay01.readInTesselation2D();
+    }
+    if(parameters[0] == -2){
+        Lay01.readInTesselation3D();
+    }
 	//now I have the triangulated mesh. If I have peripodial, I need to get the circumference.
 	//Then I will calculate the vectors pointing out from each of the circumference nodes.
 	//Then I will use those values to add the elements in mesh generation.

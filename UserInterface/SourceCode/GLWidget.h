@@ -74,7 +74,7 @@ using namespace std;
      bool       displayPipette;
      double  	xClip, yClip, zClip;
      bool 		drawSymmetricity;
-     int		currNodeNumber;
+     size_t		currNodeNumber;
      float 		obj_pos[3];
 
  signals:
@@ -99,13 +99,13 @@ using namespace std;
      void 	drawForPicking ();
      void 	generate3DObject();
      void 	initialiseNodeColourList();
-     void	reInitialiseNodeColourList(int oldNodeNumber);
+     void	reInitialiseNodeColourList(size_t oldNodeNumber);
 
      //Element drawing functions
      bool 	checkIfDrawingElement(int i);
      bool 	checkIfDrawingElementSymmetric(int i, bool symmetricX, bool symmetricY);
      bool 	checkIfDrawingNode(int i);
-     void 	drawElement(int i, bool picking);
+     void 	drawElement(size_t i, bool picking);
      void 	highlightElement(int i);
      void 	highlightNode(int i);
      void 	drawReferenceElement(int i);
@@ -135,7 +135,7 @@ using namespace std;
      QColor 	qtPurple;
      double 	Qcurr[4], Qlast[4];
      float 		MatRot[16];
-     bool 		checkPickedColour(int* ElementColour);
+     bool 		checkPickedColour(std::array<int,3> ElementColour);
      void 		rotateByQuaternians(double* Qrot);
      void 		normaliseCurrentRotationAngle (double* Qrot);
      void 		rotateCurrentRotationQuaternian(double* Qrot);

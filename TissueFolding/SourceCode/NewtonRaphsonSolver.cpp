@@ -42,32 +42,32 @@ NewtonRaphsonSolver::NewtonRaphsonSolver(int dim, int n){
 
 NewtonRaphsonSolver::~NewtonRaphsonSolver(){
 	gsl_matrix_free(uk);
-	cout<<" deleted uk"<<endl;
+	std::cout<<" deleted uk"<<std::endl;
    	gsl_matrix_free(un);
-	cout<<" deleted un"<<endl;
+	std::cout<<" deleted un"<<std::endl;
 	gsl_matrix_free(ge);
-	cout<<" deleted ge"<<endl;
+	std::cout<<" deleted ge"<<std::endl;
 	gsl_matrix_free(gvExternal);
-	cout<<" deleted gvExternal"<<endl;
+	std::cout<<" deleted gvExternal"<<std::endl;
 	gsl_matrix_free(gvInternal);
-	cout<<" deleted gvInternal"<<endl;
+	std::cout<<" deleted gvInternal"<<std::endl;
 	gsl_matrix_free(gExt);
-	cout<<" deleted gExt"<<endl;
+	std::cout<<" deleted gExt"<<std::endl;
 	gsl_vector_free(gSum);
-	cout<<" deleted gSum"<<endl;
+	std::cout<<" deleted gSum"<<std::endl;
 	gsl_matrix_free(displacementPerDt);
-	cout<<" deleted displacementPerDt"<<endl;
+	std::cout<<" deleted displacementPerDt"<<std::endl;
 	gsl_vector_free(deltaU);
-	cout<<" deleted deltaU"<<endl;
+	std::cout<<" deleted deltaU"<<std::endl;
 	gsl_matrix_free(K);
-	cout<<" deleted K"<<endl;
+	std::cout<<" deleted K"<<std::endl;
 	if (Knumerical != 0){
 		gsl_matrix_free(Knumerical);
 	}
 	else{
 		free(Knumerical);
 	}
-	cout<<" deleted Knumerical"<<endl;
+	std::cout<<" deleted Knumerical"<<std::endl;
 }
 
 void NewtonRaphsonSolver::setMatricesToZeroAtTheBeginningOfIteration(bool thereIsNumericalCalculation){
@@ -103,9 +103,9 @@ void NewtonRaphsonSolver::setMatricesToZeroInsideIteration(){
 
 }
 
-void NewtonRaphsonSolver::constructUnMatrix(vector <Node*>& Nodes){
-    for (int i = 0; i<nNodes; ++i ){
-        for (int j=0; j<nDim; ++j){
+void NewtonRaphsonSolver::constructUnMatrix(const std::vector<std::unique_ptr<Node>>& Nodes){
+    for (size_t i = 0; i<nNodes; ++i ){
+        for (size_t j=0; j<nDim; ++j){
             gsl_matrix_set(un,3*i+j,0,Nodes[i]->Position[j]);
         }
     }
@@ -192,7 +192,7 @@ void NewtonRaphsonSolver::equateSlaveDisplacementsToMasters(){
 	}
 }
 
-void NewtonRaphsonSolver::calcutateFixedK(vector <Node*>& Nodes){
+void NewtonRaphsonSolver::calcutateFixedK(const std::vector<std::unique_ptr<Node>>& Nodes){
     /** Some degrees of freedom are fixed for some nodes, as defined by the user input boundary conditions.
      * this will be recorded in the 3 dimensional boolean array of each node Node#FixedPos
      * for x,y and z coordinates. In the node has a fixed degree of freedom, then the  sum of
@@ -205,7 +205,7 @@ void NewtonRaphsonSolver::calcutateFixedK(vector <Node*>& Nodes){
     for(size_t i=0; i<nNodes; i++){
         for (size_t j=0; j<dim; ++j){
             if (Nodes[i]->FixedPos[j]){
-                int index1 = i*dim+j;
+                size_t index1 = i*dim+j;
                 gsl_vector_set(gSum,index1,0.0); // making the forces zero
                 for (size_t k =0; k<Ksize; ++k){
                     double value =0.0;
@@ -218,64 +218,63 @@ void NewtonRaphsonSolver::calcutateFixedK(vector <Node*>& Nodes){
     }
 }
 
-void NewtonRaphsonSolver::calculateForcesAndJacobianMatrixNR(vector <Node*>& Nodes, vector <ShapeBase*>& Elements, double dt, bool recordForcesOnFixedNodes, double **FixedNodeForces){
-#ifndef DO_NOT_USE_OMP
-    /** If DO_NOT_USE_OMP is not defined,I will be using omp. This
-     * is necessary as omp is not set up on mac
-     */
+void NewtonRaphsonSolver::calculateForcesAndJacobianMatrixNR(const std::vector <std::unique_ptr<Node>>& Nodes, const std::vector <std::unique_ptr<ShapeBase>>& Elements, double dt){
+	#ifndef DO_NOT_USE_OMP
+	/** If DO_NOT_USE_OMP is not defined,I will be using omp. This
+	* is necessary as omp is not set up on mac
+	*/
 	const int maxThreads = omp_get_max_threads();
 	omp_set_num_threads(maxThreads);
-	#pragma omp parallel for //private(Nodes, displacementPerDt, recordForcesOnFixedNodes, FixedNodeForces, outputFile, dt)
-#endif
-
-	for( vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		/** The calculation of foces and their derivatives in each element starts with
+	#pragma omp parallel for
+	#endif
+	for(std::vector<std::unique_ptr<ShapeBase>>::const_iterator itElement = Elements.begin(); itElement < Elements.end(); ++itElement){
+	   	/** The calculation of foces and their derivatives in each element starts with
 		 * calculation of forces via ShapeBase#calculateForces. A series of calculations necessary for
 		 * Jacobian calculation are obtained at this stage. Then the Elastic and Viscous parts of the elemetnal Jacobian
 		 * are calculates through ShapeBase#calculateImplicitKElastic and ShapeBase#calculateImplicitKViscous ,respectively
 		  */
           	if (!(*itElement)->IsAblated){
-			(*itElement)->calculateForces(Nodes, displacementPerDt, recordForcesOnFixedNodes, FixedNodeForces);
+          		(*itElement)->calculateForces(Nodes, displacementPerDt);
 		}
-		(*itElement)->calculateImplicitKElastic(); //This is the stiffness matrix, elastic part of the jacobian matrix
-		(*itElement)->calculateImplicitKViscous(displacementPerDt, dt); //This is the viscous part of jacobian matrix
+          	(*itElement)->calculateImplicitKElastic(); //This is the stiffness matrix, elastic part of the jacobian matrix
+          	(*itElement)->calculateImplicitKViscous(displacementPerDt, dt); //This is the viscous part of jacobian matrix
 	}
 	if (thereIsLumen){
-		tissueLumen->updateMatrices(Nodes);
+		tissueLumen->updateMatrices(Nodes, Elements);
 		tissueLumen->calculateCurrentVolume();
-		tissueLumen->calculateResiduals(Nodes);
+		tissueLumen->calculateResiduals(Nodes, Elements);
 		//calculateLumenNumericalJacobian(tissueLumen,Nodes,Elements);
-		tissueLumen->calculateJacobian();
+		tissueLumen->calculateJacobian(Elements);
 		tissueLumen->writeLumenJacobianToSystemJacobian(K,Nodes);
 	}
 }
 
 
-void NewtonRaphsonSolver::updateElementPositions(vector <Node*>& Nodes, vector <ShapeBase*>& Elements){
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		(*itElement)->updatePositions(Nodes);
+void NewtonRaphsonSolver::updateElementPositions(const std::vector <std::unique_ptr<Node>>&  Nodes, const std::vector <std::unique_ptr<ShapeBase>>& Elements){
+	for(const auto& itElement : Elements){
+		itElement->updatePositions(Nodes);
 	}
 }
 
-void 	NewtonRaphsonSolver::calculateLumenNumericalJacobian(Lumen* tissueLumen, vector <Node*>& Nodes, vector <ShapeBase*>& Elements){
+void 	NewtonRaphsonSolver::calculateLumenNumericalJacobian(Lumen* tissueLumen, const std::vector <std::unique_ptr<Node>>& Nodes, const std::vector <std::unique_ptr<ShapeBase>>& Elements){
 	gsl_matrix_set_zero(tissueLumen->Kv);
 	double perturbation = 1E-6;
-	const int nEle = tissueLumen->encapsulatingElements.size();
+	const int nEle = tissueLumen->encapsulatingElementIds.size();
 	//take backup of elemental elastic system forces and reset to zero
 	double backupElasticForces [nEle][6][3];
 	for (int i=0; i<nEle; ++i){
 		for (int j=0; j<6; j++){
 			for (int k =0; k<3;++k){
-				backupElasticForces[i][j][k] = tissueLumen->encapsulatingElements[i]->getElementalElasticForce(j,k);
-				tissueLumen->encapsulatingElements[i]->setElementalElasticForce(j,k,0.0);
+				int eleId = tissueLumen->encapsulatingElementIds[i];
+				backupElasticForces[i][j][k] = Elements[eleId]->getElementalElasticForce(j,k);
+				Elements[eleId]->setElementalElasticForce(j,k,0.0);
 			}
 		}
 	}
 	int  nNode = tissueLumen->nodeIdsList.size();
 	gsl_matrix* gOriginal = gsl_matrix_calloc(tissueLumen->Dim*nNode,1);
 	double rVover6V0 =  tissueLumen->rV /6.0 / tissueLumen->currentIdealVolume;
-	tissueLumen->calculateLumengFromElementalResiduals(gOriginal);
+	tissueLumen->calculateLumengFromElementalResiduals(gOriginal, Elements);
 	gsl_matrix_scale(gOriginal,-1.0*tissueLumen->bulkModulus*rVover6V0);
 
 	gsl_matrix* gPerturbed = gsl_matrix_calloc(tissueLumen->Dim*nNode,1);
@@ -285,16 +284,16 @@ void 	NewtonRaphsonSolver::calculateLumenNumericalJacobian(Lumen* tissueLumen, v
 			if (Nodes[currId]->FixedPos[currDim] ){
 				continue;
 			}
-			//cout<<" perturbing node "<<currId<<" at dim: "<<currDim<<endl;
+			//std::cout<<" perturbing node "<<currId<<" at dim: "<<currDim<<std::endl;
 			Nodes[currId]->Position[currDim]  += perturbation;
 			updateElementPositions(Nodes, Elements);
-			tissueLumen->updateMatrices(Nodes);
+			tissueLumen->updateMatrices(Nodes, Elements);
 			tissueLumen->calculateCurrentVolume();
 			double rVover6V0 =  tissueLumen->rV /6.0 / tissueLumen->currentIdealVolume;			
 			//reset perturbed g:
 			gsl_matrix_set_zero(gPerturbed);
-			tissueLumen->calculateResiduals(Nodes);
-			tissueLumen->calculateLumengFromElementalResiduals(gPerturbed);
+			tissueLumen->calculateResiduals(Nodes, Elements);
+			tissueLumen->calculateLumengFromElementalResiduals(gPerturbed, Elements);
 			gsl_matrix_scale(gPerturbed,-1.0*tissueLumen->bulkModulus*rVover6V0);
 			//writing the perturbation to global jacobian
 			gsl_matrix_sub(gPerturbed,gOriginal);
@@ -312,7 +311,7 @@ void 	NewtonRaphsonSolver::calculateLumenNumericalJacobian(Lumen* tissueLumen, v
 					double newValue = valueOnLumenK+numericalValueAffectedDim;
 					gsl_matrix_set(tissueLumen->Kv,currIndexOnLumenK,affectedIndexOnLumenK,newValue);
 					if (currIndexOnLumenK == 0 && affectedIndexOnLumenK == 7){
-						cout<<"numerical ["<<currIndexOnLumenK<<", "<<affectedIndexOnLumenK<<"]: value to add"<<numericalValueAffectedDim<<" valueOnLumenK "<<valueOnLumenK<<endl;
+						std::cout<<"numerical ["<<currIndexOnLumenK<<", "<<affectedIndexOnLumenK<<"]: value to add"<<numericalValueAffectedDim<<" valueOnLumenK "<<valueOnLumenK<<std::endl;
 					}
 				}
 			}
@@ -323,43 +322,44 @@ void 	NewtonRaphsonSolver::calculateLumenNumericalJacobian(Lumen* tissueLumen, v
 	}
 	//outside the loop, correct positions and all calculated values:
 	updateElementPositions(Nodes, Elements);
-	tissueLumen->updateMatrices(Nodes);
+	tissueLumen->updateMatrices(Nodes, Elements);
 	tissueLumen->calculateCurrentVolume();
 	//set back the elemental elastic forces:
 	for (int i=0; i<nEle; ++i){
 		for (int j=0; j<6; j++){
 			for (int k =0; k<3;++k){
-				tissueLumen->encapsulatingElements[i]->setElementalElasticForce(j,k,backupElasticForces[i][j][k]);
+				int eleId = tissueLumen->encapsulatingElementIds[i];
+				Elements[eleId]->setElementalElasticForce(j,k,backupElasticForces[i][j][k]);
 			}
 		}
 	}
-	tissueLumen->calculateResiduals(Nodes);
+	tissueLumen->calculateResiduals(Nodes, Elements);
 	//free memory
 	gsl_matrix_free(gOriginal);
 	gsl_matrix_free(gPerturbed);
 }
 
-void NewtonRaphsonSolver::writeForcesTogeAndgvInternal(vector <Node*>& Nodes, vector <ShapeBase*>& Elements, double** SystemForces){
-    for(vector<ShapeBase*>::iterator  itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-        if (!(*itElement)->IsAblated){
-        	(*itElement)->writeInternalForcesTogeAndgv(ge,gvInternal,SystemForces,Nodes);
+void NewtonRaphsonSolver::writeForcesTogeAndgvInternal(const std::vector <std::unique_ptr<Node>>& Nodes, const std::vector <std::unique_ptr<ShapeBase>>& Elements, std::vector<std::array<double,3>>& SystemForces){
+    for(const auto&  itElement : Elements){
+        if (!itElement->IsAblated){
+        	itElement->writeInternalForcesTogeAndgv(ge,gvInternal,SystemForces,Nodes);
         }
     }
 }
 
-void NewtonRaphsonSolver::writeImplicitElementalKToJacobian(vector <ShapeBase*>& Elements){
+void NewtonRaphsonSolver::writeImplicitElementalKToJacobian(const std::vector <std::unique_ptr<ShapeBase>>& Elements){
     /** All elemental elastic (ShapeBase#Ke) and internal viscous (ShapeBase#Kv) jacobians are added onto the
      * system Jacobian (NewtonRaphsonSolver#K) in this function.
      */
-    for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-    	(*itElement)->writeKviscousToMainKatrix(K);
-    }
-    for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-    	(*itElement)->writeKelasticToMainKatrix(K);
-    }
+	for(const auto&  itElement : Elements){
+		itElement->writeKviscousToMainKatrix(K);
+	}
+	for(const auto&  itElement : Elements){
+		itElement->writeKelasticToMainKatrix(K);
+	}
 }
 
-void NewtonRaphsonSolver::calculateExternalViscousForcesForNR(vector <Node*>& Nodes){
+void NewtonRaphsonSolver::calculateExternalViscousForcesForNR(const std::vector<std::unique_ptr<Node>>&  Nodes){
     //the mass is already updated for symmetricity boundary nodes, and the viscous forces will be calculated correctly,
 	//as mvisdt is already accounting for the doubling of mass
     //gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, mvisc, displacementPerDt,0.0, gvExternal);
@@ -382,29 +382,29 @@ void NewtonRaphsonSolver::calculateExternalViscousForcesForNR(vector <Node*>& No
 				double displacementValue = gsl_matrix_get(displacementPerDt,3*i+j,0);
 				gsl_matrix_set(gvExternal,3*i+j,0,surfaceAreaTimesViscosity*displacementValue);
 				if (std::isnan(surfaceAreaTimesViscosity)){
-					cout<<" node: "<<i<<" dimention: "<<j<<" surfaceAreaTimesViscosity is nan: "<<surfaceAreaTimesViscosity<<endl;
+					std::cout<<" node: "<<i<<" dimention: "<<j<<" surfaceAreaTimesViscosity is nan: "<<surfaceAreaTimesViscosity<<std::endl;
 				}
 				if (std::isnan(displacementValue)){
-					cout<<" node: "<<i<<" dimention: "<<j<<" displacementValue is nan: "<<displacementValue<<endl;
+					std::cout<<" node: "<<i<<" dimention: "<<j<<" displacementValue is nan: "<<displacementValue<<std::endl;
 				}
 			}
 		}
 	}
 	/** Once all the viscous forces are calculated, the force direction will be inverted, as I am interested in the visouc
-	* drag applied by the meida to the node.
+	* drag applied by the media to the node.
 	*/
  	gsl_matrix_scale(gvExternal,-1.0);
 }
 
-void NewtonRaphsonSolver::addImplicitKViscousExternalToJacobian(vector <Node*>& Nodes, double dt){
+void NewtonRaphsonSolver::addImplicitKViscousExternalToJacobian(const std::vector<std::unique_ptr<Node>>&  Nodes, double dt){
 	/** This function will add the derivatives of external viscous drag forces with respect to
 	* nodal displacement onto the system Jacobian.
 	*
 	*/
-	for (int i = 0; i<nNodes; ++i ){
+	for (size_t i = 0; i<nNodes; ++i ){
 		if (externalViscosityVolumeBased){
 			double massPerDt = Nodes[i]->mass/dt;
-			for (int j=0; j<nDim; ++j){
+			for (size_t j=0; j<nDim; ++j){
 				double curKValue = gsl_matrix_get(K,3*i+j,3*i+j);
 				double massTimesViscosityPerDt = massPerDt*Nodes[i]->externalViscosity[j];
 				//double matrixValuePerDt = gsl_matrix_get(mvisc,0,3*i+j)/dt;
@@ -413,7 +413,7 @@ void NewtonRaphsonSolver::addImplicitKViscousExternalToJacobian(vector <Node*>& 
 		}
 		else{
 			double surfaceAreaPerDt = Nodes[i]->viscositySurface/dt;
-			for (int j=0; j<nDim; ++j){
+			for (size_t j=0; j<nDim; ++j){
 				double curKValue = gsl_matrix_get(K,3*i+j,3*i+j);
 				double surfaceAreaTimesViscosityPerDt = surfaceAreaPerDt*Nodes[i]->externalViscosity[j];
 				gsl_matrix_set(K,3*i+j,3*i+j,surfaceAreaTimesViscosityPerDt+curKValue);
@@ -439,7 +439,7 @@ void NewtonRaphsonSolver::checkJacobianForAblatedNodes(std::vector <int> & Ablat
 }
 
 void NewtonRaphsonSolver::calculateSumOfInternalForces(){
-	for (int i=0; i<nDim*nNodes; ++i){
+	for (size_t i=0; i<nDim*nNodes; ++i){
 		gsl_vector_set(gSum,i,gsl_matrix_get(ge,i,0)+gsl_matrix_get(gvInternal,i,0)+gsl_matrix_get(gvExternal,i,0));
 	}
 }
@@ -447,11 +447,11 @@ void NewtonRaphsonSolver::calculateSumOfInternalForces(){
 void NewtonRaphsonSolver::addExernalForces(){
 	/** This function adds the external forces on the system sum of forces, NewtonRaphsonSolver#gSum)
 	*/
-	for (int i=0; i<nDim*nNodes; ++i){
+	for (size_t i=0; i<nDim*nNodes; ++i){
 		gsl_vector_set(gSum,i,gsl_vector_get(gSum,i)+gsl_matrix_get(gExt,i,0));
 		double value = gsl_vector_get(gSum,i);
 		if (std::isnan(value)){
-		      cout<<" gSUM is nan at matrix point: "<<i<<endl;
+		      std::cout<<" gSUM is nan at matrix point: "<<i<<std::endl;
 		}
 	}
 }
@@ -475,7 +475,7 @@ void NewtonRaphsonSolver::solveForDeltaU(){
 	writeKinPardisoFormat(nNonzero, ja_vec, a_vec, ja, a);
 	writeginPardisoFormat(b,nmult);
 	int error = solveWithPardiso(a, b, ia, ja, nmult);
-	if (error != 0){cerr<<"Pardiso solver did not return success!!"<<endl;}
+	if (error != 0){std::cerr<<"Pardiso solver did not return success!!"<<std::endl;}
 	if (boundNodesWithSlaveMasterDefinition){
 		equateSlaveDisplacementsToMasters();
 	}
@@ -653,7 +653,7 @@ int NewtonRaphsonSolver::solveWithPardiso(double* a, double*b, int* ia, int* ja,
     pardiso (pt, &maxfct, &mnum, &mtype, &phase,
              &n, a, ia, ja, &idum, &nrhs,
              iparm, &msglvl, &ddum, &ddum, &error, dparm);
-//cout<<"symbolic factorisation"<<endl;
+//std::cout<<"symbolic factorisation"<<std::endl;
     if (error != 0) {
         printf("\nERROR during symbolic factorization: %d", error);
         exit(1);
@@ -671,7 +671,7 @@ int NewtonRaphsonSolver::solveWithPardiso(double* a, double*b, int* ia, int* ja,
     pardiso (pt, &maxfct, &mnum, &mtype, &phase,
              &n, a, ia, ja, &idum, &nrhs,
              iparm, &msglvl, &ddum, &ddum, &error,  dparm);
-//cout<<"numerical factorisation"<<endl;
+//std::cout<<"numerical factorisation"<<std::endl;
     if (error != 0) {
         printf("\nERROR during numerical factorization: %d", error);
         exit(2);
@@ -773,7 +773,7 @@ void NewtonRaphsonSolver::constructiaForPardiso(int* ia, const int nmult, vector
                 ja_vec.push_back(j);
                 a_vec.push_back(Kvalue);
                 if (!wroteiaForThisRow){
-                    //cout<<"writing is for row "<<i<<" column is: "<<j<<endl;
+                    //std::cout<<"writing is for row "<<i<<" column is: "<<j<<std::endl;
                     ia[i] = counter;
                     wroteiaForThisRow = true;
                 }
@@ -814,10 +814,10 @@ bool NewtonRaphsonSolver::checkConvergenceViaDeltaU(){
 
 	if (d>threshold){
 		converged = false;
-		cout<<" not  yet converged via du: norm "<<d<<endl;
+		std::cout<<" not  yet converged via du: norm "<<d<<std::endl;
 	}
 	else{
-		cout<<"converged with displacement: norm"<<d<<endl;
+		std::cout<<"converged with displacement: norm"<<d<<std::endl;
 	}
 	return converged;
 }
@@ -831,10 +831,10 @@ bool NewtonRaphsonSolver::checkConvergenceViaForce(){
 	double d = gsl_blas_dnrm2 (gSum);
 	if (d>threshold){
 		converged = false;
-		cout<<" not  yet converged via forces: norm "<<d<<endl;
+		std::cout<<" not  yet converged via forces: norm "<<d<<std::endl;
 	}
 	else{
-		cout<<"converged with forces: norm"<<d<<endl;
+		std::cout<<"converged with forces: norm"<<d<<std::endl;
 	}
 	return converged;
 }
@@ -851,7 +851,7 @@ void NewtonRaphsonSolver::updateUkInIteration(){
 	}
 }
 
-void NewtonRaphsonSolver::calculateDifferenceBetweenNumericalAndAnalyticalJacobian(vector <Node*>& Nodes, bool displayMatricesDuringNumericalCalculation){
+void NewtonRaphsonSolver::calculateDifferenceBetweenNumericalAndAnalyticalJacobian(const std::vector<std::unique_ptr<Node>>&  Nodes, bool displayMatricesDuringNumericalCalculation){
 	/**
 	 * This function calculates the difference between the numerical and analytical Jacobians.
 	 * It is here for debugging purposes only, it should be used with caution as it displays the difference matrix.
@@ -862,8 +862,8 @@ void NewtonRaphsonSolver::calculateDifferenceBetweenNumericalAndAnalyticalJacobi
 	//calculate the difference:
 	gsl_matrix* Kdiff = gsl_matrix_calloc(nDim*nNodes,nDim*nNodes);
 	double d = 0;
-	for (int i=0; i<nDim*nNodes; ++i){
-		for (int j=0; j<nDim*nNodes; ++j){
+	for (size_t i=0; i<nDim*nNodes; ++i){
+		for (size_t j=0; j<nDim*nNodes; ++j){
 			double value = gsl_matrix_get(Knumerical,i,j) - gsl_matrix_get(K,i,j);
 			gsl_matrix_set(Kdiff,i,j,value);
 			d += value*value;
@@ -874,7 +874,7 @@ void NewtonRaphsonSolver::calculateDifferenceBetweenNumericalAndAnalyticalJacobi
 		displayMatrix(K,"normalK");
 		displayMatrix(Kdiff,"differenceKMatrix");
 	}
-	std::cout<<"norm of difference between numerical and analytical K: "<<d<<endl;
+	std::cout<<"norm of difference between numerical and analytical K: "<<d<<std::endl;
 	gsl_matrix_free(Kdiff);
 }
 
@@ -885,26 +885,26 @@ void NewtonRaphsonSolver::useNumericalJacobianInIteration(){
 void NewtonRaphsonSolver::displayMatrix(gsl_matrix* mat, string matname){
     int m = mat->size1;
     int n = mat->size2;
-    cout<<matname<<": "<<endl;
+    std::cout<<matname<<": "<<std::endl;
 
     for (int i =0; i<m; i++){
         for (int j =0; j<n; j++){
             cout.precision(4);
             cout.width(6);
-            cout<<gsl_matrix_get(mat,i,j)<<" ";
+            std::cout<<gsl_matrix_get(mat,i,j)<<" ";
         }
-        cout<<endl;
+        std::cout<<std::endl;
     }
-    cout<<endl;
+    std::cout<<std::endl;
 }
 
 void NewtonRaphsonSolver::displayMatrix(gsl_vector* mat, string matname){
     int m = mat->size;
-    cout<<matname<<": "<<endl;
+    std::cout<<matname<<": "<<std::endl;
     for (int i =0; i<m; i++){
-		cout.precision(4);
-		cout.width(6);
-		cout<<gsl_vector_get(mat,i)<<endl;
+		std::cout.precision(4);
+		std::cout.width(6);
+		std::cout<<gsl_vector_get(mat,i)<<std::endl;
     }
 }
 
@@ -945,11 +945,11 @@ void NewtonRaphsonSolver::checkMasterUpdate(int& dofMaster, int& masterId){
 	}
 }
 
-void NewtonRaphsonSolver::cleanPeripodialBindingFromMaster(int masterDoF, vector<Node*>& Nodes){
+void NewtonRaphsonSolver::cleanPeripodialBindingFromMaster(int masterDoF, const std::vector<std::unique_ptr<Node>>&  Nodes){
 	//order is [slave][master]
-	//cout<<" searching for master: "<<masterDoF<<endl;
+	//std::cout<<" searching for master: "<<masterDoF<<std::endl;
 	for (vector< vector<int> >::iterator iter = slaveMasterList.begin(); iter != slaveMasterList.end(); ) {
-	    //cout<<"checking slaveMasterList of size "<<slaveMasterList.size()<<" slave/master "<< (*iter)[0]<<" / "<<(*iter)[1]<<endl;
+	    //std::cout<<"checking slaveMasterList of size "<<slaveMasterList.size()<<" slave/master "<< (*iter)[0]<<" / "<<(*iter)[1]<<std::endl;
 		bool deletedItem = false;
 		if ((*iter)[1] == masterDoF){
 	    	//I have found a couple where this is a master, is the slave a peripodiaal node?
@@ -958,7 +958,7 @@ void NewtonRaphsonSolver::cleanPeripodialBindingFromMaster(int masterDoF, vector
 	    	int slaveId = (dofSlave-dim)/3;
 	    	if (Nodes[slaveId]->tissueType == 1){
 	    		//clearing the peripodial slave
-	    		//cout<<"deleting binding from peripodial node "<<Nodes[slaveId]<<" dim: "<<dim<<endl;
+	    		//std::cout<<"deleting binding from peripodial node "<<Nodes[slaveId]<<" dim: "<<dim<<std::endl;
 	    		Nodes[slaveId]->slaveTo[dim] = -1;
 	    		iter = slaveMasterList.erase(iter);
 	    		deletedItem = true;
@@ -983,7 +983,7 @@ bool NewtonRaphsonSolver::checkIfSlaveIsAlreadyMasterOfOthers(int dofSlave, int 
 	bool madeChange = false;
 	for(int i=0; i<n;++i){
 		if(slaveMasterList[i][1] == dofSlave){
-			cout<<"making change, slave was master of "<<slaveMasterList[i][0]<<endl;
+			std::cout<<"making change, slave was master of "<<slaveMasterList[i][0]<<std::endl;
 			//proposed slave is already a master, update the master to the proposed master
 			slaveMasterList[i][1] = dofMaster;
 			madeChange = true;

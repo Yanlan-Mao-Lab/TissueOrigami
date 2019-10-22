@@ -9,7 +9,7 @@
 
 #include "Analysis.h"
 
-Analysis::Analysis(int dim, string saveDirectoryToDisplayString, vector<Node*> &nodes, double boundingBoxWidth){
+Analysis::Analysis(int dim, string saveDirectoryToDisplayString, const std::vector<std::unique_ptr<Node>>& nodes, double boundingBoxWidth){
 	Dim = dim;
 	nNodes = nodes.size();
 	yPosForSideDVLine = 0.1;
@@ -51,53 +51,53 @@ Analysis::Analysis(int dim, string saveDirectoryToDisplayString, vector<Node*> &
 
 
 Analysis::~Analysis(){
-	for (int i=0; i<nNodes; ++i){
+	for (size_t i=0; i<nNodes; ++i){
 		delete[] connectivityMap[i];
 	}
     delete[] connectivityMap;
 }
 
-void Analysis::saveApicalCircumferencePosition(int timeInSec, vector<Node*> &nodes){
+void Analysis::saveApicalCircumferencePosition(int timeInSec, const std::vector<std::unique_ptr<Node>>& nodes){
 	//cout<<"inside save circ" <<endl;
 	//[time] [nodeId] [at-midline] [x] [y] [z]
-	for (vector<Node*>::iterator itNode = nodes.begin(); itNode<nodes.end(); ++itNode){
-		if ((*itNode)->atCircumference && (*itNode)->tissuePlacement == 1){
+	for (const auto& itNode : nodes){
+		if (itNode->atCircumference && itNode->tissuePlacement == 1){
 			saveFileCircumference<<timeInSec<<" ";
-			saveFileCircumference<<(*itNode)->Id<<" ";
-			if ((*itNode)->Position[1] == 0){
+			saveFileCircumference<<itNode->Id<<" ";
+			if (itNode->Position[1] == 0){
 				saveFileCircumference<<1<<" ";
 			}
 			else{
 				saveFileCircumference<<0<<" ";
 			}
-			saveFileCircumference<<(*itNode)->Position[0]<<" ";
-			saveFileCircumference<<(*itNode)->Position[1]<<" ";
-			saveFileCircumference<<(*itNode)->Position[2]<<endl;
+			saveFileCircumference<<itNode->Position[0]<<" ";
+			saveFileCircumference<<itNode->Position[1]<<" ";
+			saveFileCircumference<<itNode->Position[2]<<endl;
 		}
-		if (!(*itNode)->atCircumference && (*itNode)->tissuePlacement == 1 && (*itNode)->Position[1] == 0 ){
+		if (!itNode->atCircumference && itNode->tissuePlacement == 1 && itNode->Position[1] == 0 ){
 			saveFileCircumference<<timeInSec<<" ";
-			saveFileCircumference<<(*itNode)->Id<<" ";
+			saveFileCircumference<<itNode->Id<<" ";
 			saveFileCircumference<<1<<" ";
-			saveFileCircumference<<(*itNode)->Position[0]<<" ";
-			saveFileCircumference<<(*itNode)->Position[1]<<" ";
-			saveFileCircumference<<(*itNode)->Position[2]<<endl;
+			saveFileCircumference<<itNode->Position[0]<<" ";
+			saveFileCircumference<<itNode->Position[1]<<" ";
+			saveFileCircumference<<itNode->Position[2]<<endl;
 		}
 
 	}
 }
 
-void Analysis::setUpConnectivityMap(vector<Node*> &nodes){
+void Analysis::setUpConnectivityMap(const std::vector<std::unique_ptr<Node>> &nodes){
 	connectivityMap = new bool* [(const int) nNodes];
-	for (int i=0; i<nNodes; ++i){
+	for (size_t i=0; i<nNodes; ++i){
 		connectivityMap[i] = new bool [(const int) nNodes];
 		std::fill(connectivityMap[i],connectivityMap[i]+nNodes,false);
 		connectivityMap[i][i] = true;
 	}
-	for (vector<Node*>::iterator itNode = nodes.begin(); itNode<nodes.end(); ++itNode){
-		int n = (*itNode)->immediateNeigs.size();
-		int id = (*itNode)->Id;
+	for (const auto& itNode : nodes){
+		int n = itNode->immediateNeigs.size();
+		int id = itNode->Id;
 		for (int i=0; i<n; ++i){
-			int currNeigId = nodes[(*itNode)->immediateNeigs[i]]->Id;
+			int currNeigId = nodes[itNode->immediateNeigs[i]]->Id;
 			connectivityMap[currNeigId][id] = true;
 			connectivityMap[id][currNeigId] = true;
 		}
@@ -120,10 +120,10 @@ void Analysis::calculateBoundingBoxSizeAndAspectRatio(int timeInSec, double boun
 
 }
 
-void Analysis::setUpContourLinesDV(vector<Node*> &nodes, double boundingBoxWidth){
+void Analysis::setUpContourLinesDV(const std::vector<std::unique_ptr<Node>>& nodes, double boundingBoxWidth){
 	double posThreshold = 10E-2;
 	double negThreshold = (-1.0)*posThreshold;
-	for (int i=0 ; i<nNodes; ++i){
+	for (size_t i=0 ; i<nNodes; ++i){
 		if (nodes[i]->tissuePlacement == 0 ){ //tissue placement 0 is for basal nodes
 			if (nodes[i]->Position[1] > negThreshold && nodes[i]->Position[1] < posThreshold){
 				basalContourLineDVNodeIds.push_back(i);
@@ -139,14 +139,14 @@ void Analysis::setUpContourLinesDV(vector<Node*> &nodes, double boundingBoxWidth
 	sortPositionMinToMax(nodes, 0, basalContourLineDVNodeIds); //sort basalContourLineDVNodeIds with x position going from minimum to maximum
 	sortPositionMinToMax(nodes, 0, apicalContourLineDVNodeIds); //sort apicalContourLineDVNodeIds with x position going from minimum to maximum
 	cout<<" Apical contour Ids: ";
-	for (int i=0; i<apicalContourLineDVNodeIds.size(); ++i){
+	for (size_t i=0; i<apicalContourLineDVNodeIds.size(); ++i){
 		cout<<apicalContourLineDVNodeIds[i]<<" ";
 	}
 	cout<<endl;
 }
 
 
-void Analysis::calculateContourLineLengthsDV(vector<Node*> &nodes){
+void Analysis::calculateContourLineLengthsDV(const std::vector<std::unique_ptr<Node>>& nodes){
 	double currContourLength = 0;
 	//calculating contour length for basal DV axis:
 	int n = basalContourLineDVNodeIds.size();
@@ -190,67 +190,55 @@ void Analysis::updateSideContourPosition(double boundingBoxWidth){
 	yPosForSideDVLine = relativeYPosSideDVLine * boundingBoxWidth;
 }
 
-void Analysis::setUpSideApicalDVContour(vector<Node*> &nodes, double boundingBoxWidth){
+void Analysis::setUpSideApicalDVContour(const std::vector<std::unique_ptr<Node>>& nodes, double boundingBoxWidth){
 	//cout<<"entered setUpSideApicalDVContour"<<endl;
 	apicalContourLineDVSelectedYPositionsX.clear();
 	apicalContourLineDVSelectedYPositionsZ.clear();
 	updateSideContourPosition(boundingBoxWidth);
 	vector<double> initialPositionsInX;
 	//cout<<" y cut off positions: "<<yPosForSideDVLine<<" relative to tissue: "<<relativeYPosSideDVLine<<endl;
-	for (vector<Node*>::iterator itNode = nodes.begin(); itNode<nodes.end(); ++itNode){
-		if ((*itNode)->tissuePlacement == 1){
+	for (const auto& itNode : nodes){
+		if (itNode->tissuePlacement == 1){
 			//cout<<" checking node "<<(*itNode)->Id<<" # of immediate neigs: "<<(*itNode)->immediateNeigs.size()<<endl;
 			//checking only apical nodes
-			int nNeig = (*itNode)->immediateNeigs.size();
-			double diff0 = (*itNode)->Position[1]-yPosForSideDVLine;
+			int nNeig = itNode->immediateNeigs.size();
+			double diff0 = itNode->Position[1]-yPosForSideDVLine;
 			for (int i=0; i<nNeig; ++i){
-				if ((*itNode)->Id < (*itNode)->immediateNeigs[i]
-				    && nodes[(*itNode)->immediateNeigs[i]]->tissuePlacement == 1 ){
+				if (itNode->Id < itNode->immediateNeigs[i]
+				    && nodes[itNode->immediateNeigs[i]]->tissuePlacement == 1 ){
 					//cout<<" checking node "<<(*itNode)->Id<<" aginst node "<<nodes[(*itNode)->immediateNeigs[i]]->Id<<endl;
 					//checking only neigs with id numbers larger than mine, therefore have not been checked yet:
 					//checking only apical neigs
-					int id1 = (*itNode)->immediateNeigs[i];
+					int id1 = itNode->immediateNeigs[i];
 					double diff1 = nodes[id1]->Position[1]-yPosForSideDVLine;
 					if (diff0*diff1 < 0){
 						//the two nodes are on different sides of the line!:
 						//find the intersection point
 						double vec0To1[3];
 						for (int k=0; k<3; ++k){
-							vec0To1[k] = nodes[id1]->Position[k] - (*itNode)->Position[k];
+							vec0To1[k] = nodes[id1]->Position[k] - itNode->Position[k];
 						}
-						double scaleFactor = (yPosForSideDVLine-(*itNode)->Position[1])/vec0To1[1];
-						double pointX = (*itNode)->Position[0] + vec0To1[0]*scaleFactor;
-						double pointZ = (*itNode)->Position[2] + vec0To1[2]*scaleFactor;
+						double scaleFactor = (yPosForSideDVLine-itNode->Position[1])/vec0To1[1];
+						double pointX = itNode->Position[0] + vec0To1[0]*scaleFactor;
+						double pointZ = itNode->Position[2] + vec0To1[2]*scaleFactor;
 						apicalContourLineDVSelectedYPositionsX.push_back(pointX);
 						apicalContourLineDVSelectedYPositionsZ.push_back(pointZ);
 						//calculating the same point in the junction in original positions:
 						double vec0To1InitialPos[3];
 						for (int k=0; k<3; ++k){
-							vec0To1InitialPos[k] = nodes[id1]->initialPosition[k] - (*itNode)->initialPosition[k];
+							vec0To1InitialPos[k] = nodes[id1]->initialPosition[k] - itNode->initialPosition[k];
 						}
-						double pointXInitialPos =(*itNode)->initialPosition[0] + vec0To1InitialPos[0]*scaleFactor;
+						double pointXInitialPos =itNode->initialPosition[0] + vec0To1InitialPos[0]*scaleFactor;
 						initialPositionsInX.push_back(pointXInitialPos);
-						//cout<<"node: "<<(*itNode)->Id<<" initial pos: "<<(*itNode)->initialPosition[0]<<" "<<(*itNode)->initialPosition[1]<<" "<<(*itNode)->initialPosition[2]<<endl;
-						//cout<<"node: "<<(*itNode)->Id<<" current pos: "<<(*itNode)->Position[0]<<" "<<(*itNode)->Position[1]<<" "<<(*itNode)->Position[2]<<endl;
-						//cout<<"node: "<<id1<<" initial pos: "<<nodes[id1]->initialPosition[0]<<" "<<nodes[id1]->initialPosition[1]<<" "<<nodes[id1]->initialPosition[2]<<endl;
-						//cout<<"node: "<<id1<<" current pos: "<<nodes[id1]->Position[0]<<" "<<nodes[id1]->Position[1]<<" "<<nodes[id1]->Position[2]<<endl;
-						//cout<<"vec0To1: "<<vec0To1[0]<<" "<<vec0To1[1]<<" "<<vec0To1[2]<<" vec0To1InitialPos: "<<vec0To1InitialPos[0]<<" "<<vec0To1InitialPos[1]<<" "<<vec0To1InitialPos[2]<<endl;
-						//cout<<"scaleFactor "<<scaleFactor<<" selected current point "<<pointX<<" "<<yPosForSideDVLine<<" "<<pointZ<<" selected initial x: "<<pointXInitialPos<<endl;
 					}
 				}
 			}
 		}
 	}
 	sortPointsMinToMaxBasedOnInitialPos(initialPositionsInX, apicalContourLineDVSelectedYPositionsX,apicalContourLineDVSelectedYPositionsZ);
-	//sortPointsMinToMaxBasedFirstArray(apicalContourLineDVSelectedYPositionsX, apicalContourLineDVSelectedYPositionsZ, apicalContourLineDVSelectedYNodeCouples0,apicalContourLineDVSelectedYNodeCouples1);
-	//int nXpos = apicalContourLineDVSelectedYPositionsX.size();
-	//for (int i=0;i<nXpos;++i){
-	//	cout<<" side contour: "<<i<<" of "<<apicalContourLineDVSelectedYPositionsX.size()<<": "<<apicalContourLineDVSelectedYPositionsX[i]<<" "<<apicalContourLineDVSelectedYPositionsZ[i]<<" base: "<<initialPositionsInX[i]<<endl;
-	//}
-	//cout<<"finalised setUpSideApicalDVContour"<<endl;
 }
 
-void Analysis::findApicalKinkPointsDV(int timeInSec,  double boundingBoxXMin, double boundingBoxLength, double boundingBoxWidth, vector<Node*> &nodes){
+void Analysis::findApicalKinkPointsDV(int timeInSec,  double boundingBoxXMin, double boundingBoxLength, double boundingBoxWidth, const std::vector<std::unique_ptr<Node>>& nodes){
 	cout<<" inside findApicalKinkPointsDV"<<endl;
 	setUpSideApicalDVContour(nodes,boundingBoxWidth);
 	for (int DVLineIndex = 0; DVLineIndex<2; DVLineIndex++){
@@ -339,7 +327,7 @@ void Analysis::findApicalKinkPointsDV(int timeInSec,  double boundingBoxXMin, do
 	cout<<" finished findApicalKinkPointsDV "<<endl;
 }
 
-void Analysis::sortPositionMinToMax(vector<Node*> &nodes, int axisToSortWith, vector <int> &linkToArrayToSort ){
+void Analysis::sortPositionMinToMax(const std::vector<std::unique_ptr<Node>>& nodes, int axisToSortWith, vector <int> &linkToArrayToSort ){
 	int n = linkToArrayToSort.size();
 	bool swapped = true;
 	while (swapped){
@@ -441,13 +429,13 @@ void Analysis::calculateTissueVolumeMap	(vector<ShapeBase*> &elements, int timeI
 	cout<<" Time: "<<timeInSec<<" total tissue ideal volume: "<<totTissueIdealVolume<<" total tissue emergent volume:" <<totTissueEmergentVolume<<endl;
 }
 
-void Analysis::saveNodesOnFold(int timeInSec, vector<Node*>& Nodes){
+void Analysis::saveNodesOnFold(int timeInSec, const std::vector<std::unique_ptr<Node>>& Nodes){
 	int foldIds[(const int)nNodes];
 	std::fill(foldIds,foldIds+nNodes,-1);
 	int nextFoldId = 0;
-	for (vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-		int id = (*itNode)->Id;
-		if ((*itNode)->onFoldInitiation){
+	for (const auto& itNode : Nodes){
+		int id = itNode->Id;
+		if (itNode->onFoldInitiation){
 			int activeFoldId = nextFoldId;
 			vector<int> idsToChange;
 			//now go through connectivity map to see if any neigs have been assigned anything so far
@@ -462,7 +450,7 @@ void Analysis::saveNodesOnFold(int timeInSec, vector<Node*>& Nodes){
 			foldIds[id] =activeFoldId;
 			int n = idsToChange.size();
 			for (int i=0; i<n; ++i){
-				for (int j=0; j<nNodes; ++j){
+				for (size_t j=0; j<nNodes; ++j){
 					if (foldIds[j] == idsToChange[i]){
 						foldIds[j] = activeFoldId;
 					}
@@ -474,42 +462,42 @@ void Analysis::saveNodesOnFold(int timeInSec, vector<Node*>& Nodes){
 		}
 	}
 
-	for (vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-		if ((*itNode)->onFoldInitiation){
+	for (const auto& itNode : Nodes){
+		if (itNode->onFoldInitiation){
 			saveFileFoldMarkers.width(10);
 			saveFileFoldMarkers<<timeInSec;
 			saveFileFoldMarkers.width(10);
-			saveFileFoldMarkers<<(*itNode)->Id;
+			saveFileFoldMarkers<<itNode->Id;
 			saveFileFoldMarkers.width(10);
 			saveFileFoldMarkers.precision(3);
-			saveFileFoldMarkers<<(*itNode)->Position[0];
+			saveFileFoldMarkers<<itNode->Position[0];
 			saveFileFoldMarkers.width(10);
 			saveFileFoldMarkers.precision(3);
-			saveFileFoldMarkers<<(*itNode)->Position[1];
+			saveFileFoldMarkers<<itNode->Position[1];
 			saveFileFoldMarkers.width(10);
 			saveFileFoldMarkers.precision(3);
-			saveFileFoldMarkers<<(*itNode)->Position[2];
+			saveFileFoldMarkers<<itNode->Position[2];
 			saveFileFoldMarkers.width(10);
 			saveFileFoldMarkers.precision(3);
-			saveFileFoldMarkers<<foldIds[(*itNode)->Id];
+			saveFileFoldMarkers<<foldIds[itNode->Id];
 			saveFileFoldMarkers<<endl;
 
 			cout.width(10);
 			cout<<timeInSec;
 			cout.width(10);
-			cout<<(*itNode)->Id;
+			cout<<itNode->Id;
 			cout.width(10);
 			cout.precision(3);
-			cout<<(*itNode)->Position[0];
+			cout<<itNode->Position[0];
 			cout.width(10);
 			cout.precision(3);
-			cout<<(*itNode)->Position[1];
+			cout<<itNode->Position[1];
 			cout.width(10);
 			cout.precision(3);
-			cout<<(*itNode)->Position[2];
+			cout<<itNode->Position[2];
 			cout.width(10);
 			cout.precision(3);
-			cout<<foldIds[(*itNode)->Id];
+			cout<<foldIds[itNode->Id];
 			cout<<endl;
 
 		}

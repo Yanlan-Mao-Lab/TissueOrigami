@@ -9,17 +9,19 @@
 #define ANALYSIS_H_
 
 #include <vector>
+#include <memory>
 #include "Node.h"
 #include "ShapeBase.h"
+
 using namespace std;
 
 class Analysis{
 
 protected:
    //double getApicalSideLengthAverage();
-	int Dim ;		//dimensions of the system, should be 3D.
-	int nNodes;		//number of nodes of the system to be analysed
-	int nElements; //number of elements of the system to be analysed
+	size_t Dim ;		//dimensions of the system, should be 3D.
+	size_t nNodes;		//number of nodes of the system to be analysed
+	size_t nElements; //number of elements of the system to be analysed
 
 	ofstream saveFileVolumeMaps;
 	ofstream saveFileLenghtMeasurements;
@@ -29,31 +31,30 @@ protected:
 	string saveDirectoryString;
 	vector <int> apicalContourLineDVNodeIds;
 	vector <int> basalContourLineDVNodeIds;
-	//vector<vector<bool> > connectivityMap;
 	bool** connectivityMap;
-	void setUpConnectivityMap(vector<Node*> &nodes);
+	void setUpConnectivityMap(const std::vector<std::unique_ptr<Node>>& nodes);
 public:
 	double yPosForSideDVLine;
 	double relativeYPosSideDVLine;
 	vector<double> apicalContourLineDVSelectedYPositionsX;
 	vector<double> apicalContourLineDVSelectedYPositionsZ;
-	Analysis(int dim, string saveDirectoryToDisplayString,vector<Node*> &nodes, double boundingBoxWidth);
+	Analysis(int dim, string saveDirectoryToDisplayString, const std::vector<std::unique_ptr<Node>>& nodes, double boundingBoxWidth);
 	~Analysis();
 
 	void calculateBoundingBoxSizeAndAspectRatio(int timeInSec,double boundingBoxLength, double boundingBoxWidth);
-	void sortPositionMinToMax(vector<Node*> &nodes, int axisToSortWith, vector <int> &linkToArrayToSort );
+	void sortPositionMinToMax(const std::vector<std::unique_ptr<Node>>& nodes, int axisToSortWith, vector <int> &linkToArrayToSort );
 	void sortPointsMinToMaxBasedFirstArray(vector<double> &x, vector<double> &z, vector<int> &baseNodeId0, vector <int> &baseNodeId1);
 	void sortPointsMinToMaxBasedOnInitialPos(vector<double> &base, vector<double> &x, vector<double> &z);
-	void setUpContourLinesDV(vector<Node*> &nodes, double boundingBoxWidth);
-	void calculateContourLineLengthsDV(vector<Node*> &nodes);
-	void setUpSideApicalDVContour(vector<Node*> &nodes, double boundingBoxWidth);
+	void setUpContourLinesDV(const std::vector<std::unique_ptr<Node>>& nodes, double boundingBoxWidth);
+	void calculateContourLineLengthsDV(const std::vector<std::unique_ptr<Node>>& nodes);
+	void setUpSideApicalDVContour(const std::vector<std::unique_ptr<Node>>& nodes, double boundingBoxWidth);
 	void updateSideContourPosition(double boundingBoxSizeY);
-	void findApicalKinkPointsDV(int timeInSec, double boundingBoxXMin,  double boundingBoxLength, double boundingBoxWidth, vector<Node*> &nodes);
-	void setUpContourLinesAP(vector<Node*> &nodes);
-	void calculateContourLineLengthsAP(vector<Node*> &nodes);
+	void findApicalKinkPointsDV(int timeInSec, double boundingBoxXMin,  double boundingBoxLength, double boundingBoxWidth, const std::vector<std::unique_ptr<Node>>& nodes);
+	void setUpContourLinesAP(const std::vector<std::unique_ptr<Node>>& nodes);
+	void calculateContourLineLengthsAP(const std::vector<std::unique_ptr<Node>>& nodes);
 	void calculateTissueVolumeMap(vector<ShapeBase*> &elements, int timeInSec, double boundingBoxXMin, double boundingBoxYMin, double boundingBoxLength, double boundingBoxWidth);
-	void saveNodesOnFold(int timeInSec, vector<Node*>& Nodes);
-	void saveApicalCircumferencePosition(int timeInSec, vector<Node*> &nodes);
+	void saveNodesOnFold(int timeInSec, const std::vector<std::unique_ptr<Node>>& Nodes);
+	void saveApicalCircumferencePosition(int timeInSec, const std::vector<std::unique_ptr<Node>>& nodes);
 
 };
 

@@ -30,16 +30,16 @@ protected:
     void calculateReferenceVolume();                                        ///< This function calculateds the volume of the reference element.
 
     void calculatePlaneNormals(double** normals);       	///< This function calculates the plane normals for the triangular surfaces constructing the prism.
-    void assignNodalVector(double* vec, int id0, int id1);		///< This function calculates the 3D vector from nodes indexed at id0 to id1.
+    void assignNodalVector(double* vec, size_t id0, size_t id1);		///< This function calculates the 3D vector from nodes indexed at id0 to id1.
     bool checkNodePlaneConsistency(double** normals);		///< This functions checks the planes of the elemetn as part of health check.
     void setInitialEdgeLenghts();                                           ///< This function sets the initial edge lengths of the element, will be essential in deciding if the elemetn should collapse its surfaces to avoid flipping.
     void checkEdgeLenghtsForBinding(std::vector<int>& masterIds, std::vector<int>& slaveIds);   ///< This function checks the edge lengths of the prism to decide if the elemetn should collapse its surfaces to avoid flipping.
     double getApicalSideLengthAverage();    			///< This function returns the average edge length of the apical surface.
     double getBasalSideLengthAverage();     				///< This function returns the average edge length of the basal surface.
-    void assignExposedSurfaceAreaIndices(vector <Node*>& Nodes);  ///< This function assigns the indices of externally exposed surfaces of the prism.
+    void assignExposedSurfaceAreaIndices();  ///< This function assigns the indices of externally exposed surfaces of the prism.
 
 public:
-    Prism(int* NodeIds,vector<Node*>& Nodes, int CurrId, bool thereIsPlasticDeformation);	//< constructor
+    Prism(int* NodeIds, const std::vector<std::unique_ptr<Node>>& Nodes, int CurrId);	//< constructor
     ~Prism(); //< destructor
     void  setElasticProperties(double EApical, double EBasal, double EMid,  double EECM, double v); ///< This function sets the elastic properties of the prism.
 
@@ -57,8 +57,8 @@ public:
     void calculateBasalArea();                  ///< This function calculates the basal area of the prism.
 
     void updateElasticProperties();             ///< This function updates the elastic properties of the prism upon perturbation.
-    void setBasalNeigElementId(vector<ShapeBase*>& elementsList); ///< This function sets the basal neighboiur of this element, which has an apical surface overlapping completely with teh basal surface of this prism.
-    void constructElementStackList(const int discretisationLayers, vector<ShapeBase*>& elementsList);		///< This function constructs the apical-basal element stack list that this prosm resides in.	
+    void setBasalNeigElementId(const std::vector <std::unique_ptr<ShapeBase>>&  elementsList); ///< This function sets the basal neighboiur of this element, which has an apical surface overlapping completely with teh basal surface of this prism.
+    void constructElementStackList(const int discretisationLayers, const std::vector <std::unique_ptr<ShapeBase>>&  elementsList);		///< This function constructs the apical-basal element stack list that this prosm resides in.
     void getApicalNodeIds(vector <int> &nodeIds); //< This function writes the apical node ids to the input vector
     void getApicalNodeIndicesOnElement(vector <int> &apicalNodeIndices); //< This function writes the apical node indices of the lement to the input vector	
     void checkRotationConsistency3D();          ///< This function checks if the nodes of the prosm rotate counter-clock vise, and corrects if not.

@@ -10,21 +10,21 @@
 
 
 void 	ShapeBase::ParentErrorMessage(string functionName){
-	cerr<<"You are calling the function: "<<functionName<<" from a parent here, check declaration is via pointers"<<endl;
+	std::cerr<<"You are calling the function: "<<functionName<<" from a parent here, check declaration is via pointers"<<std::endl;
 }
 
 bool 	ShapeBase::ParentErrorMessage(string functionName, bool returnValue){
-	cerr<<"You are calling the function: "<<functionName<<" from a parent here, check declaration is via pointers"<<endl;
+	std::cerr<<"You are calling the function: "<<functionName<<" from a parent here, check declaration is via pointers"<<std::endl;
 	return returnValue;
 }
 
 double 	ShapeBase::ParentErrorMessage(string functionName, double returnValue){
-	cerr<<"You are calling the function: "<<functionName<<" from a parent here, check declaration is via pointers"<<endl;
+	std::cerr<<"You are calling the function: "<<functionName<<" from a parent here, check declaration is via pointers"<<std::endl;
 	return returnValue;
 }
 
 int 	ShapeBase::ParentErrorMessage(string functionName, int returnValue){
-	cerr<<"You are calling the function: "<<functionName<<" from a parent here, check declaration is via pointers"<<endl;
+	std::cerr<<"You are calling the function: "<<functionName<<" from a parent here, check declaration is via pointers"<<std::endl;
 	return returnValue;
 }
 
@@ -49,13 +49,13 @@ void	ShapeBase::setShapeType(string TypeName){
 		this->ShapeType = 3;
 	}
 	else if (TypeName == "Triangle"){
-		//cout<<"set shape type to triangle"<<endl;
+		//std::cout<<"set shape type to triangle"<<std::endl;
 		this->ShapeType = 4;
 	}
 	else{
 		this->ShapeType= -100;
 	};
-	//cout<<"finalised set shape type"<<endl;
+	//std::cout<<"finalised set shape type"<<std::endl;
 }
 
 void	ShapeBase::setIdentificationColour(){
@@ -76,7 +76,7 @@ void	ShapeBase::setIdentificationColour(){
 	else{
 		IdentifierColour[0] = 0;
 	}
-	//cout<<"IdentifierColour: "<<IdentifierColour[0]<<" "<<IdentifierColour[1]<<" "<<IdentifierColour[2]<<endl;
+	//std::cout<<"IdentifierColour: "<<IdentifierColour[0]<<" "<<IdentifierColour[1]<<" "<<IdentifierColour[2]<<std::endl;
 }
 
 int		ShapeBase::getShapeType(){
@@ -166,7 +166,7 @@ void 	ShapeBase::setZRemodellingSoFar(double zRemodellingSoFar){
 
 void ShapeBase::updateInternalViscosityTest(){
 	double d[2] = {0.0,0.0};
-	for (int i = 0; i<nNodes; ++i ){
+	for (size_t i = 0; i<nNodes; ++i ){
 		d[0] += Positions[i][0];
 		d[1] += Positions[i][1];
 	}
@@ -186,7 +186,7 @@ double 	ShapeBase::getPoissonRatio(){
 }
 
 std::array<double,3> ShapeBase::getGrowthRate(){
-	//cout<<"Element "<<Id<<" Growth rate: "<<GrowthRate[0]<<" "<<GrowthRate[1]<<" "<<GrowthRate[2]<<endl;
+	//std::cout<<"Element "<<Id<<" Growth rate: "<<GrowthRate[0]<<" "<<GrowthRate[1]<<" "<<GrowthRate[2]<<std::endl;
 	return GrowthRate;
 }
 
@@ -237,7 +237,7 @@ void ShapeBase::createMatrixCopy(gsl_matrix* dest, gsl_matrix* src){
     }
 }
 
-double* ShapeBase::getShapeChangeRate(){
+std::array<double,6> ShapeBase::getShapeChangeRate(){
 	return ShapeChangeRate;
 }
 
@@ -331,11 +331,11 @@ bool ShapeBase::isGrowthRateApplicable( int sourceTissue, double& weight, double
 	return false;
 }
 
-void ShapeBase::updateGrowthWillBeScaledDueToApikobasalRedistribution(bool thisFunctionShrinksApical, double scale, vector<int>& ellipseBandIdsForGrowthRedistribution){
+void ShapeBase::updateGrowthWillBeScaledDueToApikobasalRedistribution(bool thisFunctionShrinksApical, vector<int>& ellipseBandIdsForGrowthRedistribution){
 	if(tissueType == 0){ //columnar tissue
 		bool insideEllipseBandWithRedistribution = false;
 		if (!isECMMimicing && insideEllipseBand){
-			for (int i=0; i<ellipseBandIdsForGrowthRedistribution.size(); ++i){
+			for (size_t i=0; i<ellipseBandIdsForGrowthRedistribution.size(); ++i){
 				if (coveringEllipseBandId == ellipseBandIdsForGrowthRedistribution[i]){
 					insideEllipseBandWithRedistribution =  true;
 					break;
@@ -358,7 +358,7 @@ void ShapeBase::updateGrowthWillBeScaledDueToApikobasalRedistribution(bool thisF
 	}
 }
 
-void ShapeBase::scaleGrowthForZRedistribution( double& x, double& y, double& z, int sourceTissue){
+void ShapeBase::scaleGrowthForZRedistribution( double& x, double& y, double& z){
     /** This function will modify the incremental growth deformation gradient of the element to reflect the
      * volume redistribution in the height of the tissue. First check point id for if there is such
      * redistribution in simulaiton. \n
@@ -411,7 +411,7 @@ double ShapeBase::getCurrentVolume(){
      * Then the reference shape volume is scaled.
      */
      	double J = 0;
-	for (int iter =0; iter<numberOfGaussPoints;++iter){
+	for (size_t iter =0; iter<numberOfGaussPoints;++iter){
 		J +=detFs[iter]*gaussWeights[iter];
 	}
 	double currentVolume =J * ReferenceShape->Volume;
@@ -427,7 +427,7 @@ gsl_matrix* ShapeBase::getCurrentFe(){
 	gsl_matrix* FeAvr = gsl_matrix_calloc(3,3);
 	gsl_matrix* Fetmp = gsl_matrix_calloc(3,3);
 
-	for (int iter =0; iter<numberOfGaussPoints;++iter){
+	for (size_t iter =0; iter<numberOfGaussPoints;++iter){
 		createMatrixCopy(Fetmp, FeMatrices[iter]);
 		gsl_matrix_scale(Fetmp,gaussWeights[iter]);
 		gsl_matrix_add(FeAvr, Fetmp);
@@ -446,7 +446,7 @@ void ShapeBase::relaxElasticForces(){
 	createMatrixCopy(tmpFgForInversion,Fg);
 	bool inverted = InvertMatrix(tmpFgForInversion, InvFg);
 	if (!inverted){
-		cerr<<"Fg not inverted!!"<<endl;
+		std::cerr<<"Fg not inverted!!"<<std::endl;
 	}
 	double detFg = determinant3by3Matrix(Fg);
 	GrownVolume = detFg*ReferenceShape->Volume;
@@ -457,14 +457,14 @@ void ShapeBase::relaxElasticForces(){
 void ShapeBase::calculateFgFromRates(double dt, double x, double y, double z, gsl_matrix* rotMat, gsl_matrix* increment, int sourceTissue, double zMin, double zMax){
     /**
      * The current growth deformation gradient increment is calculated from rates and rotation.\n
-     * First check point is for cheking if the growth function is applicable to the element, via
+     * First check point is for checking if the growth function is applicable to the element, via
      * ShapeBase#isGrowthRateApplicable. If the element is growing, the diagonal of the growth increment
      * is obtained. Then the increment is rotated with a tensor rotation (M' = R M R^T), using the input rotation matrix.
      */
      	double tissueWeight;
 	bool continueCalaculation = isGrowthRateApplicable(sourceTissue, tissueWeight, zMin, zMax);
 	if (continueCalaculation){
-		scaleGrowthForZRedistribution(x,y,z,sourceTissue);
+		scaleGrowthForZRedistribution(x,y,z);
 		double gx = exp(x*tissueWeight*dt);
 		double gy = exp(y*tissueWeight*dt);
 		double gz = exp(z*tissueWeight*dt);
@@ -591,7 +591,7 @@ void ShapeBase::calculateFgFromGridCorners(int gridGrowthsInterpolationType, dou
 		}
 		/** Then growth is scaled if there is any distribution of tissue volume in z axis, thourgh ShapeBase#scaleGrowthForZRedistribution.
          	*/
-		scaleGrowthForZRedistribution(growth[0],growth[1],growth[2],sourceTissue);
+		scaleGrowthForZRedistribution(growth[0],growth[1],growth[2]);
 
 		for (int axis =0; axis<3; axis++){
 			double gAxis = exp(growth[axis]*dt);
@@ -662,7 +662,7 @@ void ShapeBase::updateGrowthIncrement(gsl_matrix* columnar, gsl_matrix* peripodi
 }
 
 void ShapeBase::updateShapeChangeIncrement(gsl_matrix* columnarShapeChangeIncrement){
-	//cout<<" Element: "<<Id<<endl;
+	//std::cout<<" Element: "<<Id<<std::endl;
 	//displayMatrix(columnarShapeChangeIncrement,"currIncrementalShapeChangeIncrement");
 	gsl_matrix* temp = gsl_matrix_calloc(nDim,nDim);
 	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, columnarShapeChangeIncrement, shapeChangeIncrement, 0.0, temp);
@@ -713,24 +713,24 @@ void ShapeBase::convertRelativePosToGridIndex(double* relpos, int& indexX, int &
 	fracX  = relpos[0] - indexX;
 	indexY = floor(relpos[1]);
 	fracY  = relpos[1] - indexY;
-	//cout<<" indexX "<<indexX<<" fracX "<<fracX<<" indexY "<<indexY<<" fracY "<<fracY<<endl;
+	//std::cout<<" indexX "<<indexX<<" fracX "<<fracX<<" indexY "<<indexY<<" fracY "<<fracY<<std::endl;
 	if (indexX >= nGridX-1) { //this is for the point that is exactly the point determining the bounding box high end in X, or the side elements for columnar parameter generation (outside the bounding box by definition
 		indexX = nGridX-2;
 		fracX = 1.0;
-		//cout<<" in if 1, indexX: "<<indexX<<" fracX: "<<fracX<<endl;
+		//std::cout<<" in if 1, indexX: "<<indexX<<" fracX: "<<fracX<<std::endl;
 	}else if (indexX<0){
 		indexX = 0;
 		fracX = 0.0;
-		//cout<<" in if 2, indexX: "<<indexX<<" fracX: "<<fracX<<endl;
+		//std::cout<<" in if 2, indexX: "<<indexX<<" fracX: "<<fracX<<std::endl;
 	}
 	if (indexY >= nGridY-1) {//this is for the point that is exactly the point determining the bounding box high end in X, or the side elements for columnar parameter generation (outside the bounding box by definition
 		indexY = nGridY-2;
 		fracY = 1.0;
-		//cout<<" in if 3, indexY: "<<indexY<<" fracY: "<<fracY<<endl;
+		//std::cout<<" in if 3, indexY: "<<indexY<<" fracY: "<<fracY<<std::endl;
 	}else if (indexY<0){
 		indexY = 0;
 		fracY = 0.0;
-		//cout<<" in if 4, indexY: "<<indexY<<" fracY: "<<fracY<<endl;
+		//std::cout<<" in if 4, indexY: "<<indexY<<" fracY: "<<fracY<<std::endl;
 	}
 }
 
@@ -741,7 +741,7 @@ void 	ShapeBase::readNodeIds(int* inpNodeIds){
 	 *  There is no checkpoint to ensure the size of the array input pointer points to is equal to ShapeBase#nNodes.
 	 *
 	 */
-	for (int i=0; i<nNodes; ++i){
+	for (size_t i=0; i<nNodes; ++i){
 		this->NodeIds[i] = inpNodeIds[i];
 	}
 }
@@ -750,10 +750,10 @@ void 	ShapeBase::displayName(){
 	/**
 	 *  This function will write the shape type and shape id to standard output.
 	 */
-	cout<<"Type: "<<this->ShapeType<<" Id: "<<this->Id<<endl;
+	std::cout<<"Type: "<<this->ShapeType<<" Id: "<<this->Id<<std::endl;
 }
 
-void 	ShapeBase::setPositionMatrix(vector<Node*>& Nodes){
+void 	ShapeBase::setPositionMatrix(const std::vector<std::unique_ptr<Node>>& Nodes){
 	/**
 	 *  This function will take the address of a Nodes pointers vector (It should be the Simulation#Nodes vector)
 	 *  It will go through the ShapeBase#NodeIds in a nested loop of ShapeBase#nNodes and ShapeBase#nDim,
@@ -765,7 +765,7 @@ void 	ShapeBase::setPositionMatrix(vector<Node*>& Nodes){
 	const int n = nNodes;
 	const int dim = nDim;
 	Positions = new double*[n];
-	for (int i = 0; i<nNodes; ++i){
+	for (size_t i = 0; i<nNodes; ++i){
 		Positions[i] = new double[dim];
 		for (int j = 0; j<dim; ++j){
 			Positions[i][j] = Nodes[NodeIds[i]]->Position[j];
@@ -773,7 +773,7 @@ void 	ShapeBase::setPositionMatrix(vector<Node*>& Nodes){
 	}
 }
 
-void 	ShapeBase::setTissuePlacement(vector<Node*>& Nodes){
+void 	ShapeBase::setTissuePlacement(const std::vector<std::unique_ptr<Node>>& Nodes){
 	/**
 	 *  This function will take the address of a Nodes pointers vector (It should be the Simulation#Nodes vector)
 	 *  Checking the nodes that construct the element, the function will decide the placement of the element
@@ -791,7 +791,7 @@ void 	ShapeBase::setTissuePlacement(vector<Node*>& Nodes){
 	bool hasBasalNode = false;
 	bool hasLateralNode = false;
 	spansWholeTissue = false;
-	for (int i = 0; i<nNodes; ++i){
+	for (size_t i = 0; i<nNodes; ++i){
 		if (Nodes[NodeIds[i]]->tissuePlacement == 1){
 			hasApicalNode = true;
 		}
@@ -864,7 +864,7 @@ void ShapeBase::setActinMimicing(bool isActinMimicing){
 	this->isActinMimicing = isActinMimicing;
 }
 
-void 	ShapeBase::setTissueType(vector<Node*>& Nodes){
+void 	ShapeBase::setTissueType(const std::vector<std::unique_ptr<Node>>& Nodes){
 	/**
 	* The tissue can be of columnar epithelum type, peripodial type, or be connecting the two.
 	* Depending on the owner nodes of the element, if the element has any linker type nodes, it will be a linker node.
@@ -875,7 +875,7 @@ void 	ShapeBase::setTissueType(vector<Node*>& Nodes){
 	bool hasColumnarNode = false;
 	bool hasPeripodialNode = false;
 	bool hasLinkerNode = false;
-	for (int i = 0; i<nNodes; ++i){
+	for (size_t i = 0; i<nNodes; ++i){
 		if (Nodes[NodeIds[i]]->tissueType == 0){
 			hasColumnarNode = true;
 		}
@@ -899,15 +899,15 @@ void 	ShapeBase::setTissueType(vector<Node*>& Nodes){
 		tissueType = 0;
 	}
 	else {
-		cerr<<"Element is not placed into tissue correctly, Id: "<<Id<<endl;
+		std::cerr<<"Element is not placed into tissue correctly, Id: "<<Id<<std::endl;
 	}
-	//cout<<"Element : "<<Id<<" hasColumnarNode: "<<hasColumnarNode<<" hasPeripodialmNode "<<hasPeripodialNode<<" tissueType: "<<tissueType<<endl;
+	//std::cout<<"Element : "<<Id<<" hasColumnarNode: "<<hasColumnarNode<<" hasPeripodialmNode "<<hasPeripodialNode<<" tissueType: "<<tissueType<<std::endl;
 }
 
 void 	ShapeBase::setGrowthWeightsViaTissuePlacement (double periWeight){
 	peripodialGrowthWeight = periWeight;
 	columnarGrowthWeight = 1.0 - peripodialGrowthWeight;
-	//cout<<" Element: "<<Id<<" peripodialness: "<<peripodialGrowthWeight<<" columnarness: "<<columnarGrowthWeight<<endl;
+	//std::cout<<" Element: "<<Id<<" peripodialness: "<<peripodialGrowthWeight<<" columnarness: "<<columnarGrowthWeight<<std::endl;
 }
 
 void 	ShapeBase::setReferencePositionMatrix(){
@@ -921,12 +921,12 @@ void 	ShapeBase::setReferencePositionMatrix(){
 	*  and the positions of saves steps are loaded afterwards.
 	*
 	*/
-	const int n = nNodes;
-	const int dim = nDim;
+	const size_t n = nNodes;
+	const size_t dim = nDim;
 	ReferenceShape -> Positions = new double*[n];
-	for (int i = 0; i<nNodes; ++i){
+	for (size_t i = 0; i<nNodes; ++i){
 		ReferenceShape -> Positions[i] = new double[dim];
-		for (int j = 0; j<dim; ++j){
+		for (size_t j = 0; j<dim; ++j){
 			ReferenceShape -> Positions[i][j] = Positions[i][j];
 		}
 	}
@@ -939,7 +939,7 @@ void ShapeBase::setFg(gsl_matrix* currFg){
     createMatrixCopy(tmpFgForInversion, Fg);
     bool inverted = InvertMatrix(tmpFgForInversion, InvFg);
     if (!inverted){
-    	cerr<<"Fg cannot be inverted!"<<endl;
+    	std::cerr<<"Fg cannot be inverted!"<<std::endl;
     }
     gsl_matrix_free(tmpFgForInversion);
 }
@@ -991,7 +991,7 @@ void 	ShapeBase::updateShapeFromSave(ifstream& file){
 }
 
 void 	ShapeBase::updateNodeIdsFromSave(ifstream& file){
-	for (int i = 0; i<nNodes; ++i){
+	for (size_t i = 0; i<nNodes; ++i){
 		int savedId;
 		file >> savedId;
 		NodeIds[i] = savedId;
@@ -999,12 +999,12 @@ void 	ShapeBase::updateNodeIdsFromSave(ifstream& file){
 }
 
 bool 	ShapeBase::readNodeIdData(ifstream& file){
-	for (int i = 0; i<nNodes; ++i){
+	for (size_t i = 0; i<nNodes; ++i){
 		int savedId;
 		file >> savedId;
 
 		if (NodeIds[i] != savedId){
-			cout<<"NodeId "<<NodeIds[i]<<" savedId "<<savedId<<endl;
+			std::cout<<"NodeId "<<NodeIds[i]<<" savedId "<<savedId<<std::endl;
 			return false;
 		}
 	}
@@ -1012,35 +1012,35 @@ bool 	ShapeBase::readNodeIdData(ifstream& file){
 }
 
 void 	ShapeBase::updateReferencePositionMatrixFromSave(ifstream& file){
-	for (int i = 0; i<nNodes; ++i){
-		for (int j = 0; j<nDim; ++j){
+	for (size_t i = 0; i<nNodes; ++i){
+		for (size_t j = 0; j<nDim; ++j){
 			double savedPos;
 			file >> savedPos;
 			ReferenceShape -> Positions[i][j] = savedPos;
-			//cout<<"savedPos: "<<savedPos<<endl;
+			//std::cout<<"savedPos: "<<savedPos<<std::endl;
 		}
 	}
 }
 
 void 	ShapeBase::updateReferencePositionMatrixFromInput(double** inputPos){
-	for (int i = 0; i<nNodes; ++i){
-		for (int j = 0; j<nDim; ++j){
+	for (size_t i = 0; i<nNodes; ++i){
+		for (size_t j = 0; j<nDim; ++j){
 			ReferenceShape -> Positions[i][j] = inputPos[i][j];
 		}
 	}
 }
 
 bool	ShapeBase::readReferencePositionData(ifstream& file){
-	for (int i = 0; i<nNodes; ++i){
-		for (int j = 0; j<nDim; ++j){
+	for (size_t i = 0; i<nNodes; ++i){
+		for (size_t j = 0; j<nDim; ++j){
 			double savedPos;
 			file >> savedPos;
-			//cout<<Id<<" "<<i<<" "<<j<<" ReferenceShape->Positions: "<<ReferenceShape -> Positions[i][j]<<" savedPos "<<savedPos<<endl;
+			//std::cout<<Id<<" "<<i<<" "<<j<<" ReferenceShape->Positions: "<<ReferenceShape -> Positions[i][j]<<" savedPos "<<savedPos<<std::endl;
 			if (ReferenceShape -> Positions[i][j] != savedPos){
 				//the positions are not equal, it may be an issue of rounding, my satisfactory precision is 2%
 				float percentError = (ReferenceShape -> Positions[i][j] - savedPos) / ReferenceShape -> Positions[i][j]*100.0;
 				if (percentError>2.0 || percentError< -2.0){
-					cout<<"ReferenceShape->Positions: "<<ReferenceShape -> Positions[i][j]<<" savedPos "<<savedPos<<" percent Error: "<<percentError<<endl;
+					std::cout<<"ReferenceShape->Positions: "<<ReferenceShape -> Positions[i][j]<<" savedPos "<<savedPos<<" percent Error: "<<percentError<<std::endl;
 					return false;
 				}
 			}
@@ -1053,38 +1053,38 @@ void 	ShapeBase::updateReferencePositionMatrixFromMeshInput(ifstream& file){
 	updateReferencePositionMatrixFromSave(file);
 }
 
-void ShapeBase::updateElementVolumesAndTissuePlacementsForSave(vector<Node*>& Nodes){
+void ShapeBase::updateElementVolumesAndTissuePlacementsForSave(const std::vector<std::unique_ptr<Node>>& Nodes){
 	calculateReferenceVolume();
 	setTissuePlacement(Nodes);
 	setTissueType(Nodes);
 }
 
 void 	ShapeBase::displayNodeIds(){
-	for (int i=0; i<nNodes;++i){
-			cout<<NodeIds[i]<<"  ";
-		cout<<endl;
+	for (size_t i=0; i<nNodes;++i){
+		std::cout<<NodeIds[i]<<"  ";
+		std::cout<<std::endl;
 	}
 }
 
 void 	ShapeBase::displayPositions(){
-	for (int i=0; i<nNodes;++i){
-		for (int j =0; j<nDim; ++j){
-			cout<<Positions[i][j]<<"  ";
+	for (size_t i=0; i<nNodes;++i){
+		for (size_t j =0; j<nDim; ++j){
+			std::cout<<Positions[i][j]<<"  ";
 		}
-		cout<<endl;
+		std::cout<<std::endl;
 	}
 }
 
 void 	ShapeBase::displayReferencePositions(){
-	for (int i=0; i<nNodes;++i){
-		for (int j =0; j<nDim; ++j){
-			cout<<ReferenceShape ->Positions[i][j]<<"  ";
+	for (size_t i=0; i<nNodes;++i){
+		for (size_t j =0; j<nDim; ++j){
+			std::cout<<ReferenceShape ->Positions[i][j]<<"  ";
 		}
-		cout<<endl;
+		std::cout<<std::endl;
 	}
 }
 
-int*	ShapeBase::getIdentifierColour(){
+std::array<int,3>	ShapeBase::getIdentifierColour(){
 	return IdentifierColour;
 }
 
@@ -1130,7 +1130,7 @@ void 	ShapeBase::getStrain(int type, float &StrainMag){
 	}
 }
 
-void 	ShapeBase::getNodeBasedPysProp(int type, int NodeNo, vector<Node*>& Nodes, float& PysPropMag){
+void 	ShapeBase::getNodeBasedPysProp(int type, int NodeNo, const std::vector<std::unique_ptr<Node>>& Nodes, float& PysPropMag){
 	PysPropMag = 0.0;
 	if (type == 0){
 		PysPropMag = Nodes[NodeIds[NodeNo]] -> externalViscosity[2];
@@ -1151,9 +1151,7 @@ void 	ShapeBase::getPysProp(int type, float &PysPropMag, double dt){
 		std::array<double,3> growth{0};
 		growth = getGrowthRate();
         double timescale = 24*60.0*60.0; //reporting per 24 hours
-        //for (int i =0 ; i< nDim-1 ; ++i){ //reporting only x & y
-        //for (int i =2 ; i< nDim ; ++i){ //reporting only z
-        for (int i =0; i< nDim ; ++i){//reporting x,y,z
+        for (size_t i =0; i< nDim ; ++i){//reporting x,y,z
 			//growth is in form exp(r*dt), get r first, then adjust the time scale, and report the exponential form still:
 			//And I want to rate of volume growth, that is x*y*z
 			double value = exp(log(growth[i])/dt*timescale);
@@ -1168,8 +1166,7 @@ void 	ShapeBase::getPysProp(int type, float &PysPropMag, double dt){
 		PysPropMag = calculateEmergentShapeOrientation();
 	}
 	else if (type == 7){
-		double* shapechange;
-		shapechange = getShapeChangeRate();
+		std::array<double,6> shapechange = getShapeChangeRate();
 		PysPropMag = shapechange[2];
 	}
 }
@@ -1242,7 +1239,7 @@ double	ShapeBase::calculateEmergentShapeOrientation(){
 }
 
 void 	ShapeBase::displayIdentifierColour(){
-	cout <<" IdentifierColour:  "<<IdentifierColour[0]<<" "<<IdentifierColour[1]<<" "<<IdentifierColour[2]<<endl;
+	cout <<" IdentifierColour:  "<<IdentifierColour[0]<<" "<<IdentifierColour[1]<<" "<<IdentifierColour[2]<<std::endl;
 }
 
 void 	ShapeBase::changeShapeByFsc(double dt){
@@ -1269,7 +1266,7 @@ void 	ShapeBase::changeShapeByFsc(double dt){
 	createMatrixCopy(tmpFscForInversion,Fsc);
 	bool inverted = InvertMatrix(tmpFscForInversion, InvFsc);
 	if (!inverted){
-		cerr<<"Fsc not inverted!!"<<endl;
+		std::cerr<<"Fsc not inverted!!"<<std::endl;
 	}
 	//double detFsc = determinant3by3Matrix(Fsc);
 	//freeing matrices allocated in this function
@@ -1323,7 +1320,7 @@ void 	ShapeBase::growShapeByFg(){
     createMatrixCopy(tmpFgForInversion,Fg);
     bool inverted = InvertMatrix(tmpFgForInversion, InvFg);
     if (!inverted){
-        cerr<<"Fg not inverted!!"<<endl;
+        std::cerr<<"Fg not inverted!!"<<std::endl;
     }
     /**
     * The volumentric change induced by growth is calculated via the determinant of the growth deformation
@@ -1340,7 +1337,7 @@ void 	ShapeBase::growShapeByFg(){
 }
 
 void ShapeBase::displayDebuggingMatrices(){
-	cout<<" Prism "<<Id<<" rotatedGrowth: "<<rotatedGrowth<<endl;
+	std::cout<<" Prism "<<Id<<" rotatedGrowth: "<<rotatedGrowth<<std::endl;
 	displayMatrix(Fg, " Fg");
 	displayMatrix(FeMatrices[0], " FeMatrices[0]");
 	displayMatrix(FeMatrices[1], " FeMatrices[1]");
@@ -1374,7 +1371,7 @@ bool ShapeBase::isActinStiffnessChangeAppliedToElement(bool ThereIsWholeTissueSt
  	if (!isECMMimicing){
 		if( ThereIsWholeTissueStiffnessPerturbation  //the whole columnar tissue is perturbed
 			|| ThereIsBasolateralWithApicalRelaxationStiffnessPerturbation	// there is relaxation on the apical surface and stiffenning on the rest of the tissue, further checks needed while calculating the rate
-			|| (ThereIsBasolateralStiffnessPerturbation && !tissuePlacement == 1) //there is only basolateral stiffness perturbation, without affecting apical sides
+			|| (ThereIsBasolateralStiffnessPerturbation && !(tissuePlacement == 1)) //there is only basolateral stiffness perturbation, without affecting apical sides
 			|| (tissuePlacement == 0 && ThereIsBasalStiffnessPerturbation    ) //the basal surface is perturbed and element is basal
 			|| (tissuePlacement == 1 && ThereIsApicalStiffnessPerturbation   ) // the apical surface is perturbed and element is apical
 			|| (atBasalBorderOfECM   && ThereIsBasalStiffnessPerturbation    ) //the basal surface is perturbed and element is at the layer above the "basal elements, but there is basal ECM, therefore the element is basal of the tissue (atBasalBorderOfECM)
@@ -1486,6 +1483,10 @@ void ShapeBase::updateStiffnessMultiplier(double dt){
 }
 
 void ShapeBase::calculateStiffnessFeedback(double dt){
+	/**
+	 * This function allow for updating the stiffness of the actin layer
+	 * with tension on the xy-plane of the element.
+	 */
 	if (tissueType == 0 && tissuePlacement == 1){ //apical columnar layer element
 		gsl_matrix* Fe = getCurrentFe();
 		//taking into account only x&y deformation
@@ -1493,11 +1494,11 @@ void ShapeBase::calculateStiffnessFeedback(double dt){
 		double detFe = determinant3by3Matrix(Fe);
 		if (detFe > 0){
 			double eqStiffnessMultiplier = 1 + (detFe -1)*10.0;
-			cout<<"Id: "<<Id<<" determinant of Fe: "<<detFe<<" eq Actin: "<<eqStiffnessMultiplier<<" actin before update: "<<stiffnessMultiplier<<" ";
+			std::cout<<"Id: "<<Id<<" determinant of Fe: "<<detFe<<" eq Actin: "<<eqStiffnessMultiplier<<" actin before update: "<<stiffnessMultiplier<<" ";
 			double rate =1.0/3600 * dt;
 			if (rate > 1.0) {rate =1.0;}
 			stiffnessMultiplier += rate* (eqStiffnessMultiplier-stiffnessMultiplier);
-			cout<<" actin after update: "<<stiffnessMultiplier<<endl;
+			std::cout<<" actin after update: "<<stiffnessMultiplier<<std::endl;
 			if (stiffnessMultiplier < 1.0){
 				stiffnessMultiplier = 1;
 			}
@@ -1556,7 +1557,7 @@ bool	ShapeBase::checkZCappingInRemodelling(bool volumeConserved, double zRemodel
 	return zCapped;
 }
 
-void	ShapeBase::checkIfInsideEllipseBands(int nMarkerEllipseRanges, vector<double> markerEllipseBandXCentres,vector<double> markerEllipseBandR1Ranges, vector<double> markerEllipseBandR2Ranges, vector<Node*>& Nodes){
+void	ShapeBase::checkIfInsideEllipseBands(int nMarkerEllipseRanges, vector<double> markerEllipseBandXCentres,vector<double> markerEllipseBandR1Ranges, vector<double> markerEllipseBandR2Ranges, const std::vector<std::unique_ptr<Node>>& Nodes){
 	for (int i=0;i<nMarkerEllipseRanges; ++i){	
 		double dx  = relativePosInBoundingBox[0] - markerEllipseBandXCentres [i];
 		double dy = relativePosInBoundingBox[1];
@@ -1573,11 +1574,11 @@ void	ShapeBase::checkIfInsideEllipseBands(int nMarkerEllipseRanges, vector<doubl
 			if (d_squareLower> 1 && d_squareUpper<1){
 				insideEllipseBand = true;
 				coveringEllipseBandId = i;
-				for (int j =0 ; j<nNodes; ++j){
+				for (size_t j =0 ; j<nNodes; ++j){
 					int currNodeId = NodeIds[j];
 					Nodes[currNodeId]->insideEllipseBand=true;
 					Nodes[currNodeId]->coveringEllipseBandId  = i;
-					//cout<<"Node "<<currNodeId<<" is inside ellipse"<<i<<endl;
+					//std::cout<<"Node "<<currNodeId<<" is inside ellipse"<<i<<std::endl;
 				}
 			}
 		}		
@@ -1740,8 +1741,8 @@ void 	ShapeBase::calculateTriPointFForRatation(){
     //The point order is established in shape function derivative calculation!
     //Make sure the weights fir in with the order - eta zeta nu:
     //double points[3][3]={{1.0/6.0,1.0/6.0,0.0},{2.0/3.0,1.0/6.0,0.0},{1.0/6.0,2.0/3.0,0.0}};
-    for (int iter =0; iter<numberOfGaussPoints;++iter){
-        //cout<<"Calculating gauss point: "<<eta<<" "<<nu<<" "<<zeta<<endl;
+    for (size_t iter =0; iter<numberOfGaussPoints;++iter){
+        //std::cout<<"Calculating gauss point: "<<eta<<" "<<nu<<" "<<zeta<<std::endl;
         calculateCurrTriPointFForRotation(currF,iter);
         gsl_matrix_scale(currF,gaussWeights[iter]);
         gsl_matrix_add(TriPointF, currF);
@@ -1820,7 +1821,7 @@ bool 	ShapeBase::calculate3DRotMatFromF(gsl_matrix* rotMat){
 
     double det = determinant3by3Matrix(rotMat);
     if (det<0){
-        cout<<"Error! Flipped element, Id: "<<Id<<endl;
+        std::cout<<"Error! Flipped element, Id: "<<Id<<std::endl;
         isFlipped = true;
     }
     gsl_matrix_free (Sgsl);
@@ -1874,8 +1875,8 @@ void ShapeBase::updateGrowthByMutation(double dt){
 		double new_xy_GrowthRatePerSec = log(newGrowthPer24hrs)/24.0/3600.0/2.0;
 		double growthRateperDt22 = gsl_matrix_get(growthIncrement,2,2);
 		double z_ratePerSec = log(growthRateperDt22)/dt;
-		//cout<<"current growth: "<<growthPerDt<<" ratePerSec: "<<ratePerSec<<" GrowthPer24hrs:" <<growthPer24hrs<<endl;
-		//cout<<" newGrowthPer24hrs: "<<newGrowthPer24hrs<<" newGrowthRatePerSec = "<<newGrowthRatePerSec<<endl;
+		//std::cout<<"current growth: "<<growthPerDt<<" ratePerSec: "<<ratePerSec<<" GrowthPer24hrs:" <<growthPer24hrs<<std::endl;
+		//std::cout<<" newGrowthPer24hrs: "<<newGrowthPer24hrs<<" newGrowthRatePerSec = "<<newGrowthRatePerSec<<std::endl;
 		setGrowthRate(dt,new_xy_GrowthRatePerSec,new_xy_GrowthRatePerSec,z_ratePerSec);
 		//displayMatrix(growthIncrement,"before_growthIncrement");
 		updateGrowthIncrementFromRate();
@@ -1917,7 +1918,7 @@ bool ShapeBase::isElementFlippedInPotentialNewShape(int nodeId, double newX, dou
     	}
     }
     bool elementWillFlip = false;
-    for (int pointNo =0; pointNo<numberOfGaussPoints;++pointNo){
+    for (size_t pointNo =0; pointNo<numberOfGaussPoints;++pointNo){
 		//calculating dx/de (Jacobian) and reading out dX/de, shape function derivaties:
 		gsl_matrix* ShapeFuncDer = ShapeFuncDerivatives[pointNo];
 		gsl_matrix* InvdXde = InvdXdes[pointNo];
@@ -1945,13 +1946,13 @@ bool ShapeBase::isElementFlippedInPotentialNewShape(int nodeId, double newX, dou
 }
 
 
-void ShapeBase::checkForCollapsedNodes(int TissueHeightDiscretisationLayers, vector<Node*>& Nodes, vector<ShapeBase*>& Elements){
+void ShapeBase::checkForCollapsedNodes(int TissueHeightDiscretisationLayers, const std::vector<std::unique_ptr<Node>>& Nodes, const std::vector <std::unique_ptr<ShapeBase>>& Elements){
     /** If the element has any nodes that are collapsed with any other node, then the element is
      * considered collapsed. This definition does not make any distinction betwenn elements collapsing on
      * themselves to avoid flips, or the nodal collapse due to adhesion of two elements.
      */
      	bool elementCollapsed = false;
-		for (int j =0 ; j<nNodes; ++j){
+		for (size_t j =0 ; j<nNodes; ++j){
 		int nodeId = NodeIds[j];
 		int collapsedNodeNumber = Nodes[nodeId]->collapsedWith.size();
 		if (collapsedNodeNumber>0){elementCollapsed = true;break;}
@@ -1967,15 +1968,15 @@ void ShapeBase::checkForCollapsedNodes(int TissueHeightDiscretisationLayers, vec
 			selectedEllipseBandId = 101;
 		}
 		coveringEllipseBandId = selectedEllipseBandId;
-		cout<<"Id : "<<Id<<" assigned "<<selectedEllipseBandId<<" in function checkForCollapsedNodes "<<endl;
+		std::cout<<"Id : "<<Id<<" assigned "<<selectedEllipseBandId<<" in function checkForCollapsedNodes "<<std::endl;
 		assignEllipseBandIdToWholeTissueColumn(TissueHeightDiscretisationLayers,Nodes,Elements);
 	}
 }
 
-bool ShapeBase::hasEnoughNodesOnCurve(vector<Node*>&Nodes){
+bool ShapeBase::hasEnoughNodesOnCurve(const std::vector<std::unique_ptr<Node>>& Nodes){
 	int threshold = 3;
 	int nodesOnCurveCounter = 0;
-	for (int i=0;i<nNodes; i++){
+	for (size_t i=0;i<nNodes; i++){
 		if (Nodes[NodeIds[i]]->onFoldInitiation){
 			nodesOnCurveCounter++;
 		}
@@ -1986,21 +1987,21 @@ bool ShapeBase::hasEnoughNodesOnCurve(vector<Node*>&Nodes){
 	return false;
 }
 
-void ShapeBase::assignEllipseBandIdToWholeTissueColumn(int TissueHeightDiscretisationLayers, vector<Node*>& Nodes, vector<ShapeBase*>& Elements){
+void ShapeBase::assignEllipseBandIdToWholeTissueColumn(int TissueHeightDiscretisationLayers, const std::vector<std::unique_ptr<Node>>& Nodes, const std::vector <std::unique_ptr<ShapeBase>>& Elements){
 	for (int i=0; i < TissueHeightDiscretisationLayers;++i){
 		int idOfElementOnSameColumn = elementsIdsOnSameColumn[i];
 		Elements[idOfElementOnSameColumn]->assignEllipseBandId(Nodes,coveringEllipseBandId);
 	}
 }
 
-void ShapeBase::assignEllipseBandId(vector<Node*>& Nodes, int selectedEllipseBandId){
+void ShapeBase::assignEllipseBandId(const std::vector<std::unique_ptr<Node>>& Nodes, int selectedEllipseBandId){
 	insideEllipseBand = true;
 	coveringEllipseBandId = selectedEllipseBandId;
 	assignEllipseBandIdToNodes(Nodes);
 }
 
-void ShapeBase::assignEllipseBandIdToNodes(vector<Node*>& Nodes){
-	for (int j =0 ; j<nNodes; ++j){
+void ShapeBase::assignEllipseBandIdToNodes(const std::vector<std::unique_ptr<Node>>& Nodes){
+	for (size_t j =0 ; j<nNodes; ++j){
 		int nodeId = NodeIds[j];
 		Nodes[nodeId]->insideEllipseBand = true;
 		Nodes[nodeId]->coveringEllipseBandId = coveringEllipseBandId;
@@ -2029,17 +2030,17 @@ void ShapeBase::addToTriPointKe(int i,int j,double value){
      	double baseValue = gsl_matrix_get(TriPointKe,i,j);
 	baseValue +=value;
 	gsl_matrix_set(TriPointKe,i,j,baseValue);
-	//cout<<" element id (in addToTriPointKe): "<<Id<<endl;
+	//std::cout<<" element id (in addToTriPointKe): "<<Id<<std::endl;
 	//displayMatrix(TriPointKe,"TriPointKeInsideaddToTriPointKe");
 }
 
 
 void 	ShapeBase::displayRelativePosInBoundingBox(){
-		cout<<"Element: "<<Id<<"  relative position in the tissue bounding box: "<<relativePosInBoundingBox[0]<<" "<<relativePosInBoundingBox[1]<<endl;
+		std::cout<<"Element: "<<Id<<"  relative position in the tissue bounding box: "<<relativePosInBoundingBox[0]<<" "<<relativePosInBoundingBox[1]<<std::endl;
 }
 
 bool 	ShapeBase::DoesPointBelogToMe(int IdNode){
-	for (int i = 0; i<nNodes; ++i){
+	for (size_t i = 0; i<nNodes; ++i){
 		if (NodeIds[i] == IdNode){
 			return true;
 		}
@@ -2098,7 +2099,7 @@ void	ShapeBase::calculateRotationAxis(double* u, double* v,double* rotAx, double
 	//aligning u onto v:
 	if (c>-0.99998){
 		crossProduct3D(u,v,rotAx);
-		double dummy = normaliseVector3D(rotAx);
+		(void) normaliseVector3D(rotAx);
 	}
 	else{
 		//the angle is 180 degree, the standard rotation axis calculation will be wrong, I am rotating over x axis at all times;
@@ -2140,39 +2141,36 @@ void	ShapeBase::rotateVectorByRotationMatrix(double* u,gsl_matrix* rotMat){
 
 
 void  ShapeBase::rotateReferenceElementByRotationMatrix(double* rotMat){
-	//cout<<"rotating the reference matrix of element: "<<Id<<endl;
-	for (int i=0; i<nNodes; ++i){
+	//std::cout<<"rotating the reference matrix of element: "<<Id<<std::endl;
+	for (size_t i=0; i<nNodes; ++i){
 		double * u;
 		u = new double[3];
-		for (int j=0; j<nDim; ++j){
+		for (size_t j=0; j<nDim; ++j){
 			u[j] = ReferenceShape->Positions[i][j];
 		}
 		rotateVectorByRotationMatrix(u,rotMat);
-		for (int j=0; j<nDim; ++j){
+		for (size_t j=0; j<nDim; ++j){
 			ReferenceShape->Positions[i][j] = u[j];
 		}
 		delete[] u;
 	}
 }
 
-void	ShapeBase::calculateForces(vector <Node*>& Nodes, gsl_matrix* displacementPerDt, bool recordForcesOnFixedNodes, double **FixedNodeForces){
+void	ShapeBase::calculateForces(const std::vector<std::unique_ptr<Node>>& Nodes, gsl_matrix* displacementPerDt){
 	if (ShapeDim == 3){		//3D element
-        calculateForces3D(Nodes, displacementPerDt, recordForcesOnFixedNodes, FixedNodeForces);
+        calculateForces3D(Nodes, displacementPerDt);
     }
 }
 
-void ShapeBase::writeInternalForcesTogeAndgv(gsl_matrix* ge, gsl_matrix* gvInternal, double** SystemForces, vector <Node*>& Nodes){
+void ShapeBase::writeInternalForcesTogeAndgv(gsl_matrix* ge, gsl_matrix* gvInternal, std::vector<std::array<double,3>>& SystemForces, const std::vector<std::unique_ptr<Node>>& Nodes){
 	//now all the forces are written on SysyemForces
     //Now I will add the forces into ge, this step can be made faster by separating calculate forces function into two,
     //and filling up either ge or System forces depending on the solution method:
-	for (int i = 0; i< nNodes; ++i){
-        for ( int j=0; j<nDim; j++){
+	for (size_t i = 0; i< nNodes; ++i){
+        for ( size_t j=0; j<nDim; j++){
         	int indexI = nDim*NodeIds[i]+j;
         	double elementalvalue = gsl_matrix_get(ElementalElasticSystemForces,i,j);
         	double matrixValue = gsl_matrix_get(ge,indexI,0);
-        	//if (std::isnan(elementalvalue)){
-        	//	cout<<" element: "<<Id<<" ge dimention: "<<j<<" is NaN: "<<elementalvalue<<endl;
-        	//}
             gsl_matrix_set(ge, indexI,0,matrixValue + elementalvalue);
         	elementalvalue = gsl_matrix_get(ElementalInternalViscousSystemForces,i,j);
         	matrixValue = gsl_matrix_get(gvInternal,indexI,0);
@@ -2180,10 +2178,9 @@ void ShapeBase::writeInternalForcesTogeAndgv(gsl_matrix* ge, gsl_matrix* gvInter
         }
     }
     int counter = 0;
-    for (int i = 0; i<nNodes; ++i){
-        for (int j = 0; j<nDim; ++j){
+    for (size_t i = 0; i<nNodes; ++i){
+        for (size_t j = 0; j<nDim; ++j){
             if (!Nodes[NodeIds[i]]->FixedPos[j]){
-               // cout<<"element: "<<Id<<" writing to system forces for NodeID: "<<NodeIds[i]<<" dim: "<<j<<" initial value "<<SystemForces[NodeIds[i]][j]<<" Felastic: "<<gsl_matrix_get(ElementalElasticSystemForces,i,j)<<" Fvisc: "<<gsl_matrix_get(ElementalInternalViscousSystemForces,i,j)<<endl;
                 SystemForces[NodeIds[i]][j] = SystemForces[NodeIds[i]][j] + gsl_matrix_get(ElementalElasticSystemForces,i,j) + gsl_matrix_get(ElementalInternalViscousSystemForces,i,j);
 
             }
@@ -2192,7 +2189,7 @@ void ShapeBase::writeInternalForcesTogeAndgv(gsl_matrix* ge, gsl_matrix* gvInter
     }
 }
 
-void	ShapeBase::calculateForces3D(vector <Node*>& Nodes,  gsl_matrix* displacementPerDt, bool recordForcesOnFixedNodes, double **FixedNodeForces){
+void	ShapeBase::calculateForces3D(const std::vector<std::unique_ptr<Node>>& Nodes,  gsl_matrix* displacementPerDt){
     int dim = nDim;
     int n = nNodes;
     //calculating F and B in a 3 point gaussian:
@@ -2223,20 +2220,20 @@ void	ShapeBase::calculateForces3D(vector <Node*>& Nodes,  gsl_matrix* displaceme
      * Then the elemental forces are written on the system forces.
      */
     int counter = 0;
-    for (int i = 0; i<nNodes; ++i){
-            for (int j = 0; j<nDim; ++j){
+    for (size_t i = 0; i<nNodes; ++i){
+            for (size_t j = 0; j<nDim; ++j){
             	if (!Nodes[NodeIds[i]]->FixedPos[j]){
             		double value = gsl_matrix_get(ElementalElasticSystemForces,i,j);
             		value -= gsl_matrix_get(TriPointge,counter,0);
             		gsl_matrix_set(ElementalElasticSystemForces,i,j,value);
             		if(std::isnan(value)){
-						cout<<"force from ElementalElasticSystemForces for element "<<Id<<" dim: "<<j<<" is nan"<<endl;
+						std::cout<<"force from ElementalElasticSystemForces for element "<<Id<<" dim: "<<j<<" is nan"<<std::endl;
 					}
             		value = gsl_matrix_get(ElementalInternalViscousSystemForces,i,j);
             		value -= gsl_matrix_get(TriPointgv,counter,0);
             		gsl_matrix_set(ElementalInternalViscousSystemForces,i,j,value);
             		if(std::isnan(value)){
-            			cout<<"force from ElementalInternalViscousSystemForces for element "<<Id<<" dim: "<<j<<" is nan"<<endl;
+            			std::cout<<"force from ElementalInternalViscousSystemForces for element "<<Id<<" dim: "<<j<<" is nan"<<std::endl;
             		}
 				}
 				counter++;
@@ -2248,8 +2245,6 @@ void	ShapeBase::calculateForces3D(vector <Node*>& Nodes,  gsl_matrix* displaceme
     gsl_matrix_free(currge);
     gsl_matrix_free(currgv);
     gsl_matrix_free(currF);
-    //cout<<"Element: "<<Id<<endl;
-    //displayMatrix(Fg, "Fg");
 }
 
 
@@ -2340,10 +2335,10 @@ void ShapeBase::updateLagrangianElasticityTensorNeoHookean(gsl_matrix* invC, dou
      * D[gauss points] [system dimension (3D)] [system dimension (3D)] [system dimension (3D)] [system dimension (3D)].
      */
      double multiplier = 2*(mu - lambda*lnJ);
-	for (int I = 0; I<nDim; ++I){
-        for (int J = 0; J<nDim; ++J){
-            for (int K = 0; K<nDim; ++K){
-                for (int L = 0; L<nDim; ++L){
+     for (size_t I = 0; I<nDim; ++I){
+        for (size_t J = 0; J<nDim; ++J){
+            for (size_t K = 0; K<nDim; ++K){
+                for (size_t L = 0; L<nDim; ++L){
                     double Iijkl = 0.5* (gsl_matrix_get(invC,I,K)*gsl_matrix_get(invC,J,L) + gsl_matrix_get(invC,I,L)*gsl_matrix_get(invC,J,K));
                     D81[pointNo][I][J][K][L] = lambda*gsl_matrix_get(invC,I,J)*gsl_matrix_get(invC,K,L) + multiplier * Iijkl;
                 }
@@ -2359,7 +2354,7 @@ gsl_matrix* ShapeBase::calculateCompactStressForNodalForces(double detFe, gsl_ma
      //calculating stress (stress = (detFe)^-1 Fe S Fe^T):
     //double detFe = determinant3by3Matrix(Fe);
     gsl_matrix* tmpMat1 =  gsl_matrix_calloc(nDim, nDim);
-    //cout<<"detFe: "<<detFe<<endl;
+    //std::cout<<"detFe: "<<detFe<<std::endl;
     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, Fe, S,0.0, tmpMat1);
     gsl_blas_dgemm (CblasNoTrans, CblasTrans,1.0, tmpMat1, Fe,0.0, Stress);
     gsl_matrix_scale(Stress, 1.0/detFe);
@@ -2386,15 +2381,15 @@ void ShapeBase::calculateInvJShFuncDerSWithFe(gsl_matrix* currFe, gsl_matrix* In
 	createMatrixCopy(tmpFeforInversion,currFe);
 	bool inverted = InvertMatrix(tmpFeforInversion, InvFe);
 	if (!inverted){
-		cerr<<"Fe not inverted!!"<<endl;
+		std::cerr<<"Fe not inverted!!"<<std::endl;
 	}
 	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, InvDXde, InvFe,0.0, InvJe);
 
 	int dim2 = nDim*nDim;
 	//Generating the inverse Jacobian(elastic) stack:
 	gsl_matrix* InvJacobianElasticStack =  gsl_matrix_calloc(dim2,dim2);
-	for (int i =0; i<nDim; i++){
-		for (int m=0; m<nDim; ++m){
+	for (size_t i =0; i<nDim; i++){
+		for (size_t m=0; m<nDim; ++m){
 			for (int n=0; n<3; ++n){
 				gsl_matrix_set(InvJacobianElasticStack,i*nDim+m,i*nDim+n,gsl_matrix_get(InvJe,n,m));
 			}
@@ -2428,13 +2423,13 @@ gsl_matrix* ShapeBase::calculateInverseJacobianStackForNodalForces(gsl_matrix* J
     createMatrixCopy(tmpJacobianForInversion,Jacobian);
     bool inverted = InvertMatrix(tmpJacobianForInversion, InvJacobian);
     if (!inverted){
-        cerr<<"Jacobian not inverted!!"<<endl;
+        std::cerr<<"Jacobian not inverted!!"<<std::endl;
     }
     //displayMatrix(Jacobian,"Jacobian");
     //Generating the inverse Jacobian stack:
     gsl_matrix* InvJacobianStack =  gsl_matrix_calloc(dim2,dim2);
-    for (int i =0; i<nDim; i++){
-        for (int m=0; m<nDim; ++m){
+    for (size_t i =0; i<nDim; i++){
+        for (size_t m=0; m<nDim; ++m){
             for (int n=0; n<3; ++n){
                 gsl_matrix_set(InvJacobianStack,i*nDim+m,i*nDim+n,gsl_matrix_get(InvJacobian,n,m));
             }
@@ -2604,9 +2599,9 @@ gsl_matrix* ShapeBase::constructElementalDisplacementMatrix(gsl_matrix* displace
 
 	 */
 	gsl_matrix* elementalDisplacementMatrix = gsl_matrix_calloc(nDim*nNodes,1);
-	for (int i=0; i<nNodes; ++i){
+	for (size_t i=0; i<nNodes; ++i){
 		int index = NodeIds[i];
-		for (int j=0; j<nDim; ++j){
+		for (size_t j=0; j<nDim; ++j){
 			double value = gsl_matrix_get(displacement,index*nDim+j,0);
 			gsl_matrix_set(elementalDisplacementMatrix,i*nDim+j,0,value);
 		}
@@ -2652,7 +2647,7 @@ void ShapeBase::calculateViscousForces(gsl_matrix*  gv, gsl_matrix*  BTdetFdetdX
 }
 
 void ShapeBase::calculateImplicitKElastic(){
-    //cout<<"calculating implicit K elastic for element: "<<Id<<endl;
+    //std::cout<<"calculating implicit K elastic for element: "<<Id<<std::endl;
     int dim = nDim;
     int n = nNodes;
     if (IsAblated){
@@ -2662,7 +2657,7 @@ void ShapeBase::calculateImplicitKElastic(){
     	//calculating Kelastic in a 6 point gaussian:
 		gsl_matrix* currK = gsl_matrix_calloc(dim*n,dim*n);
 		gsl_matrix_set_zero(TriPointKe);
-		for (int iter =0; iter<numberOfGaussPoints;++iter){
+		for (size_t iter =0; iter<numberOfGaussPoints;++iter){
 			gsl_matrix_set_zero(currK);
 			calculateElasticKIntegral1(currK,iter);
 			calculateElasticKIntegral2(currK,iter);
@@ -2703,7 +2698,7 @@ void ShapeBase::calculateImplicitKViscous(gsl_matrix* displacementPerDt, double 
 		gsl_matrix* velocityGradient = gsl_matrix_calloc(dim,dim);
 		gsl_matrix* paranthesisTermForKv1 =  gsl_matrix_calloc(dim,dim);
 	    //loop over Gauss points
-		for (int iter =0; iter<numberOfGaussPoints;++iter){
+		for (size_t iter =0; iter<numberOfGaussPoints;++iter){
 			//set the temporary matrix to zero.
 			gsl_matrix_set_zero(currK);
 			//set the velocity gradient to zero.
@@ -2745,20 +2740,20 @@ void ShapeBase::writeKelasticToMainKatrix(gsl_matrix* K){
 	//	displayMatrix(TriPointKe,"TriPointKeWhileWriting");
 	//}
 
-    for (int a=0; a<nNodes; ++a){
-        for (int b=0; b<nNodes; ++b){
+    for (size_t a=0; a<nNodes; ++a){
+        for (size_t b=0; b<nNodes; ++b){
             int NodeId1 = NodeIds[a];
             int NodeId2 = NodeIds[b];
             NodeId1 *= nDim;
             NodeId2 *= nDim;
-            for (int i=0; i<nDim; ++i){
-                for (int j=0; j<nDim; ++j){
+            for (size_t i=0; i<nDim; ++i){
+                for (size_t j=0; j<nDim; ++j){
                     double valueij = gsl_matrix_get(K,NodeId1+i,NodeId2+j);
 					valueij	+= gsl_matrix_get(TriPointKe,a*nDim+i,b*nDim+j);
                     gsl_matrix_set(K,NodeId1+i,NodeId2+j,valueij);
                 	if (std::isnan(valueij)){
                 		double tripointvalue = gsl_matrix_get(TriPointKe,a*nDim+i,b*nDim+j);
-                		cout<<" element: "<<Id<<" K elastic dimention: "<<i<<" "<<j<<" is NaN after addition: "<<valueij<<" tri point value: "<<tripointvalue<<endl;
+                		std::cout<<" element: "<<Id<<" K elastic dimention: "<<i<<" "<<j<<" is NaN after addition: "<<valueij<<" tri point value: "<<tripointvalue<<std::endl;
                 	}
                 }
             }
@@ -2768,20 +2763,20 @@ void ShapeBase::writeKelasticToMainKatrix(gsl_matrix* K){
 
 void ShapeBase::writeKviscousToMainKatrix(gsl_matrix* K){
 	if (internalViscosity != 0){
-		for (int a=0; a<nNodes; ++a){
-			for (int b=0; b<nNodes; ++b){
+		for (size_t a=0; a<nNodes; ++a){
+			for (size_t b=0; b<nNodes; ++b){
 				int NodeId1 = NodeIds[a];
 				int NodeId2 = NodeIds[b];
 				NodeId1 *= nDim;
 				NodeId2 *= nDim;
-				for (int i=0; i<nDim; ++i){
-					for (int j=0; j<nDim; ++j){
+				for (size_t i=0; i<nDim; ++i){
+					for (size_t j=0; j<nDim; ++j){
 						double valueij = gsl_matrix_get(K,NodeId1+i,NodeId2+j);
 						valueij	+= gsl_matrix_get(TriPointKv,a*nDim+i,b*nDim+j);
 						gsl_matrix_set(K,NodeId1+i,NodeId2+j,valueij);
 	                	if (std::isnan(valueij)){
 	                		double tripointvalue = gsl_matrix_get(TriPointKv,a*nDim+i,b*nDim+j);
-	                		cout<<" element: "<<Id<<" K viscous dimention: "<<i<<" "<<j<<" is NaN after addition: "<<valueij<<" tri point value: "<<tripointvalue<<endl;
+	                		std::cout<<" element: "<<Id<<" K viscous dimention: "<<i<<" "<<j<<" is NaN after addition: "<<valueij<<" tri point value: "<<tripointvalue<<std::endl;
 	                	}
 					}
 				}
@@ -2793,7 +2788,7 @@ void ShapeBase::writeKviscousToMainKatrix(gsl_matrix* K){
 void	ShapeBase::calculateForceFromStress(int nodeId, gsl_matrix* Externalstress, gsl_matrix *ExternalNodalForces){
     gsl_matrix_set_zero(ExternalNodalForces);
     int nodeNo = 0;
-    for (int i=0; i<nNodes; i++){
+    for (size_t i=0; i<nNodes; i++){
         if (NodeIds[i] == nodeId){
             nodeNo = i;
             break;
@@ -2821,27 +2816,27 @@ void	ShapeBase::calculateElasticKIntegral1(gsl_matrix* currElementalK,int pointN
     double detdXde = detdXdes[pointNo];
     gsl_matrix* Fe = FeMatrices[pointNo];
     double detFe = determinant3by3Matrix(Fe);
-    for (int a =0; a<nNodes; ++a){
-        for (int b=0; b<nNodes; ++b){
+    for (size_t a =0; a<nNodes; ++a){
+        for (size_t b=0; b<nNodes; ++b){
             gsl_matrix* Keab = gsl_matrix_calloc(3,3);
             double DNa[3] = {0.0,0.0,0.0};
             double DNb[3] = {0.0,0.0,0.0};
 
-            for (int i=0;i<nDim;++i){
+            for (size_t i=0;i<nDim;++i){
                 DNa[i] = gsl_matrix_get(invJShFuncDerS,i,nDim*a);
                 DNb[i] = gsl_matrix_get(invJShFuncDerS,i,nDim*b);
             }
             //writing Kab:
-            for (int i = 0 ; i<nDim; ++i){
-                for (int k=0; k<nDim; ++k){
+            for (size_t i = 0 ; i<nDim; ++i){
+                for (size_t k=0; k<nDim; ++k){
                     double value = 0;
                     //the sum over j,l,I,J,K,L, to get Kab(i,k):
-                    for (int j = 0; j<nDim; ++j){
-                        for (int l=0; l<nDim; ++l){
-                            for (int I=0; I<nDim; ++I){
-                                for (int J=0; J<nDim; ++J){
-                                    for (int K=0; K<nDim; ++K){
-                                        for (int L=0; L<nDim; ++L){
+                    for (size_t j = 0; j<nDim; ++j){
+                        for (size_t l=0; l<nDim; ++l){
+                            for (size_t I=0; I<nDim; ++I){
+                                for (size_t J=0; J<nDim; ++J){
+                                    for (size_t K=0; K<nDim; ++K){
+                                        for (size_t L=0; L<nDim; ++L){
                                             value += (gsl_matrix_get(Fe,i,I)*gsl_matrix_get(Fe,j,J)*gsl_matrix_get(Fe,k,K)*gsl_matrix_get(Fe,l,L)*D81[pointNo][I][J][K][L]*DNb[l]*DNa[j]);
                                         }
                                     }
@@ -2856,8 +2851,8 @@ void	ShapeBase::calculateElasticKIntegral1(gsl_matrix* currElementalK,int pointN
                 }
             }
             //now I have Kab for current gauss point, I need to write in into currK:
-            for (int i=0; i<nDim; ++i){
-                for (int j=0; j<nDim; ++j){
+            for (size_t i=0; i<nDim; ++i){
+                for (size_t j=0; j<nDim; ++j){
                     double value = gsl_matrix_get(currElementalK,a*nDim+i, b*nDim+j);
                     value += gsl_matrix_get(Keab,i, j);
                     gsl_matrix_set(currElementalK,a*nDim+i, b*nDim+j,value);
@@ -2878,9 +2873,9 @@ void	ShapeBase::calculateElasticKIntegral2(gsl_matrix* currElementalK,int pointN
     gsl_matrix* DNaT = gsl_matrix_calloc(1,nDim);
     gsl_matrix* DNb = gsl_matrix_calloc(nDim,1);
     gsl_matrix* Keab2 = gsl_matrix_calloc(1,1);
-    for (int a =0; a<nNodes; ++a){
-        for (int b=0; b<nNodes; ++b){
-            for (int i=0;i<nDim;++i){
+    for (size_t a =0; a<nNodes; ++a){
+        for (size_t b=0; b<nNodes; ++b){
+            for (size_t i=0;i<nDim;++i){
                 gsl_matrix_set(DNaT,0,i,gsl_matrix_get(invJShFuncDerS,i,nDim*a));
                 gsl_matrix_set(DNb,i,0,gsl_matrix_get(invJShFuncDerS,i,nDim*b));
             }
@@ -2888,7 +2883,7 @@ void	ShapeBase::calculateElasticKIntegral2(gsl_matrix* currElementalK,int pointN
             gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, DNaT, Stress,0.0, tmp1);
             gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, tmp1, DNb,0.0, Keab2);
             double value = gsl_matrix_get(Keab2,0,0)*detF*detdXde;
-            for (int i=0; i<nDim; ++i){
+            for (size_t i=0; i<nDim; ++i){
                 int index1 = a*nDim+i;
                 int index2 = b*nDim+i;
                 double addedValue = gsl_matrix_get(currElementalK,index1,index2) + value;//adding the calculated value to current K matirx
@@ -2904,11 +2899,11 @@ void	ShapeBase::calculateElasticKIntegral2(gsl_matrix* currElementalK,int pointN
 
 void ShapeBase::calculateVelocityGradient( gsl_matrix* velocityGradient, gsl_matrix* displacementPerDt, int pointNo){
 	gsl_matrix* invJShFuncDerS = invJShapeFuncDerStack[pointNo];
-	for (int c=0; c<nNodes; ++c){
+	for (size_t c=0; c<nNodes; ++c){
 		gsl_matrix* delVc = gsl_matrix_calloc(nDim,nDim);
 		//get \DelNc^T
 		gsl_matrix* DNc = gsl_matrix_calloc(nDim,1);
-		for (int i=0;i<nDim;++i){
+		for (size_t i=0;i<nDim;++i){
 			gsl_matrix_set(DNc,i,0,gsl_matrix_get(invJShFuncDerS,i,nDim*c));
 		}
 		//calculate velocity of node c:
@@ -2934,14 +2929,14 @@ void ShapeBase::calculateViscousKIntegral1(gsl_matrix* currElementalK, gsl_matri
 	gsl_matrix* BaTBb = gsl_matrix_calloc(nDim,nDim);
 	gsl_matrix* KvabInt1 = gsl_matrix_calloc(nDim,nDim); //First integral in calculation of Kv for nodes a and b
 	gsl_matrix* B = Bmatrices[pointNo];
-	for (int a=0;a<nNodes;++a){
-		for (int b=0; b<nNodes; ++b){
+	for (size_t a=0;a<nNodes;++a){
+		for (size_t b=0; b<nNodes; ++b){
 			consturctBaTBb(B, BaT,Bb,a,b);
 			//Bb matrix should have the last three rows as 0.5, this matrix stems from the
 			//"d" matrix, as opposed to viscous stresses, therefore the definition
 			//should have 0.5 on off diagonal terms, therefore the last three rows of Bb.
-			for (int i=3; i<6; ++i){
-				for (int j=0; j<nDim; ++j){
+			for (size_t i=3; i<6; ++i){
+				for (size_t j=0; j<nDim; ++j){
 					double value = gsl_matrix_get(Bb, i,j);
 					gsl_matrix_set(Bb,i,j,0.5*value);
 				}
@@ -2958,8 +2953,8 @@ void ShapeBase::calculateViscousKIntegral1(gsl_matrix* currElementalK, gsl_matri
 			//Now KabvInt1 is a 3x3 (dim x dim) matrix, while currK is 18 x 18 (dim*n_node x dim*n_nodes)
 			//currK is composed of 3x3 Kab matrices placed into the blocks (a,b), with indexing from zero,
 			//for a = 1 and b=2, Kab will be placed in the 3x3 block covering indices (3,4,5) x (6,7,8) on K matrix.
-			for (int i=0; i<nDim; ++i){
-				for (int j=0; j<nDim; ++j){
+			for (size_t i=0; i<nDim; ++i){
+				for (size_t j=0; j<nDim; ++j){
 					int index2 = a*nDim+i;
 					int index1 = b*nDim+j;
 					double value = gsl_matrix_get(KvabInt1,i,j);
@@ -2981,9 +2976,9 @@ void ShapeBase::calculateViscousKIntegral2(gsl_matrix* currElementalK,int pointN
 	gsl_matrix* DNa = gsl_matrix_calloc(nDim,1);
 	gsl_matrix* DNb = gsl_matrix_calloc(nDim,1);
 	gsl_matrix* KvabInt2 = gsl_matrix_calloc(nDim,nDim);
-	for (int a =0; a<nNodes; ++a){
-		for (int b=0; b<nNodes; ++b){
-			for (int i=0;i<nDim;++i){
+	for (size_t a =0; a<nNodes; ++a){
+		for (size_t b=0; b<nNodes; ++b){
+			for (size_t i=0;i<nDim;++i){
 				gsl_matrix_set(DNa,i,0,gsl_matrix_get(invJShFuncDerS,i,nDim*a));
 				gsl_matrix_set(DNb,i,0,gsl_matrix_get(invJShFuncDerS,i,nDim*b));
 			}
@@ -2997,8 +2992,8 @@ void ShapeBase::calculateViscousKIntegral2(gsl_matrix* currElementalK,int pointN
 			gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, Stress, paranthesisTerm,0.0, KvabInt2);
 			gsl_matrix_scale(KvabInt2, detFs[pointNo]);
 			gsl_matrix_scale(KvabInt2, detdXdes[pointNo]);
-			for (int i=0; i<nDim; ++i){
-				for (int j=0; j<nDim; ++j){
+			for (size_t i=0; i<nDim; ++i){
+				for (size_t j=0; j<nDim; ++j){
 					int index2 = a*nDim+i;
 					int index1 = b*nDim+j;
 					double value = gsl_matrix_get(KvabInt2,i,j);
@@ -3020,10 +3015,9 @@ void	ShapeBase::calculateOuterProduct(gsl_matrix* a, gsl_matrix* b, gsl_matrix* 
 	/** The outer product is defined as: \n
 	* \f$ \mathbf{a} outer \mathbf{b} = \mathbf{a} \mathbf{b}^{T}
 	*/
-	int size1 = a->size1;
 	int size2 = a->size2;
 	if ((int) b->size2 != size2){
-		cerr<<"matrix dimension mismatch in outer product calculation"<<endl;
+		std::cerr<<"matrix dimension mismatch in outer product calculation"<<std::endl;
 	}
 	//a outer b =  a b^T
 	gsl_blas_dgemm (CblasNoTrans, CblasTrans,1.0, a, b,0.0, outerProduct);
@@ -3033,18 +3027,16 @@ gsl_matrix*	ShapeBase::calculateSymmetricisedTensorProduct(gsl_matrix* a, gsl_ma
 	int size1 = a->size1;
 	int size2 = a->size2;
 	if ((int) b->size1 != size1){
-		cerr<<"matrix dimension mismatch in symmetricised outer product calculation"<<endl;
+		std::cerr<<"matrix dimension mismatch in symmetricised outer product calculation"<<std::endl;
 	}
 	if ((int) b->size2 != size2){
-		cerr<<"matrix dimension mismatch in symmetricised outer product calculation"<<endl;
+		std::cerr<<"matrix dimension mismatch in symmetricised outer product calculation"<<std::endl;
 	}
 	//calculating individual outer products a x b = a bT
 	gsl_matrix* abOuterProduct = gsl_matrix_calloc(size1,size1);
 	calculateOuterProduct(a,b,abOuterProduct);
-	//gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, a, bT,0.0, abOuterProduct);
 	gsl_matrix* baOuterProduct = gsl_matrix_calloc(size1,size1);
 	calculateOuterProduct(b,a,abOuterProduct);
-	//gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, b, aT,0.0, baOuterProduct);
 	//calculating the averaged contraction term:
 	gsl_matrix* averagedContraction = gsl_matrix_calloc(size1,size1);
 	gsl_matrix_add(averagedContraction,abOuterProduct);
@@ -3056,8 +3048,8 @@ gsl_matrix*	ShapeBase::calculateSymmetricisedTensorProduct(gsl_matrix* a, gsl_ma
 }
 
 void ShapeBase::consturctBaTBb(gsl_matrix* B, gsl_matrix* BaT, gsl_matrix* Bb, int a, int b){
-    for (int i=0; i<6; ++i){
-        for (int j=0; j<nDim; ++j){
+    for (size_t i=0; i<6; ++i){
+        for (size_t j=0; j<nDim; ++j){
             //double value = gsl_matrix_get(B,i,a*dim+j);
             gsl_matrix_set(BaT,j,i,gsl_matrix_get(B,i,a*nDim+j)); //transpose of Ba
             //value  = gsl_matrix_get(B,i,b*dim+j);
@@ -3067,9 +3059,9 @@ void ShapeBase::consturctBaTBb(gsl_matrix* B, gsl_matrix* BaT, gsl_matrix* Bb, i
     }
 }
 
-void	ShapeBase::fillNodeNeighbourhood(vector<Node*>& Nodes){
-	for (int i = 0; i<nNodes; ++i){
-		for (int j = 0; j<nNodes; ++j){
+void	ShapeBase::fillNodeNeighbourhood(const std::vector<std::unique_ptr<Node>>& Nodes){
+	for (size_t i = 0; i<nNodes; ++i){
+		for (size_t j = 0; j<nNodes; ++j){
 			if ( i !=j ){
 				int n = Nodes[NodeIds[i]]->immediateNeigs.size();
 				bool alreadyOnList = false;
@@ -3087,17 +3079,17 @@ void	ShapeBase::fillNodeNeighbourhood(vector<Node*>& Nodes){
 	}
 }
 
-void	ShapeBase::updatePositions(vector<Node*>& Nodes){
-	for (int i = 0; i<nNodes; ++i){
-		for (int j = 0; j<nDim; ++j){
+void	ShapeBase::updatePositions(const std::vector<std::unique_ptr<Node>>& Nodes){
+	for (size_t i = 0; i<nNodes; ++i){
+		for (size_t j = 0; j<nDim; ++j){
 			Positions[i][j] = Nodes[NodeIds[i]]->Position[j];
 		}
 	}
 }
 
 void	ShapeBase::updateReferencePositionsToCurentShape(){
-	for (int i=0; i<nNodes; ++i){
-		for (int j=0; j<nDim; ++j){
+	for (size_t i=0; i<nNodes; ++i){
+		for (size_t j=0; j<nDim; ++j){
 			ReferenceShape ->Positions[i][j] = Positions[i][j];
 		}
 	}
@@ -3182,7 +3174,7 @@ double  ShapeBase::calculateVolumeForInputShapeStructure(double** shapePositions
 		double* vec1 = new double [(const int) nDim];
 		double* vec2 = new double [(const int) nDim];
 		double* vecMid = new double [(const int) nDim];
-		for (int j=0 ;j < nDim; ++j){
+		for (size_t j=0 ;j < nDim; ++j){
 				vec1   [j] = shapePositions[node1][j] - shapePositions[node0][j];
 				vec2   [j] = shapePositions[node2][j] - shapePositions[node0][j];
 				vecMid [j] = midPoint[j] - shapePositions[node0][j];
@@ -3280,7 +3272,7 @@ void 	ShapeBase::calculatePrincipalStrainAxesOnXYPlane(double& e1, double &e2, d
 	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, tmp, Rot, 0.0, newStrain);
 	e1 = gsl_matrix_get(newStrain,0,0);
 	e2 = gsl_matrix_get(newStrain,1,1);
-	//cout<<"Id: "<<Id<<" tan2Tet "<<tan2Tet<<" 2Tet "<<atan2(exy,difference)<<" tet: "<<tet;
+	//std::cout<<"Id: "<<Id<<" tan2Tet "<<tan2Tet<<" 2Tet "<<atan2(exy,difference)<<" tet: "<<tet;
 	if (e2>e1){
 		//the main strain is in the direction perpendicular to the calculated angle.
 		double tmp = e1;
@@ -3288,9 +3280,6 @@ void 	ShapeBase::calculatePrincipalStrainAxesOnXYPlane(double& e1, double &e2, d
 		e2 = tmp;
 		tet = tet + M_PI/2.0;
 	}
-	//cout<<"after correction tet: "<<tet<<endl;
-	//displayMatrix(Strain, "strain");
-	//displayMatrix(newStrain, "newStrain");
 	gsl_matrix_free(Rot);
 	gsl_matrix_free(RotT);
 	gsl_matrix_free(newStrain);
@@ -3299,17 +3288,22 @@ void 	ShapeBase::calculatePrincipalStrainAxesOnXYPlane(double& e1, double &e2, d
 }
 
 bool	ShapeBase::checkIfXYPlaneStrainAboveThreshold(double thres){
+	/**
+	 * This function will return a boolean to test if the polarity in planar deformation
+	 * is above a threshold.
+	 */
+
 	double exx = gsl_matrix_get(Strain,0,0);
 	double eyy = gsl_matrix_get(Strain,1,0);
 	double exy = gsl_matrix_get(Strain,3,0)/2.0;
 	double thresSquared = thres*thres;
 	double diff= exx - eyy;
 	if (diff*diff > thresSquared){
-		//cout<<"Element: "<<Id<<" exx, eyy, exy: "<<exx<<" "<<eyy<<" "<<exy<<endl;
+		//std::cout<<"Element: "<<Id<<" exx, eyy, exy: "<<exx<<" "<<eyy<<" "<<exy<<std::endl;
 		return true;
 	}
 	if (exy*exy > thresSquared){
-		//cout<<"Element: "<<Id<<" exx, eyy, exy: "<<exx<<" "<<eyy<<" "<<exy<<endl;
+		//std::cout<<"Element: "<<Id<<" exx, eyy, exy: "<<exx<<" "<<eyy<<" "<<exy<<std::endl;
 		return true;
 	}
 	return false;
@@ -3395,6 +3389,15 @@ bool 	ShapeBase::InvertMatrix(boost::numeric::ublas::matrix<double>& input, boos
 	return true;
 }
 
+
+std::array<double,3> 	ShapeBase::crossProduct3D(std::array<double,3>  u, std::array<double,3> v){
+	std::array<double,3>  cross{0.0};
+	cross[0] = u[1]*v[2] - u[2]*v[1];
+	cross[1] = u[2]*v[0] - u[0]*v[2];
+	cross[2] = u[0]*v[1] - u[1]*v[0];
+	return cross;
+}
+
 void	ShapeBase::crossProduct3D(double* u, double* v, double* cross){
 	cross[0] = u[1]*v[2] - u[2]*v[1];
 	cross[1] = u[2]*v[0] - u[0]*v[2];
@@ -3411,6 +3414,23 @@ double	ShapeBase::calculateMagnitudeVector3D(double* v){
 	double mag = v[0]*v[0]+v[1]*v[1]+v[2]*v[2];
 	mag = pow(mag,0.5);
 	return mag;
+}
+
+double ShapeBase::normaliseVector3D(std::array<double,3>& v){
+    double x = v[0];
+    double y = v[1];
+    double z = v[2];
+    double mag2 = x*x + y*y + z*z;
+    if (fabs(mag2) > 1E-14 && fabs(mag2 - 1.0f) > 1E-14) {
+        double mag = pow(mag2,0.5);
+        v[0] /= mag;
+        v[1] /= mag;
+        v[2] /= mag;
+        return mag;
+    }
+    else{
+        return 0.0;
+    }
 }
 
 double	ShapeBase::normaliseVector3D(double* v){
@@ -3452,79 +3472,85 @@ double 	ShapeBase::dotProduct3D(double* u, double* v){
 }
 
 
+double 	ShapeBase::dotProduct3D(std::array<double,3>& u, std::array<double,3>& v){
+    double dot = 0;
+    dot = u[0]*v[0]+u[1]*v[1]+u[2]*v[2];
+    return dot;
+}
+
 void 	ShapeBase::displayMatrix(boost::numeric::ublas::matrix<double>& mat, string matname){
 	int m = mat.size1();
 	int n = mat.size2();
-	cout<<matname<<": "<<endl;
+	std::cout<<matname<<": "<<std::endl;
 
 	for (int i =0; i<m; i++){
 		for (int j =0; j<n; j++){
 			cout.precision(4);
 			cout.width(6);
-			cout<<mat(i,j)<<" ";
+			std::cout<<mat(i,j)<<" ";
 		}
-		cout<<endl;
+		std::cout<<std::endl;
 	}
-	cout<<endl;
+	std::cout<<std::endl;
 }
 
 void 	ShapeBase::displayMatrix(gsl_matrix* mat, string matname){
     int m = mat->size1;
     int n = mat->size2;
-    cout<<matname<<": "<<endl;
+    std::cout<<matname<<": "<<std::endl;
 
     for (int i =0; i<m; i++){
         for (int j =0; j<n; j++){
             cout.precision(4);
             cout.width(6);
-            cout<<gsl_matrix_get(mat,i,j)<<" ";
+            std::cout<<gsl_matrix_get(mat,i,j)<<" ";
         }
-        cout<<endl;
+        std::cout<<std::endl;
     }
-    cout<<endl;
+    std::cout<<std::endl;
 }
 
 void 	ShapeBase::displayMatrix(gsl_vector* mat, string matname){
     int m = mat->size;
-    cout<<matname<<": "<<endl;
+    std::cout<<matname<<": "<<std::endl;
 
     for (int i =0; i<m; i++){
         cout.precision(4);
         cout.width(6);
-        cout<<gsl_vector_get(mat,i)<<endl;
+        std::cout<<gsl_vector_get(mat,i)<<std::endl;
     }
-    cout<<endl;
+    std::cout<<std::endl;
 }
 
 void 	ShapeBase::displayMatrix(boost::numeric::ublas::matrix<int>& mat, string matname){
 	int m = mat.size1();
 	int n = mat.size2();
-	cout<<matname<<": "<<endl;
+	std::cout<<matname<<": "<<std::endl;
 
 	for (int i =0; i<m; i++){
 		for (int j =0; j<n; j++){
 			cout.precision(4);
 			cout.width(6);
-			cout<<mat(i,j)<<" ";
+			std::cout<<mat(i,j)<<" ";
 		}
-		cout<<endl;
+		std::cout<<std::endl;
 	}
-	cout<<endl;
+	std::cout<<std::endl;
 }
 
 void	ShapeBase::displayMatrix(boost::numeric::ublas::vector<double>& vec, string matname){
 	int m = vec.size();
-	cout<<matname<<": "<<endl;
+	std::cout<<matname<<": "<<std::endl;
 	for (int i =0; i<m; i++){
 		cout.precision(4);
 		cout.width(6);
-		cout<<vec(i)<<" ";
+		std::cout<<vec(i)<<" ";
 	}
-	cout<<endl;
+	std::cout<<std::endl;
 }
 
-void 	ShapeBase::assignVolumesToNodes(vector <Node*>& Nodes){
-	for (int i=0; i<nNodes; i++){
+void 	ShapeBase::assignVolumesToNodes(const std::vector<std::unique_ptr<Node>>& Nodes){
+	for (size_t i=0; i<nNodes; i++){
         Nodes[NodeIds[i]]->mass += VolumePerNode;
 	}
 }
@@ -3538,7 +3564,7 @@ void 	ShapeBase::calculateViscositySurfaces(){
 	}
 }
 
-void ShapeBase::assignViscositySurfaceAreaToNodes(vector <Node*>& Nodes){
+void ShapeBase::assignViscositySurfaceAreaToNodes(const std::vector<std::unique_ptr<Node>>& Nodes){
 	if (elementHasExposedApicalSurface){
 		for(int i=0;i<nSurfaceAreaNodeNumber; ++i){
 			Nodes[NodeIds[exposedApicalSurfaceNodeIds[i]]]->viscositySurface+=ApicalArea/nSurfaceAreaNodeNumber;
@@ -3591,7 +3617,7 @@ void 	ShapeBase::calculateZProjectedAreas(){
 }
 
 
-void 	ShapeBase::assignZProjectedAreas(vector <Node*> Nodes){
+void 	ShapeBase::assignZProjectedAreas(const std::vector<std::unique_ptr<Node>>& Nodes){
     if (ShapeType == 1 ){ //only written for prisms
         for (int i=0; i<3; i++){
             Nodes[NodeIds[i]]->zProjectedArea +=ZProjectedBasalArea/3.0;
@@ -3602,8 +3628,8 @@ void 	ShapeBase::assignZProjectedAreas(vector <Node*> Nodes){
     }
 }
 
-void 	ShapeBase:: assignElementToConnectedNodes(vector <Node*>& Nodes){
-	for (int i=0; i<nNodes; i++){
+void 	ShapeBase:: assignElementToConnectedNodes(const std::vector<std::unique_ptr<Node>>& Nodes){
+	for (size_t i=0; i<nNodes; i++){
 		Nodes[NodeIds[i]]->connectedElementIds.push_back(Id);
 		double weightfFraction = (ReferenceShape->Volume/nNodes)/Nodes[NodeIds[i]]->mass;
 		Nodes[NodeIds[i]]->connectedElementWeights.push_back(weightfFraction);
@@ -3613,8 +3639,8 @@ void 	ShapeBase:: assignElementToConnectedNodes(vector <Node*>& Nodes){
 	}
 }
 
-void 	ShapeBase::removeMassFromNodes(vector <Node*>& Nodes){
-	for (int i=0; i<nNodes; i++){
+void 	ShapeBase::removeMassFromNodes(const std::vector<std::unique_ptr<Node>>& Nodes){
+	for (size_t i=0; i<nNodes; i++){
 			Nodes[NodeIds[i]]->mass -= VolumePerNode;
 			//updating the weight fractions of the elements on the node due to elimination of the ablated element:
 			int n = Nodes[NodeIds[i]]->connectedElementIds.size();
@@ -3639,7 +3665,7 @@ void 	ShapeBase::checkDisplayClipping(double xClip, double yClip, double zClip){
 	IsXSymmetricClippedInDisplay=false;
 	IsYSymmetricClippedInDisplay=false;
 
-	for (int j=0; j<nNodes; ++j){
+	for (size_t j=0; j<nNodes; ++j){
 		 if((-1.0)*Positions[j][0]>xClip){
 			 IsXSymmetricClippedInDisplay = true;
 		 }
@@ -3656,7 +3682,7 @@ void 	ShapeBase::checkDisplayClipping(double xClip, double yClip, double zClip){
 		 }
 
 		//convert zclip back to percentage:
-		//if (Id ==0){ cout<<"zClip pre: "<<zClip;}
+		//if (Id ==0){ std::cout<<"zClip pre: "<<zClip;}
 		 double currentThres = -10.0+zClip - Positions[j][1];
 		 if(Positions[j][0]<currentThres){
 			 IsClippedInDisplay = true;
@@ -3682,7 +3708,7 @@ void ShapeBase::setECMMimicingElementThicknessGrowthAxis(){
 			rotAx[0] = Positions[3][0] - Positions[0][0];
 			rotAx[1] = Positions[3][1] - Positions[0][1];
 			rotAx[2] = Positions[3][2] - Positions[0][2];
-			double dummy = normaliseVector3D(rotAx);
+			(void) normaliseVector3D(rotAx);
 			//I rotation angle  will come from peripodialness. If peripodialness is 1, the angle is pi, if it is 0, the angle is 0.
 			//I will rotate the coordinates via y axis in psi degrees:
 			double psi = (-1.0) * peripodialGrowthWeight*M_PI;
@@ -3711,9 +3737,9 @@ void ShapeBase::setECMMimicingElementThicknessGrowthAxis(){
 
 }
 
-bool ShapeBase::areanyOfMyNodesAtCircumference(vector<Node*>& Nodes){
+bool ShapeBase::areanyOfMyNodesAtCircumference(const std::vector<std::unique_ptr<Node>>& Nodes){
 	bool thereIsNodeAtCircumference = false;
-	for (int i=0; i< nNodes; ++i){
+	for (size_t i=0; i< nNodes; ++i){
 		if (Nodes[NodeIds[i]]->atCircumference){
 			thereIsNodeAtCircumference = true;
 			break;
@@ -3722,7 +3748,7 @@ bool ShapeBase::areanyOfMyNodesAtCircumference(vector<Node*>& Nodes){
 	return thereIsNodeAtCircumference;
 }
 
-void ShapeBase::setLateralElementsRemodellingPlaneRotationMatrix(double systemCentreX, double systemCentreY){
+void ShapeBase::setLateralElementsRemodellingPlaneRotationMatrix(){
 	if(tissueType == 2){
 		if (ShapeType == 1){
 			//calculating the z vector I am interested in:
@@ -3732,7 +3758,7 @@ void ShapeBase::setLateralElementsRemodellingPlaneRotationMatrix(double systemCe
 			rotAx[0] = Positions[3][0] - Positions[0][0];
 			rotAx[1] = Positions[3][1] - Positions[0][1];
 			rotAx[2] = Positions[3][2] - Positions[0][2];
-			double dummy = normaliseVector3D(rotAx);
+			(void) normaliseVector3D(rotAx);
 			//I rotation angle  will come from peripodialness. If peripodialness is 1, the angle is pi, if it is 0, the angle is 0.
 			//I will rotate the coordinates via y axis in psi degrees:
 			double psi = (-1.0) * peripodialGrowthWeight*M_PI;
@@ -3803,8 +3829,8 @@ void ShapeBase::setLateralElementsRemodellingPlaneRotationMatrix(double systemCe
 		}
 		else{
 			//this axis calculation will only work for prisms!!!
-			cout<<"Error! Trying to calculate remodellingPlaneRotationMatrix for non-prism element, update code, I will delte the matrix to make code break here!"<<endl;
-			cerr<<"Error! Trying to calculate remodellingPlaneRotationMatrix for non-prism element, update code, I will delte the matrix to make code break here!"<<endl;
+			std::cout<<"Error! Trying to calculate remodellingPlaneRotationMatrix for non-prism element, update code, I will delte the matrix to make code break here!"<<std::endl;
+			std::cerr<<"Error! Trying to calculate remodellingPlaneRotationMatrix for non-prism element, update code, I will delte the matrix to make code break here!"<<std::endl;
 			gsl_matrix_free(remodellingPlaneRotationMatrix);
 		}
 	}

@@ -6,6 +6,7 @@
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_blas.h>
 #include <array>
+
 //#include <vector>
 using namespace std;
 
@@ -70,14 +71,14 @@ public:
 	virtual float 		getOuterRadius(){return ParentErrorMessage("getOuterRadius",0.0);}; /// Virtual function of the parent to get outer radius of the growth function definition.
 	virtual std::array<double,3> 		getGrowthRate(){ParentErrorMessage("getGrowthRate");return std::array<double,3>{0.0};}; /// Virtual function of the parent to get growth rate of the growth function definition.
 	virtual std::array<double,3>		getShapeChangeRateRate(){ParentErrorMessage("getShapeChangeRateRate"); return std::array<double,3>{0.0};}; /// Virtual function of the parent to get shape change rate of the growth function definition.
-	virtual gsl_matrix* getShearAngleRotationMatrix(){ParentErrorMessage("getShearAngleRotationMatrix"); gsl_matrix* dummy; return dummy;}; //// Virtual function of the parent to get rotation angle matrix of the growth function definition.
+	virtual gsl_matrix* getShearAngleRotationMatrix(){ParentErrorMessage("getShearAngleRotationMatrix"); return 0; /*gsl_matrix* dummy; return dummy;*/}; //// Virtual function of the parent to get rotation angle matrix of the growth function definition.
 	virtual double 		getShearAngle(){ParentErrorMessage("getShearAngle");return 0.0;}; /// Virtual function of the parent to get rotation angle of the growth function definition.
 	virtual int			getGridX(){return ParentErrorMessage("getGridX",0);}; /// Virtual function of the parent to get gridX of the growth function definition.
 	virtual int			getGridY(){return ParentErrorMessage("getGridY",0);}; /// Virtual function of the parent to get gridY of the growth function definition.
 	virtual	double 		getGrowthMatrixElement(int /*i*/, int /*j*/, int /*k*/){return ParentErrorMessage("getGrowthMatrixElement",0.0);}; /// Virtual function of the parent to get grid matrix element of the growth function definition.
 	virtual	double 		getXyShearAngleMatrixElement(int /*i*/, int /*j*/){return ParentErrorMessage("getXyShearhMatrixElement",0.0);}; /// Virtual function of the parent to get grid matrix element of the growth function definition.
 	virtual bool 		isAspectRatioOverOne(int /*i*/, int /*j*/){return ParentErrorMessage("isAspectRatioOverOne",0);}; /// Virtual function of the parent to check aspect ratio of the growth function definition.
-	virtual gsl_matrix* getXyShearRotationsMatrixElement(int /*i*/, int /*j*/){ParentErrorMessage("getShearAngleRotationMatrixElement");gsl_matrix* dummy ; return dummy;}; //this is used by grid based growth
+	virtual gsl_matrix* getXyShearRotationsMatrixElement(int /*i*/, int /*j*/){ParentErrorMessage("getShearAngleRotationMatrixElement");return 0; /*gsl_matrix* dummy ; return dummy;*/}; //this is used by grid based growth
 	virtual void 		getGrowthProfileAt4Corners(int /*IndexX*/, int /*IndexY*/, double */*growth0*/, double */*growth1*/, double */*growth2*/, double */*growth3*/, double */*angles*/, bool */*anglesEliminated*/){ParentErrorMessage("getGrowthProfileAt4Corners");};
 
 	virtual void		setGrowtRate(double /*ex*/, double /*ey*/, double /*ez*/){ParentErrorMessage("setGrowtRate");}; /// Virtual function of the parent to set growth rateof the growth function definition.

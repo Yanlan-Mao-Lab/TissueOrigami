@@ -232,7 +232,7 @@ bool Node::isMyNeig(int nodeId){
 	return false;
 }
 
-bool Node::isNeigWithMyCollapsedNodes(int NodeId, vector<Node*>& Nodes){
+bool Node::isNeigWithMyCollapsedNodes(int NodeId, const std::vector <std::unique_ptr<Node>>& Nodes){
 	/**
 	 *  This function will take in a node id, and the address of the list of node pointers in the simulation.
 	 *  It will check if the input node id is an immediate neighbour of any of the nodes it has been collapsed with.
@@ -251,7 +251,7 @@ bool Node::isNeigWithMyCollapsedNodes(int NodeId, vector<Node*>& Nodes){
 }
 
 //version without element checking, and adhesion
-void Node::collapseOnNode(vector<Node*>& Nodes, int masterNodeId){
+void Node::collapseOnNode(const std::vector <std::unique_ptr<Node>>& Nodes, int masterNodeId){
 	/**
 	 *  This function will collapse this Node with the input node id (second parameter).
 	 *  Collapse will bind the two nodes' all degrees of freedoms to each other, and bring them to the same position,
@@ -332,7 +332,7 @@ void Node::collapseOnNode(vector<Node*>& Nodes, int masterNodeId){
 		}
 		cout<<endl;
 		cout<<"  masters collapsed list before update: ";
-		for(int i=0; i<Nodes[masterNodeId]->collapsedWith.size(); ++i){
+		for(size_t i=0; i<Nodes[masterNodeId]->collapsedWith.size(); ++i){
 			cout<<Nodes[masterNodeId]->collapsedWith[i]<<" ";
 		}
 		cout<<endl;
@@ -363,7 +363,7 @@ void Node::clearDuplicatesFromCollapseList(){
 	collapsedWith.erase( unique( collapsedWith.begin(), collapsedWith.end() ), collapsedWith.end() );
 }
 
-void Node::getNewCollapseListAndAveragePos(vector<int> &newCollapseList, double* avrPos, bool* fix, vector<Node*>& Nodes, int masterNodeId){
+void Node::getNewCollapseListAndAveragePos(vector<int> &newCollapseList, double* avrPos, bool* fix, const std::vector <std::unique_ptr<Node>>& Nodes, int masterNodeId){
 	for (size_t j=0; j<3; ++j){
 		avrPos[j] = 0;
 		fix[j] = false;
@@ -403,7 +403,7 @@ void Node::getNewCollapseListAndAveragePos(vector<int> &newCollapseList, double*
 
 
 //version that will check element collapse:
-void Node::collapseOnNodeInStages( vector<int> &newCollapseList, double* avrPos, bool* fix, vector<Node*>& Nodes, int masterNodeId){
+void Node::collapseOnNodeInStages( vector<int> &newCollapseList, double* avrPos, bool* fix, const std::vector <std::unique_ptr<Node>>& Nodes){
 	//update adhesion:
 	size_t nNew = newCollapseList.size();
 	int baseNode = 0;
@@ -441,7 +441,7 @@ void Node::collapseOnNodeInStages( vector<int> &newCollapseList, double* avrPos,
 	}
 }
 
-void Node::collapseOnNode(vector<int> &newCollapseList, double* avrPos, bool* fix, vector<Node*>& Nodes, int masterNodeId){
+void Node::collapseOnNode(vector<int> &newCollapseList, double* avrPos, bool* fix, const std::vector <std::unique_ptr<Node>>& Nodes, int masterNodeId){
 	bool debugDisplay = true;
 	//add the nodes master have collapsed with on me:
 	//update adhesion:
@@ -589,7 +589,7 @@ int  Node::getId(){
 	return Id;
 }
 
-bool Node::isECMChangeAppliedToNode(bool changeApicalECM, bool changeBasalECM, vector<int> &ECMChangeEllipseBandIds, int numberOfECMChangeEllipseBands){
+bool Node::isECMChangeAppliedToNode(bool changeApicalECM, bool changeBasalECM, vector<int> &ECMChangeEllipseBandIds, size_t numberOfECMChangeEllipseBands){
 	if (allOwnersECMMimicing){
 		if  (    (changeApicalECM && tissuePlacement == 1 )
 			  || (changeBasalECM  && tissuePlacement == 0 )

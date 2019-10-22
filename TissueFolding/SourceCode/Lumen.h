@@ -19,21 +19,21 @@ protected:
 	int nTriangleSize;	//the number of triangles forming the surface of lumen
 
 public:
-	Lumen(vector<ShapeBase*>& Elements,vector<Node*>& Nodes, double lumenBulkModulus, double lumenGrowthFold);
+	Lumen(const std::vector <std::unique_ptr<ShapeBase>>& Elements,const std::vector <std::unique_ptr<Node>>& Nodes, double lumenBulkModulus, double lumenGrowthFold);
 	~Lumen();
 
-	void updateMatrices(vector<Node*>& Nodes);
+	void updateMatrices(const std::vector <std::unique_ptr<Node>>& Nodes, const std::vector <std::unique_ptr<ShapeBase>>& Elements);
 	void calculateCurrentVolume();
-	void calculateResiduals(vector<Node*>& Nodes);
-	void calculateLumengFromElementalResiduals(gsl_matrix* g);
-	void calculateJacobian();
-	void writeLumenJacobianToSystemJacobian(gsl_matrix* K,vector<Node*>& Nodes);
+	void calculateResiduals(const std::vector <std::unique_ptr<Node>>& Nodes, const std::vector <std::unique_ptr<ShapeBase>>& Elements);
+	void calculateLumengFromElementalResiduals(gsl_matrix* g, const std::vector <std::unique_ptr<ShapeBase>>& Elements);
+	void calculateJacobian(const std::vector <std::unique_ptr<ShapeBase>>& Elements);
+	void writeLumenJacobianToSystemJacobian(gsl_matrix* K,const std::vector <std::unique_ptr<Node>>& Nodes);
 	void growLumen(double currentTimeInSec);
 
 
 	int Dim ;		//dimensions of the system, should be 3D.
 	double rV;	//normalised deviation from ideal volume (V - V0 )/V0
-	vector <ShapeBase*> encapsulatingElements;
+	vector<int> encapsulatingElementIds;
 	vector <int> nodeIdsList;
 	double growthRate;	//growth rate per sec
 	double initialIdealVolume;

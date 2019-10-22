@@ -44,38 +44,25 @@ Simulation::Simulation(){
 
 Simulation::~Simulation(){
 	delete ModInp;
-	if (nGrowthPinning>0){
-		delete [] growthPinUpdateTime;
-		delete [] growthPinUpdateBools;
-	}
-	//n nodes
-	for (int j=0;j<nNodes;++j){
-		delete[] SystemForces[j];
-		delete[] PackingForces[j];
-		delete[] FixedNodeForces[j];
-	}
-	delete[] SystemForces;
-    delete[] PackingForces;
-    delete[] FixedNodeForces;
     if (thereIsPeripodialMembrane){
     	delete tissueLumen;
     }
 
-    cout<<"deleting elements"<<endl;
-	while(!Elements.empty()){
+    std::cout<<"deleting elements"<<std::endl;
+	/*while(!Elements.empty()){
 		ShapeBase* tmp_pt;
 		tmp_pt = Elements.back();
 		Elements.pop_back();
 		delete tmp_pt;
-	}
-    cout<<"deleting nodes"<<endl;
-	while(!Nodes.empty()){
+	}*/
+    std::cout<<"deleting nodes"<<std::endl;
+	/*while(!Nodes.empty()){
 		Node* tmp_pt;
 		tmp_pt = Nodes.back();
 		Nodes.pop_back();
 		delete tmp_pt;
-	}
-    cout<<"deletion complete"<<endl;
+	}*/
+    std::cout<<"deletion complete"<<std::endl;
 
 }
 
@@ -136,7 +123,6 @@ void Simulation::setDefaultParameters(){
 	growthRedistributionSaved = true;
 	nodeBindingSaved = true;
 	physicalPropertiesSaved = true;
-	collapseAndAdhesionSaved = true;
 	PeripodialElasticity = 0.0;
 	peripodialApicalViscosity = discProperApicalViscosity;
 	peripodialBasalViscosity  = discProperBasalViscosity;
@@ -298,7 +284,7 @@ bool Simulation::readExecutableInputs(int argc, char **argv){
 			Success = readSaveDirectoryToDisplay(i, argc, argv);
 		}
 		else {
-			cerr<<"Please enter a valid option key: {-mode,-i, -od, -dInput}, current string: "<<inptype<<endl;
+			std::cerr<<"Please enter a valid option key: {-mode,-i, -od, -dInput}, current string: "<<inptype<<std::endl;
 			return false;
 		}
 		i++;
@@ -313,7 +299,7 @@ bool Simulation::readExecutableInputs(int argc, char **argv){
 bool Simulation::readModeOfSim(int& i, int argc, char **argv){
 	i++;
 	if (i >= argc){
-		cerr<<" input the mode of simulation: {DisplaySave, SimulationOnTheGo, ContinueFromSave, Default}"<<endl;
+		std::cerr<<" input the mode of simulation: {DisplaySave, SimulationOnTheGo, ContinueFromSave, Default}"<<std::endl;
 		return false;
 	}
 	const char* inpstring = argv[i];
@@ -332,7 +318,7 @@ bool Simulation::readModeOfSim(int& i, int argc, char **argv){
 		return true;
 	}
 	else{
-		cerr<<"Please provide input mode: -mode {DisplaySave, SimulationOnTheGo, ContinueFromSave, Default}";
+		std::cerr<<"Please provide input mode: -mode {DisplaySave, SimulationOnTheGo, ContinueFromSave, Default}";
 		return false;
 	}
 }
@@ -340,7 +326,7 @@ bool Simulation::readModeOfSim(int& i, int argc, char **argv){
 bool Simulation::readParameters(int& i, int argc, char **argv){
 	i++;
 	if (i >= argc){
-		cerr<<" input the model input file"<<endl;
+		std::cerr<<" input the model input file"<<std::endl;
 		return false;
 	}
 	const char* inpstring = argv[i];
@@ -356,7 +342,7 @@ bool Simulation::readParameters(int& i, int argc, char **argv){
 bool Simulation::readSaveDirectoryToDisplay(int& i, int argc, char **argv){
 	i++;
 	if (i >= argc){
-		cerr<<" input the save directory, contents of which will be displayed"<<endl;
+		std::cerr<<" input the save directory, contents of which will be displayed"<<std::endl;
 		return false;
 	}
 	const char* inpstring = argv[i];
@@ -372,7 +358,7 @@ bool Simulation::readOutputDirectory(int& i, int argc, char **argv){
      */
 	i++;
 	if (i >= argc){
-		cerr<<" input the save directory"<<endl;
+		std::cerr<<" input the save directory"<<std::endl;
 		return false;
 	}
 	const char* inpstring = argv[i];
@@ -402,7 +388,7 @@ bool Simulation::readFinalSimulationStep(){
          * line is discarded as it is the header.
          */
 		getline(saveFileToDisplayMesh,currline);
-		cerr<<" currline in read last step: "<<currline<<endl;
+		std::cerr<<" currline in read last step: "<<currline<<std::endl;
 		if(saveFileToDisplayMesh.eof()){
 			reachedEndOfSaveFile = true;
 			break;
@@ -411,7 +397,7 @@ bool Simulation::readFinalSimulationStep(){
          * If end of file is not reached, the node data is read.
          */
 		success = readNodeDataToContinueFromSave();
-		cout<<"dt after  readNodeDataToContinueFromSave "<<dt<<" timeStepCurrentSim: "<<timeStepCurrentSim<<" dataSaveInterval: "<<dataSaveInterval<<" dataSaveIntervalCurrentSim: "<<dataSaveIntervalCurrentSim<<endl;
+		std::cout<<"dt after  readNodeDataToContinueFromSave "<<dt<<" timeStepCurrentSim: "<<timeStepCurrentSim<<" dataSaveInterval: "<<dataSaveInterval<<" dataSaveIntervalCurrentSim: "<<dataSaveIntervalCurrentSim<<std::endl;
 		if (!success){
 			return false;
 		}
@@ -419,7 +405,7 @@ bool Simulation::readFinalSimulationStep(){
          * If node data is successfully read, then element data is read.
          */
 		readElementDataToContinueFromSave();
-		cout<<"dt after  readElementDataToContinueFromSave "<<dt<<" timeStepCurrentSim: "<<timeStepCurrentSim<<" dataSaveInterval: "<<dataSaveInterval<<" dataSaveIntervalCurrentSim: "<<dataSaveIntervalCurrentSim<<endl;
+		std::cout<<"dt after  readElementDataToContinueFromSave "<<dt<<" timeStepCurrentSim: "<<timeStepCurrentSim<<" dataSaveInterval: "<<dataSaveInterval<<" dataSaveIntervalCurrentSim: "<<dataSaveIntervalCurrentSim<<std::endl;
         /**
          * Depending on which properties are saved, all the trmainder physocal porperies and
          * states of the tissue are read.
@@ -448,19 +434,16 @@ bool Simulation::readFinalSimulationStep(){
     	if (nodeBindingSaved){
     		readNodeBindingToContinueFromSave();
     	}
-    	if(collapseAndAdhesionSaved){
-    		readCollapseAndAdhesionToContinueFromSave();
-    	}
         if (thereIsExplicitLumen){
         	tissueLumen->growLumen(currSimTimeSec + dt*dataSaveInterval);
-        	cout<<"lumen growth is carried out for: "<<currSimTimeSec + dt*dataSaveInterval<<endl;
+        	std::cout<<"lumen growth is carried out for: "<<currSimTimeSec + dt*dataSaveInterval<<std::endl;
         }
         /**
          * The time step are iterated with the save time step read from the save summary.
          */
 		timestep = timestep + dataSaveInterval;
 		currSimTimeSec += dt*dataSaveInterval;
-		std::cout<<"current time step "<<timestep<<" currSimTimeSec: "<<currSimTimeSec<<endl;
+		std::cout<<"current time step "<<timestep<<" currSimTimeSec: "<<currSimTimeSec<<std::endl;
         /**
          * Finally the footer is skipped.
          */
@@ -481,7 +464,6 @@ bool Simulation::readFinalSimulationStep(){
      * One the last step is reached, the element positions, volumes, physical properties, nodal masses, and other geometry dependent properties such as
      * the shape function derivatives, and bounding box are updated.
      */
-	std::cout<<"carry out updates"<<std::endl;
 	updateElementVolumesAndTissuePlacements();
 	updateElasticPropertiesForAllNodes();
 	clearNodeMassLists();
@@ -502,11 +484,11 @@ bool Simulation::readFinalSimulationStep(){
 }
 
 void Simulation::updateMasterSlaveNodesInBinding(){
-	for (vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+	 for (const auto& itNode : Nodes){
 		for (int dim = 0; dim<3; ++dim){
-			if ((*itNode)->slaveTo[dim] > -1){
-				int slaveDof = (*itNode)->Id*3+dim;
-				int masterDof = (*itNode)->slaveTo[dim]*3+dim;
+			if (itNode->slaveTo[dim] > -1){
+				int slaveDof = itNode->Id*3+dim;
+				int masterDof = itNode->slaveTo[dim]*3+dim;
 				vector <int> fix;
 				fix.push_back(slaveDof);
 				fix.push_back(masterDof);
@@ -519,31 +501,31 @@ void Simulation::updateMasterSlaveNodesInBinding(){
 
 bool Simulation::checkInputConsistency(){
 	if (ContinueFromSave &&  saveDirectoryToDisplayString == "Not-Set"){
-		cerr <<"The mode is set to continue from saved simulation, please provide an input directory containing the saved profile, using -dInput"<<endl;
+		cerr <<"The mode is set to continue from saved simulation, please provide an input directory containing the saved profile, using -dInput"<<std::endl;
 		return false;
 	}
 	if (saveData || saveImages){
 		if (saveDirectory == "Not-Set"){
-			cerr <<"Modelinput file requires saving, please provide output directory, using -od tag"<<endl;
+			cerr <<"Modelinput file requires saving, please provide output directory, using -od tag"<<std::endl;
 			return false;
 		}
 	}
 	if (DisplaySave){
 		if (saveDirectoryToDisplayString == "Not-Set"){
-			cerr <<"The mode is set to display from save, please provide an input directory, using -dInput"<<endl;
+			cerr <<"The mode is set to display from save, please provide an input directory, using -dInput"<<std::endl;
 			return false;
 		}
 	}
 	if (AddPeripodialMembrane == false){
 		for (int i=0; i<nGrowthFunctions; ++i){
 			if(GrowthFunctions[i]->applyToPeripodialMembrane){
-				cerr<<"There is no peripodial membrane, while growth function "<<i<<" is applicable to peropodial membrane, further checks needed"<<endl;
+				std::cerr<<"There is no peripodial membrane, while growth function "<<i<<" is applicable to peropodial membrane, further checks needed"<<std::endl;
 				needPeripodialforInputConsistency = true;
 			}
 		}
 	}
 	if (thereIsExplicitLumen && !AddPeripodialMembrane){
-		cerr<<"There is no peripodial membrane while asking for a lumen, check if there is one in the input mesh before adding lumen!"<<endl;
+		std::cerr<<"There is no peripodial membrane while asking for a lumen, check if there is one in the input mesh before adding lumen!"<<std::endl;
 		needPeripodialforInputConsistency = true;
 	}
 	return true;
@@ -605,7 +587,7 @@ bool Simulation::initiateSystem(){
 	if (AddPeripodialMembrane){
 		if (thereIsPeripodialMembrane){
 			Success = false;
-			cerr<<"Error-there is already peripodial membrane added to the mesh, but modelinput file asks to add another"<<endl;
+			std::cerr<<"Error-there is already peripodial membrane added to the mesh, but modelinput file asks to add another"<<std::endl;
 		}
 		else{
 			//Success = addCurvedPeripodialMembraneToTissue();
@@ -622,7 +604,7 @@ bool Simulation::initiateSystem(){
      */
 	if (needPeripodialforInputConsistency){
 		if (!thereIsPeripodialMembrane){
-			cerr<<"There is no peripodial membrane but at least one growth function or lumen desires one"<<endl;
+			std::cerr<<"There is no peripodial membrane but at least one growth function or lumen desires one"<<std::endl;
 			Success = false;
 		}
 	}
@@ -715,9 +697,8 @@ bool Simulation::initiateSystem(){
 	calculateBoundingBox();
     calculateDVDistance();
     assignCompartment();
-	vector<ShapeBase*>::iterator itElement;
-    for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-    	(*itElement)->calculateRelativePosInBoundingBox(boundingBox[0][0],boundingBox[0][1],boundingBoxSize[0],boundingBoxSize[1]);
+    for(const auto& itElement : Elements){
+    	itElement->calculateRelativePosInBoundingBox(boundingBox[0][0],boundingBox[0][1],boundingBoxSize[0],boundingBoxSize[1]);
     }
     /**
      * During relative position calculation, the positions of non-apical elements are assigned to be equal to their apical
@@ -725,8 +706,8 @@ bool Simulation::initiateSystem(){
      * of elements would be equal.
      */
     updateRelativePositionsToApicalPositioning();
-    for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-        (*itElement)->setInitialRelativePosInBoundingBox();
+    for(const auto& itElement : Elements){
+        itElement->setInitialRelativePosInBoundingBox();
     }
     /**
      * If there are any additional manipulations, they are implemented next. These include growth mutant induction, experimental stretcher attachement,
@@ -754,20 +735,22 @@ bool Simulation::initiateSystem(){
      * frame of the save is read via Simulation#readFinalSimulationStep.
      */
 	if (ContinueFromSave){
-		cout<<"Reading Final SimulationStep: "<<endl;
+		std::cout<<"Reading Final SimulationStep: "<<std::endl;
 		Success = readFinalSimulationStep();
 		if (!Success){
 			return Success;
 		}
 	}
+	std::cout<<"read the final step"<<std::endl;
     /**
      * If data is being saved, then the simulation summary will be written next.
      */
 	if (saveData){
-		cout<<"writing the summary current simulation parameters"<<endl;
+		std::cout<<"writing the summary current simulation parameters"<<std::endl;
 		writeSimulationSummary();
 		writeSpecificNodeTypes();
 	}
+	std::cout<<"saved the step if needed"<<std::endl;
     /**
      * Fianlly, the Newton Raphson solver object is initiated, and node DoF bonding as boundary condition is checked.
      */
@@ -803,7 +786,7 @@ bool Simulation::initiateSystem(){
     if (thereIsPlasticDeformation){
     	setLateralElementsRemodellingPlaneRotationMatrices();
     }
-    cout<<" system initiated"<<endl;
+    std::cout<<" system initiated"<<std::endl;
 	return Success;
 }
 
@@ -813,14 +796,14 @@ void Simulation::checkForNodeBinding(){
      * then this is implemented in here. The nodes are updated via Simulation#bindCircumferenceXY, and the NR solver data is updated.
      */
 	if (thereIsCircumferenceXYBinding){
-		cout<<"binding circumference"<<endl;
+		std::cout<<"binding circumference"<<std::endl;
 		bool thereIsBinding = bindCircumferenceXY();
 		if (thereIsBinding){
 			NRSolver->boundNodesWithSlaveMasterDefinition = true;
 		}
 	}
 	if (ellipseIdsForBaseAxisBinding.size()>0){
-		cout<<"binding ellipses"<<endl;
+		std::cout<<"binding ellipses"<<std::endl;
 		bool thereIsBinding = bindEllipseAxes();
 		if (thereIsBinding){
 			//I will not equate the values, if the parameter of NRSolver
@@ -830,7 +813,7 @@ void Simulation::checkForNodeBinding(){
 			NRSolver->boundNodesWithSlaveMasterDefinition = true;
 		}
 	}
-	cout<<"finished binding"<<endl;
+	std::cout<<"finished binding"<<std::endl;
 }
 
 
@@ -867,24 +850,25 @@ bool Simulation::bindEllipseAxes(){
 		 *  - is inside an ellipse of interest (Node#coveringEllipseBandId is equal to current id being checked)
 		 *  - the master node does not have a fixed position on the axis ellipse is attempting to bind.
 		 */
-		for (vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-			if ((*itNode)->insideEllipseBand && (*itNode)->tissuePlacement == 0){//inside ellipse band and basal
+
+		for (const auto& itNode : Nodes){
+			if (itNode->insideEllipseBand && itNode->tissuePlacement == 0){//inside ellipse band and basal
 				//checking one ellipse base binding rule:
 				for (int ellipseIdIterator =0; ellipseIdIterator<nBoundEllipses;++ellipseIdIterator){
-					if ((*itNode)->coveringEllipseBandId == ellipseIdsForBaseAxisBinding[ellipseFunctionIterator][ellipseIdIterator]){
-						nodeIds.push_back((*itNode)->Id);
-						if ((*itNode)->Id<masterNodeId){
+					if (itNode->coveringEllipseBandId == ellipseIdsForBaseAxisBinding[ellipseFunctionIterator][ellipseIdIterator]){
+						nodeIds.push_back(itNode->Id);
+						if (itNode->Id<masterNodeId){
 							//I will avoid making a fixed node my master:
 							bool skipThisNode = false;
 							for (int dimIterator = 0; dimIterator <3; ++dimIterator){
 								if (ellipseBasesAreBoundOnAxis[ellipseFunctionIterator][dimIterator] &&
-										(*itNode)->FixedPos[dimIterator]){
+									itNode->FixedPos[dimIterator]){
 									skipThisNode = true;
 									break;
 								}
 							}
 							if (!skipThisNode){
-								masterNodeId = (*itNode)->Id;
+								masterNodeId = itNode->Id;
 							}
 						}
 						break;
@@ -892,14 +876,14 @@ bool Simulation::bindEllipseAxes(){
 				}
 			}
 		}
-		if (masterNodeId ==  nNodes*2){
+		if (masterNodeId ==  (int) (nNodes*2)){
 			/** In case I could not find a master node, then I will generate an error, and skip this
 			 * binding. The might be due to all the nodes within the marker ellipse region
 			 * are already bound in at least on of their qualifying axes. The solution is to remove this fixed axis
 			 * from the requirements of the ellipse and restart simulation.
 			 */
-			cout<<" skipping ellipse binding function "<<ellipseFunctionIterator<<", due to clash with node fixing!"<<endl;
-			cerr<<" skipping ellipse binding function "<<ellipseFunctionIterator<<", due to clash with node fixing!"<<endl;
+			std::cout<<" skipping ellipse binding function "<<ellipseFunctionIterator<<", due to clash with node fixing!"<<std::endl;
+			std::cerr<<" skipping ellipse binding function "<<ellipseFunctionIterator<<", due to clash with node fixing!"<<std::endl;
 			return thereIsBinding;
 		}
 		//Now I have a list of all nodes that are to be bound;
@@ -915,7 +899,7 @@ bool Simulation::bindEllipseAxes(){
 		int dofYmaster  = dofXmaster+1;
 		int dofZmaster  = dofXmaster+2;
 		for (int i=0;i<n;++i){
-			if (nodeIds[i] != masterNodeId){
+			if ((int) (nodeIds[i]) != masterNodeId){
 				int slaveNodeId = nodeIds[i];
 				int dofXslave  = slaveNodeId*dim;
 				int dofYslave  = dofXslave+1;
@@ -974,32 +958,32 @@ bool Simulation::bindPeripodialToColumnar(){
 	int dim = 3;
 	vector<int> masterIds,slaveIds;
 	//make a list of master slave couples between columnar and peripodial:
-	for (vector<Node*>::iterator itPeripodialNode = Nodes.begin();itPeripodialNode<Nodes.end(); ++itPeripodialNode){
-		if ((*itPeripodialNode)->tissueType != 1 || (*itPeripodialNode)->tissuePlacement != 1 ){
+	for (const auto& itPeripodialNode : Nodes){
+		if (itPeripodialNode->tissueType != 1 || itPeripodialNode->tissuePlacement != 1 ){
 			//not peripodial node or is not apical
 			continue;
 		}
-		if ((*itPeripodialNode)->hasLateralElementOwner){
+		if (itPeripodialNode->hasLateralElementOwner){
 			continue;
 		}
-		for (vector<Node*>::iterator itColumnarNode = Nodes.begin();itColumnarNode<Nodes.end(); ++itColumnarNode){
-			if ((*itColumnarNode)->tissueType != 0 || (*itColumnarNode)->tissuePlacement != 1){
+		for (const auto& itColumnarNode : Nodes){
+			if (itColumnarNode->tissueType != 0 || itColumnarNode->tissuePlacement != 1){
 				//not columnar node or is not apical
 				continue;
 			}
-			if ((*itColumnarNode)->hasLateralElementOwner){
+			if (itColumnarNode->hasLateralElementOwner){
 				continue;
 			}
 			double threshold = 1E-5;
-			if(    (*itColumnarNode)->Position[0] < (*itPeripodialNode)->Position[0]+threshold
-				&& (*itColumnarNode)->Position[0] > (*itPeripodialNode)->Position[0]-threshold
-				&& (*itColumnarNode)->Position[1] < (*itPeripodialNode)->Position[1]+threshold
-				&& (*itColumnarNode)->Position[1] > (*itPeripodialNode)->Position[1]-threshold
+			if(    itColumnarNode->Position[0] < itPeripodialNode->Position[0]+threshold
+				&& itColumnarNode->Position[0] > itPeripodialNode->Position[0]-threshold
+				&& itColumnarNode->Position[1] < itPeripodialNode->Position[1]+threshold
+				&& itColumnarNode->Position[1] > itPeripodialNode->Position[1]-threshold
 					){
-				masterIds.push_back((*itColumnarNode)->Id);
-				slaveIds.push_back((*itPeripodialNode)->Id);
-				(*itColumnarNode)->attachedToPeripodial=true;
-				cout<<" master: "<<(*itColumnarNode)->Id<<" slave: "<<(*itPeripodialNode)->Id<<endl;
+				masterIds.push_back(itColumnarNode->Id);
+				slaveIds.push_back(itPeripodialNode->Id);
+				itColumnarNode->attachedToPeripodial=true;
+				std::cout<<" master: "<<itColumnarNode->Id<<" slave: "<<itPeripodialNode->Id<<std::endl;
 			}
 		}
 	}
@@ -1031,20 +1015,20 @@ bool Simulation::bindPeripodialToColumnar(){
 					dofslave = Nodes[slaveNodeId]->slaveTo[i]*dim+i;
 					slaveNodeId = Nodes[slaveNodeId]->slaveTo[i];
 				}
-				//cout<<"DOF not fixed,  initial              : "<<dofmaster<<" "<<dofslave<<endl;
+				//std::cout<<"DOF not fixed,  initial              : "<<dofmaster<<" "<<dofslave<<std::endl;
 				//check if the master dof is already bound to something:
 				NRSolver->checkMasterUpdate(dofmaster,masterNodeId);
 				//It may have been that the slave was the master of the master node.
 				//Now I have updated the master to the slave, and they are equal.
 				//I do not need to add anything, as the master-slave relation is already implemented.
-				//cout<<"DOF not fixed, after master update   : "<<dofmaster<<" "<<dofslave<<endl;
+				//std::cout<<"DOF not fixed, after master update   : "<<dofmaster<<" "<<dofslave<<std::endl;
 				if (dofmaster != dofslave){
 					bool continueAddition =  NRSolver->checkIfCombinationExists(dofslave,dofmaster);
-					//cout<<"DOF not fixed, continueAddition? : "<<continueAddition<<endl;
+					//std::cout<<"DOF not fixed, continueAddition? : "<<continueAddition<<std::endl;
 					if (continueAddition){
 						bool madeChange = NRSolver->checkIfSlaveIsAlreadyMasterOfOthers(dofslave,dofmaster);
 						if (madeChange){
-							for (int nodeIt = 0 ; nodeIt<Nodes.size(); ++nodeIt){
+							for (size_t nodeIt = 0 ; nodeIt<Nodes.size(); ++nodeIt){
 								if(Nodes[nodeIt]->slaveTo[i]==slaveNodeId){
 									Nodes[nodeIt]->slaveTo[i]=masterNodeId;
 								}
@@ -1071,14 +1055,14 @@ bool Simulation::areNodesToCollapseOnLateralECM(int slaveNodeId, int masterNodeI
 	 * the function returns true.
 	 */
 	if(Nodes[slaveNodeId]->hasLateralElementOwner || Nodes[masterNodeId]->hasLateralElementOwner){
-		//cout<<"binding nodes: "<<slaveNodeId<<" "<<masterNodeId<<" on single element collapse, but will not collapse nodes, as they are too close on lateral element"<<endl;
+		//std::cout<<"binding nodes: "<<slaveNodeId<<" "<<masterNodeId<<" on single element collapse, but will not collapse nodes, as they are too close on lateral element"<<std::endl;
 		return true;
 	}
 	int nElement = Nodes[slaveNodeId]->connectedElementIds.size();
 	for (int elementCounter = 0; elementCounter<nElement; elementCounter++){
 		int elementId = Nodes[slaveNodeId]->connectedElementIds[elementCounter];
 		if (Elements[elementId]->isECMMimimcingAtCircumference){
-			//cout<<"binding nodes: "<<slaveNodeId<<" "<<masterNodeId<<" on single element collapse, but will not collapse nodes, as they are too close on circumferential element - slave"<<endl;
+			//std::cout<<"binding nodes: "<<slaveNodeId<<" "<<masterNodeId<<" on single element collapse, but will not collapse nodes, as they are too close on circumferential element - slave"<<std::endl;
 			return true;
 		}
 	}
@@ -1086,7 +1070,7 @@ bool Simulation::areNodesToCollapseOnLateralECM(int slaveNodeId, int masterNodeI
 	for (int elementCounter = 0; elementCounter<nElement; elementCounter++){
 		int elementId = Nodes[masterNodeId]->connectedElementIds[elementCounter];
 		if (Elements[elementId]->isECMMimimcingAtCircumference){
-			//cout<<"binding nodes: "<<slaveNodeId<<" "<<masterNodeId<<" on single element collapse, but will not collapse nodes, as they are too close on circumferential element - master"<<endl;
+			//std::cout<<"binding nodes: "<<slaveNodeId<<" "<<masterNodeId<<" on single element collapse, but will not collapse nodes, as they are too close on circumferential element - master"<<std::endl;
 			return true;
 		}
 	}
@@ -1108,22 +1092,22 @@ bool Simulation::checkEdgeLenghtsForBindingPotentiallyUnstableElements(){
           * They are bound without collapse as they are very thin. This is carried out once at
           * the beginning of the simulation, and the operation is flagged with Simulation#boundLateralElements boolean.
           */
-		for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		for(const auto& itElement : Elements){
 			boundLateralElements = true;
 			/**
 			 * The length is checked with ShapeBase#checkEdgeLenghtsForBinding.
 			 */
-			(*itElement)->checkEdgeLenghtsForBinding(masterIdsBulk,slaveIdsBulk);
+			itElement->checkEdgeLenghtsForBinding(masterIdsBulk,slaveIdsBulk);
 			int selectedPair[2] = {0,0};
-			if((*itElement)->isECMMimimcingAtCircumference && (*itElement)->tissuePlacement == 0){//check lateral elements and bind them:
+			if(itElement->isECMMimimcingAtCircumference && itElement->tissuePlacement == 0){//check lateral elements and bind them:
                 /** Then in the following loop the corner ECM elements are listed to be bound.
                  */
-				int* nodeIds = (*itElement)->getNodeIds();
+				int* nodeIds = itElement->getNodeIds();
 				double* vec= new double[3];
 				for (int idim =0; idim<3; idim++){
 					vec[idim] = Nodes[nodeIds[0]]->Position[idim]-Nodes[nodeIds[1]]->Position[idim];
 				}
-				double L = (*itElement)->normaliseVector3D(vec);
+				double L = itElement->normaliseVector3D(vec);
 				if (L < 0.5){
 					selectedPair[0] = 0;
 					selectedPair[1] = 1;
@@ -1132,7 +1116,7 @@ bool Simulation::checkEdgeLenghtsForBindingPotentiallyUnstableElements(){
 					for (int idim =0; idim<3; idim++){
 						vec[idim] = Nodes[nodeIds[0]]->Position[idim]-Nodes[nodeIds[2]]->Position[idim];
 					}
-					double L = (*itElement)->normaliseVector3D(vec);
+					double L = itElement->normaliseVector3D(vec);
 					if (L < 0.5){
 						selectedPair[0] = 0;
 						selectedPair[1] = 2;
@@ -1142,13 +1126,13 @@ bool Simulation::checkEdgeLenghtsForBindingPotentiallyUnstableElements(){
 						selectedPair[1] = 2;
 					}
 				}
-				//cout<<"selected "<<selectedPair[0]<<" "<<selectedPair[1]<<endl;
+				//std::cout<<"selected "<<selectedPair[0]<<" "<<selectedPair[1]<<std::endl;
 				masterIdsBulk.push_back(nodeIds[selectedPair[0]]);
 				slaveIdsBulk.push_back(nodeIds[selectedPair[1]]);
 				masterIdsBulk.push_back(nodeIds[selectedPair[0]+3]);
 				slaveIdsBulk.push_back(nodeIds[selectedPair[1]+3]);
 				for (int i=1; i < TissueHeightDiscretisationLayers;++i){
-					int idOfElementOnSameColumn = (*itElement)->elementsIdsOnSameColumn[i];
+					int idOfElementOnSameColumn = itElement->elementsIdsOnSameColumn[i];
 					nodeIds = Elements[idOfElementOnSameColumn]->getNodeIds();
 					masterIdsBulk.push_back(nodeIds[selectedPair[0]]);
 					slaveIdsBulk.push_back(nodeIds[selectedPair[1]]);
@@ -1188,16 +1172,16 @@ bool Simulation::checkEdgeLenghtsForBindingPotentiallyUnstableElements(){
 		int slaveNodeId = slaveIds[idMasterSlaveCouple];
 		if (binary_search(Nodes[masterNodeId]->collapsedWith.begin(), Nodes[masterNodeId]->collapsedWith.end(),slaveNodeId)){
 			//the couple is already collapsed;
-			//cout<<" the couple is already collapsed, slave master list size should be non-zero, size: "<<NRSolver->slaveMasterList.size()<<endl;
-			//cout<<" is there binding? "<<NRSolver->boundNodesWithSlaveMasterDefinition<<endl;
+			//std::cout<<" the couple is already collapsed, slave master list size should be non-zero, size: "<<NRSolver->slaveMasterList.size()<<std::endl;
+			//std::cout<<" is there binding? "<<NRSolver->boundNodesWithSlaveMasterDefinition<<std::endl;
 			continue;
 		}
 		bool  nodesHaveLateralOwners = areNodesToCollapseOnLateralECM(slaveNodeId,masterNodeId);
 		if(!nodesHaveLateralOwners){
-			cout<<"the nodes do not have lateral owners, continue to collapse"<<endl;
+			std::cout<<"the nodes do not have lateral owners, continue to collapse"<<std::endl;
 			Nodes[slaveNodeId]->collapseOnNode(Nodes, masterNodeId);
 		}
-		//cout<<" arranging positions"<<endl;
+		//std::cout<<" arranging positions"<<std::endl;
 		for(int i=0; i<dim; ++i){
             /** The fixed node degree of freedoms of the master node are reflected on the slave.
              */
@@ -1217,7 +1201,7 @@ bool Simulation::checkEdgeLenghtsForBindingPotentiallyUnstableElements(){
                      * One possiblity is that the potential slave is already a slave to the potential master, then nothing is needed to be done.
                      */
 					if(Nodes[slaveNodeId]->slaveTo[i] == masterNodeId || Nodes[slaveNodeId]->slaveTo[i] == Nodes[masterNodeId]->slaveTo[i] ){
-						cout<<"slave "<<slaveNodeId<<" is already bound to master "<<masterNodeId<<endl;
+						std::cout<<"slave "<<slaveNodeId<<" is already bound to master "<<masterNodeId<<std::endl;
 						continue;
 					}
 					dofslave = Nodes[slaveNodeId]->slaveTo[i]*dim+i;
@@ -1248,7 +1232,7 @@ bool Simulation::checkEdgeLenghtsForBindingPotentiallyUnstableElements(){
 						 */
 						bool madeChange = NRSolver->checkIfSlaveIsAlreadyMasterOfOthers(dofslave,dofmaster);
 						if (madeChange){
-							cout<<"slave "<<slaveNodeId<<" is already master of others"<<endl;
+							std::cout<<"slave "<<slaveNodeId<<" is already master of others"<<std::endl;
 							size_t nodesSize = Nodes.size();
 							for (size_t nodeIt = 0 ; nodeIt<nodesSize; ++nodeIt){
 								if(Nodes[nodeIt]->slaveTo[i]==slaveNodeId){
@@ -1290,7 +1274,7 @@ bool Simulation::bindCircumferenceXY(){
 	bool thereIsBinding = false;
 	int dim = 3;
 	vector <int> nodeIds;
-	for (int i=0; i<nNodes; ++i){
+	for (size_t i=0; i<nNodes; ++i){
 		if (Nodes[i]->tissuePlacement == 0){
 			//basal node
 			if (Nodes[i]->atCircumference){
@@ -1300,9 +1284,9 @@ bool Simulation::bindCircumferenceXY(){
 		}
 	}
 	int n = nodeIds.size();
-	//cout<<"found the node ids for basal circumference, n: "<<n<<endl;
+	//std::cout<<"found the node ids for basal circumference, n: "<<n<<std::endl;
 	for (int i=0; i<n; ++i){
-		//cout<<" in circumference binding, checking nodeId: "<<nodeIds[i]<<" "<<i<<" of "<<n<<" ";
+		//std::cout<<" in circumference binding, checking nodeId: "<<nodeIds[i]<<" "<<i<<" of "<<n<<" ";
 		int masterNodeId = nodeIds[i];
 		int dofXmaster = masterNodeId*dim;
 		int dofYmaster = masterNodeId*dim+1;
@@ -1312,7 +1296,7 @@ bool Simulation::bindCircumferenceXY(){
 		while (!reachedTop && a<5){//bibap
 			a++;
 			int nConnectedElements = Nodes[currNodeId]->connectedElementIds.size();
-			//cout<<" current node: "<<currNodeId<<" nConnectedElements "<<nConnectedElements<<endl;
+			//std::cout<<" current node: "<<currNodeId<<" nConnectedElements "<<nConnectedElements<<std::endl;
 			for (int j=0;j<nConnectedElements;++j){
 				int elementId = Nodes[currNodeId]->connectedElementIds[j];
 				bool IsBasalOwner = Elements[elementId]->IsThisNodeMyBasal(currNodeId);
@@ -1353,39 +1337,39 @@ bool Simulation::bindCircumferenceXY(){
 						thereIsBinding = true;
 					}
 					currNodeId = slaveNodeId;
-					//cout<<" found slave: "<<slaveNodeId<<endl;
+					//std::cout<<" found slave: "<<slaveNodeId<<std::endl;
 					break;
 				}
 			}
 			if (!thereIsPeripodialMembrane && Nodes[currNodeId]->tissuePlacement == 1){
-				//cout<<" in binding there is no peripodial, I have reached top"<<endl;
+				//std::cout<<" in binding there is no peripodial, I have reached top"<<std::endl;
 				//there is no peripodial and I have reached apical nodes
 				reachedTop = true;
 			}
 			if (thereIsPeripodialMembrane && Nodes[currNodeId]->tissuePlacement == 0){
 				//there is peripodial and I have reached basal nodes again
-				//cout<<" in binding there is peripodial, I have reached top"<<endl;
+				//std::cout<<" in binding there is peripodial, I have reached top"<<std::endl;
 				reachedTop = true;
 			}
-			//cout<<" tissue placement of next node: "<<Nodes[currNodeId]->tissuePlacement<<endl;
+			//std::cout<<" tissue placement of next node: "<<Nodes[currNodeId]->tissuePlacement<<std::endl;
 		}
 	}
 	return thereIsBinding;
 }
 
 void Simulation::setLateralElementsRemodellingPlaneRotationMatrices(){
-	calculateSystemCentre();
-	double cx = SystemCentre[0];
-	double cy = SystemCentre[1];
-	if (symmetricX){
-		cx = 0;
-	}
-	if (symmetricY){
-		cy = 0;
-	}
-	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		if ((*itElement)->tissueType == 2){
-			(*itElement)->setLateralElementsRemodellingPlaneRotationMatrix(cx,cy);
+	//calculateSystemCentre();
+	//double cx = SystemCentre[0];
+	//double cy = SystemCentre[1];
+	//if (symmetricX){
+	//	cx = 0;
+	//}
+	//if (symmetricY){
+	//	cy = 0;
+	//}
+	for(const auto&  itElement : Elements){
+		if (itElement->tissueType == 2){
+			itElement->setLateralElementsRemodellingPlaneRotationMatrix();
 		}
 	}
 }
@@ -1394,9 +1378,8 @@ void Simulation::assignNodeMasses(){
     /**
      * Masses to all nodes are assigned through their owner elements via ShapeBase#assignVolumesToNodes.
      */
-	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-	    (*itElement)->assignVolumesToNodes(Nodes);
-		//(*itElement)->assignSurfaceAreaToNodes(Nodes);
+	for(const auto&  itElement : Elements){
+	    itElement->assignVolumesToNodes(Nodes);
 	}
 }
 
@@ -1417,18 +1400,17 @@ void Simulation::assignElementalSurfaceAreaIndices(){
 	omp_set_num_threads(maxThreads);
 	#pragma omp parallel for
 	#endif
-	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		(*itElement)->assignExposedSurfaceAreaIndices(Nodes);
+	for (std::vector<std::unique_ptr<ShapeBase>>::iterator itElement = Elements.begin(); itElement<Elements.end(); ++itElement){
+		(*itElement)->assignExposedSurfaceAreaIndices();
 	}
 }
 
 void Simulation::assignConnectedElementsAndWeightsToNodes(){
     /**
-     * All connected elements are asigned nodes via ShapeBase#assignElementToConnectedNodes.
+     * All connected elements are assigned nodes via ShapeBase#assignElementToConnectedNodes.
      */
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		(*itElement)->assignElementToConnectedNodes(Nodes);
+	for(const auto& itElement : Elements){
+		itElement->assignElementToConnectedNodes(Nodes);
 	}
 }
 
@@ -1443,7 +1425,7 @@ bool Simulation::openFiles(){
 			Success = true;
 		}
 		else{
-			cerr<<"could not open file: "<<name_saveFileMesh<<endl;
+			std::cerr<<"could not open file: "<<name_saveFileMesh<<std::endl;
 			Success = false;
 		}
 
@@ -1454,46 +1436,46 @@ bool Simulation::openFiles(){
 			Success = true;
 		}
 		else{
-			cerr<<"could not open file: "<<name_saveFileSimulationSummary<<endl;
+			std::cerr<<"could not open file: "<<name_saveFileSimulationSummary<<std::endl;
 			Success = false;
 		}
 
 		//tension compression information at each step:
 		saveFileString = saveDirectory +"/Save_TensionCompression";
 		const char* name_saveFileTenComp = saveFileString.c_str();
-		cout<<"opening the file" <<name_saveFileTenComp<<endl;
+		std::cout<<"opening the file" <<name_saveFileTenComp<<std::endl;
 		saveFileTensionCompression.open(name_saveFileTenComp, ofstream::binary);
 		if (saveFileTensionCompression.good() && saveFileTensionCompression.is_open()){
 			Success = true;
 		}
 		else{
-			cerr<<"could not open file: "<<name_saveFileTenComp<<endl;
+			std::cerr<<"could not open file: "<<name_saveFileTenComp<<std::endl;
 			Success = false;
 		}
 
         //Growth information at each step (Fg):
         saveFileString = saveDirectory +"/Save_Growth";
         const char* name_saveFileGrowth = saveFileString.c_str();
-        cout<<"opening the file" <<name_saveFileGrowth<<endl;
+        std::cout<<"opening the file" <<name_saveFileGrowth<<std::endl;
         saveFileGrowth.open(name_saveFileGrowth, ofstream::binary);
         if (saveFileGrowth.good() && saveFileGrowth.is_open()){
             Success = true;
         }
         else{
-            cerr<<"could not open file: "<<name_saveFileGrowth<<endl;
+            std::cerr<<"could not open file: "<<name_saveFileGrowth<<std::endl;
             Success = false;
         }
 
         //Growth rate information at each step (rx,ry,rz, (as in exp(rx*dt) )for display purposes only):
         saveFileString = saveDirectory +"/Save_GrowthRate";
         const char* name_saveFileGrowthRate = saveFileString.c_str();
-        cout<<"opening the file" <<name_saveFileGrowthRate<<endl;
+        std::cout<<"opening the file" <<name_saveFileGrowthRate<<std::endl;
         saveFileGrowthRate.open(name_saveFileGrowthRate, ofstream::binary);
         if (saveFileGrowthRate.good() && saveFileGrowthRate.is_open()){
             Success = true;
         }
         else{
-            cerr<<"could not open file: "<<name_saveFileGrowthRate<<endl;
+            std::cerr<<"could not open file: "<<name_saveFileGrowthRate<<std::endl;
             Success = false;
         }
 
@@ -1505,7 +1487,7 @@ bool Simulation::openFiles(){
 			Success = true;
 		}
 		else{
-			cerr<<"could not open file: "<<name_saveFileForces<<endl;
+			std::cerr<<"could not open file: "<<name_saveFileForces<<std::endl;
 			Success = false;
 		}
 		//opening the packing information file:
@@ -1516,7 +1498,7 @@ bool Simulation::openFiles(){
 			Success = true;
 		}
 		else{
-			cerr<<"could not open file: "<<name_saveFilePacking<<endl;
+			std::cerr<<"could not open file: "<<name_saveFilePacking<<std::endl;
 			Success = false;
 		}
 		//opening the physical property information file:
@@ -1527,7 +1509,7 @@ bool Simulation::openFiles(){
 			Success = true;
 		}
 		else{
-			cerr<<"could not open file: "<<name_saveFilePhysicalProp<<endl;
+			std::cerr<<"could not open file: "<<name_saveFilePhysicalProp<<std::endl;
 			Success = false;
 		}
 
@@ -1539,7 +1521,7 @@ bool Simulation::openFiles(){
 			Success = true;
 		}
 		else{
-			cerr<<"could not open file: "<<name_saveFileSpecificType<<endl;
+			std::cerr<<"could not open file: "<<name_saveFileSpecificType<<std::endl;
 			Success = false;
 		}
 
@@ -1548,44 +1530,32 @@ bool Simulation::openFiles(){
 		//opeining the growth redistribution information file:
 		saveFileString = saveDirectory +"/Save_GrowthRedistribution";
 		const char* name_saveFileGrowRedist = saveFileString.c_str();
-		cout<<"opening the file" <<name_saveFileGrowRedist<<endl;
+		std::cout<<"opening the file" <<name_saveFileGrowRedist<<std::endl;
 		saveFileGrowthRedistribution.open(name_saveFileGrowRedist, ofstream::binary);
 		if (saveFileGrowthRedistribution.good() && saveFileGrowthRedistribution.is_open()){
 			Success = true;
 		}
 		else{
-			cerr<<"could not open file: "<<name_saveFileGrowRedist<<endl;
+			std::cerr<<"could not open file: "<<name_saveFileGrowRedist<<std::endl;
 			Success = false;
 		}
 
 		//node binding information at each step:
 		saveFileString = saveDirectory +"/Save_NodeBinding";
 		const char* name_saveFileNodeBind = saveFileString.c_str();
-		cout<<"opening the file" <<name_saveFileNodeBind<<endl;
+		std::cout<<"opening the file" <<name_saveFileNodeBind<<std::endl;
 		//saveFileNodeBinding.open(name_saveFileNodeBind, ofstream::binary);
 		saveFileNodeBinding.open(name_saveFileNodeBind, ofstream::out);
 		if (saveFileNodeBinding.good() && saveFileNodeBinding.is_open()){
 			Success = true;
 		}
 		else{
-			cerr<<"could not open file: "<<name_saveFileNodeBind<<endl;
-			Success = false;
-		}
-		//node collapse and adhesion information at each step:
-		saveFileString = saveDirectory +"/Save_CollapseAndAdhesion";
-		const char* name_saveFileCollapseAndAdhesion = saveFileString.c_str();
-		cout<<"opening the file" <<name_saveFileCollapseAndAdhesion<<endl;
-		saveFileCollapseAndAdhesion.open(name_saveFileCollapseAndAdhesion, ofstream::binary);
-		if (saveFileCollapseAndAdhesion.good() && saveFileCollapseAndAdhesion.is_open()){
-			Success = true;
-		}
-		else{
-			cerr<<"could not open file: "<<name_saveFileCollapseAndAdhesion<<endl;
+			std::cerr<<"could not open file: "<<name_saveFileNodeBind<<std::endl;
 			Success = false;
 		}
 	}
 	if (saveDirectory == "Not-Set"){
-		cerr<<"Output directory is not set, outputting on Out file in current directory"<<endl;
+		std::cerr<<"Output directory is not set, outputting on Out file in current directory"<<std::endl;
 		outputFileString = "./Out";
 	}
 	else {
@@ -1597,7 +1567,7 @@ bool Simulation::openFiles(){
 		Success = true;
 	}
 	else{
-		cerr<<"could not open file: "<<name_outputFile<<endl;
+		std::cerr<<"could not open file: "<<name_outputFile<<std::endl;
 		Success = false;
 	}
 	return Success;
@@ -1605,14 +1575,14 @@ bool Simulation::openFiles(){
 
 void Simulation::writeSimulationSummary(){
 	saveFileSimulationSummary<<"TimeStep(sec):  ";
-	saveFileSimulationSummary<<dt<<endl;
+	saveFileSimulationSummary<<dt<<std::endl;
 	saveFileSimulationSummary<<"DataSaveInterval(sec):  ";
-	saveFileSimulationSummary<<dataSaveInterval*dt<<endl;
+	saveFileSimulationSummary<<dataSaveInterval*dt<<std::endl;
 	saveFileSimulationSummary<<"ModelinputName:  ";
-	saveFileSimulationSummary<<ModInp->parameterFileName<<endl<<endl;
+	saveFileSimulationSummary<<ModInp->parameterFileName<<endl<<std::endl;
 	saveFileSimulationSummary<<"Mesh_Type:  ";
-	saveFileSimulationSummary<<MeshType<<endl;
-	saveFileSimulationSummary<<"	Symmetricity-x: "<<symmetricX<<" Symmetricity-y: "<<symmetricY<<endl;
+	saveFileSimulationSummary<<MeshType<<std::endl;
+	saveFileSimulationSummary<<"	Symmetricity-x: "<<symmetricX<<" Symmetricity-y: "<<symmetricY<<std::endl;
 	writeMeshFileSummary();
 	writeGrowthRatesSummary();
 	writeECMSummary();
@@ -1629,60 +1599,60 @@ void Simulation::writeSpecificNodeTypes(){
 	int counterForMarkerEllipsesOnNodes = 0;
 	int numberOfCounterEllipses = 0;
 
-	for (vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		if ((*itElement)->isActinMimicing){
+	for (const auto& itElement : Elements){
+		if (itElement->isActinMimicing){
 			counterForActinMimicingElements++;
 		}
-		if ((*itElement)->isECMMimicing){
+		if (itElement->isECMMimicing){
 			counterForECMMimicingElements++;
 		}
-		if ((*itElement)->insideEllipseBand){
+		if (itElement->insideEllipseBand){
 			counterForMarkerEllipsesOnElements++;
-			if (numberOfCounterEllipses<(*itElement)->coveringEllipseBandId){
-				numberOfCounterEllipses=(*itElement)->coveringEllipseBandId;
+			if (numberOfCounterEllipses<itElement->coveringEllipseBandId){
+				numberOfCounterEllipses=itElement->coveringEllipseBandId;
 			}
 		}
 	}
-	for (vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-		if ((*itNode)->insideEllipseBand){
+	for (const auto& itNode : Nodes){
+		if (itNode->insideEllipseBand){
 			counterForMarkerEllipsesOnNodes++;
 		}
 	}
+
 	//Writing explicit actin layer:
 	saveFileSpecificType.write((char*) &counterForActinMimicingElements, sizeof counterForActinMimicingElements);
-	for (vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		if ((*itElement)->isActinMimicing){
-			saveFileSpecificType.write((char*) &(*itElement)->Id, sizeof (*itElement)->Id);
+	for (const auto& itElement : Elements){
+		if (itElement->isActinMimicing){
+			saveFileSpecificType.write((char*) &itElement->Id, sizeof itElement->Id);
 		}
 	}
 
 	//Writing explicit ECM layer:
 	saveFileSpecificType.write((char*) &counterForECMMimicingElements, sizeof counterForECMMimicingElements);
-	for (vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		if ((*itElement)->isECMMimicing){
-			saveFileSpecificType.write((char*) &(*itElement)->Id, sizeof (*itElement)->Id);
+	for (const auto& itElement : Elements){
+		if (itElement->isECMMimicing){
+			saveFileSpecificType.write((char*) &itElement->Id, sizeof itElement->Id);
 		}
 	}
 
 	//Writing marker ellipses for elements:
 	saveFileSpecificType.write((char*) &counterForMarkerEllipsesOnElements, sizeof counterForMarkerEllipsesOnElements);
-	for (vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		if ((*itElement)->insideEllipseBand){
-			saveFileSpecificType.write((char*) &(*itElement)->Id, sizeof (*itElement)->Id);
-			saveFileSpecificType.write((char*) &(*itElement)->coveringEllipseBandId, sizeof (*itElement)->coveringEllipseBandId);
+	for (const auto& itElement : Elements){
+		if (itElement->insideEllipseBand){
+			saveFileSpecificType.write((char*) &itElement->Id, sizeof itElement->Id);
+			saveFileSpecificType.write((char*) &itElement->coveringEllipseBandId, sizeof itElement->coveringEllipseBandId);
 		}
 	}
-
 	//Writing marker ellipses for nodes:
 	saveFileSpecificType.write((char*) &counterForMarkerEllipsesOnNodes, sizeof counterForMarkerEllipsesOnNodes);
-	for (vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-		if ((*itNode)->insideEllipseBand){
-			saveFileSpecificType.write((char*) &(*itNode)->Id, sizeof (*itNode)->Id);
-			saveFileSpecificType.write((char*) &(*itNode)->coveringEllipseBandId, sizeof (*itNode)->coveringEllipseBandId);
+	for (const auto& itNode : Nodes){
+		if (itNode->insideEllipseBand){
+			saveFileSpecificType.write((char*) &itNode->Id, sizeof itNode->Id);
+			saveFileSpecificType.write((char*) &itNode->coveringEllipseBandId, sizeof itNode->coveringEllipseBandId);
 		}
 	}
 	saveFileSpecificType.close();
-	cout<<"wrote specific element types: "<<counterForMarkerEllipsesOnNodes<<" "<<counterForMarkerEllipsesOnElements<<" "<<counterForECMMimicingElements<<" "<<counterForActinMimicingElements<<endl;
+	std::cout<<"wrote specific element types: "<<counterForMarkerEllipsesOnNodes<<" "<<counterForMarkerEllipsesOnElements<<" "<<counterForECMMimicingElements<<" "<<counterForActinMimicingElements<<std::endl;
 }
 
 void Simulation::writeMeshFileSummary(){
@@ -1695,17 +1665,17 @@ void Simulation::writeMeshFileSummary(){
 		saveFileSimulationSummary<<SideLength;
 		saveFileSimulationSummary<<"	zHeight: ";
 		saveFileSimulationSummary<<zHeight;
-		saveFileSimulationSummary<<endl;
+		saveFileSimulationSummary<<std::endl;
 	}
 	if ( MeshType == 4){
 		saveFileSimulationSummary<<"	MeshFileName: ";
 		saveFileSimulationSummary<<inputMeshFileName;
-		saveFileSimulationSummary<<endl;
+		saveFileSimulationSummary<<std::endl;
 	}
 }
 
 void Simulation::writeGrowthRatesSummary(){
-	saveFileSimulationSummary<<endl;
+	saveFileSimulationSummary<<std::endl;
 	for (int i=0; i<nGrowthFunctions; ++i){
 		if(GrowthFunctions[i]->Type == 3){ //grid based function does not need dt in summary
 			GrowthFunctions[i]->writeSummary(saveFileSimulationSummary);
@@ -1717,40 +1687,40 @@ void Simulation::writeGrowthRatesSummary(){
 }
 
 void Simulation::writeECMSummary(){
-	saveFileSimulationSummary<<endl;
-	saveFileSimulationSummary<<"There is explicit ECM:	"<<thereIsExplicitECM<<endl;
+	saveFileSimulationSummary<<std::endl;
+	saveFileSimulationSummary<<"There is explicit ECM:	"<<thereIsExplicitECM<<std::endl;
 	if (thereIsExplicitECM){
 		writeECMProperties();
 	}
 }
 
 void Simulation::writeECMProperties(){
-	saveFileSimulationSummary<<"	Columnar ECM Stiffness(Pa): "<<EColumnarECM<<endl;
-	saveFileSimulationSummary<<"	Peripodial ECM Stiffness(Pa): "<<EPeripodialECM<<endl;
-	saveFileSimulationSummary<<"	ECM remodelling half life (hour): "<<ECMRenawalHalfLife/3600.0<<endl;
-	saveFileSimulationSummary<<"	Is there perturbation to the ECM: "<<thereIsECMChange<<endl;
+	saveFileSimulationSummary<<"	Columnar ECM Stiffness(Pa): "<<EColumnarECM<<std::endl;
+	saveFileSimulationSummary<<"	Peripodial ECM Stiffness(Pa): "<<EPeripodialECM<<std::endl;
+	saveFileSimulationSummary<<"	ECM remodelling half life (hour): "<<ECMRenawalHalfLife/3600.0<<std::endl;
+	saveFileSimulationSummary<<"	Is there perturbation to the ECM: "<<thereIsECMChange<<std::endl;
 	if (thereIsECMChange){
 		int n = ECMChangeBeginTimeInSec.size();
-		saveFileSimulationSummary<<"there are "<<n<<" ECM perturbations"<<endl;
+		saveFileSimulationSummary<<"there are "<<n<<" ECM perturbations"<<std::endl;
 		for (int ECMperturbationIndex =0;ECMperturbationIndex<n; ++ECMperturbationIndex ){
-			saveFileSimulationSummary<<"		stiffness alteration begins at  "<<ECMChangeBeginTimeInSec[ECMperturbationIndex]/3600.0<<" hrs and ends at "<<ECMChangeEndTimeInSec[ECMperturbationIndex]/3600.0<<endl;
-			saveFileSimulationSummary<<"		final fraction of ECM stiffness  "<<ECMStiffnessChangeFraction[ECMperturbationIndex]<<" times original values."<<endl;
-			saveFileSimulationSummary<<"		final fraction of ECM renewal time  "<<ECMRenewalHalfLifeTargetFraction[ECMperturbationIndex]<<" times original values."<<endl;
-			saveFileSimulationSummary<<"		final fraction of ECM viscosity  "<<ECMViscosityChangeFraction[ECMperturbationIndex]<<" times original values."<<endl;
-			saveFileSimulationSummary<<"		stiffness alteration applied to apical ECM: "	<<changeApicalECM[ECMperturbationIndex]<<endl;
-			saveFileSimulationSummary<<"		stiffness alteration applied to basal  ECM: "	<<changeBasalECM[ECMperturbationIndex]<<endl;
+			saveFileSimulationSummary<<"		stiffness alteration begins at  "<<ECMChangeBeginTimeInSec[ECMperturbationIndex]/3600.0<<" hrs and ends at "<<ECMChangeEndTimeInSec[ECMperturbationIndex]/3600.0<<std::endl;
+			saveFileSimulationSummary<<"		final fraction of ECM stiffness  "<<ECMStiffnessChangeFraction[ECMperturbationIndex]<<" times original values."<<std::endl;
+			saveFileSimulationSummary<<"		final fraction of ECM renewal time  "<<ECMRenewalHalfLifeTargetFraction[ECMperturbationIndex]<<" times original values."<<std::endl;
+			saveFileSimulationSummary<<"		final fraction of ECM viscosity  "<<ECMViscosityChangeFraction[ECMperturbationIndex]<<" times original values."<<std::endl;
+			saveFileSimulationSummary<<"		stiffness alteration applied to apical ECM: "	<<changeApicalECM[ECMperturbationIndex]<<std::endl;
+			saveFileSimulationSummary<<"		stiffness alteration applied to basal  ECM: "	<<changeBasalECM[ECMperturbationIndex]<<std::endl;
 			saveFileSimulationSummary<<"		stiffness alteration applied to ellipse bands: ";
-			for (int i=0; i<numberOfECMChangeEllipseBands[ECMperturbationIndex]; ++i){
+			for (size_t i=0; i<numberOfECMChangeEllipseBands[ECMperturbationIndex]; ++i){
 				saveFileSimulationSummary<<" "<<ECMChangeEllipseBandIds[ECMperturbationIndex][i];
 			}
-			saveFileSimulationSummary<<endl;
+			saveFileSimulationSummary<<std::endl;
 		}
 	}
 }
 
 void Simulation::writeActinSummary(){
-	saveFileSimulationSummary<<endl;
-	saveFileSimulationSummary<<"There is explicit actin:  "<<thereIsExplicitActin<<endl;
+	saveFileSimulationSummary<<std::endl;
+	saveFileSimulationSummary<<"There is explicit actin:  "<<thereIsExplicitActin<<std::endl;
 }
 
 void Simulation::writeExperimentalSummary(){
@@ -1758,19 +1728,19 @@ void Simulation::writeExperimentalSummary(){
 }
 
 void Simulation::writePipetteSumary(){
-	saveFileSimulationSummary<<endl;
-	saveFileSimulationSummary<<"There is pipette aspiration:  "<<PipetteSuction<<endl;
+	saveFileSimulationSummary<<std::endl;
+	saveFileSimulationSummary<<"There is pipette aspiration:  "<<PipetteSuction<<std::endl;
 	if (PipetteSuction){
-		saveFileSimulationSummary<<"	is the tissue stuck on the glass: "<<TissueStuckOnGlassDuringPipetteAspiration<<endl;
-		saveFileSimulationSummary<<"	suction on apical side: "<<ApicalSuction<<endl;
-		saveFileSimulationSummary<<"	pipette position [centre(x,y,z), effective pippette suction depth, microns]: "<<pipetteCentre[0]<<" "<<pipetteCentre[1]<<" "<<pipetteCentre[2]<<" "<<pipetteDepth<<endl;
-		saveFileSimulationSummary<<"	pipette radia [inner & outer(microns)]: "<<pipetteInnerRadius<<" "<<pipetteInnerRadius+pipetteThickness<<endl;
-		saveFileSimulationSummary<<"	Steps for pipette suction "<<nPipetteSuctionSteps<<endl;
+		saveFileSimulationSummary<<"	is the tissue stuck on the glass: "<<TissueStuckOnGlassDuringPipetteAspiration<<std::endl;
+		saveFileSimulationSummary<<"	suction on apical side: "<<ApicalSuction<<std::endl;
+		saveFileSimulationSummary<<"	pipette position [centre(x,y,z), effective pippette suction depth, microns]: "<<pipetteCentre[0]<<" "<<pipetteCentre[1]<<" "<<pipetteCentre[2]<<" "<<pipetteDepth<<std::endl;
+		saveFileSimulationSummary<<"	pipette radia [inner & outer(microns)]: "<<pipetteInnerRadius<<" "<<pipetteInnerRadius+pipetteThickness<<std::endl;
+		saveFileSimulationSummary<<"	Steps for pipette suction "<<nPipetteSuctionSteps<<std::endl;
 		saveFileSimulationSummary<<"	suction times (sec): ";
 		for (int i=0; i<nPipetteSuctionSteps; ++i){
 			saveFileSimulationSummary<<pipetteSuctionTimes[i]<<" ";
 		}
-		saveFileSimulationSummary<<endl;
+		saveFileSimulationSummary<<std::endl;
 		saveFileSimulationSummary<<"	suction pressures (Pa): ";
 		for (int i=0; i<nPipetteSuctionSteps; ++i){
 			saveFileSimulationSummary<<pipetteSuctionPressures[i]<<" ";
@@ -1786,8 +1756,8 @@ void Simulation::writeRelaxedMeshFromCurrentState(){
 	file.open(name_meshSaveString, ofstream::out);
 	//count non ablated nodes:
 	file<<nNodes;
-	file<<endl;
-	for (int i=0; i<nNodes; ++i){
+	file<<std::endl;
+	for (size_t i=0; i<nNodes; ++i){
 		file << Nodes[i]->Position[0];
 		file<<" \t";
 		file << Nodes[i]->Position[1];
@@ -1802,8 +1772,8 @@ void Simulation::writeRelaxedMeshFromCurrentState(){
 		file << endl;
 	}
 	file<<nElements;
-	file<<endl;
-	for (int i=0; i<nElements; ++i){
+	file<<std::endl;
+	for (size_t i=0; i<nElements; ++i){
 		file<< Elements[i]->getShapeType();
 		file<<" \t";
 		const int n = Elements[i]->getNodeNumber();
@@ -1832,14 +1802,14 @@ bool Simulation::openFilesToDisplay(){
 	const char* name_saveFileToDisplayMesh = saveFileString.c_str();
 	saveFileToDisplayMesh.open(name_saveFileToDisplayMesh, ifstream::in);
 	if (!(saveFileToDisplayMesh.good() && saveFileToDisplayMesh.is_open())){
-		cerr<<"Cannot open the save file to display: "<<name_saveFileToDisplayMesh<<endl;
+		std::cerr<<"Cannot open the save file to display: "<<name_saveFileToDisplayMesh<<std::endl;
 		return false;
 	}
 	saveFileString = saveDirectoryToDisplayString +"/Save_Summary";
 	const char* name_saveFileToDisplaySimSum = saveFileString.c_str();;
 	saveFileToDisplaySimSum.open(name_saveFileToDisplaySimSum, ifstream::in);
 	if (!(saveFileToDisplaySimSum.good() && saveFileToDisplaySimSum.is_open())){
-		cerr<<"Cannot open the simulation summary: "<<name_saveFileToDisplaySimSum<<endl;
+		std::cerr<<"Cannot open the simulation summary: "<<name_saveFileToDisplaySimSum<<std::endl;
 		return false;
 	}
 	saveFileString = saveDirectoryToDisplayString +"/Save_SpecificElementAndNodeTypes";
@@ -1847,7 +1817,7 @@ bool Simulation::openFilesToDisplay(){
 	saveFileToDisplaySpecificNodeTypes.open(name_saveSpecificElementAndNodeTypes, ifstream::in);
 	specificElementTypesRecorded = true;
 	if (!(saveFileToDisplaySpecificNodeTypes.good() && saveFileToDisplaySpecificNodeTypes.is_open())){
-		cerr<<"Cannot open the specific node types: "<<name_saveSpecificElementAndNodeTypes<<endl;
+		std::cerr<<"Cannot open the specific node types: "<<name_saveSpecificElementAndNodeTypes<<std::endl;
 		specificElementTypesRecorded = false;
 		//return false;
 	}
@@ -1855,7 +1825,7 @@ bool Simulation::openFilesToDisplay(){
 	const char* name_saveFileToDisplayTenComp = saveFileString.c_str();
 	saveFileToDisplayTenComp.open(name_saveFileToDisplayTenComp, ifstream::in);
 	if (!(saveFileToDisplayTenComp.good() && saveFileToDisplayTenComp.is_open())){
-		cerr<<"Cannot open the save file to display: "<<name_saveFileToDisplayTenComp<<endl;
+		std::cerr<<"Cannot open the save file to display: "<<name_saveFileToDisplayTenComp<<std::endl;
 		TensionCompressionSaved = false;
 	}
 
@@ -1863,7 +1833,7 @@ bool Simulation::openFilesToDisplay(){
     const char* name_saveFileToDisplayGrowth = saveFileString.c_str();
     saveFileToDisplayGrowth.open(name_saveFileToDisplayGrowth, ifstream::in);
     if (!(saveFileToDisplayGrowth.good() && saveFileToDisplayGrowth.is_open())){
-        cerr<<"Cannot open the save file to display: "<<name_saveFileToDisplayGrowth<<endl;
+        std::cerr<<"Cannot open the save file to display: "<<name_saveFileToDisplayGrowth<<std::endl;
         GrowthSaved = false;
     }
 
@@ -1871,50 +1841,43 @@ bool Simulation::openFilesToDisplay(){
 	const char* name_saveFileToDisplayGrowthRate = saveFileString.c_str();
 	saveFileToDisplayGrowthRate.open(name_saveFileToDisplayGrowthRate, ifstream::in);
 	if (!(saveFileToDisplayGrowthRate.good() && saveFileToDisplayGrowthRate.is_open())){
-		cerr<<"Cannot open the save file to display: "<<name_saveFileToDisplayGrowthRate<<endl;
+		std::cerr<<"Cannot open the save file to display: "<<name_saveFileToDisplayGrowthRate<<std::endl;
 		GrowthRateSaved = false;
 	}
 	saveFileString = saveDirectoryToDisplayString +"/Save_Force";
 	const char* name_saveFileToDisplayForce = saveFileString.c_str();;
 	saveFileToDisplayForce.open(name_saveFileToDisplayForce, ifstream::in);
 	if (!(saveFileToDisplayForce.good() && saveFileToDisplayForce.is_open())){
-		cerr<<"Cannot open the save file to display: "<<name_saveFileToDisplayForce<<endl;
+		std::cerr<<"Cannot open the save file to display: "<<name_saveFileToDisplayForce<<std::endl;
 		ForcesSaved = false;
 	}
 	saveFileString = saveDirectoryToDisplayString +"/Save_Packing";
 	const char* name_saveFileToDisplayPacking = saveFileString.c_str();;
 	saveFileToDisplayPacking.open(name_saveFileToDisplayPacking, ifstream::in);
 	if (!(saveFileToDisplayPacking.good() && saveFileToDisplayPacking.is_open())){
-		cerr<<"Cannot open the save file to display: "<<name_saveFileToDisplayPacking<<endl;
+		std::cerr<<"Cannot open the save file to display: "<<name_saveFileToDisplayPacking<<std::endl;
 		PackingSaved = false;
 	}
 	saveFileString = saveDirectoryToDisplayString +"/Save_PhysicalProp";
 	const char* name_saveFileToDisplayPhysicalProp = saveFileString.c_str();;
 	saveFileToDisplayPhysicalProp.open(name_saveFileToDisplayPhysicalProp, ifstream::in);
 	if (!(saveFileToDisplayPhysicalProp.good() && saveFileToDisplayPhysicalProp.is_open())){
-		cerr<<"Cannot open the save file to display: "<<name_saveFileToDisplayPhysicalProp<<endl;
+		std::cerr<<"Cannot open the save file to display: "<<name_saveFileToDisplayPhysicalProp<<std::endl;
 		physicalPropertiesSaved = false;
 	}
 	saveFileString = saveDirectoryToDisplayString +"/Save_GrowthRedistribution";
 	const char* name_saveFileToDisplayGrowRedist = saveFileString.c_str();
 	saveFileToDisplayGrowthRedistribution.open(name_saveFileToDisplayGrowRedist, ifstream::in);
 	if (!(saveFileToDisplayTenComp.good() && saveFileToDisplayTenComp.is_open())){
-		cerr<<"Cannot open the save file to display: "<<name_saveFileToDisplayGrowRedist<<endl;
+		std::cerr<<"Cannot open the save file to display: "<<name_saveFileToDisplayGrowRedist<<std::endl;
 		growthRedistributionSaved = false;
 	}
 	saveFileString = saveDirectoryToDisplayString +"/Save_NodeBinding";
 	const char* name_saveFileToDisplayNodeBinding = saveFileString.c_str();
 	saveFileToDisplayNodeBinding.open(name_saveFileToDisplayNodeBinding, ifstream::in);
 	if (!(saveFileToDisplayNodeBinding.good() && saveFileToDisplayNodeBinding.is_open())){
-		cerr<<"Cannot open the save file to display: "<<name_saveFileToDisplayNodeBinding<<endl;
+		std::cerr<<"Cannot open the save file to display: "<<name_saveFileToDisplayNodeBinding<<std::endl;
 		nodeBindingSaved = false;
-	}
-	saveFileString = saveDirectoryToDisplayString +"/Save_CollapseAndAdhesion";
-	const char* name_saveFileToDisplayCollapseAndAdhesion = saveFileString.c_str();
-	saveFileToDisplayCollapseAndAdhesion.open(name_saveFileToDisplayCollapseAndAdhesion, ifstream::in);
-	if (!(saveFileToDisplayCollapseAndAdhesion.good() && saveFileToDisplayCollapseAndAdhesion.is_open())){
-		cerr<<"Cannot open the save file to display: "<<name_saveFileToDisplayCollapseAndAdhesion<<endl;
-		collapseAndAdhesionSaved = false;
 	}
 	return true;
 }
@@ -1947,21 +1910,21 @@ bool Simulation::initiateSavedSystem(){
 	if (!success){
 		return false;
 	}
-	cout<<" reading Ten comp"<<endl;
+	std::cout<<" reading Ten comp"<<std::endl;
 	if (TensionCompressionSaved){
 		updateTensionCompressionFromSave();
 	}
-	cout<<" reading growth"<<endl;
+	std::cout<<" reading growth"<<std::endl;
 
     if (GrowthSaved){
         updateGrowthFromSave();
     }
-	cout<<" reading growth rate"<<endl;
+	std::cout<<" reading growth rate"<<std::endl;
 
     if (GrowthRateSaved){
         updateGrowthRateFromSave();
     }
-	cout<<" reading forces"<<endl;
+	std::cout<<" reading forces"<<std::endl;
 
 	if (ForcesSaved){
 		updateForcesFromSave();
@@ -1972,28 +1935,33 @@ bool Simulation::initiateSavedSystem(){
 	if (nodeBindingSaved){
 		updateNodeBindingFromSave();
 	}
-	if(collapseAndAdhesionSaved){
-		updateCollapseAndAdhesionFromSave();
-	}
 	updateElementVolumesAndTissuePlacements();
-    //cleanMatrixUpdateData();
+	std::cout<<"clearNodeMassLists"<<std::endl;
 	clearNodeMassLists();
+	std::cout<<"assignNodeMasses"<<std::endl;
 	assignNodeMasses();
+	std::cout<<"assignConnectedElementsAndWeightsToNodes"<<std::endl;
 	assignConnectedElementsAndWeightsToNodes();
+	std::cout<<"clearLaserAblatedSites"<<std::endl;
 	clearLaserAblatedSites();
-    //calculateStiffnessMatrices();
+	std::cout<<"calculateShapeFunctionDerivatives"<<std::endl;
     calculateShapeFunctionDerivatives();
+	std::cout<<"updateElementPositions"<<std::endl;
 	updateElementPositions();
+	(void) calculateTissueHeight();
+	std::cout<<"fillInElementColumnLists"<<std::endl;
 	fillInElementColumnLists();
 	calculateBoundingBox();
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		(*itElement)->calculateRelativePosInBoundingBox(boundingBox[0][0],boundingBox[0][1],boundingBoxSize[0],boundingBoxSize[1]);
+	std::cout<<"after bounding box"<<std::endl;
+	for(const auto& itElement : Elements){
+		itElement->calculateRelativePosInBoundingBox(boundingBox[0][0],boundingBox[0][1],boundingBoxSize[0],boundingBoxSize[1]);
 	}
+	std::cout<<"update to apical relative"<<std::endl;
 	updateRelativePositionsToApicalPositioning();
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		(*itElement)->setInitialRelativePosInBoundingBox();
+	for(const auto& itElement : Elements){
+		itElement->setInitialRelativePosInBoundingBox();
 	}
+	std::cout<<"induce clones"<<std::endl;
 	induceClones();
 	//skipping the footer:
 	getline(saveFileToDisplayMesh,currline);
@@ -2005,32 +1973,31 @@ bool Simulation::initiateSavedSystem(){
 		reachedEndOfSaveFile = true;
 		return true;
 	}
-
-	//cout<<"skipped footer: "<<currline<<endl;
+	std::cout<<" finised initialisation"<<std::endl;
 	return true;
 }
 
 bool Simulation::readSystemSummaryFromSave(){
 	string dummystring;
 	if(saveFileToDisplaySimSum.eof()){
-		cerr<<"reached the end of summary file, expecting: TimeStep(sec):"<<endl;
+		std::cerr<<"reached the end of summary file, expecting: TimeStep(sec):"<<std::endl;
 		return false;
 	}
 	saveFileToDisplaySimSum >> dummystring; //reading "TimeStep(sec):"
 	if(saveFileToDisplaySimSum.eof()){
-		cerr<<"reached the end of summary file, expecting: dt value"<<endl;
+		std::cerr<<"reached the end of summary file, expecting: dt value"<<std::endl;
 		return false;
 	}
 	saveFileToDisplaySimSum >> dt;
 
 	if(saveFileToDisplaySimSum.eof()){
-		cerr<<"reached the end of summary file, expecting: DataSaveInterval(sec):"<<endl;
+		std::cerr<<"reached the end of summary file, expecting: DataSaveInterval(sec):"<<std::endl;
 		return false;
 	}
 	saveFileToDisplaySimSum >> dummystring; //reading "DataSaveInterval(sec):"
 	double dummydouble;
 	if(saveFileToDisplaySimSum.eof()){
-		cerr<<"reached the end of summary file, expecting: save interval value"<<endl;
+		std::cerr<<"reached the end of summary file, expecting: save interval value"<<std::endl;
 		return false;
 	}
 	saveFileToDisplaySimSum >> dummydouble;
@@ -2038,47 +2005,47 @@ bool Simulation::readSystemSummaryFromSave(){
 
 
 	if(saveFileToDisplaySimSum.eof()){
-		cerr<<"reached the end of summary file, expecting: ModelinputName:"<<endl;
+		std::cerr<<"reached the end of summary file, expecting: ModelinputName:"<<std::endl;
 		return false;
 	}
 	saveFileToDisplaySimSum >> dummystring; //reading "ModelinputName: "
 	if(saveFileToDisplaySimSum.eof()){
-		cerr<<"reached the end of summary file, expecting name of the model input file"<<endl;
+		std::cerr<<"reached the end of summary file, expecting name of the model input file"<<std::endl;
 		return false;
 	}
 	saveFileToDisplaySimSum >> dummystring; //reading the model input file
 	if(saveFileToDisplaySimSum.eof()){
-		cerr<<"reached the end of summary file, expecting: Mesh_Type:"<<endl;
+		std::cerr<<"reached the end of summary file, expecting: Mesh_Type:"<<std::endl;
 		return false;
 	}
 	saveFileToDisplaySimSum >> dummystring; //reading "Mesh_Type: "
 	if(saveFileToDisplaySimSum.eof()){
-		cerr<<"reached the end of summary file, expecting: the mesh type(int)"<<endl;
+		std::cerr<<"reached the end of summary file, expecting: the mesh type(int)"<<std::endl;
 		return false;
 	}
 	int dummyint;
 	saveFileToDisplaySimSum >> dummyint; //reading the mesh type
 	if(saveFileToDisplaySimSum.eof()){
-		cerr<<"reached the end of summary file, expecting: Symmetricity-x:"<<endl;
+		std::cerr<<"reached the end of summary file, expecting: Symmetricity-x:"<<std::endl;
 		return false;
 	}
 	saveFileToDisplaySimSum >> dummystring; //reading "Symmetricity-x: "
 	if(saveFileToDisplaySimSum.eof()){
-		cerr<<"reached the end of summary file, expecting: symmetricitX boolean:"<<endl;
+		std::cerr<<"reached the end of summary file, expecting: symmetricitX boolean:"<<std::endl;
 		return false;
 	}
 	saveFileToDisplaySimSum >> symmetricX;
 	if(saveFileToDisplaySimSum.eof()){
-		cerr<<"reached the end of summary file, expecting: Symmetricity-y:"<<endl;
+		std::cerr<<"reached the end of summary file, expecting: Symmetricity-y:"<<std::endl;
 		return false;
 	}
 	saveFileToDisplaySimSum >> dummystring; //reading "Symmetricity-y: "
 	if(saveFileToDisplaySimSum.eof()){
-		cerr<<"reached the end of summary file, expecting: symmetricitY boolean:"<<endl;
+		std::cerr<<"reached the end of summary file, expecting: symmetricitY boolean:"<<std::endl;
 		return false;
 	}
 	saveFileToDisplaySimSum >> symmetricY;
-	cout<<"read the summary, symmetricity data: "<<symmetricX<<" "<<symmetricY<<endl;
+	std::cout<<"read the summary, symmetricity data: "<<symmetricX<<" "<<symmetricY<<std::endl;
 	return true;
 }
 
@@ -2094,8 +2061,8 @@ bool Simulation::readSpecificNodeTypesFromSave(){
 		saveFileToDisplaySpecificNodeTypes.read((char*) &currElementId, sizeof currElementId);
 		int currIndice = getElementArrayIndexFromId(currElementId);
 		if (currIndice < 0){
-			cout<<" error in reading actin mimicking elements "<<endl;
-			cerr<<" error in reading actin mimicking elements "<<endl;
+			std::cout<<" error in reading actin mimicking elements "<<std::endl;
+			std::cerr<<" error in reading actin mimicking elements "<<std::endl;
 			return false;
 		}
 		Elements[currIndice]->isActinMimicing = true;
@@ -2110,12 +2077,12 @@ bool Simulation::readSpecificNodeTypesFromSave(){
 		saveFileToDisplaySpecificNodeTypes.read((char*) &currElementId, sizeof currElementId);
 		int currIndice = getElementArrayIndexFromId(currElementId);
 		if (currIndice < 0){
-			cout<<" error in reading ECM mimicking elements "<<endl;
-			cerr<<" error in reading ECM mimicking elements "<<endl;
+			std::cout<<" error in reading ECM mimicking elements "<<std::endl;
+			std::cerr<<" error in reading ECM mimicking elements "<<std::endl;
 			return false;
 		}
 		Elements[currIndice]->isECMMimicing = true;
-		//cout<<" ECM indice: "<<currIndice<<" "<<currElementId<<endl;
+		//std::cout<<" ECM indice: "<<currIndice<<" "<<currElementId<<std::endl;
 	}
 	assigneElementsAtTheBorderOfECM();
 	assigneElementsAtTheBorderOfActin();
@@ -2123,7 +2090,7 @@ bool Simulation::readSpecificNodeTypesFromSave(){
 	int counterForMarkerEllipsesOnElements;
 	int currEllipseBandId;
 	saveFileToDisplaySpecificNodeTypes.read((char*) &counterForMarkerEllipsesOnElements, sizeof counterForMarkerEllipsesOnElements);
-	cout<<"counterForMarkerEllipsesOnElements "<<counterForMarkerEllipsesOnElements<<endl;
+	std::cout<<"counterForMarkerEllipsesOnElements "<<counterForMarkerEllipsesOnElements<<std::endl;
 	if (counterForMarkerEllipsesOnElements<0 || counterForMarkerEllipsesOnElements> 200000){
 		counterForMarkerEllipsesOnElements = 0;
 	}
@@ -2132,8 +2099,8 @@ bool Simulation::readSpecificNodeTypesFromSave(){
 		saveFileToDisplaySpecificNodeTypes.read((char*) &currEllipseBandId, sizeof currEllipseBandId);
 		int currIndice = getElementArrayIndexFromId(currElementId);
 		if (currIndice < 0){
-			cout<<" error in reading marker ellipses for elements "<<endl;
-			cerr<<" error in reading marker ellipses for elements "<<endl;
+			std::cout<<" error in reading marker ellipses for elements "<<std::endl;
+			std::cerr<<" error in reading marker ellipses for elements "<<std::endl;
 			return false;
 		}
 		Elements[currIndice]->insideEllipseBand = true;
@@ -2144,7 +2111,7 @@ bool Simulation::readSpecificNodeTypesFromSave(){
 	int currNodeId;
 	saveFileToDisplaySpecificNodeTypes.read((char*) &counterForMarkerEllipsesOnNodes, sizeof counterForMarkerEllipsesOnNodes);
 
-	cout<<" to display counterForMarkerEllipsesOnNodes "<<counterForMarkerEllipsesOnNodes<<endl;
+	std::cout<<" to display counterForMarkerEllipsesOnNodes "<<counterForMarkerEllipsesOnNodes<<std::endl;
 	if (counterForMarkerEllipsesOnNodes<0 || counterForMarkerEllipsesOnNodes> 200000){
 		counterForMarkerEllipsesOnNodes = 0;
 	}
@@ -2153,40 +2120,40 @@ bool Simulation::readSpecificNodeTypesFromSave(){
 		saveFileToDisplaySpecificNodeTypes.read((char*) &currEllipseBandId, sizeof currEllipseBandId);
 		int currIndice = getNodeArrayIndexFromId(currNodeId);
 		if (currIndice < 0){
-			cout<<" error in reading marker ellipses for nodes "<<endl;
-			cerr<<" error in reading marker ellipses for nodes "<<endl;
+			std::cout<<" error in reading marker ellipses for nodes "<<std::endl;
+			std::cerr<<" error in reading marker ellipses for nodes "<<std::endl;
 			return false;
 		}
 		Nodes[currIndice]->insideEllipseBand = true;
 		Nodes[currIndice]->coveringEllipseBandId = currEllipseBandId;
 	}
-	cout<<"read specific element types: "<<counterForMarkerEllipsesOnNodes<<" "<<counterForMarkerEllipsesOnElements<<" "<<counterForECMMimicingElements<<" "<<counterForActinMimicingElements<<endl;
+	std::cout<<"read specific element types: "<<counterForMarkerEllipsesOnNodes<<" "<<counterForMarkerEllipsesOnElements<<" "<<counterForECMMimicingElements<<" "<<counterForActinMimicingElements<<std::endl;
 	return true;
 }
 
 int Simulation::getElementArrayIndexFromId(int currId){
 	int currIndice = 0;
-	for (vector<ShapeBase*>::iterator itElement = Elements.begin(); itElement < Elements.end(); itElement++){
-		if ((*itElement)->getId() == currId){
+	for (const auto& itElement : Elements){
+		if (itElement->getId() == currId){
 			return currIndice;
 		}
 		currIndice++;
 	}
-	cout<<"Error in getElementArrayIndexFromId, required element Id : "<<currId<<" returnin -10, inducing a crash"<<endl;
-	cerr<<"Error in getElementArrayIndexFromId, required element Id : "<<currId<<" returnin -10, inducing a crash"<<endl;
+	std::cout<<"Error in getElementArrayIndexFromId, required element Id : "<<currId<<" returnin -10, inducing a crash"<<std::endl;
+	std::cerr<<"Error in getElementArrayIndexFromId, required element Id : "<<currId<<" returnin -10, inducing a crash"<<std::endl;
 	return -10;
 }
 
 int Simulation::getNodeArrayIndexFromId(int currId){
 	int currIndice = 0;
-	for (vector<Node*>::iterator itNode = Nodes.begin(); itNode < Nodes.end(); itNode++){
-		if ((*itNode)->getId() == currId){
+	for (const auto& itNode : Nodes){
+		if (itNode->getId() == currId){
 			return currIndice;
 		}
 		currIndice++;
 	}
-	cout<<"Error in getElementArrayIndexFromId, required node Id : "<<currId<<" returnin -10, inducing a crash"<<endl;
-	cerr<<"Error in getElementArrayIndexFromId, required node Id : "<<currId<<" returnin -10, inducing a crash"<<endl;
+	std::cout<<"Error in getElementArrayIndexFromId, required node Id : "<<currId<<" returnin -10, inducing a crash"<<std::endl;
+	std::cerr<<"Error in getElementArrayIndexFromId, required node Id : "<<currId<<" returnin -10, inducing a crash"<<std::endl;
 	return -10;
 }
 
@@ -2196,14 +2163,14 @@ bool Simulation::readNodeDataToContinueFromSave(){
      * [number of nodes] \n
      * [pos_x] [pos_y] [pos_z] [Node#tissuePlacement] [Node#tissueType] [Node#atCircumference]
      */
-	int n;
+	size_t n;
 	saveFileToDisplayMesh >> n;
-	cout<<"number of nodes: "<<n<<endl;
+	std::cout<<"number of nodes: "<<n<<std::endl;
 	if(nNodes != n){
-		cerr<<"The node number from save file("<<n<<") and model input("<<Nodes.size()<<") are not consistent - cannot continue simulation from save"<<endl;
+		std::cerr<<"The node number from save file("<<n<<") and model input("<<Nodes.size()<<") are not consistent - cannot continue simulation from save"<<std::endl;
 		return false;
 	}
-	for (int i=0; i<n; ++i){
+	for (size_t i=0; i<n; ++i){
 		int tissuePlacement, tissueType;
 		bool atCircumference;
 		saveFileToDisplayMesh >> Nodes[i]->Position[0];
@@ -2213,7 +2180,7 @@ bool Simulation::readNodeDataToContinueFromSave(){
 		saveFileToDisplayMesh >> tissueType;
 		saveFileToDisplayMesh >> atCircumference;
 		if (Nodes[i]->tissuePlacement != tissuePlacement || Nodes[i]->atCircumference != atCircumference || Nodes[i]->tissueType != tissueType ){
-			cerr<<"Node "<<i<<" properties are not consistent  - cannot continue simulation from save "<<endl;
+			std::cerr<<"Node "<<i<<" properties are not consistent  - cannot continue simulation from save "<<std::endl;
 			return false;
 		}
 	}
@@ -2222,9 +2189,7 @@ bool Simulation::readNodeDataToContinueFromSave(){
 
 void Simulation::initiateNodesFromSave(){
 	saveFileToDisplayMesh >> nNodes;
-	cout<<"number of nodes: "<<nNodes<<endl;
-	Node* tmp_nd;
-	for (int i=0; i<nNodes; ++i){
+	for (size_t i=0; i<nNodes; ++i){
 		std::array<double,3> pos;
 		int tissuePlacement, tissueType;
 		bool atCircumference;
@@ -2234,17 +2199,15 @@ void Simulation::initiateNodesFromSave(){
 		saveFileToDisplayMesh >> tissuePlacement;
 		saveFileToDisplayMesh >> tissueType;
 		saveFileToDisplayMesh >> atCircumference;
-		tmp_nd = new Node(i, 3, pos,tissuePlacement, tissueType);
+		std::unique_ptr<Node> tmp_nd = make_unique<Node>(i, 3, pos,tissuePlacement, tissueType);
 		tmp_nd-> atCircumference = atCircumference;
-		Nodes.push_back(tmp_nd);
+		Nodes.push_back(std::move(tmp_nd));
 	}
-	cout<<"number of nodes: "<<nNodes<<endl;
 }
 
 void Simulation::initiateNodesFromMeshInput(){
 	int n;
 	inputMeshFile >> n;
-	Node* tmp_nd;
 	for (int i=0; i<n; ++i){
 		std::array<double,3> pos;
 		int tissuePos = -2;
@@ -2256,9 +2219,9 @@ void Simulation::initiateNodesFromMeshInput(){
 		inputMeshFile >> tissuePos;
 		inputMeshFile >> tissueType;
 		inputMeshFile >> atCircumference;
-		tmp_nd = new Node(i, 3, pos,tissuePos, tissueType);
-		tmp_nd->atCircumference = atCircumference;
-		Nodes.push_back(tmp_nd);
+        std::unique_ptr<Node> tmp_nd = make_unique<Node>(i, 3, pos,tissuePos, tissueType);
+        tmp_nd-> atCircumference = atCircumference;
+        Nodes.push_back(std::move(tmp_nd));
 		nNodes = Nodes.size();
 	}
 }
@@ -2273,7 +2236,7 @@ void Simulation::initiateElementsFromMeshInput(){
 			initiatePrismFromMeshInput();
 		}
 		else{
-			cerr<<"Element "<<i<<" of "<<n<<": Error in shape type, corrupt save file! - currShapeType: "<<shapeType<<endl;
+			std::cerr<<"Element "<<i<<" of "<<n<<": Error in shape type, corrupt save file! - currShapeType: "<<shapeType<<std::endl;
 			break;
 		}
 	}
@@ -2281,20 +2244,20 @@ void Simulation::initiateElementsFromMeshInput(){
 
 
 void Simulation::initiateElementsFromSave(){
-	int n;
+	size_t n;
 	saveFileToDisplayMesh >> n;
-	cout<<"number of elements: "<<n<<endl;
-	for (int i=0; i<n; ++i){
+	std::cout<<"number of elements: "<<n<<std::endl;
+	for (size_t i=0; i<n; ++i){
 		int shapeType;
 		saveFileToDisplayMesh >> shapeType;
 		if (shapeType == 1){
 			initiatePrismFromSave();
 		}
 		else{
-			cerr<<"Error in shape type, corrupt save file! - currShapeType: "<<shapeType<<endl;
+			std::cerr<<"Error in shape type, corrupt save file! - currShapeType: "<<shapeType<<std::endl;
 		}
 	}
-	cout<<"number of elements: "<<nElements<<endl;
+	std::cout<<"number of elements: "<<nElements<<std::endl;
 }
 
 bool Simulation::readElementDataToContinueFromSave(){
@@ -2303,27 +2266,27 @@ bool Simulation::readElementDataToContinueFromSave(){
      * [number of elements] \n
      * [ShapeBase#ShapeType] [shape type specific data read by Simulation#readShapeData]
      */
-	int n;
+	size_t n;
 	saveFileToDisplayMesh >> n;
 	if (nElements != n){
-		cerr<<"The element number from save file and model input are not consistent - cannot continue simulation from save"<<endl;
-		cerr<<"n: "<<n<<" nElements: "<<endl;
+		std::cerr<<"The element number from save file and model input are not consistent - cannot continue simulation from save"<<std::endl;
+		std::cerr<<"n: "<<n<<" nElements: "<<std::endl;
 		return false;
 	}
-	for (int i=0; i<nElements; ++i){
+	for (size_t i=0; i<nElements; ++i){
 		//string line;
 		//getline(saveFileToDisplayMesh, line);
 
 		int shapeType;
 		saveFileToDisplayMesh >> shapeType;
 		if (Elements[i]->getShapeType() != shapeType){
-			cerr<<"The element type from save file and model input are not consistent - cannot continue simulation from save"<<endl;
+			std::cerr<<"The element type from save file and model input are not consistent - cannot continue simulation from save"<<std::endl;
 			return false;
 		}
 		if (shapeType == 1){
 			bool success = readShapeData(i);
 			if (!success){
-				cerr<<"Error reading shape data, element: "<<i<<endl;
+				std::cerr<<"Error reading shape data, element: "<<i<<std::endl;
 				return false;
 			}
 		}
@@ -2332,12 +2295,12 @@ bool Simulation::readElementDataToContinueFromSave(){
 			saveFileToDisplayMesh >> height;
 			bool success = readShapeData(i);
 			if (!success){
-				cerr<<"Error reading shape data, element: "<<i<<endl;
+				std::cerr<<"Error reading shape data, element: "<<i<<std::endl;
 				return false;
 			}
 		}
 		else{
-			cerr<<"Error in shape type, corrupt save file! - currShapeType: "<<shapeType<<endl;
+			std::cerr<<"Error in shape type, corrupt save file! - currShapeType: "<<shapeType<<std::endl;
 		}
 
 	}
@@ -2354,10 +2317,9 @@ void Simulation::initiatePrismFromSave(){
 	for (int i =0 ;i<6; ++i){
 		NodeIds[i] = 0;
 	}
-	Prism* PrismPnt01;
-	PrismPnt01 = new Prism(NodeIds, Nodes, currElementId,thereIsPlasticDeformation);
+	std::unique_ptr<ShapeBase> PrismPnt01 = make_unique<Prism>(NodeIds, Nodes, currElementId);
 	PrismPnt01->updateShapeFromSave(saveFileToDisplayMesh);
-	Elements.push_back(PrismPnt01);
+	Elements.push_back(std::move(PrismPnt01));
 	nElements = Elements.size();
 	currElementId++;
 	delete[] NodeIds;
@@ -2371,17 +2333,17 @@ bool Simulation::readShapeData(int i){
 	bool IsAblated;
 	saveFileToDisplayMesh >> IsAblated;
 	if ( Elements[i]->IsAblated != IsAblated){
-		cerr<<"The element "<<i<<" ablation from save file and model input are not consistent - cannot continue simulation from save"<<endl;
+		std::cerr<<"The element "<<i<<" ablation from save file and model input are not consistent - cannot continue simulation from save"<<std::endl;
 		return false;
 	}
 	bool success = Elements[i]->readNodeIdData(saveFileToDisplayMesh);
 	if (!success){
-		cerr<<"The element "<<i<<" node ids from save file and model input are not consistent - cannot continue simulation from save"<<endl;
+		std::cerr<<"The element "<<i<<" node ids from save file and model input are not consistent - cannot continue simulation from save"<<std::endl;
 		return false;
 	}
 	success = Elements[i]->readReferencePositionData(saveFileToDisplayMesh);
 	if (!success){
-		cerr<<"The element "<<i<<" reference shape from save file and model input are not consistent - cannot continue simulation from save"<<endl;
+		std::cerr<<"The element "<<i<<" reference shape from save file and model input are not consistent - cannot continue simulation from save"<<std::endl;
 		return false;
 	}
 	return true;
@@ -2396,29 +2358,33 @@ void Simulation::initiatePrismFromMeshInput(){
 		inputMeshFile >> savedId;
 		NodeIds[i] = savedId;
 	}
-	Prism* PrismPnt01;
-	PrismPnt01 = new Prism(NodeIds, Nodes, currElementId,thereIsPlasticDeformation);
+
+	std::unique_ptr<ShapeBase> PrismPnt01 = make_unique<Prism>(NodeIds, Nodes, currElementId);
 	PrismPnt01->updateReferencePositionMatrixFromMeshInput(inputMeshFile);
 	PrismPnt01->checkRotationConsistency3D();
-	Elements.push_back(PrismPnt01);
+	Elements.push_back(std::move(PrismPnt01));
 	nElements = Elements.size();
 	currElementId++;
 	delete[] NodeIds;
 }
 
-void Simulation::reInitiateSystemForces(int oldSize){
-	//deleting the old system forces:
+void Simulation::reInitiateSystemForces(){
+	SystemForces.clear();
+	PackingForces.clear();
+	FixedNodeForces.clear();
+	for (size_t j=0;j<nNodes;++j){
+		SystemForces.push_back(std::array<double,3>{0.0});
+		PackingForces.push_back(std::array<double,3>{0.0});
+		FixedNodeForces.push_back(std::array<double,3>{0.0});
+	}
+	/*//deleting the old system forces:
 	for (int j=0;j<oldSize;++j){
 		delete[] SystemForces[j];
 		delete[] PackingForces[j];
-		//delete[] PackingForcesPreviousStep[j];
-		//delete[] PackingForcesTwoStepsAgoStep[j];
-		delete[] FixedNodeForces[j];
+			delete[] FixedNodeForces[j];
 	}
 	delete[] SystemForces;
 	delete[] PackingForces;
-	//delete[] PackingForcesPreviousStep;
-	//delete[] PackingForcesTwoStepsAgoStep;
 	delete[] FixedNodeForces;
 	//reinitiating with the new size:
 	const int n = nNodes;
@@ -2438,11 +2404,11 @@ void Simulation::reInitiateSystemForces(int oldSize){
 		FixedNodeForces[j][0] = 0.0;
 		FixedNodeForces[j][1] = 0.0;
 		FixedNodeForces[j][2] = 0.0;
-	}
+	}*/
 }
 
 void Simulation::updateForcesFromSave(){
-	for (int i=0;i<nNodes;++i){
+	for (size_t i=0;i<nNodes;++i){
 		saveFileToDisplayForce.read((char*) &SystemForces[i][0], sizeof SystemForces[i][0]);
 		saveFileToDisplayForce.read((char*) &SystemForces[i][1], sizeof SystemForces[i][1]);
 		saveFileToDisplayForce.read((char*) &SystemForces[i][2], sizeof SystemForces[i][2]);
@@ -2450,56 +2416,39 @@ void Simulation::updateForcesFromSave(){
 }
 
 void Simulation::updateTensionCompressionFromSave(){
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		for (int j=0; j<6; ++j){
-            double S = gsl_matrix_get((*itElement)->Strain,j,0);
+	for(const auto& itElement : Elements){
+		for (size_t j=0; j<6; ++j){
+            double S = gsl_matrix_get(itElement->Strain,j,0);
             saveFileToDisplayTenComp.read((char*) &S, sizeof S);
-            gsl_matrix_set((*itElement)->Strain,j,0,S);
+            gsl_matrix_set(itElement->Strain,j,0,S);
         }
 	}
 }
 
 void Simulation::updateGrowthRedistributionFromSave(){
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+	for(const auto& itElement : Elements){
 		bool thereIsDistribution = false;
 		bool shrinksElement = false;
 		saveFileToDisplayGrowthRedistribution.read((char*) &thereIsDistribution, sizeof thereIsDistribution);
-		(*itElement)->thereIsGrowthRedistribution = thereIsDistribution;
+		itElement->thereIsGrowthRedistribution = thereIsDistribution;
 		saveFileToDisplayGrowthRedistribution.read((char*) &shrinksElement, sizeof shrinksElement);
-		(*itElement)->growthRedistributionShrinksElement = shrinksElement;
+		itElement->growthRedistributionShrinksElement = shrinksElement;
 	}
 }
 
 void Simulation::updateNodeBindingFromSave(){
-	/*int n = 0; //size Of Master-Slave List
-	saveFileToDisplayNodeBinding.read((char*) &n, sizeof n);
-	cout<<" n: "<<n<<endl;
-	for (int i=0; i<n; ++i){
-		int dofSlave, dofMaster;
-		saveFileToDisplayNodeBinding.read((char*) &dofSlave, sizeof dofSlave);
-		saveFileToDisplayNodeBinding.read((char*) &dofMaster, sizeof dofMaster);
-		int dim = dofSlave % 3;
-		int nodeSlave = (dofSlave - dim)/3;
-		int nodeMaster = (dofMaster - dim)/3;
-		Nodes[nodeSlave]->slaveTo[dim] = nodeMaster;
-		Nodes[nodeMaster]->isMaster[dim] = true;
-	}*/
-
-
-	for(vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-		(*itNode)->slaveTo[0] = -1;
-		(*itNode)->slaveTo[1] = -1;
-		(*itNode)->slaveTo[2] = -1;
-		(*itNode)->isMaster[0] = false;
-		(*itNode)->isMaster[1] = false;
-		(*itNode)->isMaster[2] = false;
-		(*itNode)->attachedToPeripodial = false;
+	for(const auto& itNode : Nodes){
+		itNode->slaveTo[0] = -1;
+		itNode->slaveTo[1] = -1;
+		itNode->slaveTo[2] = -1;
+		itNode->isMaster[0] = false;
+		itNode->isMaster[1] = false;
+		itNode->isMaster[2] = false;
+		itNode->attachedToPeripodial = false;
 	}
-	int n = 0; //size Of Master-Slave List
+	size_t n = 0; //size Of Master-Slave List
 	saveFileToDisplayNodeBinding>>n;
-	for (int i=0; i<n; ++i){
+	for (size_t i=0; i<n; ++i){
 		int dofSlave, dofMaster;
 		saveFileToDisplayNodeBinding>>dofSlave;
 		saveFileToDisplayNodeBinding>>dofMaster;
@@ -2511,62 +2460,20 @@ void Simulation::updateNodeBindingFromSave(){
 		if(Nodes[nodeSlave]->tissueType ==1 ){
 			Nodes[nodeMaster]->attachedToPeripodial = true;
 		}
-		//cout<<"read binding: "<<i<<" of "<<n<<" slave :"<<nodeSlave<<" master  "<<nodeMaster<<endl;
-	}
-}
-
-void Simulation::updateCollapseAndAdhesionFromSave(){
-	/*for(vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-		int adheredTo;
-		saveFileToDisplayCollapseAndAdhesion.read((char*) &adheredTo, sizeof adheredTo);
-		(*itNode)->adheredTo = adheredTo;
-		int nCollapsedNodes;
-		saveFileToDisplayCollapseAndAdhesion.read((char*) &nCollapsedNodes, sizeof nCollapsedNodes);
-		vector<int> collapseList;
-		for (int i=0; i<nCollapsedNodes; ++i){
-			int nodeId;
-			saveFileToDisplayCollapseAndAdhesion.read((char*) &nodeId, sizeof nodeId);
-			collapseList.push_back(nodeId);
-		}
-		(*itNode)->collapsedWith = collapseList;
-	}*/
-	for(vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-		int adheredTo;
-		saveFileToDisplayCollapseAndAdhesion.read((char*) &adheredTo, sizeof adheredTo);
-		if ((*itNode)->adheredTo<0){
-			(*itNode)->adheredTo = adheredTo;
-		}
-		if (savedStepwise){
-		saveFileToDisplayCollapseAndAdhesion.read((char*) &(*itNode)->positionUpdateOngoing, sizeof (*itNode)->positionUpdateOngoing);
-		saveFileToDisplayCollapseAndAdhesion.read((char*) &(*itNode)->positionUpdateCounter, sizeof (*itNode)->positionUpdateCounter);
-		}
-		int nCollapsedNodes;
-
-		saveFileToDisplayCollapseAndAdhesion.read((char*) &nCollapsedNodes, sizeof nCollapsedNodes);
-		//vector<int> collapseList;
-		for (int i=0; i<nCollapsedNodes; ++i){
-			int nodeId;
-			saveFileToDisplayCollapseAndAdhesion.read((char*) &nodeId, sizeof nodeId);
-			bool nodeOnList = binary_search((*itNode)->collapsedWith.begin(), (*itNode)->collapsedWith.end(),nodeId);
-			if (!nodeOnList){
-				(*itNode)->collapsedWith.push_back(nodeId);
-			}
-		}
 	}
 }
 
 void Simulation::updateGrowthFromSave(){
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+	for(const auto& itElement : Elements){
 		gsl_matrix* currFg = gsl_matrix_calloc(3,3);
-        for (int j=0; j<3; ++j){
-            for(int k=0; k<3; ++k){
+        for (size_t j=0; j<3; ++j){
+            for(size_t k=0; k<3; ++k){
                 double Fgjk;
                 saveFileToDisplayGrowth.read((char*) &Fgjk, sizeof Fgjk);
                 gsl_matrix_set(currFg,j,k,Fgjk);
             }
         }
-        (*itElement)->setFg(currFg);
+        itElement->setFg(currFg);
         gsl_matrix_free(currFg);
     }
 }
@@ -2576,13 +2483,12 @@ void Simulation::updateGrowthRateFromSave(){
 	 * growth rate [r_x] [r_y] [r_z] \n
 	 * Then the shape information is updated with correct timestep length in ShapeBase#setGrowthRateViaInputTimeMultipliedMagnitude.
 	 */
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+	for(const auto& itElement : Elements){
 		double rx=0.0,ry=0.0,rz=0.0;
 		saveFileToDisplayGrowthRate.read((char*) &rx, sizeof rx);
 		saveFileToDisplayGrowthRate.read((char*) &ry, sizeof ry);
 		saveFileToDisplayGrowthRate.read((char*) &rz, sizeof rz);
-		(*itElement)->setGrowthRateExpFromInput(rx,ry,rz);
+		itElement->setGrowthRateExpFromInput(rx,ry,rz);
 	}
 }
 
@@ -2627,104 +2533,51 @@ void Simulation::updatePackingFromSave(){
 }
 
 void Simulation::readTensionCompressionToContinueFromSave(){
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		for (int j=0; j<6; ++j){
+	for(const auto& itElement : Elements){
+		for (size_t j=0; j<6; ++j){
             double S;
             saveFileToDisplayTenComp.read((char*) &S, sizeof S);
-            gsl_matrix_set((*itElement)->Strain,j,0,S);
+            gsl_matrix_set(itElement->Strain,j,0,S);
 		}
 	}
 }
 
 void Simulation::readGrowthRedistributionToContinueFromSave(){
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+	for(const auto& itElement : Elements){
 		bool thereIsDistribution = false;
 		bool shrinksElement = false;
 		saveFileToDisplayGrowthRedistribution.read((char*) &thereIsDistribution, sizeof thereIsDistribution);
-        (*itElement)->thereIsGrowthRedistribution = thereIsDistribution;
+        itElement->thereIsGrowthRedistribution = thereIsDistribution;
         saveFileToDisplayGrowthRedistribution.read((char*) &shrinksElement, sizeof shrinksElement);
-        (*itElement)->growthRedistributionShrinksElement = shrinksElement;
+        itElement->growthRedistributionShrinksElement = shrinksElement;
 	}
 }
 
 void Simulation::readNodeBindingToContinueFromSave(){
-	/*int n = 0; //size Of Master-Slave List
-	saveFileToDisplayNodeBinding.read((char*) &n, sizeof n);
-	for (int i=0; i<n; ++i){
-		int dofSlave, dofMaster;
-		saveFileToDisplayNodeBinding.read((char*) &dofSlave, sizeof dofSlave);
-		saveFileToDisplayNodeBinding.read((char*) &dofMaster, sizeof dofMaster);
-		int dim = dofSlave % 3;
-		int nodeSlave = (dofSlave - dim)/3;
-		int nodeMaster = (dofMaster - dim)/3;
-		Nodes[nodeSlave]->slaveTo[dim] = nodeMaster;
-		Nodes[nodeMaster]->isMaster[dim] = true;
-	}*/
 	//clear all first:
-	for(vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-		(*itNode)->slaveTo[0] = -1;
-		(*itNode)->slaveTo[1] = -1;
-		(*itNode)->slaveTo[2] = -1;
-		(*itNode)->isMaster[0] = false;
-		(*itNode)->isMaster[1] = false;
-		(*itNode)->isMaster[2] = false;
-		(*itNode)->attachedToPeripodial = false;
+	for(const auto& itNode : Nodes){
+		itNode->slaveTo[0] = -1;
+		itNode->slaveTo[1] = -1;
+		itNode->slaveTo[2] = -1;
+		itNode->isMaster[0] = false;
+		itNode->isMaster[1] = false;
+		itNode->isMaster[2] = false;
+		itNode->attachedToPeripodial = false;
 	}
-	int n = 0; //size Of Master-Slave List
+	size_t n = 0; //size Of Master-Slave List
 	saveFileToDisplayNodeBinding>>n;
-	for (int i=0; i<n; ++i){
-		int dofSlave, dofMaster;
+	for (size_t i=0; i<n; ++i){
+		size_t dofSlave, dofMaster;
 		saveFileToDisplayNodeBinding>>dofSlave;
 		saveFileToDisplayNodeBinding>>dofMaster;
-		int dim = dofSlave % 3;
-		int nodeSlave = (dofSlave - dim)/3;
-		int nodeMaster = (dofMaster - dim)/3;
+		size_t dim = dofSlave % 3;
+		size_t nodeSlave = (dofSlave - dim)/3;
+		size_t nodeMaster = (dofMaster - dim)/3;
 		Nodes[nodeSlave]->slaveTo[dim] = nodeMaster;
 		Nodes[nodeMaster]->isMaster[dim] = true;
 		if(Nodes[nodeSlave]->tissueType ==1 ){
 			Nodes[nodeMaster]->attachedToPeripodial = true;
 		}
-		//cout<<"read binding: "<<i<<" of "<<n<<" slave :"<<nodeSlave<<" master  "<<nodeMaster<<endl;
-	}
-}
-
-
-void Simulation::readCollapseAndAdhesionToContinueFromSave(){
-	for(vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-		int adheredTo;
-		saveFileToDisplayCollapseAndAdhesion.read((char*) &adheredTo, sizeof adheredTo);
-		if ((*itNode)->adheredTo<0){
-			(*itNode)->adheredTo = adheredTo;
-		}
-		if (savedStepwise){
-			saveFileToDisplayCollapseAndAdhesion.read((char*) &(*itNode)->positionUpdateOngoing, sizeof (*itNode)->positionUpdateOngoing);
-			saveFileToDisplayCollapseAndAdhesion.read((char*) &(*itNode)->positionUpdateCounter, sizeof (*itNode)->positionUpdateCounter);
-		}
-		int nCollapsedNodes;
-		saveFileToDisplayCollapseAndAdhesion.read((char*) &nCollapsedNodes, sizeof nCollapsedNodes);
-		//cout<<" node "<<(*itNode)->Id<<" adheredTo " <<(*itNode)->adheredTo<<" positionUpdateOngoing? "<<(*itNode)->positionUpdateOngoing<<" counter: "<<(*itNode)->positionUpdateCounter<<" nCollapsedNodes? "<<nCollapsedNodes<<endl;
-		//vector<int> collapseList;
-		for (int i=0; i<nCollapsedNodes; ++i){
-			int nodeId;
-			saveFileToDisplayCollapseAndAdhesion.read((char*) &nodeId, sizeof nodeId);
-			//cout<<"read collapse: "<<" node :"<<(*itNode)->Id<<" adheredTo  "<<(*itNode)->adheredTo<<" reading collapse: "<<i<<" of "<<nCollapsedNodes<<" id: "<<nodeId<<endl;
-			bool nodeOnList = binary_search((*itNode)->collapsedWith.begin(), (*itNode)->collapsedWith.end(),nodeId);
-			if (!nodeOnList){
-				(*itNode)->collapsedWith.push_back(nodeId);
-			}
-			//collapseList.push_back(nodeId);
-		}
-		(*itNode)->clearDuplicatesFromCollapseList();
-		//(*itNode)->collapsedWith = collapseList;
-		/*if ((*itNode)->adheredTo >  0|| (*itNode)->collapsedWith.size()>0){
-			cout<<" node "<<(*itNode)->Id<<" is collapsed with ";
-			for (int i=0; i<(*itNode)->collapsedWith.size(); ++i){
-				cout<<(*itNode)->collapsedWith[i]<<" ";
-			}
-			cout<<" adhered to: "<<(*itNode)->adheredTo<<" is master: "<<(*itNode)->isMaster[0]<<" "<<(*itNode)->isMaster[1]<<" "<<(*itNode)->isMaster[2]<<" slave to: "<<(*itNode)->slaveTo[0]<<" "<<(*itNode)->slaveTo[1]<<" "<<(*itNode)->slaveTo[2]<<endl;
-		}*/
 	}
 }
 
@@ -2745,24 +2598,22 @@ void Simulation::readPhysicalPropToContinueFromSave(){
      * Then for each node: \n
      * [external viscosity_x] [external viscosity_y] [external viscosity_z]
      */
-	vector<ShapeBase*>::iterator itElement;
 	double E;
 	double internalViscposity;
 	double externalViscosity[3];
 	double zRemodelling;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+	for (const auto& itElement : Elements){
 		saveFileToDisplayPhysicalProp.read((char*) &E, sizeof E);
 		saveFileToDisplayPhysicalProp.read((char*) &internalViscposity, sizeof internalViscposity);
 		saveFileToDisplayPhysicalProp.read((char*) &zRemodelling, sizeof zRemodelling);
-		(*itElement)->setYoungsModulus(E);
-		(*itElement)->setViscosity(internalViscposity);
-		(*itElement)->setZRemodellingSoFar(zRemodelling);
+		itElement->setYoungsModulus(E);
+		itElement->setViscosity(internalViscposity);
+		itElement->setZRemodellingSoFar(zRemodelling);
 	}
-	vector<Node*>::iterator itNode;
-	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+	for (const auto& itNode : Nodes){
 		for (int i=0; i<3; ++i){
 			saveFileToDisplayPhysicalProp.read((char*) &externalViscosity[i], sizeof externalViscosity[i]);
-			(*itNode)->externalViscosity[i] = externalViscosity[i];
+			itNode->externalViscosity[i] = externalViscosity[i];
 		}
 	}
 }
@@ -2778,12 +2629,11 @@ void Simulation::initiatePrismFromSaveForUpdate(int k){
 		//the node ids will be updated in function: updateShapeFromSave
 		NodeIds[i] = 0;
 	}
-	Prism* PrismPnt01;
-	PrismPnt01 = new Prism(NodeIds, Nodes, currElementId,thereIsPlasticDeformation);
-	PrismPnt01->updateShapeFromSave(saveFileToDisplayMesh);
-	vector<ShapeBase*>::iterator it = Elements.begin();
+    std::unique_ptr<ShapeBase> PrismPnt01 = make_unique<Prism>(NodeIds, Nodes, currElementId);
+    PrismPnt01->updateShapeFromSave(saveFileToDisplayMesh);
+    std::vector<std::unique_ptr<ShapeBase>>::iterator it = Elements.begin();
 	it += k;
-	Elements.insert(it,PrismPnt01);
+    Elements.insert(it,std::move(PrismPnt01));
 	nElements = Elements.size();
 	currElementId++;
 	delete[] NodeIds;
@@ -2791,7 +2641,7 @@ void Simulation::initiatePrismFromSaveForUpdate(int k){
 
 
 void Simulation::updateOneStepFromSave(){
-	cout<<"updating step from save"<<endl;
+	std::cout<<"updating step from save"<<std::endl;
 	string currline;
 	//skipping the header:
 	getline(saveFileToDisplayMesh,currline);
@@ -2799,18 +2649,17 @@ void Simulation::updateOneStepFromSave(){
 		reachedEndOfSaveFile = true;
 		return;
 	}
-	//cout<<"skipped header: "<<currline<<endl;
+	//std::cout<<"skipped header: "<<currline<<std::endl;
     resetForces(true);	// reset packing forces
     updateNodeNumberFromSave();
 	updateNodePositionsFromSave();
 	updateElementStatesFromSave();
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+	for(auto const& itElement : Elements){
 		//This is updating positions from save.
-		(*itElement)->updatePositions(Nodes);
+		itElement->updatePositions(Nodes);
 	}
 	if (TensionCompressionSaved){
-        //cout<<"updating tension compression: "<<endl;
+        //std::cout<<"updating tension compression: "<<std::endl;
 		updateTensionCompressionFromSave();
 	}
     if (GrowthSaved){
@@ -2825,10 +2674,10 @@ void Simulation::updateOneStepFromSave(){
 	if(physicalPropertiesSaved){
 		updatePhysicalPropFromSave();
 	}
-	//cout<<"trying to update packing from save, PackingSaved: "<<PackingSaved<<endl;
+	//std::cout<<"trying to update packing from save, PackingSaved: "<<PackingSaved<<std::endl;
 	if (PackingSaved){
 		updatePackingFromSave();
-		//cout<<"updated packing, the size of packing couples: "<<pacingNodeCouples0.size()<<endl;
+		//std::cout<<"updated packing, the size of packing couples: "<<pacingNodeCouples0.size()<<std::endl;
 	}
 	if (growthRedistributionSaved){
 		updateGrowthRedistributionFromSave();
@@ -2836,12 +2685,9 @@ void Simulation::updateOneStepFromSave(){
 	if (nodeBindingSaved){
 		updateNodeBindingFromSave();
 	}
-	if (collapseAndAdhesionSaved){
-		updateCollapseAndAdhesionFromSave();
-	}
     if (thereIsExplicitLumen){
     	tissueLumen->growLumen(currSimTimeSec+dt*dataSaveInterval);
-    	cout<<"in updateOneStepFromSave lumen growth is carried out for: "<<currSimTimeSec + dt*dataSaveInterval<<endl;
+    	std::cout<<"in updateOneStepFromSave lumen growth is carried out for: "<<currSimTimeSec + dt*dataSaveInterval<<std::endl;
     }
 	clearNodeMassLists();
 	assignNodeMasses();
@@ -2855,58 +2701,50 @@ void Simulation::updateOneStepFromSave(){
 	//skipping the footer:
 	string currline2;
 	getline(saveFileToDisplayMesh,currline2);
-	//cout<<"currline 1st reading: "<<currline2<<endl;
+	//std::cout<<"currline 1st reading: "<<currline2<<std::endl;
 	getline(saveFileToDisplayMesh,currline2);
-	//cout<<"currline 2nd reading: "<<currline2<<endl;
+	//std::cout<<"currline 2nd reading: "<<currline2<<std::endl;
 	while (currline.empty() && !saveFileToDisplayMesh.eof()){
 		//skipping empty line
-		//cout<<"skipping empty line"<<endl;
+		//std::cout<<"skipping empty line"<<std::endl;
 		getline(saveFileToDisplayMesh,currline2);
 	}
 	//if(saveFileToDisplayMesh.eof()){
 	//	reachedEndOfSaveFile = true;
 	//	return;
 	//}
-	//cout<<"in step update, skipped footer: "<<currline2<<endl;
+	//std::cout<<"in step update, skipped footer: "<<currline2<<std::endl;
 	timestep = timestep + dataSaveInterval;
 	currSimTimeSec += dt*dataSaveInterval;
 }
 
 void  Simulation::updateNodeNumberFromSave(){
-	//cout<<"Updating number of nodes from save"<<endl;
-	//cout<<"Is save file open: "<<saveFileToDisplay.is_open()<<" is file good? "<<saveFileToDisplay.good()<<endl;
-	int n;
+	size_t n;
 	saveFileToDisplayMesh>> n;
-	int currNodeNumber = Nodes.size();
-	//cout<<"number of nodes from save file: "<<n <<" number of nodes on the vector: "<<currNodeNumber<<endl;
+	size_t currNodeNumber = Nodes.size();
 	if (n>currNodeNumber){
-		Node* tmp_nd;
-		for (int i = 0; i<(n-currNodeNumber); ++i){
-			std::array<double,3> pos;
-			pos[0]=0.0;
-			pos[1]=0.0;
-			pos[2]=0.0;
-			//the positions will be read and updated in function updateNodePositionsFromSave
-			tmp_nd = new Node(i, 3, pos,-1, -1);
-			Nodes.push_back(tmp_nd);
+		for (size_t i = 0; i<(n-currNodeNumber); ++i){
+			std::array<double,3> pos = {0.0, 0.0, 0.0};
+			/** This function only initiates the node where necessary, the positions will be read and updated in
+			* Simulaition#updateNodePositionsFromSave.
+			*/
+			std::unique_ptr<Node> tmp_nd = make_unique<Node>(i, 3, pos,-1, -1);
+			Nodes.push_back(std::move(tmp_nd));
 			nNodes = Nodes.size();
 		}
 	}
 	else{
-		for (int i = 0; i<(currNodeNumber-n); ++i){
-			Node* tmp_nd;
-			tmp_nd = Nodes.back();
+		//shorten the vector until node numbers match
+		for (size_t i = 0; i<(currNodeNumber-n); ++i){
 			Nodes.pop_back();
-			nNodes = Nodes.size();
-			delete tmp_nd;
 		}
 	}
 	n = Nodes.size();
 	if ( n != nNodes){
 		//the node number is change, I updated the node list, now I need to fix system forces:
-		reInitiateSystemForces(nNodes);
+		reInitiateSystemForces();
 	}
-	//cout<<"end of funciton, number of nodes from save file: "<<n <<" number of nodes on the vector: "<<Nodes.size()<<endl;
+	//std::cout<<"end of funciton, number of nodes from save file: "<<n <<" number of nodes on the vector: "<<Nodes.size()<<std::endl;
 }
 
 void  Simulation::updateElementStatesFromSave(){
@@ -2914,7 +2752,7 @@ void  Simulation::updateElementStatesFromSave(){
 	saveFileToDisplayMesh >> n;
 	int currElementNumber = Elements.size();
 	//The elements list is bigger than necessary, I am deleting elements form the end of the list
-	//cout<<"number of elements from save file: "<<nElements <<" number of element on the Elements vector: "<<currElementNumber<<endl;
+	//std::cout<<"number of elements from save file: "<<nElements <<" number of element on the Elements vector: "<<currElementNumber<<std::endl;
 	while(currElementNumber>n){
         /** If the elements list is longer than necessary, elements will be removed from list via Simulation#removeElementFromEndOfList.
         */
@@ -2972,19 +2810,15 @@ void  Simulation::updateElementStatesFromSave(){
 }
 
 void Simulation::removeElementFromEndOfList(){
-	ShapeBase* tmp_element;
-	tmp_element = Elements.back();
-	//int shapetype = tmp_element->getShapeType();
 	Elements.pop_back();
 	nElements = Elements.size();
-	delete tmp_element;
 }
 
 void Simulation::updateNodePositionsFromSave(){
     /** The formatting is detailed in , Simulation#readNodeDataToContinueFromSave,
      * the main difference is that the node numebr is already read once this function is called.
      */
-	for (int i=0; i<nNodes; ++i){
+	for (size_t i=0; i<nNodes; ++i){
 		saveFileToDisplayMesh >> Nodes[i]->Position[0];
 		saveFileToDisplayMesh >> Nodes[i]->Position[1];
 		saveFileToDisplayMesh >> Nodes[i]->Position[2];
@@ -3005,23 +2839,23 @@ bool Simulation::initiateMesh(int MeshType, float zHeight){
          * Simulation#initiateNodesByRowAndColumn, then the elemetns will be initiated
          * via Simulation#initiateElementsByRowAndColumn accordingly.
          */
-		cerr<<"Error: Too few arguments for mesh by dimensions"<<endl;
+		std::cerr<<"Error: Too few arguments for mesh by dimensions"<<std::endl;
 		return false;
 	}
 	else if ( MeshType == 3 || MeshType ==4 ){
-		cerr<<"Error: Wrong set of arguments  for mesh triangulation"<<endl;
+		std::cerr<<"Error: Wrong set of arguments  for mesh triangulation"<<std::endl;
 		return false;
 	}
 	else {
-		cerr<<"Error: Mesh Type not recognised"<<endl;
+		std::cerr<<"Error: Mesh Type not recognised"<<std::endl;
 		return false;
 	}
 	return true;
 }
 
-bool Simulation::initiateMesh(int MeshType, int Row, int Column, float SideLength, float zHeight){
+bool Simulation::initiateMesh(int MeshType, size_t Row, size_t Column, float SideLength, float zHeight){
 	if ( MeshType == 1 ){
-		cerr<<"Error: Too many arguments for a single element system"<<endl;
+		std::cerr<<"Error: Too many arguments for a single element system"<<std::endl;
 		return false;
 	}
 	if ( MeshType == 2){
@@ -3040,15 +2874,15 @@ bool Simulation::initiateMesh(int MeshType, int Row, int Column, float SideLengt
 		initiateElementsByRowAndColumn(Row,Column);
 	}
 	else if ( MeshType == 3 ){
-		cerr<<"Error: Wrong set of arguments for mesh triangulation"<<endl;
+		std::cerr<<"Error: Wrong set of arguments for mesh triangulation"<<std::endl;
 		return false;
 	}
 	else if ( MeshType ==4 ){
-		cerr<<"Error: Too many arguments for reading the mesh from file"<<endl;
+		std::cerr<<"Error: Too many arguments for reading the mesh from file"<<std::endl;
 		return false;
 	}
 	else {
-		cerr<<"Error: Mesh Type not recognised"<<endl;
+		std::cerr<<"Error: Mesh Type not recognised"<<std::endl;
 		return false;
 	}
 	return true;
@@ -3056,15 +2890,15 @@ bool Simulation::initiateMesh(int MeshType, int Row, int Column, float SideLengt
 
 bool Simulation::initiateMesh(int MeshType){
 	if ( MeshType == 1 ){
-		cerr<<"Error: Too many arguments for a single element system"<<endl;
+		std::cerr<<"Error: Too many arguments for a single element system"<<std::endl;
 		return false;
 	}
 	if ( MeshType == 2){
-		cerr<<"Error: Too few arguments for mesh by dimensions"<<endl;
+		std::cerr<<"Error: Too few arguments for mesh by dimensions"<<std::endl;
 		return false;
 	}
 	else if ( MeshType == 3 ){
-		cerr<<"Error: Wrong set of arguments  for mesh triangulation"<<endl;
+		std::cerr<<"Error: Wrong set of arguments  for mesh triangulation"<<std::endl;
 		return false;
 	}
 	else if ( MeshType ==4 ){
@@ -3080,42 +2914,22 @@ bool Simulation::initiateMesh(int MeshType){
 		const char* name_inputMeshFile = inputMeshFileName.c_str();;
 		inputMeshFile.open(name_inputMeshFile, ifstream::in);
 		if (!(inputMeshFile.good() && inputMeshFile.is_open())){
-			cerr<<"Cannot open the input mesh file: "<<name_inputMeshFile<<endl;
+			std::cerr<<"Cannot open the input mesh file: "<<name_inputMeshFile<<std::endl;
 			return false;
 		}
-		cout<<"initiating nodes"<<endl;
+		std::cout<<"initiating nodes"<<std::endl;
 		initiateNodesFromMeshInput();
 		initiateElementsFromMeshInput();
-		cout<<" nNodes: "<<nNodes<<" nEle: "<<nElements<<endl;
+		std::cout<<" nNodes: "<<nNodes<<" nEle: "<<nElements<<std::endl;
 		bool areTissueWeightsRecorded = checkIfTissueWeightsRecorded();
 		if (areTissueWeightsRecorded){
 			readInTissueWeights();
-			cout<<" read in tissue weights"<<endl;
+			std::cout<<" read in tissue weights"<<std::endl;
 		}
 		inputMeshFile.close();
-		//Alter the mesh:
-		//delete all nodes and elements with nodes and elements above a certain z:
-		vector<int> deletedNodes, deletedElements;
-		for (int i=0; i<nNodes; ++i){
-			if (Nodes[i]->Position[2] > 14.25){//I do not want any node above 14.25;
-				deletedNodes.push_back(i);
-			}
-		}
-		int nAN = deletedNodes.size();
-		vector<ShapeBase*>::iterator itElement;
-		for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-			if(!(*itElement)->IsAblated){
-				for (int j =0; j<nAN; ++j){
-					bool IsAblatedNow = (*itElement)->DoesPointBelogToMe(deletedNodes[j]);
-					if (IsAblatedNow){
-							deletedElements.push_back((*itElement)->Id);
-					}
-				}
-			}
-		}
 	}
 	else {
-		cerr<<"Error: Mesh Type not recognised"<<endl;
+		std::cerr<<"Error: Mesh Type not recognised"<<std::endl;
 		return false;
 	}
 	return true;
@@ -3133,24 +2947,23 @@ void Simulation::readInTissueWeights(){
      * ShapeBase#setGrowthWeightsViaTissuePlacement. The recorded value is
      * peripodialness weight, ShapeBase#peripodialGrowthWeight.
      */
-	vector<ShapeBase*>::iterator itEle;
 	double wPeri;
-	for (itEle=Elements.begin(); itEle<Elements.end(); ++itEle){
+	for (auto const& itEle : Elements){
 		inputMeshFile >> wPeri;
-		(*itEle)->setGrowthWeightsViaTissuePlacement(wPeri); //peripodialness weight is recorded
+		itEle->setGrowthWeightsViaTissuePlacement(wPeri); //peripodialness weight is recorded
 	}
 }
 
 bool Simulation::generateColumnarCircumferenceNodeList(	vector <int> &ColumnarCircumferencialNodeList){
 	//generating a list of nodes that are at the circumference and at the basal surface
-	for (int i=0; i<nNodes; ++i){
+	for (size_t i=0; i<nNodes; ++i){
 		if (Nodes[i]->atCircumference && Nodes[i]->tissuePlacement == 0 && Nodes[i]->tissueType == 0){ // tissuePlacement = 0 -> basal node, tissueType = 0 -> columnar node
 			ColumnarCircumferencialNodeList.push_back(i);
 		}
 	}
 	int n = ColumnarCircumferencialNodeList.size();
 	if (n<=0){
-		cerr<<"No circumferncial nodes indicated! Cannot generate PeripodialMembrane"<<endl;
+		std::cerr<<"No circumferncial nodes indicated! Cannot generate PeripodialMembrane"<<std::endl;
 		AddPeripodialMembrane = false;
 		thereIsPeripodialMembrane = false;
 		return false;
@@ -3180,24 +2993,23 @@ void Simulation::clearCircumferenceDataFromSymmetricityLine(){
       */
 	if (symmetricY){
 		double xTipPos = -1000, xTipNeg = 1000;
-		vector<Node*>::iterator itNode;
-		for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-			if ((*itNode)->Position[0] > xTipPos ){
-				xTipPos = (*itNode)->Position[0];
+		for (const auto& itNode : Nodes){
+			if (itNode->Position[0] > xTipPos ){
+				xTipPos = itNode->Position[0];
 			}
-			if ((*itNode)->Position[0] < xTipNeg ){
-				xTipNeg = (*itNode)->Position[0];
+			if (itNode->Position[0] < xTipNeg ){
+				xTipNeg = itNode->Position[0];
 			}
 		}
 		double yLimPos = 0.1;
 		double yLimNeg = (-1.0)*yLimPos;
-		for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-			double x = (*itNode)->Position[0];
-			double y = (*itNode)->Position[1];
+		for (const auto& itNode : Nodes){
+			double x = itNode->Position[0];
+			double y = itNode->Position[1];
 			if ( y < yLimPos){
 				if ( y  > yLimNeg){
-					(*itNode)->atSymmetricityBorder = true;
-					fixY((*itNode),false); //this is for symmetricity, the fixing has to be hard fixing, not with external viscosity under any condition
+					itNode->atSymmetricityBorder = true;
+					fixY(itNode.get(),false); //this is for symmetricity, the fixing has to be hard fixing, not with external viscosity under any condition
 					//the node is indeed at the border, BUT, I will remove it only if it is not at the tip:
 					bool atTip = false;
 					if ( x < xTipPos+yLimPos && x >xTipPos+yLimNeg){
@@ -3220,7 +3032,7 @@ void Simulation::clearCircumferenceDataFromSymmetricityLine(){
 					}
 					if (!atTip){
 						//removing node from list:
-						(*itNode)->atCircumference = false;
+						itNode->atCircumference = false;
 					}
 				}
 			}
@@ -3228,23 +3040,23 @@ void Simulation::clearCircumferenceDataFromSymmetricityLine(){
 	}
 	if (symmetricX){
 		double yTipPos = -1000, yTipNeg = 1000;
-		for (vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-			if ((*itNode)->Position[0] > yTipPos ){
-				yTipPos = (*itNode)->Position[1];
+		for (const auto& itNode : Nodes){
+			if (itNode->Position[0] > yTipPos ){
+				yTipPos = itNode->Position[1];
 			}
-			if ((*itNode)->Position[0] < yTipNeg ){
-				yTipNeg = (*itNode)->Position[1];
+			if (itNode->Position[0] < yTipNeg ){
+				yTipNeg = itNode->Position[1];
 			}
 		}
 		double xLimPos = 0.1;
 		double xLimNeg = (-1.0)*xLimPos;
-		for (vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-			double x = (*itNode)->Position[0];
-			double y = (*itNode)->Position[1];
+		for (const auto& itNode : Nodes){
+			double x = itNode->Position[0];
+			double y = itNode->Position[1];
 			if ( x < xLimPos){
 				if ( x  > xLimNeg){
-					(*itNode)->atSymmetricityBorder = true;
-					fixX((*itNode),false); //this is for symmetricity, the fixing has to be hard fixing, not with external viscosity under any condition
+					itNode->atSymmetricityBorder = true;
+					fixX(itNode.get(),false); //this is for symmetricity, the fixing has to be hard fixing, not with external viscosity under any condition
 					//the node is indeed at the border, BUT, I will remove it only if it is not at the tip:
 					bool atTip = false;
 					if ( y < yTipPos+xLimPos && y >yTipPos+xLimNeg){
@@ -3255,7 +3067,7 @@ void Simulation::clearCircumferenceDataFromSymmetricityLine(){
 					}
 					if (!atTip){
 						//removing node from list:
-						(*itNode)->atCircumference = false;
+						itNode->atCircumference = false;
 					}
 				}
 			}
@@ -3287,7 +3099,7 @@ void Simulation::sortColumnarCircumferenceNodeList(vector <int> &ColumnarCircumf
 				angles[i-1]=angles[i];
 				angles[i]=td;
 				swapped = true;
-				//cout<<"swapped "<<i <<" with "<<i-1<<endl;
+				//std::cout<<"swapped "<<i <<" with "<<i-1<<std::endl;
 			}
 		}
 	}
@@ -3303,12 +3115,11 @@ void Simulation::getAverageSideLength(double& periAverageSideLength, double& col
 			packingDetectionThresholdGridCounter[i][j] = 0.0;
 		}
 	}
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		if (!(*itElement)->IsAblated){
+	for(const auto& itElement : Elements){
+		if (!itElement->IsAblated){
 			//do not count ablated elements
-			if ((*itElement)->tissueType==0){ //element belongs to columnar layer
-				double currValue = (*itElement)->getApicalSideLengthAverage();
+			if (itElement->tissueType==0){ //element belongs to columnar layer
+				double currValue = itElement->getApicalSideLengthAverage();
 				if(currValue>0){
 				   /**
 					  * There may be alements with fully collapsed areas, where currValue will be zero.
@@ -3319,8 +3130,8 @@ void Simulation::getAverageSideLength(double& periAverageSideLength, double& col
 					colCounter++;
 				}
 				//if the element is at the basal surface, also get the basal lengths into consideration:
-				if((*itElement)->tissuePlacement == 0 || (*itElement)->spansWholeTissue){
-					currValue = (*itElement)->getBasalSideLengthAverage();
+				if(itElement->tissuePlacement == 0 || itElement->spansWholeTissue){
+					currValue = itElement->getBasalSideLengthAverage();
 					if(currValue>0){
 						dsumCol += currValue;
 						colCounter++;
@@ -3330,7 +3141,7 @@ void Simulation::getAverageSideLength(double& periAverageSideLength, double& col
 	             * 10x5 grid, Simulation#packingDetectionThresholdGrid.
 	             */
 				double* reletivePos = new double[2];
-				(*itElement)->getRelativePosInBoundingBox(reletivePos);
+				itElement->getRelativePosInBoundingBox(reletivePos);
 				int relX = floor(reletivePos[0]);
 				int relY = floor(reletivePos[1]/2.0);
 				if (relX < 0) {relX = 0;}
@@ -3343,7 +3154,7 @@ void Simulation::getAverageSideLength(double& periAverageSideLength, double& col
 
 			}
 			else{
-				dsumPeri += (*itElement)->getApicalSideLengthAverage();
+				dsumPeri += itElement->getApicalSideLengthAverage();
 				periCounter++;
 			}
 		}
@@ -3363,9 +3174,8 @@ void Simulation::getAverageSideLength(double& periAverageSideLength, double& col
 
 bool  Simulation::isColumnarLayer3D(){
 	bool ColumnarLayer3D = false;
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		if ((*itElement)->ShapeDim == 3){
+	for(auto const& itElement : Elements){
+		if (itElement->ShapeDim == 3){
 			ColumnarLayer3D  = true;
 			break;
 		}
@@ -3374,14 +3184,13 @@ bool  Simulation::isColumnarLayer3D(){
 }
 
 bool Simulation::calculateTissueHeight(){
-    /**
-     * First check will be if the tissue is made up of 3D elements. If the tissue is 3D, then the height
-     * will be calculated accordingly. If the tissue is made up of 2D elements, then the
-     * height will simply be the assigned heigt of the elements, ReferenceShapeBase#height. \n
-     */
+	/**
+	 * First check will be if the tissue is made up of 3D elements. If the tissue is 3D, then the height
+	 * will be calculated accordingly. If the tissue is made up of 2D elements, then the
+	 * height will simply be the assigned heigt of the elements, ReferenceShapeBase#height. \n
+	 */
 	bool ColumnarLayer3D = isColumnarLayer3D();
 	TissueHeight = 0;
-	//cout<<"inside calculateTissueHeight"<<endl;
 	if (ColumnarLayer3D){
         /**
          * The calculation for tissue height will find the first basal node on Simulation#Nodes.
@@ -3390,11 +3199,12 @@ bool Simulation::calculateTissueHeight(){
 		//Find the first element that has this node on the elements list
 		//Move apically through the elements until you reach the apical surface - an apical node
 		//Find a basal node:
-		vector<Node*>::iterator itNode;
+		int currNodeId=0;
 		bool foundNode = false;
-		for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-			if((*itNode)->tissueType == 0 && (*itNode)->tissuePlacement == 0){ //Columnar node is basal
+		for (auto& itNode : Nodes){
+			if(itNode->tissueType == 0 && itNode->tissuePlacement == 0){ //Columnar node is basal
 				foundNode = true;
+				currNodeId = itNode->Id;
 				break;
 			}
 		}
@@ -3402,100 +3212,87 @@ bool Simulation::calculateTissueHeight(){
 			return false;
 		}
 		//Find an element using the basal node, and move on the elements apically, until you reach the apical surface:
-		int currNodeId = (*itNode)->Id;
-		cout<<"found node: "<<foundNode<<" currNodeId: "<<currNodeId<<endl;
-		vector<ShapeBase*>::iterator itElement;
 		bool foundElement = true;
 		TissueHeightDiscretisationLayers = 0;
 		double currentH =0;
-        /**
-         * Then the first element on Simulation#Elements that utilises the found node as a basal node will be identified.
-         * Once the element is identified, an apical node of this element will be selected as the current search node,
-         * the Simulation#TissueHeight and Simulation#TissueHeightDiscretisationLayers will be incremented up, and
-         * the search will continue to find the first element to utilise the new search node as its apicel. The loopo
-         * will continue until and apical node is readhed (Node#tissuePlacement == 1).
-         */
+		/**
+		 * Then the first element on Simulation#Elements that utilises the found node as a basal node will be identified.
+		 * Once the element is identified, an apical node of this element will be selected as the current search node,
+		 * the Simulation#TissueHeight and Simulation#TissueHeightDiscretisationLayers will be incremented up, and
+		 * the search will continue to find the first element to utilise the new search node as its apicel. The loopo
+		 * will continue until and apical node is readhed (Node#tissuePlacement == 1).
+		 */
 		while(Nodes[currNodeId]->tissuePlacement != 1 && foundElement){ //while the node is not apical, and I could find the next element
 			foundElement = false;
-			for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-				bool IsBasalOwner = (*itElement)->IsThisNodeMyBasal(currNodeId);
+			for (auto &itElement : Elements){
+				bool IsBasalOwner = itElement->IsThisNodeMyBasal(currNodeId);
 				if (IsBasalOwner){
 					foundElement = true;
+					currentH = itElement->getElementHeight();
+					currNodeId = itElement->getCorrecpondingApical(currNodeId); //have the next node
 					break;
 				}
 			}
-			//cout<<"found element: "<<foundElement<<" currNodeId: "<<currNodeId<<endl;
-			double currentH = (*itElement)->getElementHeight();
 			TissueHeight += currentH;
 			TissueHeightDiscretisationLayers++;
-			currNodeId = (*itElement)->getCorrecpondingApical(currNodeId); //have the next node
-			//cout<<"corresponding apical node: "<<currNodeId<<" foundElement bool at this point: "<<foundElement<<" tissueplacement: "<<Nodes[currNodeId]->tissuePlacement<<endl;
 		}
 		if (!foundElement){
 			return false;
 		}
 	}
 	else{
-		if (TissueHeight == 0){
-			cout<<"The coulmanr layer is 2D, but the tissue height of the elements is not assigned properly, cannot obtain TissueHeight"<<endl;
-			return false;
-		}
+		std::cerr<<"The coulmanr layer is 2D, manage tissue height, needs coding"<<std::endl;
 	}
-	//cout<<"checking for peripodial & lumen in calculateTissueHeight"<<endl;
+	//std::cout<<"checking for peripodial & lumen in calculateTissueHeight"<<std::endl;
 
 	if (thereIsPeripodialMembrane){
 		double columnarTop = -1000.0, peripodialbottom = 1000.0;
-		vector<Node*>::iterator itNode;
-		for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-			if ((*itNode)->tissueType == 0 ){
+		for (auto &itNode : Nodes){
+			if (itNode->tissueType == 0 ){
 				//columnar node
-				if ((*itNode)->tissuePlacement == 1){
+				if (itNode->tissuePlacement == 1){
 					//apical node:
-					if((*itNode)->Position[2]> columnarTop){
-						columnarTop = (*itNode)->Position[2];
+					if(itNode->Position[2]> columnarTop){
+						columnarTop = itNode->Position[2];
 					}
 				}
 			}
-			else if ((*itNode)->tissueType == 1 ){
+			else if (itNode->tissueType == 1 ){
 				//peripodial node
-				if ((*itNode)->tissuePlacement == 0){
+				if (itNode->tissuePlacement == 0){
 					//basal node:
-					if((*itNode)->Position[2]< peripodialbottom){
-						peripodialbottom = (*itNode)->Position[2];
+					if(itNode->Position[2]< peripodialbottom){
+						peripodialbottom = itNode->Position[2];
 					}
 				}
 			}
 		}
 		lumenHeight = columnarTop - peripodialbottom;
 	}
-	//cout<<"finalised calculateTissueHeight"<<endl;
+	//std::cout<<"finalised calculateTissueHeight"<<std::endl;
 	return true;
 }
 
 void Simulation::assignInitialZPositions(){
-	for(vector<ShapeBase*>::iterator itElement = Elements.begin(); itElement<Elements.end(); ++itElement){
-		(*itElement)->setInitialZPosition(boundingBox[0][2], TissueHeight);  //minimum z of the tissue and the tissue height given as input
+	for(auto const& itElement : Elements){
+		itElement->setInitialZPosition(boundingBox[0][2], TissueHeight);  //minimum z of the tissue and the tissue height given as input
 	}
 }
 
 void Simulation::calculateStiffnessMatrices(){
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		//cout<<" setting up element :  "<<(*itElement)->Id<<" of "<<nElements<<endl;
-		(*itElement)->calculateReferenceStiffnessMatrix();
+	for(auto const& itElement : Elements){
+		itElement->calculateReferenceStiffnessMatrix();
 	}
 }
 
 void Simulation::calculateShapeFunctionDerivatives(){
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		//cout<<" setting up element :  "<<(*itElement)->Id<<" of "<<nElements<<endl;
-		(*itElement)->calculateElementShapeFunctionDerivatives();
+	for(auto const& itElement : Elements){
+		itElement->calculateElementShapeFunctionDerivatives();
     }
 }
 
 void Simulation::fixAllD(Node* currNode, bool fixWithViscosity){
-	for (int j =0 ; j<currNode->nDim; ++j){
+	for (size_t j =0 ; j<currNode->nDim; ++j){
 		if(fixWithViscosity){
 			currNode->externalViscosity[j] = fixingExternalViscosity[j];
 			//currNode->baseExternalViscosity[j] = currNode->externalViscosity[j];
@@ -3505,11 +3302,10 @@ void Simulation::fixAllD(Node* currNode, bool fixWithViscosity){
 			currNode->FixedPos[j]=true;
 		}
 	}
-	//cout<<" fixAllD called on node: "<<currNode->Id<<endl;
 }
 
 void Simulation::fixAllD(int i, bool fixWithViscosity){
-	for (int j =0 ; j<Nodes[i]->nDim; ++j){
+	for (size_t j =0 ; j<Nodes[i]->nDim; ++j){
 		if(fixWithViscosity){
 			Nodes[i]->externalViscosity[j] = fixingExternalViscosity[j];
 			//Nodes[i]->baseExternalViscosity[j] = Nodes[i]->externalViscosity[j];
@@ -3533,7 +3329,7 @@ void Simulation::fixX(Node* currNode, bool fixWithViscosity){
 		}
 	}
 	else{
-		cerr<<"ERROR: Node : "<<currNode->Id<<" does not have x-dimension"<<endl;
+		std::cerr<<"ERROR: Node : "<<currNode->Id<<" does not have x-dimension"<<std::endl;
 	}
 }
 void Simulation::fixX(int i, bool fixWithViscosity){
@@ -3548,7 +3344,7 @@ void Simulation::fixX(int i, bool fixWithViscosity){
 		}
 	}
 	else{
-		cerr<<"ERROR: Node : "<<Nodes[i]->Id<<" does not have x-dimension"<<endl;
+		std::cerr<<"ERROR: Node : "<<Nodes[i]->Id<<" does not have x-dimension"<<std::endl;
 	}
 
 }
@@ -3565,7 +3361,7 @@ void Simulation::fixY(Node* currNode, bool fixWithViscosity){
 		}
 	}
 	else{
-		cerr<<"ERROR: Node : "<<currNode->Id<<" does not have y-dimension"<<endl;
+		std::cerr<<"ERROR: Node : "<<currNode->Id<<" does not have y-dimension"<<std::endl;
 	}
 }
 
@@ -3581,7 +3377,7 @@ void Simulation::fixY(int i, bool fixWithViscosity){
 		}
 	}
 	else{
-		cerr<<"ERROR: Node : "<<Nodes[i]->Id<<" does not have y-dimension"<<endl;
+		std::cerr<<"ERROR: Node : "<<Nodes[i]->Id<<" does not have y-dimension"<<std::endl;
 	}
 }
 
@@ -3597,7 +3393,7 @@ void Simulation::fixZ(Node* currNode, bool fixWithViscosity){
 		}
 	}
 	else{
-		cerr<<"ERROR: Node : "<<currNode->Id<<" does not have z-dimension"<<endl;
+		std::cerr<<"ERROR: Node : "<<currNode->Id<<" does not have z-dimension"<<std::endl;
 	}
 }
 
@@ -3613,7 +3409,7 @@ void Simulation::fixZ(int i, bool fixWithViscosity){
 		}
 	}
 	else{
-		cerr<<"ERROR: Node : "<<Nodes[i]->Id<<" does not have z-dimension"<<endl;
+		std::cerr<<"ERROR: Node : "<<Nodes[i]->Id<<" does not have z-dimension"<<std::endl;
 	}
 }
 
@@ -3625,7 +3421,7 @@ void Simulation::zeroForcesOnNode(size_t i){
 	ForceBalance[0] = SystemForces[i][0];
 	ForceBalance[1] = SystemForces[i][1];
 	ForceBalance[2] = SystemForces[i][2];
-	for (int i=0;i<nNodes;++i){
+	for (size_t i=0;i<nNodes;++i){
 		SystemForces[i][0]-=ForceBalance[0];
 		SystemForces[i][1]-=ForceBalance[1];
 		SystemForces[i][2]-=ForceBalance[2];
@@ -3633,58 +3429,39 @@ void Simulation::zeroForcesOnNode(size_t i){
 }
 
 void Simulation::initiateSystemForces(){
-	const int n = nNodes;
-	//n nodes
-	SystemForces = new double*[n];
-	PackingForces = new double*[n];
-	//PackingForcesPreviousStep = new double*[n];
-	//PackingForcesTwoStepsAgoStep = new double*[n];
-	FixedNodeForces = new double*[n];
-	for (int j=0;j<n;++j){
+    for (size_t j=0;j<nNodes;++j){
 		//3 dimensions
-		SystemForces[j] = new double[3];
-		PackingForces[j] = new double[3];
-		//PackingForcesPreviousStep[j] = new double[3];
-		//PackingForcesTwoStepsAgoStep[j] = new double[3];
-		FixedNodeForces[j] = new double[3];
-		SystemForces[j][0]=0.0;
-		SystemForces[j][1]=0.0;
-		SystemForces[j][2]=0.0;
-		PackingForces[j][0]=0.0;
-		PackingForces[j][1]=0.0;
-		PackingForces[j][2]=0.0;
-		FixedNodeForces[j][0] = 0.0;
-		FixedNodeForces[j][1] = 0.0;
-		FixedNodeForces[j][2] = 0.0;
+        SystemForces.push_back(std::array<double,3>{0.0});
+        PackingForces.push_back(std::array<double,3>{0.0});
+        FixedNodeForces.push_back(std::array<double,3>{0.0});
 	}
 }
 
 void Simulation::initiateSinglePrismNodes(float zHeight){
 	std::array<double,3> pos;
-	Node* tmp_nd;
 	pos[0]=0;pos[1]=1;pos[2]=0;
-	tmp_nd = new Node(0, 3, pos,0,0);
-	Nodes.push_back(tmp_nd);
+	std::unique_ptr<Node> tmp_nd01 = make_unique<Node>(0, 3, pos,0, 0);
+	Nodes.push_back(std::move(tmp_nd01));
 	nNodes = Nodes.size();
 	pos[0]=1;pos[1]=0;pos[2]=0;
-	tmp_nd = new Node(1, 3, pos,0,0);
-	Nodes.push_back(tmp_nd);
+	std::unique_ptr<Node> tmp_nd02 = make_unique<Node>(1, 3, pos,0, 0);
+	Nodes.push_back(std::move(tmp_nd02));
 	nNodes = Nodes.size();
 	pos[0]=0;pos[1]=0;pos[2]=0;
-	tmp_nd = new Node(2, 3, pos,0,0);
-	Nodes.push_back(tmp_nd);
+	std::unique_ptr<Node> tmp_nd03 = make_unique<Node>(2, 3, pos,0, 0);
+	Nodes.push_back(std::move(tmp_nd03));
 	nNodes = Nodes.size();
 	pos[0]=0;pos[1]=1;pos[2]=zHeight;
-	tmp_nd = new Node(3, 3, pos,1,0);
-	Nodes.push_back(tmp_nd);
+	std::unique_ptr<Node> tmp_nd04 = make_unique<Node>(3, 3, pos,1, 0);
+	Nodes.push_back(std::move(tmp_nd04));
 	nNodes = Nodes.size();
 	pos[0]=1;pos[1]=0;pos[2]=zHeight;
-	tmp_nd = new Node(4, 3, pos,1,0);
-	Nodes.push_back(tmp_nd);
+	std::unique_ptr<Node> tmp_nd05 = make_unique<Node>(4, 3, pos,1, 0);
+	Nodes.push_back(std::move(tmp_nd05));
 	nNodes = Nodes.size();
 	pos[0]=0;pos[1]=0;pos[2]=zHeight;
-	tmp_nd = new Node(5, 3, pos,1,0);
-	Nodes.push_back(tmp_nd);
+	std::unique_ptr<Node> tmp_nd06 = make_unique<Node>(5, 3, pos,1, 0);
+	Nodes.push_back(std::move(tmp_nd06));
 	nNodes = Nodes.size();
 }
 
@@ -3694,9 +3471,8 @@ void Simulation::initiateSinglePrismElement(){
 	for (int i = 0; i < 6 ; i++){
 		NodeIds[i]=i;
 	}
-	Prism* PrismPnt01;
-	PrismPnt01 = new Prism(NodeIds, Nodes, currElementId,thereIsPlasticDeformation);
-	Elements.push_back(PrismPnt01);
+	std::unique_ptr<ShapeBase> PrismPnt01 = make_unique<Prism>(NodeIds, Nodes, currElementId);
+	Elements.push_back(std::move(PrismPnt01));
 	nElements = Elements.size();
 	currElementId++;
 	fixZ(0, BasalNodeFixWithExternalViscosity);
@@ -3705,7 +3481,7 @@ void Simulation::initiateSinglePrismElement(){
 }
 
 
-void Simulation::initiateNodesByRowAndColumn(int Row, int Column, float SideLength, float zHeight){
+void Simulation::initiateNodesByRowAndColumn(size_t Row, size_t Column, float SideLength, float zHeight){
     /**
      * This function will place nodes in space to form the triangles to generate a hexagonal mesh of input rows and
      * columns at its widest point. First in a simple geometric calculation, the height of of the equilateral triangle
@@ -3720,7 +3496,7 @@ void Simulation::initiateNodesByRowAndColumn(int Row, int Column, float SideLeng
 	vector <double> xPos, yPos;
 	vector <int> NodesToFix;
 	int toprowcounter = 0;	//number of nodes at the terminating end, the top row. I will need this to add the sideway prisms;
-	for (int ColCount = 0; ColCount < Column+1; ++ColCount){
+	for (size_t ColCount = 0; ColCount < Column+1; ++ColCount){
 		double CurrY = ColCount*h;
 		int CurrRowNum = Row + 1 - ColCount;
 		double RowOffset = 0.5*SideLength*ColCount;
@@ -3747,57 +3523,53 @@ void Simulation::initiateNodesByRowAndColumn(int Row, int Column, float SideLeng
 			}
 		}
 	}
-	int n =  xPos.size();
-	Node* tmp_nd;
-	std::array<double,3> pos;
+	size_t n =  xPos.size();
+	std::array<double,3> pos = {0.0, 0.0, 0.0};
 	//Adding the basal level of nodes, all will form columnar elements:
-	for (int i =0; i< n; ++i){
+	for (size_t i =0; i< n; ++i){
 		pos[0] = xPos[i];
 		pos[1] = yPos[i];
 		pos[2] = 0.0;
-		tmp_nd = new Node(i, 3, pos,0,0);
-		Nodes.push_back(tmp_nd);
+		std::unique_ptr<Node> tmp_nd = make_unique<Node>(i, 3, pos,0,0);
+		Nodes.push_back(std::move(tmp_nd));
 		nNodes = Nodes.size();
 	}
 	//Adding the apical level, all will form columnar elements:
-	for (int i =0; i< n; ++i){
+	for (size_t i =0; i< n; ++i){
 		pos[0] = xPos[i];
 		pos[1] = yPos[i];
 		pos[2] = zHeight;
-		tmp_nd = new Node(n+i, 3, pos,1,0);
-		Nodes.push_back(tmp_nd);
-		nNodes = Nodes.size();
+		std::unique_ptr<Node> tmp_nd = make_unique<Node>(n+i, 3, pos,1,0);
+		Nodes.push_back(std::move(tmp_nd));
 		nNodes = Nodes.size();
 	}
 }
 
 void Simulation::setLinkerCircumference(){
 	//First find the node that is further back on
-	vector<Node*>::iterator itNode;
 	double maxX = -100, ZofTip = -100;
-	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-		if ((*itNode)->tissueType == 2){
+	for (auto& itNode : Nodes){
+		if (itNode->tissueType == 2){
 			//The node is linker, is the x position higher than already recorded?
-			if ((*itNode)->Position[0]> maxX){
-				maxX  = (*itNode)->Position[0];
-				ZofTip = (*itNode)->Position[2];
+			if (itNode->Position[0]> maxX){
+				maxX  = itNode->Position[0];
+				ZofTip = itNode->Position[2];
 			}
 		}
 	}
 	double thres = 0.2;
-	//cout<<"Setting circumference, maxX: "<<maxX<<" Z of tip: "<<ZofTip<<endl;
+	//std::cout<<"Setting circumference, maxX: "<<maxX<<" Z of tip: "<<ZofTip<<std::endl;
 	//Now I have the maxX, and the corresponding z height.
 	//Declare all linkers at the basal/or apical surface are the circumferential nodes:
-	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-		if ((*itNode)->tissueType == 2){
+	for (auto & itNode : Nodes){
+		if (itNode->tissueType == 2){
 			//The node is linker, if it is apical or basal, it can be circumferntial:
-			if ( (*itNode)->tissuePlacement == 0 || (*itNode)->tissuePlacement == 1 ){
+			if ( itNode->tissuePlacement == 0 || itNode->tissuePlacement == 1 ){
 				//The node is linker, if it is in the range of the height of the tip then it is circumferential
-				if ( (*itNode)->Position[2] < ZofTip+thres && (*itNode)->Position[2] > ZofTip-thres ){
-					(*itNode)->atCircumference = true;
+				if ( itNode->Position[2] < ZofTip+thres && itNode->Position[2] > ZofTip-thres ){
+					itNode->atCircumference = true;
 				}
 			}
-
 		}
 	}
 }
@@ -3830,17 +3602,16 @@ void Simulation::checkForNodeFixing(){
     /** If there is any fixing option active in any dimention, then the detailed check will continue.
      */
 	if (thereIsCircumFix){
-		vector<Node*>::iterator itNode;
-		for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-			if ( (*itNode)->atCircumference){
+		for (auto & itNode : Nodes){
+			if ( itNode->atCircumference){
                 /** The node is protected from fixing if it is at peripodial tissue.
                  */
 				bool doNotFix = false;
-				if ((*itNode)->tissueType == 1){
+				if (itNode->tissueType == 1){
 					doNotFix = true;
 				}
 				if (!doNotFix){
-					//cout<<"Node "<<(*itNode)->Id<<" in fix options"<<endl;
+					//std::cout<<"Node "<<(*itNode)->Id<<" in fix options"<<std::endl;
 					//Node is at the circumference, now checking for all possibilities:
 					// if i == 0 , I am checking for apical circumference
 					// if i == 1 , I am checking for basal  circumference
@@ -3851,21 +3622,20 @@ void Simulation::checkForNodeFixing(){
                      * through functions Node#fixX, Node#fixY, Node#fixZ.
                      */
 					for (size_t i=0;i<5; ++i){
-						if ( (i == 0 && (*itNode)->tissuePlacement == 1 ) ||  //tissuePlacement == 1 is apical
-							 (i == 1 && (*itNode)->tissuePlacement == 0 ) ||  //tissuePlacement == 0 is basal
-							 (i == 2 && (*itNode)->tissueType == 2 && (*itNode)->tissuePlacement == 1 ) ||  //tissuePlacement == 1 is apical
-							 (i == 3 && (*itNode)->tissueType == 2 && (*itNode)->tissuePlacement == 0 ) ||  //tissuePlacement == 0 is basal
+						if ( (i == 0 && itNode->tissuePlacement == 1 ) ||  //tissuePlacement == 1 is apical
+							 (i == 1 && itNode->tissuePlacement == 0 ) ||  //tissuePlacement == 0 is basal
+							 (i == 2 && itNode->tissueType == 2 && itNode->tissuePlacement == 1 ) ||  //tissuePlacement == 1 is apical
+							 (i == 3 && itNode->tissueType == 2 && itNode->tissuePlacement == 0 ) ||  //tissuePlacement == 0 is basal
 							 (i == 4)){										  //tissuePlacement is irrelevant, fixing all
 							//The node is at circumference; if
 							if (CircumferentialNodeFix[i][0]){
-								fixX((*itNode),CircumferentialNodeFixWithHighExternalViscosity[i]);
+								fixX(itNode.get(),CircumferentialNodeFixWithHighExternalViscosity[i]);
 							}
 							if (CircumferentialNodeFix[i][1]){
-								fixY((*itNode),CircumferentialNodeFixWithHighExternalViscosity[i]);
-
+								fixY(itNode.get(),CircumferentialNodeFixWithHighExternalViscosity[i]);
 							}
 							if (CircumferentialNodeFix[i][2]){
-								fixZ((*itNode),CircumferentialNodeFixWithHighExternalViscosity[i]);
+								fixZ(itNode.get(),CircumferentialNodeFixWithHighExternalViscosity[i]);
 							}
 						}
 					}
@@ -3878,33 +3648,31 @@ void Simulation::checkForNodeFixing(){
      * on glass for a pipette aspiration experiment.
      */
 	if (BasalNodeFix[0] || BasalNodeFix[1] || BasalNodeFix[2] ){
-		vector<Node*>::iterator itNode;
-		for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-			if ( (*itNode)->tissuePlacement == 0){
+		for (auto& itNode : Nodes){
+			if ( itNode->tissuePlacement == 0){
 				if (BasalNodeFix[0]){
-					fixX((*itNode), BasalNodeFixWithExternalViscosity);
+					fixX(itNode.get(), BasalNodeFixWithExternalViscosity);
 				}
 				if (BasalNodeFix[1]){
-					fixY((*itNode), BasalNodeFixWithExternalViscosity);
+					fixY(itNode.get(), BasalNodeFixWithExternalViscosity);
 				}
 				if (BasalNodeFix[2]){
-					fixZ((*itNode), BasalNodeFixWithExternalViscosity);
+					fixZ(itNode.get(), BasalNodeFixWithExternalViscosity);
 				}
 			}
 		}
 	}
 	if (ApicalNodeFix[0] || ApicalNodeFix[1]  || ApicalNodeFix[2]){
-		vector<Node*>::iterator itNode;
-		for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-			if ( (*itNode)->tissuePlacement == 1){
+		for (auto & itNode : Nodes){
+			if ( itNode->tissuePlacement == 1){
 				if (ApicalNodeFix[0]){
-					fixX((*itNode), ApicalNodeFixWithExternalViscosity);
+					fixX(itNode.get(), ApicalNodeFixWithExternalViscosity);
 				}
 				if (ApicalNodeFix[1]){
-					fixY((*itNode), ApicalNodeFixWithExternalViscosity);
+					fixY(itNode.get(), ApicalNodeFixWithExternalViscosity);
 				}
 				if (ApicalNodeFix[2]){
-					fixZ((*itNode), ApicalNodeFixWithExternalViscosity);
+					fixZ(itNode.get(), ApicalNodeFixWithExternalViscosity);
 				}
 			}
 		}
@@ -3914,21 +3682,20 @@ void Simulation::checkForNodeFixing(){
      * Siumulation#notumFixingRange and Simulation#NotumNodeFix.
      */
 	if (NotumNodeFix[0] || NotumNodeFix[1]  || NotumNodeFix[2]){
-		vector<Node*>::iterator itNode;
-		for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-			if ( (*itNode)->tissuePlacement == 0){
+		for (auto& itNode : Nodes){
+			if ( itNode->tissuePlacement == 0){
 				double boundingBoxXMin = boundingBox[0][0];
 				double boundingBoxLength = boundingBoxSize[0];
-				double relativeXPos = ((*itNode)->Position[0] - boundingBoxXMin)/boundingBoxLength;
+				double relativeXPos = (itNode->Position[0] - boundingBoxXMin)/boundingBoxLength;
 				if ( relativeXPos >= notumFixingRange[0] && relativeXPos <= notumFixingRange[1]){
 					if (NotumNodeFix[0]){
-						fixX((*itNode), NotumNodeFixWithExternalViscosity);
+						fixX(itNode.get(), NotumNodeFixWithExternalViscosity);
 					}
 					if (NotumNodeFix[1]){
-						fixY((*itNode), NotumNodeFixWithExternalViscosity);
+						fixY(itNode.get(), NotumNodeFixWithExternalViscosity);
 					}
 					if (NotumNodeFix[2]){
-						fixZ((*itNode), NotumNodeFixWithExternalViscosity);
+						fixZ(itNode.get(), NotumNodeFixWithExternalViscosity);
 					}
 				}
 			}
@@ -3942,27 +3709,27 @@ void Simulation::induceClones(){
       * positional information from model input file, and the mutation growth influence type, which can be
       * an absolute growth value input, or scaling the existing growth rate.
       */
-	cout<<"inside induce clones"<<endl;
+	std::cout<<"inside induce clones"<<std::endl;
 	for (size_t i=0;i<numberOfClones; ++i){
 		double inMicronsX = cloneInformationX[i]*boundingBoxSize[0] + boundingBox[0][0];
 		double inMicronsY = cloneInformationY[i]*boundingBoxSize[1] + boundingBox[0][1];
 		double inMicronsRadius = cloneInformationR[i];
 		double r2 = inMicronsRadius*inMicronsRadius;
 		double growthRateORFold = cloneInformationGrowth[i];
-		for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-			if (!(*itElement)->isECMMimicing && !(*itElement)->IsAblated){
+		for(auto const& itElement : Elements){
+			if (!itElement->isECMMimicing && !itElement->IsAblated){
 				double* c = new double[3];
-				c = (*itElement)->getCentre();
+				c = itElement->getCentre();
 				double dx = inMicronsX - c[0];
 				double dy = inMicronsY - c[1];
 				double d2 = dx*dx + dy*dy;
 
 				if (d2 < r2){
 					if (cloneInformationUsingAbsolueGrowth[i]){
-						(*itElement)->mutateElement(0,growthRateORFold); //the mutation is absolute, using an absolute value
+						itElement->mutateElement(0,growthRateORFold); //the mutation is absolute, using an absolute value
 					}
 					else{
-						(*itElement)->mutateElement(growthRateORFold,0); //the mutation is not absolute, using relative values
+						itElement->mutateElement(growthRateORFold,0); //the mutation is not absolute, using relative values
 					}
 				}
 				delete[] c;
@@ -3990,9 +3757,8 @@ void Simulation::initiateElementsByRowAndColumn(int Row, int Column){
 			NodeIds[3] = NodeIds[0] + n;
 			NodeIds[4] = NodeIds[1] + n;
 			NodeIds[5] = NodeIds[2] + n;
-			Prism* PrismPnt01;
-			PrismPnt01 = new Prism(NodeIds, Nodes, currElementId,thereIsPlasticDeformation);
-			Elements.push_back(PrismPnt01);
+			std::unique_ptr<ShapeBase> PrismPnt01 = make_unique<Prism>(NodeIds, Nodes, currElementId);
+			Elements.push_back(std::move(PrismPnt01));
 			nElements = Elements.size();
 			currElementId++;
 
@@ -4002,8 +3768,8 @@ void Simulation::initiateElementsByRowAndColumn(int Row, int Column){
 			NodeIds[3] = NodeIds[0] + n;
 			NodeIds[4] = NodeIds[1] + n;
 			NodeIds[5] = NodeIds[2] + n;
-			PrismPnt01 = new Prism(NodeIds, Nodes, currElementId,thereIsPlasticDeformation);
-			Elements.push_back(PrismPnt01);
+			std::unique_ptr<ShapeBase> PrismPnt02 = make_unique<Prism>(NodeIds, Nodes, currElementId);
+			Elements.push_back(std::move(PrismPnt02));
 			nElements = Elements.size();
 			currElementId++;
 		}
@@ -4017,9 +3783,8 @@ void Simulation::initiateElementsByRowAndColumn(int Row, int Column){
 			NodeIds[3] = NodeIds[0] + n;
 			NodeIds[4] = NodeIds[1] + n;
 			NodeIds[5] = NodeIds[2] + n;
-			Prism* PrismPnt01;
-			PrismPnt01 = new Prism(NodeIds, Nodes, currElementId,thereIsPlasticDeformation);
-			Elements.push_back(PrismPnt01);
+			std::unique_ptr<ShapeBase> PrismPnt01 = make_unique<Prism>(NodeIds, Nodes, currElementId);
+			Elements.push_back(std::move(PrismPnt01));
 			nElements = Elements.size();
 			currElementId++;
 
@@ -4029,8 +3794,8 @@ void Simulation::initiateElementsByRowAndColumn(int Row, int Column){
 			NodeIds[3] = NodeIds[0] + n;
 			NodeIds[4] = NodeIds[1] + n;
 			NodeIds[5] = NodeIds[2] + n;
-			PrismPnt01 = new Prism(NodeIds, Nodes, currElementId,thereIsPlasticDeformation);
-			Elements.push_back(PrismPnt01);
+			std::unique_ptr<ShapeBase> PrismPnt02 = make_unique<Prism>(NodeIds, Nodes, currElementId);
+			Elements.push_back(std::move(PrismPnt02));
 			nElements = Elements.size();
 			currElementId++;
 
@@ -4040,12 +3805,12 @@ void Simulation::initiateElementsByRowAndColumn(int Row, int Column){
 		xinit3 = xinit4;
 		xinit4 = xinit2 + CurrRowNum-2;
 	}
-	cout<<"finalised element initiation"<<endl;
+	std::cout<<"finalised element initiation"<<std::endl;
 }
 
 void Simulation::calculateSystemCentre(){
-	for (int i = 0; i< nNodes; ++i){
-		for (int j =0; j<Nodes[i]->nDim; ++j){
+	for (size_t i = 0; i< nNodes; ++i){
+		for (size_t j =0; j<Nodes[i]->nDim; ++j){
 			SystemCentre[j] += Nodes[i]->Position[j];
 		}
 	}
@@ -4073,62 +3838,63 @@ void Simulation::addSoftPeriphery(double* fractions){
 	else if (softPeripheryBooleans[0] || softPeripheryBooleans[1]){
 		midlineFraction = 1.0 - (1.0-softnessFraction)*0.5;
 	}
-	for(vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-		if ( (*itNode)->atCircumference ){
+
+	for(const auto& itNode : Nodes){
+		if ( itNode->atCircumference ){
 			//this node is at circumference, I will calculate the distance of all elements to this node
 			//if an element is close enough, update the fraction matrix set above:
-			for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+			for(const auto& itElement : Elements){
 				bool applyToThisElement = true;
-				if ( (*itElement)->tissuePlacement == 1 && !softPeripheryBooleans[0]){
+				if ( itElement->tissuePlacement == 1 && !softPeripheryBooleans[0]){
 					//element is apical, the softness is NOT applied to apical
 					applyToThisElement = false;
 				}
-				if ((*itElement)->tissuePlacement == 0 && !softPeripheryBooleans[1]){
+				if (itElement->tissuePlacement == 0 && !softPeripheryBooleans[1]){
 					//element is basal, the softness is NOT applied to apical
 					applyToThisElement = false;
 				}
-				if ((*itElement)->tissueType == 0 && !softPeripheryBooleans[2]){
+				if (itElement->tissueType == 0 && !softPeripheryBooleans[2]){
 					//element is columnar, the softness is NOT applied to columnar
 					applyToThisElement = false;
 				}
-				if ((*itElement)->tissueType == 1 && !softPeripheryBooleans[3]){
+				if (itElement->tissueType == 1 && !softPeripheryBooleans[3]){
 					//element is peripodial, the softness is NOT applied to peripodial
 					applyToThisElement = false;
 				}
 				if ( applyToThisElement ){
 					//scaling the softness fraction if necessary:
 					currSoftnessFraction  = softnessFraction;
-					if ((*itElement)->tissuePlacement == 2 ){ //element is on the midline
+					if (itElement->tissuePlacement == 2 ){ //element is on the midline
 						currSoftnessFraction= midlineFraction;
 					}
 					//scaling the tissue type multiplier if necessary (important for linker elements:
-					if ((*itElement)->tissueType == 2 ){ // element is on the linker zone
+					if (itElement->tissueType == 2 ){ // element is on the linker zone
 						if (softPeripheryBooleans[2] && softPeripheryBooleans[3]){
 							//softness is applied to both peripodial and columnar zones, the linkers should not be scaling anything
 							tissueTypeMultiplier = 1.0;
 						}else if (softPeripheryBooleans[2] ){
 							//softness only applied to columnar layer:
-							tissueTypeMultiplier = (*itElement)->getColumnarness();
+							tissueTypeMultiplier = itElement->getColumnarness();
 						}
 						else if (softPeripheryBooleans[3] ){
 							//softness only applied to peripodial layer:
-							tissueTypeMultiplier = (*itElement)->getPeripodialness();
+							tissueTypeMultiplier = itElement->getPeripodialness();
 						}
 					}
 					else{ //element is not linker
 						tissueTypeMultiplier = 1;
 					}
 					currSoftnessFraction  = 1.0 - (1.0-currSoftnessFraction)*tissueTypeMultiplier;
-					double *c = (*itElement)->getCentre();
-					double dx = c[0]-(*itNode)->Position[0];
-					double dy = c[1]-(*itNode)->Position[1];
+					double *c = itElement->getCentre();
+					double dx = c[0]-itNode->Position[0];
+					double dy = c[1]-itNode->Position[1];
 					//double dz = c[2]-(*itNode1)->Position[2];
 					double d = dx*dx + dy*dy;
 					if (d<t2){
 						d = pow(d,0.5);
 						double f = currSoftnessFraction + (1.0 - currSoftnessFraction)*d/softDepth;
-						if ((softnessFraction< 1.0 && f < fractions[(*itElement)->Id]) ||(softnessFraction> 1.0 && f > fractions[(*itElement)->Id])){
-							fractions[(*itElement)->Id] = f;
+						if ((softnessFraction< 1.0 && f < fractions[itElement->Id]) ||(softnessFraction> 1.0 && f > fractions[itElement->Id])){
+							fractions[itElement->Id] = f;
 						}
 					}
 					delete[] c;
@@ -4144,7 +3910,7 @@ void Simulation::assignPhysicalParameters(){
      */
 	double* fractions;
 	fractions = new double[(const int) nElements];
-	for (int i=0; i<nElements; ++i){
+	for (size_t i=0; i<nElements; ++i){
 		fractions[i] = 1.0;
 	}
 	if(softPeriphery){
@@ -4153,8 +3919,7 @@ void Simulation::assignPhysicalParameters(){
          */
 		addSoftPeriphery(fractions);
 	}
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+	for(const auto& itElement : Elements){
         /** If there is noise on the physical proerties, this is randomly assigned first.
          */
 		double r = (rand() % 200) / 100.0;	//random number between 0.00 and 2.00
@@ -4168,24 +3933,24 @@ void Simulation::assignPhysicalParameters(){
          * Then the elastic properties of the elemetn are set and necessary tensors updated via ShapeBase#setElasticProperties and
          * ShapeBase#setViscosity functions.
          */
-		if ((*itElement)->tissueType == 0){ //Element is on the columnar layer
-			double currEApical 	= fractions[(*itElement)->Id] * EApical*(1 + noise1/100.0);
-			double currEBasal	= fractions[(*itElement)->Id] * EBasal*(1 + noise1/100.0);
-			double currEMid		= fractions[(*itElement)->Id] * EMid*(1 + noise1/100.0);
-			double currEECM		= fractions[(*itElement)->Id] * EColumnarECM*(1 + noise1/100.0);
+		if (itElement->tissueType == 0){ //Element is on the columnar layer
+			double currEApical 	= fractions[itElement->Id] * EApical*(1 + noise1/100.0);
+			double currEBasal	= fractions[itElement->Id] * EBasal*(1 + noise1/100.0);
+			double currEMid		= fractions[itElement->Id] * EMid*(1 + noise1/100.0);
+			double currEECM		= fractions[itElement->Id] * EColumnarECM*(1 + noise1/100.0);
 			double currPoisson = poisson*(1 + noise2/100);
-			if((*itElement)->isECMMimicing){
+			if(itElement->isECMMimicing){
 				//the Poisson ratio is zero so that the ECM layer will not thin!
 				currPoisson = 0;
 			}
-			(*itElement)->setElasticProperties(currEApical,currEBasal,currEMid,currEECM,currPoisson);
-			(*itElement)->setViscosity(discProperApicalViscosity,discProperBasalViscosity,discProperMidlineViscosity);
+			itElement->setElasticProperties(currEApical,currEBasal,currEMid,currEECM,currPoisson);
+			itElement->setViscosity(discProperApicalViscosity,discProperBasalViscosity,discProperMidlineViscosity);
 		}
-		else if ((*itElement)->tissueType == 1){ //Element is on the peripodial membrane
-			double currEApical = fractions[(*itElement)->Id] * PeripodialElasticity*(1 + noise1/100.0);
+		else if (itElement->tissueType == 1){ //Element is on the peripodial membrane
+			double currEApical = fractions[itElement->Id] * PeripodialElasticity*(1 + noise1/100.0);
 			double currEBasal = currEApical;
 			double currEMid = currEApical;
-			double currEECM = fractions[(*itElement)->Id] * EPeripodialECM*(1 + noise1/100.0);
+			double currEECM = fractions[itElement->Id] * EPeripodialECM*(1 + noise1/100.0);
 			double currPoisson = poisson*(1 + noise2/100);
 			/*if(thereIsExplicitECM){
 				//The input file does not define apical and basal stiffness separately
@@ -4195,75 +3960,74 @@ void Simulation::assignPhysicalParameters(){
 				currEBasal = fractions[(*itElement)->Id] * EBasal*(1 + noise1/100.0);
 				currEMid = fractions[(*itElement)->Id] * EMid*(1 + noise1/100.0);
 			}*/
-			if((*itElement)->isECMMimicing){
+			if(itElement->isECMMimicing){
 				//the Poisson ratio is zero so that the ECM layer will not thin!
 				currPoisson = 0;
 			}
-			(*itElement)->setElasticProperties(currEApical,currEBasal,currEMid,currEECM, currPoisson);
-			(*itElement)->setViscosity(peripodialApicalViscosity,peripodialBasalViscosity,peripodialMidlineViscosity);
+			itElement->setElasticProperties(currEApical,currEBasal,currEMid,currEECM, currPoisson);
+			itElement->setViscosity(peripodialApicalViscosity,peripodialBasalViscosity,peripodialMidlineViscosity);
 		}
-		else if ((*itElement)->tissueType == 2 ){ //Element is on the linker Zone,
+		else if (itElement->tissueType == 2 ){ //Element is on the linker Zone,
 			//The elastic properties of the linker zone ECM are always based on the
 			//peripodialness factor.
-			double currPeripodialECME = fractions[(*itElement)->Id] * EPeripodialECM*(1 + noise1/100.0);
-			double currColumnarECME = fractions[(*itElement)->Id] * EColumnarECM*(1 + noise1/100.0);
-			double periWeight 		= (*itElement)->getPeripodialness();
-			double colWeight = (*itElement)->getColumnarness();
+			double currPeripodialECME = fractions[itElement->Id] * EPeripodialECM*(1 + noise1/100.0);
+			double currColumnarECME = fractions[itElement->Id] * EColumnarECM*(1 + noise1/100.0);
+			double periWeight 		= itElement->getPeripodialness();
+			double colWeight = itElement->getColumnarness();
 			double currEECM		= colWeight * currColumnarECME + periWeight * currPeripodialECME;
 			if (BaseLinkerZoneParametersOnPeripodialness){
 				//I will weight the values:
-				double currPeripodialE 	= fractions[(*itElement)->Id] * PeripodialElasticity * (1 + noise1/100.0);
-				double currEApical 		= fractions[(*itElement)->Id] * EApical * (1 + noise1/100.0);
-				double currEBasal 		= fractions[(*itElement)->Id] * EBasal * (1 + noise1/100.0);
-				double currEMid 		= fractions[(*itElement)->Id] * EMid * (1 + noise1/100.0);
+				double currPeripodialE 	= fractions[itElement->Id] * PeripodialElasticity * (1 + noise1/100.0);
+				double currEApical 		= fractions[itElement->Id] * EApical * (1 + noise1/100.0);
+				double currEBasal 		= fractions[itElement->Id] * EBasal * (1 + noise1/100.0);
+				double currEMid 		= fractions[itElement->Id] * EMid * (1 + noise1/100.0);
 				double currPoisson      = poisson*(1 + noise2/100);
 				currEApical = colWeight * currEApical + periWeight * currPeripodialE;
 				currEBasal  = colWeight * currEBasal  + periWeight * currPeripodialE;
 				currEMid    = colWeight * currEMid    + periWeight * currPeripodialE;
-				(*itElement)->setElasticProperties(currEApical,currEBasal,currEMid,currEECM, currPoisson);
+				itElement->setElasticProperties(currEApical,currEBasal,currEMid,currEECM, currPoisson);
 				double currViscApical  = colWeight * discProperApicalViscosity  + periWeight * peripodialApicalViscosity;
 				double currViscBasal   = colWeight * discProperBasalViscosity   + periWeight * peripodialBasalViscosity;
-				(*itElement)->setViscosity(currViscApical,currViscBasal); //There is no midline in the linker zone.
+				itElement->setViscosity(currViscApical,currViscBasal); //There is no midline in the linker zone.
 			}
 			else{
 				//I have the inputs provided:
-				double currEApical 	= fractions[(*itElement)->Id] * LinkerZoneApicalElasticity*(1 + noise1/100.0);
-				double currEBasal	= fractions[(*itElement)->Id] * LinkerZoneBasalYoungsModulus*(1 + noise1/100.0);
-				double currEMid		= fractions[(*itElement)->Id] * 0.5 * (LinkerZoneApicalElasticity+LinkerZoneBasalYoungsModulus)*(1 + noise1/100.0);
+				double currEApical 	= fractions[itElement->Id] * LinkerZoneApicalElasticity*(1 + noise1/100.0);
+				double currEBasal	= fractions[itElement->Id] * LinkerZoneBasalYoungsModulus*(1 + noise1/100.0);
+				double currEMid		= fractions[itElement->Id] * 0.5 * (LinkerZoneApicalElasticity+LinkerZoneBasalYoungsModulus)*(1 + noise1/100.0);
 				double currPoisson  = poisson*(1 + noise2/100);
 
 
-				if((*itElement)->isECMMimicing){
+				if(itElement->isECMMimicing){
 					//the Poisson ratio is zero so that the ECM layer will not thin!
 					currPoisson = 0;
 				}
-				(*itElement)->setElasticProperties(currEApical,currEBasal,currEMid,currEECM, currPoisson);
-				(*itElement)->setViscosity(linkerZoneApicalViscosity,linkerZoneBasalViscosity,linkerZoneMidlineViscosity);
+				itElement->setElasticProperties(currEApical,currEBasal,currEMid,currEECM, currPoisson);
+				itElement->setViscosity(linkerZoneApicalViscosity,linkerZoneBasalViscosity,linkerZoneMidlineViscosity);
 			}
 		}
 	}
     /** Once all elemental properties are set, the nodal viscosities are asssigned through their owenr elements.
      */
-	vector<Node*>::iterator itNode;
-	for(itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+	for(const auto& itNode : Nodes){
 		double r = (rand() % 200) / 100.0;
 		r = r - 1.0;
 		float noise3 = r*noiseOnPysProp[1];
 		noise3 = (1 + noise3/100.0);
-		if ((*itNode)->tissueType == 2 ){ //linker, the viscosity can be averaged, or based on indivudual set of parameters:
+		if (itNode->tissueType == 2 ){ //linker, the viscosity can be averaged, or based on indivudual set of parameters:
 			if (BaseLinkerZoneParametersOnPeripodialness){
 				//take average of the two:
 				double currExternalViscApical = 0.5*(externalViscosityDPApical + externalViscosityPMApical);
 				double currExternalViscBasal  = 0.5*(externalViscosityDPBasal  + externalViscosityPMBasal);
-				(*itNode)->setExternalViscosity(currExternalViscApical,currExternalViscBasal, extendExternalViscosityToInnerTissue);
+				itNode->setExternalViscosity(currExternalViscApical,currExternalViscBasal, extendExternalViscosityToInnerTissue);
 			}
 			else{
-				(*itNode)->setExternalViscosity(externalViscosityLZApical*noise3, externalViscosityLZBasal*noise3, extendExternalViscosityToInnerTissue);
+				itNode->setExternalViscosity(externalViscosityLZApical*noise3, externalViscosityLZBasal*noise3, extendExternalViscosityToInnerTissue);
 			}
-		}else if ((*itNode)->tissueType == 0){ //disc proper
-			(*itNode)->setExternalViscosity(externalViscosityDPApical*noise3, externalViscosityDPBasal*noise3, extendExternalViscosityToInnerTissue);
-		}else if ((*itNode)->tissueType == 1){
-			(*itNode)->setExternalViscosity(externalViscosityPMApical*noise3, externalViscosityPMBasal*noise3, extendExternalViscosityToInnerTissue);
+		}else if (itNode->tissueType == 0){ //disc proper
+			itNode->setExternalViscosity(externalViscosityDPApical*noise3, externalViscosityDPBasal*noise3, extendExternalViscosityToInnerTissue);
+		}else if (itNode->tissueType == 1){
+			itNode->setExternalViscosity(externalViscosityPMApical*noise3, externalViscosityPMBasal*noise3, extendExternalViscosityToInnerTissue);
 		}
 	}
 	delete[] fractions;
@@ -4274,10 +4038,9 @@ void Simulation::checkForZeroExternalViscosity(){
      * Among all nodes, if there is at least one node with external viscosity in a given dimension, then the
      * viscosity is not zero in that dimension.
      */
-	vector<Node*>::iterator itNode;
-	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+	for (auto& itNode : Nodes){
 		for (int i=0; i<3; ++i){
-			if ((*itNode)->externalViscosity[i] > 0){
+			if (itNode->externalViscosity[i] > 0){
 				zeroExternalViscosity[i] = false;
 			}
 		}
@@ -4292,7 +4055,7 @@ void Simulation::checkForZeroExternalViscosity(){
     if (zeroExternalViscosity[0] || zeroExternalViscosity[1] || zeroExternalViscosity[2]){
     	//At least one of the dimensions have zero viscosity
     	if(nNodes < 3) {
-    		cerr<<"Cannot run zero viscosity simulation with less than 3 nodes, run simulation at your own risk!"<<endl;
+    		std::cerr<<"Cannot run zero viscosity simulation with less than 3 nodes, run simulation at your own risk!"<<std::endl;
     	}
 
         if (!symmetricY){
@@ -4386,15 +4149,15 @@ void Simulation::checkForZeroExternalViscosity(){
 void Simulation::addCurvatureToColumnar(double h){
 	//find the tips:
 	double l1 = -1000, l2 = 1000, l3 = -1000;
-	for (vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-		if ((*itNode)->Position[0] >= l1 ){
-			l1 = (*itNode)->Position[0]; //displacement from origin to positive x tip
+	for (auto& itNode : Nodes){
+		if (itNode->Position[0] >= l1 ){
+			l1 = itNode->Position[0]; //displacement from origin to positive x tip
 		}
-		if ((*itNode)->Position[0] <= l2 ){
-			l2 = (*itNode)->Position[0]; //displacement from origin to negative x tip
+		if (itNode->Position[0] <= l2 ){
+			l2 = itNode->Position[0]; //displacement from origin to negative x tip
 		}
-		if ((*itNode)->Position[1] >= l3 ){
-			l3 = (*itNode)->Position[1];	//displacement from origin to positive y tip
+		if (itNode->Position[1] >= l3 ){
+			l3 = itNode->Position[1];	//displacement from origin to positive y tip
 		}
 	}
 	if (symmetricX){
@@ -4404,14 +4167,14 @@ void Simulation::addCurvatureToColumnar(double h){
 	l1 *= 1.01;//make them slightly larger to include boundry nodes
 	l2 *= 1.01;
 	l3 *= 1.01;
-	cout<<"l1: "<<l1 <<" l2: "<<l2<<" l3: "<<l3<<endl;
-	for (vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-		double x = (*itNode)->Position[0];
-		double y = (*itNode)->Position[1];
+	std::cout<<"l1: "<<l1 <<" l2: "<<l2<<" l3: "<<l3<<std::endl;
+	for (auto& itNode : Nodes){
+		double x = itNode->Position[0];
+		double y = itNode->Position[1];
 		//double z = (*itNode)->Position[2];
 		double a = l1;
 		double c = l3;
-		if ((*itNode)->Position[0] < 0){
+		if (itNode->Position[0] < 0){
 			a = l2;
 		}
 		double value = (1 - x*x/a/a - y*y/c/c);
@@ -4420,12 +4183,12 @@ void Simulation::addCurvatureToColumnar(double h){
 			if (h<0){
 				offset *= (-1.0);
 			}
-			if (thereIsPeripodialMembrane && (*itNode)->tissueType != 0){ //node is not columnar
+			if (thereIsPeripodialMembrane && itNode->tissueType != 0){ //node is not columnar
 				//there is peripodial membrane, any node above the mid-line of the lumen should be curved in the opposite direction of the columnar layer:
 				//But I have a direction choice, if the columnar is curving down, the peripodial shoul curve up
 				//If the columnar is curing up, the peripodial should still curve up!
 				double heightThreshold = TissueHeight + lumenHeight/2.0;
-				if ((*itNode)->Position[2] >= heightThreshold) {
+				if (itNode->Position[2] >= heightThreshold) {
 					if (offset > 0){
 						offset *= (-1.0);
 					}
@@ -4435,12 +4198,12 @@ void Simulation::addCurvatureToColumnar(double h){
 			//if (offset<0){offset = -h;}
 			//if (offset>0){offset = h;}
 			//end of added for lumen test
-			(*itNode)->Position[2] -= offset;
+			itNode->Position[2] -= offset;
 		}
 	}
-	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		(*itElement)->updatePositions(Nodes);
-		(*itElement)->updateReferencePositionsToCurentShape();
+	for(const auto&  itElement : Elements){
+		itElement->updatePositions(Nodes);
+		itElement->updateReferencePositionsToCurentShape();
 	}
 }
 
@@ -4450,23 +4213,23 @@ void Simulation::thickenECM(){
 	double bbXSize = bbMaxX-bbMinX;
 	double thickenDz = 0;//4.17; //make selected regions 3 micron thicker
 	double thinnerDz = 2.0;
-	for (vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-		if ((*itNode)->tissuePlacement == 0){
+	for (auto& itNode : Nodes){
+		if (itNode->tissuePlacement == 0){
 			//only basal nodes
-			double x = (*itNode)->Position[0];
+			double x = itNode->Position[0];
 			double relativeX = (x-bbMinX)/bbXSize;
 			if (relativeX < 0.4 || relativeX > 0.65){
 				//<0.4 notum, >0.65 pouch
-				(*itNode)->Position[2] -= thickenDz;
+				itNode->Position[2] -= thickenDz;
 			}
 			//else{
-				(*itNode)->Position[2] += thinnerDz;
+				itNode->Position[2] += thinnerDz;
 			//}
 		}
 	}
-	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		(*itElement)->updatePositions(Nodes);
-		(*itElement)->updateReferencePositionsToCurentShape();
+	for(auto const& itElement : Elements){
+		itElement->updatePositions(Nodes);
+		itElement->updateReferencePositionsToCurentShape();
 	}
 }
 
@@ -4474,15 +4237,13 @@ void Simulation::fixNode0InPosition(double x, double y, double z){
 	double dx = Nodes[0]->Position[0]-x;
 	double dy = Nodes[0]->Position[1]-y;
 	double dz = Nodes[0]->Position[2]-z;
-	vector<Node*>::iterator itNode;
-	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-		(*itNode)->Position[0] -=dx;
-		(*itNode)->Position[1] -=dy;
-		(*itNode)->Position[2] -=dz;
+	for (auto& itNode : Nodes){
+		itNode->Position[0] -=dx;
+		itNode->Position[1] -=dy;
+		itNode->Position[2] -=dz;
 	}
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		(*itElement)->updatePositions(Nodes);
+	for(auto const& itElement : Elements){
+		itElement->updatePositions(Nodes);
 	}
 }
 
@@ -4506,14 +4267,14 @@ void Simulation::manualPerturbationToInitialSetup(bool deform, bool rotate){
         double tetZ = 0 *PI/180.0;
     	int axisToRotateOn = 1; //0: rotate around x axis, 1: around y-axis, and 2: around z-axis.
         if(deform){
-        	for (vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-        		(*itNode)->Position[0] *=scaleX;
-        		(*itNode)->Position[1] *=scaleY;
-                (*itNode)->Position[2] *=scaleZ;
+        	for (auto& itNode : Nodes){
+        		itNode->Position[0] *=scaleX;
+        		itNode->Position[1] *=scaleY;
+                itNode->Position[2] *=scaleZ;
             }
         }
         if (rotate){
-        	cerr<<"Rotating system"<<endl;
+        	std::cerr<<"Rotating system"<<std::endl;
             double R[3][3] =  {{1,0,0},{0,1,0},{0,0,1}};
             if (axisToRotateOn == 0){
             	double c = cos(tetX);
@@ -4542,17 +4303,17 @@ void Simulation::manualPerturbationToInitialSetup(bool deform, bool rotate){
 				R[1][0] = s;
 				R[1][1] = c;
             }
-        	for (vector<Node*>::iterator  itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-                double x = (*itNode)->Position[0]*R[0][0] + (*itNode)->Position[1]*R[0][1] + (*itNode)->Position[2]*R[0][2];
-                double y = (*itNode)->Position[0]*R[1][0] + (*itNode)->Position[1]*R[1][1] + (*itNode)->Position[2]*R[1][2];
-                double z = (*itNode)->Position[0]*R[2][0] + (*itNode)->Position[1]*R[2][1] + (*itNode)->Position[2]*R[2][2];
-                (*itNode)->Position[0]=x;
-                (*itNode)->Position[1]=y;
-                (*itNode)->Position[2]=z;
+            for (auto& itNode : Nodes){
+                double x = itNode->Position[0]*R[0][0] + itNode->Position[1]*R[0][1] + itNode->Position[2]*R[0][2];
+                double y = itNode->Position[0]*R[1][0] + itNode->Position[1]*R[1][1] + itNode->Position[2]*R[1][2];
+                double z = itNode->Position[0]*R[2][0] + itNode->Position[1]*R[2][1] + itNode->Position[2]*R[2][2];
+                itNode->Position[0]=x;
+                itNode->Position[1]=y;
+                itNode->Position[2]=z;
             }
         }
-    	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-    		(*itElement)->updatePositions(Nodes);
+    	for(const auto& itElement : Elements){
+    		itElement->updatePositions(Nodes);
         }
     }
 }
@@ -4561,10 +4322,9 @@ void Simulation::updateGrowthRotationMatrices(){
     /**
      * Growth rotation matrices are updated for each element via ShapeBase#CalculateGrowthRotationByF.
      */
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-        if (!(*itElement)->IsAblated){
-            (*itElement)->CalculateGrowthRotationByF();
+	for (auto& itElement : Elements){
+        if (!itElement->IsAblated){
+            itElement->CalculateGrowthRotationByF();
         }
     }
 }
@@ -4584,9 +4344,9 @@ void Simulation::calculateDiscretisationLayers(double &hColumnar, int& LumenHeig
 	peripodialHeightDiscretisationLayers = ceil(peripodialHeight/hColumnar);
 	//calculating the actual element height needed to produce the total height with the calculated layr number:
 	hPeripodial = peripodialHeight/peripodialHeightDiscretisationLayers;
-	//cout<<"Tissue height: "<<TissueHeight<<" columnar element height: "<<hColumnar<<" TissueHeightDiscretisationLayers: "<<TissueHeightDiscretisationLayers<<endl;
-	//cout<<"Lumen height:  "<<lumenHeight<<" height of one lumen element: "<<hLumen<<" LumenHeightDiscretisationLayers: "<<LumenHeightDiscretisationLayers<<endl;
-	//cout<<"Peripodial height:  "<<peripodialHeight<<" height of one peripodial element: "<<hPeripodial<<" LumenHeightDiscretisationLayers: "<<peripodialHeightDiscretisationLayers<<endl;
+	//std::cout<<"Tissue height: "<<TissueHeight<<" columnar element height: "<<hColumnar<<" TissueHeightDiscretisationLayers: "<<TissueHeightDiscretisationLayers<<std::endl;
+	//std::cout<<"Lumen height:  "<<lumenHeight<<" height of one lumen element: "<<hLumen<<" LumenHeightDiscretisationLayers: "<<LumenHeightDiscretisationLayers<<std::endl;
+	//std::cout<<"Peripodial height:  "<<peripodialHeight<<" height of one peripodial element: "<<hPeripodial<<" LumenHeightDiscretisationLayers: "<<peripodialHeightDiscretisationLayers<<std::endl;
 }
 
 int Simulation::countPeripodialHeightDiscretisaionLayers(){
@@ -4597,14 +4357,14 @@ int Simulation::countPeripodialHeightDiscretisaionLayers(){
 	int peripodiallayercount = 0;
 	//addNodesForPeripodialOnOuterCircumference
 	int currNodeId = -1;
-	for (int i =0; i<nNodes; ++i){
+	for (size_t i =0; i<nNodes; ++i){
 		if (Nodes[i]->tissueType ==1 && Nodes[i]->tissuePlacement ==1){
 			currNodeId = i; //found myself an apical peripodial node
 			break;
 		}
 	}
 	if (currNodeId<0){
-		cerr<<" there is no peripodial! error in calling this function, returning 0 layers!"<<endl;
+		std::cerr<<" there is no peripodial! error in calling this function, returning 0 layers!"<<std::endl;
 		return peripodiallayercount;
 	}
 
@@ -4612,11 +4372,12 @@ int Simulation::countPeripodialHeightDiscretisaionLayers(){
 	bool finishedTissueThickness  = false;
 	while(!finishedTissueThickness && foundElement){ //while the node is not apical, and I could find the next element
 		foundElement = false;
-		vector<ShapeBase*>::iterator itElement;
-		for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-			bool IsBasalOwner = (*itElement)->IsThisNodeMyBasal(currNodeId);
+		int currElementId = 0;
+		for(auto const& itElement : Elements){
+			bool IsBasalOwner = itElement->IsThisNodeMyBasal(currNodeId);
 			if (IsBasalOwner){
 				foundElement = true;
+				currElementId = itElement->Id;
 				break;
 			}
 		}
@@ -4624,7 +4385,7 @@ int Simulation::countPeripodialHeightDiscretisaionLayers(){
 		//get the corresponding apical node, record in the list:
 		//This is stated on an elemental basis, so it will be similar to columnar layer,
 		//the nodes at the bottom given as inputs, will point to nodes at the top.
-		currNodeId = (*itElement)->getCorrecpondingApical(currNodeId); //have the next node
+		currNodeId = Elements[currElementId]->getCorrecpondingApical(currNodeId); //have the next node
 		peripodiallayercount ++;
 		if(Nodes[currNodeId]->tissuePlacement == 0) {
 			//This is for peripodial membrane
@@ -4643,19 +4404,20 @@ void Simulation::fillColumnarBasedNodeList(vector< vector<int> > &ColumnarBasedN
     	int currNodeId = ColumnarBasedNodeArray[i][0];
 		bool foundElement = true;
 		bool finishedTissueThickness  = false;
+		int currElementId =0;
 		while(!finishedTissueThickness && foundElement){ //while the node is not apical, and I could find the next element
 			foundElement = false;
-			vector<ShapeBase*>::iterator itElement;
-			for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-				bool IsBasalOwner = (*itElement)->IsThisNodeMyBasal(currNodeId);
+			for(auto const& itElement : Elements){
+				bool IsBasalOwner = itElement->IsThisNodeMyBasal(currNodeId);
 				if (IsBasalOwner){
 					foundElement = true;
+					currElementId = itElement->Id;
 					break;
 				}
 			}
 			//found the current node as basal node of an element
 			//get the corresponding apical node, record in the list:
-			currNodeId = (*itElement)->getCorrecpondingApical(currNodeId); //have the next node
+			currNodeId = Elements[currElementId]->getCorrecpondingApical(currNodeId); //have the next node
 			ColumnarBasedNodeArray[i].push_back(currNodeId);
 
 			if (thereIsPeripodialMembrane == false){
@@ -4663,7 +4425,7 @@ void Simulation::fillColumnarBasedNodeList(vector< vector<int> > &ColumnarBasedN
 					//There is no peripodial membrane
 					//Added the apical node now,
 					//I can stop:
-					//cerr<<"finished lateral node addition with apical columnar"<<endl;
+					//std::cerr<<"finished lateral node addition with apical columnar"<<std::endl;
 					finishedTissueThickness = true;
 				}
 			}
@@ -4672,7 +4434,7 @@ void Simulation::fillColumnarBasedNodeList(vector< vector<int> > &ColumnarBasedN
 					//There is peripodial membrane
 					//Added the basal node at the top of peripodial node now,
 					//I can stop:
-					//cout<<"finished lateral node addition with basal peripodial, "<<i<<" of "<<nCircumference<<endl;
+					//std::cout<<"finished lateral node addition with basal peripodial, "<<i<<" of "<<nCircumference<<std::endl;
 					finishedTissueThickness = true;
 				}
 			}
@@ -4682,20 +4444,20 @@ void Simulation::fillColumnarBasedNodeList(vector< vector<int> > &ColumnarBasedN
 
 void Simulation::addNodesForPeripodialOnColumnarCircumference (vector< vector<int> > &ColumnarBasedNodeArray, int LumenHeightDiscretisationLayers, double hLumen, int peripodialHeightDiscretisationLayers, double hPeripodial ){
 	//add nodes for the lumen and peripodial membrane on top of the columnar nodes:
-	int nCircumference = ColumnarBasedNodeArray.size();
-	for (int i=0; i<nCircumference; ++i){
+	size_t nCircumference = ColumnarBasedNodeArray.size();
+	for (size_t i=0; i<nCircumference; ++i){
 		int nodeId0 = ColumnarBasedNodeArray[i][TissueHeightDiscretisationLayers];
 		std::array<double,3> pos;
-		for (int j=0; j<Nodes[nodeId0]->nDim; j++){
+		for (size_t j=0; j<Nodes[nodeId0]->nDim; j++){
 			pos[j] = Nodes[nodeId0]->Position[j];
 		}
 		//adding nodes for lumen:
 		for (int j=1; j<LumenHeightDiscretisationLayers+1; ++j){
 			pos[2] += hLumen;
-			int newNodeId = Nodes.size();
-			Node* tmp_nd = new Node(newNodeId, 3, pos, 2, 1); //Tissue placement is midlayer (2), tissue type is peripodial membrane (1)
-			Nodes.push_back(tmp_nd);
-			nNodes = Nodes.size();
+			size_t newNodeId = Nodes.size();
+	        std::unique_ptr<Node> tmp_nd = make_unique<Node>(newNodeId, 3, pos,2,0);//Tissue placement is midlayer (2), tissue type is peripodial membrane (1)
+	        Nodes.push_back(std::move(tmp_nd));
+	        nNodes = Nodes.size();
 			ColumnarBasedNodeArray[i].push_back(newNodeId);
 		}
 		//The last node should also be apical, at it is the bottom of the peripodial membrane, looking into the lumen, change its placement:
@@ -4704,8 +4466,8 @@ void Simulation::addNodesForPeripodialOnColumnarCircumference (vector< vector<in
 		for (int j=1; j<peripodialHeightDiscretisationLayers+1; ++j){
 			pos[2] += hPeripodial;
 			int newNodeId = Nodes.size();
-			Node* tmp_nd = new Node(newNodeId, 3, pos, 2, 1); //Tissue placement is midlayer (2), tissue type is peripodial membrane (1)
-			Nodes.push_back(tmp_nd);
+			std::unique_ptr<Node> tmp_nd = make_unique<Node>(newNodeId, 3, pos,2,1);//Tissue placement is midlayer (2), tissue type is peripodial membrane (1)
+			Nodes.push_back(std::move(tmp_nd));
 			nNodes = Nodes.size();
 			ColumnarBasedNodeArray[i].push_back(newNodeId);
 		}
@@ -4714,7 +4476,7 @@ void Simulation::addNodesForPeripodialOnColumnarCircumference (vector< vector<in
 	}
 }
 void Simulation::calculateNewNodePosForPeripodialNodeAddition(int nodeId0, int nodeId1, int nodeId2, std::array<double,3> &pos, double sideThickness){
-	//cout<<"nodeIDs: "<<nodeId0<<" "<<nodeId1<<" "<<nodeId2<<" sideThickness: "<<sideThickness<<endl;
+	//std::cout<<"nodeIDs: "<<nodeId0<<" "<<nodeId1<<" "<<nodeId2<<" sideThickness: "<<sideThickness<<std::endl;
 	double* vec1;
 	vec1 = new double[3];
 	if (symmetricY && nodeId1 == -100){
@@ -4730,12 +4492,12 @@ void Simulation::calculateNewNodePosForPeripodialNodeAddition(int nodeId0, int n
 	else{
 		double* vec2;
 		vec2 = new double[3];
-		for (int j=0; j<Nodes[nodeId0]->nDim; j++){
+		for (size_t j=0; j<Nodes[nodeId0]->nDim; j++){
 			vec1[j] = (Nodes[nodeId0]->Position[j] - Nodes[nodeId1]->Position[j]);
 			vec2[j] = (Nodes[nodeId0]->Position[j] - Nodes[nodeId2]->Position[j]);
 		}
-		double dummy = Elements[0]->normaliseVector3D(vec1);
-		dummy = Elements[0]->normaliseVector3D(vec2);
+		(void) Elements[0]->normaliseVector3D(vec1);
+		(void) Elements[0]->normaliseVector3D(vec2);
 		vec1[0] += vec2[0];
 		vec1[1] += vec2[1];
 		vec1[2] += vec2[2];
@@ -4748,7 +4510,7 @@ void Simulation::calculateNewNodePosForPeripodialNodeAddition(int nodeId0, int n
 			vec1[1] = vec2[0];
 		}
 		else{
-			double dummy = Elements[0]->normaliseVector3D(vec1);
+			(void) Elements[0]->normaliseVector3D(vec1);
 		}
 		//now I have the vector to point out from the base node 0. BUT, this will point outwards only if the tissue curvature is convex at all points
 		//I need to check if it actually is pointing out, as the experimentally driven tissues can be concave at points.
@@ -4758,15 +4520,15 @@ void Simulation::calculateNewNodePosForPeripodialNodeAddition(int nodeId0, int n
 		vecCentre[0] =  SystemCentre[0] - Nodes[nodeId0]->Position[0];
 		vecCentre[1] =  SystemCentre[1] - Nodes[nodeId0]->Position[1];
 		vecCentre[2] =  SystemCentre[2] - Nodes[nodeId0]->Position[2];
-		dummy = Elements[0]->normaliseVector3D(vecCentre);
+		(void) Elements[0]->normaliseVector3D(vecCentre);
 		double* cross1;
 		cross1 = new double[3];
 		Elements[0]->crossProduct3D(vec2,vecCentre,cross1);
-		dummy = Elements[0]->normaliseVector3D(cross1);
+		(void) Elements[0]->normaliseVector3D(cross1);
 		double* cross2;
 		cross2 = new double[3];
 		Elements[0]->crossProduct3D(vec2,vec1,cross2);
-		dummy = Elements[0]->normaliseVector3D(cross2);
+		(void) Elements[0]->normaliseVector3D(cross2);
 		double dotp = Elements[0]->dotProduct3D(cross1,cross2);
 		if (dotp >0 ){
 			//the vectors are pointing to the same direction! Need to rotate vec1 180 degrees:
@@ -4791,11 +4553,11 @@ void Simulation::calculateNewNodePosForPeripodialNodeAddition(int nodeId0, int n
 	double* vec0;
 	vec0 = new double[3];
 	double midpoint[3] = {0,0,0};
-	for (int j=0; j<Nodes[nodeId0]->nDim; j++){
+	for (size_t j=0; j<Nodes[nodeId0]->nDim; j++){
 		vec0[j] = (Nodes[nodeId1]->Position[j] - Nodes[nodeId0]->Position[j])/2.0;
 		midpoint[j] = Nodes[nodeId0]->Position[j] + vec0[j];
 	}
-	double dummy = Elements[0]->normaliseVector3D(vec0);
+	(void) Elements[0]->normaliseVector3D(vec0); //I am not using the returned magnitude, I will skip it with (void)
 	//The list is sorted counter-cock-wise, to point out, I will rotate normalised vector v0 -90 degrees on z axis:
 	// (x,y,z) -> (y,-x,z);
 	// then I will add this vector to the calculated mid point to gt the new node's position.
@@ -4810,27 +4572,13 @@ void Simulation::addNodesForPeripodialOnOuterCircumference (vector< vector<int> 
 	double avrSide=0.0, dummy =0.0;
 	getAverageSideLength(dummy,avrSide);	//first term will get you the average side length of the peripodial membrane elements, second is the columnar elements
 	if (avrSide/peripodialSideConnectionThickness > 5 || avrSide/peripodialSideConnectionThickness< 0.2 ){
-		cerr<<"WARNING, the lateral connection thickness between the peripodial membrane and the columnar layer is too different than average element size (more than 5 fold diference)"<<endl;
+		std::cerr<<"WARNING, the lateral connection thickness between the peripodial membrane and the columnar layer is too different than average element size (more than 5 fold diference)"<<std::endl;
 	}
 	//Now I need the average side of an element, to add new nodes accordingly:
 	int nCircumference = ColumnarBasedNodeArray.size();
 
 	for (int i=0; i<nCircumference; ++i){
-		//cout<<"at node in the list: "<<i<<endl;
-		//adding 2 point based node:
-/*		int nodeId0 = ColumnarBasedNodeArray[i][0];
-		int nodeId1;
-		if( i == nCircumference - 1){
-			nodeId1 = ColumnarBasedNodeArray[0][0];
-		}
-		else{
-			nodeId1 = ColumnarBasedNodeArray[i+1][0];
-		}
-		double* pos = new double[3];
-		calculateNewNodePosForPeripodialNodeAddition(nodeId0, nodeId1, pos, peripodialSideConnectionThickness);
-		//cout<<" calculated pos : "<<pos[0] <<" "<<pos[1]<<" "<<pos[2]<<endl;
-		//Adding the array of new nodes:
-*/
+		//std::cout<<"at node in the list: "<<i<<std::endl;
 		//adding 3 point based node:
 		int nodeId0 = ColumnarBasedNodeArray[i][0];
 		int nodeId1;
@@ -4867,34 +4615,32 @@ void Simulation::addNodesForPeripodialOnOuterCircumference (vector< vector<int> 
 		std::array<double,3> pos;
 		calculateNewNodePosForPeripodialNodeAddition(nodeId0, nodeId1, nodeId2, pos, peripodialSideConnectionThickness);
 
-		//cout<<" calculated pos : "<<pos[0] <<" "<<pos[1]<<" "<<pos[2]<<endl;
+		//std::cout<<" calculated pos : "<<pos[0] <<" "<<pos[1]<<" "<<pos[2]<<std::endl;
 		//Adding the array of new nodes:
 
 		//adding the base:
-		int newNodeId = Nodes.size();
-		Node* tmp_nd = new Node(newNodeId, 3, pos, 0, 2); //Tissue placement basal (0), tissue type is linker zone (2)
-		Nodes.push_back(tmp_nd);
+		size_t newNodeId = Nodes.size();
+        std::unique_ptr<Node> tmp_nd = make_unique<Node>(newNodeId, 3, pos,0,2); //Tissue placement basal (0), tissue type is linker zone (2)
+		Nodes.push_back(std::move(tmp_nd));
 		nNodes = Nodes.size();
 		OuterNodeArray[i].push_back(newNodeId);
 		//adding the nodes for the columnar layer:
 		for (int j=1; j<TissueHeightDiscretisationLayers+1; ++j){
 			//pos[2] += hColumnar;
 			pos[2]  = Nodes[ColumnarBasedNodeArray[baseIndex0][j]]->Position[2];
-			//cout<<" pos for columnar aligned new node: "<<pos[0] <<" "<<pos[1]<<" "<<pos[2]<<" hColumnar: "<<hColumnar<<endl;
-
 			int newNodeId = Nodes.size();
-			Node* tmp_nd = new Node(newNodeId, 3, pos, 2, 2); //Tissue placement is midlayer (2), tissue type is linker zone (2)
-			Nodes.push_back(tmp_nd);
+			std::unique_ptr<Node> tmp_nd = make_unique<Node>(newNodeId, 3, pos,2,2);  //Tissue placement is midlayer (2), tissue type is linker zone (2)
+			Nodes.push_back(std::move(tmp_nd));
 			nNodes = Nodes.size();
 			OuterNodeArray[i].push_back(newNodeId);
 		}
 		//adding nodes for lumen:
-		//cout<<" LumenHeightDiscretisationLayers: "<<LumenHeightDiscretisationLayers<<endl;
+		//std::cout<<" LumenHeightDiscretisationLayers: "<<LumenHeightDiscretisationLayers<<std::endl;
 		for (int j=1; j<LumenHeightDiscretisationLayers+1; ++j){
 			pos[2] += hLumen;
-			int newNodeId = Nodes.size();
-			Node* tmp_nd = new Node(newNodeId, 3, pos, 2, 2); //Tissue placement is midlayer (2), tissue type is linker zone (2)
-			Nodes.push_back(tmp_nd);
+			size_t newNodeId = Nodes.size();
+			std::unique_ptr<Node> tmp_nd = make_unique<Node>(newNodeId, 3, pos,2,2); //Tissue placement is midlayer (2), tissue type is linker zone (2)
+			Nodes.push_back(std::move(tmp_nd));
 			nNodes = Nodes.size();
 			OuterNodeArray[i].push_back(newNodeId);
 		}
@@ -4902,8 +4648,8 @@ void Simulation::addNodesForPeripodialOnOuterCircumference (vector< vector<int> 
 		for (int j=1; j<peripodialHeightDiscretisationLayers+1; ++j){
 			pos[2] += hPeripodial;
 			int newNodeId = Nodes.size();
-			Node* tmp_nd = new Node(newNodeId, 3, pos, 2, 2); //Tissue placement is midlayer (2), tissue type is linker zone (2)
-			Nodes.push_back(tmp_nd);
+			std::unique_ptr<Node> tmp_nd = make_unique<Node>(newNodeId, 3, pos,2,2); //Tissue placement is midlayer (2), tissue type is linker zone (2)
+			Nodes.push_back(std::move(tmp_nd));
 			nNodes = Nodes.size();
 			OuterNodeArray[i].push_back(newNodeId);
 		}
@@ -4919,14 +4665,13 @@ void Simulation::addLateralPeripodialElements(int LumenHeightDiscretisationLayer
     // Second triangle base will be: New node 0, new node 1, old node 1
 	int totalLayers = TissueHeightDiscretisationLayers+LumenHeightDiscretisationLayers+peripodialHeightDiscretisationLayers;
 	double peripodialnessFractionStep = 1.0 / (double) (LumenHeightDiscretisationLayers+1.0); //this is the step increment in periopdiallness weight at each element of lumen side. If there is 1 layer, it should be 50% peripodial, 50% columnar etc, if there are two, it should be 33%, 2x33% etc.
-	int nCircumference = ColumnarBasedNodeArray.size();
-	int nLoop = nCircumference;
+	size_t nCircumference = ColumnarBasedNodeArray.size();
+	size_t nLoop = nCircumference;
 	if (symmetricY){
 		//in symmetric setup, the last node is not connected to the first node, we simply ignore that step
 		nLoop--;
 	}
-	cout<<"nElements before addition: "<<nElements<<endl;
-	for (int i=0;i<nLoop; ++i){
+	for (size_t i=0;i<nLoop; ++i){
     	for (int j=0;j<totalLayers; ++j){
     		//calculating the fraction of peripodialness these two elements should have:
     		//counting which layer in the lumen they are:
@@ -4941,11 +4686,11 @@ void Simulation::addLateralPeripodialElements(int LumenHeightDiscretisationLayer
     		}
     		// if (j>=TissueHeightDiscretisationLayers+LumenHeightDiscretisationLayers), then the added elements are above the lumen, should behave like peripodial, default was 1.0, no change.
     		//preparing the node lists:
-    		int indiceTri0Corner0 = i;
-			int indiceTri0Corner1 = i+1;
-			int indiceTri0Corner2 = i;
-			int indiceTri1Corner0 = indiceTri0Corner0;
-			int indiceTri1Corner1 = i+1;
+    		size_t indiceTri0Corner0 = i;
+			size_t indiceTri0Corner1 = i+1;
+			size_t indiceTri0Corner2 = i;
+			size_t indiceTri1Corner0 = indiceTri0Corner0;
+			size_t indiceTri1Corner1 = i+1;
 			int indiceTri1Corner2 = indiceTri0Corner1;
 			if (indiceTri0Corner1 == nCircumference){
 				indiceTri0Corner1 = 0;
@@ -4960,10 +4705,9 @@ void Simulation::addLateralPeripodialElements(int LumenHeightDiscretisationLayer
 			NodeIds[3] = OuterNodeArray[indiceTri0Corner0][j+1];
 			NodeIds[4] = ColumnarBasedNodeArray[indiceTri0Corner1][j+1];
 			NodeIds[5] = ColumnarBasedNodeArray[indiceTri0Corner2][j+1];
-			Prism* PrismPnt01;
-			PrismPnt01 = new Prism(NodeIds, Nodes, currElementId,thereIsPlasticDeformation);
+			std::unique_ptr<ShapeBase> PrismPnt01 = make_unique<Prism>(NodeIds, Nodes, currElementId);
 			PrismPnt01->setGrowthWeightsViaTissuePlacement(peripodialWeight);
-			Elements.push_back(PrismPnt01);
+			Elements.push_back(std::move(PrismPnt01));
 			nElements = Elements.size();
 			if (thereIsExplicitECM){
 				PrismPnt01->isECMMimimcingAtCircumference = true;
@@ -4977,9 +4721,9 @@ void Simulation::addLateralPeripodialElements(int LumenHeightDiscretisationLayer
 			NodeIds[3] = OuterNodeArray[indiceTri1Corner0][j+1];
 			NodeIds[4] = OuterNodeArray[indiceTri1Corner1][j+1];
 			NodeIds[5] = ColumnarBasedNodeArray[indiceTri1Corner2][j+1];
-			PrismPnt01 = new Prism(NodeIds, Nodes, currElementId,thereIsPlasticDeformation);
-			PrismPnt01->setGrowthWeightsViaTissuePlacement(peripodialWeight);
-			Elements.push_back(PrismPnt01);
+			std::unique_ptr<ShapeBase> PrismPnt02 = make_unique<Prism>(NodeIds, Nodes, currElementId);
+			PrismPnt02->setGrowthWeightsViaTissuePlacement(peripodialWeight);
+			Elements.push_back(std::move(PrismPnt02));;
 			nElements = Elements.size();
 			currElementId++;
 			if (thereIsExplicitECM){
@@ -4988,7 +4732,7 @@ void Simulation::addLateralPeripodialElements(int LumenHeightDiscretisationLayer
 			}
     	}
     }
-	cout<<"nElements after lateral addition: "<<nElements<<endl;
+	std::cout<<"nElements after lateral addition: "<<nElements<<std::endl;
 
 }
 
@@ -5030,8 +4774,8 @@ void Simulation::addNodesForPeripodialOnCap(vector< vector<int> > &ColumnarBased
 					int newNodeId = Nodes.size();
 					int tissuePlacement = 2; //defalut is midlayer
 					if (j==0){tissuePlacement = 1;} //The first node should be apical, as it is looking into the lumen, the basal node is corrected outside loop
-					Node* tmp_nd = new Node(newNodeId, 3, pos, tissuePlacement, 1); //Tissue placement is midlayer (2), tissue type is peripodial membrane (1)
-					Nodes.push_back(tmp_nd);
+					std::unique_ptr<Node> tmp_nd = make_unique<Node>(newNodeId, 3, pos,tissuePlacement,1); //Tissue placement is midlayer (2), tissue type is peripodial membrane (1)
+					Nodes.push_back(std::move(tmp_nd));
 					nNodes = Nodes.size();
 					PeripodialCapNodeArray[n].push_back(newNodeId);
 					pos[2] += hPeripodial;
@@ -5045,11 +4789,10 @@ void Simulation::addNodesForPeripodialOnCap(vector< vector<int> > &ColumnarBased
 
 void Simulation::constructTriangleCornerListOfApicalSurface( vector< vector<int> > &TriangleList){
 	int nTri = 0;
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		if ((*itElement)->tissueType == 0){
+	for(auto const& itElement : Elements){
+		if (itElement->tissueType == 0){
 			vector <int> ApicalTriangles;
-			(*itElement)->getApicalTriangles(ApicalTriangles);
+			itElement->getApicalTriangles(ApicalTriangles);
 			int nList = ApicalTriangles.size();
 			for (int k=0; k<nList-2; k+=3){
 				if (Nodes[ApicalTriangles[k]]->tissuePlacement == 1 &&
@@ -5068,12 +4811,12 @@ void Simulation::constructTriangleCornerListOfApicalSurface( vector< vector<int>
 
 void Simulation::addCapPeripodialElements( vector< vector<int> > &TriangleList, vector< vector<int> > &PeripodialCapNodeArray, int peripodialHeightDiscretisationLayers){
 	int nTri = TriangleList.size();
-	cout<<"number of elements before periodial cap: "<<nElements<<endl;
+	std::cout<<"number of elements before periodial cap: "<<nElements<<std::endl;
 
 	for (int i=0; i<nTri; ++i){
 		int indiceTri0Corner0 =-1, indiceTri0Corner1=-1,indiceTri0Corner2=-1;
 		int n = PeripodialCapNodeArray.size();
-		//cout<<"size of the peripodial cap node array: "<<n<<endl;
+		//std::cout<<"size of the peripodial cap node array: "<<n<<std::endl;
 		bool found0 = false, found1 = false, found2 = false;
 		for (int j =0; j<n; ++j){
 		   if (TriangleList[i][0] == PeripodialCapNodeArray[j][0]){
@@ -5093,7 +4836,7 @@ void Simulation::addCapPeripodialElements( vector< vector<int> > &TriangleList, 
 		   }
 		}
 		if(!(found0 && found1 && found2)){
-			cerr<<"could not find all the corners in addCapPeripodialElements, will give error"<<endl;
+			std::cerr<<"could not find all the corners in addCapPeripodialElements, will give error"<<std::endl;
 			cerr.flush();
 		}
 		//now I have the indices of the corners, adding the elements, as many layers as necessary:
@@ -5105,14 +4848,13 @@ void Simulation::addCapPeripodialElements( vector< vector<int> > &TriangleList, 
 			NodeIds[3] = PeripodialCapNodeArray[indiceTri0Corner0][j+1];
 			NodeIds[4] = PeripodialCapNodeArray[indiceTri0Corner1][j+1];
 			NodeIds[5] = PeripodialCapNodeArray[indiceTri0Corner2][j+1];
-			Prism* PrismPnt01;
-			PrismPnt01 = new Prism(NodeIds, Nodes, currElementId,thereIsPlasticDeformation);
-			Elements.push_back(PrismPnt01);
+			std::unique_ptr<ShapeBase> PrismPnt02 = make_unique<Prism>(NodeIds, Nodes, currElementId);
+			Elements.push_back(std::move(PrismPnt02));
 			nElements = Elements.size();
 			currElementId++;
 		}
    }
-	cout<<"number of elements after periodial cap: "<<nElements<<endl;
+	std::cout<<"number of elements after periodial cap: "<<nElements<<std::endl;
 
 }
 void Simulation::correctCircumferentialNodeAssignment(vector< vector<int> > OuterNodeArray){
@@ -5120,11 +4862,10 @@ void Simulation::correctCircumferentialNodeAssignment(vector< vector<int> > Oute
 	//The Nodes that were at the circumference in the columnar layer are embedded in the tissue now,
 	// while the new lateral nodes of the peripodial membrane are at the circumference.
 	//I will correct this in node booleans:
-	vector<Node*>::iterator itNode;
-	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+	for (auto& itNode : Nodes){
 		//making all circumferential node flags of the columnar layer false
-		if ( (*itNode)->tissueType == 0 && (*itNode)->atCircumference){
-			(*itNode)->atCircumference = false;
+		if ( itNode->tissueType == 0 && itNode->atCircumference){
+			itNode->atCircumference = false;
 		}
 	}
 	//I have a list of the Ids fot the OuterNodes I have added, changing their circumferential node flags to true:
@@ -5134,10 +4875,10 @@ void Simulation::correctCircumferentialNodeAssignment(vector< vector<int> > Oute
 		for (int j=0; j<n1; ++j){
 			int currId = OuterNodeArray[i][j];
 			//find the node with the curr id: (I know Ids and index order is the same now, but staying on the safe side for potential future changes
-			for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+			for (auto& itNode : Nodes){
 				//making all circumferential node flags of the columnar layer false
-				if ( (*itNode)->Id == currId){
-					(*itNode)->atCircumference = true;
+				if ( itNode->Id == currId){
+					itNode->atCircumference = true;
 					break;
 				}
 			}
@@ -5162,7 +4903,7 @@ bool Simulation::addCurvedPeripodialMembraneToTissue(){
 	vector <int> ColumnarCircumferencialNodeList;
 	Success = generateColumnarCircumferenceNodeList(ColumnarCircumferencialNodeList);
 	if (!Success){
-		cerr<<"Error!! circumferential nodes not extracted properly"<<endl;
+		std::cerr<<"Error!! circumferential nodes not extracted properly"<<std::endl;
 	}
 	//Now I have the list, I need to sort in to rotate in one direction:
 	calculateSystemCentre();
@@ -5240,16 +4981,16 @@ bool Simulation::addCurvedPeripodialMembraneToTissue(){
 		else{
 			double* vec2;
 			vec2 = new double[3];
-			for (int j=0; j<Nodes[nodeId0]->nDim; j++){
+			for (size_t j=0; j<Nodes[nodeId0]->nDim; j++){
 				vec1[j] = (Nodes[nodeId0]->Position[j] - Nodes[nodeId1]->Position[j]);
 				vec2[j] = (Nodes[nodeId0]->Position[j] - Nodes[nodeId2]->Position[j]);
 			}
-			double dummy = Elements[0]->normaliseVector3D(vec1);
-			dummy = Elements[0]->normaliseVector3D(vec2);
+			(void) Elements[0]->normaliseVector3D(vec1);
+			(void) Elements[0]->normaliseVector3D(vec2);
 			vec1[0] += vec2[0];
 			vec1[1] += vec2[1];
 			vec1[2] += vec2[2];
-			dummy = Elements[0]->normaliseVector3D(vec1);
+			(void) Elements[0]->normaliseVector3D(vec1);
 			//The list is sorted counter-cock-wise, to point out, I will rotate normalised vector v0 -90 degrees on z axis:
 			// (x,y,z) -> (y,-x,z);
 			// then I will add this vector to the calculated mid point to gt the new node's position.
@@ -5269,7 +5010,7 @@ bool Simulation::addCurvedPeripodialMembraneToTissue(){
 			drawingPointsX.push_back(Nodes[idBase]->Position[0] + r2 * vec1[0]);
 			drawingPointsY.push_back(Nodes[idBase]->Position[1] + r2 * vec1[1]);
 			drawingPointsZ.push_back(Nodes[idBase]->Position[2] + r1);
-			cout<<"hMidPoint: "<<hMidPoint<<endl;
+			std::cout<<"hMidPoint: "<<hMidPoint<<std::endl;
 		}
 		delete[] vec1;
 	}
@@ -5291,9 +5032,8 @@ bool Simulation::addCurvedPeripodialMembraneToTissue(){
 
 bool Simulation::checkIfThereIsPeripodialMembrane(){
 	bool Success = true;
-	vector<Node*>::iterator itNode;
-	for(itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-		if ((*itNode)->tissueType == 1){
+	for (auto& itNode : Nodes){
+		if (itNode->tissueType == 1){
 			thereIsPeripodialMembrane = true;
 			//I have not added the peripodial membrane as yet,
 			//if there is one, it came from the input mesh
@@ -5313,7 +5053,7 @@ bool Simulation::addSideECMLayer(){
     vector <int> ColumnarCircumferencialNodeList;
     Success = generateColumnarCircumferenceNodeList(ColumnarCircumferencialNodeList);
     if (!Success){
-        cerr<<"Error!! circumferential nodes not extracted properly"<<endl;
+        std::cerr<<"Error!! circumferential nodes not extracted properly"<<std::endl;
     }
     //Now I have the list, I need to sort in to rotate in one direction:
     calculateSystemCentre();
@@ -5345,7 +5085,7 @@ void Simulation::addNodesForSideECMOnOuterCircumference (vector< vector<int> > &
     int peripodialLayers = countPeripodialHeightDiscretisaionLayers();
 
     for (int i=0; i<nCircumference; ++i){
-        //cout<<"at node in the list: "<<i<<endl;
+        //std::cout<<"at node in the list: "<<i<<std::endl;
         //adding 3 point based node:
         int nodeId0 = ColumnarBasedNodeArray[i][0];
         int nodeId1;
@@ -5382,20 +5122,20 @@ void Simulation::addNodesForSideECMOnOuterCircumference (vector< vector<int> > &
         std::array<double,3> pos;
         calculateNewNodePosForPeripodialNodeAddition(nodeId0, nodeId1, nodeId2, pos, ECMSideThickness);
 
-        //cout<<" calculated pos : "<<pos[0] <<" "<<pos[1]<<" "<<pos[2]<<endl;
+        //std::cout<<" calculated pos : "<<pos[0] <<" "<<pos[1]<<" "<<pos[2]<<std::endl;
         //Adding the array of new nodes:
 
         //adding the base:
-		int newNodeId = Nodes.size();
-		Node* tmp_nd = new Node(newNodeId, 3, pos, 0, 0); //Tissue placement basal (0), tissue type is columnar
-		Nodes.push_back(tmp_nd);
+		size_t newNodeId = Nodes.size();
+		std::unique_ptr<Node> tmp_nd = make_unique<Node>(newNodeId, 3, pos,0,0); //Tissue placement basal (0), tissue type is columnar
+		Nodes.push_back(std::move(tmp_nd));
 		nNodes = Nodes.size();
 		OuterNodeArray[i].push_back(newNodeId);
 
         //adding the nodes for the columnar layer:
         for (int j=1; j<TissueHeightDiscretisationLayers+peripodialLayers+1; ++j){
             pos[2] =  Nodes[ColumnarBasedNodeArray[baseIndex0][j]]->Position[2];
-            //cout<<" pos for columnar aligned new node: "<<pos[0] <<" "<<pos[1]<<" "<<pos[2]<<" hColumnar: "<<hColumnar<<endl;
+            //std::cout<<" pos for columnar aligned new node: "<<pos[0] <<" "<<pos[1]<<" "<<pos[2]<<" hColumnar: "<<hColumnar<<std::endl;
 
             int newNodeId = Nodes.size();
             int tissuePlacement = 2; //midline
@@ -5410,8 +5150,8 @@ void Simulation::addNodesForSideECMOnOuterCircumference (vector< vector<int> > &
             	//basal on peripodial side
             	tissuePlacement=0;//basal
             }
-            Node* tmp_nd = new Node(newNodeId, 3, pos, tissuePlacement, 0); //Tissue placement is midlayer (2), tissue type is columnar (0)
-            Nodes.push_back(tmp_nd);
+            std::unique_ptr<Node> tmp_nd = make_unique<Node>(newNodeId, 3, pos,tissuePlacement,0); //Tissue placement is midlayer (2), tissue type is columnar (0)
+            Nodes.push_back(std::move(tmp_nd));
             nNodes = Nodes.size();
             OuterNodeArray[i].push_back(newNodeId);
         }
@@ -5456,12 +5196,11 @@ void Simulation::addSideECMElements(vector< vector<int> > &ColumnarBasedNodeArra
             NodeIds[3] = OuterNodeArray[indiceTri0Corner0][j+1];
             NodeIds[4] = ColumnarBasedNodeArray[indiceTri0Corner1][j+1];
             NodeIds[5] = ColumnarBasedNodeArray[indiceTri0Corner2][j+1];
-            Prism* PrismPnt01;
-            PrismPnt01 = new Prism(NodeIds, Nodes, currElementId,thereIsPlasticDeformation);
+            std::unique_ptr<ShapeBase> PrismPnt01 = make_unique<Prism>(NodeIds, Nodes, currElementId);
             PrismPnt01->setGrowthWeightsViaTissuePlacement(peripodialWeight);
             PrismPnt01->setECMMimicing(true);
             PrismPnt01->isECMMimimcingAtCircumference = true;
-            Elements.push_back(PrismPnt01);
+            Elements.push_back(std::move(PrismPnt01));
             nElements = Elements.size();
             currElementId++;
             //adding the second element:
@@ -5471,11 +5210,11 @@ void Simulation::addSideECMElements(vector< vector<int> > &ColumnarBasedNodeArra
             NodeIds[3] = OuterNodeArray[indiceTri1Corner0][j+1];
             NodeIds[4] = OuterNodeArray[indiceTri1Corner1][j+1];
             NodeIds[5] = ColumnarBasedNodeArray[indiceTri1Corner2][j+1];
-            PrismPnt01 = new Prism(NodeIds, Nodes, currElementId,thereIsPlasticDeformation);
-            PrismPnt01->setGrowthWeightsViaTissuePlacement(peripodialWeight);
-            PrismPnt01->setECMMimicing(true);
-            PrismPnt01->isECMMimimcingAtCircumference = true;
-            Elements.push_back(PrismPnt01);
+            std::unique_ptr<ShapeBase> PrismPnt02 = make_unique<Prism>(NodeIds, Nodes, currElementId);
+            PrismPnt02->setGrowthWeightsViaTissuePlacement(peripodialWeight);
+            PrismPnt02->setECMMimicing(true);
+            PrismPnt02->isECMMimimcingAtCircumference = true;
+            Elements.push_back(std::move(PrismPnt02));
             nElements = Elements.size();
             currElementId++;
         }
@@ -5483,7 +5222,7 @@ void Simulation::addSideECMElements(vector< vector<int> > &ColumnarBasedNodeArra
 }
 
 bool Simulation::addStraightPeripodialMembraneToTissue(){
-    //cout<<"adding peripodial membrane from scratch" <<endl;
+    //std::cout<<"adding peripodial membrane from scratch" <<std::endl;
 	bool Success = true;
     //here I am calculating the height of the tissue and the discretisation layers used for columnar layer
     double hColumnar; //The average columnar layer element height
@@ -5500,7 +5239,7 @@ bool Simulation::addStraightPeripodialMembraneToTissue(){
     vector <int> ColumnarCircumferencialNodeList;
     Success = generateColumnarCircumferenceNodeList(ColumnarCircumferencialNodeList);
     if (!Success){
-        cerr<<"Error!! circumferential nodes not extracted properly"<<endl;
+        std::cerr<<"Error!! circumferential nodes not extracted properly"<<std::endl;
     }
     //Now I have the list, I need to sort in to rotate in one direction:
     calculateSystemCentre();
@@ -5567,7 +5306,7 @@ void Simulation::calculateStiffnessChangeRatesForActin(int idOfCurrentStiffnessP
 	omp_set_num_threads(maxThreads);
 	#pragma omp parallel for
 	#endif
-	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+	for (std::vector<std::unique_ptr<ShapeBase>>::iterator itElement = Elements.begin(); itElement<Elements.end(); ++itElement){
 		bool applyToThisElement = (*itElement)->isActinStiffnessChangeAppliedToElement(ThereIsWholeTissueStiffnessPerturbation[idOfCurrentStiffnessPerturbation], ThereIsApicalStiffnessPerturbation[idOfCurrentStiffnessPerturbation], ThereIsBasalStiffnessPerturbation[idOfCurrentStiffnessPerturbation], ThereIsBasolateralWithApicalRelaxationStiffnessPerturbation[idOfCurrentStiffnessPerturbation],ThereIsBasolateralStiffnessPerturbation[idOfCurrentStiffnessPerturbation], stiffnessPerturbationEllipseBandIds[idOfCurrentStiffnessPerturbation], numberOfStiffnessPerturbationAppliesEllipseBands[idOfCurrentStiffnessPerturbation]);
 		if (applyToThisElement){
             (*itElement)->calculateStiffnessPerturbationRate(ThereIsBasolateralWithApicalRelaxationStiffnessPerturbation[idOfCurrentStiffnessPerturbation], stiffnessPerturbationBeginTimeInSec[idOfCurrentStiffnessPerturbation],stiffnessPerturbationEndTimeInSec[idOfCurrentStiffnessPerturbation], stiffnessChangedToFractionOfOriginal[idOfCurrentStiffnessPerturbation]);
@@ -5590,7 +5329,7 @@ void Simulation::updateStiffnessChangeForActin(int idOfCurrentStiffnessPerturbat
 	omp_set_num_threads(maxThreads);
 	#pragma omp parallel for
 	#endif
-	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+	for (std::vector<std::unique_ptr<ShapeBase>>::iterator itElement = Elements.begin(); itElement<Elements.end(); ++itElement){
 		bool applyToThisElement = (*itElement)->isActinStiffnessChangeAppliedToElement(ThereIsWholeTissueStiffnessPerturbation[idOfCurrentStiffnessPerturbation], ThereIsApicalStiffnessPerturbation[idOfCurrentStiffnessPerturbation], ThereIsBasalStiffnessPerturbation[idOfCurrentStiffnessPerturbation], ThereIsBasolateralWithApicalRelaxationStiffnessPerturbation[idOfCurrentStiffnessPerturbation],  ThereIsBasolateralStiffnessPerturbation[idOfCurrentStiffnessPerturbation], stiffnessPerturbationEllipseBandIds[idOfCurrentStiffnessPerturbation], numberOfStiffnessPerturbationAppliesEllipseBands[idOfCurrentStiffnessPerturbation]);
 		if (applyToThisElement){
             (*itElement)->updateStiffnessMultiplier(dt);
@@ -5634,7 +5373,7 @@ void Simulation::updateChangeForExplicitECM(int idOfCurrentECMPerturbation){
 	omp_set_num_threads(maxThreads);
 	#pragma omp parallel for
 	#endif
-	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+	for (std::vector<std::unique_ptr<ShapeBase>>::iterator itElement = Elements.begin(); itElement<Elements.end(); ++itElement){
 		bool applyToThisElement = (*itElement)->isECMChangeAppliedToElement(changeApicalECM[idOfCurrentECMPerturbation], changeBasalECM[idOfCurrentECMPerturbation], ECMChangeEllipseBandIds[idOfCurrentECMPerturbation], numberOfECMChangeEllipseBands[idOfCurrentECMPerturbation]);
 		if (applyToThisElement){
 			 (*itElement)->updateStiffnessMultiplier(dt);
@@ -5651,7 +5390,7 @@ void Simulation::updateChangeForViscosityBasedECMDefinition(int idOfCurrentECMPe
       * Node#ECMViscosityChangePerHour and the time step Simulation#dt (in sec). Once new viscosity is
       * calculated, it is capped to be positive and at most equal to the maximum external viscosity.
       */
-	cout<<"in viscosity update"<<endl;
+	std::cout<<"in viscosity update"<<std::endl;
     //const int maxThreads = omp_get_max_threads();
 	#ifndef DO_NOT_USE_OMP
 	/** If DO_NOT_USE_OMP is not defined,I will be using omp. This
@@ -5661,12 +5400,12 @@ void Simulation::updateChangeForViscosityBasedECMDefinition(int idOfCurrentECMPe
 	omp_set_num_threads(maxThreads);
 	#pragma omp parallel for
 	#endif
-	for (vector<Node*>::iterator itNode = Nodes.begin(); itNode<Nodes.end(); ++itNode){
+	for (std::vector<std::unique_ptr<Node>>::iterator itNode = Nodes.begin(); itNode<Nodes.end(); ++itNode){
 			if(((*itNode)->tissuePlacement == 0 && changeBasalECM[idOfCurrentECMPerturbation] ) || ((*itNode)->tissuePlacement == 1 && changeApicalECM[idOfCurrentECMPerturbation] )){
 				if((*itNode)->insideEllipseBand){
-					for (int ECMReductionRangeCounter =0; ECMReductionRangeCounter<numberOfECMChangeEllipseBands[idOfCurrentECMPerturbation]; ++ECMReductionRangeCounter){
+					for (size_t ECMReductionRangeCounter =0; ECMReductionRangeCounter<numberOfECMChangeEllipseBands[idOfCurrentECMPerturbation]; ++ECMReductionRangeCounter){
 						if ((*itNode)->coveringEllipseBandId == ECMChangeEllipseBandIds[idOfCurrentECMPerturbation][ECMReductionRangeCounter]){
-							for (int i =0; i<(*itNode)->nDim; ++i){
+							for (size_t i =0; i<(*itNode)->nDim; ++i){
 								double viscosityChange = (*itNode)->ECMViscosityChangePerHour[i]/3600*dt;
 								double newViscosity = (*itNode)->externalViscosity[i] - viscosityChange;
 								//avoiding setting negative viscosity!
@@ -5700,7 +5439,7 @@ void Simulation::calculateChangeRatesForECM(int idOfCurrentECMPerturbation){
 	//If there is explicit ECM, I will calculate the young modulus change via elements.
 	//If there is no explicit ECM, the viscosity reflects the ECM stiffness, and I will change the viscosity on a nodal basis.
 	if( thereIsExplicitECM){
-		cout<<" there is explicit ECM for rate calculation"<<endl;
+		std::cout<<" there is explicit ECM for rate calculation"<<std::endl;
 		#ifndef DO_NOT_USE_OMP
 		/** If DO_NOT_USE_OMP is not defined,I will be using omp. This
 		 * is necessary as omp is not set up on mac
@@ -5709,7 +5448,7 @@ void Simulation::calculateChangeRatesForECM(int idOfCurrentECMPerturbation){
 		omp_set_num_threads(maxThreads);
 		#pragma omp parallel for
 		#endif
-		for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		for (std::vector<std::unique_ptr<ShapeBase>>::iterator itElement = Elements.begin(); itElement<Elements.end(); ++itElement){
 			bool applyToThisElement = (*itElement)->isECMChangeAppliedToElement(changeApicalECM[idOfCurrentECMPerturbation], changeBasalECM[idOfCurrentECMPerturbation], ECMChangeEllipseBandIds[idOfCurrentECMPerturbation], numberOfECMChangeEllipseBands[idOfCurrentECMPerturbation]);
 			if (applyToThisElement){
 				//the first input is used for checking basolateral stiffenning combined with apical relaxation
@@ -5730,7 +5469,7 @@ void Simulation::calculateChangeRatesForECM(int idOfCurrentECMPerturbation){
 		 */
 		#pragma omp parallel for
 		#endif
-		for (vector<Node*>::iterator itNode = Nodes.begin(); itNode<Nodes.end(); ++itNode){
+		for (std::vector<std::unique_ptr<Node>>::iterator itNode = Nodes.begin(); itNode<Nodes.end(); ++itNode){
 			bool applyToThisNode = (*itNode)->isECMChangeAppliedToNode(changeApicalECM[idOfCurrentECMPerturbation], changeBasalECM[idOfCurrentECMPerturbation], ECMChangeEllipseBandIds[idOfCurrentECMPerturbation], numberOfECMChangeEllipseBands[idOfCurrentECMPerturbation]);
 			if(applyToThisNode){
 				double timeDifferenceInHours = (ECMChangeEndTimeInSec[idOfCurrentECMPerturbation] - ECMChangeBeginTimeInSec[idOfCurrentECMPerturbation])/3600;
@@ -5757,7 +5496,7 @@ void Simulation::calculateChangeRatesForECM(int idOfCurrentECMPerturbation){
 		 */
 		#pragma omp parallel for
 		#endif
-		for (vector<Node*>::iterator itNode = Nodes.begin(); itNode<Nodes.end(); ++itNode){
+		for (std::vector<std::unique_ptr<Node>>::iterator itNode = Nodes.begin(); itNode<Nodes.end(); ++itNode){
 			bool applyToThisNode = (*itNode)->isECMChangeAppliedToNode(changeApicalECM[idOfCurrentECMPerturbation], changeBasalECM[idOfCurrentECMPerturbation], ECMChangeEllipseBandIds[idOfCurrentECMPerturbation], numberOfECMChangeEllipseBands[idOfCurrentECMPerturbation]);
 			if(applyToThisNode){
 				for (int i=0; i<3; ++i){
@@ -5790,7 +5529,7 @@ void Simulation::updateECMRenewalHalflifeMultiplier(int idOfCurrentECMPerturbati
 			 */
 			#pragma omp parallel for
 			#endif
-			for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+			for (std::vector<std::unique_ptr<ShapeBase>>::iterator itElement = Elements.begin(); itElement<Elements.end(); ++itElement){
 				if ((*itElement)->isECMMimicing){
 					bool applyToThisElement = (*itElement)->isECMChangeAppliedToElement(changeApicalECM[idOfCurrentECMPerturbation], changeBasalECM[idOfCurrentECMPerturbation], ECMChangeEllipseBandIds[idOfCurrentECMPerturbation], numberOfECMChangeEllipseBands[idOfCurrentECMPerturbation]);
 					if (applyToThisElement){
@@ -5823,7 +5562,7 @@ void Simulation::updateECMRenewalHalflifeMultiplier(int idOfCurrentECMPerturbati
 				*/
 				#pragma omp parallel for
 				#endif
-				for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+				for (std::vector<std::unique_ptr<ShapeBase>>::iterator itElement = Elements.begin(); itElement<Elements.end(); ++itElement){
 					if ((*itElement)->isECMMimicing){
 						bool applyToThisElement = (*itElement)->isECMChangeAppliedToElement(changeApicalECM[idOfCurrentECMPerturbation], changeBasalECM[idOfCurrentECMPerturbation], ECMChangeEllipseBandIds[idOfCurrentECMPerturbation], numberOfECMChangeEllipseBands[idOfCurrentECMPerturbation]);
 						if (applyToThisElement){
@@ -5850,7 +5589,7 @@ void Simulation::checkECMChange(){
 		 */
 		#pragma omp parallel for
 		#endif
-		for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		for (std::vector<std::unique_ptr<ShapeBase>>::iterator itElement = Elements.begin(); itElement<Elements.end(); ++itElement){
 			bool updateStiffness = false;
 			if( (*itElement)->isECMMimicing && (*itElement)->tissuePlacement == 0 && (*itElement)->tissueType ==0 ){//columnar basal ecmmimicking element
 				//check notum:
@@ -5910,7 +5649,7 @@ void Simulation::checkECMChange(){
 			}
 		}
 	}
-	cout<<"finished ECM change"<<endl;
+	std::cout<<"finished ECM change"<<std::endl;
 }
 
 void Simulation::checkEllipseAllocationWithCurvingNodes(){
@@ -5927,19 +5666,19 @@ void Simulation::checkEllipseAllocationWithCurvingNodes(){
      * will carry out this operation.
      */
 	int selectedEllipseBandId =100;
-	for (vector<Node*>::iterator itNode= Nodes.begin(); itNode<Nodes.end(); ++itNode){
-		if ((*itNode)->onFoldInitiation){
-			if((*itNode)->coveringEllipseBandId != 100 && (*itNode)->coveringEllipseBandId != 101){
-				if ((*itNode)->tissuePlacement == 1){ //apical collapse: ECM relaxation, cell shortening, volume redistribution to shrink top
+	for (auto& itNode : Nodes){
+		if (itNode->onFoldInitiation){
+			if(itNode->coveringEllipseBandId != 100 && itNode->coveringEllipseBandId != 101){
+				if (itNode->tissuePlacement == 1){ //apical collapse: ECM relaxation, cell shortening, volume redistribution to shrink top
 					selectedEllipseBandId = 100;
 				}
 				else{ //basal collapse, volume redistribution to shrink bottom
 					selectedEllipseBandId = 101;
 				}
-				int n = (*itNode)->connectedElementIds.size();
+				int n = itNode->connectedElementIds.size();
 				for (int i=0; i<n; ++i){
-					int currElementId = (*itNode)->connectedElementIds[i];
-					//cout<<"assigning element "<<currElementId<<" vie owner node "<< (*itNode)->Id<<endl;
+					int currElementId = itNode->connectedElementIds[i];
+					//std::cout<<"assigning element "<<currElementId<<" vie owner node "<< (*itNode)->Id<<std::endl;
 					if (Elements[currElementId]->coveringEllipseBandId == 100 || Elements[currElementId]->coveringEllipseBandId == 101 || Elements[currElementId]->isECMMimimcingAtCircumference){
 						continue;
 					}
@@ -5947,7 +5686,7 @@ void Simulation::checkEllipseAllocationWithCurvingNodes(){
 					bool changeEllipseId = Elements[currElementId]->hasEnoughNodesOnCurve(Nodes);
 					if (changeEllipseId){
 						Elements[currElementId]->coveringEllipseBandId = selectedEllipseBandId;
-						cout<<" Id : "<<currElementId<<" assigned "<<selectedEllipseBandId<<" in function checkEllipseAllocationWithCurvingNodes"<<endl;
+						std::cout<<" Id : "<<currElementId<<" assigned "<<selectedEllipseBandId<<" in function checkEllipseAllocationWithCurvingNodes"<<std::endl;
 						Elements[currElementId]->assignEllipseBandIdToWholeTissueColumn(TissueHeightDiscretisationLayers,Nodes,Elements);
 					}
 				}
@@ -5962,12 +5701,12 @@ void Simulation::checkForLeftOutElementsInEllipseAssignment(){
      * As a result, in densly folding regions, an element can have all its nodes assigned to a specific marker
      * by its neighbours, without itself being assigned to it. These elements themselves will be tagged via their nodes.
      */
-	for (vector<Node*>::iterator itNode = Nodes.begin(); itNode < Nodes.end(); ++itNode){
-		if ((*itNode)->checkOwnersforEllipseAsignment){
-			int currentEllipseId = (*itNode)->coveringEllipseBandId;
-			int n = (*itNode)->connectedElementIds.size();
+	for (auto& itNode : Nodes){
+		if (itNode->checkOwnersforEllipseAsignment){
+			int currentEllipseId = itNode->coveringEllipseBandId;
+			int n = itNode->connectedElementIds.size();
 			for (int i=0; i<n ; ++i){
-				int currElementId = (*itNode)->connectedElementIds[i];
+				int currElementId = itNode->connectedElementIds[i];
 				if (Elements[currElementId]->coveringEllipseBandId ==currentEllipseId ){
 					continue;
 				}
@@ -5985,7 +5724,7 @@ void Simulation::checkForLeftOutElementsInEllipseAssignment(){
 					//the element does not have any nodes outside the ellipse
 					//should assign to ellipse
 					Elements[currElementId]->coveringEllipseBandId = currentEllipseId;
-					cout<<" Id : "<<currElementId<<" assigned "<<currentEllipseId<<" in function checkForLeftOutElementsInEllipseAssignment"<<endl;
+					std::cout<<" Id : "<<currElementId<<" assigned "<<currentEllipseId<<" in function checkForLeftOutElementsInEllipseAssignment"<<std::endl;
 					Elements[currElementId]->assignEllipseBandIdToWholeTissueColumn(TissueHeightDiscretisationLayers,Nodes,Elements);
 				}
 			}
@@ -6001,12 +5740,12 @@ void Simulation::updateEllipseWithCollapse(){
      * Lateral ECM elements are not modified. If the element is not already assigned to an emergent marker group (on fold initiation), then
      * its collapse status is checked via ShapeBase#checkForCollapsedNodes.
      */
-	for (vector<ShapeBase*>::iterator itEle=Elements.begin(); itEle<Elements.end(); itEle++){
-		if ((*itEle)->coveringEllipseBandId == 100 || (*itEle)->coveringEllipseBandId == 101 || (*itEle)->isECMMimimcingAtCircumference){
+	for (auto const& itEle : Elements){
+		if (itEle->coveringEllipseBandId == 100 || itEle->coveringEllipseBandId == 101 || itEle->isECMMimimcingAtCircumference){
 			continue;
 		}
-		if((*itEle)->tissuePlacement == 0 || (*itEle)->tissuePlacement == 1 || ((*itEle)->tissuePlacement == 2 && (*itEle)->spansWholeTissue ) ){
-			(*itEle)->checkForCollapsedNodes(TissueHeightDiscretisationLayers, Nodes, Elements);
+		if(itEle->tissuePlacement == 0 || itEle->tissuePlacement == 1 || (itEle->tissuePlacement == 2 && itEle->spansWholeTissue ) ){
+			itEle->checkForCollapsedNodes(TissueHeightDiscretisationLayers, Nodes, Elements);
 		}
 	}
 }
@@ -6017,12 +5756,12 @@ void Simulation::checkForEllipseIdUpdateWithECMDegradation(){
      * tissue shape change perturbation starts only after the ECM is reduced below a certain fraction of its original value), then
      * the elements initially tagged 100 are updated to tag 102 once this threshold (Simulation#shapeChangeECMLimit) is reached.
      */
-	for (vector<ShapeBase*>::iterator itEle=Elements.begin(); itEle<Elements.end(); itEle++){
-		if ((*itEle)->isECMMimicing && (*itEle)->coveringEllipseBandId == 100){
-			if ((*itEle)->stiffnessMultiplier<shapeChangeECMLimit){
-				(*itEle)->coveringEllipseBandId = 102;
-				cout<<" Id : "<<currElementId<<" assigned "<<102<<" in function checkForEllipseIdUpdateWithECMDegradation"<<endl;
-				(*itEle)->assignEllipseBandIdToWholeTissueColumn(TissueHeightDiscretisationLayers,Nodes,Elements);
+	for (auto const& itEle : Elements){
+		if (itEle->isECMMimicing && itEle->coveringEllipseBandId == 100){
+			if (itEle->stiffnessMultiplier<shapeChangeECMLimit){
+				itEle->coveringEllipseBandId = 102;
+				std::cout<<" Id : "<<currElementId<<" assigned "<<102<<" in function checkForEllipseIdUpdateWithECMDegradation"<<std::endl;
+				itEle->assignEllipseBandIdToWholeTissueColumn(TissueHeightDiscretisationLayers,Nodes,Elements);
 			}
 		}
 	}
@@ -6033,7 +5772,7 @@ void Simulation::updateOnFoldNodesFromCollapse(){
      * When an element collapses its nodes, it is a sign that it is residing on a fold. These elements
      * assign their nodes to be on folds, by flagging the boolean Node#onFold.
      */
-	//cout<<"calling updateOnFoldNodesFromCollapse"<<endl;
+	//std::cout<<"calling updateOnFoldNodesFromCollapse"<<std::endl;
 	if (checkedForCollapsedNodesOnFoldingOnce){
 		return;
 	}
@@ -6052,20 +5791,20 @@ void Simulation::updateOnFoldNodesFromCollapse(){
 		}
 	}
 	//check collapsed nodes, run this code only on initiation!
-	for (vector<Node*>::iterator itNode = Nodes.begin(); itNode < Nodes.end(); ++itNode){
-		if ( (*itNode)->collapsedWith.size()>0) {
+	for (const auto& itNode : Nodes){
+		if ( itNode->collapsedWith.size()>0) {
 			bool checkForFold = true;
-			int collapsedId = (*itNode)->collapsedWith[0];
-			if (collapsedId == (*itNode)->Id){
-				if ((*itNode)->collapsedWith.size()>1){
-					collapsedId = (*itNode)->collapsedWith[1];
+			int collapsedId = itNode->collapsedWith[0];
+			if (collapsedId == itNode->Id){
+				if (itNode->collapsedWith.size()>1){
+					collapsedId = itNode->collapsedWith[1];
 				}
 				else{
 					checkForFold=false;
 				}
 			}
 			if (checkForFold){
-				assignFoldRegionAndReleasePeripodial((*itNode), Nodes[collapsedId]);
+				assignFoldRegionAndReleasePeripodial(itNode.get(), Nodes[collapsedId].get());
 			}
 		}
 	}
@@ -6096,18 +5835,18 @@ void Simulation::artificialRelax(){
      * gradient onto growth gradient. The relaxation can optionally be extended to ECM, or be applied to only
      * cellular material of the tissue.
      */
-	for (vector<ShapeBase*>::iterator itEle=Elements.begin(); itEle<Elements.end(); itEle++){
+	for (auto const& itEle : Elements){
 		bool relaxElement = false;
-		if ((*itEle)->isECMMimicing){
+		if (itEle->isECMMimicing){
 			if( relaxECMInArtificialRelaxation ){
 				relaxElement = true;
 			}
 		}
-		else if((*itEle)->tissueType == 0 ){
+		else if(itEle->tissueType == 0 ){
 			relaxElement = true;
 		}
 		if (relaxElement){
-			(*itEle)->relaxElasticForces();
+			itEle->relaxElasticForces();
 		}
 	}
 }
@@ -6137,11 +5876,10 @@ bool Simulation::runOneStep(){
      * relative positions of the midline and bottom elements are updated to be the same as the apical layer, as growth should
      * not differ in the z-axis, the relative positions should read the same grid point from growth maps.
      */
-	cout<<"At time -- "<<currSimTimeSec<<" sec ("<<currSimTimeSec/3600<<" hours - "<<timestep<<" timesteps)"<<endl;
+	std::cout<<"At time -- "<<currSimTimeSec<<" sec ("<<currSimTimeSec/3600<<" hours - "<<timestep<<" timesteps)"<<std::endl;
 	alignTissueDVToXPositive();
 	calculateBoundingBox();
 	calculateDVDistance();
-	vector<ShapeBase*>::iterator itElement;
 	for(const auto& itElement : Elements){
 		itElement->calculateRelativePosInBoundingBox(boundingBox[0][0],boundingBox[0][1],boundingBoxSize[0],boundingBoxSize[1]);
 	}
@@ -6180,7 +5918,7 @@ bool Simulation::runOneStep(){
     }
     if (thereIsExplicitLumen){
     	tissueLumen->growLumen(currSimTimeSec+dt);
-    	cout<<"in runOneStep lumen growth is carried out for: "<<currSimTimeSec+dt<<endl;
+    	std::cout<<"in runOneStep lumen growth is carried out for: "<<currSimTimeSec+dt<<std::endl;
     }
     /**
      * Based on user preferences, the volumes of the elements can be conserved individually (default), or the volume can be
@@ -6228,7 +5966,7 @@ bool Simulation::runOneStep(){
       */
     detectPacingNodes();
 	//detectPackingToAFMBead();
-    //cout<<"after detect packing"<<endl;
+    //std::cout<<"after detect packing"<<std::endl;
     if (encloseTissueBetweenSurfaces){
     	detectPacingToEnclosingSurfacesNodes();
     }
@@ -6306,7 +6044,7 @@ void Simulation::updateRelativePositionsToApicalPositioning(){
 			//I will equate tissue positioning of this element to all other elements on the list:
 			double* ReletivePos = new double[2];
 			itElement->getRelativePosInBoundingBox(ReletivePos);
-			for (size_t i=0; i < TissueHeightDiscretisationLayers-2;++i){
+			for (int i=0; i < TissueHeightDiscretisationLayers-2;++i){
 				int idOfElementBelowThisApicalElement = itElement->elementsIdsOnSameColumn[i];
 				Elements[idOfElementBelowThisApicalElement]->setRelativePosInBoundingBox(ReletivePos[0],ReletivePos[1]);
 			}
@@ -6316,11 +6054,11 @@ void Simulation::updateRelativePositionsToApicalPositioning(){
 }
 
 void Simulation::checkForPinningPositionsUpdate(){
-	//cout<<"checking for pinning update, currTime: "<<currSimTimeSec<<" nGrowthPinning: "<<nGrowthPinning<<" GridGrowthsPinnedOnInitialMesh? "<<GridGrowthsPinnedOnInitialMesh<<endl;
+	//std::cout<<"checking for pinning update, currTime: "<<currSimTimeSec<<" nGrowthPinning: "<<nGrowthPinning<<" GridGrowthsPinnedOnInitialMesh? "<<GridGrowthsPinnedOnInitialMesh<<std::endl;
 	if (GridGrowthsPinnedOnInitialMesh){
-		//cout<<" grid is pinned "<<endl;
+		//std::cout<<" grid is pinned "<<std::endl;
 		for (int i=0; i<nGrowthPinning; ++i){
-			//cout<<"growthPinUpdateTime["<<i<<"]: "<<growthPinUpdateTime[i]<<" growthPinUpdateBools["<<i<<"]: "<<growthPinUpdateBools[i]<<endl;
+			//std::cout<<"growthPinUpdateTime["<<i<<"]: "<<growthPinUpdateTime[i]<<" growthPinUpdateBools["<<i<<"]: "<<growthPinUpdateBools[i]<<std::endl;
 			if (currSimTimeSec >= growthPinUpdateTime[i] &&  !growthPinUpdateBools[i]){
 				updatePinningPositions();
 				growthPinUpdateBools[i] = true;
@@ -6339,7 +6077,7 @@ bool Simulation::checkFlip(){
 	for(const auto& itElement : Elements){
 		if (itElement->isFlipped){
 			//there is a flipped element:
-			outputFile<<"There is A flipped element: "<<itElement->Id<<endl;
+			outputFile<<"There is A flipped element: "<<itElement->Id<<std::endl;
 			return false;
 		}
 	}
@@ -6389,7 +6127,7 @@ void Simulation::updatePlasticDeformation(){
 	omp_set_num_threads(maxThreads);
 	#pragma omp parallel for
 	#endif
-	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+	for (std::vector<std::unique_ptr<ShapeBase>>::iterator itElement = Elements.begin(); itElement<Elements.end(); ++itElement){
 		if (!(*itElement)->IsAblated ){
 			if (thereIsExplicitECM &&  (*itElement)->isECMMimicing){
 	            /**
@@ -6432,21 +6170,21 @@ void Simulation::calculateNumericalJacobian(bool displayMatricesDuringNumericalC
 	//No perturbation:
 	gsl_matrix* ge_noPerturb = gsl_matrix_calloc(dim*nNodes,1);
 	gsl_matrix* gvInternal_noPerturb = gsl_matrix_calloc(dim*nNodes,1);
-	NRSolver->calculateForcesAndJacobianMatrixNR(Nodes, Elements, dt, recordForcesOnFixedNodes, FixedNodeForces);
+	NRSolver->calculateForcesAndJacobianMatrixNR(Nodes, Elements, dt);
 	NRSolver->writeForcesTogeAndgvInternal(Nodes, Elements, SystemForces);
 	gsl_matrix_memcpy(ge_noPerturb, NRSolver->ge);
 	gsl_matrix_memcpy(gvInternal_noPerturb, NRSolver->gvInternal);
 	//perturbation loop:
 	gsl_matrix* uk_original = gsl_matrix_calloc(dim*nNodes,1);
 	gsl_matrix_memcpy(uk_original,NRSolver->uk);
-	for (int i=0; i<nNodes; ++i){
+	for (size_t i=0; i<nNodes; ++i){
 		for (int j=0; j<3; ++j){
 			resetForces(true);	// reset packing forces
 			gsl_matrix_set(NRSolver->uk,i*3+j,0,gsl_matrix_get(NRSolver->uk,i*3+j,0)+1E-6);
 			NRSolver->calculateDisplacementMatrix(dt);
 			Nodes[i]->Position[j] += 1E-6;
 			updateElementPositions();
-			NRSolver->calculateForcesAndJacobianMatrixNR(Nodes, Elements, dt, recordForcesOnFixedNodes, FixedNodeForces);
+			NRSolver->calculateForcesAndJacobianMatrixNR(Nodes, Elements, dt);
 			gsl_matrix* ge_withPerturb = gsl_matrix_calloc(dim*nNodes,1);
 			gsl_matrix* gvInternal_withPerturb = gsl_matrix_calloc(dim*nNodes,1);
 			NRSolver->writeForcesTogeAndgvInternal(Nodes, Elements, SystemForces);
@@ -6457,7 +6195,7 @@ void Simulation::calculateNumericalJacobian(bool displayMatricesDuringNumericalC
 			gsl_matrix_sub(gvInternal_withPerturb,gvInternal_noPerturb);
 			gsl_matrix_scale(ge_withPerturb,1.0/1E-6);
 			gsl_matrix_scale(gvInternal_withPerturb,1.0/1E-6);
-			for (int k=0; k<nNodes*3; ++k){
+			for (size_t k=0; k<nNodes*3; ++k){
 				double valueElastic =   0;//gsl_matrix_get(ge_withPerturb,k,0);
 				double valueViscous = 	gsl_matrix_get(gvInternal_withPerturb,k,0);
 				double value = valueElastic + valueViscous;
@@ -6484,12 +6222,12 @@ void Simulation::calculateNumericalJacobian(bool displayMatricesDuringNumericalC
 }
 
 void Simulation::conserveColumnVolume(){
-	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+	for(auto const& itElement : Elements){
     	vector <int> elementIdsForRedistribution;
-    	if ((*itElement)->tissueType == 0 && (*itElement)->tissuePlacement == 1){
+    	if (itElement->tissueType == 0 && itElement->tissuePlacement == 1){
     		//columnar apical element, take the elements on same column
-    		for (size_t i=0; i < TissueHeightDiscretisationLayers;++i){
-    			int idOfElementOnSameColumn = (*itElement)->elementsIdsOnSameColumn[i];
+    		for (int i=0; i < TissueHeightDiscretisationLayers;++i){
+    			int idOfElementOnSameColumn = itElement->elementsIdsOnSameColumn[i];
     			if (Elements[idOfElementOnSameColumn]->tissueType != 0){
     				//must be columnar
 					continue;
@@ -6524,17 +6262,11 @@ void Simulation::conserveColumnVolume(){
     			}
     			ratioOfCurrentVolumeToIdeal[i]= currentVolume/idealVolume;
     			sumCurrentVolumes += currentVolume;
-    			if (elementIdsForRedistribution[i] == 7009 || elementIdsForRedistribution[i] == 5207 || elementIdsForRedistribution[i] == 4622 || elementIdsForRedistribution[i] == 2820){
-    				cout<<" redistributing element: "<<elementIdsForRedistribution[i]<<" idealVolume: "<<idealVolume<<" currentVolume: "<<currentVolume<<" ratio: "<<ratioOfCurrentVolumeToIdeal[i]<<endl;
-    			}
     		}
     		double redistributionFactors[n];
     		for (int i=0; i < n;++i){
     			//calculate redistribution factors:
     			redistributionFactors[i] = sumIdealVolumes/sumCurrentVolumes *ratioOfCurrentVolumeToIdeal[i];
-    			if (elementIdsForRedistribution[i] == 7009 || elementIdsForRedistribution[i] == 5207 || elementIdsForRedistribution[i] == 4622 || elementIdsForRedistribution[i] == 2820){
-    				cout<<" redistributing element: "<<elementIdsForRedistribution[i]<<" redist factor: "<<redistributionFactors[i]<<endl;
-    			}
     			//calculateGrowth:
     			double uniformGrowthIncrement = pow(redistributionFactors[i],1.0/3.0);
     			gsl_matrix* columnarFgIncrement = gsl_matrix_calloc(3,3);
@@ -6566,7 +6298,7 @@ void Simulation::updateStepNR(){
     bool converged = false;
 
 
-
+    cout<<" in update NR "<<endl;
 #ifdef DO_NOT_SOLVE_SYSTEM_OF_EQUATIONS
     /** If DO_NOT_SOLVE_SYSTEM_OF_EQUATIONS is defined,I will
      * not go into the Newton-Rapson iterations. This has two purposes:
@@ -6598,14 +6330,14 @@ void Simulation::updateStepNR(){
           * The external forces are calculated in NewtonRaphsonSolver#calculateExternalViscousForcesForNR and their derivatives are added to
           * the system Jacobian in NewtonRaphsonSolver#addImplicitKViscousExternalToJacobian. \n
           */
-        cout<<"iteration: "<<iteratorK<<endl;
+        std::cout<<"iteration: "<<iteratorK<<std::endl;
         resetForces(true);	// reset packing forces
         NRSolver->setMatricesToZeroInsideIteration();
         if (numericalCalculation){
         	calculateNumericalJacobian(displayMatricesDuringNumericalCalculation);
         }
         NRSolver->calculateDisplacementMatrix(dt);
-        NRSolver->calculateForcesAndJacobianMatrixNR(Nodes, Elements, dt, recordForcesOnFixedNodes, FixedNodeForces);
+        NRSolver->calculateForcesAndJacobianMatrixNR(Nodes, Elements, dt);
 		NRSolver->writeForcesTogeAndgvInternal(Nodes, Elements, SystemForces);
 	    NRSolver->writeImplicitElementalKToJacobian(Elements);
 	    if (numericalCalculation){
@@ -6672,7 +6404,7 @@ void Simulation::updateStepNR(){
         updateNodePositionsNR(NRSolver->uk);
         iteratorK ++;
         if (!converged && iteratorK > maxIteration){
-            cerr<<"Error: did not converge!!!"<<endl;
+            std::cerr<<"Error: did not converge!!!"<<std::endl;
             converged = true;
         }
     }
@@ -6680,15 +6412,15 @@ void Simulation::updateStepNR(){
     //Now the calculation is converged, I update the node positions with the latest positions uk:
     updateNodePositionsNR(NRSolver->uk);
      //Element positions are already up to date.
-    cout<<"finished run one step"<<endl;
+    std::cout<<"finished run one step"<<std::endl;
     if (PipetteSuction){
     	//find the max z:
     	double zMax = -10000;
     	int idMax = -10;
-    	for (vector<Node*>::iterator itNode = Nodes.begin(); itNode < Nodes.end(); ++itNode){
-    		if ((*itNode)->Position[2] > zMax){
-    			zMax = (*itNode)->Position[2];
-    			idMax = (*itNode)->Id;
+    	for (auto& itNode : Nodes){
+    		if (itNode->Position[2] > zMax){
+    			zMax = itNode->Position[2];
+    			idMax = itNode->Id;
     		}
     	}
     	std::cout<<"Pipette suction: "<<SuctionPressure[2]<<" max suction: "<<zMax<<" from node "<<idMax<<std::endl;
@@ -6721,7 +6453,7 @@ void Simulation::calculateRandomForces(){
 }
 
 void Simulation::addRandomForces(gsl_matrix* gExt){
-		for (int j=0; j<3*nNodes; ++j){
+		for (size_t j=0; j<3*nNodes; ++j){
 			double F = randomForces[j];
 			F += gsl_matrix_get(gExt,j,0);
 			gsl_matrix_set(gExt,j,0,F);
@@ -6732,9 +6464,9 @@ void Simulation::updateNodePositionsNR(gsl_matrix* uk){
     /**
      * The nodal positions vector contains each position of each node in a single vector, and indexing is carried out accordingly.
      */
-    int dim = 3;
-    for (int i = 0; i<nNodes; ++i){
-    	for (int j=0; j<dim; ++j){
+    size_t dim = 3;
+    for (size_t i = 0; i<nNodes; ++i){
+    	for (size_t j=0; j<dim; ++j){
             Nodes[i]->Position[j]=gsl_matrix_get(uk,dim*i+j,0);
         }
     }
@@ -6742,16 +6474,16 @@ void Simulation::updateNodePositionsNR(gsl_matrix* uk){
 
 void Simulation::updateElementPositionsinNR(gsl_matrix* uk){
     int dim = 3;
-    for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-        int* nodeIds = (*itElement)->getNodeIds();
-        int nNodes= (*itElement)->getNodeNumber();
+    for(auto const& itElement : Elements ){
+        int* nodeIds = itElement->getNodeIds();
+        int nNodes= itElement->getNodeNumber();
         for (int j=0; j<nNodes; ++j){
             double x = gsl_matrix_get(uk,dim*nodeIds[j],0);
             double y = gsl_matrix_get(uk,dim*nodeIds[j]+1,0);
             double z = gsl_matrix_get(uk,dim*nodeIds[j]+2,0);
-            (*itElement)->Positions[j][0] = x;
-            (*itElement)->Positions[j][1] = y;
-            (*itElement)->Positions[j][2] = z;
+            itElement->Positions[j][0] = x;
+            itElement->Positions[j][1] = y;
+            itElement->Positions[j][2] = z;
         }
     }
 }
@@ -7025,12 +6757,12 @@ bool Simulation::checkForElementFlippingUponNodeCollapse(vector<int> &newCollaps
      * If the collapse of two nodes will move the nodes (there is collapse) the owner elemetns are first checked to see if
      * this movement will cause element flipping. The adhesion is avoided if it will.
      */
-	int nCollapsedList = newCollapseList.size();
+	size_t nCollapsedList = newCollapseList.size();
 	bool elementWillCollapse = false;
-	for (int nodeIterator=0; nodeIterator<nCollapsedList;++nodeIterator){
+	for (size_t nodeIterator=0; nodeIterator<nCollapsedList;++nodeIterator){
 		int currNodeId = newCollapseList[nodeIterator];
-		int nElements=  Nodes[currNodeId]->connectedElementIds.size();
-		for (int i=0; i<nElements;++i){
+		size_t nElements=  Nodes[currNodeId]->connectedElementIds.size();
+		for (size_t i=0; i<nElements;++i){
 			elementWillCollapse = Elements[Nodes[currNodeId]->connectedElementIds[i]]->isElementFlippedInPotentialNewShape(currNodeId, avrPos[0], avrPos[1], avrPos[2]);
 			if (elementWillCollapse){
 				std::cout<<" element "<<Nodes[currNodeId]->connectedElementIds[i]<<" will flip if adhered"<<std::endl;
@@ -7043,31 +6775,29 @@ bool Simulation::checkForElementFlippingUponNodeCollapse(vector<int> &newCollaps
 
 
 void Simulation::updatePositionsOfNodesCollapsingInStages(){
-	for(vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-		if ((*itNode)->positionUpdateOngoing){
-			//cout<<"updating node "<<(*itNode)->Id<<endl;
+	for (auto& itNode : Nodes){
+		if (itNode->positionUpdateOngoing){
+			//std::cout<<"updating node "<<(*itNode)->Id<<std::endl;
 			double* avrPos = new double[3];
 			bool* fix = new bool[3];
 			avrPos[0] = 0; avrPos[1]=0; avrPos[2]=0;
 			fix[0]=false; fix[1]=false; fix[2]=false;
-			int n = (*itNode)->collapsedWith.size();
+			int n = itNode->collapsedWith.size();
 			for (int i = 0; i<n; ++i){
 				for (int j=0; j<3; ++j){
-					avrPos[j] += Nodes[(*itNode)->collapsedWith[i]]->Position[j]/n;
+					avrPos[j] += Nodes[itNode->collapsedWith[i]]->Position[j]/n;
 				}
 			}
-			//cout<<" average position: "<<avrPos[0]<<" "<<avrPos[1]<<" "<<avrPos[2]<<endl;
+			//std::cout<<" average position: "<<avrPos[0]<<" "<<avrPos[1]<<" "<<avrPos[2]<<std::endl;
 			for (int i = 0; i<n; ++i){
 				for (int j=0; j<3; ++j){
-					if(Nodes[(*itNode)->collapsedWith[i]]->FixedPos[j]){
-						avrPos[j] = Nodes[(*itNode)->collapsedWith[i]]->Position[j];
+					if(Nodes[itNode->collapsedWith[i]]->FixedPos[j]){
+						avrPos[j] = Nodes[itNode->collapsedWith[i]]->Position[j];
 						fix[j] = true;
 					}
 				}
 			}
-			//cout<<" fix pos : "<<fix[0]<<" "<<fix[1]<<" "<<fix[2]<<endl;
-			(*itNode)->updatePositionTowardsPoint(avrPos,fix);
-			//cout<<"updated towards average"<<endl;
+			itNode->updatePositionTowardsPoint(avrPos,fix);
 			delete[] avrPos;
 			delete[] fix;
 		}
@@ -7103,7 +6833,7 @@ bool Simulation::adhereNodes(){
             /**
              * If the adhesion collapses nodes, then the adhesion is one-to-one, and should be carried out between the closest couples.
              */
-			for (int nodeCoupleIteratorFromHereOn = nodeCoupleIterator+1; nodeCoupleIteratorFromHereOn<n; ++nodeCoupleIteratorFromHereOn){
+			for (size_t nodeCoupleIteratorFromHereOn = nodeCoupleIterator+1; nodeCoupleIteratorFromHereOn<n; ++nodeCoupleIteratorFromHereOn){
 				if (masterNodeId == pacingNodeCouples0[nodeCoupleIteratorFromHereOn] ||
 					masterNodeId == pacingNodeCouples1[nodeCoupleIteratorFromHereOn] ||
 					slaveNodeId  == pacingNodeCouples0[nodeCoupleIteratorFromHereOn] ||
@@ -7118,7 +6848,7 @@ bool Simulation::adhereNodes(){
 						//yes this adhesion is possible, compare distances:
 						double dSqOriginal = distanceSqBetweenNodes(masterNodeId, slaveNodeId);
 						double dSqNext = distanceSqBetweenNodes(pacingNodeCouples0[nodeCoupleIteratorFromHereOn],pacingNodeCouples1[nodeCoupleIteratorFromHereOn]);
-						cout<<"two occurrences, distances are: "<<dSqOriginal<<" "<<dSqNext<<endl;
+						std::cout<<"two occurrences, distances are: "<<dSqOriginal<<" "<<dSqNext<<std::endl;
 						if (dSqNext < dSqOriginal){
 							//the next couple I will reach is closer, adhere them (or another one that may be further down the list and even closer)
                             /**
@@ -7126,7 +6856,7 @@ bool Simulation::adhereNodes(){
                              * closer pair). Declare this pari cannot adhere, and continue.
                              */
 							adhesionAllowedList[nodeCoupleIterator] = false;
-							cout<<"I will adhere the next pair";
+							std::cout<<"I will adhere the next pair";
 							break;
 						}
 						else{
@@ -7155,7 +6885,7 @@ bool Simulation::adhereNodes(){
 			Nodes[slaveNodeId]->adheredTo = masterNodeId;
 			Nodes[masterNodeId]->adheredTo = slaveNodeId;
 			if (collapseNodesOnAdhesion){
-				Nodes[slaveNodeId]->collapseOnNodeInStages(newCollapseList, avrPos, fix,Nodes, masterNodeId);
+				Nodes[slaveNodeId]->collapseOnNodeInStages(newCollapseList, avrPos, fix,Nodes);
 			}
 			delete[] avrPos;
 			delete[] fix;
@@ -7233,7 +6963,7 @@ bool Simulation::adhereNodes(){
 						NRSolver->slaveMasterList.push_back(fixDOF);
 						Nodes[slaveNodeId]->slaveTo[i] = masterNodeId;
 						Nodes[masterNodeId]->isMaster[i] = true;
-						//cout<<" adhereing nodes: "<<masterNodeId<<" "<<slaveNodeId<<" in dof "<<i<<endl;
+						//std::cout<<" adhereing nodes: "<<masterNodeId<<" "<<slaveNodeId<<" in dof "<<i<<std::endl;
 						thereIsBinding = true;
 						pacingNodeCouplesHaveAdhered[nodeCoupleIterator] = true;
 						if (adherePeripodialToColumnar && Nodes[masterNodeId]->attachedToPeripodial){
@@ -7344,9 +7074,9 @@ void Simulation::calculatePackingForcesImplicit3D(){
 
 		bool printForces = false;
 		if (printForces){
-			cout<<" id0-id1: "<<id0<<"-"<<id1<<" F : "<<Fx<<" "<<Fy<<" "<<Fz<<" d: "<<d<<" packingThreshold: "<<packingThreshold<<" sigmoid: "<<sigmoid;
-			cout<<" node0pos: "<<Nodes[id0]->Position[0]<<" "<<Nodes[id0]->Position[1]<<" "<<Nodes[id0]->Position[2];
-			cout<<" node1pos: "<<Nodes[id1]->Position[0]<<" "<<Nodes[id1]->Position[1]<<" "<<Nodes[id1]->Position[2]<<endl;
+			std::cout<<" id0-id1: "<<id0<<"-"<<id1<<" F : "<<Fx<<" "<<Fy<<" "<<Fz<<" d: "<<d<<" packingThreshold: "<<packingThreshold<<" sigmoid: "<<sigmoid;
+			std::cout<<" node0pos: "<<Nodes[id0]->Position[0]<<" "<<Nodes[id0]->Position[1]<<" "<<Nodes[id0]->Position[2];
+			std::cout<<" node1pos: "<<Nodes[id1]->Position[0]<<" "<<Nodes[id1]->Position[1]<<" "<<Nodes[id1]->Position[2]<<std::endl;
 		}
 		/**
 		 * - With the direction of the normal calculation, the algorithm will calculate \f$  \mathbf{F_{0}} \f$.
@@ -7359,13 +7089,13 @@ void Simulation::calculatePackingForcesImplicit3D(){
 		PackingForces[id1][1] -= Fy;
 		PackingForces[id1][2] -= Fz;
 		if (std::isnan(Fx)){
-		      cout<<" packing force Fx is nan for nodes "<<pacingNodeCouples0[node_counter]<<" - "<<pacingNodeCouples1[node_counter]<<endl;
+		      std::cout<<" packing force Fx is nan for nodes "<<pacingNodeCouples0[node_counter]<<" - "<<pacingNodeCouples1[node_counter]<<std::endl;
 		}
 		if (std::isnan(Fy)){
-		      cout<<" packing force Fy is nan for nodes "<<pacingNodeCouples0[node_counter]<<" - "<<pacingNodeCouples1[node_counter]<<endl;
+		      std::cout<<" packing force Fy is nan for nodes "<<pacingNodeCouples0[node_counter]<<" - "<<pacingNodeCouples1[node_counter]<<std::endl;
 		}
 		if (std::isnan(Fz)){
-		      cout<<" packing force Fz is nan for nodes "<<pacingNodeCouples0[node_counter]<<" - "<<pacingNodeCouples1[node_counter]<<endl;
+		      std::cout<<" packing force Fz is nan for nodes "<<pacingNodeCouples0[node_counter]<<" - "<<pacingNodeCouples1[node_counter]<<std::endl;
 		}
 	}
 }
@@ -7461,7 +7191,7 @@ void Simulation::calculatePackingJacobian3D(gsl_matrix* K){
 
 		bool printForces = false;
 		if (printForces){
-			cout<<" id0-id1: "<<id0<<endl;
+			std::cout<<" id0-id1: "<<id0<<std::endl;
 			Elements[0]->displayMatrix(dFidXi,"dFidXi");
 		}
 		/**
@@ -7532,12 +7262,12 @@ void Simulation::processDisplayDataAndSave(){
 }
 
 void Simulation::updateNodeMasses(){
-    for(vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-    	(*itNode)->mass = 0;
+	for (auto& itNode : Nodes){
+    	itNode->mass = 0;
     }
-    for( vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-        if (!(*itElement)->IsAblated){
-        	(*itElement)->assignVolumesToNodes(Nodes);
+    for(const auto& itElement : Elements){
+        if (!itElement->IsAblated){
+        	itElement->assignVolumesToNodes(Nodes);
         }
     }
 }
@@ -7551,29 +7281,28 @@ void Simulation::updateNodeViscositySurfaces(){
 	omp_set_num_threads(maxThreads);
 	#pragma omp parallel for
 	#endif
-    for( vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+	for (std::vector<std::unique_ptr<ShapeBase>>::iterator itElement = Elements.begin(); itElement<Elements.end(); ++itElement){
 		if (!(*itElement)->IsAblated){
 			(*itElement)->calculateViscositySurfaces();
 		}
 	}
     //calculated the areas, now assigning them
-	for(vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-		(*itNode)->viscositySurface = 0;
+    for (auto& itNode : Nodes){
+    	itNode->viscositySurface = 0;
 	}
-    for( vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+	for (std::vector<std::unique_ptr<ShapeBase>>::iterator itElement = Elements.begin(); itElement<Elements.end(); ++itElement){
     	if (!(*itElement)->IsAblated){
     		(*itElement)->assignViscositySurfaceAreaToNodes(Nodes);
     	}
     }
 }
 
-void 	Simulation:: updateElementToConnectedNodes(vector <Node*>& Nodes){
-	for(vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-	    if ((*itNode)->mass > 0){//an ablated node will have this as zero
-			int n = (*itNode)->connectedElementIds.size();
-			for (int i=0; i<n; ++i){
-				//if(!Elements[Nodes[j]->connectedElementIds[i]] -> IsAblated){
-				(*itNode)->connectedElementWeights[i] = Elements[(*itNode)->connectedElementIds[i]]->VolumePerNode/(*itNode)->mass;
+void 	Simulation:: updateElementToConnectedNodes(const std::vector <std::unique_ptr<Node>>& Nodes){
+	for (auto& itNode : Nodes){
+	    if (itNode->mass > 0){//an ablated node will have this as zero
+			size_t n = itNode->connectedElementIds.size();
+			for (size_t i=0; i<n; ++i){
+				itNode->connectedElementWeights[i] = Elements[itNode->connectedElementIds[i]]->VolumePerNode/itNode->mass;
 				//}
 			}
 	    }
@@ -7581,9 +7310,8 @@ void 	Simulation:: updateElementToConnectedNodes(vector <Node*>& Nodes){
 }
 
 void Simulation::fillInNodeNeighbourhood(){
-	vector<ShapeBase*>::iterator itEle;
-	for (itEle=Elements.begin(); itEle<Elements.end(); ++itEle){
-		(*itEle)->fillNodeNeighbourhood(Nodes);
+	for (auto& itEle : Elements){
+		itEle->fillNodeNeighbourhood(Nodes);
 	}
 }
 
@@ -7598,7 +7326,7 @@ void Simulation::setBasalNeighboursForApicalElements(){
 	omp_set_num_threads(maxThreads);
 	#pragma omp parallel for
 	#endif
-	for( vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+	for (std::vector<std::unique_ptr<ShapeBase>>::iterator itElement = Elements.begin(); itElement<Elements.end(); ++itElement){
 		(*itElement)->setBasalNeigElementId(Elements);
 	}
 }
@@ -7612,7 +7340,7 @@ void Simulation::fillInElementColumnLists(){
 	omp_set_num_threads(maxThreads);
 	#pragma omp parallel for
 	#endif
-	for( vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+	for (std::vector<std::unique_ptr<ShapeBase>>::iterator itElement = Elements.begin(); itElement<Elements.end(); ++itElement){
 		if (!(*itElement)->IsAblated && (*itElement)->tissueType ==0 ){//Check only the columnar layer elements.
 			if ((*itElement)->tissuePlacement == 0){
 				//start from the basal element and move up
@@ -7655,7 +7383,7 @@ void Simulation::checkPackingToPipette(bool& packsToPip, double* pos, double* pi
 				pipF[2] *= -1.0;
 			}
 			packsToPip = true;
-			//cout<<"Node is pushed from bottom -  packing force: "<<pipF[0]<<" "<<pipF[1]<<" "<<pipF[2]<<endl;
+			//std::cout<<"Node is pushed from bottom -  packing force: "<<pipF[0]<<" "<<pipF[1]<<" "<<pipF[2]<<std::endl;
 			return;
 		}
 		//the node is not close to the pipette tip in x&y but not in range to be pushed by tip bottom, it may be too far away
@@ -7695,7 +7423,7 @@ void Simulation::checkPackingToPipette(bool& packsToPip, double* pos, double* pi
 			pipF[0] = Fmag*dist[0];
 			pipF[1] = Fmag*dist[1];
 			pipF[2] = 0.0;
-			//cout<<"Node "<<id<<" is pushed from side wall - packing force: "<<pipF[0]<<" "<<pipF[1]<<" "<<pipF[2]<<endl;
+			//std::cout<<"Node "<<id<<" is pushed from side wall - packing force: "<<pipF[0]<<" "<<pipF[1]<<" "<<pipF[2]<<std::endl;
 			packsToPip = true;
 			return;
 		}
@@ -7717,10 +7445,10 @@ void Simulation::detectPackingToAFMBead(){
 	initialWeightPackingToBeadx.clear();
 	initialWeightPackingToBeady.clear();
 	initialWeightPackingToBeadz.clear();
-	for (vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-		if ((*itNode)->mass >0){ //node is not ablated
-			if ((*itNode)->tissuePlacement == 0){
-				std::array<double,3> pos = (*itNode)->getCurrentPosition();
+	for (auto& itNode : Nodes){
+		if (itNode->mass >0){ //node is not ablated
+			if (itNode->tissuePlacement == 0){
+				std::array<double,3> pos = itNode->getCurrentPosition();
 				double dx = pos[0] - beadPos[0];
 				double dy = pos[1] - beadPos[1];
 				double dz = pos[2] - beadPos[2];
@@ -7732,8 +7460,8 @@ void Simulation::detectPackingToAFMBead(){
 				dz = dz/d*dGap;
 				if (dGap<packingDetectionToBeadThreshold){
 					//node is close enough to pack to surface:
-					nodesPackingToBead.push_back((*itNode)->Id);
-					cout<<"packing to bead: "<<(*itNode)->Id<<" dGap: "<<dGap<<" threshold: "<< packingDetectionToBeadThreshold<<" d: "<<dx<<" "<<dy<<" "<<dz<<endl;
+					nodesPackingToBead.push_back(itNode->Id);
+					std::cout<<"packing to bead: "<<itNode->Id<<" dGap: "<<dGap<<" threshold: "<< packingDetectionToBeadThreshold<<" d: "<<dx<<" "<<dy<<" "<<dz<<std::endl;
 					initialWeightPackingToBeadx.push_back(dx/dGap);
 					initialWeightPackingToBeady.push_back(dy/dGap);
 					initialWeightPackingToBeadz.push_back(dz/dGap);
@@ -7777,11 +7505,11 @@ void Simulation::detectPacingToEnclosingSurfacesNodes(){
 	std::cout<<"curr time in sec: "<<currSimTimeSec<<" z enclosement boundaries: "<<zEnclosementBoundaries[0]<<" "<<zEnclosementBoundaries[1]<<" initial boundaries: "<<initialZEnclosementBoundaries[0]<<" "<<initialZEnclosementBoundaries[1]<<" final boundaries: "<<finalZEnclosementBoundaries[0]<<" "<<finalZEnclosementBoundaries[1]<<std::endl;
 
 	//go over nodes to detect packing:
-	for (vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-		if ((*itNode)->mass >0){ //node is not ablated
+	for (auto& itNode : Nodes){
+		if (itNode->mass >0){ //node is not ablated
 			bool checkAgainstPositiveSurface = false;
 			bool checkAgainstNegativeSurface = false;
-			if ((*itNode)->atCircumference){
+			if (itNode->atCircumference){
 				//Node is at the ciscumference, with sufficient rotation, it can pack anywhere
 				//chack against both surfaces.
 				checkAgainstPositiveSurface = true;
@@ -7789,41 +7517,41 @@ void Simulation::detectPacingToEnclosingSurfacesNodes(){
 			}
 			else {
 				//basal node of the columnar layer is checked against the negative surface:
-				if ( (*itNode)->tissuePlacement == 0){
+				if ( itNode->tissuePlacement == 0){
 					//node is basal
 					//if it is columnar layer, check against negative surface:
-					if( (*itNode)->tissueType ==0 ){
+					if( itNode->tissueType ==0 ){
 						checkAgainstNegativeSurface = true;
 					}
-					else if((*itNode)->tissueType ==1 ){
+					else if(itNode->tissueType ==1 ){
 						//if it is peripodial layer, check against positive surface:
 						checkAgainstPositiveSurface = true;
 					}
 				}
 				//if tissue placement is apical, and the tissue tyoe is columnar,
 				//check against the positive surface:
-				if( (*itNode)->tissuePlacement == 1 && (*itNode)->tissueType ==0 ){	//Node is apical, check against positive border
+				if( itNode->tissuePlacement == 1 && itNode->tissueType ==0 ){	//Node is apical, check against positive border
 					checkAgainstPositiveSurface = true;
 				}
 			}
 			if( checkAgainstNegativeSurface ){
-				std::array<double,3> pos = (*itNode)->getCurrentPosition();
+				std::array<double,3> pos = itNode->getCurrentPosition();
 				double dz = pos[2] - zEnclosementBoundaries[0];
 				double d2 = dz*dz;
 				if (d2<t2){
 					//node is close enough to pack to surface:
-					nodesPackingToNegativeSurface.push_back((*itNode)->Id);
+					nodesPackingToNegativeSurface.push_back(itNode->Id);
 					double d = pow (d2,0.5);
 					initialWeightPackingToNegativeSurface.push_back(dz/d);
 				}
 			}
 			if( checkAgainstPositiveSurface){
-				std::array<double,3> pos = (*itNode)->getCurrentPosition();
+				std::array<double,3> pos = itNode->getCurrentPosition();
 				double dz = pos[2] - zEnclosementBoundaries[1];
 				double d2 = dz*dz;
 				if (d2<t2){
 					//node is close enough to pack to surface:
-					nodesPackingToPositiveSurface.push_back((*itNode)->Id);
+					nodesPackingToPositiveSurface.push_back(itNode->Id);
 					double d = pow (d2,0.5);
 					initialWeightPackingToPositiveSurface.push_back(dz/d);
 				}
@@ -7855,8 +7583,8 @@ void 	Simulation::assignFoldRegionAndReleasePeripodial(Node* NodeMaster, Node* N
 
 	for (vector<int>::iterator itInt = NodeMaster->immediateNeigs.begin(); itInt < NodeMaster->immediateNeigs.end(); ++itInt){
 		if(Nodes[(*itInt)]->tissuePlacement != NodeMaster->tissuePlacement){
-			int commonOwnerId = NodeMaster->getCommonOwnerId(Nodes[(*itInt)]);
-			//cout<<"master Node : "<<NodeMaster->Id<<" checked node : "<<Nodes[(*itInt)]->Id<<" common owner: "<<commonOwnerId<<endl;
+			int commonOwnerId = NodeMaster->getCommonOwnerId(Nodes[(*itInt)].get());
+			//std::cout<<"master Node : "<<NodeMaster->Id<<" checked node : "<<Nodes[(*itInt)]->Id<<" common owner: "<<commonOwnerId<<std::endl;
 			if (commonOwnerId > -1){
 				//there is common owner
 				//are nodes on top of each other on this element?
@@ -7864,7 +7592,7 @@ void 	Simulation::assignFoldRegionAndReleasePeripodial(Node* NodeMaster, Node* N
 				if (nodesConnected){
 					masterCorrespondingX = Nodes[(*itInt)]->Position[0];
 					masterCorrespondingY = Nodes[(*itInt)]->Position[1];
-					//cout<<"master Node : "<<NodeMaster->Id<<" corresponding; "<<Nodes[(*itInt)]->Id<<endl;
+					//std::cout<<"master Node : "<<NodeMaster->Id<<" corresponding; "<<Nodes[(*itInt)]->Id<<std::endl;
 					break;
 				}
 			}
@@ -7872,7 +7600,7 @@ void 	Simulation::assignFoldRegionAndReleasePeripodial(Node* NodeMaster, Node* N
 	}
 	for (vector<int>::iterator itInt = NodeSlave->immediateNeigs.begin(); itInt < NodeSlave->immediateNeigs.end(); ++itInt){
 		if(Nodes[(*itInt)]->tissuePlacement != NodeSlave->tissuePlacement){
-			int commonOwnerId = NodeSlave->getCommonOwnerId(Nodes[(*itInt)]);
+			int commonOwnerId = NodeSlave->getCommonOwnerId(Nodes[(*itInt)].get());
 			if (commonOwnerId > -1){
 				//there is common owner
 				//are nodes on top of each other on this element?
@@ -7880,7 +7608,7 @@ void 	Simulation::assignFoldRegionAndReleasePeripodial(Node* NodeMaster, Node* N
 				if (nodesConnected){
 					slaveCorrespoindingX = Nodes[(*itInt)]->Position[0];
 					slaveCorrespoindingY = Nodes[(*itInt)]->Position[1];
-					//cout<<"slave Node : "<<NodeSlave->Id<<" corresponding; "<<Nodes[(*itInt)]->Id<<endl;
+					//std::cout<<"slave Node : "<<NodeSlave->Id<<" corresponding; "<<Nodes[(*itInt)]->Id<<std::endl;
 					break;
 				}
 			}
@@ -7894,7 +7622,8 @@ void 	Simulation::assignFoldRegionAndReleasePeripodial(Node* NodeMaster, Node* N
 	double zmin = min(NodeMaster->Position[2], NodeSlave->Position[2]);
 	ymin -= 4.0*packingDetectionThresholdGrid[masterXGridIndex][masterYGridIndex];
 	ymax += 4.0*packingDetectionThresholdGrid[masterXGridIndex][masterYGridIndex];
-	for (vector<Node*>::iterator itNodeInBetween = Nodes.begin(); itNodeInBetween < Nodes.end(); itNodeInBetween++){
+
+	for (std::vector<std::unique_ptr<Node>>::iterator itNodeInBetween = Nodes.begin(); itNodeInBetween<Nodes.end(); ++itNodeInBetween){
 		if((*itNodeInBetween)->tissuePlacement == NodeMaster->tissuePlacement ){
 		if((*itNodeInBetween)->attachedToPeripodial || !(*itNodeInBetween)->onFoldInitiation ){
 			//for apical curves, chack for zmax, for basal , check for z min
@@ -7902,9 +7631,9 @@ void 	Simulation::assignFoldRegionAndReleasePeripodial(Node* NodeMaster, Node* N
 				if((*itNodeInBetween)->Position[0] >= xmin && (*itNodeInBetween)->Position[0] <= xmax){
 					if((*itNodeInBetween)->Position[1] >= ymin && (*itNodeInBetween)->Position[1] <= ymax){
 						(*itNodeInBetween)->onFoldInitiation = true;
-						//cout<<"adding node in between "<<(*itNodeInBetween)->Id<<endl;
+						//std::cout<<"adding node in between "<<(*itNodeInBetween)->Id<<std::endl;
 						if((*itNodeInBetween)->attachedToPeripodial){
-							cout<<" Releasing peripodial from node "<<(*itNodeInBetween)->Id<<" as in between"<<endl;
+							std::cout<<" Releasing peripodial from node "<<(*itNodeInBetween)->Id<<" as in between"<<std::endl;
 							for (int j=0;j<nDim;++j){
 								double dof =0;
 								dof = (*itNodeInBetween)->Id * nDim+j;
@@ -7921,12 +7650,12 @@ void 	Simulation::assignFoldRegionAndReleasePeripodial(Node* NodeMaster, Node* N
 	for (int j=0;j<nDim;++j){
 		double dof =0;
 		if (NodeMaster->attachedToPeripodial){
-			cout<<"Releasing peripodial from node "<< NodeMaster->Id<<" via "<<NodeSlave->Id <<endl;
+			std::cout<<"Releasing peripodial from node "<< NodeMaster->Id<<" via "<<NodeSlave->Id <<std::endl;
 			dof = NodeMaster->Id * nDim+j;
 			NRSolver->cleanPeripodialBindingFromMaster(dof, Nodes);
 		}
 		if (NodeSlave->attachedToPeripodial){
-			cout<<"Releasing peripodial from node "<< NodeSlave->Id<<" via "<<NodeMaster->Id <<endl;
+			std::cout<<"Releasing peripodial from node "<< NodeSlave->Id<<" via "<<NodeMaster->Id <<std::endl;
 			dof = NodeSlave->Id * nDim+j;
 			NRSolver->cleanPeripodialBindingFromMaster(dof, Nodes);
 		}
@@ -7936,12 +7665,11 @@ void 	Simulation::assignFoldRegionAndReleasePeripodial(Node* NodeMaster, Node* N
 }
 
 
-
 void Simulation::detectPacingNodes(){
-    /**
-     * The current distance of node-node packing is dependent on the local average side length and
-     * is sored in a 10x5 grid Simulation#packingDetectionThresholdGrid.
-     */
+	/**
+	 * The current distance of node-node packing is dependent on the local average side length and
+	 * is sored in a 10x5 grid Simulation#packingDetectionThresholdGrid.
+	 */
 	double periAverageSideLength = 0,colAverageSideLength = 0;
 	getAverageSideLength(periAverageSideLength, colAverageSideLength);
 
@@ -7949,11 +7677,8 @@ void Simulation::detectPacingNodes(){
 		colAverageSideLength = (periAverageSideLength+colAverageSideLength)/2.0;
 	}
 	double packingDetectionThresholdGridSq[10][5];
-	for (int i=0;i<10;++i){
-		for(int j=0;j<5;++j){
-			// 0.4*1.2 normal packing detection value
-			// 0.25 is stable with clashes
-			// 0.333
+	for (size_t i=0;i<10;++i){
+		for(size_t j=0;j<5;++j){
 			packingDetectionThresholdGrid[i][j] = 0.4 * packingDetectionThresholdGrid[i][j];
 			packingDetectionThresholdGridSq[i][j] = packingDetectionThresholdGrid[i][j]*packingDetectionThresholdGrid[i][j];
 		}
@@ -7966,9 +7691,7 @@ void Simulation::detectPacingNodes(){
 	pacingNodeCouples0.clear();
 	pacingNodeCouples1.clear();
 	pacingNodeCouplesHaveAdhered.clear();
-	initialWeightPointx.clear();
-	initialWeightPointy.clear();
-	initialWeightPointz.clear();
+	 //not using range based loops here to ensure openMP comaptibility
 	#ifndef DO_NOT_USE_OMP
 	/** If DO_NOT_USE_OMP is not defined,I will be using omp. This
 	 * is necessary as omp is not set up on mac
@@ -7977,158 +7700,100 @@ void Simulation::detectPacingNodes(){
 	omp_set_num_threads(maxThreads);
 	#pragma omp parallel for
 	#endif
-	for (vector<ShapeBase*>::iterator itEle = Elements.begin(); itEle<Elements.end(); ++itEle){
-		if ((*itEle)->tissueType == 0 && ((*itEle)->tissuePlacement == 1 || (*itEle)->spansWholeTissue)){
+	for(std::vector<std::unique_ptr<ShapeBase>>::iterator itElement = Elements.begin(); itElement <Elements.end(); ++itElement){
+		if ((*itElement)->tissueType == 0 && ((*itElement)->tissuePlacement == 1 || (*itElement)->spansWholeTissue)){
 			//columnar element at the apical surface or spans whole tissue
-			(*itEle)->calculateApicalNormalCurrentShape();
+			(*itElement)->calculateApicalNormalCurrentShape();
 		}
 	}
-	//Added for parallelisation:
-	//node based only:
-	const int nArray = 16; //the size of array that I will divide the elements into.
-	int parallellisationSegmentSize = ceil(nNodes/nArray);
-	if (parallellisationSegmentSize<1){
-		parallellisationSegmentSize =1;
-	}
-	const int nSegments = ceil(nNodes/parallellisationSegmentSize); //this does not need to be the same as desired size
-	//if there are 5 nodes and I want 16 segments, the actual nSegments will be 5.
-	const int segmentBoundariesArraySize = nSegments+1;
-	int parallellisationSegmentBoundaries[segmentBoundariesArraySize];
-	parallellisationSegmentBoundaries[0] = 0;
-	parallellisationSegmentBoundaries[segmentBoundariesArraySize-1] = nNodes;
-	for (int i=1; i<segmentBoundariesArraySize-1; ++i){
-		parallellisationSegmentBoundaries[i] = i*parallellisationSegmentSize;
-	}
-	vector <vector<int> > arrayForParallelisationPacingNodeCouples0(nSegments, vector <int>(0));
-	vector <vector<int> > arrayForParallelisationPacingNodeCouples1(nSegments, vector <int>(0));
-	vector <vector<double> > arrayForParallelisationInitialWeightPointx(nSegments, vector <double>(0));
-	vector <vector<double> > arrayForParallelisationInitialWeightPointy(nSegments, vector <double>(0));
-	vector <vector<double> > arrayForParallelisationInitialWeightPointz(nSegments, vector <double>(0));
-	//parallelise this loop:
-	//cout<<" at parallelisation loop for packing, within detectPacingNodes"<<endl;
-	for (int a =0; a<nSegments; ++a){
-		int initialpoint = parallellisationSegmentBoundaries[a];
-		int breakpoint =  parallellisationSegmentBoundaries[a+1];
-		//cout<<" a = "<<a<<" initialpoint: "<<initialpoint<<" breakpoint "<<breakpoint<<" nNodes: "<<nNodes<<endl;
-		for (vector<Node*>::iterator itNode=Nodes.begin()+ initialpoint; itNode<Nodes.begin()+breakpoint; ++itNode){
-			bool NodeHasPacking = (*itNode)->checkIfNodeHasPacking();
-			if (NodeHasPacking){//702 - 596
-				std::array<double,3> pos = (*itNode)->getCurrentPosition();
-				int masterXGridIndex = floor( (pos[0] - boundingBox[0][0])/boundingBoxSize[0] );
-				int masterYGridIndex = floor( (pos[1] - boundingBox[0][1])/boundingBoxSize[1] );
-				t2 = packingDetectionThresholdGridSq[masterXGridIndex][masterYGridIndex];
-				for (vector<Node*>::iterator itNodeSlave=itNode+1; itNodeSlave<Nodes.end(); ++itNodeSlave){
-					bool SlaveNodeHasPacking = (*itNodeSlave)->checkIfNodeHasPacking();
-					//bool nodesOnSeperateSurfaces = (*itNodeSlave)->tissueType != (*itNode)->tissueType;
-					//if (SlaveNodeHasPacking && nodesOnSeperateSurfaces){
-					if (SlaveNodeHasPacking){
-						if ((*itNode)->tissuePlacement == (*itNodeSlave)->tissuePlacement){
-							//nodes can pack, are they connected?
-							bool neigbours = (*itNode)->isMyNeig((*itNodeSlave)->Id);
-							if (neigbours){
-								continue;
-							}
-							//check if the master node is in the collapsed list?
-							//the vector is sorted, as I sort it to remove duplicates
-							if (binary_search((*itNode)->collapsedWith.begin(), (*itNode)->collapsedWith.end(),(*itNodeSlave)->Id)){
-								//the couple is already collapsed:
-								continue;
-							}
-							//check if the collapsed nodes of master are neigs of slave
-							neigbours = (*itNode)->isNeigWithMyCollapsedNodes((*itNodeSlave)->Id,Nodes);
-							if (neigbours){
-								continue;
-							}
-							neigbours = (*itNodeSlave)->isNeigWithMyCollapsedNodes((*itNode)->Id,Nodes);
-							if (neigbours){
-								continue;
-							}
-							//the nodes can potentially pack, are they close enough?
-							std::array<double,3> posSlave = (*itNodeSlave)->getCurrentPosition();
-							double dx = pos[0] - posSlave[0];
-							double dy = pos[1] - posSlave[1];
-							double dz = pos[2] - posSlave[2];
-							double d2 = dx*dx + dy*dy + dz*dz;
-							//if packing is between peripodial and columnar:
-							//I will stsrt detecting these much earlier
-							double tissueTypeDistanceSqMultiplier = 1.0;
-							if (   ( (*itNodeSlave)->tissueType ==1 && (*itNode)->tissueType == 0)
-								|| ( (*itNode)->tissueType ==1 && (*itNodeSlave)->tissueType == 0) ){
-								tissueTypeDistanceSqMultiplier=9.0; //2*2
-							}
-							if (d2<t2*tissueTypeDistanceSqMultiplier){
-								//close enough for packing , add to list:
-								arrayForParallelisationPacingNodeCouples0[a].push_back((*itNode)->Id);
-								arrayForParallelisationPacingNodeCouples1[a].push_back((*itNodeSlave)->Id);
-								double d = pow (d2,0.5);
-								arrayForParallelisationInitialWeightPointx[a].push_back(dx/d);
-								arrayForParallelisationInitialWeightPointy[a].push_back(dy/d);
-								arrayForParallelisationInitialWeightPointz[a].push_back(dz/d);
-							}
-							bool checkForCurvedRegions = false;
+	for (auto itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+		bool NodeHasPacking = (*itNode)->checkIfNodeHasPacking();
+		if (NodeHasPacking){
+			std::array<double,3> pos = (*itNode)->getCurrentPosition();
+			int masterXGridIndex = floor( (pos[0] - boundingBox[0][0])/boundingBoxSize[0] );
+			int masterYGridIndex = floor( (pos[1] - boundingBox[0][1])/boundingBoxSize[1] );
+			t2 = packingDetectionThresholdGridSq[masterXGridIndex][masterYGridIndex];
+			for (auto itNodeSlave=itNode+1; itNodeSlave<Nodes.end(); ++itNodeSlave){
+				bool SlaveNodeHasPacking = (*itNodeSlave)->checkIfNodeHasPacking();
+				if (SlaveNodeHasPacking){
+					if ((*itNode)->tissuePlacement == (*itNodeSlave)->tissuePlacement){
+						//nodes can pack, are they connected?
+						bool neigbours = (*itNode)->isMyNeig((*itNodeSlave)->Id);
+						if (neigbours){
+							continue;
+						}
+						//check if the master node is in the collapsed list?
+						//the vector is sorted, as I sort it to remove duplicates
+						if (binary_search((*itNode)->collapsedWith.begin(), (*itNode)->collapsedWith.end(),(*itNodeSlave)->Id)){
+							//the couple is already collapsed:
+							continue;
+						}
+						//check if the collapsed nodes of master are neigs of slave
+						neigbours = (*itNode)->isNeigWithMyCollapsedNodes((*itNodeSlave)->Id,Nodes);
+						if (neigbours){
+							continue;
+						}
+						neigbours = (*itNodeSlave)->isNeigWithMyCollapsedNodes((*itNode)->Id,Nodes);
+						if (neigbours){
+							continue;
+						}
+						//the nodes can potentially pack, are they close enough?
+						std::array<double,3> posSlave = (*itNodeSlave)->getCurrentPosition();
+						double dx = pos[0] - posSlave[0];
+						double dy = pos[1] - posSlave[1];
+						double dz = pos[2] - posSlave[2];
+						double d2 = dx*dx + dy*dy + dz*dz;
+						if (d2<t2){
+							//close enough for packing , add to list:
+							pacingNodeCouples0.push_back((*itNode)->Id);
+							pacingNodeCouples1.push_back((*itNodeSlave)->Id);
+							pacingNodeCouplesHaveAdhered.push_back(false);
+						}
+						bool checkForCurvedRegions = false;
 
-							double curveIdentificationThresholdSq = packingDetectionThresholdGrid[masterXGridIndex][masterYGridIndex];
-							curveIdentificationThresholdSq *= curveIdentificationThresholdSq;
-							curveIdentificationThresholdSq *=9;//0.625;
-							if (d2<curveIdentificationThresholdSq){
-								if (thereIsEmergentEllipseMarking && (!(*itNode)->onFoldInitiation || !(*itNodeSlave)->onFoldInitiation) ){
-									//only check if the nodes are not covered by emergent ellipse bands
-									checkForCurvedRegions=true;
-								}
-								else if (adherePeripodialToColumnar && ((*itNode)->attachedToPeripodial || (*itNodeSlave)->attachedToPeripodial)){
-									//only check if one of the nodes was attached to peripodial
-									checkForCurvedRegions=true;
-								}
+						double curveIdentificationThresholdSq = packingDetectionThresholdGrid[masterXGridIndex][masterYGridIndex];
+						curveIdentificationThresholdSq *= curveIdentificationThresholdSq;
+						curveIdentificationThresholdSq *=9;//0.625;
+						if (d2<curveIdentificationThresholdSq){
+							if (thereIsEmergentEllipseMarking && (!(*itNode)->onFoldInitiation || !(*itNodeSlave)->onFoldInitiation) ){
+								//only check if the nodes are not covered by emergent ellipse bands
+								checkForCurvedRegions=true;
 							}
-							if (checkForCurvedRegions){
-								//cout<<" check for curved regions active"<<endl;
-								int elementIdMaster = (*itNode)->connectedElementIds[0];
-								int elementIdSlave = (*itNodeSlave)->connectedElementIds[0];
+						}
+						if (checkForCurvedRegions){
+							//std::cout<<" check for curved regions active"<<std::endl;
+							int elementIdMaster = (*itNode)->connectedElementIds[0];
+							int elementIdSlave = (*itNodeSlave)->connectedElementIds[0];
 
-								double dotP = Elements[elementIdSlave]->dotProduct3D(Elements[elementIdMaster]->apicalNormalCurrentShape,Elements[elementIdSlave]->apicalNormalCurrentShape);
-								//cout<<"dotp: "<<dotP<<endl;
-								if (dotP <0){
-									//normals point opposite directions
-									//do they face each other?
-									bool releaseNodes = false;
-									double *connectingVec = new double[3];
-									for (int dimIter=0; dimIter<3; ++dimIter){
-										connectingVec[dimIter] = (*itNode)->Position[dimIter] - (*itNodeSlave)->Position[dimIter];
-									}
-									double dotPmaster = Elements[elementIdMaster]->dotProduct3D(connectingVec,Elements[elementIdMaster]->apicalNormalCurrentShape);
-									if (dotPmaster >0 ){
+							double dotP = Elements[elementIdSlave]->dotProduct3D(Elements[elementIdMaster]->apicalNormalCurrentShape,Elements[elementIdSlave]->apicalNormalCurrentShape);
+							//std::cout<<"dotp: "<<dotP<<std::endl;
+							if (dotP <0){
+								//normals point opposite directions
+								//do they face each other?
+								bool releaseNodes = false;
+								std::array<double,3> connectingVec = {0.0};
+								for (int dimIter=0; dimIter<3; ++dimIter){
+									connectingVec[dimIter] = (*itNode)->Position[dimIter] - (*itNodeSlave)->Position[dimIter];
+								}
+								double dotPmaster = Elements[elementIdMaster]->dotProduct3D(connectingVec,Elements[elementIdMaster]->apicalNormalCurrentShape);
+								if (dotPmaster >0 ){
+									releaseNodes = true;
+								}
+								else{
+									double dotPslave = Elements[elementIdSlave]->dotProduct3D(connectingVec,Elements[elementIdSlave]->apicalNormalCurrentShape);
+									if (dotPslave>0){
 										releaseNodes = true;
 									}
-									else{
-										double dotPslave = Elements[elementIdSlave]->dotProduct3D(connectingVec,Elements[elementIdSlave]->apicalNormalCurrentShape);
-										if (dotPslave>0){
-											releaseNodes = true;
-										}
-									}
-									if (!releaseNodes){
-										continue;
-									}
-									assignFoldRegionAndReleasePeripodial((*itNode),(*itNodeSlave));
 								}
+								if (!releaseNodes){
+									continue;
+								}
+								assignFoldRegionAndReleasePeripodial((*itNode).get(),(*itNodeSlave).get());
 							}
 						}
 					}
 				}
 			}
-		}
-		//calculate packing here
-	}
-	//outside parallellisation, need to combine the nodes:
-	for (int a =0; a<nSegments-1; ++a){
-		int n = arrayForParallelisationPacingNodeCouples0[a].size();
-		for (int i=0; i<n; ++i){
-			pacingNodeCouples0.push_back(arrayForParallelisationPacingNodeCouples0[a][i]);
-			pacingNodeCouples1.push_back(arrayForParallelisationPacingNodeCouples1[a][i]);
-			pacingNodeCouplesHaveAdhered.push_back(false);
-			initialWeightPointx.push_back(arrayForParallelisationInitialWeightPointx[a][i]);
-			initialWeightPointy.push_back(arrayForParallelisationInitialWeightPointy[a][i]);
-			initialWeightPointz.push_back(arrayForParallelisationInitialWeightPointz[a][i]);
-			//cout<<"packing nodes: "<<pacingNodeCouples0.back()<<" "<<pacingNodeCouples1.back()<<endl;
 		}
 	}
 }
@@ -8140,7 +7805,7 @@ void Simulation::addPackingForces(gsl_matrix* gExt){
      * accordingly.
      */
 	double sumPack[3] = {0.0,0.0,0.0};
-	for (int j=0; j<nNodes; ++j){
+	for (size_t j=0; j<nNodes; ++j){
 		double Fx = PackingForces[j][0];
 		double Fy = PackingForces[j][1];
 		double Fz = PackingForces[j][2];
@@ -8158,9 +7823,8 @@ void Simulation::addPackingForces(gsl_matrix* gExt){
 }
 
 void Simulation::updateElementPositions(){
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		(*itElement)->updatePositions(Nodes);
+	for(const auto& itElement : Elements){
+		itElement->updatePositions(Nodes);
 	}
 }
 
@@ -8172,7 +7836,7 @@ void Simulation::updateElementPositionsSingle(size_t i ){
 void Simulation::assignTips(){
 	double xTips[2] ={ 10000, -10000};
 	double yTips[2] ={ 10000, -10000};
-	for (int i =0; i<nNodes; ++i){
+	for (size_t i =0; i<nNodes; ++i){
 		if (Nodes[i]->tissuePlacement == 0 && Nodes[i]->tissueType == 0 ) { //taking the basal nodes of the columnar layer only
 			if (Nodes[i]->Position[0] < xTips[0] ){
 				dorsalTipIndex = i;
@@ -8191,8 +7855,8 @@ void Simulation::assignTips(){
 				yTips[1] = Nodes[i]->Position[1];
 			}
 		}
-		//cout<<"DV Tip node indexes: "<<dorsalTipIndex<<" "<<ventralTipIndex<<endl;
-		//cout<<"AP Tip node indexes: "<<anteriorTipIndex<<" "<<posteriorTipIndex<<endl;
+		//std::cout<<"DV Tip node indexes: "<<dorsalTipIndex<<" "<<ventralTipIndex<<std::endl;
+		//std::cout<<"AP Tip node indexes: "<<anteriorTipIndex<<" "<<posteriorTipIndex<<std::endl;
 	}
 	//I have identified the tips assuming the tissue is represented in full.
 	//If there is symmetry in the input, then I will need to correct this.
@@ -8202,7 +7866,7 @@ void Simulation::assignTips(){
 		double delta = 0.02;
 		//the ventralTipIndex is correct, it is at the minimum of x axis. The dorsalTipIndex is at x=0. but there are a series of nodes at x=0,
 		//and the selected one should be at y=0 too.
-		for (int i =0; i<nNodes; ++i){
+		for (size_t i =0; i<nNodes; ++i){
 				if (Nodes[i]->tissuePlacement == 0 && Nodes[i]->tissueType == 0 ) { //taking the basal nodes of the columnar layer only
 					if (Nodes[i]->Position[0]< delta &&  Nodes[i]->Position[0]> -delta){
 						//this node is at x = 0, is it at y = 0 too?
@@ -8218,7 +7882,7 @@ void Simulation::assignTips(){
 		double delta = 0.02;
 		//the posteriorTipIndex is correct, it is at the maximum of y axis. The anteriorTipIndex is at y=0. but there are a series of nodes at y=0,
 		//and the selected one should be at x=0 too.
-		for (int i =0; i<nNodes; ++i){
+		for (size_t i =0; i<nNodes; ++i){
 				if (Nodes[i]->tissuePlacement == 0 && Nodes[i]->tissueType == 0 ) { //taking the basal nodes of the columnar layer only
 					if (Nodes[i]->Position[1]< delta &&  Nodes[i]->Position[1]> -delta){
 						//this node is at x = 0, is it at y = 0 too?
@@ -8230,8 +7894,8 @@ void Simulation::assignTips(){
 				}
 		}
 	}
-	cout<<"Tip node indexes - dorsalTipIndex: "<<dorsalTipIndex<<" ventralTipIndex: "<<ventralTipIndex<<endl;
-	cout<<"Tip node indexes - anteriorTipIndex: "<<anteriorTipIndex<<" posteriorTipIndex: "<<posteriorTipIndex<<endl;
+	std::cout<<"Tip node indexes - dorsalTipIndex: "<<dorsalTipIndex<<" ventralTipIndex: "<<ventralTipIndex<<std::endl;
+	std::cout<<"Tip node indexes - anteriorTipIndex: "<<anteriorTipIndex<<" posteriorTipIndex: "<<posteriorTipIndex<<std::endl;
 }
 
 void Simulation::alignTissueDVToXPositive(){
@@ -8247,8 +7911,8 @@ void Simulation::alignTissueDVToXPositive(){
 		for (int i=0;i<3;++i){
 			u[i] = Nodes[ventralTipIndex]->Position[i] - Nodes[dorsalTipIndex]->Position[i];
 		}
-		//cout<<" ventralTipIndex: "<<ventralTipIndex<<" dorsalTipIndex "<<dorsalTipIndex<<endl;
-		double dummy = Elements[0]->normaliseVector3D(u);
+		//std::cout<<" ventralTipIndex: "<<ventralTipIndex<<" dorsalTipIndex "<<dorsalTipIndex<<std::endl;
+		(void) Elements[0]->normaliseVector3D(u);
 		v[0]=1;v[1]=0;v[2]=0;
 		double c, s;
 		Elements[0]->calculateRotationAngleSinCos(u,v,c,s);
@@ -8258,19 +7922,18 @@ void Simulation::alignTissueDVToXPositive(){
 		rotMat = new double[9]; //matrix is written in one row
 		Elements[0]->calculateRotationAxis(u,v,rotAx,c);	//calculating the rotation axis that is perpendicular to both u and v
 		Elements[0]->constructRotationMatrix(c,s,rotAx,rotMat);
-		for(int i=1;i<nNodes;++i){
-			for(int j = 0; j< Nodes[i]->nDim; ++j){
+		for(size_t i=1;i<nNodes;++i){
+			for(size_t j = 0; j< Nodes[i]->nDim; ++j){
 				u[j] = Nodes[i]->Position[j] - Nodes[0]->Position[j];
 			}
 			Elements[0]->rotateVectorByRotationMatrix(u,rotMat);
 
-			for(int j = 0; j< Nodes[i]->nDim; ++j){
+			for(size_t j = 0; j< Nodes[i]->nDim; ++j){
 				Nodes[i]->Position[j] = u[j] + Nodes[0]->Position[j];
 			}
 		}
-		vector<ShapeBase*>::iterator itElement;
-		for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-			(*itElement)->updatePositions(Nodes);
+		for(const auto& itElement : Elements){
+			itElement->updatePositions(Nodes);
 		}
 		delete[] rotAx;
 		delete[] rotMat;
@@ -8287,9 +7950,9 @@ void Simulation::alignTissueAPToXYPlane(){
 	for (int i=0;i<3;++i){
 		u[i] = Nodes[anteriorTipIndex]->Position[i] - Nodes[posteriorTipIndex]->Position[i];
 	}
-	double dummy = Elements[0]->normaliseVector3D(u);
+	(void) Elements[0]->normaliseVector3D(u);
 	v[0]=u[0];v[1]=u[1];v[2]=0;
-	dummy = Elements[0]->normaliseVector3D(v);
+	(void) Elements[0]->normaliseVector3D(v);
 	double c, s;
 	Elements[0]->calculateRotationAngleSinCos(u,v,c,s);
 	double *rotAx;
@@ -8298,18 +7961,17 @@ void Simulation::alignTissueAPToXYPlane(){
 	rotMat = new double[9]; //matrix is written in one row
 	Elements[0]->calculateRotationAxis(u,v,rotAx,c);	//calculating the rotation axis that is perpendicular to both u and v
 	Elements[0]->constructRotationMatrix(c,s,rotAx,rotMat);
-	for(int i=0;i<nNodes;++i){
-		for(int j = 0; j< Nodes[i]->nDim; ++j){
+	for(size_t i=0;i<nNodes;++i){
+		for(size_t j = 0; j< Nodes[i]->nDim; ++j){
 			u[j] = Nodes[i]->Position[j];
 		}
 		Elements[0]->rotateVectorByRotationMatrix(u,rotMat);
-		for(int j = 0; j< Nodes[i]->nDim; ++j){
+		for(size_t j = 0; j< Nodes[i]->nDim; ++j){
 			Nodes[i]->Position[j] = u[j];
 		}
 	}
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		(*itElement)->updatePositions(Nodes);
+	for(const auto& itElement : Elements){
+		itElement->updatePositions(Nodes);
 	}
 	delete[] rotAx;
 	delete[] rotMat;
@@ -8334,7 +7996,7 @@ void Simulation::calculateDVDistance(){
 	double dmag = d[0]+d[1]+d[2];
 	dmag = pow(dmag,0.5);
 	outputFile<<"time: "<<currSimTimeSec<<" DV distance is: "<<dmag<<" ";
-	cout<<"time: "<<currSimTimeSec<<" DV distance is: "<<dmag<<" ";
+	std::cout<<"time: "<<currSimTimeSec<<" DV distance is: "<<dmag<<" ";
 	if (symmetricY){
 		for (int i=0;i<3;++i){
 			d[i] = Nodes[posteriorTipIndex]->Position[i];
@@ -8349,28 +8011,21 @@ void Simulation::calculateDVDistance(){
 	}
 	dmag = d[0]+d[1]+d[2];
 	dmag = pow(dmag,0.5);
-	outputFile<<" AP distance is: "<<dmag<<endl;
-	cout<<" AP distance is: "<<dmag<<endl;
-	//cout<<"time: "<<currSimTimeSec<<" Node 0 position: "<<Nodes[0]->Position[0]<<" "<<Nodes[0]->Position[1]<<" "<<Nodes[0]->Position[2]<<endl;
-	//cout<<"TIPS: "<<dorsalTipIndex<<" "<<ventralTipIndex<<" "<<anteriorTipIndex<<" "<<posteriorTipIndex<<endl;
+	outputFile<<" AP distance is: "<<dmag<<std::endl;
+	std::cout<<" AP distance is: "<<dmag<<std::endl;
+	//std::cout<<"time: "<<currSimTimeSec<<" Node 0 position: "<<Nodes[0]->Position[0]<<" "<<Nodes[0]->Position[1]<<" "<<Nodes[0]->Position[2]<<std::endl;
+	//std::cout<<"TIPS: "<<dorsalTipIndex<<" "<<ventralTipIndex<<" "<<anteriorTipIndex<<" "<<posteriorTipIndex<<std::endl;
 }
 
 void Simulation::resetForces(bool resetPacking){
-	int dim = 3;
-	//n nodes
-	for (int j=0;j<nNodes;++j){
-		//3 dimensions
-		for (int k=0;k<dim;++k){
-			SystemForces[j][k]=0.0;
-			//packing forces should be reset at the beginning of the step, but not during NR iterations
-			if (resetPacking){
-				//PackingForcesTwoStepsAgoStep[j][k] = PackingForcesPreviousStep[j][k];
-				//PackingForcesPreviousStep[j][k] = PackingForces[j][k];
-				PackingForces[j][k]=0.0;
-			}
-			if (recordForcesOnFixedNodes){
-				FixedNodeForces[j][k]=0.0;
-			}
+	for (size_t j=0;j<nNodes;++j){
+		//3 dimensions set to zero
+		std::fill(SystemForces[j].begin(), SystemForces[j].end(), 0);
+		if (resetPacking){
+			std::fill(PackingForces[j].begin(), PackingForces[j].end(), 0);
+		}
+		if (recordForcesOnFixedNodes){
+			std::fill(FixedNodeForces[j].begin(), FixedNodeForces[j].end(), 0);
 		}
 	}
 }
@@ -8379,27 +8034,26 @@ void Simulation::resetForces(bool resetPacking){
 void Simulation::calculateApicalSize(){
 	double sizeLim[2][2] = {{0.0,0.0},{0.0,0.0}};
 	bool found[2][2] = {{false,false},{false,false}};
-	vector<Node*>::iterator itNode;
-	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-		if ((*itNode)->tissueType == 0 && (*itNode)->tissuePlacement == 1){ //checking only columnar apical layer nodes
+	for (auto& itNode : Nodes){
+		if (itNode->tissueType == 0 && itNode->tissuePlacement == 1){ //checking only columnar apical layer nodes
 			for (int i=0; i<2; ++i){
-				if ( (*itNode)->Position[i] < sizeLim[0][i] ){
-					sizeLim[0][i] = (*itNode)->Position[i];
+				if ( itNode->Position[i] < sizeLim[0][i] ){
+					sizeLim[0][i] = itNode->Position[i];
 					found[0][i] = true;
 				}
-				else if((*itNode)->Position[i]>sizeLim[1][i]){
-					sizeLim[1][i] = (*itNode)->Position[i];
+				else if(itNode->Position[i]>sizeLim[1][i]){
+					sizeLim[1][i] = itNode->Position[i];
 					found[1][i] = true;
 				}
 			}
 		}
 	}
 	if (!found[0][0] && !found[0][1] && !found[1][0] && !found[1][1]){
-		cerr<<" error in apical bounding  box calculation! Found? :"<<found[0][0]<<" "<<found[0][1]<<" "<<found[1][0]<<" "<<found[1][1]<<endl;
+		std::cerr<<" error in apical bounding  box calculation! Found? :"<<found[0][0]<<" "<<found[0][1]<<" "<<found[1][0]<<" "<<found[1][1]<<std::endl;
 	}
 	double DV = sizeLim[1][0] - sizeLim[0][0];
 	double AP = sizeLim[1][1] - sizeLim[0][1];
-	outputFile<<"At time: "<<currSimTimeSec<<" apical bounding box size: "<<DV<<" "<<AP<<endl;
+	outputFile<<"At time: "<<currSimTimeSec<<" apical bounding box size: "<<DV<<" "<<AP<<std::endl;
 }
 
 void Simulation::calculateBoundingBox(){
@@ -8410,106 +8064,35 @@ void Simulation::calculateBoundingBox(){
 	boundingBox[1][1] = -100000.0;	//upper right y
 	boundingBox[1][2] = -100000.0;	//upper z
 	bool found[2][3] = {{false,false,false},{false,false,false}};
-	vector<Node*>::iterator itNode;
-	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+	for (auto& itNode : Nodes){
 		//Do not count node if it is part of an explicit ECM:
-		if(!(*itNode)->allOwnersECMMimicing){
-		//if (!(*itNode)->allOwnersAblated){
-			//There is at least one element owning this node that is not ablated
-		//if ((*itNode)->tissueType == 0 || (*itNode)->tissueType==1) {	//only consider peripodial or columnar nodes, not the linkers
-			for (int i=0; i<(*itNode)->nDim; ++i){
-				if ( (*itNode)->Position[i] < boundingBox[0][i] ){
-					boundingBox[0][i] = (*itNode)->Position[i];
+		if(!itNode->allOwnersECMMimicing){
+			for (size_t i=0; i<itNode->nDim; ++i){
+				if ( itNode->Position[i] < boundingBox[0][i] ){
+					boundingBox[0][i] = itNode->Position[i];
 					found[0][i] = true;
 				}
-				else if((*itNode)->Position[i]>boundingBox[1][i]){
-					boundingBox[1][i] = (*itNode)->Position[i];
+				else if(itNode->Position[i]>boundingBox[1][i]){
+					boundingBox[1][i] = itNode->Position[i];
 					found[1][i] = true;
 				}
 			}
 		}
-		//}
-		//}
 	}
-	//cout<<"calculating bounding box, symmetricity x & y: "<<symmetricX<<" "<<symmetricY<<endl;
-	//cout<<"bounding box before update: "<<boundingBox[0][0]<<" "<<boundingBox[0][1]<<" "<<boundingBox[1][0]<<" "<<boundingBox[1][1]<<endl;
 	if (symmetricY){
 		boundingBox[0][1] = (-1.0)*boundingBox[1][1]; //if there is Y symmetricity, then the bounding box is extended to double the size in y
 	}
-	cout<<"bounding box after update: "<<boundingBox[0][0]<<" "<<boundingBox[0][1]<<" "<<boundingBox[1][0]<<" "<<boundingBox[1][1]<<endl;
+	std::cout<<"bounding box after update: "<<boundingBox[0][0]<<" "<<boundingBox[0][1]<<" "<<boundingBox[1][0]<<" "<<boundingBox[1][1]<<std::endl;
 	for (int i=0; i<3; ++i){
 		boundingBoxSize[i] = boundingBox[1][i] - boundingBox[0][i];
 	}
 	if (!found[0][0] && !found[0][1] && !found[0][2] && !found[1][0] && !found[1][1] && !found[1][2]){
-		cerr<<" error in bounding box calculation! Found? :"<<found[0][0]<<" "<<found[0][1]<<" "<<found[0][2]<<" "<<found[1][0]<<" "<<found[1][1]<<" "<<found[1][2]<<endl;
+		std::cerr<<" error in bounding box calculation! Found? :"<<found[0][0]<<" "<<found[0][1]<<" "<<found[0][2]<<" "<<found[1][0]<<" "<<found[1][1]<<" "<<found[1][2]<<std::endl;
 	}
 }
 
-/*
-void Simulation::calculateColumnarLayerBoundingBox(){
-	columnarBoundingBox[0][0] =  100000.0;	//lower left x
-	columnarBoundingBox[0][1] =  100000.0;	//lower left y
-	columnarBoundingBox[0][2] =  100000.0;	//lower z
-	columnarBoundingBox[1][0] = -100000.0;	//upper right x
-	columnarBoundingBox[1][1] = -100000.0;	//upper right y
-	columnarBoundingBox[1][2] = -100000.0;	//upper z
-	bool found[2][3] = {{false,false,false},{false,false,false}};
-	vector<Node*>::iterator itNode;
-	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-		if ((*itNode)->tissueType == 0){ //checking only columnar layer nodes
-			for (int i=0; i<(*itNode)->nDim; ++i){
-				if ( (*itNode)->Position[i] < columnarBoundingBox[0][i] ){
-					columnarBoundingBox[0][i] = (*itNode)->Position[i];
-					found[0][i] = true;
-				}
-				else if((*itNode)->Position[i]>columnarBoundingBox[1][i]){
-					columnarBoundingBox[1][i] = (*itNode)->Position[i];
-					found[1][i] = true;
-				}
-			}
-		}
-	}
-	for (int i=0; i<3; ++i){
-		columnarBoundingBoxSize[i] = columnarBoundingBox[1][i] - columnarBoundingBox[0][i];
-	}
-	if (!found[0][0] && !found[0][1] && !found[0][2] && !found[1][0] && !found[1][1] && !found[1][2]){
-		cerr<<" error in bounding box calculation! Found? :"<<found[0][0]<<" "<<found[0][1]<<" "<<found[0][2]<<" "<<found[1][0]<<" "<<found[1][1]<<" "<<found[1][2]<<endl;
-	}
-}
-
-void Simulation::calculatePeripodialBoundingBox(){
-	peripodialBoundingBox[0][0] =  100000.0;	//lower left x
-	peripodialBoundingBox[0][1] =  100000.0;	//lower left y
-	peripodialBoundingBox[0][2] =  100000.0;	//lower z
-	peripodialBoundingBox[1][0] = -100000.0;	//upper right x
-	peripodialBoundingBox[1][1] = -100000.0;	//upper right y
-	peripodialBoundingBox[1][2] = -100000.0;	//upper z
-	bool found[2][3] = {{false,false,false},{false,false,false}};
-	vector<Node*>::iterator itNode;
-	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-		if ((*itNode)->tissueType != 0){ //checking any node that is not columnar
-			for (int i=0; i<(*itNode)->nDim; ++i){
-				if ( (*itNode)->Position[i] < peripodialBoundingBox[0][i] ){
-					peripodialBoundingBox[0][i] = (*itNode)->Position[i];
-					found[0][i] = true;
-				}
-				else if((*itNode)->Position[i]>peripodialBoundingBox[1][i]){
-					peripodialBoundingBox[1][i] = (*itNode)->Position[i];
-					found[1][i] = true;
-				}
-			}
-		}
-	}
-	for (int i=0; i<3; ++i){
-		peripodialBoundingBoxSize[i] = peripodialBoundingBox[1][i] - peripodialBoundingBox[0][i];
-	}
-	if (!found[0][0] && !found[0][1] && !found[0][2] && !found[1][0] && !found[1][1] && !found[1][2]){
-		cerr<<" error in bounding box calculation! Found? :"<<found[0][0]<<" "<<found[0][1]<<" "<<found[0][2]<<" "<<found[1][0]<<" "<<found[1][1]<<" "<<found[1][2]<<endl;
-	}
-}
-*/
 void Simulation::saveStep(){
-	outputFile<<"Saving step: "<< timestep<<" this is :"<<currSimTimeSec<<" sec ("<<currSimTimeSec/3600<<" hr )"<<endl;
+	outputFile<<"Saving step: "<< timestep<<" this is :"<<currSimTimeSec<<" sec ("<<currSimTimeSec/3600<<" hr )"<<std::endl;
 	writeSaveFileStepHeader();
 	writeNodes();
 	writeElements();
@@ -8521,7 +8104,6 @@ void Simulation::saveStep(){
 	writePhysicalProp();
 	writeGrowthRedistribution();
 	writeNodeBinding();
-	writeCollapseAndAdhesion();
 }
 
 void Simulation::writeSaveFileStepHeader(){
@@ -8529,7 +8111,7 @@ void Simulation::writeSaveFileStepHeader(){
 	saveFileMesh.precision(6);
 	saveFileMesh.width(10);
 	saveFileMesh<<currSimTimeSec;
-	saveFileMesh<<"==================================================="<<endl;
+	saveFileMesh<<"==================================================="<<std::endl;
 }
 
 void Simulation::writeSaveFileStepFooter(){
@@ -8537,12 +8119,12 @@ void Simulation::writeSaveFileStepFooter(){
 	saveFileMesh.precision(6);
 	saveFileMesh.width(10);
 	saveFileMesh<<currSimTimeSec;
-	saveFileMesh<<"============================================"<<endl;
+	saveFileMesh<<"============================================"<<std::endl;
 }
 
 void Simulation::writeNodes(){
-	saveFileMesh<<nNodes<<endl;
-	for (int i = 0; i<nNodes; ++i){
+	saveFileMesh<<nNodes<<std::endl;
+	for (size_t i = 0; i<nNodes; ++i){
 		if(Nodes[i]->nDim==2){
 			saveFileMesh.precision(10);saveFileMesh.width(20);
 			saveFileMesh<<Nodes[i]->Position[0];
@@ -8553,8 +8135,8 @@ void Simulation::writeNodes(){
 
 		}
 		else{
-			int ndim = Nodes[i]->nDim;
-			for (int j=0;j<ndim;++j){
+			size_t ndim = Nodes[i]->nDim;
+			for (size_t j=0;j<ndim;++j){
 				saveFileMesh.precision(10);saveFileMesh.width(20);
 				saveFileMesh<<Nodes[i]->Position[j];
 			}
@@ -8566,13 +8148,13 @@ void Simulation::writeNodes(){
 		saveFileMesh<<Nodes[i]->tissueType;
 		saveFileMesh.width(4);
 		saveFileMesh<<Nodes[i]->atCircumference;
-		saveFileMesh<<endl;
+		saveFileMesh<<std::endl;
 	}
 }
 
 void Simulation::writeElements(){
-	saveFileMesh<<nElements<<endl;
-	for (int i = 0; i<nElements; ++i){
+	saveFileMesh<<nElements<<std::endl;
+	for (size_t i = 0; i<nElements; ++i){
 		int shapetype = Elements[i]->getShapeType();
 		saveFileMesh.width(4);
 		saveFileMesh<<shapetype;
@@ -8583,31 +8165,30 @@ void Simulation::writeElements(){
 		}
 		saveFileMesh.width(4);
 		saveFileMesh<<Elements[i]->IsAblated;
-		int nodeNumber = Elements[i]->getNodeNumber();
+		size_t nodeNumber = Elements[i]->getNodeNumber();
 		int*  NodeIds = Elements[i]->getNodeIds();
-		for (int j = 0; j<nodeNumber; ++j ){
+		for (size_t j = 0; j<nodeNumber; ++j ){
 			saveFileMesh.width(9);saveFileMesh<<NodeIds[j];
 		}
-		int dim  = Elements[i]->getDim();
+		size_t dim  = Elements[i]->getDim();
 		double** refPos = Elements[i]->getReferencePos();
-		for (int j = 0; j<nodeNumber; ++j ){
-			for (int k = 0; k<dim; ++k ){
+		for (size_t j = 0; j<nodeNumber; ++j ){
+			for (size_t k = 0; k<dim; ++k ){
 				saveFileMesh.precision(4);saveFileMesh.width(15);
 				saveFileMesh<<refPos[j][k];
 			}
 		}
-		saveFileMesh<<endl;
+		saveFileMesh<<std::endl;
 	}
 }
 
 void Simulation::writeTensionCompression(){
 	//for (int i=0;i<6;++i){
-	//	cout<<" at timestep :"<< timestep<<" the plastic strains of element 0:	"<<Elements[0]->PlasticStrain(i)<<"	normal strain: 	"<<Elements[i]->Strain(0)<<endl;
+	//	std::cout<<" at timestep :"<< timestep<<" the plastic strains of element 0:	"<<Elements[0]->PlasticStrain(i)<<"	normal strain: 	"<<Elements[i]->Strain(0)<<std::endl;
 	//}
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+	for(const auto& itElement : Elements){
         for (int j=0; j<6; ++j){
-            double S = gsl_matrix_get((*itElement)->Strain,j,0);
+            double S = gsl_matrix_get(itElement->Strain,j,0);
             saveFileTensionCompression.write((char*) &S, sizeof S);
         }
     }
@@ -8617,10 +8198,9 @@ void Simulation::writeTensionCompression(){
 
 
 void Simulation::writeGrowthRedistribution(){
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		bool thereIsDistribution = (*itElement)->thereIsGrowthRedistribution;
-		bool shrinksElement = (*itElement)->growthRedistributionShrinksElement;
+	for(const auto& itElement : Elements){
+		bool thereIsDistribution = itElement->thereIsGrowthRedistribution;
+		bool shrinksElement = itElement->growthRedistributionShrinksElement;
 		saveFileGrowthRedistribution.write((char*) &thereIsDistribution, sizeof thereIsDistribution);
 		saveFileGrowthRedistribution.write((char*) &shrinksElement, sizeof shrinksElement);
 	}
@@ -8629,60 +8209,34 @@ void Simulation::writeGrowthRedistribution(){
 
 void Simulation::writeNodeBinding(){
 	//count slave dof:
-	//cout<<"writing node binding"<<endl;
+	//std::cout<<"writing node binding"<<std::endl;
 	vector<int> slaveDOFs, masterDOFs;
 	int counter = 0;
-	for (vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
+	for (auto& itNode : Nodes){
 		for (int i=0; i<3; ++i){
-			if ((*itNode)->slaveTo[i]>0){
-				int slavedof = 3*(*itNode)->Id + i;
-				int masterdof = 3*(*itNode)->slaveTo[i] + i;
+			if (itNode->slaveTo[i]>0){
+				int slavedof = 3*itNode->Id + i;
+				int masterdof = 3*itNode->slaveTo[i] + i;
 				slaveDOFs.push_back(slavedof);
 				masterDOFs.push_back(masterdof);
 				counter++;
 			}
 		}
 	}
-	/*saveFileNodeBinding.write((char*) &counter, sizeof counter);
-	for(int i=0;i<counter;++i){
-		int slave  =slaveDOFs[i];
-		int master = masterDOFs[i];
-		saveFileNodeBinding.write((char*) &slave, sizeof slave);
-		saveFileNodeBinding.write((char*) &master, sizeof master);
-		cout<<"slaveDOFs :"<<slaveDOFs[i]<<" masterDOFs "<<masterDOFs[i]<<endl;
-	}*/
-	saveFileNodeBinding<<counter<<" "<<endl;
+	saveFileNodeBinding<<counter<<" "<<std::endl;
 	for(int i=0;i<counter;++i){
 		int slave  =slaveDOFs[i];
 		int master = masterDOFs[i];
 		saveFileNodeBinding<<slave<<" ";
-		saveFileNodeBinding<<master<<" "<<endl;
-		//cout<<"slaveDOFs :"<<slaveDOFs[i]<<" masterDOFs "<<masterDOFs[i]<<endl;
-	}
-}
-
-void Simulation::writeCollapseAndAdhesion(){
-	//[adhered to] [# of collapsed partners] [ids of collapsed partners]
-	for (vector<Node*>::iterator itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-		saveFileCollapseAndAdhesion.write((char*) &(*itNode)->adheredTo, sizeof (*itNode)->adheredTo);
-		saveFileCollapseAndAdhesion.write((char*) &(*itNode)->positionUpdateOngoing, sizeof (*itNode)->positionUpdateOngoing);
-		saveFileCollapseAndAdhesion.write((char*) &(*itNode)->positionUpdateCounter, sizeof (*itNode)->positionUpdateCounter);
-		int n = (*itNode)->collapsedWith.size();
-		saveFileCollapseAndAdhesion.write((char*) &n, sizeof n);
-		for(int i=0;i<n;++i){
-			saveFileCollapseAndAdhesion.write((char*) &(*itNode)->collapsedWith[i], sizeof (*itNode)->collapsedWith[i]);
-		}
+		saveFileNodeBinding<<master<<" "<<std::endl;
+		//std::cout<<"slaveDOFs :"<<slaveDOFs[i]<<" masterDOFs "<<masterDOFs[i]<<std::endl;
 	}
 }
 
 void Simulation::writeGrowth(){
-    //for (int i=0;i<6;++i){
-    //	cout<<" at timestep :"<< timestep<<" the plastic strains of element 0:	"<<Elements[0]->PlasticStrain(i)<<"	normal strain: 	"<<Elements[i]->Strain(0)<<endl;
-    //}
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-        gsl_matrix* currFg = (*itElement)->getFg();
-        std::array<double,3> growthRate = (*itElement)->getGrowthRate();
+	for(const auto& itElement : Elements){
+        gsl_matrix* currFg = itElement->getFg();
+        std::array<double,3> growthRate = itElement->getGrowthRate();
         for (int j=0; j<3; ++j){
             for (int k=0; k<3; ++k){
                 double Fgjk = gsl_matrix_get(currFg,j,k);
@@ -8700,7 +8254,7 @@ void Simulation::writeGrowth(){
 
 void Simulation::writeForces(){
 	//Write system forces first, on a nodal basis
-	for (int i=0;i<nNodes;++i){
+	for (size_t i=0;i<nNodes;++i){
 		saveFileForces.write((char*) &SystemForces[i][0], sizeof SystemForces[i][0]);
 		saveFileForces.write((char*) &SystemForces[i][1], sizeof SystemForces[i][1]);
 		saveFileForces.write((char*) &SystemForces[i][2], sizeof SystemForces[i][2]);
@@ -8731,30 +8285,28 @@ void Simulation::writePacking(){
 }
 
 void Simulation::writePhysicalProp(){
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		double E = (*itElement)->getYoungModulus();
-		double interalVisc	= (*itElement)->getInternalViscosity();
-		double zRemodellingSoFar = (*itElement)->getZRemodellingSoFar();
+	for(const auto& itElement : Elements){
+		double E = itElement->getYoungModulus();
+		double interalVisc	= itElement->getInternalViscosity();
+		double zRemodellingSoFar = itElement->getZRemodellingSoFar();
 		saveFilePhysicalProp.write((char*) &E, sizeof E);
 		saveFilePhysicalProp.write((char*) &interalVisc, sizeof interalVisc);
 		saveFilePhysicalProp.write((char*) &zRemodellingSoFar, sizeof zRemodellingSoFar);
 	}
-	vector<Node*>::iterator itNode;
-	for (itNode=Nodes.begin(); itNode<Nodes.end(); ++itNode){
-		saveFilePhysicalProp.write((char*) &(*itNode)->externalViscosity[0], sizeof (*itNode)->externalViscosity[0]);
-		saveFilePhysicalProp.write((char*) &(*itNode)->externalViscosity[1], sizeof (*itNode)->externalViscosity[1]);
-		saveFilePhysicalProp.write((char*) &(*itNode)->externalViscosity[2], sizeof (*itNode)->externalViscosity[2]);
+	for (auto& itNode : Nodes){
+		saveFilePhysicalProp.write((char*) &itNode->externalViscosity[0], sizeof itNode->externalViscosity[0]);
+		saveFilePhysicalProp.write((char*) &itNode->externalViscosity[1], sizeof itNode->externalViscosity[1]);
+		saveFilePhysicalProp.write((char*) &itNode->externalViscosity[2], sizeof itNode->externalViscosity[2]);
 	}
 	saveFilePhysicalProp.flush();
 }
 
 void Simulation::calculateGrowth(){
-	//cout<<"Calculating Growth"<<endl;
+	//std::cout<<"Calculating Growth"<<std::endl;
 	cleanUpGrowthRates();
 	for (int i=0; i<nGrowthFunctions; ++i){
 		if (GrowthFunctions[i]->Type == 1){
-			//cout<<"Calculating Uniform Growth, function: "<<i<<endl;
+			//std::cout<<"Calculating Uniform Growth, function: "<<i<<std::endl;
 			calculateGrowthUniform(GrowthFunctions[i].get());
 		}
 		else if(GrowthFunctions[i]->Type == 2){
@@ -8764,41 +8316,36 @@ void Simulation::calculateGrowth(){
 			calculateGrowthGridBased(GrowthFunctions[i].get());
 		}
 	}
-	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		if ((*itElement)->isMutated){
-			(*itElement)->updateGrowthByMutation(dt);
+	for (auto& itElement : Elements){
+		if (itElement->isMutated){
+			itElement->updateGrowthByMutation(dt);
 		}
 	}
 }
 
 void Simulation::calculateShapeChange(){
 	cleanUpShapeChangeRates();
-	//cout<<"outside cleanUpShapeChangeRates"<<endl;
 	for (int i=0; i<nShapeChangeFunctions; ++i){
 		if (ShapeChangeFunctions[i]->Type == 1){
-			//cout<<"calling calculate Shape change"<<endl;
 			calculateShapeChangeUniform(ShapeChangeFunctions[i].get());
 		}
 		if (ShapeChangeFunctions[i]->Type == 2){
-			//cout<<"calling calculate Shape change"<<endl;
 			calculateShapeChangeMarkerEllipseBased(ShapeChangeFunctions[i].get());
 		}
 	}
 }
 
 void Simulation::cleanUpGrowthRates(){
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		(*itElement)->setGrowthRate(dt,0.0,0.0,0.0);
-		(*itElement)->updateGrowthIncrementFromRate();
+	for (auto& itElement : Elements){
+		itElement->setGrowthRate(dt,0.0,0.0,0.0);
+		itElement->updateGrowthIncrementFromRate();
 	}
 }
 
 void Simulation::cleanUpShapeChangeRates(){
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		(*itElement)->setShapeChangeRate(0.0,0.0,0.0,0.0,0.0,0.0);
-		(*itElement)->setShapeChangeInrementToIdentity();
+	for (auto& itElement : Elements){
+		itElement->setShapeChangeRate(0.0,0.0,0.0,0.0,0.0,0.0);
+		itElement->setShapeChangeInrementToIdentity();
 	}
 }
 
@@ -8807,14 +8354,13 @@ void Simulation::calculateShapeChangeMarkerEllipseBased (GrowthFunctionBase* cur
 			gsl_matrix* columnarShapeChangeIncrement = gsl_matrix_calloc(3,3);
 			std::array<double,3> growthRates;
 			growthRates= currSCF->getShapeChangeRateRate();
-	    	vector<ShapeBase*>::iterator itElement;
-	    	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-				bool appliedToElement = (*itElement)->isShapeChangeAppliedToElement(currSCF->appliedEllipseBandIds, currSCF->applyToBasalECM, currSCF->applyToLateralECM, currSCF->applyTissueApical, currSCF->applyTissueBasal, currSCF->applyTissueMidLine );
+			for(const auto& itElement : Elements){
+				bool appliedToElement = itElement->isShapeChangeAppliedToElement(currSCF->appliedEllipseBandIds, currSCF->applyToBasalECM, currSCF->applyToLateralECM, currSCF->applyTissueApical, currSCF->applyTissueBasal, currSCF->applyTissueMidLine );
 				if (appliedToElement){
-					cout<<" shape chenge is applied to element "<<(*itElement)->Id<<endl;
+					std::cout<<" shape chenge is applied to element "<<itElement->Id<<std::endl;
 					gsl_matrix_set_identity(columnarShapeChangeIncrement);
-					(*itElement)->calculateShapeChangeIncrementFromRates(dt, growthRates[0],growthRates[1],growthRates[2],columnarShapeChangeIncrement);
-					(*itElement)->updateShapeChangeIncrement(columnarShapeChangeIncrement);
+					itElement->calculateShapeChangeIncrementFromRates(dt, growthRates[0],growthRates[1],growthRates[2],columnarShapeChangeIncrement);
+					itElement->updateShapeChangeIncrement(columnarShapeChangeIncrement);
 				}
 	    	}
 			gsl_matrix_free(columnarShapeChangeIncrement);
@@ -8823,28 +8369,26 @@ void Simulation::calculateShapeChangeMarkerEllipseBased (GrowthFunctionBase* cur
 
 void Simulation::calculateShapeChangeUniform (GrowthFunctionBase* currSCF){
 	if(currSimTimeSec >= currSCF->initTime && currSimTimeSec < currSCF->endTime ){
-		//cout<<"calculating shape change uniform"<<endl;
+		//std::cout<<"calculating shape change uniform"<<std::endl;
 		std::array<double,3> maxValues{0};
         maxValues = currSCF->getGrowthRate();
-    	vector<ShapeBase*>::iterator itElement;
-    	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-			//tissue type == 0 is columnar layer, ==1 is peripodial membrane, ==2 id linker zone
+        for(const auto& itElement : Elements){	//tissue type == 0 is columnar layer, ==1 is peripodial membrane, ==2 id linker zone
 			if ( currSCF->applyToColumnarLayer){
-				if ((*itElement)->tissueType == 0){ //columnar layer, grow directly
-					(*itElement)->updateShapeChangeRate(maxValues[0],maxValues[1],maxValues[2],0,0,0);
+				if (itElement->tissueType == 0){ //columnar layer, grow directly
+					itElement->updateShapeChangeRate(maxValues[0],maxValues[1],maxValues[2],0,0,0);
 				}
-				else if ((*itElement)->tissueType == 2){ //Linker zone, need to weight the growth
-					double weight = (*itElement)->getColumnarness();
-					(*itElement)->updateShapeChangeRate(weight*maxValues[0],weight*maxValues[1],weight*maxValues[2],0,0,0);
+				else if (itElement->tissueType == 2){ //Linker zone, need to weight the growth
+					double weight = itElement->getColumnarness();
+					itElement->updateShapeChangeRate(weight*maxValues[0],weight*maxValues[1],weight*maxValues[2],0,0,0);
 				}
 			}
 			if ( currSCF->applyToPeripodialMembrane){
-				if ((*itElement)->tissueType == 1){ //peripodial membrane, grow directly
-					(*itElement)->updateShapeChangeRate(maxValues[0],maxValues[1],maxValues[2],0,0,0);
+				if (itElement->tissueType == 1){ //peripodial membrane, grow directly
+					itElement->updateShapeChangeRate(maxValues[0],maxValues[1],maxValues[2],0,0,0);
 				}
-				else if ((*itElement)->tissueType == 2){ //Linker zone, need to weight the growth
-					double weight = (*itElement)->getPeripodialness();
-					(*itElement)->updateShapeChangeRate(weight*maxValues[0],weight*maxValues[1],weight*maxValues[2],0,0,0);
+				else if (itElement->tissueType == 2){ //Linker zone, need to weight the growth
+					double weight = itElement->getPeripodialness();
+					itElement->updateShapeChangeRate(weight*maxValues[0],weight*maxValues[1],weight*maxValues[2],0,0,0);
 				}
 			}
 		}
@@ -8852,41 +8396,40 @@ void Simulation::calculateShapeChangeUniform (GrowthFunctionBase* currSCF){
 }
 
 void Simulation::calculateGrowthUniform(GrowthFunctionBase* currGF){
-	//cout<<"inside uniform growth function, initTime: "<<currGF->initTime <<" endtime: "<<currGF->endTime<<" simTime"<<simTime<<endl;
+	//std::cout<<"inside uniform growth function, initTime: "<<currGF->initTime <<" endtime: "<<currGF->endTime<<" simTime"<<simTime<<std::endl;
 	if(currSimTimeSec >= currGF->initTime && currSimTimeSec < currGF->endTime ){
 		gsl_matrix* columnarFgIncrement = gsl_matrix_calloc(3,3);
 		gsl_matrix* peripodialFgIncrement = gsl_matrix_calloc(3,3);
 		std::array<double,3> growthRates{0};
 		growthRates = currGF->getGrowthRate();
-    	vector<ShapeBase*>::iterator itElement;
-    	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		for(const auto& itElement : Elements){
 			gsl_matrix_set_identity(columnarFgIncrement);
 			gsl_matrix_set_identity(peripodialFgIncrement);
     		//if (!(*itElement)->isMutated){
 				if (currGF->applyToBasalECM || currGF->applyToLateralECM){
 					if (currGF->applyToBasalECM){
-						if ((*itElement)->isECMMimicing && (*itElement)->tissuePlacement == 0){
-							(*itElement)->calculateFgFromRates(dt, growthRates[0],growthRates[1],growthRates[2], currGF->getShearAngleRotationMatrix(), columnarFgIncrement, 0, currGF->zMin, currGF->zMax);
+						if (itElement->isECMMimicing && itElement->tissuePlacement == 0){
+							itElement->calculateFgFromRates(dt, growthRates[0],growthRates[1],growthRates[2], currGF->getShearAngleRotationMatrix(), columnarFgIncrement, 0, currGF->zMin, currGF->zMax);
 						}
 					}
 					if (currGF->applyToLateralECM){
-						if ((*itElement)->isECMMimimcingAtCircumference && !(*itElement)->tissuePlacement == 0){ //do not grow the basal element twice
-							(*itElement)->calculateFgFromRates(dt, growthRates[0],growthRates[1],growthRates[2], currGF->getShearAngleRotationMatrix(), columnarFgIncrement, 0, currGF->zMin, currGF->zMax);
+						if (itElement->isECMMimimcingAtCircumference && !itElement->tissuePlacement == 0){ //do not grow the basal element twice
+							itElement->calculateFgFromRates(dt, growthRates[0],growthRates[1],growthRates[2], currGF->getShearAngleRotationMatrix(), columnarFgIncrement, 0, currGF->zMin, currGF->zMax);
 						}
 					}
 				}
-				if (!thereIsExplicitECM || !(*itElement)->isECMMimicing ){
+				if (!thereIsExplicitECM || !itElement->isECMMimicing ){
 					//There is either no explicit ECM definition, or the element is not ECM mimicing.
 					//If there is explicit ECM, the basal elements should not grow, all others should proceed as usual
 					//If there is no explicit ecm, then all should proceed as usual.
 					if (currGF->applyToColumnarLayer){
-						(*itElement)->calculateFgFromRates(dt, growthRates[0],growthRates[1],growthRates[2], currGF->getShearAngleRotationMatrix(), columnarFgIncrement, 0, currGF->zMin, currGF->zMax);
+						itElement->calculateFgFromRates(dt, growthRates[0],growthRates[1],growthRates[2], currGF->getShearAngleRotationMatrix(), columnarFgIncrement, 0, currGF->zMin, currGF->zMax);
 					}
 					if (currGF->applyToPeripodialMembrane){
-						(*itElement)->calculateFgFromRates(dt, growthRates[0],growthRates[1],growthRates[2], currGF->getShearAngleRotationMatrix(), peripodialFgIncrement, 1, currGF->zMin, currGF->zMax);
+						itElement->calculateFgFromRates(dt, growthRates[0],growthRates[1],growthRates[2], currGF->getShearAngleRotationMatrix(), peripodialFgIncrement, 1, currGF->zMin, currGF->zMax);
 					}
 				}
-				(*itElement)->updateGrowthIncrement(columnarFgIncrement,peripodialFgIncrement);
+				itElement->updateGrowthIncrement(columnarFgIncrement,peripodialFgIncrement);
 			//}
     	}
 		gsl_matrix_free(columnarFgIncrement);
@@ -8908,10 +8451,9 @@ void Simulation::calculateGrowthRing(GrowthFunctionBase* currGF){
 		float outerRadius2 = outerRadius*outerRadius;
 		gsl_matrix* columnarFgIncrement = gsl_matrix_calloc(3,3);
 		gsl_matrix* peripodialFgIncrement = gsl_matrix_calloc(3,3);
-    	vector<ShapeBase*>::iterator itElement;
-    	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		for(const auto& itElement : Elements){
 			double* Elementcentre = new double[3];
-			Elementcentre = (*itElement)->getCentre();
+			Elementcentre = itElement->getCentre();
 			//the distance is calculated in the x-y projection
 			double d[2] = {centre[0] - Elementcentre[0], centre[1] - Elementcentre[1]};
 			double dmag2 = d[0]*d[0] + d[1]*d[1];
@@ -8926,28 +8468,28 @@ void Simulation::calculateGrowthRing(GrowthFunctionBase* currGF){
 				//if (!(*itElement)->isMutated){
 					if (currGF->applyToBasalECM || currGF->applyToLateralECM){
 						if (currGF->applyToBasalECM){
-							if ((*itElement)->isECMMimicing && (*itElement)->tissuePlacement == 0){
-								(*itElement)->calculateFgFromRates(dt, growthscale[0],growthscale[1],growthscale[2], currGF->getShearAngleRotationMatrix(), columnarFgIncrement, 0, currGF->zMin, currGF->zMax);
+							if (itElement->isECMMimicing && itElement->tissuePlacement == 0){
+								itElement->calculateFgFromRates(dt, growthscale[0],growthscale[1],growthscale[2], currGF->getShearAngleRotationMatrix(), columnarFgIncrement, 0, currGF->zMin, currGF->zMax);
 							}
 						}
 						if (currGF->applyToLateralECM){
-							if ((*itElement)->isECMMimimcingAtCircumference && !(*itElement)->tissuePlacement == 0){ //do not grow the basal element twice
-								(*itElement)->calculateFgFromRates(dt, growthscale[0],growthscale[1],growthscale[2], currGF->getShearAngleRotationMatrix(), columnarFgIncrement, 0, currGF->zMin, currGF->zMax);
+							if (itElement->isECMMimimcingAtCircumference && !itElement->tissuePlacement == 0){ //do not grow the basal element twice
+								itElement->calculateFgFromRates(dt, growthscale[0],growthscale[1],growthscale[2], currGF->getShearAngleRotationMatrix(), columnarFgIncrement, 0, currGF->zMin, currGF->zMax);
 							}
 						}
 					}
-					if (!thereIsExplicitECM || !(*itElement)->isECMMimicing ){
+					if (!thereIsExplicitECM || !itElement->isECMMimicing ){
 						//There is either no explicit ECM definition, or the element is not ECM mimicing.
 						//If there is explicit ECM, the basal elements should not grow, all others should proceed as usual
 						//If there is no explicit ecm, then all should proceed as usual.
 						if (currGF->applyToColumnarLayer){
-							(*itElement)->calculateFgFromRates(dt, growthscale[0],growthscale[1],growthscale[2], currGF->getShearAngleRotationMatrix(), columnarFgIncrement, 0, currGF->zMin, currGF->zMax);
+							itElement->calculateFgFromRates(dt, growthscale[0],growthscale[1],growthscale[2], currGF->getShearAngleRotationMatrix(), columnarFgIncrement, 0, currGF->zMin, currGF->zMax);
 						}
 						if (currGF->applyToPeripodialMembrane){
-							(*itElement)->calculateFgFromRates(dt, growthscale[0],growthscale[1],growthscale[2], currGF->getShearAngleRotationMatrix(), peripodialFgIncrement, 1, currGF->zMin, currGF->zMax);
+							itElement->calculateFgFromRates(dt, growthscale[0],growthscale[1],growthscale[2], currGF->getShearAngleRotationMatrix(), peripodialFgIncrement, 1, currGF->zMin, currGF->zMax);
 						}
 					}
-					(*itElement)->updateGrowthIncrement(columnarFgIncrement,peripodialFgIncrement);
+					itElement->updateGrowthIncrement(columnarFgIncrement,peripodialFgIncrement);
 				//}
 			}
 			delete[] Elementcentre;
@@ -9010,7 +8552,7 @@ void Simulation::setUpECMMimicingElements(){
 			nodeIds = itElement->getNodeIds();
 			for (int i =0; i<n; ++i){
 				Nodes[nodeIds[i]]->allOwnersECMMimicing = false;
-				//cout<<"Node ["<<nodeIds[i]<<" is not ECM mimicking"<<endl;
+				//std::cout<<"Node ["<<nodeIds[i]<<" is not ECM mimicking"<<std::endl;
 			}
 		}
 	}
@@ -9135,44 +8677,42 @@ void Simulation::calculateGrowthGridBased(GrowthFunctionBase* currGF){
 	if(currSimTimeSec >= currGF->initTime && currSimTimeSec < currGF->endTime ){
 		gsl_matrix* columnarFgIncrement = gsl_matrix_calloc(3,3);
 		gsl_matrix* peripodialFgIncrement = gsl_matrix_calloc(3,3);
-		for(vector<ShapeBase*>::iterator  itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+		for(const auto& itElement : Elements){
 			gsl_matrix_set_identity(columnarFgIncrement);
 			gsl_matrix_set_identity(peripodialFgIncrement);
 
 			int IndexX = 0.0, IndexY = 0.0;
 			double FracX = 1.0,  FracY = 1.0;
-			//(*itElement)->getTissuePositionWeigths(columnarnessWeight, peripodialnessWeight);
 			if (GridGrowthsPinnedOnInitialMesh){
-				(*itElement)->getInitialRelativePositionInTissueInGridIndex(nGridX, nGridY, IndexX, IndexY, FracX, FracY);
+				itElement->getInitialRelativePositionInTissueInGridIndex(nGridX, nGridY, IndexX, IndexY, FracX, FracY);
 			}
 			else{
-				(*itElement)->getRelativePositionInTissueInGridIndex(nGridX, nGridY, IndexX, IndexY, FracX, FracY);
+				itElement->getRelativePositionInTissueInGridIndex(nGridX, nGridY, IndexX, IndexY, FracX, FracY);
 			}
-			//if (!(*itElement)->isMutated){
 				if (currGF->applyToBasalECM || currGF->applyToLateralECM){
 					if (currGF->applyToBasalECM){
-						if ((*itElement)->isECMMimicing && (*itElement)->tissuePlacement == 0){
-							(*itElement)->calculateFgFromGridCorners(gridGrowthsInterpolationType, dt, currGF, columnarFgIncrement, 0, IndexX,  IndexY, FracX, FracY); 	//sourceTissue is 0 for columnar Layer
+						if (itElement->isECMMimicing && itElement->tissuePlacement == 0){
+							itElement->calculateFgFromGridCorners(gridGrowthsInterpolationType, dt, currGF, columnarFgIncrement, 0, IndexX,  IndexY, FracX, FracY); 	//sourceTissue is 0 for columnar Layer
 						}
 					}
 					if (currGF->applyToLateralECM){
-						if ((*itElement)->isECMMimimcingAtCircumference && !(*itElement)->tissuePlacement == 0){ //do not grow the basal element twice
-							(*itElement)->calculateFgFromGridCorners(gridGrowthsInterpolationType, dt, currGF, columnarFgIncrement, 0, IndexX,  IndexY, FracX, FracY); 	//sourceTissue is 0 for columnar Layer
+						if (itElement->isECMMimimcingAtCircumference && !itElement->tissuePlacement == 0){ //do not grow the basal element twice
+							itElement->calculateFgFromGridCorners(gridGrowthsInterpolationType, dt, currGF, columnarFgIncrement, 0, IndexX,  IndexY, FracX, FracY); 	//sourceTissue is 0 for columnar Layer
 						}
 					}
 				}
-				if (!thereIsExplicitECM || !(*itElement)->isECMMimicing ){
+				if (!thereIsExplicitECM || !itElement->isECMMimicing ){
 					//There is either no explicit ECM definition, or the element is not ECM mimicing.
 					//If there is explicit ECM, the basal elements should not grow, all others should proceed as usual
 					//If there is no explicit ecm, then all should proceed as usual.
 					if (currGF->applyToColumnarLayer){
-						(*itElement)->calculateFgFromGridCorners(gridGrowthsInterpolationType, dt, currGF, columnarFgIncrement, 0, IndexX,  IndexY, FracX, FracY); 	//sourceTissue is 0 for columnar Layer
+						itElement->calculateFgFromGridCorners(gridGrowthsInterpolationType, dt, currGF, columnarFgIncrement, 0, IndexX,  IndexY, FracX, FracY); 	//sourceTissue is 0 for columnar Layer
 					}
 					if (currGF->applyToPeripodialMembrane){
-						(*itElement)->calculateFgFromGridCorners(gridGrowthsInterpolationType, dt, currGF, peripodialFgIncrement, 1, IndexX,  IndexY, FracX, FracY); 	//sourceTissue is 1 for peripodial membrane
+						itElement->calculateFgFromGridCorners(gridGrowthsInterpolationType, dt, currGF, peripodialFgIncrement, 1, IndexX,  IndexY, FracX, FracY); 	//sourceTissue is 1 for peripodial membrane
 					}
 				}
-				(*itElement)->updateGrowthIncrement(columnarFgIncrement,peripodialFgIncrement);
+				itElement->updateGrowthIncrement(columnarFgIncrement,peripodialFgIncrement);
 			//}
 		}
 		gsl_matrix_free(columnarFgIncrement);
@@ -9181,46 +8721,45 @@ void Simulation::calculateGrowthGridBased(GrowthFunctionBase* currGF){
 }
 
 void Simulation::TissueAxisPositionDisplay(){
-	cerr<<"DV border: "<<endl;
-	for (int i=0;i<nNodes;++i){
+	std::cerr<<"DV border: "<<std::endl;
+	for (size_t i=0;i<nNodes;++i){
 		double x= Nodes[i]->Position[0];
 		if (x < 0.2 && x > -0.2 ){
-			cout<<Nodes[i]->Position[0]<<" "<<Nodes[i]->Position[1]<<" "<<Nodes[i]->Position[2]<<endl;
+			std::cout<<Nodes[i]->Position[0]<<" "<<Nodes[i]->Position[1]<<" "<<Nodes[i]->Position[2]<<std::endl;
 		}
 	}
-	cerr<<"AP border: "<<endl;
-	for (int i=0;i<nNodes;++i){
+	std::cerr<<"AP border: "<<std::endl;
+	for (size_t i=0;i<nNodes;++i){
 		double y= Nodes[i]->Position[1];
 		if (y < 0.2 && y > -0.2 ){
-			cout<<Nodes[i]->Position[0]<<" "<<Nodes[i]->Position[1]<<" "<<Nodes[i]->Position[2]<<endl;
+			std::cout<<Nodes[i]->Position[0]<<" "<<Nodes[i]->Position[1]<<" "<<Nodes[i]->Position[2]<<std::endl;
 		}
 	}
 }
 
 void Simulation::coordinateDisplay(){
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		int type =(*itElement)-> getShapeType();
+	for(const auto& itElement : Elements){
+		int type =itElement-> getShapeType();
 		if(type ==1){
 			for(int j=0;j<3;++j){
-				cout<<Nodes[(*itElement)->NodeIds[j]]->Position[0]<<" ";
-				cout<<Nodes[(*itElement)->NodeIds[j]]->Position[1]<<" ";
-				cout<<Nodes[(*itElement)->NodeIds[j]]->Position[2]<<" ";
+				std::cout<<Nodes[itElement->NodeIds[j]]->Position[0]<<" ";
+				std::cout<<Nodes[itElement->NodeIds[j]]->Position[1]<<" ";
+				std::cout<<Nodes[itElement->NodeIds[j]]->Position[2]<<" ";
 			}
 		}
 	}
-	cout<<endl;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		int type =(*itElement)-> getShapeType();
+	std::cout<<std::endl;
+	for(const auto& itElement : Elements){
+		int type =itElement-> getShapeType();
 		if(type ==1){
 			for(int j=3;j<6;++j){
-				cout<<Nodes[(*itElement)->NodeIds[j]]->Position[0]<<" ";
-				cout<<Nodes[(*itElement)->NodeIds[j]]->Position[1]<<" ";
-				cout<<Nodes[(*itElement)->NodeIds[j]]->Position[2]<<" ";
+				std::cout<<Nodes[itElement->NodeIds[j]]->Position[0]<<" ";
+				std::cout<<Nodes[itElement->NodeIds[j]]->Position[1]<<" ";
+				std::cout<<Nodes[itElement->NodeIds[j]]->Position[2]<<" ";
 			}
 		}
 	}
-	cout<<endl;
+	std::cout<<std::endl;
 }
 
 void Simulation::setStretch(){
@@ -9241,12 +8780,12 @@ void Simulation::setStretch(){
      */
 	if (DVClamp){
 		distance = fabs(Nodes[ventralTipIndex]->Position[0] - Nodes[dorsalTipIndex]->Position[0]);
-		cerr<<"Total DV distance: "<<distance<<" ";
+		std::cerr<<"Total DV distance: "<<distance<<" ";
 		distanceIndex = 0; //if the clamp is on DV axis, then the direction of interest is x, index is 0;
 	}
 	else{
 		distance = fabs(Nodes[anteriorTipIndex]->Position[1] - Nodes[posteriorTipIndex]->Position[1]);
-		cerr<<"Total AP distance: "<<distance<<" ";
+		std::cerr<<"Total AP distance: "<<distance<<" ";
 		distanceIndex = 1; //if the clamp is on AP axis, then the direction of interest is y, index is 1.
 	}
     /**
@@ -9278,14 +8817,13 @@ void Simulation::setStretch(){
 void Simulation::setUpClampBorders(vector<int>& clampedNodeIds){
 	int* nodeIds;
 	int n = clampedNodeIds.size();
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		nodeIds = (*itElement)->getNodeIds();
+	for(const auto& itElement : Elements){
+		nodeIds = itElement->getNodeIds();
 		bool hasClampedNode = false;
 		bool hasNonClampedNode = false;
 		bool leftHandSide = false;
 		vector <int> clampedBorderNodes;
-		int nNodes = (*itElement)->getNodeNumber();
+		int nNodes = itElement->getNodeNumber();
 		for (int j=0; j< nNodes; j++){
 			bool lastNodeWasClamped = false;
 			for (int k=0; k<n; k++){
@@ -9324,16 +8862,16 @@ void Simulation::setUpClampBorders(vector<int>& clampedNodeIds){
 			}
 		}
 		if (hasClampedNode && hasNonClampedNode){
-			cout<<" Element "<<(*itElement)->Id<<" is at the border"<<endl;
+			std::cout<<" Element "<<itElement->Id<<" is at the border"<<std::endl;
 			int nClamp = clampedBorderNodes.size();
 			if(leftHandSide){
-				cout<<"Element is on left hand side"<<endl;
+				std::cout<<"Element is on left hand side"<<std::endl;
 				for (int k=0; k<nClamp; k++){
 					leftClampBorder.push_back(clampedBorderNodes[k]);
 				}
 			}
 			else {
-				cout<<"Element is on right hand side"<<endl;
+				std::cout<<"Element is on right hand side"<<std::endl;
 				for (int k=0; k<nClamp; k++){
 					rightClampBorder.push_back(clampedBorderNodes[k]);
 				}
@@ -9341,11 +8879,11 @@ void Simulation::setUpClampBorders(vector<int>& clampedNodeIds){
 		}
 	}int nLeftClamp = leftClampBorder.size();
 	for (int k=0; k<nLeftClamp; k++){
-		cout<<"left clamp border nodes: "<<leftClampBorder[k]<<endl;
+		std::cout<<"left clamp border nodes: "<<leftClampBorder[k]<<std::endl;
 	}
 	int nRightClamp = rightClampBorder.size();
 	for (int k=0; k<nRightClamp; k++){
-		cout<<"right clamp border nodes: "<<rightClampBorder[k]<<endl;
+		std::cout<<"right clamp border nodes: "<<rightClampBorder[k]<<std::endl;
 	}
 }
 
@@ -9368,19 +8906,19 @@ void Simulation::recordForcesOnClampBorders(){
 			}
 		}
 	}
-	outputFile<<"Forces on clamps lhs: "<<leftClampForces[0]<<" "<<leftClampForces[1]<<" "<<leftClampForces[2]<<" rhs: "<<rightClampForces[0]<<" "<<rightClampForces[1]<<" "<<rightClampForces[2]<<endl;
+	outputFile<<"Forces on clamps lhs: "<<leftClampForces[0]<<" "<<leftClampForces[1]<<" "<<leftClampForces[2]<<" rhs: "<<rightClampForces[0]<<" "<<rightClampForces[1]<<" "<<rightClampForces[2]<<std::endl;
 }
 
 void Simulation::moveAFMBead(){
 	if (beadPos[2] != -1000){
 		beadPos[2] += 0.05;
-		cout<<"new bead pos:" <<beadPos[2]<<endl;
+		std::cout<<"new bead pos:" <<beadPos[2]<<std::endl;
 	}
 }
 
 void Simulation::moveClampedNodesForStretcher(){
 	if (currSimTimeSec>=StretchInitialTime && currSimTimeSec<StretchEndTime){
-		for (int i=0; i<nNodes; ++i){
+		for (size_t i=0; i<nNodes; ++i){
 			if (Nodes[i]->Position[distanceIndex]> StretchMax){
 				Nodes[i]->Position[distanceIndex] += StretchDistanceStep;
 			}
@@ -9388,9 +8926,8 @@ void Simulation::moveClampedNodesForStretcher(){
 				Nodes[i]->Position[distanceIndex] -= StretchDistanceStep;
 			}
 		}
-		vector<ShapeBase*>::iterator itElement;
-		for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-			(*itElement)->updatePositions(Nodes);
+		for(const auto& itElement : Elements){
+			itElement->updatePositions(Nodes);
         }
 	}
 }
@@ -9416,7 +8953,7 @@ void Simulation::setupPipetteExperiment(){
      */
 	if (TissueStuckOnGlassDuringPipetteAspiration){
 		if (ApicalSuction){
-			for (int i=0; i<nNodes; ++i){
+			for (size_t i=0; i<nNodes; ++i){
 				//fix basal nodes of columnar layer:
 				if(Nodes[i]->tissuePlacement == 0 && Nodes[i]->tissueType == 0) {
 					fixAllD(i, false); //this is fixing with adhesives, should be a hard fix at all times
@@ -9424,7 +8961,7 @@ void Simulation::setupPipetteExperiment(){
 			}
 		}
 		else{
-			for (int i=0; i<nNodes; ++i){
+			for (size_t i=0; i<nNodes; ++i){
 				//fix apical nodes and all peripodial membrane nodes:
 				if(Nodes[i]->tissuePlacement == 1 || Nodes[i]->tissueType == 1) {
 					fixAllD(i, false); //this is fixing with adhesives, should be a hard fix at all times
@@ -9500,7 +9037,7 @@ void Simulation::packToPipetteWall(){
 		Nodes[TransientZFixListForPipette[zfixiter]]->FixedPos[2] = 0;
 	}
 	TransientZFixListForPipette.clear();
-	for (int currId=0; currId<nNodes;currId++){
+	for (size_t currId=0; currId<nNodes;currId++){
 		if (Nodes[currId]->FixedPos[2] == 0){
 			if( ( ApicalSuction && Nodes[currId]->tissuePlacement == 1) || ( !ApicalSuction && Nodes[currId]->tissuePlacement == 0)){
 				bool freezeNodeZ = false;
@@ -9532,7 +9069,7 @@ void Simulation::packToPipetteWall(){
 
 void Simulation::laserAblateTissueType(int ablationType){
 	vector <int> AblatedElements;
-	for (int i=0; i<nNodes; ++i){
+	for (size_t i=0; i<nNodes; ++i){
 		if (Nodes[i]->tissueType == ablationType && !Nodes[i]->hasLateralElementOwner){
 			//I want to ablate a whole tisse type, such as ablating the disc proper at the beginning of simulation.
 			//BUT, I want the nodes that are owned by the linker nodes to stay intact. Otherwise, I will loose part of the unintended tissue.
@@ -9544,22 +9081,21 @@ void Simulation::laserAblateTissueType(int ablationType){
 	}
 
 	int nAN = AblatedNodes.size();
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		if(!(*itElement)->IsAblated){
+	for(const auto& itElement : Elements){
+		if(!itElement->IsAblated){
 			for (int j =0; j<nAN; ++j){
-				bool IsAblatedNow = (*itElement)->DoesPointBelogToMe(AblatedNodes[j]);
+				bool IsAblatedNow = itElement->DoesPointBelogToMe(AblatedNodes[j]);
 				if (IsAblatedNow){
-					(*itElement)->removeMassFromNodes(Nodes);
-					(*itElement)->IsAblated = true;
-					//cerr<<"Ablating element:" <<Elements[i]->Id<<endl;
+					itElement->removeMassFromNodes(Nodes);
+					itElement->IsAblated = true;
+					//std::cerr<<"Ablating element:" <<Elements[i]->Id<<std::endl;
 					break;
 				}
 			}
 		}
 	}
 	//some nodes are left with zero mass, which will cause problems in later calculations:
-	for (int i=0; i<nNodes; ++i){
+	for (size_t i=0; i<nNodes; ++i){
 		if (Nodes[i]->mass <=0){
 			Nodes[i]->mass = 0.1;
 		}
@@ -9570,7 +9106,7 @@ void Simulation::laserAblate(double OriginX, double OriginY, double Radius){
 	vector <int> AblatedNodes;
 	vector <int> AblatedElements;
 	double thres2 = Radius*Radius;
-	for (int i=0; i<nNodes; ++i){
+	for (size_t i=0; i<nNodes; ++i){
 		double dx = Nodes[i]->Position[0]- OriginX;
 		double dy = Nodes[i]->Position[1]- OriginY;
 		double d2 = dx *dx + dy*dy;
@@ -9583,22 +9119,21 @@ void Simulation::laserAblate(double OriginX, double OriginY, double Radius){
 	}
 
 	int nAN = AblatedNodes.size();
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		if(!(*itElement)->IsAblated){
+	for(const auto& itElement : Elements){
+		if(!itElement->IsAblated){
 			for (int j =0; j<nAN; ++j){
-				bool IsAblatedNow = (*itElement)->DoesPointBelogToMe(AblatedNodes[j]);
+				bool IsAblatedNow = itElement->DoesPointBelogToMe(AblatedNodes[j]);
 				if (IsAblatedNow){
-					(*itElement)->removeMassFromNodes(Nodes);
-					(*itElement)->IsAblated = true;
-					cerr<<"Ablating element:" <<(*itElement)->Id<<endl;
+					itElement->removeMassFromNodes(Nodes);
+					itElement->IsAblated = true;
+					std::cerr<<"Ablating element:" <<itElement->Id<<std::endl;
 					break;
 				}
 			}
 		}
 	}
 	//some nodes are ledt with zero mass, which will cause problems in later calculations:
-	for (int i=0; i<nNodes; ++i){
+	for (size_t i=0; i<nNodes; ++i){
 		if (Nodes[i]->mass <=0){
 			Nodes[i]->mass = 0.1;
 		}
@@ -9606,21 +9141,20 @@ void Simulation::laserAblate(double OriginX, double OriginY, double Radius){
 }
 
 void Simulation::updateElementVolumesAndTissuePlacements(){
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		cout<<"updating element: "<<(*itElement)->Id<<endl;
-		(*itElement)->updateElementVolumesAndTissuePlacementsForSave(Nodes);
+	for(const auto& itElement : Elements){
+		std::cout<<"updating element: "<<itElement->Id<<std::endl;
+		itElement->updateElementVolumesAndTissuePlacementsForSave(Nodes);
 	}
 }
 
 void Simulation::updateElasticPropertiesForAllNodes(){
-	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		(*itElement)->updateElasticProperties();
+	for(const auto& itElement : Elements){
+		itElement->updateElasticProperties();
 	}
 }
 
 void Simulation::clearNodeMassLists(){
-	for (int i=0 ;i<nNodes;++i){
+	for (size_t i=0 ;i<nNodes;++i){
 		Nodes[i]->connectedElementIds.size();
 		Nodes[i]->connectedElementIds.clear();
 		Nodes[i]->connectedElementWeights.clear();
@@ -9630,13 +9164,12 @@ void Simulation::clearNodeMassLists(){
 }
 
 void Simulation::clearLaserAblatedSites(){
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		if ((*itElement)->IsAblated){
-			(*itElement)->removeMassFromNodes(Nodes);
+	for(const auto& itElement : Elements){
+		if (itElement->IsAblated){
+			itElement->removeMassFromNodes(Nodes);
 		}
 	}
-	for (int i=0; i<nNodes; ++i){
+	for (size_t i=0; i<nNodes; ++i){
 		if (Nodes[i]->mass <=0){
 			Nodes[i]->mass = 0.1;
 		}
@@ -9647,30 +9180,29 @@ void Simulation::setupYsymmetricity(){
 	double yLimPos = 0.1;
 	double yLimNeg = (-1.0)*yLimPos;
 	vector <int> AblatedNodes;
-	for (int i=0; i<nNodes; ++i){
+	for (size_t i=0; i<nNodes; ++i){
 		if (Nodes[i]->Position[1]< yLimPos){
 			if (Nodes[i]->Position[1] > yLimNeg){
 				//symmetricYBoundaryNodes.push_back(Nodes[i]);
 				Nodes[i]->atSymmetricityBorder = true;
-				fixY(Nodes[i],false); //this is for symmetricity, the fixing has to be hard fixing, not with external viscosity under any condition
+				fixY(Nodes[i].get(),false); //this is for symmetricity, the fixing has to be hard fixing, not with external viscosity under any condition
 			}
 			else{
 				AblatedNodes.push_back(i);
-				fixAllD(Nodes[i], false); //this is fixing for ablated nodes, no need for calculations
+				fixAllD(Nodes[i].get(), false); //this is fixing for ablated nodes, no need for calculations
 				//setSymmetricNode(Nodes[i],yLimPos);
 			}
 		}
 	}
 	int nAN = AblatedNodes.size();
 	//fix the position of all ablated nodes for effective Newton Raphson calculation:
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		if(!(*itElement)->IsAblated){
+	for(const auto& itElement : Elements){
+		if(!itElement->IsAblated){
 			for (int j =0; j<nAN; ++j){
-				bool IsAblatedNow = (*itElement)->DoesPointBelogToMe(AblatedNodes[j]);
+				bool IsAblatedNow = itElement->DoesPointBelogToMe(AblatedNodes[j]);
 				if (IsAblatedNow){
-					(*itElement)->removeMassFromNodes(Nodes);
-					(*itElement)->IsAblated = true;
+					itElement->removeMassFromNodes(Nodes);
+					itElement->IsAblated = true;
 					break;
 				}
 			}
@@ -9682,30 +9214,29 @@ void Simulation::setupXsymmetricity(){
 	double xLimPos = 0.1;
 	double xLimNeg = (-1.0)*xLimPos;
 	vector <int> AblatedNodes;
-	for (int i=0; i<nNodes; ++i){
+	for (size_t i=0; i<nNodes; ++i){
 		if (Nodes[i]->Position[0]< xLimPos){
 			if (Nodes[i]->Position[0] > xLimNeg){
 				//symmetricXBoundaryNodes.push_back(Nodes[i]);
 				Nodes[i]->atSymmetricityBorder = true;
-				fixX(Nodes[i],false); //this is for symmetricity, the fixing has to be hard fixing, not with external viscosity under any condition
+				fixX(Nodes[i].get(),false); //this is for symmetricity, the fixing has to be hard fixing, not with external viscosity under any condition
 			}
 			else{
 				AblatedNodes.push_back(i);
-				fixAllD(Nodes[i], false); //this is fixing for ablated nodes, no need for calculations
+				fixAllD(Nodes[i].get(), false); //this is fixing for ablated nodes, no need for calculations
 				//setSymmetricNode(Nodes[i],yLimPos);
 			}
 		}
 	}
 	int nAN = AblatedNodes.size();
 	//fix the position of all ablated nodes for effective Newton Raphson calculation:
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		if(!(*itElement)->IsAblated){
+	for(const auto& itElement : Elements){
+		if(!itElement->IsAblated){
 			for (int j =0; j<nAN; ++j){
-				bool IsAblatedNow = (*itElement)->DoesPointBelogToMe(AblatedNodes[j]);
+				bool IsAblatedNow = itElement->DoesPointBelogToMe(AblatedNodes[j]);
 				if (IsAblatedNow){
-					(*itElement)->removeMassFromNodes(Nodes);
-					(*itElement)->IsAblated = true;
+					itElement->removeMassFromNodes(Nodes);
+					itElement->IsAblated = true;
 					break;
 				}
 			}
@@ -9715,23 +9246,21 @@ void Simulation::setupXsymmetricity(){
 
 void Simulation::ablateSpcific(){
 	vector <int> AblatedNodes;
-	for (int i=0; i<nNodes; ++i){
-		fixAllD(Nodes[i],  false); //this is fixing for ablated nodes, no need for calculations);
+	for (size_t i=0; i<nNodes; ++i){
+		fixAllD(Nodes[i].get(),  false); //this is fixing for ablated nodes, no need for calculations);
 	}
 	//int nAN = AblatedNodes.size();
 	//fix the position of all ablated nodes for effective Newton Raphson calculation:
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+	for(const auto& itElement : Elements){
 		double* c = new double[3];
-		c = (*itElement)->getCentre();
-		//if ((*itElement)->Id != 38 && (*itElement)->Id != 39 /*&& (*itElement)->Id != 30 && (*itElement)->Id != 41*/){
+		c = itElement->getCentre();
 		if (c[0]<20 || c[1] >10 || c[1]<-10){
-			(*itElement)->removeMassFromNodes(Nodes);
-			(*itElement)->IsAblated = true;
+			itElement->removeMassFromNodes(Nodes);
+			itElement->IsAblated = true;
 		}
 		else{
-			for (int i=1; i<nNodes; ++i){
-				if ((*itElement)->DoesPointBelogToMe(i)){
+			for (size_t i=1; i<nNodes; ++i){
+				if (itElement->DoesPointBelogToMe(i)){
 					Nodes[i]->FixedPos[0]= false;
 					Nodes[i]->FixedPos[1]= false;
 					Nodes[i]->FixedPos[2]= false;
@@ -9740,13 +9269,10 @@ void Simulation::ablateSpcific(){
 		}
 		delete[] c;
 	}
-	Nodes[1]->FixedPos[2]= true;
-	Nodes[18]->FixedPos[1]= true;
-	Nodes[18]->FixedPos[2]= true;
 }
 
 void Simulation::pokeElement(int elementId, double dx, double dy, double dz){
-	cout<<" poking element: "<<elementId<<endl;
+	std::cout<<" poking element: "<<elementId<<std::endl;
 	int* nodeIds = Elements[elementId]->getNodeIds();
 	int nNodes= Elements[elementId]->getNodeNumber();
 	for (int j=0; j<nNodes; ++j){
@@ -9754,38 +9280,37 @@ void Simulation::pokeElement(int elementId, double dx, double dy, double dz){
 		Nodes[nodeIds[j]]->Position[1] += dy;
 		Nodes[nodeIds[j]]->Position[2] += dz;
 	}
-	vector<ShapeBase*>::iterator itElement;
-	for(itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-		(*itElement)->updatePositions(Nodes);
+	for(const auto& itElement : Elements){
+		itElement->updatePositions(Nodes);
     }
 }
 
 void Simulation::writeMeshRemovingAblatedRegions(){
-	cout<<"writing non-ablated mesh"<<endl;
+	std::cout<<"writing non-ablated mesh"<<std::endl;
 	int nonAblatedNodeMap[( const int ) nNodes];
 	int nNonAblatedNode = 0;
-	for (int i=0; i<nNodes; ++i){
+	for (size_t i=0; i<nNodes; ++i){
 		nonAblatedNodeMap[i] = -10;
 		if (Nodes[i]->mass > 0){
 			nonAblatedNodeMap[i] = nNonAblatedNode;
 			nNonAblatedNode++;
 		}
 	}
-	cout<<"got non-ablated node number and map "<<endl;
+	std::cout<<"got non-ablated node number and map "<<std::endl;
 	int nNonAblatedElements = 0;
-	for (int i=0; i<nElements; ++i){
+	for (size_t i=0; i<nElements; ++i){
 		if (!Elements[i]->IsAblated){
 			nNonAblatedElements++;
 		}
 	}
-	cout<<"opening file"<<endl;
+	std::cout<<"opening file"<<std::endl;
 	string meshSaveString = saveDirectory +"/MeshFromNonAblated.mesh";
 	const char* name_meshSaveString = meshSaveString.c_str();;
 	ofstream file;
 	file.open(name_meshSaveString, ofstream::out);
 	file<<nNonAblatedNode;
-	file<<endl;
-	for (int i=0; i<nNodes; ++i){
+	file<<std::endl;
+	for (size_t i=0; i<nNodes; ++i){
 		if (Nodes[i]->mass > 0){
 			file << Nodes[i]->Position[0];
 			file<<" \t";
@@ -9802,8 +9327,8 @@ void Simulation::writeMeshRemovingAblatedRegions(){
 		}
 	}
 	file<<nNonAblatedElements;
-	file<<endl;
-	for (int i=0; i<nElements; ++i){
+	file<<std::endl;
+	for (size_t i=0; i<nElements; ++i){
 		if (!Elements[i]->IsAblated){
 			file<< Elements[i]->getShapeType();
 			file<<" \t";
@@ -9827,8 +9352,8 @@ void Simulation::writeMeshRemovingAblatedRegions(){
 		}
 	}
 	//recording tissue weights
-	file <<1<<endl;
-	for (int i=0; i<nElements; ++i){
+	file <<1<<std::endl;
+	for (size_t i=0; i<nElements; ++i){
 			if (!Elements[i]->IsAblated){
 				file <<Elements[i]->getPeripodialness() << endl;
 			}
@@ -9841,7 +9366,6 @@ void Simulation::checkForVolumeRedistributionInTissue(){
 	for (int i=0; i< nApikobasalVolumeRedistributionFunctions; ++i){
 		if (currSimTimeSec >= apikobasalVolumeRedistributionBeginTimeInSec[i] && currSimTimeSec < apikobasalVolumeRedistributionEndTimeInSec[i]){
 			bool thisFunctionShrinksApical = apikobasalVolumeRedistributionFunctionShrinksApical[i];
-			double scale =apikobasalVolumeRedistributionScales[i];
 			#ifndef DO_NOT_USE_OMP
 			/** If DO_NOT_USE_OMP is not defined,I will be using omp. This
 			 * is necessary as omp is not set up on mac
@@ -9850,8 +9374,8 @@ void Simulation::checkForVolumeRedistributionInTissue(){
 			omp_set_num_threads(maxThreads);
 			#pragma omp parallel for
 			#endif
-			for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
-				(*itElement)->updateGrowthWillBeScaledDueToApikobasalRedistribution(thisFunctionShrinksApical, scale, apikobasalVolumeRedistributionFunctionEllipseBandIds[i]);
+			for (std::vector<std::unique_ptr<ShapeBase>>::iterator itElement = Elements.begin(); itElement<Elements.end(); ++itElement){
+				(*itElement)->updateGrowthWillBeScaledDueToApikobasalRedistribution(thisFunctionShrinksApical, apikobasalVolumeRedistributionFunctionEllipseBandIds[i]);
 			}
 		}
 	}
@@ -9866,7 +9390,7 @@ void Simulation::clearScaleingDueToApikobasalRedistribution(){
 	omp_set_num_threads(maxThreads);
 	#pragma omp parallel for
 	#endif
-	for(vector<ShapeBase*>::iterator itElement=Elements.begin(); itElement<Elements.end(); ++itElement){
+	for (std::vector<std::unique_ptr<ShapeBase>>::iterator itElement = Elements.begin(); itElement<Elements.end(); ++itElement){
 		(*itElement)->thereIsGrowthRedistribution = false;
 		(*itElement)->growthRedistributionScale = 0.0;
 	}
@@ -9877,9 +9401,9 @@ void Simulation::assignCompartment(){
 	double notumPrisms[2] = {2183, 3505};
 	double pouchPrisms[3] = {1494,305,368};
 	if (Elements.size()<2184){
-		for (vector<ShapeBase*>::iterator itEle = Elements.begin(); itEle<Elements.end(); ++itEle){
-			(*itEle)->compartmentIdentityFraction = 1.0;
-			(*itEle)->compartmentType = -1;
+		for(const auto& itEle : Elements){
+			itEle->compartmentIdentityFraction = 1.0;
+			itEle->compartmentType = -1;
 		}
 		return;
 	}
@@ -9898,17 +9422,17 @@ void Simulation::assignCompartment(){
 	double m_pouch1 = (pouch_p1[1]-pouch_p2[1])/(pouch_p1[0] - pouch_p2[0]);
 	double b_pouch1 = pouch_p1[1] - m_pouch1 * pouch_p1[0];
 
-	for (vector<ShapeBase*>::iterator itEle = Elements.begin(); itEle<Elements.end(); ++itEle){
-		if ((*itEle) -> tissueType == 0){ //columnar layer
-			(*itEle)->compartmentType = 1; //default is set to hinge
-			double* p = (*itEle)->getCentre();
+	for(const auto& itEle : Elements){
+		if (itEle -> tissueType == 0){ //columnar layer
+			itEle->compartmentType = 1; //default is set to hinge
+			double* p = itEle->getCentre();
 			//check if notum:
 			double xOnLine = (p[1]-b_notum)/m_notum;
 			double d = p[0]-xOnLine; //correct for hinge
-			//cout<<"(*itEle)->Id: "<< (*itEle)->Id<<" notum_p0 "<<notum_p0[0]<<" "<<notum_p0[1]<<" notum_p1: "<<notum_p1[0]<<" "<<notum_p1[1]<<" m & b: "<<m_notum<<" "<<b_notum<<" p "<<p[0]<<" "<<p[1]<<" xOnLine "<<xOnLine<<endl;
+			//std::cout<<"(*itEle)->Id: "<< (*itEle)->Id<<" notum_p0 "<<notum_p0[0]<<" "<<notum_p0[1]<<" notum_p1: "<<notum_p1[0]<<" "<<notum_p1[1]<<" m & b: "<<m_notum<<" "<<b_notum<<" p "<<p[0]<<" "<<p[1]<<" xOnLine "<<xOnLine<<std::endl;
 			if (xOnLine > p[0]){
 				//element is on the notum side!
-				(*itEle)->compartmentType = 2; //notum
+				itEle->compartmentType = 2; //notum
 				d *= -1.0; //corrected distance o reflect the notum side.
 				//threshold at 3 microns, this will make a total of 6 microns on each side
 			}
@@ -9921,7 +9445,7 @@ void Simulation::assignCompartment(){
 						//on pouch, correct d:
 						d = p[0]- xOnLine;
 						//element is on the pouch side!
-						(*itEle)->compartmentType = 0; //notum
+						itEle->compartmentType = 0; //notum
 					}
 					else{
 						//on hinge, is it closer to this boundary?
@@ -9939,7 +9463,7 @@ void Simulation::assignCompartment(){
 						//on pouch, correct d:
 						d = p[0]- xOnLine;
 						//element is on the pouch side!
-						(*itEle)->compartmentType = 0; //notum
+						itEle->compartmentType = 0; //notum
 					}
 					else{
 						//on hinge, is it closer to this boundary?
@@ -9951,15 +9475,15 @@ void Simulation::assignCompartment(){
 				}
 			}
 			if (d>bufferLength){
-				(*itEle)->compartmentIdentityFraction = 1.0;
+				itEle->compartmentIdentityFraction = 1.0;
 			}
 			else{
-				(*itEle)->compartmentIdentityFraction = d/bufferLength;
+				itEle->compartmentIdentityFraction = d/bufferLength;
 			}
 			delete[] p;
 		}
 		else{
-			(*itEle)->compartmentType = -1;
+			itEle->compartmentType = -1;
 		}
 	}
 	delete[] notum_p0;

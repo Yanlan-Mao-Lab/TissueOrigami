@@ -14,7 +14,7 @@ CC            = gcc
 CXX           = g++
 DEFINES       = -DQT_NO_DEBUG -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB
 CFLAGS        = -pipe -O2 -fopenmp -Wall -W -D_REENTRANT -fPIE $(DEFINES)
-CXXFLAGS      = -pipe -fopenmp -std=c++17 -D DO_NOT_SOLVE_SYSTEM_OF_EQUATIONS -O2 -Wall -W -D_REENTRANT -fPIE $(DEFINES)
+CXXFLAGS      = -pipe -fopenmp -std=c++17 -O2 -Wall -W -D_REENTRANT -fPIE $(DEFINES)
 INCPATH       = -I/opt/Qt5.2.1/5.2.1/gcc_64/mkspecs/linux-g++ -I. -I/opt/Qt5.2.1/5.2.1/gcc_64/include -I/opt/Qt5.2.1/5.2.1/gcc_64/include/QtOpenGL -I/opt/Qt5.2.1/5.2.1/gcc_64/include/QtWidgets -I/opt/Qt5.2.1/5.2.1/gcc_64/include/QtGui -I/opt/Qt5.2.1/5.2.1/gcc_64/include/QtCore -I.
 LINK          = g++
 LFLAGS        = -fopenmp -Wl,-O1 -Wl,-rpath,/opt/Qt5.2.1/5.2.1/gcc_64 -Wl,-rpath,/opt/Qt5.2.1/5.2.1/gcc_64/lib
@@ -909,7 +909,6 @@ moc_MainWindow.cpp: /opt/Qt5.2.1/5.2.1/gcc_64/include/QtGui/QtGui \
 		../TissueFolding/SourceCode/GrowthFunctionTypes.h \
 		../TissueFolding/SourceCode/NewtonRaphsonSolver.h \
 		../TissueFolding/SourceCode/Lumen.h \
-		../TissueFolding/SourceCode/MuscleFibre.h \
 		../TissueFolding/SourceCode/Analysis.h \
 		SourceCode/MainWindow.h
 	/opt/Qt5.2.1/5.2.1/gcc_64/bin/moc $(DEFINES) $(INCPATH) SourceCode/MainWindow.h -o moc_MainWindow.cpp
@@ -1371,7 +1370,6 @@ moc_GLWidget.cpp: /opt/Qt5.2.1/5.2.1/gcc_64/include/QtOpenGL/QGLWidget \
 		../TissueFolding/SourceCode/GrowthFunctionTypes.h \
 		../TissueFolding/SourceCode/NewtonRaphsonSolver.h \
 		../TissueFolding/SourceCode/Lumen.h \
-		../TissueFolding/SourceCode/MuscleFibre.h \
 		../TissueFolding/SourceCode/Analysis.h \
 		SourceCode/GLWidget.h
 	/opt/Qt5.2.1/5.2.1/gcc_64/bin/moc $(DEFINES) $(INCPATH) SourceCode/GLWidget.h -o moc_GLWidget.cpp
@@ -1841,7 +1839,6 @@ main.o: SourceCode/main.cpp /opt/Qt5.2.1/5.2.1/gcc_64/include/QtWidgets/QGraphic
 		../TissueFolding/SourceCode/GrowthFunctionTypes.h \
 		../TissueFolding/SourceCode/NewtonRaphsonSolver.h \
 		../TissueFolding/SourceCode/Lumen.h \
-		../TissueFolding/SourceCode/MuscleFibre.h \
 		../TissueFolding/SourceCode/Analysis.h \
 		SourceCode/GLWidget.h \
 		/opt/Qt5.2.1/5.2.1/gcc_64/include/QtOpenGL/QGLWidget \
@@ -2311,7 +2308,6 @@ MainWindow.o: SourceCode/MainWindow.cpp /opt/Qt5.2.1/5.2.1/gcc_64/include/QtGui/
 		../TissueFolding/SourceCode/GrowthFunctionTypes.h \
 		../TissueFolding/SourceCode/NewtonRaphsonSolver.h \
 		../TissueFolding/SourceCode/Lumen.h \
-		../TissueFolding/SourceCode/MuscleFibre.h \
 		../TissueFolding/SourceCode/Analysis.h \
 		SourceCode/GLWidget.h \
 		/opt/Qt5.2.1/5.2.1/gcc_64/include/QtOpenGL/QGLWidget \
@@ -2787,7 +2783,6 @@ GLWidget.o: SourceCode/GLWidget.cpp /opt/Qt5.2.1/5.2.1/gcc_64/include/QtGui/QtGu
 		../TissueFolding/SourceCode/GrowthFunctionTypes.h \
 		../TissueFolding/SourceCode/NewtonRaphsonSolver.h \
 		../TissueFolding/SourceCode/Lumen.h \
-		../TissueFolding/SourceCode/MuscleFibre.h \
 		../TissueFolding/SourceCode/Analysis.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o GLWidget.o SourceCode/GLWidget.cpp
 
@@ -2818,7 +2813,6 @@ Simulation.o: ../TissueFolding/SourceCode/Simulation.cpp ../TissueFolding/Source
 		../TissueFolding/SourceCode/GrowthFunctionTypes.h \
 		../TissueFolding/SourceCode/NewtonRaphsonSolver.h \
 		../TissueFolding/SourceCode/Lumen.h \
-		../TissueFolding/SourceCode/MuscleFibre.h \
 		../TissueFolding/SourceCode/Prism.h \
 		../TissueFolding/SourceCode/RandomGenerator.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o Simulation.o ../TissueFolding/SourceCode/Simulation.cpp
@@ -2834,8 +2828,7 @@ ModelInputObject.o: ../TissueFolding/SourceCode/ModelInputObject.cpp ../TissueFo
 		../TissueFolding/SourceCode/GrowthFunctionBase.h \
 		../TissueFolding/SourceCode/GrowthFunctionTypes.h \
 		../TissueFolding/SourceCode/NewtonRaphsonSolver.h \
-		../TissueFolding/SourceCode/Lumen.h \
-		../TissueFolding/SourceCode/MuscleFibre.h
+		../TissueFolding/SourceCode/Lumen.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ModelInputObject.o ../TissueFolding/SourceCode/ModelInputObject.cpp
 
 RandomGenerator.o: ../TissueFolding/SourceCode/RandomGenerator.cpp ../TissueFolding/SourceCode/RandomGenerator.h

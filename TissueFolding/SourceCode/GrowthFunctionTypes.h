@@ -270,8 +270,8 @@ class GridBasedGrowthFunction : public GrowthFunctionBase{
 private:
 
 public:
-	int nGridX;	///< The number of grid points that discretise the tissue in x
-	int nGridY;	///< The number of grid points that discretise the tissue in y
+	size_t nGridX;	///< The number of grid points that discretise the tissue in x
+	size_t nGridY;	///< The number of grid points that discretise the tissue in y
 	//GrowthMatrix : [grid_i] [grid_j][x,y,z]
 	std::vector<std::vector<std::array<double,3>>> GrowthMatrix;	///<The matrix of growth rates in (1/sec). It is a matrix of double triplets for growth rate at each grid point. The dimensions of the matrix are equal to (GridBasedGrowthFunction::nGridX, GridBasedGrowthFunction::nGridY), and set in constructor of the GridBasedGrowthFunction. The triplets store the growth rate in [ DV axis (x), AP axis (y), and AB axis (z)].
 	//xyShearAngleMatrix : [grid_i] [grid_j][orientation angle]
@@ -338,9 +338,9 @@ public:
 		}
 
 		xyShearRotationsMatrix = new gsl_matrix**[(const int) nGridX];
-		for (int i=0; i<nGridX; ++i){
+		for (size_t i=0; i<nGridX; ++i){
 			xyShearRotationsMatrix[i] = new gsl_matrix*[(const int) nGridY];
-			for (int j=0; j<nGridY; ++j){
+			for (size_t j=0; j<nGridY; ++j){
 				xyShearRotationsMatrix[i][j] = new gsl_matrix;
 				xyShearRotationsMatrix[i][j] = gsl_matrix_calloc(3,3);
 				double c = cos(xyShearAngleMatrix[i][j]);
@@ -361,8 +361,8 @@ public:
 	} ///< The constructor of GridBasedGrowthFunction
 
 	~GridBasedGrowthFunction(){
-		for (int i=0; i<nGridX; ++i){
-			for (int j=0; j<nGridY; ++j){
+		for (size_t i=0; i<nGridX; ++i){
+			for (size_t j=0; j<nGridY; ++j){
 				gsl_matrix_free(xyShearRotationsMatrix[i][j]);
 			}
 		}
@@ -399,8 +399,8 @@ public:
 	}///< This function sets the growth rate at grid point [i]\[j\] (in dimensions GridBasedGrowthFunction#nGridX, GridBasedGrowthFunction#nGridY), to the growth rate [ex, ey, ez] in the format [ DV axis (x), AP axis (y), and AB axis (z)].
 
 	void preCalculateAnglesForCompatibleAveraging(){
-		for (int IndexX = 0; IndexX<nGridX-1; ++IndexX){
-			for (int IndexY = 0; IndexY<nGridY-1; ++IndexY){
+		for (size_t IndexX = 0; IndexX<nGridX-1; ++IndexX){
+			for (size_t IndexY = 0; IndexY<nGridY-1; ++IndexY){
 				//read the growth rates at four corners for this grid point:
 				double growth0[3] = {0.0,0.0,0.0};
 				double growth1[3] = {0.0,0.0,0.0};

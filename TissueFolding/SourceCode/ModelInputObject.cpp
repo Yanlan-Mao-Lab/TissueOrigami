@@ -22,8 +22,8 @@ ModelInputObject::ModelInputObject(){
 };
 
 ModelInputObject::~ModelInputObject(){
-	//cout<<"called the destructor for ModelInputObject class"<<endl;
-	//cout<<"finalised the destructor for ModelInputObject class"<<endl;
+	//std::cout<<"called the destructor for ModelInputObject class"<<std::endl;
+	//std::cout<<"finalised the destructor for ModelInputObject class"<<std::endl;
 };
 
 bool ModelInputObject::readParameters(){
@@ -235,8 +235,8 @@ bool ModelInputObject::readParameters(){
 				 * unexpected line in the model input file, it will throw an error with a corresponding explanatory message,
 				 * and quit the simulation.
 				 */
-				cerr<<"Unidentified parameter input line: "<<endl;
-				cerr<<"		"<<currParameterHeader<<endl;
+				std::cerr<<"Unidentified parameter input line: "<<std::endl;
+				std::cerr<<"		"<<currParameterHeader<<std::endl;
 				return false;
 			}
 			if (!Success){
@@ -254,11 +254,11 @@ bool ModelInputObject::checkFileStatus(ifstream& file, string fileName){
 	 *
 	 */
 	if (!file.is_open()) {
-		cout<<"Cannot open parameter input file, "<<fileName<<endl;
+		std::cout<<"Cannot open parameter input file, "<<fileName<<std::endl;
 		return false;
 	}
 	if (!file.good()) {
-		cout<<"File does not exist, "<<fileName<<endl;
+		std::cout<<"File does not exist, "<<fileName<<std::endl;
 		return false;
 	}
 	return true;
@@ -279,7 +279,7 @@ bool ModelInputObject::readGrowthOptions(ifstream& file){
 		Sim->nGrowthFunctions = n;
 	}
 	else{
-		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: NumberofGrowthFunctions(int):" <<endl;
+		std::cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: NumberofGrowthFunctions(int):" <<std::endl;
 		return false;
 	}
 	/**
@@ -294,7 +294,7 @@ bool ModelInputObject::readGrowthOptions(ifstream& file){
 		Sim->GridGrowthsPinnedOnInitialMesh = tmpBool;
 	}
 	else{
-		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: GridGrowthsPinnedOnInitialMesh(bool):" <<endl;
+		std::cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: GridGrowthsPinnedOnInitialMesh(bool):" <<std::endl;
 		return false;
 	}
 	/**
@@ -304,17 +304,16 @@ bool ModelInputObject::readGrowthOptions(ifstream& file){
 	if(currHeader == "PinningUpdateTimes(number-times(sec)):"){
 		file >> Sim->nGrowthPinning;
 		if ( Sim->nGrowthPinning > 0){
-			Sim->growthPinUpdateTime = new int[(const int) Sim->nGrowthPinning];
-			Sim->growthPinUpdateBools = new bool[(const int) Sim->nGrowthPinning];
-
 			for (int j=0; j<Sim->nGrowthPinning; ++j){
-				file >> Sim->growthPinUpdateTime[j];
-				Sim->growthPinUpdateBools[j] = false;
+				int currentUpdateTime;
+				file >> currentUpdateTime;
+				Sim->growthPinUpdateTime.push_back(currentUpdateTime);
+				Sim->growthPinUpdateBools.push_back(false);
 			}
 		}
 	}
 	else{
-		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: PinningUpdateTimes(number-times(sec)):" <<endl;
+		std::cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: PinningUpdateTimes(number-times(sec)):" <<std::endl;
 		return false;
 	}
 	/**
@@ -328,7 +327,7 @@ bool ModelInputObject::readGrowthOptions(ifstream& file){
 		file >> Sim->gridGrowthsInterpolationType;
 	}
 	else{
-		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: GridGrowthsInterpolationType(0=step,1=linear):" <<endl;
+		std::cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: GridGrowthsInterpolationType(0=step,1=linear):" <<std::endl;
 		return false;
 	}
 	/**
@@ -345,7 +344,7 @@ bool ModelInputObject::readGrowthOptions(ifstream& file){
 			file >> type;
 		}
 		else{
-			cerr<<"Error in reading growth type, curr string: "<<currHeader<<", should have been: GrowthFunctionType(int-seeDocumentation):" <<endl;
+			std::cerr<<"Error in reading growth type, curr string: "<<currHeader<<", should have been: GrowthFunctionType(int-seeDocumentation):" <<std::endl;
 			return false;
 		}
 		bool Success = true;
@@ -368,14 +367,14 @@ bool ModelInputObject::readGrowthOptions(ifstream& file){
 			Success = readGrowthType3(file);
 		}
 		else{
-			cerr<<"Error in reading growth type, please enter a valid type: {1, 2, 3}, current type: "<<type<<endl;
+			std::cerr<<"Error in reading growth type, please enter a valid type: {1, 2, 3}, current type: "<<type<<std::endl;
 			return false;
 		}
 		if (!Success){
 			return false;
 		}
 	}
-	std::cout<<"Finalised reading growth options"<<endl;
+	std::cout<<"Finalised reading growth options"<<std::endl;
 	return true;
 }
 
@@ -394,7 +393,7 @@ bool ModelInputObject::readGrowthType1(ifstream& file){
 	 */
 	string currHeader;
 	file >> currHeader;
-	cout<<"entered read growth type 1, current header: "<<currHeader<<endl;
+	std::cout<<"entered read growth type 1, current header: "<<currHeader<<std::endl;
 	float initialtime;
 	float finaltime;
 	bool applyToColumnarLayer = false;
@@ -409,7 +408,7 @@ bool ModelInputObject::readGrowthType1(ifstream& file){
 		file >> initialtime;
 	}
 	else{
-		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: InitialTime(sec):" <<endl;
+		std::cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: InitialTime(sec):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -417,7 +416,7 @@ bool ModelInputObject::readGrowthType1(ifstream& file){
 		file >> finaltime;
 	}
 	else{
-		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: FinalTime(sec):" <<endl;
+		std::cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: FinalTime(sec):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -425,7 +424,7 @@ bool ModelInputObject::readGrowthType1(ifstream& file){
 			file >> applyToColumnarLayer;
 	}
 	else{
-		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: ApplyToColumnarLayer(bool):" <<endl;
+		std::cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: ApplyToColumnarLayer(bool):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -433,7 +432,7 @@ bool ModelInputObject::readGrowthType1(ifstream& file){
 			file >> applyToPeripodialMembrane;
 	}
 	else{
-		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: ApplyToPeripodialMembrane(bool):" <<endl;
+		std::cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: ApplyToPeripodialMembrane(bool):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -441,7 +440,7 @@ bool ModelInputObject::readGrowthType1(ifstream& file){
 			file >> applyToBasalECM;
 	}
 	else{
-		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: applyToBasalECM(bool):" <<endl;
+		std::cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: applyToBasalECM(bool):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -449,7 +448,7 @@ bool ModelInputObject::readGrowthType1(ifstream& file){
 			file >> applyToLateralECM;
 	}
 	else{
-		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: applyToLateralECM(bool):" <<endl;
+		std::cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: applyToLateralECM(bool):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -468,7 +467,7 @@ bool ModelInputObject::readGrowthType1(ifstream& file){
 		ABRate *= timeMultiplier;
 	}
 	else{
-		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: MaxValue(fractionPerHour-xyz):" <<endl;
+		std::cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: MaxValue(fractionPerHour-xyz):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -480,7 +479,7 @@ bool ModelInputObject::readGrowthType1(ifstream& file){
 		angle *= M_PI/180.0; 	 // converting to radians
 	}
 	else{
-		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: Angle(degrees):" <<endl;
+		std::cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: Angle(degrees):" <<std::endl;
 		return false;
 	}
 	/**
@@ -517,7 +516,7 @@ bool ModelInputObject::readGrowthType2(ifstream& file){
 	 */
 	string currHeader;
 	file >> currHeader;
-	cout<<"entered read growth type 2, current header: "<<currHeader<<endl;
+	std::cout<<"entered read growth type 2, current header: "<<currHeader<<std::endl;
 	float initialtime;
 	float finaltime;
 	bool applyToColumnarLayer = false;
@@ -533,7 +532,7 @@ bool ModelInputObject::readGrowthType2(ifstream& file){
 		file >> initialtime;
 	}
 	else{
-		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: InitialTime(sec):" <<endl;
+		std::cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: InitialTime(sec):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -541,7 +540,7 @@ bool ModelInputObject::readGrowthType2(ifstream& file){
 		file >> finaltime;
 	}
 	else{
-		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: FinalTime(sec):" <<endl;
+		std::cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: FinalTime(sec):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -549,7 +548,7 @@ bool ModelInputObject::readGrowthType2(ifstream& file){
 			file >> applyToColumnarLayer;
 	}
 	else{
-		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: ApplyToColumnarLayer(bool):" <<endl;
+		std::cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: ApplyToColumnarLayer(bool):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -557,7 +556,7 @@ bool ModelInputObject::readGrowthType2(ifstream& file){
 			file >> applyToPeripodialMembrane;
 	}
 	else{
-		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: ApplyToPeripodialMembrane(bool):" <<endl;
+		std::cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: ApplyToPeripodialMembrane(bool):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -565,7 +564,7 @@ bool ModelInputObject::readGrowthType2(ifstream& file){
 			file >> applyToBasalECM;
 	}
 	else{
-		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: applyToBasalECM(bool):" <<endl;
+		std::cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: applyToBasalECM(bool):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -573,7 +572,7 @@ bool ModelInputObject::readGrowthType2(ifstream& file){
 			file >> applyToLateralECM;
 	}
 	else{
-		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: applyToLateralECM(bool):" <<endl;
+		std::cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: applyToLateralECM(bool):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -585,7 +584,7 @@ bool ModelInputObject::readGrowthType2(ifstream& file){
 		file >> CentreY;
 	}
 	else{
-		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: Centre:" <<endl;
+		std::cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: Centre:" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -598,7 +597,7 @@ bool ModelInputObject::readGrowthType2(ifstream& file){
 		file >> innerR;
 	}
 	else{
-		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: Radius:" <<endl;
+		std::cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: Radius:" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -610,7 +609,7 @@ bool ModelInputObject::readGrowthType2(ifstream& file){
 		file >> outerR;
 	}
 	else{
-		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: Radius:" <<endl;
+		std::cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: Radius:" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -629,7 +628,7 @@ bool ModelInputObject::readGrowthType2(ifstream& file){
 		ABRate *= timeMultiplier;
 	}
 	else{
-		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: MaxValue(fractionPerHour-DV,AP,AB):" <<endl;
+		std::cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: MaxValue(fractionPerHour-DV,AP,AB):" <<std::endl;
 		return false;
 	}
 	double angle;
@@ -642,7 +641,7 @@ bool ModelInputObject::readGrowthType2(ifstream& file){
 		angle *= M_PI/180.0; 	 // converting to radians
 	}
 	else{
-		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: Angle(degrees):" <<endl;
+		std::cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: Angle(degrees):" <<std::endl;
 		return false;
 	}
 	/**
@@ -688,7 +687,7 @@ bool ModelInputObject::readGrowthType3(ifstream& file){
 		file >> initialtime;
 	}
 	else{
-		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: InitialTime(sec):" <<endl;
+		std::cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: InitialTime(sec):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -696,7 +695,7 @@ bool ModelInputObject::readGrowthType3(ifstream& file){
 		file >> finaltime;
 	}
 	else{
-		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: FinalTime(sec):" <<endl;
+		std::cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: FinalTime(sec):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -704,7 +703,7 @@ bool ModelInputObject::readGrowthType3(ifstream& file){
 			file >> applyToColumnarLayer;
 	}
 	else{
-		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: ApplyToColumnarLayer(bool):" <<endl;
+		std::cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: ApplyToColumnarLayer(bool):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -712,7 +711,7 @@ bool ModelInputObject::readGrowthType3(ifstream& file){
 			file >> applyToPeripodialMembrane;
 	}
 	else{
-		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: ApplyToPeripodialMembrane(bool):" <<endl;
+		std::cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: ApplyToPeripodialMembrane(bool):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -720,7 +719,7 @@ bool ModelInputObject::readGrowthType3(ifstream& file){
 			file >> applyToBasalECM;
 	}
 	else{
-		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: applyToBasalECM(bool):" <<endl;
+		std::cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: applyToBasalECM(bool):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -728,7 +727,7 @@ bool ModelInputObject::readGrowthType3(ifstream& file){
 			file >> applyToLateralECM;
 	}
 	else{
-		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: applyToLateralECM(bool):" <<endl;
+		std::cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: applyToLateralECM(bool):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -761,14 +760,14 @@ bool ModelInputObject::readGrowthType3(ifstream& file){
 		GrowthRateFile >> gridX;
 		GrowthRateFile >> gridY;
 		float rate;
-        cout<<"initiating growth and angle matrices"<<std::endl;
+        std::cout<<"initiating growth and angle matrices"<<std::endl;
         /**
          * Then the stacked arrays are generated for the growth rate and the growth orientation matrices, if I have time, I will convert these to vectors, which are
          * much more cleaner then new double arrays. Growth matrix has three layers, x & y coordinates on the bounding box and the 3D growth.
          * Orientation angles have 2 laters, x & y directions only, followed by a single angle value.
          * All initiated as zeros.
          */
-        for (size_t i= 0; i<gridX; ++i){
+        for (int i= 0; i<gridX; ++i){
             std::vector<std::array<double,3>> tmpGridMatrixY(gridY,std::array<double,3>{0.0});
             GrowthMatrix.push_back(tmpGridMatrixY);
             std::vector<double> tmpShearY(gridY,0.0);
@@ -778,7 +777,7 @@ bool ModelInputObject::readGrowthType3(ifstream& file){
 		/**
 		 * Then the growth rates and angles are read in.
 		 */
-		cout<<"reading growth matrix"<<endl;
+		std::cout<<"reading growth matrix"<<std::endl;
 		for (int j=gridY-1; j>-1; --j){
 			for (int i=0; i<gridX; ++i){
 				for (int k=0; k<3; ++k){
@@ -787,7 +786,7 @@ bool ModelInputObject::readGrowthType3(ifstream& file){
 					//std::cout<<"rate: "<<rate<<" ";
 					//GrowthMatrix[i][j][k] = rate*timeMultiplier;
 					GrowthMatrix[i][j][k] = rate;
-					//std::cout<<"matrix value: "<<GrowthMatrix[i][j][k]<<endl;
+					//std::cout<<"matrix value: "<<GrowthMatrix[i][j][k]<<std::endl;
 				}
 			}
 		}
@@ -812,7 +811,7 @@ bool ModelInputObject::readGrowthType3(ifstream& file){
 		}
 	}
 	else{
-		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: Filename(full-path):" <<endl;
+		std::cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: Filename(full-path):" <<std::endl;
 		return false;
 	}
 	/**
@@ -828,7 +827,7 @@ bool ModelInputObject::readGrowthType3(ifstream& file){
 		file >> zMax;
 	}
 	else{
-		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: zRange:" <<endl;
+		std::cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: zRange:" <<std::endl;
 		return false;
 	}
 	/**
@@ -861,7 +860,7 @@ bool ModelInputObject::readMeshParameters(ifstream& file){
 		file >> Sim->MeshType;
 	}
 	else{
-		cerr<<"Error in reading mesh type, curr string: "<<currHeader<<", should have been: MeshInputMode(seeDocumentation):" <<endl;
+		std::cerr<<"Error in reading mesh type, curr string: "<<currHeader<<", should have been: MeshInputMode(seeDocumentation):" <<std::endl;
 		return false;
 	}
 	if ( Sim->MeshType == 2 ){
@@ -893,7 +892,7 @@ bool ModelInputObject::readMeshParameters(ifstream& file){
 		file >> Sim->symmetricX;
 	}
 	else{
-		cerr<<"Error in reading mesh type, curr string: "<<currHeader<<", should have been: symmetricInX(bool):" <<endl;
+		std::cerr<<"Error in reading mesh type, curr string: "<<currHeader<<", should have been: symmetricInX(bool):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -901,7 +900,7 @@ bool ModelInputObject::readMeshParameters(ifstream& file){
 		file >> Sim->symmetricY;
 	}
 	else{
-		cerr<<"Error in reading mesh type, curr string: "<<currHeader<<", should have been: symmetricInY(bool):" <<endl;
+		std::cerr<<"Error in reading mesh type, curr string: "<<currHeader<<", should have been: symmetricInY(bool):" <<std::endl;
 		return false;
 	}
 	return true;
@@ -928,7 +927,7 @@ bool ModelInputObject::readExternalViscosityParameters(ifstream& file){
 		file >>Sim->extendExternalViscosityToInnerTissue;
 	}
 	else{
-		cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: DiscProperApicalExternalViscosity:" <<endl;
+		std::cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: DiscProperApicalExternalViscosity:" <<std::endl;
 		return false;
 	}
 	/**
@@ -941,7 +940,7 @@ bool ModelInputObject::readExternalViscosityParameters(ifstream& file){
 		file >>Sim->externalViscosityDPApical;
 	}
 	else{
-		cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: DiscProperApicalExternalViscosity:" <<endl;
+		std::cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: DiscProperApicalExternalViscosity:" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -949,7 +948,7 @@ bool ModelInputObject::readExternalViscosityParameters(ifstream& file){
 		file >>Sim->externalViscosityDPBasal;
 	}
 	else{
-		cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: DiscProperBasalExternalViscosity:" <<endl;
+		std::cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: DiscProperBasalExternalViscosity:" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -957,7 +956,7 @@ bool ModelInputObject::readExternalViscosityParameters(ifstream& file){
 		file >>Sim->externalViscosityPMApical;
 	}
 	else{
-		cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: PeripodialMembraneApicalExternalViscosity:" <<endl;
+		std::cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: PeripodialMembraneApicalExternalViscosity:" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -965,7 +964,7 @@ bool ModelInputObject::readExternalViscosityParameters(ifstream& file){
 		file >>Sim->externalViscosityPMBasal;
 	}
 	else{
-		cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: PeripodialMembraneBasalExternalViscosity:" <<endl;
+		std::cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: PeripodialMembraneBasalExternalViscosity:" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -973,7 +972,7 @@ bool ModelInputObject::readExternalViscosityParameters(ifstream& file){
 		file >>Sim->externalViscosityLZApical;
 	}
 	else{
-		cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: LinkerZoneApicalExternalViscosity:" <<endl;
+		std::cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: LinkerZoneApicalExternalViscosity:" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -981,14 +980,14 @@ bool ModelInputObject::readExternalViscosityParameters(ifstream& file){
 		file >>Sim->externalViscosityLZBasal;
 	}
 	else{
-		cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: LinkerZoneBasalExternalViscosity:" <<endl;
+		std::cerr<<"Error in reading Fixing option, curr string: "<<currHeader<<", should have been: LinkerZoneBasalExternalViscosity:" <<std::endl;
 		return false;
 	}
 	return true;
 }
 
 void ModelInputObject::printErrorMessage(string currentInput, string sourceFuction, string expectedInput){
-	cerr<<"Error in reading "<<sourceFuction<<" current input: "<<currentInput<<", should have been: "<<expectedInput<<endl;
+	std::cerr<<"Error in reading "<<sourceFuction<<" current input: "<<currentInput<<", should have been: "<<expectedInput<<std::endl;
 }
 
 bool ModelInputObject::readNodeBindingParameters(ifstream& file){
@@ -1288,7 +1287,7 @@ bool ModelInputObject::readManupulationParamters(ifstream& file){
 		file >>Sim->tissueCurvatureDepth;
 	}
 	else{
-		cerr<<"Error in reading manipulations options, curr string: "<<currHeader<<", should have been: CurvatureDepthAtCentre(double-microns):" <<endl;
+		std::cerr<<"Error in reading manipulations options, curr string: "<<currHeader<<", should have been: CurvatureDepthAtCentre(double-microns):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -1296,7 +1295,7 @@ bool ModelInputObject::readManupulationParamters(ifstream& file){
 		file >>Sim->softPeriphery;
 	}
 	else{
-		cerr<<"Error in reading manipulations options, curr string: "<<currHeader<<", should have been: AddSoftPeriphery(bool):" <<endl;
+		std::cerr<<"Error in reading manipulations options, curr string: "<<currHeader<<", should have been: AddSoftPeriphery(bool):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -1304,7 +1303,7 @@ bool ModelInputObject::readManupulationParamters(ifstream& file){
 		file >>Sim->softDepth;
 	}
 	else{
-		cerr<<"Error in reading manipulations options, curr string: "<<currHeader<<", should have been: SoftPeripheryRange(double-microns):" <<endl;
+		std::cerr<<"Error in reading manipulations options, curr string: "<<currHeader<<", should have been: SoftPeripheryRange(double-microns):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -1312,7 +1311,7 @@ bool ModelInputObject::readManupulationParamters(ifstream& file){
 		file >>Sim->softnessFraction;
 	}
 	else{
-		cerr<<"Error in reading manipulations options, curr string: "<<currHeader<<", should have been: SoftnessFraction(double-fraction):" <<endl;
+		std::cerr<<"Error in reading manipulations options, curr string: "<<currHeader<<", should have been: SoftnessFraction(double-fraction):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -1320,7 +1319,7 @@ bool ModelInputObject::readManupulationParamters(ifstream& file){
 		file >>Sim->softPeripheryBooleans[0];
 	}
 	else{
-		cerr<<"Error in reading manipulations options, curr string: "<<currHeader<<", should have been: ApplyToApicalSurface(bool):" <<endl;
+		std::cerr<<"Error in reading manipulations options, curr string: "<<currHeader<<", should have been: ApplyToApicalSurface(bool):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -1328,21 +1327,21 @@ bool ModelInputObject::readManupulationParamters(ifstream& file){
 		file >>Sim->softPeripheryBooleans[1];
 	}
 	else{
-		cerr<<"Error in reading manipulations options, curr string: "<<currHeader<<", should have been: ApplyToBasalSurface(bool):" <<endl;
+		std::cerr<<"Error in reading manipulations options, curr string: "<<currHeader<<", should have been: ApplyToBasalSurface(bool):" <<std::endl;
 		return false;
 	}	file >> currHeader;
 	if(currHeader == "ApplyToColumnarLayer(bool):"){
 		file >>Sim->softPeripheryBooleans[2];
 	}
 	else{
-		cerr<<"Error in reading manipulations options, curr string: "<<currHeader<<", should have been: ApplyToColumnarLayer(bool):" <<endl;
+		std::cerr<<"Error in reading manipulations options, curr string: "<<currHeader<<", should have been: ApplyToColumnarLayer(bool):" <<std::endl;
 		return false;
 	}	file >> currHeader;
 	if(currHeader == "ApplyToPeripodialMembrane(bool):"){
 		file >>Sim->softPeripheryBooleans[3];
 	}
 	else{
-		cerr<<"Error in reading manipulations options, curr string: "<<currHeader<<", should have been: ApplyToPeripodialMembrane(bool):" <<endl;
+		std::cerr<<"Error in reading manipulations options, curr string: "<<currHeader<<", should have been: ApplyToPeripodialMembrane(bool):" <<std::endl;
 		return false;
 	}
 	//Reading Random Force Parameters
@@ -1351,7 +1350,7 @@ bool ModelInputObject::readManupulationParamters(ifstream& file){
 		file >>Sim->addingRandomForces;
 	}
 	else{
-		cerr<<"Error in reading manipulations options, curr string: "<<currHeader<<", should have been: AddRandomForce(bool):" <<endl;
+		std::cerr<<"Error in reading manipulations options, curr string: "<<currHeader<<", should have been: AddRandomForce(bool):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -1359,7 +1358,7 @@ bool ModelInputObject::readManupulationParamters(ifstream& file){
 		file >>Sim->randomForceMean;
 	}
 	else{
-		cerr<<"Error in reading manipulations options, curr string: "<<currHeader<<", should have been: RandomForceMean(double):" <<endl;
+		std::cerr<<"Error in reading manipulations options, curr string: "<<currHeader<<", should have been: RandomForceMean(double):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -1367,7 +1366,7 @@ bool ModelInputObject::readManupulationParamters(ifstream& file){
 		file >>Sim->randomForceVar;
 	}
 	else{
-		cerr<<"Error in reading manipulations options, curr string: "<<currHeader<<", should have been: RandomForceVar(double):" <<endl;
+		std::cerr<<"Error in reading manipulations options, curr string: "<<currHeader<<", should have been: RandomForceVar(double):" <<std::endl;
 		return false;
 	}
 	return true;
@@ -1386,7 +1385,7 @@ bool ModelInputObject::readMeshType4(ifstream& file){
 		file >> Sim->inputMeshFileName;
 	}
 	else{
-		cerr<<"Error in reading mesh path, curr string: "<<currHeader<<", should have been: MeshFile(full-path):" <<endl;
+		std::cerr<<"Error in reading mesh path, curr string: "<<currHeader<<", should have been: MeshFile(full-path):" <<std::endl;
 		return false;
 	}
 	return true;
@@ -1410,7 +1409,7 @@ bool ModelInputObject::readMeshType2(ifstream& file){
 		file >> Sim->Row;
 	}
 	else{
-		cerr<<"Error in reading mesh row number, curr string: "<<currHeader<<", should have been: MeshRow(int):" <<endl;
+		std::cerr<<"Error in reading mesh row number, curr string: "<<currHeader<<", should have been: MeshRow(int):" <<std::endl;
 		return false;
 	}
 
@@ -1419,7 +1418,7 @@ bool ModelInputObject::readMeshType2(ifstream& file){
 		file >> Sim->Column;
 	}
 	else{
-		cerr<<"Error in reading mesh column number, curr string: "<<currHeader<<", should have been: MeshColumn(int):" <<endl;
+		std::cerr<<"Error in reading mesh column number, curr string: "<<currHeader<<", should have been: MeshColumn(int):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -1427,7 +1426,7 @@ bool ModelInputObject::readMeshType2(ifstream& file){
 		file >> Sim->SideLength;
 	}
 	else{
-		cerr<<"Error in reading side length, curr string: "<<currHeader<<", should have been: SideLength:" <<endl;
+		std::cerr<<"Error in reading side length, curr string: "<<currHeader<<", should have been: SideLength:" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -1435,18 +1434,18 @@ bool ModelInputObject::readMeshType2(ifstream& file){
 		file >> Sim->zHeight;
 	}
 	else{
-		cerr<<"Error in reading z height, curr string: "<<currHeader<<", should have been: zHeight:" <<endl;
+		std::cerr<<"Error in reading z height, curr string: "<<currHeader<<", should have been: zHeight:" <<std::endl;
 		return false;
 	}
 	//checking consistency:
 	if (Sim->Column>Sim->Row-2){
 		Sim->Column = Sim->Row-2;
-		Sim->outputFile<<"Too few rows vs. columns, column count cannot be higher than Row-2"<<endl;
-		Sim->outputFile<<"Updated to have a mesh: Row: "<<Sim->Row<<" Column: "<<Sim->Column<<endl;
+		Sim->outputFile<<"Too few rows vs. columns, column count cannot be higher than Row-2"<<std::endl;
+		Sim->outputFile<<"Updated to have a mesh: Row: "<<Sim->Row<<" Column: "<<Sim->Column<<std::endl;
 	}
 	float aspectratio = Sim->zHeight/Sim->SideLength;
 	if ( aspectratio > 10 || aspectratio < 0.01 ){
-		Sim->outputFile<<"Warning: The aspect ratio of the shapes are too high or low (aspectratio (z/side): "<<aspectratio<<endl;
+		Sim->outputFile<<"Warning: The aspect ratio of the shapes are too high or low (aspectratio (z/side): "<<aspectratio<<std::endl;
 	}
 	return true;
 }
@@ -1474,7 +1473,7 @@ bool ModelInputObject::readPeripodialMembraneParameters(ifstream& file){
 		file >>Sim->AddPeripodialMembrane;
 	}
 	else{
-		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: AddPeripodialMembrane:" <<endl;
+		std::cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: AddPeripodialMembrane:" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -1482,7 +1481,7 @@ bool ModelInputObject::readPeripodialMembraneParameters(ifstream& file){
 		file >>Sim->PeripodialThicnessScale;
 	}
 	else{
-		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: PeripodialMembraneThickness(fractionOfTissueHeight):" <<endl;
+		std::cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: PeripodialMembraneThickness(fractionOfTissueHeight):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -1490,7 +1489,7 @@ bool ModelInputObject::readPeripodialMembraneParameters(ifstream& file){
 		file >>Sim->PeripodialLateralThicnessScale;
 	}
 	else{
-		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: PeripodialMembraneLateralThickness(fractionOfTissueHeight):" <<endl;
+		std::cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: PeripodialMembraneLateralThickness(fractionOfTissueHeight):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -1498,7 +1497,7 @@ bool ModelInputObject::readPeripodialMembraneParameters(ifstream& file){
 		file >>Sim->lumenHeightScale;
 	}
 	else{
-		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: LumenHeightScale(fractionOfTissueHeight):" <<endl;
+		std::cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: LumenHeightScale(fractionOfTissueHeight):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -1506,7 +1505,7 @@ bool ModelInputObject::readPeripodialMembraneParameters(ifstream& file){
 		file >>Sim->PeripodialElasticity;
 	}
 	else{
-		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: PeripodialMembraneYoungsModulus:" <<endl;
+		std::cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: PeripodialMembraneYoungsModulus:" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -1514,7 +1513,7 @@ bool ModelInputObject::readPeripodialMembraneParameters(ifstream& file){
 		file >>Sim->peripodialApicalViscosity;
 	}
 	else{
-		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: PeripodialMembraneApicalViscosity:" <<endl;
+		std::cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: PeripodialMembraneApicalViscosity:" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -1522,7 +1521,7 @@ bool ModelInputObject::readPeripodialMembraneParameters(ifstream& file){
 		file >>Sim->peripodialBasalViscosity;
 	}
 	else{
-		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: PeripodialMembraneBasalViscosity:" <<endl;
+		std::cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: PeripodialMembraneBasalViscosity:" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -1530,7 +1529,7 @@ bool ModelInputObject::readPeripodialMembraneParameters(ifstream& file){
 		file >>Sim->peripodialMidlineViscosity;
 	}
 	else{
-		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: PeripodialMembraneMidlineViscosity:" <<endl;
+		std::cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: PeripodialMembraneMidlineViscosity:" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -1555,7 +1554,7 @@ bool ModelInputObject::readLinkerZoneParameters(ifstream& file){
 		file >>Sim->BaseLinkerZoneParametersOnPeripodialness;
 	}
 	else{
-		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: BaseOnPeripodialness(bool):" <<endl;
+		std::cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: BaseOnPeripodialness(bool):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -1563,7 +1562,7 @@ bool ModelInputObject::readLinkerZoneParameters(ifstream& file){
 		file >>Sim->LinkerZoneApicalElasticity;
 	}
 	else{
-		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: LinkerZoneApicalYoungsModulus:" <<endl;
+		std::cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: LinkerZoneApicalYoungsModulus:" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -1571,7 +1570,7 @@ bool ModelInputObject::readLinkerZoneParameters(ifstream& file){
 		file >>Sim->LinkerZoneBasalYoungsModulus;
 	}
 	else{
-		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: LinkerZoneBasalYoungsModulus:" <<endl;
+		std::cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: LinkerZoneBasalYoungsModulus:" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -1579,7 +1578,7 @@ bool ModelInputObject::readLinkerZoneParameters(ifstream& file){
 		file >>Sim->linkerZoneApicalViscosity;
 	}
 	else{
-		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: LinkerZoneApicalViscosity:" <<endl;
+		std::cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: LinkerZoneApicalViscosity:" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -1587,7 +1586,7 @@ bool ModelInputObject::readLinkerZoneParameters(ifstream& file){
 		file >>Sim->linkerZoneBasalViscosity;
 	}
 	else{
-		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: LinkerZoneBasalViscosity:" <<endl;
+		std::cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: LinkerZoneBasalViscosity:" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -1595,7 +1594,7 @@ bool ModelInputObject::readLinkerZoneParameters(ifstream& file){
 		file >>Sim->linkerZoneMidlineViscosity;
 	}
 	else{
-		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: LinkerZoneMidlineViscosity:" <<endl;
+		std::cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: LinkerZoneMidlineViscosity:" <<std::endl;
 		return false;
 	}
 	return true;
@@ -1618,7 +1617,7 @@ bool ModelInputObject::readTimeParameters(ifstream& file){
 		file >> Sim->dt;
 	}
 	else{
-		cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: TimeStep(sec):" <<endl;
+		std::cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: TimeStep(sec):" <<std::endl;
 		return false;
 	}
 
@@ -1627,12 +1626,12 @@ bool ModelInputObject::readTimeParameters(ifstream& file){
 		file >> Sim->SimLength;
 	}
 	else{
-		cerr<<"Error in reading simulation length, curr string: "<<currHeader<<" should have been: SimulationLength(sec)::" <<endl;
+		std::cerr<<"Error in reading simulation length, curr string: "<<currHeader<<" should have been: SimulationLength(sec)::" <<std::endl;
 		return false;
 	}
 
-	cout<<"Simulation time step	: "<<Sim->dt<<endl;
-	cout<<"Simulation Length	: "<<Sim->SimLength<<endl;
+	std::cout<<"Simulation time step	: "<<Sim->dt<<std::endl;
+	std::cout<<"Simulation Length	: "<<Sim->SimLength<<std::endl;
 	return true;
 }
 
@@ -1658,7 +1657,7 @@ bool ModelInputObject::readPysicalProperties(ifstream& file){
 		file >> Sim->EApical;
 	}
 	else{
-		cerr<<"Error in reading Young's modulus, curr string: "<<currHeader<<" should have been: YoungsModulusApical:" <<endl;
+		std::cerr<<"Error in reading Young's modulus, curr string: "<<currHeader<<" should have been: YoungsModulusApical:" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -1666,7 +1665,7 @@ bool ModelInputObject::readPysicalProperties(ifstream& file){
 		file >> Sim->EBasal;
 	}
 	else{
-		cerr<<"Error in reading Young's modulus, curr string: "<<currHeader<<" should have been: YoungsModulusBasal:" <<endl;
+		std::cerr<<"Error in reading Young's modulus, curr string: "<<currHeader<<" should have been: YoungsModulusBasal:" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -1674,7 +1673,7 @@ bool ModelInputObject::readPysicalProperties(ifstream& file){
 		file >> Sim->EMid;
 	}
 	else{
-		cerr<<"Error in reading Young's modulus, curr string: "<<currHeader<<" should have been: YoungsModulusMid:" <<endl;
+		std::cerr<<"Error in reading Young's modulus, curr string: "<<currHeader<<" should have been: YoungsModulusMid:" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -1682,7 +1681,7 @@ bool ModelInputObject::readPysicalProperties(ifstream& file){
 		file >> Sim->noiseOnPysProp[0];
 	}
 	else{
-		cerr<<"Error in reading Young's modulus noise, curr string: "<<currHeader<<" should have been: Noise(%-int)" <<endl;
+		std::cerr<<"Error in reading Young's modulus noise, curr string: "<<currHeader<<" should have been: Noise(%-int)" <<std::endl;
 		return false;
 	}
 
@@ -1691,7 +1690,7 @@ bool ModelInputObject::readPysicalProperties(ifstream& file){
 		file >> Sim->poisson;
 	}
 	else{
-		cerr<<"Error in reading Poisson's ratio, curr string: "<<currHeader<<" should have been: PoissonsRatio:" <<endl;
+		std::cerr<<"Error in reading Poisson's ratio, curr string: "<<currHeader<<" should have been: PoissonsRatio:" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -1699,7 +1698,7 @@ bool ModelInputObject::readPysicalProperties(ifstream& file){
 		file >> Sim->noiseOnPysProp[1];
 	}
 	else{
-		cerr<<"Error in reading Poisson's Ratio noise, curr string: "<<currHeader<<" should have been: Noise(%-int)" <<endl;
+		std::cerr<<"Error in reading Poisson's Ratio noise, curr string: "<<currHeader<<" should have been: Noise(%-int)" <<std::endl;
 		return false;
 	}
 
@@ -1708,7 +1707,7 @@ bool ModelInputObject::readPysicalProperties(ifstream& file){
 		file >> Sim->discProperApicalViscosity;
 	}
 	else{
-		cerr<<"Error in reading Apical Viscosity, curr string: "<<currHeader<<" should have been: ApicalViscosity:" <<endl;
+		std::cerr<<"Error in reading Apical Viscosity, curr string: "<<currHeader<<" should have been: ApicalViscosity:" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -1716,7 +1715,7 @@ bool ModelInputObject::readPysicalProperties(ifstream& file){
 		file >> Sim->noiseOnPysProp[2];
 	}
 	else{
-		cerr<<"Error in reading Viscosity noise, curr string: "<<currHeader<<" should have been: Noise(%-int)" <<endl;
+		std::cerr<<"Error in reading Viscosity noise, curr string: "<<currHeader<<" should have been: Noise(%-int)" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -1724,7 +1723,7 @@ bool ModelInputObject::readPysicalProperties(ifstream& file){
 		file >> Sim->discProperBasalViscosity;
 	}
 	else{
-		cerr<<"Error in reading Basal Viscosity, curr string: "<<currHeader<<" should have been: BasalViscosity:" <<endl;
+		std::cerr<<"Error in reading Basal Viscosity, curr string: "<<currHeader<<" should have been: BasalViscosity:" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -1732,7 +1731,7 @@ bool ModelInputObject::readPysicalProperties(ifstream& file){
 		file >> Sim->discProperMidlineViscosity;
 	}
 	else{
-		cerr<<"Error in reading Midline Viscosity, curr string: "<<currHeader<<" should have been: MidLineViscosity:" <<endl;
+		std::cerr<<"Error in reading Midline Viscosity, curr string: "<<currHeader<<" should have been: MidLineViscosity:" <<std::endl;
 		return false;
 	}
 
@@ -1754,14 +1753,14 @@ bool ModelInputObject::readSaveOptions(ifstream& file){
   	 *   DataSaveInterval(sec):  1800
 	 *
 	 */
-	//cout<<"reading save options"<<endl;
+	//std::cout<<"reading save options"<<std::endl;
 	string currHeader;
 	file >> currHeader;
 	if(currHeader == "SaveImages(bool):"){
 		file >> Sim->saveImages;
 	}
 	else{
-		cerr<<"Error in reading image saving option, current string: "<<currHeader<<" should have been: SaveImages(bool):" <<endl;
+		std::cerr<<"Error in reading image saving option, current string: "<<currHeader<<" should have been: SaveImages(bool):" <<std::endl;
 		return false;
 	}
 
@@ -1770,7 +1769,7 @@ bool ModelInputObject::readSaveOptions(ifstream& file){
 		file >> Sim->saveData;
 	}
 	else{
-		cerr<<"Error in reading simulation data saving option, current string: "<<currHeader<<" should have been: SaveData(bool):" <<endl;
+		std::cerr<<"Error in reading simulation data saving option, current string: "<<currHeader<<" should have been: SaveData(bool):" <<std::endl;
 		return false;
 	}
 
@@ -1786,7 +1785,7 @@ bool ModelInputObject::readSaveOptions(ifstream& file){
         }
 	}
 	else{
-		cerr<<"Error in reading image save interval, current string: "<<currHeader<<" should have been: ImageSaveInterval(sec)" <<endl;
+		std::cerr<<"Error in reading image save interval, current string: "<<currHeader<<" should have been: ImageSaveInterval(sec)" <<std::endl;
 		return false;
 	}
 
@@ -1800,13 +1799,13 @@ bool ModelInputObject::readSaveOptions(ifstream& file){
         if (Sim->dataSaveInterval < 1 ){
           Sim->dataSaveInterval =1;
         }
-        cout<<"dataSaveInterval as read from file: "<<Sim->dataSaveInterval<<endl;
+        std::cout<<"dataSaveInterval as read from file: "<<Sim->dataSaveInterval<<std::endl;
 	}
 	else{
-		cerr<<"Error in reading data save interval, current string: "<<currHeader<<" should have been: DataSaveInterval(sec)" <<endl;
+		std::cerr<<"Error in reading data save interval, current string: "<<currHeader<<" should have been: DataSaveInterval(sec)" <<std::endl;
 		return false;
 	}
-	//cout<<"Sim->saveImages: "<<Sim->saveImages<<" Sim->saveData: "<<Sim->saveData<<" "<<" datainterval: "<<Sim->dataSaveInterval<<" imageinterval: "<<Sim->dataSaveInterval<<endl;
+	//std::cout<<"Sim->saveImages: "<<Sim->saveImages<<" Sim->saveData: "<<Sim->saveData<<" "<<" datainterval: "<<Sim->dataSaveInterval<<" imageinterval: "<<Sim->dataSaveInterval<<std::endl;
 	return true;
 }
 
@@ -1817,13 +1816,13 @@ bool ModelInputObject::readShapeChangeOptions(ifstream& file){
 	string currHeader;
 	file >> currHeader;
 	int n;
-	//cout<<"entered read shape change options, current header: "<<currHeader<<endl;
+	//std::cout<<"entered read shape change options, current header: "<<currHeader<<std::endl;
 	if(currHeader == "NumberofShapeChangeFunctions(int):"){
 		file >> n;
 		Sim->nShapeChangeFunctions = n;
 	}
 	else{
-		cerr<<"Error in reading shape change options, curr string: "<<currHeader<<", should have been: NumberofShapeChangeFunctions(int):" <<endl;
+		std::cerr<<"Error in reading shape change options, curr string: "<<currHeader<<", should have been: NumberofShapeChangeFunctions(int):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -1837,12 +1836,12 @@ bool ModelInputObject::readShapeChangeOptions(ifstream& file){
 	for (int i = 0; i<n; ++i){
 		file >> currHeader;
 		int type;
-		//cout<<"inside the loop, read shape change options, current header: "<<currHeader<<endl;
+		//std::cout<<"inside the loop, read shape change options, current header: "<<currHeader<<std::endl;
 		if(currHeader == "ShapeChangeFunctionType(int-seeDocumentation):"){
 			file >> type;
 		}
 		else{
-			cerr<<"Error in reading shpae change type, curr string: "<<currHeader<<", should have been: ShapeChangeFunctionType(int-seeDocumentation):" <<endl;
+			std::cerr<<"Error in reading shpae change type, curr string: "<<currHeader<<", should have been: ShapeChangeFunctionType(int-seeDocumentation):" <<std::endl;
 			return false;
 		}
 		if (type == 1){
@@ -1858,7 +1857,7 @@ bool ModelInputObject::readShapeChangeOptions(ifstream& file){
 			}
 		}
 		else{
-			cerr<<"Error in reading shape change type, please enter a valid type: {1},{2} current type: "<<type<<endl;
+			std::cerr<<"Error in reading shape change type, please enter a valid type: {1},{2} current type: "<<type<<std::endl;
 			return false;
 		}
 	}
@@ -1887,7 +1886,7 @@ bool ModelInputObject::readPlasticDeformationOptions(ifstream& file){
 		file >> Sim->thereIsPlasticDeformation;
 	}
 	else{
-		cerr<<"Error in reading plastic deformation options, curr string: "<<currHeader<<", should have been: ThereIsPlasticDeformation(bool):" <<endl;
+		std::cerr<<"Error in reading plastic deformation options, curr string: "<<currHeader<<", should have been: ThereIsPlasticDeformation(bool):" <<std::endl;
 		return false;
 	}
 
@@ -1897,7 +1896,7 @@ bool ModelInputObject::readPlasticDeformationOptions(ifstream& file){
 				file >> Sim->plasticDeformationAppliedToColumnar;
 		}
 		else{
-			cerr<<"Error in reading  plastic deformation options, curr string: "<<currHeader<<", should have been: ApplyToColumnarLayer(bool):" <<endl;
+			std::cerr<<"Error in reading  plastic deformation options, curr string: "<<currHeader<<", should have been: ApplyToColumnarLayer(bool):" <<std::endl;
 			return false;
 		}
 		file >> currHeader;
@@ -1905,7 +1904,7 @@ bool ModelInputObject::readPlasticDeformationOptions(ifstream& file){
 				file >> Sim->plasticDeformationAppliedToPeripodial;;
 		}
 		else{
-			cerr<<"Error in reading  plastic deformation options, curr string: "<<currHeader<<", should have been: ApplyToPeripodialMembrane(bool):" <<endl;
+			std::cerr<<"Error in reading  plastic deformation options, curr string: "<<currHeader<<", should have been: ApplyToPeripodialMembrane(bool):" <<std::endl;
 			return false;
 		}
 
@@ -1914,7 +1913,7 @@ bool ModelInputObject::readPlasticDeformationOptions(ifstream& file){
 		file >> Sim->volumeConservedInPlasticDeformation;
 	}
 	else{
-		cerr<<"Error in reading plastic deformation options, curr string: "<<currHeader<<", should have been: VolumeConserved(bool):" <<endl;
+		std::cerr<<"Error in reading plastic deformation options, curr string: "<<currHeader<<", should have been: VolumeConserved(bool):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -1923,7 +1922,7 @@ bool ModelInputObject::readPlasticDeformationOptions(ifstream& file){
 		Sim->plasticDeformationHalfLife *= 3600; //converting to seconds.
 	}
 	else{
-		cerr<<"Error in reading plastic deformation options, curr string: "<<currHeader<<", should have been: DeformationHalfLife(hour):" <<endl;
+		std::cerr<<"Error in reading plastic deformation options, curr string: "<<currHeader<<", should have been: DeformationHalfLife(hour):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -1932,7 +1931,7 @@ bool ModelInputObject::readPlasticDeformationOptions(ifstream& file){
 		file >> Sim->zRemodellingUpperThreshold;
 	}
 	else{
-		cerr<<"Error in reading plastic deformation options, curr string: "<<currHeader<<", should have been: zDeformationLimits(lowerFraction-upperFraction):" <<endl;
+		std::cerr<<"Error in reading plastic deformation options, curr string: "<<currHeader<<", should have been: zDeformationLimits(lowerFraction-upperFraction):" <<std::endl;
 		return false;
 	}
 	return true;
@@ -1953,7 +1952,7 @@ bool ModelInputObject::readShapeChangeType1(ifstream& file){
 		file >> initialtime;
 	}
 	else{
-		cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: InitialTime(sec):" <<endl;
+		std::cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: InitialTime(sec):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -1962,7 +1961,7 @@ bool ModelInputObject::readShapeChangeType1(ifstream& file){
 		//Sim->GrowthParameters.push_back(finaltime);
 	}
 	else{
-		cerr<<"Error in reading shape change options, curr string: "<<currHeader<<", should have been: FinalTime(sec):" <<endl;
+		std::cerr<<"Error in reading shape change options, curr string: "<<currHeader<<", should have been: FinalTime(sec):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -1970,7 +1969,7 @@ bool ModelInputObject::readShapeChangeType1(ifstream& file){
 			file >> applyToColumnarLayer;
 	}
 	else{
-		cerr<<"Error in reading shape change options, curr string: "<<currHeader<<", should have been: ApplyToColumnarLayer(bool):" <<endl;
+		std::cerr<<"Error in reading shape change options, curr string: "<<currHeader<<", should have been: ApplyToColumnarLayer(bool):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -1978,7 +1977,7 @@ bool ModelInputObject::readShapeChangeType1(ifstream& file){
 			file >> applyToPeripodialMembrane;
 	}
 	else{
-		cerr<<"Error in reading shape chenage options, curr string: "<<currHeader<<", should have been: ApplyToPeripodialMembrane(bool):" <<endl;
+		std::cerr<<"Error in reading shape chenage options, curr string: "<<currHeader<<", should have been: ApplyToPeripodialMembrane(bool):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -1988,10 +1987,10 @@ bool ModelInputObject::readShapeChangeType1(ifstream& file){
 		Rate  *= timeMultiplier;
 	}
 	else{
-		cerr<<"Error in reading shape change options, curr string: "<<currHeader<<", should have been: MaxValue(fractionPerHour-xyz):" <<endl;
+		std::cerr<<"Error in reading shape change options, curr string: "<<currHeader<<", should have been: MaxValue(fractionPerHour-xyz):" <<std::endl;
 		return false;
 	}
-	cerr<<"Shape change of type : 1, from time: "<<initialtime<<" to "<<finaltime<<" applicable to (C, P) "<<applyToColumnarLayer <<" "<<applyToPeripodialMembrane<<" Rate: "<<Rate<<endl;
+	std::cerr<<"Shape change of type : 1, from time: "<<initialtime<<" to "<<finaltime<<" applicable to (C, P) "<<applyToColumnarLayer <<" "<<applyToPeripodialMembrane<<" Rate: "<<Rate<<std::endl;
 	//GrowthFunctionBase* GSBp;
 	//int Id = Sim->ShapeChangeFunctions.size();
 	//type is 1
@@ -2153,11 +2152,11 @@ bool ModelInputObject::readStretcherSetup(ifstream& file){
 	if(currHeader == "StretcherAttached(bool):"){
 		bool stretcherAttached;
 		file >> stretcherAttached;
-		//cerr<<"stretcherAttached "<<stretcherAttached<<endl;
+		//std::cerr<<"stretcherAttached "<<stretcherAttached<<std::endl;
 		Sim->stretcherAttached = stretcherAttached;
 	}
 	else{
-		cerr<<"Error in reading stretcher setup: "<<currHeader<<", should have been: StretcherAttached(bool):" <<endl;
+		std::cerr<<"Error in reading stretcher setup: "<<currHeader<<", should have been: StretcherAttached(bool):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -2165,7 +2164,7 @@ bool ModelInputObject::readStretcherSetup(ifstream& file){
 		file >> Sim->DVClamp;
 	}
 	else{
-		cerr<<"Error in reading stretcher setup: "<<currHeader<<", should have been: ClampedOnDV(bool):" <<endl;
+		std::cerr<<"Error in reading stretcher setup: "<<currHeader<<", should have been: ClampedOnDV(bool):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -2175,7 +2174,7 @@ bool ModelInputObject::readStretcherSetup(ifstream& file){
 		Sim->StretchInitialTime = inittime;
 	}
 	else{
-		cerr<<"Error in reading stretcher setup: "<<currHeader<<", should have been: InitialTime(sec):" <<endl;
+		std::cerr<<"Error in reading stretcher setup: "<<currHeader<<", should have been: InitialTime(sec):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -2185,7 +2184,7 @@ bool ModelInputObject::readStretcherSetup(ifstream& file){
 		Sim->StretchEndTime = endtime;
 	}
 	else{
-		cerr<<"Error in reading stretcher setup: "<<currHeader<<", should have been: FinalTime(sec):" <<endl;
+		std::cerr<<"Error in reading stretcher setup: "<<currHeader<<", should have been: FinalTime(sec):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -2195,7 +2194,7 @@ bool ModelInputObject::readStretcherSetup(ifstream& file){
 		Sim->StretchMin = ClampPos;
 	}
 	else{
-		cerr<<"Error in reading stretcher setup: "<<currHeader<<", should have been: DVClampMin:" <<endl;
+		std::cerr<<"Error in reading stretcher setup: "<<currHeader<<", should have been: DVClampMin:" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -2205,7 +2204,7 @@ bool ModelInputObject::readStretcherSetup(ifstream& file){
 		Sim->StretchMax = ClampPos;
 	}
 	else{
-		cerr<<"Error in reading stretcher setup: "<<currHeader<<", should have been: DVClampMax:" <<endl;
+		std::cerr<<"Error in reading stretcher setup: "<<currHeader<<", should have been: DVClampMax:" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -2215,10 +2214,10 @@ bool ModelInputObject::readStretcherSetup(ifstream& file){
 		Sim->StretchStrain = MaxStrain;
 	}
 	else{
-		cerr<<"Error in reading stretcher setup: "<<currHeader<<", should have been: DVClampMax:" <<endl;
+		std::cerr<<"Error in reading stretcher setup: "<<currHeader<<", should have been: DVClampMax:" <<std::endl;
 		return false;
 	}
-	//cout<<"StretcherAttached "<<Sim->stretcherAttached<<"InitialStep "<<Sim->StretchInitialStep<<" EndStep: "<<Sim->StretchEndStep<<" ClapmPos: "<<Sim->StretchMin<<" "<<Sim->StretchMax<<" strain: "<<Sim->StretchStrain<<endl;
+	//std::cout<<"StretcherAttached "<<Sim->stretcherAttached<<"InitialStep "<<Sim->StretchInitialStep<<" EndStep: "<<Sim->StretchEndStep<<" ClapmPos: "<<Sim->StretchMin<<" "<<Sim->StretchMax<<" strain: "<<Sim->StretchStrain<<std::endl;
 	return true;
 }
 
@@ -2245,7 +2244,7 @@ bool ModelInputObject::readMarkerEllipseBandOptions(ifstream& file){
 		file >> Sim->nMarkerEllipseRanges;
 	}
 	else{
-		cerr<<"Error in reading marker ellipses, curr string: "<<currHeader<<", should have been: numberOfMarkerEllipses(int):" <<endl;
+		std::cerr<<"Error in reading marker ellipses, curr string: "<<currHeader<<", should have been: numberOfMarkerEllipses(int):" <<std::endl;
 		return false;
 	}
 	
@@ -2258,7 +2257,7 @@ bool ModelInputObject::readMarkerEllipseBandOptions(ifstream& file){
 		}
 	}
 	else{
-		cerr<<"Error in reading  marker ellipses, curr string: "<<currHeader<<", should have been: MarkerEllipseXCenters(fractionOfTissueSize):"<<endl;
+		std::cerr<<"Error in reading  marker ellipses, curr string: "<<currHeader<<", should have been: MarkerEllipseXCenters(fractionOfTissueSize):"<<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -2272,7 +2271,7 @@ bool ModelInputObject::readMarkerEllipseBandOptions(ifstream& file){
 		}
 	}
 	else{
-		cerr<<"Error in reading  marker ellipses, curr string: "<<currHeader<<", should have been: MarkerEllipseBandR1Ranges(fractionOfTissueSize-x1Low-x1High):" <<endl;
+		std::cerr<<"Error in reading  marker ellipses, curr string: "<<currHeader<<", should have been: MarkerEllipseBandR1Ranges(fractionOfTissueSize-x1Low-x1High):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -2286,7 +2285,7 @@ bool ModelInputObject::readMarkerEllipseBandOptions(ifstream& file){
 		}
 	}
 	else{
-		cerr<<"Error in reading  marker ellipses, curr string: "<<currHeader<<", should have been: MarkerEllipseBandR2Ranges(fractionOfTissueSize-y2Low-y2High):" <<endl;
+		std::cerr<<"Error in reading  marker ellipses, curr string: "<<currHeader<<", should have been: MarkerEllipseBandR2Ranges(fractionOfTissueSize-y2Low-y2High):" <<std::endl;
 		return false;
 	}
 	return true;
@@ -2373,7 +2372,7 @@ bool ModelInputObject::readStiffnessPerturbation(ifstream& file){
 		file >> Sim->ThereIsStiffnessPerturbation;
 	}
 	else{
-		cerr<<"Error in reading stiffness perturbations, curr string: "<<currHeader<<", should have been: ThereIsStiffnessPerturbation(bool):" <<endl;
+		std::cerr<<"Error in reading stiffness perturbations, curr string: "<<currHeader<<", should have been: ThereIsStiffnessPerturbation(bool):" <<std::endl;
 		return false;
 	}
 	int nStiffnessFunctions;
@@ -2496,7 +2495,7 @@ bool ModelInputObject::readECMPerturbation(ifstream& file){
 		file >> Sim->thereIsECMChange;
 	}
 	else{
-		cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: ThereIsECMSoftening(bool):" <<endl;
+		std::cerr<<"Error in reading ECM perturbations, curr string: "<<currHeader<<", should have been: ThereIsECMSoftening(bool):" <<std::endl;
 		return false;
 	}
 
@@ -2564,7 +2563,7 @@ bool ModelInputObject::readECMPerturbation(ifstream& file){
 			Sim->numberOfECMChangeEllipseBands.push_back(numberOfECMChangeEllipseBands);
 			int ellipseBandId;
 			Sim->ECMChangeEllipseBandIds.push_back(vector<int>(0));
-			for (int aa=0; aa<Sim->numberOfECMChangeEllipseBands[i]; ++aa){
+			for (size_t aa=0; aa<Sim->numberOfECMChangeEllipseBands[i]; ++aa){
 				file >>ellipseBandId;
 				Sim->ECMChangeEllipseBandIds[i].push_back(ellipseBandId);
 				if (ellipseBandId >= 100){
@@ -2670,7 +2669,7 @@ bool ModelInputObject::readExplicitActinOptions(ifstream& file){
 		file >> Sim->thereIsExplicitActin;
 	}
 	else{
-		cerr<<"Error in reading explicit actin options: "<<currHeader<<", should have been: ThereIsExplicitActin(bool):" <<endl;
+		std::cerr<<"Error in reading explicit actin options: "<<currHeader<<", should have been: ThereIsExplicitActin(bool):" <<std::endl;
 		return false;
 	}
 	return true;
@@ -2687,7 +2686,7 @@ bool ModelInputObject::readColumnViseVolumeConservationOptions(ifstream& file){
 		file >> Sim->conservingColumnVolumes;
 	}
 	else{
-		cerr<<"Error in reading column-vise volume conservation options: "<<currHeader<<", should have been: ThereIsColumnViseVolumeConservation(bool):" <<endl;
+		std::cerr<<"Error in reading column-vise volume conservation options: "<<currHeader<<", should have been: ThereIsColumnViseVolumeConservation(bool):" <<std::endl;
 		return false;
 	}
 	return true;
@@ -2767,7 +2766,7 @@ bool ModelInputObject::readEnclosementOptions(ifstream& file){
 		file >> Sim->encloseTissueBetweenSurfaces;
 	}
 	else{
-		cerr<<"Error in reading enclosement options: "<<currHeader<<", should have been: thereIsEnclosementOfTheTissue(bool):" <<endl;
+		std::cerr<<"Error in reading enclosement options: "<<currHeader<<", should have been: thereIsEnclosementOfTheTissue(bool):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -2776,7 +2775,7 @@ bool ModelInputObject::readEnclosementOptions(ifstream& file){
 		file >> Sim->initialZEnclosementBoundaries[1];
 	}
 	else{
-		cerr<<"Error in reading enclosementoptions: "<<currHeader<<", should have been: initialLimits(lowerBound,upperBound):" <<endl;
+		std::cerr<<"Error in reading enclosementoptions: "<<currHeader<<", should have been: initialLimits(lowerBound,upperBound):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -2785,7 +2784,7 @@ bool ModelInputObject::readEnclosementOptions(ifstream& file){
 		file >> Sim->finalZEnclosementBoundaries[1];
 	}
 	else{
-		cerr<<"Error in reading enclosement options: "<<currHeader<<", should have been: finalLimits(lowerBound,upperBound):" <<endl;
+		std::cerr<<"Error in reading enclosement options: "<<currHeader<<", should have been: finalLimits(lowerBound,upperBound):" <<std::endl;
 		return false;
 	}
 
@@ -2794,7 +2793,7 @@ bool ModelInputObject::readEnclosementOptions(ifstream& file){
 		file >> Sim->initialTimeToEncloseTissueBetweenSurfacesSec;
 	}
 	else{
-		cerr<<"Error in reading enclosement options: "<<currHeader<<", should have been: initialTime(sec):" <<endl;
+		std::cerr<<"Error in reading enclosement options: "<<currHeader<<", should have been: initialTime(sec):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -2802,7 +2801,7 @@ bool ModelInputObject::readEnclosementOptions(ifstream& file){
 		file >> Sim->finalTimeToEncloseTissueBetweenSurfacesSec;
 	}
 	else{
-		cerr<<"Error in reading enclosement options: "<<currHeader<<", should have been: finalTime(sec):" <<endl;
+		std::cerr<<"Error in reading enclosement options: "<<currHeader<<", should have been: finalTime(sec):" <<std::endl;
 		return false;
 	}
 	return true;
@@ -2821,7 +2820,7 @@ bool ModelInputObject::readMutationOptions(ifstream& file){
 	file >> currHeader;
 	if(currHeader == "cloneInformation(double-relativeX,relativeY,micronRadius,usingAbsoluteGrowth(bool),growthRatePerHour_OR_growthFoldIncrease):"){
 		double relativeX, relativeY, micronRadius, growthRateORFold,useAbsoluteGrowthRate;
-		for (int i=0; i<Sim->numberOfClones; ++i){
+		for (size_t i=0; i<Sim->numberOfClones; ++i){
 			file >> relativeX;
 			file >> relativeY;
 			file >> micronRadius;
@@ -2936,11 +2935,11 @@ bool ModelInputObject::readPipetteSetup(ifstream& file){
 	if(currHeader == "PipetteAspitarionActive(bool):"){
 		bool PipetteSuction;
 		file >> PipetteSuction;
-		//cerr<<"stretcherAttached "<<stretcherAttached<<endl;
+		//std::cerr<<"stretcherAttached "<<stretcherAttached<<std::endl;
 		Sim->PipetteSuction = PipetteSuction;
 	}
 	else{
-		cerr<<"Error in reading pipette aspiration setup: "<<currHeader<<", should have been: PipetteAspitarionActive(bool):" <<endl;
+		std::cerr<<"Error in reading pipette aspiration setup: "<<currHeader<<", should have been: PipetteAspitarionActive(bool):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -2948,7 +2947,7 @@ bool ModelInputObject::readPipetteSetup(ifstream& file){
 		file >> Sim->nPipetteSuctionSteps;
 	}
 	else{
-		cerr<<"Error in reading pipette aspiration setup: "<<currHeader<<", should have been:  NumberOfPressureStages(int):" <<endl;
+		std::cerr<<"Error in reading pipette aspiration setup: "<<currHeader<<", should have been:  NumberOfPressureStages(int):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -2960,7 +2959,7 @@ bool ModelInputObject::readPipetteSetup(ifstream& file){
 		}
 	}
 	else{
-		cerr<<"Error in reading pipette aspiration setup: "<<currHeader<<", should have been:  InitiationTimes(sec):" <<endl;
+		std::cerr<<"Error in reading pipette aspiration setup: "<<currHeader<<", should have been:  InitiationTimes(sec):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -2972,7 +2971,7 @@ bool ModelInputObject::readPipetteSetup(ifstream& file){
 		}
 	}
 	else{
-		cerr<<"Error in reading pipette aspiration setup: "<<currHeader<<", should have been:  Pressures(Pa):" <<endl;
+		std::cerr<<"Error in reading pipette aspiration setup: "<<currHeader<<", should have been:  Pressures(Pa):" <<std::endl;
 		return false;
 	}
 	if (Sim->nPipetteSuctionSteps>0){
@@ -2983,7 +2982,7 @@ bool ModelInputObject::readPipetteSetup(ifstream& file){
 		file >> Sim->ApicalSuction;
 	}
 	else{
-		cerr<<"Error in reading pipette aspiration setup: "<<currHeader<<", should have been: ApicalSuction(bool-will_set_up_basal_suction_if_false):" <<endl;
+		std::cerr<<"Error in reading pipette aspiration setup: "<<currHeader<<", should have been: ApicalSuction(bool-will_set_up_basal_suction_if_false):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -2991,7 +2990,7 @@ bool ModelInputObject::readPipetteSetup(ifstream& file){
 		file >> Sim->TissueStuckOnGlassDuringPipetteAspiration;
 	}
 	else{
-		cerr<<"Error in reading pipette aspiration setup: "<<currHeader<<", should have been: TissueStuck(bool-will_fix_the_opposite_surface_in_z):" <<endl;
+		std::cerr<<"Error in reading pipette aspiration setup: "<<currHeader<<", should have been: TissueStuck(bool-will_fix_the_opposite_surface_in_z):" <<std::endl;
 		return false;
 	}
 
@@ -3004,7 +3003,7 @@ bool ModelInputObject::readPipetteSetup(ifstream& file){
 		}
 	}
 	else{
-		cerr<<"Error in reading pipette aspiration setup: "<<currHeader<<", should have been: Centre Position(x,y,z):" <<endl;
+		std::cerr<<"Error in reading pipette aspiration setup: "<<currHeader<<", should have been: Centre Position(x,y,z):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -3012,7 +3011,7 @@ bool ModelInputObject::readPipetteSetup(ifstream& file){
 		file >> Sim->pipetteInnerRadius;
 	}
 	else{
-		cerr<<"Error in reading pipette aspiration setup: "<<currHeader<<", should have been: Pipette_InnerRadius(micron):" <<endl;
+		std::cerr<<"Error in reading pipette aspiration setup: "<<currHeader<<", should have been: Pipette_InnerRadius(micron):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -3022,7 +3021,7 @@ bool ModelInputObject::readPipetteSetup(ifstream& file){
 		Sim->pipetteThickness = pippetOuterRad - Sim->pipetteInnerRadius;
 	}
 	else{
-		cerr<<"Error in reading pipette aspiration setup: "<<currHeader<<", should have been: Pipette_OuterRadius(micron):" <<endl;
+		std::cerr<<"Error in reading pipette aspiration setup: "<<currHeader<<", should have been: Pipette_OuterRadius(micron):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -3032,7 +3031,7 @@ bool ModelInputObject::readPipetteSetup(ifstream& file){
 		Sim->pipetteDepth = dummy;
 	}
 	else{
-		cerr<<"Error in reading pipette aspiration setup: "<<currHeader<<", should have been: Pipette_Effect_Depth(micron):" <<endl;
+		std::cerr<<"Error in reading pipette aspiration setup: "<<currHeader<<", should have been: Pipette_Effect_Depth(micron):" <<std::endl;
 		return false;
 	}
 	file >> currHeader;
@@ -3044,7 +3043,7 @@ bool ModelInputObject::readPipetteSetup(ifstream& file){
 		}
 	}
 	else{
-		cerr<<"Error in reading pipette aspiration setup: "<<currHeader<<", should have been: Pipette_Suction_Pressure(x,y,z-unit):" <<endl;
+		std::cerr<<"Error in reading pipette aspiration setup: "<<currHeader<<", should have been: Pipette_Suction_Pressure(x,y,z-unit):" <<std::endl;
 		return false;
 	}
 	return true;
