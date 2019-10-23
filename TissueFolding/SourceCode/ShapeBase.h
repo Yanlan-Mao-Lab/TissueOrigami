@@ -174,6 +174,12 @@ public:
     bool			IsClippedInDisplay;					///< Boolean stating if the element is clipped out of the view in openGL rendering
     bool 			IsXSymmetricClippedInDisplay;		///< Boolean stating if the X symmetric version of the element is clipped in openGL rendering.
     bool			IsYSymmetricClippedInDisplay;		///< Boolean stating if the Y symmetric version of the element is clipped in openGL rendering.
+    bool			IsZSymmetricClippedInDisplay;		///< Boolean stating if the Z symmetric version of the element is clipped in openGL rendering.
+    bool 			IsXYSymmetricClippedInDisplay;		///< Boolean stating if the XY symmetric version of the element is clipped in openGL rendering.
+    bool			IsXZSymmetricClippedInDisplay;		///< Boolean stating if the XZ symmetric version of the element is clipped in openGL rendering.
+    bool			IsYZSymmetricClippedInDisplay;		///< Boolean stating if the YZ symmetric version of the element is clipped in openGL rendering.
+    bool 			IsXYZSymmetricClippedInDisplay;   	///< Boolean stating if the XYZ symmetric version of the element is clipped in openGL rendering.
+
     double 			CurrShapeChangeToAdd[3];			///< The current shape change to be applied to the element, in form of 3D rates.
     double* 		ApicalNormalForPacking;				///< The normal of the apical surface for calcuating packing.
     double* 		BasalNormalForPacking;				///< The normal of the basal surface for calculating packing.

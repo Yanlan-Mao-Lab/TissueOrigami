@@ -903,6 +903,14 @@ bool ModelInputObject::readMeshParameters(ifstream& file){
 		std::cerr<<"Error in reading mesh type, curr string: "<<currHeader<<", should have been: symmetricInY(bool):" <<std::endl;
 		return false;
 	}
+	file >> currHeader;
+	if(currHeader == "symmetricInZ(bool):"){
+		file >> Sim->symmetricZ;
+	}
+	else{
+		std::cerr<<"Error in reading mesh type, curr string: "<<currHeader<<", should have been: symmetricInY(bool):" <<std::endl;
+		return false;
+	}
 	return true;
 }
 

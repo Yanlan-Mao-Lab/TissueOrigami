@@ -300,22 +300,29 @@ void GLWidget::reInitialiseNodeColourList(size_t oldNodeNumber){
 	 return drawthisElement;
  }
 
- bool GLWidget::checkIfDrawingElementSymmetric(int i, bool symmetricX, bool symmetricY){
-	 bool drawthisElement = true;
+ std::array<bool,7> GLWidget::checkIfDrawingElementSymmetric(int i){
+	 std::array<bool,7> isSymettricClipped;
+	 isSymettricClipped.fill(true);
+	 //order is;
+	 // IsXSymmetricClippedInDisplay;		///< Boolean stating if the X symmetric version of the element is clipped in openGL rendering.
+	 // IsYSymmetricClippedInDisplay;		///< Boolean stating if the Y symmetric version of the element is clipped in openGL rendering.
+	 // IsZSymmetricClippedInDisplay;		///< Boolean stating if the Z symmetric version of the element is clipped in openGL rendering.
+	 // IsXYSymmetricClippedInDisplay;		///< Boolean stating if the XY symmetric version of the element is clipped in openGL rendering.
+	 // IsXZSymmetricClippedInDisplay;		///< Boolean stating if the XZ symmetric version of the element is clipped in openGL rendering.
+	 // IsYZSymmetricClippedInDisplay;		///< Boolean stating if the YZ symmetric version of the element is clipped in openGL rendering.
+	 // IsXYZSymmetricClippedInDisplay;   	///< Boolean stating if the XYZ symmetric version of the element is clipped in openGL rendering.
+
 	 if (!drawSymmetricity){
-		 return drawSymmetricity;
+		 return isSymettricClipped;
 	 }
-	 if (symmetricX){
-		 if (Sim01->Elements[i]->IsXSymmetricClippedInDisplay){
-			 drawthisElement = false;
-		 }
-	 }
-	 if (symmetricY){
-		 if (Sim01->Elements[i]->IsYSymmetricClippedInDisplay){
-			 drawthisElement = false;
-		 }
-	 }
-	 return drawthisElement;
+	 isSymettricClipped[0] = Sim01->Elements[i]->IsXSymmetricClippedInDisplay;
+	 isSymettricClipped[1] = Sim01->Elements[i]->IsYSymmetricClippedInDisplay;
+	 isSymettricClipped[2] = Sim01->Elements[i]->IsZSymmetricClippedInDisplay;
+	 isSymettricClipped[3] = Sim01->Elements[i]->IsXYSymmetricClippedInDisplay;
+	 isSymettricClipped[4] = Sim01->Elements[i]->IsXZSymmetricClippedInDisplay;
+	 isSymettricClipped[5] = Sim01->Elements[i]->IsYZSymmetricClippedInDisplay;
+	 isSymettricClipped[6] = Sim01->Elements[i]->IsXYZSymmetricClippedInDisplay;
+	 return isSymettricClipped;
  }
 
  bool GLWidget::checkIfDrawingNode(int i){
@@ -331,34 +338,14 @@ void GLWidget::reInitialiseNodeColourList(size_t oldNodeNumber){
 
  void GLWidget::drawElement(size_t i, bool picking){
 	 bool drawCurrentElement = checkIfDrawingElement(i);
+	 int ShapeType = Sim01->Elements[i]->getShapeType();
 	 if (drawCurrentElement){
-		 int ShapeType = Sim01->Elements[i]->getShapeType();
 		 if (ShapeType == 1 ){
 			 if (picking){
 				drawPrismForPicking(i);
 			 }
 			 else{
-				 drawPrism(i, false, false);
-				 bool drawCurrentElementSymmetric[2] = {false, false};
-				 if (Sim01->symmetricX){
-					 drawCurrentElementSymmetric[0] = checkIfDrawingElementSymmetric(i, true, false); //Id, symmetricX, symmetricY
-				 }
-				 if (Sim01->symmetricY){
-					 drawCurrentElementSymmetric[1] = checkIfDrawingElementSymmetric(i, false, true); //Id, symmetricX, symmetricY
-				 }
-				 if (drawCurrentElementSymmetric[0] && drawCurrentElementSymmetric[1]){
-					 //there is symetry in both axes, and the element qualifies for both.
-					 //draw its reflection on x, ony  and on x&y:
-					 drawPrism(i, true, false); //for X,   inputs: Id, symmetricX, symmetricY
-					 drawPrism(i, false, true); //for Y,   inputs: Id, symmetricX, symmetricY
-					 drawPrism(i, true, true);  //for X&Y, inputs: Id, symmetricX, symmetricY
-				 }
-				 else if(drawCurrentElementSymmetric[0]){
-					 drawPrism(i, true, false); //for X,   inputs: Id, symmetricX, symmetricY
-				 }
-				 else if(drawCurrentElementSymmetric[1]){
-					 drawPrism(i, false, true); //for Y,   inputs: Id, symmetricX, symmetricY
-				 }
+				 drawPrism(i, false, false,false);
 			 }
 		 }
 		 else if (ShapeType == 4 ){
@@ -370,7 +357,42 @@ void GLWidget::reInitialiseNodeColourList(size_t oldNodeNumber){
 			 }
 		 }
 	 }
+	 //now drawing hte symetricity for prisms only
+	if (ShapeType == 1 ){
+		array<bool,7> isSymettricClipped;
+		isSymettricClipped.fill(true);
+		 //order is;
+		 // IsXSymmetricClippedInDisplay;		///< Boolean stating if the X symmetric version of the element is clipped in openGL rendering.
+		 // IsYSymmetricClippedInDisplay;		///< Boolean stating if the Y symmetric version of the element is clipped in openGL rendering.
+		 // IsZSymmetricClippedInDisplay;		///< Boolean stating if the Z symmetric version of the element is clipped in openGL rendering.
+		 // IsXYSymmetricClippedInDisplay;		///< Boolean stating if the XY symmetric version of the element is clipped in openGL rendering.
+		 // IsXZSymmetricClippedInDisplay;		///< Boolean stating if the XZ symmetric version of the element is clipped in openGL rendering.
+		 // IsYZSymmetricClippedInDisplay;		///< Boolean stating if the YZ symmetric version of the element is clipped in openGL rendering.
+		 // IsXYZSymmetricClippedInDisplay;   	///< Boolean stating if the XYZ symmetric version of the element is clipped in openGL rendering.
+		isSymettricClipped = checkIfDrawingElementSymmetric(i); //Id
 
+		if(!isSymettricClipped[0]){
+			drawPrism(i, true, false,false);			//for X,   inputs: Id, symmetricX, symmetricY, symmetricZ
+		}
+		if(!isSymettricClipped[1]){
+			drawPrism(i, false, true,false);			//for Y,   inputs: Id, symmetricX, symmetricY, symmetricZ
+		}
+		if(!isSymettricClipped[2]){
+			drawPrism(i, false, false,true);			//for Z,   inputs: Id, symmetricX, symmetricY, symmetricZ
+		}
+		if(!isSymettricClipped[3]){
+			drawPrism(i, true, true,false);				//for XY,   inputs: Id, symmetricX, symmetricY, symmetricZ
+		}
+		if(!isSymettricClipped[4]){
+			drawPrism(i, true, false,true);				//for XZ,   inputs: Id, symmetricX, symmetricY, symmetricZ
+		}
+		if(!isSymettricClipped[5]){
+			drawPrism(i, false, true,true);			//for YZ,   inputs: Id, symmetricX, symmetricY, symmetricZ
+		}
+		if(!isSymettricClipped[6]){
+			drawPrism(i, true, true,true);			//for XYZ,   inputs: Id, symmetricX, symmetricY, symmetricZ
+		}
+	}
  }
 
 
@@ -650,13 +672,16 @@ void GLWidget::highlightNode(int i){
 	return NodeColours;
  }
 
- void GLWidget::drawPrism(int i, bool symmetricX, bool symmetricY){
-	float xMultiplier = 1.0, yMultiplier = 1.0;
+ void GLWidget::drawPrism(int i, bool symmetricX, bool symmetricY, bool symmetricZ){
+	float xMultiplier = 1.0, yMultiplier = 1.0, zMultiplier=1.0;
 	if (symmetricX){
 		xMultiplier = -1.0;
 	}
 	if (symmetricY){
 		yMultiplier = -1.0;
+	}
+	if (symmetricZ){
+		zMultiplier = -1.0;
 	}
 	//Drawing the surfaces
 	const int nTriangle = 8; //top + bottom + 2 for each side.
@@ -733,7 +758,7 @@ void GLWidget::highlightNode(int i){
 
 				float x = xMultiplier * Sim01->Elements[i]->Positions[pointId][0];
 				float y = yMultiplier * Sim01->Elements[i]->Positions[pointId][1];
-				float z = Sim01->Elements[i]->Positions[pointId][2];
+				float z = zMultiplier * Sim01->Elements[i]->Positions[pointId][2];
 				//cout<<"triangle : "<<j<<" point: "<<k<<" position : "<<x<<" y "<<y<<" z "<<z<<" colour: "<<NodeColours[pointId][0]<<" "<<NodeColours[pointId][1]<<" "<<NodeColours[pointId][2]<<endl;
 				glVertex3f( x, y, z);
 			}
@@ -751,7 +776,7 @@ void GLWidget::highlightNode(int i){
 				int pointId = BorderConnectivity[j];
 				float x = xMultiplier * Sim01->Elements[i]->Positions[pointId][0];
 				float y = yMultiplier * Sim01->Elements[i]->Positions[pointId][1];
-				float z = Sim01->Elements[i]->Positions[pointId][2];
+				float z = zMultiplier * Sim01->Elements[i]->Positions[pointId][2];
 				glVertex3f( x, y, z);
 			}
 		glEnd();

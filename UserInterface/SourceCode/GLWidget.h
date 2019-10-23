@@ -103,13 +103,13 @@ using namespace std;
 
      //Element drawing functions
      bool 	checkIfDrawingElement(int i);
-     bool 	checkIfDrawingElementSymmetric(int i, bool symmetricX, bool symmetricY);
+     std::array<bool,7> 	checkIfDrawingElementSymmetric(int i);
      bool 	checkIfDrawingNode(int i);
      void 	drawElement(size_t i, bool picking);
      void 	highlightElement(int i);
      void 	highlightNode(int i);
      void 	drawReferenceElement(int i);
-     void 	drawPrism(int i, bool symmetricX, bool symmetricY);
+     void 	drawPrism(int i, bool symmetricX, bool symmetricY, bool symmetricZ);
      void 	drawTriangle(int i);
      void 	drawPrismForPicking(int i);
      void 	drawTriangleForPicking(int i);

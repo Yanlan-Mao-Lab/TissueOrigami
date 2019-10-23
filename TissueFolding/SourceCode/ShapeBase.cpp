@@ -3664,35 +3664,55 @@ void 	ShapeBase::checkDisplayClipping(double xClip, double yClip, double zClip){
 	IsClippedInDisplay=false;
 	IsXSymmetricClippedInDisplay=false;
 	IsYSymmetricClippedInDisplay=false;
-
+	IsZSymmetricClippedInDisplay=false;
+	IsXYSymmetricClippedInDisplay = false;
+	IsXZSymmetricClippedInDisplay = false;
+	IsYZSymmetricClippedInDisplay = false;
+	IsXYZSymmetricClippedInDisplay = false;
 	for (size_t j=0; j<nNodes; ++j){
 		 if((-1.0)*Positions[j][0]>xClip){
 			 IsXSymmetricClippedInDisplay = true;
+			 IsXYSymmetricClippedInDisplay = true;
+			 IsXZSymmetricClippedInDisplay = true;
+			 IsXYZSymmetricClippedInDisplay = true;
 		 }
 		 if((-1.0)*Positions[j][1]<yClip){
 			 IsYSymmetricClippedInDisplay = true;
+			 IsXYSymmetricClippedInDisplay = true;
+			 IsYZSymmetricClippedInDisplay = true;
+			 IsXYZSymmetricClippedInDisplay = true;
+		 }
+		 if((-1.0)*Positions[j][2]>zClip){
+			 IsZSymmetricClippedInDisplay = true;
+			 IsXZSymmetricClippedInDisplay = true;
+			 IsYZSymmetricClippedInDisplay = true;
+			 IsXYZSymmetricClippedInDisplay = true;
 		 }
 		 if(Positions[j][0]>xClip){
 			 IsClippedInDisplay = true;
-			 return;
+			 IsYSymmetricClippedInDisplay = true;
+			 IsZSymmetricClippedInDisplay = true;
+			 IsYZSymmetricClippedInDisplay = true;
 		 }
 		 if(Positions[j][1]<yClip){
 			 IsClippedInDisplay = true;
-			 return;
+			 IsXSymmetricClippedInDisplay = true;
+			 IsZSymmetricClippedInDisplay = true;
+			 IsXZSymmetricClippedInDisplay = true;
 		 }
-
-		//convert zclip back to percentage:
+		 if(Positions[j][2]>zClip){
+		 	 IsClippedInDisplay = true;
+		 	 IsXSymmetricClippedInDisplay = true;
+		 	 IsYSymmetricClippedInDisplay = true;
+		 	 IsXYSymmetricClippedInDisplay = true;
+		 }
+		 //convert zclip back to percentage:
 		//if (Id ==0){ std::cout<<"zClip pre: "<<zClip;}
-		 double currentThres = -10.0+zClip - Positions[j][1];
-		 if(Positions[j][0]<currentThres){
-			 IsClippedInDisplay = true;
-			 return;
-		 }
-
-		 //if(Positions[j][2]>zClip){
-		 //	 IsClippedInDisplay = true;
-		 //	 return;
-		 //}
+		//double currentThres = -10.0+zClip - Positions[j][1];
+		//if(Positions[j][0]<currentThres){
+		//	 IsClippedInDisplay = true;
+		//	 return;
+		//}
 	 }
 
 }

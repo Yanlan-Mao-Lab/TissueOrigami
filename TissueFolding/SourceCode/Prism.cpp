@@ -55,6 +55,12 @@ Prism::Prism(int* tmpNodeIds, const std::vector<std::unique_ptr<Node>>& Nodes, i
 	IsClippedInDisplay = false;
 	IsXSymmetricClippedInDisplay = false;
 	IsYSymmetricClippedInDisplay = false;
+	IsZSymmetricClippedInDisplay = false;
+	IsXYSymmetricClippedInDisplay = false;
+	IsXZSymmetricClippedInDisplay = false;
+	IsYZSymmetricClippedInDisplay = false;
+	IsXYZSymmetricClippedInDisplay = false;
+
 	capElement = false;
     rotatedGrowth = false;
     //rotatedGrowth_tethaZ = 0;

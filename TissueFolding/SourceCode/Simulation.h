@@ -254,7 +254,8 @@ private:
     void addSoftPeriphery(double* fractions);						///< This function is used to alter the youngs modulus of the tissue periphery.
     void setupYsymmetricity();										///< This function sets up symmetric mesh around y-axis.
     void setupXsymmetricity();										///< This function sets up symmetric mesh around x-axis.
-	void setUpECMMimicingElements();								///< This function sets up ECM mimicking elements.
+	void setupZsymmetricity();
+    void setUpECMMimicingElements();								///< This function sets up ECM mimicking elements.
 	void assigneElementsAtTheBorderOfECM();							///< This function marks elements at the border of the ECM (bottom & sides - basal & lateral).
 	void setUpActinMimicingElements();								///< This function sets up actin-layer elements on the apical surface.
 	void assigneElementsAtTheBorderOfActin();						///< This function marks elements at the border of the actin (top - apical).
@@ -384,7 +385,8 @@ public:
 	bool thereIsPeripodialMembrane;                             ///< The boolean stating if there is a peripodial membrane in the simulation
 	bool AddPeripodialMembrane;
 	bool symmetricY;                                            ///< The boolean stating if there is y-axis symettricity in tissue
-	bool symmetricX;                                            ///< The boolean stating if there is x-axis symettricity in tissue
+	bool symmetricX;      										///< The boolean stating if there is x-axis symettricity in tissue
+	bool symmetricZ; 											///< The boolean stating if there is z-axis symettricity in tissue
 	bool conservingColumnVolumes;                               ///< The boolean stating if the simulation is conserving the volume of each elemental column rather than each element.
 	bool thereIsArtificaialRelaxation;                          ///< The boolean stating if there is artifical relaxation of forces in tissue at a selected time point stored in Simulation#artificialRelaxationTime
 	bool relaxECMInArtificialRelaxation;                        ///< The boolean stating if the ECM should be relaxed with the tissue in artifical relaxation of forces at a selected time point stored in Simulation#artificialRelaxationTime

@@ -167,6 +167,7 @@ void Simulation::setDefaultParameters(){
 
 	addCurvatureToTissue = false;
 	tissueCurvatureDepth = 0.0;
+	symmetricZ = false;
 	symmetricY = false;
 	symmetricX = false;
 	addingRandomForces = false;
@@ -524,8 +525,16 @@ bool Simulation::checkInputConsistency(){
 			}
 		}
 	}
-	if (thereIsExplicitLumen && !AddPeripodialMembrane){
-		std::cerr<<"There is no peripodial membrane while asking for a lumen, check if there is one in the input mesh before adding lumen!"<<std::endl;
+	if (thereIsExplicitLumen && (!AddPeripodialMembrane && !symmetricZ)){
+		std::cerr<<"There is no peripodial membrane and no z-symmetricity while asking for a lumen, check if there is one in the input mesh before adding lumen!"<<std::endl;
+		// Maybe you are trying to simulate an enclosed full mesh, such as a full sphere.
+		// Then you are receiving this error while trying to set up a lumen.
+		// You will either: - delete this consistency check (please dont)
+		//				or:	- define an enclosed strucutre boolean in the mesh inputs (please do)
+		// Then you will be able to modify this check point such that:
+		// && (!AddPeripodialMembrane && !symmetricZ && !enclosedInputMesh)
+		// I did not add this with one sole purpose.
+		// Before you start coding, please think again, why are you not simulating part of the tissue?
 		needPeripodialforInputConsistency = true;
 	}
 	return true;
@@ -555,7 +564,7 @@ bool Simulation::initiateSystem(){
 	if (!Success){
 		return Success;
 	}
-	if (symmetricY || symmetricX){
+	if (symmetricX || symmetricY || symmetricZ){
         /**
          * If there is symetricity in the system, a checkpoint for circumferential node definitions
          * is in place. The symmetricity boundary should not be considered as at the outer circumference.
@@ -635,9 +644,11 @@ bool Simulation::initiateSystem(){
 	 */
 	if (thereIsExplicitLumen){
 		if (!thereIsPeripodialMembrane){
-			std::cerr<<"There is no peripodial membrane but simulation has a lumen"<<std::endl;
-			thereIsExplicitLumen = false;
-			Success = false;
+			if(!symmetricZ){
+				std::cerr<<"There is no peripodial membrane OR Z-symmetricity, but simulation has a lumen"<<std::endl;
+				thereIsExplicitLumen = false;
+				Success = false;
+			}
 		}
 		tissueLumen = new Lumen(Elements, Nodes,lumenBulkModulus,lumenGrowthFold);
 	}
@@ -728,6 +739,9 @@ bool Simulation::initiateSystem(){
 	}
 	if (symmetricX){
 		setupXsymmetricity();
+	}
+	if (symmetricZ){
+		setupZsymmetricity();
 	}
 	assignIfElementsAreInsideEllipseBands();
     /**
@@ -1582,7 +1596,7 @@ void Simulation::writeSimulationSummary(){
 	saveFileSimulationSummary<<ModInp->parameterFileName<<endl<<std::endl;
 	saveFileSimulationSummary<<"Mesh_Type:  ";
 	saveFileSimulationSummary<<MeshType<<std::endl;
-	saveFileSimulationSummary<<"	Symmetricity-x: "<<symmetricX<<" Symmetricity-y: "<<symmetricY<<std::endl;
+	saveFileSimulationSummary<<"	Symmetricity-x: "<<symmetricX<<" Symmetricity-y: "<<symmetricY<<" Symmetricity-z: "<<symmetricZ<<std::endl;
 	writeMeshFileSummary();
 	writeGrowthRatesSummary();
 	writeECMSummary();
@@ -2045,7 +2059,13 @@ bool Simulation::readSystemSummaryFromSave(){
 		return false;
 	}
 	saveFileToDisplaySimSum >> symmetricY;
-	std::cout<<"read the summary, symmetricity data: "<<symmetricX<<" "<<symmetricY<<std::endl;
+	saveFileToDisplaySimSum >> dummystring; //reading "Symmetricity-z: "
+		if(saveFileToDisplaySimSum.eof()){
+			std::cerr<<"reached the end of summary file, expecting: symmetricitZ boolean:"<<std::endl;
+			return false;
+		}
+		saveFileToDisplaySimSum >> symmetricZ;
+	std::cout<<"read the summary, symmetricity data: "<<symmetricX<<" "<<symmetricY<<" "<<symmetricZ<<std::endl;
 	return true;
 }
 
@@ -2991,6 +3011,12 @@ void Simulation::clearCircumferenceDataFromSymmetricityLine(){
       * therefore should not be symmetric.
       *
       */
+	if (symmetricX && symmetricY && symmetricZ){
+		for (const auto& itNode : Nodes){
+			itNode->atCircumference = false;
+		}
+		return;
+	}
 	if (symmetricY){
 		double xTipPos = -1000, xTipNeg = 1000;
 		for (const auto& itNode : Nodes){
@@ -8079,8 +8105,14 @@ void Simulation::calculateBoundingBox(){
 			}
 		}
 	}
+	if (symmetricX){
+		boundingBox[0][0] = (-1.0)*boundingBox[1][0]; //if there is X symmetricity, then the bounding box is extended to double the size in y
+	}
 	if (symmetricY){
 		boundingBox[0][1] = (-1.0)*boundingBox[1][1]; //if there is Y symmetricity, then the bounding box is extended to double the size in y
+	}
+	if (symmetricZ){
+		boundingBox[0][2] = (-1.0)*boundingBox[1][2]; //if there is Z symmetricity, then the bounding box is extended to double the size in y
 	}
 	std::cout<<"bounding box after update: "<<boundingBox[0][0]<<" "<<boundingBox[0][1]<<" "<<boundingBox[1][0]<<" "<<boundingBox[1][1]<<std::endl;
 	for (int i=0; i<3; ++i){
@@ -9220,6 +9252,40 @@ void Simulation::setupXsymmetricity(){
 				//symmetricXBoundaryNodes.push_back(Nodes[i]);
 				Nodes[i]->atSymmetricityBorder = true;
 				fixX(Nodes[i].get(),false); //this is for symmetricity, the fixing has to be hard fixing, not with external viscosity under any condition
+			}
+			else{
+				AblatedNodes.push_back(i);
+				fixAllD(Nodes[i].get(), false); //this is fixing for ablated nodes, no need for calculations
+				//setSymmetricNode(Nodes[i],yLimPos);
+			}
+		}
+	}
+	int nAN = AblatedNodes.size();
+	//fix the position of all ablated nodes for effective Newton Raphson calculation:
+	for(const auto& itElement : Elements){
+		if(!itElement->IsAblated){
+			for (int j =0; j<nAN; ++j){
+				bool IsAblatedNow = itElement->DoesPointBelogToMe(AblatedNodes[j]);
+				if (IsAblatedNow){
+					itElement->removeMassFromNodes(Nodes);
+					itElement->IsAblated = true;
+					break;
+				}
+			}
+		}
+	}
+}
+
+void Simulation::setupZsymmetricity(){
+	double zLimPos = 0.1;
+	double zLimNeg = (-1.0)*zLimPos;
+	vector <int> AblatedNodes;
+	for (size_t i=0; i<nNodes; ++i){
+		if (Nodes[i]->Position[2]< zLimPos){
+			if (Nodes[i]->Position[2] > zLimNeg){
+				//symmetricXBoundaryNodes.push_back(Nodes[i]);
+				Nodes[i]->atSymmetricityBorder = true;
+				fixZ(Nodes[i].get(),false); //this is for symmetricity, the fixing has to be hard fixing, not with external viscosity under any condition
 			}
 			else{
 				AblatedNodes.push_back(i);

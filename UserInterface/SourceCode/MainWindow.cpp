@@ -476,8 +476,8 @@ void  MainWindow::yClipChange(int k){
 }
 
 void  MainWindow::zClipChange(int k){
-	//MainGLWidget->zClip = Sim01->boundingBox[0][2] +( ( Sim01->boundingBox[1][2] - Sim01->boundingBox[0][2] ) * (double) (k+10)/100.0 );
-	MainGLWidget->zClip = Sim01->boundingBox[0][0] +( ( Sim01->boundingBox[1][0] - Sim01->boundingBox[0][0] ) * (double) (k+10)/100.0 );
+	MainGLWidget->zClip = Sim01->boundingBox[0][2] +( ( Sim01->boundingBox[1][2] - Sim01->boundingBox[0][2] ) * (double) (k+10)/100.0 );
+	//MainGLWidget->zClip = Sim01->boundingBox[0][0] +( ( Sim01->boundingBox[1][0] - Sim01->boundingBox[0][0] ) * (double) (k+10)/100.0 );
 	MainGLWidget->updateClipping();
 	//cout<<"z:" <<k<<" "<<MainGLWidget->zClip<<endl;
 }
@@ -816,7 +816,7 @@ void MainWindow::timerSimulationStep(){
     //cout<<"Called the function via timer"<<endl;
 
 	bool 	automatedSave =false ;
-	int		viewSelection = 4; //0: top, 1: cross, 2: perspective 3: side, 4: clone cross-section
+	int		viewSelection = -1; //0: top, 1: cross, 2: perspective 3: side, 4: clone cross-section
 	int 	displayAutomatedStrain = -1; //-1 no strain display, 1 display DV strains, 2 AP strains;
 	bool 	analyseResults = true;
 	bool 	slowstepsOnDisplay = true;
