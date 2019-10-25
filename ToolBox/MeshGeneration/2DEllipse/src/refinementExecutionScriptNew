@@ -1,7 +1,12 @@
 g++ -std=c++11 -o src/EllipseFromOutline src/EllipseFromOutline.cpp
 cp ./src/EllipseFromOutline ./
 
-
+FORMAT OF THE OUTPUT MESH:
+[number of nodes]
+for each node:
+[x-coord   y-coord   z-coord]  [tissuePlacement: basal-node identifier(0)] [tissueType(columnar-0, peripodium-2)]  [flag for border nodes]
+[number of elements]
+[shape type =1 for prism] [node ids, 6 of them for prism, zero indexed] [reference position of each node, [x,y,z] for 6 nodes =18 values, this should be the original position you defined]
 
 
 Small 48 hours. The average is 85.56 to 54.6 microns. The cross point at 50 microns.
@@ -21,17 +26,22 @@ Without taking the curve region into account this traslates to a shape of:
 
 cp Points.5.ele Points.1.ele
 cp Points.5.node Points.1.node
-./EllipseFromOutline -1 15.5 2 6 1  ./inputOutlines/48hrDiscOutline
+./EllipseFromOutline -1 15.5 2 6 1
 cp MeshFile.out ./Exp48hr-noPeriECM_08.mesh
 
-%[input mesh] [xmin] [xmax] [area constraint] [buffer zone]
+I want a setup that has finer mesh at the centre corresponding to folds.
+This is a function to do that, dont worry anbout the details.
+
+%[input mesh] [xmin-(0-1)] [xmax-(0-1)] [area constraint for each triangle (micron-sq)] [buffer zone(0-1)]
 ./generateTriangleBasedAreaConstraints  Points.5 0.5 0.7 0.7 0.63 0.1 > tmp
 ../triangle/triangle -rq33a Points.5.ele 
 
 cp Points.6.ele Points.1.ele
 cp Points.6.node Points.1.node
-./EllipseFromOutline -1 15.5 1 6 1  ./inputOutlines/48hrDiscOutline
+./EllipseFromOutline -1 15.5 1 6 1
 cp MeshFile.out ./Exp48hr-noPeriECM_09.mesh
+
+Same mesh as above, but with 5 layer s only, I save a lot of computation with one layer less elements
 
 ./EllipseFromOutline -1 15.5 1.0 5 1  ./inputOutlines/48hrDiscOutline
 cp MeshFile.out ./Exp48hr-noPeriECMThin_09.mesh
@@ -48,7 +58,6 @@ cp Points.7.node Points.1.node
 %%HERE NEED TO CHANGE THE ECM THICKNESS IN SOURCE CODE, change ECM to 0.2):
 ./EllipseFromOutline -1 12.5 1.0 5 1  ./inputOutlines/48hrDiscOutline
 cp MeshFile.out ./Exp48hr-noPeri-ThinECM_12.mesh
-
 
 
 //ACTIVATE PERIPODIAL IN INPUT:
@@ -78,6 +87,7 @@ cp Points.6.node Points.1.node
 ./EllipseFromOutline -1 15.5 1 6 1  ./inputOutlines/48hrDiscOutline
 cp MeshFile.out ./Exp48hr-ECM_09.mesh
 
+//same mesh as above less layers
 ./EllipseFromOutline -1 15.5 1.0 5 1  ./inputOutlines/48hrDiscOutline
 cp MeshFile.out ./Exp48hr-ECMThin_09.mesh
 

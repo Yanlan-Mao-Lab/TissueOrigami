@@ -1950,32 +1950,22 @@ bool Simulation::initiateSavedSystem(){
 		updateNodeBindingFromSave();
 	}
 	updateElementVolumesAndTissuePlacements();
-	std::cout<<"clearNodeMassLists"<<std::endl;
 	clearNodeMassLists();
-	std::cout<<"assignNodeMasses"<<std::endl;
 	assignNodeMasses();
-	std::cout<<"assignConnectedElementsAndWeightsToNodes"<<std::endl;
 	assignConnectedElementsAndWeightsToNodes();
-	std::cout<<"clearLaserAblatedSites"<<std::endl;
 	clearLaserAblatedSites();
-	std::cout<<"calculateShapeFunctionDerivatives"<<std::endl;
     calculateShapeFunctionDerivatives();
-	std::cout<<"updateElementPositions"<<std::endl;
 	updateElementPositions();
 	(void) calculateTissueHeight();
-	std::cout<<"fillInElementColumnLists"<<std::endl;
 	fillInElementColumnLists();
 	calculateBoundingBox();
-	std::cout<<"after bounding box"<<std::endl;
 	for(const auto& itElement : Elements){
 		itElement->calculateRelativePosInBoundingBox(boundingBox[0][0],boundingBox[0][1],boundingBoxSize[0],boundingBoxSize[1]);
 	}
-	std::cout<<"update to apical relative"<<std::endl;
 	updateRelativePositionsToApicalPositioning();
 	for(const auto& itElement : Elements){
 		itElement->setInitialRelativePosInBoundingBox();
 	}
-	std::cout<<"induce clones"<<std::endl;
 	induceClones();
 	//skipping the footer:
 	getline(saveFileToDisplayMesh,currline);
@@ -3313,6 +3303,7 @@ void Simulation::calculateStiffnessMatrices(){
 
 void Simulation::calculateShapeFunctionDerivatives(){
 	for(auto const& itElement : Elements){
+		//std::cout<<"calculating shape func der for element "<<itElement->Id<<" ">
 		itElement->calculateElementShapeFunctionDerivatives();
     }
 }
@@ -8105,15 +8096,16 @@ void Simulation::calculateBoundingBox(){
 			}
 		}
 	}
-	if (symmetricX){
-		boundingBox[0][0] = (-1.0)*boundingBox[1][0]; //if there is X symmetricity, then the bounding box is extended to double the size in y
-	}
+	//Think how you implement the growth mapping before implementing the bounding box changes.
+	//if (symmetricX){
+	//	boundingBox[0][0] = (-1.0)*boundingBox[1][0]; //if there is X symmetricity, then the bounding box is extended to double the size in y
+	//}
 	if (symmetricY){
 		boundingBox[0][1] = (-1.0)*boundingBox[1][1]; //if there is Y symmetricity, then the bounding box is extended to double the size in y
 	}
-	if (symmetricZ){
-		boundingBox[0][2] = (-1.0)*boundingBox[1][2]; //if there is Z symmetricity, then the bounding box is extended to double the size in y
-	}
+	//if (symmetricZ){
+	//	boundingBox[0][2] = (-1.0)*boundingBox[1][2]; //if there is Z symmetricity, then the bounding box is extended to double the size in y
+	//}
 	std::cout<<"bounding box after update: "<<boundingBox[0][0]<<" "<<boundingBox[0][1]<<" "<<boundingBox[1][0]<<" "<<boundingBox[1][1]<<std::endl;
 	for (int i=0; i<3; ++i){
 		boundingBoxSize[i] = boundingBox[1][i] - boundingBox[0][i];
