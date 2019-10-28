@@ -52,14 +52,16 @@ Prism::Prism(int* tmpNodeIds, const std::vector<std::unique_ptr<Node>>& Nodes, i
 	//ChangedShapeInThePast = false;
 	IsAblated = false;
 	atSymetricityBoundary = false;
+    //Base line for display is that the elemetn itself is visibla, but none of its symettric counterparts are.
+    //Once the system is initiated, these will be set if there is any symmetricity in simulation.
 	IsClippedInDisplay = false;
-	IsXSymmetricClippedInDisplay = false;
-	IsYSymmetricClippedInDisplay = false;
-	IsZSymmetricClippedInDisplay = false;
-	IsXYSymmetricClippedInDisplay = false;
-	IsXZSymmetricClippedInDisplay = false;
-	IsYZSymmetricClippedInDisplay = false;
-	IsXYZSymmetricClippedInDisplay = false;
+    IsXSymmetricClippedInDisplay = true;
+    IsYSymmetricClippedInDisplay = true;
+    IsZSymmetricClippedInDisplay = true;
+    IsXYSymmetricClippedInDisplay = true;
+    IsXZSymmetricClippedInDisplay = true;
+    IsYZSymmetricClippedInDisplay = true;
+    IsXYZSymmetricClippedInDisplay = true;
 
 	capElement = false;
     rotatedGrowth = false;
@@ -519,8 +521,8 @@ void  Prism::updateElasticProperties(){
      * during modifications of stiffness, the initial Young's modulus is not altered, nad the modifications are 
      * stored in ShapeBase#stiffnessMultiplier.
      */
-    lambda = stiffnessMultiplier*E*v/(1+v)/(1-2.0*v);
-    mu = stiffnessMultiplier*E/2.0/(1+v);
+    lambda = StiffnessTimeSeriesMultiplier*stiffnessMultiplier*E*v/(1+v)/(1-2.0*v);
+    mu = StiffnessTimeSeriesMultiplier*stiffnessMultiplier*E/2.0/(1+v);
     /** The two tensor updates are not necessary for a neo-Hookean material, as the calculation for
     * ShapeBase#D81 tensor is carried out at each Newton-Raphson iteration. At this point, the material model is
     * not known,  therefore the values will be updated. 

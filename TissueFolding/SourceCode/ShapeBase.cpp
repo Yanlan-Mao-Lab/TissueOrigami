@@ -54,7 +54,7 @@ void	ShapeBase::setShapeType(string TypeName){
 	}
 	else{
 		this->ShapeType= -100;
-	};
+    }
 	//std::cout<<"finalised set shape type"<<std::endl;
 }
 
@@ -176,9 +176,12 @@ void ShapeBase::updateInternalViscosityTest(){
 	internalViscosity = dmag*originalInternalViscosity;
 }
 
-
 double 	ShapeBase::getYoungModulus(){
-	return (stiffnessMultiplier*E);
+    return (StiffnessTimeSeriesMultiplier*stiffnessMultiplier*E);
+}
+
+void ShapeBase::SetStiffnessMultiplier(double CurrElementUpdatedMultiplier){
+    StiffnessTimeSeriesMultiplier = CurrElementUpdatedMultiplier;
 }
 
 double 	ShapeBase::getPoissonRatio(){
@@ -3660,15 +3663,41 @@ void 	ShapeBase::removeMassFromNodes(const std::vector<std::unique_ptr<Node>>& N
 		}
 }
 
-void 	ShapeBase::checkDisplayClipping(double xClip, double yClip, double zClip){
-	IsClippedInDisplay=false;
-	IsXSymmetricClippedInDisplay=false;
-	IsYSymmetricClippedInDisplay=false;
-	IsZSymmetricClippedInDisplay=false;
-	IsXYSymmetricClippedInDisplay = false;
-	IsXZSymmetricClippedInDisplay = false;
-	IsYZSymmetricClippedInDisplay = false;
-	IsXYZSymmetricClippedInDisplay = false;
+void ShapeBase::setDisplayClippingAccordingToSystemSymmetricity(bool symmetricX,bool symmetricY,bool symmetricZ){
+    IsXSymmetricClippedInDisplay=false;
+    IsYSymmetricClippedInDisplay=false;
+    IsZSymmetricClippedInDisplay=false;
+    IsXYSymmetricClippedInDisplay = false;
+    IsXZSymmetricClippedInDisplay = false;
+    IsYZSymmetricClippedInDisplay = false;
+    IsXYZSymmetricClippedInDisplay = false;
+    if (!symmetricX){
+       IsXSymmetricClippedInDisplay = true;
+       IsXYSymmetricClippedInDisplay = true;
+       IsXZSymmetricClippedInDisplay = true;
+       IsXYZSymmetricClippedInDisplay = true;
+    }
+    if (!symmetricY){
+        IsYSymmetricClippedInDisplay = true;
+        IsXYSymmetricClippedInDisplay = true;
+        IsYZSymmetricClippedInDisplay = true;
+        IsXYZSymmetricClippedInDisplay = true;
+    }
+    if (!symmetricZ){
+        IsZSymmetricClippedInDisplay = true;
+        IsXZSymmetricClippedInDisplay = true;
+        IsYZSymmetricClippedInDisplay = true;
+        IsXYZSymmetricClippedInDisplay = true;
+    }
+}
+
+void 	ShapeBase::checkDisplayClipping(double xClip, double yClip, double zClip, bool symmetricX,bool symmetricY,bool symmetricZ ){
+    //We start by approving drawing 8 elements on screen per one real element:
+    // 1 own
+    // 7 symmetrics in 7 quadrants.
+    IsClippedInDisplay=false;
+    //If there is no symmetricity, then those reflections should be "clipped" by definition
+    setDisplayClippingAccordingToSystemSymmetricity(symmetricX, symmetricY, symmetricZ);
 	for (size_t j=0; j<nNodes; ++j){
 		 if((-1.0)*Positions[j][0]>xClip){
 			 IsXSymmetricClippedInDisplay = true;
@@ -3689,7 +3718,7 @@ void 	ShapeBase::checkDisplayClipping(double xClip, double yClip, double zClip){
 			 IsXYZSymmetricClippedInDisplay = true;
 		 }
 		 if(Positions[j][0]>xClip){
-			 IsClippedInDisplay = true;
+             IsClippedInDisplay = true; //this is the real element and whether it is clipped on display
 			 IsYSymmetricClippedInDisplay = true;
 			 IsZSymmetricClippedInDisplay = true;
 			 IsYZSymmetricClippedInDisplay = true;
@@ -3855,4 +3884,8 @@ void ShapeBase::setLateralElementsRemodellingPlaneRotationMatrix(){
 		}
 	}
 	//This function should not have been called if the element is not a linker!
+}
+
+void ShapeBase::SetTimeseriesStiffnessMultiplier(double CurrElementUpdatedMultiplier){
+    StiffnessTimeSeriesMultiplier = CurrElementUpdatedMultiplier;
 }

@@ -19,21 +19,23 @@
 
 
 #curr path for ubuntu
-CurrPath = /home/melda/Documents/TissueFolding/UserInterface/
+#CurrPath = /home/melda/Documents/TissueFolding/UserInterface/
 
 #curr path for MacOS:
-#CurrPath = ./
+CurrPath = ./
 
 TARGET = $$CurrPath/Debug/TissueFoldingUI
 
-QMAKE_CFLAGS_RELEASE += -fopenmp
-QMAKE_CFLAGS_DEBUG += -fopenmp 
-QMAKE_CXXFLAGS += -fopenmp -std=c++17 
-QMAKE_LFLAGS +=  -fopenmp
-
-#QMAKE_CXXFLAGS += -fopenmp -std=c++11 -D DO_NOT_USE_OMP -D DO_NOT_SOLVE_SYSTEM_OF_EQUATIONS
 #qt creator on mac can read config not QMAKE_CXXFLAGS, ubuntu canr read QMAKE_CXXFLAGS, not CONFIG
+#QMAKE_CFLAGS_RELEASE += -fopenmp
+#QMAKE_CFLAGS_DEBUG += -fopenmp
+#QMAKE_CXXFLAGS += -fopenmp -std=c++17
+#QMAKE_LFLAGS +=  -fopenmp
+
+#QMAKE_CXXFLAGS += -fopenmp -std=c++17 -D DO_NOT_USE_OMP -D DO_NOT_SOLVE_SYSTEM_OF_EQUATIONS
 #CONFIG += -std=c++11 -D DO_NOT_USE_OMP -D DO_NOT_SOLVE_SYSTEM_OF_EQUATIONS
+CONFIG += c++17 -D DO_NOT_USE_OMP -D DO_NOT_SOLVE_SYSTEM_OF_EQUATIONS
+QMAKE_CXXFLAGS += -D DO_NOT_USE_OMP -D DO_NOT_SOLVE_SYSTEM_OF_EQUATIONS
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 QT += opengl
@@ -57,23 +59,18 @@ SOURCES += $$CurrPath/SourceCode/main.cpp \
 	$$CurrPath/../TissueFolding/SourceCode/RandomGenerator.cpp \
 	$$CurrPath/../TissueFolding/SourceCode/NewtonRaphsonSolver.cpp \
 	$$CurrPath/../TissueFolding/SourceCode/Analysis.cpp \
-	$$CurrPath/../TissueFolding/SourceCode/Lumen.cpp
+        $$CurrPath/../TissueFolding/SourceCode/Lumen.cpp \
+        $$CurrPath/../TissueFolding/SourceCode/TimeSeriesPhysicalProperties.cpp \
+        $$CurrPath/../TissueFolding/SourceCode/YoungsModulusModifier.cpp
 
 #libs and includes for linux for independent license pardiso:
-#LIBS += -L/usr/include -lgsl -lgslcblas -lpardiso500-GNU461-X86-64  -fopenmp -llapack --- Old pardiso 
-LIBS += -L/usr/include -lgsl -lgslcblas -lpardiso600-GNU720-X86-64  -fopenmp -llapack -lgomp -lpthread -lgfortran -lm
-
-
-#libs and includes for linux for MKL: ---- clashes with gsl cblas!!!
-#LIBS += -L/usr/include -lgsl -lgslcblas -lpardiso500-GNU461-X86-64  -fopenmp -llapack -DMKL_ILP64 -m64 -L${MKLROOT}/lib/intel64 -Wl,--no-as-needed  -lmkl_intel_ilp64 -lmkl_gnu_thread -lmkl_core -lgomp -lpthread -lm -ldl
-#INCLUDEPATH += ${MKLROOT}/include
-
+#LIBS += -L/usr/include -lgsl -lgslcblas -lpardiso600-GNU720-X86-64  -fopenmp -llapack -lgomp -lpthread -lgfortran -lm
 
 
 
 # libs and includes for MacOS
-# LIBS += -L/usr/include -L/usr/local/lib/ -lgsl -lgslcblas -L/usr/local/Cellar/boost/1.58.0/include -lpardiso500-MACOS-X86-64
-# INCLUDEPATH += /usr/local/Cellar/boost/1.58.0/include /usr/local/include/
+LIBS += -L/usr/include -L/usr/local/lib/ -lgsl -lgslcblas -L/usr/local/Cellar/boost/1.58.0/include -lpardiso600-MACOS-X86-64
+INCLUDEPATH += /usr/local/Cellar/boost/1.71.0/include /usr/local/include/
 
 
 # install

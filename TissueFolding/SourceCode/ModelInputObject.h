@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <memory>
-//#include "Simulation.h"
+#include "Simulation.h"
 
 class Simulation;
 using namespace std;
@@ -58,7 +58,8 @@ private:
 	bool readLumenOptions(ifstream& file);					///< This function reads the lumen options
 
 	bool readEnclosementOptions(ifstream& file);
-
+    bool readYoungsModulusTimeseriesGrids(ifstream& file);
+    bool readTypeOfCoordinateSystem(ifstream& file);
 public:
 	Simulation* Sim;				///< The pointer to the simulation object, for which the parameters are being read from the modelinput file.
 	const char*  parameterFileName;	///< The name (including path) of the file containing the model input parameters.

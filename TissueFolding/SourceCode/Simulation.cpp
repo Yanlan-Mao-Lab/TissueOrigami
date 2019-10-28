@@ -166,10 +166,11 @@ void Simulation::setDefaultParameters(){
 	boundingBox[1][2] = -1000.0;	//top z
 
 	addCurvatureToTissue = false;
-	tissueCurvatureDepth = 0.0;
-	symmetricZ = false;
-	symmetricY = false;
+    tissueCurvatureDepth = 0.0;
+
 	symmetricX = false;
+    symmetricY = false;
+    symmetricZ = false;
 	addingRandomForces = false;
 	randomForceMean = 0.0;
 	randomForceVar = 0.0;
@@ -570,6 +571,7 @@ bool Simulation::initiateSystem(){
          * is in place. The symmetricity boundary should not be considered as at the outer circumference.
          */
 		 clearCircumferenceDataFromSymmetricityLine();
+         setDisplayClippingofElementsAccordingToSystemSymmetricity();
 	}
     /**
      * Then the existance of the peripodial membrane in the system is checked.
@@ -799,6 +801,12 @@ bool Simulation::initiateSystem(){
 	 */
     if (thereIsPlasticDeformation){
     	setLateralElementsRemodellingPlaneRotationMatrices();
+    }
+    for (const auto& currYoungModulusTimeSeriesModifier : AllYoungsModulusModifiers ){
+        Success = currYoungModulusTimeSeriesModifier->timeStepConsistencyCheck(dt);
+        if (!Success){
+            return Success;
+        }
     }
     std::cout<<" system initiated"<<std::endl;
 	return Success;
@@ -1966,6 +1974,7 @@ bool Simulation::initiateSavedSystem(){
 	for(const auto& itElement : Elements){
 		itElement->setInitialRelativePosInBoundingBox();
 	}
+    setDisplayClippingofElementsAccordingToSystemSymmetricity();
 	induceClones();
 	//skipping the footer:
 	getline(saveFileToDisplayMesh,currline);
@@ -2981,6 +2990,11 @@ bool Simulation::generateColumnarCircumferenceNodeList(	vector <int> &ColumnarCi
 	return true;
 }
 
+void Simulation::setDisplayClippingofElementsAccordingToSystemSymmetricity(){
+    for (auto const& itElement : Elements){
+        itElement->setDisplayClippingAccordingToSystemSymmetricity(symmetricX, symmetricY, symmetricZ);
+    }
+}
 void Simulation::clearCircumferenceDataFromSymmetricityLine(){
 
     /**

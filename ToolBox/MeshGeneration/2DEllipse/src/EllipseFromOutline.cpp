@@ -237,8 +237,9 @@ void EllipseLayoutGenerator::linkerTesselate2D(){
 	ostringstream Convert;
 	Convert << maxArea; // Use some manipulators
 	string maxAreaStr = Convert.str(); // Give the result to the string
-	string sysCommand = "/home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/triangle/triangle -pq33a"+maxAreaStr+" ./LinkerPoints.poly  ";
-	cerr<<"Running triangulation with: "<<sysCommand<<endl;
+        //string sysCommand = "/home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/triangle/triangle -pq33a"+maxAreaStr+" ./LinkerPoints.poly  ";
+        string sysCommand = "/Users/nkhalilgharibi/TissueFoldingProject/NargessBranch/TissueFolding/ToolBox/MeshGeneration/triangle/triangle -pq33a"+maxAreaStr+" ./LinkerPoints.poly  ";
+        cerr<<"Running triangulation with: "<<sysCommand<<endl;
 	system(sysCommand.c_str());
 }
 
@@ -255,8 +256,9 @@ void EllipseLayoutGenerator::peripodialSparseTesselate2D(bool symmetricX, bool s
 	for (int i =0; i< n; ++i){
 		pointsForTesselation<<i<<" "<<x[i]<<" "<<y[i]<<" 1"<<endl;
 	}
-	string sysCommand = "/home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/triangle/triangle -Yq ./PointsPeri.node  ";
-	cerr<<"Running triangulation with: "<<sysCommand<<endl;
+        //string sysCommand = "/home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/triangle/triangle -Yq ./PointsPeri.node  ";
+        string sysCommand = "/Users/nkhalilgharibi/TissueFoldingProject/NargessBranch/TissueFolding/ToolBox/MeshGeneration/triangle/triangle -Yq ./PointsPeri.node  ";
+        cerr<<"Running triangulation with: "<<sysCommand<<endl;
 	system(sysCommand.c_str());
 	
 }
@@ -433,32 +435,41 @@ void EllipseLayoutGenerator::Tesselate2D(){
 	ostringstream Convert;
 	Convert << maxArea; // Use some manipulators
 	string maxAreaStr = Convert.str(); // Give the result to the string
-	string sysCommand = "/home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/triangle/triangle -q33a"+maxAreaStr+" ./Points.node  ";
-	cerr<<"Running triangulation with: "<<sysCommand<<endl;
+        //string sysCommand = "/home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/triangle/triangle -q33a"+maxAreaStr+" ./Points.node  ";
+        string sysCommand = "/Users/nkhalilgharibi/TissueFoldingProject/NargessBranch/TissueFolding/ToolBox/MeshGeneration/triangle/triangle -q33a"+maxAreaStr+" ./Points.node  ";
+        cerr<<"Running triangulation with: "<<sysCommand<<endl;
 	system(sysCommand.c_str());
 	
 }
 
 void EllipseLayoutGenerator::readInTesselation3D(){
     cout<<" start of read in tesselation3D, size of points: "<<posx.size()<<" size of tissue shape: "<<tissueType.size()<<endl;
-
-    ifstream SphereTesselationFile;
-    SphereTesselationFile.open("./SphericalTriangulation", ifstream::in);
+    ifstream TesselationIn3DFile;
+    if (generatingSphere){
+        TesselationIn3DFile.open("./SphericalTriangulation", ifstream::in);
+    }
+    else if (generatingCylinder){
+            TesselationIn3DFile.open("./CylindricalTriangulation", ifstream::in);
+    }
+    else{
+        cerr<<"Inside readInTesselation 3D but the tissue shape is neither spherical or cylindrical. Check input values.";
+        return;
+    }
 
     int nNode;
     int bordersMarked=1;
-    SphereTesselationFile>>nNode;
+    TesselationIn3DFile>>nNode;
     cout<<"nNode: "<<nNode<<endl;
     for (int i=0; i<nNode; ++i){
         int nodeId;
-        SphereTesselationFile>>nodeId;
+        TesselationIn3DFile>>nodeId;
         //cerr<<"Reading node : "<<i<<"("<<nodeId<<") of "<<nNode<<endl;
         double pnts[3];
         for (int j=0;j<3;++j){
-            SphereTesselationFile >> pnts[j];
+            TesselationIn3DFile >> pnts[j];
         }
         //reading the flag for border nodes, and generating the vector for it
-        SphereTesselationFile>>bordersMarked;
+        TesselationIn3DFile>>bordersMarked;
         atBorder.push_back(bordersMarked);
         //cerr<<"		read pos: "<< pnts[0]<<" "<<pnts[1]<<" "<<pnts[2]<<" borders? "<<bordersMarked<<endl;
         if (nodeId<posx.size()){
@@ -478,12 +489,12 @@ void EllipseLayoutGenerator::readInTesselation3D(){
     }
     cout<<" end of read in tesselation3D nodes, size of points: "<<posx.size()<<" size of tissue shape: "<<tissueType.size()<<endl;
     int ntri;
-    SphereTesselationFile>>ntri;
+    TesselationIn3DFile>>ntri;
     for (int i=0; i<ntri; ++i){
         int* pnts;
         pnts = new int[3];
         for (int j=0;j<3;++j){
-            SphereTesselationFile >> pnts[j];
+            TesselationIn3DFile >> pnts[j];
         }
         triangles.push_back(pnts);
         Links0.push_back(pnts[0]);
@@ -494,7 +505,7 @@ void EllipseLayoutGenerator::readInTesselation3D(){
         Links1.push_back(pnts[0]);
     }
     cout<<" end of read in tesselation3D triangles, size of points: "<<posx.size()<<" size of tissue shape: "<<tissueType.size()<<endl;
-    SphereTesselationFile.close();
+    TesselationIn3DFile.close();
     //writing for gnuplot vectors:
     ofstream vectorsForGnuplot,nodesForGnuplot;;
     vectorsForGnuplot.open("./VectorsPostTesselation.out",ofstream::trunc);
@@ -1505,13 +1516,17 @@ void EllipseLayoutGenerator::writeMeshFileForSimulation(double zHeight, int zLay
 	cout<<" if added, node count expected linkers: "<<SortedCircumferenceForLinkers.size()*nNonDuplicateLinkers<<endl;
 	//Adding the basal layer:
 	for (int i=0;i<n;++i){
-        if (generatingSphere){
+            if (generatingSphere){
+                MeshFile<<posx[i]<<"	"<<posy[i]<<"	"<<posz[i]<<"    0	"<<tissueType[i]<<"	"<<atBorder[i]<<endl;	//[x-coord   y-coord   z-coord]  [tissuePlacement: basal-node identifier(0)] [tissueType(columnar-0, peripodium-2)]  [flag for border nodes]
+                recordedNodesX.push_back(posx[i]);
+                recordedNodesY.push_back(posy[i]);
+                recordedNodesZ.push_back(posz[i]);
+            }
+             else if (generatingCylinder){
             MeshFile<<posx[i]<<"	"<<posy[i]<<"	"<<posz[i]<<"    0	"<<tissueType[i]<<"	"<<atBorder[i]<<endl;	//[x-coord   y-coord   z-coord]  [tissuePlacement: basal-node identifier(0)] [tissueType(columnar-0, peripodium-2)]  [flag for border nodes]
             recordedNodesX.push_back(posx[i]);
             recordedNodesY.push_back(posy[i]);
             recordedNodesZ.push_back(posz[i]);
-        }
-        else if (generatingCylinder){
         }
         else{
             MeshFile<<posx[i]<<"	"<<posy[i]<<"	"<<0<<"    0	"<<tissueType[i]<<"	"<<atBorder[i]<<endl;	//x-coord   y-coord   z-coord   basal-node identifier(0) tissueType(columnar-0, peripodium-2) flag for border nodes
@@ -1556,9 +1571,22 @@ void EllipseLayoutGenerator::writeMeshFileForSimulation(double zHeight, int zLay
 
             }
             else if (generatingCylinder){
-                //write how to calculate new xyz coordinates of the next layer for a tube.
-                //Do you go in or out?
-                //which axis is the tube along? Make a comment of it here once decided.
+                //calculating the normalised vector towards the axis of the tube.
+                //The axis of the tube is x-axis. So the normalised vector should be in y-z plane. x should not change.
+                double vec[3] = {-posx[i],-posy[i],-posz[i]};
+                double magVec = sqrt(vec[1]*vec[1] + vec[2]*vec[2]);
+                vec[1] = vec[1]/magVec*currzHeight;  //normalise & bring length to currzHeight
+                vec[2] = vec[2]/magVec*currzHeight;
+                //now the new node position should be moved from base position towards
+                //the core of the organoid
+                //the calculated vector
+                double currX = posx[i];
+                double currY = posy[i]+vec[1];
+                double currZ = posz[i]+vec[2];
+                recordedNodesX.push_back(currX);
+                recordedNodesY.push_back(currY);
+                recordedNodesZ.push_back(currZ);
+                MeshFile<<currX<<"	"<<currY<<"	"<<currZ<<"    "<<nodePositionIdentifier<<"	"<<tissueType[i]<<"	"<<atBorder[i]<<endl;
             }
             else{
                 MeshFile<<posx[i]<<"	"<<posy[i]<<"	"<<currzHeight<<"    "<<nodePositionIdentifier<<"	"<<tissueType[i]<<"	"<<atBorder[i]<<endl;
@@ -2457,12 +2485,13 @@ void EllipseLayoutGenerator::arrangeSideLength(vector <float>&  x, vector <float
 
 bool readinputs (int argc, char **argv, double* parameters, ifstream& inputOutline){
 	if (argc<2){
-		cerr<<"Please give shape type: "<<endl;
-        cerr<<"		1  = wing disc or circular outline"<<endl;
-		cerr<<"		2  = rectangle"<<endl;
-		cerr<<"		-1 for input tesselation 2D(input files MUST BE Points.1.ele and Points.1.node)"<<endl;
-        cerr<<"		-2 for input tesselation 3D(input files MUST BE SphericalMeshTesselation)"<<endl;
-		return 0;	
+            cerr<<"Please give shape type: "<<endl;
+            cerr<<"		1  = wing disc or circular outline"<<endl;
+            cerr<<"		2  = rectangle"<<endl;
+            cerr<<"		-1 for input tesselation 2D(input files MUST BE Points.1.ele and Points.1.node)"<<endl;
+            cerr<<"		-2 for input tesselation 3D - spherical(input files MUST BE SphericalTriangulation)"<<endl;
+            cerr<<"		-3 for input tesselation 3D - cylindrical(input files MUST BE CylindricalTriangulation)"<<endl;
+            return 0;
 	}
 	else {
 		const char* inpstring = argv[1];
@@ -2474,9 +2503,13 @@ bool readinputs (int argc, char **argv, double* parameters, ifstream& inputOutli
 		offset = 2;	
 	}
 	if (parameters[0] == -2){
-        cerr<<"Will read tesselation from SphericalMeshTesselation, the side length input will not be used, but must be valid"<<endl;
+        cerr<<"Will read tesselation from SphericalTriangulation, the side length input will not be used, but must be valid"<<endl;  ///we don't need side length because the triangulation is already done
 		offset = 2;	
 	}
+        if (parameters[0] == -3){
+        cerr<<"Will read tesselation from CylindricalTriangulation, the side length input will not be used, but must be valid"<<endl; ///we don't need side length because the triangulation is already done
+                offset = 2;
+        }
 	else if (parameters[0] == 1){
 		if(argc<6){
 			cerr<<"Please give lenght1, length2, width1 and width2 (in this order)"<<endl;
@@ -2597,11 +2630,12 @@ int main(int argc, char **argv)
 
     // 0: wingdisc48Hr (no ECM),
     // 1: wing disc with ECM at 48 hr, // This will be the one you use for wong disc simulations!
-	// 2: wing disc 72 hr,
-	// 3: optic cup
+    // 2: wing disc 72 hr,
+    // 3: optic cup
     // 4: x&y symmetric circle (half disc) and needs further code mdifications! -> Eliminate bluntTip function for type 4 with no x symmetricity! (half circle - not quarter)
-	// 5: spherical organoid
-    int selectTissueType = 5;
+    // 5: spherical organoid
+    // 6: Tubular organoid
+        int selectTissueType = 1;
 
 	if (selectTissueType == 0){ // 0 : wingdisc48Hr, 
 		symmetricY = true;
@@ -2621,21 +2655,25 @@ int main(int argc, char **argv)
 	}
 	else if(selectTissueType == 4){
 		symmetricY = true;
-        symmetricX = false; //should be true for quarter of a disc
+                symmetricX = false; //should be true for quarter of a disc
 	}
-    else if(selectTissueType == 5){ //spheroid
-		symmetricY = true;
-        symmetricX = false;
+        else if(selectTissueType == 5){ //spheroid
+                symmetricY = true;
+                symmetricX = true;
 	}
+        else if(selectTissueType == 6){ //tubular organoid
+                symmetricY = true;
+                symmetricX = false;
+        }
 	else{
 		cerr<<"Tissue type selected wrong!!"<<endl;	
 		return 0;
 	}
 	cout<<" selectTissueType: "<<selectTissueType<<endl;
 	if (success) {
-        if (parameters[0] == -1 || parameters[0] == -2 ){
-            cerr<<"preparing from ready triangulation"<<endl;
-		}	
+                if (parameters[0] == -1 || parameters[0] == -2 ){
+                    cerr<<"preparing from ready triangulation"<<endl;
+                }
 		printOutSystemSetup(parameters);
 		GlobalShape = parameters[0];
 		DVRadius[0] = parameters[1];
@@ -2660,7 +2698,7 @@ int main(int argc, char **argv)
 		}
 	}
 	EllipseLayoutGenerator Lay01(DVRadius[0],DVRadius[1], APRadius[0], APRadius[1], sideLength, symmetricX, symmetricY, 0.9);
-	bool addPeripodial = true;
+        bool addPeripodial = false; //this is false by default and over-written in selectTissueType below
 	double peripodialHeightFrac;
 	double lumenHeightFrac;
     bool addLateralECMRing = false; // leftover dont worry
@@ -2729,9 +2767,11 @@ int main(int argc, char **argv)
     else if(selectTissueType == 1){ // 1: ECM mimicing wing disc 48 hr, THIS WILL BE THE ONE TO USE 90% OF THE TIME!
 		cout<<" in loop for tissue type(1) : "<<selectTissueType<<endl; 
         actinHeight = 2.0;  //these are the values used in paper: 2.0 for actin layer
-        ECMHeight = 0.2;    //these are the values used in paper: 0.2 for ECM
-		peripodialHeightFrac = ECMHeight/(ABHeight-ECMHeight);//  ECM thickness is 0.2, AB height includes ECM. 0.33333;  //0.508
-		lumenHeightFrac = 0.;//0.2;
+        ECMHeight = -0.2;    //these are the values used in paper: 0.2 for ECM
+                addPeripodial = false;
+                //peripodialHeightFrac is not used.
+                peripodialHeightFrac = ECMHeight/(ABHeight-ECMHeight);//  ECM thickness is 0.2, AB height includes ECM. 0.33333;  //0.508
+                lumenHeightFrac = 0.;//0.2; //this is set to 0 because the lumen height will be added by curving the tissue in model input.
 		addLateralECMRing = false;
 		modifiedZDueToThinActin = ABHeight/ABLayers;
 		//basalLayerHeight = 6.25;
@@ -2750,7 +2790,7 @@ int main(int argc, char **argv)
 			bool correctActin = false;
 			if(ECMHeight<0){ECMHeight=0;denominator++;correctECM=true;}
 			if(basalLayerHeight<0){basalLayerHeight=0;denominator++;correctBasal=true;}
-			if(actinHeight<0){actinHeight==0;denominator++;correctActin=true;}
+                        if(actinHeight<0){actinHeight=0;denominator++;correctActin=true;}
 			modifiedZDueToThinActin = (ABHeight - ECMHeight - actinHeight -basalLayerHeight)/ denominator;
 			if (correctECM){ECMHeight= modifiedZDueToThinActin;}
 			if (correctBasal){basalLayerHeight= modifiedZDueToThinActin;}
@@ -2813,7 +2853,7 @@ int main(int argc, char **argv)
 			bool correctActin = false;
 			if(ECMHeight<0){ECMHeight=0;denominator++;correctECM=true;}
 			if(basalLayerHeight<0){basalLayerHeight=0;denominator++;correctBasal=true;}
-			if(actinHeight<0){actinHeight==0;denominator++;correctActin=true;}
+                        if(actinHeight<0){actinHeight=0;denominator++;correctActin=true;}
 			modifiedZDueToThinActin = (ABHeight - ECMHeight - actinHeight -basalLayerHeight)/ denominator;
 			if (correctECM){ECMHeight= modifiedZDueToThinActin;}
 			if (correctBasal){basalLayerHeight= modifiedZDueToThinActin;}
@@ -2823,11 +2863,11 @@ int main(int argc, char **argv)
 	}
     else if (selectTissueType == 5){
 		//spherical organoid
-        Lay01.generatingSphere = true;
+                Lay01.generatingSphere = true;
 		addPeripodial = false;
 		addLateralECMRing = false;
 		actinHeight = 2.0;
-		ECMHeight = 0.2;
+                ECMHeight = 0.2; //this should be set to negative in order to remove the ECM
 		modifiedZDueToThinActin = ABHeight/ABLayers;
 		if (ABLayers<3){
 			ECMHeight = ABHeight/ABLayers;
@@ -2841,18 +2881,51 @@ int main(int argc, char **argv)
 			bool correctECM = false;
 			bool correctBasal = false;
 			bool correctActin = false;
-			if(ECMHeight<0){ECMHeight=0;denominator++;correctECM=true;}
+                        if(ECMHeight<0){ECMHeight=0;denominator++;correctECM=true;}
 			if(basalLayerHeight<0){basalLayerHeight=0;denominator++;correctBasal=true;}
-			if(actinHeight<0){actinHeight==0;denominator++;correctActin=true;}
+                        if(actinHeight<0){actinHeight=0;denominator++;correctActin=true;}
 			modifiedZDueToThinActin = (ABHeight - ECMHeight - actinHeight -basalLayerHeight)/ denominator;
 			if (correctECM){ECMHeight= modifiedZDueToThinActin;}
 			if (correctBasal){basalLayerHeight= modifiedZDueToThinActin;}
 			if (correctActin){actinHeight= modifiedZDueToThinActin;}
 			cout<<" if clause 2,  modifiedZDueToThinActin: "<<modifiedZDueToThinActin<<endl;
+                        cout<<"ECMHeight is"<<ECMHeight<<endl;
 		}
 		Lay01.symmetricY = true;
 		Lay01.symmetricX = true;
 	}
+        else if (selectTissueType == 6){
+                    //tubular organoid
+                    Lay01.generatingCylinder = true;
+                    addPeripodial = false;
+                    addLateralECMRing = false;
+                    actinHeight = 2.0;
+                    ECMHeight = 0.2;
+                    modifiedZDueToThinActin = ABHeight/ABLayers;
+                    if (ABLayers<3){
+                            ECMHeight = ABHeight/ABLayers;
+                            actinHeight = ABHeight/ABLayers;
+                            basalLayerHeight = ABHeight/ABLayers;
+                            modifiedZDueToThinActin  = ABHeight/ABLayers;
+                            cout<<" if clause 1,  modifiedZDueToThinActin: "<<modifiedZDueToThinActin<<endl;
+                    }
+                    else{
+                            double denominator = (ABLayers-3);
+                            bool correctECM = false;
+                            bool correctBasal = false;
+                            bool correctActin = false;
+                            if(ECMHeight<0){ECMHeight=0;denominator++;correctECM=true;}
+                            if(basalLayerHeight<0){basalLayerHeight=0;denominator++;correctBasal=true;}
+                            if(actinHeight<0){actinHeight=0;denominator++;correctActin=true;}
+                            modifiedZDueToThinActin = (ABHeight - ECMHeight - actinHeight -basalLayerHeight)/ denominator;
+                            if (correctECM){ECMHeight= modifiedZDueToThinActin;}
+                            if (correctBasal){basalLayerHeight= modifiedZDueToThinActin;}
+                            if (correctActin){actinHeight= modifiedZDueToThinActin;}
+                            cout<<" if clause 2,  modifiedZDueToThinActin: "<<modifiedZDueToThinActin<<endl;
+                    }
+                    Lay01.symmetricY = true;
+                    Lay01.symmetricX = false;
+        }
 	else{
 		cerr<<"Tissue type selected wrong!!"<<endl;	
 		return 0;
@@ -2861,7 +2934,7 @@ int main(int argc, char **argv)
 		Lay01.addPeripodial = true;
 		Lay01.calculatePeripodialMembraneParameters(ABHeight, ABLayers,  ECMHeight,  modifiedZDueToThinActin, peripodialHeightFrac, lumenHeightFrac,peripodialSideCurveFrac,addLateralECMRing);
 	}
-	if (parameters[0] != -1 && parameters[0] != -2){//I am not using a ready made triangulation
+        if (parameters[0] != -1 && parameters[0] != -2 && parameters[0] != -3){//I am not using a ready made triangulation
 		vector <float> x, y;	
 		readInOutline(x,y,inputOutline);
 		Lay01.scaleInputOutline(x,y);
@@ -2871,6 +2944,9 @@ int main(int argc, char **argv)
         Lay01.readInTesselation2D();
     }
     if(parameters[0] == -2){
+        Lay01.readInTesselation3D();
+    }
+    if(parameters[0] == -3){
         Lay01.readInTesselation3D();
     }
 	//now I have the triangulated mesh. If I have peripodial, I need to get the circumference.

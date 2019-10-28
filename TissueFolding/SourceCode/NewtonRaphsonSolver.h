@@ -10,7 +10,7 @@
 #include "Lumen.h"
 #ifndef DO_NOT_USE_OMP
     //USING OMP, do not use omp not defined!
-	#include <omp.h>
+    #include <omp.h>
 #endif
 
 

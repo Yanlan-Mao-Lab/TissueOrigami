@@ -1,6 +1,12 @@
 g++ -std=c++11 -o src/EllipseFromOutline src/EllipseFromOutline.cpp
 cp ./src/EllipseFromOutline ./
 
+//For creating meshes from the outlines (e.g. wing discs), we changed one line in the triangle folder/make file:
+	#FOR LINUX VERSION
+	#CSWITCHES = -O -DLINUX -I/usr/X11R6/include -L/usr/X11R6/lib
+	#FOR MAC VERSION
+	CSWITCHES = -O -I/usr/X11R6/include -L/usr/X11R6/lib
+
 FORMAT OF THE OUTPUT MESH:
 [number of nodes]
 for each node:
@@ -8,99 +14,218 @@ for each node:
 [number of elements]
 [shape type =1 for prism] [node ids, 6 of them for prism, zero indexed] [reference position of each node, [x,y,z] for 6 nodes =18 values, this should be the original position you defined]
 
+//SMALL ORGANOID WITHOUT ECM
+1. Prepare the tessellation in Matlab (/NargessCodes/SphericalMesh.m). The radius is 20 microns and desired side length is 5. The output file is called "SmallSphericalTriangulation".
+2. Copy the file into /ToolBox/MeshGeneration/2DEllipse/ and rename to SphericalTriangulation.
+3. In EllipseFromOutline.cpp, change tissueType: selectTissueType = 5. 
+4. Set ECM height to negative. This will then remove the ECM:
+	ECMHeight = 0.2; //this should be set to negative in order to remove the ECM
+5. After running the first two lines in the beginning of this text file, run:
+	./EllipseFromOutline -2 12.3 2 4 1
+Here I have reduced the ABHeight 12.5 to 12.3, because the original height of ECM was 0.2 and I am now removing it. Also I have reduced the number of layers from 5 to 4.
+6. The output is MeshFile.out. Rename it as appropriate.
 
-Small 48 hours. The average is 85.56 to 54.6 microns. The cross point at 50 microns.
-Without taking the curve region into account this traslates to a shape of:
-35.56 50 27.3 27.3
+//LARGE ORGANOID WITHOUT ECM
+1. Prepare the tessellation in Matlab (/NargessCodes/SphericalMesh.m). The radius is 20 microns and desired side length is 5. The output file is called "LargeSphericalTriangulation".
+2. Copy the file into /ToolBox/MeshGeneration/2DEllipse/ and rename to SphericalTriangulation.
+3. In EllipseFromOutline.cpp, change tissueType: selectTissueType = 5. 
+4. Set ECM height to negative. This will then remove the ECM:
+	ECMHeight = 0.2; //this should be set to negative in order to remove the ECM
+5. After running the first two lines in the beginning of this text file, run:
+	./EllipseFromOutline -2 12.3 2 4 1
+Here I have reduced the ABHeight 12.5 to 12.3, because the original height of ECM was 0.2 and I am now removing it. Also I have reduced the number of layers from 5 to 4.
+6. The output is MeshFile.out. Rename it as appropriate.
 
-//RUN WITHOUT PERIPODIAL GENERATION
-% Now with explicit ECM but no peripodial:
-%first mesh:
-./EllipseFromOutline 1 35.56 50 27.3 27.3 12.5 9 2 0  ./inputOutlines/48hrDiscOutline
+
+//SMALL ORGANOID WITH ECM
+1. Prepare the tessellation in Matlab (/NargessCodes/SphericalMesh.m). The radius is 20 microns and desired side length is 5. The output file is called "SmallSphericalTriangulation".
+2. Copy the file into /ToolBox/MeshGeneration/2DEllipse/ and rename to SphericalTriangulation.
+3. In EllipseFromOutline.cpp, change tissueType: selectTissueType = 5.
+4. After running the first two lines in the beginning of this text file, run:
+	./EllipseFromOutline -2 12.5 2 5 1
+5. The output is MeshFile.out. Rename it as appropriate.
+
+
+//LARGE ORGANOID WITH ECM
+1. Prepare the tessellation in Matlab (/NargessCodes/SphericalMesh.m). The radius is 100 microns and desired side length is 5. The output file is called "LargeSphericalTriangulation".
+2. Copy the file into /ToolBox/MeshGeneration/2DEllipse/ and rename to SphericalTriangulation.
+3. In EllipseFromOutline.cpp, change tissueType: selectTissueType = 5.
+4. After running the first two lines in the beginning of this text file, run:
+	./EllipseFromOutline -2 12.5 2 5 1
+5. The output is MeshFile.out. Rename it as appropriate.
+
+
+//SMALL 48H DISC WITH ECM AND PERIPODIAL
+1. In the cpp file, correct selectTissueType to 1 and addPeripodial = true.
+2. Small 48 hours. The average is 85.56 to 54.6 microns. The cross point at 50 microns.
+Without taking the curve region into account this translates to a shape of:
+35.56 50 27.3 27.3. Height is 12.5 but it is irrelevant because we will not use this mesh. It is too coarse because the side length is 9. Run:
+	./EllipseFromOutline 1 35.56 50 27.3 27.3 12.5 9 2 0  ./inputOutlines/48hrDiscOutline
+This might have a segmentation fault but we don't care. We only need the first mesh: Points.1.node and Points.1.ele.
+3. Now we will refine the mesh. This will make the mesh finer:
 %further refinements, same as above:
 ../triangle/triangle -rq33a27.44 Points.1
 ../triangle/triangle -rq33a10.4 Points.2
 ../triangle/triangle -rq33a5.8 Points.3
 ../triangle/triangle -rq33a2.8 Points.4
 ../triangle/triangle -rq33a0.65 Points.5
+4. Copy the refinement that you are interested at into Points.1:
+cp Points.3.ele Points.1.ele
+cp Points.3.node Points.1.node
+5. Now from this mesh, build the 3D tissue. We will start from basal and move upwards.
+./EllipseFromOutline -1 12.7 2 3 1 
+12.7 is the tissue height (12.5+0.2ECM), side length 2 although it is not used, 3 layers for test purposes and 1 for y-symmetry.
+6. Rename the mesh file
+cp MeshFile.out ./SmallExp48hWithPeriWithECM.mesh
 
-cp Points.5.ele Points.1.ele
-cp Points.5.node Points.1.node
-./EllipseFromOutline -1 15.5 2 6 1
-cp MeshFile.out ./Exp48hr-noPeriECM_08.mesh
-
-I want a setup that has finer mesh at the centre corresponding to folds.
-This is a function to do that, dont worry anbout the details.
-
-%[input mesh] [xmin-(0-1)] [xmax-(0-1)] [area constraint for each triangle (micron-sq)] [buffer zone(0-1)]
-./generateTriangleBasedAreaConstraints  Points.5 0.5 0.7 0.7 0.63 0.1 > tmp
-../triangle/triangle -rq33a Points.5.ele 
-
-cp Points.6.ele Points.1.ele
-cp Points.6.node Points.1.node
-./EllipseFromOutline -1 15.5 1 6 1
-cp MeshFile.out ./Exp48hr-noPeriECM_09.mesh
-
-Same mesh as above, but with 5 layer s only, I save a lot of computation with one layer less elements
-
-./EllipseFromOutline -1 15.5 1.0 5 1  ./inputOutlines/48hrDiscOutline
-cp MeshFile.out ./Exp48hr-noPeriECMThin_09.mesh
-
-
-rm Points.6*
-../triangle/triangle -rq33a2.0 Points.5
-%[input mesh] [xmin] [xmax] [ymax] [area constraint] [buffer zone]
-./generateTriangleBasedAreaConstraints  Points.6 0.4 0.7 0.7 0.50 0.1 > tmp
-../triangle/triangle -rq33a Points.6.ele 
-cp Points.7.ele Points.1.ele
-cp Points.7.node Points.1.node
-
-%%HERE NEED TO CHANGE THE ECM THICKNESS IN SOURCE CODE, change ECM to 0.2):
-./EllipseFromOutline -1 12.5 1.0 5 1  ./inputOutlines/48hrDiscOutline
-cp MeshFile.out ./Exp48hr-noPeri-ThinECM_12.mesh
-
-
-//ACTIVATE PERIPODIAL IN INPUT:
-./EllipseFromOutline 1 35.56 50 27.3 27.3 12.5 9 2 0  ./inputOutlines/48hrDiscOutline
+//LARGE 48H DISC WITH ECM AND PERIPODIAL
+1. In the cpp file, correct selectTissueType to 1 and addPeripodial = true.
+2. Small 48 hours. The average is 85.56 to 54.6 microns. The cross point at 50 microns.
+Without taking the curve region into account this translates to a shape of:
+35.56 50 27.3 27.3. Height is 12.5 but it is irrelevant because we will not use this mesh. It is too coarse because the side length is 9. Run:
+	./EllipseFromOutline 1 35.56 50 27.3 27.3 12.5 9 2 0  ./inputOutlines/48hrDiscOutline
+This might have a segmentation fault but we don't care. We only need the first mesh: Points.1.node and Points.1.ele.
+3. Now we will refine the mesh. This will make the mesh finer:
+%further refinements, same as above:
 ../triangle/triangle -rq33a27.44 Points.1
 ../triangle/triangle -rq33a10.4 Points.2
 ../triangle/triangle -rq33a5.8 Points.3
 ../triangle/triangle -rq33a2.8 Points.4
 ../triangle/triangle -rq33a0.65 Points.5
-
-cp Points.3.ele Points.1.ele
-cp Points.3.node Points.1.node
-./EllipseFromOutline -1 15.5 4 3 1  ./inputOutlines/48hrDiscOutline
-cp MeshFile.out ./Exp48hr-ECM_06.mesh
-
-
+4. Copy the refinement that you are interested at into Points.1:
 cp Points.5.ele Points.1.ele
 cp Points.5.node Points.1.node
-./EllipseFromOutline -1 15.5 2 6 1  ./inputOutlines/48hrDiscOutline
-cp MeshFile.out ./Exp48hr-ECM_08.mesh
+5. Now from this mesh, build the 3D tissue. We will start from basal and move upwards.
+./EllipseFromOutline -1 12.7 2 3 1 
+12.7 is the tissue height (12.5+0.2ECM), side length 2 although it is not used, 3 layers for test purposes and 1 for y-symmetry.
+6. Rename the mesh file
+cp MeshFile.out ./LargeExp48hWithPeriWithECM.mesh
 
 
+//SMALL 48H DISC WITH ECM AND NO PERIPODIAL
+1. In the cpp file, correct selectTissueType to 1 and addPeripodial = false.
+2. Small 48 hours. The average is 85.56 to 54.6 microns. The cross point at 50 microns.
+Without taking the curve region into account this translates to a shape of:
+35.56 50 27.3 27.3. Height is 12.5 but it is irrelevant because we will not use this mesh. It is too coarse because the side length is 9. Run:
+	./EllipseFromOutline 1 35.56 50 27.3 27.3 12.5 9 2 0  ./inputOutlines/48hrDiscOutline
+This might have a segmentation fault but we don't care. We only need the first mesh: Points.1.node and Points.1.ele.
+3. Now we will refine the mesh. This will make the mesh finer:
+%further refinements, same as above:
+../triangle/triangle -rq33a27.44 Points.1
+../triangle/triangle -rq33a10.4 Points.2
+../triangle/triangle -rq33a5.8 Points.3
+../triangle/triangle -rq33a2.8 Points.4
+../triangle/triangle -rq33a0.65 Points.5
+4. Copy the refinement that you are interested at into Points.1:
+cp Points.3.ele Points.1.ele
+cp Points.3.node Points.1.node
+5. Now from this mesh, build the 3D tissue. We will start from basal and move upwards.
+./EllipseFromOutline -1 12.7 2 3 1 
+12.7 is the tissue height (12.5+0.2ECM), side length 2 although it is not used, 3 layers for test purposes and 1 for y-symmetry.
+6. Rename the mesh file
+cp MeshFile.out ./SmallExp48hNoPeriWithECM.mesh
+
+//LARGE 48H DISC WITH ECM AND NO PERIPODIAL
+1. In the cpp file, correct selectTissueType to 1 and addPeripodial = false.
+2. Small 48 hours. The average is 85.56 to 54.6 microns. The cross point at 50 microns.
+Without taking the curve region into account this translates to a shape of:
+35.56 50 27.3 27.3. Height is 12.5 but it is irrelevant because we will not use this mesh. It is too coarse because the side length is 9. Run:
+	./EllipseFromOutline 1 35.56 50 27.3 27.3 12.5 9 2 0  ./inputOutlines/48hrDiscOutline
+This might have a segmentation fault but we don't care. We only need the first mesh: Points.1.node and Points.1.ele.
+3. Now we will refine the mesh. This will make the mesh finer:
+%further refinements, same as above:
+../triangle/triangle -rq33a27.44 Points.1
+../triangle/triangle -rq33a10.4 Points.2
+../triangle/triangle -rq33a5.8 Points.3
+../triangle/triangle -rq33a2.8 Points.4
+../triangle/triangle -rq33a0.65 Points.5
+4. Copy the refinement that you are interested at into Points.1:
+cp Points.5.ele Points.1.ele
+cp Points.5.node Points.1.node
+5. Now from this mesh, build the 3D tissue. We will start from basal and move upwards.
+./EllipseFromOutline -1 12.7 2 3 1 
+12.7 is the tissue height (12.5+0.2ECM), side length 2 although it is not used, 3 layers for test purposes and 1 for y-symmetry.
+6. Rename the mesh file
+cp MeshFile.out ./LargeExp48hNoPeriWithECM.mesh
+
+//MORE REFINED MESH WITH ECM AND NO PERIPODIAL
+1. Compile "generateTriangleBasedAreaConstraints"
+	g++ -o ./generateTriangleBasedAreaConstraints ./src/generateTriangleBasedAreaConstraints.cpp
+2. Refining the mesh in the hinge area
+%[input mesh] [xmin-(0-1)] [xmax-(0-1)] [area constraint for each triangle (micron-sq)] [buffer zone(0-1)]
 ./generateTriangleBasedAreaConstraints  Points.5 0.5 0.7 0.7 0.63 0.1 > tmp
 ../triangle/triangle -rq33a Points.5.ele 
+3. Copy this to node1:
 cp Points.6.ele Points.1.ele
 cp Points.6.node Points.1.node
-./EllipseFromOutline -1 15.5 1 6 1  ./inputOutlines/48hrDiscOutline
-cp MeshFile.out ./Exp48hr-ECM_09.mesh
-
-//same mesh as above less layers
-./EllipseFromOutline -1 15.5 1.0 5 1  ./inputOutlines/48hrDiscOutline
-cp MeshFile.out ./Exp48hr-ECMThin_09.mesh
-
-rm Points.6*
-../triangle/triangle -rq33a2.0 Points.5
-./generateTriangleBasedAreaConstraints  Points.6 0.4 0.7 0.7 0.50 0.1 > tmp
-../triangle/triangle -rq33a Points.6.ele 
-cp Points.7.ele Points.1.ele
-cp Points.7.node Points.1.node
-
-%%HERE NEED TO CHANGE THE ECM THICKNESS IN SOURCE CODE, change ECM to 0.2):
-./EllipseFromOutline -1 12.5 1.0 5 1  ./inputOutlines/48hrDiscOutline
-cp MeshFile.out ./Exp48hr-ThinECM_12.mesh
+4. Now build the 3d tissue:
+	./EllipseFromOutline -1 12.7 1.0 5 1 
+5. Rename the file
+	 cp MeshFile.out ./FineMeshExp48hrNoPeriWithECM.mesh
 
 
+//SMALL 48H DISC WITHOUT ECM AND NO PERIPODIAL
+1. In the cpp file, correct selectTissueType to 1 and addPeripodial = false.
+2. Small 48 hours. The average is 85.56 to 54.6 microns. The cross point at 50 microns.
+Without taking the curve region into account this translates to a shape of:
+35.56 50 27.3 27.3. Height is 12.5 but it is irrelevant because we will not use this mesh. It is too coarse because the side length is 9. Run:
+	./EllipseFromOutline 1 35.56 50 27.3 27.3 12.5 9 2 0  ./inputOutlines/48hrDiscOutline
+This might have a segmentation fault but we don't care. We only need the first mesh: Points.1.node and Points.1.ele.
+3. Now we will refine the mesh. This will make the mesh finer:
+%further refinements, same as above:
+../triangle/triangle -rq33a27.44 Points.1
+../triangle/triangle -rq33a10.4 Points.2
+../triangle/triangle -rq33a5.8 Points.3
+../triangle/triangle -rq33a2.8 Points.4
+../triangle/triangle -rq33a0.65 Points.5
+4. Copy the refinement that you are interested at into Points.1:
+cp Points.3.ele Points.1.ele
+cp Points.3.node Points.1.node
+5. Now from this mesh, build the 3D tissue. We will start from basal and move upwards.
+./EllipseFromOutline -1 12.5 2 3 1 
+12.7 is the tissue height (12.5+0.2ECM), side length 2 although it is not used, 3 layers for test purposes and 1 for y-symmetry.
+6. Rename the mesh file
+cp MeshFile.out ./SmallExp48hNoPeriWithoutECM.mesh
+
+
+
+//LARGE 48H DISC WITHOUT ECM AND NO PERIPODIAL
+1. In the cpp file, correct selectTissueType to 1 and addPeripodial = false.
+2. Small 48 hours. The average is 85.56 to 54.6 microns. The cross point at 50 microns.
+Without taking the curve region into account this translates to a shape of:
+35.56 50 27.3 27.3. Height is 12.5 but it is irrelevant because we will not use this mesh. It is too coarse because the side length is 9. Run:
+	./EllipseFromOutline 1 35.56 50 27.3 27.3 12.5 9 2 0  ./inputOutlines/48hrDiscOutline
+This might have a segmentation fault but we don't care. We only need the first mesh: Points.1.node and Points.1.ele.
+3. Now we will refine the mesh. This will make the mesh finer:
+%further refinements, same as above:
+../triangle/triangle -rq33a27.44 Points.1
+../triangle/triangle -rq33a10.4 Points.2
+../triangle/triangle -rq33a5.8 Points.3
+../triangle/triangle -rq33a2.8 Points.4
+../triangle/triangle -rq33a0.65 Points.5
+4. Copy the refinement that you are interested at into Points.1:
+cp Points.5.ele Points.1.ele
+cp Points.5.node Points.1.node
+5. Now from this mesh, build the 3D tissue. We will start from basal and move upwards.
+./EllipseFromOutline -1 12.5 2 4 1 
+12.7 is the tissue height (12.5+0.2ECM), side length 2 although it is not used, 3 layers for test purposes and 1 for y-symmetry.
+6. Rename the mesh file
+cp MeshFile.out ./LargeExp48hNoPeriWithoutECM.mesh
+
+
+
+//MORE REFINED MESH WITHOUT ECM AND NO PERIPODIAL
+1. Compile "generateTriangleBasedAreaConstraints"
+	g++ -o ./generateTriangleBasedAreaConstraints ./src/generateTriangleBasedAreaConstraints.cpp
+2. Refining the mesh in the hinge area
+%[input mesh] [xmin-(0-1)] [xmax-(0-1)] [area constraint for each triangle (micron-sq)] [buffer zone(0-1)]
+./generateTriangleBasedAreaConstraints  Points.5 0.5 0.7 0.7 0.63 0.1 > tmp
+../triangle/triangle -rq33a Points.5.ele 
+3. Copy this to node1:
+cp Points.6.ele Points.1.ele
+cp Points.6.node Points.1.node
+4. Now build the 3d tissue:
+	./EllipseFromOutline -1 12.5 1.0 4 1 
+5. Rename the file
+	 cp MeshFile.out ./FineMeshExp48hrNoPeriWithoutECM.mesh
 

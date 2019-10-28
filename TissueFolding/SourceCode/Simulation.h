@@ -6,6 +6,9 @@
 #include <ostream>
 #include <fstream>
 #include <vector>
+#include <array>
+#include <memory>
+
 
 #include "ModelInputObject.h"
 #include "ShapeBase.h"
@@ -14,11 +17,12 @@
 #include "GrowthFunctionTypes.h"
 #include "NewtonRaphsonSolver.h"
 #include "Lumen.h"
-#include <array>
+#include "YoungsModulusModifier.h"
+
 
 #ifndef DO_NOT_USE_OMP
     //USING OMP, do not use omp not defined!
-	#include <omp.h>
+    #include <omp.h>
 #endif
 
 
@@ -124,7 +128,8 @@ private:
 	bool initiateMesh(int MeshType);								///< This function initiates the simulation mesh depending on the input mesh type.
 	void readInTissueWeights();										///< This function reads in the tissue type weight of elements, peripodialness is recorded.
 	bool checkIfTissueWeightsRecorded();							///< This function checks if the tissue type weights are recorded.
-	void clearCircumferenceDataFromSymmetricityLine();				///< This function clears the circumference identity from nodes and elements that are at a symmetricity boundary.
+    void setDisplayClippingofElementsAccordingToSystemSymmetricity(); ///< This function sets the symmetric displayt options of all elements.
+    void clearCircumferenceDataFromSymmetricityLine();				///< This function clears the circumference identity from nodes and elements that are at a symmetricity boundary.
 	bool generateColumnarCircumferenceNodeList(vector <int> &ColumnarCircumferencialNodeList);
 	void sortColumnarCircumferenceNodeList(vector <int> &ColumnarCircumferencialNodeList);
 	void getAverageSideLength(double& periAverageSideLength, double& colAverageSideLength);		///< This function calculates the average side length of elements, necessary for packing/binding/collapse thresholds.
@@ -640,6 +645,12 @@ public:
 	void addSideECMElements(vector< vector<int> > &ColumnarBasedNodeArray, vector< vector<int> > &OuterNodeArray); 							///< This function adds the elements for the side ECM layer.
 	bool addSideECMLayer();												///< This function adds an ECM to the columnar layer sides only. The tissue is assumed to have a basal ECM, and there will be no peripodial componenents.
 
+    void ApplyAllYoungsModulusModifiers();
+    vector<std::unique_ptr<YoungsModulusModifier>> AllYoungsModulusModifiers;
+
+    bool UseXYCoordinatesforRelativePositions;
+    bool UsePolarCoordinatesforRelativePositions;
+    bool UseCylindricalCoordintesforRelativePositions;
 };
 
 #endif

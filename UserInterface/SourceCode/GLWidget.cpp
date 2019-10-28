@@ -279,8 +279,8 @@ void GLWidget::reInitialiseNodeColourList(size_t oldNodeNumber){
 	 //cout<<"updating the clipping"<<endl;
 	 int n = Sim01->Elements.size();
 	 for (int i=0; i<n; ++i){
-		 Sim01->Elements[i]->checkDisplayClipping(xClip, yClip, zClip);
-	 }
+         Sim01->Elements[i]->checkDisplayClipping(xClip, yClip, zClip,Sim01->symmetricX,Sim01->symmetricY,Sim01->symmetricZ);
+     }
  }
 
  bool GLWidget::checkIfDrawingElement(int i){

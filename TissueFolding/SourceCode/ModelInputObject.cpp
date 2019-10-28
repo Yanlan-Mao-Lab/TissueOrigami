@@ -124,6 +124,20 @@ bool ModelInputObject::readParameters(){
 				 */
 				Success  = readSaveOptions(parametersFile);
 			}
+            else if(currParameterHeader == "YoungsModulusTimeseriesGrids:"){
+                /**
+                 * Timeseries of the Young's modulus of the tissue  through the private function ModelInputObject#readYoungsModulusTimeseriesGrids
+                 */
+                //std::cout<<"reading YoungsModulusTimeseriesGrids:"<<std::endl;
+                Success  = readYoungsModulusTimeseriesGrids(parametersFile);
+             }
+             else if(currParameterHeader == "TypeOfCoordinateSystem:"){
+                /**
+                 * Inputs defining the type of coordinate system
+                 */
+                //std::cout<<"reading YoungsModulusTimeseriesGrids:"<<std::endl;
+                Success  = readTypeOfCoordinateSystem(parametersFile);
+            }
 			else if (currParameterHeader == "GrowthOptions:"){
 				/**
 				 * Growth functions and related parameters of the simulation through the private function ModelInputObject#readGrowthOptions
@@ -1815,6 +1829,180 @@ bool ModelInputObject::readSaveOptions(ifstream& file){
 	}
 	//std::cout<<"Sim->saveImages: "<<Sim->saveImages<<" Sim->saveData: "<<Sim->saveData<<" "<<" datainterval: "<<Sim->dataSaveInterval<<" imageinterval: "<<Sim->dataSaveInterval<<std::endl;
 	return true;
+}
+
+bool ModelInputObject::readYoungsModulusTimeseriesGrids(ifstream& file){
+
+    size_t noTimeseriesInputs;
+    string currHeader;
+    file >> currHeader;
+    if(currHeader == "noTimeseriesInputs(size_t):"){
+        file >> noTimeseriesInputs;
+    }
+    else{
+        cerr<<"Error in reading number of timeseries inputs: "<<currHeader<<" should have been: noTimeseriesInputs(size_t):" <<endl;
+        return false;
+    }
+    for (size_t i=0;i<noTimeseriesInputs;++i){
+        size_t TimePointNoInput;
+        bool YoungsModulusMultiplierChangeRateIsLinearInput;
+        std::array<bool,7> WhereToApplyInput;
+        std::vector<double> WhenToApplyInput;
+        std::vector<std::string> nameListInput;
+
+        file >> currHeader;
+        if(currHeader == "TimePointNoInput(size_t):"){
+            file >> TimePointNoInput;
+        }
+        else{
+            cerr<<"Error in reading number of timepoints in timeseries: "<<currHeader<<" should have been: TimePointNoInput(size_t):" <<endl;
+            return false;
+        }
+
+        file >> currHeader;
+        if(currHeader == "YoungsModulusMultiplierChangeRateIsLinearInput(bool):"){
+            file >> YoungsModulusMultiplierChangeRateIsLinearInput;
+        }
+        else{
+            printErrorMessage(currHeader,"readYoungsModulusTimeseriesGrids","YoungsModulusMultiplierChangeRateIsLinearInput(bool):");
+            return false;
+        }
+
+        file >> currHeader;
+        if(currHeader == "applyToColumnarLayer(bool):"){
+            double currApplyToLayer;
+            file >> currApplyToLayer;
+            WhereToApplyInput[0]=currApplyToLayer;
+        }
+        else{
+             printErrorMessage(currHeader,"readYoungsModulusTimeseriesGrids","applyToColumnarLayer(bool):");
+            return false;
+        }
+
+        file >> currHeader;
+        if(currHeader == "applyToPeripodialMembrane(bool):"){
+            double currApplyToLayer;
+            file >> currApplyToLayer;
+            WhereToApplyInput[1]=currApplyToLayer;
+        }
+        else{
+             printErrorMessage(currHeader,"readYoungsModulusTimeseriesGrids","applyToPeripodialMembrane(bool):");
+            return false;
+        }
+
+        file >> currHeader;
+        if(currHeader == "applyToApicalLayer(bool):"){
+            double currApplyToLayer;
+            file >> currApplyToLayer;
+            WhereToApplyInput[2]=currApplyToLayer;
+        }
+        else{
+             printErrorMessage(currHeader,"readYoungsModulusTimeseriesGrids","applyToApicalLayer(bool):");
+            return false;
+        }
+
+        file >> currHeader;
+        if(currHeader == "applyToMidLayer(bool):"){
+            double currApplyToLayer;
+            file >> currApplyToLayer;
+            WhereToApplyInput[3]=currApplyToLayer;
+        }
+        else{
+             printErrorMessage(currHeader,"readYoungsModulusTimeseriesGrids","applyToMidLayer(bool):");
+            return false;
+        }
+
+        file >> currHeader;
+        if(currHeader == "applyToBasalLayer(bool):"){
+            double currApplyToLayer;
+            file >> currApplyToLayer;
+            WhereToApplyInput[4]=currApplyToLayer;
+        }
+        else{
+             printErrorMessage(currHeader,"readYoungsModulusTimeseriesGrids","applyToBasalLayer(bool):");
+            return false;
+        }
+
+        file >> currHeader;
+        if(currHeader == "applyToPeripodialECM(bool):"){
+            double currApplyToLayer;
+            file >> currApplyToLayer;
+            WhereToApplyInput[5]=currApplyToLayer;
+        }
+        else{
+             printErrorMessage(currHeader,"readYoungsModulusTimeseriesGrids","applyToPeripodialECM(bool):");
+            return false;
+        }
+
+        file >> currHeader;
+        if(currHeader == "applyToColumnarECM(bool):"){
+            double currApplyToLayer;
+            file >> currApplyToLayer;
+            WhereToApplyInput[6]=currApplyToLayer;
+        }
+        else{
+             printErrorMessage(currHeader,"readYoungsModulusTimeseriesGrids","applyToColumnarECM(bool):");
+            return false;
+        }
+
+        for (size_t j=0;j<TimePointNoInput;++j){
+            file >> currHeader;
+            if(currHeader == "Filename(full-path):"){
+                std::string currnameListInput;
+                file >> currnameListInput;
+                nameListInput.push_back(currnameListInput);
+            }
+            else{
+                printErrorMessage(currHeader,"readYoungsModulusTimeseriesGrids","Filename(full-path):");
+                return false;
+            }
+
+            file >> currHeader;
+            if(currHeader == "WhenToApplyInput(sec):"){
+                double currWhenToApplyInput;
+                file >> currWhenToApplyInput;
+                WhenToApplyInput.push_back(currWhenToApplyInput);
+            }
+            else{
+                 printErrorMessage(currHeader,"readYoungsModulusTimeseriesGrids","WhenToApplyInput(sec):");
+                return false;
+            }
+        }
+       std::unique_ptr<YoungsModulusModifier> ym01 = std::make_unique<YoungsModulusModifier>(TimePointNoInput,nameListInput,WhenToApplyInput,WhereToApplyInput,YoungsModulusMultiplierChangeRateIsLinearInput);
+       Sim->AllYoungsModulusModifiers.push_back(std::move(ym01));
+    }
+    return true;
+}
+
+bool ModelInputObject::readTypeOfCoordinateSystem(ifstream& file){
+    string currHeader;
+    file >> currHeader;
+    if(currHeader == "UseXYCoordinatesforRelativePositions(bool):"){
+        file >> Sim->UseXYCoordinatesforRelativePositions;
+    }
+    else{
+        printErrorMessage(currHeader,"defineTypeOfCoordinateSystem","UseXYCoordinatesforRelativePositions(bool):");
+        return false;
+    }
+
+    file >> currHeader;
+    if(currHeader == "UsePolarCoordinatesforRelativePositions(bool):"){
+        file >> Sim->UsePolarCoordinatesforRelativePositions;
+    }
+    else{
+        printErrorMessage(currHeader,"defineTypeOfCoordinateSystem","UsePolarCoordinatesforRelativePositions(bool):");
+        return false;
+    }
+
+    file >> currHeader;
+    if(currHeader == "UseCylindricalCoordintesforRelativePositions(bool):"){
+        file >> Sim->UseCylindricalCoordintesforRelativePositions;
+    }
+    else{
+        printErrorMessage(currHeader,"defineTypeOfCoordinateSystem","UseCylindricalCoordintesforRelativePositions(bool):");
+        return false;
+    }
+    return true;
 }
 
 bool ModelInputObject::readShapeChangeOptions(ifstream& file){

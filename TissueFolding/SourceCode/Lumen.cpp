@@ -18,7 +18,10 @@ Lumen::Lumen(const std::vector <std::unique_ptr<ShapeBase>>& Elements, const std
 	growthRate = 0;
 
 	//lumenGrowthFold is the growth in 24 hours, the growth rate is in seconds:
-	growthRate = log(lumenGrowthFold)/3600/24;
+    if (growthRate>0){
+        //calculate the rate only if the rate is non-zero
+        growthRate = log(lumenGrowthFold)/3600/24;
+    }
 	rV = 0;
 	nTriangleSize= 0;
     for (const auto & iterEle : Elements){

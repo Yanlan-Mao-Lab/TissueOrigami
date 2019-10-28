@@ -144,6 +144,7 @@ protected:
 
 public:
     double 			stiffnessMultiplier;					///< The double for the multiplier that will define Young's modulus stress stiffening.
+    double          StiffnessTimeSeriesMultiplier;          ///< The double for the multiplier calculated from the Young's modulus timeseries input.
     gsl_matrix*		remodellingPlaneRotationMatrix;			///< The rotation matrix converting the xyz coordinate system to the plane of remodelling for the lateral elements.
     gsl_matrix* 	Fg;										///< Growth matrix
     int 			Id;										///< The unique ID of the element, without remodelling, equal to its indes on the Simulation#Elements vector.
@@ -249,6 +250,7 @@ public:
     double					getOriginalInternalViscosity();							///<  This function will return the internal viscosity of the element prior to any perturbations.
     void   					updateInternalViscosityTest();
     double 					getYoungModulus();								///< This function will return the Young's modulus of the element
+    void                    SetStiffnessMultiplier(double CurrElementUpdatedMultiplier);            ///< this funciton gets the updated multiplier value as input and sets the current value to the updated value.
     double 					getPoissonRatio();								///< This function will return the Poissons's ratio of the element
     std::array<double,3> 	getGrowthRate();								///< This function will return the current growth rate of the element.
     std::array<double,6>	getShapeChangeRate();								///< This function will return the current shape change rate of the element.
@@ -395,7 +397,8 @@ public:
     
     void 					updateReferencePositionMatrixFromMeshInput(std::ifstream& file);    ///< This function updates the reference position of the element from save file
     void					fillNodeNeighbourhood(const std::vector<std::unique_ptr<Node>>& Nodes); ///< This function fills in the node neightbourhood, needed for constrction of the connectivity of nodes
-    void 					checkDisplayClipping(double xClip, double yClip, double zClip); ///< This function checks if the element is clipped in the openGL rendering.
+    void                    setDisplayClippingAccordingToSystemSymmetricity(bool symmetricX,bool symmetricY,bool symmetricZ);    ///< This function sets the clipping options according to system symmetricity at the beginning.
+    void                    checkDisplayClipping(double xClip, double yClip, double zClip, bool symmetricX,bool symmetricY,bool symmetricZ ); ///< This function checks if the element is clipped in the openGL rendering.
     double 					dotProduct3D(std::array<double,3>& u, std::array<double,3>& v); ///< Helper algebraic function, calculates dot product of two arrays <double,3>
     double 					dotProduct3D(double* u, double* v); ///< Helper algebraic function, calculates dot product of two arrays <double,3>
     std::array<double,3> 	crossProduct3D(std::array<double,3>  u, std::array<double,3> v); ///< Helper algebraic function, calculates cross product of two arrays, outputs the result array.
@@ -418,6 +421,8 @@ public:
 
 	void 					setLateralElementsRemodellingPlaneRotationMatrix(); //TO DO: DO I use this? defined but NO
     void					setECMMimicingElementThicknessGrowthAxis();	//TO DO: DO I USE THIS? defined but NO
+
+    void                    SetTimeseriesStiffnessMultiplier(double CurrElementUpdatedMultiplier);   ///< this funciton gets the updated multiplier value as input and sets the current value to the updated value.
 };
 
 #endif
