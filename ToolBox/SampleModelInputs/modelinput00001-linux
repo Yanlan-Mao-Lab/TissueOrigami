@@ -12,13 +12,13 @@ TypeOfCoordinateSystem:
 InputMeshParameters:
   MeshInputMode(int-seeDocumentation): 4
   MeshFile(full-path):     /home/melda/Documents/TissueFoldingNargess/TissueFolding/ToolBox/MeshGeneration/2DEllipse/SmallExp48hNoPeriWithECM.mesh
-  symmetricInX(bool): 1
+  symmetricInX(bool): 0
   symmetricInY(bool): 1
   symmetricInZ(bool): 0
  
 TimeParameters:
   TimeStep(sec): 1
-  SimulationLength(sec): 0
+  SimulationLength(sec): 25
  
 SaveOptions:
   SaveImages(bool): 1
@@ -28,8 +28,8 @@ SaveOptions:
   
 Stretcher:
   StretcherAttached(bool): 1
-  ClampedOnDV(bool): 1
-  InitialTime(sec): 10
+  ClampedOnDV(bool): 0
+  InitialTime(sec): 0
   FinalTime(sec): 20
   DVClampMin: 0.3
   DVClampMax: 0.7

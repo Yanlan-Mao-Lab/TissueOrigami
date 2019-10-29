@@ -8826,13 +8826,14 @@ void Simulation::setStretch(){
         std::cerr<<"Total AP distance: "<<distance<<" "<<" StretchMax: "<<StretchMax<<" StretchMin: "<<StretchMin<<endl;
 		distanceIndex = 1; //if the clamp is on AP axis, then the direction of interest is y, index is 1.
 	}
+    stretcherAxisDistance = distance;
     /**
      * For each node falling under a clamp, their Ids are recorded to move with clamp, their movement is fixed otherwise.
      */
     for (const auto& currNode : Nodes){
         double bbCorner = boundingBox[0][distanceIndex];
-        double scalingDistance = distance;
-        if (distanceIndex == 0 && symmetricX){ bbCorner = -distance; scalingDistance *= 2;}
+        double scalingDistance = stretcherAxisDistance;
+        if (distanceIndex == 0 && symmetricX){ bbCorner = -stretcherAxisDistance; scalingDistance *= 2;}
         if (distanceIndex == 1 && symmetricY){ scalingDistance *= 2;}
         double currNodePositionalFraction = (currNode->Position[distanceIndex] - bbCorner) / scalingDistance;
         cout<<" node pos : "<<currNode->Position[distanceIndex]<<" bb corner "<<bbCorner<<" scalingDistance: "<<scalingDistance<<" currNodePositionalFraction: "<<currNodePositionalFraction<<endl;
@@ -8962,12 +8963,17 @@ void Simulation::moveAFMBead(){
 }
 
 void Simulation::moveClampedNodesForStretcher(){
+    double bbCorner = boundingBox[0][distanceIndex];
+    double scalingDistance = stretcherAxisDistance;
+    if (distanceIndex == 0 && symmetricX){ bbCorner = -stretcherAxisDistance; scalingDistance *= 2;}
+    if (distanceIndex == 1 && symmetricY){ scalingDistance *= 2;}
 	if (currSimTimeSec>=StretchInitialTime && currSimTimeSec<StretchEndTime){
 		for (size_t i=0; i<nNodes; ++i){
-			if (Nodes[i]->Position[distanceIndex]> StretchMax){
+            double currNodePositionalFraction = (Nodes[i]->Position[distanceIndex] - bbCorner) / scalingDistance;
+            if (currNodePositionalFraction> StretchMax){
 				Nodes[i]->Position[distanceIndex] += StretchDistanceStep;
 			}
-			else if( Nodes[i]->Position[distanceIndex] < StretchMin ){
+            else if( currNodePositionalFraction < StretchMin ){
 				Nodes[i]->Position[distanceIndex] -= StretchDistanceStep;
 			}
 		}

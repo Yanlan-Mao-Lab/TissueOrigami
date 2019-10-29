@@ -408,7 +408,7 @@ public:
 	double StretchMin;                                          ///< The minimum relative position in the selected direction (Simulation#distanceIndex), below which the nodes are clamped and move with the stretcher.
 	double StretchMax;                                          ///< The maximum relative position in the selected direction (Simulation#distanceIndex), below which the nodes are clamped and move with the stretcher.
 	double StretchStrain;                                       ///< The stretch applied in the stretcher device.
-
+    double stretcherAxisDistance;
 	bool PipetteSuction;                                        ///< The boolean if there is a pipette aspiration experiment in the simulation.
 	bool ApicalSuction;                                         ///< The boolean if the pipette aspiration experiment is attached to apical surface, if not, it is attached to basal surface.
 	bool TissueStuckOnGlassDuringPipetteAspiration;             ///< The boolean stating if the tissue is stuck on glass on the non-aspirated surface
