@@ -20,6 +20,7 @@ Prism::Prism(int* tmpNodeIds, const std::vector<std::unique_ptr<Node>>& Nodes, i
     lambda = E*v /(1+v)/(1-2.0*v);
     mu = E/2.0/(1+v);
     stiffnessMultiplier = 1.0;
+    StiffnessTimeSeriesMultiplier = 1.0;
     minimumValueOfStiffnessMultiplier = 0.00001;
     maximumValueOfStiffnessMultiplier = 100000;
 

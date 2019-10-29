@@ -571,7 +571,6 @@ bool Simulation::initiateSystem(){
          * is in place. The symmetricity boundary should not be considered as at the outer circumference.
          */
 		 clearCircumferenceDataFromSymmetricityLine();
-         setDisplayClippingofElementsAccordingToSystemSymmetricity();
 	}
     /**
      * Then the existance of the peripodial membrane in the system is checked.
@@ -630,6 +629,13 @@ bool Simulation::initiateSystem(){
 		setUpECMMimicingElements();
 		//TO DO: NEED TO UPDATE THE PHYSICAL PROPERTIES AFTER THIS!
 	}
+    if (symmetricX || symmetricY || symmetricZ){
+        /**
+         * Here, I am setting the clipping display options of the symmetric elements, after addition of
+         * lateral ECM elements.
+         */
+         setDisplayClippingofElementsAccordingToSystemSymmetricity();
+    }
     /**
      * Then with curvature is added to the tissue, with Simulation#addCurvatureToColumnar, which will add
      * the specified corvature to the columnar, and bend the peripodial the other direction. Therefore,

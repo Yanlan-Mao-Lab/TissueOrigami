@@ -28,11 +28,11 @@ SaveOptions:
   
 Stretcher:
   StretcherAttached(bool): 1
-  ClampedOnDV(bool): 0
+  ClampedOnDV(bool): 1
   InitialTime(sec): 0
   FinalTime(sec): 20
-  DVClampMin: 0.3
-  DVClampMax: 0.7
+  DVClampMin: 0.1
+  DVClampMax: 0.9
   MaxStrain: 1.5
 
 NodeBindingOptions:
