@@ -67,6 +67,7 @@ bool TimeSeriesPhysicalProperties::ReadGrid(const std::vector<std::string>& name
 
         PhysicalPropertyFile.close();
     }
+    return true;
 }
 
 

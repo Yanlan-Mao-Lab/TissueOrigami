@@ -57,7 +57,9 @@ SOURCES       = SourceCode/main.cpp \
 		../TissueFolding/SourceCode/RandomGenerator.cpp \
 		../TissueFolding/SourceCode/NewtonRaphsonSolver.cpp \
 		../TissueFolding/SourceCode/Analysis.cpp \
-		../TissueFolding/SourceCode/Lumen.cpp moc_MainWindow.cpp \
+		../TissueFolding/SourceCode/Lumen.cpp \
+		../TissueFolding/SourceCode/TimeSeriesPhysicalProperties.cpp \
+		../TissueFolding/SourceCode/YoungsModulusModifier.cpp moc_MainWindow.cpp \
 		moc_GLWidget.cpp
 OBJECTS       = main.o \
 		MainWindow.o \
@@ -72,6 +74,8 @@ OBJECTS       = main.o \
 		NewtonRaphsonSolver.o \
 		Analysis.o \
 		Lumen.o \
+		TimeSeriesPhysicalProperties.o \
+		YoungsModulusModifier.o \
 		moc_MainWindow.o \
 		moc_GLWidget.o
 DIST          = /opt/Qt5.2.1/5.2.1/gcc_64/mkspecs/features/spec_pre.prf \
@@ -433,7 +437,7 @@ qmake_all: FORCE
 
 dist: 
 	@test -d .tmp/TissueFoldingUI1.0.0 || mkdir -p .tmp/TissueFoldingUI1.0.0
-	$(COPY_FILE) --parents $(SOURCES) $(DIST) .tmp/TissueFoldingUI1.0.0/ && $(COPY_FILE) --parents SourceCode/MainWindow.h SourceCode/GLWidget.h ../TissueFolding/SourceCode/Analysis.h ../TissueFolding/SourceCode/GrowthFunctionBase.h ../TissueFolding/SourceCode/GrowthFunctionTypes.h ../TissueFolding/SourceCode/Lumen.h ../TissueFolding/SourceCode/ModelInputObject.h ../TissueFolding/SourceCode/MuscleFibre.h ../TissueFolding/SourceCode/NewtonRaphsonSolver.h ../TissueFolding/SourceCode/Node.h ../TissueFolding/SourceCode/Prism.h ../TissueFolding/SourceCode/RandomGenerator.h ../TissueFolding/SourceCode/ReferenceShapeBase.h ../TissueFolding/SourceCode/ShapeBase.h ../TissueFolding/SourceCode/Simulation.h .tmp/TissueFoldingUI1.0.0/ && $(COPY_FILE) --parents SourceCode/main.cpp SourceCode/MainWindow.cpp SourceCode/GLWidget.cpp ../TissueFolding/SourceCode/Prism.cpp ../TissueFolding/SourceCode/ReferenceShapeBase.cpp ../TissueFolding/SourceCode/ShapeBase.cpp ../TissueFolding/SourceCode/Simulation.cpp ../TissueFolding/SourceCode/Node.cpp ../TissueFolding/SourceCode/ModelInputObject.cpp ../TissueFolding/SourceCode/RandomGenerator.cpp ../TissueFolding/SourceCode/NewtonRaphsonSolver.cpp ../TissueFolding/SourceCode/Analysis.cpp ../TissueFolding/SourceCode/Lumen.cpp .tmp/TissueFoldingUI1.0.0/ && (cd `dirname .tmp/TissueFoldingUI1.0.0` && $(TAR) TissueFoldingUI1.0.0.tar TissueFoldingUI1.0.0 && $(COMPRESS) TissueFoldingUI1.0.0.tar) && $(MOVE) `dirname .tmp/TissueFoldingUI1.0.0`/TissueFoldingUI1.0.0.tar.gz . && $(DEL_FILE) -r .tmp/TissueFoldingUI1.0.0
+	$(COPY_FILE) --parents $(SOURCES) $(DIST) .tmp/TissueFoldingUI1.0.0/ && $(COPY_FILE) --parents SourceCode/MainWindow.h SourceCode/GLWidget.h ../TissueFolding/SourceCode/Analysis.h ../TissueFolding/SourceCode/GrowthFunctionBase.h ../TissueFolding/SourceCode/GrowthFunctionTypes.h ../TissueFolding/SourceCode/Lumen.h ../TissueFolding/SourceCode/ModelInputObject.h ../TissueFolding/SourceCode/MuscleFibre.h ../TissueFolding/SourceCode/NewtonRaphsonSolver.h ../TissueFolding/SourceCode/Node.h ../TissueFolding/SourceCode/Prism.h ../TissueFolding/SourceCode/RandomGenerator.h ../TissueFolding/SourceCode/ReferenceShapeBase.h ../TissueFolding/SourceCode/ShapeBase.h ../TissueFolding/SourceCode/Simulation.h ../TissueFolding/SourceCode/TimeSeriesPhysicalProperties.h ../TissueFolding/SourceCode/YoungsModulusModifier.h .tmp/TissueFoldingUI1.0.0/ && $(COPY_FILE) --parents SourceCode/main.cpp SourceCode/MainWindow.cpp SourceCode/GLWidget.cpp ../TissueFolding/SourceCode/Prism.cpp ../TissueFolding/SourceCode/ReferenceShapeBase.cpp ../TissueFolding/SourceCode/ShapeBase.cpp ../TissueFolding/SourceCode/Simulation.cpp ../TissueFolding/SourceCode/Node.cpp ../TissueFolding/SourceCode/ModelInputObject.cpp ../TissueFolding/SourceCode/RandomGenerator.cpp ../TissueFolding/SourceCode/NewtonRaphsonSolver.cpp ../TissueFolding/SourceCode/Analysis.cpp ../TissueFolding/SourceCode/Lumen.cpp ../TissueFolding/SourceCode/TimeSeriesPhysicalProperties.cpp ../TissueFolding/SourceCode/YoungsModulusModifier.cpp .tmp/TissueFoldingUI1.0.0/ && (cd `dirname .tmp/TissueFoldingUI1.0.0` && $(TAR) TissueFoldingUI1.0.0.tar TissueFoldingUI1.0.0 && $(COMPRESS) TissueFoldingUI1.0.0.tar) && $(MOVE) `dirname .tmp/TissueFoldingUI1.0.0`/TissueFoldingUI1.0.0.tar.gz . && $(DEL_FILE) -r .tmp/TissueFoldingUI1.0.0
 
 
 clean:compiler_clean 
@@ -909,6 +913,8 @@ moc_MainWindow.cpp: /opt/Qt5.2.1/5.2.1/gcc_64/include/QtGui/QtGui \
 		../TissueFolding/SourceCode/GrowthFunctionTypes.h \
 		../TissueFolding/SourceCode/NewtonRaphsonSolver.h \
 		../TissueFolding/SourceCode/Lumen.h \
+		../TissueFolding/SourceCode/YoungsModulusModifier.h \
+		../TissueFolding/SourceCode/TimeSeriesPhysicalProperties.h \
 		../TissueFolding/SourceCode/Analysis.h \
 		SourceCode/MainWindow.h
 	/opt/Qt5.2.1/5.2.1/gcc_64/bin/moc $(DEFINES) $(INCPATH) SourceCode/MainWindow.h -o moc_MainWindow.cpp
@@ -1370,6 +1376,8 @@ moc_GLWidget.cpp: /opt/Qt5.2.1/5.2.1/gcc_64/include/QtOpenGL/QGLWidget \
 		../TissueFolding/SourceCode/GrowthFunctionTypes.h \
 		../TissueFolding/SourceCode/NewtonRaphsonSolver.h \
 		../TissueFolding/SourceCode/Lumen.h \
+		../TissueFolding/SourceCode/YoungsModulusModifier.h \
+		../TissueFolding/SourceCode/TimeSeriesPhysicalProperties.h \
 		../TissueFolding/SourceCode/Analysis.h \
 		SourceCode/GLWidget.h
 	/opt/Qt5.2.1/5.2.1/gcc_64/bin/moc $(DEFINES) $(INCPATH) SourceCode/GLWidget.h -o moc_GLWidget.cpp
@@ -1839,6 +1847,8 @@ main.o: SourceCode/main.cpp /opt/Qt5.2.1/5.2.1/gcc_64/include/QtWidgets/QGraphic
 		../TissueFolding/SourceCode/GrowthFunctionTypes.h \
 		../TissueFolding/SourceCode/NewtonRaphsonSolver.h \
 		../TissueFolding/SourceCode/Lumen.h \
+		../TissueFolding/SourceCode/YoungsModulusModifier.h \
+		../TissueFolding/SourceCode/TimeSeriesPhysicalProperties.h \
 		../TissueFolding/SourceCode/Analysis.h \
 		SourceCode/GLWidget.h \
 		/opt/Qt5.2.1/5.2.1/gcc_64/include/QtOpenGL/QGLWidget \
@@ -2308,6 +2318,8 @@ MainWindow.o: SourceCode/MainWindow.cpp /opt/Qt5.2.1/5.2.1/gcc_64/include/QtGui/
 		../TissueFolding/SourceCode/GrowthFunctionTypes.h \
 		../TissueFolding/SourceCode/NewtonRaphsonSolver.h \
 		../TissueFolding/SourceCode/Lumen.h \
+		../TissueFolding/SourceCode/YoungsModulusModifier.h \
+		../TissueFolding/SourceCode/TimeSeriesPhysicalProperties.h \
 		../TissueFolding/SourceCode/Analysis.h \
 		SourceCode/GLWidget.h \
 		/opt/Qt5.2.1/5.2.1/gcc_64/include/QtOpenGL/QGLWidget \
@@ -2783,6 +2795,8 @@ GLWidget.o: SourceCode/GLWidget.cpp /opt/Qt5.2.1/5.2.1/gcc_64/include/QtGui/QtGu
 		../TissueFolding/SourceCode/GrowthFunctionTypes.h \
 		../TissueFolding/SourceCode/NewtonRaphsonSolver.h \
 		../TissueFolding/SourceCode/Lumen.h \
+		../TissueFolding/SourceCode/YoungsModulusModifier.h \
+		../TissueFolding/SourceCode/TimeSeriesPhysicalProperties.h \
 		../TissueFolding/SourceCode/Analysis.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o GLWidget.o SourceCode/GLWidget.cpp
 
@@ -2813,6 +2827,8 @@ Simulation.o: ../TissueFolding/SourceCode/Simulation.cpp ../TissueFolding/Source
 		../TissueFolding/SourceCode/GrowthFunctionTypes.h \
 		../TissueFolding/SourceCode/NewtonRaphsonSolver.h \
 		../TissueFolding/SourceCode/Lumen.h \
+		../TissueFolding/SourceCode/YoungsModulusModifier.h \
+		../TissueFolding/SourceCode/TimeSeriesPhysicalProperties.h \
 		../TissueFolding/SourceCode/Prism.h \
 		../TissueFolding/SourceCode/RandomGenerator.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o Simulation.o ../TissueFolding/SourceCode/Simulation.cpp
@@ -2828,7 +2844,9 @@ ModelInputObject.o: ../TissueFolding/SourceCode/ModelInputObject.cpp ../TissueFo
 		../TissueFolding/SourceCode/GrowthFunctionBase.h \
 		../TissueFolding/SourceCode/GrowthFunctionTypes.h \
 		../TissueFolding/SourceCode/NewtonRaphsonSolver.h \
-		../TissueFolding/SourceCode/Lumen.h
+		../TissueFolding/SourceCode/Lumen.h \
+		../TissueFolding/SourceCode/YoungsModulusModifier.h \
+		../TissueFolding/SourceCode/TimeSeriesPhysicalProperties.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ModelInputObject.o ../TissueFolding/SourceCode/ModelInputObject.cpp
 
 RandomGenerator.o: ../TissueFolding/SourceCode/RandomGenerator.cpp ../TissueFolding/SourceCode/RandomGenerator.h
@@ -2859,6 +2877,22 @@ Lumen.o: ../TissueFolding/SourceCode/Lumen.cpp ../TissueFolding/SourceCode/Lumen
 		../TissueFolding/SourceCode/GrowthFunctionTypes.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o Lumen.o ../TissueFolding/SourceCode/Lumen.cpp
 
+TimeSeriesPhysicalProperties.o: ../TissueFolding/SourceCode/TimeSeriesPhysicalProperties.cpp ../TissueFolding/SourceCode/TimeSeriesPhysicalProperties.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o TimeSeriesPhysicalProperties.o ../TissueFolding/SourceCode/TimeSeriesPhysicalProperties.cpp
+
+YoungsModulusModifier.o: ../TissueFolding/SourceCode/YoungsModulusModifier.cpp ../TissueFolding/SourceCode/YoungsModulusModifier.h \
+		../TissueFolding/SourceCode/TimeSeriesPhysicalProperties.h \
+		../TissueFolding/SourceCode/ShapeBase.h \
+		../TissueFolding/SourceCode/Node.h \
+		../TissueFolding/SourceCode/ReferenceShapeBase.h \
+		../TissueFolding/SourceCode/GrowthFunctionBase.h \
+		../TissueFolding/SourceCode/GrowthFunctionTypes.h \
+		../TissueFolding/SourceCode/Simulation.h \
+		../TissueFolding/SourceCode/ModelInputObject.h \
+		../TissueFolding/SourceCode/NewtonRaphsonSolver.h \
+		../TissueFolding/SourceCode/Lumen.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o YoungsModulusModifier.o ../TissueFolding/SourceCode/YoungsModulusModifier.cpp
+
 moc_MainWindow.o: moc_MainWindow.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_MainWindow.o moc_MainWindow.cpp
 
@@ -2868,78 +2902,86 @@ moc_GLWidget.o: moc_GLWidget.cpp
 ####### Install
 
 install_target: first FORCE
-	@test -d $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface// || mkdir -p $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface//
-	-$(INSTALL_PROGRAM) "Debug/$(QMAKE_TARGET)" "$(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/$(QMAKE_TARGET)"
-	-$(STRIP) "$(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/$(QMAKE_TARGET)"
+	@test -d $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/.// || mkdir -p $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/.//
+	-$(INSTALL_PROGRAM) "Debug/$(QMAKE_TARGET)" "$(INSTALL_ROOT)/$(QMAKE_TARGET)"
+	-$(STRIP) "$(INSTALL_ROOT)/$(QMAKE_TARGET)"
 
 uninstall_target: FORCE
-	-$(DEL_FILE) "$(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/$(QMAKE_TARGET)"
-	-$(DEL_DIR) $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface// 
+	-$(DEL_FILE) "$(INSTALL_ROOT)/$(QMAKE_TARGET)"
+	-$(DEL_DIR) $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/.// 
 
 
 install_sources: first FORCE
-	@test -d $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/ || mkdir -p $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
-	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/UserInterface/SourceCode/main.cpp $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
-	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/UserInterface/SourceCode/MainWindow.cpp $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
-	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/UserInterface/SourceCode/GLWidget.cpp $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
-	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/Prism.cpp $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
-	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/ReferenceShapeBase.cpp $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
-	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/ShapeBase.cpp $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
-	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/Simulation.cpp $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
-	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/Node.cpp $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
-	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/ModelInputObject.cpp $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
-	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/RandomGenerator.cpp $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
-	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/NewtonRaphsonSolver.cpp $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
-	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/Analysis.cpp $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
-	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/Lumen.cpp $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
-	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/UserInterface/SourceCode/MainWindow.h $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
-	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/UserInterface/SourceCode/GLWidget.h $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
-	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/Analysis.h $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
-	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/GrowthFunctionBase.h $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
-	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/GrowthFunctionTypes.h $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
-	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/Lumen.h $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
-	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/ModelInputObject.h $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
-	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/MuscleFibre.h $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
-	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/NewtonRaphsonSolver.h $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
-	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/Node.h $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
-	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/Prism.h $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
-	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/RandomGenerator.h $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
-	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/ReferenceShapeBase.h $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
-	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/ShapeBase.h $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
-	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/TissueFolding/SourceCode/Simulation.h $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
-	-$(INSTALL_FILE) /home/melda/Documents/TissueFolding/UserInterface/TissueFoldingUI.pro $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/
+	@test -d $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./ || mkdir -p $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./
+	-$(INSTALL_FILE) /home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/SourceCode/main.cpp $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./
+	-$(INSTALL_FILE) /home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/SourceCode/MainWindow.cpp $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./
+	-$(INSTALL_FILE) /home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/SourceCode/GLWidget.cpp $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./
+	-$(INSTALL_FILE) /home/melda/Documents/TissueFoldingNargess/TissueFolding/TissueFolding/SourceCode/Prism.cpp $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./
+	-$(INSTALL_FILE) /home/melda/Documents/TissueFoldingNargess/TissueFolding/TissueFolding/SourceCode/ReferenceShapeBase.cpp $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./
+	-$(INSTALL_FILE) /home/melda/Documents/TissueFoldingNargess/TissueFolding/TissueFolding/SourceCode/ShapeBase.cpp $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./
+	-$(INSTALL_FILE) /home/melda/Documents/TissueFoldingNargess/TissueFolding/TissueFolding/SourceCode/Simulation.cpp $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./
+	-$(INSTALL_FILE) /home/melda/Documents/TissueFoldingNargess/TissueFolding/TissueFolding/SourceCode/Node.cpp $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./
+	-$(INSTALL_FILE) /home/melda/Documents/TissueFoldingNargess/TissueFolding/TissueFolding/SourceCode/ModelInputObject.cpp $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./
+	-$(INSTALL_FILE) /home/melda/Documents/TissueFoldingNargess/TissueFolding/TissueFolding/SourceCode/RandomGenerator.cpp $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./
+	-$(INSTALL_FILE) /home/melda/Documents/TissueFoldingNargess/TissueFolding/TissueFolding/SourceCode/NewtonRaphsonSolver.cpp $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./
+	-$(INSTALL_FILE) /home/melda/Documents/TissueFoldingNargess/TissueFolding/TissueFolding/SourceCode/Analysis.cpp $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./
+	-$(INSTALL_FILE) /home/melda/Documents/TissueFoldingNargess/TissueFolding/TissueFolding/SourceCode/Lumen.cpp $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./
+	-$(INSTALL_FILE) /home/melda/Documents/TissueFoldingNargess/TissueFolding/TissueFolding/SourceCode/TimeSeriesPhysicalProperties.cpp $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./
+	-$(INSTALL_FILE) /home/melda/Documents/TissueFoldingNargess/TissueFolding/TissueFolding/SourceCode/YoungsModulusModifier.cpp $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./
+	-$(INSTALL_FILE) /home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/SourceCode/MainWindow.h $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./
+	-$(INSTALL_FILE) /home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/SourceCode/GLWidget.h $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./
+	-$(INSTALL_FILE) /home/melda/Documents/TissueFoldingNargess/TissueFolding/TissueFolding/SourceCode/Analysis.h $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./
+	-$(INSTALL_FILE) /home/melda/Documents/TissueFoldingNargess/TissueFolding/TissueFolding/SourceCode/GrowthFunctionBase.h $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./
+	-$(INSTALL_FILE) /home/melda/Documents/TissueFoldingNargess/TissueFolding/TissueFolding/SourceCode/GrowthFunctionTypes.h $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./
+	-$(INSTALL_FILE) /home/melda/Documents/TissueFoldingNargess/TissueFolding/TissueFolding/SourceCode/Lumen.h $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./
+	-$(INSTALL_FILE) /home/melda/Documents/TissueFoldingNargess/TissueFolding/TissueFolding/SourceCode/ModelInputObject.h $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./
+	-$(INSTALL_FILE) /home/melda/Documents/TissueFoldingNargess/TissueFolding/TissueFolding/SourceCode/MuscleFibre.h $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./
+	-$(INSTALL_FILE) /home/melda/Documents/TissueFoldingNargess/TissueFolding/TissueFolding/SourceCode/NewtonRaphsonSolver.h $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./
+	-$(INSTALL_FILE) /home/melda/Documents/TissueFoldingNargess/TissueFolding/TissueFolding/SourceCode/Node.h $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./
+	-$(INSTALL_FILE) /home/melda/Documents/TissueFoldingNargess/TissueFolding/TissueFolding/SourceCode/Prism.h $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./
+	-$(INSTALL_FILE) /home/melda/Documents/TissueFoldingNargess/TissueFolding/TissueFolding/SourceCode/RandomGenerator.h $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./
+	-$(INSTALL_FILE) /home/melda/Documents/TissueFoldingNargess/TissueFolding/TissueFolding/SourceCode/ReferenceShapeBase.h $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./
+	-$(INSTALL_FILE) /home/melda/Documents/TissueFoldingNargess/TissueFolding/TissueFolding/SourceCode/ShapeBase.h $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./
+	-$(INSTALL_FILE) /home/melda/Documents/TissueFoldingNargess/TissueFolding/TissueFolding/SourceCode/Simulation.h $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./
+	-$(INSTALL_FILE) /home/melda/Documents/TissueFoldingNargess/TissueFolding/TissueFolding/SourceCode/TimeSeriesPhysicalProperties.h $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./
+	-$(INSTALL_FILE) /home/melda/Documents/TissueFoldingNargess/TissueFolding/TissueFolding/SourceCode/YoungsModulusModifier.h $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./
+	-$(INSTALL_FILE) /home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/TissueFoldingUI.pro $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./
 
 uninstall_sources: FORCE
-	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/TissueFoldingUI.pro
-	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/Simulation.h
-	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/ShapeBase.h
-	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/ReferenceShapeBase.h
-	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/RandomGenerator.h
-	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/Prism.h
-	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/Node.h
-	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/NewtonRaphsonSolver.h
-	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/MuscleFibre.h
-	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/ModelInputObject.h
-	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/Lumen.h
-	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/GrowthFunctionTypes.h
-	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/GrowthFunctionBase.h
-	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/Analysis.h
-	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/GLWidget.h
-	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/MainWindow.h
-	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/Lumen.cpp
-	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/Analysis.cpp
-	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/NewtonRaphsonSolver.cpp
-	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/RandomGenerator.cpp
-	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/ModelInputObject.cpp
-	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/Node.cpp
-	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/Simulation.cpp
-	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/ShapeBase.cpp
-	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/ReferenceShapeBase.cpp
-	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/Prism.cpp
-	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/GLWidget.cpp
-	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/MainWindow.cpp
-	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/main.cpp
-	-$(DEL_DIR) $(INSTALL_ROOT)/home/melda/Documents/TissueFolding/UserInterface/ 
+	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./TissueFoldingUI.pro
+	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./YoungsModulusModifier.h
+	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./TimeSeriesPhysicalProperties.h
+	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./Simulation.h
+	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./ShapeBase.h
+	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./ReferenceShapeBase.h
+	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./RandomGenerator.h
+	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./Prism.h
+	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./Node.h
+	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./NewtonRaphsonSolver.h
+	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./MuscleFibre.h
+	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./ModelInputObject.h
+	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./Lumen.h
+	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./GrowthFunctionTypes.h
+	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./GrowthFunctionBase.h
+	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./Analysis.h
+	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./GLWidget.h
+	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./MainWindow.h
+	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./YoungsModulusModifier.cpp
+	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./TimeSeriesPhysicalProperties.cpp
+	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./Lumen.cpp
+	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./Analysis.cpp
+	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./NewtonRaphsonSolver.cpp
+	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./RandomGenerator.cpp
+	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./ModelInputObject.cpp
+	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./Node.cpp
+	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./Simulation.cpp
+	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./ShapeBase.cpp
+	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./ReferenceShapeBase.cpp
+	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./Prism.cpp
+	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./GLWidget.cpp
+	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./MainWindow.cpp
+	-$(DEL_FILE) -r $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./main.cpp
+	-$(DEL_DIR) $(INSTALL_ROOT)/home/melda/Documents/TissueFoldingNargess/TissueFolding/UserInterface/./ 
 
 
 install:  install_target install_sources  FORCE

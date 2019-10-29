@@ -8818,19 +8818,26 @@ void Simulation::setStretch(){
      */
 	if (DVClamp){
 		distance = fabs(Nodes[ventralTipIndex]->Position[0] - Nodes[dorsalTipIndex]->Position[0]);
-		std::cerr<<"Total DV distance: "<<distance<<" ";
+        std::cerr<<"Total DV distance: "<<distance<<" "<<" StretchMax: "<<StretchMax<<" StretchMin: "<<StretchMin<<endl;
 		distanceIndex = 0; //if the clamp is on DV axis, then the direction of interest is x, index is 0;
 	}
 	else{
 		distance = fabs(Nodes[anteriorTipIndex]->Position[1] - Nodes[posteriorTipIndex]->Position[1]);
-		std::cerr<<"Total AP distance: "<<distance<<" ";
+        std::cerr<<"Total AP distance: "<<distance<<" "<<" StretchMax: "<<StretchMax<<" StretchMin: "<<StretchMin<<endl;
 		distanceIndex = 1; //if the clamp is on AP axis, then the direction of interest is y, index is 1.
 	}
     /**
      * For each node falling under a clamp, their Ids are recorded to move with clamp, their movement is fixed otherwise.
      */
-	for (const auto& currNode : Nodes){
-		if (currNode->Position[distanceIndex]> StretchMax || currNode->Position[distanceIndex] < StretchMin){
+    for (const auto& currNode : Nodes){
+        double bbCorner = boundingBox[0][distanceIndex];
+        double scalingDistance = distance;
+        if (distanceIndex == 0 && symmetricX){ bbCorner = -distance; scalingDistance *= 2;}
+        if (distanceIndex == 1 && symmetricY){ scalingDistance *= 2;}
+        double currNodePositionalFraction = (currNode->Position[distanceIndex] - bbCorner) / scalingDistance;
+        cout<<" node pos : "<<currNode->Position[distanceIndex]<<" bb corner "<<bbCorner<<" scalingDistance: "<<scalingDistance<<" currNodePositionalFraction: "<<currNodePositionalFraction<<endl;
+
+        if (currNodePositionalFraction> StretchMax || currNodePositionalFraction < StretchMin){
 			currNode->FixedPos[0]=1;
 			currNode->FixedPos[1]=1;
 			currNode->FixedPos[2]=1;

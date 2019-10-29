@@ -81,19 +81,20 @@ bool YoungsModulusModifier::IsItApplicable(const ShapeBase* currElement){
                     (applyToBasalLayer && (currElement->tissuePlacement==0 || currElement->atBasalBorderOfECM))){
                 IsModificationApplicable=true;
             }
-        }
-        return IsModificationApplicable;
+        } 
     }
+    return IsModificationApplicable;
 }
 
 
 std::array<size_t,2> YoungsModulusModifier::GetElementPosition(ShapeBase* currElement){
     int IndexX = 0.0, IndexY = 0.0;
     double FracX = 1.0,  FracY = 1.0;
-
+    currElement->getRelativePositionInTissueInGridIndex(nGridX,nGridY,IndexX, IndexY,FracX, FracY);
     std::array<size_t,2> PositionIndex{(size_t) IndexX,(size_t) IndexY};
     return PositionIndex;
 }
+
 double YoungsModulusModifier::GetCurrentMultiplierChangeRate(const size_t CurrentRateGridIndex, const std::array<size_t,2> CurrElementXYGridIndices){
     //I know th index of the rate grids within the time series that I will use
     // I need the x&y for the current element, then I can return current rate.
