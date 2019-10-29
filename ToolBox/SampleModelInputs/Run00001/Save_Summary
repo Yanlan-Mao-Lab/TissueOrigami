@@ -1,0 +1,18 @@
+TimeStep(sec):  1
+DataSaveInterval(sec):  5
+ModelinputName:  ./modelinput00001
+
+Mesh_Type:  4
+	Symmetricity-x: 0 Symmetricity-y: 1 Symmetricity-z: 0
+	MeshFileName: /Users/nkhalilgharibi/TissueFoldingProject/NargessBranch/TissueFolding/ToolBox/MeshGeneration/2DEllipse/SmallExp48hNoPeriWithECM.mesh
+
+
+There is explicit ECM:	1
+	Columnar ECM Stiffness(Pa): 1600
+	Peripodial ECM Stiffness(Pa): 100
+	ECM remodelling half life (hour): 8
+	Is there perturbation to the ECM: 0
+
+There is explicit actin:  1
+
+There is pipette aspiration:  0

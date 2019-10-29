@@ -1,0 +1,315 @@
+Simulation time step	: 1
+Simulation Length	: 25
+dataSaveInterval as read from file: 5
+opening the file./Run00001//Save_TensionCompression
+opening the file./Run00001//Save_Growth
+opening the file./Run00001//Save_GrowthRate
+opening the file./Run00001//Save_GrowthRedistribution
+opening the file./Run00001//Save_NodeBinding
+initiating nodes
+ nNodes: 680 nEle: 861
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+Tip node indexes - dorsalTipIndex: 792 ventralTipIndex: 680
+Tip node indexes - anteriorTipIndex: 0 posteriorTipIndex: 728
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+time: 0 DV distance is: 85.96  AP distance is: 27.4999
+inside induce clones
+setting the stretcher
+ Element 6 is at the border
+Element is on left hand side
+ Element 24 is at the border
+Element is on right hand side
+ Element 80 is at the border
+Element is on left hand side
+ Element 109 is at the border
+Element is on left hand side
+ Element 226 is at the border
+Element is on left hand side
+ Element 293 is at the border
+Element is on left hand side
+ Element 311 is at the border
+Element is on right hand side
+ Element 367 is at the border
+Element is on left hand side
+ Element 396 is at the border
+Element is on left hand side
+ Element 513 is at the border
+Element is on left hand side
+ Element 580 is at the border
+Element is on left hand side
+ Element 598 is at the border
+Element is on right hand side
+ Element 654 is at the border
+Element is on left hand side
+ Element 683 is at the border
+Element is on left hand side
+ Element 800 is at the border
+Element is on left hand side
+left clamp border nodes: 150
+left clamp border nodes: 122
+left clamp border nodes: 320
+left clamp border nodes: 292
+left clamp border nodes: 71
+left clamp border nodes: 241
+left clamp border nodes: 133
+left clamp border nodes: 303
+left clamp border nodes: 490
+left clamp border nodes: 462
+left clamp border nodes: 411
+left clamp border nodes: 473
+left clamp border nodes: 660
+left clamp border nodes: 632
+left clamp border nodes: 581
+left clamp border nodes: 643
+right clamp border nodes: 134
+right clamp border nodes: 304
+right clamp border nodes: 474
+right clamp border nodes: 644
+the distance that is to be moved: 128.94 stretchTimeSteps: 10 StretchDistanceStep: 6.447
+read the final step
+writing the summary current simulation parameters
+wrote specific element types: 0 0 455 287
+saved the step if needed
+binding circumference
+finished binding
+ system initiated
+system initiated
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+ Apical contour Ids: 795 523 669 542 666 538 627 544 612 524 615 555 619 534 563 629 526 646 570 679 528 650 532 655 510 683 
+gl initiated
+starting timer
+finalised mainwindow initiation
+started step: 0 length: 25
+At time -- 0 sec (0 hours - 0 timesteps)
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+time: 0 DV distance is: 85.96  AP distance is: 27.4999
+ in update NR 
+finished run one step
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+taking screenshot
+./Run00001//ScreenShots/frame000001-1sec.png
+started step: 1 length: 25
+At time -- 1 sec (0.000277778 hours - 1 timesteps)
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+time: 1 DV distance is: 85.96  AP distance is: 27.4999
+ in update NR 
+finished run one step
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+taking screenshot
+./Run00001//ScreenShots/frame000002-2sec.png
+started step: 2 length: 25
+At time -- 2 sec (0.000555556 hours - 2 timesteps)
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+time: 2 DV distance is: 85.96  AP distance is: 27.4999
+ in update NR 
+finished run one step
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+taking screenshot
+./Run00001//ScreenShots/frame000003-3sec.png
+started step: 3 length: 25
+At time -- 3 sec (0.000833333 hours - 3 timesteps)
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+time: 3 DV distance is: 85.96  AP distance is: 27.4999
+ in update NR 
+finished run one step
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+taking screenshot
+./Run00001//ScreenShots/frame000004-4sec.png
+started step: 4 length: 25
+At time -- 4 sec (0.00111111 hours - 4 timesteps)
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+time: 4 DV distance is: 85.96  AP distance is: 27.4999
+ in update NR 
+finished run one step
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+taking screenshot
+./Run00001//ScreenShots/frame000005-5sec.png
+started step: 5 length: 25
+At time -- 5 sec (0.00138889 hours - 5 timesteps)
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+time: 5 DV distance is: 85.96  AP distance is: 27.4999
+ in update NR 
+finished run one step
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+taking screenshot
+./Run00001//ScreenShots/frame000006-6sec.png
+started step: 6 length: 25
+At time -- 6 sec (0.00166667 hours - 6 timesteps)
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+time: 6 DV distance is: 85.96  AP distance is: 27.4999
+ in update NR 
+finished run one step
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+taking screenshot
+./Run00001//ScreenShots/frame000007-7sec.png
+started step: 7 length: 25
+At time -- 7 sec (0.00194444 hours - 7 timesteps)
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+time: 7 DV distance is: 85.96  AP distance is: 27.4999
+ in update NR 
+finished run one step
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+taking screenshot
+./Run00001//ScreenShots/frame000008-8sec.png
+started step: 8 length: 25
+At time -- 8 sec (0.00222222 hours - 8 timesteps)
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+time: 8 DV distance is: 85.96  AP distance is: 27.4999
+ in update NR 
+finished run one step
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+taking screenshot
+./Run00001//ScreenShots/frame000009-9sec.png
+started step: 9 length: 25
+At time -- 9 sec (0.0025 hours - 9 timesteps)
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+time: 9 DV distance is: 85.96  AP distance is: 27.4999
+ in update NR 
+finished run one step
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+taking screenshot
+./Run00001//ScreenShots/frame000010-10sec.png
+started step: 10 length: 25
+At time -- 10 sec (0.00277778 hours - 10 timesteps)
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+time: 10 DV distance is: 85.96  AP distance is: 27.4999
+ in update NR 
+finished run one step
+bounding box after update: -62.8159 -27.3 35.6381 27.3
+taking screenshot
+./Run00001//ScreenShots/frame000011-11sec.png
+started step: 11 length: 25
+At time -- 11 sec (0.00305556 hours - 11 timesteps)
+bounding box after update: -62.8159 -27.3 35.6381 27.3
+time: 11 DV distance is: 98.854  AP distance is: 28.2467
+ in update NR 
+finished run one step
+bounding box after update: -69.2629 -27.3 42.0851 27.3
+taking screenshot
+./Run00001//ScreenShots/frame000012-12sec.png
+started step: 12 length: 25
+At time -- 12 sec (0.00333333 hours - 12 timesteps)
+bounding box after update: -69.2629 -27.3 42.0851 27.3
+time: 12 DV distance is: 111.748  AP distance is: 30.3749
+ in update NR 
+finished run one step
+bounding box after update: -75.7099 -27.3 48.5321 27.3
+taking screenshot
+./Run00001//ScreenShots/frame000013-13sec.png
+started step: 13 length: 25
+At time -- 13 sec (0.00361111 hours - 13 timesteps)
+bounding box after update: -75.7099 -27.3 48.5321 27.3
+time: 13 DV distance is: 124.642  AP distance is: 33.6232
+ in update NR 
+finished run one step
+bounding box after update: -82.1569 -27.3 54.9791 27.3
+taking screenshot
+./Run00001//ScreenShots/frame000014-14sec.png
+started step: 14 length: 25
+At time -- 14 sec (0.00388889 hours - 14 timesteps)
+bounding box after update: -82.1569 -27.3 54.9791 27.3
+time: 14 DV distance is: 137.536  AP distance is: 37.7032
+ in update NR 
+finished run one step
+bounding box after update: -88.6039 -27.3 61.4261 27.3
+taking screenshot
+./Run00001//ScreenShots/frame000015-15sec.png
+started step: 15 length: 25
+At time -- 15 sec (0.00416667 hours - 15 timesteps)
+bounding box after update: -88.6039 -27.3 61.4261 27.3
+time: 15 DV distance is: 150.43  AP distance is: 42.3754
+ in update NR 
+finished run one step
+bounding box after update: -95.0509 -27.3 67.8731 27.3
+taking screenshot
+./Run00001//ScreenShots/frame000016-16sec.png
+started step: 16 length: 25
+At time -- 16 sec (0.00444444 hours - 16 timesteps)
+bounding box after update: -95.0509 -27.3 67.8731 27.3
+time: 16 DV distance is: 163.324  AP distance is: 47.4652
+ in update NR 
+finished run one step
+bounding box after update: -101.498 -27.3 74.3201 27.3
+taking screenshot
+./Run00001//ScreenShots/frame000017-17sec.png
+started step: 17 length: 25
+At time -- 17 sec (0.00472222 hours - 17 timesteps)
+bounding box after update: -101.498 -27.3 74.3201 27.3
+time: 17 DV distance is: 176.218  AP distance is: 52.852
+ in update NR 
+finished run one step
+bounding box after update: -107.945 -27.3 80.7671 27.3
+taking screenshot
+./Run00001//ScreenShots/frame000018-18sec.png
+started step: 18 length: 25
+At time -- 18 sec (0.005 hours - 18 timesteps)
+bounding box after update: -107.945 -27.3 80.7671 27.3
+time: 18 DV distance is: 189.112  AP distance is: 58.4539
+ in update NR 
+finished run one step
+bounding box after update: -114.392 -27.3 87.2141 27.3
+taking screenshot
+./Run00001//ScreenShots/frame000019-19sec.png
+started step: 19 length: 25
+At time -- 19 sec (0.00527778 hours - 19 timesteps)
+bounding box after update: -114.392 -27.3 87.2141 27.3
+time: 19 DV distance is: 202.006  AP distance is: 64.2146
+ in update NR 
+finished run one step
+bounding box after update: -120.839 -27.3 93.6611 27.3
+taking screenshot
+./Run00001//ScreenShots/frame000020-20sec.png
+started step: 20 length: 25
+At time -- 20 sec (0.00555556 hours - 20 timesteps)
+bounding box after update: -120.839 -27.3 93.6611 27.3
+time: 20 DV distance is: 214.9  AP distance is: 70.0949
+ in update NR 
+finished run one step
+bounding box after update: -120.839 -27.3 93.6611 27.3
+taking screenshot
+./Run00001//ScreenShots/frame000021-21sec.png
+started step: 21 length: 25
+At time -- 21 sec (0.00583333 hours - 21 timesteps)
+bounding box after update: -120.839 -27.3 93.6611 27.3
+time: 21 DV distance is: 214.9  AP distance is: 70.0949
+ in update NR 
+finished run one step
+bounding box after update: -120.839 -27.3 93.6611 27.3
+taking screenshot
+./Run00001//ScreenShots/frame000022-22sec.png
+started step: 22 length: 25
+At time -- 22 sec (0.00611111 hours - 22 timesteps)
+bounding box after update: -120.839 -27.3 93.6611 27.3
+time: 22 DV distance is: 214.9  AP distance is: 70.0949
+ in update NR 
+finished run one step
+bounding box after update: -120.839 -27.3 93.6611 27.3
+taking screenshot
+./Run00001//ScreenShots/frame000023-23sec.png
+started step: 23 length: 25
+At time -- 23 sec (0.00638889 hours - 23 timesteps)
+bounding box after update: -120.839 -27.3 93.6611 27.3
+time: 23 DV distance is: 214.9  AP distance is: 70.0949
+ in update NR 
+finished run one step
+bounding box after update: -120.839 -27.3 93.6611 27.3
+taking screenshot
+./Run00001//ScreenShots/frame000024-24sec.png
+started step: 24 length: 25
+At time -- 24 sec (0.00666667 hours - 24 timesteps)
+bounding box after update: -120.839 -27.3 93.6611 27.3
+time: 24 DV distance is: 214.9  AP distance is: 70.0949
+ in update NR 
+finished run one step
+bounding box after update: -120.839 -27.3 93.6611 27.3
+taking screenshot
+./Run00001//ScreenShots/frame000025-25sec.png
+started step: 25 length: 25
+At time -- 25 sec (0.00694444 hours - 25 timesteps)
+bounding box after update: -120.839 -27.3 93.6611 27.3
+time: 25 DV distance is: 214.9  AP distance is: 70.0949
+ in update NR 
+finished run one step
+bounding box after update: -120.839 -27.3 93.6611 27.3
+taking screenshot
+./Run00001//ScreenShots/frame000026-26sec.png
