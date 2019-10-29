@@ -135,7 +135,6 @@ bool ModelInputObject::readParameters(){
                 /**
                  * Inputs defining the type of coordinate system
                  */
-                //std::cout<<"reading YoungsModulusTimeseriesGrids:"<<std::endl;
                 Success  = readTypeOfCoordinateSystem(parametersFile);
             }
 			else if (currParameterHeader == "GrowthOptions:"){
@@ -284,6 +283,15 @@ bool ModelInputObject::readGrowthOptions(ifstream& file){
 	 * This function will read the growth options. The generic growth related parameters will be read here, followed by
 	 * growth type specific parameters read in specialised functions.
 	 * The first parameter to read will be the number of growth options.
+     *
+     *
+     *GrowthOptions:
+     *   NumberofGrowthFunctions(int): 5
+     *   GridGrowthsPinnedOnInitialMesh(bool): 1
+     *   PinningUpdateTimes(number-times(sec)):  2 57600 115200
+     *   GridGrowthsInterpolationType(0=step,1=linear): 1
+     *
+     *   then continue with the each growth option inputs
 	 */
 	string currHeader;
 	file >> currHeader;
@@ -1104,15 +1112,15 @@ bool ModelInputObject::readNodeFixingParameters(ifstream& file){
 	 * The example would have the syntax:
 	 *
 	 * NodeFixingOptions:
-	 * FixingViscosity(x,y,z): 0   0  32000
-  	 * ApicSurfaceFix(bool-x,y,z):   0 0 0   FixApicalExtVisc(bool): 0
-  	 * BasalSurfaceFix(bool-x,y,z):  0 0 0   FixBasalExtVisc(bool):  0
-  	 * CircumferenceFix(bool-x,y,z): 0 0 0   FixCircWithExtVisc(bool): 0
-  	 * ApicCircumFix(bool-x,y,z):    0 0 0   FixApicCircWithExtVisc(bool):  0
-  	 * BasalCircumFix(bool-x,y,z):   0 0 0   FixBasalCircWithExtVisc(bool): 0
-  	 * LinkerApicCircumFix(bool-x,y,z):  0 0 0  FixLinkerApicCircWithExtVisc(bool):  0
-  	 * LinkerBasalCircumFix(bool-x,y,z): 0 0 0  FixLinkerBasalCircWithExtVisc(bool): 0
-  	 * NotumFix(bool-x,y,z,double-xFracMin,xFracMax): 0 0 0 -0.1 0.5  FixNotumExtVisc(bool): 0
+     *   FixingViscosity(x,y,z): 0   0  32000
+     *   ApicSurfaceFix(bool-x,y,z):   0 0 0   FixApicalExtVisc(bool): 0
+     *   BasalSurfaceFix(bool-x,y,z):  0 0 0   FixBasalExtVisc(bool):  0
+     *   CircumferenceFix(bool-x,y,z): 0 0 0   FixCircWithExtVisc(bool): 0
+     *   ApicCircumFix(bool-x,y,z):    0 0 0   FixApicCircWithExtVisc(bool):  0
+     *   BasalCircumFix(bool-x,y,z):   0 0 0   FixBasalCircWithExtVisc(bool): 0
+     *   LinkerApicCircumFix(bool-x,y,z):  0 0 0  FixLinkerApicCircWithExtVisc(bool):  0
+     *   LinkerBasalCircumFix(bool-x,y,z): 0 0 0  FixLinkerBasalCircWithExtVisc(bool): 0
+     *   NotumFix(bool-x,y,z,double-xFracMin,xFracMax): 0 0 0 -0.1 0.5  FixNotumExtVisc(bool): 0
 	 */
 	string currHeader;
 	file >> currHeader;
@@ -1281,18 +1289,18 @@ bool ModelInputObject::readManupulationParamters(ifstream& file){
 	 * I find it highly unlikely you will use these, probably will remove them soon.
 	 *
 	 * Manipulations:
-	 * AddCurvature(bool): 1
-	 * CurvatureDepthAtCentre(double-microns): 2.0
-	 * AddSoftPeriphery(bool): 0
-	 * SoftPeripheryRange(double-microns): 30.0
-	 * SoftnessFraction(double-fraction): 0.1
-	 * ApplyToApicalSurface(bool): 1
-	 * ApplyToBasalSurface(bool): 0
-	 * ApplyToColumnarLayer(bool): 1
-	 * ApplyToPeripodialMembrane(bool): 1
-	 * AddRandomForce(bool): 0
-	 * RandomForceMean(double): 0.0
-	 * RandomForceVar(double): 1E-5
+     *   AddCurvature(bool): 1
+     *   CurvatureDepthAtCentre(double-microns): 2.0
+     *   AddSoftPeriphery(bool): 0
+     *   SoftPeripheryRange(double-microns): 30.0
+     *   SoftnessFraction(double-fraction): 0.1
+     *   ApplyToApicalSurface(bool): 1
+     *   ApplyToBasalSurface(bool): 0
+     *   ApplyToColumnarLayer(bool): 1
+     *   ApplyToPeripodialMembrane(bool): 1
+     *   AddRandomForce(bool): 0
+     *   RandomForceMean(double): 0.0
+     *   RandomForceVar(double): 1E-5
 	 *
 	 */
 	string currHeader;
@@ -1975,6 +1983,13 @@ bool ModelInputObject::readYoungsModulusTimeseriesGrids(ifstream& file){
 }
 
 bool ModelInputObject::readTypeOfCoordinateSystem(ifstream& file){
+    /**
+      * Sample:
+      * TypeOfCoordinateSystem:
+      *     UseXYCoordinatesforRelativePositions(bool): 1
+      *     UsePolarCoordinatesforRelativePositions(bool): 0
+    **/
+
     string currHeader;
     file >> currHeader;
     if(currHeader == "UseXYCoordinatesforRelativePositions(bool):"){
@@ -2007,7 +2022,22 @@ bool ModelInputObject::readTypeOfCoordinateSystem(ifstream& file){
 
 bool ModelInputObject::readShapeChangeOptions(ifstream& file){
 	/**
-	 * Will change soon.
+     * ShapeChangeOptions:
+     *   NumberofShapeChangeFunctions(int): 1
+     *   ShapeChangeStartsBelowECMLevel(fraction): 1.0
+
+     *   ShapeChangeFunctionType(int-seeDocumentation): 2
+     *   InitialTime(sec):  60000
+     *   FinalTime(sec):  4200
+     *   ApplyTissueApical(bool): 0
+     *   ApplyTissueBasal(bool): 0
+     *   ApplyTissueMidline(bool): 0
+     *   ApplyToBasalECM(bool): 0
+     *   ApplyToLateralECM(bool): 0
+     *   ShapeChangeAppliedToEllipses(number,[ellipseId][ellipseId]): 1 102
+     *   xyShapeChange(fractionPerHour): 0.00699
+     *   ConserveVolume(bool): 1
+     *
 	 */
 	string currHeader;
 	file >> currHeader;
@@ -2333,7 +2363,12 @@ bool ModelInputObject::readStretcherSetup(ifstream& file){
 	 * the stretching period. The scale of clamping is given by the DVClampMin and DVClampMax
 	 * parameters (setting Simulation#StretchMin and Simulation#StretchMax, the value being the relative size in the bounding box. In case of AP clamping,
 	 * the same scale applies normalised to the AP bounding box length.
-	 *
+     *
+     * I would advise running the stretcher simulations with very small time steps, for short periods, with no external viscosity.
+     * Then you can take the end point of the simulation, and continue with an actual larger time step simulation to observe the
+     * dynamics of the ststem (such as ECM) post stretch. I would be cautious whie interpretting the actual dynamics ofthe stretching event,
+     * and think carefully aboutwhat external and internal viscosities mean if I am to do so.
+     *
 	 * Stretcher:
 	 *   StretcherAttached(bool): 1
 	 *   ClampedOnDV(bool): 0
@@ -2560,7 +2595,21 @@ bool ModelInputObject::readApicoBasalVolumeRedistribution(ifstream& file){
 
 bool ModelInputObject::readStiffnessPerturbation(ifstream& file){
 	/**
-	 * Will change
+     * We did not check if this works with the time series approach.
+     *
+     *
+     * Stiffness_Perturbation:
+     *   ThereIsStiffnessPerturbation(bool): 1
+     *   NumberOfStiffnessPerturbations(int): 1
+
+     *   ApplyToApically(bool): 1
+     *   ApplyBasally(bool): 0
+     *   ApplyToWholeTissue(bool): 0
+     *   Basolateral(bool): 0
+     *   BasolateralWithApicalRelaxation(bool): 0
+     *   timeOfStiffeningPerturbation(hr): 30 32
+     *   stiffnessPerturbationAppliedToEllipses(number,[ellipseId][ellipseId]): 1 0
+     *   stiffnessChangedToFractionOfOriginal(double):  0.75
 	 */
 	string currHeader;
 	file >> currHeader;
@@ -2683,7 +2732,22 @@ bool ModelInputObject::readStiffnessPerturbation(ifstream& file){
 
 bool ModelInputObject::readECMPerturbation(ifstream& file){
 	/**
-	 * Will change
+     * ECM_Perturbation:
+     *   ThereIsECMStiffnessChange(bool): 0
+     *   NumberOfECMPerturbations(int): 1
+
+     *   ApplyToApicalECM(bool): 0
+     *    ApplyToBasalECM(bool): 0
+     *    AppliedElementsAreEmergent(bool): 1
+     *    timeOfStiffnessChange(hr): 20 26
+     *    stiffnessChangeAppliedToEllipses(number,[ellipseId][ellipseId]): 1 102
+     *    stiffnessChangeFraction(double(0-1.0)):  0.5
+     *    ECMRenewalHalfLifeTargetFraction(double(0-1.0)): 1.0
+     *    ECMViscosityChangeFraction(double): 0.5
+     *    changeNotumECM(time,fraction): 1000 1000 1.0
+     *    changeHingeECM(time,fraction): 1000 1000 1.0
+     *    changePouchECM(time,fraction): 1000 1000 1.0
+     *
 	 */
 	string currHeader;
 	file >> currHeader;
@@ -2874,7 +2938,12 @@ bool ModelInputObject::readExplicitActinOptions(ifstream& file){
 
 bool ModelInputObject::readColumnViseVolumeConservationOptions(ifstream& file){
 	/**
-	 * The boolean sets the parameter Simulation#conservingColumnVolumes
+     * The boolean sets the parameter Simulation#conservingColumnVolumes.
+     * The functionality is working, but not thoroughly tested.
+     *
+     *ColumnViseVolumeConservationOptions:
+     *  ThereIsColumnViseVolumeConservation(bool): 1
+
 	 */
 	string currHeader;
 	file >> currHeader;
@@ -2927,6 +2996,13 @@ bool ModelInputObject::readLumenOptions(ifstream& file){
 }
 
 bool ModelInputObject::readartificialRelaxationOptions(ifstream& file){
+    /**
+     * ArtificialRelaxationOptions:
+     *   ThereIsArtificaialRelaxation(bool): 1
+     *   ArtificialRelaxationTime(sec): 64800
+     *   relaxECM(bool): 0
+     *
+     */
 	string currHeader;
 	file >> currHeader;
 	if(currHeader == "ThereIsArtificaialRelaxation(bool):"){
@@ -2956,6 +3032,14 @@ bool ModelInputObject::readartificialRelaxationOptions(ifstream& file){
 }
 
 bool ModelInputObject::readEnclosementOptions(ifstream& file){
+    /**
+     * zShellOptions:
+     *   thereIsEnclosementOfTheTissue(bool): 1
+     *   initialLimits(lowerBound,upperBound): -12.50  25.00
+     *   finalLimits(lowerBound,upperBound):   -12.50  25.00
+     *   initialTime(sec):     0
+     *   finalTime(sec):       1800
+     */
 	string currHeader;
 	file >> currHeader;
 	if(currHeader == "thereIsEnclosementOfTheTissue(bool):"){
@@ -3004,6 +3088,21 @@ bool ModelInputObject::readEnclosementOptions(ifstream& file){
 }
 
 bool ModelInputObject::readMutationOptions(ifstream& file){
+    /**
+     * MutationOptions:
+     *   numberOfClones(int): 10
+     *   cloneInformation(double-relativeX,relativeY,micronRadius,usingAbsoluteGrowth(bool),growthRatePerHour_OR_growthFoldIncrease):
+     *  0.8    0.725 3   1 0.1324
+     *  0.775  0.75  3   1 0.1324
+     *  0.75   0.75  3   1 0.1324
+     *  0.7    0.75  3   1 0.1324
+     *  0.65   0.75  3   1 0.1324
+     *  0.8    0.725  3  1 0.1324
+     *  0.775  0.7   3  1 0.1324
+     *  0.75   0.7   3  1 0.1324
+     *  0.7    0.7   3  1 0.1324
+     *  0.65   0.7   3  1 0.1324
+     */
 	string currHeader;
 	file >> currHeader;
 	if(currHeader == "numberOfClones(int):"){
@@ -3037,6 +3136,14 @@ bool ModelInputObject::readMutationOptions(ifstream& file){
 }
 
 bool ModelInputObject::readAdhesionOptions(ifstream& file){
+    /**
+     * I believe this should be kept as is in almost all simulations that will be run. I cannot
+     * think of a scenario that it should be off.
+     *
+     * AdhesionOptions:
+     *   ThereIsAdhesion(bool): 1
+     *   CollapseNodesOnAdhesion(bool): 1
+     */
 	string currHeader;
 	file >> currHeader;
 	if(currHeader == "ThereIsAdhesion(bool):"){
@@ -3058,6 +3165,15 @@ bool ModelInputObject::readAdhesionOptions(ifstream& file){
 }
 
 bool ModelInputObject::readNodeCollapseOptions(ifstream& file){
+    /**
+     * This will collapse nodes that are too close such that they can cause element flips,
+     * or when nodes are adhered. This should be active unless strictly needed to be off for
+     * some reason.
+     *
+     * NodeCollapseOptions:
+     *   ThereIsNodeCollapse(bool): 1
+     *
+     */
 	string currHeader;
 	file >> currHeader;
 	if(currHeader == "ThereIsNodeCollapse(bool):"){
@@ -3072,6 +3188,18 @@ bool ModelInputObject::readNodeCollapseOptions(ifstream& file){
 
 
 bool ModelInputObject::readExplicitECMOptions(ifstream& file){
+    /**
+     * DO not add lateral ECM to spherical setups. Be wary when running x & z symmetrixc setups.
+     * They have not been thoroughly tested.
+     *
+     * ExplicitECMOptions:
+     *   ThereIsExplicitECM(bool): 1
+     *   AddLateralECM(bool): 0
+     *   LateralECMThickness(microns): 0.2
+     *   ECMRemodellingHalfLife(hour): 8.0
+     *   ECMColumnarYoungsModulus:  1600
+     *   ECMPeripodialYoungsModulus:  100
+     */
 	string currHeader;
 	file >> currHeader;
 	if(currHeader == "ThereIsExplicitECM(bool):"){
