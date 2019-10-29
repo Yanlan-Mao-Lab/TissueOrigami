@@ -845,6 +845,13 @@ void Simulation::checkForNodeBinding(){
 }
 
 
+void Simulation::ApplyAllYoungsModulusModifiers(){
+    for (const auto& currentYoungsModulusModifier : AllYoungsModulusModifiers){
+        for(const auto& itElement: Elements){
+             currentYoungsModulusModifier->UpdateStiffnessMultiplier(currSimTimeSec, dt, itElement.get());
+        }
+    }
+}
 
 bool Simulation::bindEllipseAxes(){
 	/**
@@ -5931,6 +5938,10 @@ bool Simulation::runOneStep(){
     if (ThereIsStiffnessPerturbation) {
     	checkStiffnessPerturbation();
     }
+    /**
+     * Now we update the elemental stiffnesses with the time series modifiers.
+     */
+    ApplyAllYoungsModulusModifiers();
     if (thereIsECMChange) {
     	checkECMChange();
     }

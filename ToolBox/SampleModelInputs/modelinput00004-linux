@@ -70,7 +70,7 @@ GrowthOptions:
   ApplyToPeripodialMembrane(bool): 0
   ApplyToBasalECM(bool): 0
   ApplyToLateralECM(bool): 0
-  Filename(full-path): /home/melda/Documents/TissueFoldingNargess/TissueFolding/ToolBox/GrowthRates/HeightAt80hr_Growth_48-72hr_0_0_1_4_2
+  Filename(full-path): /home/melda/Documents/TissueFoldingNargess/TissueFolding/ToolBox/GrowthRates/Growth_48-72hr_0_0_1_0_2
   zRange: 0.0 1.0
 
   GrowthFunctionType(int-seeDocumentation): 3
@@ -80,7 +80,7 @@ GrowthOptions:
   ApplyToPeripodialMembrane(bool): 0
   ApplyToBasalECM(bool): 0
   ApplyToLateralECM(bool): 0
-  Filename(full-path): /home/melda/Documents/TissueFoldingNargess/TissueFolding/ToolBox/GrowthRates/HeightAt80hr_Growth_56-88hr_1_0_1_4_2
+  Filename(full-path): /home/melda/Documents/TissueFoldingNargess/TissueFolding/ToolBox/GrowthRates/Growth_56-88hr_1_0_1_0_2
   zRange: 0.0 1.0
   
 
@@ -91,7 +91,7 @@ GrowthOptions:
   ApplyToPeripodialMembrane(bool): 0
   ApplyToBasalECM(bool): 0
   ApplyToLateralECM(bool): 0
-  Filename(full-path): /home/melda/Documents/TissueFoldingNargess/TissueFolding/ToolBox/GrowthRates/HeightAt96from80hr_Growth_72-96hr_1_0_1_4_2
+  Filename(full-path): /home/melda/Documents/TissueFoldingNargess/TissueFolding/ToolBox/GrowthRates/Growth_72-96hr_1_0_1_0_2
   zRange: 0.0 1.0
 
 ExplicitECMOptions:

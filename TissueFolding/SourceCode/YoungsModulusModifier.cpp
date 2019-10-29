@@ -105,6 +105,7 @@ double YoungsModulusModifier::GetCurrentMultiplierChangeRate(const size_t Curren
 
 void YoungsModulusModifier::UpdateStiffnessMultiplier(const double currTime, const double dt, ShapeBase* currElement){
     if (IsItApplicable(currElement)){
+        cout<<"applicable to element "<<currElement->Id<<endl;
         bool ModificationApplicableAtThisTimepoint = calculateCurrentRateGridIndex(currTime);
         if (ModificationApplicableAtThisTimepoint){
             std::array<size_t,2> CurrElementXYGridIndices = GetElementPosition(currElement);
@@ -123,13 +124,6 @@ void YoungsModulusModifier::UpdateStiffnessMultiplier(const double currTime, con
 }
 
 
-void Simulation::ApplyAllYoungsModulusModifiers(){
-    for (const auto& currentYoungsModulusModifier : AllYoungsModulusModifiers){
-        for(const auto& itElement: Elements){
-             currentYoungsModulusModifier->UpdateStiffnessMultiplier(currSimTimeSec, dt, itElement.get());
-        }
-    }
-}
 
 
 

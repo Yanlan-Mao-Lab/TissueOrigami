@@ -1285,7 +1285,7 @@ bool ModelInputObject::readNodeFixingParameters(ifstream& file){
 bool ModelInputObject::readManupulationParamters(ifstream& file){
 	/**
 	 * This option group allows for an ensemble of additional
-	 * manipulations on the simulation options, from stiffness perturbations to random forces.
+     * manipulations on the simulation options, from stiffness perturbations to random forces. If you are running a simulation with peripodial, you need to copy this into the model input file.
 	 * I find it highly unlikely you will use these, probably will remove them soon.
 	 *
 	 * Manipulations:

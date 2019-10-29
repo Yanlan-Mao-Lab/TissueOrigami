@@ -1,7 +1,7 @@
 LumenOptions:
     thereIsLumen(bool): 1
     LumenBulkModulus(Pa): 32000
-    LumenGrowthRate(foldPer24hr): 2.0
+    LumenGrowthRate(foldPer24hr): 24.0
 
 TypeOfCoordinateSystem:
   UseXYCoordinatesforRelativePositions(bool): 1
@@ -62,7 +62,7 @@ ExplicitECMOptions:
   AddLateralECM(bool): 0
   LateralECMThickness(microns): 0
   ECMRemodellingHalfLife(hour): 8.0
-  ECMColumnarYoungsModulus:  0
+  ECMColumnarYoungsModulus:  1600
   ECMPeripodialYoungsModulus:  0
 
 ExplicitActinOptions:

@@ -12,7 +12,7 @@ YoungsModulusTimeseriesGrids:
   noTimeseriesInputs(size_t): 1
 
   TimePointNoInput(size_t): 3
-  YoungsModulusMultiplierChangeRateIsLinearInput(bool): 1
+  YoungsModulusMultiplierChangeRateIsLinearInput(bool): 0
   applyToColumnarLayer(bool): 1
   applyToPeripodialMembrane(bool): 0
   applyToApicalLayer(bool): 1

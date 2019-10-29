@@ -1,7 +1,7 @@
 LumenOptions:
-  thereIsLumen(bool): 0
+  thereIsLumen(bool): 1
   LumenBulkModulus(Pa): 32000
-  LumenGrowthRate(foldPer24hr): 0.0
+  LumenGrowthRate(foldPer24hr): 2.0
 
 TypeOfCoordinateSystem:
   UseXYCoordinatesforRelativePositions(bool): 1

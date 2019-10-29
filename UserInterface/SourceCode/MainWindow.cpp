@@ -815,11 +815,11 @@ void MainWindow::testAdhesionsAndCurveConstruction(){
 void MainWindow::timerSimulationStep(){
     //cout<<"Called the function via timer"<<endl;
 
-	bool 	automatedSave =false ;
-	int		viewSelection = -1; //0: top, 1: cross, 2: perspective 3: side, 4: clone cross-section
-	int 	displayAutomatedStrain = -1; //-1 no strain display, 1 display DV strains, 2 AP strains;
-	bool 	analyseResults = true;
-	bool 	slowstepsOnDisplay = true;
+    bool 	automatedSave = false;
+    int		viewSelection = -1; //0: top, 1: cross, 2: perspective 3: side, 4: clone cross-section
+    int 	displayAutomatedStrain = -1; //-1 no strain display, 1 display DV strains, 2 AP strains;
+    bool 	analyseResults = false;
+    bool 	slowstepsOnDisplay = false;
 	bool 	slowstepsOnRun = false;
 	int 	slowWaitTime = 0;
 	//display DV strains
