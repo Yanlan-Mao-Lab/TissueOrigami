@@ -2022,6 +2022,20 @@ bool ModelInputObject::readTypeOfCoordinateSystem(ifstream& file){
 
 bool ModelInputObject::readShapeChangeOptions(ifstream& file){
 	/**
+     * Thiss function will change the shapes of the elements within the givven time range.
+     * For applying to  elements of ellipse amrker 102 (the emergent folds), you should make the initial time 0
+     * or any specific time if you want to restrict how early the shape change starts (sometimes folds can initiatw as early as 14-15 hrs (62 -63 hr AEL)
+     *The shape chenage does not stop. It will continue till the end point in time.
+     *If you are using emergent ellipses (100 or 102) this will create a considerable difference between elemetns that became part of a fol at different
+     *times.
+     *
+     *How can you fix this? Give a new attribute initialTimeShapeChangeStarted to each element.
+     * Check the time to stop as the difference between initial and final times, against the new
+     * attribute: IF I said apply from time =6hr to 8 hrs, that is 2 hours of shape change.
+     * If the shape change of a particular element started at 7 hrs, it should keep on for 2 hours,
+     * until 9hrs.
+     * YOU HAVE TO SAVE THAT ATTRIBUTE, as it will cause problems while conitnuing from saves!
+     *
      * ShapeChangeOptions:
      *   NumberofShapeChangeFunctions(int): 1
      *   ShapeChangeStartsBelowECMLevel(fraction): 1.0
@@ -2732,7 +2746,18 @@ bool ModelInputObject::readStiffnessPerturbation(ifstream& file){
 
 bool ModelInputObject::readECMPerturbation(ifstream& file){
 	/**
-     * ECM_Perturbation:
+     * ECM change is applied in different ways.
+     * First, it is explicitly applied to specified regions (Notum,hinge, pouch).
+     * Then on regions specified with ellipses. This are usually the folds.
+     * Non-emergent changes are applied between sepcieid timepoint (e.g. timeOfStiffnessChange).
+     * For emergent changes, the code will check when the emergent change is applicable and the change will be applied any time after that.
+     * The change will continue to be applied until the ChangeFraction is reached. Then it will stop.
+     * Emergent ellipse id assignment is done through Simulation#checkForEmergentEllipseFormation.
+     * Ellipse ids: 100 is apical node collapse. 101 is basal node collapse and 102 is when the ECM change has reached a threshold.
+     * Emergent ECM change is not applied to ellipse id 101.
+     * For ellipse id 100, emergent ECM change is applied. When a certain threshold is reach, ellipse id will change to 102 and other changes (e.g. cell shortening) start to emerge as well.
+     *
+     *ECM_Perturbation:
      *   ThereIsECMStiffnessChange(bool): 0
      *   NumberOfECMPerturbations(int): 1
 
@@ -2740,7 +2765,7 @@ bool ModelInputObject::readECMPerturbation(ifstream& file){
      *    ApplyToBasalECM(bool): 0
      *    AppliedElementsAreEmergent(bool): 1
      *    timeOfStiffnessChange(hr): 20 26
-     *    stiffnessChangeAppliedToEllipses(number,[ellipseId][ellipseId]): 1 102
+     *    stiffnessChangeAppliedToEllipses(number,[ellipseId][ellipseId]): 1 100
      *    stiffnessChangeFraction(double(0-1.0)):  0.5
      *    ECMRenewalHalfLifeTargetFraction(double(0-1.0)): 1.0
      *    ECMViscosityChangeFraction(double): 0.5

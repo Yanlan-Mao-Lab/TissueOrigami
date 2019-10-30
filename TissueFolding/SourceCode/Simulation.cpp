@@ -5857,8 +5857,9 @@ void Simulation::updateOnFoldNodesFromCollapse(){
 
 void Simulation::checkForEmergentEllipseFormation(){
     /**
+     *
      * The emergent marker ellipse Ids, reserved 100, 101 and 102, are assigned to
-     * curved surfaces of hte tissue. This information can be obtained via
+     * curved surfaces of the tissue. This information can be obtained via
      * collapse of an elemental surface, or adhesion of two nodes. Once the
      * identity is assigned, it can be updated to mark ECM relaxation threshold.
      * The respnsible functions are Simulation#updateEllipseWithCollapse,
@@ -8380,7 +8381,7 @@ void Simulation::calculateGrowth(){
 
 void Simulation::calculateShapeChange(){
 	cleanUpShapeChangeRates();
-	for (int i=0; i<nShapeChangeFunctions; ++i){
+    for (int i=0; i<nShapeChangeFunctions; ++i){
 		if (ShapeChangeFunctions[i]->Type == 1){
 			calculateShapeChangeUniform(ShapeChangeFunctions[i].get());
 		}
