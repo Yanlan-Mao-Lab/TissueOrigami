@@ -1,7 +1,7 @@
 LumenOptions:
     thereIsLumen(bool): 1
     LumenBulkModulus(Pa): 32000
-    LumenGrowthRate(foldPer24hr): 2.0
+    LumenGrowthRate(foldPer24hr): 24.0
 
 TypeOfCoordinateSystem:
   UseXYCoordinatesforRelativePositions(bool): 1
@@ -11,20 +11,20 @@ TypeOfCoordinateSystem:
  
 InputMeshParameters:
   MeshInputMode(int-seeDocumentation): 4
-  MeshFile(full-path):     /home/melda/Documents/TissueFoldingNargess/TissueFolding/ToolBox/MeshGeneration/2DEllipse/SmallSphericalMeshFileWithECM.mesh
+  MeshFile(full-path):     /home/ucbpnkh/Scratch/bulkruns/MeshFiles/2DEllipse/SmallSphericalMeshFileWithECM.mesh
   symmetricInX(bool): 1
   symmetricInY(bool): 1
   symmetricInZ(bool): 1
  
 TimeParameters:
-  TimeStep(sec): 3600
+  TimeStep(sec): 600
   SimulationLength(sec): 180000
   
 SaveOptions:
   SaveImages(bool): 0
   SaveData(bool):   1
   ImageSaveInterval(sec): 1
-  DataSaveInterval(sec):  3600
+  DataSaveInterval(sec):  1800
   
 NodeFixingOptions:
   FixingViscosity(x,y,z): 0   0  32000
@@ -36,6 +36,10 @@ NodeFixingOptions:
   LinkerApicCircumFix(bool-x,y,z):  0 0 0  FixLinkerApicCircWithExtVisc(bool):  0
   LinkerBasalCircumFix(bool-x,y,z): 0 0 0  FixLinkerBasalCircWithExtVisc(bool): 0
   NotumFix(bool-x,y,z,double-xFracMin,xFracMax): 0 0 0 -0.1 0.5  FixNotumExtVisc(bool): 0
+
+NodeBindingOptions:
+  bindCircumferenceXYToBasal(bool): 1
+  bindEllipses(bool,nFunctions): 0 0
 
 PysicalProperties:
   YoungsModulusApical: 100.0	YoungsModulusBasal: 25.0	YoungsModulusMid: 25.0	Noise(%-int): 0

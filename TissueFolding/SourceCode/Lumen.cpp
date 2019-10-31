@@ -144,7 +144,7 @@ void	Lumen::calculateCurrentVolume(){
 	}
 	//currentIdealVolume = currentVolume;
 	rV =  (currentVolume - currentIdealVolume)/currentIdealVolume;
-	//cout<<"current Volume of Lumen: "<<currentVolume<<" ideal volume: "<<currentIdealVolume <<" rV "<<rV<<endl;
+    //cout<<"current Volume of lumen: "<<currentVolume<<" ideal volume: "<<currentIdealVolume <<" rV "<<rV<<endl;
 }
 
 void	Lumen::calculateResiduals(const std::vector <std::unique_ptr<Node>>& Nodes, const std::vector <std::unique_ptr<ShapeBase>>& Elements){
@@ -330,5 +330,5 @@ void Lumen::writeLumenJacobianToSystemJacobian(gsl_matrix* K, const std::vector 
 
 void Lumen::growLumen(double currentTimeInSec){
 	currentIdealVolume = initialIdealVolume * exp(growthRate*currentTimeInSec);
-	cout<<" lumen ideal volume: "<<currentIdealVolume<<endl;
+    //cout<<" lumen ideal volume: "<<currentIdealVolume<<" at time "<<currentTimeInSec<<endl;
 }
