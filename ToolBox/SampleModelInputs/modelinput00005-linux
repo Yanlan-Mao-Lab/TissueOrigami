@@ -37,10 +37,6 @@ NodeFixingOptions:
   LinkerBasalCircumFix(bool-x,y,z): 0 0 0  FixLinkerBasalCircWithExtVisc(bool): 0
   NotumFix(bool-x,y,z,double-xFracMin,xFracMax): 0 0 0 -0.1 0.5  FixNotumExtVisc(bool): 0
 
-NodeBindingOptions:
-  bindCircumferenceXYToBasal(bool): 1
-  bindEllipses(bool,nFunctions): 0 0
-
 PysicalProperties:
   YoungsModulusApical: 100.0	YoungsModulusBasal: 25.0	YoungsModulusMid: 25.0	Noise(%-int): 0
   PoissonsRatio: 0.29		Noise(%-int): 0

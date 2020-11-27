@@ -2635,7 +2635,7 @@ int main(int argc, char **argv)
     // 4: x&y symmetric circle (half disc) and needs further code mdifications! -> Eliminate bluntTip function for type 4 with no x symmetricity! (half circle - not quarter)
     // 5: spherical organoid
     // 6: Tubular organoid
-        int selectTissueType = 1;
+        int selectTissueType = 7;
 
 	if (selectTissueType == 0){ // 0 : wingdisc48Hr, 
 		symmetricY = true;
@@ -2665,6 +2665,10 @@ int main(int argc, char **argv)
                 symmetricY = true;
                 symmetricX = false;
         }
+        else if(selectTissueType == 7){ //rectangular sheet
+                symmetricY = false;
+                symmetricX = false;
+        }
 	else{
 		cerr<<"Tissue type selected wrong!!"<<endl;	
 		return 0;
@@ -2691,7 +2695,7 @@ int main(int argc, char **argv)
 			modifiedZDueToThinActin  = ABHeight/ABLayers;
 		}
 		if (parameters[8] == 1 ){ 		
-			symmetricY = true;
+                        symmetricY = false;
 		}
 		else{
 			symmetricY = false;
@@ -2926,6 +2930,45 @@ int main(int argc, char **argv)
                     Lay01.symmetricY = true;
                     Lay01.symmetricX = false;
         }
+        else if(selectTissueType == 7){ // 1: ECM mimicing wing disc 48 hr, THIS WILL BE THE ONE TO USE 90% OF THE TIME!
+                    cout<<" in loop for tissue type(1) : "<<selectTissueType<<endl;
+            actinHeight = 15.12;  //these are the values used in paper: 2.0 for actin layer
+            ECMHeight = 1.45;    //these are the values used in paper: 0.2 for ECM
+                    addPeripodial = false;
+                    //peripodialHeightFrac is not used.
+                    peripodialHeightFrac = ECMHeight/(ABHeight-ECMHeight);//  ECM thickness is 0.2, AB height includes ECM. 0.33333;  //0.508
+                    lumenHeightFrac = 0.;//0.2; //this is set to 0 because the lumen height will be added by curving the tissue in model input.
+                    addLateralECMRing = false;
+                    modifiedZDueToThinActin = ABHeight/ABLayers;
+                    //basalLayerHeight = 6.25;
+                    //  end of ECM options
+                    if (ABLayers<3){
+                            ECMHeight = ABHeight/ABLayers;
+                            actinHeight = ABHeight/ABLayers;
+                            basalLayerHeight = ABHeight/ABLayers;
+                            modifiedZDueToThinActin  = ABHeight/ABLayers;
+                            cout<<" if clause 1,  modifiedZDueToThinActin: "<<modifiedZDueToThinActin<<endl;
+                    }
+                    else{
+                            double denominator = (ABLayers-3);
+                            bool correctECM = false;
+                            bool correctBasal = false;
+                            bool correctActin = false;
+                            if(ECMHeight<0){ECMHeight=0;denominator++;correctECM=true;}
+                            if(basalLayerHeight<0){basalLayerHeight=0;denominator++;correctBasal=true;}
+                            if(actinHeight<0){actinHeight=0;denominator++;correctActin=true;}
+                            modifiedZDueToThinActin = (ABHeight - ECMHeight - actinHeight -basalLayerHeight)/ denominator;
+                            if (correctECM){ECMHeight= modifiedZDueToThinActin;}
+                            if (correctBasal){basalLayerHeight= modifiedZDueToThinActin;}
+                            if (correctActin){actinHeight= modifiedZDueToThinActin;}
+                            //modifiedZDueToThinActin = (ABHeight - ECMHeight - actinHeight -basalLayerHeight)/ (ABLayers-3);
+                            cout<<" if clause 3,  modifiedZDueToThinActin: "<<modifiedZDueToThinActin<<endl;
+                    }
+                    peripodialSideCurveFrac = (modifiedZDueToThinActin + 5.52) /ABHeight ;
+                    Lay01.symmetricY = false;
+                    Lay01.symmetricX = false;
+                    cout<<"peripodialSideCurveFrac: "<<peripodialSideCurveFrac<<" ABHeight: "<<ABHeight<<" modifiedZDueToThinActin: "<<modifiedZDueToThinActin<<endl;
+            }
 	else{
 		cerr<<"Tissue type selected wrong!!"<<endl;	
 		return 0;
