@@ -1,7 +1,7 @@
 LumenOptions:
     thereIsLumen(bool): 1
     LumenBulkModulus(Pa): 32000
-    LumenGrowthRate(foldPer24hr): 2.0
+    LumenGrowthRate(foldPer24hr): 24.0
 
 TypeOfCoordinateSystem:
   UseXYCoordinatesforRelativePositions(bool): 1
@@ -17,14 +17,14 @@ InputMeshParameters:
   symmetricInZ(bool): 1
  
 TimeParameters:
-  TimeStep(sec): 3600
+  TimeStep(sec): 600
   SimulationLength(sec): 180000
   
 SaveOptions:
   SaveImages(bool): 0
   SaveData(bool):   1
   ImageSaveInterval(sec): 1
-  DataSaveInterval(sec):  3600
+  DataSaveInterval(sec):  1800
   
 NodeFixingOptions:
   FixingViscosity(x,y,z): 0   0  32000
