@@ -91,7 +91,7 @@ void Node::setExternalViscosity(double ApicalVisc,double BasalVisc, bool extendE
 			}
 		}
 	}
-	else if (tissuePlacement == 2 || tissuePlacement == 3){
+        else if (tissuePlacement == 2 || tissuePlacement == 3 || tissuePlacement == 4){
 		if (extendExternalViscosityToInnerTissue){
 			//middle or lateral node are equal to the minimum of apical and basal values
 			double minV = ApicalVisc;

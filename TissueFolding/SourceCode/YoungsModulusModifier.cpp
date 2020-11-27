@@ -76,7 +76,7 @@ bool YoungsModulusModifier::IsItApplicable(const ShapeBase* currElement){
             }
         }
         else{
-            if ((applyToApicalLayer && currElement->tissuePlacement==1) ||
+            if ((applyToApicalLayer && (currElement->tissuePlacement==1 || currElement->tissuePlacement==4)) ||
                     (applyToMidLayer && currElement->tissuePlacement==2) ||
                     (applyToBasalLayer && (currElement->tissuePlacement==0 || currElement->atBasalBorderOfECM))){
                 IsModificationApplicable=true;

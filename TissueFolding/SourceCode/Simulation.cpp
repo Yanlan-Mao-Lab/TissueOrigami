@@ -1376,7 +1376,7 @@ bool Simulation::bindCircumferenceXY(){
 					break;
 				}
 			}
-			if (!thereIsPeripodialMembrane && Nodes[currNodeId]->tissuePlacement == 1){
+                        if (!thereIsPeripodialMembrane && (Nodes[currNodeId]->tissuePlacement == 1 || Nodes[currNodeId]->tissuePlacement == 4)){
 				//std::cout<<" in binding there is no peripodial, I have reached top"<<std::endl;
 				//there is no peripodial and I have reached apical nodes
 				reachedTop = true;
@@ -6147,7 +6147,7 @@ void Simulation::clearProjectedAreas(){
 
 void Simulation::correctzProjectedAreaForMidNodes(){
 	for (const auto& currNode : Nodes){
-		if (currNode->tissuePlacement == 2 ){ // the node is on midlayer
+                if (currNode->tissuePlacement == 2 || currNode->tissuePlacement == 4){ // the node is on midlayer
 		/**
 		 * For the nodes in mid-line nodes the area is added from apical and basal surfaces of elemetns on both sides.
 		 * This is corrected in this function. !! A more efficient approach would be to calculate these areas only once!!
@@ -8704,7 +8704,7 @@ void Simulation::setUpActinMimicingElements(){
      * All elements on the apical side (ShapeBase#tissuePlacement = 1) are actin-rich elements.
      */
 	for(const auto& itElement : Elements){
-		if ( itElement->tissuePlacement == 1 ){
+                if (itElement->tissuePlacement == 1 || itElement->tissuePlacement == 4){
 			//apical elements are mimicing actin:
 			if (!itElement->isECMMimimcingAtCircumference){
 				itElement->setActinMimicing(true);
