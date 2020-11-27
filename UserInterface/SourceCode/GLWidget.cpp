@@ -475,8 +475,6 @@ void GLWidget::highlightNode(int i){
 					StrainMag = Sim01->tissueLumen->rV;
 				}
 				else{
-
-
 					int nConnectedElements = itNode->connectedElementIds.size();
 					for (int i=0;i<nConnectedElements; ++i){
 						float TmpStrainMag =0.0;
