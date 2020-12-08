@@ -347,7 +347,7 @@ void ShapeBase::updateGrowthWillBeScaledDueToApikobasalRedistribution(bool thisF
 		}
 		if (insideEllipseBandWithRedistribution){
 			thereIsGrowthRedistribution = true;
-                        if ((tissuePlacement == 1 || tissuePlacement == 4) || atApicalBorderOfActin) { //apical
+			if ((tissuePlacement == 1 || tissuePlacement == 4 ) || atApicalBorderOfActin) { //apical
 				//this element is apically positioned, it should shrink if the function is shrinking
 				//the apical layer, or expand it if not.
 				growthRedistributionShrinksElement = thisFunctionShrinksApical;
@@ -587,12 +587,10 @@ void ShapeBase::calculateFgFromGridCorners(int gridGrowthsInterpolationType, dou
 			}
 		}
 		//write the increment from obtained growth:
-                if (isActinMimicing){
-                    /** If the element is ShapeBase#isActinMimicing, then growth in the tissue in all three dimensions is ignored.
-                    */
-                    growth[0] = 0; //no x-growth in actin mimicing apical surfaces (or tissue bulk). This line was added for Katie's version.
-                    growth[1] = 0; //no y-growth in actin mimicing apical surfaces (or tissue bulk). This line was added for Katie's version.
-                    growth[2] = 0; //no z-growth in actin mimicing apical surfaces.
+		if (isActinMimicing){
+			/** If the element is ShapeBase#isActinMimicing, then growth in the tissue height is ignored.
+             		*/
+			growth[2] = 0; //no z-growth in actin mimicing apical surfaces.
 		}
 		/** Then growth is scaled if there is any distribution of tissue volume in z axis, thourgh ShapeBase#scaleGrowthForZRedistribution.
          	*/
@@ -788,7 +786,7 @@ void 	ShapeBase::setTissuePlacement(const std::vector<std::unique_ptr<Node>>& No
 	 *  	- Basal:   ShapeBase#tissuePlacement = 0
 	 *  	- Mid-line or spans the whole tissue: ShapeBase#tissuePlacement = 2
 	 *  	- Lateral: ShapeBase#tissuePlacement = 3
-         *      - Apical bulk: ShapeBase#tissuePlacement = 4
+	 *  	- Apical bulk: ShapeBase#tissuePlacement = 4
 	 *
 	 *  The function will first decide which type of nodes the element is composed of.
 	 *
@@ -796,13 +794,14 @@ void 	ShapeBase::setTissuePlacement(const std::vector<std::unique_ptr<Node>>& No
 	bool hasApicalNode = false;
 	bool hasBasalNode = false;
 	bool hasLateralNode = false;
+	bool hasApicalBulkNode = false;
 	spansWholeTissue = false;
 	for (size_t i = 0; i<nNodes; ++i){
 		if (Nodes[NodeIds[i]]->tissuePlacement == 1){
 			hasApicalNode = true;
 		}
-                else if (Nodes[NodeIds[i]]->tissuePlacement == 4){
-                           hasApicalBulkNode = true;
+		else if (Nodes[NodeIds[i]]->tissuePlacement == 4){
+                        hasApicalBulkNode = true;
                 }
 		else if (Nodes[NodeIds[i]]->tissuePlacement == 0){
 			hasBasalNode = true;
@@ -850,18 +849,16 @@ void 	ShapeBase::setTissuePlacement(const std::vector<std::unique_ptr<Node>>& No
 		else{
 			/**
 			* If the element does not contain any lateral, apical or basal nodes, it must be that the
-                        * element is composed wholly of mid-line nodes or the apical bulk. So I will first check if it is in the apical bulk and if not, then the element lies in the mid-layer of
-			* tissue.
-			*
-                        */
-                    if (hasApicalBulkNode){
-                        //the element is in the apical bulk but not the very top layer where tissue placement is 1
-                        tissuePlacement = 4;
-                    }
-                    else {
-                        //the element has only mid-line nodes, it is mid-line
-                        tissuePlacement = 2;
-                    }
+			* element is composed wholly of mid-line nodes or the apical bulk.
+			*/
+			if (hasApicalBulkNode){
+				//the element is in the apical bulk but not the very top layer where tissue placement is 1
+				tissuePlacement = 4;
+			}			
+			else{
+				//the element has only mid-line nodes, it is mid-line
+				tissuePlacement = 2;
+			}
 		}
 	}
 }

@@ -484,7 +484,7 @@ void  Prism::setElasticProperties(double EApical, double EBasal, double EMid, do
 		if (tissuePlacement == 0 || atBasalBorderOfECM){
 			this -> E = EBasal;
 		}
-                else if(tissuePlacement == 1 || tissuePlacement == 4){
+		else if(tissuePlacement == 1 || tissuePlacement == 4){
 		/**
 		* If the element has an apical tissue placement (ShapeBase#tissuePlacement = 1), then 
 		* its stiffness will be set to \f$ E_{apical} \f$. \n
