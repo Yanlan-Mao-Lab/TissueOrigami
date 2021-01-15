@@ -98,12 +98,12 @@ std::array<size_t,2> YoungsModulusModifier::GetElementPosition(ShapeBase* currEl
 double YoungsModulusModifier::GetCurrentMultiplierChangeRate(const size_t CurrentRateGridIndex, const std::array<size_t,2> CurrElementXYGridIndices){
     //I know th index of the rate grids within the time series that I will use
     // I need the x&y for the current element, then I can return current rate.
-    size_t CurrElementXIndex = CurrElementXYGridIndices[1];
-    size_t CurrElementYIndex = CurrElementXYGridIndices[2];
-    return YoungsModulusChangeRateGrid[CurrentRateGridIndex][CurrElementXIndex][CurrElementYIndex];
+    size_t CurrElementXIndex = CurrElementXYGridIndices[0];
+    size_t CurrElementYIndex = CurrElementXYGridIndices[1];
+    return YoungsModulusChangeRateGrid[CurrentRateGridIndex][CurrElementYIndex][CurrElementXIndex];
 }
 
-void YoungsModulusModifier::UpdateStiffnessMultiplier(const double currTime, const double dt, ShapeBase* currElement){
+void YoungsModulusModifier::updateTimeSeriesStiffnessMultiplier(const double currTime, const double dt, ShapeBase* currElement){
     if (IsItApplicable(currElement)){
         cout<<"applicable to element "<<currElement->Id<<endl;
         bool ModificationApplicableAtThisTimepoint = calculateCurrentRateGridIndex(currTime);

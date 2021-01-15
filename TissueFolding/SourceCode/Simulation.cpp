@@ -848,7 +848,7 @@ void Simulation::checkForNodeBinding(){
 void Simulation::ApplyAllYoungsModulusModifiers(){
     for (const auto& currentYoungsModulusModifier : AllYoungsModulusModifiers){
         for(const auto& itElement: Elements){
-             currentYoungsModulusModifier->UpdateStiffnessMultiplier(currSimTimeSec, dt, itElement.get());
+             currentYoungsModulusModifier->updateTimeSeriesStiffnessMultiplier(currSimTimeSec, dt, itElement.get());
         }
     }
 }
