@@ -86,7 +86,7 @@ public:
 	void writeNodes2D(ofstream &nodesForGnuplot);
 	void addPeripodialNodesMirroringColumnar(ofstream& meshfile, int nPeripodialNodeNumber, int nSharedNodesAtCircumference, vector<double>& recordedNodesX, vector<double>& recordedNodesY, vector<double>& recordedNodesZ, double& currzHeight, double& dzHeight, double& ECMHeight, double actinHeight, double basalLayerHeight, bool addLateralECMRing);
 	void addPeripodialNodesFromTriangulation(ofstream& meshfile, int nPeripodialNodeNumber, int nSharedNodesAtCircumference, vector<double>& recordedNodesX, vector<double>& recordedNodesY, vector<double>& recordedNodesZ, double& currzHeight, double& dzHeight, double& ECMHeight, double actinHeight, double basalLayerHeight, bool addLateralECMRing);
-	void writeMeshFileForSimulation(double zHeight, int zLayers, double ECMHeight,double actinHeight, double modifiedZDueToThinActin, double basalLayerHeight, bool addLateralECMRing);
+        void writeMeshFileForSimulation(double zHeight, int zLayers, double ECMHeight,double actinHeight, double modifiedZDueToThinActin, double basalLayerHeight, bool addLateralECMRing, int tissueBulkzLayers, double modifiedZForTissueBulk);
 	void writeTissueWeights(ofstream& MeshFile, vector <double> &recordedPeripodialness);
 	void writeTriangleMeshFileForSimulation(double zHeight);
 	void addEquidistantRingMin();
@@ -1485,8 +1485,8 @@ void EllipseLayoutGenerator::addPeripodialNodesMirroringColumnar(ofstream& MeshF
 	}
 }
 
-void EllipseLayoutGenerator::writeMeshFileForSimulation(double zHeight, int zLayers, double ECMHeight,double actinHeight, double modifiedZDueToThinActin, double basalLayerHeight, bool addLateralECMRing){	
-	bool mirrorColumnarForPeripodial = false;
+void EllipseLayoutGenerator::writeMeshFileForSimulation(double zHeight, int zLayers, double ECMHeight,double actinHeight, double modifiedZDueToThinActin, double basalLayerHeight, bool addLateralECMRing, int tissueBulkzLayers, double modifiedZForTissueBulk){
+        bool mirrorColumnarForPeripodial = false;
 	vector <double> recordedNodesX, recordedNodesY, recordedNodesZ;
 	vector <double> recordedPeripodialness;
 	cout<<" Writing triangle file, size of points: "<<posx.size()<<" size of tissue shape: "<<tissueType.size()<<endl;
@@ -1545,59 +1545,58 @@ void EllipseLayoutGenerator::writeMeshFileForSimulation(double zHeight, int zLay
 		if (layers == 1) {
 			currzHeight = ECMHeight+basalLayerHeight;
 		}
-		int nodePositionIdentifier = 2; //0=basal. 1=apical, 2=midline
-		if (layers == zLayers-1){nodePositionIdentifier=1;}
-		for (int i=0;i<n;++i){
-            if (generatingSphere){
-                //calculate the normalised vector from origin to the base point I read from mesh,
-                //then make it the magnitude of current z:
-                //The vector must point towards the centre of the organoid, which is assumed to be
-                //at origin. The mesh I have is the basal layer.
-                double vec[3] = {-posx[i],-posy[i],-posz[i]};
-                double magVec = sqrt(vec[0]*vec[0] + vec[1]*vec[1] + vec[2]*vec[2]);
-                vec[0] = vec[0]/magVec*currzHeight; //normalise & bring length to currzHeight
-                vec[1] = vec[1]/magVec*currzHeight;
-                vec[2] = vec[2]/magVec*currzHeight;
-                //now the new node position should be moved from base position towards
-                //the core of the organoid
-                //the calculated vector
-                double currX = posx[i]+vec[0];
-                double currY = posy[i]+vec[1];
-                double currZ = posz[i]+vec[2];
-                recordedNodesX.push_back(currX);
-                recordedNodesY.push_back(currY);
-                recordedNodesZ.push_back(currZ);
-                MeshFile<<currX<<"	"<<currY<<"	"<<currZ<<"    "<<nodePositionIdentifier<<"	"<<tissueType[i]<<"	"<<atBorder[i]<<endl;
-
-            }
-            else if (generatingCylinder){
-                //calculating the normalised vector towards the axis of the tube.
-                //The axis of the tube is x-axis. So the normalised vector should be in y-z plane. x should not change.
-                double vec[3] = {-posx[i],-posy[i],-posz[i]};
-                double magVec = sqrt(vec[1]*vec[1] + vec[2]*vec[2]);
-                vec[1] = vec[1]/magVec*currzHeight;  //normalise & bring length to currzHeight
-                vec[2] = vec[2]/magVec*currzHeight;
-                //now the new node position should be moved from base position towards
-                //the core of the organoid
-                //the calculated vector
-                double currX = posx[i];
-                double currY = posy[i]+vec[1];
-                double currZ = posz[i]+vec[2];
-                recordedNodesX.push_back(currX);
-                recordedNodesY.push_back(currY);
-                recordedNodesZ.push_back(currZ);
-                MeshFile<<currX<<"	"<<currY<<"	"<<currZ<<"    "<<nodePositionIdentifier<<"	"<<tissueType[i]<<"	"<<atBorder[i]<<endl;
-            }
-            else{
-                MeshFile<<posx[i]<<"	"<<posy[i]<<"	"<<currzHeight<<"    "<<nodePositionIdentifier<<"	"<<tissueType[i]<<"	"<<atBorder[i]<<endl;
-                recordedNodesX.push_back(posx[i]);
-                recordedNodesY.push_back(posy[i]);
-                recordedNodesZ.push_back(currzHeight);
-            }
-
-		}
-		if (layers == zLayers-2){
-			currzHeight += actinHeight;		
+                int nodePositionIdentifier = 2; //0=basal. 1=apical, 2=midline
+                if (layers > zLayers-tissueBulkzLayers-1){nodePositionIdentifier=4;}
+                if (layers == zLayers-1){nodePositionIdentifier=1;}
+                for (int i=0;i<n;++i){
+                    if (generatingSphere){
+                        //calculate the normalised vector from origin to the base point I read from mesh,
+                        //then make it the magnitude of current z:
+                        //The vector must point towards the centre of the organoid, which is assumed to be
+                        //at origin. The mesh I have is the basal layer.
+                        double vec[3] = {-posx[i],-posy[i],-posz[i]};
+                        double magVec = sqrt(vec[0]*vec[0] + vec[1]*vec[1] + vec[2]*vec[2]);
+                        vec[0] = vec[0]/magVec*currzHeight; //normalise & bring length to currzHeight
+                        vec[1] = vec[1]/magVec*currzHeight;
+                        vec[2] = vec[2]/magVec*currzHeight;
+                        //now the new node position should be moved from base position towards
+                        //the core of the organoid
+                        //the calculated vector
+                        double currX = posx[i]+vec[0];
+                        double currY = posy[i]+vec[1];
+                        double currZ = posz[i]+vec[2];
+                        recordedNodesX.push_back(currX);
+                        recordedNodesY.push_back(currY);
+                        recordedNodesZ.push_back(currZ);
+                        MeshFile<<currX<<"	"<<currY<<"	"<<currZ<<"    "<<nodePositionIdentifier<<"	"<<tissueType[i]<<"	"<<atBorder[i]<<endl;
+                    }
+                    else if (generatingCylinder){
+                        //calculating the normalised vector towards the axis of the tube.
+                        //The axis of the tube is x-axis. So the normalised vector should be in y-z plane. x should not change.
+                        double vec[3] = {-posx[i],-posy[i],-posz[i]};
+                        double magVec = sqrt(vec[1]*vec[1] + vec[2]*vec[2]);
+                        vec[1] = vec[1]/magVec*currzHeight;  //normalise & bring length to currzHeight
+                        vec[2] = vec[2]/magVec*currzHeight;
+                        //now the new node position should be moved from base position towards
+                        //the core of the organoid
+                        //the calculated vector
+                        double currX = posx[i];
+                        double currY = posy[i]+vec[1];
+                        double currZ = posz[i]+vec[2];
+                        recordedNodesX.push_back(currX);
+                        recordedNodesY.push_back(currY);
+                        recordedNodesZ.push_back(currZ);
+                        MeshFile<<currX<<"	"<<currY<<"	"<<currZ<<"    "<<nodePositionIdentifier<<"	"<<tissueType[i]<<"	"<<atBorder[i]<<endl;
+                    }
+                    else{
+                        MeshFile<<posx[i]<<"	"<<posy[i]<<"	"<<currzHeight<<"    "<<nodePositionIdentifier<<"	"<<tissueType[i]<<"	"<<atBorder[i]<<endl;
+                        recordedNodesX.push_back(posx[i]);
+                        recordedNodesY.push_back(posy[i]);
+                        recordedNodesZ.push_back(currzHeight);
+                    }
+                }
+                if (layers > zLayers-tissueBulkzLayers-2){
+                        currzHeight += modifiedZForTissueBulk;
 		}
 		else{
 			currzHeight += modifiedZDueToThinActin;
@@ -2565,16 +2564,23 @@ bool readinputs (int argc, char **argv, double* parameters, ifstream& inputOutli
             cerr<<"parameters[0]:"<<parameters[0]<<"  Please give the input file path for the outline"<<endl;
             return 0;
         }
-	}
-	else{
-        if(parameters[0] == 0 || parameters[0] == 1){
-            const char* inpstring = argv[offset+4];
-            inputOutline.open(inpstring,ifstream::in);
-            if (!inputOutline.good() || !inputOutline.is_open()){
-                cerr<<"input outline cannot be opened: "<<inpstring<<endl;
-                return 0;
-            }
+        else if (parameters[0] == -1){
+            cerr<<"Please give the number of layers in z for the tissue bulk"<<endl;
         }
+	}
+        else{
+           if(parameters[0] == 0 || parameters[0] == 1){
+                const char* inpstring = argv[offset+4];
+                inputOutline.open(inpstring,ifstream::in);
+                if (!inputOutline.good() || !inputOutline.is_open()){
+                    cerr<<"input outline cannot be opened: "<<inpstring<<endl;
+                    return 0;
+                }
+            }
+            else if(parameters[0] == -1) {
+                const char* inpstring = argv[offset+4];
+                parameters[9] = atof(inpstring);
+            }
 	}
 	return 1;
 }
@@ -2590,6 +2596,7 @@ void printOutSystemSetup(double * parameters){
 	cerr<<"	sideLength : "<<parameters[6]<<endl;
 	cerr<<"	ABLayers   : "<<parameters[7]<<endl;
 	cerr<<"	symmetricY : "<<parameters[8]<<endl;
+        cerr<<"	tissueBulkLayers : "<<parameters[9]<<endl;
 }
 
 void readInOutline(vector <float>& x, vector <float>&y, ifstream& inputOutline){
@@ -2621,10 +2628,12 @@ int main(int argc, char **argv)
 	double 	ABHeight;
 	double 	sideLength;
 	int    	ABLayers;
+        int     tissueBulkLayers;
 	double  ECMHeight = -1.0;
 	double	actinHeight = -1.0;
 	double  basalLayerHeight = -1.0;
 	double  modifiedZDueToThinActin = 1;
+        double  modifiedZForTissueBulk = 1;
 	bool 	symmetricY = false;
 	bool 	symmetricX = false;
 
@@ -2695,11 +2704,12 @@ int main(int argc, char **argv)
 			modifiedZDueToThinActin  = ABHeight/ABLayers;
 		}
 		if (parameters[8] == 1 ){ 		
-                        symmetricY = false;
+                        symmetricY = true;
 		}
 		else{
 			symmetricY = false;
 		}
+                tissueBulkLayers = parameters[9];
 	}
 	EllipseLayoutGenerator Lay01(DVRadius[0],DVRadius[1], APRadius[0], APRadius[1], sideLength, symmetricX, symmetricY, 0.9);
         bool addPeripodial = false; //this is false by default and over-written in selectTissueType below
@@ -2932,7 +2942,7 @@ int main(int argc, char **argv)
         }
         else if(selectTissueType == 7){ // 1: ECM mimicing wing disc 48 hr, THIS WILL BE THE ONE TO USE 90% OF THE TIME!
                     cout<<" in loop for tissue type(1) : "<<selectTissueType<<endl;
-            actinHeight = 15.12;  //these are the values used in paper: 2.0 for actin layer
+            actinHeight = 45.36;  //these are the values used in paper: 2.0 for actin layer
             ECMHeight = 1.45;    //these are the values used in paper: 0.2 for ECM
                     addPeripodial = false;
                     //peripodialHeightFrac is not used.
@@ -2950,7 +2960,7 @@ int main(int argc, char **argv)
                             cout<<" if clause 1,  modifiedZDueToThinActin: "<<modifiedZDueToThinActin<<endl;
                     }
                     else{
-                            double denominator = (ABLayers-3);
+                            double denominator = (ABLayers-tissueBulkLayers-2);
                             bool correctECM = false;
                             bool correctBasal = false;
                             bool correctActin = false;
@@ -2962,10 +2972,13 @@ int main(int argc, char **argv)
                             if (correctBasal){basalLayerHeight= modifiedZDueToThinActin;}
                             if (correctActin){actinHeight= modifiedZDueToThinActin;}
                             //modifiedZDueToThinActin = (ABHeight - ECMHeight - actinHeight -basalLayerHeight)/ (ABLayers-3);
+                            cout<<"actinHeight"<<actinHeight<<" ECMHeight"<<ECMHeight<<endl;
                             cout<<" if clause 3,  modifiedZDueToThinActin: "<<modifiedZDueToThinActin<<endl;
                     }
+                    modifiedZForTissueBulk = (actinHeight)/tissueBulkLayers;
+                    cout<<"modified Z ForTissueBulk"<<modifiedZForTissueBulk<<endl;
                     peripodialSideCurveFrac = (modifiedZDueToThinActin + 5.52) /ABHeight ;
-                    Lay01.symmetricY = false;
+                    Lay01.symmetricY = symmetricY;
                     Lay01.symmetricX = false;
                     cout<<"peripodialSideCurveFrac: "<<peripodialSideCurveFrac<<" ABHeight: "<<ABHeight<<" modifiedZDueToThinActin: "<<modifiedZDueToThinActin<<endl;
             }
@@ -3001,7 +3014,7 @@ int main(int argc, char **argv)
 		Lay01.peripodialReadInTesselation2D();
 	}
 	Lay01.calculateAverageSideLength();
-	Lay01.writeMeshFileForSimulation(ABHeight,ABLayers,ECMHeight,actinHeight,modifiedZDueToThinActin,basalLayerHeight, addLateralECMRing);	
+        Lay01.writeMeshFileForSimulation(ABHeight,ABLayers,ECMHeight,actinHeight,modifiedZDueToThinActin,basalLayerHeight, addLateralECMRing,tissueBulkLayers,modifiedZForTissueBulk);
 	//output the points for plotting:
 	int n=Lay01.posx.size();	
 	//cerr<<"r1: "<<Lay01.r1[0]<<" "<<Lay01.r1[1]<<" r2: "<<Lay01.r2[0]<<" "<<Lay01.r2[1]<<endl;
