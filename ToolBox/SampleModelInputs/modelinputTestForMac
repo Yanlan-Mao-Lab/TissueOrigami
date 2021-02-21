@@ -6,14 +6,14 @@ TypeOfCoordinateSystem:
   
 InputMeshParameters:
   MeshInputMode(int-seeDocumentation): 4
-  MeshFile(full-path): /Users/nkhalilgharibi/TissueFoldingProject/TissueFoldingForked/TissueFolding/ToolBox/MeshGeneration/2DEllipse/MeshFile.out
-  symmetricInX(bool): 0
+  MeshFile(full-path): /Users/nkhalilgharibi/TissueFoldingProject/TissueFoldingForked/TissueFolding/ToolBox/MeshGeneration/2DEllipse/thickRectangleTissue_fineMesh_1period_symmetricY_posCoord.mesh
+  symmetricInX(bool): 1
   symmetricInY(bool): 1
   symmetricInZ(bool): 0
  
 TimeParameters:
   TimeStep(sec): 300
-  SimulationLength(sec): 0
+  SimulationLength(sec): 57600
   
 SaveOptions:
   SaveImages(bool): 1
@@ -48,11 +48,11 @@ YoungsModulusTimeseriesGrids:
   applyToBasalLayer(bool): 1
   applyToPeripodialECM(bool): 0
   applyToColumnarECM(bool): 0
-  Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/TissueFoldingForked/TissueFolding/ToolBox/StiffnessTimeSeries/StiffnessFolding_t0
+  Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/TissueFoldingForked/TissueFolding/ToolBox/StiffnessTimeSeries/StiffnessFolding_1period_10rows_t0
   WhenToApplyInput(sec): 0
-  Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/TissueFoldingForked/TissueFolding/ToolBox/StiffnessTimeSeries/StiffnessFolding_t1
+  Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/TissueFoldingForked/TissueFolding/ToolBox/StiffnessTimeSeries/StiffnessFolding_1period_10rows_t1
   WhenToApplyInput(sec): 28800
-  Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/TissueFoldingForked/TissueFolding/ToolBox/StiffnessTimeSeries/StiffnessFolding_t2
+  Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/TissueFoldingForked/TissueFolding/ToolBox/StiffnessTimeSeries/StiffnessFolding_1period_10rows_t2
   WhenToApplyInput(sec): 57600
 
 PysicalProperties:
