@@ -839,8 +839,8 @@ bool ModelInputObject::readGrowthType3(ifstream& file){
 	/**
 	 * The normalised z range of a grid based growth function defined to which height of the tissue the growth function should be applied in.
 	 * Note that this is on top of the booleans specifying which components of the tissue the growth function will be applied to.
-	 * The z starts from the basal surface of columnar (z=0 is basal columnar surface) and z=1.0 is either the apical surface of the columnar layer
-	 * or the basal surface of the peripodial layer (if there is one).
+         * In the code, the z starts from the basal surface of columnar. However, the zRange that is reported here is the relative z and is starts from top, so z=1.0 for basal columnar surface and z=0.0 is either the apical surface of the columnar layer
+         * or the basal surface of the peripodial layer (if there is one).
 	 */
 	double zMin, zMax;
 	file >> currHeader;

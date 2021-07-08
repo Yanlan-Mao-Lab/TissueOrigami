@@ -6,20 +6,20 @@ TypeOfCoordinateSystem:
   
 InputMeshParameters:
   MeshInputMode(int-seeDocumentation): 4
-  MeshFile(full-path): /Users/nkhalilgharibi/TissueFoldingProject/TissueFoldingForked/TissueFolding/ToolBox/MeshGeneration/2DEllipse/thickRectangleTissue_smallMesh.mesh
+  MeshFile(full-path): /Users/nkhalilgharibi/TissueFoldingProject/TissueFoldingForked/TissueFolding/ToolBox/MeshGeneration/2DEllipse/96hrRectangleWing_SmallMesh_posCoord.mesh
   symmetricInX(bool): 0
-  symmetricInY(bool): 1
+  symmetricInY(bool): 0
   symmetricInZ(bool): 0
  
 TimeParameters:
-  TimeStep(sec): 300
-  SimulationLength(sec): 0
+  TimeStep(sec): 60
+  SimulationLength(sec): 3600
   
 SaveOptions:
   SaveImages(bool): 1
   SaveData(bool):   1
   ImageSaveInterval(sec): 1
-  DataSaveInterval(sec):  900
+  DataSaveInterval(sec):  60
   
 NodeFixingOptions:
   FixingViscosity(x,y,z): 0   0  32000
@@ -39,21 +39,19 @@ NodeBindingOptions:
 YoungsModulusTimeseriesGrids:
   noTimeseriesInputs(size_t): 1
 
-  TimePointNoInput(size_t): 3
+  TimePointNoInput(size_t): 2
   YoungsModulusMultiplierChangeRateIsLinearInput(bool): 0
   applyToColumnarLayer(bool): 1
   applyToPeripodialMembrane(bool): 0
   applyToApicalLayer(bool): 0
-  applyToMidLayer(bool): 1
-  applyToBasalLayer(bool): 1
+  applyToMidLayer(bool): 0
+  applyToBasalLayer(bool): 0
   applyToPeripodialECM(bool): 0
-  applyToColumnarECM(bool): 0
-  Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/TissueFoldingForked/TissueFolding/ToolBox/StiffnessTimeSeries/StiffnessFolding_3periods_10rows_t0
+  applyToColumnarECM(bool): 1
+  Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/TissueFoldingForked/TissueFolding/ToolBox/StiffnessTimeSeries/Stiffness96hrRectangleWing_Reduction_0
   WhenToApplyInput(sec): 0
-  Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/TissueFoldingForked/TissueFolding/ToolBox/StiffnessTimeSeries/StiffnessFolding_3periods_10rows_t1
-  WhenToApplyInput(sec): 28800
-  Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/TissueFoldingForked/TissueFolding/ToolBox/StiffnessTimeSeries/StiffnessFolding_3periods_10rows_t2
-  WhenToApplyInput(sec): 57600
+  Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/TissueFoldingForked/TissueFolding/ToolBox/StiffnessTimeSeries/Stiffness96hrRectangleWing_Reduction_4
+  WhenToApplyInput(sec): 900
 
 PysicalProperties:
   YoungsModulusApical: 37.49	YoungsModulusBasal: 37.49	YoungsModulusMid: 37.49	Noise(%-int): 0

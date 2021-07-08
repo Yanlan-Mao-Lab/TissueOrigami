@@ -471,9 +471,7 @@ void ShapeBase::calculateFgFromRates(double dt, double x, double y, double z, gs
                 /**
                  * If the element is ShapeBase#isActinMimicing, then growth in the tissue height is ignored.
                  */
-                x = 0; //no x-growth in actin mimicing apical surfaces (or tissue bulk). This line was added for Katie's version.
-                y = 0; //no y-growth in actin mimicing apical surfaces (or tissue bulk). This line was added for Katie's version.
-                z = 0; //no z-growth in actin mimicing apical surfaces (or tissue bulk). This line was added for Katie's version.
+                z = 0; //no z-growth in actin mimicing apical surfaces.
             }
 		scaleGrowthForZRedistribution(x,y,z);
 		double gx = exp(x*tissueWeight*dt);
