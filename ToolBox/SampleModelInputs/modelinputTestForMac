@@ -50,7 +50,7 @@ YoungsModulusTimeseriesGrids:
   applyToColumnarECM(bool): 1
   Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/TissueFoldingForked/TissueFolding/ToolBox/StiffnessTimeSeries/Stiffness96hrRectangleWing_Reduction_0
   WhenToApplyInput(sec): 0
-  Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/TissueFoldingForked/TissueFolding/ToolBox/StiffnessTimeSeries/Stiffness96hrRectangleWing_Reduction_4
+  Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/TissueFoldingForked/TissueFolding/ToolBox/StiffnessTimeSeries/Stiffness96hrRectangleWing_Reduction_6
   WhenToApplyInput(sec): 900
 
 PysicalProperties:
@@ -72,7 +72,7 @@ ExternalViscositySetup:
 
 GrowthOptions:
   NumberofGrowthFunctions(int): 10
-  GridGrowthsPinnedOnInitialMesh(bool): 1 
+  GridGrowthsPinnedOnInitialMesh(bool): 0 
   PinningUpdateTimes(number-times(sec)):  4 7200 10800 18000 36000
   GridGrowthsInterpolationType(0=step,1=linear): 1
 

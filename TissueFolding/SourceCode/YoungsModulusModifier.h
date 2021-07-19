@@ -18,7 +18,7 @@ public:
     size_t nGridY;
     size_t CurrentRateGridIndex;
 
-    std::array<size_t,2> CurrElementXYGridIndices;
+    std::array<double,4> CurrElementXYGridIndices;
 
     std::vector<double> CurrentStepYoungsModulusGrid;
     std::vector<double> NextStepYoungsModulusGrid;
@@ -30,8 +30,8 @@ public:
     void CalculateYoungsModulusChangeRate();                                                                                                      ///< this function calculates the Young's modulus change rate from the input time-series grid.
     bool calculateCurrentRateGridIndex(const double currTime);                                                                                    ///<this function gets the current time as input and calculates which grid of the timeseries grid to use.
     bool IsItApplicable(const ShapeBase* currElement);                                                                                            ///< this function gets the element and decides whether the change in the Young's modulus is applicable to it.
-    std::array<size_t,2> GetElementPosition(ShapeBase* currElement);                                                                              ///< this function takes the size of the grid as input and calculates the element position on the grid.
-    double GetCurrentMultiplierChangeRate(const size_t CurrentRateGridIndex, const std::array<size_t,2> CurrElementXYGridIndices);                ///< this function gets the current time index and the position of the element, looks through the timeseries multiplier rate grid and finds the multiplier change rate that is applicable to the element.
+    std::array<double,4> GetElementPosition(ShapeBase* currElement);                                                                              ///< this function takes the size of the grid as input and calculates the element position on the grid.
+    double GetCurrentMultiplierChangeRate(const size_t CurrentRateGridIndex, const std::array<double,4> CurrElementXYGridIndices);                ///< this function gets the current time index and the position of the element, looks through the timeseries multiplier rate grid and finds the multiplier change rate that is applicable to the element.
     void updateTimeSeriesStiffnessMultiplier(const double currTime, const double dt, ShapeBase* currElement);                                               ///< this function calculates the updated value of the element multiplier.
 };
 
