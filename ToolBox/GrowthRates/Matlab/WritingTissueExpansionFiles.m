@@ -113,9 +113,72 @@
 %     fclose(fileID)
 %     
 % end
+% %% Creating growth/shape change rate input for Lola's project
+% noFiles=5; % number of timepoints (e.g. if the user wants to input 5 growth maps, noTimePoints=5)
+% noColumns=33;    % number of columns in the expansion grid file. For each square on the expansion rate grid, we need three values (i.e. expansion rate in x, y, z).
+% noRows=4;  % number of rows in the expansion grid file
+% 
+% % Defining the grids where data will be stored temporarily
+% growth_mag_XY=zeros(noRows,noColumns);   % growth magnitude in xy
+% growth_mag_Z=zeros(noRows,noColumns);   % growth magntude in z
+% growth_ori_XY=zeros(noRows,noColumns/3);   % growth orientation in xy, noColumns is 1/3 of the growth magnitude because we don't need x,y,z
+% growth_ori_Z=zeros(noRows,noColumns/3);   % growth orientation in z, noColumns is 1/3 of the growth magnitude because we don't need x,y,z
+% 
+% 
+% % For expansion rates, we need to make two matrices, one for magnitude and
+% % one for orientation. Since for the case of brain folding, we don't have y
+% % growth, we either have orientations as 0 or 180 degrees of x or z axis.
+% % So I will first create the magnitude matrix. Then find the ones with
+% % negative values, set the orientation of those to 180. And then make all
+% % values in the magnitude matrix positive.
+% for fileID=1:noFiles
+%     for i=5:7
+%         growth_mag_XY(:,(i-1)*3+1)= -(fileID-1)*0.25;
+%         growth_mag_XY(:,(i-1)*3+2)= -(fileID-1)*0.25;
+%         growth_mag_XY(:,(i-1)*3+3)= 0;
+%         
+%         growth_mag_Z(:,(i-1)*3+1)= 0;
+%         growth_mag_Z(:,(i-1)*3+2)= 0;
+%         growth_mag_Z(:,(i-1)*3+3)= -(fileID-1)*0.25;
+%     end
+%         
+%     growth_ori_XY(:,5:7)=45;
+%     
+%     filename=sprintf('ShapeChangeRate96hrRectangleWingXY_Reduction_%d',fileID-1);
+%     filename = fopen(filename,'w');
+%     fprintf(filename,'%d %d \n',[noColumns/3,noRows]);  % number of columns and rows in the grid matrix
+%     % writing growth magnitude in x
+%     for i=1:noRows
+%         fprintf(filename,'%f ',growth_mag_XY(i,:));
+%         fprintf(filename,'\n');
+%     end
+%     % writing growth orientation in x
+%     for i=1:noRows
+%         fprintf(filename,'%d ',growth_ori_XY(i,:));
+%         fprintf(filename,'\n');
+%     end
+%     fclose(filename)
+%     
+%     filename=sprintf('ShapeChangeRate96hrRectangleWingZ_Reduction_%d',fileID-1);
+%     filename = fopen(filename,'w');
+%     fprintf(filename,'%d %d \n',[noColumns/3,noRows]);  % number of columns and rows in the grid matrix
+%     % writing growth magnitude in z
+%     for i=1:noRows
+%         fprintf(filename,'%f ',growth_mag_Z(i,:));
+%         fprintf(filename,'\n');
+%     end
+%     % writing growth orientation in z
+%     for i=1:noRows
+%         fprintf(filename,'%d ',growth_ori_Z(i,:));
+%         fprintf(filename,'\n');
+%     end
+%     fclose(filename)
+%     
+% end
 %% Creating growth/shape change rate input for Lola's project
 noFiles=5; % number of timepoints (e.g. if the user wants to input 5 growth maps, noTimePoints=5)
-noColumns=33;    % number of columns in the expansion grid file. For each square on the expansion rate grid, we need three values (i.e. expansion rate in x, y, z).
+noColumns=165;    % number of columns in the expansion grid file. For each square on the expansion rate grid, we need three values (i.e. expansion rate in x, y, z).
+midColumn=ceil(((noColumns)/3)/2);
 noRows=4;  % number of rows in the expansion grid file
 
 % Defining the grids where data will be stored temporarily
@@ -132,7 +195,7 @@ growth_ori_Z=zeros(noRows,noColumns/3);   % growth orientation in z, noColumns i
 % negative values, set the orientation of those to 180. And then make all
 % values in the magnitude matrix positive.
 for fileID=1:noFiles
-    for i=5:7
+    for i=midColumn-1:midColumn+1
         growth_mag_XY(:,(i-1)*3+1)= -(fileID-1)*0.25;
         growth_mag_XY(:,(i-1)*3+2)= -(fileID-1)*0.25;
         growth_mag_XY(:,(i-1)*3+3)= 0;
@@ -142,9 +205,9 @@ for fileID=1:noFiles
         growth_mag_Z(:,(i-1)*3+3)= -(fileID-1)*0.25;
     end
         
-    growth_ori_XY(:,5:7)=45;
+    %growth_ori_XY(:,midColumn-1:midColumn+1)=45;
     
-    filename=sprintf('ShapeChangeRate96hrRectangleWingXY_Reduction_%d',fileID-1);
+    filename=sprintf('ShapeChangeRate96hrRectangleWingXY_FineGrid_Reduction_%d',fileID-1);
     filename = fopen(filename,'w');
     fprintf(filename,'%d %d \n',[noColumns/3,noRows]);  % number of columns and rows in the grid matrix
     % writing growth magnitude in x
@@ -159,7 +222,70 @@ for fileID=1:noFiles
     end
     fclose(filename)
     
-    filename=sprintf('ShapeChangeRate96hrRectangleWingZ_Reduction_%d',fileID-1);
+    filename=sprintf('ShapeChangeRate96hrRectangleWingZ_FineGrid_Reduction_%d',fileID-1);
+    filename = fopen(filename,'w');
+    fprintf(filename,'%d %d \n',[noColumns/3,noRows]);  % number of columns and rows in the grid matrix
+    % writing growth magnitude in z
+    for i=1:noRows
+        fprintf(filename,'%f ',growth_mag_Z(i,:));
+        fprintf(filename,'\n');
+    end
+    % writing growth orientation in z
+    for i=1:noRows
+        fprintf(filename,'%d ',growth_ori_Z(i,:));
+        fprintf(filename,'\n');
+    end
+    fclose(filename)
+    
+end
+%% Creating growth/shape change rate input for Lola's project
+noFiles=5; % number of timepoints (e.g. if the user wants to input 5 growth maps, noTimePoints=5)
+noColumns=330;    % number of columns in the expansion grid file. For each square on the expansion rate grid, we need three values (i.e. expansion rate in x, y, z).
+midColumn=ceil(((noColumns)/3)/2);
+noRows=4;  % number of rows in the expansion grid file
+
+% Defining the grids where data will be stored temporarily
+growth_mag_XY=zeros(noRows,noColumns);   % growth magnitude in xy
+growth_mag_Z=zeros(noRows,noColumns);   % growth magntude in z
+growth_ori_XY=zeros(noRows,noColumns/3);   % growth orientation in xy, noColumns is 1/3 of the growth magnitude because we don't need x,y,z
+growth_ori_Z=zeros(noRows,noColumns/3);   % growth orientation in z, noColumns is 1/3 of the growth magnitude because we don't need x,y,z
+
+
+% For expansion rates, we need to make two matrices, one for magnitude and
+% one for orientation. Since for the case of brain folding, we don't have y
+% growth, we either have orientations as 0 or 180 degrees of x or z axis.
+% So I will first create the magnitude matrix. Then find the ones with
+% negative values, set the orientation of those to 180. And then make all
+% values in the magnitude matrix positive.
+for fileID=1:noFiles
+    for i=midColumn-1:midColumn+1
+        growth_mag_XY(:,(i-1)*3+1)= -(fileID-1)*0.25;
+        growth_mag_XY(:,(i-1)*3+2)= -(fileID-1)*0.25;
+        growth_mag_XY(:,(i-1)*3+3)= 0;
+        
+        growth_mag_Z(:,(i-1)*3+1)= 0;
+        growth_mag_Z(:,(i-1)*3+2)= 0;
+        growth_mag_Z(:,(i-1)*3+3)= -(fileID-1)*0.25;
+    end
+        
+    %growth_ori_XY(:,midColumn-1:midColumn+1)=45;
+    
+    filename=sprintf('ShapeChangeRate96hrRectangleWingXY_VeryFineGrid_Reduction_%d',fileID-1);
+    filename = fopen(filename,'w');
+    fprintf(filename,'%d %d \n',[noColumns/3,noRows]);  % number of columns and rows in the grid matrix
+    % writing growth magnitude in x
+    for i=1:noRows
+        fprintf(filename,'%f ',growth_mag_XY(i,:));
+        fprintf(filename,'\n');
+    end
+    % writing growth orientation in x
+    for i=1:noRows
+        fprintf(filename,'%d ',growth_ori_XY(i,:));
+        fprintf(filename,'\n');
+    end
+    fclose(filename)
+    
+    filename=sprintf('ShapeChangeRate96hrRectangleWingZ_VeryFineGrid_Reduction_%d',fileID-1);
     filename = fopen(filename,'w');
     fprintf(filename,'%d %d \n',[noColumns/3,noRows]);  % number of columns and rows in the grid matrix
     % writing growth magnitude in z

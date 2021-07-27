@@ -1854,6 +1854,7 @@ bool ModelInputObject::readYoungsModulusTimeseriesGrids(ifstream& file){
     for (size_t i=0;i<noTimeseriesInputs;++i){
         size_t TimePointNoInput;
         bool YoungsModulusMultiplierChangeRateIsLinearInput;
+        int YoungsModulusRateChangeApplicationMethodInput;
         std::array<bool,7> WhereToApplyInput;
         std::vector<double> WhenToApplyInput;
         std::vector<std::string> nameListInput;
@@ -1873,6 +1874,15 @@ bool ModelInputObject::readYoungsModulusTimeseriesGrids(ifstream& file){
         }
         else{
             printErrorMessage(currHeader,"readYoungsModulusTimeseriesGrids","YoungsModulusMultiplierChangeRateIsLinearInput(bool):");
+            return false;
+        }
+        
+        file >> currHeader;
+        if(currHeader == "YoungsModulusRateChangeApplicationMethodInput(int):"){
+            file >> YoungsModulusRateChangeApplicationMethodInput;
+        }
+        else{
+            printErrorMessage(currHeader,"readYoungsModulusTimeseriesGrids","YoungsModulusRateChangeApplicationMethodInput(int):");
             return false;
         }
 
@@ -1976,7 +1986,7 @@ bool ModelInputObject::readYoungsModulusTimeseriesGrids(ifstream& file){
                 return false;
             }
         }
-       std::unique_ptr<YoungsModulusModifier> ym01 = std::make_unique<YoungsModulusModifier>(TimePointNoInput,nameListInput,WhenToApplyInput,WhereToApplyInput,YoungsModulusMultiplierChangeRateIsLinearInput);
+       std::unique_ptr<YoungsModulusModifier> ym01 = std::make_unique<YoungsModulusModifier>(TimePointNoInput,nameListInput,WhenToApplyInput,WhereToApplyInput,YoungsModulusMultiplierChangeRateIsLinearInput,YoungsModulusRateChangeApplicationMethodInput);
        Sim->AllYoungsModulusModifiers.push_back(std::move(ym01));
     }
     return true;

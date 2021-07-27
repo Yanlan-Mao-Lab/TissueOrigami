@@ -3,10 +3,11 @@
 #include "Simulation.h"
 #include <memory>
 
-YoungsModulusModifier::YoungsModulusModifier(size_t TimePointNoInput,const std::vector<std::string>& nameListInput, const std::vector<double>& WhenToApplyInput, const std::array<bool,7>& WhereToApplyInput, const bool YoungsModulusMultiplierChangeRateIsLinearInput) : TimeSeriesPhysicalProperties(TimePointNoInput,nameListInput, WhenToApplyInput, WhereToApplyInput)
+YoungsModulusModifier::YoungsModulusModifier(size_t TimePointNoInput,const std::vector<std::string>& nameListInput, const std::vector<double>& WhenToApplyInput, const std::array<bool,7>& WhereToApplyInput, const bool YoungsModulusMultiplierChangeRateIsLinearInput, const int YoungsModulusRateChangeApplicationMethodInput) : TimeSeriesPhysicalProperties(TimePointNoInput,nameListInput, WhenToApplyInput, WhereToApplyInput)
 {
     YoungsModulusMultiplierChangeRateIsLinear = YoungsModulusMultiplierChangeRateIsLinearInput;
-
+    YoungsModulusRateChangeApplicationMethod = YoungsModulusRateChangeApplicationMethodInput;
+    
     CalculateYoungsModulusChangeRate();
 }
 
@@ -48,7 +49,7 @@ bool YoungsModulusModifier::calculateCurrentRateGridIndex(const double currTime)
     }
     else{
         for(size_t i =0; i<TimePointNo-1;++i){
-            if (currTime>=TimeToApplyTimeSeriesGrid[i] && currTime<=TimeToApplyTimeSeriesGrid[i+1]){
+            if (currTime>=TimeToApplyTimeSeriesGrid[i] && currTime<TimeToApplyTimeSeriesGrid[i+1]){
                 CurrentRateGridIndex=i;
                 FoundCurrentRateGridIndex = true;
                 break;
@@ -110,26 +111,43 @@ double YoungsModulusModifier::GetCurrentMultiplierChangeRate(const size_t Curren
     double CurrElementYIndex = CurrElementXYGridIndices[1];
     double CurrElementFracX = CurrElementXYGridIndices[2];
     double CurrElementFracY = CurrElementXYGridIndices[3];
-    //std::cout<<"Im in GetCurrentMultiplierChangeRate and curreElementXYGridIndices are"<<CurrentRateGridIndex<<" "<<CurrElementXYGridIndices[0]<<" "<<CurrElementXYGridIndices[1]<<" "<<CurrElementXYGridIndices[2]<<" "<<CurrElementXYGridIndices[3]<<std::endl;
-    //std::cout<<"My YoungsModlulsChangeRateGrid is"<<YoungsModulusChangeRateGrid[CurrentRateGridIndex][CurrElementYIndex][CurrElementXIndex]<<std::endl;
     
-    
-    //taking growth data around 4 grid points
-    double* YoungsModulusChangeRateNeighbours = new double[4];
-    
-    double outputYoungsModulusChangeRate;
-
+    //taking rate data around 4 grid points.
+    double YoungsModulusChangeRateNeighbours[4];
     YoungsModulusChangeRateNeighbours[0]=YoungsModulusChangeRateGrid[CurrentRateGridIndex][CurrElementYIndex][CurrElementXIndex];
     YoungsModulusChangeRateNeighbours[1]=YoungsModulusChangeRateGrid[CurrentRateGridIndex][CurrElementYIndex][CurrElementXIndex+1];
     YoungsModulusChangeRateNeighbours[2]=YoungsModulusChangeRateGrid[CurrentRateGridIndex][CurrElementYIndex+1][CurrElementXIndex];
     YoungsModulusChangeRateNeighbours[3]=YoungsModulusChangeRateGrid[CurrentRateGridIndex][CurrElementYIndex+1][CurrElementXIndex+1];
     
-    outputYoungsModulusChangeRate=(1-CurrElementFracX)*(1-CurrElementFracY)*YoungsModulusChangeRateNeighbours[0]
-            +CurrElementFracX*(1-CurrElementFracY)*YoungsModulusChangeRateNeighbours[1]
-            +(1-CurrElementFracX)*CurrElementFracY*YoungsModulusChangeRateNeighbours[2]
-            +CurrElementFracX*CurrElementFracY*YoungsModulusChangeRateNeighbours[3];
-    // return YoungsModulusChangeRateGrid[CurrentRateGridIndex][CurrElementYIndex][CurrElementXIndex];
-    //std::cout<<"nGridX is "<<nGridX<<" and nGridY is "<<nGridY<<" and currElementFracX is "<<CurrElementFracX<<"and CurrElementFracY is "<<CurrElementFracY<<"CurrElementXIndex is "<<CurrElementXIndex<<"and CurrElementYIndex is "<<CurrElementYIndex<<std::endl;
+    double outputYoungsModulusChangeRate;
+    
+    if (YoungsModulusRateChangeApplicationMethod==0){
+        //rate of the nearest neighbour is assigned to the element
+        if (CurrElementFracX > 0.5){
+            if (CurrElementFracY > 0.5){
+                outputYoungsModulusChangeRate = YoungsModulusChangeRateNeighbours[3];
+            }
+            else {
+                outputYoungsModulusChangeRate = YoungsModulusChangeRateNeighbours[1];
+            }
+        }
+        else {
+            if (CurrElementFracY > 0.5){
+                outputYoungsModulusChangeRate = YoungsModulusChangeRateNeighbours[2];
+            }
+            else {
+                outputYoungsModulusChangeRate = YoungsModulusChangeRateNeighbours[0];
+            }
+        }
+    }
+    else if (YoungsModulusRateChangeApplicationMethod==1){
+        //rate is calculated interpolated from the 4 neighbours.
+        outputYoungsModulusChangeRate = YoungsModulusChangeRateNeighbours[0]*(1.0-CurrElementFracX)*(1.0-CurrElementFracY)+YoungsModulusChangeRateNeighbours[1]*CurrElementFracX*(1.0-CurrElementFracY)+YoungsModulusChangeRateNeighbours[2]*(1.0-CurrElementFracX)*CurrElementFracY+YoungsModulusChangeRateNeighbours[3]*CurrElementFracX*CurrElementFracY;
+    }
+    else if (YoungsModulusRateChangeApplicationMethod==2){
+        //rate of the exact index is assigned to the element.
+        outputYoungsModulusChangeRate = YoungsModulusChangeRateNeighbours[0];
+    }
     return outputYoungsModulusChangeRate;
 }
 

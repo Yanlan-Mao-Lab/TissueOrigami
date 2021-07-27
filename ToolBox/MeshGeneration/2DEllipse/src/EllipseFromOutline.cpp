@@ -2785,7 +2785,7 @@ int main(int argc, char **argv)
 	}
     else if(selectTissueType == 1){ // 1: ECM mimicing wing disc 48 hr, THIS WILL BE THE ONE TO USE 90% OF THE TIME!
 		cout<<" in loop for tissue type(1) : "<<selectTissueType<<endl; 
-        actinHeight = 2.0;  //these are the values used in paper: 2.0 for actin layer
+        actinHeight = 2.0;  //these are the values used in paper: 2.0 for actin layer. If negative, there will be no layer.
         ECMHeight = 0.2;    //these are the values used in paper: 0.2 for ECM
                 addPeripodial = false;
                 //peripodialHeightFrac is not used.

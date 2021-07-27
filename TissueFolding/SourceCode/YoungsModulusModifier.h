@@ -13,6 +13,7 @@ public:
     double NextTimeStep;
 
     bool YoungsModulusMultiplierChangeRateIsLinear;
+    int YoungsModulusRateChangeApplicationMethod;
 
     size_t nGridX;
     size_t nGridY;
@@ -25,7 +26,7 @@ public:
     std::vector<std::vector<std::vector<double>>> YoungsModulusChangeRateGrid;
     std::vector<std::vector<double>> currentMultiplierChangeRate;
 
-    YoungsModulusModifier(size_t TimePointNoInput,const std::vector<std::string>& nameListInput, const std::vector<double>& WhenToApplyInput, const std::array<bool,7>& WhereToApplyInput, bool YoungsModulusMultiplierChangeRateIsLinear);
+    YoungsModulusModifier(size_t TimePointNoInput,const std::vector<std::string>& nameListInput, const std::vector<double>& WhenToApplyInput, const std::array<bool,7>& WhereToApplyInput, bool YoungsModulusMultiplierChangeRateIsLinearInput, int YoungsModulusRateChangeApplicationMethod);
 
     void CalculateYoungsModulusChangeRate();                                                                                                      ///< this function calculates the Young's modulus change rate from the input time-series grid.
     bool calculateCurrentRateGridIndex(const double currTime);                                                                                    ///<this function gets the current time as input and calculates which grid of the timeseries grid to use.
