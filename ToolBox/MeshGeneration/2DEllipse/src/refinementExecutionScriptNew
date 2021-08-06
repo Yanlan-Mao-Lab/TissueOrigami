@@ -7,6 +7,7 @@ cp ./src/EllipseFromOutline ./
 	#FOR MAC VERSION
 	CSWITCHES = -O -I/usr/X11R6/include -L/usr/X11R6/lib
 
+
 FORMAT OF THE OUTPUT MESH:
 [number of nodes]
 for each node:

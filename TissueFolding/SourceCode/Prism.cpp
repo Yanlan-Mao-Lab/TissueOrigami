@@ -147,6 +147,7 @@ Prism::Prism(int* tmpNodeIds, const std::vector<std::unique_ptr<Node>>& Nodes, i
         ShapeFuncDerStacks[i] = gsl_matrix_calloc(nDim*nDim, nDim*nNodes);
         InvdXdes[i] = gsl_matrix_calloc(nDim, nDim);
         detdXdes[i] = 0.0;
+        detFs[i] = 0.0; //Nargess added this line to pre-define thie value fo detFs.
         Bmatrices[i] = gsl_matrix_calloc(nNodes,nDim*nNodes);
         FeMatrices[i] = gsl_matrix_calloc(3,3);
         invJShapeFuncDerStack[i] = gsl_matrix_calloc(nDim*nDim, nDim*nNodes);

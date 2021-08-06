@@ -3264,4 +3264,151 @@ for i=1:length(ConnectionInfo)
     fprintf(fileID,'%d %d %d %d \n',[i-1, ConnectionInfo(i,1)-1,ConnectionInfo(i,2)-1,ConnectionInfo(i,3)-1]);
 end
 fclose(fileID);
+%%
+%% 20210705 96h wing disc experimental measures - small mesh - positive coordinates
+clear all
+close all
+
+xLength=294;
+yLength=214/2;
+desiredSideLength=8;
+
+borderNodeCounter=1;
+
+for i=0:desiredSideLength:xLength
+    for j=0:desiredSideLength:yLength
+        if i==0 || i==xLength || j==0 || j==yLength
+            x=i;
+            y=j;
+            borderNodes(borderNodeCounter,:)=[x,y];
+            borderNodeCounter=borderNodeCounter+1;
+        end
+    end
+    if j<yLength && j+desiredSideLength>yLength
+        if borderNodes(borderNodeCounter-1,2)<yLength-desiredSideLength/2
+            x=i;
+            y=yLength;
+            borderNodes(borderNodeCounter,:)=[x,y];
+            borderNodeCounter=borderNodeCounter+1;
+        else
+            x=i;
+            y=yLength;
+            borderNodes(borderNodeCounter-1,:)=[x,y];
+        end
+    end
+end
+
+if i<xLength && i+desiredSideLength>xLength
+    if i<xLength-desiredSideLength/2
+        for j=0:desiredSideLength:yLength
+            x=xLength;
+            y=j;
+            borderNodes(borderNodeCounter,:)=[x,y];
+            borderNodeCounter=borderNodeCounter+1;
+        end
+    else
+        id=find(borderNodes(:,1)==mod(xLength,desiredSideLength));
+        borderNodes(id,1)=0;
+        for j=0:desiredSideLength:yLength-desiredSideLength
+            x=xLength;
+            y=j;
+            borderNodes(borderNodeCounter,:)=[x,y];
+            borderNodeCounter=borderNodeCounter+1;
+        end
+    end
+end
+
+borderNodes(borderNodeCounter:borderNodeCounter+3,:)=[0 0;0 yLength;xLength 0;xLength yLength];
+borderNodesTmp=borderNodes;
+
+borderNodes=unique(borderNodes,'rows');
+
+scatter(borderNodes(:,1),borderNodes(:,2),'r')
+
+
+if mod(xLength,desiredSideLength)>desiredSideLength/2
+    maxSurfaceNodeX=xLength;
+else
+    maxSurfaceNodeX=xLength-desiredSideLength;
+end
+
+if mod(yLength,desiredSideLength)>desiredSideLength/2
+    maxSurfaceNodeY=yLength;
+else
+    maxSurfaceNodeY=yLength-desiredSideLength;
+end
+
+surfaceNodeCounter=1;
+for i=desiredSideLength:desiredSideLength:maxSurfaceNodeX
+    for j=desiredSideLength:desiredSideLength:maxSurfaceNodeY
+        x=i;
+        y=j;
+        surfaceNodes(surfaceNodeCounter,:)=[x,y];
+        surfaceNodeCounter=surfaceNodeCounter+1;
+    end
+end
+
+random=randperm(length(surfaceNodes));
+for i=1:length(random)
+    x_noise=desiredSideLength*(0.5*rand-0.25);
+    y_noise=desiredSideLength*(0.5*rand-0.25);
+    if surfaceNodes(random(i),1)+x_noise<xLength && surfaceNodes(random(i),1)+x_noise>0
+        surfaceNodes(random(i),1)=surfaceNodes(random(i),1)+x_noise;
+    else
+        surfaceNodes(random(i),1)=surfaceNodes(random(i),1);
+    end
+    if surfaceNodes(random(i),2)+y_noise<yLength && surfaceNodes(random(i),2)+y_noise>0
+        surfaceNodes(random(i),2)=surfaceNodes(random(i),2)+y_noise;
+    else
+        surfaceNodes(random(i),2)=surfaceNodes(random(i),2);
+    end
+end
+
+hold on
+scatter(surfaceNodes(:,1),surfaceNodes(:,2),'b')
+
+xx=350;
+yy=150;
+borderNodes=borderNodes-[xx yy];
+surfaceNodes=surfaceNodes-[xx yy];
+
+coord=[borderNodes;surfaceNodes];
+
+figure()
+scatter(coord(:,1),coord(:,2))
+
+figure()
+DT = delaunayTriangulation(coord(:,1),coord(:,2)); %2D delaunay triangulation
+triplot(DT);
+
+NodeInfo=zeros(length(DT.Points),3);
+NodeInfo(:,1)=DT.Points(:,1);
+NodeInfo(:,2)=DT.Points(:,2);
+
+
+for i=1:length(NodeInfo)
+    if NodeInfo(i,1)==0-xx || NodeInfo(i,1)==xLength-xx || NodeInfo(i,2)==0-yy || NodeInfo(i,2)==yLength-yy
+        NodeInfo(i,3)=1;
+        hold on
+        plot(NodeInfo(i,1),NodeInfo(i,2),'go');
+    end
+end
+
+
+ConnectionInfo = DT.ConnectivityList;
+
+
+fileID = fopen('96hWingDisc_smallMesh_negCoord_notInOrigin.node','w');
+fprintf(fileID,'%d %d %d %d\n',[length(NodeInfo),2,0,1]); %number of nodes
+for i=1:length(NodeInfo)
+    fprintf(fileID,'%d %.4f %.4f %d\n',[i-1,NodeInfo(i,:)]);
+end
+fclose(fileID);
+
+fileID = fopen('96hWingDisc_smallMesh_negCoord_notInOrigin.ele','w');
+fprintf(fileID,'%d %d %d\n',[length(ConnectionInfo),3,0]); %number of connections
+for i=1:length(ConnectionInfo)
+    fprintf(fileID,'%d %d %d %d \n',[i-1, ConnectionInfo(i,1)-1,ConnectionInfo(i,2)-1,ConnectionInfo(i,3)-1]);
+end
+fclose(fileID);
 

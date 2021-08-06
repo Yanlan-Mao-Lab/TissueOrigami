@@ -1,6 +1,6 @@
 TypeOfCoordinateSystem:
-  UseXYCoordinatesforRelativePositions(bool): 0
-  UsePolarCoordinatesforRelativePositions(bool): 1
+  UseXYCoordinatesforRelativePositions(bool): 1
+  UsePolarCoordinatesforRelativePositions(bool): 0
   UseCylindricalCoordintesforRelativePositions(bool): 0
   
   
@@ -39,25 +39,23 @@ NodeBindingOptions:
 YoungsModulusTimeseriesGrids:
   noTimeseriesInputs(size_t): 1
 
-  TimePointNoInput(size_t): 3
+  TimePointNoInput(size_t): 2
   YoungsModulusMultiplierChangeRateIsLinearInput(bool): 0
   YoungsModulusRateChangeApplicationMethodInput(int): 0
   applyToColumnarLayer(bool): 1
   applyToPeripodialMembrane(bool): 0
-  applyToApicalLayer(bool): 1
+  applyToApicalLayer(bool): 0
   applyToMidLayer(bool): 0
   applyToBasalLayer(bool): 0
   applyToPeripodialECM(bool): 0
-  applyToColumnarECM(bool): 0
+  applyToColumnarECM(bool): 1
   Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/TissueFoldingForked/TissueFolding/ToolBox/StiffnessTimeSeries/Stiffness96hrRectangleWing_FineGrid_Reduction_0
   WhenToApplyInput(sec): 0
   Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/TissueFoldingForked/TissueFolding/ToolBox/StiffnessTimeSeries/Stiffness96hrRectangleWing_FineGrid_Reduction_4
   WhenToApplyInput(sec): 300
-  Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/TissueFoldingForked/TissueFolding/ToolBox/StiffnessTimeSeries/Stiffness96hrRectangleWing_FineGrid_Reduction_4
-  WhenToApplyInput(sec): 3600
 
 PysicalProperties:
-  YoungsModulusApical: 1600	YoungsModulusBasal: 37.49	YoungsModulusMid: 37.49	Noise(%-int): 0
+  YoungsModulusApical: 25.0	YoungsModulusBasal: 25.0	YoungsModulusMid: 25.0	Noise(%-int): 0
   PoissonsRatio: 0.29		Noise(%-int): 0
   ApicalViscosity:  0.0 	Noise(%-int): 0
   BasalViscosity:   0.0
@@ -66,118 +64,12 @@ PysicalProperties:
 
 ExternalViscositySetup:
   ExtendToWholeTissue: 0
-  DiscProperApicalExternalViscosity: 10.0 
+  DiscProperApicalExternalViscosity: 16000.0 
   DiscProperBasalExternalViscosity: 10.0 
   PeripodialMembraneApicalExternalViscosity: 0.0
   PeripodialMembraneBasalExternalViscosity: 0.0 
   LinkerZoneApicalExternalViscosity: 0.0
   LinkerZoneBasalExternalViscosity: 0.0
-
-GrowthOptions:
-  NumberofGrowthFunctions(int): 10
-  GridGrowthsPinnedOnInitialMesh(bool): 0 
-  PinningUpdateTimes(number-times(sec)):  4 7200 10800 18000 36000
-  GridGrowthsInterpolationType(0=step,1=linear): 1
-
-GrowthFunctionType(int-seeDocumentation): 3
-  InitialTime(sec): 0
-  FinalTime(sec): 7200 
-  ApplyToColumnarLayer(bool): 1
-  ApplyToPeripodialMembrane(bool): 0
-  ApplyToBasalECM(bool): 0
-  ApplyToLateralECM(bool): 0
-  Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/TissueFoldingForked/TissueFolding/ToolBox/GrowthRates/ExpansionRateX_t0
-  zRange: 0.0 1.0
-
-GrowthFunctionType(int-seeDocumentation): 3
-  InitialTime(sec): 7200
-  FinalTime(sec): 10800
-  ApplyToColumnarLayer(bool): 1
-  ApplyToPeripodialMembrane(bool): 0
-  ApplyToBasalECM(bool): 0
-  ApplyToLateralECM(bool): 0
-  Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/TissueFoldingForked/TissueFolding/ToolBox/GrowthRates/ExpansionRateX_t1
-  zRange: 0.0 1.0
-
-GrowthFunctionType(int-seeDocumentation): 3
-  InitialTime(sec): 10800
-  FinalTime(sec): 18000
-  ApplyToColumnarLayer(bool): 1
-  ApplyToPeripodialMembrane(bool): 0
-  ApplyToBasalECM(bool): 0
-  ApplyToLateralECM(bool): 0
-  Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/TissueFoldingForked/TissueFolding/ToolBox/GrowthRates/ExpansionRateX_t2
-  zRange: 0.0 1.0
-
-GrowthFunctionType(int-seeDocumentation): 3
-  InitialTime(sec): 18000
-  FinalTime(sec): 36000
-  ApplyToColumnarLayer(bool): 1
-  ApplyToPeripodialMembrane(bool): 0
-  ApplyToBasalECM(bool): 0
-  ApplyToLateralECM(bool): 0
-  Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/TissueFoldingForked/TissueFolding/ToolBox/GrowthRates/ExpansionRateX_t3
-  zRange: 0.0 1.0
-
-GrowthFunctionType(int-seeDocumentation): 3
-  InitialTime(sec): 36000
-  FinalTime(sec): 57600
-  ApplyToColumnarLayer(bool): 1
-  ApplyToPeripodialMembrane(bool): 0
-  ApplyToBasalECM(bool): 0
-  ApplyToLateralECM(bool): 0
-  Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/TissueFoldingForked/TissueFolding/ToolBox/GrowthRates/ExpansionRateX_t4
-  zRange: 0.0 1.0
-
-GrowthFunctionType(int-seeDocumentation): 3
-  InitialTime(sec): 0
-  FinalTime(sec): 7200 
-  ApplyToColumnarLayer(bool): 1
-  ApplyToPeripodialMembrane(bool): 0
-  ApplyToBasalECM(bool): 0
-  ApplyToLateralECM(bool): 0
-  Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/TissueFoldingForked/TissueFolding/ToolBox/GrowthRates/ExpansionRateZ_t0
-  zRange: 0.0 1.0
-
-GrowthFunctionType(int-seeDocumentation): 3
-  InitialTime(sec): 7200
-  FinalTime(sec): 10800
-  ApplyToColumnarLayer(bool): 1
-  ApplyToPeripodialMembrane(bool): 0
-  ApplyToBasalECM(bool): 0
-  ApplyToLateralECM(bool): 0
-  Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/TissueFoldingForked/TissueFolding/ToolBox/GrowthRates/ExpansionRateZ_t1
-  zRange: 0.0 1.0
-
-GrowthFunctionType(int-seeDocumentation): 3
-  InitialTime(sec): 10800
-  FinalTime(sec):  18000
-  ApplyToColumnarLayer(bool): 1
-  ApplyToPeripodialMembrane(bool): 0
-  ApplyToBasalECM(bool): 0
-  ApplyToLateralECM(bool): 0
-  Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/TissueFoldingForked/TissueFolding/ToolBox/GrowthRates/ExpansionRateZ_t2
-  zRange: 0.0 1.0
-
-GrowthFunctionType(int-seeDocumentation): 3
-  InitialTime(sec): 18000
-  FinalTime(sec): 36000
-  ApplyToColumnarLayer(bool): 1
-  ApplyToPeripodialMembrane(bool): 0
-  ApplyToBasalECM(bool): 0
-  ApplyToLateralECM(bool): 0
-  Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/TissueFoldingForked/TissueFolding/ToolBox/GrowthRates/ExpansionRateZ_t3
-  zRange: 0.0 1.0
-
-GrowthFunctionType(int-seeDocumentation): 3
-  InitialTime(sec): 36000
-  FinalTime(sec): 57600
-  ApplyToColumnarLayer(bool): 1
-  ApplyToPeripodialMembrane(bool): 0
-  ApplyToBasalECM(bool): 0
-  ApplyToLateralECM(bool): 0
-  Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/TissueFoldingForked/TissueFolding/ToolBox/GrowthRates/ExpansionRateZ_t4
-  zRange: 0.0 1.0
 
 ExplicitECMOptions:
   ThereIsExplicitECM(bool): 1
@@ -196,3 +88,6 @@ AdhesionOptions:
 
 NodeCollapseOptions:
   ThereIsNodeCollapse(bool): 1
+
+ColumnViseVolumeConservationOptions:
+  ThereIsColumnViseVolumeConservation(bool): 1
