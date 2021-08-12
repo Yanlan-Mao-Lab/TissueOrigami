@@ -148,7 +148,7 @@ Prism::Prism(int* tmpNodeIds, const std::vector<std::unique_ptr<Node>>& Nodes, i
         InvdXdes[i] = gsl_matrix_calloc(nDim, nDim);
         detdXdes[i] = 0.0;
         detFs[i] = 0.0; //Nargess added this line to pre-define thie value fo detFs.
-        Bmatrices[i] = gsl_matrix_calloc(nNodes,nDim*nNodes);
+	Bmatrices[i] = gsl_matrix_calloc(nNodes,nDim*nNodes);
         FeMatrices[i] = gsl_matrix_calloc(3,3);
         invJShapeFuncDerStack[i] = gsl_matrix_calloc(nDim*nDim, nDim*nNodes);
         invJShapeFuncDerStackwithFe[i] = gsl_matrix_calloc(nDim*nDim, nDim*nNodes);
@@ -802,6 +802,7 @@ void Prism::calculateCurrNodalForces(gsl_matrix *currge, gsl_matrix *currgv, gsl
     double detFe = determinant3by3Matrix(currFe);
 
     double lnJ = log(detFe);
+    //std::cout<<"In Prism::calculateCurrNodalForces. Element ID is "<<Id<<" an detFe is "<<detFe<<" and lnJ is"<<lnJ<<std::endl;
     if(std::isnan(lnJ)){
     	std::cout<<"element: "<<Id<<" lnJ is nan, detFe: "<<detFe<<std::endl;
     	std::cout<<" Element positions: "<<std::endl;
@@ -1563,7 +1564,7 @@ void Prism::setBasalNeigElementId(const std::vector <std::unique_ptr<ShapeBase>>
      * labelled, as these elements do not hold a basal neighbour that is a tissue piece.
      */
      	if (tissueType== 0 //columnar layer element
-			&& !tissuePlacement == 0 //not checking for basal elements, to save time
+			&& !(tissuePlacement == 0) //not checking for basal elements, to save time
 			&& !atBasalBorderOfECM  //not checking for elements bordering ECM, same as basal
 			&& !isECMMimicing		 //not checking for ECM mimicking elements
 			){

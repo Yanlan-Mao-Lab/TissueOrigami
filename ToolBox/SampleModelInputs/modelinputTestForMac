@@ -91,3 +91,22 @@ NodeCollapseOptions:
 
 ColumnViseVolumeConservationOptions:
   ThereIsColumnViseVolumeConservation(bool): 1
+
+ShapeChangeOptions:
+  NumberofShapeChangeFunctions(int): 1
+  ShapeChangeStartsBelowECMLevel(fraction): 1.0
+  ShapeChangeGridInterpolationType(0=stepNearestNeighbour,1=linear,2=stepExact): 0
+
+  ShapeChangeFunctionType(int-seeDocumentation): 3
+  InitialTime(sec):  0
+  FinalTime(sec):  3600
+  applyShapeChangeToColumnarLayer(bool): 1
+  applyShapeChangeToPeripodialMembrane(bool): 0
+  applyShapeChangeToApicalLayer(bool): 0
+  applyShapeChangeToMidLayer(bool): 0
+  applyShapeChangeToBasalLayer(bool): 1
+  applyShapeChangeToBasalECM(bool): 0
+  applyShapeChangeToLateralECM(bool): 0
+  ShapeChangeType(1=AB;2=DV&AP): 1
+  Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/TissueFoldingForked/TissueFolding/ToolBox/ShapeChangeRates/ShapeChangeRate96hrRectangleWing_FineGrid_Reduction_3
+  ConserveVolume(bool): 0

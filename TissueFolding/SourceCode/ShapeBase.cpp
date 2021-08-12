@@ -415,7 +415,7 @@ double ShapeBase::getCurrentVolume(){
      */
      	double J = 0;
 	for (size_t iter =0; iter<numberOfGaussPoints;++iter){
-		J +=detFs[iter]*gaussWeights[iter];
+		J +=detFs[iter]*gaussWeights[iter]; 
 	}
 	double currentVolume =J * ReferenceShape->Volume;
 	return currentVolume;
@@ -466,13 +466,14 @@ void ShapeBase::calculateFgFromRates(double dt, double x, double y, double z, gs
      */
      	double tissueWeight;
 	bool continueCalaculation = isGrowthRateApplicable(sourceTissue, tissueWeight, zMin, zMax);
-        if (continueCalaculation){
-            if (isActinMimicing){
-                /**
-                 * If the element is ShapeBase#isActinMimicing, then growth in the tissue height is ignored.
-                 */
-                z = 0; //no z-growth in actin mimicing apical surfaces.
-            }
+	if (continueCalaculation){
+		if (isActinMimicing){
+			/** If the element is ShapeBase#isActinMimicing, then growth in the tissue height is ignored.
+ 			*/
+            		x = 0; //no x-growth in actin mimicing apical surfaces (or tissue bulk). This line was added for Katie's version.
+            		y = 0; //no y-growth in actin mimicing apical surfaces (or tissue bulk). This line was added for Katie's version.
+            		z = 0; //no z-growth in actin mimicing apical surfaces (or tissue bulk). This line was added for Katie's version.
+        	}
 		scaleGrowthForZRedistribution(x,y,z);
 		double gx = exp(x*tissueWeight*dt);
 		double gy = exp(y*tissueWeight*dt);
@@ -596,6 +597,8 @@ void ShapeBase::calculateFgFromGridCorners(int gridGrowthsInterpolationType, dou
 		if (isActinMimicing){
 			/** If the element is ShapeBase#isActinMimicing, then growth in the tissue height is ignored.
              		*/
+			//growth[0] = 0; //no x-growth in actin mimicing apical surfaces (or tissue bulk). This line was added for Katie's version.
+            		//growth[1] = 0; //no y-growth in actin mimicing apical surfaces (or tissue bulk). This line was added for Katie's version.	
 			growth[2] = 0; //no z-growth in actin mimicing apical surfaces.
 		}
 		/** Then growth is scaled if there is any distribution of tissue volume in z axis, thourgh ShapeBase#scaleGrowthForZRedistribution.
@@ -1413,7 +1416,7 @@ bool ShapeBase::isShapeChangeAppliedToElement(vector<int> &ellipseBandIds, bool 
 	}
 	if (isECMMimicing){
 		if  (   (applyBasalECM  && tissuePlacement == 0 )
-			 || (applyToLateralECM && isECMMimimcingAtCircumference && !tissuePlacement == 0) //do not grow the basal element twice
+			 || (applyToLateralECM && isECMMimimcingAtCircumference && !(tissuePlacement == 0)) //do not grow the basal element twice
 			){
 			checkForEllipseId = true;
 		}
@@ -1529,6 +1532,7 @@ void	ShapeBase::assignSoftHinge(double lowHingeLimit, double highHingeLimit,doub
 	if (!isECMMimicing){
 		if (relativePosInBoundingBox[0]>lowHingeLimit && relativePosInBoundingBox[0] < highHingeLimit){
 			stiffnessMultiplier *= softnessLevel;
+			std::cout<<"I'm in assignSoftHinge and am updating elastic properties"<<std::endl;	
 			updateElasticProperties();
 		}
 	}

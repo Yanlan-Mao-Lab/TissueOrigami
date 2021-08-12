@@ -32,7 +32,6 @@ bool TimeSeriesPhysicalProperties::timeStepConsistencyCheck(const double dt){
     return true;
 }
 bool TimeSeriesPhysicalProperties::ReadGrid(const std::vector<std::string>& nameListInput){
-
     //open physical property file
     for (size_t nT =0; nT<TimePointNo; ++nT){
         size_t nX;         //number of rows of the physical property grid
@@ -41,7 +40,6 @@ bool TimeSeriesPhysicalProperties::ReadGrid(const std::vector<std::string>& name
         double PhysicalProperty;
 
         std:: string filename = nameListInput[nT];
-        std::cout<<"physical property filename is "<<filename<<std::endl;
         std::ifstream PhysicalPropertyFile;
         PhysicalPropertyFile.open(filename,std::ios::in);
 
@@ -51,44 +49,41 @@ bool TimeSeriesPhysicalProperties::ReadGrid(const std::vector<std::string>& name
             return false;
         }
         //std::cout<<"filename is : "<<filename<<std::endl;
-        //read first row of the file which defines number of columns (nX) and number of rows (nY)
+        //read first row of the file which defines number of rows (nX) and number of columns (nY)
         PhysicalPropertyFile >> nX;
         PhysicalPropertyFile >> nY;
 
+        //This section creates the timeseries grid.
         if (nT==0){
-            std::vector<std::vector<std::vector<double>>> tempVecTimeSeries (TimePointNo,std::vector<std::vector<double>>(nY,std::vector<double>(nX,0)));
-            TimeSeriesGrid=tempVecTimeSeries;
+		std::vector<std::vector<std::vector<double>>> tempVecTimeSeries (TimePointNo,std::vector<std::vector<double>>(nY,std::vector<double>(nX,0)));
+		TimeSeriesGrid=tempVecTimeSeries;
         }
-        std::cout<<"The TimeSeriesPhysicalPropertiesGrid before going into loop is:"<<std::endl;
-        displayGrid(TimeSeriesGrid);
 
         for (size_t i= 0; i<nY; ++i){
+            //std::vector<double> oneRow(nX,0);
             for(size_t j=0; j<nX; ++j){
                 PhysicalPropertyFile>>PhysicalProperty;
-
                 TimeSeriesGrid[nT][i][j]=PhysicalProperty;
             }
         }
 
-//        //This section creates the timeseries grid.
-//        std::vector<std::vector<double>> oneGrid;
 
-//        for (size_t i= 0; i<nY; ++i){
-//            std::vector<double> oneRow(nX,0);
-//            for(size_t j=0; j<nX; ++j){
-//                PhysicalPropertyFile>>PhysicalProperty;
-//                oneRow[j]=PhysicalProperty;
-//            }
-//            oneGrid.push_back(oneRow);
-//        }
-//        TimeSeriesGrid.push_back(oneGrid);
+	//std::vector<std::vector<double>> oneGrid;
+        //for (size_t i= 0; i<nY; ++i){
+           // std::vector<double> oneRow(nY,0);
+            //for(size_t j=0; j<nX; ++j){
+                //PhysicalPropertyFile>>PhysicalProperty;
+                //oneRow[j]=PhysicalProperty;
+            //}
+            //oneGrid.push_back(oneRow);
+       //}
+        //TimeSeriesGrid.push_back(oneGrid);
 
         PhysicalPropertyFile.close();
     }
-    std::cout<<"The TimeSeriesPhysicalPropertiesGrid is:"<<std::endl;
-    displayGrid(TimeSeriesGrid);
     return true;
 }
+
 
 
 //This section displays the Young's modulus timeseries grid in the output tmp file.

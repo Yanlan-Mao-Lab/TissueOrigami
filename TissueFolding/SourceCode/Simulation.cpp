@@ -5376,8 +5376,9 @@ void Simulation::updateStiffnessChangeForActin(int idOfCurrentStiffnessPerturbat
 	for (std::vector<std::unique_ptr<ShapeBase>>::iterator itElement = Elements.begin(); itElement<Elements.end(); ++itElement){
 		bool applyToThisElement = (*itElement)->isActinStiffnessChangeAppliedToElement(ThereIsWholeTissueStiffnessPerturbation[idOfCurrentStiffnessPerturbation], ThereIsApicalStiffnessPerturbation[idOfCurrentStiffnessPerturbation], ThereIsBasalStiffnessPerturbation[idOfCurrentStiffnessPerturbation], ThereIsBasolateralWithApicalRelaxationStiffnessPerturbation[idOfCurrentStiffnessPerturbation],  ThereIsBasolateralStiffnessPerturbation[idOfCurrentStiffnessPerturbation], stiffnessPerturbationEllipseBandIds[idOfCurrentStiffnessPerturbation], numberOfStiffnessPerturbationAppliesEllipseBands[idOfCurrentStiffnessPerturbation]);
 		if (applyToThisElement){
-            (*itElement)->updateStiffnessMultiplier(dt);
-            (*itElement)->updateElasticProperties();
+			(*itElement)->updateStiffnessMultiplier(dt);
+			std::cout<<"I'm in updateStiffnessChangeForActin and am updating the elastic properties"<<std::endl;
+			(*itElement)->updateElasticProperties();
 		}
 	}
 }
@@ -5420,8 +5421,9 @@ void Simulation::updateChangeForExplicitECM(int idOfCurrentECMPerturbation){
 	for (std::vector<std::unique_ptr<ShapeBase>>::iterator itElement = Elements.begin(); itElement<Elements.end(); ++itElement){
 		bool applyToThisElement = (*itElement)->isECMChangeAppliedToElement(changeApicalECM[idOfCurrentECMPerturbation], changeBasalECM[idOfCurrentECMPerturbation], ECMChangeEllipseBandIds[idOfCurrentECMPerturbation], numberOfECMChangeEllipseBands[idOfCurrentECMPerturbation]);
 		if (applyToThisElement){
-			 (*itElement)->updateStiffnessMultiplier(dt);
-			 (*itElement)->updateElasticProperties();
+			(*itElement)->updateStiffnessMultiplier(dt);
+			std::cout<<"I'm in updateChangeForExplicitECM and am updating the elastic properties"<<std::endl; 
+			(*itElement)->updateElasticProperties();
 		}
 	}
 }
@@ -5663,6 +5665,7 @@ void Simulation::checkECMChange(){
 			}
 			if (updateStiffness){
 				(*itElement)->updateStiffnessMultiplier(dt);
+				std::cout<<"I'm in checkECMChange and am updating the elastic properties"<<std::endl;
 				(*itElement)->updateElasticProperties();
 			}
 		}
@@ -5944,7 +5947,8 @@ bool Simulation::runOneStep(){
      */
     ApplyAllYoungsModulusModifiers();
     if (thereIsECMChange) {
-    	checkECMChange();
+    	std::cout<<"I am inside thereIsECMChange in Simulation.cpp"<<std::endl;
+	checkECMChange();
     }
 
     /**
@@ -6286,9 +6290,17 @@ void Simulation::conserveColumnVolume(){
     				continue;
     			}
     			if (Elements[idOfElementOnSameColumn]->isActinMimicing){
-    				//exclude top actin layer if there is one
-					continue;
+    				std::cout<<"I'm in conserveColumnVolume and there is ActinMimicing elements with id:"<<itElement->getId()<<std::endl;
+				//exclude top actin layer if there is one
+				continue;
 				}
+			std::cout<<"Main element id is: "<<itElement->getId()<<"and id of added element is: "<<idOfElementOnSameColumn<<std::endl;
+                	std::cout<<"NodeIds of added element "<<Elements[idOfElementOnSameColumn]->getId()<<"is: "<<std::endl;
+                	int* NodeIdsTemp = Elements[idOfElementOnSameColumn]->getNodeIds();
+                	for (int j=0; j<6; ++j){
+                    		std::cout<<NodeIdsTemp[j]<<" ";
+                	}
+                	std::cout<<" "<<std::endl;	
     			elementIdsForRedistribution.push_back(idOfElementOnSameColumn);
     		}
             /**
@@ -6309,14 +6321,17 @@ void Simulation::conserveColumnVolume(){
     			if (currentVolume < 10E-10){
     				currentVolume = idealVolume;
     			}
-    			ratioOfCurrentVolumeToIdeal[i]= currentVolume/idealVolume;
+    			//std::cout<<"Calculating volumes. elementID idealV currV: "<<elementIdsForRedistribution[i]<<" "<<Elements[elementIdsForRedistribution[i]]->GrownVolume<<" "<<Elements[elementIdsForRedistribution[i]]->getCurrentVolume()<<std::endl;
+			ratioOfCurrentVolumeToIdeal[i]= currentVolume/idealVolume;
     			sumCurrentVolumes += currentVolume;
     		}
     		double redistributionFactors[n];
     		for (int i=0; i < n;++i){
     			//calculate redistribution factors:
     			redistributionFactors[i] = sumIdealVolumes/sumCurrentVolumes *ratioOfCurrentVolumeToIdeal[i];
-    			//calculateGrowth:
+    			std::cout<<"I'm in conseerveColumnVolume and my  id is: "<<itElement->getId()<<std::endl;
+			std::cout<<"[sumIdealV][sumCurrVol][ratio][redistFac]: "<<sumIdealVolumes<<" "<<sumCurrentVolumes<<" "<<ratioOfCurrentVolumeToIdeal[i]<<" "<<redistributionFactors[i]<<std::endl;
+			//calculateGrowth:
     			double uniformGrowthIncrement = pow(redistributionFactors[i],1.0/3.0);
     			gsl_matrix* columnarFgIncrement = gsl_matrix_calloc(3,3);
     			gsl_matrix* peripodialFgIncrement = gsl_matrix_calloc(3,3);
@@ -8469,7 +8484,7 @@ void Simulation::calculateGrowthUniform(GrowthFunctionBase* currGF){
 						}
 					}
 					if (currGF->applyToLateralECM){
-						if (itElement->isECMMimimcingAtCircumference && !itElement->tissuePlacement == 0){ //do not grow the basal element twice
+						if (itElement->isECMMimimcingAtCircumference && !(itElement->tissuePlacement == 0)){ //do not grow the basal element twice
 							itElement->calculateFgFromRates(dt, growthRates[0],growthRates[1],growthRates[2], currGF->getShearAngleRotationMatrix(), columnarFgIncrement, 0, currGF->zMin, currGF->zMax);
 						}
 					}
@@ -8529,7 +8544,7 @@ void Simulation::calculateGrowthRing(GrowthFunctionBase* currGF){
 							}
 						}
 						if (currGF->applyToLateralECM){
-							if (itElement->isECMMimimcingAtCircumference && !itElement->tissuePlacement == 0){ //do not grow the basal element twice
+							if (itElement->isECMMimimcingAtCircumference && !(itElement->tissuePlacement == 0)){ //do not grow the basal element twice
 								itElement->calculateFgFromRates(dt, growthscale[0],growthscale[1],growthscale[2], currGF->getShearAngleRotationMatrix(), columnarFgIncrement, 0, currGF->zMin, currGF->zMax);
 							}
 						}
@@ -8752,7 +8767,7 @@ void Simulation::calculateGrowthGridBased(GrowthFunctionBase* currGF){
 						}
 					}
 					if (currGF->applyToLateralECM){
-						if (itElement->isECMMimimcingAtCircumference && !itElement->tissuePlacement == 0){ //do not grow the basal element twice
+						if (itElement->isECMMimimcingAtCircumference && !(itElement->tissuePlacement == 0)){ //do not grow the basal element twice
 							itElement->calculateFgFromGridCorners(gridGrowthsInterpolationType, dt, currGF, columnarFgIncrement, 0, IndexX,  IndexY, FracX, FracY); 	//sourceTissue is 0 for columnar Layer
 						}
 					}
@@ -9218,6 +9233,7 @@ void Simulation::updateElementVolumesAndTissuePlacements(){
 
 void Simulation::updateElasticPropertiesForAllNodes(){
 	for(const auto& itElement : Elements){
+		std::cout<<"I'm in updateElasticPropertiesForAllNodes and am updating the elastic properties"<<std::endl;
 		itElement->updateElasticProperties();
 	}
 }
