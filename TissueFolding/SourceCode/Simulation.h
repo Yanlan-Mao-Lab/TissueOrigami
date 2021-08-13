@@ -234,7 +234,8 @@ private:
 	void calculateGrowthGridBased(GrowthFunctionBase* currGF);      ///< Calculates growth increments applied on the elements from a input growth map grid.
 	void calculateShapeChangeUniform (GrowthFunctionBase* currSCF); ///< Calculates shape change increments applied on the elements from a uniform growth function.
 	void calculateShapeChangeMarkerEllipseBased (GrowthFunctionBase* currSCF); ///< Calculates shape change increments applied on the elements from a shape function based on spacial marking of certain elemetns. Marking can be emergent at fold initiation (curvature based) or input in modelinpiut file.
-	void setStretch();                                              ///< Set up the stretcher experiment.
+        void calculateShapeChangeGridBased(GrowthFunctionBase* currSCF); ///< Calculates shape change increments applied on the elements from a input shape change map grid.
+        void setStretch();                                              ///< Set up the stretcher experiment.
 	void setUpClampBorders(std::vector<int>& clampedNodeIds); 		///< Set up the clamping borders of the stretcher device.
 	void moveClampedNodesForStretcher();							///< This function moves the nodes clamped under the stretcher, at rates defined by the user stretcher information.
 	void moveAFMBead();												///< Push the bead of the Atomic Force Microscopy setup towrds the tissue incrementally.
@@ -357,8 +358,8 @@ public:
 	int nShapeChangeFunctions;                                  ///< The number of shape change functions active in the simulation.
     std::vector<std::unique_ptr<GrowthFunctionBase>> ShapeChangeFunctions; ///< The vector containing the unique pointers to the shape change functions active in the simulation
 	double shapeChangeECMLimit;                                 ///< The threshold of ECM density upon which emergent shape change will be activated (reduction of ECM strength inducing shape change).
-
-	bool thereIsPlasticDeformation;								///< The boolean stating that there is plastic deformation (remodelling) in the tissue.
+        int ShapeChangeGridInterpolationType;                           ///< The type of interpolation done on growth map grid, 0 = no interpolation, step function but value assumed from nearest neighbour, 1 = linear interpolation, 2 = no interpolation, step function but value assumed by exact indices (default = 1).
+        bool thereIsPlasticDeformation;								///< The boolean stating that there is plastic deformation (remodelling) in the tissue.
 	bool plasticDeformationAppliedToPeripodial;					///< The boolean stating that plastic deformation (remodelling) is applied to peripodial tissue.
 	bool plasticDeformationAppliedToColumnar;					///< The boolean stating that plastic deformation (remodelling) is applied to columnar tissue.
 	bool volumeConservedInPlasticDeformation;					///< The boolean stating if volume is conserved during plastic deformation (remodelling).

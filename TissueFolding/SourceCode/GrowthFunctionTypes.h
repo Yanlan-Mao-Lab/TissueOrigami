@@ -665,5 +665,113 @@ public:
 	}///< The function is to write the growth function summary to simulation summary file
 };
 
+class GridBasedShapeChangeFunction : public GrowthFunctionBase{
+private:
+
+public:
+    size_t nGridX;	///< The number of grid points that discretise the tissue in x
+    size_t nGridY;	///< The number of grid points that discretise the tissue in y
+    int ShapeChangeType;
+    bool conserveVolume;
+    //GrowthMatrix : [grid_i] [grid_j][x,y,z]
+    std::vector<std::vector<std::array<double,3>>> GrowthMatrix;	///<The matrix of growth rates in (1/sec). It is a matrix of double triplets for growth rate at each grid point. The dimensions of the matrix are equal to (GridBasedGrowthFunction::nGridX, GridBasedGrowthFunction::nGridY), and set in constructor of the GridBasedGrowthFunction. The triplets store the growth rate in [ DV axis (x), AP axis (y), and AB axis (z)].
+
+    GridBasedShapeChangeFunction(int id, int type, float initTime, float endTime, bool applyToColumnarLayer, bool applyToPeripodialMembrane, bool applyToApicalLayer, bool applyToMidLayer, bool applyToBasalLayer, bool applyToBasalECM, bool applyToLateralECM, int ShapeChangeType, int nX, int nY, std::vector<std::vector<double>>& ShapeChangeMat, bool conserveVolume) : GrowthFunctionBase(id, type, initTime, endTime, applyToColumnarLayer, applyToPeripodialMembrane, applyToBasalECM,  applyToLateralECM){
+        /**
+         *  The first six parameters will be directed to the parent constructor, GrowthFunctionBase#GrowthFunctionBase. \n
+         *  integers nX and nY will set GridBasedGrowthFunction#nGridX and GridBasedGrowthFunction#nGridY, respectively.  GridBasedGrowthFunction::GrowthMatrix will be initiated to point at a 2 dimensional matrix of double triplets the size(nX, nY). \n
+         *  double*** GrowthMat is the pointer to the 2-dimensional matrix of double triplets, holding the 3D growth rates at each grid point. Values stored in GrowthMat will set the values in GridBasedGrowthFunction::GrowthMatrix.
+         *  The matrix storing the growth rates have been read from an input file through ModelInputObject#readGrowthOptions and related functions therein \n
+         */
+        this->applyTissueApical = applyToApicalLayer;
+        this->applyTissueMidLine = applyToMidLayer;
+        this->applyTissueBasal = applyToBasalLayer;
+        this->ShapeChangeType = ShapeChangeType;
+        this->conserveVolume = conserveVolume;
+
+        this ->nGridX = nX;
+        this ->nGridY = nY;
+
+        for (size_t i= 0; i<nGridX; ++i){
+            std::vector<std::array<double,3>> tmpGridMatrixY(nGridY,std::array<double,3>{0.0});
+            GrowthMatrix.push_back(tmpGridMatrixY);
+        }
+
+//        for (size_t i= 0; i<nGridX; ++i){
+//            for (size_t j=0; j<nGridY; ++j){
+//                for (size_t k=0; k<3; ++k){
+//            //std::vector<std::array<double,3>> tmpGridMatrixY(nGridY,std::array<double,3>{0.0});
+//            //GrowthMatrix.push_back(tmpGridMatrixY);
+//                GrowthMatrix[i][j][k]=0;
+//                std::cout<<"GrowthMatrix[i][j][k] is:"<<GrowthMatrix[i][j][k]<<std::endl;
+//                }
+//            }
+//        }
+
+        for (size_t i=0; i<nGridX; ++i){
+            for (size_t j=0; j<nGridY; ++j){
+                if (ShapeChangeType == 1){
+                    //this is change in cell height
+                    double ShapeChangeRate = ShapeChangeMat[i][j];
+                    GrowthMatrix[i][j][2] = 1.0 *ShapeChangeRate;	  //zz
+                    if (conserveVolume){
+                        //This is to conserve volume
+                        GrowthMatrix[i][j][0] =   - 0.5 * ShapeChangeRate;  //xx
+                        GrowthMatrix[i][j][1] =   - 0.5 * ShapeChangeRate;  //yy
+                    }
+                    else{
+                        //no elemental volume conservation
+                        GrowthMatrix[i][j][0] =   0;  //xx
+                        GrowthMatrix[i][j][1] =   0;  //yy
+                    }
+                }
+                else if (ShapeChangeType == 2){
+                    //this is change in cell area
+                    double ShapeChangeFraction = ShapeChangeMat[i][j];
+                    GrowthMatrix[i][j][0] = 0.5 * log(1.0+ShapeChangeFraction);	  //xx
+                    GrowthMatrix[i][j][1] = 0.5 * log(1.0+ShapeChangeFraction);	  //yy
+                    if (conserveVolume){
+                        //This is to conserve volume
+                        GrowthMatrix[i][j][2] =  log(1.0/(1.0+ShapeChangeFraction));		 //zz
+                    }
+                    else{
+                        //no elemental volume conservation
+                        GrowthMatrix[i][j][2] =   0;  //zz
+                    }
+                }
+            }
+        }
+    } ///< The constructor of GridBasedShapeChangeFunction
+
+    ~GridBasedShapeChangeFunction(){};
+
+    int getGridX(){
+        return nGridX;
+    }///< This function returns GridBasedGrowthFunction#nGridX.
+
+    int getGridY(){
+        return nGridY;
+    }///< This function returns GridBasedGrowthFunction#nGridY.
+
+    double getGrowthMatrixElement(int i, int j, int k){
+        return GrowthMatrix[i][j][k];
+    }///< This function returns the growth rate at grid point [i]\[j\] (in dimensions GridBasedGrowthFunction#nGridX, GridBasedGrowthFunction#nGridY), for the shape change dimension [k] (as in  [ DV axis (x), AP axis (y), and AB axis (z)] ).
+
+    void writeSummary(ofstream &saveFileSimulationSummary){
+        /**
+         *  This function will write the GridBasedGrowthFunction details into the simulation summary file, provided as the first input.
+         *  The output should look like: \n
+         *			Shape Change Type:  Shape Change From File (3)
+         *			Initial time(sec): GridBasedShapeChangeFunction#initTime	FinalTime time(sec): GridBasedShapeChangeFunction#endTime	Shape change matrix mesh size: GridBasedShapeChangeFunction#nGridX GridBasedShapeChangeFunction#nGridY
+         */
+        saveFileSimulationSummary<<"Shape Change Type:  Shape Change From File (3)"<<endl;
+        saveFileSimulationSummary<<"	Initial time(sec): ";
+        saveFileSimulationSummary<<initTime;
+        saveFileSimulationSummary<<"	FinalTime time(sec): ";
+        saveFileSimulationSummary<<endTime;
+        saveFileSimulationSummary<<"	Shape change matrix mesh size: ";
+        saveFileSimulationSummary<<nGridX <<" "<<nGridY<<endl;
+    }///< The function is to write the growth function summary to simulation summary file
+};
 
 #endif /* GROWTHFUNCTIONTYPES_H */

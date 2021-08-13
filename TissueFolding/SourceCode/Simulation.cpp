@@ -8403,6 +8403,10 @@ void Simulation::calculateShapeChange(){
 		if (ShapeChangeFunctions[i]->Type == 2){
 			calculateShapeChangeMarkerEllipseBased(ShapeChangeFunctions[i].get());
 		}
+                if (ShapeChangeFunctions[i]->Type == 3){
+                        calculateShapeChangeGridBased(ShapeChangeFunctions[i].get());
+                }
+
 	}
 }
 
@@ -8464,6 +8468,27 @@ void Simulation::calculateShapeChangeUniform (GrowthFunctionBase* currSCF){
 			}
 		}
 	}
+}
+
+void Simulation::calculateShapeChangeGridBased(GrowthFunctionBase* currSCF){
+    int nGridX = currSCF->getGridX();
+    int nGridY = currSCF->getGridY();
+    if(currSimTimeSec >= currSCF->initTime && currSimTimeSec < currSCF->endTime ){
+            gsl_matrix* columnarShapeChangeIncrement = gsl_matrix_calloc(3,3);
+                       for(const auto& itElement : Elements){
+                bool appliedToElement = itElement->isGridBasedShapeChangeAppliedToElement(currSCF->applyToColumnarLayer, currSCF->applyToPeripodialMembrane, currSCF->applyToBasalECM, currSCF->applyToLateralECM, currSCF->applyTissueApical, currSCF->applyTissueBasal, currSCF->applyTissueMidLine );
+                if (appliedToElement){
+                    std::cout<<" shape chenge is applied to element "<<itElement->Id<<std::endl;
+                    gsl_matrix_set_identity(columnarShapeChangeIncrement);
+                    int IndexX = 0.0, IndexY = 0.0;
+                    double FracX = 1.0,  FracY = 1.0;
+                    itElement->getRelativePositionInTissueInGridIndex(nGridX, nGridY, IndexX, IndexY, FracX, FracY);
+                    itElement->calculateShapeChangeIncrementFromGridCorners(ShapeChangeGridInterpolationType, dt, currSCF, columnarShapeChangeIncrement, 0, IndexX,  IndexY, FracX, FracY);
+                    itElement->updateShapeChangeIncrement(columnarShapeChangeIncrement);
+                }
+            }
+            gsl_matrix_free(columnarShapeChangeIncrement);
+        }
 }
 
 void Simulation::calculateGrowthUniform(GrowthFunctionBase* currGF){

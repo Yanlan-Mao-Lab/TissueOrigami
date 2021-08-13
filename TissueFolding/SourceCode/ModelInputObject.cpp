@@ -2083,7 +2083,15 @@ bool ModelInputObject::readShapeChangeOptions(ifstream& file){
 			printErrorMessage(currHeader,"read shape change options","ShapeChangeStartsBelowECMLevel(fraction)");
 			return false;
 		}
-	for (int i = 0; i<n; ++i){
+        file >> currHeader;
+            if (currHeader == "ShapeChangeGridInterpolationType(0=stepNearestNeighbour,1=linear,2=stepExact):"){
+                file >> Sim->ShapeChangeGridInterpolationType;
+            }
+            else{
+                std::cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: ShapeChangeGridInterpolationType(0=stepNearestNeighbour,1=linear,2=stepExact):" <<std::endl;
+                return false;
+            }
+        for (int i = 0; i<n; ++i){
 		file >> currHeader;
 		int type;
 		//std::cout<<"inside the loop, read shape change options, current header: "<<currHeader<<std::endl;
@@ -2106,6 +2114,12 @@ bool ModelInputObject::readShapeChangeOptions(ifstream& file){
 				return false;
 			}
 		}
+                else if (type ==3){
+                        bool success = readShapeChangeType3(file);
+                        if (!success){
+                                return false;
+                        }
+                }
 		else{
 			std::cerr<<"Error in reading shape change type, please enter a valid type: {1},{2} current type: "<<type<<std::endl;
 			return false;
@@ -2371,6 +2385,232 @@ bool ModelInputObject::readShapeChangeType2(ifstream& file){
 	return true;
 }
 
+bool ModelInputObject::readShapeChangeType3(ifstream& file){
+    /**
+     * This function reads in the grid based growth options.
+     * The format with placeholder values:
+     *   InitialTime(sec): 100
+     *   FinalTime(sec): 200
+     *   ApplyToColumnarLayer(bool): 1
+     *   ApplyToPeripodialMembrane(bool): 0
+     *   ApplyToBasalECM(bool): 0
+     *   ApplyToLateralECM(bool): 1
+     *   Filename(full-path): /path/toWhere/GrowhtIs/myGrowthFile
+     *   zRange: 0 0.5
+     */
+    string currHeader;
+    file >> currHeader;
+    float initialtime;
+    float finaltime;
+    bool applyShapeChangeToColumnarLayer = false;
+    bool applyShapeChangeToPeripodialMembrane = false;
+    bool applyShapeChangeToLateralECM = false;
+    bool applyShapeChangeToBasalECM = false;
+    bool applyShapeChangeToApicalLayer = false;
+    bool applyShapeChangeToMidLayer = false;
+    bool applyShapeChangeToBasalLayer = false;
+    bool conserveVolume = false;
+    int gridX, gridY;
+    int ShapeChangeType;
+    std::vector<std::vector<double>> ShapeChangeMatrix; //[grid_i][grid_j][shapeChangeRate]
+    if(currHeader == "InitialTime(sec):"){
+        file >> initialtime;
+    }
+    else{
+        std::cerr<<"Error in reading shape change options, curr string: "<<currHeader<<", should have been: InitialTime(sec):" <<std::endl;
+        return false;
+    }
+    file >> currHeader;
+    if(currHeader == "FinalTime(sec):"){
+        file >> finaltime;
+    }
+    else{
+        std::cerr<<"Error in reading shape change options, curr string: "<<currHeader<<", should have been: FinalTime(sec):" <<std::endl;
+        return false;
+    }
+    file >> currHeader;
+    if(currHeader == "applyShapeChangeToColumnarLayer(bool):"){
+            file >> applyShapeChangeToColumnarLayer;
+    }
+    else{
+        std::cerr<<"Error in reading shape change options, curr string: "<<currHeader<<", should have been: applyShapeChangeToColumnarLayer(bool):" <<std::endl;
+        return false;
+    }
+    file >> currHeader;
+    if(currHeader == "applyShapeChangeToPeripodialMembrane(bool):"){
+            file >> applyShapeChangeToPeripodialMembrane;
+    }
+    else{
+        std::cerr<<"Error in reading shape change options, curr string: "<<currHeader<<", should have been: applyShapeChangeToPeripodialMembrane(bool):" <<std::endl;
+        return false;
+    }
+
+    file >> currHeader;
+    if(currHeader == "applyShapeChangeToApicalLayer(bool):"){
+            file >> applyShapeChangeToApicalLayer;
+    }
+    else{
+        std::cerr<<"Error in reading shape change options, curr string: "<<currHeader<<", should have been: applyShapeChangeToApicalLayer(bool):" <<std::endl;
+        return false;
+    }
+    file >> currHeader;
+    if(currHeader == "applyShapeChangeToMidLayer(bool):"){
+            file >> applyShapeChangeToMidLayer;
+    }
+    else{
+        std::cerr<<"Error in reading shape change options, curr string: "<<currHeader<<", should have been: applyShapeChangeToMidLayer(bool):" <<std::endl;
+        return false;
+    }
+    file >> currHeader;
+    if(currHeader == "applyShapeChangeToBasalLayer(bool):"){
+            file >> applyShapeChangeToBasalLayer;
+    }
+    else{
+        std::cerr<<"Error in reading shape change options, curr string: "<<currHeader<<", should have been: applyShapeChangeToBasalLayer(bool):" <<std::endl;
+        return false;
+    }
+    file >> currHeader;
+    if(currHeader == "applyShapeChangeToBasalECM(bool):"){
+            file >> applyShapeChangeToBasalECM;
+    }
+    else{
+        std::cerr<<"Error in reading shape change options, curr string: "<<currHeader<<", should have been: applyShapeChangeToBasalECM(bool):" <<std::endl;
+        return false;
+    }
+    file >> currHeader;
+    if(currHeader == "applyShapeChangeToLateralECM(bool):"){
+            file >> applyShapeChangeToLateralECM;
+    }
+    else{
+        std::cerr<<"Error in reading shape change options, curr string: "<<currHeader<<", should have been: applyShapeChangeToLateralECM(bool):" <<std::endl;
+        return false;
+    }
+    file >> currHeader;
+    if(currHeader == "ShapeChangeType(1=AB;2=DV&AP):"){
+            file >> ShapeChangeType;
+    }
+    else{
+        std::cerr<<"Error in reading shape change options, curr string: "<<currHeader<<", should have been: ShapeChangeType(int):" <<std::endl;
+        return false;
+    }
+    file >> currHeader;
+    if(currHeader == "Filename(full-path):"){
+        /**
+         * The file path should be a readable path from where the executable is lounced. It can handle relative paths, but full paths are encouraged.
+         */
+        string filepath;
+        file >> filepath;
+        std::cerr<<" filename is: "<<filepath<<std::endl;
+        const char* name_shapeChangeRates = filepath.c_str();
+        ifstream ShapeChangeRateFile;
+        ShapeChangeRateFile.open(name_shapeChangeRates, ifstream::in);
+        if (!(ShapeChangeRateFile.good() && ShapeChangeRateFile.is_open())){
+            /**
+             * Once the file is attempted to be open, it is checked to make sure it is actually open.
+             * Most common case of a file error is that the path is wrong.
+             * If you checked the file name, check it 5 more times before assuming the error is something else.
+             * No, seriously, it is the file path that is wrong, you have a typo.
+             */
+            std::cerr<<"could not open shape change rate file file: "<<name_shapeChangeRates<<std::endl;
+            return false;
+        }
+        //adding the indice of the growth matrix
+        /**
+         * The growth grid will contain the size of the grid matrix as the first two
+         * parameters, first these are read.
+         */
+        std::cout<<"reading from shape change file"<<std::endl;
+        ShapeChangeRateFile >> gridX;
+        ShapeChangeRateFile >> gridY;
+        double rate;
+        std::cout<<"initiating shape change matrices"<<std::endl;
+        /**
+         * Nargess! Fill description for this part.
+         */
+//        for (int i= 0; i<gridX; ++i){
+//            for (int j= 0; j<gridY; ++j){
+//                ShapeChangeMatrix[i][j]=0;
+//            }
+//        }
+        for (int i= 0; i<gridX; ++i){
+            std::vector<double> tmpGridMatrixY(gridY,0.0);
+            ShapeChangeMatrix.push_back(tmpGridMatrixY);
+        }
+        double timeMultiplier = 1.0 / 3600.0; // converting rate per hour to rate per second
+        /**
+         * Then the shape change rates are read in.
+         */
+        std::cout<<"reading shape change matrix"<<std::endl;
+        for (int j=gridY-1; j>-1; --j){
+            for (int i=0; i<gridX; ++i){
+                    //std::cout<<"i :"<<i<<" j: "<<j<<" ";
+                    ShapeChangeRateFile >> rate;
+                    //std::cout<<"rate: "<<rate<<" ";
+                    //ShapeChangeMatrix[i][j] = rate*timeMultiplier;
+                    ShapeChangeMatrix[i][j]=rate;
+                    //std::cout<<"matrix value: "<<ShapeChangeMatrix[i][j]<<std::endl;
+            }
+        }
+        /**
+         * Now the reading from the file is over, I will close the file. All necessary content is copied over to the memory.
+         * I will convert shape change rates to be per second for consistency with time step.
+         */
+        ShapeChangeRateFile.close();
+        for (int i=0; i<gridX; ++i){
+            for (int j=0; j<gridY; ++j){
+                    ShapeChangeMatrix[i][j] *= timeMultiplier;
+            }
+        }
+    }
+    else{
+        std::cerr<<"Error in reading growth options, curr string: "<<currHeader<<", should have been: Filename(full-path):" <<std::endl;
+        return false;
+    }
+//    /**
+//     * The normalised z range of a grid based growth function defined to which height of the tissue the growth function should be applied in.
+//     * Note that this is on top of the booleans specifying which components of the tissue the growth function will be applied to.
+//     * The z starts from the basal surface of columnar (z=0 is basal columnar surface) and z=1.0 is either the apical surface of the columnar layer
+//     * or the basal surface of the peripodial layer (if there is one).
+//     */
+//    double zMin, zMax;
+//    file >> currHeader;
+//    if(currHeader == "zRange:"){
+//        file >> zMin;
+//        file >> zMax;
+//    }
+//    else{
+//        std::cerr<<"Error in reading shape change options, curr string: "<<currHeader<<", should have been: zRange:" <<std::endl;
+//        return false;
+//    }
+    file >> currHeader;
+    if(currHeader == "ConserveVolume(bool):"){
+        file >> conserveVolume;
+    }
+    else{
+        printErrorMessage(currHeader,"shape change type 3","ConserveVolume(bool)");
+        return false;
+    }
+
+
+
+    /**
+     * Once all input parameters are gathered, a new growth function object is initiated with the constructor of UniformGrowthFunction# class.
+     * The pointer to the generated object is recorded in the vector of Growth function objects that the simulation object keeps, Simulation#GrowthFunctions.
+     */
+    //GrowthFunctionBase* GSBp;
+    int Id = Sim->ShapeChangeFunctions.size();
+    //type is 3
+    //GSBp = new GridBasedGrowthFunction(Id, 3, initialtime, finaltime, applyToColumnarLayer, applyToPeripodialMembrane, applyToBasalECM, applyToLateralECM, gridX, gridY, GrowthMatrix, AngleMatrix);
+    //GSBp->zMin = zMin;
+    //GSBp->zMax = zMax;
+
+    //Sim->GrowthFunctions.push_back(GSBp);
+    std::unique_ptr<GrowthFunctionBase> GSBp = std::make_unique<GridBasedShapeChangeFunction>(Id, 3, initialtime, finaltime, applyShapeChangeToColumnarLayer, applyShapeChangeToPeripodialMembrane, applyShapeChangeToApicalLayer, applyShapeChangeToMidLayer, applyShapeChangeToBasalLayer, applyShapeChangeToBasalECM, applyShapeChangeToLateralECM, ShapeChangeType, gridX, gridY, ShapeChangeMatrix, conserveVolume);
+    //GSBp->zMin = zMin;
+    //GSBp->zMax = zMax;
+    Sim->ShapeChangeFunctions.push_back(std::move(GSBp));
+    return true;
+}
 
 bool ModelInputObject::readStretcherSetup(ifstream& file){
 	/**

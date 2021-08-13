@@ -108,5 +108,5 @@ ShapeChangeOptions:
   applyShapeChangeToBasalECM(bool): 0
   applyShapeChangeToLateralECM(bool): 0
   ShapeChangeType(1=AB;2=DV&AP): 1
-  Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/TissueFoldingForked/TissueFolding/ToolBox/ShapeChangeRates/ShapeChangeRate96hrRectangleWing_FineGrid_Reduction_3
+  Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/TissueFoldingForked/TissueFolding/ToolBox/ShapeChangeRates/ShapeChangeRate96hrRectangleWingZ_FineGrid_Reduction_3
   ConserveVolume(bool): 0

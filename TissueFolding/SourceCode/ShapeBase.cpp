@@ -644,6 +644,106 @@ void ShapeBase::calculateFgFromGridCorners(int gridGrowthsInterpolationType, dou
 	}
 }
 
+void ShapeBase::calculateShapeChangeIncrementFromGridCorners(int ShapeChangeGridInterpolationType, double dt, GrowthFunctionBase* currSCF, gsl_matrix* increment, int sourceTissue,  int IndexX, int IndexY, double FracX, double FracY){
+     /**
+     * The current growth deformation gradient increment is calculated from the input growth magnitude and rotations map in a grid \n
+     * First check point is for cheking if the growth function is applicable to the element, via
+     * ShapeBase#isGrowthRateApplicable. If the element is growing, the four corners of the grid that are closest
+     * to the relative position of the element are extracted from the input grid. The growth rates are obtained at four
+     * the corners via the function GrowthBase#getGrowthProfileAt4Corners.
+     * Depending on th einterpolation method chosen, the growth of the point can be mapped to the closest corner,
+     * or can be interpolated between the points depending on the distance the relative position of the element
+     * centre falls within the grid: \n
+     * \verbatim
+             [point 2] ------------- [point 3]
+                |                        |
+                |<--fracX----> (o)       |
+                |               |        |
+                |               |        |
+                |             fracY      |
+                |               |        |
+             [point 0] ------------- [point 1]
+      \endverbatim
+     */
+    //taking growth data around 4 grid points
+        double *growth0, *growth1, *growth2, *growth3;
+        growth0 = new double[3];
+        growth1 = new double[3];
+        growth2 = new double[3];
+        growth3 = new double[3];
+
+        for (int axis =0; axis<3; axis++){
+            growth0[axis] = currSCF->getGrowthMatrixElement(IndexX,IndexY,axis);
+            growth1[axis] = currSCF->getGrowthMatrixElement(IndexX+1,IndexY,axis);
+            growth2[axis] = currSCF->getGrowthMatrixElement(IndexX,IndexY+1,axis);
+            growth3[axis] = currSCF->getGrowthMatrixElement(IndexX+1,IndexY+1,axis);
+        }
+        double growth[3]= {0.0,0.0,0.0};
+        if (ShapeChangeGridInterpolationType == 0){
+            //using the growth rate at the grid point:
+            //if fraction is below 0,5, I will use the index availabe.
+            //If it is above 0.5, it is within the range of next groid point, I will use index +1:
+            if(FracX > 0.5){
+                if (FracY > 0.5){
+                    for (int i=0; i<3; ++i){
+                        growth[i] = growth3[i];
+                    }
+                }
+                else{
+                    for (int i=0; i<3; ++i){
+                        growth[i] = growth1[i];
+                    }
+                }
+            }
+            else{
+                if (FracY > 0.5){
+                    for (int i=0; i<3; ++i){
+                        growth[i] = growth2[i];
+                    }
+                }
+                else{
+                    for (int i=0; i<3; ++i){
+                        growth[i] = growth0[i];
+                    }
+                }
+            }
+        }
+        else if (ShapeChangeGridInterpolationType == 1){
+            /** A linear interpolation with the distances are carried out for the growth rates and orientation angles:
+                    */
+            //taking the linear interpolation of 4 growth rates at 4 grid points
+            for (int axis =0; axis<3; axis++){
+                growth[axis]  = growth0[axis]*(1.0-FracX)*(1.0-FracY)+growth1[axis]*FracX*(1.0-FracY)+growth2[axis]*(1.0-FracX)*FracY+growth3[axis]*FracX*FracY;
+            }
+        }
+        else if (ShapeChangeGridInterpolationType == 2){
+            //no interpolation - taking the grid point with the exact index
+            for (int axis =0; axis<3; axis++){
+                growth[axis]  = growth0[axis];
+            }
+        }
+        //write the increment from obtained growth:
+        if (isActinMimicing){
+            /** If the element is ShapeBase#isActinMimicing, then growth in the tissue height is ignored.
+                    */
+            //growth[0] = 0; //no x-growth in actin mimicing apical surfaces (or tissue bulk). This line was added for Katie's version.
+            //growth[1] = 0; //no y-growth in actin mimicing apical surfaces (or tissue bulk). This line was added for Katie's version.
+            growth[2] = 0; //no z-growth in actin mimicing apical surfaces.
+        }
+        /** Then growth is scaled if there is any distribution of tissue volume in z axis, thourgh ShapeBase#scaleGrowthForZRedistribution.
+            */
+        //scaleGrowthForZRedistribution(growth[0],growth[1],growth[2]);
+
+        for (int axis =0; axis<3; axis++){
+            double gAxis = exp(growth[axis]*dt);
+            gsl_matrix_set(increment,axis,axis,gAxis);
+        }
+        delete[] growth0;
+        delete[] growth1;
+        delete[] growth2;
+        delete[] growth3;
+}
+
 gsl_matrix* ShapeBase::getGrowthIncrement(){
 	return growthIncrement;
 }
@@ -1439,6 +1539,34 @@ bool ShapeBase::isShapeChangeAppliedToElement(vector<int> &ellipseBandIds, bool 
 		}
 	}
 	return false;
+}
+
+bool ShapeBase::isGridBasedShapeChangeAppliedToElement(bool applyColumnar, bool applyPeripodial, bool applyBasalECM, bool applyToLateralECM, bool applyApically, bool applyBasally, bool applyMidLayer){
+    // this function decides whether the modifier is applicable to current element.
+    bool IsGridBasedShapeChangeApplicable = false;
+
+    //if ((applyColumnar && tissueType==0) || (applyPeripodial && tissueType==1)){
+    if (tissueType == 1){//For now, I (Nargess) am not applying shape change to peripodial. This may need to change later.
+        return false;
+    }
+    else if ((tissueType==0 && applyColumnar)){
+        //Tissue type includes both tissue and ECM, so tissueType 0 is columnar cell layer and ECM, and tissueType 1 is peripodial layer and ECM.
+        //This will apply the same map to the lateral ECM.
+        if (isECMMimicing){
+            if ((applyBasalECM && tissuePlacement==0) ||
+                    (applyToLateralECM && isECMMimimcingAtCircumference && !(tissuePlacement == 0))){              //This is the lateral ECM. But we check that the tissuePlacement is not 0 so that we don't take into account the one element that is placed where the lateral and basal ECM meet. That element is assumed to only be basal.
+                IsGridBasedShapeChangeApplicable=true;
+            }
+        }
+        else{
+            if ((applyApically && (tissuePlacement==1 || tissuePlacement==4)) ||
+                    (applyMidLayer && tissuePlacement==2) ||
+                    (applyBasally && (tissuePlacement==0 || atBasalBorderOfECM))){
+                IsGridBasedShapeChangeApplicable=true;
+            }
+        }
+    }
+    return IsGridBasedShapeChangeApplicable;
 }
 
 bool ShapeBase::isECMChangeAppliedToElement(bool changeApicalECM, bool changeBasalECM, vector<int> &ECMChangeEllipseBandIds, int numberOfECMChangeEllipseBands){
