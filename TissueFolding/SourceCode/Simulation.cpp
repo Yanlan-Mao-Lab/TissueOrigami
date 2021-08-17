@@ -8425,6 +8425,7 @@ void Simulation::cleanUpShapeChangeRates(){
 }
 
 void Simulation::calculateShapeChangeMarkerEllipseBased (GrowthFunctionBase* currSCF){
+        std::cout<<"Inside Simulation::calculateShapeChangeMarkerEllipseBased"<<std::endl;
 	if(currSimTimeSec >= currSCF->initTime && currSimTimeSec < currSCF->endTime ){
 			gsl_matrix* columnarShapeChangeIncrement = gsl_matrix_calloc(3,3);
 			std::array<double,3> growthRates;
@@ -8443,6 +8444,7 @@ void Simulation::calculateShapeChangeMarkerEllipseBased (GrowthFunctionBase* cur
 }
 
 void Simulation::calculateShapeChangeUniform (GrowthFunctionBase* currSCF){
+    std::cout<<"Inside Simulation::calculateShapeChangeUniform"<<std::endl;
 	if(currSimTimeSec >= currSCF->initTime && currSimTimeSec < currSCF->endTime ){
 		//std::cout<<"calculating shape change uniform"<<std::endl;
 		std::array<double,3> maxValues{0};
@@ -8471,6 +8473,7 @@ void Simulation::calculateShapeChangeUniform (GrowthFunctionBase* currSCF){
 }
 
 void Simulation::calculateShapeChangeGridBased(GrowthFunctionBase* currSCF){
+    std::cout<<"Inside Simulation::calculateShapeChangeGridBased"<<std::endl;
     int nGridX = currSCF->getGridX();
     int nGridY = currSCF->getGridY();
     if(currSimTimeSec >= currSCF->initTime && currSimTimeSec < currSCF->endTime ){
