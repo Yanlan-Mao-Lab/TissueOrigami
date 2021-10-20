@@ -286,3 +286,63 @@ for fileID=1:noFiles
     end
     fclose(filename)
 end
+%% Creating stiffness grids for Lola's project
+
+
+noFiles=5; %
+noColumns=55;    %
+midColumn=ceil(noColumns/2);
+noRows=4;  %
+
+initialStiffness=160000;
+
+
+for fileID=1:noFiles
+    stiffness=zeros(noRows,noColumns)+160000;   % stiffness grid
+    
+    stiffness(:,midColumn-1:midColumn+1)=(1-(fileID-1)*0.25)*stiffness(:,midColumn-1:midColumn+1);
+    if fileID==noFiles
+        stiffness(:,midColumn-1:midColumn+1)=0.000001;
+    end
+ 
+    
+    filename=sprintf('Stiffness96hrRectangleWing_FineGrid_Reduction_100TimesStiffer_%d',fileID-1);
+    filename = fopen(filename,'w');
+    fprintf(filename,'%d %d \n',[noColumns,noRows]);  % number of columns and rows in the grid matrix
+    % writing stiffness file for folding case
+    for i=1:noRows
+        fprintf(filename,'%f ',stiffness(i,:));
+        fprintf(filename,'\n');
+    end
+    fclose(filename)
+end
+%% Creating stiffness grids for Lola's project
+
+
+noFiles=5; %
+noColumns=55;    %
+midColumn=ceil(noColumns/2);
+noRows=4;  %
+
+initialStiffness=16000;
+
+
+for fileID=1:noFiles
+    stiffness=zeros(noRows,noColumns)+160000;   % stiffness grid
+    
+    stiffness(:,midColumn-1:midColumn+1)=(1-(fileID-1)*0.25)*stiffness(:,midColumn-1:midColumn+1);
+    if fileID==noFiles
+        stiffness(:,midColumn-1:midColumn+1)=0.000001;
+    end
+ 
+    
+    filename=sprintf('Stiffness96hrRectangleWing_FineGrid_Reduction_10TimesStiffer_%d',fileID-1);
+    filename = fopen(filename,'w');
+    fprintf(filename,'%d %d \n',[noColumns,noRows]);  % number of columns and rows in the grid matrix
+    % writing stiffness file for folding case
+    for i=1:noRows
+        fprintf(filename,'%f ',stiffness(i,:));
+        fprintf(filename,'\n');
+    end
+    fclose(filename)
+end

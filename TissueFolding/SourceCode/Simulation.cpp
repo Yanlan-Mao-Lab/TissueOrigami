@@ -5978,9 +5978,9 @@ bool Simulation::runOneStep(){
      * conserved through the column, but volume exchange is allowed between elements of the same column, this is stated
      * by the boolean Simulation#conservingColumnVolumes and operation is handled by the function Simulation#conserveColumnVolume. \n
      */
-    if (conservingColumnVolumes){
-    	conserveColumnVolume();
-    }
+//    if (conservingColumnVolumes){
+//        conserveColumnVolume();
+//    }
     /**
      * Following potential volume exchange, the remodelling (plastic deformation) is updated. All explicit ECM elements (ShapeBase#isECMMimicing = true)
      * do have remodelling by default. Remodelling of cellular elements (all the rest) can be defiend by the user preferences
@@ -5990,6 +5990,16 @@ bool Simulation::runOneStep(){
     	updatePlasticDeformation();
     }
     checkForVolumeRedistributionInTissue();
+
+    if (conservingColumnVolumes){
+        for(const auto &itElement: Elements){
+             if (!itElement->IsAblated){
+                 std::cout<<"in conservingColumnVolumes and element id is: "<<itElement->getId()<<std::endl;
+                 itElement->tempgrowShapeByFg();
+             }
+        }
+        conserveColumnVolume();
+    }
 
 	/**
 	* The growth, shape change, volume exchange and remodelling all induce theri effects eventually through growth of the elements. Once
@@ -6274,77 +6284,252 @@ void Simulation::calculateNumericalJacobian(bool displayMatricesDuringNumericalC
 	gsl_matrix_free(uk_original);
 }
 
+
+//void Simulation::conserveColumnVolume(){
+//        for(auto const& itElement : Elements){
+//        vector <int> elementIdsForRedistribution;
+//        if (itElement->tissueType == 0 && itElement->tissuePlacement == 1){
+//                //columnar apical element, take the elements on same column
+//                for (int i=0; i < TissueHeightDiscretisationLayers;++i){
+//                        int idOfElementOnSameColumn = itElement->elementsIdsOnSameColumn[i];
+//                        if (Elements[idOfElementOnSameColumn]->tissueType != 0){
+//                                //must be columnar
+//                                        continue;
+//                                }
+//                        if (Elements[idOfElementOnSameColumn]->isECMMimicing){
+//                                //exclude ECM
+//                                continue;
+//                        }
+//                        if (Elements[idOfElementOnSameColumn]->isActinMimicing){
+//                                //exclude top actin layer if there is one
+//                                        std::cout<<"I'm in conserveColumnVolume and there is ActinMimicing elements with id:"<<itElement->getId()<<std::endl;
+//                                        continue;
+//                                }
+//                        elementIdsForRedistribution.push_back(idOfElementOnSameColumn);
+//                }
+//            /**
+//             * The column-vise volume conservation requires volume redistribution amongst cell layer of the tissue,
+//             * and a diffusion based volume exchange where the most compressed elements give volume to least compressed.
+//             */
+//                //now I have a list of elements that I would like to redistribute the volumes of:
+//                //get sum of ideal volumes:
+//                const int n = elementIdsForRedistribution.size();
+//                double ratioOfCurrentVolumeToIdeal[n];
+//                double sumIdealVolumes = 0;
+//                double sumCurrentVolumes = 0;
+//                double sumReferenceVolumes = 0;
+//                for (int i=0; i < n;++i){
+//                        double idealVolume = Elements[elementIdsForRedistribution[i]]->GrownVolume;
+//                        sumIdealVolumes += idealVolume;
+//                        //get current volume from average detF:
+//                        double currentVolume = Elements[elementIdsForRedistribution[i]]->getCurrentVolume();
+//                        if (currentVolume < 10E-10){
+//                                currentVolume = idealVolume;
+//                        }
+//                        ratioOfCurrentVolumeToIdeal[i]= currentVolume/idealVolume;
+//                        sumCurrentVolumes += currentVolume;
+//                        //get reference volume:
+//                        double referenceVolume = Elements[elementIdsForRedistribution[i]]->getReferenceVolume();
+//                        sumReferenceVolumes += referenceVolume;
+
+//                        std::cout<<"calculating volumes. elementID refV currV idealV: "<<elementIdsForRedistribution[i]<<" "<<referenceVolume<<" "<<currentVolume<<" "<<idealVolume<<std::endl;
+//                }
+//                double redistributionFactors[n];
+//                for (int i=0; i < n;++i){
+//                        //calculate redistribution factors:
+//                        redistributionFactors[i] = sumIdealVolumes/sumCurrentVolumes *ratioOfCurrentVolumeToIdeal[i];
+//                        std::cout<<"[sumReferenceV][sumCurrVol][sumIdealVol][ratio][redistFac]: "<<sumReferenceVolumes<<" "<<sumCurrentVolumes<<" "<<sumIdealVolumes<<" "<<ratioOfCurrentVolumeToIdeal[i]<<" "<<redistributionFactors[i]<<std::endl;
+//                        //calculateGrowth:
+//                        double uniformGrowthIncrement = pow(redistributionFactors[i],1.0/3.0);
+//                        gsl_matrix* columnarFgIncrement = gsl_matrix_calloc(3,3);
+//                        gsl_matrix* peripodialFgIncrement = gsl_matrix_calloc(3,3);
+//                        gsl_matrix_set_identity(columnarFgIncrement);
+//                        gsl_matrix_set_identity(peripodialFgIncrement);
+//                        gsl_matrix_set(columnarFgIncrement,0,0,uniformGrowthIncrement);
+//                        gsl_matrix_set(columnarFgIncrement,1,1,uniformGrowthIncrement);
+//                        gsl_matrix_set(columnarFgIncrement,2,2,uniformGrowthIncrement);
+//                        Elements[elementIdsForRedistribution[i]]->updateGrowthIncrement(columnarFgIncrement,peripodialFgIncrement);
+//                        gsl_matrix_free(columnarFgIncrement);
+//                        gsl_matrix_free(peripodialFgIncrement);
+//                }
+//        }
+//    }
+//}
+
+
+//void Simulation::conserveColumnVolume(){
+//	for(auto const& itElement : Elements){
+//    	vector <int> elementIdsForRedistribution;
+//    	if (itElement->tissueType == 0 && itElement->tissuePlacement == 1){
+//    		//columnar apical element, take the elements on same column
+//    		for (int i=0; i < TissueHeightDiscretisationLayers;++i){
+//    			int idOfElementOnSameColumn = itElement->elementsIdsOnSameColumn[i];
+//    			if (Elements[idOfElementOnSameColumn]->tissueType != 0){
+//    				//must be columnar
+//					continue;
+//				}
+//    			if (Elements[idOfElementOnSameColumn]->isECMMimicing){
+//    				//exclude ECM
+//    				continue;
+//    			}
+//    			if (Elements[idOfElementOnSameColumn]->isActinMimicing){
+//    				std::cout<<"I'm in conserveColumnVolume and there is ActinMimicing elements with id:"<<itElement->getId()<<std::endl;
+//				//exclude top actin layer if there is one
+//				continue;
+//				}
+//			std::cout<<"Main element id is: "<<itElement->getId()<<"and id of added element is: "<<idOfElementOnSameColumn<<std::endl;
+//                	std::cout<<"NodeIds of added element "<<Elements[idOfElementOnSameColumn]->getId()<<"is: "<<std::endl;
+//                	int* NodeIdsTemp = Elements[idOfElementOnSameColumn]->getNodeIds();
+//                	for (int j=0; j<6; ++j){
+//                    		std::cout<<NodeIdsTemp[j]<<" ";
+//                	}
+//                	std::cout<<" "<<std::endl;
+//    			elementIdsForRedistribution.push_back(idOfElementOnSameColumn);
+//    		}
+//            /**
+//             * The column-vise volume conservation requires volume redistribution amongst cell layer of the tissue,
+//             * and a diffusion based volume exchange where the most compressed elements give volume to least compressed.
+//             */
+//    		//now I have a list of elements that I would like to redistribute the volumes of:
+//    		//get sum of ideal volumes:
+//    		const int n = elementIdsForRedistribution.size();
+//    		double ratioOfCurrentVolumeToIdeal[n];
+//    		double sumIdealVolumes = 0;
+//    		double sumCurrentVolumes = 0;
+//                double sumReferenceVolumes = 0;
+//    		for (int i=0; i < n;++i){
+//                    double idealVolume;
+//                    if (currSimTimeSec - dt > 0){
+//                        std::cout<<"I'm calculating ideal volume from GrownVolume. Time is: "<<currSimTimeSec<<" s"<<std::endl;
+//                        idealVolume = Elements[elementIdsForRedistribution[i]]->GrownVolume;
+//                        sumIdealVolumes += idealVolume;
+//                    }
+//                    else{
+//                     std::cout<<"I'm calculating ideal volume from referenceVolume. Time is: "<<currSimTimeSec<<" s"<<std::endl;
+//                     idealVolume = Elements[elementIdsForRedistribution[i]]->getReferenceVolume();
+//                     sumIdealVolumes += idealVolume;
+//                    }
+//                        //get reference volume:
+//                        double referenceVolume = Elements[elementIdsForRedistribution[i]]->getReferenceVolume();
+//                        sumReferenceVolumes += referenceVolume;
+//    			//get current volume from average detF:
+//                        double currentVolume = Elements[elementIdsForRedistribution[i]]->getCurrentVolume();
+//                        //double currentVolume = Elements[elementIdsForRedistribution[i]]->getReferenceVolume();
+//    			if (currentVolume < 10E-10){
+//    				currentVolume = idealVolume;
+//    			}
+//                        std::cout<<"calculating volumes. elementID idealV currV refV: "<<elementIdsForRedistribution[i]<<" "<<Elements[elementIdsForRedistribution[i]]->GrownVolume<<" "<<Elements[elementIdsForRedistribution[i]]->getCurrentVolume()<<" "<<Elements[elementIdsForRedistribution[i]]->getReferenceVolume()<<std::endl;
+//			ratioOfCurrentVolumeToIdeal[i]= currentVolume/idealVolume;
+//    			sumCurrentVolumes += currentVolume;
+//    		}
+//    		double redistributionFactors[n];
+//    		for (int i=0; i < n;++i){
+//    			//calculate redistribution factors:
+//                        //redistributionFactors[i] = sumIdealVolumes/sumCurrentVolumes *ratioOfCurrentVolumeToIdeal[i];
+//                        //redistributionFactors[i] = (sumCurrentVolumes/sumIdealVolumes)/ratioOfCurrentVolumeToIdeal[i];
+//                        redistributionFactors[i] = sumReferenceVolumes/sumCurrentVolumes *ratioOfCurrentVolumeToIdeal[i];
+//                        std::cout<<"I'm in conseerveColumnVolume and my  id is: "<<itElement->getId()<<std::endl;
+//                        std::cout<<"[sumRefV][sumIdealV][sumCurrVol][ratio][redistFac]: "<<sumReferenceVolumes<<" "<<sumIdealVolumes<<" "<<sumCurrentVolumes<<" "<<ratioOfCurrentVolumeToIdeal[i]<<" "<<redistributionFactors[i]<<std::endl;
+//			//calculateGrowth:
+//    			double uniformGrowthIncrement = pow(redistributionFactors[i],1.0/3.0);
+//    			gsl_matrix* columnarFgIncrement = gsl_matrix_calloc(3,3);
+//    			gsl_matrix* peripodialFgIncrement = gsl_matrix_calloc(3,3);
+//    			gsl_matrix_set_identity(columnarFgIncrement);
+//    			gsl_matrix_set_identity(peripodialFgIncrement);
+//    			gsl_matrix_set(columnarFgIncrement,0,0,uniformGrowthIncrement);
+//    			gsl_matrix_set(columnarFgIncrement,1,1,uniformGrowthIncrement);
+//    			gsl_matrix_set(columnarFgIncrement,2,2,uniformGrowthIncrement);
+//    			Elements[elementIdsForRedistribution[i]]->updateGrowthIncrement(columnarFgIncrement,peripodialFgIncrement);
+//    			gsl_matrix_free(columnarFgIncrement);
+//    			gsl_matrix_free(peripodialFgIncrement);
+//    		}
+//    	}
+//    }
+//}
+
 void Simulation::conserveColumnVolume(){
-	for(auto const& itElement : Elements){
-    	vector <int> elementIdsForRedistribution;
-    	if (itElement->tissueType == 0 && itElement->tissuePlacement == 1){
-    		//columnar apical element, take the elements on same column
-    		for (int i=0; i < TissueHeightDiscretisationLayers;++i){
-    			int idOfElementOnSameColumn = itElement->elementsIdsOnSameColumn[i];
-    			if (Elements[idOfElementOnSameColumn]->tissueType != 0){
-    				//must be columnar
-					continue;
-				}
-    			if (Elements[idOfElementOnSameColumn]->isECMMimicing){
-    				//exclude ECM
-    				continue;
-    			}
-    			if (Elements[idOfElementOnSameColumn]->isActinMimicing){
-    				std::cout<<"I'm in conserveColumnVolume and there is ActinMimicing elements with id:"<<itElement->getId()<<std::endl;
-				//exclude top actin layer if there is one
-				continue;
-				}
-			std::cout<<"Main element id is: "<<itElement->getId()<<"and id of added element is: "<<idOfElementOnSameColumn<<std::endl;
-                	std::cout<<"NodeIds of added element "<<Elements[idOfElementOnSameColumn]->getId()<<"is: "<<std::endl;
-                	int* NodeIdsTemp = Elements[idOfElementOnSameColumn]->getNodeIds();
-                	for (int j=0; j<6; ++j){
-                    		std::cout<<NodeIdsTemp[j]<<" ";
-                	}
-                	std::cout<<" "<<std::endl;	
-    			elementIdsForRedistribution.push_back(idOfElementOnSameColumn);
-    		}
+    for(auto const& itElement : Elements){
+        vector <int> elementIdsForRedistribution;
+        if (itElement->tissueType == 0 && itElement->tissuePlacement == 1){
+            //columnar apical element, take the elements on same column
+            for (int i=0; i < TissueHeightDiscretisationLayers;++i){
+                int idOfElementOnSameColumn = itElement->elementsIdsOnSameColumn[i];
+                if (Elements[idOfElementOnSameColumn]->tissueType != 0){
+                    //must be columnar
+                    continue;
+                }
+                if (Elements[idOfElementOnSameColumn]->isECMMimicing){
+                    //exclude ECM
+                    continue;
+                }
+                if (Elements[idOfElementOnSameColumn]->isActinMimicing){
+                    //exclude top actin layer if there is one
+                     //std::cout<<"I'm in conserveColumnVolume and there is ActinMimicing elements with id:"<<itElement->getId()<<std::endl;
+                    continue;
+                }
+                //std::cout<<"Main element id is: "<<itElement->getId()<<"and id of added element is: "<<idOfElementOnSameColumn<<std::endl;
+                //std::cout<<"NodeIds of added element "<<Elements[idOfElementOnSameColumn]->getId()<<"is: "<<std::endl;
+                int* NodeIdsTemp = Elements[idOfElementOnSameColumn]->getNodeIds();
+                for (int j=0; j<6; ++j){
+                    //std::cout<<NodeIdsTemp[j]<<" ";
+                }
+                //std::cout<<" "<<std::endl;
+                elementIdsForRedistribution.push_back(idOfElementOnSameColumn);
+            }
             /**
              * The column-vise volume conservation requires volume redistribution amongst cell layer of the tissue,
              * and a diffusion based volume exchange where the most compressed elements give volume to least compressed.
              */
-    		//now I have a list of elements that I would like to redistribute the volumes of:
-    		//get sum of ideal volumes:
-    		const int n = elementIdsForRedistribution.size();
-    		double ratioOfCurrentVolumeToIdeal[n];
-    		double sumIdealVolumes = 0;
-    		double sumCurrentVolumes = 0;
-    		for (int i=0; i < n;++i){
-    			double idealVolume = Elements[elementIdsForRedistribution[i]]->GrownVolume;
-    			sumIdealVolumes += idealVolume;
-    			//get current volume from average detF:
-    			double currentVolume = Elements[elementIdsForRedistribution[i]]->getCurrentVolume();
-    			if (currentVolume < 10E-10){
-    				currentVolume = idealVolume;
-    			}
-    			//std::cout<<"Calculating volumes. elementID idealV currV: "<<elementIdsForRedistribution[i]<<" "<<Elements[elementIdsForRedistribution[i]]->GrownVolume<<" "<<Elements[elementIdsForRedistribution[i]]->getCurrentVolume()<<std::endl;
-			ratioOfCurrentVolumeToIdeal[i]= currentVolume/idealVolume;
-    			sumCurrentVolumes += currentVolume;
-    		}
-    		double redistributionFactors[n];
-    		for (int i=0; i < n;++i){
-    			//calculate redistribution factors:
-    			redistributionFactors[i] = sumIdealVolumes/sumCurrentVolumes *ratioOfCurrentVolumeToIdeal[i];
-    			std::cout<<"I'm in conseerveColumnVolume and my  id is: "<<itElement->getId()<<std::endl;
-			std::cout<<"[sumIdealV][sumCurrVol][ratio][redistFac]: "<<sumIdealVolumes<<" "<<sumCurrentVolumes<<" "<<ratioOfCurrentVolumeToIdeal[i]<<" "<<redistributionFactors[i]<<std::endl;
-			//calculateGrowth:
-    			double uniformGrowthIncrement = pow(redistributionFactors[i],1.0/3.0);
-    			gsl_matrix* columnarFgIncrement = gsl_matrix_calloc(3,3);
-    			gsl_matrix* peripodialFgIncrement = gsl_matrix_calloc(3,3);
-    			gsl_matrix_set_identity(columnarFgIncrement);
-    			gsl_matrix_set_identity(peripodialFgIncrement);
-    			gsl_matrix_set(columnarFgIncrement,0,0,uniformGrowthIncrement);
-    			gsl_matrix_set(columnarFgIncrement,1,1,uniformGrowthIncrement);
-    			gsl_matrix_set(columnarFgIncrement,2,2,uniformGrowthIncrement);
-    			Elements[elementIdsForRedistribution[i]]->updateGrowthIncrement(columnarFgIncrement,peripodialFgIncrement);
-    			gsl_matrix_free(columnarFgIncrement);
-    			gsl_matrix_free(peripodialFgIncrement);
-    		}
-    	}
+            //now I have a list of elements that I would like to redistribute the volumes of:
+            //get sum of ideal volumes:
+            const int n = elementIdsForRedistribution.size();
+            double ratioOfCurrentVolumeToIdeal[n];
+            double sumTempGrownVolumes = 0;
+            double sumCurrentVolumes = 0;
+            double sumReferenceVolumes = 0;
+
+            for (int i=0; i < n;++i){
+                // get temporary grown volume:
+                double tempGrownVolume;
+                tempGrownVolume = Elements[elementIdsForRedistribution[i]]->GrownVolume;
+                sumTempGrownVolumes += tempGrownVolume;
+
+                //get reference volume:
+                double referenceVolume = Elements[elementIdsForRedistribution[i]]->getReferenceVolume();
+                sumReferenceVolumes += referenceVolume;
+
+                //get current volume from average detF:
+                double currentVolume = Elements[elementIdsForRedistribution[i]]->getCurrentVolume();
+                if (currentVolume < 10E-10){
+                    currentVolume = referenceVolume;
+                }
+                ratioOfCurrentVolumeToIdeal[i]= currentVolume/tempGrownVolume;
+                sumCurrentVolumes += currentVolume;
+
+                std::cout<<"calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: "<<currSimTimeSec<<" "<<itElement->getId()<<" "<<elementIdsForRedistribution[i]<<" "<<referenceVolume<<" "<<currentVolume<<" "<<tempGrownVolume<<std::endl;
+            }
+            double redistributionFactors[n];
+            for (int i=0; i < n;++i){
+                //calculate redistribution factors:
+                //redistributionFactors[i] = (sumCurrentVolumes/sumTempGrownVolumes)/ratioOfCurrentVolumeToIdeal[i];
+                //redistributionFactors[i] = (sumCurrentVolumes/sumTempGrownVolumes);
+                redistributionFactors[i] = (sumReferenceVolumes/sumTempGrownVolumes);
+                std::cout<<"[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: "<<currSimTimeSec<<" "<<itElement->getId()<<" "<<elementIdsForRedistribution[i]<<" "<<sumReferenceVolumes<<" "<<sumCurrentVolumes<<" "<<sumTempGrownVolumes<<" "<<ratioOfCurrentVolumeToIdeal[i]<<" "<<redistributionFactors[i]<<std::endl;
+
+                //calculateGrowth:
+                double uniformGrowthIncrement = pow(redistributionFactors[i],1.0/3.0);
+                gsl_matrix* columnarFgIncrement = gsl_matrix_calloc(3,3);
+                gsl_matrix* peripodialFgIncrement = gsl_matrix_calloc(3,3);
+                gsl_matrix_set_identity(columnarFgIncrement);
+                gsl_matrix_set_identity(peripodialFgIncrement);
+                gsl_matrix_set(columnarFgIncrement,0,0,uniformGrowthIncrement);
+                gsl_matrix_set(columnarFgIncrement,1,1,uniformGrowthIncrement);
+                gsl_matrix_set(columnarFgIncrement,2,2,uniformGrowthIncrement);
+                Elements[elementIdsForRedistribution[i]]->updateGrowthIncrement(columnarFgIncrement,peripodialFgIncrement);
+                gsl_matrix_free(columnarFgIncrement);
+                gsl_matrix_free(peripodialFgIncrement);
+            }
+        }
     }
 }
 

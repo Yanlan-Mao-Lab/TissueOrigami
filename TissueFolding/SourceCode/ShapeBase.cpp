@@ -421,6 +421,17 @@ double ShapeBase::getCurrentVolume(){
 	return currentVolume;
 }
 
+
+double ShapeBase::getReferenceVolume(){
+    /**
+     * This function gives the initial volume of the element at relaxed state.
+     */
+
+    double referenceVolume = ReferenceShape->Volume;
+    return referenceVolume;
+}
+
+
 gsl_matrix* ShapeBase::getCurrentFe(){
     /**
      * The current elastic deformation gradient is calculated the average at all Gauss points
@@ -608,6 +619,8 @@ void ShapeBase::calculateFgFromGridCorners(int gridGrowthsInterpolationType, dou
 		for (int axis =0; axis<3; axis++){
 			double gAxis = exp(growth[axis]*dt);
 			gsl_matrix_set(increment,axis,axis,gAxis);
+			std::cout<<"Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:"<<axis<<" "<<gAxis<<" "<<increment<<std::endl;
+
 		}
 
 		//Rotate the growth if the angel is not zero:
@@ -1400,6 +1413,62 @@ void ShapeBase::setPlasticDeformationIncrement(double xx, double yy, double zz){
 	gsl_matrix_set(plasticDeformationIncrement,0,0,xx);
 	gsl_matrix_set(plasticDeformationIncrement,1,1,yy);
 	gsl_matrix_set(plasticDeformationIncrement,2,2,zz);
+}
+
+void 	ShapeBase::tempgrowShapeByFg(){
+    /** This function updates the current growth deformaiton gradient with the growt/shape
+    * change/plastic deformation increments and their respective rotations.
+    */
+    if (rotatedGrowth){
+    /** If the growth is rotated (ShapeBase#rotatedGrowth), the current growth increment
+    *  in rotated with a tensor rotation: \f$ \mathbf{R}^{T} \mathbf{F}^{G}_{increment} \mathbf{R}  \f$.\n
+    *  Where \f$ \mathbf{F}^{G}_{increment} \f$
+    * is ShapeBase#growthIncrement and the rotation matrix is ShapeBase#GrowthStrainsRotMat. A similar
+    * rotation is applied on shape change increment defined in ShapeBase#shapeChangeIncrement and
+    * ShapeBase#GrowthStrainsRotMat.
+    */
+        gsl_matrix* temp = gsl_matrix_calloc(nDim,nDim);
+        //R^T * growthIncrement
+        gsl_blas_dgemm (CblasTrans, CblasNoTrans,1.0, GrowthStrainsRotMat, growthIncrement, 0.0, temp);
+        //R^T * growthIncrement * R
+        gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, temp, GrowthStrainsRotMat, 0.0, growthIncrement);
+        //rotate shape change increment:
+        gsl_blas_dgemm (CblasTrans, CblasNoTrans,1.0, GrowthStrainsRotMat, shapeChangeIncrement, 0.0, temp);
+        gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, temp, GrowthStrainsRotMat, 0.0, shapeChangeIncrement);
+        gsl_matrix_free(temp);
+    }
+    //incrementing Fg with current growth rate, plastic deformation rate, and shape changes:
+    gsl_matrix* temp1 = gsl_matrix_calloc(nDim,nDim);
+    gsl_matrix* temp2 = gsl_matrix_calloc(nDim,nDim);
+    gsl_matrix* temp3 = gsl_matrix_calloc(nDim,nDim);
+    /** The plastic deformation increment is already in the correct orientation by definiton. The increments
+    * are then merged and added on the current growth deformation gradient \f$ F^{G} \f$
+    */
+    //adding plastic deformation, this increment is in already in correct orientation:
+    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, plasticDeformationIncrement,growthIncrement, 0.0, temp1);
+    //adding shape change, this increment is in already in correct orientation:
+    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, shapeChangeIncrement,temp1, 0.0, temp2);
+    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, temp2, Fg, 0.0, temp3);
+//    gsl_matrix_memcpy(Fg, temp3);
+//    gsl_matrix* tmpFgForInversion = gsl_matrix_calloc(nDim,nDim);
+//    createMatrixCopy(tmpFgForInversion,Fg);
+//    bool inverted = InvertMatrix(tmpFgForInversion, InvFg);
+//    if (!inverted){
+//        std::cerr<<"Fg not inverted!!"<<std::endl;
+//    }
+    /**
+    * The volumentric change induced by growth is calculated via the determinant of the growth deformation
+    * gradient. The current prefered volume is updated accordingly.
+    */
+//    double detFg = determinant3by3Matrix(Fg);
+    double tempdetFg = determinant3by3Matrix(temp3);
+    GrownVolume = tempdetFg*ReferenceShape->Volume;
+//    VolumePerNode = GrownVolume/nNodes;
+    //freeing matrices allocated in this function
+    gsl_matrix_free(temp1);
+    gsl_matrix_free(temp2);
+    gsl_matrix_free(temp3);
+//    gsl_matrix_free(tmpFgForInversion);
 }
 
 void 	ShapeBase::growShapeByFg(){

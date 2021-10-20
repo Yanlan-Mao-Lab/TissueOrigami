@@ -215,6 +215,7 @@ public:
     void			getInitialRelativePositionInTissueInGridIndex(int nGridX, int nGridY, int& IndexX, int& IndexY, double& FracX, double& FracY); 	///< The relative positions of the iitial configuration of the element within the bounding box of the tissue.
     double			getStiffnessMultiplier();			///< This function returns the current stiffness multiplier as a result of perturbations to physical properties.
     double			getCurrentVolume();					///< This function returns the current volume of the element.
+    double                      getReferenceVolume();                                    ///< This function returns the reference volume of the element (i.e. the initial volume at relaxed state).
     double			getElementalElasticForce(int nodeIndex, int dimIndex);					///< This function returns the calculated elastic force for the node nodeIndex, in coordinate dimIndex.
     void			setElementalElasticForce(int nodeIndex, int dimIndex, double value);	///< This functions sets the calculated elastic force for the node nodeIndex, dimension dimIndex, to the input value.
 
@@ -350,6 +351,7 @@ public:
     void    				CalculateGrowthRotationByF();                                                       ///< This function calculates the rigid body rotation of the element around the z axis of the tissue from hte fecormation gradient.
     void 					calculateTriPointFForRatation();                                                    ///< This function calculates the current deformaiton gradient as averaged at all Gauss points, for rigid body rotation extraction
     void 					setPlasticDeformationIncrement(double xx, double yy, double zz);                    ///< This function sets diagonal of the plastic deformation gradient increment from input values
+    void 					tempgrowShapeByFg();
     void 					growShapeByFg();                                                                    ///< This function updates the current growth deformaiton gradient with the growt/shape change/plastic deformation increments and their respective rotations.
     void 					changeShapeByFsc(double dt);                                                        ///< This function calculates the shape change increment from shape change rates
     void					checkIfInsideEllipseBands(int nMarkerEllipseRanges, std::vector<double> markerEllipseBandXCentres, std::vector<double> markerEllipseBandR1Ranges, std::vector<double> markerEllipseBandR2Ranges, const std::vector<std::unique_ptr<Node>>& Nodes); ///< This function checks if the element is inside any marker bands for perturbatins.

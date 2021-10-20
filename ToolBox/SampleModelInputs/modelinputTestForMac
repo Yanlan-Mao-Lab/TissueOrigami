@@ -6,14 +6,14 @@ TypeOfCoordinateSystem:
   
 InputMeshParameters:
   MeshInputMode(int-seeDocumentation): 4
-  MeshFile(full-path): /Users/nkhalilgharibi/TissueFoldingProject/TissueFoldingForked/TissueFolding/ToolBox/MeshGeneration/2DEllipse/96hrRectangleWing_SmallMesh_posCoord_noActin.mesh
+  MeshFile(full-path): /Users/nkhalilgharibi/TissueFoldingProject/TissueFoldingForked/TissueFolding/ToolBox/MeshGeneration/2DEllipse/96hrRectangleWing_LargeMesh_posCoord.mesh
   symmetricInX(bool): 0
   symmetricInY(bool): 0
   symmetricInZ(bool): 0
  
 TimeParameters:
   TimeStep(sec): 60
-  SimulationLength(sec): 3600
+  SimulationLength(sec): 0
   
 SaveOptions:
   SaveImages(bool): 1
@@ -108,5 +108,5 @@ ShapeChangeOptions:
   applyShapeChangeToBasalECM(bool): 0
   applyShapeChangeToLateralECM(bool): 0
   ShapeChangeType(1=AB;2=DV&AP): 1
-  Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/TissueFoldingForked/TissueFolding/ToolBox/ShapeChangeRates/ShapeChangeRate96hrRectangleWingZ_FineGrid_Reduction_3
+  Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/TissueFoldingForked/TissueFolding/ToolBox/ShapeChangeRates/ShapeChangeRate96hrRectangleWingZ_FineGrid_Reduction_3_neg
   ConserveVolume(bool): 0
