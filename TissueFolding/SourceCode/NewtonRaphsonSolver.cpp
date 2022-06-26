@@ -474,11 +474,11 @@ void NewtonRaphsonSolver::solveForDeltaU(){
 	double* a = new double [nNonzero];
 	writeKinPardisoFormat(nNonzero, ja_vec, a_vec, ja, a);
 	writeginPardisoFormat(b,nmult);
-	int error = solveWithPardiso(a, b, ia, ja, nmult);
-	if (error != 0){std::cerr<<"Pardiso solver did not return success!!"<<std::endl;}
-	if (boundNodesWithSlaveMasterDefinition){
-		equateSlaveDisplacementsToMasters();
-	}
+//	int error = solveWithPardiso(a, b, ia, ja, nmult);
+//	if (error != 0){std::cerr<<"Pardiso solver did not return success!!"<<std::endl;}
+//	if (boundNodesWithSlaveMasterDefinition){
+//		equateSlaveDisplacementsToMasters();
+//	}
 	delete[] ia;
 	delete[] ja;
 	delete[] a;
@@ -493,272 +493,272 @@ extern "C" void pardiso_chkvec     (int *, int *, double *, int *);
 extern "C" void pardiso_printstats (int *, int *, double *, int *, int *, int *, double *, int *);
 
 
-int NewtonRaphsonSolver::solveWithPardiso(double* a, double*b, int* ia, int* ja, const int n_variables){
+//int NewtonRaphsonSolver::solveWithPardiso(double* a, double*b, int* ia, int* ja, const int n_variables){
 
-    // I am copying my libraries to a different location for this to work:
-    // On MAC:
-    // cp /usr/local/lib/gcc/x86_64-apple-darwin14.4.0/4.7.4/libgfortran.3.dylib /usr/local/lib/
-    // cp /usr/local/lib/gcc/x86_64-apple-darwin14.4.0/4.7.4/libgomp.1.dylib /usr/local/lib/
-    // cp /usr/local/lib/gcc/x86_64-apple-darwin14.4.0/4.7.4/libquadmath.0.dylib /usr/local/lib/
-    // cp libpardiso500-MACOS-X86-64.dylib usr/local/lib
-    //
-    // compilation:
-    // g++ pardiso_sym.cpp -o pardiso_sym  -L./ -L/usr/local/lib -L/usr/lib/  -lpardiso500-MACOS-X86-64 -llapack
-
-
-    // On ubuntu,
-    // cp libpardiso500-GNU461-X86-64.so /usr/lib/
-    //
-    // sometimes linux cannot recognise liblapack.so.3gf or liblapack.so.3.0.1 or others like this, are essentially liblapack.so
-    // on ubuntu you can get this solved by installing liblapack-dev:
-    // sudo apt-get install liblapack-dev
-    //
-    // compilation:
-    // gcc test.cpp -o testexe  -L/usr/lib/  -lpardiso500-GNU461-X86-64  -fopenmp  -llapack
-
-    //
-    // also for each terminal run:
-    // export OMP_NUM_THREADS=1
-    // For mkl this is :
-    // export MKL_PARDISO_OOC_MAX_CORE_SIZE=10000
-    // export MKL_PARDISO_OOC_MAX_SWAP_SIZE=2000
-    // fo
-    // MSGLVL: the level of verbal output, 0 is no output.
-
-    int    n = n_variables;
-    int    nnz = ia[n];
-    int    mtype = 11;        /* Real unsymmetric matrix */
-
-    /* RHS and solution vectors. */
-    int      nrhs = 1;          /* Number of right hand sides. */
-    double   x[n_variables];//, diag[n_variables];
-    /* Internal solver memory pointer pt,                  */
-    /* 32-bit: int pt[64]; 64-bit: long int pt[64]         */
-    /* or void *pt[64] should be OK on both architectures  */
-    void    *pt[64];
-
-    /* Pardiso control parameters. */
-    int      iparm[64];
-    double   dparm[64];
-    int      maxfct, mnum, phase, error, msglvl, solver;
-
-    iparm[60] = 1; //use in-core version when there is enough memory, use out of core version when not.
-
-    /* Number of processors. */
-    int      num_procs;
-
-    /* Auxiliary variables. */
-    char    *var;
-    int      i;// k;
-
-    double   ddum;              /* Double dummy */
-    int      idum;              /* Integer dummy. */
+//    // I am copying my libraries to a different location for this to work:
+//    // On MAC:
+//    // cp /usr/local/lib/gcc/x86_64-apple-darwin14.4.0/4.7.4/libgfortran.3.dylib /usr/local/lib/
+//    // cp /usr/local/lib/gcc/x86_64-apple-darwin14.4.0/4.7.4/libgomp.1.dylib /usr/local/lib/
+//    // cp /usr/local/lib/gcc/x86_64-apple-darwin14.4.0/4.7.4/libquadmath.0.dylib /usr/local/lib/
+//    // cp libpardiso500-MACOS-X86-64.dylib usr/local/lib
+//    //
+//    // compilation:
+//    // g++ pardiso_sym.cpp -o pardiso_sym  -L./ -L/usr/local/lib -L/usr/lib/  -lpardiso500-MACOS-X86-64 -llapack
 
 
-/* -------------------------------------------------------------------- */
-/* ..  Setup Pardiso control parameters.                                */
-/* -------------------------------------------------------------------- */
+//    // On ubuntu,
+//    // cp libpardiso500-GNU461-X86-64.so /usr/lib/
+//    //
+//    // sometimes linux cannot recognise liblapack.so.3gf or liblapack.so.3.0.1 or others like this, are essentially liblapack.so
+//    // on ubuntu you can get this solved by installing liblapack-dev:
+//    // sudo apt-get install liblapack-dev
+//    //
+//    // compilation:
+//    // gcc test.cpp -o testexe  -L/usr/lib/  -lpardiso500-GNU461-X86-64  -fopenmp  -llapack
 
-    error = 0;
-    solver = 0; /* use sparse direct solver */
-    pardisoinit (pt,  &mtype, &solver, iparm, dparm, &error);
+//    //
+//    // also for each terminal run:
+//    // export OMP_NUM_THREADS=1
+//    // For mkl this is :
+//    // export MKL_PARDISO_OOC_MAX_CORE_SIZE=10000
+//    // export MKL_PARDISO_OOC_MAX_SWAP_SIZE=2000
+//    // fo
+//    // MSGLVL: the level of verbal output, 0 is no output.
 
-    if (error != 0)
-    {
-        if (error == -10 )
-           printf("No license file found \n");
-        if (error == -11 )
-           printf("License is expired \n");
-        if (error == -12 )
-           printf("Wrong username or hostname \n");
-         return 1;
-    }
-    else
-        //printf("[PARDISO]: License check was successful ... \n");
+//    int    n = n_variables;
+//    int    nnz = ia[n];
+//    int    mtype = 11;        /* Real unsymmetric matrix */
 
-    /* Numbers of processors, value of OMP_NUM_THREADS */
-    var = getenv("OMP_NUM_THREADS");
-    if(var != NULL)
-        sscanf( var, "%d", &num_procs );
-    else {
-        printf("Set environment OMP_NUM_THREADS to 1");
-        exit(1);
-    }
-    iparm[2]  = num_procs;
+//    /* RHS and solution vectors. */
+//    int      nrhs = 1;          /* Number of right hand sides. */
+//    double   x[n_variables];//, diag[n_variables];
+//    /* Internal solver memory pointer pt,                  */
+//    /* 32-bit: int pt[64]; 64-bit: long int pt[64]         */
+//    /* or void *pt[64] should be OK on both architectures  */
+//    void    *pt[64];
 
-    maxfct = 1;		    /* Maximum number of numerical factorizations.  */
-    mnum   = 1;         /* Which factorization to use. */
+//    /* Pardiso control parameters. */
+//    int      iparm[64];
+//    double   dparm[64];
+//    int      maxfct, mnum, phase, error, msglvl, solver;
 
-    iparm[10] = 0; /* no scaling  */
-    iparm[12] = 0; /* no matching */
+//    iparm[60] = 1; //use in-core version when there is enough memory, use out of core version when not.
 
-    msglvl = 0;         /* Print statistical information  */
-    error  = 0;         /* Initialize error flag */
+//    /* Number of processors. */
+//    int      num_procs;
 
-/* -------------------------------------------------------------------- */
-/* ..  Convert matrix from 0-based C-notation to Fortran 1-based        */
-/*     notation.                                                        */
-/* -------------------------------------------------------------------- */
-    for (i = 0; i < n+1; i++) {
-        ia[i] += 1;
-    }
-    for (i = 0; i < nnz; i++) {
-        ja[i] += 1;
-    }
+//    /* Auxiliary variables. */
+//    char    *var;
+//    int      i;// k;
 
-/* -------------------------------------------------------------------- */
-/*  .. pardiso_chk_matrix(...)                                          */
-/*     Checks the consistency of the given matrix.                      */
-/*     Use this functionality only for debugging purposes               */
-/* -------------------------------------------------------------------- */
-    bool carryOutDebuggingChecks = false;
-    if (carryOutDebuggingChecks){
-        pardiso_chkmatrix  (&mtype, &n, a, ia, ja, &error);
-        if (error != 0) {
-            printf("\nERROR in consistency of matrix: %d", error);
-            exit(1);
-        }
-    }
-/* -------------------------------------------------------------------- */
-/* ..  pardiso_chkvec(...)                                              */
-/*     Checks the given vectors for infinite and NaN values             */
-/*     Input parameters (see PARDISO user manual for a description):    */
-/*     Use this functionality only for debugging purposes               */
-/* -------------------------------------------------------------------- */
+//    double   ddum;              /* Double dummy */
+//    int      idum;              /* Integer dummy. */
 
-    if (carryOutDebuggingChecks){
-        pardiso_chkvec (&n, &nrhs, b, &error);
-        if (error != 0) {
-            printf("\nERROR  in right hand side: %d", error);
-            exit(1);
-        }
-    }
-/* -------------------------------------------------------------------- */
-/* .. pardiso_printstats(...)                                           */
-/*    prints information on the matrix to STDOUT.                       */
-/*    Use this functionality only for debugging purposes                */
-/* -------------------------------------------------------------------- */
-    if (carryOutDebuggingChecks){
-        pardiso_printstats (&mtype, &n, a, ia, ja, &nrhs, b, &error);
-        if (error != 0) {
-            printf("\nERROR right hand side: %d", error);
-            exit(1);
-        }
-    }
-/* -------------------------------------------------------------------- */
-/* ..  Reordering and Symbolic Factorization.  This step also allocates */
-/*     all memory that is necessary for the factorization.              */
-/* -------------------------------------------------------------------- */
-    phase = 11;
-    pardiso (pt, &maxfct, &mnum, &mtype, &phase,
-             &n, a, ia, ja, &idum, &nrhs,
-             iparm, &msglvl, &ddum, &ddum, &error, dparm);
-//std::cout<<"symbolic factorisation"<<std::endl;
-    if (error != 0) {
-        printf("\nERROR during symbolic factorization: %d", error);
-        exit(1);
-    }
-    //printf("\nReordering completed ... ");
-    //printf("\nNumber of nonzeros in factors  = %d", iparm[17]);
-    //printf("\nNumber of factorization MFLOPS = %d", iparm[18]);
 
-/* -------------------------------------------------------------------- */
-/* ..  Numerical factorization.                                         */
-/* -------------------------------------------------------------------- */
-    phase = 22;
-//    iparm[32] = 1; /* compute determinant */
+///* -------------------------------------------------------------------- */
+///* ..  Setup Pardiso control parameters.                                */
+///* -------------------------------------------------------------------- */
 
-    pardiso (pt, &maxfct, &mnum, &mtype, &phase,
-             &n, a, ia, ja, &idum, &nrhs,
-             iparm, &msglvl, &ddum, &ddum, &error,  dparm);
-//std::cout<<"numerical factorisation"<<std::endl;
-    if (error != 0) {
-        printf("\nERROR during numerical factorization: %d", error);
-        exit(2);
-    }
-    //printf("\nFactorization completed ...\n ");
+//    error = 0;
+//    solver = 0; /* use sparse direct solver */
+//    pardisoinit (pt,  &mtype, &solver, iparm, dparm, &error);
 
-/* -------------------------------------------------------------------- */
-/* ..  Back substitution and iterative refinement.                      */
-/* -------------------------------------------------------------------- */
-   /* phase = 33;
+//    if (error != 0)
+//    {
+//        if (error == -10 )
+//           printf("No license file found \n");
+//        if (error == -11 )
+//           printf("License is expired \n");
+//        if (error == -12 )
+//           printf("Wrong username or hostname \n");
+//         return 1;
+//    }
+//    else
+//        //printf("[PARDISO]: License check was successful ... \n");
 
-    iparm[7] = 1;       // Max numbers of iterative refinement steps.
+//    /* Numbers of processors, value of OMP_NUM_THREADS */
+//    var = getenv("OMP_NUM_THREADS");
+//    if(var != NULL)
+//        sscanf( var, "%d", &num_procs );
+//    else {
+//        printf("Set environment OMP_NUM_THREADS to 1");
+//        exit(1);
+//    }
+//    iparm[2]  = num_procs;
 
-    pardiso (pt, &maxfct, &mnum, &mtype, &phase,
-             &n, a, ia, ja, &idum, &nrhs,
-             iparm, &msglvl, b, x, &error,  dparm);
+//    maxfct = 1;		    /* Maximum number of numerical factorizations.  */
+//    mnum   = 1;         /* Which factorization to use. */
 
-    if (error != 0) {
-        printf("\nERROR during solution: %d", error);
-        exit(3);
-    }
-    bool displayResult = false;
-    if (displayResult){
-        printf("\nSolve completed ... ");
-        printf("\nThe solution of the system is: ");
-        for (i = 0; i < n; i++) {
-            printf("\n x [%d] = % f", i, x[i] );
-        }
-        printf ("\n");
-    }
-    //Write x into deltaU:
-    for (int i=0; i<n_variables; ++i){
-        gsl_vector_set(deltaU,i,x[i]);
-    }
-    */
-/* -------------------------------------------------------------------- */
-/* ..  Back substitution with tranposed matrix A^t x=b                  */
-/* -------------------------------------------------------------------- */
+//    iparm[10] = 0; /* no scaling  */
+//    iparm[12] = 0; /* no matching */
 
-	phase = 33;
-	//iparm[4]  = 61;	 /*changing the precision of convergence with pre-conditioning, not sure what it does, I added as trial, but did not change anything */
-	iparm[7]  = 1;       /* Max numbers of iterative refinement steps. */
-	iparm[11] = 1;       /* Solving with transpose matrix. */
+//    msglvl = 0;         /* Print statistical information  */
+//    error  = 0;         /* Initialize error flag */
 
-	pardiso (pt, &maxfct, &mnum, &mtype, &phase,
-			 &n, a, ia, ja, &idum, &nrhs,
-			 iparm, &msglvl, b, x, &error,  dparm);
+///* -------------------------------------------------------------------- */
+///* ..  Convert matrix from 0-based C-notation to Fortran 1-based        */
+///*     notation.                                                        */
+///* -------------------------------------------------------------------- */
+//    for (i = 0; i < n+1; i++) {
+//        ia[i] += 1;
+//    }
+//    for (i = 0; i < nnz; i++) {
+//        ja[i] += 1;
+//    }
 
-	if (error != 0) {
-		printf("\nERROR during solution: %d", error);
-		exit(3);
-	}
+///* -------------------------------------------------------------------- */
+///*  .. pardiso_chk_matrix(...)                                          */
+///*     Checks the consistency of the given matrix.                      */
+///*     Use this functionality only for debugging purposes               */
+///* -------------------------------------------------------------------- */
+//    bool carryOutDebuggingChecks = false;
+//    if (carryOutDebuggingChecks){
+//        pardiso_chkmatrix  (&mtype, &n, a, ia, ja, &error);
+//        if (error != 0) {
+//            printf("\nERROR in consistency of matrix: %d", error);
+//            exit(1);
+//        }
+//    }
+///* -------------------------------------------------------------------- */
+///* ..  pardiso_chkvec(...)                                              */
+///*     Checks the given vectors for infinite and NaN values             */
+///*     Input parameters (see PARDISO user manual for a description):    */
+///*     Use this functionality only for debugging purposes               */
+///* -------------------------------------------------------------------- */
 
-	bool displayResult = false;
-	if (displayResult){
-		printf("\nSolve completed ... ");
-		printf("\nThe solution of the system is: ");
-		for (i = 0; i < n; i++) {
-			printf("\n x [%d] = % f", i, x[i] );
-		}
-		printf ("\n");
-	}
-    //Write x into deltaU:
-    for (int i=0; i<n_variables; ++i){
-        gsl_vector_set(deltaU,i,x[i]);
-    }
+//    if (carryOutDebuggingChecks){
+//        pardiso_chkvec (&n, &nrhs, b, &error);
+//        if (error != 0) {
+//            printf("\nERROR  in right hand side: %d", error);
+//            exit(1);
+//        }
+//    }
+///* -------------------------------------------------------------------- */
+///* .. pardiso_printstats(...)                                           */
+///*    prints information on the matrix to STDOUT.                       */
+///*    Use this functionality only for debugging purposes                */
+///* -------------------------------------------------------------------- */
+//    if (carryOutDebuggingChecks){
+//        pardiso_printstats (&mtype, &n, a, ia, ja, &nrhs, b, &error);
+//        if (error != 0) {
+//            printf("\nERROR right hand side: %d", error);
+//            exit(1);
+//        }
+//    }
+///* -------------------------------------------------------------------- */
+///* ..  Reordering and Symbolic Factorization.  This step also allocates */
+///*     all memory that is necessary for the factorization.              */
+///* -------------------------------------------------------------------- */
+//    phase = 11;
+//    pardiso (pt, &maxfct, &mnum, &mtype, &phase,
+//             &n, a, ia, ja, &idum, &nrhs,
+//             iparm, &msglvl, &ddum, &ddum, &error, dparm);
+////std::cout<<"symbolic factorisation"<<std::endl;
+//    if (error != 0) {
+//        printf("\nERROR during symbolic factorization: %d", error);
+//        exit(1);
+//    }
+//    //printf("\nReordering completed ... ");
+//    //printf("\nNumber of nonzeros in factors  = %d", iparm[17]);
+//    //printf("\nNumber of factorization MFLOPS = %d", iparm[18]);
 
-/* -------------------------------------------------------------------- */
-/* ..  Convert matrix back to 0-based C-notation.                       */
-/* -------------------------------------------------------------------- */
-    for (i = 0; i < n+1; i++) {
-        ia[i] -= 1;
-    }
-    for (i = 0; i < nnz; i++) {
-        ja[i] -= 1;
-    }
+///* -------------------------------------------------------------------- */
+///* ..  Numerical factorization.                                         */
+///* -------------------------------------------------------------------- */
+//    phase = 22;
+////    iparm[32] = 1; /* compute determinant */
 
-/* -------------------------------------------------------------------- */
-/* ..  Termination and release of memory.                               */
-/* -------------------------------------------------------------------- */
-    phase = -1;                 /* Release internal memory. */
+//    pardiso (pt, &maxfct, &mnum, &mtype, &phase,
+//             &n, a, ia, ja, &idum, &nrhs,
+//             iparm, &msglvl, &ddum, &ddum, &error,  dparm);
+////std::cout<<"numerical factorisation"<<std::endl;
+//    if (error != 0) {
+//        printf("\nERROR during numerical factorization: %d", error);
+//        exit(2);
+//    }
+//    //printf("\nFactorization completed ...\n ");
 
-    pardiso (pt, &maxfct, &mnum, &mtype, &phase,
-             &n, &ddum, ia, ja, &idum, &nrhs,
-             iparm, &msglvl, &ddum, &ddum, &error,  dparm);
-    return 0;
-}
+///* -------------------------------------------------------------------- */
+///* ..  Back substitution and iterative refinement.                      */
+///* -------------------------------------------------------------------- */
+//   /* phase = 33;
+
+//    iparm[7] = 1;       // Max numbers of iterative refinement steps.
+
+//    pardiso (pt, &maxfct, &mnum, &mtype, &phase,
+//             &n, a, ia, ja, &idum, &nrhs,
+//             iparm, &msglvl, b, x, &error,  dparm);
+
+//    if (error != 0) {
+//        printf("\nERROR during solution: %d", error);
+//        exit(3);
+//    }
+//    bool displayResult = false;
+//    if (displayResult){
+//        printf("\nSolve completed ... ");
+//        printf("\nThe solution of the system is: ");
+//        for (i = 0; i < n; i++) {
+//            printf("\n x [%d] = % f", i, x[i] );
+//        }
+//        printf ("\n");
+//    }
+//    //Write x into deltaU:
+//    for (int i=0; i<n_variables; ++i){
+//        gsl_vector_set(deltaU,i,x[i]);
+//    }
+//    */
+///* -------------------------------------------------------------------- */
+///* ..  Back substitution with tranposed matrix A^t x=b                  */
+///* -------------------------------------------------------------------- */
+
+//	phase = 33;
+//	//iparm[4]  = 61;	 /*changing the precision of convergence with pre-conditioning, not sure what it does, I added as trial, but did not change anything */
+//	iparm[7]  = 1;       /* Max numbers of iterative refinement steps. */
+//	iparm[11] = 1;       /* Solving with transpose matrix. */
+
+//	pardiso (pt, &maxfct, &mnum, &mtype, &phase,
+//			 &n, a, ia, ja, &idum, &nrhs,
+//			 iparm, &msglvl, b, x, &error,  dparm);
+
+//	if (error != 0) {
+//		printf("\nERROR during solution: %d", error);
+//		exit(3);
+//	}
+
+//	bool displayResult = false;
+//	if (displayResult){
+//		printf("\nSolve completed ... ");
+//		printf("\nThe solution of the system is: ");
+//		for (i = 0; i < n; i++) {
+//			printf("\n x [%d] = % f", i, x[i] );
+//		}
+//		printf ("\n");
+//	}
+//    //Write x into deltaU:
+//    for (int i=0; i<n_variables; ++i){
+//        gsl_vector_set(deltaU,i,x[i]);
+//    }
+
+///* -------------------------------------------------------------------- */
+///* ..  Convert matrix back to 0-based C-notation.                       */
+///* -------------------------------------------------------------------- */
+//    for (i = 0; i < n+1; i++) {
+//        ia[i] -= 1;
+//    }
+//    for (i = 0; i < nnz; i++) {
+//        ja[i] -= 1;
+//    }
+
+///* -------------------------------------------------------------------- */
+///* ..  Termination and release of memory.                               */
+///* -------------------------------------------------------------------- */
+//    phase = -1;                 /* Release internal memory. */
+
+//    pardiso (pt, &maxfct, &mnum, &mtype, &phase,
+//             &n, &ddum, ia, ja, &idum, &nrhs,
+//             iparm, &msglvl, &ddum, &ddum, &error,  dparm);
+//    return 0;
+//}
 
 
 void NewtonRaphsonSolver::constructiaForPardiso(int* ia, const int nmult, vector<int> &ja_vec, vector<double> &a_vec){

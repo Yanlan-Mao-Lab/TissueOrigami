@@ -68,7 +68,7 @@ public:
 
 	void solveForDeltaU();															///< This function solves for the displacements within the N-R step.
    	//raw pointers necessary for Pardiso
-	int  solveWithPardiso(double* a, double*b, int* ia, int* ja, const int n_variables);
+//	int  solveWithPardiso(double* a, double*b, int* ia, int* ja, const int n_variables);
 	void constructiaForPardiso(int* ia, const int nmult, vector<int> &ja_vec, vector<double> &a_vec);
 	void writeKinPardisoFormat(const int nNonzero, vector<int> &ja_vec, vector<double> &a_vec, int* ja, double* a);
 	void writeginPardisoFormat(double* b, const int n);

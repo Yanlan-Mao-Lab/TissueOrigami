@@ -69,7 +69,8 @@ SOURCES += $$CurrPath/SourceCode/main.cpp \
 
 
 # libs and includes for MacOS
-LIBS += -L/usr/include -L/usr/local/lib/ -lgsl -lgslcblas -L/usr/local/Cellar/boost/1.58.0/include -lpardiso600-MACOS-X86-64
+#LIBS += -L/usr/include -L/usr/local/lib/ -lgsl -lgslcblas -L/usr/local/Cellar/boost/1.58.0/include -lpardiso600-MACOS-X86-64
+LIBS += -L/usr/include -L/usr/local/lib/ -lgsl -lgslcblas -L/usr/local/Cellar/boost/1.58.0/include
 INCLUDEPATH += /usr/local/Cellar/boost/1.71.0/include /usr/local/include/
 
 
