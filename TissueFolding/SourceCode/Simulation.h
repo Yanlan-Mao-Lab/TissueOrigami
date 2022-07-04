@@ -15,7 +15,7 @@
 #include "Node.h"
 #include "GrowthFunctionBase.h"
 #include "GrowthFunctionTypes.h"
-#include "NewtonRaphsonSolver.h"
+//#include "NewtonRaphsonSolver.h"
 #include "Lumen.h"
 #include "YoungsModulusModifier.h"
 
@@ -558,7 +558,7 @@ public:
 	vector<double> apikobasalVolumeRedistributionScales;
 
 	//std::unique_ptr<NewtonRaphsonSolver> NRSolver; ///< The pointer to the newton raphson solver
-	std::unique_ptr<NewtonRaphsonSolver> NRSolver;  ///< The pointer to the newton raphson solver
+//	std::unique_ptr<NewtonRaphsonSolver> NRSolver;  ///< The pointer to the newton raphson solver
 
 	//packi
 	Simulation();                                       ///< Constructor
@@ -601,7 +601,7 @@ public:
     bool runOneStep();                                      ///< Run the simulation for one time step.
     void updateOneStepFromSave();							///< Update the simulation for time step from saved files.
     void updatePlasticDeformation();						///< Update the plastic deformation (remodelling) of all nodes.
-    void updateStepNR();									///< Update the positions with solving for the displacements with the N-R iterations.
+//    void updateStepNR();									///< Update the positions with solving for the displacements with the N-R iterations.
     void calculateNumericalJacobian(bool displayMatricesDuringNumericalCalculation);	///< The calculation of the numerical Jacobian for debugging purposes only.
     void calculateLumenNumericalJacobian();												///< The calculation of the numerical Jacobian for lumen contribution, for debugging purposes only.
     void updateElementPositionsinNR(gsl_matrix* uk);        ///< Update elemental positions during one iteration of the NR numerical solving for the displacements.
