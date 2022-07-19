@@ -9,13 +9,16 @@ RemoteSystemsTempFiles/
 TissueFolding/Debug/
 UserInterface/Debug/
 LegionBackup
-
+build*
+oldbuilds
 
 # Specific Files #
 ##################
 *gmon.out
 *Out
 moc_*
+*.pro.user
+*.pro-FORMAC
 
 # compiled source #
 ###################

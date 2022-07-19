@@ -17,35 +17,40 @@
 #   	g++  -o "TissueFolding" $(OBJS) $(USER_OBJS) $(LIBS) -L${OPENBLASROOT}/lib -lopenblas -lpardiso500-GNU481-X86-64  -fopenmp  -I/shared/ucl/apps/gsl/1.16/gcc/include  -lgsl -lgslcblas
 # Then you can make on legion.
 
+#================================================================
+#MODIFY BASED ON USER'S SYSTEM
 
-#curr path for ubuntu
-#CurrPath = /home/melda/Documents/TissueFolding/UserInterface/
+# #curr path for linux
+# CurrPath = /home/melda/Documents/TissueFolding/UserInterface/
 
 #curr path for MacOS:
 CurrPath = ./
+#----------------------------------------------------------------
 
 TARGET = $$CurrPath/Debug/TissueFoldingUI
 
+#=================================================================================================
+#MODIFY BASED ON USER'S SYSTEM
 #qt creator on mac can read config not QMAKE_CXXFLAGS, ubuntu can read QMAKE_CXXFLAGS, not CONFIG
 
-#for ubuntu
-QMAKE_CFLAGS_RELEASE += -fopenmp
-QMAKE_CFLAGS_DEBUG += -fopenmp
-QMAKE_CXXFLAGS += -fopenmp -std=c++17
-QMAKE_LFLAGS +=  -fopenmp
+# #for linux
+# QMAKE_CFLAGS_RELEASE += -fopenmp
+# QMAKE_CFLAGS_DEBUG += -fopenmp
+# QMAKE_CXXFLAGS += -fopenmp -std=c++17
+# QMAKE_LFLAGS +=  -fopenmp
 
-QMAKE_CXXFLAGS += -fopenmp -std=c++17 -D DO_NOT_USE_OMP -D DO_NOT_SOLVE_SYSTEM_OF_EQUATIONS
+# #for linux - include if you want to run without pardiso
+# QMAKE_CXXFLAGS += -fopenmp -std=c++17 -D DO_NOT_USE_OMP -D DO_NOT_SOLVE_SYSTEM_OF_EQUATIONS
 
 #for mac
-#CONFIG += c++17 -D DO_NOT_USE_OMP -D DO_NOT_SOLVE_SYSTEM_OF_EQUATIONS
-#QMAKE_CXXFLAGS += -D DO_NOT_USE_OMP -D DO_NOT_SOLVE_SYSTEM_OF_EQUATIONS
+CONFIG += c++17 -D DO_NOT_USE_OMP -D DO_NOT_SOLVE_SYSTEM_OF_EQUATIONS
+QMAKE_CXXFLAGS += -D DO_NOT_USE_OMP -D DO_NOT_SOLVE_SYSTEM_OF_EQUATIONS
+#--------------------------------------------------------------------------------------------------
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 QT += opengl
  
 # Input
-
-
 HEADERS       +=  	$$CurrPath/SourceCode/MainWindow.h \
 			$$CurrPath/SourceCode/GLWidget.h \
 			$$CurrPath/../TissueFolding/SourceCode/*.h
@@ -66,18 +71,26 @@ SOURCES += $$CurrPath/SourceCode/main.cpp \
         $$CurrPath/../TissueFolding/SourceCode/TimeSeriesPhysicalProperties.cpp \
         $$CurrPath/../TissueFolding/SourceCode/YoungsModulusModifier.cpp
 
-#libs and includes for linux for independent license pardiso:
-#LIBS += -L/usr/include -lgsl -lgslcblas -lpardiso600-GNU720-X86-64  -fopenmp -llapack -lgomp -lpthread -lgfortran -lm
-LIBS += -L/usr/local/include -lgsl -lgslcblas -fopenmp -llapack -lgomp -lpthread -lgfortran -lm
+#=========================================================================================================================
+#MODIFY BASED ON USER'S SYSTEM
 
-# libs and includes for MacOS Intel processor
-#LIBS += -L/usr/include -L/usr/local/lib/ -lgsl -lgslcblas -L/usr/local/Cellar/boost/1.58.0/include -lpardiso600-MACOS-X86-64
-#LIBS += -L/usr/include -L/usr/local/lib/ -lgsl -lgslcblas -L/usr/local/Cellar/boost/1.58.0/include
-#INCLUDEPATH += /usr/local/Cellar/boost/1.71.0/include /usr/local/include/
+# #libs and includes for linux for independent license pardiso:
+# LIBS += -L/usr/include -lgsl -lgslcblas -lpardiso600-GNU720-X86-64  -fopenmp -llapack -lgomp -lpthread -lgfortran -lm
 
-# libs and includes for MacOS M1 Chip processor
-#LIBS += -L/opt/include -L/opt/homebrew/lib/ -lgsl -lgslcblas -L/opt/homebrew/Cellar/boost/1.78.0_1/include
-#INCLUDEPATH += /opt/homebrew/Cellar/boost/1.78.0_1/include /opt/homebrew/include/
+# #libs and includes for linux without pardiso:
+# LIBS += -L/usr/local/include -lgsl -lgslcblas -fopenmp -llapack -lgomp -lpthread -lgfortran -lm
+
+# #libs and includes for MacOS Intel processor for independent license pardiso
+# LIBS += -L/usr/include -L/usr/local/lib/ -lgsl -lgslcblas -L/usr/local/Cellar/boost/1.58.0/include -lpardiso600-MACOS-X86-64
+
+#libs and includes for MacOS Intel processor without pardiso
+LIBS += -L/usr/include -L/usr/local/lib/ -lgsl -lgslcblas -L/usr/local/Cellar/boost/1.58.0/include
+INCLUDEPATH += /usr/local/Cellar/boost/1.71.0/include /usr/local/include/
+
+# #libs and includes for MacOS M1 Chip processor without pardiso
+# LIBS += -L/opt/include -L/opt/homebrew/lib/ -lgsl -lgslcblas -L/opt/homebrew/Cellar/boost/1.78.0_1/include
+# INCLUDEPATH += /opt/homebrew/Cellar/boost/1.78.0_1/include /opt/homebrew/include/
+#--------------------------------------------------------------------------------------------------------------------------
 
 # install
 target.path   =  $$CurrPath/
