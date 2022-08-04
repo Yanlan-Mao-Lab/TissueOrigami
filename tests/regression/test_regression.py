@@ -44,9 +44,9 @@ class Test_RegressionClass():
 
     for t_case in test_cases:
         ref_mesh_input_to_sim[t_case] = dir_path + "/" + ref_location + "/ref_mesh_input_to_sim_" + t_case + ".txt"
-        ref_sim_output_pre_qt[t_case] = dir_path + "/" + ref_location + "/ref_sim_output_pre_qt" + t_case + ".txt"
-        gen_mesh_input_to_sim[t_case] = dir_path + "/" + gen_location + "/ref_mesh_input_to_sim_" + t_case + ".txt"
-        gen_sim_output_pre_qt[t_case] = dir_path + "/" + gen_location + "/ref_sim_output_pre_qt" + t_case + ".txt"
+        ref_sim_output_pre_qt[t_case] = dir_path + "/" + ref_location + "/ref_sim_output_pre_qt_" + t_case + ".txt"
+        gen_mesh_input_to_sim[t_case] = dir_path + "/" + gen_location + "/gen_mesh_input_to_sim_" + t_case + ".txt"
+        gen_sim_output_pre_qt[t_case] = dir_path + "/" + gen_location + "/gen_sim_output_pre_qt_" + t_case + ".txt"
 
     def test_mesh_input_to_simulation_regression(self):
 
