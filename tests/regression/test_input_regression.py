@@ -25,7 +25,7 @@ from cgi import test
 import glob, os
 import filecmp
 
-def test_input_regression():
+def test_mesh_input_to_simulation_regression():
 
     # test case labels
     test_cases = ['rect', 'sphere', 'wingd']
@@ -53,14 +53,14 @@ def test_input_regression():
             # assert file contents are identical, print error in test case if they are not
             assert filecmp.cmp(r_input_file, g_input_file, shallow=False), "Input file mismatch in " + t_case + " case"
 
-def test_output_regression():
+def test_simulation_output_regression():
 
     # test case labels
     test_cases = ['rect', 'sphere', 'wingd']
     # path to reappend in order to find files to compare
     dir_path = os.path.dirname(os.path.abspath(__file__))
 
-    # PLACEHOLDER FOR CALL TO CODE FOR GENERATION OF INPUT MESHES
+    # PLACEHOLDER FOR CALL TO SIMULATION RUN, and to predefined input files
     # CONSIDER COMBINING WITH THE TEST ABOVE, OR PUTTING INTO A TEST CLASS, SO THESE FILES CAN BE ACCESSED BY BOTH TESTS
     
     # compare matching filenames
