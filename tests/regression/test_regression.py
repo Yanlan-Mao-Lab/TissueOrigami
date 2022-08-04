@@ -43,10 +43,10 @@ class Test_RegressionClass():
     ref_sim_output_pre_qt = dict(); gen_sim_output_pre_qt = dict()
 
     for t_case in test_cases:
-        ref_mesh_input_to_sim[t_case] = dir_path + "/" + ref_location + "/mesh_input_to_sim_" + t_case + ".txt"
-        ref_sim_output_pre_qt[t_case] = dir_path + "/" + ref_location + "/sim_output_pre_qt" + t_case + ".txt"
-        gen_mesh_input_to_sim[t_case] = dir_path + "/" + gen_location + "/mesh_input_to_sim_" + t_case + ".txt"
-        gen_sim_output_pre_qt[t_case] = dir_path + "/" + gen_location + "/sim_output_pre_qt" + t_case + ".txt"
+        ref_mesh_input_to_sim[t_case] = dir_path + "/" + ref_location + "/ref_mesh_input_to_sim_" + t_case + ".txt"
+        ref_sim_output_pre_qt[t_case] = dir_path + "/" + ref_location + "/ref_sim_output_pre_qt" + t_case + ".txt"
+        gen_mesh_input_to_sim[t_case] = dir_path + "/" + gen_location + "/ref_mesh_input_to_sim_" + t_case + ".txt"
+        gen_sim_output_pre_qt[t_case] = dir_path + "/" + gen_location + "/ref_sim_output_pre_qt" + t_case + ".txt"
 
     def test_mesh_input_to_simulation_regression(self):
 
