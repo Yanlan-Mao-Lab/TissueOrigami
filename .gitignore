@@ -25,4 +25,7 @@ moc_*
 *.o
 *.so
 
+# python caches #
+#################
+**/__pycache__/**
 
