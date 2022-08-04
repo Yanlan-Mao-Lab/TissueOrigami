@@ -25,60 +25,47 @@ from cgi import test
 import glob, os
 import filecmp
 
-class RegressionTestClass():
-    def test_mesh_input_to_simulation_regression():
+class Test_RegressionClass():
 
-        # test case labels
-        test_cases = ['rect', 'sphere', 'wingd']
-        # path to reappend in order to find files to compare
-        dir_path = os.path.dirname(os.path.abspath(__file__))
+    # path to reappend in order to find files to compare
+    dir_path = os.path.dirname(os.path.abspath(__file__))
 
-        # PLACEHOLDER FOR CALL TO CODE FOR GENERATION OF INPUT MESHES
+    # test case labels
+    test_cases = ["rect", "sphere", "wingd"]
+
+    # reference file location, relative to this file location
+    ref_location = "ref_files"
+    # generated file location, relative to this file location
+    gen_location = "gen_files"
+
+    # fetch the names of the reference files now and place them into dicts
+    ref_mesh_input_to_sim = dict(); gen_mesh_input_to_sim = dict()
+    ref_sim_output_pre_qt = dict(); gen_sim_output_pre_qt = dict()
+
+    for t_case in test_cases:
+        ref_mesh_input_to_sim[t_case] = dir_path + "/" + ref_location + "/mesh_input_to_sim_" + t_case + ".txt"
+        ref_sim_output_pre_qt[t_case] = dir_path + "/" + ref_location + "/sim_output_pre_qt" + t_case + ".txt"
+        gen_mesh_input_to_sim[t_case] = dir_path + "/" + gen_location + "/mesh_input_to_sim_" + t_case + ".txt"
+        gen_sim_output_pre_qt[t_case] = dir_path + "/" + gen_location + "/sim_output_pre_qt" + t_case + ".txt"
+
+    def test_mesh_input_to_simulation_regression(self):
+
+        for t_case in self.test_cases:
+            # PLACEHOLDER FOR CALL TO CODE FOR GENERATION OF INPUT MESHES
+            # SAVE THESE INPUTS TO THE NAMES PROVIDED IN mesh_input_to_sim_fdict
+            # This should look something like:
+            # call executable that creates the mesh for the test case t_case, and save it to the file gen_mesh_input_to_sim[t_case]
+
+            # now assert that the input file generated matches the reference input file, for this t_case
+            # if assert fails, print out test case that caused failure
+            assert filecmp.cmp(self.ref_mesh_input_to_sim[t_case], self.gen_mesh_input_to_sim[t_case], shallow=False), "Input file mismatch in " + t_case + " case"              
+
+    def test_simulation_output_regression(self):
+
+        for t_case in self.test_cases:
+            # PLACEHOLDER FOR CALL TO SIMULATION RUN
+            # This should look something like:
+            # run simulation using input file in ref_mesh_input_to_sim[t_case], saving it to file gen_sim_output_pre_qt[t_case]
         
-        # compare matching filenames
-        for t_case in test_cases:       
-            # obtain the corresponding files from reference_inputs and generated_inputs
-            r_input = glob.glob(dir_path + "/regression_inputs/regression_input_" + t_case + ".txt")
-            g_input = glob.glob(dir_path + "/generated_inputs/generated_input_" + t_case + ".txt")
-
-            # r_input and g_input should be lists of length 1, containing strings. 
-            # Fail test and throw error (test not working!) if this is not the case.
-            if len(g_input)!=1:
-                raise(RuntimeError("Non-unique generated input file for test_input_regression in test case: " + t_case + "\n Got: %d, Expected 1. Did you clear previously generated input files?" % len(g_input)))
-            elif len(r_input)!=1:
-                raise(RuntimeError("Non unique reference input file for test_input_regression in test case: " + t_case + "\n Got: %d, Expected 1. Has the location of the reference input files been modified?" % len(r_input)))
-            else:
-                # proceed with test
-                r_input_file = r_input[0]
-                g_input_file = g_input[0]
-                # assert file contents are identical, print error in test case if they are not
-                assert filecmp.cmp(r_input_file, g_input_file, shallow=False), "Input file mismatch in " + t_case + " case"
-
-    def test_simulation_output_regression():
-
-        # test case labels
-        test_cases = ['rect', 'sphere', 'wingd']
-        # path to reappend in order to find files to compare
-        dir_path = os.path.dirname(os.path.abspath(__file__))
-
-        # PLACEHOLDER FOR CALL TO SIMULATION RUN, and to predefined input files
-        # CONSIDER COMBINING WITH THE TEST ABOVE, OR PUTTING INTO A TEST CLASS, SO THESE FILES CAN BE ACCESSED BY BOTH TESTS
-        
-        # compare matching filenames
-        for t_case in test_cases:       
-            # obtain the corresponding files from reference_inputs and generated_inputs
-            r_output = glob.glob(dir_path + "/regression_onputs/regression_output_" + t_case + ".txt")
-            g_output = glob.glob(dir_path + "/generated_onputs/generated_output_" + t_case + ".txt")
-
-            # r_input and g_input should be lists of length 1, containing strings. 
-            # Fail test and throw error (test not working!) if this is not the case.
-            if len(g_output)!=1:
-                raise(RuntimeError("Non-unique generated output file for test_output_regression in test case: " + t_case + "\n Got: %d, Expected 1. Did you clear previously generated output files?" % len(g_output)))
-            elif len(g_output)!=1:
-                raise(RuntimeError("Non unique reference input file for test_output_regression in test case: " + t_case + "\n Got: %d, Expected 1. Has the location of the reference input files been modified?" % len(r_output)))
-            else:
-                # proceed with test
-                r_output_file = r_output[0]
-                g_output_file = g_output[0]
-                # assert file contents are identical, print error in test case if they are not
-                assert filecmp.cmp(r_output_file, g_output_file, shallow=False), "Input file mismatch in " + t_case + " case"
+            # assert file contents are identical, print error in test case if they are not
+            assert filecmp.cmp(self.ref_sim_output_pre_qt[t_case], self.gen_sim_output_pre_qt[t_case], shallow=False), "Input file mismatch in " + t_case + " case"
