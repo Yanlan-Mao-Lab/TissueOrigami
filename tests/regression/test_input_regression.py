@@ -52,3 +52,32 @@ def test_input_regression():
             g_input_file = g_input[0]
             # assert file contents are identical, print error in test case if they are not
             assert filecmp.cmp(r_input_file, g_input_file, shallow=False), "Input file mismatch in " + t_case + " case"
+
+def test_output_regression():
+
+    # test case labels
+    test_cases = ['rect', 'sphere', 'wingd']
+    # path to reappend in order to find files to compare
+    dir_path = os.path.dirname(os.path.abspath(__file__))
+
+    # PLACEHOLDER FOR CALL TO CODE FOR GENERATION OF INPUT MESHES
+    # CONSIDER COMBINING WITH THE TEST ABOVE, OR PUTTING INTO A TEST CLASS, SO THESE FILES CAN BE ACCESSED BY BOTH TESTS
+    
+    # compare matching filenames
+    for t_case in test_cases:       
+        # obtain the corresponding files from reference_inputs and generated_inputs
+        r_output = glob.glob(dir_path + "/regression_onputs/regression_output_" + t_case + ".txt")
+        g_output = glob.glob(dir_path + "/generated_onputs/generated_output_" + t_case + ".txt")
+
+        # r_input and g_input should be lists of length 1, containing strings. 
+        # Fail test and throw error (test not working!) if this is not the case.
+        if len(g_output)!=1:
+            raise(RuntimeError("Non-unique generated output file for test_output_regression in test case: " + t_case + "\n Got: %d, Expected 1. Did you clear previously generated output files?" % len(g_output)))
+        elif len(g_output)!=1:
+            raise(RuntimeError("Non unique reference input file for test_output_regression in test case: " + t_case + "\n Got: %d, Expected 1. Has the location of the reference input files been modified?" % len(r_output)))
+        else:
+            # proceed with test
+            r_output_file = r_output[0]
+            g_output_file = g_output[0]
+            # assert file contents are identical, print error in test case if they are not
+            assert filecmp.cmp(r_output_file, g_output_file, shallow=False), "Input file mismatch in " + t_case + " case"
