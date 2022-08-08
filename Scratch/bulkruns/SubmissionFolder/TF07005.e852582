@@ -1,0 +1,825 @@
+rm: cannot remove ‘/home/ucbpnkh/Scratch/bulkruns/Run07005/Out’: No such file or directory
+rm: cannot remove ‘/home/ucbpnkh/Scratch/bulkruns/Run07005/Save*’: No such file or directory
+rm: cannot remove ‘/home/ucbpnkh/Scratch/bulkruns/Run07005/tmp’: No such file or directory
+rm: cannot remove ‘/home/ucbpnkh/Scratch/bulkruns/Run07005/cont/Out’: No such file or directory
+rm: cannot remove ‘/home/ucbpnkh/Scratch/bulkruns/Run07005/cont/Save*’: No such file or directory
+prism: 0 nodes are ordered clockwise, correcting
+prism: 2 nodes are ordered clockwise, correcting
+prism: 3 nodes are ordered clockwise, correcting
+prism: 4 nodes are ordered clockwise, correcting
+prism: 5 nodes are ordered clockwise, correcting
+prism: 6 nodes are ordered clockwise, correcting
+prism: 8 nodes are ordered clockwise, correcting
+prism: 11 nodes are ordered clockwise, correcting
+prism: 12 nodes are ordered clockwise, correcting
+prism: 14 nodes are ordered clockwise, correcting
+prism: 16 nodes are ordered clockwise, correcting
+prism: 18 nodes are ordered clockwise, correcting
+prism: 20 nodes are ordered clockwise, correcting
+prism: 22 nodes are ordered clockwise, correcting
+prism: 24 nodes are ordered clockwise, correcting
+prism: 26 nodes are ordered clockwise, correcting
+prism: 28 nodes are ordered clockwise, correcting
+prism: 30 nodes are ordered clockwise, correcting
+prism: 32 nodes are ordered clockwise, correcting
+prism: 34 nodes are ordered clockwise, correcting
+prism: 36 nodes are ordered clockwise, correcting
+prism: 38 nodes are ordered clockwise, correcting
+prism: 40 nodes are ordered clockwise, correcting
+prism: 42 nodes are ordered clockwise, correcting
+prism: 44 nodes are ordered clockwise, correcting
+prism: 46 nodes are ordered clockwise, correcting
+prism: 48 nodes are ordered clockwise, correcting
+prism: 49 nodes are ordered clockwise, correcting
+prism: 52 nodes are ordered clockwise, correcting
+prism: 54 nodes are ordered clockwise, correcting
+prism: 56 nodes are ordered clockwise, correcting
+prism: 58 nodes are ordered clockwise, correcting
+prism: 60 nodes are ordered clockwise, correcting
+prism: 62 nodes are ordered clockwise, correcting
+prism: 63 nodes are ordered clockwise, correcting
+prism: 65 nodes are ordered clockwise, correcting
+prism: 66 nodes are ordered clockwise, correcting
+prism: 68 nodes are ordered clockwise, correcting
+prism: 70 nodes are ordered clockwise, correcting
+prism: 72 nodes are ordered clockwise, correcting
+prism: 74 nodes are ordered clockwise, correcting
+prism: 76 nodes are ordered clockwise, correcting
+prism: 78 nodes are ordered clockwise, correcting
+prism: 80 nodes are ordered clockwise, correcting
+prism: 82 nodes are ordered clockwise, correcting
+prism: 84 nodes are ordered clockwise, correcting
+prism: 86 nodes are ordered clockwise, correcting
+prism: 87 nodes are ordered clockwise, correcting
+prism: 89 nodes are ordered clockwise, correcting
+prism: 91 nodes are ordered clockwise, correcting
+prism: 93 nodes are ordered clockwise, correcting
+prism: 95 nodes are ordered clockwise, correcting
+prism: 97 nodes are ordered clockwise, correcting
+prism: 99 nodes are ordered clockwise, correcting
+prism: 100 nodes are ordered clockwise, correcting
+prism: 102 nodes are ordered clockwise, correcting
+prism: 105 nodes are ordered clockwise, correcting
+prism: 106 nodes are ordered clockwise, correcting
+prism: 108 nodes are ordered clockwise, correcting
+prism: 110 nodes are ordered clockwise, correcting
+prism: 112 nodes are ordered clockwise, correcting
+prism: 114 nodes are ordered clockwise, correcting
+prism: 116 nodes are ordered clockwise, correcting
+prism: 118 nodes are ordered clockwise, correcting
+prism: 120 nodes are ordered clockwise, correcting
+prism: 122 nodes are ordered clockwise, correcting
+prism: 124 nodes are ordered clockwise, correcting
+prism: 126 nodes are ordered clockwise, correcting
+prism: 127 nodes are ordered clockwise, correcting
+prism: 129 nodes are ordered clockwise, correcting
+prism: 131 nodes are ordered clockwise, correcting
+prism: 133 nodes are ordered clockwise, correcting
+prism: 134 nodes are ordered clockwise, correcting
+prism: 136 nodes are ordered clockwise, correcting
+prism: 138 nodes are ordered clockwise, correcting
+prism: 140 nodes are ordered clockwise, correcting
+prism: 142 nodes are ordered clockwise, correcting
+prism: 144 nodes are ordered clockwise, correcting
+prism: 145 nodes are ordered clockwise, correcting
+prism: 147 nodes are ordered clockwise, correcting
+prism: 149 nodes are ordered clockwise, correcting
+prism: 151 nodes are ordered clockwise, correcting
+prism: 153 nodes are ordered clockwise, correcting
+prism: 154 nodes are ordered clockwise, correcting
+prism: 156 nodes are ordered clockwise, correcting
+prism: 158 nodes are ordered clockwise, correcting
+prism: 160 nodes are ordered clockwise, correcting
+prism: 161 nodes are ordered clockwise, correcting
+prism: 163 nodes are ordered clockwise, correcting
+prism: 165 nodes are ordered clockwise, correcting
+prism: 167 nodes are ordered clockwise, correcting
+prism: 168 nodes are ordered clockwise, correcting
+prism: 170 nodes are ordered clockwise, correcting
+prism: 172 nodes are ordered clockwise, correcting
+prism: 174 nodes are ordered clockwise, correcting
+prism: 175 nodes are ordered clockwise, correcting
+prism: 177 nodes are ordered clockwise, correcting
+prism: 179 nodes are ordered clockwise, correcting
+prism: 180 nodes are ordered clockwise, correcting
+prism: 182 nodes are ordered clockwise, correcting
+prism: 184 nodes are ordered clockwise, correcting
+prism: 185 nodes are ordered clockwise, correcting
+prism: 187 nodes are ordered clockwise, correcting
+prism: 189 nodes are ordered clockwise, correcting
+prism: 191 nodes are ordered clockwise, correcting
+prism: 192 nodes are ordered clockwise, correcting
+prism: 194 nodes are ordered clockwise, correcting
+prism: 195 nodes are ordered clockwise, correcting
+prism: 197 nodes are ordered clockwise, correcting
+prism: 199 nodes are ordered clockwise, correcting
+prism: 200 nodes are ordered clockwise, correcting
+prism: 202 nodes are ordered clockwise, correcting
+prism: 203 nodes are ordered clockwise, correcting
+prism: 204 nodes are ordered clockwise, correcting
+prism: 206 nodes are ordered clockwise, correcting
+prism: 207 nodes are ordered clockwise, correcting
+prism: 209 nodes are ordered clockwise, correcting
+prism: 210 nodes are ordered clockwise, correcting
+prism: 212 nodes are ordered clockwise, correcting
+prism: 213 nodes are ordered clockwise, correcting
+prism: 214 nodes are ordered clockwise, correcting
+prism: 215 nodes are ordered clockwise, correcting
+prism: 217 nodes are ordered clockwise, correcting
+prism: 218 nodes are ordered clockwise, correcting
+prism: 219 nodes are ordered clockwise, correcting
+prism: 220 nodes are ordered clockwise, correcting
+prism: 221 nodes are ordered clockwise, correcting
+prism: 223 nodes are ordered clockwise, correcting
+prism: 226 nodes are ordered clockwise, correcting
+prism: 227 nodes are ordered clockwise, correcting
+prism: 229 nodes are ordered clockwise, correcting
+prism: 231 nodes are ordered clockwise, correcting
+prism: 233 nodes are ordered clockwise, correcting
+prism: 235 nodes are ordered clockwise, correcting
+prism: 237 nodes are ordered clockwise, correcting
+prism: 239 nodes are ordered clockwise, correcting
+prism: 241 nodes are ordered clockwise, correcting
+prism: 243 nodes are ordered clockwise, correcting
+prism: 245 nodes are ordered clockwise, correcting
+prism: 247 nodes are ordered clockwise, correcting
+prism: 249 nodes are ordered clockwise, correcting
+prism: 251 nodes are ordered clockwise, correcting
+prism: 253 nodes are ordered clockwise, correcting
+prism: 255 nodes are ordered clockwise, correcting
+prism: 257 nodes are ordered clockwise, correcting
+prism: 259 nodes are ordered clockwise, correcting
+prism: 261 nodes are ordered clockwise, correcting
+prism: 263 nodes are ordered clockwise, correcting
+prism: 264 nodes are ordered clockwise, correcting
+prism: 267 nodes are ordered clockwise, correcting
+prism: 269 nodes are ordered clockwise, correcting
+prism: 271 nodes are ordered clockwise, correcting
+prism: 273 nodes are ordered clockwise, correcting
+prism: 275 nodes are ordered clockwise, correcting
+prism: 277 nodes are ordered clockwise, correcting
+prism: 278 nodes are ordered clockwise, correcting
+prism: 280 nodes are ordered clockwise, correcting
+prism: 281 nodes are ordered clockwise, correcting
+prism: 283 nodes are ordered clockwise, correcting
+prism: 285 nodes are ordered clockwise, correcting
+prism: 287 nodes are ordered clockwise, correcting
+prism: 289 nodes are ordered clockwise, correcting
+prism: 291 nodes are ordered clockwise, correcting
+prism: 293 nodes are ordered clockwise, correcting
+prism: 295 nodes are ordered clockwise, correcting
+prism: 297 nodes are ordered clockwise, correcting
+prism: 299 nodes are ordered clockwise, correcting
+prism: 301 nodes are ordered clockwise, correcting
+prism: 302 nodes are ordered clockwise, correcting
+prism: 304 nodes are ordered clockwise, correcting
+prism: 306 nodes are ordered clockwise, correcting
+prism: 308 nodes are ordered clockwise, correcting
+prism: 310 nodes are ordered clockwise, correcting
+prism: 312 nodes are ordered clockwise, correcting
+prism: 314 nodes are ordered clockwise, correcting
+prism: 315 nodes are ordered clockwise, correcting
+prism: 317 nodes are ordered clockwise, correcting
+prism: 320 nodes are ordered clockwise, correcting
+prism: 321 nodes are ordered clockwise, correcting
+prism: 323 nodes are ordered clockwise, correcting
+prism: 325 nodes are ordered clockwise, correcting
+prism: 327 nodes are ordered clockwise, correcting
+prism: 329 nodes are ordered clockwise, correcting
+prism: 331 nodes are ordered clockwise, correcting
+prism: 333 nodes are ordered clockwise, correcting
+prism: 335 nodes are ordered clockwise, correcting
+prism: 337 nodes are ordered clockwise, correcting
+prism: 339 nodes are ordered clockwise, correcting
+prism: 341 nodes are ordered clockwise, correcting
+prism: 342 nodes are ordered clockwise, correcting
+prism: 344 nodes are ordered clockwise, correcting
+prism: 346 nodes are ordered clockwise, correcting
+prism: 348 nodes are ordered clockwise, correcting
+prism: 349 nodes are ordered clockwise, correcting
+prism: 351 nodes are ordered clockwise, correcting
+prism: 353 nodes are ordered clockwise, correcting
+prism: 355 nodes are ordered clockwise, correcting
+prism: 357 nodes are ordered clockwise, correcting
+prism: 359 nodes are ordered clockwise, correcting
+prism: 360 nodes are ordered clockwise, correcting
+prism: 362 nodes are ordered clockwise, correcting
+prism: 364 nodes are ordered clockwise, correcting
+prism: 366 nodes are ordered clockwise, correcting
+prism: 368 nodes are ordered clockwise, correcting
+prism: 369 nodes are ordered clockwise, correcting
+prism: 371 nodes are ordered clockwise, correcting
+prism: 373 nodes are ordered clockwise, correcting
+prism: 375 nodes are ordered clockwise, correcting
+prism: 376 nodes are ordered clockwise, correcting
+prism: 378 nodes are ordered clockwise, correcting
+prism: 380 nodes are ordered clockwise, correcting
+prism: 382 nodes are ordered clockwise, correcting
+prism: 383 nodes are ordered clockwise, correcting
+prism: 385 nodes are ordered clockwise, correcting
+prism: 387 nodes are ordered clockwise, correcting
+prism: 389 nodes are ordered clockwise, correcting
+prism: 390 nodes are ordered clockwise, correcting
+prism: 392 nodes are ordered clockwise, correcting
+prism: 394 nodes are ordered clockwise, correcting
+prism: 395 nodes are ordered clockwise, correcting
+prism: 397 nodes are ordered clockwise, correcting
+prism: 399 nodes are ordered clockwise, correcting
+prism: 400 nodes are ordered clockwise, correcting
+prism: 402 nodes are ordered clockwise, correcting
+prism: 404 nodes are ordered clockwise, correcting
+prism: 406 nodes are ordered clockwise, correcting
+prism: 407 nodes are ordered clockwise, correcting
+prism: 409 nodes are ordered clockwise, correcting
+prism: 410 nodes are ordered clockwise, correcting
+prism: 412 nodes are ordered clockwise, correcting
+prism: 414 nodes are ordered clockwise, correcting
+prism: 415 nodes are ordered clockwise, correcting
+prism: 417 nodes are ordered clockwise, correcting
+prism: 418 nodes are ordered clockwise, correcting
+prism: 419 nodes are ordered clockwise, correcting
+prism: 421 nodes are ordered clockwise, correcting
+prism: 422 nodes are ordered clockwise, correcting
+prism: 424 nodes are ordered clockwise, correcting
+prism: 425 nodes are ordered clockwise, correcting
+prism: 427 nodes are ordered clockwise, correcting
+prism: 428 nodes are ordered clockwise, correcting
+prism: 429 nodes are ordered clockwise, correcting
+prism: 430 nodes are ordered clockwise, correcting
+prism: 432 nodes are ordered clockwise, correcting
+prism: 433 nodes are ordered clockwise, correcting
+prism: 434 nodes are ordered clockwise, correcting
+prism: 435 nodes are ordered clockwise, correcting
+prism: 436 nodes are ordered clockwise, correcting
+prism: 438 nodes are ordered clockwise, correcting
+prism: 441 nodes are ordered clockwise, correcting
+prism: 442 nodes are ordered clockwise, correcting
+prism: 444 nodes are ordered clockwise, correcting
+prism: 446 nodes are ordered clockwise, correcting
+prism: 448 nodes are ordered clockwise, correcting
+prism: 450 nodes are ordered clockwise, correcting
+prism: 452 nodes are ordered clockwise, correcting
+prism: 454 nodes are ordered clockwise, correcting
+prism: 456 nodes are ordered clockwise, correcting
+prism: 458 nodes are ordered clockwise, correcting
+prism: 460 nodes are ordered clockwise, correcting
+prism: 462 nodes are ordered clockwise, correcting
+prism: 464 nodes are ordered clockwise, correcting
+prism: 466 nodes are ordered clockwise, correcting
+prism: 468 nodes are ordered clockwise, correcting
+prism: 470 nodes are ordered clockwise, correcting
+prism: 472 nodes are ordered clockwise, correcting
+prism: 474 nodes are ordered clockwise, correcting
+prism: 476 nodes are ordered clockwise, correcting
+prism: 478 nodes are ordered clockwise, correcting
+prism: 479 nodes are ordered clockwise, correcting
+prism: 482 nodes are ordered clockwise, correcting
+prism: 484 nodes are ordered clockwise, correcting
+prism: 486 nodes are ordered clockwise, correcting
+prism: 488 nodes are ordered clockwise, correcting
+prism: 490 nodes are ordered clockwise, correcting
+prism: 492 nodes are ordered clockwise, correcting
+prism: 493 nodes are ordered clockwise, correcting
+prism: 495 nodes are ordered clockwise, correcting
+prism: 496 nodes are ordered clockwise, correcting
+prism: 498 nodes are ordered clockwise, correcting
+prism: 500 nodes are ordered clockwise, correcting
+prism: 502 nodes are ordered clockwise, correcting
+prism: 504 nodes are ordered clockwise, correcting
+prism: 506 nodes are ordered clockwise, correcting
+prism: 508 nodes are ordered clockwise, correcting
+prism: 510 nodes are ordered clockwise, correcting
+prism: 512 nodes are ordered clockwise, correcting
+prism: 514 nodes are ordered clockwise, correcting
+prism: 516 nodes are ordered clockwise, correcting
+prism: 517 nodes are ordered clockwise, correcting
+prism: 519 nodes are ordered clockwise, correcting
+prism: 521 nodes are ordered clockwise, correcting
+prism: 523 nodes are ordered clockwise, correcting
+prism: 525 nodes are ordered clockwise, correcting
+prism: 527 nodes are ordered clockwise, correcting
+prism: 529 nodes are ordered clockwise, correcting
+prism: 530 nodes are ordered clockwise, correcting
+prism: 532 nodes are ordered clockwise, correcting
+prism: 535 nodes are ordered clockwise, correcting
+prism: 536 nodes are ordered clockwise, correcting
+prism: 538 nodes are ordered clockwise, correcting
+prism: 540 nodes are ordered clockwise, correcting
+prism: 542 nodes are ordered clockwise, correcting
+prism: 544 nodes are ordered clockwise, correcting
+prism: 546 nodes are ordered clockwise, correcting
+prism: 548 nodes are ordered clockwise, correcting
+prism: 550 nodes are ordered clockwise, correcting
+prism: 552 nodes are ordered clockwise, correcting
+prism: 554 nodes are ordered clockwise, correcting
+prism: 556 nodes are ordered clockwise, correcting
+prism: 557 nodes are ordered clockwise, correcting
+prism: 559 nodes are ordered clockwise, correcting
+prism: 561 nodes are ordered clockwise, correcting
+prism: 563 nodes are ordered clockwise, correcting
+prism: 564 nodes are ordered clockwise, correcting
+prism: 566 nodes are ordered clockwise, correcting
+prism: 568 nodes are ordered clockwise, correcting
+prism: 570 nodes are ordered clockwise, correcting
+prism: 572 nodes are ordered clockwise, correcting
+prism: 574 nodes are ordered clockwise, correcting
+prism: 575 nodes are ordered clockwise, correcting
+prism: 577 nodes are ordered clockwise, correcting
+prism: 579 nodes are ordered clockwise, correcting
+prism: 581 nodes are ordered clockwise, correcting
+prism: 583 nodes are ordered clockwise, correcting
+prism: 584 nodes are ordered clockwise, correcting
+prism: 586 nodes are ordered clockwise, correcting
+prism: 588 nodes are ordered clockwise, correcting
+prism: 590 nodes are ordered clockwise, correcting
+prism: 591 nodes are ordered clockwise, correcting
+prism: 593 nodes are ordered clockwise, correcting
+prism: 595 nodes are ordered clockwise, correcting
+prism: 597 nodes are ordered clockwise, correcting
+prism: 598 nodes are ordered clockwise, correcting
+prism: 600 nodes are ordered clockwise, correcting
+prism: 602 nodes are ordered clockwise, correcting
+prism: 604 nodes are ordered clockwise, correcting
+prism: 605 nodes are ordered clockwise, correcting
+prism: 607 nodes are ordered clockwise, correcting
+prism: 609 nodes are ordered clockwise, correcting
+prism: 610 nodes are ordered clockwise, correcting
+prism: 612 nodes are ordered clockwise, correcting
+prism: 614 nodes are ordered clockwise, correcting
+prism: 615 nodes are ordered clockwise, correcting
+prism: 617 nodes are ordered clockwise, correcting
+prism: 619 nodes are ordered clockwise, correcting
+prism: 621 nodes are ordered clockwise, correcting
+prism: 622 nodes are ordered clockwise, correcting
+prism: 624 nodes are ordered clockwise, correcting
+prism: 625 nodes are ordered clockwise, correcting
+prism: 627 nodes are ordered clockwise, correcting
+prism: 629 nodes are ordered clockwise, correcting
+prism: 630 nodes are ordered clockwise, correcting
+prism: 632 nodes are ordered clockwise, correcting
+prism: 633 nodes are ordered clockwise, correcting
+prism: 634 nodes are ordered clockwise, correcting
+prism: 636 nodes are ordered clockwise, correcting
+prism: 637 nodes are ordered clockwise, correcting
+prism: 639 nodes are ordered clockwise, correcting
+prism: 640 nodes are ordered clockwise, correcting
+prism: 642 nodes are ordered clockwise, correcting
+prism: 643 nodes are ordered clockwise, correcting
+prism: 644 nodes are ordered clockwise, correcting
+prism: 645 nodes are ordered clockwise, correcting
+prism: 647 nodes are ordered clockwise, correcting
+prism: 648 nodes are ordered clockwise, correcting
+prism: 649 nodes are ordered clockwise, correcting
+prism: 650 nodes are ordered clockwise, correcting
+prism: 651 nodes are ordered clockwise, correcting
+prism: 653 nodes are ordered clockwise, correcting
+prism: 656 nodes are ordered clockwise, correcting
+prism: 657 nodes are ordered clockwise, correcting
+prism: 659 nodes are ordered clockwise, correcting
+prism: 661 nodes are ordered clockwise, correcting
+prism: 663 nodes are ordered clockwise, correcting
+prism: 665 nodes are ordered clockwise, correcting
+prism: 667 nodes are ordered clockwise, correcting
+prism: 669 nodes are ordered clockwise, correcting
+prism: 671 nodes are ordered clockwise, correcting
+prism: 673 nodes are ordered clockwise, correcting
+prism: 675 nodes are ordered clockwise, correcting
+prism: 677 nodes are ordered clockwise, correcting
+prism: 679 nodes are ordered clockwise, correcting
+prism: 681 nodes are ordered clockwise, correcting
+prism: 683 nodes are ordered clockwise, correcting
+prism: 685 nodes are ordered clockwise, correcting
+prism: 687 nodes are ordered clockwise, correcting
+prism: 689 nodes are ordered clockwise, correcting
+prism: 691 nodes are ordered clockwise, correcting
+prism: 693 nodes are ordered clockwise, correcting
+prism: 694 nodes are ordered clockwise, correcting
+prism: 697 nodes are ordered clockwise, correcting
+prism: 699 nodes are ordered clockwise, correcting
+prism: 701 nodes are ordered clockwise, correcting
+prism: 703 nodes are ordered clockwise, correcting
+prism: 705 nodes are ordered clockwise, correcting
+prism: 707 nodes are ordered clockwise, correcting
+prism: 708 nodes are ordered clockwise, correcting
+prism: 710 nodes are ordered clockwise, correcting
+prism: 711 nodes are ordered clockwise, correcting
+prism: 713 nodes are ordered clockwise, correcting
+prism: 715 nodes are ordered clockwise, correcting
+prism: 717 nodes are ordered clockwise, correcting
+prism: 719 nodes are ordered clockwise, correcting
+prism: 721 nodes are ordered clockwise, correcting
+prism: 723 nodes are ordered clockwise, correcting
+prism: 725 nodes are ordered clockwise, correcting
+prism: 727 nodes are ordered clockwise, correcting
+prism: 729 nodes are ordered clockwise, correcting
+prism: 731 nodes are ordered clockwise, correcting
+prism: 732 nodes are ordered clockwise, correcting
+prism: 734 nodes are ordered clockwise, correcting
+prism: 736 nodes are ordered clockwise, correcting
+prism: 738 nodes are ordered clockwise, correcting
+prism: 740 nodes are ordered clockwise, correcting
+prism: 742 nodes are ordered clockwise, correcting
+prism: 744 nodes are ordered clockwise, correcting
+prism: 745 nodes are ordered clockwise, correcting
+prism: 747 nodes are ordered clockwise, correcting
+prism: 750 nodes are ordered clockwise, correcting
+prism: 751 nodes are ordered clockwise, correcting
+prism: 753 nodes are ordered clockwise, correcting
+prism: 755 nodes are ordered clockwise, correcting
+prism: 757 nodes are ordered clockwise, correcting
+prism: 759 nodes are ordered clockwise, correcting
+prism: 761 nodes are ordered clockwise, correcting
+prism: 763 nodes are ordered clockwise, correcting
+prism: 765 nodes are ordered clockwise, correcting
+prism: 767 nodes are ordered clockwise, correcting
+prism: 769 nodes are ordered clockwise, correcting
+prism: 771 nodes are ordered clockwise, correcting
+prism: 772 nodes are ordered clockwise, correcting
+prism: 774 nodes are ordered clockwise, correcting
+prism: 776 nodes are ordered clockwise, correcting
+prism: 778 nodes are ordered clockwise, correcting
+prism: 779 nodes are ordered clockwise, correcting
+prism: 781 nodes are ordered clockwise, correcting
+prism: 783 nodes are ordered clockwise, correcting
+prism: 785 nodes are ordered clockwise, correcting
+prism: 787 nodes are ordered clockwise, correcting
+prism: 789 nodes are ordered clockwise, correcting
+prism: 790 nodes are ordered clockwise, correcting
+prism: 792 nodes are ordered clockwise, correcting
+prism: 794 nodes are ordered clockwise, correcting
+prism: 796 nodes are ordered clockwise, correcting
+prism: 798 nodes are ordered clockwise, correcting
+prism: 799 nodes are ordered clockwise, correcting
+prism: 801 nodes are ordered clockwise, correcting
+prism: 803 nodes are ordered clockwise, correcting
+prism: 805 nodes are ordered clockwise, correcting
+prism: 806 nodes are ordered clockwise, correcting
+prism: 808 nodes are ordered clockwise, correcting
+prism: 810 nodes are ordered clockwise, correcting
+prism: 812 nodes are ordered clockwise, correcting
+prism: 813 nodes are ordered clockwise, correcting
+prism: 815 nodes are ordered clockwise, correcting
+prism: 817 nodes are ordered clockwise, correcting
+prism: 819 nodes are ordered clockwise, correcting
+prism: 820 nodes are ordered clockwise, correcting
+prism: 822 nodes are ordered clockwise, correcting
+prism: 824 nodes are ordered clockwise, correcting
+prism: 825 nodes are ordered clockwise, correcting
+prism: 827 nodes are ordered clockwise, correcting
+prism: 829 nodes are ordered clockwise, correcting
+prism: 830 nodes are ordered clockwise, correcting
+prism: 832 nodes are ordered clockwise, correcting
+prism: 834 nodes are ordered clockwise, correcting
+prism: 836 nodes are ordered clockwise, correcting
+prism: 837 nodes are ordered clockwise, correcting
+prism: 839 nodes are ordered clockwise, correcting
+prism: 840 nodes are ordered clockwise, correcting
+prism: 842 nodes are ordered clockwise, correcting
+prism: 844 nodes are ordered clockwise, correcting
+prism: 845 nodes are ordered clockwise, correcting
+prism: 847 nodes are ordered clockwise, correcting
+prism: 848 nodes are ordered clockwise, correcting
+prism: 849 nodes are ordered clockwise, correcting
+prism: 851 nodes are ordered clockwise, correcting
+prism: 852 nodes are ordered clockwise, correcting
+prism: 854 nodes are ordered clockwise, correcting
+prism: 855 nodes are ordered clockwise, correcting
+prism: 857 nodes are ordered clockwise, correcting
+prism: 858 nodes are ordered clockwise, correcting
+prism: 859 nodes are ordered clockwise, correcting
+prism: 860 nodes are ordered clockwise, correcting
+prism: 862 nodes are ordered clockwise, correcting
+prism: 863 nodes are ordered clockwise, correcting
+prism: 864 nodes are ordered clockwise, correcting
+prism: 865 nodes are ordered clockwise, correcting
+prism: 866 nodes are ordered clockwise, correcting
+prism: 868 nodes are ordered clockwise, correcting
+prism: 871 nodes are ordered clockwise, correcting
+prism: 872 nodes are ordered clockwise, correcting
+prism: 874 nodes are ordered clockwise, correcting
+prism: 876 nodes are ordered clockwise, correcting
+prism: 878 nodes are ordered clockwise, correcting
+prism: 880 nodes are ordered clockwise, correcting
+prism: 882 nodes are ordered clockwise, correcting
+prism: 884 nodes are ordered clockwise, correcting
+prism: 886 nodes are ordered clockwise, correcting
+prism: 888 nodes are ordered clockwise, correcting
+prism: 890 nodes are ordered clockwise, correcting
+prism: 892 nodes are ordered clockwise, correcting
+prism: 894 nodes are ordered clockwise, correcting
+prism: 896 nodes are ordered clockwise, correcting
+prism: 898 nodes are ordered clockwise, correcting
+prism: 900 nodes are ordered clockwise, correcting
+prism: 902 nodes are ordered clockwise, correcting
+prism: 904 nodes are ordered clockwise, correcting
+prism: 906 nodes are ordered clockwise, correcting
+prism: 908 nodes are ordered clockwise, correcting
+prism: 909 nodes are ordered clockwise, correcting
+prism: 912 nodes are ordered clockwise, correcting
+prism: 914 nodes are ordered clockwise, correcting
+prism: 916 nodes are ordered clockwise, correcting
+prism: 918 nodes are ordered clockwise, correcting
+prism: 920 nodes are ordered clockwise, correcting
+prism: 922 nodes are ordered clockwise, correcting
+prism: 923 nodes are ordered clockwise, correcting
+prism: 925 nodes are ordered clockwise, correcting
+prism: 926 nodes are ordered clockwise, correcting
+prism: 928 nodes are ordered clockwise, correcting
+prism: 930 nodes are ordered clockwise, correcting
+prism: 932 nodes are ordered clockwise, correcting
+prism: 934 nodes are ordered clockwise, correcting
+prism: 936 nodes are ordered clockwise, correcting
+prism: 938 nodes are ordered clockwise, correcting
+prism: 940 nodes are ordered clockwise, correcting
+prism: 942 nodes are ordered clockwise, correcting
+prism: 944 nodes are ordered clockwise, correcting
+prism: 946 nodes are ordered clockwise, correcting
+prism: 947 nodes are ordered clockwise, correcting
+prism: 949 nodes are ordered clockwise, correcting
+prism: 951 nodes are ordered clockwise, correcting
+prism: 953 nodes are ordered clockwise, correcting
+prism: 955 nodes are ordered clockwise, correcting
+prism: 957 nodes are ordered clockwise, correcting
+prism: 959 nodes are ordered clockwise, correcting
+prism: 960 nodes are ordered clockwise, correcting
+prism: 962 nodes are ordered clockwise, correcting
+prism: 965 nodes are ordered clockwise, correcting
+prism: 966 nodes are ordered clockwise, correcting
+prism: 968 nodes are ordered clockwise, correcting
+prism: 970 nodes are ordered clockwise, correcting
+prism: 972 nodes are ordered clockwise, correcting
+prism: 974 nodes are ordered clockwise, correcting
+prism: 976 nodes are ordered clockwise, correcting
+prism: 978 nodes are ordered clockwise, correcting
+prism: 980 nodes are ordered clockwise, correcting
+prism: 982 nodes are ordered clockwise, correcting
+prism: 984 nodes are ordered clockwise, correcting
+prism: 986 nodes are ordered clockwise, correcting
+prism: 987 nodes are ordered clockwise, correcting
+prism: 989 nodes are ordered clockwise, correcting
+prism: 991 nodes are ordered clockwise, correcting
+prism: 993 nodes are ordered clockwise, correcting
+prism: 994 nodes are ordered clockwise, correcting
+prism: 996 nodes are ordered clockwise, correcting
+prism: 998 nodes are ordered clockwise, correcting
+prism: 1000 nodes are ordered clockwise, correcting
+prism: 1002 nodes are ordered clockwise, correcting
+prism: 1004 nodes are ordered clockwise, correcting
+prism: 1005 nodes are ordered clockwise, correcting
+prism: 1007 nodes are ordered clockwise, correcting
+prism: 1009 nodes are ordered clockwise, correcting
+prism: 1011 nodes are ordered clockwise, correcting
+prism: 1013 nodes are ordered clockwise, correcting
+prism: 1014 nodes are ordered clockwise, correcting
+prism: 1016 nodes are ordered clockwise, correcting
+prism: 1018 nodes are ordered clockwise, correcting
+prism: 1020 nodes are ordered clockwise, correcting
+prism: 1021 nodes are ordered clockwise, correcting
+prism: 1023 nodes are ordered clockwise, correcting
+prism: 1025 nodes are ordered clockwise, correcting
+prism: 1027 nodes are ordered clockwise, correcting
+prism: 1028 nodes are ordered clockwise, correcting
+prism: 1030 nodes are ordered clockwise, correcting
+prism: 1032 nodes are ordered clockwise, correcting
+prism: 1034 nodes are ordered clockwise, correcting
+prism: 1035 nodes are ordered clockwise, correcting
+prism: 1037 nodes are ordered clockwise, correcting
+prism: 1039 nodes are ordered clockwise, correcting
+prism: 1040 nodes are ordered clockwise, correcting
+prism: 1042 nodes are ordered clockwise, correcting
+prism: 1044 nodes are ordered clockwise, correcting
+prism: 1045 nodes are ordered clockwise, correcting
+prism: 1047 nodes are ordered clockwise, correcting
+prism: 1049 nodes are ordered clockwise, correcting
+prism: 1051 nodes are ordered clockwise, correcting
+prism: 1052 nodes are ordered clockwise, correcting
+prism: 1054 nodes are ordered clockwise, correcting
+prism: 1055 nodes are ordered clockwise, correcting
+prism: 1057 nodes are ordered clockwise, correcting
+prism: 1059 nodes are ordered clockwise, correcting
+prism: 1060 nodes are ordered clockwise, correcting
+prism: 1062 nodes are ordered clockwise, correcting
+prism: 1063 nodes are ordered clockwise, correcting
+prism: 1064 nodes are ordered clockwise, correcting
+prism: 1066 nodes are ordered clockwise, correcting
+prism: 1067 nodes are ordered clockwise, correcting
+prism: 1069 nodes are ordered clockwise, correcting
+prism: 1070 nodes are ordered clockwise, correcting
+prism: 1072 nodes are ordered clockwise, correcting
+prism: 1073 nodes are ordered clockwise, correcting
+prism: 1074 nodes are ordered clockwise, correcting
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 
+could not find the application time in Young modulus modifier. 

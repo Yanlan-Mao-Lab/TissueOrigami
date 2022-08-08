@@ -1,0 +1,5 @@
+rm: cannot remove ‘/home/ucbpnkh/Scratch/bulkruns/Run07004/Out’: No such file or directory
+rm: cannot remove ‘/home/ucbpnkh/Scratch/bulkruns/Run07004/Save*’: No such file or directory
+rm: cannot remove ‘/home/ucbpnkh/Scratch/bulkruns/Run07004/tmp’: No such file or directory
+rm: cannot remove ‘/home/ucbpnkh/Scratch/bulkruns/Run07004/cont/Out’: No such file or directory
+rm: cannot remove ‘/home/ucbpnkh/Scratch/bulkruns/Run07004/cont/Save*’: No such file or directory

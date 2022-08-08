@@ -1,0 +1,15 @@
+mkdir /home/ucbpnkh/Scratch/bulkruns/Run07005
+mv Job07005 /home/ucbpnkh/Scratch/bulkruns/Run07005/
+mv JobContinue07005 /home/ucbpnkh/Scratch/bulkruns/Run07005/
+mkdir /home/ucbpnkh/Scratch/bulkruns/Run07006
+mv Job07006 /home/ucbpnkh/Scratch/bulkruns/Run07006/
+mv JobContinue07006 /home/ucbpnkh/Scratch/bulkruns/Run07006/
+mkdir /home/ucbpnkh/Scratch/bulkruns/Run07007
+mv Job07007 /home/ucbpnkh/Scratch/bulkruns/Run07007/
+mv JobContinue07007 /home/ucbpnkh/Scratch/bulkruns/Run07007/
+mkdir /home/ucbpnkh/Scratch/bulkruns/Run07008
+mv Job07008 /home/ucbpnkh/Scratch/bulkruns/Run07008/
+mv JobContinue07008 /home/ucbpnkh/Scratch/bulkruns/Run07008/
+mkdir /home/ucbpnkh/Scratch/bulkruns/Run07009
+mv Job07009 /home/ucbpnkh/Scratch/bulkruns/Run07009/
+mv JobContinue07009 /home/ucbpnkh/Scratch/bulkruns/Run07009/
