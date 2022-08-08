@@ -10,7 +10,9 @@ The main directory includes the following files/folders:
 
 Creating executables:
 
-Details of the steps to follow to make executables when running the code for the first time should be in ./Scratch/TissueFolding/TissueFolding.pro. In brief, these commands should be run in order: 
+1. Go to ./Scratch/TissueFolding and open TissueFolding.pro.
+2. Update the file paths to direct to your local directory (currently they point to mine).
+3. Details of the steps to follow to make executables when running the code for the first time should be in TissueFolding.pro. In brief, these commands should be run in order: 
 - module load qt/4.8.6/gnu-4.9.2
 - qmake TissueFolding.pro
 - module unload compilers mpi mkl
@@ -47,5 +49,6 @@ Automatic job submssion:
 4.    cd to bulkruns and modify submitter.sh to include the files that you want to run. Then:
 - bash submitter.sh
 
+Note: Please note that paths to the code's inputs should also be updated in modelinput files in Scratch/bulkruns/ModelInputs/. These files currently point to my Myriad directory.
 
 
