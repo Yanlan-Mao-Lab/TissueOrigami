@@ -1,30 +1,25 @@
-LumenOptions:
-    thereIsLumen(bool): 0
-    LumenBulkModulus(Pa): 32000
-    LumenGrowthRate(foldPer24hr): 2.0
-
 TypeOfCoordinateSystem:
   UseXYCoordinatesforRelativePositions(bool): 1
   UsePolarCoordinatesforRelativePositions(bool): 0
   UseCylindricalCoordintesforRelativePositions(bool): 0
-
- 
+  
+  
 InputMeshParameters:
   MeshInputMode(int-seeDocumentation): 4
-  MeshFile(full-path):     /home/melda/Documents/TissueFoldingNargess/TissueFolding/ToolBox/MeshGeneration/2DEllipse/SmallSphericalMeshFileWithECM.mesh
-  symmetricInX(bool): 1
-  symmetricInY(bool): 1
+  MeshFile(full-path): /home/ucbpnkh/Scratch/bulkruns/MeshFiles/2DEllipse/HalfSphere_50_mesh_withECM.mesh
+  symmetricInX(bool): 0
+  symmetricInY(bool): 0
   symmetricInZ(bool): 1
  
 TimeParameters:
-  TimeStep(sec): 3600
-  SimulationLength(sec): 86400
+  TimeStep(sec): 600
+  SimulationLength(sec): 30000 
   
 SaveOptions:
-  SaveImages(bool): 0
+  SaveImages(bool): 1
   SaveData(bool):   1
   ImageSaveInterval(sec): 1
-  DataSaveInterval(sec):  3600
+  DataSaveInterval(sec):  600
   
 NodeFixingOptions:
   FixingViscosity(x,y,z): 0   0  32000
@@ -35,27 +30,29 @@ NodeFixingOptions:
   BasalCircumFix(bool-x,y,z):   0 0 0   FixBasalCircWithExtVisc(bool): 0
   LinkerApicCircumFix(bool-x,y,z):  0 0 0  FixLinkerApicCircWithExtVisc(bool):  0
   LinkerBasalCircumFix(bool-x,y,z): 0 0 0  FixLinkerBasalCircWithExtVisc(bool): 0
-  NotumFix(bool-x,y,z,double-xFracMin,xFracMax): 0 0 0 -0.1 0.5  FixNotumExtVisc(bool): 0
+  NotumFix(bool-x,y,z,double-xFracMin,xFracMax): 0 0 0 0 0  FixNotumExtVisc(bool): 0
 
 NodeBindingOptions:
-  bindCircumferenceXYToBasal(bool): 1
+  bindCircumferenceXYToBasal(bool): 0
   bindEllipses(bool,nFunctions): 0 0
 
-GrowthOptions:
-  NumberofGrowthFunctions(int): 1
-  GridGrowthsPinnedOnInitialMesh(bool): 1 
-  PinningUpdateTimes(number-times(sec)):  0
-  GridGrowthsInterpolationType(0=step,1=linear): 1
+YoungsModulusTimeseriesGrids:
+  noTimeseriesInputs(size_t): 1
 
-GrowthFunctionType(int-seeDocumentation): 1
-  InitialTime(sec): 0
-  FinalTime(sec): 86400
-  ApplyToColumnarLayer(bool): 1
-  ApplyToPeripodialMembrane(bool): 0
-  ApplyToBasalECM(bool): 0
-  ApplyToLateralECM(bool): 0
-  MaxValue(fractionPerHour-DV,AP,AB): 0.002 0.001 0.000
-  Angle(degrees): 45.0
+  TimePointNoInput(size_t): 2
+  YoungsModulusMultiplierChangeRateIsLinearInput(bool): 0
+  YoungsModulusRateChangeApplicationMethodInput(int): 0
+  applyToColumnarLayer(bool): 1
+  applyToPeripodialMembrane(bool): 0
+  applyToApicalLayer(bool): 0
+  applyToMidLayer(bool): 0
+  applyToBasalLayer(bool): 0
+  applyToPeripodialECM(bool): 0
+  applyToColumnarECM(bool): 1
+  Filename(full-path): /home/ucbpnkh/Scratch/bulkruns/StiffnessTimeSeries/StiffnessMatrix_200_200_homogeneous.txt
+  WhenToApplyInput(sec): 0
+  Filename(full-path): /home/ucbpnkh/Scratch/bulkruns/StiffnessTimeSeries/StiffnessMatrix_200_200_20%_new.txt
+  WhenToApplyInput(sec): 30000
 
 PysicalProperties:
   YoungsModulusApical: 100.0	YoungsModulusBasal: 25.0	YoungsModulusMid: 25.0	Noise(%-int): 0
@@ -63,6 +60,7 @@ PysicalProperties:
   ApicalViscosity:  0.0 	Noise(%-int): 0
   BasalViscosity:   0.0
   MidLineViscosity: 0.0
+
 
 ExternalViscositySetup:
   ExtendToWholeTissue: 0
@@ -73,13 +71,15 @@ ExternalViscositySetup:
   LinkerZoneApicalExternalViscosity: 0.0
   LinkerZoneBasalExternalViscosity: 0.0
 
+
+
 ExplicitECMOptions:
   ThereIsExplicitECM(bool): 1
   AddLateralECM(bool): 0
-  LateralECMThickness(microns): 0
+  LateralECMThickness(microns): 0.2
   ECMRemodellingHalfLife(hour): 8.0
-  ECMColumnarYoungsModulus:  0
-  ECMPeripodialYoungsModulus:  0
+  ECMColumnarYoungsModulus:  1600
+  ECMPeripodialYoungsModulus:  100
 
 ExplicitActinOptions:
   ThereIsExplicitActin(bool): 1
@@ -90,3 +90,11 @@ AdhesionOptions:
 
 NodeCollapseOptions:
   ThereIsNodeCollapse(bool): 1
+
+ColumnViseVolumeConservationOptions:
+  ThereIsColumnViseVolumeConservation(bool): 0
+
+LumenOptions:
+  thereIsLumen(bool): 1
+  LumenBulkModulus(Pa): 32000
+  LumenGrowthRate(foldPer24hr): 12
