@@ -1,10 +1,10 @@
 Setting up directories on Myriad:
 
 The main directory includes the following files/folders:
-1.    LocalLibs folder: This is currently empty but should contain the pardiso package (.so files)
+1.    LocalLibs folder: This currently includes an "emptyFile" but should contain the pardiso package (.so files)
 2.    Pardiso.lic file: This file should include the license key for the pardiso package
 3.    Scratch folder: This includes the following sub-folders:
-  -   bin folder: This is currently empty but the executable will be copied here automatically.
+  -   bin folder: This currently contains an "emptyFile" but the executable will be copied here automatically.
   -   bulkruns: I have copied the contents of this folder to github. This is where are the inputs and outputs of the code are stored.
   -   TissueFolding: This folder contains the actual source code. The version I currently have on the Server has all the sparse matrix solver references enabled and needs pardiso to run. I have copied this folder on github under the Myriad branch, but for the purpose of testing without pardiso, you can copy the version on ARCCollaboration branch where all references to pardiso have been commented out.
 
