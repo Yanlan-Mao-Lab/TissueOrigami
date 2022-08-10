@@ -27,6 +27,8 @@
 ## 07004    FineMeshExp48hrNoPeriWithECM.mesh
 ## 07005    HalfSphere_50_mesh_withECM.mesh
 ## 07006    HalfSphere_20_mesh_withECM.mesh
+## (Note that two of the meshes are the same)
+## 
 ## The input to the simulation (note: one of the fields is the path to the mesh file!) is saved in the style of ref_input_to_sim_XXXX where XXXX is replaced with the corresponding run number.
 
 ## For the output of a simulation given an input mesh, there are further cases
@@ -72,11 +74,21 @@ class Test_RegressionClass():
     gen_location = "gen_files"
 
     # fetch the names of the reference files now and place them into dicts
-    ref_mesh_input_to_sim = dict(); gen_mesh_input_to_sim = dict()
+    # ref_mesh_input_to_sim has an odd naming convention, so we do it by hand
+    ref_mesh_input_to_sim = dict()
+    ref_mesh_input_to_sim[test_cases[0]] = dir_path + "/" + ref_location + "/96hrRectangleWing_SmallMesh_posCoord.mesh"
+    ref_mesh_input_to_sim[test_cases[1]] = dir_path + "/" + ref_location + "/HalfSphere_50_mesh_withECM.mesh"
+    ref_mesh_input_to_sim[test_cases[2]] = dir_path = "/" + ref_location + "/HalfSphere_20_mesh_withECM.mesh"
+    ref_mesh_input_to_sim[test_cases[3]] = dir_path = "/" + ref_location + "/SmallExp48hNoPeriWithECM.mesh"
+    ref_mesh_input_to_sim[test_cases[4]] = dir_path = "/" + ref_location + "/FineMeshExp48hrNoPeriWithECM.mesh"
+    ref_mesh_input_to_sim[test_cases[5]] = dir_path = "/" + ref_location + "/HalfSphere_50_mesh_withECM.mesh"
+    ref_mesh_input_to_sim[test_cases[6]] = dir_path = "/" + ref_location + "/HalfSphere_20_mesh_withECM.mesh"
+
+    # other reference files, and the to-be-generated files, can be named systematically
+    gen_mesh_input_to_sim = dict()
     ref_input_to_sim = dict()
     ref_sim_output_pre_qt = dict(); gen_sim_output_pre_qt = dict()
     for t_case in test_cases:
-        ref_mesh_input_to_sim[t_case] = dir_path + "/" + ref_location + "/ref_mesh_input_to_sim_" + t_case + ".txt"
         ref_sim_output_pre_qt[t_case] = dir_path + "/" + ref_location + "/ref_sim_output_pre_qt_" + t_case + ".txt"
         ref_input_to_sim[t_case] = dir_path + "/" + ref_location + "/ref_input_to_sim_" + t_case + ".txt"
         gen_mesh_input_to_sim[t_case] = dir_path + "/" + gen_location + "/gen_mesh_input_to_sim_" + t_case + ".txt"
