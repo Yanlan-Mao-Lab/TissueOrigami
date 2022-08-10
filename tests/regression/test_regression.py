@@ -11,13 +11,13 @@
 ## 
 ## There are 7 sample runs that have been produced to use as test cases:
 ## Run Number   Mesh type           StiffnessChange     Growth/ShapeChange  LumenGrowth 
-## 7000         Rect                Y                   Y (xy, z)           N
-## 7001         Sphere (small)      Y                   N                   Y
-## 7002         Sphere (fine)       Y                   N                   Y
-## 7003         WingDisc (small)    N                   Y (uniform)         N
-## 7004         WingDisc (fine)     N                   Y (uniform)         N
-## 7005         Sphere (small)      Y                   N                   Y
-## 7006         Sphere (fine)       Y                   N                   Y
+## 07000        Rect                Y                   Y (xy, z)           N
+## 07001        Sphere (small)      Y                   N                   Y
+## 07002        Sphere (fine)       Y                   N                   Y
+## 07003        WingDisc (small)    N                   Y (uniform)         N
+## 07004        WingDisc (fine)     N                   Y (uniform)         N
+## 07005        Sphere (small)      Y                   N                   Y
+## 07006        Sphere (fine)       Y                   N                   Y
 ##
 ## The mesh files generated for these runs are saved in the style ref_mesh_input_to_sim_XXXX where XXXX is replaced with the corresponding run number.
 ## The input to the simulation (note: one of the fields is the path to the mesh file!) is saved in the style of ref_input_to_sim_XXXX where XXXX is replaced with the corresponding run number.
@@ -57,7 +57,7 @@ class Test_RegressionClass():
     dir_path = os.path.dirname(os.path.abspath(__file__))
 
     # test case labels
-    test_cases = ["rect", "sphere", "wingd"]
+    test_cases = ["07000", "07001", "07002", "07003", "07004", "07005", "07006"]
 
     # reference file location, relative to this file location
     ref_location = "ref_files"
@@ -66,12 +66,27 @@ class Test_RegressionClass():
 
     # fetch the names of the reference files now and place them into dicts
     ref_mesh_input_to_sim = dict(); gen_mesh_input_to_sim = dict()
+    ref_input_to_sim = dict()
     ref_sim_output_pre_qt = dict(); gen_sim_output_pre_qt = dict()
     for t_case in test_cases:
         ref_mesh_input_to_sim[t_case] = dir_path + "/" + ref_location + "/ref_mesh_input_to_sim_" + t_case + ".txt"
         ref_sim_output_pre_qt[t_case] = dir_path + "/" + ref_location + "/ref_sim_output_pre_qt_" + t_case + ".txt"
+        ref_input_to_sim[t_case] = dir_path + "/" + ref_location + "/ref_input_to_sim_" + t_case + ".txt"
         gen_mesh_input_to_sim[t_case] = dir_path + "/" + gen_location + "/gen_mesh_input_to_sim_" + t_case + ".txt"
         gen_sim_output_pre_qt[t_case] = dir_path + "/" + gen_location + "/gen_sim_output_pre_qt_" + t_case + ".txt"
+
+    def test_ref_files_exist(self):
+        '''Check that all reference files can be found before beginning tests!
+        
+        Parameters
+        ----------
+        '''
+
+        ## only check for existence of reference files - if these are missing or have been renamed we are in trouble!
+        for t_case in self.test_cases:
+            assert os.path.exists(self.ref_mesh_input_to_sim[t_case]), "Could not find reference file: " + self.ref_mesh_input_to_sim[t_case]
+            assert os.path.exists(self.ref_sim_output_pre_qt[t_case]), "Could not find reference file: " + self.ref_sim_output_pre_qt[t_case]
+            assert os.path.exists(self.ref_input_to_sim[t_case]), "Could not find reference file: " + self.ref_input_to_sim[t_case]
 
     def test_mesh_input_to_sim(self):
         '''For each test case, checks whether a generated mesh matches the reference mesh

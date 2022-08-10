@@ -1,3 +1,0 @@
-This tissue is a sphere
-There are three lines in this file
-987654321
