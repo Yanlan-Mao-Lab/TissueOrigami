@@ -1,3 +1,0 @@
-This tissue is a rectangle
-There are three lines in this file
-123456789
