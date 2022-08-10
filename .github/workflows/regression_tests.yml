@@ -1,0 +1,33 @@
+# Workflow to perform regression tests
+
+name: Regression Tests
+
+# Workflow will run on pull requests, pushes to master directly, and if requested through the dispatch on Github
+on:
+  # Triggers the workflow on pull request events, or direct pushes to the "master" branch
+  push:
+    branches: "master"
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  # Run regression tests
+  regression_tests:
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+      - uses: actions/checkout@v3
+
+      # Install test dependencies
+      - name: Install test dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install python3
+          pip install pytest
+
+      # Run pytest in the tests/regression directory
+      - name: Run regression tests via pytest
+        run: |
+          cd ${{ github.workspace }}/TissueOrigami/tests/regression
+          pytest
