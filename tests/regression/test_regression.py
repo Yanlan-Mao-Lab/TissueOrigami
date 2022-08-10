@@ -19,7 +19,14 @@
 ## 07005        Sphere (small)      Y                   N                   Y
 ## 07006        Sphere (fine)       Y                   N                   Y
 ##
-## The mesh files generated for these runs are saved in the style ref_mesh_input_to_sim_XXXX where XXXX is replaced with the corresponding run number.
+## The mesh files generated for these runs are as follows:
+## 07000    96hrRectangleWing_SmallMesh_posCoord.mesh
+## 07001    HalfSphere_50_mesh_withECM.mesh
+## 07002    HalfSphere_20_mesh_withECM.mesh
+## 07003    SmallExp48hNoPeriWithECM.mesh
+## 07004    FineMeshExp48hrNoPeriWithECM.mesh
+## 07005    HalfSphere_50_mesh_withECM.mesh
+## 07006    HalfSphere_20_mesh_withECM.mesh
 ## The input to the simulation (note: one of the fields is the path to the mesh file!) is saved in the style of ref_input_to_sim_XXXX where XXXX is replaced with the corresponding run number.
 
 ## For the output of a simulation given an input mesh, there are further cases
