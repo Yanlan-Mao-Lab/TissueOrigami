@@ -6,8 +6,9 @@ name: Regression Tests
 on:
   # Triggers the workflow on pull request events, or direct pushes to the "master" branch
   push:
-    branches: "master"
+    branches: ["master"]
   pull_request:
+    branches: ["master"]
   workflow_dispatch:
 
 jobs:
@@ -17,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-      - uses: actions/checkout@v3
+        uses: actions/checkout@v3
 
       # Install test dependencies
       - name: Install test dependencies
