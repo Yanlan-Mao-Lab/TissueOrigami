@@ -34,6 +34,7 @@
 ## For the output of a simulation given an input mesh, there are further cases
 
 import os, filecmp
+import copy
 
 class Test_RegressionClass():
     '''
@@ -78,11 +79,11 @@ class Test_RegressionClass():
     ref_mesh_input_to_sim = dict()
     ref_mesh_input_to_sim[test_cases[0]] = dir_path + "/" + ref_location + "/96hrRectangleWing_SmallMesh_posCoord.mesh"
     ref_mesh_input_to_sim[test_cases[1]] = dir_path + "/" + ref_location + "/HalfSphere_50_mesh_withECM.mesh"
-    ref_mesh_input_to_sim[test_cases[2]] = dir_path = "/" + ref_location + "/HalfSphere_20_mesh_withECM.mesh"
-    ref_mesh_input_to_sim[test_cases[3]] = dir_path = "/" + ref_location + "/SmallExp48hNoPeriWithECM.mesh"
-    ref_mesh_input_to_sim[test_cases[4]] = dir_path = "/" + ref_location + "/FineMeshExp48hrNoPeriWithECM.mesh"
-    ref_mesh_input_to_sim[test_cases[5]] = dir_path = "/" + ref_location + "/HalfSphere_50_mesh_withECM.mesh"
-    ref_mesh_input_to_sim[test_cases[6]] = dir_path = "/" + ref_location + "/HalfSphere_20_mesh_withECM.mesh"
+    ref_mesh_input_to_sim[test_cases[2]] = dir_path + "/" + ref_location + "/HalfSphere_20_mesh_withECM.mesh"
+    ref_mesh_input_to_sim[test_cases[3]] = dir_path + "/" + ref_location + "/SmallExp48hNoPeriWithECM.mesh"
+    ref_mesh_input_to_sim[test_cases[4]] = dir_path + "/" + ref_location + "/FineMeshExp48hrNoPeriWithECM.mesh"
+    ref_mesh_input_to_sim[test_cases[5]] = dir_path + "/" + ref_location + "/HalfSphere_50_mesh_withECM.mesh"
+    ref_mesh_input_to_sim[test_cases[6]] = dir_path + "/" + ref_location + "/HalfSphere_20_mesh_withECM.mesh"
 
     # other reference files, and the to-be-generated files, can be named systematically
     gen_mesh_input_to_sim = dict()
@@ -107,32 +108,32 @@ class Test_RegressionClass():
             assert os.path.exists(self.ref_sim_output_pre_qt[t_case]), "Could not find reference file: " + self.ref_sim_output_pre_qt[t_case]
             assert os.path.exists(self.ref_input_to_sim[t_case]), "Could not find reference file: " + self.ref_input_to_sim[t_case]
 
-    def test_mesh_input_to_sim(self):
-        '''For each test case, checks whether a generated mesh matches the reference mesh
+    # def test_mesh_input_to_sim(self):
+    #     '''For each test case, checks whether a generated mesh matches the reference mesh
 
-        Parameters
-        ----------
-        '''
-        for t_case in self.test_cases:
-            # PLACEHOLDER FOR CALL TO CODE FOR GENERATION OF INPUT MESHES
-            # SAVE THESE INPUTS TO THE NAMES PROVIDED IN mesh_input_to_sim_fdict
-            # This should look something like:
-            # call executable that creates the mesh for the test case t_case, and save it to the file gen_mesh_input_to_sim[t_case]
+    #     Parameters
+    #     ----------
+    #     '''
+    #     for t_case in self.test_cases:
+    #         # PLACEHOLDER FOR CALL TO CODE FOR GENERATION OF INPUT MESHES
+    #         # SAVE THESE INPUTS TO THE NAMES PROVIDED IN mesh_input_to_sim_fdict
+    #         # This should look something like:
+    #         # call executable that creates the mesh for the test case t_case, and save it to the file gen_mesh_input_to_sim[t_case]
 
-            # now assert that the input file generated matches the reference input file, for this t_case
-            # if assert fails, print out test case that caused failure
-            assert filecmp.cmp(self.ref_mesh_input_to_sim[t_case], self.gen_mesh_input_to_sim[t_case], shallow=False), "Input file mismatch in " + t_case + " case"              
+    #         # now assert that the input file generated matches the reference input file, for this t_case
+    #         # if assert fails, print out test case that caused failure
+    #         assert filecmp.cmp(self.ref_mesh_input_to_sim[t_case], self.gen_mesh_input_to_sim[t_case], shallow=False), "Input file mismatch in " + t_case + " case"              
 
-    def test_sim_output_pre_qt(self):
-        '''For each test case, checks whether a simulation output (prior to Qt processing) matches the reference output
+    # def test_sim_output_pre_qt(self):
+    #     '''For each test case, checks whether a simulation output (prior to Qt processing) matches the reference output
         
-        Parameters
-        ----------
-        '''
-        for t_case in self.test_cases:
-            # PLACEHOLDER FOR CALL TO SIMULATION RUN
-            # This should look something like:
-            # run simulation using input file in ref_mesh_input_to_sim[t_case], saving it to file gen_sim_output_pre_qt[t_case]
+    #     Parameters
+    #     ----------
+    #     '''
+    #     for t_case in self.test_cases:
+    #         # PLACEHOLDER FOR CALL TO SIMULATION RUN
+    #         # This should look something like:
+    #         # run simulation using input file in ref_mesh_input_to_sim[t_case], saving it to file gen_sim_output_pre_qt[t_case]
         
-            # assert file contents are identical, print error in test case if they are not
-            assert filecmp.cmp(self.ref_sim_output_pre_qt[t_case], self.gen_sim_output_pre_qt[t_case], shallow=False), "Input file mismatch in " + t_case + " case"
+    #         # assert file contents are identical, print error in test case if they are not
+    #         assert filecmp.cmp(self.ref_sim_output_pre_qt[t_case], self.gen_sim_output_pre_qt[t_case], shallow=False), "Input file mismatch in " + t_case + " case"
