@@ -58,18 +58,19 @@ ArgumentSpace ArgumentReader::readInput(int argc, char **argv) {
     }
     // if we get to here then a run type was specified, and the user didn't ask for help
     // we thus check that the correct input arguments were given, and if so, process them into the members of args
-    else if ((args.getSimulationMode()==OnTheGo) && args.nNonFlags==4 ) {
+    else if ((args.getSimulationMode()==OnTheGo) && args.nNonFlags==3 ) {
         /* We require an input file path and output file directory. Input directory is NOT required.
         We have also been blessed with the correct number of inputs */
-        args.pathToInputFile = args.getNonFlag(2);
-        args.pathToOutputDir = args.getNonFlag(3);
+        args.pathToInputFile = args.getNonFlag(1);
+        args.pathToOutputDir = args.getNonFlag(2);
     }
-    else if (args.nNonFlags == 5) { 
+    else if (!(args.getSimulationMode() == OnTheGo) && args.nNonFlags == 4)
+    {
         /* We are running DisplaySave or Continue, but need the same number of inputs regardless, of which we have enough.
         We require an input file path, output file directory, and the input file directory to continue from */
-        args.pathToInputFile = args.getNonFlag(2);
-        args.pathToOutputDir = args.getNonFlag(3);
-        args.pathToInputDir  = args.getNonFlag(4);
+        args.pathToInputFile = args.getNonFlag(1);
+        args.pathToOutputDir = args.getNonFlag(2);
+        args.pathToInputDir  = args.getNonFlag(3);
 
         if (!DirectoryExists(args.pathToInputDir))
         {
