@@ -1,111 +1,103 @@
 # include <stdexcept>
-# include "argument_parser.hpp"
+# include "argument_parser.h"
 # include <iostream>
+# include <sys/stat.h>
 
 using namespace std;
 
 /**
+ * @brief Checks whether path points to a directory that is accessible
+ * 
+ * @param path Path to a directory on the filesystem
+ * @return true The path points to a directory
+ * @return false The path does not exist, nor point to a directory
+ */
+bool DirectoryExists(string path) {
+
+    struct stat info;
+
+    if (stat(path.c_str(), &info) != 0) {
+        // directory does not exist
+        return false;
+    }
+    else if (info.st_mode && S_IFDIR)
+    {
+        // path exists on the filesystem, but it's not pointing to a directory
+        return false;
+    }
+    else {
+        return true;
+    }
+}
+
+/**
  * @brief Read arguments from the command line and place them into an ArgumentSpace instance.
  * 
- * The ArgumentSpace instance stores the input values, and determines the nature of, the mesh generation process.
+ * The ArgumentSpace instance interprets the command-line inputs, and determines the mode the simulation will run in, the location of the input file (and directory, if appropriate), and the output directory.
+ * These are then passed to the simulation instance that the main program creates.
  * 
  * @param argc 
  * @param argv 
  * @return ArgumentSpace Instance storing parsed input values and determining type of mesh generation scheme.
  */
-ArgumentSpace ArgumentReader::read_input(int argc, char **argv) {
+ArgumentSpace ArgumentReader::readInput(int argc, char **argv) {
 
     auto args = ArgumentSpace(argc, argv);
 
     // if the user has requested help we should provide it here
-    if (args.has_flag("-h"))
+    if (args.hasFlag("-h"))
     {
-        print_help(args.get_run_type());
+        printHelp(args.getSimulationMode());
         exit(0);
     }
-    // if no run type was specified, but the user did not ask for help, exit with error
-    else if (args.get_run_type()==NO_RUN_SET) {
-        fprintf(stdout, "Error - no run type specified. See the help below for usage information.\n");
-        print_help(NO_RUN_SET);
+    // if no simulation mode was specified, but the user did not ask for help, exit with error
+    else if (args.getSimulationMode()==NotSet) {
+        fprintf(stdout, "Error - no simulation mode specified. See the help below for usage information.\n");
+        printHelp(NotSet);
         exit(-1);
     }
     // if we get to here then a run type was specified, and the user didn't ask for help
     // we thus check that the correct input arguments were given, and if so, process them into the members of args
-    switch (args.get_run_type())
-    {
-    case WDC_RUN:
-        /* We require l1, l2, w1, w2, abh, slp, nlz, path_to_input to be present in the input */
-        if (args.num_non_flags == 9) {
-            // there are the correct number of input arguments, place them into the appropriate variables
-            args.length1 = stof(args.get_non_flag(1));
-            args.length2 = stof(args.get_non_flag(2));
-            args.width1 = stof(args.get_non_flag(3));
-            args.width2 = stof(args.get_non_flag(4));
-            args.ABHeight = stof(args.get_non_flag(5));
-            args.prism_side_len = stof(args.get_non_flag(6));
-            args.n_layers_z = stof(args.get_non_flag(7));
-            args.path_to_input = args.get_non_flag(8); // path to file needs to stay of type string
-            // check input file is where the user claims it is
-            ifstream inputOutline(args.path_to_input.c_str());
-            if (!inputOutline.good()) {
-                cout << "Error; input file not found at path provided: " + args.path_to_input + "\n";
-                exit(-1);
-            }
-        }
-        else {
-            fprintf(stdout, "Error - incorrect number of inputs. "
-                            "See function help below.\n");
-            print_help(WDC_RUN);
+    else if ((args.getSimulationMode()==OnTheGo) && args.nNonFlags==4 ) {
+        /* We require an input file path and output file directory. Input directory is NOT required.
+        We have also been blessed with the correct number of inputs */
+        args.pathToInputFile = args.getNonFlag(2);
+        args.pathToOutputDir = args.getNonFlag(3);
+    }
+    else if (args.nNonFlags == 5) { 
+        /* We are running DisplaySave or Continue, but need the same number of inputs regardless, of which we have enough.
+        We require an input file path, output file directory, and the input file directory to continue from */
+        args.pathToInputFile = args.getNonFlag(2);
+        args.pathToOutputDir = args.getNonFlag(3);
+        args.pathToInputDir  = args.getNonFlag(4);
+
+        if (!DirectoryExists(args.pathToInputDir))
+        {
+            cout << "Error; (input) directory not found at path: " + args.pathToInputDir + "\n";
             exit(-1);
         }
-        break;
-    case REC_RUN:
-        /* We require abh, slp, nlz */
-        if (args.num_non_flags == 4) {
-            args.ABHeight = stof(args.get_non_flag(1));
-            args.prism_side_len = stof(args.get_non_flag(2));
-            args.n_layers_z = stof(args.get_non_flag(3));
-        }
-        else {
-            fprintf(stdout, "Error - incorrect number of inputs. "
-                            "See function help below.\n");
-            print_help(REC_RUN);
-            exit(-1);
-        }
-        break;
-    case TESS_2D:
-        /* We require abh, slp, nlz */
-        if (args.num_non_flags == 4) {
-            args.ABHeight = stof(args.get_non_flag(1));
-            args.prism_side_len = stof(args.get_non_flag(2));
-            args.n_layers_z = stof(args.get_non_flag(3));
-        }
-        else {
-            fprintf(stdout, "Error - incorrect number of inputs. "
-                            "See function help below.\n");
-            print_help(TESS_2D);
-            exit(-1);
-        }
-        break;
-    case TESS_3D:
-        /* We require abh, slp, nlz */
-        if (args.num_non_flags == 4) {
-            args.ABHeight = stof(args.get_non_flag(1));
-            args.prism_side_len = stof(args.get_non_flag(2));
-            args.n_layers_z = stof(args.get_non_flag(3));
-        }
-        else {
-            fprintf(stdout, "Error - incorrect number of inputs. "
-                            "See function help below.\n");
-            print_help(TESS_3D);
-            exit(-1);
-        }
-        break;
+    }
+    // if we got to here, the input was invalid (too few arguments and didn't ask for help)
+    else {
+        fprintf(stdout, "Error - incorrect number of inputs. "
+                        "See function help below.\n");
+        printHelp(args.getSimulationMode());
+        exit(-1);
     }
 
-    // also, if -sym is flagged, toggle this to true
-    if (args.has_flag("-sym")) {args.sym_y = 1.;}
-
+    // check input file and output directory are where the user claims they are
+    // these checks are common to all simulation modes
+    ifstream inputFile(args.pathToInputFile.c_str());
+    if (!inputFile.good())
+    {
+        cout << "Error; input file not found at path provided: " + args.pathToInputFile + "\n";
+        exit(-1);
+    }
+    else if (!DirectoryExists(args.pathToOutputDir))
+    {
+        cout << "Error; (output) directory not found at path: " + args.pathToOutputDir + "\n";
+        exit(-1);
+    }
     // finally we can return args, which contains the information we need for the run to execute
     return args;
 };
@@ -115,76 +107,51 @@ ArgumentSpace ArgumentReader::read_input(int argc, char **argv) {
  *
  * Update this function as additional functionality is added to the ArgumentReader class
  */
-void ArgumentReader::print_help(int mode)
+void ArgumentReader::printHelp(SimMode mode)
 {
     switch (mode)
     {
-    case NO_RUN_SET:
+    case NotSet:
         fprintf(stdout, "Usage:\n"
-                        "EllipseFromOutline [options] type \n"
+                        "TissueFolding [options] mode \n"
                         "Required:\n"
-                        "type:\t Determines the mode of execuation and mesh generation.\n"
+                        "mode:\t Determines the simulation mode.\n"
                         "\t Recognised values are:\n"
-                        "\t \t wdc: Outline of tissue to be meshed is shaped like a wing disc or cicle\n"
-                        "\t \t rec: Outline of tissue to be meshed is shaped like a rectangle\n"
-                        "\t \t 2d : Providing a pre-built 2D tesselation file\n"
-                        "\t \t 3d : Providing a pre-built 3D tesselation file\n"
+                        "\t \t onthego: Start a new simulation from an input file\n"
+                        "\t \t continue: Resume a simulation that has previously finished\n"
+                        "\t \t display: Read data from the output of a finished simulation\n"
                         "Options:\n"
                         "-h:\t Display this help message\n");
         break;
-    case WDC_RUN:
+    case OnTheGo:
         fprintf(stdout, "Usage:\n"
-                        "EllipseFromOutline wdc [options] [-sym] l1 l2 w1 w2 abh slp nlz path_to_input \n"
-                        "Generates a mesh from an input file containing a wingdisc or circular outline.\n"
+                        "TissueFolding onthego [options] input_file output_dir \n"
+                        "Starts and runs a new simulation using the input_file, placing the results in output_dir\n"
                         "Required:\n"
-                        "l1, l2, w1, w2: \t Respectively length 1, length 2, width 1 and width 2 of the input outline\n"
-                        "abh: \t ABHeight\n"
-                        "slp: \t Target side length of prisms\n"
-                        "nlz: \t Number of layers in z\n"
-                        "path_to_input: \t Path to input file containing tissue outline\n"
-                        "Flags:\n"
-                        "-sym: \t Flags symmetry in y to be true\n"
+                        "input_file: \t Path to the input file the simulation should read from\n"
+                        "output_dir: \t Path to the directory to write simulation results to\n"
                         "Options:\n"
                         "-h:\t Display this help message\n");
         break;
-    case REC_RUN:
+    case Continue:
         fprintf(stdout, "Usage:\n"
-                        "EllipseFromOutline rec [options] [-sym] abh slp nlz\n"
-                        "Generates a rectangular mesh.\n"
+                        "TissueFolding continue [options] input_file output_dir input_dir \n"
+                        "Resumes a simulation by reading from the directory input_dir, and input file input_file \n"
                         "Required:\n"
-                        "abh: \t ABHeight\n"
-                        "slp: \t Target side length of prisms\n"
-                        "nlz: \t Number of layers in z\n"
-                        "Flags:\n"
-                        "-sym: \t Flags symmetry in y to be true\n"
+                        "input_file: \t Path to the input file the simulation should read from\n"
+                        "output_dir: \t Path to the directory to write simulation results to\n"
+                        "input_dir : \t Path to the directory to read the starting state from\n"
                         "Options:\n"
                         "-h:\t Display this help message\n");
         break;
-    case TESS_2D:
+    case DisplaySave:
         fprintf(stdout, "Usage:\n"
-                        "EllipseFromOutline rec [options] [-sym] abh slp nlz\n"
-                        "Generates a 2D mesh from a pre-existing tesselation.\n"
-                        "Tesselation is ASSUMED to be in the fileS Points.1.node and Points.1.ele\n"
+                        "TissueFolding display [options] input_file output_dir input_dir \n"
+                        "Reads simulation output from input_dir and displays the information \n"
                         "Required:\n"
-                        "abh: \t ABHeight\n"
-                        "slp: \t Target side length of prisms\n"
-                        "nlz: \t Number of layers in z\n"
-                        "Flags:\n"
-                        "-sym: \t Flags symmetry in y to be true\n"
-                        "Options:\n"
-                        "-h:\t Display this help message\n");
-        break;
-    case TESS_3D:
-        fprintf(stdout, "Usage:\n"
-                        "EllipseFromOutline rec [options] [-sym] abh slp nlz\n"
-                        "Generates a 3D mesh from a pre-existing tesselation.\n"
-                        "Tesselation is ASSUMED to be in the file SphericalMeshTesselation.\n"
-                        "Required:\n"
-                        "abh: \t ABHeight\n"
-                        "slp: \t Target side length of prisms\n"
-                        "nlz: \t Number of layers in z\n"
-                        "Flags:\n"
-                        "-sym: \t Flags symmetry in y to be true\n"
+                        "input_file: \t Path to the input file the simulation should read from\n"
+                        "output_dir: \t Path to the directory to write simulation results to\n"
+                        "input_dir : \t Path to the directory to read the starting state from\n"
                         "Options:\n"
                         "-h:\t Display this help message\n");
         break;
@@ -201,28 +168,27 @@ void ArgumentReader::print_help(int mode)
  */
 ArgumentSpace::ArgumentSpace(int argc, char **argv) {
 
-    all_args = vector<string>(argv+1, argv+argc);
-    num_non_flags = 0;
-    num_flags = 0;
-    for(const auto &a : all_args) {
-        if(!arg_is_flag(a)) {
-            non_flags.push_back(a);
-            num_non_flags++;
+    allArgs = vector<string>(argv+1, argv+argc);
+    nNonFlags = 0;
+    nFlags = 0;
+    for(const auto &a : allArgs) {
+        if(!argIsFlag(a)) {
+            nonFlags.push_back(a);
+            nNonFlags++;
         }
         else {
             flags.push_back(a);
-            num_flags++;
+            nFlags++;
         }
     }
-    num_args = num_non_flags + num_flags;
-    // attempt to identify the run type. If it cannot be identified, leave it as 0 to force an exit later
-    run_type = NO_RUN_SET;
-    if (num_non_flags >= 1)
+    nArgs = nNonFlags + nFlags;
+    // attempt to identify the simulation mode. If it cannot be identified, leave it as 0 to force an exit later
+    simulationMode = NotSet;
+    if (nNonFlags >= 1)
     {
-        if (non_flags[0]=="wdc") {run_type = WDC_RUN;}
-        else if (non_flags[0]=="rec") {run_type = REC_RUN;}
-        else if (non_flags[0]=="2d") {run_type = TESS_2D;}
-        else if (non_flags[0]=="3d") {run_type = TESS_3D;}
+        if (nonFlags[0]=="onthego") {simulationMode = OnTheGo;}
+        else if (nonFlags[0]=="continue") {simulationMode = Continue;}
+        else if (nonFlags[0]=="displaysave") {simulationMode = DisplaySave;}
     }
 };
 
@@ -230,27 +196,21 @@ ArgumentSpace::ArgumentSpace(int argc, char **argv) {
  * @brief Prints the specifications provided by the user to stdout, for this meshing process
  * 
  */
-void ArgumentSpace::print_mode_specs() {
-    cout << "Run type: " + non_flags[0] + "\n";
+void ArgumentSpace::printModeSpecs() {
+    cout << "Run type: " + nonFlags[0] + "\n";
     cout << "Variable values as follows:\n"
-            "length1 = " + to_string(length1) + "\n"
-            "length2 = " + to_string(length2) + "\n"
-            "width1 = " + to_string(width1) + "\n"
-            "width2 = " + to_string(width2) + "\n"
-            "ABHeight = " + to_string(ABHeight) + "\n"
-            "prism_side_len = " + to_string(prism_side_len) + "\n"
-            "n_layers_z = " + to_string(n_layers_z) + "\n"
-            "sym_y = " + to_string(sym_y) + "\n"
-            "path_to_input = " + path_to_input + "\n";
+            "pathToInputFile = " + pathToInputFile + "\n"
+            "pathToOutputDir = " + pathToOutputDir + "\n"
+            "pathToInputDir  = " + pathToInputDir  + "\n";
 }
 
 /**
- * @brief Get the run_type for mesh generation
+ * @brief Get the mode that the simulation will run
  * 
- * @return int Mode of mesh generation
+ * @return SimMode Mode of simulation
  */
-int ArgumentSpace::get_run_type() {
-    return run_type;
+SimMode ArgumentSpace::getSimulationMode() {
+    return simulationMode;
 }
 
 /**
@@ -259,8 +219,8 @@ int ArgumentSpace::get_run_type() {
  * @param i Index of argument passed from command line
  * @return string Value of required argument i passed from command line
  */
-string ArgumentSpace::get_non_flag(int i) {
-    return non_flags[i];
+string ArgumentSpace::getNonFlag(int i) {
+    return nonFlags[i];
 }
 
 /**
@@ -272,7 +232,7 @@ string ArgumentSpace::get_non_flag(int i) {
  * @return true The argument is a flag (by the above definition)
  * @return false The argument is not a flag
  */
-bool ArgumentSpace::arg_is_flag(string argument)
+bool ArgumentSpace::argIsFlag(string argument)
 {
     return argument[0] == '-';
 };
@@ -286,8 +246,8 @@ bool ArgumentSpace::arg_is_flag(string argument)
  * @return true Flag has been passed to executable
  * @return false Flag has not been passed to executable
  */
-bool ArgumentSpace::has_flag(string const &flag) {
-    for(const auto &a : all_args) {
+bool ArgumentSpace::hasFlag(string const &flag) {
+    for(const auto &a : allArgs) {
         if (a == flag) {
             return true;
         }
