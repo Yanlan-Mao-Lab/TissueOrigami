@@ -70,7 +70,7 @@ bool ModelInputObject::readParameters(){
 				/**
 				 * Peripodial membrane structure related parameters through the private function ModelInputObject#readPeripodialMembraneParameters
 				 */
-				Success  = readPeripodialMembraneParameters(parametersFile);
+				readPeripodialMembraneParameters(parametersFile);
 			}
 			else if(currParameterHeader == "LinkerZoneParameters:"){
 				/**
@@ -1431,98 +1431,95 @@ bool ModelInputObject::readMeshType2(ifstream& file){
 	return true;
 }
 
-bool ModelInputObject::readPeripodialMembraneParameters(ifstream& file){
+void ModelInputObject::readPeripodialMembraneParameters(ifstream& file){
 	/**
-	 * This section gives the used the option to add a peripodial membrane to the tissue.
+	 * This section gives the user the option to add a peripodial membrane to the tissue.
 	 * The thickness will define the z height of the peripodial layer, and the lateral thickness will
 	 * define the thickness of the laterall element layer to be used in peripodial membrane definition.
 	 * The lumen height scale will give the empty space height at the centre of the tissue. All length scales
 	 * are fractions with respect to the columnar tissue height.
 	 *
 	 * PeripodialMembraneParameters:
-  	 *   AddPeripodialMembrane: 0
-  	 *   PeripodialMembraneThickness(fractionOfTissueHeight): 0.45
-  	 *   PeripodialMembraneLateralThickness(fractionOfTissueHeight): 0.5
-  	 *   LumenHeightScale(fractionOfTissueHeight): 0.25
-  	 *   PeripodialMembraneYoungsModulus: 1000.0
-  	 *   PeripodialMembraneApicalViscosity: 0.0
-  	 *   PeripodialMembraneBasalViscosity: 0.0
+	 *   AddPeripodialMembrane: 0
+	 *   PeripodialMembraneThickness(fractionOfTissueHeight): 0.45
+	 *   PeripodialMembraneLateralThickness(fractionOfTissueHeight): 0.5
+	 *   LumenHeightScale(fractionOfTissueHeight): 0.25
+	 *   PeripodialMembraneYoungsModulus: 1000.0
+	 *   PeripodialMembraneApicalViscosity: 0.0
+	 *   PeripodialMembraneBasalViscosity: 0.0
+	 *   AdherePeripodialToColumnarInZ(bool): 1.0
 	 */
+	string orderedHeaders[8] = { "AddPeripodialMembrane:",
+								"PeripodialMembraneThickness(fractionOfTissueHeight):", "PeripodialMembraneLateralThickness(fractionOfTissueHeight):",
+								"LumenHeightScale(fractionOfTissueHeight):",
+								"PeripodialMembraneYoungsModulus:",
+								"PeripodialMembraneApicalViscosity:",
+								"PeripodialMembraneBasalViscosity:",
+								"AdherePeripodialToColumnarInZ(bool):"};
 	string currHeader;
 	file >> currHeader;
 	if(currHeader == "AddPeripodialMembrane:"){
 		file >>Sim->AddPeripodialMembrane;
 	}
 	else{
-		std::cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: AddPeripodialMembrane:" <<std::endl;
-		return false;
+		throw runtime_error("Unexpected field in PeripodialMembraneParameters; got " + currHeader ", expected " + orderedHeaders[0] + "\n");
 	}
 	file >> currHeader;
 	if(currHeader == "PeripodialMembraneThickness(fractionOfTissueHeight):"){
 		file >>Sim->PeripodialThicnessScale;
 	}
 	else{
-		std::cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: PeripodialMembraneThickness(fractionOfTissueHeight):" <<std::endl;
-		return false;
+		throw runtime_error("Unexpected field in PeripodialMembraneParameters; got " + currHeader ", expected " + orderedHeaders[1] + "\n");
 	}
 	file >> currHeader;
 	if(currHeader == "PeripodialMembraneLateralThickness(fractionOfTissueHeight):"){
 		file >>Sim->PeripodialLateralThicnessScale;
 	}
 	else{
-		std::cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: PeripodialMembraneLateralThickness(fractionOfTissueHeight):" <<std::endl;
-		return false;
+		throw runtime_error("Unexpected field in PeripodialMembraneParameters; got " + currHeader ", expected " + orderedHeaders[2] + "\n");
 	}
 	file >> currHeader;
 	if(currHeader == "LumenHeightScale(fractionOfTissueHeight):"){
 		file >>Sim->lumenHeightScale;
 	}
 	else{
-		std::cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: LumenHeightScale(fractionOfTissueHeight):" <<std::endl;
-		return false;
+		throw runtime_error("Unexpected field in PeripodialMembraneParameters; got " + currHeader ", expected " + orderedHeaders[3] + "\n");
 	}
 	file >> currHeader;
 	if(currHeader == "PeripodialMembraneYoungsModulus:"){
 		file >>Sim->PeripodialElasticity;
 	}
 	else{
-		std::cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: PeripodialMembraneYoungsModulus:" <<std::endl;
-		return false;
+		throw runtime_error("Unexpected field in PeripodialMembraneParameters; got " + currHeader ", expected " + orderedHeaders[4] + "\n");
 	}
 	file >> currHeader;
 	if(currHeader == "PeripodialMembraneApicalViscosity:"){
 		file >>Sim->peripodialApicalViscosity;
 	}
 	else{
-		std::cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: PeripodialMembraneApicalViscosity:" <<std::endl;
-		return false;
+		throw runtime_error("Unexpected field in PeripodialMembraneParameters; got " + currHeader ", expected " + orderedHeaders[5] + "\n");
 	}
 	file >> currHeader;
 	if(currHeader == "PeripodialMembraneBasalViscosity:"){
 		file >>Sim->peripodialBasalViscosity;
 	}
 	else{
-		std::cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: PeripodialMembraneBasalViscosity:" <<std::endl;
-		return false;
+		throw runtime_error("Unexpected field in PeripodialMembraneParameters; got " + currHeader ", expected " + orderedHeaders[6] + "\n");
 	}
 	file >> currHeader;
 	if(currHeader == "PeripodialMembraneMidlineViscosity:"){
 		file >>Sim->peripodialMidlineViscosity;
 	}
 	else{
-		std::cerr<<"Error in reading time step, curr string: "<<currHeader<<" should have been: PeripodialMembraneMidlineViscosity:" <<std::endl;
-		return false;
+		throw runtime_error("Unexpected field in PeripodialMembraneParameters; got " + currHeader ", expected " + orderedHeaders[7] + "\n");
 	}
 	file >> currHeader;
 	if(currHeader == "AdherePeripodialToColumnarInZ(bool):"){
 		file >>Sim->adherePeripodialToColumnar;
 	}
 	else{
-		printErrorMessage(currHeader,"Peripodial membrane parameters","AdherePeripodialToColumnarInZ(bool):");
-		return false;
+		throw runtime_error("Unexpected field in PeripodialMembraneParameters; got " + currHeader ", expected " + orderedHeaders[8] + "\n");
 	}
-
-	return true;
 }
 
 bool ModelInputObject::readLinkerZoneParameters(ifstream& file){
