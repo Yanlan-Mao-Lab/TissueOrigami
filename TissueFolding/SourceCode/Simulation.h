@@ -15,6 +15,7 @@
 #include "NewtonRaphsonSolver.h"
 #include "Lumen.h"
 #include <array>
+#include "argument_parser.h"
 
 #ifndef DO_NOT_USE_OMP
     //USING OMP, do not use omp not defined!
@@ -78,10 +79,8 @@ private:
 	bool 	boundLateralElements;							///< The flag to state if the lateral elements are bound in their degrees of freesdom to avoid boundary buckling.
 
 
-	bool readModeOfSim(int& i, int argc, char **argv);				///< User input reading function, reading mode if the simulations, can be DisplaySave, SimulationOnTheGo, ContinueFromSave. input tag is -mode
-	bool readParameters(int& i, int argc, char **argv);				///< User input reading function, reading modelinput file, the input tag is -i, should give path to modelinput file.
-	bool readOutputDirectory(int& i, int argc, char **argv);		///< User input reading function, reading output directory, the input tag is -od, shoud give path to output file
-	bool readSaveDirectoryToDisplay(int& i, int argc, char **argv);	///< User input reading function, reading the directory to obtain the save files to continue the simulation from, input tag is -od
+	void readModeOfSim(SimMode mode);						///< User input reading function, reading mode if the simulations, can be DisplaySave, SimulationOnTheGo, ContinueFromSave. input tag is -mode
+	bool readParameters(string inputPath);				///< User input reading function, reading modelinput file, the input tag is -i, should give path to modelinput file.
 	bool openFilesToDisplay();										///< This function opens the files to display a saved simulation.
 	bool readSystemSummaryFromSave();								///< This function reads the simulation parameters from the summary file, to display or continue simulation from saved simulation.
 	bool readSpecificNodeTypesFromSave();							///< This function reads the specific node types, such as the ECM, actin, marker ellipses from file.
@@ -115,7 +114,7 @@ private:
 	void readNodeBindingToContinueFromSave();						///< This function updates system node binding data from save file to continue from save.
 	bool readFinalSimulationStep();									///< This function reads a saved simulation all at once up to the end point.
 	void reInitiateSystemForces();						///< This function re-initiates arrays to store system forces in the scenario where system size may change (remeshing)
-	bool checkInputConsistency();									///< This function checks the consistency of model inputs.
+	void checkInputConsistency();									///< This function checks the consistency of model inputs.
 	void setDefaultParameters();									///< This function sets the default parameters to the simulation parameters.
 	bool openFiles();												///< This function opens the save files.
 	void initiateSystemForces(); 									///< This function initiates system force arrays.
@@ -558,7 +557,7 @@ public:
 	Simulation();                                       ///< Constructor
 	~Simulation();                                      ///< Destructor
 	void assignTips();                                  ///< This function assigns the nodes marking the tips of the tissue in xy plane.
-	bool readExecutableInputs(int argc, char **argv);   ///< This function reads the input executables from user input.
+	void readExecutableInputs(ArgumentSpace simArgs);   ///< This function reads the input executables from user input.
 	bool initiateSystem();                              ///< This function initiates the system with model inputs.
 	bool initiateSavedSystem();                         ///< This function initiates a saved system from save files.
 	void calculateSystemCentre();                       ///< This function calculates the tissue geometric centre.
