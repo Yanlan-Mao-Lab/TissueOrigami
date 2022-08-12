@@ -94,10 +94,16 @@ ArgumentSpace ArgumentReader::readInput(int argc, char **argv) {
 
     // check input file and output directory are where the user claims they are
     // these checks are common to all simulation modes
-    ifstream inputFile(args.pathToInputFile.c_str());
+    ifstream inputFile;
+    inputFile.open(args.pathToInputFile.c_str(), ifstream::in);
     if (!inputFile.good())
     {
         cout << "Error; input file not found at path provided: " + args.pathToInputFile + "\n";
+        exit(-1);
+    }
+    else if (!inputFile.is_open())
+    {
+        cout << "Error; read access denied to input file " + args.pathToInputFile + "\n";
         exit(-1);
     }
     else if (!DirectoryExists(args.pathToOutputDir))
@@ -105,6 +111,9 @@ ArgumentSpace ArgumentReader::readInput(int argc, char **argv) {
         cout << "Error; (output) directory not found at path: " + args.pathToOutputDir + "\n";
         exit(-1);
     }
+    // close the inputFile that we opened
+    inputFile.close();
+    
     // finally we can return args, which contains the information we need for the run to execute
     return args;
 };
