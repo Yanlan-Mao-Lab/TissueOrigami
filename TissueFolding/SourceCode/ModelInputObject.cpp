@@ -1471,7 +1471,7 @@ void ModelInputObject::readPeripodialMembraneParameters(ifstream& file){
 	 *   PeripodialMembraneBasalViscosity: 0.0
 	 *   AdherePeripodialToColumnarInZ(bool): 1.0
 	 */
-	string orderedHeaders[8] = { "AddPeripodialMembrane:",
+	string orderedHeaders[8] = {"AddPeripodialMembrane:",
 								"PeripodialMembraneThickness(fractionOfTissueHeight):", "PeripodialMembraneLateralThickness(fractionOfTissueHeight):",
 								"LumenHeightScale(fractionOfTissueHeight):",
 								"PeripodialMembraneYoungsModulus:",
