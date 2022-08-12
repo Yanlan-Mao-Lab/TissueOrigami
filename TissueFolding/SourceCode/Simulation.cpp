@@ -273,7 +273,7 @@ void Simulation::readExecutableInputs(ArgumentSpace simArgs){
 		DisplaySave = false;
 		break;
 	default:
-		throw out_of_range("Unknown simulation mode obtained!");
+		throw out_of_range("Unknown simulation mode specified\n");
 	}
 	// read in the inputs from the input file - THIS SHOULD REALLY THROW AN ERROR RATHER THAN RETURNING A BOOL
 	Success = readParameters(simArgs.pathToInputFile);
@@ -285,29 +285,6 @@ void Simulation::readExecutableInputs(ArgumentSpace simArgs){
 		saveDirectoryToDisplayString = simArgs.pathToInputDir;
 	}
 	checkInputConsistency();
-}
-
-void Simulation::readModeOfSim(SimMode mode){
-	switch (mode)
-	{
-		case SimMode::DisplaySave:
-			DisplaySave = true;
-			break;
-		case SimMode::OnTheGo:
-			DisplaySave = false;
-			break;
-		case SimMode::Default:
-			DisplaySave = false;
-			break;
-		case SimMode::Continue:
-			ContinueFromSave = true;
-			DisplaySave = false;
-			break;
-		default:
-			throw out_of_range("Unknown simulation mode obtained!");
-			return false;
-	}
-	return true;
 }
 
 bool Simulation::readParameters(string inputPath){

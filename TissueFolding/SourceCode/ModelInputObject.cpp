@@ -29,17 +29,13 @@ ModelInputObject::~ModelInputObject(){
 bool ModelInputObject::readParameters(){
 	/**
 	 *  This function will read all available model inputs from the file ModelInputObject#parameterFileName. \n
-	 *  It will start by opening the model input file, after each attempt to open a file, there will be a health check to ensure the file
-	 *  could be opened. In case there are issues with the file (most common one being the file is not opened due to a path error),
-	 *  the function will throw an error with corresponding explanatory error message, and quit the simulation.
+	 *  We know the input file exists and can be read from thanks to the argument parser.
+	 *  If the contents of the inputs themselves cannot be read, the function will throw an error with corresponding explanatory error message
 	 */
 	bool Success = true;
 	ifstream parametersFile;
 	parametersFile.open(parameterFileName, ifstream::in);
-	Success = checkFileStatus(parametersFile,parameterFileName);
-	if (!Success){
-		return Success;
-	}
+
 	/**
 	 *  After successfully opening the input file, the function will read it until it reaches to the end of the file.
 	 *  This will involve a series of private functions, which are thoroughly documented in source code, while
@@ -235,35 +231,12 @@ bool ModelInputObject::readParameters(){
 				 * unexpected line in the model input file, it will throw an error with a corresponding explanatory message,
 				 * and quit the simulation.
 				 */
-				std::cerr<<"Unidentified parameter input line: "<<std::endl;
-				std::cerr<<"		"<<currParameterHeader<<std::endl;
-				return false;
-			}
-			if (!Success){
-				return false;
+				throw runtime_error("Unidentified parameter input line: " + currParameterHeader + "\n");
 			}
 		}
 	}
 	return Success;
 }
-
-bool ModelInputObject::checkFileStatus(ifstream& file, string fileName){
-	/**
-	 * This function will check the status of the input file that was provided. It will
-	 * return true if the file is opened successfully, and false otherwise.
-	 *
-	 */
-	if (!file.is_open()) {
-		std::cout<<"Cannot open parameter input file, "<<fileName<<std::endl;
-		return false;
-	}
-	if (!file.good()) {
-		std::cout<<"File does not exist, "<<fileName<<std::endl;
-		return false;
-	}
-	return true;
-}
-
 
 bool ModelInputObject::readGrowthOptions(ifstream& file){
 	/**
