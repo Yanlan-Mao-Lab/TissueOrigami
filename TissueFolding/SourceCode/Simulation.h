@@ -82,8 +82,6 @@ private:
 	bool 	checkedForCollapsedNodesOnFoldingOnce;			///< The flag to state the folding regions node binding is checked once, necessary to safety check at the beginning of simulations continuing from save.
 	bool 	boundLateralElements;							///< The flag to state if the lateral elements are bound in their degrees of freesdom to avoid boundary buckling.
 
-
-	void readModeOfSim(SimMode mode);						///< User input reading function, reading mode if the simulations, can be DisplaySave, SimulationOnTheGo, ContinueFromSave. input tag is -mode
 	bool readParameters(string inputPath);				///< User input reading function, reading modelinput file, the input tag is -i, should give path to modelinput file.
 	bool openFilesToDisplay();										///< This function opens the files to display a saved simulation.
 	bool readSystemSummaryFromSave();								///< This function reads the simulation parameters from the summary file, to display or continue simulation from saved simulation.
