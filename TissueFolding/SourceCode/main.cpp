@@ -1,23 +1,29 @@
 using namespace std;
 
 #include "Simulation.h"
+#include "argument_parser.h"
 #include <vector>
 
 int main(int argc, char * argv[])
 {
+	// read command-line arguments
+	ArgumentSpace simArgs = ArgumentReader::readInput(argc, argv);
+
+	// command-line arguments are valid in the sense that they all exist,
+	// now we need to pass this information into the simulation
 	Simulation* Sim01 = new Simulation();
 	Sim01->displayIsOn = false;
-	if (argc<2){
+
+	if (simArgs.getSimulationMode()==Default) {
+		// default settings only require DisplaySave set to false
 		Sim01->DisplaySave = false;
-		cerr<<"Using default settings"<<endl;
 	}
-	else{
-		bool Success = Sim01->readExecutableInputs(argc, argv);
-		if (!Success){
-			cerr<<"Error in input to executable"<<endl;
-			return 1;
-		}
+	else 
+	{
+		// we will need to read in the inputs
+		Sim01->readExecutableInputs(argc, argv);
 	}
+
 	if (Sim01->DisplaySave){
 		cerr<<"This is the executable for running the model without display"<<endl;
 		return true;

@@ -6,6 +6,7 @@
 #include <vector>
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_blas.h>
+#include "argument_parser.h"
 
 using namespace std;
 
@@ -250,121 +251,73 @@ void Simulation::setDefaultParameters(){
 
 }
 
-bool Simulation::readExecutableInputs(int argc, char **argv){
-	int i = 1;
+void Simulation::readExecutableInputs(ArgumentSpace simArgs){
 	bool Success = true;
-	while(i<argc){
-		const char *inptype = argv[i];
-		if (string(inptype) == "-mode"){
-            /**
-             * The mode of simulation can be "DisplaySave","SimulationOnTheGo" or "ContinueFromSave". As the
-             *nemas suggest, "DisplaySave" option will dsplay a simulation from saved files, without running the
-             *simulation. "SimulationOnTheGo" will start a fresh simulation and "ContinueFromSave" will continue simulating
-             *from a save file.\n
-             *
-              */
-			Success = readModeOfSim(i, argc, argv);
-		}
-		else if (string(inptype) == "-i"){
-            /**
-             * The tag "-i" defines the input file, this should be a modelinput file
-             * detailing the parameters of the simulation.\n
-             */
-			Success = readParameters(i, argc, argv);
-		}
-		else if (string(inptype) == "-od"){
-            /**
-             * If the input file requires saving, then an output direcotry should be specified with the "-od" tag.
-             */
-			Success = readOutputDirectory(i, argc, argv);
-		}
-		else if (string(inptype) == "-dInput"){
-            /**
-             * In case of simulations contining from save or when the tool is called to display an existing simulation,
-             * the input directory should be specified, with the tag "-dInput".
-             */
-			Success = readSaveDirectoryToDisplay(i, argc, argv);
-		}
-		else {
-			std::cerr<<"Please enter a valid option key: {-mode,-i, -od, -dInput}, current string: "<<inptype<<std::endl;
-			return false;
-		}
-		i++;
-		if (!Success){
-			return Success;
-		}
-	}
-	Success = checkInputConsistency();
-	return Success;
-}
+	// configure Sim01 based on the simulation mode
+	// note that the argument parser has already checked that the inputs/output directories exist,
+	// so we should not encounter any errors opening of finding these directories
 
-bool Simulation::readModeOfSim(int& i, int argc, char **argv){
-	i++;
-	if (i >= argc){
-		std::cerr<<" input the mode of simulation: {DisplaySave, SimulationOnTheGo, ContinueFromSave, Default}"<<std::endl;
-		return false;
-	}
-	const char* inpstring = argv[i];
-	if (string(inpstring) == "DisplaySave"){
+	// based on the simulation mode, set the appropriate flags
+	switch (simArgs.getSimulationMode())
+	{
+	case SimMode::DisplaySave:
 		DisplaySave = true;
-		return true;
-	}
-	else if (string(inpstring) == "SimulationOnTheGo" || string(inpstring) == "Default"){
+		break;
+	case SimMode::OnTheGo:
 		DisplaySave = false;
-		return true;
-	}
-	else if (string(inpstring) == "ContinueFromSave"){
+		break;
+	case SimMode::Default:
+		DisplaySave = false;
+		break;
+	case SimMode::Continue:
 		ContinueFromSave = true;
 		DisplaySave = false;
-		//DisplaySave = true;
-		return true;
+		break;
+	default:
+		throw out_of_range("Unknown simulation mode obtained!");
 	}
-	else{
-		std::cerr<<"Please provide input mode: -mode {DisplaySave, SimulationOnTheGo, ContinueFromSave, Default}";
-		return false;
+	// read in the inputs from the input file - THIS SHOULD REALLY THROW AN ERROR RATHER THAN RETURNING A BOOL
+	Success = readParameters(simArgs.pathToInputFile);
+	if (!Success) { throw runtime_error("Error in input file to simulation\n");}
+	// identify the output directory
+	saveDirectory = simArgs.pathToOutputDir;
+	// if continuing from save or displaying a save, find the input directory too
+	if ( simArgs.getSimulationMode()==Continue || simArgs.getSimulationMode()==SimMode::DisplaySave ) {
+		saveDirectoryToDisplayString = simArgs.pathToInputDir;
 	}
+	checkInputConsistency();
 }
 
-bool Simulation::readParameters(int& i, int argc, char **argv){
-	i++;
-	if (i >= argc){
-		std::cerr<<" input the model input file"<<std::endl;
-		return false;
+void Simulation::readModeOfSim(SimMode mode){
+	switch (mode)
+	{
+		case SimMode::DisplaySave:
+			DisplaySave = true;
+			break;
+		case SimMode::OnTheGo:
+			DisplaySave = false;
+			break;
+		case SimMode::Default:
+			DisplaySave = false;
+			break;
+		case SimMode::Continue:
+			ContinueFromSave = true;
+			DisplaySave = false;
+			break;
+		default:
+			throw out_of_range("Unknown simulation mode obtained!");
+			return false;
 	}
-	const char* inpstring = argv[i];
+	return true;
+}
+
+bool Simulation::readParameters(string inputPath){
 	ModInp->Sim=this;
-	ModInp->parameterFileName =  inpstring;
+	ModInp->parameterFileName =  inputPath;
 	bool Success = ModInp->readParameters();
 	if (!Success){
 		return Success;
 	}
-	return true;
-}
-
-bool Simulation::readSaveDirectoryToDisplay(int& i, int argc, char **argv){
-	i++;
-	if (i >= argc){
-		std::cerr<<" input the save directory, contents of which will be displayed"<<std::endl;
-		return false;
-	}
-	const char* inpstring = argv[i];
-	saveDirectoryToDisplayString = string(inpstring);
-	return true;
-}
-
-bool Simulation::readOutputDirectory(int& i, int argc, char **argv){
-    /**
-     * This function will read in the save directory. The boolean for saving files will
-     * not be toggles. If your model input file states no saving, then the error and output files
-     * will be directed into this directory, but the frame saving must be toggled independently.
-     */
-	i++;
-	if (i >= argc){
-		std::cerr<<" input the save directory"<<std::endl;
-		return false;
-	}
-	const char* inpstring = argv[i];
-	saveDirectory= string(inpstring);
 	return true;
 }
 
@@ -501,23 +454,12 @@ void Simulation::updateMasterSlaveNodesInBinding(){
 	}
 }
 
-bool Simulation::checkInputConsistency(){
-	if (ContinueFromSave &&  saveDirectoryToDisplayString == "Not-Set"){
-		cerr <<"The mode is set to continue from saved simulation, please provide an input directory containing the saved profile, using -dInput"<<std::endl;
-		return false;
+void Simulation::checkInputConsistency(){
+	if ((saveData || saveImages) && (saveDirectory == "Not-Set")) // this will error if, for some reason, we want to save to the directory "Not-Set"!!!!
+	{
+		throw runtime_error("Modelinput file requires saving, but no output directory has been provided");
 	}
-	if (saveData || saveImages){
-		if (saveDirectory == "Not-Set"){
-			cerr <<"Modelinput file requires saving, please provide output directory, using -od tag"<<std::endl;
-			return false;
-		}
-	}
-	if (DisplaySave){
-		if (saveDirectoryToDisplayString == "Not-Set"){
-			cerr <<"The mode is set to display from save, please provide an input directory, using -dInput"<<std::endl;
-			return false;
-		}
-	}
+	// these last two tests need input from Nargess, to explain what they are doing
 	if (AddPeripodialMembrane == false){
 		for (int i=0; i<nGrowthFunctions; ++i){
 			if(GrowthFunctions[i]->applyToPeripodialMembrane){
@@ -538,7 +480,6 @@ bool Simulation::checkInputConsistency(){
 		// Before you start coding, please think again, why are you not simulating part of the tissue?
 		needPeripodialforInputConsistency = true;
 	}
-	return true;
 }
 
 bool Simulation::initiateSystem(){
