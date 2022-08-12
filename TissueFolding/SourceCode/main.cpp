@@ -1,7 +1,7 @@
 using namespace std;
 
 #include "Simulation.h"
-#include "argument_parser.h"
+#include "ArgumentParserSimulation.h"
 #include <vector>
 
 int main(int argc, char * argv[])
