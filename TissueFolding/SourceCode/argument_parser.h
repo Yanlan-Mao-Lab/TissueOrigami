@@ -13,7 +13,8 @@ enum SimMode {
     NotSet = 0,
     OnTheGo = 1,
     Continue = 2,
-    DisplaySave = 3
+    DisplaySave = 3,
+    Default = 4
 };
 
 bool DirectoryExists(string path);
@@ -24,7 +25,7 @@ class ArgumentSpace{
         vector<string> flags;
         vector<string> nonFlags;
 
-        SimMode simulationMode; // replace parameters[0]
+        SimMode simulationMode; // determines mode the simulation runs in
 
     public:
         int nArgs;

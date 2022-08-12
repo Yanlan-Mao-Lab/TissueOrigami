@@ -50,6 +50,12 @@ ArgumentSpace ArgumentReader::readInput(int argc, char **argv) {
         printHelp(args.getSimulationMode());
         exit(0);
     }
+    // do we want to run using default parameters? If so, allow this and terminate early
+    else if (args.getSimulationMode()==Default)
+    {
+        fprintf(stdout, "WARNING: Running simulation with default parameters (-d flag detected)\n");
+        return args;
+    }
     // if no simulation mode was specified, but the user did not ask for help, exit with error
     else if (args.getSimulationMode()==NotSet) {
         fprintf(stdout, "Error - no simulation mode specified. See the help below for usage information.\n");
@@ -122,7 +128,8 @@ void ArgumentReader::printHelp(SimMode mode)
                         "\t \t continue: Resume a simulation that has previously finished\n"
                         "\t \t display: Read data from the output of a finished simulation\n"
                         "Options:\n"
-                        "-h:\t Display this help message\n");
+                        "-h:\t Display this help message\n"
+                        "-d:\t Run simulation using default values - IGNORES OTHER COMMAND-LINE INPUTS\n");
         break;
     case OnTheGo:
         fprintf(stdout, "Usage:\n"
@@ -156,6 +163,11 @@ void ArgumentReader::printHelp(SimMode mode)
                         "Options:\n"
                         "-h:\t Display this help message\n");
         break;
+    case Default:
+        fprintf(stdout, "Usage:\n"
+                        "TissueFolding -d \n"
+                        "Runs simulation using default parameter values \n");
+        break;
     }
 };
 
@@ -185,7 +197,14 @@ ArgumentSpace::ArgumentSpace(int argc, char **argv) {
     nArgs = nNonFlags + nFlags;
     // attempt to identify the simulation mode. If it cannot be identified, leave it as 0 to force an exit later
     simulationMode = NotSet;
-    if (nNonFlags >= 1)
+    for (const auto &a : flags)
+    {
+        if (a == "-d")
+        {
+            simulationMode = Default;
+        }
+    }
+    if ((simulationMode!=Default) && (nNonFlags >= 1))
     {
         if (nonFlags[0]=="onthego") {simulationMode = OnTheGo;}
         else if (nonFlags[0]=="continue") {simulationMode = Continue;}
@@ -198,11 +217,16 @@ ArgumentSpace::ArgumentSpace(int argc, char **argv) {
  * 
  */
 void ArgumentSpace::printModeSpecs() {
-    cout << "Run type: " + nonFlags[0] + "\n";
-    cout << "Variable values as follows:\n"
-            "pathToInputFile = " + pathToInputFile + "\n"
-            "pathToOutputDir = " + pathToOutputDir + "\n"
-            "pathToInputDir  = " + pathToInputDir  + "\n";
+    if (simulationMode==Default) {
+        cout << "Run type is set to use defaults\n";
+    }
+    else {
+        cout << "Run type: " + nonFlags[0] + "\n";
+        cout << "Variable values as follows:\n"
+                "pathToInputFile = " + pathToInputFile + "\n"
+                "pathToOutputDir = " + pathToOutputDir + "\n"
+                "pathToInputDir  = " + pathToInputDir  + "\n";
+    }
 }
 
 /**
