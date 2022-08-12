@@ -20,13 +20,13 @@ bool DirectoryExists(string path) {
         // directory does not exist
         return false;
     }
-    else if (info.st_mode && S_IFDIR)
+    else if (info.st_mode & S_IFDIR)
     {
-        // path exists on the filesystem, but it's not pointing to a directory
-        return false;
+        return true;
     }
     else {
-        return true;
+        // path exists on the filesystem, but it's not pointing to a directory
+        return false;
     }
 }
 
