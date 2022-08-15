@@ -86,7 +86,7 @@ public:
 	void writeNodes2D(ofstream &nodesForGnuplot);
 	void addPeripodialNodesMirroringColumnar(ofstream& meshfile, int nPeripodialNodeNumber, int nSharedNodesAtCircumference, vector<double>& recordedNodesX, vector<double>& recordedNodesY, vector<double>& recordedNodesZ, double& currzHeight, double& dzHeight, double& ECMHeight, double actinHeight, double basalLayerHeight, bool addLateralECMRing);
 	void addPeripodialNodesFromTriangulation(ofstream& meshfile, int nPeripodialNodeNumber, int nSharedNodesAtCircumference, vector<double>& recordedNodesX, vector<double>& recordedNodesY, vector<double>& recordedNodesZ, double& currzHeight, double& dzHeight, double& ECMHeight, double actinHeight, double basalLayerHeight, bool addLateralECMRing);
-	void writeMeshFileForSimulation(double zHeight, int zLayers, double ECMHeight,double actinHeight, double modifiedZDueToThinActin, double basalLayerHeight, bool addLateralECMRing);
+	void writeMeshFileForSimulation(double zHeight, int zLayers, double ECMHeight, double actinHeight, double modifiedZDueToThinActin, double basalLayerHeight, bool addLateralECMRing, string output_mesh = "./MeshFile.out");
 	void writeTissueWeights(ofstream& MeshFile, vector <double> &recordedPeripodialness);
 	void writeTriangleMeshFileForSimulation(double zHeight);
 	void addEquidistantRingMin();
@@ -119,8 +119,8 @@ public:
 	void bluntTip(vector <float>&  x, vector <float>& y);
 	void addLayersToOutline(int nLayer, double* bounidngBox, vector <float>&  x, vector <float>& y);
 	void writeInPosVectors(vector <float>&  x, vector <float>& y);
-	void peripodialSparseTesselate2D(bool symmetricX, bool symmetricY);
-	void peripodialReadInTesselation2D();
+	void peripodialSparseTesselate2D(bool symmetricX, bool symmetricY, string input_nodes);
+	void peripodialReadInTesselation2D(string input_nodes, string input_mesh);
 };
 
 EllipseLayoutGenerator::EllipseLayoutGenerator(double r1_1, double r1_2, double r2_1, double r2_2, double sideLen, bool xsymmetry, bool ysymmetry, double condensation){
@@ -244,7 +244,7 @@ void EllipseLayoutGenerator::linkerTesselate2D(){
 	system(sysCommand.c_str());
 }
 
-void EllipseLayoutGenerator::peripodialSparseTesselate2D(bool symmetricX, bool symmetricY){
+void EllipseLayoutGenerator::peripodialSparseTesselate2D(bool symmetricX, bool symmetricY, string input_nodes){
 	vector<double> x, y;
 	vector <int> ids;
 	//extractBorderWithSymmetricLine(symmetricX, symmetricY, x,y,ids);
@@ -252,22 +252,22 @@ void EllipseLayoutGenerator::peripodialSparseTesselate2D(bool symmetricX, bool s
 	int n = x.size();
 	
 	ofstream pointsForTesselation;
-	pointsForTesselation.open("./PointsPeri.node",ofstream::trunc);
+	pointsForTesselation.open(input_nodes,ofstream::trunc);
 	pointsForTesselation<<n<<" 2 0 1"<<endl; //dim, attribute number , border markers on or of
 	for (int i =0; i< n; ++i){
 		pointsForTesselation<<i<<" "<<x[i]<<" "<<y[i]<<" 1"<<endl;
 	}
 	// assume EllipseFromOutline.o is located in 2DEllipse, and triangle.o is at the relative path ../triangle/triangle
 	// we are implicity assuming that the working directory is that which contains EllipseFromOutline here
-	string sysCommand = "../triangle/triangle -Yq ./PointsPeri.node";
+	string sysCommand = "../triangle/triangle -Yq " + input_nodes;
 	cerr<<"Running triangulation with: "<<sysCommand<<endl;
 	system(sysCommand.c_str());
 }
 
-void EllipseLayoutGenerator::peripodialReadInTesselation2D(){
+void EllipseLayoutGenerator::peripodialReadInTesselation2D(string input_nodes, string input_mesh){
 	cout<<" start of read in peripodial tesselation, size of points: "<<posx.size()<<" size of tissue shape: "<<tissueType.size()<<endl;	
 	ifstream NodeFile;	
-	NodeFile.open("./PointsPeri.1.node", ifstream::in);
+	NodeFile.open(input_nodes, ifstream::in);
 	int nNode;
 	int bordersMarked;
 	int nAttributes;
@@ -312,7 +312,7 @@ void EllipseLayoutGenerator::peripodialReadInTesselation2D(){
 		}
 	}
 	ifstream MeshFile;	
-	MeshFile.open("./PointsPeri.1.ele", ifstream::in);
+	MeshFile.open(input_mesh, ifstream::in);
 	//readHeader:
 	int ntri;
 	MeshFile>>ntri;
@@ -1485,13 +1485,14 @@ void EllipseLayoutGenerator::addPeripodialNodesMirroringColumnar(ofstream& MeshF
 	}
 }
 
-void EllipseLayoutGenerator::writeMeshFileForSimulation(double zHeight, int zLayers, double ECMHeight,double actinHeight, double modifiedZDueToThinActin, double basalLayerHeight, bool addLateralECMRing){	
+void EllipseLayoutGenerator::writeMeshFileForSimulation(double zHeight, int zLayers, double ECMHeight, double actinHeight, double modifiedZDueToThinActin, double basalLayerHeight, bool addLateralECMRing, string output_mesh)
+{
 	bool mirrorColumnarForPeripodial = false;
 	vector <double> recordedNodesX, recordedNodesY, recordedNodesZ;
 	vector <double> recordedPeripodialness;
 	cout<<" Writing triangle file, size of points: "<<posx.size()<<" size of tissue shape: "<<tissueType.size()<<endl;
 	ofstream MeshFile;
-	MeshFile.open("./MeshFile.out",ofstream::trunc);
+	MeshFile.open(output_mesh,ofstream::trunc);
 	int n = posx.size();
 	int nPeripodialNodeNumber = PeriPosx.size(); //this is equal to the nodes in columnar layer
 	if (mirrorColumnarForPeripodial){
@@ -2998,11 +2999,11 @@ int main(int argc, char **argv)
 	//Then I will use those values to add the elements in mesh generation.
 	if(addPeripodial){
 		Lay01.calculatePeripodialAttachVectors(symmetricX, symmetricY);
-		Lay01.peripodialSparseTesselate2D(Lay01.symmetricX , Lay01.symmetricX);
-		Lay01.peripodialReadInTesselation2D();
+		Lay01.peripodialSparseTesselate2D(Lay01.symmetricX, Lay01.symmetricX, "./PointsPeri.node");
+		Lay01.peripodialReadInTesselation2D("./PointsPeri.1.node", "./PointsPeri.1.ele");
 	}
 	Lay01.calculateAverageSideLength();
-	Lay01.writeMeshFileForSimulation(ABHeight,ABLayers,ECMHeight,actinHeight,modifiedZDueToThinActin,basalLayerHeight, addLateralECMRing);	
+	Lay01.writeMeshFileForSimulation(ABHeight, ABLayers, ECMHeight, actinHeight, modifiedZDueToThinActin, basalLayerHeight, addLateralECMRing, "./MeshFile.out");
 	//output the points for plotting:
 	int n=Lay01.posx.size();	
 	//cerr<<"r1: "<<Lay01.r1[0]<<" "<<Lay01.r1[1]<<" r2: "<<Lay01.r2[0]<<" "<<Lay01.r2[1]<<endl;
