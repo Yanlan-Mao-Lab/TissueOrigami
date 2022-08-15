@@ -6,9 +6,9 @@ name: Regression Tests
 on:
   # Triggers the workflow on pull request events, or direct pushes to the "master" branch
   push:
-    branches: ["master"]
+    branches: ["master", "ARCCollaboration"]
   pull_request:
-    branches: ["master"]
+    branches: ["master", "ARCCollaboration"]
   workflow_dispatch:
 
 jobs:
