@@ -237,7 +237,7 @@ void EllipseLayoutGenerator::linkerTesselate2D(){
 	ostringstream Convert;
 	Convert << maxArea; // Use some manipulators
 	string maxAreaStr = Convert.str(); // Give the result to the string
-	string sysCommand = "/home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/triangle/triangle -pq33a"+maxAreaStr+" ./LinkerPoints.poly  ";
+	string sysCommand = "../triangle/triangle -pq33a"+maxAreaStr+" ./LinkerPoints.poly";
 	cerr<<"Running triangulation with: "<<sysCommand<<endl;
 	system(sysCommand.c_str());
 }
@@ -255,7 +255,9 @@ void EllipseLayoutGenerator::peripodialSparseTesselate2D(bool symmetricX, bool s
 	for (int i =0; i< n; ++i){
 		pointsForTesselation<<i<<" "<<x[i]<<" "<<y[i]<<" 1"<<endl;
 	}
-	string sysCommand = "/home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/triangle/triangle -Yq ./PointsPeri.node  ";
+	// assume EllipseFromOutline.o is located in 2DEllipse, and triangle.o is at the relative path ../triangle/triangle
+	// we are implicity assuming that the working directory is that which contains EllipseFromOutline here
+	string sysCommand = "../triangle/triangle -Yq ./PointsPeri.node";
 	cerr<<"Running triangulation with: "<<sysCommand<<endl;
 	system(sysCommand.c_str());
 	
@@ -433,7 +435,9 @@ void EllipseLayoutGenerator::Tesselate2D(){
 	ostringstream Convert;
 	Convert << maxArea; // Use some manipulators
 	string maxAreaStr = Convert.str(); // Give the result to the string
-	string sysCommand = "/home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/triangle/triangle -q33a"+maxAreaStr+" ./Points.node  ";
+	// assume EllipseFromOutline.o is located in 2DEllipse, and triangle.o is at the relative path ../triangle/triangle
+	// we are implicity assuming that the working directory is that which contains EllipseFromOutline here
+	string sysCommand = "../triangle/triangle -q33a" + maxAreaStr + " ./Points.node";
 	cerr<<"Running triangulation with: "<<sysCommand<<endl;
 	system(sysCommand.c_str());
 	
