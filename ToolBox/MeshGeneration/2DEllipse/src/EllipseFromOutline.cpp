@@ -77,7 +77,7 @@ public:
 	void calculatedtet();
 	bool updateRadia();
 	void addMidLine();
-	void Tesselate2D();
+	void Tesselate2D(char *input_nodes, char *output_nodes);
 	void readInTesselation2D(char *input_meshfile, char *input_nodes, char *output_vecs, char *output_nodes);
 	void readInTesselation3D(char *input_triangulation, char *output_vecs, char *output_nodes);
 	void linkerTesselate2D();
@@ -418,12 +418,12 @@ void EllipseLayoutGenerator::linkerReadInTesselation2D(){
 }
 
 
-void EllipseLayoutGenerator::Tesselate2D(){
+void EllipseLayoutGenerator::Tesselate2D(char *input_nodes, char *output_nodes){
 	ofstream vectorsForGnuplot,nodesForGnuplot;
-	nodesForGnuplot.open("./NodesPreTesselation.out",ofstream::trunc);	
+	nodesForGnuplot.open(input_nodes,ofstream::trunc);	
 	writeNodes2D(nodesForGnuplot);
 	ofstream pointsForTesselation;
-	pointsForTesselation.open("./Points.node",ofstream::trunc);
+	pointsForTesselation.open(output_nodes,ofstream::trunc);
 	pointsForTesselation<<posx.size()<<" 2 0 1"<<endl; //dim, attribute number , border markers on or of
 	for (int i =0; i< posx.size(); ++i){
 		pointsForTesselation<<i<<" "<<posx[i]<<" "<<posy[i]<<endl;
@@ -436,7 +436,7 @@ void EllipseLayoutGenerator::Tesselate2D(){
 	string maxAreaStr = Convert.str(); // Give the result to the string
 	// assume EllipseFromOutline.o is located in 2DEllipse, and triangle.o is at the relative path ../triangle/triangle
 	// we are implicity assuming that the working directory is that which contains EllipseFromOutline here
-	string sysCommand = "../triangle/triangle -q33a" + maxAreaStr + " ./Points.node";
+	string sysCommand = "../triangle/triangle -q33a" + maxAreaStr + " " + output_nodes;
 	cerr<<"Running triangulation with: "<<sysCommand<<endl;
 	system(sysCommand.c_str());
 	
@@ -2868,7 +2868,7 @@ int main(int argc, char **argv)
 		vector <float> x, y;	
 		readInOutline(x,y,inputOutline);
 		Lay01.scaleInputOutline(x,y);
-		Lay01.Tesselate2D();
+		Lay01.Tesselate2D("./NodesPreTesselation.out", "./Points.node");
 	}
     if(parameters[0] == -1){
 		Lay01.readInTesselation2D("./Points.1.ele", "./Points.1.node", "./VectorsPostTesselation.out", "./NodesPostTesselation.out");
