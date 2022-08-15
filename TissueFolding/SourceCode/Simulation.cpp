@@ -6,7 +6,7 @@
 #include <vector>
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_blas.h>
-#include "argument_parser.h"
+#include "ArgumentParserSimulation.h"
 
 using namespace std;
 
