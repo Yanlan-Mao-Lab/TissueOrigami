@@ -78,8 +78,8 @@ public:
 	bool updateRadia();
 	void addMidLine();
 	void Tesselate2D();
-	void readInTesselation2D();
-    void readInTesselation3D();
+	void readInTesselation2D(char *input_meshfile, char *input_nodes, char *output_vecs, char *output_nodes);
+	void readInTesselation3D();
 	void linkerTesselate2D();
 	void linkerReadInTesselation2D();
 	void writeVectors2D(ofstream &vectorsForGnuplot);
@@ -262,7 +262,6 @@ void EllipseLayoutGenerator::peripodialSparseTesselate2D(bool symmetricX, bool s
 	string sysCommand = "../triangle/triangle -Yq ./PointsPeri.node";
 	cerr<<"Running triangulation with: "<<sysCommand<<endl;
 	system(sysCommand.c_str());
-	
 }
 
 void EllipseLayoutGenerator::peripodialReadInTesselation2D(){
@@ -518,12 +517,12 @@ void EllipseLayoutGenerator::readInTesselation3D(){
 }
 
 
-void EllipseLayoutGenerator::readInTesselation2D(){
+void EllipseLayoutGenerator::readInTesselation2D(char *input_meshfile, char *input_nodes, char *output_vecs, char * output_nodes){
 	cout<<" start of read in tesselation, size of points: "<<posx.size()<<" size of tissue shape: "<<tissueType.size()<<endl;
 		
-	ifstream MeshFile;	
-	MeshFile.open("./Points.1.ele", ifstream::in);
-	//readHeader:
+	ifstream MeshFile;
+	MeshFile.open(input_meshfile, ifstream::in);
+	// readHeader:
 	int ntri;
 	MeshFile>>ntri;
 	int nodesPerTri;
@@ -552,7 +551,7 @@ void EllipseLayoutGenerator::readInTesselation2D(){
 	}
 	MeshFile.close();
 	ifstream NodeFile;	
-	NodeFile.open("./Points.1.node", ifstream::in);
+	NodeFile.open(input_nodes, ifstream::in);
 	int nNode;
 	int bordersMarked;
 	NodeFile>>nNode;
@@ -591,13 +590,9 @@ void EllipseLayoutGenerator::readInTesselation2D(){
 	NodeFile.close();
 	//writing for gnuplot vectors:
 	ofstream vectorsForGnuplot,nodesForGnuplot;;
-        cout<<"I'm here1"<<endl;
-	vectorsForGnuplot.open("./VectorsPostTesselation.out",ofstream::trunc);
-        cout<<"I'm here2"<<endl;
-	nodesForGnuplot.open("./NodesPostTesselation.out",ofstream::trunc);
-        cout<<"I'm here3"<<endl;
-        writeVectors2D(vectorsForGnuplot);
-        cout<<"I'm here4"<<endl;
+	vectorsForGnuplot.open(output_vecs,ofstream::trunc);
+	nodesForGnuplot.open(output_nodes,ofstream::trunc);
+	writeVectors2D(vectorsForGnuplot);	
 	writeNodes2D(nodesForGnuplot);
         cout<<"End of read2D function"<<endl;
 }
@@ -3002,8 +2997,8 @@ int main(int argc, char **argv)
 		Lay01.Tesselate2D();
 	}
     if(parameters[0] == -1){
-        Lay01.readInTesselation2D();
-    }
+		Lay01.readInTesselation2D("./Points.1.ele", "./Points.1.node", "./VectorsPostTesselation.out", "./NodesPostTesselation.out");
+	}
     if(parameters[0] == -2){
         Lay01.readInTesselation3D();
     }
