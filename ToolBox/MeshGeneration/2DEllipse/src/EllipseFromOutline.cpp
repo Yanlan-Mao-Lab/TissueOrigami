@@ -79,7 +79,7 @@ public:
 	void addMidLine();
 	void Tesselate2D();
 	void readInTesselation2D(char *input_meshfile, char *input_nodes, char *output_vecs, char *output_nodes);
-	void readInTesselation3D();
+	void readInTesselation3D(char *input_triangulation, char *output_vecs, char *output_nodes);
 	void linkerTesselate2D();
 	void linkerReadInTesselation2D();
 	void writeVectors2D(ofstream &vectorsForGnuplot);
@@ -444,19 +444,10 @@ void EllipseLayoutGenerator::Tesselate2D(){
 	
 }
 
-void EllipseLayoutGenerator::readInTesselation3D(){
+void EllipseLayoutGenerator::readInTesselation3D(char *input_triangulation, char *output_vecs, char *output_nodes){
     cout<<" start of read in tesselation3D, size of points: "<<posx.size()<<" size of tissue shape: "<<tissueType.size()<<endl;
-    ifstream TesselationIn3DFile;
-    if (generatingSphere){
-        TesselationIn3DFile.open("./SphericalTriangulation", ifstream::in);
-    }
-    else if (generatingCylinder){
-            TesselationIn3DFile.open("./CylindricalTriangulation", ifstream::in);
-    }
-    else{
-        cerr<<"Inside readInTesselation 3D but the tissue shape is neither spherical or cylindrical. Check input values.";
-        return;
-    }
+	ifstream TesselationIn3DFile;
+	TesselationIn3DFile.open(input_triangulation, ifstream::in);
 
     int nNode;
     int bordersMarked=1;
@@ -510,8 +501,8 @@ void EllipseLayoutGenerator::readInTesselation3D(){
     TesselationIn3DFile.close();
     //writing for gnuplot vectors:
     ofstream vectorsForGnuplot,nodesForGnuplot;;
-    vectorsForGnuplot.open("./VectorsPostTesselation.out",ofstream::trunc);
-    nodesForGnuplot.open("./NodesPostTesselation.out",ofstream::trunc);
+    vectorsForGnuplot.open(output_vecs,ofstream::trunc);
+    nodesForGnuplot.open(output_nodes,ofstream::trunc);
     writeVectors2D(vectorsForGnuplot);
     writeNodes2D(nodesForGnuplot);
 }
@@ -3000,11 +2991,8 @@ int main(int argc, char **argv)
 		Lay01.readInTesselation2D("./Points.1.ele", "./Points.1.node", "./VectorsPostTesselation.out", "./NodesPostTesselation.out");
 	}
     if(parameters[0] == -2){
-        Lay01.readInTesselation3D();
-    }
-    if(parameters[0] == -3){
-        Lay01.readInTesselation3D();
-    }
+		Lay01.readInTesselation3D("./SphericalTriangulation", "./VectorsPostTesselation.out", "./NodesPostTesselation.out");
+	}
 	//now I have the triangulated mesh. If I have peripodial, I need to get the circumference.
 	//Then I will calculate the vectors pointing out from each of the circumference nodes.
 	//Then I will use those values to add the elements in mesh generation.
