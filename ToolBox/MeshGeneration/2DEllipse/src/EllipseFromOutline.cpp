@@ -77,9 +77,9 @@ public:
 	void calculatedtet();
 	bool updateRadia();
 	void addMidLine();
-	void Tesselate2D(char *input_nodes, char *output_nodes);
-	void readInTesselation2D(char *input_meshfile, char *input_nodes, char *output_vecs, char *output_nodes);
-	void readInTesselation3D(char *input_triangulation, char *output_vecs, char *output_nodes);
+	void Tesselate2D(string input_nodes, string output_nodes);
+	void readInTesselation2D(string input_meshfile, string input_nodes, string output_vecs, string output_nodes);
+	void readInTesselation3D(string input_triangulation, string output_vecs, string output_nodes);
 	void linkerTesselate2D();
 	void linkerReadInTesselation2D();
 	void writeVectors2D(ofstream &vectorsForGnuplot);
@@ -420,7 +420,7 @@ void EllipseLayoutGenerator::linkerReadInTesselation2D(){
 }
 
 
-void EllipseLayoutGenerator::Tesselate2D(char *input_nodes, char *output_nodes){
+void EllipseLayoutGenerator::Tesselate2D(string input_nodes, string output_nodes){
 	ofstream vectorsForGnuplot,nodesForGnuplot;
 	nodesForGnuplot.open(input_nodes,ofstream::trunc);	
 	writeNodes2D(nodesForGnuplot);
@@ -444,7 +444,7 @@ void EllipseLayoutGenerator::Tesselate2D(char *input_nodes, char *output_nodes){
 	
 }
 
-void EllipseLayoutGenerator::readInTesselation3D(char *input_triangulation, char *output_vecs, char *output_nodes){
+void EllipseLayoutGenerator::readInTesselation3D(string input_triangulation, string output_vecs, string output_nodes){
     cout<<" start of read in tesselation3D, size of points: "<<posx.size()<<" size of tissue shape: "<<tissueType.size()<<endl;
 	ifstream TesselationIn3DFile;
 	TesselationIn3DFile.open(input_triangulation, ifstream::in);
@@ -508,7 +508,7 @@ void EllipseLayoutGenerator::readInTesselation3D(char *input_triangulation, char
 }
 
 
-void EllipseLayoutGenerator::readInTesselation2D(char *input_meshfile, char *input_nodes, char *output_vecs, char * output_nodes){
+void EllipseLayoutGenerator::readInTesselation2D(string input_meshfile, string input_nodes, string output_vecs, string output_nodes){
 	cout<<" start of read in tesselation, size of points: "<<posx.size()<<" size of tissue shape: "<<tissueType.size()<<endl;
 		
 	ifstream MeshFile;
