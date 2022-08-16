@@ -2,4 +2,6 @@
 
 The compiled `EllipseFromOutline` needs to know the location on the user's machine of the compiled `triangle` library.
 
-At present, and to get the code to run on local machines, the codebase will assume that `EllipseFromOutline` is located in the `Toolbox/MeshGeneration/2DEllipse` directory, whilst the `triangle` binary has path `Toolbox/MeshGeneration/triangle/triangle`. It will also assume that the current working directory is `Toolbox/MeshGeneration/2DEllipse`, IE the location of the `EllipseFromOutline` binary.
+To enable the code to run on local machines, the path to the `triangle` binary needs to be provided by the user.
+This can be done by changing the value of the `TRIANGLE_PATH` variable in `EllipseFromOutline.hpp.in`.
+By default, this value is set to `../triangle/triangle`, assuming that the user is building `EllipseFromOutline` in the directory `Toolbox/MeshGeneration/2DEllipse/build`, and running it from here.

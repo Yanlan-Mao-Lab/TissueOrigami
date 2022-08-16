@@ -2,7 +2,6 @@
 // cp ./src/EllipseFromOutline ./
 //./EllipseFromOutline -1 12.5 2 5 1  ./inputOutlines/48hrDiscOutline
 
-
 using namespace std;
 #include <iostream>
 #include <fstream>
@@ -14,6 +13,7 @@ using namespace std;
 #include <vector>
 #include <map>
 
+#include "EllipseFromOutline.hpp"
 
 class EllipseLayoutGenerator{
 public:
@@ -237,9 +237,7 @@ void EllipseLayoutGenerator::linkerTesselate2D(){
 	ostringstream Convert;
 	Convert << maxArea; // Use some manipulators
 	string maxAreaStr = Convert.str(); // Give the result to the string
-	// assume EllipseFromOutline.o is located in 2DEllipse, and triangle.o is at the relative path ../triangle/triangle
-	// we are implicity assuming that the working directory is that which contains EllipseFromOutline here
-	string sysCommand = "../triangle/triangle -pq33a"+maxAreaStr+" ./LinkerPoints.poly";
+	string sysCommand = string(TRIANGLE_PATH) + " -pq33a" + maxAreaStr + " ./LinkerPoints.poly";
 	cerr<<"Running triangulation with: "<<sysCommand<<endl;
 	system(sysCommand.c_str());
 }
@@ -257,9 +255,7 @@ void EllipseLayoutGenerator::peripodialSparseTesselate2D(bool symmetricX, bool s
 	for (int i =0; i< n; ++i){
 		pointsForTesselation<<i<<" "<<x[i]<<" "<<y[i]<<" 1"<<endl;
 	}
-	// assume EllipseFromOutline.o is located in 2DEllipse, and triangle.o is at the relative path ../triangle/triangle
-	// we are implicity assuming that the working directory is that which contains EllipseFromOutline here
-	string sysCommand = "../triangle/triangle -Yq " + input_nodes;
+	string sysCommand = string(TRIANGLE_PATH) + " -Yq " + input_nodes;
 	cerr<<"Running triangulation with: "<<sysCommand<<endl;
 	system(sysCommand.c_str());
 }
@@ -436,9 +432,7 @@ void EllipseLayoutGenerator::Tesselate2D(string input_nodes, string output_nodes
 	ostringstream Convert;
 	Convert << maxArea; // Use some manipulators
 	string maxAreaStr = Convert.str(); // Give the result to the string
-	// assume EllipseFromOutline.o is located in 2DEllipse, and triangle.o is at the relative path ../triangle/triangle
-	// we are implicity assuming that the working directory is that which contains EllipseFromOutline here
-	string sysCommand = "../triangle/triangle -q33a" + maxAreaStr + " " + output_nodes;
+	string sysCommand = string(TRIANGLE_PATH) + " -q33a" + maxAreaStr + " " + output_nodes;
 	cerr<<"Running triangulation with: "<<sysCommand<<endl;
 	system(sysCommand.c_str());
 	
