@@ -3,4 +3,5 @@
 #define Tutorial_VERSION_MINOR @Tutorial_VERSION_MINOR@
 
 // tell the source where to find triangle
-#define TRIANGLE_PATH "../triangle/triangle" //@TRIANGLE_PATH@
+//#define TRIANGLE_PATH "../triangle/triangle"
+#define TRIANGLE_PATH "@TRIANGLE_PATH@"
