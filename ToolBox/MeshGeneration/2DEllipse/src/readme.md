@@ -1,7 +1,25 @@
-# Hardcoded paths and triangle
+# Build Instructions for `EllipseFromOutline`
 
-The compiled `EllipseFromOutline` needs to know the location on the user's machine of the compiled `triangle` library.
+Change directory into the `Toolbox/MeshGeneration/2DEllipse/src` directory, and run the following commands:
+```
+mkdir build; cd build
+cmake ../src/
+cmake --build .
+```
+This will compile the `EllipseFromOutline` binary and place it into the `build` directory.
+You can then move it to the desired location on your machine.
 
-To enable the code to run on local machines, the path to the `triangle` binary needs to be provided by the user.
-This can be done by changing the value of the `TRIANGLE_PATH` variable in `EllipseFromOutline.hpp.in`.
-By default, this value is set to `../triangle/triangle`, assuming that the user is running the binary in the directory `Toolbox/MeshGeneration/2DEllipse` (after building in an appropriate build directory).
+## [`triangle`]((https://www.cs.cmu.edu/~quake/triangle.html)) Dependency
+
+[`triangle`](https://www.cs.cmu.edu/~quake/triangle.html) is a dependency of the meshing process.
+The mesh generation executable, `EllipseFromOutline`, needs to be able to call the `triangle` executable during execution in order to process and write the meshfiles.
+To do so, the path to the `triangle` executable must be included in the system `PATH` variable.
+If `triangle` is not included in `PATH`, one can edit the `find_program` command in `CMakeLists.txt` to include a path to the `triangle` executable:
+```
+find_program(TRIANGLE_PATH
+            triangle triangle.o
+            "manual_path_to_triangle")
+```
+
+Bear in mind however, that `EllipseFromOutline` will continue to look in the provided path for `triangle` even if the location of the executable is changed.
+Recompilation of `EllipseFromOutline` will be neccessary - along with providing the new path - in such circumstances.
