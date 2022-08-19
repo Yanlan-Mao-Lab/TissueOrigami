@@ -1,0 +1,1424 @@
+Simulation time step	: 60
+Simulation Length	: 600
+dataSaveInterval as read from file: 1
+reading from growth file
+initiating growth and angle matrices
+reading growth matrix
+reading from growth file
+initiating growth and angle matrices
+reading growth matrix
+Finalised reading growth options
+opening the file/home/ucbpnkh/Scratch/bulkruns/Run07007//Save_TensionCompression
+opening the file/home/ucbpnkh/Scratch/bulkruns/Run07007//Save_Growth
+opening the file/home/ucbpnkh/Scratch/bulkruns/Run07007//Save_GrowthRate
+opening the file/home/ucbpnkh/Scratch/bulkruns/Run07007//Save_GrowthRedistribution
+opening the file/home/ucbpnkh/Scratch/bulkruns/Run07007//Save_NodeBinding
+initiating nodes
+ nNodes: 60 nEle: 48
+bounding box after update: 0 0 8 4
+Tip node indexes - dorsalTipIndex: 0 ventralTipIndex: 9
+Tip node indexes - anteriorTipIndex: 0 posteriorTipIndex: 2
+bounding box after update: 0 0 8 4
+time: 0 DV distance is: 8  AP distance is: 4
+inside induce clones
+read the final step
+writing the summary current simulation parameters
+wrote specific element types: 0 0 16 16
+saved the step if needed
+finished binding
+ system initiated
+Initiating simulation in the background
+At time -- 0 sec (0 hours - 0 timesteps)
+bounding box after update: 0 0 8 4
+time: 0 DV distance is: 8  AP distance is: 4
+in conservingColumnVolumes and element id is: 0
+in conservingColumnVolumes and element id is: 1
+in conservingColumnVolumes and element id is: 2
+in conservingColumnVolumes and element id is: 3
+in conservingColumnVolumes and element id is: 4
+in conservingColumnVolumes and element id is: 5
+in conservingColumnVolumes and element id is: 6
+in conservingColumnVolumes and element id is: 7
+in conservingColumnVolumes and element id is: 8
+in conservingColumnVolumes and element id is: 9
+in conservingColumnVolumes and element id is: 10
+in conservingColumnVolumes and element id is: 11
+in conservingColumnVolumes and element id is: 12
+in conservingColumnVolumes and element id is: 13
+in conservingColumnVolumes and element id is: 14
+in conservingColumnVolumes and element id is: 15
+in conservingColumnVolumes and element id is: 16
+in conservingColumnVolumes and element id is: 17
+in conservingColumnVolumes and element id is: 18
+in conservingColumnVolumes and element id is: 19
+in conservingColumnVolumes and element id is: 20
+in conservingColumnVolumes and element id is: 21
+in conservingColumnVolumes and element id is: 22
+in conservingColumnVolumes and element id is: 23
+in conservingColumnVolumes and element id is: 24
+in conservingColumnVolumes and element id is: 25
+in conservingColumnVolumes and element id is: 26
+in conservingColumnVolumes and element id is: 27
+in conservingColumnVolumes and element id is: 28
+in conservingColumnVolumes and element id is: 29
+in conservingColumnVolumes and element id is: 30
+in conservingColumnVolumes and element id is: 31
+in conservingColumnVolumes and element id is: 32
+in conservingColumnVolumes and element id is: 33
+in conservingColumnVolumes and element id is: 34
+in conservingColumnVolumes and element id is: 35
+in conservingColumnVolumes and element id is: 36
+in conservingColumnVolumes and element id is: 37
+in conservingColumnVolumes and element id is: 38
+in conservingColumnVolumes and element id is: 39
+in conservingColumnVolumes and element id is: 40
+in conservingColumnVolumes and element id is: 41
+in conservingColumnVolumes and element id is: 42
+in conservingColumnVolumes and element id is: 43
+in conservingColumnVolumes and element id is: 44
+in conservingColumnVolumes and element id is: 45
+in conservingColumnVolumes and element id is: 46
+in conservingColumnVolumes and element id is: 47
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 0 32 16 7.0449 7.0449 7.0449
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 0 32 16 7.0449 7.0449 7.0449 1 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 0 33 17 5.2326 5.2326 5.2326
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 0 33 17 5.2326 5.2326 5.2326 1 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 0 34 18 5.2326 5.2326 5.2326
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 0 34 18 5.2326 5.2326 5.2326 1 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 0 35 19 5.5101 5.5101 5.5101
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 0 35 19 5.5101 5.5101 5.5101 1 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 0 36 20 6 6 6
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 0 36 20 6 6 6 1 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 0 37 21 6 6 6
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 0 37 21 6 6 6 1 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 0 38 22 5.5101 5.5101 5.5101
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 0 38 22 5.5101 5.5101 5.5101 1 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 0 39 23 6.4899 6.4899 6.4899
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 0 39 23 6.4899 6.4899 6.4899 1 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 0 40 24 8.4447 8.4447 8.4447
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 0 40 24 8.4447 8.4447 8.4447 1 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 0 41 25 4.5351 4.5351 4.5351
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 0 41 25 4.5351 4.5351 4.5351 1 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 0 42 26 5.5101 5.5101 5.5101
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 0 42 26 5.5101 5.5101 5.5101 1 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 0 43 27 4.5351 4.5351 4.5351
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 0 43 27 4.5351 4.5351 4.5351 1 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 0 44 28 6 6 6
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 0 44 28 6 6 6 1 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 0 45 29 9.4197 9.4197 9.4197
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 0 45 29 9.4197 9.4197 9.4197 1 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 0 46 30 4.5351 4.5351 4.5351
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 0 46 30 4.5351 4.5351 4.5351 1 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 0 47 31 6 6 6
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 0 47 31 6 6 6 1 1
+ in update NR 
+iteration: 0
+
+
+*************************************************************************** 
+CONTAINS Runtime Modules of Parallel Sparse Linear Solver PARDISO Vers. 6.0
+Copyright Universita della Svizzera Italiana 2000-2018 All Rights Reserved.
+
+TIME-LIMITED ACADEMIC SINGLE-USER LICENSE: YOU ARE USING THE PARDISO SOLVER
+UNDER THE CONTROL OF AN ACADEMIC SINGLE-USER LICENSE. YOU AS  AN INDIVIDUAL
+MAY INSTALL AND USE PARDISO ON AN  UNLIMITED  NUMBER  OF COMPUTERS PROVIDED
+THAT YOU  ARE THE  ONLY INDIVIDUAL USING  THE  PARDISO SOLVER. THIS LICENSE
+IS TIED TO A SINGLE (IDENTICAL) USER NAME THAT YOU NEED ON THESE COMPUTERS.
+A SEPARATE LICENSE IS REQUIRED FOR EACH INDIVIDUAL USER IN ALL OTHER CASES.
+USI LUGANO  MAY  PROVIDE  YOU  WITH  A LICENSE  CODE KEY  THAT  ENABLES THE
+PARDISO  SOLVER  FOR  ADDITIONAL  USERS.   THE  DURATION  (TIME  PERIOD) OF
+YOUR LICENSE  AND  YOUR  ABILITY TO USE  THE PARDISO SOLVER  IS  LIMITED TO
+THE TIME PERIOD OF THE OBTAINED LICENSE, WHICH IS CONTROLLED BY THE LICENSE
+KEY CODE. THE ACADEMIC LICENSE PERMITS THE USE OF PARDISO ONLY FOR ACADEMIC
+RESEARCH. IF YOU ARE USING THE SOFTWARE FOR ANY OTHER  PURPOSE, YOU MAY  BE
+IN  AN UNLAWFUL VIOLATION  OF THE  TERMS  OF THIS  LICENSE,  AND  YOU  MUST
+OBTAIN  A VALID  ALTERNATIVE  LICENSE. 
+USI LUGANO DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
+ALL IMPLIED   WARRANTIES  OF   MERCHANTABILITY  AND  FITNESS. IN  NO  EVENT
+SHALL USI  LUGANO  OR  ANY  OF  ITS  ENTITIES  BE  LIABLE FOR  ANY SPECIAL,
+INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER  RESULTING FROM
+LOSS OF USE, DATA OR PROFITS,  WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+OR OTHER TORTIOUS ACTION,  ARISING OUT OF OR IN  CONNECTION WITH THE USE OR
+PERFORMANCE OF THIS SOFTWARE.
+
+       Please visit http://www.pardiso-project.org for more details.      
+                                                                           
+ - You can suppress this message by setting the environment variable       
+   with e.g. export PARDISOLICMESSAGE=1                                    
+*************************************************************************** 
+converged with displacement: norm8.30056e-16
+finished run one step
+bounding box after update: -4.64167e-17 -1.14053e-16 8 4
+At time -- 60 sec (0.0166667 hours - 1 timesteps)
+bounding box after update: -4.64167e-17 -1.14053e-16 8 4
+time: 60 DV distance is: 8  AP distance is: 4
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 0.882497 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 0.882497 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 0.882497 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 0.882497 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 0.882497 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 0.882497 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 0.882497 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 0.882497 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 0.882497 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 0.882497 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 0.882497 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 0.882497 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 0.882497 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 0.882497 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 0.882497 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 0.882497 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 0.882497 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 0.882497 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 0.882497 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 0.882497 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xe8aeb0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe8aeb0
+in conservingColumnVolumes and element id is: 0
+in conservingColumnVolumes and element id is: 1
+in conservingColumnVolumes and element id is: 2
+in conservingColumnVolumes and element id is: 3
+in conservingColumnVolumes and element id is: 4
+in conservingColumnVolumes and element id is: 5
+in conservingColumnVolumes and element id is: 6
+in conservingColumnVolumes and element id is: 7
+in conservingColumnVolumes and element id is: 8
+in conservingColumnVolumes and element id is: 9
+in conservingColumnVolumes and element id is: 10
+in conservingColumnVolumes and element id is: 11
+in conservingColumnVolumes and element id is: 12
+in conservingColumnVolumes and element id is: 13
+in conservingColumnVolumes and element id is: 14
+in conservingColumnVolumes and element id is: 15
+in conservingColumnVolumes and element id is: 16
+in conservingColumnVolumes and element id is: 17
+in conservingColumnVolumes and element id is: 18
+in conservingColumnVolumes and element id is: 19
+in conservingColumnVolumes and element id is: 20
+in conservingColumnVolumes and element id is: 21
+in conservingColumnVolumes and element id is: 22
+in conservingColumnVolumes and element id is: 23
+in conservingColumnVolumes and element id is: 24
+in conservingColumnVolumes and element id is: 25
+in conservingColumnVolumes and element id is: 26
+in conservingColumnVolumes and element id is: 27
+in conservingColumnVolumes and element id is: 28
+in conservingColumnVolumes and element id is: 29
+in conservingColumnVolumes and element id is: 30
+in conservingColumnVolumes and element id is: 31
+in conservingColumnVolumes and element id is: 32
+in conservingColumnVolumes and element id is: 33
+in conservingColumnVolumes and element id is: 34
+in conservingColumnVolumes and element id is: 35
+in conservingColumnVolumes and element id is: 36
+in conservingColumnVolumes and element id is: 37
+in conservingColumnVolumes and element id is: 38
+in conservingColumnVolumes and element id is: 39
+in conservingColumnVolumes and element id is: 40
+in conservingColumnVolumes and element id is: 41
+in conservingColumnVolumes and element id is: 42
+in conservingColumnVolumes and element id is: 43
+in conservingColumnVolumes and element id is: 44
+in conservingColumnVolumes and element id is: 45
+in conservingColumnVolumes and element id is: 46
+in conservingColumnVolumes and element id is: 47
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 60 32 16 7.0449 7.0449 5.48657
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 60 32 16 7.0449 7.0449 5.48657 1.28403 1.28403
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 60 33 17 5.2326 5.2326 4.07515
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 60 33 17 5.2326 5.2326 4.07515 1.28403 1.28403
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 60 34 18 5.2326 5.2326 5.2326
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 60 34 18 5.2326 5.2326 5.2326 1 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 60 35 19 5.5101 5.5101 4.29127
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 60 35 19 5.5101 5.5101 4.29127 1.28403 1.28403
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 60 36 20 6 6 4.6728
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 60 36 20 6 6 4.6728 1.28403 1.28403
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 60 37 21 6 6 6
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 60 37 21 6 6 6 1 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 60 38 22 5.5101 5.5101 4.29127
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 60 38 22 5.5101 5.5101 4.29127 1.28403 1.28403
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 60 39 23 6.4899 6.4899 5.05434
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 60 39 23 6.4899 6.4899 5.05434 1.28403 1.28403
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 60 40 24 8.4447 8.4447 6.57674
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 60 40 24 8.4447 8.4447 6.57674 1.28403 1.28403
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 60 41 25 4.5351 4.5351 3.53194
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 60 41 25 4.5351 4.5351 3.53194 1.28403 1.28403
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 60 42 26 5.5101 5.5101 4.29127
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 60 42 26 5.5101 5.5101 4.29127 1.28403 1.28403
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 60 43 27 4.5351 4.5351 4.5351
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 60 43 27 4.5351 4.5351 4.5351 1 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 60 44 28 6 6 6
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 60 44 28 6 6 6 1 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 60 45 29 9.4197 9.4197 7.33607
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 60 45 29 9.4197 9.4197 7.33607 1.28403 1.28403
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 60 46 30 4.5351 4.5351 4.5351
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 60 46 30 4.5351 4.5351 4.5351 1 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 60 47 31 6 6 6
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 60 47 31 6 6 6 1 1
+ in update NR 
+iteration: 0
+ not  yet converged via du: norm 0.639474
+iteration: 1
+ not  yet converged via du: norm 0.0217172
+iteration: 2
+ not  yet converged via du: norm 0.000133212
+iteration: 3
+converged with displacement: norm2.27786e-09
+finished run one step
+bounding box after update: 0.00013104 -0.00222549 7.99909 4.00283
+At time -- 120 sec (0.0333333 hours - 2 timesteps)
+bounding box after update: 0.0388656 -0.000587155 8.04948 4.0061
+time: 120 DV distance is: 7.95896  AP distance is: 3.99275
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 0.882497 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 0.882497 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 0.882497 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 0.882497 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 0.882497 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 0.882497 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 0.882497 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 0.882497 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 0.882497 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 0.882497 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe978b0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 0.882497 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 0.882497 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 0.882497 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 0.882497 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 0.882497 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 0.882497 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 0.882497 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 0.882497 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 0.882497 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 0.882497 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 0.882497 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 0.882497 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 0.882497 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 0.882497 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 0.882497 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 0.882497 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 0.882497 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 0.882497 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 0.882497 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 0.882497 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xe9b0f0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe9b0f0
+in conservingColumnVolumes and element id is: 0
+in conservingColumnVolumes and element id is: 1
+in conservingColumnVolumes and element id is: 2
+in conservingColumnVolumes and element id is: 3
+in conservingColumnVolumes and element id is: 4
+in conservingColumnVolumes and element id is: 5
+in conservingColumnVolumes and element id is: 6
+in conservingColumnVolumes and element id is: 7
+in conservingColumnVolumes and element id is: 8
+in conservingColumnVolumes and element id is: 9
+in conservingColumnVolumes and element id is: 10
+in conservingColumnVolumes and element id is: 11
+in conservingColumnVolumes and element id is: 12
+in conservingColumnVolumes and element id is: 13
+in conservingColumnVolumes and element id is: 14
+in conservingColumnVolumes and element id is: 15
+in conservingColumnVolumes and element id is: 16
+in conservingColumnVolumes and element id is: 17
+in conservingColumnVolumes and element id is: 18
+in conservingColumnVolumes and element id is: 19
+in conservingColumnVolumes and element id is: 20
+in conservingColumnVolumes and element id is: 21
+in conservingColumnVolumes and element id is: 22
+in conservingColumnVolumes and element id is: 23
+in conservingColumnVolumes and element id is: 24
+in conservingColumnVolumes and element id is: 25
+in conservingColumnVolumes and element id is: 26
+in conservingColumnVolumes and element id is: 27
+in conservingColumnVolumes and element id is: 28
+in conservingColumnVolumes and element id is: 29
+in conservingColumnVolumes and element id is: 30
+in conservingColumnVolumes and element id is: 31
+in conservingColumnVolumes and element id is: 32
+in conservingColumnVolumes and element id is: 33
+in conservingColumnVolumes and element id is: 34
+in conservingColumnVolumes and element id is: 35
+in conservingColumnVolumes and element id is: 36
+in conservingColumnVolumes and element id is: 37
+in conservingColumnVolumes and element id is: 38
+in conservingColumnVolumes and element id is: 39
+in conservingColumnVolumes and element id is: 40
+in conservingColumnVolumes and element id is: 41
+in conservingColumnVolumes and element id is: 42
+in conservingColumnVolumes and element id is: 43
+in conservingColumnVolumes and element id is: 44
+in conservingColumnVolumes and element id is: 45
+in conservingColumnVolumes and element id is: 46
+in conservingColumnVolumes and element id is: 47
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 120 32 16 7.0449 7.27625 4.84188
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 120 32 16 7.0449 7.27625 4.84188 1.50277 1.45499
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 120 33 17 5.2326 5.36607 3.59631
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 120 33 17 5.2326 5.36607 3.59631 1.49211 1.45499
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 120 34 18 5.2326 5.35498 5.2326
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 120 34 18 5.2326 5.35498 5.2326 1.02339 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 120 35 19 5.5101 5.69866 3.78703
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 120 35 19 5.5101 5.69866 3.78703 1.50478 1.45499
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 120 36 20 6 6.14683 4.12374
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 120 36 20 6 6.14683 4.12374 1.4906 1.45499
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 120 37 21 6 6.11127 6
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 120 37 21 6 6.11127 6 1.01855 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 120 38 22 5.5101 5.64352 3.78703
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 120 38 22 5.5101 5.64352 3.78703 1.49022 1.45499
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 120 39 23 6.4899 6.66381 4.46044
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 120 39 23 6.4899 6.66381 4.46044 1.49398 1.45499
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 120 40 24 8.4447 8.66343 5.80395
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 120 40 24 8.4447 8.66343 5.80395 1.49268 1.45499
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 120 41 25 4.5351 4.62909 3.11693
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 120 41 25 4.5351 4.62909 3.11693 1.48515 1.45499
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 120 42 26 5.5101 5.66759 3.78703
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 120 42 26 5.5101 5.66759 3.78703 1.49658 1.45499
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 120 43 27 4.5351 4.59167 4.5351
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 120 43 27 4.5351 4.59167 4.5351 1.01247 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 120 44 28 6 6.0571 6
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 120 44 28 6 6.0571 6 1.00952 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 120 45 29 9.4197 9.66532 6.47406
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 120 45 29 9.4197 9.66532 6.47406 1.49293 1.45499
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 120 46 30 4.5351 4.57332 4.5351
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 120 46 30 4.5351 4.57332 4.5351 1.00843 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 120 47 31 6 6.09754 6
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 120 47 31 6 6.09754 6 1.01626 1
+ in update NR 
+iteration: 0
+ not  yet converged via du: norm 0.0453731
+iteration: 1
+ not  yet converged via du: norm 0.000147099
+iteration: 2
+converged with displacement: norm5.57242e-09
+finished run one step
+bounding box after update: 0.0423851 -0.00221031 8.04856 4.00712
+At time -- 180 sec (0.05 hours - 3 timesteps)
+bounding box after update: 0.0418 -0.00147791 8.05171 4.00858
+time: 180 DV distance is: 7.95285  AP distance is: 3.99304
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 0.882497 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 0.882497 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 0.882497 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 0.882497 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 0.882497 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 0.882497 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 0.882497 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 0.882497 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 0.882497 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 0.882497 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xea83a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 0.882497 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 0.882497 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 0.882497 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 0.882497 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 0.882497 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 0.882497 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 0.882497 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 0.882497 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 0.882497 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 0.882497 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 0.882497 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 0.882497 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 0.882497 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 0.882497 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 0.882497 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 0.882497 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 0.882497 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 0.882497 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 0.882497 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 0.882497 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xe9d4a0
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xe9d4a0
+in conservingColumnVolumes and element id is: 0
+in conservingColumnVolumes and element id is: 1
+in conservingColumnVolumes and element id is: 2
+in conservingColumnVolumes and element id is: 3
+in conservingColumnVolumes and element id is: 4
+in conservingColumnVolumes and element id is: 5
+in conservingColumnVolumes and element id is: 6
+in conservingColumnVolumes and element id is: 7
+in conservingColumnVolumes and element id is: 8
+in conservingColumnVolumes and element id is: 9
+in conservingColumnVolumes and element id is: 10
+in conservingColumnVolumes and element id is: 11
+in conservingColumnVolumes and element id is: 12
+in conservingColumnVolumes and element id is: 13
+in conservingColumnVolumes and element id is: 14
+in conservingColumnVolumes and element id is: 15
+in conservingColumnVolumes and element id is: 16
+in conservingColumnVolumes and element id is: 17
+in conservingColumnVolumes and element id is: 18
+in conservingColumnVolumes and element id is: 19
+in conservingColumnVolumes and element id is: 20
+in conservingColumnVolumes and element id is: 21
+in conservingColumnVolumes and element id is: 22
+in conservingColumnVolumes and element id is: 23
+in conservingColumnVolumes and element id is: 24
+in conservingColumnVolumes and element id is: 25
+in conservingColumnVolumes and element id is: 26
+in conservingColumnVolumes and element id is: 27
+in conservingColumnVolumes and element id is: 28
+in conservingColumnVolumes and element id is: 29
+in conservingColumnVolumes and element id is: 30
+in conservingColumnVolumes and element id is: 31
+in conservingColumnVolumes and element id is: 32
+in conservingColumnVolumes and element id is: 33
+in conservingColumnVolumes and element id is: 34
+in conservingColumnVolumes and element id is: 35
+in conservingColumnVolumes and element id is: 36
+in conservingColumnVolumes and element id is: 37
+in conservingColumnVolumes and element id is: 38
+in conservingColumnVolumes and element id is: 39
+in conservingColumnVolumes and element id is: 40
+in conservingColumnVolumes and element id is: 41
+in conservingColumnVolumes and element id is: 42
+in conservingColumnVolumes and element id is: 43
+in conservingColumnVolumes and element id is: 44
+in conservingColumnVolumes and element id is: 45
+in conservingColumnVolumes and element id is: 46
+in conservingColumnVolumes and element id is: 47
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 180 32 16 7.0449 7.28062 4.84188
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 180 32 16 7.0449 7.28062 4.84188 1.50367 1.45499
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 180 33 17 5.2326 5.37091 3.59631
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 180 33 17 5.2326 5.37091 3.59631 1.49345 1.45499
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 180 34 18 5.2326 5.35773 5.2326
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 180 34 18 5.2326 5.35773 5.2326 1.02391 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 180 35 19 5.5101 5.70435 3.78703
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 180 35 19 5.5101 5.70435 3.78703 1.50628 1.45499
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 180 36 20 6 6.14893 4.12374
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 180 36 20 6 6.14893 4.12374 1.49111 1.45499
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 180 37 21 6 6.11206 6
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 180 37 21 6 6.11206 6 1.01868 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 180 38 22 5.5101 5.6299 3.78703
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 180 38 22 5.5101 5.6299 3.78703 1.48663 1.45499
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 180 39 23 6.4899 6.64668 4.46044
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 180 39 23 6.4899 6.64668 4.46044 1.49014 1.45499
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 180 40 24 8.4447 8.65183 5.80395
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 180 40 24 8.4447 8.65183 5.80395 1.49068 1.45499
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 180 41 25 4.5351 4.63389 3.11693
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 180 41 25 4.5351 4.63389 3.11693 1.48668 1.45499
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 180 42 26 5.5101 5.65587 3.78703
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 180 42 26 5.5101 5.65587 3.78703 1.49348 1.45499
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 180 43 27 4.5351 4.59291 4.5351
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 180 43 27 4.5351 4.59291 4.5351 1.01275 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 180 44 28 6 6.05789 6
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 180 44 28 6 6.05789 6 1.00965 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 180 45 29 9.4197 9.66915 6.47406
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 180 45 29 9.4197 9.66915 6.47406 1.49352 1.45499
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 180 46 30 4.5351 4.57276 4.5351
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 180 46 30 4.5351 4.57276 4.5351 1.0083 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 180 47 31 6 6.09781 6
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 180 47 31 6 6.09781 6 1.0163 1
+ in update NR 
+iteration: 0
+ not  yet converged via du: norm 0.0364875
+iteration: 1
+ not  yet converged via du: norm 0.000128481
+iteration: 2
+converged with displacement: norm5.2438e-09
+finished run one step
+bounding box after update: 0.0430716 -0.00265111 8.05116 4.00915
+At time -- 240 sec (0.0666667 hours - 4 timesteps)
+bounding box after update: 0.0422749 -0.00177711 8.0528 4.01089
+time: 240 DV distance is: 7.94963  AP distance is: 3.99323
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 0.882497 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 0.882497 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 0.882497 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 0.882497 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 0.882497 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 0.882497 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 0.882497 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 0.882497 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 0.882497 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 0.882497 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xeb2030
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 0.882497 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 0.882497 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 0.882497 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 0.882497 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 0.882497 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 0.882497 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 0.882497 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 0.882497 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 0.882497 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 0.882497 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 0.882497 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 0.882497 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 0.882497 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 0.882497 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 0.882497 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 0.882497 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 0.882497 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 0.882497 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 0.882497 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 0.882497 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:0 1 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:1 1 0xeabe30
+Inside ShapeBase::calculateFgFromGridCorners and [axis][gAxis][Increment]:2 1 0xeabe30
+in conservingColumnVolumes and element id is: 0
+in conservingColumnVolumes and element id is: 1
+in conservingColumnVolumes and element id is: 2
+in conservingColumnVolumes and element id is: 3
+in conservingColumnVolumes and element id is: 4
+in conservingColumnVolumes and element id is: 5
+in conservingColumnVolumes and element id is: 6
+in conservingColumnVolumes and element id is: 7
+in conservingColumnVolumes and element id is: 8
+in conservingColumnVolumes and element id is: 9
+in conservingColumnVolumes and element id is: 10
+in conservingColumnVolumes and element id is: 11
+in conservingColumnVolumes and element id is: 12
+in conservingColumnVolumes and element id is: 13
+in conservingColumnVolumes and element id is: 14
+in conservingColumnVolumes and element id is: 15
+in conservingColumnVolumes and element id is: 16
+in conservingColumnVolumes and element id is: 17
+in conservingColumnVolumes and element id is: 18
+in conservingColumnVolumes and element id is: 19
+in conservingColumnVolumes and element id is: 20
+in conservingColumnVolumes and element id is: 21
+in conservingColumnVolumes and element id is: 22
+in conservingColumnVolumes and element id is: 23
+in conservingColumnVolumes and element id is: 24
+in conservingColumnVolumes and element id is: 25
+in conservingColumnVolumes and element id is: 26
+in conservingColumnVolumes and element id is: 27
+in conservingColumnVolumes and element id is: 28
+in conservingColumnVolumes and element id is: 29
+in conservingColumnVolumes and element id is: 30
+in conservingColumnVolumes and element id is: 31
+in conservingColumnVolumes and element id is: 32
+in conservingColumnVolumes and element id is: 33
+in conservingColumnVolumes and element id is: 34
+in conservingColumnVolumes and element id is: 35
+in conservingColumnVolumes and element id is: 36
+in conservingColumnVolumes and element id is: 37
+in conservingColumnVolumes and element id is: 38
+in conservingColumnVolumes and element id is: 39
+in conservingColumnVolumes and element id is: 40
+in conservingColumnVolumes and element id is: 41
+in conservingColumnVolumes and element id is: 42
+in conservingColumnVolumes and element id is: 43
+in conservingColumnVolumes and element id is: 44
+in conservingColumnVolumes and element id is: 45
+in conservingColumnVolumes and element id is: 46
+in conservingColumnVolumes and element id is: 47
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 240 32 16 7.0449 7.28042 4.84188
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 240 32 16 7.0449 7.28042 4.84188 1.50363 1.45499
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 240 33 17 5.2326 5.37211 3.59631
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 240 33 17 5.2326 5.37211 3.59631 1.49379 1.45499
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 240 34 18 5.2326 5.35761 5.2326
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 240 34 18 5.2326 5.35761 5.2326 1.02389 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 240 35 19 5.5101 5.70593 3.78703
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 240 35 19 5.5101 5.70593 3.78703 1.5067 1.45499
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 240 36 20 6 6.14783 4.12374
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 240 36 20 6 6.14783 4.12374 1.49084 1.45499
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 240 37 21 6 6.11003 6
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 240 37 21 6 6.11003 6 1.01834 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 240 38 22 5.5101 5.61367 3.78703
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 240 38 22 5.5101 5.61367 3.78703 1.48234 1.45499
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 240 39 23 6.4899 6.62647 4.46044
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 240 39 23 6.4899 6.62647 4.46044 1.48561 1.45499
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 240 40 24 8.4447 8.63622 5.80395
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 240 40 24 8.4447 8.63622 5.80395 1.48799 1.45499
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 240 41 25 4.5351 4.63715 3.11693
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 240 41 25 4.5351 4.63715 3.11693 1.48773 1.45499
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 240 42 26 5.5101 5.64087 3.78703
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 240 42 26 5.5101 5.64087 3.78703 1.48952 1.45499
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 240 43 27 4.5351 4.59346 4.5351
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 240 43 27 4.5351 4.59346 4.5351 1.01287 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 240 44 28 6 6.05733 6
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 240 44 28 6 6.05733 6 1.00955 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 240 45 29 9.4197 9.66848 6.47406
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 240 45 29 9.4197 9.66848 6.47406 1.49342 1.45499
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 240 46 30 4.5351 4.57196 4.5351
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 240 46 30 4.5351 4.57196 4.5351 1.00813 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 240 47 31 6 6.09633 6
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 240 47 31 6 6.09633 6 1.01606 1
+ in update NR 
+iteration: 0
+ not  yet converged via du: norm 0.0298533
+iteration: 1
+ not  yet converged via du: norm 7.15545e-05
+iteration: 2
+converged with displacement: norm2.17667e-09
+finished run one step
+bounding box after update: 0.0431084 -0.0026254 8.05252 4.01146
+At time -- 300 sec (0.0833333 hours - 5 timesteps)
+bounding box after update: 0.0424582 -0.00226861 8.05377 4.01287
+time: 300 DV distance is: 7.94815  AP distance is: 3.9933
+in conservingColumnVolumes and element id is: 0
+in conservingColumnVolumes and element id is: 1
+in conservingColumnVolumes and element id is: 2
+in conservingColumnVolumes and element id is: 3
+in conservingColumnVolumes and element id is: 4
+in conservingColumnVolumes and element id is: 5
+in conservingColumnVolumes and element id is: 6
+in conservingColumnVolumes and element id is: 7
+in conservingColumnVolumes and element id is: 8
+in conservingColumnVolumes and element id is: 9
+in conservingColumnVolumes and element id is: 10
+in conservingColumnVolumes and element id is: 11
+in conservingColumnVolumes and element id is: 12
+in conservingColumnVolumes and element id is: 13
+in conservingColumnVolumes and element id is: 14
+in conservingColumnVolumes and element id is: 15
+in conservingColumnVolumes and element id is: 16
+in conservingColumnVolumes and element id is: 17
+in conservingColumnVolumes and element id is: 18
+in conservingColumnVolumes and element id is: 19
+in conservingColumnVolumes and element id is: 20
+in conservingColumnVolumes and element id is: 21
+in conservingColumnVolumes and element id is: 22
+in conservingColumnVolumes and element id is: 23
+in conservingColumnVolumes and element id is: 24
+in conservingColumnVolumes and element id is: 25
+in conservingColumnVolumes and element id is: 26
+in conservingColumnVolumes and element id is: 27
+in conservingColumnVolumes and element id is: 28
+in conservingColumnVolumes and element id is: 29
+in conservingColumnVolumes and element id is: 30
+in conservingColumnVolumes and element id is: 31
+in conservingColumnVolumes and element id is: 32
+in conservingColumnVolumes and element id is: 33
+in conservingColumnVolumes and element id is: 34
+in conservingColumnVolumes and element id is: 35
+in conservingColumnVolumes and element id is: 36
+in conservingColumnVolumes and element id is: 37
+in conservingColumnVolumes and element id is: 38
+in conservingColumnVolumes and element id is: 39
+in conservingColumnVolumes and element id is: 40
+in conservingColumnVolumes and element id is: 41
+in conservingColumnVolumes and element id is: 42
+in conservingColumnVolumes and element id is: 43
+in conservingColumnVolumes and element id is: 44
+in conservingColumnVolumes and element id is: 45
+in conservingColumnVolumes and element id is: 46
+in conservingColumnVolumes and element id is: 47
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 300 32 16 7.0449 7.28022 7.0449
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 300 32 16 7.0449 7.28022 7.0449 1.0334 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 300 33 17 5.2326 5.37272 5.2326
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 300 33 17 5.2326 5.37272 5.2326 1.02678 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 300 34 18 5.2326 5.35734 5.2326
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 300 34 18 5.2326 5.35734 5.2326 1.02384 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 300 35 19 5.5101 5.70693 5.5101
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 300 35 19 5.5101 5.70693 5.5101 1.03572 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 300 36 20 6 6.14694 6
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 300 36 20 6 6.14694 6 1.02449 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 300 37 21 6 6.10822 6
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 300 37 21 6 6.10822 6 1.01804 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 300 38 22 5.5101 5.60097 5.5101
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 300 38 22 5.5101 5.60097 5.5101 1.01649 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 300 39 23 6.4899 6.61095 6.4899
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 300 39 23 6.4899 6.61095 6.4899 1.01865 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 300 40 24 8.4447 8.62444 8.4447
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 300 40 24 8.4447 8.62444 8.4447 1.02128 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 300 41 25 4.5351 4.63978 4.5351
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 300 41 25 4.5351 4.63978 4.5351 1.02308 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 300 42 26 5.5101 5.62901 5.5101
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 300 42 26 5.5101 5.62901 5.5101 1.02158 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 300 43 27 4.5351 4.5938 4.5351
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 300 43 27 4.5351 4.5938 4.5351 1.01294 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 300 44 28 6 6.05666 6
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 300 44 28 6 6.05666 6 1.00944 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 300 45 29 9.4197 9.66789 9.4197
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 300 45 29 9.4197 9.66789 9.4197 1.02635 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 300 46 30 4.5351 4.5713 4.5351
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 300 46 30 4.5351 4.5713 4.5351 1.00798 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 300 47 31 6 6.09506 6
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 300 47 31 6 6.09506 6 1.01584 1
+ in update NR 
+iteration: 0
+ not  yet converged via du: norm 0.0209563
+iteration: 1
+ not  yet converged via du: norm 2.91753e-05
+iteration: 2
+converged with displacement: norm3.92853e-10
+finished run one step
+bounding box after update: 0.0430675 -0.00300344 8.05368 4.01329
+At time -- 360 sec (0.1 hours - 6 timesteps)
+bounding box after update: 0.0426597 -0.00277865 8.05449 4.01418
+time: 360 DV distance is: 7.94748  AP distance is: 3.99333
+in conservingColumnVolumes and element id is: 0
+in conservingColumnVolumes and element id is: 1
+in conservingColumnVolumes and element id is: 2
+in conservingColumnVolumes and element id is: 3
+in conservingColumnVolumes and element id is: 4
+in conservingColumnVolumes and element id is: 5
+in conservingColumnVolumes and element id is: 6
+in conservingColumnVolumes and element id is: 7
+in conservingColumnVolumes and element id is: 8
+in conservingColumnVolumes and element id is: 9
+in conservingColumnVolumes and element id is: 10
+in conservingColumnVolumes and element id is: 11
+in conservingColumnVolumes and element id is: 12
+in conservingColumnVolumes and element id is: 13
+in conservingColumnVolumes and element id is: 14
+in conservingColumnVolumes and element id is: 15
+in conservingColumnVolumes and element id is: 16
+in conservingColumnVolumes and element id is: 17
+in conservingColumnVolumes and element id is: 18
+in conservingColumnVolumes and element id is: 19
+in conservingColumnVolumes and element id is: 20
+in conservingColumnVolumes and element id is: 21
+in conservingColumnVolumes and element id is: 22
+in conservingColumnVolumes and element id is: 23
+in conservingColumnVolumes and element id is: 24
+in conservingColumnVolumes and element id is: 25
+in conservingColumnVolumes and element id is: 26
+in conservingColumnVolumes and element id is: 27
+in conservingColumnVolumes and element id is: 28
+in conservingColumnVolumes and element id is: 29
+in conservingColumnVolumes and element id is: 30
+in conservingColumnVolumes and element id is: 31
+in conservingColumnVolumes and element id is: 32
+in conservingColumnVolumes and element id is: 33
+in conservingColumnVolumes and element id is: 34
+in conservingColumnVolumes and element id is: 35
+in conservingColumnVolumes and element id is: 36
+in conservingColumnVolumes and element id is: 37
+in conservingColumnVolumes and element id is: 38
+in conservingColumnVolumes and element id is: 39
+in conservingColumnVolumes and element id is: 40
+in conservingColumnVolumes and element id is: 41
+in conservingColumnVolumes and element id is: 42
+in conservingColumnVolumes and element id is: 43
+in conservingColumnVolumes and element id is: 44
+in conservingColumnVolumes and element id is: 45
+in conservingColumnVolumes and element id is: 46
+in conservingColumnVolumes and element id is: 47
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 360 32 16 7.0449 7.27998 7.0449
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 360 32 16 7.0449 7.27998 7.0449 1.03337 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 360 33 17 5.2326 5.37283 5.2326
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 360 33 17 5.2326 5.37283 5.2326 1.0268 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 360 34 18 5.2326 5.35684 5.2326
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 360 34 18 5.2326 5.35684 5.2326 1.02374 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 360 35 19 5.5101 5.70743 5.5101
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 360 35 19 5.5101 5.70743 5.5101 1.03581 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 360 36 20 6 6.14618 6
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 360 36 20 6 6.14618 6 1.02436 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 360 37 21 6 6.10668 6
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 360 37 21 6 6.10668 6 1.01778 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 360 38 22 5.5101 5.5927 5.5101
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 360 38 22 5.5101 5.5927 5.5101 1.01499 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 360 39 23 6.4899 6.60101 6.4899
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 360 39 23 6.4899 6.60101 6.4899 1.01712 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 360 40 24 8.4447 8.61718 8.4447
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 360 40 24 8.4447 8.61718 8.4447 1.02042 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 360 41 25 4.5351 4.64145 4.5351
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 360 41 25 4.5351 4.64145 4.5351 1.02345 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 360 42 26 5.5101 5.62122 5.5101
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 360 42 26 5.5101 5.62122 5.5101 1.02017 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 360 43 27 4.5351 4.59383 4.5351
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 360 43 27 4.5351 4.59383 4.5351 1.01295 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 360 44 28 6 6.05588 6
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 360 44 28 6 6.05588 6 1.00931 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 360 45 29 9.4197 9.66731 9.4197
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 360 45 29 9.4197 9.66731 9.4197 1.02629 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 360 46 30 4.5351 4.57063 4.5351
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 360 46 30 4.5351 4.57063 4.5351 1.00783 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 360 47 31 6 6.09405 6
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 360 47 31 6 6.09405 6 1.01568 1
+ in update NR 
+iteration: 0
+ not  yet converged via du: norm 0.0137479
+iteration: 1
+ not  yet converged via du: norm 9.71279e-06
+iteration: 2
+converged with displacement: norm4.10361e-11
+finished run one step
+bounding box after update: 0.043104 -0.00341113 8.05454 4.01442
+At time -- 420 sec (0.116667 hours - 7 timesteps)
+bounding box after update: 0.04289 -0.0032921 8.05502 4.01489
+time: 420 DV distance is: 7.94705  AP distance is: 3.99336
+in conservingColumnVolumes and element id is: 0
+in conservingColumnVolumes and element id is: 1
+in conservingColumnVolumes and element id is: 2
+in conservingColumnVolumes and element id is: 3
+in conservingColumnVolumes and element id is: 4
+in conservingColumnVolumes and element id is: 5
+in conservingColumnVolumes and element id is: 6
+in conservingColumnVolumes and element id is: 7
+in conservingColumnVolumes and element id is: 8
+in conservingColumnVolumes and element id is: 9
+in conservingColumnVolumes and element id is: 10
+in conservingColumnVolumes and element id is: 11
+in conservingColumnVolumes and element id is: 12
+in conservingColumnVolumes and element id is: 13
+in conservingColumnVolumes and element id is: 14
+in conservingColumnVolumes and element id is: 15
+in conservingColumnVolumes and element id is: 16
+in conservingColumnVolumes and element id is: 17
+in conservingColumnVolumes and element id is: 18
+in conservingColumnVolumes and element id is: 19
+in conservingColumnVolumes and element id is: 20
+in conservingColumnVolumes and element id is: 21
+in conservingColumnVolumes and element id is: 22
+in conservingColumnVolumes and element id is: 23
+in conservingColumnVolumes and element id is: 24
+in conservingColumnVolumes and element id is: 25
+in conservingColumnVolumes and element id is: 26
+in conservingColumnVolumes and element id is: 27
+in conservingColumnVolumes and element id is: 28
+in conservingColumnVolumes and element id is: 29
+in conservingColumnVolumes and element id is: 30
+in conservingColumnVolumes and element id is: 31
+in conservingColumnVolumes and element id is: 32
+in conservingColumnVolumes and element id is: 33
+in conservingColumnVolumes and element id is: 34
+in conservingColumnVolumes and element id is: 35
+in conservingColumnVolumes and element id is: 36
+in conservingColumnVolumes and element id is: 37
+in conservingColumnVolumes and element id is: 38
+in conservingColumnVolumes and element id is: 39
+in conservingColumnVolumes and element id is: 40
+in conservingColumnVolumes and element id is: 41
+in conservingColumnVolumes and element id is: 42
+in conservingColumnVolumes and element id is: 43
+in conservingColumnVolumes and element id is: 44
+in conservingColumnVolumes and element id is: 45
+in conservingColumnVolumes and element id is: 46
+in conservingColumnVolumes and element id is: 47
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 420 32 16 7.0449 7.27972 7.0449
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 420 32 16 7.0449 7.27972 7.0449 1.03333 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 420 33 17 5.2326 5.37261 5.2326
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 420 33 17 5.2326 5.37261 5.2326 1.02676 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 420 34 18 5.2326 5.35616 5.2326
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 420 34 18 5.2326 5.35616 5.2326 1.02361 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 420 35 19 5.5101 5.70761 5.5101
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 420 35 19 5.5101 5.70761 5.5101 1.03584 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 420 36 20 6 6.1455 6
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 420 36 20 6 6.1455 6 1.02425 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 420 37 21 6 6.10537 6
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 420 37 21 6 6.10537 6 1.01756 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 420 38 22 5.5101 5.58796 5.5101
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 420 38 22 5.5101 5.58796 5.5101 1.01413 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 420 39 23 6.4899 6.59533 6.4899
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 420 39 23 6.4899 6.59533 6.4899 1.01624 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 420 40 24 8.4447 8.61325 8.4447
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 420 40 24 8.4447 8.61325 8.4447 1.01996 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 420 41 25 4.5351 4.64233 4.5351
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 420 41 25 4.5351 4.64233 4.5351 1.02364 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 420 42 26 5.5101 5.61674 5.5101
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 420 42 26 5.5101 5.61674 5.5101 1.01935 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 420 43 27 4.5351 4.59364 4.5351
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 420 43 27 4.5351 4.59364 4.5351 1.01291 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 420 44 28 6 6.05506 6
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 420 44 28 6 6.05506 6 1.00918 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 420 45 29 9.4197 9.66675 9.4197
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 420 45 29 9.4197 9.66675 9.4197 1.02623 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 420 46 30 4.5351 4.56994 4.5351
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 420 46 30 4.5351 4.56994 4.5351 1.00768 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 420 47 31 6 6.09326 6
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 420 47 31 6 6.09326 6 1.01554 1
+ in update NR 
+iteration: 0
+ not  yet converged via du: norm 0.00951263
+iteration: 1
+ not  yet converged via du: norm 3.43002e-06
+iteration: 2
+converged with displacement: norm3.2353e-12
+finished run one step
+bounding box after update: 0.0432229 -0.00383398 8.05516 4.01498
+At time -- 480 sec (0.133333 hours - 8 timesteps)
+bounding box after update: 0.0431244 -0.00377818 8.05542 4.0152
+time: 480 DV distance is: 7.94669  AP distance is: 3.99339
+in conservingColumnVolumes and element id is: 0
+in conservingColumnVolumes and element id is: 1
+in conservingColumnVolumes and element id is: 2
+in conservingColumnVolumes and element id is: 3
+in conservingColumnVolumes and element id is: 4
+in conservingColumnVolumes and element id is: 5
+in conservingColumnVolumes and element id is: 6
+in conservingColumnVolumes and element id is: 7
+in conservingColumnVolumes and element id is: 8
+in conservingColumnVolumes and element id is: 9
+in conservingColumnVolumes and element id is: 10
+in conservingColumnVolumes and element id is: 11
+in conservingColumnVolumes and element id is: 12
+in conservingColumnVolumes and element id is: 13
+in conservingColumnVolumes and element id is: 14
+in conservingColumnVolumes and element id is: 15
+in conservingColumnVolumes and element id is: 16
+in conservingColumnVolumes and element id is: 17
+in conservingColumnVolumes and element id is: 18
+in conservingColumnVolumes and element id is: 19
+in conservingColumnVolumes and element id is: 20
+in conservingColumnVolumes and element id is: 21
+in conservingColumnVolumes and element id is: 22
+in conservingColumnVolumes and element id is: 23
+in conservingColumnVolumes and element id is: 24
+in conservingColumnVolumes and element id is: 25
+in conservingColumnVolumes and element id is: 26
+in conservingColumnVolumes and element id is: 27
+in conservingColumnVolumes and element id is: 28
+in conservingColumnVolumes and element id is: 29
+in conservingColumnVolumes and element id is: 30
+in conservingColumnVolumes and element id is: 31
+in conservingColumnVolumes and element id is: 32
+in conservingColumnVolumes and element id is: 33
+in conservingColumnVolumes and element id is: 34
+in conservingColumnVolumes and element id is: 35
+in conservingColumnVolumes and element id is: 36
+in conservingColumnVolumes and element id is: 37
+in conservingColumnVolumes and element id is: 38
+in conservingColumnVolumes and element id is: 39
+in conservingColumnVolumes and element id is: 40
+in conservingColumnVolumes and element id is: 41
+in conservingColumnVolumes and element id is: 42
+in conservingColumnVolumes and element id is: 43
+in conservingColumnVolumes and element id is: 44
+in conservingColumnVolumes and element id is: 45
+in conservingColumnVolumes and element id is: 46
+in conservingColumnVolumes and element id is: 47
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 480 32 16 7.0449 7.27948 7.0449
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 480 32 16 7.0449 7.27948 7.0449 1.0333 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 480 33 17 5.2326 5.37222 5.2326
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 480 33 17 5.2326 5.37222 5.2326 1.02668 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 480 34 18 5.2326 5.35537 5.2326
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 480 34 18 5.2326 5.35537 5.2326 1.02346 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 480 35 19 5.5101 5.70762 5.5101
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 480 35 19 5.5101 5.70762 5.5101 1.03585 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 480 36 20 6 6.14488 6
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 480 36 20 6 6.14488 6 1.02415 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 480 37 21 6 6.10422 6
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 480 37 21 6 6.10422 6 1.01737 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 480 38 22 5.5101 5.58545 5.5101
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 480 38 22 5.5101 5.58545 5.5101 1.01367 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 480 39 23 6.4899 6.59223 6.4899
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 480 39 23 6.4899 6.59223 6.4899 1.01577 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 480 40 24 8.4447 8.61131 8.4447
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 480 40 24 8.4447 8.61131 8.4447 1.01973 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 480 41 25 4.5351 4.6427 4.5351
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 480 41 25 4.5351 4.6427 4.5351 1.02373 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 480 42 26 5.5101 5.61435 5.5101
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 480 42 26 5.5101 5.61435 5.5101 1.01892 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 480 43 27 4.5351 4.59334 4.5351
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 480 43 27 4.5351 4.59334 4.5351 1.01284 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 480 44 28 6 6.05423 6
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 480 44 28 6 6.05423 6 1.00904 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 480 45 29 9.4197 9.66625 9.4197
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 480 45 29 9.4197 9.66625 9.4197 1.02617 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 480 46 30 4.5351 4.56926 4.5351
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 480 46 30 4.5351 4.56926 4.5351 1.00753 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 480 47 31 6 6.09262 6
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 480 47 31 6 6.09262 6 1.01544 1
+ in update NR 
+iteration: 0
+ not  yet converged via du: norm 0.00745168
+iteration: 1
+ not  yet converged via du: norm 1.96346e-06
+iteration: 2
+converged with displacement: norm6.7412e-13
+finished run one step
+bounding box after update: 0.0433903 -0.00424093 8.05564 4.0152
+At time -- 540 sec (0.15 hours - 9 timesteps)
+bounding box after update: 0.0433488 -0.00421664 8.05578 4.0153
+time: 540 DV distance is: 7.94633  AP distance is: 3.99341
+in conservingColumnVolumes and element id is: 0
+in conservingColumnVolumes and element id is: 1
+in conservingColumnVolumes and element id is: 2
+in conservingColumnVolumes and element id is: 3
+in conservingColumnVolumes and element id is: 4
+in conservingColumnVolumes and element id is: 5
+in conservingColumnVolumes and element id is: 6
+in conservingColumnVolumes and element id is: 7
+in conservingColumnVolumes and element id is: 8
+in conservingColumnVolumes and element id is: 9
+in conservingColumnVolumes and element id is: 10
+in conservingColumnVolumes and element id is: 11
+in conservingColumnVolumes and element id is: 12
+in conservingColumnVolumes and element id is: 13
+in conservingColumnVolumes and element id is: 14
+in conservingColumnVolumes and element id is: 15
+in conservingColumnVolumes and element id is: 16
+in conservingColumnVolumes and element id is: 17
+in conservingColumnVolumes and element id is: 18
+in conservingColumnVolumes and element id is: 19
+in conservingColumnVolumes and element id is: 20
+in conservingColumnVolumes and element id is: 21
+in conservingColumnVolumes and element id is: 22
+in conservingColumnVolumes and element id is: 23
+in conservingColumnVolumes and element id is: 24
+in conservingColumnVolumes and element id is: 25
+in conservingColumnVolumes and element id is: 26
+in conservingColumnVolumes and element id is: 27
+in conservingColumnVolumes and element id is: 28
+in conservingColumnVolumes and element id is: 29
+in conservingColumnVolumes and element id is: 30
+in conservingColumnVolumes and element id is: 31
+in conservingColumnVolumes and element id is: 32
+in conservingColumnVolumes and element id is: 33
+in conservingColumnVolumes and element id is: 34
+in conservingColumnVolumes and element id is: 35
+in conservingColumnVolumes and element id is: 36
+in conservingColumnVolumes and element id is: 37
+in conservingColumnVolumes and element id is: 38
+in conservingColumnVolumes and element id is: 39
+in conservingColumnVolumes and element id is: 40
+in conservingColumnVolumes and element id is: 41
+in conservingColumnVolumes and element id is: 42
+in conservingColumnVolumes and element id is: 43
+in conservingColumnVolumes and element id is: 44
+in conservingColumnVolumes and element id is: 45
+in conservingColumnVolumes and element id is: 46
+in conservingColumnVolumes and element id is: 47
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 540 32 16 7.0449 7.27926 7.0449
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 540 32 16 7.0449 7.27926 7.0449 1.03327 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 540 33 17 5.2326 5.37177 5.2326
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 540 33 17 5.2326 5.37177 5.2326 1.0266 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 540 34 18 5.2326 5.35455 5.2326
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 540 34 18 5.2326 5.35455 5.2326 1.02331 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 540 35 19 5.5101 5.70757 5.5101
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 540 35 19 5.5101 5.70757 5.5101 1.03584 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 540 36 20 6 6.14432 6
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 540 36 20 6 6.14432 6 1.02405 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 540 37 21 6 6.10318 6
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 540 37 21 6 6.10318 6 1.0172 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 540 38 22 5.5101 5.58417 5.5101
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 540 38 22 5.5101 5.58417 5.5101 1.01344 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 540 39 23 6.4899 6.59054 6.4899
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 540 39 23 6.4899 6.59054 6.4899 1.01551 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 540 40 24 8.4447 8.61041 8.4447
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 540 40 24 8.4447 8.61041 8.4447 1.01962 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 540 41 25 4.5351 4.64283 4.5351
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 540 41 25 4.5351 4.64283 4.5351 1.02375 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 540 42 26 5.5101 5.61311 5.5101
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 540 42 26 5.5101 5.61311 5.5101 1.0187 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 540 43 27 4.5351 4.59299 4.5351
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 540 43 27 4.5351 4.59299 4.5351 1.01277 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 540 44 28 6 6.05342 6
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 540 44 28 6 6.05342 6 1.0089 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 540 45 29 9.4197 9.6658 9.4197
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 540 45 29 9.4197 9.6658 9.4197 1.02613 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 540 46 30 4.5351 4.5686 4.5351
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 540 46 30 4.5351 4.5686 4.5351 1.00739 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 540 47 31 6 6.09208 6
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 540 47 31 6 6.09208 6 1.01535 1
+ in update NR 
+iteration: 0
+ not  yet converged via du: norm 0.00643199
+iteration: 1
+ not  yet converged via du: norm 1.56536e-06
+iteration: 2
+converged with displacement: norm4.76262e-13
+finished run one step
+bounding box after update: 0.0435765 -0.00461077 8.05605 4.01524
+At time -- 600 sec (0.166667 hours - 10 timesteps)
+bounding box after update: 0.0435585 -0.00459971 8.05614 4.01529
+time: 600 DV distance is: 7.94599  AP distance is: 3.99344
+in conservingColumnVolumes and element id is: 0
+in conservingColumnVolumes and element id is: 1
+in conservingColumnVolumes and element id is: 2
+in conservingColumnVolumes and element id is: 3
+in conservingColumnVolumes and element id is: 4
+in conservingColumnVolumes and element id is: 5
+in conservingColumnVolumes and element id is: 6
+in conservingColumnVolumes and element id is: 7
+in conservingColumnVolumes and element id is: 8
+in conservingColumnVolumes and element id is: 9
+in conservingColumnVolumes and element id is: 10
+in conservingColumnVolumes and element id is: 11
+in conservingColumnVolumes and element id is: 12
+in conservingColumnVolumes and element id is: 13
+in conservingColumnVolumes and element id is: 14
+in conservingColumnVolumes and element id is: 15
+in conservingColumnVolumes and element id is: 16
+in conservingColumnVolumes and element id is: 17
+in conservingColumnVolumes and element id is: 18
+in conservingColumnVolumes and element id is: 19
+in conservingColumnVolumes and element id is: 20
+in conservingColumnVolumes and element id is: 21
+in conservingColumnVolumes and element id is: 22
+in conservingColumnVolumes and element id is: 23
+in conservingColumnVolumes and element id is: 24
+in conservingColumnVolumes and element id is: 25
+in conservingColumnVolumes and element id is: 26
+in conservingColumnVolumes and element id is: 27
+in conservingColumnVolumes and element id is: 28
+in conservingColumnVolumes and element id is: 29
+in conservingColumnVolumes and element id is: 30
+in conservingColumnVolumes and element id is: 31
+in conservingColumnVolumes and element id is: 32
+in conservingColumnVolumes and element id is: 33
+in conservingColumnVolumes and element id is: 34
+in conservingColumnVolumes and element id is: 35
+in conservingColumnVolumes and element id is: 36
+in conservingColumnVolumes and element id is: 37
+in conservingColumnVolumes and element id is: 38
+in conservingColumnVolumes and element id is: 39
+in conservingColumnVolumes and element id is: 40
+in conservingColumnVolumes and element id is: 41
+in conservingColumnVolumes and element id is: 42
+in conservingColumnVolumes and element id is: 43
+in conservingColumnVolumes and element id is: 44
+in conservingColumnVolumes and element id is: 45
+in conservingColumnVolumes and element id is: 46
+in conservingColumnVolumes and element id is: 47
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 600 32 16 7.0449 7.27907 7.0449
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 600 32 16 7.0449 7.27907 7.0449 1.03324 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 600 33 17 5.2326 5.37131 5.2326
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 600 33 17 5.2326 5.37131 5.2326 1.02651 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 600 34 18 5.2326 5.35374 5.2326
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 600 34 18 5.2326 5.35374 5.2326 1.02315 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 600 35 19 5.5101 5.7075 5.5101
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 600 35 19 5.5101 5.7075 5.5101 1.03582 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 600 36 20 6 6.1438 6
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 600 36 20 6 6.1438 6 1.02397 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 600 37 21 6 6.10224 6
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 600 37 21 6 6.10224 6 1.01704 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 600 38 22 5.5101 5.58353 5.5101
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 600 38 22 5.5101 5.58353 5.5101 1.01333 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 600 39 23 6.4899 6.58959 6.4899
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 600 39 23 6.4899 6.58959 6.4899 1.01536 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 600 40 24 8.4447 8.61005 8.4447
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 600 40 24 8.4447 8.61005 8.4447 1.01958 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 600 41 25 4.5351 4.64283 4.5351
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 600 41 25 4.5351 4.64283 4.5351 1.02376 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 600 42 26 5.5101 5.61248 5.5101
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 600 42 26 5.5101 5.61248 5.5101 1.01858 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 600 43 27 4.5351 4.59264 4.5351
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 600 43 27 4.5351 4.59264 4.5351 1.01269 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 600 44 28 6 6.05266 6
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 600 44 28 6 6.05266 6 1.00878 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 600 45 29 9.4197 9.66541 9.4197
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 600 45 29 9.4197 9.66541 9.4197 1.02608 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 600 46 30 4.5351 4.56797 4.5351
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 600 46 30 4.5351 4.56797 4.5351 1.00725 1
+calculating volumes.[currSimTimeSec][mainElementID][elementID][refV][currV][tempGrown]V: 600 47 31 6 6.09161 6
+[currSimTimeSec][main elementID][elementID][sumReferenceV][sumCurrVol][sumTempGrownVolumes][ratio][redistFac]: 600 47 31 6 6.09161 6 1.01527 1
+ in update NR 
+iteration: 0
+ not  yet converged via du: norm 0.00574922
+iteration: 1
+ not  yet converged via du: norm 1.33972e-06
+iteration: 2
+converged with displacement: norm3.54601e-13
+finished run one step
+bounding box after update: 0.0437502 -0.00493398 8.05644 4.01519
+deleting elements
+deleting nodes
+deletion complete
+ deleted uk
+ deleted un
+ deleted ge
+ deleted gvExternal
+ deleted gvInternal
+ deleted gExt
+ deleted gSum
+ deleted displacementPerDt
+ deleted deltaU
+ deleted K
+ deleted Knumerical
+Finished Simulation

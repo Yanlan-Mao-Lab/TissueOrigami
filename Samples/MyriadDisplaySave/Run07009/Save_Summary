@@ -1,0 +1,18 @@
+TimeStep(sec):  600
+DataSaveInterval(sec):  600
+ModelinputName:  /home/ucbpnkh/Scratch/bulkruns/ModelInputs/modelinput07009
+
+Mesh_Type:  4
+	Symmetricity-x: 0 Symmetricity-y: 0 Symmetricity-z: 1
+	MeshFileName: /home/ucbpnkh/Scratch/bulkruns/MeshFiles/2DEllipse/smallSphere.mesh
+
+
+There is explicit ECM:	1
+	Columnar ECM Stiffness(Pa): 1600
+	Peripodial ECM Stiffness(Pa): 100
+	ECM remodelling half life (hour): 8
+	Is there perturbation to the ECM: 0
+
+There is explicit actin:  1
+
+There is pipette aspiration:  0

@@ -1,0 +1,238 @@
+Simulation time step	: 3600
+Simulation Length	: 36000
+dataSaveInterval as read from file: 1
+entered read growth type 1, current header: InitialTime(sec):
+Finalised reading growth options
+opening the file/home/ucbpnkh/Scratch/bulkruns/Run07008//Save_TensionCompression
+opening the file/home/ucbpnkh/Scratch/bulkruns/Run07008//Save_Growth
+opening the file/home/ucbpnkh/Scratch/bulkruns/Run07008//Save_GrowthRate
+opening the file/home/ucbpnkh/Scratch/bulkruns/Run07008//Save_GrowthRedistribution
+opening the file/home/ucbpnkh/Scratch/bulkruns/Run07008//Save_NodeBinding
+initiating nodes
+ nNodes: 144 nEle: 138
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+Tip node indexes - dorsalTipIndex: 13 ventralTipIndex: 0
+Tip node indexes - anteriorTipIndex: 0 posteriorTipIndex: 7
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+time: 0 DV distance is: 85.56  AP distance is: 27.3
+inside induce clones
+read the final step
+writing the summary current simulation parameters
+wrote specific element types: 0 0 46 46
+saved the step if needed
+binding circumference
+finished binding
+ system initiated
+Initiating simulation in the background
+At time -- 0 sec (0 hours - 0 timesteps)
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+time: 0 DV distance is: 85.56  AP distance is: 27.3
+ in update NR 
+iteration: 0
+
+
+*************************************************************************** 
+CONTAINS Runtime Modules of Parallel Sparse Linear Solver PARDISO Vers. 6.0
+Copyright Universita della Svizzera Italiana 2000-2018 All Rights Reserved.
+
+TIME-LIMITED ACADEMIC SINGLE-USER LICENSE: YOU ARE USING THE PARDISO SOLVER
+UNDER THE CONTROL OF AN ACADEMIC SINGLE-USER LICENSE. YOU AS  AN INDIVIDUAL
+MAY INSTALL AND USE PARDISO ON AN  UNLIMITED  NUMBER  OF COMPUTERS PROVIDED
+THAT YOU  ARE THE  ONLY INDIVIDUAL USING  THE  PARDISO SOLVER. THIS LICENSE
+IS TIED TO A SINGLE (IDENTICAL) USER NAME THAT YOU NEED ON THESE COMPUTERS.
+A SEPARATE LICENSE IS REQUIRED FOR EACH INDIVIDUAL USER IN ALL OTHER CASES.
+USI LUGANO  MAY  PROVIDE  YOU  WITH  A LICENSE  CODE KEY  THAT  ENABLES THE
+PARDISO  SOLVER  FOR  ADDITIONAL  USERS.   THE  DURATION  (TIME  PERIOD) OF
+YOUR LICENSE  AND  YOUR  ABILITY TO USE  THE PARDISO SOLVER  IS  LIMITED TO
+THE TIME PERIOD OF THE OBTAINED LICENSE, WHICH IS CONTROLLED BY THE LICENSE
+KEY CODE. THE ACADEMIC LICENSE PERMITS THE USE OF PARDISO ONLY FOR ACADEMIC
+RESEARCH. IF YOU ARE USING THE SOFTWARE FOR ANY OTHER  PURPOSE, YOU MAY  BE
+IN  AN UNLAWFUL VIOLATION  OF THE  TERMS  OF THIS  LICENSE,  AND  YOU  MUST
+OBTAIN  A VALID  ALTERNATIVE  LICENSE. 
+USI LUGANO DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
+ALL IMPLIED   WARRANTIES  OF   MERCHANTABILITY  AND  FITNESS. IN  NO  EVENT
+SHALL USI  LUGANO  OR  ANY  OF  ITS  ENTITIES  BE  LIABLE FOR  ANY SPECIAL,
+INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER  RESULTING FROM
+LOSS OF USE, DATA OR PROFITS,  WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+OR OTHER TORTIOUS ACTION,  ARISING OUT OF OR IN  CONNECTION WITH THE USE OR
+PERFORMANCE OF THIS SOFTWARE.
+
+       Please visit http://www.pardiso-project.org for more details.      
+                                                                           
+ - You can suppress this message by setting the environment variable       
+   with e.g. export PARDISOLICMESSAGE=1                                    
+*************************************************************************** 
+ not  yet converged via du: norm 4.35262
+iteration: 1
+ not  yet converged via du: norm 0.314211
+iteration: 2
+ not  yet converged via du: norm 0.00237256
+iteration: 3
+ not  yet converged via du: norm 1.8693e-07
+iteration: 4
+converged with displacement: norm1.54424e-13
+finished run one step
+bounding box after update: -56.909 -27.7061 29.5359 27.7061
+At time -- 3600 sec (1 hours - 1 timesteps)
+bounding box after update: -56.911 -27.7061 29.5346 27.7061
+time: 3600 DV distance is: 86.4449  AP distance is: 27.7077
+ in update NR 
+iteration: 0
+ not  yet converged via du: norm 7.3409
+iteration: 1
+ not  yet converged via du: norm 0.311297
+iteration: 2
+ not  yet converged via du: norm 0.00135694
+iteration: 3
+ not  yet converged via du: norm 5.7794e-08
+iteration: 4
+converged with displacement: norm1.76777e-13
+finished run one step
+bounding box after update: -57.9259 -28.4584 30.2244 28.4584
+At time -- 7200 sec (2 hours - 2 timesteps)
+bounding box after update: -57.929 -28.4584 30.2223 28.4584
+time: 7200 DV distance is: 88.1495  AP distance is: 28.4639
+ in update NR 
+iteration: 0
+ not  yet converged via du: norm 11.0898
+iteration: 1
+ not  yet converged via du: norm 0.428815
+iteration: 2
+ not  yet converged via du: norm 0.0018489
+iteration: 3
+ not  yet converged via du: norm 1.687e-08
+iteration: 4
+converged with displacement: norm1.37061e-13
+finished run one step
+bounding box after update: -59.4805 -29.6046 31.3176 29.6046
+At time -- 10800 sec (3 hours - 3 timesteps)
+bounding box after update: -59.4843 -29.6046 31.315 29.6046
+time: 10800 DV distance is: 90.7963  AP distance is: 29.6163
+ in update NR 
+iteration: 0
+ not  yet converged via du: norm 15.5805
+iteration: 1
+ not  yet converged via du: norm 0.736412
+iteration: 2
+ not  yet converged via du: norm 0.00360692
+iteration: 3
+ not  yet converged via du: norm 2.53116e-07
+iteration: 4
+converged with displacement: norm1.61612e-13
+finished run one step
+bounding box after update: -61.6557 -31.2074 32.8856 31.2074
+At time -- 14400 sec (4 hours - 4 timesteps)
+bounding box after update: -61.6597 -31.2074 32.8828 31.2074
+time: 14400 DV distance is: 94.5384  AP distance is: 31.2295
+ in update NR 
+iteration: 0
+ not  yet converged via du: norm 20.7119
+iteration: 1
+ not  yet converged via du: norm 1.31148
+iteration: 2
+ not  yet converged via du: norm 0.0071962
+iteration: 3
+ not  yet converged via du: norm 6.83256e-07
+iteration: 4
+converged with displacement: norm2.03391e-13
+finished run one step
+bounding box after update: -64.5194 -33.3207 34.9833 33.3207
+At time -- 18000 sec (5 hours - 5 timesteps)
+bounding box after update: -64.5231 -33.3207 34.9805 33.3207
+time: 18000 DV distance is: 99.4986  AP distance is: 33.3617
+ in update NR 
+iteration: 0
+ not  yet converged via du: norm 11.284
+iteration: 1
+ not  yet converged via du: norm 0.0951957
+iteration: 2
+ not  yet converged via du: norm 1.67176e-05
+iteration: 3
+converged with displacement: norm2.6926e-12
+finished run one step
+bounding box after update: -66.0744 -34.2661 36.0406 34.2661
+At time -- 21600 sec (6 hours - 6 timesteps)
+bounding box after update: -66.0753 -34.2661 36.04 34.2661
+time: 21600 DV distance is: 102.11  AP distance is: 34.3273
+ in update NR 
+iteration: 0
+ not  yet converged via du: norm 7.99888
+iteration: 1
+ not  yet converged via du: norm 0.0418907
+iteration: 2
+ not  yet converged via du: norm 4.08251e-06
+iteration: 3
+converged with displacement: norm2.51884e-13
+finished run one step
+bounding box after update: -67.2101 -34.8777 36.773 34.8777
+At time -- 25200 sec (7 hours - 7 timesteps)
+bounding box after update: -67.2113 -34.8777 36.7721 34.8777
+time: 25200 DV distance is: 103.978  AP distance is: 34.9582
+ in update NR 
+iteration: 0
+ not  yet converged via du: norm 6.22506
+iteration: 1
+ not  yet converged via du: norm 0.0245325
+iteration: 2
+ not  yet converged via du: norm 1.82633e-06
+iteration: 3
+converged with displacement: norm1.89644e-13
+finished run one step
+bounding box after update: -68.1203 -35.3237 37.3398 35.3237
+At time -- 28800 sec (8 hours - 8 timesteps)
+bounding box after update: -68.1215 -35.3237 37.3388 35.3237
+time: 28800 DV distance is: 105.454  AP distance is: 35.422
+ in update NR 
+iteration: 0
+ not  yet converged via du: norm 5.09901
+iteration: 1
+ not  yet converged via du: norm 0.016199
+iteration: 2
+ not  yet converged via du: norm 8.43035e-07
+iteration: 3
+converged with displacement: norm1.33421e-13
+finished run one step
+bounding box after update: -68.8828 -35.6712 37.8047 35.6712
+At time -- 32400 sec (9 hours - 9 timesteps)
+bounding box after update: -68.884 -35.6712 37.8038 35.6712
+time: 32400 DV distance is: 106.682  AP distance is: 35.7856
+ in update NR 
+iteration: 0
+ not  yet converged via du: norm 4.32272
+iteration: 1
+ not  yet converged via du: norm 0.0115406
+iteration: 2
+ not  yet converged via du: norm 4.17998e-07
+iteration: 3
+converged with displacement: norm1.7991e-13
+finished run one step
+bounding box after update: -69.5399 -35.9552 38.2003 35.9552
+At time -- 36000 sec (10 hours - 10 timesteps)
+bounding box after update: -69.541 -35.9552 38.1996 35.9552
+time: 36000 DV distance is: 107.734  AP distance is: 36.0845
+ in update NR 
+iteration: 0
+ not  yet converged via du: norm 3.75985
+iteration: 1
+ not  yet converged via du: norm 0.00869288
+iteration: 2
+ not  yet converged via du: norm 2.26093e-07
+iteration: 3
+converged with displacement: norm1.40464e-13
+finished run one step
+bounding box after update: -70.1181 -36.1964 38.5458 36.1964
+deleting elements
+deleting nodes
+deletion complete
+ deleted uk
+ deleted un
+ deleted ge
+ deleted gvExternal
+ deleted gvInternal
+ deleted gExt
+ deleted gSum
+ deleted displacementPerDt
+ deleted deltaU
+ deleted K
+ deleted Knumerical
+Finished Simulation
