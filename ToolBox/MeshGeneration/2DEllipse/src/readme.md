@@ -9,6 +9,11 @@ cmake --build .
 This will compile the `EllipseFromOutline` binary and place it into the `build` directory.
 You can then move it to the desired location on your machine.
 
+#### 2022-08-22:
+
+`EllipseFromOutline` now takes `selectTissueType` as an argument from the command line.
+This argument should be the _last_ argument passed to the executable, _except_ when providing an input outline file, in which case it should be provided immediately before the path to such a file.
+
 ## [`triangle`]((https://www.cs.cmu.edu/~quake/triangle.html)) Dependency
 
 [`triangle`](https://www.cs.cmu.edu/~quake/triangle.html) is a dependency of the meshing process.

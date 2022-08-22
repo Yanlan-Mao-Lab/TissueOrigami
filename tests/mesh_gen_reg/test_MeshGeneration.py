@@ -4,6 +4,19 @@
 from cgi import test
 import os, filecmp, shutil, subprocess
 
+def cleanup(fnames):
+    '''
+    Removes files whose names match those in fnames
+
+    Parameters
+    ----------
+    fnames: \t List of strings, files to be removed
+    '''
+
+    for f in fnames:
+        os.remove(f)
+    return
+
 class Test_MeshGeneration():
     '''
 
@@ -35,7 +48,8 @@ class Test_MeshGeneration():
 
     def test_smallRectangle(self):
         '''
-        
+        Regression test for the smallRectangle mesh.
+        Reference output: smallRectangle.mesh
         '''
 
         # create the output directory if it doesn't already exist
@@ -67,9 +81,81 @@ class Test_MeshGeneration():
         # now compare the contents of the generated output and the reference output
         assert filecmp.cmp(ref_output, gen_output, shallow=False), "Output meshfile mismatch between " + ref_output + " and " + gen_output
 
-        # clean up copied files
-        os.remove(dst_nodes)
-        os.remove(dst_ele)
-        # clean up aux files
-        os.remove(self.executable_loc + "/NodesPostTesselation.out")
-        os.remove(self.executable_loc + "/VectorsPostTesselation.out")
+        # clean up auxillary and copied files
+        cleanup([dst_nodes, dst_ele, self.executable_loc + "/NodesPostTesselation.out", self.executable_loc + "/VectorsPostTesselation.out"])
+
+        return
+
+    def test_smallSphere(self):
+        '''
+        Regression test for the smallSphere mesh.
+        Reference output: smallSphere.mesh
+        '''
+
+        # create the output directory if it doesn't already exist
+        if (not os.path.exists(self.gen_location)):
+            os.mkdir(self.gen_location)
+
+        # reference output to compare to
+        ref_output = self.ref_location + "/smallSphere.mesh"
+        # check this file can be found, fail if not
+        assert os.path.exists(ref_output), "Could not find reference file: " + ref_output
+        # where to place the generated output
+        gen_output = self.gen_location + "/smallSphere.mesh"
+
+        # copy input files to executable directory
+        src_tri = self.input_loc + "/SphericalTriangulation.txt"
+        dst_tri = self.executable_loc + "/SphericalTriangulation"
+        shutil.copyfile(src_tri, dst_tri)
+
+        # ./EllipseFromOutline -2 4.2 2 3 0, additional 5 for TissueType input allowance
+        command = "./" + self.executable_name + " -2 4.2 2 3 0 5"
+        # run the executable...
+        subprocess.run(command.split(), cwd=self.executable_loc)
+        # the output should then be moved (and renamed) to gen_output, in case we wish to inspect it later
+        shutil.move(self.raw_output_src, gen_output)
+
+        # now compare the contents of the generated output and the reference output
+        assert filecmp.cmp(ref_output, gen_output, shallow=False), "Output meshfile mismatch between " + ref_output + " and " + gen_output
+
+        # clean up auxillary and copied files
+        cleanup([dst_tri, self.executable_loc + "/NodesPostTesselation.out", self.executable_loc + "/VectorsPostTesselation.out"])
+
+        return
+
+    def test_smallWingDisc(self):
+        '''
+        Regression test for the smallWingDisc mesh.
+        Reference output: smallWingDisc.mesh
+        '''
+
+        # create the output directory if it doesn't already exist
+        if (not os.path.exists(self.gen_location)):
+            os.mkdir(self.gen_location)
+
+        # reference output to compare to
+        ref_output = self.ref_location + "/smallWingDisc.mesh"
+        # check this file can be found, fail if not
+        assert os.path.exists(ref_output), "Could not find reference file: " + ref_output
+        # where to place the generated output
+        gen_output = self.gen_location + "/smallWingDisc.mesh"
+
+        # copy input files to executable directory
+        src_tri = self.input_loc + "/SphericalTriangulation.txt"
+        dst_tri = self.executable_loc + "/SphericalTriangulation"
+        shutil.copyfile(src_tri, dst_tri)
+
+        # ./EllipseFromOutline -2 4.2 2 3 0, additional 5 for TissueType input allowance
+        command = "./" + self.executable_name + " -2 4.2 2 3 0 5"
+        # run the executable...
+        subprocess.run(command.split(), cwd=self.executable_loc)
+        # the output should then be moved (and renamed) to gen_output, in case we wish to inspect it later
+        shutil.move(self.raw_output_src, gen_output)
+
+        # now compare the contents of the generated output and the reference output
+        assert filecmp.cmp(ref_output, gen_output, shallow=False), "Output meshfile mismatch between " + ref_output + " and " + gen_output
+
+        # clean up auxillary and copied files
+        cleanup([dst_tri, self.executable_loc + "/NodesPostTesselation.out", self.executable_loc + "/VectorsPostTesselation.out"])
+
+        return

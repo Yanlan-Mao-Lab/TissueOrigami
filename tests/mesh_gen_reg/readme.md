@@ -43,7 +43,7 @@ This will create the outout `MeshFile.out`. This is what has been renamed to `sm
 
 ## Spherical Triangulation
 
-- `SphericalTriangulation.txt` must be copied to the folder `TissueOrigami/ToolBox/MeshGeneration/2DEllipse`.
+- `SphericalTriangulation.txt` must be copied to the folder `TissueOrigami/ToolBox/MeshGeneration/2DEllipse` and renamed `SphericalTriangulation` (no file extension).
 - In `EllipseFromOutline.cpp` manually change the parameter `selectTissueType=5`, and then in the condition `else if(selectTissueType == 5)` set
 ```cpp
     actinHeight = 1.0;
