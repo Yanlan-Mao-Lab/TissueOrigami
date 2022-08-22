@@ -29,7 +29,7 @@ jobs:
       # Install using the CMake instructions
       - name: Build EllipseFromOutline
         run: |
-          cd ${{ github.workspace }}/Toolbox/MeshGeneration/2DEllipse
+          cd ${{ github.workspace }}/ToolBox/MeshGeneration/2DEllipse
           mkdir build
           cd build
           cmake ../
@@ -37,7 +37,7 @@ jobs:
       
       - name: Move EllipseFromOutline to desired folder
         run: |
-          mv ${{ github.workspace }}/Toolbox/MeshGeneration/2DEllipse/src/build/EllipseFromOutline ${{ github.workspace }}/Toolbox/MeshGeneration/2DEllipse/
+          mv ${{ github.workspace }}/ToolBox/MeshGeneration/2DEllipse/src/build/EllipseFromOutline ${{ github.workspace }}/Toolbox/MeshGeneration/2DEllipse/
 
       # Install test dependencies
       - name: Install test dependencies
