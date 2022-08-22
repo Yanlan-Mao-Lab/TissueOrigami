@@ -10,8 +10,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # set triangle path - change this later to auto-detect triangle's location, or make it a subroutine
 # but for now, we can set this variable here, could even try to get auto-detection working?
 find_program(TRIANGLE_PATH
-            triangle triangle.o
-            "../../triangle")
+            triangle triangle.o)
+            "../../triangle") #optional search path for when triangle is not on the PATH
 
 # configure a header file
 # this will pass the location of triangle to the files
@@ -20,6 +20,6 @@ configure_file(EllipseFromOutline.hpp.in EllipseFromOutline.hpp)
 # the executable we want to compile
 add_executable(EllipseFromOutline EllipseFromOutline.cpp)
 
-target_include_directories(MeshGeneration PUBLIC
+target_include_directories(EllipseFromOutline PUBLIC
                             "${PROJECT_BINARY_DIR}"
                             )
