@@ -230,7 +230,7 @@ class Test_MeshGeneration():
         # this means that the final line of the reference intermediary- and the generated intermediary files will always be different, as the call to triangle uses a different path
         # the solution is to trim this final line from both files and compare the result
         # make temporary directory for this
-        tmp_dir = "./tests/temp_im_comp"
+        tmp_dir = self.dir_path + "/tests/temp_im_comp"
         if (not os.path.exists(tmp_dir)):
             os.mkdir(tmp_dir)
         # for ease of making new files in the directory
