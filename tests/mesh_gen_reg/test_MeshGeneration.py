@@ -57,8 +57,8 @@ class Test_MeshGeneration():
         shutil.copyfile(src_nodes, dst_nodes)
         shutil.copyfile(src_ele, dst_ele)
 
-        # ./EllipseFromOutline -1 5.2 2 3 0,
-        command = "./" + self.executable_name + " -1 5.2 2 3 0"
+        # ./EllipseFromOutline -1 5.2 2 3 0, additional 1 for TissueType input allowance
+        command = "./" + self.executable_name + " -1 5.2 2 3 0 1"
         # run the executable...
         subprocess.run(command.split(), cwd=self.executable_loc)
         # the output should then be moved (and renamed) to gen_output, in case we wish to inspect it later

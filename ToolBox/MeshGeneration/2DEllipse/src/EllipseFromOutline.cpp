@@ -2555,7 +2555,14 @@ bool readinputs (int argc, char **argv, double* parameters, ifstream& inputOutli
 		const char* inpstring = argv[offset+3];
 		parameters[8] = atof(inpstring);		
 	}
-	if(argc<offset+5){
+	if (argc<offset+5){
+		cerr<<"Please provide the TissueType"<<endl;
+	}
+	else{
+		const char *inpstring = argv[offset + 4];
+		parameters[9] = atof(inpstring);
+	}
+	if(argc<offset+6){
         if(parameters[0] == 0 || parameters[0] == 1){
             cerr<<"parameters[0]:"<<parameters[0]<<"  Please give the input file path for the outline"<<endl;
             return 0;
@@ -2563,7 +2570,7 @@ bool readinputs (int argc, char **argv, double* parameters, ifstream& inputOutli
 	}
 	else{
         if(parameters[0] == 0 || parameters[0] == 1){
-            const char* inpstring = argv[offset+4];
+            const char* inpstring = argv[offset+5];
             inputOutline.open(inpstring,ifstream::in);
             if (!inputOutline.good() || !inputOutline.is_open()){
                 cerr<<"input outline cannot be opened: "<<inpstring<<endl;
@@ -2603,7 +2610,7 @@ void readInOutline(vector <float>& x, vector <float>&y, ifstream& inputOutline){
 int main(int argc, char **argv)
 {	
 	double * parameters;
-	parameters = new double[9];
+	parameters = new double[10];
 	ifstream inputOutline;
 	bool success = readinputs (argc, argv, parameters,inputOutline);
 	if (!success) {
@@ -2630,7 +2637,7 @@ int main(int argc, char **argv)
     // 4: x&y symmetric circle (half disc) and needs further code mdifications! -> Eliminate bluntTip function for type 4 with no x symmetricity! (half circle - not quarter)
     // 5: spherical organoid
     // 6: Tubular organoid
-        int selectTissueType = 1;
+        int selectTissueType = (int) parameters[9];
 
 	if (selectTissueType == 0){ // 0 : wingdisc48Hr, 
 		symmetricY = true;
