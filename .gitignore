@@ -33,6 +33,7 @@ tests/**/gen_outputs/
 #################
 **__pycache__**
 
-# triangle binary #
+# compiled binary #
 ###################
 **triangle
+**EllipseFromOutline
