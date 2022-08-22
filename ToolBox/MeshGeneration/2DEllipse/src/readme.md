@@ -22,4 +22,4 @@ find_program(TRIANGLE_PATH
 ```
 
 Bear in mind however, that `EllipseFromOutline` will continue to look in the provided path for `triangle` even if the location of the executable is changed.
-Recompilation of `EllipseFromOutline` will be neccessary - along with providing the new path - in such circumstances.
+Recompiling/rebuilding `EllipseFromOutline` will be neccessary - along with providing the new path to `triangle` - in such circumstances.
