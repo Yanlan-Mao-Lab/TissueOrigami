@@ -17,6 +17,33 @@ def cleanup(fnames):
         os.remove(f)
     return
 
+def trim_final_line(fnames):
+    '''
+    Removes the final line from a file
+
+     Parameters
+    ----------
+    fnames: \t List of strings, files to have final line removed
+    '''
+
+    for fname in fnames:
+        with open(fname, "r+", encoding = "utf-8") as file:
+            # Move pointer to end of file
+            file.seek(0, os.SEEK_END)
+            # In the case that the last line is null, delete it
+            pos = file.tell() - 1
+
+            # Read characters backwards until hitting a newline character
+            while pos > 0 and file.read(1) != "\n":
+                pos -= 1
+                file.seek(pos, os.SEEK_SET)
+            
+            # So long was we're not at the start of the file, delete everything FORWARD of the current position
+            if pos > 0:
+                file.seek(pos, os.SEEK_SET)
+                file.truncate()
+    return
+
 class Test_MeshGeneration():
     '''
 
@@ -194,7 +221,27 @@ class Test_MeshGeneration():
         # # PHASE 3: Compare intermediaries and output files
 
         assert filecmp.cmp(ref_output, gen_output, shallow=False), "Output meshfile mismatch between " + ref_output + " and " + gen_output
-        assert filecmp.cmp(ref_im_nodes, gen_im_nodes, shallow=False), "Intermediary file mismatch between " + ref_im_nodes + " and " + gen_im_nodes
-        assert filecmp.cmp(ref_im_ele, gen_im_ele, shallow=False), "Intermediary file mismatch between " + ref_im_ele + " and " + gen_im_ele
+
+        # triangle-generated files append the ABSOLUTE path to the end of the file
+        # this means that the final line of the reference intermediary- and the generated intermediary files will always be different, as the call to triangle uses a different path
+        # the solution is to trim this final line from both files and compare the result
+        # make temporary directory for this
+        tmp_dir = "./tests/temp_im_comp"
+        if (not os.path.exists(tmp_dir)):
+            os.mkdir(tmp_dir)
+        # for ease of making new files in the directory
+        tmp_dir += "/"
+        # copy files across
+        shutil.copyfile(ref_im_nodes, tmp_dir + "ref.node")
+        shutil.copyfile(ref_im_ele, tmp_dir + "ref.ele")
+        shutil.copyfile(gen_im_nodes, tmp_dir + "gen.node")
+        shutil.copyfile(gen_im_ele, tmp_dir + "gen.ele")
+        # trim final lines
+        trim_final_line([tmp_dir + "ref.node", tmp_dir + "ref.ele", tmp_dir + "gen.node", tmp_dir + "gen.ele"])
+        # compare remaining parts of files, which should match
+        assert filecmp.cmp(tmp_dir + "ref.node", tmp_dir + "gen.node", shallow=False), "Intermediary file mismatch between " + ref_im_nodes + " and " + gen_im_nodes
+        assert filecmp.cmp(tmp_dir + "ref.ele", tmp_dir + "gen.ele", shallow=False), "Intermediary file mismatch between " + ref_im_ele + " and " + gen_im_ele
+        # cleanup the temporary directory
+        shutil.rmtree(tmp_dir)
 
         return
