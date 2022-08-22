@@ -2571,15 +2571,6 @@ bool readinputs (int argc, char **argv, double* parameters, ifstream& inputOutli
             }
         }
 	}
-	// temporarily, allow selectTissueType to also be set from the command line
-	if(argc<offset+6){
-		cerr<<"Please give the tissueType"<<endl;
-		return 0;
-	}
-	else{
-		const char *inpstring = argv[offset + 5];
-		parameters[9] = atof(inpstring);
-	}
 	return 1;
 }
 
@@ -2612,7 +2603,7 @@ void readInOutline(vector <float>& x, vector <float>&y, ifstream& inputOutline){
 int main(int argc, char **argv)
 {	
 	double * parameters;
-	parameters = new double[10];
+	parameters = new double[9];
 	ifstream inputOutline;
 	bool success = readinputs (argc, argv, parameters,inputOutline);
 	if (!success) {
@@ -2639,7 +2630,7 @@ int main(int argc, char **argv)
     // 4: x&y symmetric circle (half disc) and needs further code mdifications! -> Eliminate bluntTip function for type 4 with no x symmetricity! (half circle - not quarter)
     // 5: spherical organoid
     // 6: Tubular organoid
-	int selectTissueType = (int)parameters[9]; // allow selection via command-line for testing purposes
+        int selectTissueType = 5;
 
 	if (selectTissueType == 0){ // 0 : wingdisc48Hr, 
 		symmetricY = true;
