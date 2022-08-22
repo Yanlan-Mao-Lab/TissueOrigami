@@ -18,13 +18,20 @@ class Test_MeshGeneration():
     # path to reappend in order to find files to compare
     dir_path = os.path.dirname(os.path.abspath(__file__))
 
-    # location (relative to this file) of the folder containing the mesh generation executable
-    executable_loc = "../../ToolBox/MeshGeneration/2DEllipse"
+    # location of the folder containing the reference outputs
+    ref_location = dir_path + "/ref_outputs"
+    # location of the folder containing the inputs to mesh generation executable
+    input_loc = dir_path + "/mesh_inputs"
+    # location of the folder to place the generated outputs into
+    gen_location = dir_path + "/gen_putputs"
+
+    # location of the folder containing the mesh generation executable
+    executable_loc = dir_path + "/../../ToolBox/MeshGeneration/2DEllipse"
     # name of the mesh generation executable
     executable_name = "EllipseFromOutline"
 
     # at present, the executable just dumps MeshFile.out to the directory
-    raw_output_src = dir_path + "/" + executable_loc + "/MeshFile.out"           
+    raw_output_src = executable_loc + "/MeshFile.out"           
 
     def test_smallRectangle(self):
         '''
@@ -32,22 +39,22 @@ class Test_MeshGeneration():
         '''
 
         # reference output to compare to
-        ref_output = self.dir_path + "/" + self.ref_location + "/smallRectangle.mesh"
+        ref_output = self.ref_location + "/smallRectangle.mesh"
         # check this file can be found, fail if not
         assert os.path.exists(ref_output, "Could not find reference file: " + ref_output)
         # where to place the generated output
-        gen_output = self.dir_path + "/" + self.gen_location + "/smallRectangle.mesh"
+        gen_output = self.gen_location + "/smallRectangle.mesh"
 
         # copy input files to executable directory
-        src_nodes = self.dir_path + "/" + self.input_loc + "/smallRectangle.node"
-        src_ele = self.dir_path + "/" + self.input_loc + "/smallRectangle.ele"
-        dst_nodes = self.dir_path + "/" + self.executable_loc + "Points.1.nodes"
-        dst_ele = self.dir_path + "/" + self.executable_loc + "Points.1.ele"
+        src_nodes = self.input_loc + "/smallRectangle.node"
+        src_ele = self.input_loc + "/smallRectangle.ele"
+        dst_nodes = self.executable_loc + "/Points.1.nodes"
+        dst_ele = self.executable_loc + "/Points.1.ele"
         shutil.copyfile(src_nodes, dst_nodes)
         shutil.copyfile(src_ele, dst_ele)
 
-        # ./EllipseFromOutline -1 5.2 2 3 0, extra 1 on the end for reading in TissueType
-        command = self.executable_name + " -1 5.2 2 3 0 1"
+        # ./EllipseFromOutline -1 5.2 2 3 0,
+        command = "./" + self.executable_name + " -1 5.2 2 3 0"
         # run the executable...
         subprocess.Popen(command.split(), cwd=self.executable_loc)
         # the output should then be moved (and renamed) to gen_output, in case we wish to inspect it later
