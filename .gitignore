@@ -32,3 +32,7 @@ tests/**/gen_outputs/
 # Pycache files #
 #################
 **__pycache__**
+
+# triangle binary #
+###################
+**triangle
