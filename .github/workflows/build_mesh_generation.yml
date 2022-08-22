@@ -1,0 +1,29 @@
+# Workflow to build EllipseFromOutline (mesh generation executable) and place it into the correct directory.
+
+name: Build EllipseFromOutline
+
+# Set to run on pull requests, pushes to master/ ARCCollaboration directly, and if requested on GitHub
+on:
+  push:
+    branches: ["master", "ARCCollaboration"]
+  pull_request:
+    branches: ["master", "ARCCollaboration"]
+  workflow_dispatch:
+
+jobs:
+  # Build mesh generation executable
+  build_EllipseFromOutline:
+    
+    runs-on: ubtuntu-lastest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      # Install using the CMake instructions
+      - name: Build EllipseFromOutline
+        run: |
+          cd ${{ github_workspace}}/Toolbox/MeshGeneration/2DEllipse
+          mkdir build
+          cd build
+          cmake ../
+          cmake --build .
