@@ -54,4 +54,8 @@ class Test_MeshGeneration():
         shutil.move(self.raw_output_src, gen_output)
 
         # now compare the contents of the generated output and the reference output
-        assert filecmp.cmp(ref_output, gen_output, shallow=False), "Output meshfile mismatch between " + ref_output + " and " + gen_output    
+        assert filecmp.cmp(ref_output, gen_output, shallow=False), "Output meshfile mismatch between " + ref_output + " and " + gen_output
+
+        # clean up copied files
+        os.remove(dst_nodes)
+        os.remove(dst_ele)
