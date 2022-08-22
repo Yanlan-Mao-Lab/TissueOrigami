@@ -18,6 +18,7 @@ oldbuilds
 moc_*
 *.pro.user
 *.pro-FORMAC
+tests/**/gen_outputs/
 
 # compiled source #
 ###################
@@ -28,4 +29,6 @@ moc_*
 *.o
 *.so
 
-
+# Pycache files #
+#################
+**__pycache__**

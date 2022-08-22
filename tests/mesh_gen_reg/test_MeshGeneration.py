@@ -23,7 +23,7 @@ class Test_MeshGeneration():
     # location of the folder containing the inputs to mesh generation executable
     input_loc = dir_path + "/mesh_inputs"
     # location of the folder to place the generated outputs into
-    gen_location = dir_path + "/gen_putputs"
+    gen_location = dir_path + "/gen_outputs"
 
     # location of the folder containing the mesh generation executable
     executable_loc = dir_path + "/../../ToolBox/MeshGeneration/2DEllipse"
@@ -38,6 +38,10 @@ class Test_MeshGeneration():
         
         '''
 
+        # create the output directory if it doesn't already exist
+        if (not os.path.exists(self.gen_location)):
+            os.mkdir(self.gen_location)
+
         # reference output to compare to
         ref_output = self.ref_location + "/smallRectangle.mesh"
         # check this file can be found, fail if not
@@ -48,7 +52,7 @@ class Test_MeshGeneration():
         # copy input files to executable directory
         src_nodes = self.input_loc + "/smallRectangle.node"
         src_ele = self.input_loc + "/smallRectangle.ele"
-        dst_nodes = self.executable_loc + "/Points.1.nodes"
+        dst_nodes = self.executable_loc + "/Points.1.node"
         dst_ele = self.executable_loc + "/Points.1.ele"
         shutil.copyfile(src_nodes, dst_nodes)
         shutil.copyfile(src_ele, dst_ele)
@@ -66,3 +70,6 @@ class Test_MeshGeneration():
         # clean up copied files
         os.remove(dst_nodes)
         os.remove(dst_ele)
+        # clean up aux files
+        os.remove(self.executable_loc + "/NodesPostTesselation.out")
+        os.remove(self.executable_loc + "/VectorsPostTesselation.out")
