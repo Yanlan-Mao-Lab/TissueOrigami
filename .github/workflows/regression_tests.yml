@@ -37,7 +37,7 @@ jobs:
       
       - name: Move EllipseFromOutline to desired folder
         run: |
-          mv ${{ github.workspace }}/ToolBox/MeshGeneration/2DEllipse/src/build/EllipseFromOutline ${{ github.workspace }}/Toolbox/MeshGeneration/2DEllipse/
+          mv ${{ github.workspace }}/ToolBox/MeshGeneration/2DEllipse/src/build/EllipseFromOutline ${{ github.workspace }}/ToolBox/MeshGeneration/2DEllipse/
 
       # Install test dependencies
       - name: Install test dependencies
