@@ -2630,7 +2630,7 @@ int main(int argc, char **argv)
     // 4: x&y symmetric circle (half disc) and needs further code mdifications! -> Eliminate bluntTip function for type 4 with no x symmetricity! (half circle - not quarter)
     // 5: spherical organoid
     // 6: Tubular organoid
-        int selectTissueType = 1;
+        int selectTissueType = 5;
 
 	if (selectTissueType == 0){ // 0 : wingdisc48Hr, 
 		symmetricY = true;
@@ -2869,7 +2869,7 @@ int main(int argc, char **argv)
                 Lay01.generatingSphere = true;
 		addPeripodial = false;
 		addLateralECMRing = false;
-		actinHeight = 2.0;
+                actinHeight = 1.0;
                 ECMHeight = 0.2; //this should be set to negative in order to remove the ECM
 		modifiedZDueToThinActin = ABHeight/ABLayers;
 		if (ABLayers<3){
@@ -2894,8 +2894,8 @@ int main(int argc, char **argv)
 			cout<<" if clause 2,  modifiedZDueToThinActin: "<<modifiedZDueToThinActin<<endl;
                         cout<<"ECMHeight is"<<ECMHeight<<endl;
 		}
-		Lay01.symmetricY = true;
-		Lay01.symmetricX = true;
+                Lay01.symmetricY = true;
+                Lay01.symmetricX = true;
 	}
         else if (selectTissueType == 6){
                     //tubular organoid

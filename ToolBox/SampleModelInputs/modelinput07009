@@ -1,25 +1,25 @@
 TypeOfCoordinateSystem:
-  UseXYCoordinatesforRelativePositions(bool): 0
-  UsePolarCoordinatesforRelativePositions(bool): 1
+  UseXYCoordinatesforRelativePositions(bool): 1
+  UsePolarCoordinatesforRelativePositions(bool): 0
   UseCylindricalCoordintesforRelativePositions(bool): 0
   
   
 InputMeshParameters:
   MeshInputMode(int-seeDocumentation): 4
-  MeshFile(full-path): /Users/nkhalilgharibi/TissueFoldingProject/YanlanMaoLabRepo/TissueOrigami/ToolBox/MeshGeneration/2DEllipse/MeshFile.out
+  MeshFile(full-path): /Users/nkhalilgharibi/TissueFoldingProject/YanlanMaoLabRepo/TissueOrigami/ToolBox/MeshGeneration/2DEllipse/smallSphere.mesh
   symmetricInX(bool): 0
   symmetricInY(bool): 0
   symmetricInZ(bool): 1
  
 TimeParameters:
-  TimeStep(sec): 60
-  SimulationLength(sec): 3600
+  TimeStep(sec): 600
+  SimulationLength(sec): 6000 
   
 SaveOptions:
-  SaveImages(bool): 0
+  SaveImages(bool): 1
   SaveData(bool):   1
   ImageSaveInterval(sec): 1
-  DataSaveInterval(sec):  60
+  DataSaveInterval(sec):  600
   
 NodeFixingOptions:
   FixingViscosity(x,y,z): 0   0  32000
@@ -44,15 +44,15 @@ YoungsModulusTimeseriesGrids:
   YoungsModulusRateChangeApplicationMethodInput(int): 0
   applyToColumnarLayer(bool): 1
   applyToPeripodialMembrane(bool): 0
-  applyToApicalLayer(bool): 1
+  applyToApicalLayer(bool): 0
   applyToMidLayer(bool): 0
   applyToBasalLayer(bool): 0
   applyToPeripodialECM(bool): 0
   applyToColumnarECM(bool): 1
-  Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/YanlanMaoLabRepo/TissueOrigami/ToolBox/StiffnessTimeSeries/NargessFiles/Stiffness96hrRectangleWing_Reduction_0
+  Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/YanlanMaoLabRepo/TissueOrigami/ToolBox/StiffnessTimeSeries/StiffnessMatrix_200_200_homogeneous.txt
   WhenToApplyInput(sec): 0
-  Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/YanlanMaoLabRepo/TissueOrigami/ToolBox/StiffnessTimeSeries/NargessFiles/Stiffness96hrRectangleWing_Reduction_4
-  WhenToApplyInput(sec): 3540
+  Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/YanlanMaoLabRepo/TissueOrigami/ToolBox/StiffnessTimeSeries/StiffnessMatrix_200_200_20%_new.txt
+  WhenToApplyInput(sec): 6000
 
 PysicalProperties:
   YoungsModulusApical: 100.0	YoungsModulusBasal: 25.0	YoungsModulusMid: 25.0	Noise(%-int): 0
@@ -70,6 +70,8 @@ ExternalViscositySetup:
   PeripodialMembraneBasalExternalViscosity: 0.0 
   LinkerZoneApicalExternalViscosity: 0.0
   LinkerZoneBasalExternalViscosity: 0.0
+
+
 
 ExplicitECMOptions:
   ThereIsExplicitECM(bool): 1
@@ -90,23 +92,9 @@ NodeCollapseOptions:
   ThereIsNodeCollapse(bool): 1
 
 ColumnViseVolumeConservationOptions:
-  ThereIsColumnViseVolumeConservation(bool): 1
+  ThereIsColumnViseVolumeConservation(bool): 0
 
-ShapeChangeOptions:
-  NumberofShapeChangeFunctions(int): 1
-  ShapeChangeStartsBelowECMLevel(fraction): 1.0
-  ShapeChangeGridInterpolationType(0=stepNearestNeighbour,1=linear,2=stepExact): 0
-
-  ShapeChangeFunctionType(int-seeDocumentation): 3
-  InitialTime(sec):  0
-  FinalTime(sec):  3600
-  applyShapeChangeToColumnarLayer(bool): 1
-  applyShapeChangeToPeripodialMembrane(bool): 0
-  applyShapeChangeToApicalLayer(bool): 0
-  applyShapeChangeToMidLayer(bool): 0
-  applyShapeChangeToBasalLayer(bool): 1
-  applyShapeChangeToBasalECM(bool): 0
-  applyShapeChangeToLateralECM(bool): 0
-  ShapeChangeType(1=AB;2=DV&AP): 1
-  Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/YanlanMaoLabRepo/TissueOrigami/ToolBox/ShapeChangeRates/ShapeChangeRate96hrRectangleWingZ_FineGrid_Reduction_3_neg
-  ConserveVolume(bool): 0
+LumenOptions:
+  thereIsLumen(bool): 1
+  LumenBulkModulus(Pa): 32000
+  LumenGrowthRate(foldPer24hr): 12

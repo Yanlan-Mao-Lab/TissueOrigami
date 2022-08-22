@@ -1,0 +1,68 @@
+#!/bin/bash -l
+
+#the "-l" in bash setting is necessary to indicate login shell (it also must be on top of the script)s
+#ulimit command sets the output limit to zerro, so that none of the spitted out error text will be recorded. This is to avoid filling up scratch under an unexpected error load 
+#the first 3 modules change the compiler to gcc
+#the 4th module loads gsl compatible with selected gsl version
+#the 5th module loads openblas, so that lapack will work 
+#the 6th&7th modules are necessary to use ublas. 5th is blas itself, and it depends on pyhton hence 7th)
+
+ulimit -c 0
+module unload compilers mpi mkl
+module load compilers/gnu/4.9.2
+module load gsl/1.16/gnu-4.9.2 
+module load openblas/0.2.14/gnu-4.9.2
+module load python/2.7.9
+module load boost/1_54_0/gnu-4.9.2
+
+#the path settings are necessary for pardiso
+export PATH=/home/ucbpnkh/LocalLibs/:$PATH
+export LD_LIBRARY_PATH=/home/ucbpnkh/LocalLibs/:$LD_LIBRARY_PATH
+export LIBRARY_PATH=/home/ucbpnkh/LocalLibs/:$LIBRARY_PATH
+export OMP_NUM_THREADS=4
+export OPENBLAS_NUM_THREADS=1
+
+mkdir /home/ucbpnkh/Scratch/bulkruns/Run07009/cont
+cat /home/ucbpnkh/Scratch/bulkruns/Run07009/cont/Out  >> /home/ucbpnkh/Scratch/bulkruns/Run07009/Out
+cat /home/ucbpnkh/Scratch/bulkruns/Run07009/cont/pressureData  >> /home/ucbpnkh/Scratch/bulkruns/Run07009/pressureData
+mv /home/ucbpnkh/Scratch/bulkruns/Run07009/cont/Save_Force /home/ucbpnkh/Scratch/bulkruns/Run07009/
+mv /home/ucbpnkh/Scratch/bulkruns/Run07009/cont/Save_Frame /home/ucbpnkh/Scratch/bulkruns/Run07009/
+mv /home/ucbpnkh/Scratch/bulkruns/Run07009/cont/Save_Growth /home/ucbpnkh/Scratch/bulkruns/Run07009/
+mv /home/ucbpnkh/Scratch/bulkruns/Run07009/cont/Save_GrowthRate /home/ucbpnkh/Scratch/bulkruns/Run07009/
+mv /home/ucbpnkh/Scratch/bulkruns/Run07009/cont/Save_Packing /home/ucbpnkh/Scratch/bulkruns/Run07009/
+mv /home/ucbpnkh/Scratch/bulkruns/Run07009/cont/Save_Proteins /home/ucbpnkh/Scratch/bulkruns/Run07009/
+mv /home/ucbpnkh/Scratch/bulkruns/Run07009/cont/Save_PhysicalProp /home/ucbpnkh/Scratch/bulkruns/Run07009/
+mv /home/ucbpnkh/Scratch/bulkruns/Run07009/cont/Save_TensionCompression /home/ucbpnkh/Scratch/bulkruns/Run07009/
+mv /home/ucbpnkh/Scratch/bulkruns/Run07009/cont/Save_SpecificElementAndNodeTypes /home/ucbpnkh/Scratch/bulkruns/Run07009/
+mv /home/ucbpnkh/Scratch/bulkruns/Run07009/cont/Save_GrowthRedistribution /home/ucbpnkh/Scratch/bulkruns/Run07009/
+mv /home/ucbpnkh/Scratch/bulkruns/Run07009/cont/Save_NodeBinding /home/ucbpnkh/Scratch/bulkruns/Run07009/
+mv /home/ucbpnkh/Scratch/bulkruns/Run07009/cont/Save_CollapseAndAdhesion /home/ucbpnkh/Scratch/bulkruns/Run07009/
+rm /home/ucbpnkh/Scratch/bulkruns/Run07009/Save_CollapseAndAdhesion 
+
+rm /home/ucbpnkh/Scratch/bulkruns/Run07009/cont/Out
+
+/home/ucbpnkh/Scratch/bin/TissueFolding -mode ContinueFromSave -i /home/ucbpnkh/Scratch/bulkruns/ModelInputs/modelinput07009 -dInput /home/ucbpnkh/Scratch/bulkruns/Run07009/  -od /home/ucbpnkh/Scratch/bulkruns/Run07009/cont/ > /home/ucbpnkh/Scratch/bulkruns/Run07009/cont/tmp
+grep Pipette /home/ucbpnkh/Scratch/bulkruns/Run07009/cont/tmp > /home/ucbpnkh/Scratch/bulkruns/Run07009/cont/pressureData
+
+# If the script can reach this point, then the wall clock time allowed the simulation to finish. I will catanate the 
+#   files again, to ensure that the continue check script will not re-submit this job, just to merge files.
+mkdir /home/ucbpnkh/Scratch/bulkruns/Run07009/cont
+cat /home/ucbpnkh/Scratch/bulkruns/Run07009/cont/Out  >> /home/ucbpnkh/Scratch/bulkruns/Run07009/Out
+cat /home/ucbpnkh/Scratch/bulkruns/Run07009/cont/pressureData  >> /home/ucbpnkh/Scratch/bulkruns/Run07009/pressureData
+mv /home/ucbpnkh/Scratch/bulkruns/Run07009/cont/Save_Force /home/ucbpnkh/Scratch/bulkruns/Run07009/
+mv /home/ucbpnkh/Scratch/bulkruns/Run07009/cont/Save_Frame /home/ucbpnkh/Scratch/bulkruns/Run07009/
+mv /home/ucbpnkh/Scratch/bulkruns/Run07009/cont/Save_Growth /home/ucbpnkh/Scratch/bulkruns/Run07009/
+mv /home/ucbpnkh/Scratch/bulkruns/Run07009/cont/Save_GrowthRate /home/ucbpnkh/Scratch/bulkruns/Run07009/
+mv /home/ucbpnkh/Scratch/bulkruns/Run07009/cont/Save_Packing /home/ucbpnkh/Scratch/bulkruns/Run07009/
+mv /home/ucbpnkh/Scratch/bulkruns/Run07009/cont/Save_Proteins /home/ucbpnkh/Scratch/bulkruns/Run07009/
+mv /home/ucbpnkh/Scratch/bulkruns/Run07009/cont/Save_PhysicalProp /home/ucbpnkh/Scratch/bulkruns/Run07009/
+mv /home/ucbpnkh/Scratch/bulkruns/Run07009/cont/Save_TensionCompression /home/ucbpnkh/Scratch/bulkruns/Run07009/
+mv /home/ucbpnkh/Scratch/bulkruns/Run07009/cont/Save_SpecificElementAndNodeTypes /home/ucbpnkh/Scratch/bulkruns/Run07009/
+mv /home/ucbpnkh/Scratch/bulkruns/Run07009/cont/Save_GrowthRedistribution /home/ucbpnkh/Scratch/bulkruns/Run07009/
+mv /home/ucbpnkh/Scratch/bulkruns/Run07009/cont/Save_NodeBinding /home/ucbpnkh/Scratch/bulkruns/Run07009/
+mv /home/ucbpnkh/Scratch/bulkruns/Run07009/cont/Save_CollapseAndAdhesion /home/ucbpnkh/Scratch/bulkruns/Run07009/
+
+rm /home/ucbpnkh/Scratch/bulkruns/Run07009/cont/Out
+rm /home/ucbpnkh/Scratch/bulkruns/Run07009/Save_CollapseAndAdhesion 
+rm /home/ucbpnkh/Scratch/bulkruns/Run07009/cont/pressureData
+

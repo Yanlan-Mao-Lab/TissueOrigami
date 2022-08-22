@@ -15,7 +15,6 @@ oldbuilds
 # Specific Files #
 ##################
 *gmon.out
-*Out
 moc_*
 *.pro.user
 *.pro-FORMAC
