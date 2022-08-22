@@ -200,7 +200,7 @@ class Test_MeshGeneration():
         shutil.move(raw_im_ele, gen_im_ele)
 
         # now cleanup the files we produced and copied across
-        cleanup([dst_outline, self.executable_loc + "/Points.node"])
+        cleanup([dst_outline, self.executable_loc + "/Points.node", self.executable_loc + "/NodesPreTesselation.out"])
 
         # PHASE 2: Extrude to 3 dimensions
 
