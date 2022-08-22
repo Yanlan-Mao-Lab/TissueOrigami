@@ -127,6 +127,7 @@ class Test_MeshGeneration():
         '''
         Regression test for the smallWingDisc mesh.
         Reference output: smallWingDisc.mesh
+        Intermediaries: WD_Points.1.node, WD_Points.1.ele
         '''
 
         # create the output directory if it doesn't already exist
@@ -137,25 +138,63 @@ class Test_MeshGeneration():
         ref_output = self.ref_location + "/smallWingDisc.mesh"
         # check this file can be found, fail if not
         assert os.path.exists(ref_output), "Could not find reference file: " + ref_output
-        # where to place the generated output
+
+        # reference intermediary output files
+        ref_im_nodes = self.ref_location + "/WD_Points.1.node"
+        ref_im_ele = self.ref_location + "/WD_Points.1.ele"
+        # check the files exist
+        assert os.path.exists(ref_im_nodes), "Could not find reference file: " + ref_im_nodes
+        assert os.path.exists(ref_im_ele), "Could not find reference file: " + ref_im_ele
+
+        # where to place the generated output and intermediary files
         gen_output = self.gen_location + "/smallWingDisc.mesh"
+        gen_im_nodes = self.gen_location + "/WD_Points.1.node"
+        gen_im_ele = self.gen_location + "/WD_Points.1.ele"
 
-        # copy input files to executable directory
-        src_tri = self.input_loc + "/SphericalTriangulation.txt"
-        dst_tri = self.executable_loc + "/SphericalTriangulation"
-        shutil.copyfile(src_tri, dst_tri)
+        # expected names of the intermediary files
+        raw_im_nodes = self.executable_loc + "/Points.1.node"
+        raw_im_ele = self.executable_loc + "/Points.1.ele"
 
-        # ./EllipseFromOutline -2 4.2 2 3 0, additional 5 for TissueType input allowance
-        command = "./" + self.executable_name + " -2 4.2 2 3 0 5"
+        # PHASE 1: Copy outline file and create 2D mesh
+
+        # copy files across to target directories
+        src_outline = self.input_loc + "/48hrDiscSymmetricOutline"
+        # create the target directory if it doesn't already exist
+        dst_outline = self.executable_loc + "/48hrDiscSymmetricOutline"
+        shutil.copyfile(src_outline, dst_outline)
+
+        # ./EllipseFromOutline 1 35.56 50 27.3 27.3 12.5 9 2 0  ./48hrDiscSymmetricOutline, insert 1 before the path to pass the TissueType
+        command = "./" + self.executable_name + " 1 35.56 50 27.3 27.3 12.5 9 2 0 1 " + dst_outline
         # run the executable...
         subprocess.run(command.split(), cwd=self.executable_loc)
-        # the output should then be moved (and renamed) to gen_output, in case we wish to inspect it later
+        # we should have produced the points.1.{ele, node} files
+        # copy these to the output directory (to preserve them for comparison later)
+        shutil.move(raw_im_nodes, gen_im_nodes)
+        shutil.move(raw_im_ele, gen_im_ele)
+
+        # now cleanup the files we produced and copied across
+        cleanup([dst_outline, self.executable_loc + "/Points.node"])
+
+        # PHASE 2: Extrude to 3 dimensions
+
+        # copy across the reference input files to the locations they are expected to be at
+        shutil.copyfile(ref_im_nodes, raw_im_nodes)
+        shutil.copyfile(ref_im_ele, raw_im_ele)
+
+        # ./EllipseFromOutline -1 5.2 1.0 3 1, extra 1 to pass the TissueType
+        command = "./" + self.executable_name + " -1 5.2 1.0 3 1 1"
+        # run the executable...
+        subprocess.run(command.split(), cwd=self.executable_loc)
+        # save the output
         shutil.move(self.raw_output_src, gen_output)
+        
+        # cleanup auxillary files
+        cleanup([raw_im_ele, raw_im_nodes, self.executable_loc + "/NodesPostTesselation.out", self.executable_loc + "/VectorsPostTesselation.out"])
 
-        # now compare the contents of the generated output and the reference output
+        # # PHASE 3: Compare intermediaries and output files
+
         assert filecmp.cmp(ref_output, gen_output, shallow=False), "Output meshfile mismatch between " + ref_output + " and " + gen_output
-
-        # clean up auxillary and copied files
-        cleanup([dst_tri, self.executable_loc + "/NodesPostTesselation.out", self.executable_loc + "/VectorsPostTesselation.out"])
+        assert filecmp.cmp(ref_im_nodes, gen_im_nodes, shallow=False), "Intermediary file mismatch between " + ref_im_nodes + " and " + gen_im_nodes
+        assert filecmp.cmp(ref_im_ele, gen_im_ele, shallow=False), "Intermediary file mismatch between " + ref_im_ele + " and " + gen_im_ele
 
         return
