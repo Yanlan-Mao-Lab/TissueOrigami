@@ -41,7 +41,7 @@ class Test_MeshGeneration():
         # reference output to compare to
         ref_output = self.ref_location + "/smallRectangle.mesh"
         # check this file can be found, fail if not
-        assert os.path.exists(ref_output, "Could not find reference file: " + ref_output)
+        assert os.path.exists(ref_output), "Could not find reference file: " + ref_output
         # where to place the generated output
         gen_output = self.gen_location + "/smallRectangle.mesh"
 
@@ -56,7 +56,7 @@ class Test_MeshGeneration():
         # ./EllipseFromOutline -1 5.2 2 3 0,
         command = "./" + self.executable_name + " -1 5.2 2 3 0"
         # run the executable...
-        subprocess.Popen(command.split(), cwd=self.executable_loc)
+        subprocess.run(command.split(), cwd=self.executable_loc)
         # the output should then be moved (and renamed) to gen_output, in case we wish to inspect it later
         shutil.move(self.raw_output_src, gen_output)
 

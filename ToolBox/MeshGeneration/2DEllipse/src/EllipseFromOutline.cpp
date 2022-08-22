@@ -2630,7 +2630,7 @@ int main(int argc, char **argv)
     // 4: x&y symmetric circle (half disc) and needs further code mdifications! -> Eliminate bluntTip function for type 4 with no x symmetricity! (half circle - not quarter)
     // 5: spherical organoid
     // 6: Tubular organoid
-        int selectTissueType = 5;
+        int selectTissueType = 1;
 
 	if (selectTissueType == 0){ // 0 : wingdisc48Hr, 
 		symmetricY = true;
