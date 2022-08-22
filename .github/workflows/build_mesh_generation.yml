@@ -19,6 +19,12 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v3
 
+      # Install the triangle dependency
+      - name: Install triangle
+        run: |
+          sudo apt-get update
+          sudo apt-get install triangle-bin
+
       # Install using the CMake instructions
       - name: Build EllipseFromOutline
         run: |

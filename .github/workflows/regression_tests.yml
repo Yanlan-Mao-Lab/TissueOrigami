@@ -1,6 +1,6 @@
 # Workflow to perform regression tests
 
-name: Regression Tests
+name: Mesh Generation Regression Tests
 
 # Workflow will run on pull requests, pushes to master directly, and if requested through the dispatch on Github
 on:
@@ -20,6 +20,25 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v3
 
+      # Install the triangle dependency
+      - name: Install triangle
+        run: |
+          sudo apt-get update
+          sudo apt-get install triangle-bin
+
+      # Install using the CMake instructions
+      - name: Build EllipseFromOutline
+        run: |
+          cd ${{ github.workspace }}/Toolbox/MeshGeneration/2DEllipse
+          mkdir build
+          cd build
+          cmake ../
+          cmake --build .
+      
+      - name: Move EllipseFromOutline to desired folder
+        run: |
+          mv ${{ github.workspace }}/Toolbox/MeshGeneration/2DEllipse/src/build/EllipsFromOutline ${{ github.workspace }}/Toolbox/MeshGeneration/2DEllipse/
+
       # Install test dependencies
       - name: Install test dependencies
         run: |
@@ -28,7 +47,7 @@ jobs:
           pip install pytest
 
       # Run pytest in the tests/regression directory
-      - name: Run regression tests via pytest
+      - name: Run mesh generation regression tests
         run: |
-          cd ${{ github.workspace }}/tests/regression
+          cd ${{ github.workspace }}/tests/mesh_gen_reg/
           pytest
