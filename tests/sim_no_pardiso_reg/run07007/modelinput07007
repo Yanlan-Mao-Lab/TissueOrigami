@@ -6,7 +6,7 @@ TypeOfCoordinateSystem:
   
 InputMeshParameters:
   MeshInputMode(int-seeDocumentation): 4
-  MeshFile(full-path): /Users/nkhalilgharibi/TissueFoldingProject/YanlanMaoLabRepo/TissueOrigami/ToolBox/MeshGeneration/2DEllipse/smallRectangle.mesh
+  MeshFile(full-path): ./smallRectangle.mesh
   symmetricInX(bool): 0
   symmetricInY(bool): 0
   symmetricInZ(bool): 0
@@ -49,9 +49,9 @@ YoungsModulusTimeseriesGrids:
   applyToBasalLayer(bool): 0
   applyToPeripodialECM(bool): 0
   applyToColumnarECM(bool): 1
-  Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/YanlanMaoLabRepo/TissueOrigami/ToolBox/StiffnessTimeSeries/Stiffness96hrRectangleWing_Reduction_0
+  Filename(full-path): ./Stiffness96hrRectangleWing_Reduction_0
   WhenToApplyInput(sec): 0
-  Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/YanlanMaoLabRepo/TissueOrigami/ToolBox/StiffnessTimeSeries/Stiffness96hrRectangleWing_Reduction_4
+  Filename(full-path): ./Stiffness96hrRectangleWing_Reduction_4
   WhenToApplyInput(sec): 600
 
 PysicalProperties:
@@ -84,7 +84,7 @@ GrowthFunctionType(int-seeDocumentation): 3
   ApplyToPeripodialMembrane(bool): 0
   ApplyToBasalECM(bool): 0
   ApplyToLateralECM(bool): 0
-  Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/YanlanMaoLabRepo/TissueOrigami/ToolBox/GrowthRates/ShapeChangeRate96hrRectangleWingZ_Reduction_3
+  Filename(full-path): ./ShapeChangeRate96hrRectangleWingZ_Reduction_3
   zRange: 0.5 1.0
 
 GrowthFunctionType(int-seeDocumentation): 3
@@ -94,7 +94,7 @@ GrowthFunctionType(int-seeDocumentation): 3
   ApplyToPeripodialMembrane(bool): 0
   ApplyToBasalECM(bool): 0
   ApplyToLateralECM(bool): 0
-  Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/YanlanMaoLabRepo/TissueOrigami/ToolBox/GrowthRates/ShapeChangeRate96hrRectangleWingXY_Reduction_3
+  Filename(full-path): ./ShapeChangeRate96hrRectangleWingXY_Reduction_3
   zRange: 0.5 1.0
 
 ExplicitECMOptions:
