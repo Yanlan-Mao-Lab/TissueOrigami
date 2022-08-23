@@ -36,6 +36,7 @@ jobs:
       # Install EllipseFromOutline using CMake instructions
       - name: Build EllipseFromOutline
         run: |
+          ls
           cd ${{ github.workspace }}/ToolBox/MeshGeneration/2DEllipse/src
           mkdir build
           cd build
