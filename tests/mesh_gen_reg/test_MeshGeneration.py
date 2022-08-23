@@ -49,7 +49,6 @@ class Test_MeshGeneration():
     Test that the functionality of the mesh generation executable has not been signficantly altered by changes to the codebase (regression test).
 
     These tests assume that the mesh generation executable is located in Toolbox/MeshGeneraion/2DEllipse/ and has been built using the CMake instructions.
-    The present name of the executable is EllipseFromOutline.
 
     Attributes
     ----------
