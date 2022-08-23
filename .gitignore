@@ -3,6 +3,7 @@
 *~
 .*
 !/.gitignore
+!.github/workflows/*
 Archive/
 bin/
 RemoteSystemsTempFiles/
