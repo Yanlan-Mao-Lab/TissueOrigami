@@ -6,7 +6,7 @@ TypeOfCoordinateSystem:
   
 InputMeshParameters:
   MeshInputMode(int-seeDocumentation): 4
-  MeshFile(full-path): /Users/nkhalilgharibi/TissueFoldingProject/YanlanMaoLabRepo/TissueOrigami/ToolBox/MeshGeneration/2DEllipse/smallSphere.mesh
+  MeshFile(full-path): ./smallSphere.mesh
   symmetricInX(bool): 0
   symmetricInY(bool): 0
   symmetricInZ(bool): 1
@@ -49,9 +49,9 @@ YoungsModulusTimeseriesGrids:
   applyToBasalLayer(bool): 0
   applyToPeripodialECM(bool): 0
   applyToColumnarECM(bool): 1
-  Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/YanlanMaoLabRepo/TissueOrigami/ToolBox/StiffnessTimeSeries/StiffnessMatrix_200_200_homogeneous.txt
+  Filename(full-path): ./StiffnessMatrix_200_200_homogeneous.txt
   WhenToApplyInput(sec): 0
-  Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/YanlanMaoLabRepo/TissueOrigami/ToolBox/StiffnessTimeSeries/StiffnessMatrix_200_200_20%_new.txt
+  Filename(full-path): ./StiffnessMatrix_200_200_20%_new.txt
   WhenToApplyInput(sec): 6000
 
 PysicalProperties:

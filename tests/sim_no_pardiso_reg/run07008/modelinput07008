@@ -6,7 +6,7 @@ TypeOfCoordinateSystem:
   
 InputMeshParameters:
   MeshInputMode(int-seeDocumentation): 4
-  MeshFile(full-path):     /Users/nkhalilgharibi/TissueFoldingProject/YanlanMaoLabRepo/TissueOrigami/ToolBox/MeshGeneration/2DEllipse/smallWingDisc.mesh
+  MeshFile(full-path): ./smallWingDisc.mesh
   symmetricInX(bool): 0
   symmetricInY(bool): 1
   symmetricInZ(bool): 0
