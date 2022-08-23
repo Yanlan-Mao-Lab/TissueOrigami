@@ -26,9 +26,9 @@ class Test_SimulationNoPardiso():
     gen_res_subdir = "generatd_out"
 
     # location of the executable (relative to this file)
-    exe_loc = dir_path + "../../TissueFolding/"
+    exe_loc = dir_path + "/../../TissueFolding"
     # name of the executable
-    exe_call = "TissueFolding"
+    exe_name = "TissueFolding"
 
     # variables that will store the information each test needs to run on
 
@@ -51,7 +51,7 @@ class Test_SimulationNoPardiso():
                 "Save_Frame", \
                 "Save_Growth", \
                 "Save_GrowthRate", \
-                "Save_GrwothRedistribution", \
+                "Save_GrowthRedistribution", \
                 "Save_NodeBinding", \
                 "Save_Packing", \
                 "Save_PhysicalProp", \
@@ -79,7 +79,9 @@ class Test_SimulationNoPardiso():
 
         # now that files have been copied across, run the executable with the appropriate command-line options
         command = "./" + self.exe_name + " -i ./" + model_input_file + " -mode SimulationOnTheGo -od ."
-        subprocess.run(command.split(), cwd=self.exe_loc)
+        # the tmp output is the result of piping stdout to the file tmp when running the simulation executable
+        # to do this with subprocess, we can just map stdout to a file of the same name
+        subprocess.run(command.split(), cwd=self.exe_loc, stdout = open(self.exe_loc + "/tmp", "w") )
 
         # once the run is over, move the output files back to the testing area, in the generated results location
         gen_res_loc = run_folder + "/" + self.gen_res_subdir
@@ -99,9 +101,14 @@ class Test_SimulationNoPardiso():
         # where the reference outputs are stored
         ref_res_loc = run_folder + "/" + self.ref_res_subdir
         for file in self.outputs:
-            ref_op = ref_res_loc + "/" + file
-            gen_op = gen_res_loc + "/" + file
-            assert filecmp(ref_op, gen_op, shallow=False), "Output mismatch between " + ref_op + " and " + gen_op
+            # tmp contains absolute paths - there is no way we can get these to match the reference files
+            # as such, skip over these files
+            if file == "tmp":
+                continue
+            else:
+                ref_op = ref_res_loc + "/" + file
+                gen_op = gen_res_loc + "/" + file
+                assert filecmp.cmp(ref_op, gen_op, shallow=False), "Output mismatch between " + ref_op + " and " + gen_op
         
         return
 
