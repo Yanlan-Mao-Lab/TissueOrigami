@@ -12,6 +12,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # FOR RUNNING THE CODE, the following environment variables must be set!
 # LD_LIBRARY_PATH must point to the Pardiso library (.so file)
 # OMP_NUM_THREADS (if using multi-threaded version)
+# The license key must be in the home directory OR the directory the executable is run from
 
 # FOR LINKING, THE FOLLOWING COMMANDS ARE USED ON LINUX ARCHITECTURES!
 # gcc <source/objects files> -o <executable>
