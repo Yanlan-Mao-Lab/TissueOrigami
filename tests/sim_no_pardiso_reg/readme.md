@@ -40,3 +40,48 @@ GrowthFunctionType(int-seeDocumentation): 3
     InitialTime(sec): 60
     Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/YanlanMaoLabRepo/TissueOrigami/ToolBox/GrowthRates/ShapeChangeRate96hrRectangleWingXY_Reduction_3
 ```
+
+### Run 07008
+
+#### File dependencies:
+
+This run requires access to the following files:
+- `smallWingDisc.mesh`
+
+The `.mesh` file will appear as a reference output for the mesh generation regression tests - we can later save storage space by pointing to this file, rather than having two copies of said file in the repository if we so wish.
+
+#### Hard-paths changelog
+
+Input file changes have been conducted, so as to remove hard-coded paths.
+
+```bash
+InputMeshParameters:
+  MeshFile(full-path): /Users/nkhalilgharibi/TissueFoldingProject/YanlanMaoLabRepo/TissueOrigami/ToolBox/MeshGeneration/2DEllipse/smallWingDisc.mesh
+```
+
+### Run 07009
+
+#### File dependencies:
+
+This run requires access to the following files:
+- `smallSphere.mesh`
+- `StiffnessMatrix_200_200_homogeneous.txt`
+- `StiffnessMatrix_200_200_20%_new.txt`
+
+The `.mesh` file will appear as a reference output for the mesh generation regression tests - we can later save storage space by pointing to this file, rather than having two copies of said file in the repository if we so wish.
+
+#### Hard-paths changelog
+
+Input file changes have been conducted, so as to remove hard-coded paths.
+
+```bash
+InputMeshParameters:
+  MeshFile(full-path): /Users/nkhalilgharibi/TissueFoldingProject/YanlanMaoLabRepo/TissueOrigami/ToolBox/MeshGeneration/2DEllipse/smallSphere.mesh
+
+YoungsModulusTimeseriesGrids:
+  Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/YanlanMaoLabRepo/TissueOrigami/ToolBox/StiffnessTimeSeries/StiffnessMatrix_200_200_homogeneous.txt
+  WhenToApplyInput(sec): 0
+  Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/YanlanMaoLabRepo/TissueOrigami/ToolBox/StiffnessTimeSeries/StiffnessMatrix_200_200_20%_new.txt
+  WhenToApplyInput(sec): 6000
+```
+

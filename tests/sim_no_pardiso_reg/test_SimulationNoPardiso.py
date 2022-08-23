@@ -33,15 +33,23 @@ class Test_SimulationNoPardiso():
     # variables that will store the information each test needs to run on
 
     # the run numbers
-    run_numbers = [7]#[7, 8, 9]
+    run_numbers = [7, 8, 9]
 
     # files that the run needs to be able to see
     files_needed = dict()
+    # run 07007 needs access to the following (non-modelinput) files
     files_needed[7] = [ "smallRectangle.mesh", \
                         "Stiffness96hrRectangleWing_Reduction_0", \
                         "Stiffness96hrRectangleWing_Reduction_4", \
                         "ShapeChangeRate96hrRectangleWingZ_Reduction_3", \
                         "ShapeChangeRate96hrRectangleWingXY_Reduction_3"
+    ]
+    # run 07008 needs access to the following (non-modelinput) files
+    files_needed[8] = [ "smallWingDisc.mesh" ]
+    # run 07009 needs access to the following (non-modelinput) files
+    files_needed[9] = [ "smallSphere.mesh", \
+                        "StiffnessMatrix_200_200_homogeneous.txt", \
+                        "StiffnessMatrix_200_200_20%_new.txt"
     ]
 
     # output file names that the simulation produces
