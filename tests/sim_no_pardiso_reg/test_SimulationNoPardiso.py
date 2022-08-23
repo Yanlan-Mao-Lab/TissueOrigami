@@ -120,7 +120,7 @@ class Test_SimulationNoPardiso():
         
         return
 
-    def test_run07007(self):
+    def test_allruns(self):
         for rn in self.run_numbers:
             self.launch_run0700x(rn)
         return

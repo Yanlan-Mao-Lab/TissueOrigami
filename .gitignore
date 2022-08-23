@@ -31,3 +31,4 @@ moc_*
 # pytest outputs #
 ##################
 **__pycache__**
+**/generatd_out/**
