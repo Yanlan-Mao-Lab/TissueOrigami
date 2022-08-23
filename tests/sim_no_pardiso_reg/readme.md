@@ -66,7 +66,7 @@ InputMeshParameters:
 This run requires access to the following files:
 - `smallSphere.mesh`
 - `StiffnessMatrix_200_200_homogeneous.txt`
-- `StiffnessMatrix_200_200_20%_new.txt`
+- `StiffnessMatrix_200_200_20_new.txt`
 
 The `.mesh` file will appear as a reference output for the mesh generation regression tests - we can later save storage space by pointing to this file, rather than having two copies of said file in the repository if we so wish.
 

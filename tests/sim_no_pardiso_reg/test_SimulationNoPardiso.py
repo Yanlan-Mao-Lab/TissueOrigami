@@ -49,7 +49,7 @@ class Test_SimulationNoPardiso():
     # run 07009 needs access to the following (non-modelinput) files
     files_needed[9] = [ "smallSphere.mesh", \
                         "StiffnessMatrix_200_200_homogeneous.txt", \
-                        "StiffnessMatrix_200_200_20%_new.txt"
+                        "StiffnessMatrix_200_200_20_new.txt"
     ]
 
     # output file names that the simulation produces
