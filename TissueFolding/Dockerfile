@@ -6,9 +6,20 @@ RUN apt-get update
 # copy source files so that we can check if the build succeeds
 COPY ./SourceCode /TissueFolding
 
+# Build requirements, and compiler dependencies for OpenBLAS
+RUN apt-get install -y gcc g++ gfortran cmake
+
 # Install TissueFolding requirements next
-# NEED TO LOOKUP THE PACKAGE NAMES IN apt REPOSITORIES
-RUN apt-get install -y gcc g++ gfortran
 
+# Compiler for the TissueFolding executable itself
+# OpenBLAS 0.2.14, gsl 1.16, boost 1_54_0
+RUN apt-get install -y libopenblas-dev libgsl-dev libboost-all-dev
 
-#qt=4.8.6 gsl=1.16 openblas=0.2.14 python=2.7.9 boost=1_54_0
+# Attempt to build TissueFolding
+RUN cd TissueFolding/ &&\
+    mkdir build &&\
+    cd build &&\
+    cmake .. &&\
+    cmake --build . &&\
+    mv ./TissueFolding ../ &&\
+    rm -r ./*
