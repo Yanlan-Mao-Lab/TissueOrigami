@@ -9,8 +9,6 @@ This run requires access to the following files:
 - `ShapeChangeRate96hrRectangleWingZ_Reduction_3`
 - `ShapeChangeRate96hrRectangleWingXY_Reduction_3`
 
-The `.mesh` file will appear as a reference output for the mesh generation regression tests - we can later save storage space by pointing to this file, rather than having two copies of said file in the repository if we so wish.
-
 #### Hard-paths changelog
 
 Input file changes have been conducted, so as to remove hard-coded paths.
