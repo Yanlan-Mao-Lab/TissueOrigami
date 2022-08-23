@@ -27,7 +27,7 @@ Instructions for _the original_ production of each mesh file (given it's inputs)
 ### Small Rectangle
 
 - The `smallRectangle.ele` and `smallRectangle.node` input files have to be moved to the folder `TissueOrigami/ToolBox/MeshGeneration/2DEllipse` (although moving the executable to the same directory as the files will likely also work) and renamed to `Points.1.ele` and `Points.1.node` respectively.
-- In `EllipseFromOutline.cpp`, the manually change `selectTissueType=1` and then in the condition `else if(selectTissueType == 1)`, set the following variables:
+- In `EllipseFromOutline.cpp`, manually change `selectTissueType=1` and then in the condition `else if(selectTissueType == 1)`, set the following variables:
 ```cpp
     actinHeight = 2.0;
     ECMHeight = 0.2;
