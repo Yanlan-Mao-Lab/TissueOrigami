@@ -1,6 +1,6 @@
 # Regression Tests for mesh generation executable
 
-The `mesh_gen_reg` folder contains the scripts and files for running regression tests on the mesh-generation executable, currently named `EllipseFromOutline`.
+The `mesh_gen_reg` folder contains the scripts and files for running regression tests on the mesh-generation executable.
 Below is an outline of the _original_ mesh generation process in each of the test cases that are provided.
 As the codebase is developed, the tests themselves will adapt to take new input formats and adjust to code refactorings that take place, but ultimately must reproduce the following outputs from the given inputs at all times.
 
