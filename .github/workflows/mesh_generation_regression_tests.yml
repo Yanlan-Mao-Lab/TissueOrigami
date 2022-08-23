@@ -39,21 +39,21 @@ jobs:
         run: |
           mv ${{ github.workspace }}/ToolBox/MeshGeneration/2DEllipse/src/build/EllipseFromOutline ${{ github.workspace }}/ToolBox/MeshGeneration/2DEllipse/
 
-  # # Run regression tests for mesh generation
-  # mesh_generation_regression_tests:
-  #   name: Regression tests - mesh generation
-  #   needs: build_mesh_generation_executable
-  #   runs-on: ubuntu-latest
+  # Run regression tests for mesh generation
+  mesh_generation_regression_tests:
+    name: Regression tests - mesh generation
+    needs: build_mesh_generation_executable
+    runs-on: ubuntu-latest
       
-  #     # Install test dependencies
-  #     - name: Install test dependencies
-  #       run: |
-  #         sudo apt-get update
-  #         sudo apt-get install python3
-  #         pip install pytest
+      # Install test dependencies
+      - name: Install test dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install python3
+          pip install pytest
 
-  #     # Run pytest in the tests/regression directory
-  #     - name: Run mesh generation regression tests
-  #       run: |
-  #         cd ${{ github.workspace }}/tests/mesh_gen_reg/
-  #         pytest
+      # Run pytest in the tests/regression directory
+      - name: Run mesh generation regression tests
+        run: |
+          cd ${{ github.workspace }}/tests/mesh_gen_reg/
+          pytest
