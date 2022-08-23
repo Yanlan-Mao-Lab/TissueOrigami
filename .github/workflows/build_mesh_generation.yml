@@ -14,7 +14,7 @@ jobs:
   # Build mesh generation executable
   build_EllipseFromOutline:
     
-    runs-on: ubtuntu-lastest
+    runs-on: ubuntu-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
