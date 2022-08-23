@@ -1,6 +1,6 @@
 # Workflow to build executables in the TissueFolding pipeline and run regression tests on them
 
-name: Build and Regression Tests
+name: Build and Regression Tests for Mesh Generation
 
 # Set to run on pull requests and pushes to ARCCollaboration or to master directly
 on:
@@ -10,24 +10,20 @@ on:
     branches: ["master", "ARCCollaboration"]
 
 jobs:
-  # check out repository
-  checkout_repository:
-    name: checkout repository
+  mesh_generation_build_and_test:
+    name: Mesh Generation - Build and Regression Tests
     runs-on: ubuntu-latest
     steps:
+      # check out the repository
       - name: Check out repository
         uses: actions/checkout@v3
       
+      # update apt
       - name: Update apt
         run: |
           sudo apt-get update
   
-  # attempt to build EllipseFromOutline
-  build_EllipseFromOutline:
-    name: build EllipseFromOutline
-    runs-on: ubuntu-latest
-    needs: checkout_repository
-    steps:
+      # Begin attempts to build EllipseFromOutline
       # Install triangle dependency
       - name: Install triangle
         run: |
@@ -36,7 +32,6 @@ jobs:
       # Install EllipseFromOutline using CMake instructions
       - name: Build EllipseFromOutline
         run: |
-          ls
           cd ${{ github.workspace }}/ToolBox/MeshGeneration/2DEllipse/src
           mkdir build
           cd build
@@ -48,12 +43,7 @@ jobs:
         run: |
           mv ${{ github.workspace }}/ToolBox/MeshGeneration/2DEllipse/src/build/EllipseFromOutline ${{ github.workspace }}/ToolBox/MeshGeneration/2DEllipse/
   
-  # Run regression tests for mesh generation
-  mesh_generation_regression_tests:
-    name: Regression Tests - Mesh Generation
-    needs: build_EllipseFromOutline
-    runs-on: ubuntu-latest
-    steps:
+      # Run regression tests for mesh generation
       # Install test dependencies
       - name: Install test dependencies
         run: |
