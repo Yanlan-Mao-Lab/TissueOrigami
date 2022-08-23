@@ -3,6 +3,8 @@
 The inputs for each test case `x` can be found in the respective `run0700x` directory.
 In order to avoid hard-coded paths, the input files have had any absolute paths in them replaced by relative paths, _assuming that these files are now present in the same directory as the executable_ `TissueFolding`, when it is executed.
 
+The `TissueFolding` executable itself is assumed to be in the `TissueFolding/` subdirectory, which has relative path `../../TissueFolding/` from this readme.
+
 ### Run 07007
 
 #### File dependencies:
