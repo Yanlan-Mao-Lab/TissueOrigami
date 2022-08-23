@@ -78,7 +78,7 @@ public:
 	bool updateRadia();
 	void addMidLine();
 	void Tesselate2D(string input_nodes, string output_nodes);
-	void readInTesselation2D(string input_meshfile, string input_nodes, string output_vecs, string output_nodes);
+	void readInTesselation2D(string input_elements, string input_nodes, string output_vecs, string output_nodes);
 	void readInTesselation3D(string input_triangulation, string output_vecs, string output_nodes);
 	void linkerTesselate2D();
 	void linkerReadInTesselation2D();
@@ -120,7 +120,7 @@ public:
 	void addLayersToOutline(int nLayer, double* bounidngBox, vector <float>&  x, vector <float>& y);
 	void writeInPosVectors(vector <float>&  x, vector <float>& y);
 	void peripodialSparseTesselate2D(bool symmetricX, bool symmetricY, string input_nodes);
-	void peripodialReadInTesselation2D(string input_nodes, string input_mesh);
+	void peripodialReadInTesselation2D(string input_nodes, string input_elements);
 };
 
 EllipseLayoutGenerator::EllipseLayoutGenerator(double r1_1, double r1_2, double r2_1, double r2_2, double sideLen, bool xsymmetry, bool ysymmetry, double condensation){
@@ -260,7 +260,7 @@ void EllipseLayoutGenerator::peripodialSparseTesselate2D(bool symmetricX, bool s
 	system(sysCommand.c_str());
 }
 
-void EllipseLayoutGenerator::peripodialReadInTesselation2D(string input_nodes, string input_mesh){
+void EllipseLayoutGenerator::peripodialReadInTesselation2D(string input_nodes, string input_elements){
 	cout<<" start of read in peripodial tesselation, size of points: "<<posx.size()<<" size of tissue shape: "<<tissueType.size()<<endl;	
 	ifstream NodeFile;	
 	NodeFile.open(input_nodes, ifstream::in);
@@ -307,21 +307,21 @@ void EllipseLayoutGenerator::peripodialReadInTesselation2D(string input_nodes, s
 			}
 		}
 	}
-	ifstream MeshFile;	
-	MeshFile.open(input_mesh, ifstream::in);
+	ifstream EleFile;	
+	EleFile.open(input_elements, ifstream::in);
 	//readHeader:
 	int ntri;
-	MeshFile>>ntri;
-	MeshFile>>nodesPerTri;
-	MeshFile>>nAttributes;
+	EleFile>>ntri;
+	EleFile>>nodesPerTri;
+	EleFile>>nAttributes;
 	cout<<" ntri, nodesPerTri, nAttributes: "<<ntri<<" "<<nodesPerTri<<" "<<nAttributes<<endl;
 	for (int i=0; i<ntri; ++i){
 		int triId;
-		MeshFile>>triId;
+		EleFile>>triId;
 		int* pnts;
 		pnts = new int[3];
 		for (int j=0;j<3;++j){
-			MeshFile >> pnts[j];
+			EleFile >> pnts[j];
 		}
 		//Now I have all the points, if all points are on the border of the columner, I will
 		//skip this triangle:
@@ -349,7 +349,7 @@ void EllipseLayoutGenerator::peripodialReadInTesselation2D(string input_nodes, s
 		periLinks0.push_back(pnts[2]);
 		periLinks1.push_back(pnts[0]);
 	}
-	MeshFile.close();
+	EleFile.close();
 }
 
 void EllipseLayoutGenerator::linkerReadInTesselation2D(){
@@ -502,26 +502,26 @@ void EllipseLayoutGenerator::readInTesselation3D(string input_triangulation, str
 }
 
 
-void EllipseLayoutGenerator::readInTesselation2D(string input_meshfile, string input_nodes, string output_vecs, string output_nodes){
+void EllipseLayoutGenerator::readInTesselation2D(string input_elements, string input_nodes, string output_vecs, string output_nodes){
 	cout<<" start of read in tesselation, size of points: "<<posx.size()<<" size of tissue shape: "<<tissueType.size()<<endl;
 		
-	ifstream MeshFile;
-	MeshFile.open(input_meshfile, ifstream::in);
+	ifstream EleFile;
+	EleFile.open(input_elements, ifstream::in);
 	// readHeader:
 	int ntri;
-	MeshFile>>ntri;
+	EleFile>>ntri;
 	int nodesPerTri;
-	MeshFile>>nodesPerTri;
+	EleFile>>nodesPerTri;
 	int nAttributes;
-	MeshFile>>nAttributes;
+	EleFile>>nAttributes;
         cout<<"line 0:"<<ntri<<" "<<nodesPerTri<<" "<<nAttributes<<endl;
 	for (int i=0; i<ntri; ++i){
 		int triId;
-		MeshFile>>triId;
+		EleFile>>triId;
 		int* pnts;
 		pnts = new int[3];
 		for (int j=0;j<3;++j){
-			MeshFile >> pnts[j];
+			EleFile >> pnts[j];
 		}
 		triangles.push_back(pnts);
 		Links0.push_back(pnts[0]);
@@ -534,7 +534,7 @@ void EllipseLayoutGenerator::readInTesselation2D(string input_meshfile, string i
 		Links1.push_back(pnts[0]);
                 cout<<"Third vector: Link0: "<<pnts[2]<<"Link1: "<<pnts[3]<<endl;
 	}
-	MeshFile.close();
+	EleFile.close();
 	ifstream NodeFile;	
 	NodeFile.open(input_nodes, ifstream::in);
 	int nNode;
