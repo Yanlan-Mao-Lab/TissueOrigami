@@ -1,7 +1,6 @@
 ## test_regression.py
 ## Created by: William Graham, 2022-08-04
 
-from cgi import test
 import os, filecmp, shutil, subprocess
 
 def cleanup(fnames):
