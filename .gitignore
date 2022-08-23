@@ -28,4 +28,6 @@ moc_*
 *.o
 *.so
 
-
+# pytest outputs #
+##################
+**__pycache__**
