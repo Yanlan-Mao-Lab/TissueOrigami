@@ -2,7 +2,8 @@ TypeOfCoordinateSystem:
   UseXYCoordinatesforRelativePositions(bool): 1
   UsePolarCoordinatesforRelativePositions(bool): 0
   UseCylindricalCoordintesforRelativePositions(bool): 0
-    
+  
+  
 InputMeshParameters:
   MeshInputMode(int-seeDocumentation): 4
   MeshFile(full-path): ./smallWingDisc.mesh
