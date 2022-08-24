@@ -1,5 +1,5 @@
-import os, filecmp, shutil, subprocess, glob
-from weakref import ref
+import os, filecmp, shutil, subprocess
+import pytest
 
 def cleanup(fnames):
     '''
@@ -68,9 +68,14 @@ class Test_SimulationNoPardiso():
                 "tmp"
     ]
 
-    def launch_run0700x(self, run_number):
+    @pytest.mark.parametrize('run_number', run_numbers)
+    def test_run0700x(self, run_number):
         '''
-        
+        Runs the simulation run0700{run_number} (without Pardiso) and compares the results to the reference outputs.
+
+        Parameters
+        ----------
+        run_number: \t Element of self.run_numbers, specifies the run number to execute.
         '''
 
         # this is the folder which we will be copying from/to, and which contains the reference outputs
@@ -116,11 +121,5 @@ class Test_SimulationNoPardiso():
             else:
                 ref_op = ref_res_loc + "/" + file
                 gen_op = gen_res_loc + "/" + file
-                assert filecmp.cmp(ref_op, gen_op, shallow=False), "Output mismatch between " + ref_op + " and " + gen_op
-        
-        return
-
-    def test_allruns(self):
-        for rn in self.run_numbers:
-            self.launch_run0700x(rn)
+                assert filecmp.cmp(ref_op, gen_op, shallow=False), "Output mismatch between: " + ref_op + " and " + gen_op
         return

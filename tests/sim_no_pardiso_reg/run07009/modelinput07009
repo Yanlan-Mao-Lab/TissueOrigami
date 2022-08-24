@@ -51,7 +51,7 @@ YoungsModulusTimeseriesGrids:
   applyToColumnarECM(bool): 1
   Filename(full-path): ./StiffnessMatrix_200_200_homogeneous.txt
   WhenToApplyInput(sec): 0
-  Filename(full-path): ./StiffnessMatrix_200_200_20%_new.txt
+  Filename(full-path): ./StiffnessMatrix_200_200_20_new.txt
   WhenToApplyInput(sec): 6000
 
 PysicalProperties:
