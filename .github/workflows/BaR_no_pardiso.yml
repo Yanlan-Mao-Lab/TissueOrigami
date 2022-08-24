@@ -1,0 +1,54 @@
+# Workflow to build TissueFolding without Pardiso and run regression checks
+
+name: Build and Regression Tests for TissueFolding (non-Pardiso)
+
+# Set to run on pull requests and pushes to ARCCollaboration or to master directly
+on:
+  push:
+    branches: ["master", "ARCCollaboration"]
+  pull_request:
+    branches: ["master", "ARCCollaboration"]
+
+jobs:
+  # Build TissueFolding without pardiso and run regression checks
+  TissueFolding_no_Pardiso:
+    name: TissueFolding (no Pardiso) - Build and Regression Tests
+    runs-on: ubuntu-latest
+    steps:
+      # check out repository
+      - name: Check out repository
+        uses: actions/checkout@v3
+      
+      # Install build dependencies
+      # GitHub ubuntu-latest runners have preinstalled: g++ gcc gfortran libgsl-dev
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install libopenblas-dev libboost-all-dev
+      
+      # Build TissueFolding using the CMake instructions
+      - name: Build TissueFolding
+        run: |
+          cd ${{ github.workspace }}/TissueFolding/SourceCode/
+          mkdir build
+          cd build
+          cmake ..
+          cmake --build .
+      
+      # Move TissueFolding to the expected directory for testing
+      - name: Move TissueFolding
+        run: |
+          mv ${{ github.workspace }}/TissueFolding/SourceCode/build/TissueFolding ${{ github.workspace }}/TissueFolding/
+      
+      # Run regression tests for non-Pardiso simulation
+      # Install test dependencies
+      - name: Install test dependencies
+        run: |
+          sudo apt-get install python3
+          pip install pytest
+      
+      # Run pytest in the tests/sim_no_pardiso_reg/ directory
+      - name: Run TissueFolding (non-Pardiso) regression tests
+        run: |
+          cd ${{ github.workspace }}/tests/sim_no_pardiso_reg/
+          pytest
