@@ -28,3 +28,5 @@ Then run
 mv ./TissueFolding ../../
 ```
 to move the `TissueFolding` executable out of the build directory and into the `TissueFolding` directory.
+
+## Building with Pardiso
