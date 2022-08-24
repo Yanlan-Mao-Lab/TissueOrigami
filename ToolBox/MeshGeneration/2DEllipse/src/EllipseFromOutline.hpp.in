@@ -1,0 +1,7 @@
+// version numbers
+#define Tutorial_VERSION_MAJOR @Tutorial_VERSION_MAJOR@
+#define Tutorial_VERSION_MINOR @Tutorial_VERSION_MINOR@
+
+// tell the source where to find triangle
+//#define TRIANGLE_PATH "../triangle/triangle"
+#define TRIANGLE_PATH "@TRIANGLE_PATH@"

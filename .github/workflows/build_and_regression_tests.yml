@@ -1,0 +1,57 @@
+# Workflow to build executables in the TissueFolding pipeline and run regression tests on them
+
+name: Build and Regression Tests for Mesh Generation
+
+# Set to run on pull requests and pushes to ARCCollaboration or to master directly
+on:
+  push:
+    branches: ["master", "ARCCollaboration"]
+  pull_request:
+    branches: ["master", "ARCCollaboration"]
+
+jobs:
+  mesh_generation_build_and_test:
+    name: Mesh Generation - Build and Regression Tests
+    runs-on: ubuntu-latest
+    steps:
+      # check out the repository
+      - name: Check out repository
+        uses: actions/checkout@v3
+      
+      # update apt
+      - name: Update apt
+        run: |
+          sudo apt-get update
+  
+      # Begin attempts to build EllipseFromOutline
+      # Install triangle dependency
+      - name: Install triangle
+        run: |
+          sudo apt-get install triangle-bin
+      
+      # Install EllipseFromOutline using CMake instructions
+      - name: Build EllipseFromOutline
+        run: |
+          cd ${{ github.workspace }}/ToolBox/MeshGeneration/2DEllipse/src
+          mkdir build
+          cd build
+          cmake ..
+          cmake --build .
+      
+      # Relocate EllipseFromOutline to expected folder for runs
+      - name: Relocate EllipseFromOutline
+        run: |
+          mv ${{ github.workspace }}/ToolBox/MeshGeneration/2DEllipse/src/build/EllipseFromOutline ${{ github.workspace }}/ToolBox/MeshGeneration/2DEllipse/
+  
+      # Run regression tests for mesh generation
+      # Install test dependencies
+      - name: Install test dependencies
+        run: |
+          sudo apt-get install python3
+          pip install pytest
+      
+      # Run pytest in the tests/mesh_gen_reg directory
+      - name: Run mesh generation regression tests
+        run: |
+          cd ${{ github.workspace }}/tests/mesh_gen_reg/
+          pytest

@@ -3,6 +3,7 @@
 *~
 .*
 !/.gitignore
+!.github/workflows/*
 Archive/
 bin/
 RemoteSystemsTempFiles/
@@ -18,6 +19,7 @@ oldbuilds
 moc_*
 *.pro.user
 *.pro-FORMAC
+tests/**/gen_outputs/
 
 # compiled source #
 ###################
@@ -32,3 +34,9 @@ moc_*
 ##################
 **__pycache__**
 **/generatd_out/**
+
+# compiled binary #
+###################
+**triangle
+**EllipseFromOutline
+**TissueFolding
