@@ -41,6 +41,7 @@ add_executable(TissueFolding
 
 target_include_directories(TissueFolding PUBLIC
                 "${PROJECT_SOURCE_DIR}"
+                "${PROJECT_BINARY_DIR}"
 )
 
 target_compile_options(TissueFolding PUBLIC
@@ -52,8 +53,4 @@ target_link_libraries(TissueFolding PUBLIC
                 gslcblas
                 gomp
                 lapack
-)
-
-target_include_directories(TissueFolding PUBLIC
-                            "${PROJECT_BINARY_DIR}"
 )

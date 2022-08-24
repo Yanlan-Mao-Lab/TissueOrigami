@@ -39,4 +39,4 @@ tests/**/gen_outputs/
 ###################
 **triangle
 **EllipseFromOutline
-**TissueFolding
+/TissueFolding/**TissueFolding
