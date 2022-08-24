@@ -34,6 +34,5 @@ RUN apt-get install -y python3.10-venv
 RUN cd / &&\
     python3 -m venv ./tissueorigami &&\
     source ./tissueorigami/bin/activate &&\
-    cd tests/ &&\
-    pip install py-requirements.txt &&\
+    pip install -r ./tests/py-requirements.txt &&\
     deactivate
