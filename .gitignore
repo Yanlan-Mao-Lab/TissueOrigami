@@ -3,6 +3,7 @@
 *~
 .*
 !/.gitignore
+!.github/workflows/*
 Archive/
 bin/
 RemoteSystemsTempFiles/
@@ -18,6 +19,7 @@ oldbuilds
 moc_*
 *.pro.user
 *.pro-FORMAC
+tests/**/gen_outputs/
 
 # compiled source #
 ###################
@@ -28,4 +30,11 @@ moc_*
 *.o
 *.so
 
+# Pycache files #
+#################
+**__pycache__**
 
+# compiled binary #
+###################
+**triangle
+**EllipseFromOutline

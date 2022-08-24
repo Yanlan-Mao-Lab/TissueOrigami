@@ -2,7 +2,6 @@
 // cp ./src/EllipseFromOutline ./
 //./EllipseFromOutline -1 12.5 2 5 1  ./inputOutlines/48hrDiscOutline
 
-
 using namespace std;
 #include <iostream>
 #include <fstream>
@@ -14,6 +13,7 @@ using namespace std;
 #include <vector>
 #include <map>
 
+#include "EllipseFromOutline.hpp"
 
 class EllipseLayoutGenerator{
 public:
@@ -77,16 +77,16 @@ public:
 	void calculatedtet();
 	bool updateRadia();
 	void addMidLine();
-	void Tesselate2D();
-	void readInTesselation2D();
-    void readInTesselation3D();
+	void Tesselate2D(string input_nodes, string output_nodes);
+	void readInTesselation2D(string input_elements, string input_nodes, string output_vecs, string output_nodes);
+	void readInTesselation3D(string input_triangulation, string output_vecs, string output_nodes);
 	void linkerTesselate2D();
 	void linkerReadInTesselation2D();
 	void writeVectors2D(ofstream &vectorsForGnuplot);
 	void writeNodes2D(ofstream &nodesForGnuplot);
 	void addPeripodialNodesMirroringColumnar(ofstream& meshfile, int nPeripodialNodeNumber, int nSharedNodesAtCircumference, vector<double>& recordedNodesX, vector<double>& recordedNodesY, vector<double>& recordedNodesZ, double& currzHeight, double& dzHeight, double& ECMHeight, double actinHeight, double basalLayerHeight, bool addLateralECMRing);
 	void addPeripodialNodesFromTriangulation(ofstream& meshfile, int nPeripodialNodeNumber, int nSharedNodesAtCircumference, vector<double>& recordedNodesX, vector<double>& recordedNodesY, vector<double>& recordedNodesZ, double& currzHeight, double& dzHeight, double& ECMHeight, double actinHeight, double basalLayerHeight, bool addLateralECMRing);
-	void writeMeshFileForSimulation(double zHeight, int zLayers, double ECMHeight,double actinHeight, double modifiedZDueToThinActin, double basalLayerHeight, bool addLateralECMRing);
+	void writeMeshFileForSimulation(double zHeight, int zLayers, double ECMHeight, double actinHeight, double modifiedZDueToThinActin, double basalLayerHeight, bool addLateralECMRing, string output_mesh = "./MeshFile.out");
 	void writeTissueWeights(ofstream& MeshFile, vector <double> &recordedPeripodialness);
 	void writeTriangleMeshFileForSimulation(double zHeight);
 	void addEquidistantRingMin();
@@ -119,8 +119,8 @@ public:
 	void bluntTip(vector <float>&  x, vector <float>& y);
 	void addLayersToOutline(int nLayer, double* bounidngBox, vector <float>&  x, vector <float>& y);
 	void writeInPosVectors(vector <float>&  x, vector <float>& y);
-	void peripodialSparseTesselate2D(bool symmetricX, bool symmetricY);
-	void peripodialReadInTesselation2D();
+	void peripodialSparseTesselate2D(bool symmetricX, bool symmetricY, string input_nodes);
+	void peripodialReadInTesselation2D(string input_nodes, string input_elements);
 };
 
 EllipseLayoutGenerator::EllipseLayoutGenerator(double r1_1, double r1_2, double r2_1, double r2_2, double sideLen, bool xsymmetry, bool ysymmetry, double condensation){
@@ -237,13 +237,12 @@ void EllipseLayoutGenerator::linkerTesselate2D(){
 	ostringstream Convert;
 	Convert << maxArea; // Use some manipulators
 	string maxAreaStr = Convert.str(); // Give the result to the string
-        //string sysCommand = "/home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/triangle/triangle -pq33a"+maxAreaStr+" ./LinkerPoints.poly  ";
-        string sysCommand = "/Users/nkhalilgharibi/TissueFoldingProject/YanlanMaoLabRepo/TissueOrigami/ToolBox/MeshGeneration/triangle/triangle -pq33a"+maxAreaStr+" ./LinkerPoints.poly  ";
-        cerr<<"Running triangulation with: "<<sysCommand<<endl;
+	string sysCommand = string(TRIANGLE_PATH) + " -pq33a" + maxAreaStr + " ./LinkerPoints.poly";
+	cerr<<"Running triangulation with: "<<sysCommand<<endl;
 	system(sysCommand.c_str());
 }
 
-void EllipseLayoutGenerator::peripodialSparseTesselate2D(bool symmetricX, bool symmetricY){
+void EllipseLayoutGenerator::peripodialSparseTesselate2D(bool symmetricX, bool symmetricY, string input_nodes){
 	vector<double> x, y;
 	vector <int> ids;
 	//extractBorderWithSymmetricLine(symmetricX, symmetricY, x,y,ids);
@@ -251,22 +250,20 @@ void EllipseLayoutGenerator::peripodialSparseTesselate2D(bool symmetricX, bool s
 	int n = x.size();
 	
 	ofstream pointsForTesselation;
-	pointsForTesselation.open("./PointsPeri.node",ofstream::trunc);
+	pointsForTesselation.open(input_nodes,ofstream::trunc);
 	pointsForTesselation<<n<<" 2 0 1"<<endl; //dim, attribute number , border markers on or of
 	for (int i =0; i< n; ++i){
 		pointsForTesselation<<i<<" "<<x[i]<<" "<<y[i]<<" 1"<<endl;
 	}
-        //string sysCommand = "/home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/triangle/triangle -Yq ./PointsPeri.node  ";
-        string sysCommand = "/Users/nkhalilgharibi/TissueFoldingProject/YanlanMaoLabRepo/TissueOrigami/ToolBox/MeshGeneration/triangle/triangle -Yq ./PointsPeri.node  ";
-        cerr<<"Running triangulation with: "<<sysCommand<<endl;
+	string sysCommand = string(TRIANGLE_PATH) + " -Yq " + input_nodes;
+	cerr<<"Running triangulation with: "<<sysCommand<<endl;
 	system(sysCommand.c_str());
-	
 }
 
-void EllipseLayoutGenerator::peripodialReadInTesselation2D(){
+void EllipseLayoutGenerator::peripodialReadInTesselation2D(string input_nodes, string input_elements){
 	cout<<" start of read in peripodial tesselation, size of points: "<<posx.size()<<" size of tissue shape: "<<tissueType.size()<<endl;	
 	ifstream NodeFile;	
-	NodeFile.open("./PointsPeri.1.node", ifstream::in);
+	NodeFile.open(input_nodes, ifstream::in);
 	int nNode;
 	int bordersMarked;
 	int nAttributes;
@@ -310,21 +307,21 @@ void EllipseLayoutGenerator::peripodialReadInTesselation2D(){
 			}
 		}
 	}
-	ifstream MeshFile;	
-	MeshFile.open("./PointsPeri.1.ele", ifstream::in);
+	ifstream EleFile;	
+	EleFile.open(input_elements, ifstream::in);
 	//readHeader:
 	int ntri;
-	MeshFile>>ntri;
-	MeshFile>>nodesPerTri;
-	MeshFile>>nAttributes;
+	EleFile>>ntri;
+	EleFile>>nodesPerTri;
+	EleFile>>nAttributes;
 	cout<<" ntri, nodesPerTri, nAttributes: "<<ntri<<" "<<nodesPerTri<<" "<<nAttributes<<endl;
 	for (int i=0; i<ntri; ++i){
 		int triId;
-		MeshFile>>triId;
+		EleFile>>triId;
 		int* pnts;
 		pnts = new int[3];
 		for (int j=0;j<3;++j){
-			MeshFile >> pnts[j];
+			EleFile >> pnts[j];
 		}
 		//Now I have all the points, if all points are on the border of the columner, I will
 		//skip this triangle:
@@ -352,7 +349,7 @@ void EllipseLayoutGenerator::peripodialReadInTesselation2D(){
 		periLinks0.push_back(pnts[2]);
 		periLinks1.push_back(pnts[0]);
 	}
-	MeshFile.close();
+	EleFile.close();
 }
 
 void EllipseLayoutGenerator::linkerReadInTesselation2D(){
@@ -419,12 +416,12 @@ void EllipseLayoutGenerator::linkerReadInTesselation2D(){
 }
 
 
-void EllipseLayoutGenerator::Tesselate2D(){
+void EllipseLayoutGenerator::Tesselate2D(string input_nodes, string output_nodes){
 	ofstream vectorsForGnuplot,nodesForGnuplot;
-	nodesForGnuplot.open("./NodesPreTesselation.out",ofstream::trunc);	
+	nodesForGnuplot.open(input_nodes,ofstream::trunc);	
 	writeNodes2D(nodesForGnuplot);
 	ofstream pointsForTesselation;
-	pointsForTesselation.open("./Points.node",ofstream::trunc);
+	pointsForTesselation.open(output_nodes,ofstream::trunc);
 	pointsForTesselation<<posx.size()<<" 2 0 1"<<endl; //dim, attribute number , border markers on or of
 	for (int i =0; i< posx.size(); ++i){
 		pointsForTesselation<<i<<" "<<posx[i]<<" "<<posy[i]<<endl;
@@ -435,26 +432,16 @@ void EllipseLayoutGenerator::Tesselate2D(){
 	ostringstream Convert;
 	Convert << maxArea; // Use some manipulators
 	string maxAreaStr = Convert.str(); // Give the result to the string
-        //string sysCommand = "/home/melda/Documents/TissueFolding/ToolBox/MeshGeneration/triangle/triangle -q33a"+maxAreaStr+" ./Points.node  ";
-        string sysCommand = "/Users/nkhalilgharibi/TissueFoldingProject/YanlanMaoLabRepo/TissueOrigami/ToolBox/MeshGeneration/triangle/triangle -q33a"+maxAreaStr+" ./Points.node  ";
-        cerr<<"Running triangulation with: "<<sysCommand<<endl;
+	string sysCommand = string(TRIANGLE_PATH) + " -q33a" + maxAreaStr + " " + output_nodes;
+	cerr<<"Running triangulation with: "<<sysCommand<<endl;
 	system(sysCommand.c_str());
 	
 }
 
-void EllipseLayoutGenerator::readInTesselation3D(){
+void EllipseLayoutGenerator::readInTesselation3D(string input_triangulation, string output_vecs, string output_nodes){
     cout<<" start of read in tesselation3D, size of points: "<<posx.size()<<" size of tissue shape: "<<tissueType.size()<<endl;
-    ifstream TesselationIn3DFile;
-    if (generatingSphere){
-        TesselationIn3DFile.open("./SphericalTriangulation", ifstream::in);
-    }
-    else if (generatingCylinder){
-            TesselationIn3DFile.open("./CylindricalTriangulation", ifstream::in);
-    }
-    else{
-        cerr<<"Inside readInTesselation 3D but the tissue shape is neither spherical or cylindrical. Check input values.";
-        return;
-    }
+	ifstream TesselationIn3DFile;
+	TesselationIn3DFile.open(input_triangulation, ifstream::in);
 
     int nNode;
     int bordersMarked=1;
@@ -508,33 +495,33 @@ void EllipseLayoutGenerator::readInTesselation3D(){
     TesselationIn3DFile.close();
     //writing for gnuplot vectors:
     ofstream vectorsForGnuplot,nodesForGnuplot;;
-    vectorsForGnuplot.open("./VectorsPostTesselation.out",ofstream::trunc);
-    nodesForGnuplot.open("./NodesPostTesselation.out",ofstream::trunc);
+    vectorsForGnuplot.open(output_vecs,ofstream::trunc);
+    nodesForGnuplot.open(output_nodes,ofstream::trunc);
     writeVectors2D(vectorsForGnuplot);
     writeNodes2D(nodesForGnuplot);
 }
 
 
-void EllipseLayoutGenerator::readInTesselation2D(){
+void EllipseLayoutGenerator::readInTesselation2D(string input_elements, string input_nodes, string output_vecs, string output_nodes){
 	cout<<" start of read in tesselation, size of points: "<<posx.size()<<" size of tissue shape: "<<tissueType.size()<<endl;
 		
-	ifstream MeshFile;	
-	MeshFile.open("./Points.1.ele", ifstream::in);
-	//readHeader:
+	ifstream EleFile;
+	EleFile.open(input_elements, ifstream::in);
+	// readHeader:
 	int ntri;
-	MeshFile>>ntri;
+	EleFile>>ntri;
 	int nodesPerTri;
-	MeshFile>>nodesPerTri;
+	EleFile>>nodesPerTri;
 	int nAttributes;
-	MeshFile>>nAttributes;
+	EleFile>>nAttributes;
         cout<<"line 0:"<<ntri<<" "<<nodesPerTri<<" "<<nAttributes<<endl;
 	for (int i=0; i<ntri; ++i){
 		int triId;
-		MeshFile>>triId;
+		EleFile>>triId;
 		int* pnts;
 		pnts = new int[3];
 		for (int j=0;j<3;++j){
-			MeshFile >> pnts[j];
+			EleFile >> pnts[j];
 		}
 		triangles.push_back(pnts);
 		Links0.push_back(pnts[0]);
@@ -547,9 +534,9 @@ void EllipseLayoutGenerator::readInTesselation2D(){
 		Links1.push_back(pnts[0]);
                 cout<<"Third vector: Link0: "<<pnts[2]<<"Link1: "<<pnts[3]<<endl;
 	}
-	MeshFile.close();
+	EleFile.close();
 	ifstream NodeFile;	
-	NodeFile.open("./Points.1.node", ifstream::in);
+	NodeFile.open(input_nodes, ifstream::in);
 	int nNode;
 	int bordersMarked;
 	NodeFile>>nNode;
@@ -588,13 +575,9 @@ void EllipseLayoutGenerator::readInTesselation2D(){
 	NodeFile.close();
 	//writing for gnuplot vectors:
 	ofstream vectorsForGnuplot,nodesForGnuplot;;
-        cout<<"I'm here1"<<endl;
-	vectorsForGnuplot.open("./VectorsPostTesselation.out",ofstream::trunc);
-        cout<<"I'm here2"<<endl;
-	nodesForGnuplot.open("./NodesPostTesselation.out",ofstream::trunc);
-        cout<<"I'm here3"<<endl;
-        writeVectors2D(vectorsForGnuplot);
-        cout<<"I'm here4"<<endl;
+	vectorsForGnuplot.open(output_vecs,ofstream::trunc);
+	nodesForGnuplot.open(output_nodes,ofstream::trunc);
+	writeVectors2D(vectorsForGnuplot);	
 	writeNodes2D(nodesForGnuplot);
         cout<<"End of read2D function"<<endl;
 }
@@ -1496,13 +1479,14 @@ void EllipseLayoutGenerator::addPeripodialNodesMirroringColumnar(ofstream& MeshF
 	}
 }
 
-void EllipseLayoutGenerator::writeMeshFileForSimulation(double zHeight, int zLayers, double ECMHeight,double actinHeight, double modifiedZDueToThinActin, double basalLayerHeight, bool addLateralECMRing){	
+void EllipseLayoutGenerator::writeMeshFileForSimulation(double zHeight, int zLayers, double ECMHeight, double actinHeight, double modifiedZDueToThinActin, double basalLayerHeight, bool addLateralECMRing, string output_mesh)
+{
 	bool mirrorColumnarForPeripodial = false;
 	vector <double> recordedNodesX, recordedNodesY, recordedNodesZ;
 	vector <double> recordedPeripodialness;
 	cout<<" Writing triangle file, size of points: "<<posx.size()<<" size of tissue shape: "<<tissueType.size()<<endl;
 	ofstream MeshFile;
-	MeshFile.open("./MeshFile.out",ofstream::trunc);
+	MeshFile.open(output_mesh,ofstream::trunc);
 	int n = posx.size();
 	int nPeripodialNodeNumber = PeriPosx.size(); //this is equal to the nodes in columnar layer
 	if (mirrorColumnarForPeripodial){
@@ -2571,7 +2555,14 @@ bool readinputs (int argc, char **argv, double* parameters, ifstream& inputOutli
 		const char* inpstring = argv[offset+3];
 		parameters[8] = atof(inpstring);		
 	}
-	if(argc<offset+5){
+	if (argc<offset+5){
+		cerr<<"Please provide the TissueType"<<endl;
+	}
+	else{
+		const char *inpstring = argv[offset + 4];
+		parameters[9] = atof(inpstring);
+	}
+	if(argc<offset+6){
         if(parameters[0] == 0 || parameters[0] == 1){
             cerr<<"parameters[0]:"<<parameters[0]<<"  Please give the input file path for the outline"<<endl;
             return 0;
@@ -2579,7 +2570,7 @@ bool readinputs (int argc, char **argv, double* parameters, ifstream& inputOutli
 	}
 	else{
         if(parameters[0] == 0 || parameters[0] == 1){
-            const char* inpstring = argv[offset+4];
+            const char* inpstring = argv[offset+5];
             inputOutline.open(inpstring,ifstream::in);
             if (!inputOutline.good() || !inputOutline.is_open()){
                 cerr<<"input outline cannot be opened: "<<inpstring<<endl;
@@ -2619,7 +2610,7 @@ void readInOutline(vector <float>& x, vector <float>&y, ifstream& inputOutline){
 int main(int argc, char **argv)
 {	
 	double * parameters;
-	parameters = new double[9];
+	parameters = new double[10];
 	ifstream inputOutline;
 	bool success = readinputs (argc, argv, parameters,inputOutline);
 	if (!success) {
@@ -2646,7 +2637,7 @@ int main(int argc, char **argv)
     // 4: x&y symmetric circle (half disc) and needs further code mdifications! -> Eliminate bluntTip function for type 4 with no x symmetricity! (half circle - not quarter)
     // 5: spherical organoid
     // 6: Tubular organoid
-        int selectTissueType = 5;
+        int selectTissueType = (int) parameters[9];
 
 	if (selectTissueType == 0){ // 0 : wingdisc48Hr, 
 		symmetricY = true;
@@ -2996,27 +2987,24 @@ int main(int argc, char **argv)
 		vector <float> x, y;	
 		readInOutline(x,y,inputOutline);
 		Lay01.scaleInputOutline(x,y);
-		Lay01.Tesselate2D();
+		Lay01.Tesselate2D("./NodesPreTesselation.out", "./Points.node");
 	}
     if(parameters[0] == -1){
-        Lay01.readInTesselation2D();
-    }
+		Lay01.readInTesselation2D("./Points.1.ele", "./Points.1.node", "./VectorsPostTesselation.out", "./NodesPostTesselation.out");
+	}
     if(parameters[0] == -2){
-        Lay01.readInTesselation3D();
-    }
-    if(parameters[0] == -3){
-        Lay01.readInTesselation3D();
-    }
+		Lay01.readInTesselation3D("./SphericalTriangulation", "./VectorsPostTesselation.out", "./NodesPostTesselation.out");
+	}
 	//now I have the triangulated mesh. If I have peripodial, I need to get the circumference.
 	//Then I will calculate the vectors pointing out from each of the circumference nodes.
 	//Then I will use those values to add the elements in mesh generation.
 	if(addPeripodial){
 		Lay01.calculatePeripodialAttachVectors(symmetricX, symmetricY);
-		Lay01.peripodialSparseTesselate2D(Lay01.symmetricX , Lay01.symmetricX);
-		Lay01.peripodialReadInTesselation2D();
+		Lay01.peripodialSparseTesselate2D(Lay01.symmetricX, Lay01.symmetricX, "./PointsPeri.node");
+		Lay01.peripodialReadInTesselation2D("./PointsPeri.1.node", "./PointsPeri.1.ele");
 	}
 	Lay01.calculateAverageSideLength();
-	Lay01.writeMeshFileForSimulation(ABHeight,ABLayers,ECMHeight,actinHeight,modifiedZDueToThinActin,basalLayerHeight, addLateralECMRing);	
+	Lay01.writeMeshFileForSimulation(ABHeight, ABLayers, ECMHeight, actinHeight, modifiedZDueToThinActin, basalLayerHeight, addLateralECMRing, "./MeshFile.out");
 	//output the points for plotting:
 	int n=Lay01.posx.size();	
 	//cerr<<"r1: "<<Lay01.r1[0]<<" "<<Lay01.r1[1]<<" r2: "<<Lay01.r2[0]<<" "<<Lay01.r2[1]<<endl;
