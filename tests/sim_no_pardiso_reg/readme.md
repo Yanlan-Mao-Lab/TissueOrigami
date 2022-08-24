@@ -1,3 +1,15 @@
+# Regression Tests for Non-Pardiso Build
+
+When building without Pardiso, the system of evolutionary equations is not solved.
+Whilst this means that the computations are of little interest, it is an important benchmark in establishing that, up to linking to Pardiso, the `TissueFolding` executable has been successfully built.
+
+Test runs are given a unique number, the inputs to each run being organised into subfoldered named with this unique identifier. Any generated outputs when running the regression tests are placed into the relevant folder.
+That is, for `run0700x`, the following steps are conducted:
+- Input files from the `run0700x` folder are copied to the directory containing the `TissueFolding` executable.
+- The `TissueFolding` executable (without Pardiso) is called to produce outputs
+- The outputs are moved to the `run07007/genertd_out` subfolder
+- The contents of the `run07007/genertd_out` directory are compared to their homonymous counterparts in `run0700x/expected_out`.
+
 ## Conducting the tests
 
 The inputs for each test case `x` can be found in the respective `run0700x` directory.
@@ -84,4 +96,3 @@ YoungsModulusTimeseriesGrids:
   Filename(full-path): /Users/nkhalilgharibi/TissueFoldingProject/YanlanMaoLabRepo/TissueOrigami/ToolBox/StiffnessTimeSeries/StiffnessMatrix_200_200_20%_new.txt
   WhenToApplyInput(sec): 6000
 ```
-
