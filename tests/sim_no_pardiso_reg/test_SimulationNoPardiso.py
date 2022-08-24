@@ -1,5 +1,6 @@
 import os, filecmp, shutil, subprocess
 import pytest
+from pytest_check import check
 
 def cleanup(fnames):
     '''
@@ -121,5 +122,10 @@ class Test_SimulationNoPardiso():
             else:
                 ref_op = ref_res_loc + "/" + file
                 gen_op = gen_res_loc + "/" + file
-                assert filecmp.cmp(ref_op, gen_op, shallow=False), "Output mismatch between: " + ref_op + " and " + gen_op
+                # use nonfatal assert so that we always compare every file
+                with check:
+                    # make the errors (if printed) more readable by not passing in filecmp.cmp into assert (
+                    # (avoids contextual expansion, as this info is printed in the error anyway)
+                    pf = filecmp.cmp(ref_op, gen_op, shallow=False)
+                    assert pf, "Output mismatch between: " + ref_op + " and " + gen_op
         return

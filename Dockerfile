@@ -7,6 +7,7 @@ RUN apt-get update
 # copy source files so that we can check if the build succeeds
 COPY ./TissueFolding/SourceCode /TissueFolding/SourceCode
 COPY ./tests/sim_no_pardiso_reg /tests/sim_no_pardiso_reg
+COPY ./tests/py-requirements.txt /tests/py-requirements.txt
 
 # Build requirements, and compiler dependencies for OpenBLAS
 RUN apt-get install -y gcc g++ gfortran cmake
@@ -33,5 +34,6 @@ RUN apt-get install -y python3.10-venv
 RUN cd / &&\
     python3 -m venv ./tissueorigami &&\
     source ./tissueorigami/bin/activate &&\
-    pip install pytest &&\
+    cd tests/ &&\
+    pip install py-requirements.txt &&\
     deactivate
