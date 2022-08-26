@@ -2,6 +2,7 @@
 # include "ArgumentParser.hpp"
 # include <iostream>
 # include <fstream>
+# include <sstream>
 
 using namespace std;
 
@@ -87,11 +88,38 @@ void ArgumentReader::print_help(helpOpts mode)
 
 ArgumentSpace::ArgumentSpace(string input_file) {
     // we have already checked that the input exists, so we can open it
-    ifstream input;
-    input.open(input_file, ifstream::in);
+    ifstream input(input_file, ifstream::in);
+
+    // variables names we expect to read from, in order of occurance
+    string input_fields[6] = {"meshing_mode", "ABHeight", "PrismSideLength", "nzLayers", "symY", "tissueType"};
+    // additional dependencies that may occur
+    string meshing_mode_deps[5] = {"length1", "length2", "width1", "width2", "outline"};
 
     // now read the information from the input file, and place it into the attributes of this class
     // ASSIGNING SOME ATTRIBUTES HERE AND READING THROUGH THE FILE IN A MEANINGFUL WAY
+    string line;
+    int expecting_variable = 0;
+    while(getline(input, line)) {
+        auto colon_pos = line.find(":");
+        // does this line contain a colon?
+        if (colon_pos == string::npos)
+        {
+            // no colon found, move on to next line
+            // is accounts for additional whitespace in the inputs
+            continue;
+        }
+        else if (colon_pos >= line.length()-1) {
+            // colon is the last character in the line, invalid input!
+            throw runtime_error("Error - no variable value provided on input line: " + line);
+        }
+        else {
+            // there is indeed a colon - read up to it to identify the variable
+            string variable = line.substr(0,colon_pos);
+            // and then continue reading to identify the value that was provided
+            string value = line.substr(colon_pos+1);
+            // now read in the variable
+        }
+    }
 };
 
 
