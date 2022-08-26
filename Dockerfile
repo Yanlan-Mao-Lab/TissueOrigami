@@ -31,9 +31,9 @@ RUN cd TissueFolding/SourceCode &&\
     rm -r ./*
 
 # Attempt to build TissueFolding via qmake
-RUN cd TissueFolding/ &\\
-    qmake TissueFolding-Docker.pro &\\
-    make &\\
+RUN cd TissueFolding/ &\
+    qmake TissueFolding-Docker.pro &\
+    make &\
     mv ./Debug/TissueFolding ./TissueFolding-qmake
 
 # Install python and pytest dependencies so that I can run the tests
