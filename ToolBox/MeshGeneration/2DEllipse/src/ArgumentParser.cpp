@@ -6,6 +6,34 @@
 
 using namespace std;
 
+mesh_mode interpretMeshMode(string mode) {
+    if (mode=="rec") {
+        return REC;
+    }
+    else if (mode=="wgd") {
+        return WGD;
+    }
+    else if (mode=="2d") {
+        return T2D;
+    }
+    else if (mode=="3d") {
+        return T3D;
+    }
+    else {
+        throw runtime_error("Invalid meshing_mode read from input: " + mode);
+    }
+}
+
+tissue_type interpretTissueType(string tt) {
+    int t = stoi(tt);
+    if(t<0 || t>9) {
+        throw runtime_error("Error: invalid tissue type given (" + tt + ")");
+    }
+    else {
+        return tissue_type(t);
+    }
+}
+
 explicit ArgumentReader::ArgumentReader(int argc, char **argv) {
     // print command-line help if it was requested
     all_args = vector<string>(argv + 1, argv + argc);
@@ -90,13 +118,7 @@ ArgumentSpace::ArgumentSpace(string input_file) {
     // we have already checked that the input exists, so we can open it
     ifstream input(input_file, ifstream::in);
 
-    // variables names we expect to read from, in order of occurance
-    string input_fields[6] = {"meshing_mode", "ABHeight", "PrismSideLength", "nzLayers", "symY", "tissueType"};
-    // additional dependencies that may occur
-    string meshing_mode_deps[5] = {"length1", "length2", "width1", "width2", "outline"};
-
     // now read the information from the input file, and place it into the attributes of this class
-    // ASSIGNING SOME ATTRIBUTES HERE AND READING THROUGH THE FILE IN A MEANINGFUL WAY
     string line;
     int expecting_variable = 0;
     while(getline(input, line)) {
@@ -117,11 +139,84 @@ ArgumentSpace::ArgumentSpace(string input_file) {
             string variable = line.substr(0,colon_pos);
             // and then continue reading to identify the value that was provided
             string value = line.substr(colon_pos+1);
-            // now read in the variable
+            // now assign the value provided to the variable
+            assign_input(variable, value);
         }
     }
+    // having read all that we can from the input file, confirm we have been given a valid set of inputs
+    validate_input_file_contents();
 };
 
+void ArgumentSpace::assign_input(string variable, string value) {
+    if (variable == "meshing_mode") {
+        meshing_mode = interpretMeshMode(value);
+        vars_set.meshing_mode = true;
+    }
+    else if (variable == "tissueType") {
+        selectTissueType = interpretTissueType(value);
+        vars_set.selectTissueType = true;
+    }
+    else if (variable == "ABHeight") {
+        ABHeight = stod(value);
+        vars_set.ABHeight = true;
+    }
+    else if (variable == "PrismSideLength") {
+        prismSideLen = stod(value);
+        vars_set.PrismSideLen = true;
+    }
+    else if (variable == "nzLayers") {
+        nzLayers = stoi(value);
+        vars_set.nzLayers = true;
+    }
+    // potentially non-present arguments
+    else if (variable == "length1") {
+        length[0] = stod(value);
+        vars_set.length[0] = true;
+    }
+    else if (variable == "length2") {
+        length[1] = stod(value);
+        vars_set.length[1] = true;
+    }
+    else if (variable == "width1") {
+        width[0] = stod(value);
+        vars_set.width[0] = true;
+    }
+    else if (variable == "width2") {
+        width[1] = stod(value);
+        vars_set.width[1] = true;
+    }
+    else if (variable == "outline") {
+        outline_file_path = value;
+        vars_set.outline = true;
+    }
+    // purely optional input arguments
+    else if (variable == "symY") {
+        symY = !(value == "0" || value == "false" || value == "False");
+    }
+    // unrecognised field, throw an error
+    else {
+        throw runtime_error("Error - did not recognise the variable name: " + variable);
+    }
+}
+
+void ArgumentSpace::validate_input_file_contents() {
+    // we always require the following to be set:
+    // meshing_mode, selectTissueType, ABHeight, PrismSideLen, nzLayers
+    if (!vars_set.meshing_mode) { throw runtime_error("Error - no meshing_mode variable defined in input\n");}
+    else if (!vars_set.selectTissueType) { throw runtime_error("Error - no tissueType variable defined in input\n");}
+    else if (!vars_set.ABHeight) { throw runtime_error("Error - no ABHeight variable defined in input\n");}
+    else if (!vars_set.PrismSideLen) { throw runtime_error("Error - no PrismSideLen variable defined in input\n");}
+    else if (!vars_set.nzLayers) { throw runtime_error("Error - no nzLayers variable defined in input\n");}
+
+    // if we are meshing a wing disc, check that optional arguments were passed
+    if (meshing_mode == WGD) {
+        if (!vars_set.length[0]) { throw runtime_error("Error - meshing wing-disc, but no length1 variable provided\n");}
+        else if (!vars_set.length[1]) { throw runtime_error("Error - meshing wing-disc, but no length2 variable provided\n");}
+        else if (!vars_set.width[0]) { throw runtime_error("Error - meshing wing-disc, but no width1 variable provided\n");}
+        else if (!vars_set.width[1]) { throw runtime_error("Error - meshing wing-disc, but no width2 variable provided\n");}
+        else if (!vars_set.outline) { throw runtime_error("Error - meshing wing-disc, but no outline variable provided\n");}
+    }
+}
 
 void ArgumentSpace::print_mode_specs() {
 

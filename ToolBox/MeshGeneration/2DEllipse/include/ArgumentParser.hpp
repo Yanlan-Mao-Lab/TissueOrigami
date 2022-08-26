@@ -3,10 +3,73 @@
 
 using namespace std;
 
+enum mesh_mode {
+    REC = 0,
+    WGD = 1,
+    T2D  = 2,
+    T3D  = 3
+};
+/**
+ * @brief Translates values for meshing_mode from input files into enums
+ * 
+ * @param mode meshing_mode value read from the input file
+ * @return mesh_mode The type of meshing to be performed
+ */
+mesh_mode interpretMeshMode(string mode);
+
+enum tissue_type {
+    WGD_48HR = 0,
+    WGD_48HR_ECM = 1,
+    WGD_72HR = 2,
+    OPT_CUP = 3,
+    HLF_DSC = 4,
+    SPH_ORG = 5,
+    TUB_ORG = 6,
+    REC_ECM = 7,
+    REC_NO_ECM = 8
+};
+tissue_type interpretTissueType(string tt);
+
+// this structure stores the flags that we can mark when certain inputs are read
+struct argument_flags
+{
+    bool meshing_mode = false;
+    bool selectTissueType = false;
+    bool ABHeight = false;
+    bool PrismSideLen = false;
+    bool nzLayers = false;
+    bool length[2] = {false};
+    bool width[2] = {false};
+    bool outline = false;
+};
+
+// the maximum number of fields that can appear in an input file
+const int max_number_inputs = 11;
+
 class ArgumentSpace{
     private:
+        // private flags for input validation
+        argument_flags vars_set;
 
     public:
+        // signals whether we are meshing a wingdisc, rectangle, or pre-built 2d or 3d tesselation
+        mesh_mode meshing_mode;
+        // determines the type of tissue that we are meshing
+        tissue_type selectTissueType;
+
+        // wing disc specific required parameters
+
+        double length[2], width[2];
+        string outline_file_path;
+
+        // parameters required for all meshing methods
+
+        double ABHeight, prismSideLen;
+        int nzLayers;
+
+        // optional parameters - set default values here
+
+        bool symY = false;
 
         /**
          * @brief Construct a new Argument Space object from the input file, simultaneously validating its entries
@@ -14,6 +77,19 @@ class ArgumentSpace{
          * @param input_file Path to the input file to read from
          */
         explicit ArgumentSpace(string input_file);
+
+        /**
+         * @brief Given the name of an input variable, assign value to the relevent class atrribute
+         *
+         * @param variable Name of the variable to assign to
+         * @param value Value to assign
+         */
+        void assign_input(string variable, string value);
+        /**
+         * @brief Check that the combination of parsed inputs are sufficient to execute mesh generation
+         * 
+         */
+        void validate_input_file_contents();
 
         /**
          * @brief Print to stdout the information that has been read into the executable
