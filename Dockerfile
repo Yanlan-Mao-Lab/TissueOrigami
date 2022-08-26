@@ -15,7 +15,7 @@ RUN apt-get install -y qtbase5-dev qtchooser qt5-qmake qtbase5-dev-tools
 RUN apt-get install -y python2
 
 # Build requirements, and compiler dependencies for OpenBLAS
-RUN apt-get install -y build-essential gcc g++ gfortran
+RUN apt-get install -y build-essential cmake gcc g++ gfortran
 
 # Compiler for the TissueFolding executable itself
 # OpenBLAS 0.2.14, gsl 1.16, boost 1_54_0
