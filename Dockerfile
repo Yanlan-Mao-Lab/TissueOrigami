@@ -6,7 +6,7 @@ RUN apt-get update
 
 # copy source files so that we can check if the build succeeds
 COPY ./TissueFolding/SourceCode /TissueFolding/SourceCode
-COPY ./TissueFolding/TissueFolding-Docker.pro /TissueFolding/TissueFolding-Docker.pro
+COPY ./TissueFolding/TissueFolding-Docker.pro /TissueFolding/TissueFolding_Docker.pro
 COPY ./tests/sim_no_pardiso_reg /tests/sim_no_pardiso_reg
 COPY ./tests/py-requirements.txt /tests/py-requirements.txt
 
@@ -31,9 +31,9 @@ RUN cd TissueFolding/SourceCode &&\
     rm -r ./*
 
 # Attempt to build TissueFolding via qmake
-RUN cd TissueFolding/ &\
-    qmake TissueFolding-Docker.pro &\
-    make &\
+RUN cd /TissueFolding/ &&\
+    qmake TissueFolding_Docker.pro &&\
+    make &&\
     mv ./Debug/TissueFolding ./TissueFolding-qmake
 
 # Install python and pytest dependencies so that I can run the tests
