@@ -9,6 +9,8 @@ COPY ./TissueFolding/SourceCode /TissueFolding/SourceCode
 COPY ./TissueFolding/TissueFolding-Docker.pro /TissueFolding/TissueFolding_Docker.pro
 COPY ./tests/sim_no_pardiso_reg /tests/sim_no_pardiso_reg
 COPY ./tests/py-requirements.txt /tests/py-requirements.txt
+COPY ./UserInterface/SourceCode /UserInterface/SourceCode
+COPY ./UserInterface/TissueFoldingUI-Docker.pro /UserInterface/TissueFoldingUI_Docker.pro
 
 # Install TissueFolding requirements next if building via QMake
 RUN apt-get install -y qtbase5-dev qtchooser qt5-qmake qtbase5-dev-tools
@@ -35,6 +37,18 @@ RUN cd /TissueFolding/ &&\
     qmake TissueFolding_Docker.pro &&\
     make &&\
     mv ./Debug/TissueFolding ./TissueFolding-qmake
+
+# Attempt to build TissueFoldingUI via qmake
+# For the application to work when loaded from Docker, you need to pass some arguments to the container!
+# first, on the host machine, run
+# $ xhost +local:docker
+# then load up the container with
+# docker container run -it -e DISPLAY=$DISPLAY -v /tmp/.X11-unix/:/tmp/.X11-unix <name-of-container>
+ENV QT_DEBUG_PLUGINS=1
+RUN cd /UserInterface/ &&\
+    qmake TissueFoldingUI_Docker.pro &&\
+    make &&\
+    mv ./Debug/TissueFoldingUI ./TissueFoldingUI-qmake
 
 # Install python and pytest dependencies so that I can run the tests
 RUN apt-get install -y python3.10-venv
