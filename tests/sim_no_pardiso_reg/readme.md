@@ -10,12 +10,37 @@ That is, for `run0700x`, the following steps are conducted:
 - The outputs are moved to the `run07007/genertd_out` subfolder
 - The contents of the `run07007/genertd_out` directory are compared to their homonymous counterparts in `run0700x/expected_out`.
 
+The comparison of the output files uses the Python function `filecmp.cmp`, which can act on binary files and non-binary files.
+Non-binary output files must satisfy `filecmp.cmp(reference, generated, shallow=False)==True` to pass.
+The simulation outputs that are produced as binary files are:
+ - Force
+ - Growth
+ - GrowthRate
+ - GrowthRedistribution
+ - Packing
+ - PhysicalProp
+ - SpecificElementAndNodeTypes
+ - TensionCompression
+When comparing these generated outputs to their reference counterparts, we allow for subtle differences in the generated binary files.
+In the event that the binary files _do not_ match (according to `filecmp.cmp`), the following is done:
+1. Reading the values stored in the binary back into the simulation (for example, if we were resuming a previously stopped simulation)
+1. Writing them to a `.txt` file
+1. Applying the same proceedure to the reference binary file
+Obtaining `True` from acting `filecmp.cmp` on the resulting text files will allow the test to pass.
+This event indicates that there is a difference between a binary file and its counterpart, but _not_ between the data that is read into the simulation. 
+`pytest` will throw a warning detailing the file which differed.
+
+
 ## Conducting the tests
 
 The inputs for each test case `x` can be found in the respective `run0700x` directory.
 In order to avoid hard-coded paths, the input files have had any absolute paths in them replaced by relative paths, _assuming that these files are now present in the same directory as the executable_ `TissueFolding`, when it is executed.
+The tests are conducted through the `test_SimulationNoPardiso.py` file.
 
 The `TissueFolding` executable itself is assumed to be in the `TissueFolding/` subdirectory, which has relative path `../../TissueFolding/` from this readme.
+
+The testing criteria may also require us to convert the outputs of the simulation from binary files to text files, in order to assert whether the simulation will read in identical values, and the binary-file difference is superflous.
+With regards to this, the `simOutputsToTxt.o` executable must be located in the `tests/` directory, and have been built prior to running `pytest`.
 
 ### Run 07007
 

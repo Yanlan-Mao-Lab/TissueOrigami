@@ -1,4 +1,4 @@
-// compiling this file is just a case of running
+// compiling this file:
 // g++ read_sim_output.cpp -o ./reader.o
 
 #include <string>
