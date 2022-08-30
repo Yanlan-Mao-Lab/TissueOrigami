@@ -47,6 +47,12 @@ jobs:
           sudo apt-get install python3
           pip install -r ${{ github.workspace }}/tests/py-requirements.txt
       
+      # Build the converter executable in case we need to use it
+      - name: Build simOutputsToTxt.o
+        run: |
+          cd ${{ github.workspace }}/tests/
+          g++ simOutputsToTxt.cpp -o simOutputsToTxt.o
+      
       # Run pytest in the tests/sim_no_pardiso_reg/ directory
       - name: Run TissueFolding (non-Pardiso) regression tests
         run: |
