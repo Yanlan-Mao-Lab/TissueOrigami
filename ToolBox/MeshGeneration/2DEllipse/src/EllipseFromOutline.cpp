@@ -14,6 +14,7 @@ using namespace std;
 #include <map>
 
 #include "EllipseFromOutline.hpp"
+#include "ArgumentParser.hpp"
 
 class EllipseLayoutGenerator{
 public:
@@ -2609,15 +2610,19 @@ void readInOutline(vector <float>& x, vector <float>&y, ifstream& inputOutline){
 
 int main(int argc, char **argv)
 {	
-	double * parameters;
+	ArgumentReader exe_args(argc, argv);
+	// read arguments from the input file that was provided
+	ArgumentSpace params(exe_args.path_to_input);
+
+/*	double * parameters;
 	parameters = new double[10];
 	ifstream inputOutline;
 	bool success = readinputs (argc, argv, parameters,inputOutline);
 	if (!success) {
 		cerr<<"Error in parameter inputs, quitting"<<endl;	
 		return 1;
-	};
-	int 	GlobalShape;
+	};*/
+	mesh_mode GlobalShape;
 	double 	DVRadius[2];
 	double 	APRadius[2];
 	double 	ABHeight;
@@ -2627,88 +2632,45 @@ int main(int argc, char **argv)
 	double	actinHeight = -1.0;
 	double  basalLayerHeight = -1.0;
 	double  modifiedZDueToThinActin = 1;
-	bool 	symmetricY = false;
-	bool 	symmetricX = false;
+	bool symmetricY = true;
+	bool symmetricX = false;
 
-    // 0: wingdisc48Hr (no ECM),
-    // 1: wing disc with ECM at 48 hr, // This will be the one you use for wong disc simulations!
-    // 2: wing disc 72 hr,
-    // 3: optic cup
-    // 4: x&y symmetric circle (half disc) and needs further code mdifications! -> Eliminate bluntTip function for type 4 with no x symmetricity! (half circle - not quarter)
-    // 5: spherical organoid
-    // 6: Tubular organoid
-        int selectTissueType = (int) parameters[9];
+	tissue_type selectTissueType = params.selectTissueType;
 
-	if (selectTissueType == 0){ // 0 : wingdisc48Hr, 
+	// set symmetry flags
+	if (params.meshing_mode==OPT_CUP || params.meshing_mode==SPH_ORG) {
+		symmetricX = true;
+	}
+	if (params.meshing_mode==REC_ECM || params.meshing_mode==REC_NO_ECM) {
+		symmetricY = false;
+	}
+
+	params.print_mode_specs();
+	GlobalShape = params.meshing_mode;
+	DVRadius[0] = params.length[0];
+	DVRadius[1] = params.length[1];
+	APRadius[0] = params.width[0];
+	APRadius[1] = params.width[1];
+	ABHeight = params.ABHeight;
+	sideLength = params.prismSideLen;
+	ABLayers = params.nzLayers;
+
+	modifiedZDueToThinActin = (ABHeight - ECMHeight - actinHeight)/ (ABLayers-2);
+	if (ABLayers<3){
+		ECMHeight = ABHeight/ABLayers;
+		actinHeight = ABHeight/ABLayers;
+		basalLayerHeight = ABHeight/ABLayers;
+		modifiedZDueToThinActin  = ABHeight/ABLayers;
+	}
+	if (params.symY ){ 		
 		symmetricY = true;
-		symmetricX = false; 
 	}
-	else if(selectTissueType == 1){ // 1: ECM mimicing wing disc 48 hr,
-		symmetricY = true;
-		symmetricX = false; 
-	}
-	else if(selectTissueType == 2){
-		symmetricY = true;
-		symmetricX = false; 
-	}
-	else if(selectTissueType == 3){
-		symmetricY = true;
-		symmetricX = true; 
-	}
-	else if(selectTissueType == 4){
-		symmetricY = true;
-                symmetricX = false; //should be true for quarter of a disc
-	}
-        else if(selectTissueType == 5){ //spheroid
-                symmetricY = true;
-                symmetricX = true;
-	}
-        else if(selectTissueType == 6){ //tubular organoid
-                symmetricY = true;
-                symmetricX = false;
-        }
-        else if(selectTissueType == 7){ //rectangle with ECM
-                symmetricY = false;
-                symmetricX = false;
-        }
-        else if(selectTissueType == 8){ //rectangle no ECM
-                symmetricY = false;
-                symmetricX = false;
-        }
 	else{
-		cerr<<"Tissue type selected wrong!!"<<endl;	
-		return 0;
+		symmetricY = false;
 	}
-	cout<<" selectTissueType: "<<selectTissueType<<endl;
-	if (success) {
-                if (parameters[0] == -1 || parameters[0] == -2 ){
-                    cerr<<"preparing from ready triangulation"<<endl;
-                }
-		printOutSystemSetup(parameters);
-		GlobalShape = parameters[0];
-		DVRadius[0] = parameters[1];
-		DVRadius[1] = parameters[2];
-		APRadius[0] = parameters[3];
-		APRadius[1] = parameters[4];
-		ABHeight = parameters[5];
-		sideLength = parameters[6];
-		ABLayers = parameters[7];
-		modifiedZDueToThinActin = (ABHeight - ECMHeight - actinHeight)/ (ABLayers-2);
-		if (ABLayers<3){
-			ECMHeight = ABHeight/ABLayers;
-			actinHeight = ABHeight/ABLayers;
-			basalLayerHeight = ABHeight/ABLayers;
-			modifiedZDueToThinActin  = ABHeight/ABLayers;
-		}
-		if (parameters[8] == 1 ){ 		
-			symmetricY = true;
-		}
-		else{
-			symmetricY = false;
-		}
-	}
+
 	EllipseLayoutGenerator Lay01(DVRadius[0],DVRadius[1], APRadius[0], APRadius[1], sideLength, symmetricX, symmetricY, 0.9);
-        bool addPeripodial = false; //this is false by default and over-written in selectTissueType below
+	bool addPeripodial = false; //this is false by default and over-written in selectTissueType below
 	double peripodialHeightFrac;
 	double lumenHeightFrac;
     bool addLateralECMRing = false; // leftover dont worry
@@ -2983,16 +2945,19 @@ int main(int argc, char **argv)
 		Lay01.addPeripodial = true;
 		Lay01.calculatePeripodialMembraneParameters(ABHeight, ABLayers,  ECMHeight,  modifiedZDueToThinActin, peripodialHeightFrac, lumenHeightFrac,peripodialSideCurveFrac,addLateralECMRing);
 	}
-        if (parameters[0] != -1 && parameters[0] != -2 && parameters[0] != -3){//I am not using a ready made triangulation
-		vector <float> x, y;	
+	// If not using pre-built triangulation
+	if (GlobalShape != T2D && GlobalShape != T3D && GlobalShape != T3D_CYL){
+		vector <float> x, y;
+		// prepare the outline file
+		ifstream inputOutline(exe_args.path_to_input, ifstream::in);
 		readInOutline(x,y,inputOutline);
 		Lay01.scaleInputOutline(x,y);
 		Lay01.Tesselate2D("./NodesPreTesselation.out", "./Points.node");
 	}
-    if(parameters[0] == -1){
+    if(GlobalShape == T2D){
 		Lay01.readInTesselation2D("./Points.1.ele", "./Points.1.node", "./VectorsPostTesselation.out", "./NodesPostTesselation.out");
 	}
-    if(parameters[0] == -2){
+    if(GlobalShape == T3D){
 		Lay01.readInTesselation3D("./SphericalTriangulation", "./VectorsPostTesselation.out", "./NodesPostTesselation.out");
 	}
 	//now I have the triangulated mesh. If I have peripodial, I need to get the circumference.
