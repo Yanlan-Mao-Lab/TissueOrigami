@@ -7,7 +7,8 @@ enum mesh_mode {
     REC = 0,
     WGD = 1,
     T2D  = 2,
-    T3D  = 3
+    T3D  = 3,
+    T3D_CYL = 4
 };
 /**
  * @brief Translates values for meshing_mode from input files into enums

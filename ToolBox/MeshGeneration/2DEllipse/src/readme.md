@@ -64,6 +64,7 @@ The first variable name should be `meshing_mode`, and should take one of the fol
 - `wgd`: The tissue to be meshed is of wing-disc shape - this includes elliptical (and circular) shapes
 - `2d` : The tissue is to be meshed in 2D using a pre-built tesselation
 - `3d` : The tissue is to be meshed in 3D using a pre-built tesselation
+- `3d_cyl` : The tissue is to be meshed in 3D using a pre-built cylindrical tesselation
 In the event that the value `wdg` is supplied, four dependencies must be provided (need diagram and details to be filled in by someone with contextual knowledge!)
 - `length1`:
 - `length2`:

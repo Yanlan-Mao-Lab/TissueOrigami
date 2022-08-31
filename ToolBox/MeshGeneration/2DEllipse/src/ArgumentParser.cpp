@@ -19,6 +19,9 @@ mesh_mode interpretMeshMode(string mode) {
     else if (mode=="3d") {
         return T3D;
     }
+    else if (mode=="3d_cyl") {
+        return T3D_CYL;
+    }
     else {
         throw runtime_error("Invalid meshing_mode read from input: " + mode);
     }
@@ -35,7 +38,7 @@ tissue_type interpretTissueType(string tt) {
 }
 
 explicit ArgumentReader::ArgumentReader(int argc, char **argv) {
-    // print command-line help if it was requested
+    // parse command-line arguments
     all_args = vector<string>(argv + 1, argv + argc);
     num_non_flags = 0;
     num_flags = 0;
@@ -53,6 +56,8 @@ explicit ArgumentReader::ArgumentReader(int argc, char **argv) {
         }
     }
     num_args = num_non_flags + num_flags;
+    // print help if it was requested
+    // otherwise, assign the path_to_input and path_to_output variables
     validate_cmdline_inputs();
     return;
 }
@@ -141,6 +146,7 @@ ArgumentSpace::ArgumentSpace(string input_file) {
             string value = line.substr(colon_pos+1);
             // now assign the value provided to the variable
             assign_input(variable, value);
+            cout << "I want to assign " << value << "to the variable " << variable;
         }
     }
     // having read all that we can from the input file, confirm we have been given a valid set of inputs
@@ -226,6 +232,7 @@ bool ArgumentReader::arg_is_flag(string argument)
 {
     return argument[0] == '-';
 };
+
 bool ArgumentReader::has_flag(string const &flag) {
     for(const auto &a : all_args) {
         if (a == flag) {
