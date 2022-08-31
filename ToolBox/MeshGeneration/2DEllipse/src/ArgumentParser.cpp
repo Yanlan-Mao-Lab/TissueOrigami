@@ -3,6 +3,7 @@
 # include <iostream>
 # include <fstream>
 # include <sstream>
+# include <algorithm>
 
 using namespace std;
 
@@ -37,7 +38,12 @@ tissue_type interpretTissueType(string tt) {
     }
 }
 
-explicit ArgumentReader::ArgumentReader(int argc, char **argv) {
+ArgumentReader::ArgumentReader(int argc, char **argv) {
+    // if no command-line arguments provided, error!
+    if (argc==1) {
+        print_help(NO_INPUTS);
+        exit(1);
+    }
     // parse command-line arguments
     all_args = vector<string>(argv + 1, argv + argc);
     num_non_flags = 0;
@@ -106,16 +112,19 @@ void ArgumentReader::print_help(helpOpts mode)
             fprintf(stdout, "Usage:\n"
                             "EllipseFromOutline [options] inputFile [outputFile] \n"
                             "Required:\n"
-                            "inputFile:\t Input file to read from. See the readme for format specifications.\n"
+                            "\t inputFile:\t Input file to read from. See the readme for format specifications.\n"
                             "Optional:\n"
-                            "outputFile: [Default MeshFile.out] Output file to write mesh to"
+                            "\t outputFile: [Default MeshFile.out] Output file to write mesh to.\n"
                             "Options:\n"
-                            "-h, --help:\t Display command-line help message.\n");
+                            "\t -h, --help:\t Display command-line help message.\n");
             break;
         case TOO_MANY_INPUTS:
             fprintf(stdout, "Error: too many inputs provided, see usage below.\n");
             print_help(DEFAULT);
             break;
+        case NO_INPUTS:
+            fprintf(stdout, "Error: no inputs provided, see usage below.\n");
+            print_help(DEFAULT);
     }
 };
 
@@ -132,21 +141,28 @@ ArgumentSpace::ArgumentSpace(string input_file) {
         if (colon_pos == string::npos)
         {
             // no colon found, move on to next line
-            // is accounts for additional whitespace in the inputs
+            // is accounts for additional newlines in the inputs
             continue;
         }
         else if (colon_pos >= line.length()-1) {
-            // colon is the last character in the line, invalid input!
-            throw runtime_error("Error - no variable value provided on input line: " + line);
+            // colon is the last character in the line
+            // continue reading in case this argument was optional (errors will be caught when flags for required variables are checked)
+            cout << "No value provided on line: " << line << endl;
         }
         else {
             // there is indeed a colon - read up to it to identify the variable
             string variable = line.substr(0,colon_pos);
-            // and then continue reading to identify the value that was provided
+            // strip character spaces
+            variable.erase( remove_if( variable.begin(), variable.end(), ::isspace), variable.end() );
+            // continue reading to identify the value that was provided
             string value = line.substr(colon_pos+1);
-            // now assign the value provided to the variable
-            assign_input(variable, value);
-            cout << "I want to assign " << value << "to the variable " << variable;
+            // strip character spaces
+            value.erase(remove_if(value.begin(), value.end(), ::isspace), value.end());
+            // check that, prior to attempting to assign, we have been left with non-empty strings value and variable
+            if (!(variable.empty() || value.empty())) {
+                // assign the value provided to the variable
+                assign_input(variable, value);
+            }
         }
     }
     // having read all that we can from the input file, confirm we have been given a valid set of inputs
@@ -225,7 +241,33 @@ void ArgumentSpace::validate_input_file_contents() {
 }
 
 void ArgumentSpace::print_mode_specs() {
-
+    cout << "Printing meshing specifications:" << endl;
+    cout << "Meshing mode: ";
+    switch (meshing_mode)
+    {
+        case WGD:
+            cout << "Wing-disc / elliptical (WGD)" << endl;
+            cout << "Length = {" << length[0] << " , " << length[1] << "}" << endl;
+            cout << "Width = {" << width[0] << " , " << width[1] << "}" << endl;
+            cout << "outline file: " << outline_file_path << endl;
+            break;
+        case REC:
+            cout << "Rectangular (REC)" << endl;
+            break;
+        case T2D:
+            cout << "Pre-built 2D tesselation (2D)" << endl;
+            break;
+        case T3D:
+            cout << "Pre-built 3D tesselation (3D)" << endl;
+            break;
+        case T3D_CYL:
+            cout << "Pre-built cylindrical 3D tesselation (3D_CYL)" << endl;
+            break;
+    }
+    // common variables
+    cout << "ABHeight: " << ABHeight << endl;
+    cout << "Prism side length: " << prismSideLen << endl;
+    cout << "No. z layers: " << nzLayers << endl;
 }
 
 bool ArgumentReader::arg_is_flag(string argument)

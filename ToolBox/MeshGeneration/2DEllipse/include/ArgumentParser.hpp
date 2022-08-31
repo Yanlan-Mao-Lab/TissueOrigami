@@ -105,7 +105,8 @@ class ArgumentSpace{
  */
 enum helpOpts {
     DEFAULT = 0,
-    TOO_MANY_INPUTS = 1
+    TOO_MANY_INPUTS = 1,
+    NO_INPUTS = 2
 };
 
 class ArgumentReader{
