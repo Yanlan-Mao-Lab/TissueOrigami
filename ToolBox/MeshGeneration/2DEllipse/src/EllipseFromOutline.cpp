@@ -2969,7 +2969,7 @@ int main(int argc, char **argv)
 		Lay01.peripodialReadInTesselation2D("./PointsPeri.1.node", "./PointsPeri.1.ele");
 	}
 	Lay01.calculateAverageSideLength();
-	Lay01.writeMeshFileForSimulation(ABHeight, ABLayers, ECMHeight, actinHeight, modifiedZDueToThinActin, basalLayerHeight, addLateralECMRing, "./MeshFile.out");
+	Lay01.writeMeshFileForSimulation(ABHeight, ABLayers, ECMHeight, actinHeight, modifiedZDueToThinActin, basalLayerHeight, addLateralECMRing, exe_args.path_to_output);
 	//output the points for plotting:
 	int n=Lay01.posx.size();	
 	//cerr<<"r1: "<<Lay01.r1[0]<<" "<<Lay01.r1[1]<<" r2: "<<Lay01.r2[0]<<" "<<Lay01.r2[1]<<endl;
