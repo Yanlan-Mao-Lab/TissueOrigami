@@ -20,7 +20,7 @@ For each test, the following steps are run:
 4. These outputs are compared to the reference outputs
 The test fails if an output file differs from its corresponding reference file.
 
-### Adding additional reference tests.
+### Adding additional reference tests
 
 The file `test_MeshGeneration.py` is structured in such a way as to seemlessly allow for the introduction of additional regression tests.
 To add a new test:
@@ -60,7 +60,8 @@ myMeshGenObj.addExeInput("extra_input_i", "optional_new_name_i")
 ```
 for each `i=1,...,N`.
 
-The `optional_new_name_i` argument is optional; if provided, pytest will copy _and rename_ `extra_input_i` to `optional_new_name_i` before running mesh generation - this is useful for giving your input files understandable and clear names, but for when the mesh generation executable is looking for a specific file name during runtime.
+The `optional_new_name_i` argument is optional; if provided, pytest will copy _and rename_ `extra_input_i` to `optional_new_name_i` before running mesh generation.
+This is useful for giving your input files understandable and clear names, but for when the mesh generation executable is looking for a specific file name during runtime.
 
 Finally, inform pytest which outputs should be recovered, and to which reference files they should be compared, using
 ```python
@@ -68,10 +69,10 @@ myMeshGenObj.addComparisonFile("out_j", "reference_j", rename_to="intermediate_n
 ```
 for each `j=1,...,M`.
 
-The `trim` parameter default to `False`, however should be set to `True` in the event that `out_j` and `reference_j` are produced from `triangle`. 
-In such cases, triangle appends the command passed to `triangle.o` the end of the output file, which involves absolute paths and does not contain any useful meshing information.
+The `trim` parameter defaults to `False`, however should be set to `True` in the event that `out_j` and `reference_j` are produced from `triangle`. 
+In such cases, triangle appends the command passed to `triangle.o` the end of the output file, which involves absolute paths and does not contain any useful meshing information, whilst simultaneously causing file-comparison to fail.
 
-The `rename_to` argument is also optional; if provided, `out_j` will be copied back to the testing area with the name `intermediate_name_j` rather than `out_j`. This is particularly useful if `reference_j` is saved under the same name as `out_j` from the mesh generation executable, as it prevents file overwriting and an error occuring.
+The `rename_to` argument is also optional; if provided, `out_j` will be copied back to the testing area with the name `intermediate_name_j` rather than `out_j`. This is particularly useful if `reference_j` is saved under the same name as `out_j`, as it prevents file overwriting and an error occuring.
 
 ## [Legacy - Running the Executable] Executable Runs
 

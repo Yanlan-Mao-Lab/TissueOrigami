@@ -40,16 +40,17 @@ EllipseFromOutline [options] inputFile [outputFile]
 ```
 Required inputs:
 - `inputFile`: Path to the input file
+
 Optional inputs:
-- `outputFile`: Path to write the output mesh to. Defaults to `MeshFile.out` if not provided.
+- `outputFile`: Path to write the output mesh to. Defaults to `MeshFile.out` if not provided
+
 Options:
 - `-h, --help`: Prints the command-line help message.
 
 ### Input File Syntax
 
 Input files follow a `.yml` style syntax of variable names, followed by colons, then by the value assigned to the variable, separated by newlines.
-Certain variable values may require further variables to be provided, which are indicated by indentation by _two character spaces_.
-Intermediary empty lines, and buffering whitespace, is ignored.
+Certain variable values may require further variables to be provided; whilst empty lines, and buffering whitespace, is ignored.
 The general syntax for the input files is thus as follows:
 ```yml
 input 1: value
@@ -59,7 +60,8 @@ input 2: value
   input 2 dependency 1: value
 input 3: value
 ```
-However there is no obligation to provide dependencies immidately after providing the value for a variable; the input reader is flexible, and will organise the inputs provided by the user and then validating that a consistent set of inputs has been provided.
+There is no obligation to this format of indenting variables beneath their dependents, provide dependencies immidately after a dependent variable, nor use any indenting - however it is advised for obvious user-friendliness reasons!
+This being said; the input reader is flexible and will organise the inputs provided by the user _before_ attempting to validate that a consistent combination of inputs has been provided.
 
 The first variable name should be `meshing_mode`, and should take one of the following values:
 - `rec`: The tissue to be meshed is of rectangular shape
