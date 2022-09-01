@@ -79,18 +79,18 @@ class MeshGenRun():
     '''
     
     '''
-    def __init__(self, exe_input_file, run_folder, oth_input_files=[], exe_mesh_out="MeshFile.out", cmp_files=[]):
+    def __init__(self, exe_input_file, run_folder, exe_mesh_out="MeshFile.out"):
         '''
         
         '''
         self.exe_in = exe_input_file
         self.folder = run_folder
 
-        self.oth_inputs = oth_input_files
+        self.oth_inputs = []
 
         self.exe_mesh_out = exe_mesh_out
 
-        self.outputs_to_compare = cmp_files
+        self.outputs_to_compare = []
         return
 
     def addComparisonFile(self, output_name, gen_name, ref_name, trim=False):

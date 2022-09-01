@@ -2638,10 +2638,10 @@ int main(int argc, char **argv)
 	tissue_type selectTissueType = params.selectTissueType;
 
 	// set symmetry flags
-	if (params.meshing_mode==OPT_CUP || params.meshing_mode==SPH_ORG) {
+	if (params.selectTissueType==OPT_CUP || params.selectTissueType==SPH_ORG) {
 		symmetricX = true;
 	}
-	if (params.meshing_mode==REC_ECM || params.meshing_mode==REC_NO_ECM) {
+	if (params.selectTissueType==REC_ECM || params.selectTissueType==REC_NO_ECM) {
 		symmetricY = false;
 	}
 
