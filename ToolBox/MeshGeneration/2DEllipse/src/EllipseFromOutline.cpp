@@ -2622,6 +2622,7 @@ int main(int argc, char **argv)
 		cerr<<"Error in parameter inputs, quitting"<<endl;	
 		return 1;
 	};*/
+	ifstream inputOutline;
 	mesh_mode GlobalShape;
 	double 	DVRadius[2];
 	double 	APRadius[2];
@@ -2740,10 +2741,10 @@ int main(int argc, char **argv)
 		cout<<" in loop for tissue type(1) : "<<selectTissueType<<endl; 
         actinHeight = 2.0;  //these are the values used in paper: 2.0 for actin layer. If negative, there will be no layer.
         ECMHeight = 0.2;    //these are the values used in paper: 0.2 for ECM
-                addPeripodial = false;
-                //peripodialHeightFrac is not used.
-                peripodialHeightFrac = ECMHeight/(ABHeight-ECMHeight);//  ECM thickness is 0.2, AB height includes ECM. 0.33333;  //0.508
-                lumenHeightFrac = 0.;//0.2; //this is set to 0 because the lumen height will be added by curving the tissue in model input.
+		addPeripodial = false;
+		//peripodialHeightFrac is not used.
+		peripodialHeightFrac = ECMHeight/(ABHeight-ECMHeight);//  ECM thickness is 0.2, AB height includes ECM. 0.33333;  //0.508
+		lumenHeightFrac = 0.;//0.2; //this is set to 0 because the lumen height will be added by curving the tissue in model input.
 		addLateralECMRing = false;
 		modifiedZDueToThinActin = ABHeight/ABLayers;
 		//basalLayerHeight = 6.25;
@@ -2866,77 +2867,77 @@ int main(int argc, char **argv)
                 Lay01.symmetricY = true;
                 Lay01.symmetricX = true;
 	}
-        else if (selectTissueType == 6){
-                    //tubular organoid
-                    Lay01.generatingCylinder = true;
-                    addPeripodial = false;
-                    addLateralECMRing = false;
-                    actinHeight = 2.0;
-                    ECMHeight = 0.2;
-                    modifiedZDueToThinActin = ABHeight/ABLayers;
-                    if (ABLayers<3){
-                            ECMHeight = ABHeight/ABLayers;
-                            actinHeight = ABHeight/ABLayers;
-                            basalLayerHeight = ABHeight/ABLayers;
-                            modifiedZDueToThinActin  = ABHeight/ABLayers;
-                            cout<<" if clause 1,  modifiedZDueToThinActin: "<<modifiedZDueToThinActin<<endl;
-                    }
-                    else{
-                            double denominator = (ABLayers-3);
-                            bool correctECM = false;
-                            bool correctBasal = false;
-                            bool correctActin = false;
-                            if(ECMHeight<0){ECMHeight=0;denominator++;correctECM=true;}
-                            if(basalLayerHeight<0){basalLayerHeight=0;denominator++;correctBasal=true;}
-                            if(actinHeight<0){actinHeight=0;denominator++;correctActin=true;}
-                            modifiedZDueToThinActin = (ABHeight - ECMHeight - actinHeight -basalLayerHeight)/ denominator;
-                            if (correctECM){ECMHeight= modifiedZDueToThinActin;}
-                            if (correctBasal){basalLayerHeight= modifiedZDueToThinActin;}
-                            if (correctActin){actinHeight= modifiedZDueToThinActin;}
-                            cout<<" if clause 2,  modifiedZDueToThinActin: "<<modifiedZDueToThinActin<<endl;
-                    }
-                    Lay01.symmetricY = true;
-                    Lay01.symmetricX = false;
+	else if (selectTissueType == 6){
+				//tubular organoid
+				Lay01.generatingCylinder = true;
+				addPeripodial = false;
+				addLateralECMRing = false;
+				actinHeight = 2.0;
+				ECMHeight = 0.2;
+				modifiedZDueToThinActin = ABHeight/ABLayers;
+				if (ABLayers<3){
+						ECMHeight = ABHeight/ABLayers;
+						actinHeight = ABHeight/ABLayers;
+						basalLayerHeight = ABHeight/ABLayers;
+						modifiedZDueToThinActin  = ABHeight/ABLayers;
+						cout<<" if clause 1,  modifiedZDueToThinActin: "<<modifiedZDueToThinActin<<endl;
+				}
+				else{
+						double denominator = (ABLayers-3);
+						bool correctECM = false;
+						bool correctBasal = false;
+						bool correctActin = false;
+						if(ECMHeight<0){ECMHeight=0;denominator++;correctECM=true;}
+						if(basalLayerHeight<0){basalLayerHeight=0;denominator++;correctBasal=true;}
+						if(actinHeight<0){actinHeight=0;denominator++;correctActin=true;}
+						modifiedZDueToThinActin = (ABHeight - ECMHeight - actinHeight -basalLayerHeight)/ denominator;
+						if (correctECM){ECMHeight= modifiedZDueToThinActin;}
+						if (correctBasal){basalLayerHeight= modifiedZDueToThinActin;}
+						if (correctActin){actinHeight= modifiedZDueToThinActin;}
+						cout<<" if clause 2,  modifiedZDueToThinActin: "<<modifiedZDueToThinActin<<endl;
+				}
+				Lay01.symmetricY = true;
+				Lay01.symmetricX = false;
         }
-        else if(selectTissueType == 7){ // 1: ECM mimicing wing disc 48 hr, THIS WILL BE THE ONE TO USE 90% OF THE TIME!
-                    cout<<" in loop for tissue type(1) : "<<selectTissueType<<endl;
-            actinHeight = 2.0;  //these are the values used in paper: 2.0 for actin layer
-            ECMHeight = -0.2;    //these are the values used in paper: 0.2 for ECM
-                    addPeripodial = false;
-                    //peripodialHeightFrac is not used.
-                    peripodialHeightFrac = ECMHeight/(ABHeight-ECMHeight);//  ECM thickness is 0.2, AB height includes ECM. 0.33333;  //0.508
-                    lumenHeightFrac = 0.;//0.2; //this is set to 0 because the lumen height will be added by curving the tissue in model input.
-                    addLateralECMRing = false;
-                    modifiedZDueToThinActin = ABHeight/ABLayers;
-                    //basalLayerHeight = 6.25;
-                    //  end of ECM options
-                    if (ABLayers<3){
-                            ECMHeight = ABHeight/ABLayers;
-                            actinHeight = ABHeight/ABLayers;
-                            basalLayerHeight = ABHeight/ABLayers;
-                            modifiedZDueToThinActin  = ABHeight/ABLayers;
-                            cout<<" if clause 1,  modifiedZDueToThinActin: "<<modifiedZDueToThinActin<<endl;
-                    }
-                    else{
-                            double denominator = (ABLayers-3);
-                            bool correctECM = false;
-                            bool correctBasal = false;
-                            bool correctActin = false;
-                            if(ECMHeight<0){ECMHeight=0;denominator++;correctECM=true;}
-                            if(basalLayerHeight<0){basalLayerHeight=0;denominator++;correctBasal=true;}
-                            if(actinHeight<0){actinHeight=0;denominator++;correctActin=true;}
-                            modifiedZDueToThinActin = (ABHeight - ECMHeight - actinHeight -basalLayerHeight)/ denominator;
-                            if (correctECM){ECMHeight= modifiedZDueToThinActin;}
-                            if (correctBasal){basalLayerHeight= modifiedZDueToThinActin;}
-                            if (correctActin){actinHeight= modifiedZDueToThinActin;}
-                            //modifiedZDueToThinActin = (ABHeight - ECMHeight - actinHeight -basalLayerHeight)/ (ABLayers-3);
-                            cout<<" if clause 3,  modifiedZDueToThinActin: "<<modifiedZDueToThinActin<<endl;
-                    }
-                    peripodialSideCurveFrac = (modifiedZDueToThinActin + 5.52) /ABHeight ;
-                    Lay01.symmetricY = false;
-                    Lay01.symmetricX = false;
-                    cout<<"peripodialSideCurveFrac: "<<peripodialSideCurveFrac<<" ABHeight: "<<ABHeight<<" modifiedZDueToThinActin: "<<modifiedZDueToThinActin<<endl;
-            }
+	else if(selectTissueType == 7){ // 1: ECM mimicing wing disc 48 hr, THIS WILL BE THE ONE TO USE 90% OF THE TIME!
+				cout<<" in loop for tissue type(1) : "<<selectTissueType<<endl;
+		actinHeight = 2.0;  //these are the values used in paper: 2.0 for actin layer
+		ECMHeight = -0.2;    //these are the values used in paper: 0.2 for ECM
+				addPeripodial = false;
+				//peripodialHeightFrac is not used.
+				peripodialHeightFrac = ECMHeight/(ABHeight-ECMHeight);//  ECM thickness is 0.2, AB height includes ECM. 0.33333;  //0.508
+				lumenHeightFrac = 0.;//0.2; //this is set to 0 because the lumen height will be added by curving the tissue in model input.
+				addLateralECMRing = false;
+				modifiedZDueToThinActin = ABHeight/ABLayers;
+				//basalLayerHeight = 6.25;
+				//  end of ECM options
+				if (ABLayers<3){
+						ECMHeight = ABHeight/ABLayers;
+						actinHeight = ABHeight/ABLayers;
+						basalLayerHeight = ABHeight/ABLayers;
+						modifiedZDueToThinActin  = ABHeight/ABLayers;
+						cout<<" if clause 1,  modifiedZDueToThinActin: "<<modifiedZDueToThinActin<<endl;
+				}
+				else{
+						double denominator = (ABLayers-3);
+						bool correctECM = false;
+						bool correctBasal = false;
+						bool correctActin = false;
+						if(ECMHeight<0){ECMHeight=0;denominator++;correctECM=true;}
+						if(basalLayerHeight<0){basalLayerHeight=0;denominator++;correctBasal=true;}
+						if(actinHeight<0){actinHeight=0;denominator++;correctActin=true;}
+						modifiedZDueToThinActin = (ABHeight - ECMHeight - actinHeight -basalLayerHeight)/ denominator;
+						if (correctECM){ECMHeight= modifiedZDueToThinActin;}
+						if (correctBasal){basalLayerHeight= modifiedZDueToThinActin;}
+						if (correctActin){actinHeight= modifiedZDueToThinActin;}
+						//modifiedZDueToThinActin = (ABHeight - ECMHeight - actinHeight -basalLayerHeight)/ (ABLayers-3);
+						cout<<" if clause 3,  modifiedZDueToThinActin: "<<modifiedZDueToThinActin<<endl;
+				}
+				peripodialSideCurveFrac = (modifiedZDueToThinActin + 5.52) /ABHeight ;
+				Lay01.symmetricY = false;
+				Lay01.symmetricX = false;
+				cout<<"peripodialSideCurveFrac: "<<peripodialSideCurveFrac<<" ABHeight: "<<ABHeight<<" modifiedZDueToThinActin: "<<modifiedZDueToThinActin<<endl;
+		}
 	else{
 		cerr<<"Tissue type selected wrong!!"<<endl;	
 		return 0;
@@ -2948,8 +2949,8 @@ int main(int argc, char **argv)
 	// If not using pre-built triangulation
 	if (GlobalShape != T2D && GlobalShape != T3D && GlobalShape != T3D_CYL){
 		vector <float> x, y;
-		// prepare the outline file
-		ifstream inputOutline(exe_args.path_to_input, ifstream::in);
+		// prepare the outline file for reading in
+		inputOutline.open(params.outline_file_path, ifstream::in);
 		readInOutline(x,y,inputOutline);
 		Lay01.scaleInputOutline(x,y);
 		Lay01.Tesselate2D("./NodesPreTesselation.out", "./Points.node");
