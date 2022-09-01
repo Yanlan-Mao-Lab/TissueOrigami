@@ -259,13 +259,30 @@ class MeshGenRun():
                 ref_file = self.folder + "/" + f.compare_to
                 gen_file = self.folder + "/" + f.rename_to
                 # trim final line if this is flagged, before comparing
+                # however, we DON'T want to alter the reference files, so we need to make temporary copies, then clean them up
                 if f.trim:
-                    trim_final_line([ref_file, gen_file])
-                # are the files the same?
-                files_match = filecmp.cmp(ref_file, gen_file)
-                if not files_match:
-                    all_checks_passed = False
-                assert files_match, "Error: difference between reference %s and generated %s" % (ref_file, gen_file)
+                    # create temporary filenames
+                    tmp_ref = self.folder + "/tmp-trimmedline-" + f.compare_to
+                    tmp_gen = self.folder + "/tmp-trimmedline-" + f.rename_to
+                    # copy outputs to temporary files
+                    shutil.copyfile(ref_file, tmp_ref)
+                    shutil.copyfile(gen_file, tmp_gen)
+                    # trim final lines off the temporary files
+                    trim_final_line([tmp_ref, tmp_gen])
+                    # compare the now-trimmed files
+                    files_match = filecmp.cmp(tmp_ref, tmp_gen)
+                    if not files_match:
+                        all_checks_passed = False
+                    assert files_match, "Error: difference between reference %s and generated %s" % (ref_file, gen_file)
+                    # cleanup temporary files
+                    os.remove(tmp_ref)
+                    os.remove(tmp_gen)
+                else:
+                    # no need for trimming - begin checking if the files match
+                    files_match = filecmp.cmp(ref_file, gen_file)
+                    if not files_match:
+                        all_checks_passed = False
+                    assert files_match, "Error: difference between reference %s and generated %s" % (ref_file, gen_file)
         return all_checks_passed
 
     def cleanup_output_files(self):
@@ -334,8 +351,8 @@ class Test_MeshGeneration():
     # create the smallWingDisc (pt1, 2d meshing from outline file) information
     smallWgdRun1 = MeshGenRun("inputFile_smallWingDisc-1", dir_path + "/smallWingDisc")
     smallWgdRun1.addExeInput("48hrDiscSymmetricOutline")
-    smallWgdRun1.addComparisonFile("Points.1.ele", "WD_Points1-gen.ele", "WD_Points1.ele")
-    smallWgdRun1.addComparisonFile("Points.1.node", "WD_Points1-gen.node", "WD_Points1.node")
+    smallWgdRun1.addComparisonFile("Points.1.ele", "WD_Points1-gen.ele", "WD_Points1.ele", trim=True)
+    smallWgdRun1.addComparisonFile("Points.1.node", "WD_Points1-gen.node", "WD_Points1.node", trim=True)
     test_info["smallWingDisc-pt1"] = smallWgdRun1
 
     # create the smallWingDisc (pt2, 3d meshing) information
@@ -352,7 +369,7 @@ class Test_MeshGeneration():
     executable_name = "EllipseFromOutline"
 
     # output files that are produced by the executable that need to be cleaned up every time
-    always_cleanup = [ executable_loc + "/NodesPostTesselation.out", executable_loc + "/VectorsPostTesselation.out", executable_loc + "/Points.node" ]
+    always_cleanup = [ executable_loc + "/NodesPostTesselation.out", executable_loc + "/VectorsPostTesselation.out", executable_loc + "/Points.node", executable_loc + "/NodesPreTesselation.out", executable_loc + "/MeshFile.out" ]
 
     @pytest.mark.parametrize("tc", test_cases)
     def test_mesh_generation(self, tc):
