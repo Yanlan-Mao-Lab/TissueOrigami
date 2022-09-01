@@ -332,7 +332,7 @@ class Test_MeshGeneration():
 
     # identifiers for the regression tests that we have
     # these should be the folder names containing the inputs to the executable and the reference outputs
-    test_cases = [ "smallRectangle", "smallSphere", "smallWingDisc-pt1"]#, "smallWingDisc-pt2" ]
+    test_cases = [ "smallRectangle", "smallSphere", "smallWingDisc-pt1", "smallWingDisc-pt2" ]
 
     test_info = dict()
     # create the smallRectangle test information
