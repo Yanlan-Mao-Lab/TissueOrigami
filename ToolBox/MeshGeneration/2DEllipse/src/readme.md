@@ -49,6 +49,7 @@ Options:
 
 Input files follow a `.yml` style syntax of variable names, followed by colons, then by the value assigned to the variable, separated by newlines.
 Certain variable values may require further variables to be provided, which are indicated by indentation by _two character spaces_.
+Intermediary empty lines, and buffering whitespace, is ignored.
 The general syntax for the input files is thus as follows:
 ```yml
 input 1: value
@@ -58,6 +59,7 @@ input 2: value
   input 2 dependency 1: value
 input 3: value
 ```
+However there is no obligation to provide dependencies immidately after providing the value for a variable; the input reader is flexible, and will organise the inputs provided by the user and then validating that a consistent set of inputs has been provided.
 
 The first variable name should be `meshing_mode`, and should take one of the following values:
 - `rec`: The tissue to be meshed is of rectangular shape
@@ -65,20 +67,19 @@ The first variable name should be `meshing_mode`, and should take one of the fol
 - `2d` : The tissue is to be meshed in 2D using a pre-built tesselation
 - `3d` : The tissue is to be meshed in 3D using a pre-built tesselation
 - `3d_cyl` : The tissue is to be meshed in 3D using a pre-built cylindrical tesselation
-In the event that the value `wdg` is supplied, four dependencies must be provided (need diagram and details to be filled in by someone with contextual knowledge!)
+In the event that the value `wdg` is supplied, four dependencies must be provided **(need diagram and details to be filled in by someone with contextual knowledge!)**
 - `length1`:
 - `length2`:
 - `width1` :
 - `width2` :
 - `outline`: Path to an outline file that traces out the boundary of the tissue. For more information see the "shape outline files" section.
 
-Following the `meshing_mode`, the following arguments are required (in order):
+Following the `meshing_mode`, the following arguments are required:
 - `ABHeight`: The combined height (length in the $z$-direction) of the actin and basal tissue layers. When ECM is present this is technically the combined height of the actin, ECM, and basal tissue layers.
 - `PrismSideLength`: The target side length for the (prism shaped) finite volume elements.
 - `nzLayers`: The number of tissue layers in the $z$-direction.
-- `symY`: Toggles whether the mesh should be made symmetric in y.
 
-Finally, one should specify a `tissueType`:
+One should specify the required variable `tissueType`:
 - `tissueType`: Determines the type of tissue, and thus the material properties etc, that is to be meshed.
 Options for the value of this variable are:
 - 0: Wing disc after 48 hours (no ECM)
@@ -92,6 +93,9 @@ Options for the value of this variable are:
 - 8: Rectangle (no ECM)
 **NOTE**: There is cause to revise the inputs that are provided, especially since the tissue types provided are only then ultimately used to set a number of parameters to hard-coded values.
 
+Finally, the following optional arguments may be provided
+- `symY`: If provided, interprets `0`, `false`, or `False` as indicating the tissue is _not_ symmetric in the y-direction. If provided with any other value, or not provided at all, the tissue is assumed symmetric in y.
+
 ### Shape Outline Files
 
-Not sure what these are (or rather, where they come from - MATLAB?). Need contextual input.
+**Not sure what these are (or rather, where they come from - MATLAB?). Need contextual input.**

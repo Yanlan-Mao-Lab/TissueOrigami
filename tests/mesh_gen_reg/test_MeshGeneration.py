@@ -58,9 +58,9 @@ class OutputFileRelocation():
     Attributes
     ----------
     output_name : Name of an output file produced by the mesh generation exe
-    rename_to : Name to save this output to in the testing area
     compare_to : Name of the reference file to compare this output to
-    trim : If true, remove the finl line from this output file before comparing
+    rename_to : [Default output_name] Name to save this output to in the testing area
+    trim : [Default false] If true, remove the finl line from this output file before comparing
 
     Construction
     ------------
@@ -69,12 +69,15 @@ class OutputFileRelocation():
     Methods
     -------
     '''
-    def __init__(self, output_name, rename_to, compare_to, trim=False):
+    def __init__(self, output_name, compare_to, rename_to="", trim=False):
         '''
         Creates a new instance of OutputFileRelocation with the assigned attributes.
         '''
         self.output_name = output_name
-        self.rename_to = rename_to
+        if rename_to=="":
+            self.rename_to = output_name
+        else:
+            self.rename_to = rename_to
         self.compare_to = compare_to
         self.trim = trim
         return
@@ -155,12 +158,12 @@ class MeshGenRun():
         self.outputs_to_compare = []
         return
 
-    def addComparisonFile(self, output_name, rename_to, compare_to, trim=False):
+    def addComparisonFile(self, output_name, compare_to, rename_to="", trim=False):
         '''
         Appends a new instance of OutputFileRelocation to the list of outputs to extract for this test.
         See OutputFileRelocation for parameter details.
         '''
-        self.outputs_to_compare.append(OutputFileRelocation(output_name, rename_to, compare_to, trim))
+        self.outputs_to_compare.append(OutputFileRelocation(output_name, compare_to, rename_to, trim))
         return
     
     def addExeInput(self, ref_name, reloc_name=""):
@@ -339,27 +342,27 @@ class Test_MeshGeneration():
     smallRecRun = MeshGenRun("inputFile_smallRectangle", dir_path + "/smallRectangle")
     smallRecRun.addExeInput("smallRectangle.ele", "Points.1.ele")
     smallRecRun.addExeInput("smallRectangle.node", "Points.1.node")
-    smallRecRun.addComparisonFile("MeshFile.out", "smallRectangle-gen.mesh", "smallRectangle.mesh")
+    smallRecRun.addComparisonFile("MeshFile.out", "smallRectangle.mesh", rename_to="smallRectangle-gen.mesh", )
     test_info["smallRectangle"] = smallRecRun
 
     # create the smallSphere test information
     smallSphRun = MeshGenRun("inputFile_smallSphere", dir_path + "/smallSphere")
     smallSphRun.addExeInput("SphericalTriangulation.txt", "SphericalTriangulation")
-    smallSphRun.addComparisonFile("MeshFile.out", "smallSphere-gen.mesh", "smallSphere.mesh")
+    smallSphRun.addComparisonFile("MeshFile.out", "smallSphere.mesh", rename_to="smallSphere-gen.mesh", )
     test_info["smallSphere"] = smallSphRun
 
     # create the smallWingDisc (pt1, 2d meshing from outline file) information
     smallWgdRun1 = MeshGenRun("inputFile_smallWingDisc-1", dir_path + "/smallWingDisc")
     smallWgdRun1.addExeInput("48hrDiscSymmetricOutline")
-    smallWgdRun1.addComparisonFile("Points.1.ele", "WD_Points1-gen.ele", "WD_Points1.ele", trim=True)
-    smallWgdRun1.addComparisonFile("Points.1.node", "WD_Points1-gen.node", "WD_Points1.node", trim=True)
+    smallWgdRun1.addComparisonFile("Points.1.ele", "WD_Points1.ele", rename_to="WD_Points1-gen.ele", trim=True)
+    smallWgdRun1.addComparisonFile("Points.1.node", "WD_Points1.node", rename_to="WD_Points1-gen.node", trim=True)
     test_info["smallWingDisc-pt1"] = smallWgdRun1
 
     # create the smallWingDisc (pt2, 3d meshing) information
     smallWgdRun2 = MeshGenRun("inputFile_smallWingDisc-2", dir_path + "/smallWingDisc")
     smallWgdRun2.addExeInput("WD_Points1.ele", "Points.1.ele")
     smallWgdRun2.addExeInput("WD_Points1.node", "Points.1.node")
-    smallWgdRun2.addComparisonFile("MeshFile.out", "smallWingDisc-gen.mesh", "smallWingDisc.mesh")
+    smallWgdRun2.addComparisonFile("MeshFile.out", "smallWingDisc.mesh", rename_to="smallWingDisc-gen.mesh")
     test_info["smallWingDisc-pt2"] = smallWgdRun2
 
     # location of the folder containing the mesh generation executable
