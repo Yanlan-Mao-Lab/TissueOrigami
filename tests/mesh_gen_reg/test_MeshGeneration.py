@@ -1,11 +1,13 @@
 ## test_regression.py
 ## Created by: William Graham, 2022-08-04
 
+import pytest
+from pytest_check import check
 import os, filecmp, shutil, subprocess
 
 def cleanup(fnames):
     '''
-    Removes files whose names match those in fnames
+    Removes files whose names match those in fnames, skipping over entries that do not match a path
 
     Parameters
     ----------
@@ -13,7 +15,10 @@ def cleanup(fnames):
     '''
 
     for f in fnames:
-        os.remove(f)
+        if os.path.exists(f):
+            os.remove(f)
+        else:
+            print("Could not find file %s, skipping removal" % f)
     return
 
 def trim_final_line(fnames):
@@ -43,6 +48,129 @@ def trim_final_line(fnames):
                 file.truncate()
     return
 
+class OutputFileRelocation():
+    '''
+    
+    '''
+    def __init__(self, out_name, gen_name, ref_name, trim=False):
+        '''
+        
+        '''
+        self.output_name = out_name
+        self.rename_to = gen_name
+        self.compare_to = ref_name
+        self.trim = trim
+        return
+
+class InputFileRelocation():
+    '''
+    '''
+    def __init__(self, ref_name, reloc_name=""):
+        '''
+        '''
+        self.ref_name = ref_name
+        if reloc_name=="":
+            self.reloc_name = ref_name
+        else:
+            self.reloc_name = reloc_name
+        return
+
+class MeshGenRun():
+    '''
+    
+    '''
+    def __init__(self, exe_input_file, run_folder, oth_input_files=[], exe_mesh_out="MeshFile.out", cmp_files=[]):
+        '''
+        
+        '''
+        self.exe_in = exe_input_file
+        self.folder = run_folder
+
+        self.oth_inputs = oth_input_files
+
+        self.exe_mesh_out = exe_mesh_out
+
+        self.outputs_to_compare = cmp_files
+        return
+
+    def addComparisonFile(self, output_name, gen_name, ref_name, trim=False):
+        '''
+        
+        '''
+        self.outputs_to_compare.append(OutputFileRelocation(output_name, gen_name, ref_name, trim))
+        return
+    
+    def addExeInput(self, ref_name, reloc_name=""):
+        '''
+        
+        '''
+        self.oth_inputs.append(InputFileRelocation(ref_name, reloc_name))
+        return
+    
+    def copy_inputs_to_loc(self, path):
+        '''
+        '''
+        # move the required input file first - do not allow renaming!
+        shutil.copyfile(self.folder + "/" + self.exe_in, path + "/" + self.exe_in)
+        # move any other required inputs we have, renaming them if specified
+        for f in self.oth_inputs:
+            shutil.copyfile(self.folder + "/" + f.ref_name, path + "/" + f.reloc_name)
+        return
+
+    def run_executable(self, exe_loc, exe_name):
+        '''
+        '''
+        # create the command
+        command = "./" + exe_name + " " + self.exe_in + " " + self.exe_mesh_out
+        # executate mesh generation executable,
+        # supplying the input file self.exe_in and output name self.exe_mesh_out as command-line args
+        subprocess.Popen(command.split(), cwd=exe_loc)
+        return
+    
+    def move_gen_outputs(self, exe_loc):
+        '''
+        '''
+        # for each instance in outputs_to_compare, move the file to self.folder
+        for f in self.outputs_to_compare:
+            src = exe_loc + "/" + f.out_name
+            dst = self.folder + "/" + f.rename_to
+            shutil.move(src, dst)
+        return
+    
+    def cleanup_moved_inputs(self, path):
+        '''
+        '''
+        # do not allow destruction of the reference files!
+        if os.path.abspath(path)==os.path.abspath(self.folder):
+            raise RuntimeError("Error: will not delete reference folder files!")
+        # clean up the copied input file, error if not found since we could be looking in the wrong directory
+        if os.path.exists(path + "/" + self.exe_in):
+            os.remove(path + "/" + self.exe_in)
+        else:
+            raise RuntimeError("Error: %s not found - are you looking in the correct directory?" % path + "/" + self.exe_in)
+        # clean up any other input files that we copied across
+        for f in self.oth_inputs:
+            if os.path.exists(path + "/" + f.reloc_name):
+                os.remove(path + "/" + f.reloc_name)
+            else:
+                raise RuntimeError("Error: %s not found - are you looking in the correct directory?" % path + "/" + f.reloc_name)
+        return
+
+    def compare_output_files(self):
+        '''
+        '''
+        # perform _all_ comparisons, even if one pair do not match
+        with check:
+            # for each instance in self.outputs_to_compare, run filecmp.cmp on f.rename_to and f.compare_to
+            for f in self.outputs_to_compare:
+                ref_file = self.folder + "/" + f.compare_to
+                gen_file = self.folder + "/" + f.rename_to
+                # trim final line if this is flagged, before comparing
+                if f.trim:
+                    trim_final_line([ref_file, gen_file])
+                assert filecmp(ref_file, gen_file), "Error: difference between reference %s and generated %s" % (ref_file, gen_file)
+        return
+
 class Test_MeshGeneration():
     '''
     Test that the functionality of the mesh generation executable has not been signficantly altered by changes to the codebase (regression test).
@@ -60,190 +188,53 @@ class Test_MeshGeneration():
     # path to reappend in order to find files to compare
     dir_path = os.path.dirname(os.path.abspath(__file__))
 
-    # location of the folder containing the reference outputs
-    ref_location = dir_path + "/ref_outputs"
-    # location of the folder containing the inputs to mesh generation executable
-    input_loc = dir_path + "/mesh_inputs"
-    # location of the folder to place the generated outputs into
-    gen_location = dir_path + "/gen_outputs"
+    # identifiers for the regression tests that we have
+    # these should be the folder names containing the inputs to the executable and the reference outputs
+    test_cases = [ "smallRectangle", "smallSphere" ]
+
+    test_info = dict()
+    smallRecRun = MeshGenRun("inputFile_smallRectangle", dir_path + "/smallRectangle")
+    smallRecRun.addExeInput("smallRectangle.ele", "Points.1.ele")
+    smallRecRun.addExeInput("smallRectangle.node", "Points.1.node")
+    smallRecRun.addComparisonFile("MeshFile.out", "smallRectangle-gen.mesh", "smallRectangle.mesh")
+    test_info["smallRectangle"] = smallRecRun
+
+    smallSphRun = MeshGenRun("inputFile_smallSphere", dir_path + "/smallSphere")
+    smallSphRun.addExeInput("SphericalTriangulation.txt", "SphericalTriangulation")
+    smallSphRun.addComparisonFile("MeshFile.out", "smallSphere-gen.mesh", "smallSphere.mesh")
+    test_info["smallSphere"] = smallSphRun
 
     # location of the folder containing the mesh generation executable
     executable_loc = dir_path + "/../../ToolBox/MeshGeneration/2DEllipse"
     # name of the mesh generation executable
     executable_name = "EllipseFromOutline"
 
-    # at present, the executable just dumps MeshFile.out to the directory
-    raw_output_src = executable_loc + "/MeshFile.out"           
+    # output files that are produced by the executable that need to be cleaned up every time
+    always_cleanup = [ executable_loc + "/NodesPostTesselation.out", executable_loc + "/VectorsPostTesselation.out", executable_loc + "/Points.node" ]
 
-    def test_smallRectangle(self):
+    @pytest.mark.parametrize("tc", test_cases)
+    def test_mesh_generation(self, tc):
         '''
-        Regression test for the smallRectangle mesh.
-        Reference output: smallRectangle.mesh
-        '''
-
-        # create the output directory if it doesn't already exist
-        if (not os.path.exists(self.gen_location)):
-            os.mkdir(self.gen_location)
-
-        # reference output to compare to
-        ref_output = self.ref_location + "/smallRectangle.mesh"
-        # check this file can be found, fail if not
-        assert os.path.exists(ref_output), "Could not find reference file: " + ref_output
-        # where to place the generated output
-        gen_output = self.gen_location + "/smallRectangle.mesh"
-
-        # copy input files to executable directory
-        src_nodes = self.input_loc + "/smallRectangle.node"
-        src_ele = self.input_loc + "/smallRectangle.ele"
-        dst_nodes = self.executable_loc + "/Points.1.node"
-        dst_ele = self.executable_loc + "/Points.1.ele"
-        shutil.copyfile(src_nodes, dst_nodes)
-        shutil.copyfile(src_ele, dst_ele)
-
-        # ./EllipseFromOutline -1 5.2 2 3 0, additional 1 for TissueType input allowance
-        command = "./" + self.executable_name + " -1 5.2 2 3 0 1"
-        # run the executable...
-        subprocess.run(command.split(), cwd=self.executable_loc)
-        # the output should then be moved (and renamed) to gen_output, in case we wish to inspect it later
-        shutil.move(self.raw_output_src, gen_output)
-
-        # now compare the contents of the generated output and the reference output
-        assert filecmp.cmp(ref_output, gen_output, shallow=False), "Output meshfile mismatch between " + ref_output + " and " + gen_output
-
-        # clean up auxillary and copied files
-        cleanup([dst_nodes, dst_ele, self.executable_loc + "/NodesPostTesselation.out", self.executable_loc + "/VectorsPostTesselation.out"])
-
-        return
-
-    def test_smallSphere(self):
-        '''
-        Regression test for the smallSphere mesh.
-        Reference output: smallSphere.mesh
-        '''
-
-        # create the output directory if it doesn't already exist
-        if (not os.path.exists(self.gen_location)):
-            os.mkdir(self.gen_location)
-
-        # reference output to compare to
-        ref_output = self.ref_location + "/smallSphere.mesh"
-        # check this file can be found, fail if not
-        assert os.path.exists(ref_output), "Could not find reference file: " + ref_output
-        # where to place the generated output
-        gen_output = self.gen_location + "/smallSphere.mesh"
-
-        # copy input files to executable directory
-        src_tri = self.input_loc + "/SphericalTriangulation.txt"
-        dst_tri = self.executable_loc + "/SphericalTriangulation"
-        shutil.copyfile(src_tri, dst_tri)
-
-        # ./EllipseFromOutline -2 4.2 2 3 0, additional 5 for TissueType input allowance
-        command = "./" + self.executable_name + " -2 4.2 2 3 0 5"
-        # run the executable...
-        subprocess.run(command.split(), cwd=self.executable_loc)
-        # the output should then be moved (and renamed) to gen_output, in case we wish to inspect it later
-        shutil.move(self.raw_output_src, gen_output)
-
-        # now compare the contents of the generated output and the reference output
-        assert filecmp.cmp(ref_output, gen_output, shallow=False), "Output meshfile mismatch between " + ref_output + " and " + gen_output
-
-        # clean up auxillary and copied files
-        cleanup([dst_tri, self.executable_loc + "/NodesPostTesselation.out", self.executable_loc + "/VectorsPostTesselation.out"])
-
-        return
-
-    def test_smallWingDisc(self):
-        '''
-        Regression test for the smallWingDisc mesh.
-        Reference output: smallWingDisc.mesh
-        Intermediaries: WD_Points.1.node, WD_Points.1.ele
-        '''
-
-        # create the output directory if it doesn't already exist
-        if (not os.path.exists(self.gen_location)):
-            os.mkdir(self.gen_location)
-
-        # reference output to compare to
-        ref_output = self.ref_location + "/smallWingDisc.mesh"
-        # check this file can be found, fail if not
-        assert os.path.exists(ref_output), "Could not find reference file: " + ref_output
-
-        # reference intermediary output files
-        ref_im_nodes = self.ref_location + "/WD_Points.1.node"
-        ref_im_ele = self.ref_location + "/WD_Points.1.ele"
-        # check the files exist
-        assert os.path.exists(ref_im_nodes), "Could not find reference file: " + ref_im_nodes
-        assert os.path.exists(ref_im_ele), "Could not find reference file: " + ref_im_ele
-
-        # where to place the generated output and intermediary files
-        gen_output = self.gen_location + "/smallWingDisc.mesh"
-        gen_im_nodes = self.gen_location + "/WD_Points.1.node"
-        gen_im_ele = self.gen_location + "/WD_Points.1.ele"
-
-        # expected names of the intermediary files
-        raw_im_nodes = self.executable_loc + "/Points.1.node"
-        raw_im_ele = self.executable_loc + "/Points.1.ele"
-
-        # PHASE 1: Copy outline file and create 2D mesh
-
-        # copy files across to target directories
-        src_outline = self.input_loc + "/48hrDiscSymmetricOutline"
-        # create the target directory if it doesn't already exist
-        dst_outline = self.executable_loc + "/48hrDiscSymmetricOutline"
-        shutil.copyfile(src_outline, dst_outline)
-
-        # ./EllipseFromOutline 1 35.56 50 27.3 27.3 12.5 9 2 0  ./48hrDiscSymmetricOutline, insert 1 before the path to pass the TissueType
-        command = "./" + self.executable_name + " 1 35.56 50 27.3 27.3 12.5 9 2 0 1 " + dst_outline
-        # run the executable...
-        subprocess.run(command.split(), cwd=self.executable_loc)
-        # we should have produced the points.1.{ele, node} files
-        # copy these to the output directory (to preserve them for comparison later)
-        shutil.move(raw_im_nodes, gen_im_nodes)
-        shutil.move(raw_im_ele, gen_im_ele)
-
-        # now cleanup the files we produced and copied across
-        cleanup([dst_outline, self.executable_loc + "/Points.node", self.executable_loc + "/NodesPreTesselation.out"])
-
-        # PHASE 2: Extrude to 3 dimensions
-
-        # copy across the reference input files to the locations they are expected to be at
-        shutil.copyfile(ref_im_nodes, raw_im_nodes)
-        shutil.copyfile(ref_im_ele, raw_im_ele)
-
-        # ./EllipseFromOutline -1 5.2 1.0 3 1, extra 1 to pass the TissueType
-        command = "./" + self.executable_name + " -1 5.2 1.0 3 1 1"
-        # run the executable...
-        subprocess.run(command.split(), cwd=self.executable_loc)
-        # save the output
-        shutil.move(self.raw_output_src, gen_output)
         
-        # cleanup auxillary files
-        cleanup([raw_im_ele, raw_im_nodes, self.executable_loc + "/NodesPostTesselation.out", self.executable_loc + "/VectorsPostTesselation.out"])
+        '''
+        # easily aliased information for this test
+        mesh_gen_test = self.test_info[tc]
 
-        # # PHASE 3: Compare intermediaries and output files
+        # copy the required input files to the executable directory
+        mesh_gen_test.copy_inputs_to_loc(self.executable_loc)
+        
+        # having copied the input files across, run the executable
+        mesh_gen_test.run_executable(self.executable_loc, self.executable_name)
 
-        assert filecmp.cmp(ref_output, gen_output, shallow=False), "Output meshfile mismatch between " + ref_output + " and " + gen_output
+        # move the outputs (that we care about) to the testing area
+        mesh_gen_test.move_gen_outputs(self.executable_loc)
 
-        # triangle-generated files append the ABSOLUTE path to the end of the file
-        # this means that the final line of the reference intermediary- and the generated intermediary files will always be different, as the call to triangle uses a different path
-        # the solution is to trim this final line from both files and compare the result
-        # make temporary directory for this
-        tmp_dir = self.dir_path + "/temp_im_comp"
-        if (not os.path.exists(tmp_dir)):
-            os.mkdir(tmp_dir)
-        # for ease of making new files in the directory
-        tmp_dir += "/"
-        # copy files across
-        shutil.copyfile(ref_im_nodes, tmp_dir + "ref.node")
-        shutil.copyfile(ref_im_ele, tmp_dir + "ref.ele")
-        shutil.copyfile(gen_im_nodes, tmp_dir + "gen.node")
-        shutil.copyfile(gen_im_ele, tmp_dir + "gen.ele")
-        # trim final lines
-        trim_final_line([tmp_dir + "ref.node", tmp_dir + "ref.ele", tmp_dir + "gen.node", tmp_dir + "gen.ele"])
-        # compare remaining parts of files, which should match
-        assert filecmp.cmp(tmp_dir + "ref.node", tmp_dir + "gen.node", shallow=False), "Intermediary file mismatch between " + ref_im_nodes + " and " + gen_im_nodes
-        assert filecmp.cmp(tmp_dir + "ref.ele", tmp_dir + "gen.ele", shallow=False), "Intermediary file mismatch between " + ref_im_ele + " and " + gen_im_ele
-        # cleanup the temporary directory
-        shutil.rmtree(tmp_dir)
+        # cleanup the input file copies that we made
+        mesh_gen_test.cleanup_moved_inputs(self.executable_loc)
+        # cleanup any other files that always need to be removed from the directory after running the executable
+        cleanup(self.always_cleanup)
 
+        # now perform the file comparisons
+        # ASSERT will be performed in here
+        mesh_gen_test.compare_output_files()
         return
