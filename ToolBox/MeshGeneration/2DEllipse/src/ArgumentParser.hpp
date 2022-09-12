@@ -3,7 +3,7 @@
 
 using namespace std;
 
-enum mesh_mode {
+enum MeshMode {
     REC = 0,
     WGD = 1,
     T2D  = 2,
@@ -16,7 +16,7 @@ enum mesh_mode {
  * @param mode meshing_mode value read from the input file
  * @return mesh_mode The type of meshing to be performed
  */
-mesh_mode interpretMeshMode(string mode);
+MeshMode interpretMeshMode(string mode);
 
 enum tissue_type {
     WGD_48HR = 0,
@@ -54,7 +54,7 @@ class ArgumentSpace{
 
     public:
         // signals whether we are meshing a wingdisc, rectangle, or pre-built 2d or 3d tesselation
-        mesh_mode meshing_mode;
+        MeshMode meshing_mode;
         // determines the type of tissue that we are meshing
         tissue_type selectTissueType;
 

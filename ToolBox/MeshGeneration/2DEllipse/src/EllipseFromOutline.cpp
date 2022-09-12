@@ -2623,7 +2623,7 @@ int main(int argc, char **argv)
 		return 1;
 	};*/
 	ifstream inputOutline;
-	mesh_mode GlobalShape;
+	MeshMode GlobalShape;
 	double 	DVRadius[2];
 	double 	APRadius[2];
 	double 	ABHeight;
@@ -2947,7 +2947,7 @@ int main(int argc, char **argv)
 		Lay01.calculatePeripodialMembraneParameters(ABHeight, ABLayers,  ECMHeight,  modifiedZDueToThinActin, peripodialHeightFrac, lumenHeightFrac,peripodialSideCurveFrac,addLateralECMRing);
 	}
 	// If not using pre-built triangulation
-	if (GlobalShape != T2D && GlobalShape != T3D && GlobalShape != T3D_CYL){
+	if (GlobalShape != MeshMode::T2D && GlobalShape != MeshMode::T3D && GlobalShape != MeshMode::T3D_CYL){
 		vector <float> x, y;
 		// prepare the outline file for reading in
 		inputOutline.open(params.outline_file_path, ifstream::in);
@@ -2955,10 +2955,10 @@ int main(int argc, char **argv)
 		Lay01.scaleInputOutline(x,y);
 		Lay01.Tesselate2D("./NodesPreTesselation.out", "./Points.node");
 	}
-    if(GlobalShape == T2D){
+    if(GlobalShape == MeshMode::T2D){
 		Lay01.readInTesselation2D("./Points.1.ele", "./Points.1.node", "./VectorsPostTesselation.out", "./NodesPostTesselation.out");
 	}
-    if(GlobalShape == T3D){
+    if(GlobalShape == MeshMode::T3D){
 		Lay01.readInTesselation3D("./SphericalTriangulation", "./VectorsPostTesselation.out", "./NodesPostTesselation.out");
 	}
 	//now I have the triangulated mesh. If I have peripodial, I need to get the circumference.
