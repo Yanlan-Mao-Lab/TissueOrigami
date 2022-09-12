@@ -54,7 +54,7 @@ class ArgumentSpace{
         // wing disc specific required parameters
 
         double length[2], width[2];
-        string outline_file_path;
+        std::string outline_file_path;
 
         // parameters required for all meshing methods
 
@@ -70,7 +70,7 @@ class ArgumentSpace{
          * 
          * @param input_file Path to the input file to read from
          */
-        explicit ArgumentSpace(string input_file);
+        explicit ArgumentSpace(std::string input_file);
 
         /**
          * @brief Given the name of an input variable, assign value to the relevent class atrribute
@@ -78,21 +78,21 @@ class ArgumentSpace{
          * @param variable Name of the variable to assign to
          * @param value Value to assign
          */
-        void assign_input(string variable, string value);
+        void assign_input(std::string variable, std::string value);
         /**
          * @brief Translates values for meshing_mode from input files into enums
          *
          * @param mode meshing_mode value read from the input file
          * @return mesh_mode The type of meshing to be performed
          */
-        void interpretMeshMode(string mode);
+        void interpretMeshMode(std::string mode);
         /**
          * @brief Translates values for tissue_type from input files into enums
          *
          * @param mode tissue_type value read from the input file
          * @return TissueType The type of tissue being meshed
          */
-        void interpretTissueType(string tt);
+        void interpretTissueType(std::string tt);
         /**
          * @brief Check that the combination of parsed inputs are sufficient to execute mesh generation
          * 
