@@ -50,7 +50,7 @@ Options:
 ### Input File Syntax
 
 Input files follow a `.yml` style syntax of variable names, followed by colons, then by the value assigned to the variable, separated by newlines.
-Certain variable values may require further variables to be provided; whilst empty lines, and buffering whitespace, is ignored.
+Certain variable values may require further variables to be provided; whilst empty lines and buffering whitespace are ignored.
 The general syntax for the input files is thus as follows:
 ```yml
 input 1: value
