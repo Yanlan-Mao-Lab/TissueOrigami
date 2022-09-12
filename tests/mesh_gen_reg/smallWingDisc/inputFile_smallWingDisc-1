@@ -1,11 +1,11 @@
-meshing_mode: wgd
+meshingMode: wgd
     length1: 35.56
     length2: 50
     width1: 27.3
     width2: 27.3
     outline: ./48hrDiscSymmetricOutline
 ABHeight: 12.5
-PrismSideLength: 9
+prismSideLength: 9
 nzLayers: 2
 symY: 0
 tissueType: 1

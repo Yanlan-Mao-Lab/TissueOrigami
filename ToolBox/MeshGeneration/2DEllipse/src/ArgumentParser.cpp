@@ -139,9 +139,9 @@ ArgumentSpace::ArgumentSpace(string input_file) {
 };
 
 void ArgumentSpace::assign_input(string variable, string value) {
-    if (variable == "meshing_mode") {
+    if (variable == "meshingMode") {
         interpretMeshMode(value);
-        vars_set.meshing_mode = true;
+        vars_set.meshingMode = true;
     }
     else if (variable == "tissueType") {
         interpretTissueType(value);
@@ -151,9 +151,9 @@ void ArgumentSpace::assign_input(string variable, string value) {
         ABHeight = stod(value);
         vars_set.ABHeight = true;
     }
-    else if (variable == "PrismSideLength") {
+    else if (variable == "prismSideLength") {
         prismSideLen = stod(value);
-        vars_set.PrismSideLen = true;
+        vars_set.prismSideLen = true;
     }
     else if (variable == "nzLayers") {
         nzLayers = stoi(value);
@@ -234,10 +234,10 @@ void ArgumentSpace::interpretTissueType(string tt)
 void ArgumentSpace::validate_input_file_contents() {
     // we always require the following to be set:
     // meshing_mode, selectTissueType, ABHeight, PrismSideLen, nzLayers
-    if (!vars_set.meshing_mode) { throw runtime_error("Error - no meshing_mode variable defined in input\n");}
+    if (!vars_set.meshingMode) { throw runtime_error("Error - no meshing_mode variable defined in input\n");}
     else if (!vars_set.selectTissueType) { throw runtime_error("Error - no tissueType variable defined in input\n");}
     else if (!vars_set.ABHeight) { throw runtime_error("Error - no ABHeight variable defined in input\n");}
-    else if (!vars_set.PrismSideLen) { throw runtime_error("Error - no PrismSideLen variable defined in input\n");}
+    else if (!vars_set.prismSideLen) { throw runtime_error("Error - no PrismSideLen variable defined in input\n");}
     else if (!vars_set.nzLayers) { throw runtime_error("Error - no nzLayers variable defined in input\n");}
 
     // if we are meshing a wing disc, check that optional arguments were passed

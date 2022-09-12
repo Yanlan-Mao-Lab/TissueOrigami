@@ -26,10 +26,10 @@ enum TissueType {
 // this structure stores the flags that we can mark when certain inputs are read
 struct argument_flags
 {
-    bool meshing_mode = false;
+    bool meshingMode = false;
     bool selectTissueType = false;
     bool ABHeight = false;
-    bool PrismSideLen = false;
+    bool prismSideLen = false;
     bool nzLayers = false;
     bool length[2] = {false};
     bool width[2] = {false};

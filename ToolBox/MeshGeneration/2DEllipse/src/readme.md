@@ -63,7 +63,7 @@ input 3: value
 There is no obligation to this format of indenting variables beneath their dependents, provide dependencies immidately after a dependent variable, nor use any indenting - however it is advised for legibility!
 This being said; the input reader is flexible and will organise the inputs provided by the user _before_ attempting to validate that a consistent combination of inputs has been provided.
 
-The first variable name should be `meshing_mode`, and should take one of the following values:
+The first variable name should be `meshingMode`, and should take one of the following values:
 - `rec`: The tissue to be meshed is of rectangular shape
 - `wgd`: The tissue to be meshed is of wing-disc shape - this includes elliptical (and circular) shapes
 - `2d` : The tissue is to be meshed in 2D using a pre-built tesselation
@@ -76,9 +76,9 @@ In the event that the value `wdg` is supplied, four dependencies must be provide
 - `width2` :
 - `outline`: Path to an outline file that traces out the boundary of the tissue. For more information see the "shape outline files" section.
 
-Following the `meshing_mode`, the following arguments are required:
+Following the `meshingMode`, the following arguments are required:
 - `ABHeight`: The combined height (length in the $z$-direction) of the actin and basal tissue layers. When ECM is present this is technically the combined height of the actin, ECM, and basal tissue layers.
-- `PrismSideLength`: The target side length for the (prism shaped) finite volume elements.
+- `prismSideLength`: The target side length for the (prism shaped) finite volume elements.
 - `nzLayers`: The number of tissue layers in the $z$-direction.
 
 One should specify the required variable `tissueType`:
