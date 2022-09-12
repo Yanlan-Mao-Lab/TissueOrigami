@@ -1,0 +1,30 @@
+# Workflow for debugging binary-output mismatches
+
+name: Bin-Debug
+
+# Set to run on pull requests and pushes to ARCCollaboration or to master directly
+on:
+  push:
+    branches: ["wgraham-TEMP-macrunner"]
+
+jobs:
+  # Build TissueFolding without pardiso and run regression checks
+  MacRunner:
+    name: Mac Runner binary saves
+    runs-on: macos-latest
+    steps:
+      # check out repository
+      - name: Check out repository
+        uses: actions/checkout@v3
+      
+      # build various things
+      - name: Build binary reader executable
+        run: |
+          cd ${{ github.workspace }}/TF-OutputMismatchExperiments
+          g++ write_binary.cpp -o write_binary.o
+          ./write_binary.o -w mac-bin
+          ./write_binary.o -r mac-bin
+      
+      # run interactive session
+      - name: tmate time
+        uses: mxschmitt/action-tmate@v3
