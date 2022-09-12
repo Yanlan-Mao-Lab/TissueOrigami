@@ -28,13 +28,13 @@ MeshMode interpretMeshMode(string mode) {
     }
 }
 
-tissue_type interpretTissueType(string tt) {
+TissueType interpretTissueType(string tt) {
     int t = stoi(tt);
     if(t<0 || t>9) {
         throw runtime_error("Error: invalid tissue type given (" + tt + ")");
     }
     else {
-        return tissue_type(t);
+        return TissueType(t);
     }
 }
 

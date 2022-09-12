@@ -2636,13 +2636,13 @@ int main(int argc, char **argv)
 	bool symmetricY = true;
 	bool symmetricX = false;
 
-	tissue_type selectTissueType = params.selectTissueType;
+	TissueType selectTissueType = params.selectTissueType;
 
 	// set symmetry flags
-	if (params.selectTissueType==OPT_CUP || params.selectTissueType==SPH_ORG) {
+	if (params.selectTissueType==TissueType::OPT_CUP || params.selectTissueType==TissueType::SPH_ORG) {
 		symmetricX = true;
 	}
-	if (params.selectTissueType==REC_ECM || params.selectTissueType==REC_NO_ECM) {
+	if (params.selectTissueType==TissueType::REC_ECM || params.selectTissueType==TissueType::REC_NO_ECM) {
 		symmetricY = false;
 	}
 
@@ -2701,7 +2701,7 @@ int main(int argc, char **argv)
 	//      there is no peripodial, or lumen, or side curve. Height will depend on the
 	//	tissue of selection (peripodial or columnar).
 
-	if (selectTissueType == 0){ // 0 : wingdisc48Hr, 
+	if (selectTissueType == TissueType::WGD_48HR){ // 0 : wingdisc48Hr, 
 		cout<<" in loop for tissue type(0) : "<<selectTissueType<<endl; 
 		peripodialHeightFrac = 0.45; 
 		lumenHeightFrac = 0.25;
@@ -2737,7 +2737,7 @@ int main(int argc, char **argv)
 			}
 		}
 	}
-    else if(selectTissueType == 1){ // 1: ECM mimicing wing disc 48 hr, THIS WILL BE THE ONE TO USE 90% OF THE TIME!
+    else if(selectTissueType == TissueType::WGD_48HR_ECM){ // 1: ECM mimicing wing disc 48 hr, THIS WILL BE THE ONE TO USE 90% OF THE TIME!
 		cout<<" in loop for tissue type(1) : "<<selectTissueType<<endl; 
         actinHeight = 2.0;  //these are the values used in paper: 2.0 for actin layer. If negative, there will be no layer.
         ECMHeight = 0.2;    //these are the values used in paper: 0.2 for ECM
@@ -2776,7 +2776,7 @@ int main(int argc, char **argv)
 		Lay01.symmetricX = false;
 		cout<<"peripodialSideCurveFrac: "<<peripodialSideCurveFrac<<" ABHeight: "<<ABHeight<<" modifiedZDueToThinActin: "<<modifiedZDueToThinActin<<endl;
 	}
-	else if(selectTissueType == 2){
+	else if(selectTissueType == TissueType::WGD_72HR){
 		cout<<" in loop for tissue type(2) : "<<selectTissueType<<endl; 
 		peripodialHeightFrac = 0.45; 
 		lumenHeightFrac = 0.25;
@@ -2785,7 +2785,7 @@ int main(int argc, char **argv)
 		Lay01.symmetricY = true;
 		Lay01.symmetricX = false;
 	}
-	else if(selectTissueType == 3){
+	else if(selectTissueType == TissueType::OPT_CUP){
 		cout<<" in loop for tissue type(3) : "<<selectTissueType<<endl; 
 		peripodialHeightFrac = 1.0; 
 		lumenHeightFrac = 0.2;
@@ -2794,7 +2794,7 @@ int main(int argc, char **argv)
 		Lay01.symmetricY = true;
 		Lay01.symmetricX = true;
 	}
-	else if(selectTissueType == 4){
+	else if(selectTissueType == TissueType::HLF_DSC){
 		cout<<" in loop for tissue type(4) : "<<selectTissueType<<endl; 
 		peripodialHeightFrac = 1.0; 
 		lumenHeightFrac = 1.0;
@@ -2834,7 +2834,7 @@ int main(int argc, char **argv)
 			//modifiedZDueToThinActin = (ABHeight - ECMHeight - actinHeight -basalLayerHeight)/ (ABLayers-3);
 		}
 	}
-    else if (selectTissueType == 5){
+    else if (selectTissueType == TissueType::SPH_ORG){
 		//spherical organoid
                 Lay01.generatingSphere = true;
 		addPeripodial = false;
@@ -2867,7 +2867,7 @@ int main(int argc, char **argv)
                 Lay01.symmetricY = true;
                 Lay01.symmetricX = true;
 	}
-	else if (selectTissueType == 6){
+	else if (selectTissueType == TissueType::TUB_ORG){
 				//tubular organoid
 				Lay01.generatingCylinder = true;
 				addPeripodial = false;
@@ -2899,7 +2899,7 @@ int main(int argc, char **argv)
 				Lay01.symmetricY = true;
 				Lay01.symmetricX = false;
         }
-	else if(selectTissueType == 7){ // 1: ECM mimicing wing disc 48 hr, THIS WILL BE THE ONE TO USE 90% OF THE TIME!
+	else if(selectTissueType == TissueType::REC_ECM){ // 1: ECM mimicing wing disc 48 hr, THIS WILL BE THE ONE TO USE 90% OF THE TIME!
 				cout<<" in loop for tissue type(1) : "<<selectTissueType<<endl;
 		actinHeight = 2.0;  //these are the values used in paper: 2.0 for actin layer
 		ECMHeight = -0.2;    //these are the values used in paper: 0.2 for ECM

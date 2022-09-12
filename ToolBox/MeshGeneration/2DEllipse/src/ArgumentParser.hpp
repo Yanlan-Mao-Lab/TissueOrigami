@@ -18,7 +18,7 @@ enum MeshMode {
  */
 MeshMode interpretMeshMode(string mode);
 
-enum tissue_type {
+enum TissueType {
     WGD_48HR = 0,
     WGD_48HR_ECM = 1,
     WGD_72HR = 2,
@@ -29,7 +29,7 @@ enum tissue_type {
     REC_ECM = 7,
     REC_NO_ECM = 8
 };
-tissue_type interpretTissueType(string tt);
+TissueType interpretTissueType(string tt);
 
 // this structure stores the flags that we can mark when certain inputs are read
 struct argument_flags
@@ -56,7 +56,7 @@ class ArgumentSpace{
         // signals whether we are meshing a wingdisc, rectangle, or pre-built 2d or 3d tesselation
         MeshMode meshing_mode;
         // determines the type of tissue that we are meshing
-        tissue_type selectTissueType;
+        TissueType selectTissueType;
 
         // wing disc specific required parameters
 
