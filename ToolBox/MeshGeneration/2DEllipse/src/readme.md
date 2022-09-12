@@ -60,7 +60,7 @@ input 2: value
   input 2 dependency 1: value
 input 3: value
 ```
-There is no obligation to this format of indenting variables beneath their dependents, provide dependencies immidately after a dependent variable, nor use any indenting - however it is advised for obvious user-friendliness reasons!
+There is no obligation to this format of indenting variables beneath their dependents, provide dependencies immidately after a dependent variable, nor use any indenting - however it is advised for legibility!
 This being said; the input reader is flexible and will organise the inputs provided by the user _before_ attempting to validate that a consistent combination of inputs has been provided.
 
 The first variable name should be `meshing_mode`, and should take one of the following values:
