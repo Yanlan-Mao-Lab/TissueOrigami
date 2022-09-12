@@ -14,7 +14,8 @@ using namespace std;
 #include <map>
 
 #include "EllipseFromOutline.hpp"
-#include "ArgumentParser.hpp"
+#include "ArgumentReader.hpp"
+#include "ArgumentSpace.hpp"
 
 class EllipseLayoutGenerator{
 public:

@@ -1,3 +1,6 @@
+# ifndef ARGUMENT_SPACE_H
+# define ARGUMENT_SPACE_H
+
 # include <string>
 # include <vector>
 
@@ -177,3 +180,5 @@ class ArgumentReader{
          */
         bool arg_is_flag(string argument);
 };
+
+# endif // ARGUMENT_SPACE_H
