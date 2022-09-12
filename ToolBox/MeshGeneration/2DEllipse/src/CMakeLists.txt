@@ -20,8 +20,10 @@ configure_file(EllipseFromOutline.hpp.in EllipseFromOutline.hpp)
 # the executable we want to compile
 add_executable(EllipseFromOutline 
     EllipseFromOutline.cpp
-    ArgumentParser.hpp
-    ArgumentParser.cpp
+    ArgumentReader.hpp
+    ArgumentReader.cpp
+    ArgumentSpace.hpp
+    ArgumentSpace.cpp
     )
 
 target_include_directories(EllipseFromOutline PUBLIC
