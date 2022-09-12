@@ -10,13 +10,6 @@ enum MeshMode {
     TESSELATION3D  = 3,
     TESSELATION3D_CYLINDER = 4
 };
-/**
- * @brief Translates values for meshing_mode from input files into enums
- * 
- * @param mode meshing_mode value read from the input file
- * @return mesh_mode The type of meshing to be performed
- */
-MeshMode interpretMeshMode(string mode);
 
 enum TissueType {
     WINGDISC_48HR = 0,
@@ -29,7 +22,6 @@ enum TissueType {
     RECTANGLE_WITH_ECM = 7,
     RECTANGLE_WITHOUT_ECM = 8
 };
-TissueType interpretTissueType(string tt);
 
 // this structure stores the flags that we can mark when certain inputs are read
 struct argument_flags
@@ -86,6 +78,20 @@ class ArgumentSpace{
          * @param value Value to assign
          */
         void assign_input(string variable, string value);
+        /**
+         * @brief Translates values for meshing_mode from input files into enums
+         *
+         * @param mode meshing_mode value read from the input file
+         * @return mesh_mode The type of meshing to be performed
+         */
+        void interpretMeshMode(string mode);
+        /**
+         * @brief Translates values for tissue_type from input files into enums
+         *
+         * @param mode tissue_type value read from the input file
+         * @return TissueType The type of tissue being meshed
+         */
+        void interpretTissueType(string tt);
         /**
          * @brief Check that the combination of parsed inputs are sufficient to execute mesh generation
          * 

@@ -7,37 +7,6 @@
 
 using namespace std;
 
-MeshMode interpretMeshMode(string mode) {
-    if (mode=="rec") {
-        return MeshMode::RECTANGLE;
-    }
-    else if (mode=="wgd") {
-        return MeshMode::WINGDISC;
-    }
-    else if (mode=="2d") {
-        return MeshMode::TESSELATION2D;
-    }
-    else if (mode=="3d") {
-        return MeshMode::TESSELATION3D;
-    }
-    else if (mode=="3d_cyl") {
-        return MeshMode::TESSELATION3D_CYLINDER;
-    }
-    else {
-        throw runtime_error("Invalid meshing_mode read from input: " + mode);
-    }
-}
-
-TissueType interpretTissueType(string tt) {
-    int t = stoi(tt);
-    if(t<0 || t>9) {
-        throw runtime_error("Error: invalid tissue type given (" + tt + ")");
-    }
-    else {
-        return TissueType(t);
-    }
-}
-
 ArgumentReader::ArgumentReader(int argc, char **argv) {
     // if no command-line arguments provided, error!
     if (argc==1) {
@@ -171,11 +140,11 @@ ArgumentSpace::ArgumentSpace(string input_file) {
 
 void ArgumentSpace::assign_input(string variable, string value) {
     if (variable == "meshing_mode") {
-        meshing_mode = interpretMeshMode(value);
+        interpretMeshMode(value);
         vars_set.meshing_mode = true;
     }
     else if (variable == "tissueType") {
-        selectTissueType = interpretTissueType(value);
+        interpretTissueType(value);
         vars_set.selectTissueType = true;
     }
     else if (variable == "ABHeight") {
@@ -218,6 +187,47 @@ void ArgumentSpace::assign_input(string variable, string value) {
     // unrecognised field, throw an error
     else {
         throw runtime_error("Error - did not recognise the variable name: " + variable);
+    }
+}
+
+void ArgumentSpace::interpretMeshMode(string mode)
+{
+    if (mode == "rec")
+    {
+        meshing_mode = MeshMode::RECTANGLE;
+    }
+    else if (mode == "wgd")
+    {
+        meshing_mode = MeshMode::WINGDISC;
+    }
+    else if (mode == "2d")
+    {
+        meshing_mode = MeshMode::TESSELATION2D;
+    }
+    else if (mode == "3d")
+    {
+        meshing_mode = MeshMode::TESSELATION3D;
+    }
+    else if (mode == "3d_cyl")
+    {
+        meshing_mode = MeshMode::TESSELATION3D_CYLINDER;
+    }
+    else
+    {
+        throw runtime_error("Invalid meshing_mode read from input: " + mode);
+    }
+}
+
+void ArgumentSpace::interpretTissueType(string tt)
+{
+    int t = stoi(tt);
+    if (t < 0 || t > 9)
+    {
+        throw runtime_error("Error: invalid tissue type given (" + tt + ")");
+    }
+    else
+    {
+        selectTissueType = TissueType(t);
     }
 }
 
