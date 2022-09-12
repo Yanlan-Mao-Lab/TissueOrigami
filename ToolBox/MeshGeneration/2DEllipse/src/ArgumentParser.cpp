@@ -9,19 +9,19 @@ using namespace std;
 
 MeshMode interpretMeshMode(string mode) {
     if (mode=="rec") {
-        return MeshMode::REC;
+        return MeshMode::RECTANGLE;
     }
     else if (mode=="wgd") {
-        return MeshMode::WGD;
+        return MeshMode::WINGDISC;
     }
     else if (mode=="2d") {
-        return MeshMode::T2D;
+        return MeshMode::TESSELATION2D;
     }
     else if (mode=="3d") {
-        return MeshMode::T3D;
+        return MeshMode::TESSELATION3D;
     }
     else if (mode=="3d_cyl") {
-        return MeshMode::T3D_CYL;
+        return MeshMode::TESSELATION3D_CYLINDER;
     }
     else {
         throw runtime_error("Invalid meshing_mode read from input: " + mode);
@@ -231,7 +231,7 @@ void ArgumentSpace::validate_input_file_contents() {
     else if (!vars_set.nzLayers) { throw runtime_error("Error - no nzLayers variable defined in input\n");}
 
     // if we are meshing a wing disc, check that optional arguments were passed
-    if (meshing_mode == MeshMode::WGD) {
+    if (meshing_mode == MeshMode::WINGDISC) {
         if (!vars_set.length[0]) { throw runtime_error("Error - meshing wing-disc, but no length1 variable provided\n");}
         else if (!vars_set.length[1]) { throw runtime_error("Error - meshing wing-disc, but no length2 variable provided\n");}
         else if (!vars_set.width[0]) { throw runtime_error("Error - meshing wing-disc, but no width1 variable provided\n");}
@@ -245,22 +245,22 @@ void ArgumentSpace::print_mode_specs() {
     cout << "Meshing mode: ";
     switch (meshing_mode)
     {
-        case MeshMode::WGD:
+        case MeshMode::WINGDISC:
             cout << "Wing-disc / elliptical (WGD)" << endl;
             cout << "Length = {" << length[0] << " , " << length[1] << "}" << endl;
             cout << "Width = {" << width[0] << " , " << width[1] << "}" << endl;
             cout << "outline file: " << outline_file_path << endl;
             break;
-        case MeshMode::REC:
+        case MeshMode::RECTANGLE:
             cout << "Rectangular (REC)" << endl;
             break;
-        case MeshMode::T2D:
+        case MeshMode::TESSELATION2D:
             cout << "Pre-built 2D tesselation (2D)" << endl;
             break;
-        case MeshMode::T3D:
+        case MeshMode::TESSELATION3D:
             cout << "Pre-built 3D tesselation (3D)" << endl;
             break;
-        case MeshMode::T3D_CYL:
+        case MeshMode::TESSELATION3D_CYLINDER:
             cout << "Pre-built cylindrical 3D tesselation (3D_CYL)" << endl;
             break;
     }

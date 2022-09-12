@@ -4,11 +4,11 @@
 using namespace std;
 
 enum MeshMode {
-    REC = 0,
-    WGD = 1,
-    T2D  = 2,
-    T3D  = 3,
-    T3D_CYL = 4
+    RECTANGLE = 0,
+    WINGDISC = 1,
+    TESSELATION2D  = 2,
+    TESSELATION3D  = 3,
+    TESSELATION3D_CYLINDER = 4
 };
 /**
  * @brief Translates values for meshing_mode from input files into enums
@@ -19,15 +19,15 @@ enum MeshMode {
 MeshMode interpretMeshMode(string mode);
 
 enum TissueType {
-    WGD_48HR = 0,
-    WGD_48HR_ECM = 1,
-    WGD_72HR = 2,
-    OPT_CUP = 3,
-    HLF_DSC = 4,
-    SPH_ORG = 5,
-    TUB_ORG = 6,
-    REC_ECM = 7,
-    REC_NO_ECM = 8
+    WINGDISC_48HR = 0,
+    WINGDISC_48HR_ECM = 1,
+    WINGDISC_72HR = 2,
+    OPTIC_CUP = 3,
+    HALF_DISC = 4,
+    SPHERICAL_ORGANOID = 5,
+    TUBULAR_ORGANOID = 6,
+    RECTANGLE_WITH_ECM = 7,
+    RECTANGLE_WITHOUT_ECM = 8
 };
 TissueType interpretTissueType(string tt);
 
