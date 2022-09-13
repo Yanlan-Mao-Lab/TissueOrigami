@@ -1,0 +1,89 @@
+Simulation time step	: 3600
+Simulation Length	: 36000
+dataSaveInterval as read from file: 1
+entered read growth type 1, current header: InitialTime(sec):
+Finalised reading growth options
+opening the file./Samples/SimulationOnTheGo/Save_TensionCompression
+opening the file./Samples/SimulationOnTheGo/Save_Growth
+opening the file./Samples/SimulationOnTheGo/Save_GrowthRate
+opening the file./Samples/SimulationOnTheGo/Save_GrowthRedistribution
+opening the file./Samples/SimulationOnTheGo/Save_NodeBinding
+initiating nodes
+ nNodes: 144 nEle: 138
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+Tip node indexes - dorsalTipIndex: 13 ventralTipIndex: 0
+Tip node indexes - anteriorTipIndex: 0 posteriorTipIndex: 7
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+time: 0 DV distance is: 85.56  AP distance is: 27.3
+inside induce clones
+read the final step
+writing the summary current simulation parameters
+wrote specific element types: 0 0 46 46
+saved the step if needed
+binding circumference
+finished binding
+ system initiated
+system initiated
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+ Apical contour Ids: 121 140 136 142 122 132 124 126 130 108 
+gl initiated
+starting timer
+finalised mainwindow initiation
+started step: 0 length: 36000
+At time -- 0 sec (0 hours - 0 timesteps)
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+time: 0 DV distance is: 85.56  AP distance is: 27.3
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+started step: 3600 length: 36000
+At time -- 3600 sec (1 hours - 1 timesteps)
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+time: 3600 DV distance is: 85.56  AP distance is: 27.3
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+started step: 7200 length: 36000
+At time -- 7200 sec (2 hours - 2 timesteps)
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+time: 7200 DV distance is: 85.56  AP distance is: 27.3
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+started step: 10800 length: 36000
+At time -- 10800 sec (3 hours - 3 timesteps)
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+time: 10800 DV distance is: 85.56  AP distance is: 27.3
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+started step: 14400 length: 36000
+At time -- 14400 sec (4 hours - 4 timesteps)
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+time: 14400 DV distance is: 85.56  AP distance is: 27.3
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+started step: 18000 length: 36000
+At time -- 18000 sec (5 hours - 5 timesteps)
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+time: 18000 DV distance is: 85.56  AP distance is: 27.3
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+started step: 21600 length: 36000
+At time -- 21600 sec (6 hours - 6 timesteps)
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+time: 21600 DV distance is: 85.56  AP distance is: 27.3
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+started step: 25200 length: 36000
+At time -- 25200 sec (7 hours - 7 timesteps)
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+time: 25200 DV distance is: 85.56  AP distance is: 27.3
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+started step: 28800 length: 36000
+At time -- 28800 sec (8 hours - 8 timesteps)
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+time: 28800 DV distance is: 85.56  AP distance is: 27.3
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+started step: 32400 length: 36000
+At time -- 32400 sec (9 hours - 9 timesteps)
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+time: 32400 DV distance is: 85.56  AP distance is: 27.3
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+started step: 36000 length: 36000
+At time -- 36000 sec (10 hours - 10 timesteps)
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+time: 36000 DV distance is: 85.56  AP distance is: 27.3
+bounding box after update: -56.3689 -27.3 29.1911 27.3
+deleting elements
+deleting nodes
+deletion complete
