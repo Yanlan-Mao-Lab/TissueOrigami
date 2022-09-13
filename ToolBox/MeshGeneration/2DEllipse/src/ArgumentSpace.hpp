@@ -4,7 +4,7 @@
 # include <string>
 # include <vector>
 
-enum MeshMode {
+enum class MeshMode {
     RECTANGLE = 0,
     WINGDISC = 1,
     TESSELATION2D  = 2,
@@ -25,7 +25,7 @@ enum TissueType {
 };
 
 // this structure stores the flags that we can mark when certain inputs are read
-struct argument_flags
+struct ArgumentFlags
 {
     bool meshingMode = false;
     bool selectTissueType = false;
@@ -43,7 +43,7 @@ const int max_number_inputs = 11;
 class ArgumentSpace{
     private:
         // private flags for input validation
-        argument_flags vars_set;
+        ArgumentFlags var_flags;
 
     public:
         // signals whether we are meshing a wingdisc, rectangle, or pre-built 2d or 3d tesselation
@@ -78,7 +78,7 @@ class ArgumentSpace{
          * @param variable Name of the variable to assign to
          * @param value Value to assign
          */
-        void assign_input(std::string variable, std::string value);
+        void assignInput(std::string variable, std::string value);
         /**
          * @brief Translates values for meshing_mode from input files into enums
          *
@@ -97,13 +97,13 @@ class ArgumentSpace{
          * @brief Check that the combination of parsed inputs are sufficient to execute mesh generation
          * 
          */
-        void validate_input_file_contents();
+        void validateInputFileContents();
 
         /**
          * @brief Print to stdout the information that has been read into the executable
          * 
          */
-        void print_mode_specs();
+        void printModeSpecs();
 };
 
 # endif // ARGUMENT_SPACE_H

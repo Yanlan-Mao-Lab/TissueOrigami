@@ -38,55 +38,55 @@ ArgumentSpace::ArgumentSpace(string input_file) {
             // check that, prior to attempting to assign, we have been left with non-empty strings value and variable
             if (!(variable.empty() || value.empty())) {
                 // assign the value provided to the variable
-                assign_input(variable, value);
+                assignInput(variable, value);
             }
         }
     }
     // having read all that we can from the input file, confirm we have been given a valid set of inputs
-    validate_input_file_contents();
+    validateInputFileContents();
 };
 
-void ArgumentSpace::assign_input(string variable, string value) {
+void ArgumentSpace::assignInput(string variable, string value) {
     if (variable == "meshingMode") {
         interpretMeshMode(value);
-        vars_set.meshingMode = true;
+        var_flags.meshingMode = true;
     }
     else if (variable == "tissueType") {
         interpretTissueType(value);
-        vars_set.selectTissueType = true;
+        var_flags.selectTissueType = true;
     }
     else if (variable == "ABHeight") {
         ABHeight = stod(value);
-        vars_set.ABHeight = true;
+        var_flags.ABHeight = true;
     }
     else if (variable == "prismSideLength") {
         prismSideLen = stod(value);
-        vars_set.prismSideLen = true;
+        var_flags.prismSideLen = true;
     }
     else if (variable == "nzLayers") {
         nzLayers = stoi(value);
-        vars_set.nzLayers = true;
+        var_flags.nzLayers = true;
     }
     // potentially non-present arguments
     else if (variable == "length1") {
         length[0] = stod(value);
-        vars_set.length[0] = true;
+        var_flags.length[0] = true;
     }
     else if (variable == "length2") {
         length[1] = stod(value);
-        vars_set.length[1] = true;
+        var_flags.length[1] = true;
     }
     else if (variable == "width1") {
         width[0] = stod(value);
-        vars_set.width[0] = true;
+        var_flags.width[0] = true;
     }
     else if (variable == "width2") {
         width[1] = stod(value);
-        vars_set.width[1] = true;
+        var_flags.width[1] = true;
     }
     else if (variable == "outline") {
         outline_file_path = value;
-        vars_set.outline = true;
+        var_flags.outline = true;
     }
     // purely optional input arguments
     else if (variable == "symY") {
@@ -139,26 +139,28 @@ void ArgumentSpace::interpretTissueType(string tt)
     }
 }
 
-void ArgumentSpace::validate_input_file_contents() {
+void ArgumentSpace::validateInputFileContents()
+{
     // we always require the following to be set:
     // meshing_mode, selectTissueType, ABHeight, PrismSideLen, nzLayers
-    if (!vars_set.meshingMode) { throw runtime_error("Error - no meshing_mode variable defined in input\n");}
-    else if (!vars_set.selectTissueType) { throw runtime_error("Error - no tissueType variable defined in input\n");}
-    else if (!vars_set.ABHeight) { throw runtime_error("Error - no ABHeight variable defined in input\n");}
-    else if (!vars_set.prismSideLen) { throw runtime_error("Error - no PrismSideLen variable defined in input\n");}
-    else if (!vars_set.nzLayers) { throw runtime_error("Error - no nzLayers variable defined in input\n");}
+    if (!var_flags.meshingMode) { throw runtime_error("Error - no meshing_mode variable defined in input\n");}
+    else if (!var_flags.selectTissueType) { throw runtime_error("Error - no tissueType variable defined in input\n");}
+    else if (!var_flags.ABHeight) { throw runtime_error("Error - no ABHeight variable defined in input\n");}
+    else if (!var_flags.prismSideLen) { throw runtime_error("Error - no PrismSideLen variable defined in input\n");}
+    else if (!var_flags.nzLayers) { throw runtime_error("Error - no nzLayers variable defined in input\n");}
 
     // if we are meshing a wing disc, check that optional arguments were passed
     if (meshing_mode == MeshMode::WINGDISC) {
-        if (!vars_set.length[0]) { throw runtime_error("Error - meshing wing-disc, but no length1 variable provided\n");}
-        else if (!vars_set.length[1]) { throw runtime_error("Error - meshing wing-disc, but no length2 variable provided\n");}
-        else if (!vars_set.width[0]) { throw runtime_error("Error - meshing wing-disc, but no width1 variable provided\n");}
-        else if (!vars_set.width[1]) { throw runtime_error("Error - meshing wing-disc, but no width2 variable provided\n");}
-        else if (!vars_set.outline) { throw runtime_error("Error - meshing wing-disc, but no outline variable provided\n");}
+        if (!var_flags.length[0]) { throw runtime_error("Error - meshing wing-disc, but no length1 variable provided\n");}
+        else if (!var_flags.length[1]) { throw runtime_error("Error - meshing wing-disc, but no length2 variable provided\n");}
+        else if (!var_flags.width[0]) { throw runtime_error("Error - meshing wing-disc, but no width1 variable provided\n");}
+        else if (!var_flags.width[1]) { throw runtime_error("Error - meshing wing-disc, but no width2 variable provided\n");}
+        else if (!var_flags.outline) { throw runtime_error("Error - meshing wing-disc, but no outline variable provided\n");}
     }
 }
 
-void ArgumentSpace::print_mode_specs() {
+void ArgumentSpace::printModeSpecs()
+{
     cout << "Printing meshing specifications:" << endl;
     cout << "Meshing mode: ";
     switch (meshing_mode)

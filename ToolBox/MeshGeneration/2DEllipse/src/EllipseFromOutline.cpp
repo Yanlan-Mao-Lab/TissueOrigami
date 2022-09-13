@@ -2648,7 +2648,7 @@ int main(int argc, char **argv)
 		symmetricY = false;
 	}
 
-	params.print_mode_specs();
+	params.printModeSpecs();
 
 	// CODE cleanup will remove these intermediary variables!
 	GlobalShape = params.meshing_mode;
@@ -2706,7 +2706,7 @@ int main(int argc, char **argv)
 	//	tissue of selection (peripodial or columnar).
 
 	if (selectTissueType == TissueType::WINGDISC_48HR){ // 0 : wingdisc48Hr, 
-		cout<<" in loop for tissue type(0) : "<<selectTissueType<<endl; 
+		cout<<" in loop for tissue type(0) : " << selectTissueType << endl; 
 		peripodialHeightFrac = 0.45; 
 		lumenHeightFrac = 0.25;
 		addLateralECMRing = false;

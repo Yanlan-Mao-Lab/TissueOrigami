@@ -8,7 +8,7 @@
  * @brief Case-toggle for the different "help" messages that can be displayed to the screen
  * 
  */
-enum helpOpts {
+enum class HelpOpts {
     DEFAULT = 0,
     TOO_MANY_INPUTS = 1,
     NO_INPUTS = 2
@@ -49,7 +49,7 @@ class ArgumentReader{
          * @brief Command-line help interface, printed when -h flag is passed
          *
          */
-        static void print_help(helpOpts mode);
+        static void print_help(HelpOpts mode);
 
         /**
          * @brief Validate the inputs provided to the executable

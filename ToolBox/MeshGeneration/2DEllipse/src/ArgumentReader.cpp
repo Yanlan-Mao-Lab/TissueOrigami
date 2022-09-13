@@ -7,7 +7,7 @@ using namespace std;
 ArgumentReader::ArgumentReader(int argc, char **argv) {
     // if no command-line arguments provided, error!
     if (argc==1) {
-        print_help(NO_INPUTS);
+        print_help(HelpOpts::NO_INPUTS);
         exit(1);
     }
     // parse command-line arguments
@@ -37,12 +37,12 @@ ArgumentReader::ArgumentReader(int argc, char **argv) {
 void ArgumentReader::validate_cmdline_inputs() {
     // if the -h or --help flags were passed, return the inline help
     if (has_flag("-h") || has_flag("--help")) {
-        print_help(DEFAULT);
+        print_help(HelpOpts::DEFAULT);
         exit(0);
     }
     // check that the user didn't provide too many input arguments
     else if (num_non_flags>2) {
-        print_help(TOO_MANY_INPUTS);
+        print_help(HelpOpts::TOO_MANY_INPUTS);
         exit(1);
     }
     // validate inputs to executable
@@ -71,10 +71,10 @@ void ArgumentReader::validate_cmdline_inputs() {
     }
 }
 
-void ArgumentReader::print_help(helpOpts mode)
+void ArgumentReader::print_help(HelpOpts mode)
 {
     switch (mode) {
-        case DEFAULT:
+        case HelpOpts::DEFAULT:
             fprintf(stdout, "Usage:\n"
                             "EllipseFromOutline [options] inputFile [outputFile] \n"
                             "Required:\n"
@@ -84,13 +84,13 @@ void ArgumentReader::print_help(helpOpts mode)
                             "Options:\n"
                             "\t -h, --help:\t Display command-line help message.\n");
             break;
-        case TOO_MANY_INPUTS:
+        case HelpOpts::TOO_MANY_INPUTS:
             fprintf(stdout, "Error: too many inputs provided, see usage below.\n");
-            print_help(DEFAULT);
+            print_help(HelpOpts::DEFAULT);
             break;
-        case NO_INPUTS:
+        case HelpOpts::NO_INPUTS:
             fprintf(stdout, "Error: no inputs provided, see usage below.\n");
-            print_help(DEFAULT);
+            print_help(HelpOpts::DEFAULT);
     }
 };
 
