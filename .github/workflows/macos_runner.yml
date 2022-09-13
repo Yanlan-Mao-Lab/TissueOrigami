@@ -29,7 +29,11 @@ jobs:
       - name: Install dependencies
         run: |
           brew install gcc gsl boost openblas
-      
+
+      # run interactive session
+      - name: tmate time
+        uses: mxschmitt/action-tmate@v3
+
       # build TissueFolding
       - name: Build TissueFolding
         run: |
@@ -39,7 +43,3 @@ jobs:
           cmake .. -DCMAKE_CXX_COMPILER=g++
           cmake --build .
           cp ./TissueFolding ../../
-
-      # run interactive session
-      - name: tmate time
-        uses: mxschmitt/action-tmate@v3
