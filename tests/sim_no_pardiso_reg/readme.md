@@ -1,5 +1,8 @@
 # Regression Tests for Non-Pardiso Build
 
+**IMPORTANT NOTE:** We maintain a testing framework that runs on Linux.
+We are aware of potential small (order machine-precision) discrepencies between the outputs of the `TissueFolding` when built on other operating systems, such as MacOS.
+
 When building without Pardiso, the system of evolutionary equations is not solved.
 Whilst this means that the computations are of little interest, it is an important benchmark in establishing that, up to linking to Pardiso, the `TissueFolding` executable has been successfully built.
 
