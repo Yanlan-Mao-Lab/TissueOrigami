@@ -17,5 +17,5 @@ At least the approval of one other developer is required before merging a PR. Sh
 
 Development branches should be deleted after merging. Avoid squashing the commits on merging, create a merge commit instead.
 
-* **C++ style guide**  
+### C++ style guide
 We loosely aim to move the code base towards adhering to [Google's C++ style guide](https://google.github.io/styleguide/cppguide.html) in order to increase legibility (at least newly introduced functionality should follow this.)
