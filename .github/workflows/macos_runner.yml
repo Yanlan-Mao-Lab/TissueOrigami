@@ -33,11 +33,10 @@ jobs:
       # build TissueFolding
       - name: Build TissueFolding
         run: |
-          export CMAKE_CXX_COMPILER=g++
           cd ${{ github.workspace }}/TissueFolding/SourceCode/
           mkdir build
           cd build
-          cmake ..
+          cmake .. -DCMAKE_CXX_COMPILER=g++
           cmake --build .
           cp ./TissueFolding ../../
 
