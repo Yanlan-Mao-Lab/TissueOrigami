@@ -18,7 +18,13 @@ find_program(TRIANGLE_PATH
 configure_file(EllipseFromOutline.hpp.in EllipseFromOutline.hpp)
 
 # the executable we want to compile
-add_executable(EllipseFromOutline EllipseFromOutline.cpp)
+add_executable(EllipseFromOutline 
+    EllipseFromOutline.cpp
+    ArgumentReader.hpp
+    ArgumentReader.cpp
+    ArgumentSpace.hpp
+    ArgumentSpace.cpp
+    )
 
 target_include_directories(EllipseFromOutline PUBLIC
                             "${PROJECT_BINARY_DIR}"

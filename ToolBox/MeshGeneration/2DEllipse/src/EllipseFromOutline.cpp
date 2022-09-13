@@ -14,6 +14,8 @@ using namespace std;
 #include <map>
 
 #include "EllipseFromOutline.hpp"
+#include "ArgumentReader.hpp"
+#include "ArgumentSpace.hpp"
 
 class EllipseLayoutGenerator{
 public:
@@ -2477,123 +2479,6 @@ void EllipseLayoutGenerator::arrangeSideLength(vector <float>&  x, vector <float
 	y[xTipIndexInXCoord[1]] = fixedPosYTips[1][1];
 }
 
-
-bool readinputs (int argc, char **argv, double* parameters, ifstream& inputOutline){
-	if (argc<2){
-            cerr<<"Please give shape type: "<<endl;
-            cerr<<"		1  = wing disc or circular outline"<<endl;
-            cerr<<"		2  = rectangle"<<endl;
-            cerr<<"		-1 for input tesselation 2D(input files MUST BE Points.1.ele and Points.1.node)"<<endl;
-            cerr<<"		-2 for input tesselation 3D - spherical(input files MUST BE SphericalTriangulation)"<<endl;
-            cerr<<"		-3 for input tesselation 3D - cylindrical(input files MUST BE CylindricalTriangulation)"<<endl;
-            return 0;
-	}
-	else {
-		const char* inpstring = argv[1];
-		parameters[0] = atof(inpstring);
-	}
-	int offset = 0;
-	if (parameters[0] == -1){
-        cerr<<"Will read tesselation from Points.1.node and Points.1.ele, the side length input will not be used, but must be valid"<<endl;
-		offset = 2;	
-	}
-	if (parameters[0] == -2){
-        cerr<<"Will read tesselation from SphericalTriangulation, the side length input will not be used, but must be valid"<<endl;  ///we don't need side length because the triangulation is already done
-		offset = 2;	
-	}
-        if (parameters[0] == -3){
-        cerr<<"Will read tesselation from CylindricalTriangulation, the side length input will not be used, but must be valid"<<endl; ///we don't need side length because the triangulation is already done
-                offset = 2;
-        }
-	else if (parameters[0] == 1){
-		if(argc<6){
-			cerr<<"Please give lenght1, length2, width1 and width2 (in this order)"<<endl;
-			return 0;
-		}
-		else{
-			const char* inpstring1 = argv[2];
-			parameters[1] = atof(inpstring1);
-			const char* inpstring2 = argv[3];
-			parameters[2] = atof(inpstring2);		
-			const char* inpstring3 = argv[4];
-			parameters[3] = atof(inpstring3);
-			const char* inpstring4 = argv[5];
-			parameters[4] = atof(inpstring4);			
-		}
-		offset = 6;
-	}
-
-	if(argc<offset+1){
-		cerr<<"Please give the ABHeight of the tissue"<<endl;
-		return 0;	
-	}
-	else{
-		const char* inpstring = argv[offset];
-		parameters[5] = atof(inpstring);		
-	}
-	if(argc<offset+2){
-		cerr<<"Please give the side length of prisms"<<endl;
-		return 0;
-	}
-	else{
-		const char* inpstring = argv[offset+1];
-		parameters[6] = atof(inpstring);		
-	}
-	if(argc<offset+3){
-		cerr<<"Please give the number of layers in z"<<endl;
-		return 0;	
-	}
-	else{
-		const char* inpstring = argv[offset+2];
-		parameters[7] = atof(inpstring);		
-	}
-	if(argc<offset+4){
-		cerr<<"Please give if the mesh will be symmetric in y(bool)"<<endl;
-		return 0;	
-	}
-	else{
-		const char* inpstring = argv[offset+3];
-		parameters[8] = atof(inpstring);		
-	}
-	if (argc<offset+5){
-		cerr<<"Please provide the TissueType"<<endl;
-	}
-	else{
-		const char *inpstring = argv[offset + 4];
-		parameters[9] = atof(inpstring);
-	}
-	if(argc<offset+6){
-        if(parameters[0] == 0 || parameters[0] == 1){
-            cerr<<"parameters[0]:"<<parameters[0]<<"  Please give the input file path for the outline"<<endl;
-            return 0;
-        }
-	}
-	else{
-        if(parameters[0] == 0 || parameters[0] == 1){
-            const char* inpstring = argv[offset+5];
-            inputOutline.open(inpstring,ifstream::in);
-            if (!inputOutline.good() || !inputOutline.is_open()){
-                cerr<<"input outline cannot be opened: "<<inpstring<<endl;
-                return 0;
-            }
-        }
-	}
-	return 1;
-}
-
-void printOutSystemSetup(double * parameters){
-	string ShapeType = "NULL";
-	if (parameters[0] == 1){ShapeType = "ellipse";}
-	if (parameters[0] == 2){ShapeType = "rectangle";}
-	cerr<<"Generating mesh for "<<ShapeType<<" :"<<endl;
-	cerr<<"	DVRadia    : "<<parameters[1]<<" "<<parameters[2]<<endl;
-	cerr<<"	APRadia    : "<<parameters[3]<<" "<<parameters[4]<<endl;
-	cerr<<"	ABHeight   : "<<parameters[5]<<endl;
-	cerr<<"	sideLength : "<<parameters[6]<<endl;
-	cerr<<"	ABLayers   : "<<parameters[7]<<endl;
-	cerr<<"	symmetricY : "<<parameters[8]<<endl;
-}
-
 void readInOutline(vector <float>& x, vector <float>&y, ifstream& inputOutline){
 	int n, id;
 	float currX, currY;
@@ -2609,106 +2494,49 @@ void readInOutline(vector <float>& x, vector <float>&y, ifstream& inputOutline){
 
 int main(int argc, char **argv)
 {	
-	double * parameters;
-	parameters = new double[10];
+	ArgumentReader exe_args(argc, argv);
+	// read arguments from the input file that was provided
+	ArgumentSpace params(exe_args.path_to_input);
+
 	ifstream inputOutline;
-	bool success = readinputs (argc, argv, parameters,inputOutline);
-	if (!success) {
-		cerr<<"Error in parameter inputs, quitting"<<endl;	
-		return 1;
-	};
-	int 	GlobalShape;
-	double 	DVRadius[2];
-	double 	APRadius[2];
-	double 	ABHeight;
-	double 	sideLength;
-	int    	ABLayers;
 	double  ECMHeight = -1.0;
 	double	actinHeight = -1.0;
 	double  basalLayerHeight = -1.0;
 	double  modifiedZDueToThinActin = 1;
-	bool 	symmetricY = false;
-	bool 	symmetricX = false;
+	bool symmetricY = true;
+	bool symmetricX = false;
 
-    // 0: wingdisc48Hr (no ECM),
-    // 1: wing disc with ECM at 48 hr, // This will be the one you use for wong disc simulations!
-    // 2: wing disc 72 hr,
-    // 3: optic cup
-    // 4: x&y symmetric circle (half disc) and needs further code mdifications! -> Eliminate bluntTip function for type 4 with no x symmetricity! (half circle - not quarter)
-    // 5: spherical organoid
-    // 6: Tubular organoid
-        int selectTissueType = (int) parameters[9];
+	// set symmetry flags
+	if (params.selectTissueType==TissueType::OPTIC_CUP 
+		|| params.selectTissueType==TissueType::SPHERICAL_ORGANOID) 
+	{
+		symmetricX = true;
+	}
+	if (params.selectTissueType==TissueType::RECTANGLE_WITH_ECM 
+		|| params.selectTissueType==TissueType::RECTANGLE_WITHOUT_ECM) 
+	{
+		symmetricY = false;
+	}
 
-	if (selectTissueType == 0){ // 0 : wingdisc48Hr, 
+	// display the system parameters
+	params.print_mode_specs();
+
+	modifiedZDueToThinActin = (params.ABHeight - ECMHeight - actinHeight)/ (params.nzLayers-2);
+	if (params.nzLayers<3){
+		ECMHeight = params.ABHeight/params.nzLayers;
+		actinHeight = params.ABHeight/params.nzLayers;
+		basalLayerHeight = params.ABHeight/params.nzLayers;
+		modifiedZDueToThinActin  = params.ABHeight/params.nzLayers;
+	}
+	if (params.symY ){ 		
 		symmetricY = true;
-		symmetricX = false; 
 	}
-	else if(selectTissueType == 1){ // 1: ECM mimicing wing disc 48 hr,
-		symmetricY = true;
-		symmetricX = false; 
-	}
-	else if(selectTissueType == 2){
-		symmetricY = true;
-		symmetricX = false; 
-	}
-	else if(selectTissueType == 3){
-		symmetricY = true;
-		symmetricX = true; 
-	}
-	else if(selectTissueType == 4){
-		symmetricY = true;
-                symmetricX = false; //should be true for quarter of a disc
-	}
-        else if(selectTissueType == 5){ //spheroid
-                symmetricY = true;
-                symmetricX = true;
-	}
-        else if(selectTissueType == 6){ //tubular organoid
-                symmetricY = true;
-                symmetricX = false;
-        }
-        else if(selectTissueType == 7){ //rectangle with ECM
-                symmetricY = false;
-                symmetricX = false;
-        }
-        else if(selectTissueType == 8){ //rectangle no ECM
-                symmetricY = false;
-                symmetricX = false;
-        }
 	else{
-		cerr<<"Tissue type selected wrong!!"<<endl;	
-		return 0;
+		symmetricY = false;
 	}
-	cout<<" selectTissueType: "<<selectTissueType<<endl;
-	if (success) {
-                if (parameters[0] == -1 || parameters[0] == -2 ){
-                    cerr<<"preparing from ready triangulation"<<endl;
-                }
-		printOutSystemSetup(parameters);
-		GlobalShape = parameters[0];
-		DVRadius[0] = parameters[1];
-		DVRadius[1] = parameters[2];
-		APRadius[0] = parameters[3];
-		APRadius[1] = parameters[4];
-		ABHeight = parameters[5];
-		sideLength = parameters[6];
-		ABLayers = parameters[7];
-		modifiedZDueToThinActin = (ABHeight - ECMHeight - actinHeight)/ (ABLayers-2);
-		if (ABLayers<3){
-			ECMHeight = ABHeight/ABLayers;
-			actinHeight = ABHeight/ABLayers;
-			basalLayerHeight = ABHeight/ABLayers;
-			modifiedZDueToThinActin  = ABHeight/ABLayers;
-		}
-		if (parameters[8] == 1 ){ 		
-			symmetricY = true;
-		}
-		else{
-			symmetricY = false;
-		}
-	}
-	EllipseLayoutGenerator Lay01(DVRadius[0],DVRadius[1], APRadius[0], APRadius[1], sideLength, symmetricX, symmetricY, 0.9);
-        bool addPeripodial = false; //this is false by default and over-written in selectTissueType below
+
+	EllipseLayoutGenerator Lay01(params.length[0],params.length[1], params.width[0], params.width[1], params.prismSideLen, symmetricX, symmetricY, 0.9);
+	bool addPeripodial = false; //this is false by default and over-written in params.selectTissueType below
 	double peripodialHeightFrac;
 	double lumenHeightFrac;
     bool addLateralECMRing = false; // leftover dont worry
@@ -2738,163 +2566,163 @@ int main(int argc, char **argv)
 	//      there is no peripodial, or lumen, or side curve. Height will depend on the
 	//	tissue of selection (peripodial or columnar).
 
-	if (selectTissueType == 0){ // 0 : wingdisc48Hr, 
-		cout<<" in loop for tissue type(0) : "<<selectTissueType<<endl; 
+	if (params.selectTissueType == TissueType::WINGDISC_48HR){ // 0 : wingdisc48Hr, 
+		cout<<" in loop for tissue type(0) : "<<params.selectTissueType<<endl; 
 		peripodialHeightFrac = 0.45; 
 		lumenHeightFrac = 0.25;
 		addLateralECMRing = false;
-		peripodialSideCurveFrac = 5.52 /ABHeight ;
+		peripodialSideCurveFrac = 5.52 /params.ABHeight ;
 		Lay01.symmetricY = symmetricY;
 		Lay01.symmetricX = false;
 		actinHeight = 0.5;
 		ECMHeight = 2.0; //Use ECMHeight instead of basalLayerHeight to define a basal layer in the absence of ECM
-		modifiedZDueToThinActin = (ABHeight - actinHeight - ECMHeight)/ (ABLayers-2);
+		modifiedZDueToThinActin = (params.ABHeight - actinHeight - ECMHeight)/ (params.nzLayers-2);
 		basalLayerHeight = modifiedZDueToThinActin;
-		if (ABLayers<2){
-			ECMHeight = ABHeight/ABLayers;
-			actinHeight = ABHeight/ABLayers;
-			basalLayerHeight = ABHeight/ABLayers;
-			modifiedZDueToThinActin  = ABHeight/ABLayers;		
+		if (params.nzLayers<2){
+			ECMHeight = params.ABHeight/params.nzLayers;
+			actinHeight = params.ABHeight/params.nzLayers;
+			basalLayerHeight = params.ABHeight/params.nzLayers;
+			modifiedZDueToThinActin  = params.ABHeight/params.nzLayers;		
 		}
 		else{
 			if (ECMHeight <0 ){
 				if (actinHeight <0 ){
-					ECMHeight = ABHeight/ABLayers;
+					ECMHeight = params.ABHeight/params.nzLayers;
 				}
 				else{	
 					
-					modifiedZDueToThinActin = (ABHeight - actinHeight)/ (ABLayers-1);
+					modifiedZDueToThinActin = (params.ABHeight - actinHeight)/ (params.nzLayers-1);
 					ECMHeight = modifiedZDueToThinActin;
 					basalLayerHeight  = modifiedZDueToThinActin;
 								
 				}
 			}
 			if (actinHeight <0 ){
-				actinHeight = ABHeight/ABLayers;
+				actinHeight = params.ABHeight/params.nzLayers;
 			}
 		}
 	}
-    else if(selectTissueType == 1){ // 1: ECM mimicing wing disc 48 hr, THIS WILL BE THE ONE TO USE 90% OF THE TIME!
-		cout<<" in loop for tissue type(1) : "<<selectTissueType<<endl; 
+    else if(params.selectTissueType == TissueType::WINGDISC_48HR_ECM){ // 1: ECM mimicing wing disc 48 hr, THIS WILL BE THE ONE TO USE 90% OF THE TIME!
+		cout<<" in loop for tissue type(1) : "<<params.selectTissueType<<endl; 
         actinHeight = 2.0;  //these are the values used in paper: 2.0 for actin layer. If negative, there will be no layer.
         ECMHeight = 0.2;    //these are the values used in paper: 0.2 for ECM
-                addPeripodial = false;
-                //peripodialHeightFrac is not used.
-                peripodialHeightFrac = ECMHeight/(ABHeight-ECMHeight);//  ECM thickness is 0.2, AB height includes ECM. 0.33333;  //0.508
-                lumenHeightFrac = 0.;//0.2; //this is set to 0 because the lumen height will be added by curving the tissue in model input.
+		addPeripodial = false;
+		//peripodialHeightFrac is not used.
+		peripodialHeightFrac = ECMHeight/(params.ABHeight-ECMHeight);//  ECM thickness is 0.2, AB height includes ECM. 0.33333;  //0.508
+		lumenHeightFrac = 0.;//0.2; //this is set to 0 because the lumen height will be added by curving the tissue in model input.
 		addLateralECMRing = false;
-		modifiedZDueToThinActin = ABHeight/ABLayers;
+		modifiedZDueToThinActin = params.ABHeight/params.nzLayers;
 		//basalLayerHeight = 6.25;
 		//  end of ECM options		
-		if (ABLayers<3){
-			ECMHeight = ABHeight/ABLayers;
-			actinHeight = ABHeight/ABLayers;
-			basalLayerHeight = ABHeight/ABLayers;
-			modifiedZDueToThinActin  = ABHeight/ABLayers;
+		if (params.nzLayers<3){
+			ECMHeight = params.ABHeight/params.nzLayers;
+			actinHeight = params.ABHeight/params.nzLayers;
+			basalLayerHeight = params.ABHeight/params.nzLayers;
+			modifiedZDueToThinActin  = params.ABHeight/params.nzLayers;
 			cout<<" if clause 1,  modifiedZDueToThinActin: "<<modifiedZDueToThinActin<<endl;
 		}
 		else{
-			double denominator = (ABLayers-3);
+			double denominator = (params.nzLayers-3);
 			bool correctECM = false;
 			bool correctBasal = false;
 			bool correctActin = false;
 			if(ECMHeight<0){ECMHeight=0;denominator++;correctECM=true;}
 			if(basalLayerHeight<0){basalLayerHeight=0;denominator++;correctBasal=true;}
                         if(actinHeight<0){actinHeight=0;denominator++;correctActin=true;}
-			modifiedZDueToThinActin = (ABHeight - ECMHeight - actinHeight -basalLayerHeight)/ denominator;
+			modifiedZDueToThinActin = (params.ABHeight - ECMHeight - actinHeight -basalLayerHeight)/ denominator;
 			if (correctECM){ECMHeight= modifiedZDueToThinActin;}
 			if (correctBasal){basalLayerHeight= modifiedZDueToThinActin;}
 			if (correctActin){actinHeight= modifiedZDueToThinActin;}
-			//modifiedZDueToThinActin = (ABHeight - ECMHeight - actinHeight -basalLayerHeight)/ (ABLayers-3);
+			//modifiedZDueToThinActin = (params.ABHeight - ECMHeight - actinHeight -basalLayerHeight)/ (params.nzLayers-3);
 			cout<<" if clause 3,  modifiedZDueToThinActin: "<<modifiedZDueToThinActin<<endl;
 		}
-		peripodialSideCurveFrac = (modifiedZDueToThinActin + 5.52) /ABHeight ;
+		peripodialSideCurveFrac = (modifiedZDueToThinActin + 5.52) /params.ABHeight ;
 		Lay01.symmetricY = true;
 		Lay01.symmetricX = false;
-		cout<<"peripodialSideCurveFrac: "<<peripodialSideCurveFrac<<" ABHeight: "<<ABHeight<<" modifiedZDueToThinActin: "<<modifiedZDueToThinActin<<endl;
+		cout<<"peripodialSideCurveFrac: "<<peripodialSideCurveFrac<<" params.ABHeight: "<<params.ABHeight<<" modifiedZDueToThinActin: "<<modifiedZDueToThinActin<<endl;
 	}
-	else if(selectTissueType == 2){
-		cout<<" in loop for tissue type(2) : "<<selectTissueType<<endl; 
+	else if(params.selectTissueType == TissueType::WINGDISC_72HR){
+		cout<<" in loop for tissue type(2) : "<<params.selectTissueType<<endl; 
 		peripodialHeightFrac = 0.45; 
 		lumenHeightFrac = 0.25;
 		addLateralECMRing = false;
-		peripodialSideCurveFrac = 7.1 /ABHeight ;
+		peripodialSideCurveFrac = 7.1 /params.ABHeight ;
 		Lay01.symmetricY = true;
 		Lay01.symmetricX = false;
 	}
-	else if(selectTissueType == 3){
-		cout<<" in loop for tissue type(3) : "<<selectTissueType<<endl; 
+	else if(params.selectTissueType == TissueType::OPTIC_CUP){
+		cout<<" in loop for tissue type(3) : "<<params.selectTissueType<<endl; 
 		peripodialHeightFrac = 1.0; 
 		lumenHeightFrac = 0.2;
 		addLateralECMRing = false;
-		peripodialSideCurveFrac = 30.0 /ABHeight ;
+		peripodialSideCurveFrac = 30.0 /params.ABHeight ;
 		Lay01.symmetricY = true;
 		Lay01.symmetricX = true;
 	}
-	else if(selectTissueType == 4){
-		cout<<" in loop for tissue type(4) : "<<selectTissueType<<endl; 
+	else if(params.selectTissueType == TissueType::HALF_DISC){
+		cout<<" in loop for tissue type(4) : "<<params.selectTissueType<<endl; 
 		peripodialHeightFrac = 1.0; 
 		lumenHeightFrac = 1.0;
 		addLateralECMRing = false;
-		peripodialSideCurveFrac = 1.0 /ABHeight ;
+		peripodialSideCurveFrac = 1.0 /params.ABHeight ;
 		Lay01.symmetricY = true;
 		Lay01.symmetricX = false;
 		addPeripodial = false;
 		//  without ECM:
-		//ECMHeight = ABHeight/ABLayers;
-		//actinHeight = ABHeight/ABLayers;
+		//ECMHeight = params.ABHeight/params.nzLayers;
+		//actinHeight = params.ABHeight/params.nzLayers;
 		//  with ECM: (this setup will add a layer to represent ECM on the apical surface
 		actinHeight  = 2.0;
 		ECMHeight = 0.2;
-		//ECMHeight = (ABHeight - actinHeight) / (ABLayers-1);
-		//basalLayerHeight  = (ABHeight - actinHeight) / (ABLayers-1);
+		//ECMHeight = (params.ABHeight - actinHeight) / (params.nzLayers-1);
+		//basalLayerHeight  = (params.ABHeight - actinHeight) / (params.nzLayers-1);
 		//  end of ECM options		
-		modifiedZDueToThinActin = (ABHeight - ECMHeight - actinHeight)/ (ABLayers-2);
-		if (ABLayers<3){
-			ECMHeight = ABHeight/ABLayers;
-			actinHeight = ABHeight/ABLayers;
-			modifiedZDueToThinActin  = ABHeight/ABLayers;
-			basalLayerHeight = ABHeight/ABLayers;
+		modifiedZDueToThinActin = (params.ABHeight - ECMHeight - actinHeight)/ (params.nzLayers-2);
+		if (params.nzLayers<3){
+			ECMHeight = params.ABHeight/params.nzLayers;
+			actinHeight = params.ABHeight/params.nzLayers;
+			modifiedZDueToThinActin  = params.ABHeight/params.nzLayers;
+			basalLayerHeight = params.ABHeight/params.nzLayers;
 		}
 		else{
-			double denominator = (ABLayers-3);
+			double denominator = (params.nzLayers-3);
 			bool correctECM = false;
 			bool correctBasal = false;
 			bool correctActin = false;
 			if(ECMHeight<0){ECMHeight=0;denominator++;correctECM=true;}
 			if(basalLayerHeight<0){basalLayerHeight=0;denominator++;correctBasal=true;}
                         if(actinHeight<0){actinHeight=0;denominator++;correctActin=true;}
-			modifiedZDueToThinActin = (ABHeight - ECMHeight - actinHeight -basalLayerHeight)/ denominator;
+			modifiedZDueToThinActin = (params.ABHeight - ECMHeight - actinHeight -basalLayerHeight)/ denominator;
 			if (correctECM){ECMHeight= modifiedZDueToThinActin;}
 			if (correctBasal){basalLayerHeight= modifiedZDueToThinActin;}
 			if (correctActin){actinHeight= modifiedZDueToThinActin;}
-			//modifiedZDueToThinActin = (ABHeight - ECMHeight - actinHeight -basalLayerHeight)/ (ABLayers-3);
+			//modifiedZDueToThinActin = (params.ABHeight - ECMHeight - actinHeight -basalLayerHeight)/ (params.nzLayers-3);
 		}
 	}
-    else if (selectTissueType == 5){
+    else if (params.selectTissueType == TissueType::SPHERICAL_ORGANOID){
 		//spherical organoid
                 Lay01.generatingSphere = true;
 		addPeripodial = false;
 		addLateralECMRing = false;
                 actinHeight = 1.0;
                 ECMHeight = 0.2; //this should be set to negative in order to remove the ECM
-		modifiedZDueToThinActin = ABHeight/ABLayers;
-		if (ABLayers<3){
-			ECMHeight = ABHeight/ABLayers;
-			actinHeight = ABHeight/ABLayers;
-			basalLayerHeight = ABHeight/ABLayers;
-			modifiedZDueToThinActin  = ABHeight/ABLayers;
+		modifiedZDueToThinActin = params.ABHeight/params.nzLayers;
+		if (params.nzLayers<3){
+			ECMHeight = params.ABHeight/params.nzLayers;
+			actinHeight = params.ABHeight/params.nzLayers;
+			basalLayerHeight = params.ABHeight/params.nzLayers;
+			modifiedZDueToThinActin  = params.ABHeight/params.nzLayers;
 			cout<<" if clause 1,  modifiedZDueToThinActin: "<<modifiedZDueToThinActin<<endl;
 		}
 		else{
-			double denominator = (ABLayers-3);
+			double denominator = (params.nzLayers-3);
 			bool correctECM = false;
 			bool correctBasal = false;
 			bool correctActin = false;
                         if(ECMHeight<0){ECMHeight=0;denominator++;correctECM=true;}
 			if(basalLayerHeight<0){basalLayerHeight=0;denominator++;correctBasal=true;}
                         if(actinHeight<0){actinHeight=0;denominator++;correctActin=true;}
-			modifiedZDueToThinActin = (ABHeight - ECMHeight - actinHeight -basalLayerHeight)/ denominator;
+			modifiedZDueToThinActin = (params.ABHeight - ECMHeight - actinHeight -basalLayerHeight)/ denominator;
 			if (correctECM){ECMHeight= modifiedZDueToThinActin;}
 			if (correctBasal){basalLayerHeight= modifiedZDueToThinActin;}
 			if (correctActin){actinHeight= modifiedZDueToThinActin;}
@@ -2904,95 +2732,101 @@ int main(int argc, char **argv)
                 Lay01.symmetricY = true;
                 Lay01.symmetricX = true;
 	}
-        else if (selectTissueType == 6){
-                    //tubular organoid
-                    Lay01.generatingCylinder = true;
-                    addPeripodial = false;
-                    addLateralECMRing = false;
-                    actinHeight = 2.0;
-                    ECMHeight = 0.2;
-                    modifiedZDueToThinActin = ABHeight/ABLayers;
-                    if (ABLayers<3){
-                            ECMHeight = ABHeight/ABLayers;
-                            actinHeight = ABHeight/ABLayers;
-                            basalLayerHeight = ABHeight/ABLayers;
-                            modifiedZDueToThinActin  = ABHeight/ABLayers;
-                            cout<<" if clause 1,  modifiedZDueToThinActin: "<<modifiedZDueToThinActin<<endl;
-                    }
-                    else{
-                            double denominator = (ABLayers-3);
-                            bool correctECM = false;
-                            bool correctBasal = false;
-                            bool correctActin = false;
-                            if(ECMHeight<0){ECMHeight=0;denominator++;correctECM=true;}
-                            if(basalLayerHeight<0){basalLayerHeight=0;denominator++;correctBasal=true;}
-                            if(actinHeight<0){actinHeight=0;denominator++;correctActin=true;}
-                            modifiedZDueToThinActin = (ABHeight - ECMHeight - actinHeight -basalLayerHeight)/ denominator;
-                            if (correctECM){ECMHeight= modifiedZDueToThinActin;}
-                            if (correctBasal){basalLayerHeight= modifiedZDueToThinActin;}
-                            if (correctActin){actinHeight= modifiedZDueToThinActin;}
-                            cout<<" if clause 2,  modifiedZDueToThinActin: "<<modifiedZDueToThinActin<<endl;
-                    }
-                    Lay01.symmetricY = true;
-                    Lay01.symmetricX = false;
+	else if (params.selectTissueType == TissueType::TUBULAR_ORGANOID){
+				//tubular organoid
+				Lay01.generatingCylinder = true;
+				addPeripodial = false;
+				addLateralECMRing = false;
+				actinHeight = 2.0;
+				ECMHeight = 0.2;
+				modifiedZDueToThinActin = params.ABHeight/params.nzLayers;
+				if (params.nzLayers<3){
+						ECMHeight = params.ABHeight/params.nzLayers;
+						actinHeight = params.ABHeight/params.nzLayers;
+						basalLayerHeight = params.ABHeight/params.nzLayers;
+						modifiedZDueToThinActin  = params.ABHeight/params.nzLayers;
+						cout<<" if clause 1,  modifiedZDueToThinActin: "<<modifiedZDueToThinActin<<endl;
+				}
+				else{
+						double denominator = (params.nzLayers-3);
+						bool correctECM = false;
+						bool correctBasal = false;
+						bool correctActin = false;
+						if(ECMHeight<0){ECMHeight=0;denominator++;correctECM=true;}
+						if(basalLayerHeight<0){basalLayerHeight=0;denominator++;correctBasal=true;}
+						if(actinHeight<0){actinHeight=0;denominator++;correctActin=true;}
+						modifiedZDueToThinActin = (params.ABHeight - ECMHeight - actinHeight -basalLayerHeight)/ denominator;
+						if (correctECM){ECMHeight= modifiedZDueToThinActin;}
+						if (correctBasal){basalLayerHeight= modifiedZDueToThinActin;}
+						if (correctActin){actinHeight= modifiedZDueToThinActin;}
+						cout<<" if clause 2,  modifiedZDueToThinActin: "<<modifiedZDueToThinActin<<endl;
+				}
+				Lay01.symmetricY = true;
+				Lay01.symmetricX = false;
         }
-        else if(selectTissueType == 7){ // 1: ECM mimicing wing disc 48 hr, THIS WILL BE THE ONE TO USE 90% OF THE TIME!
-                    cout<<" in loop for tissue type(1) : "<<selectTissueType<<endl;
-            actinHeight = 2.0;  //these are the values used in paper: 2.0 for actin layer
-            ECMHeight = -0.2;    //these are the values used in paper: 0.2 for ECM
-                    addPeripodial = false;
-                    //peripodialHeightFrac is not used.
-                    peripodialHeightFrac = ECMHeight/(ABHeight-ECMHeight);//  ECM thickness is 0.2, AB height includes ECM. 0.33333;  //0.508
-                    lumenHeightFrac = 0.;//0.2; //this is set to 0 because the lumen height will be added by curving the tissue in model input.
-                    addLateralECMRing = false;
-                    modifiedZDueToThinActin = ABHeight/ABLayers;
-                    //basalLayerHeight = 6.25;
-                    //  end of ECM options
-                    if (ABLayers<3){
-                            ECMHeight = ABHeight/ABLayers;
-                            actinHeight = ABHeight/ABLayers;
-                            basalLayerHeight = ABHeight/ABLayers;
-                            modifiedZDueToThinActin  = ABHeight/ABLayers;
-                            cout<<" if clause 1,  modifiedZDueToThinActin: "<<modifiedZDueToThinActin<<endl;
-                    }
-                    else{
-                            double denominator = (ABLayers-3);
-                            bool correctECM = false;
-                            bool correctBasal = false;
-                            bool correctActin = false;
-                            if(ECMHeight<0){ECMHeight=0;denominator++;correctECM=true;}
-                            if(basalLayerHeight<0){basalLayerHeight=0;denominator++;correctBasal=true;}
-                            if(actinHeight<0){actinHeight=0;denominator++;correctActin=true;}
-                            modifiedZDueToThinActin = (ABHeight - ECMHeight - actinHeight -basalLayerHeight)/ denominator;
-                            if (correctECM){ECMHeight= modifiedZDueToThinActin;}
-                            if (correctBasal){basalLayerHeight= modifiedZDueToThinActin;}
-                            if (correctActin){actinHeight= modifiedZDueToThinActin;}
-                            //modifiedZDueToThinActin = (ABHeight - ECMHeight - actinHeight -basalLayerHeight)/ (ABLayers-3);
-                            cout<<" if clause 3,  modifiedZDueToThinActin: "<<modifiedZDueToThinActin<<endl;
-                    }
-                    peripodialSideCurveFrac = (modifiedZDueToThinActin + 5.52) /ABHeight ;
-                    Lay01.symmetricY = false;
-                    Lay01.symmetricX = false;
-                    cout<<"peripodialSideCurveFrac: "<<peripodialSideCurveFrac<<" ABHeight: "<<ABHeight<<" modifiedZDueToThinActin: "<<modifiedZDueToThinActin<<endl;
-            }
+	else if(params.selectTissueType == TissueType::RECTANGLE_WITH_ECM){ // 1: ECM mimicing wing disc 48 hr, THIS WILL BE THE ONE TO USE 90% OF THE TIME!
+				cout<<" in loop for tissue type(1) : "<<params.selectTissueType<<endl;
+		actinHeight = 2.0;  //these are the values used in paper: 2.0 for actin layer
+		ECMHeight = -0.2;    //these are the values used in paper: 0.2 for ECM
+				addPeripodial = false;
+				//peripodialHeightFrac is not used.
+				peripodialHeightFrac = ECMHeight/(params.ABHeight-ECMHeight);//  ECM thickness is 0.2, AB height includes ECM. 0.33333;  //0.508
+				lumenHeightFrac = 0.;//0.2; //this is set to 0 because the lumen height will be added by curving the tissue in model input.
+				addLateralECMRing = false;
+				modifiedZDueToThinActin = params.ABHeight/params.nzLayers;
+				//basalLayerHeight = 6.25;
+				//  end of ECM options
+				if (params.nzLayers<3){
+						ECMHeight = params.ABHeight/params.nzLayers;
+						actinHeight = params.ABHeight/params.nzLayers;
+						basalLayerHeight = params.ABHeight/params.nzLayers;
+						modifiedZDueToThinActin  = params.ABHeight/params.nzLayers;
+						cout<<" if clause 1,  modifiedZDueToThinActin: "<<modifiedZDueToThinActin<<endl;
+				}
+				else{
+						double denominator = (params.nzLayers-3);
+						bool correctECM = false;
+						bool correctBasal = false;
+						bool correctActin = false;
+						if(ECMHeight<0){ECMHeight=0;denominator++;correctECM=true;}
+						if(basalLayerHeight<0){basalLayerHeight=0;denominator++;correctBasal=true;}
+						if(actinHeight<0){actinHeight=0;denominator++;correctActin=true;}
+						modifiedZDueToThinActin = (params.ABHeight - ECMHeight - actinHeight -basalLayerHeight)/ denominator;
+						if (correctECM){ECMHeight= modifiedZDueToThinActin;}
+						if (correctBasal){basalLayerHeight= modifiedZDueToThinActin;}
+						if (correctActin){actinHeight= modifiedZDueToThinActin;}
+						//modifiedZDueToThinActin = (params.ABHeight - ECMHeight - actinHeight -basalLayerHeight)/ (params.nzLayers-3);
+						cout<<" if clause 3,  modifiedZDueToThinActin: "<<modifiedZDueToThinActin<<endl;
+				}
+				peripodialSideCurveFrac = (modifiedZDueToThinActin + 5.52) /params.ABHeight ;
+				Lay01.symmetricY = false;
+				Lay01.symmetricX = false;
+				cout<<"peripodialSideCurveFrac: "<<peripodialSideCurveFrac<<" params.ABHeight: "<<params.ABHeight<<" modifiedZDueToThinActin: "<<modifiedZDueToThinActin<<endl;
+		}
 	else{
 		cerr<<"Tissue type selected wrong!!"<<endl;	
 		return 0;
 	}
 	if(addPeripodial){
 		Lay01.addPeripodial = true;
-		Lay01.calculatePeripodialMembraneParameters(ABHeight, ABLayers,  ECMHeight,  modifiedZDueToThinActin, peripodialHeightFrac, lumenHeightFrac,peripodialSideCurveFrac,addLateralECMRing);
+		Lay01.calculatePeripodialMembraneParameters(params.ABHeight, params.nzLayers,  ECMHeight,  modifiedZDueToThinActin, peripodialHeightFrac, lumenHeightFrac,peripodialSideCurveFrac,addLateralECMRing);
 	}
-        if (parameters[0] != -1 && parameters[0] != -2 && parameters[0] != -3){//I am not using a ready made triangulation
-		vector <float> x, y;	
+	// If not using pre-built triangulation
+	if (params.meshing_mode != MeshMode::TESSELATION2D 
+		&& params.meshing_mode != MeshMode::TESSELATION3D 
+		&& params.meshing_mode != MeshMode::TESSELATION3D_CYLINDER)
+	{
+		vector <float> x, y;
+		// prepare the outline file for reading in
+		inputOutline.open(params.outline_file_path, ifstream::in);
 		readInOutline(x,y,inputOutline);
 		Lay01.scaleInputOutline(x,y);
 		Lay01.Tesselate2D("./NodesPreTesselation.out", "./Points.node");
 	}
-    if(parameters[0] == -1){
+    if(params.meshing_mode == MeshMode::TESSELATION2D){
 		Lay01.readInTesselation2D("./Points.1.ele", "./Points.1.node", "./VectorsPostTesselation.out", "./NodesPostTesselation.out");
 	}
-    if(parameters[0] == -2){
+    if(params.meshing_mode == MeshMode::TESSELATION3D){
 		Lay01.readInTesselation3D("./SphericalTriangulation", "./VectorsPostTesselation.out", "./NodesPostTesselation.out");
 	}
 	//now I have the triangulated mesh. If I have peripodial, I need to get the circumference.
@@ -3004,7 +2838,7 @@ int main(int argc, char **argv)
 		Lay01.peripodialReadInTesselation2D("./PointsPeri.1.node", "./PointsPeri.1.ele");
 	}
 	Lay01.calculateAverageSideLength();
-	Lay01.writeMeshFileForSimulation(ABHeight, ABLayers, ECMHeight, actinHeight, modifiedZDueToThinActin, basalLayerHeight, addLateralECMRing, "./MeshFile.out");
+	Lay01.writeMeshFileForSimulation(params.ABHeight, params.nzLayers, ECMHeight, actinHeight, modifiedZDueToThinActin, basalLayerHeight, addLateralECMRing, exe_args.path_to_output);
 	//output the points for plotting:
 	int n=Lay01.posx.size();	
 	//cerr<<"r1: "<<Lay01.r1[0]<<" "<<Lay01.r1[1]<<" r2: "<<Lay01.r2[0]<<" "<<Lay01.r2[1]<<endl;

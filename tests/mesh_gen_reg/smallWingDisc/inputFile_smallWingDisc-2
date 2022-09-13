@@ -1,0 +1,10 @@
+meshingMode: 2d
+    length1: 35.56
+    length2: 50
+    width1: 27.3
+    width2: 27.3
+    outline: ./48hrDiscSymmetricOutline
+ABHeight: 5.2
+prismSideLength: 1.0
+nzLayers: 3
+tissueType: 1
