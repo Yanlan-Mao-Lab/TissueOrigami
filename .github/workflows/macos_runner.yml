@@ -25,6 +25,21 @@ jobs:
           ./write_binary.o -w mac-bin
           ./write_binary.o -r mac-bin
       
+      # install dependencies
+      - name: Install dependencies
+        run: |
+          brew install gcc gsl boost openblas
+      
+      # build TissueFolding
+      - name: Build TissueFolding
+        run: |
+          cd ${{ github.workspace }}/TissueFolding/SourceCode/
+          mkdir build
+          cd build
+          cmake ..
+          cmake --build .
+          cp ./TissueFolding ../../
+
       # run interactive session
       - name: tmate time
         uses: mxschmitt/action-tmate@v3

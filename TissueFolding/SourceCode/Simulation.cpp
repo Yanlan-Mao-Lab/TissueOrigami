@@ -6,6 +6,7 @@
 #include <vector>
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_blas.h>
+#include <iomanip> //remove after coout precision investigation
 
 using namespace std;
 
@@ -8243,7 +8244,9 @@ void Simulation::calculateDVDistance(){
 		}
 	}
 	double dmag = d[0]+d[1]+d[2];
-	dmag = pow(dmag,0.5);
+	dmag = pow(dmag, 0.5); 
+	std::cout << fixed << scientific << setprecision(16);
+	outputFile << fixed << scientific << setprecision(16);
 	outputFile<<"time: "<<currSimTimeSec<<" DV distance is: "<<dmag<<" ";
 	std::cout<<"time: "<<currSimTimeSec<<" DV distance is: "<<dmag<<" ";
 	if (symmetricY){
