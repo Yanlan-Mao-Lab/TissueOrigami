@@ -594,7 +594,7 @@
 ---
 > 			NRSolver->cleanPeripodialBindingFromMaster(dof, Nodes);
 
-=======! Comparison of: NewtonRaphsonSolver.cpp !=======
+=======! Comparison of: NewtonRaphsonSolver.cpp !======= [DONE]
 477,481c477,481
 < //	int error = solveWithPardiso(a, b, ia, ja, nmult);
 < //	if (error != 0){std::cerr<<"Pardiso solver did not return success!!"<<std::endl;}
@@ -1142,7 +1142,7 @@
 >     return 0;
 > }
 
-=======! Comparison of: Simulation.h !=======
+=======! Comparison of: Simulation.h !======= [DONE]
 18c18
 < //#include "NewtonRaphsonSolver.h"
 ---
@@ -1156,7 +1156,7 @@
 ---
 >     void updateStepNR();									///< Update the positions with solving for the displacements with the N-R iterations.
 
-=======! Comparison of: NewtonRaphsonSolver.h !=======
+=======! Comparison of: NewtonRaphsonSolver.h !======= [DONE]
 71c71
 < //	int  solveWithPardiso(double* a, double*b, int* ia, int* ja, const int n_variables);
 ---

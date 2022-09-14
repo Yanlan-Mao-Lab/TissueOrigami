@@ -2,6 +2,14 @@
 
 This executable conducts the simulation (add biological context - expertise required)
 
+## NOTES OF CHANGES UPON CODE UNIFORCATION
+
+The preprocessor definition that must be supplied (and determines whether we compile pardiso code) is named
+```
+BUILD_WITH_PARDISO
+```
+NOTE: This will replace the old option `DO_NOT_SOLVE_SYSTEM_OF_EQUATIONS`.
+
 ## Requirements
 
 `TissueFolding` has the following dependencies:

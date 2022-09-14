@@ -9,7 +9,7 @@
 #include "ShapeBase.h"
 #include "Lumen.h"
 #ifndef DO_NOT_USE_OMP
-    //USING OMP, do not use omp not defined!
+    // Do not include omp if we built without it
     #include <omp.h>
 #endif
 
@@ -68,7 +68,10 @@ public:
 
 	void solveForDeltaU();															///< This function solves for the displacements within the N-R step.
    	//raw pointers necessary for Pardiso
-//	int  solveWithPardiso(double* a, double*b, int* ia, int* ja, const int n_variables);
+	# ifdef BUILD_WITH_PARDISO
+		// do not include if building without PARDISO
+		int  solveWithPardiso(double* a, double*b, int* ia, int* ja, const int n_variables);
+	# endif
 	void constructiaForPardiso(int* ia, const int nmult, vector<int> &ja_vec, vector<double> &a_vec);
 	void writeKinPardisoFormat(const int nNonzero, vector<int> &ja_vec, vector<double> &a_vec, int* ja, double* a);
 	void writeginPardisoFormat(double* b, const int n);
