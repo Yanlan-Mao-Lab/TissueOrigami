@@ -1,4 +1,4 @@
-=======! Comparison of: Simulation.cpp !=======
+=======! Comparison of: Simulation.cpp !======= [DONE]
 497,498c497,498
 < //				NRSolver->slaveMasterList.push_back(fix);
 < //				NRSolver->boundNodesWithSlaveMasterDefinition = true;
