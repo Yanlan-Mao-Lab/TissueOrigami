@@ -30,11 +30,13 @@ tests/**/gen_outputs/
 *.o
 *.so
 
-# Pycache files #
-#################
+# pytest outputs #
+##################
 **__pycache__**
+**/generatd_out/**
 
 # compiled binary #
 ###################
 **triangle
 **EllipseFromOutline
+/TissueFolding/**TissueFolding
