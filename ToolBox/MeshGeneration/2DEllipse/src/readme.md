@@ -50,7 +50,8 @@ Options:
 ### Input File Syntax
 
 Input files follow a `.yml` style syntax of variable names, followed by colons, then by the value assigned to the variable, separated by newlines.
-Certain variable values may require further variables to be provided; whilst empty lines and buffering whitespace are ignored.
+Certain variable values may require further variables to be provided.
+Note that the file will _not_ currently be read with a typical `YAML` reader, and therefore empty lines and buffering/indenting whitespace will be ignored.
 The general syntax for the input files is thus as follows:
 ```yml
 input 1: value
@@ -60,8 +61,8 @@ input 2: value
   input 2 dependency 1: value
 input 3: value
 ```
-There is no obligation to this format of indenting variables beneath their dependents, provide dependencies immidately after a dependent variable, nor use any indenting - however it is advised for legibility!
-This being said; the input reader is flexible and will organise the inputs provided by the user _before_ attempting to validate that a consistent combination of inputs has been provided.
+As aforementioned, there is no obligation to adhere to this format of indenting variables beneath their dependents, providing dependencies immidately after a dependent variable, or using buffering whitespace - however it is advised for legibility!
+The input reader is flexible and will organise the inputs provided by the user _before_ attempting to validate that a consistent combination of inputs has been provided.
 
 The first variable name should be `meshingMode`, and should take one of the following values:
 - `rec`: The tissue to be meshed is of rectangular shape
