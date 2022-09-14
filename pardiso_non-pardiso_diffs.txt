@@ -1,0 +1,1163 @@
+=======! Comparison of: Simulation.cpp !=======
+497,498c497,498
+< //				NRSolver->slaveMasterList.push_back(fix);
+< //				NRSolver->boundNodesWithSlaveMasterDefinition = true;
+---
+> 				NRSolver->slaveMasterList.push_back(fix);
+> 				NRSolver->boundNodesWithSlaveMasterDefinition = true;
+781c781
+< //	NRSolver = make_unique<NewtonRaphsonSolver>(Nodes[0]->nDim,nNodes);
+---
+> 	NRSolver = make_unique<NewtonRaphsonSolver>(Nodes[0]->nDim,nNodes);
+783,784c783,784
+< //		NRSolver ->thereIsLumen = true;
+< //		NRSolver ->tissueLumen = this->tissueLumen;
+---
+> 		NRSolver ->thereIsLumen = true;
+> 		NRSolver ->tissueLumen = this->tissueLumen;
+802c802
+< //			NRSolver->boundNodesWithSlaveMasterDefinition = true;
+---
+> 			NRSolver->boundNodesWithSlaveMasterDefinition = true;
+830c830
+< //			NRSolver->boundNodesWithSlaveMasterDefinition = true;
+---
+> 			NRSolver->boundNodesWithSlaveMasterDefinition = true;
+841c841
+< //			NRSolver->boundNodesWithSlaveMasterDefinition = true;
+---
+> 			NRSolver->boundNodesWithSlaveMasterDefinition = true;
+949c949
+< //						NRSolver->slaveMasterList.push_back(fixX);
+---
+> 						NRSolver->slaveMasterList.push_back(fixX);
+961c961
+< //						NRSolver->slaveMasterList.push_back(fixY);
+---
+> 						NRSolver->slaveMasterList.push_back(fixY);
+973c973
+< //						NRSolver->slaveMasterList.push_back(fixZ);
+---
+> 						NRSolver->slaveMasterList.push_back(fixZ);
+1055c1055
+< //				NRSolver->checkMasterUpdate(dofmaster,masterNodeId);
+---
+> 				NRSolver->checkMasterUpdate(dofmaster,masterNodeId);
+1061,1079c1061,1079
+< //					bool continueAddition =  NRSolver->checkIfCombinationExists(dofslave,dofmaster);
+< //					//std::cout<<"DOF not fixed, continueAddition? : "<<continueAddition<<std::endl;
+< //					if (continueAddition){
+< //						bool madeChange = NRSolver->checkIfSlaveIsAlreadyMasterOfOthers(dofslave,dofmaster);
+< //						if (madeChange){
+< //							for (size_t nodeIt = 0 ; nodeIt<Nodes.size(); ++nodeIt){
+< //								if(Nodes[nodeIt]->slaveTo[i]==slaveNodeId){
+< //									Nodes[nodeIt]->slaveTo[i]=masterNodeId;
+< //								}
+< //							}
+< //						}
+< //						vector <int> fixDOF;
+< //						fixDOF.push_back(dofslave);
+< //						fixDOF.push_back(dofmaster);
+< //						NRSolver->slaveMasterList.push_back(fixDOF);
+< //						Nodes[slaveNodeId]->slaveTo[i] = masterNodeId;
+< //						Nodes[masterNodeId]->isMaster[i] = true;
+< //						thereIsBinding = true;
+< //					}
+---
+> 					bool continueAddition =  NRSolver->checkIfCombinationExists(dofslave,dofmaster);
+> 					//std::cout<<"DOF not fixed, continueAddition? : "<<continueAddition<<std::endl;
+> 					if (continueAddition){
+> 						bool madeChange = NRSolver->checkIfSlaveIsAlreadyMasterOfOthers(dofslave,dofmaster);
+> 						if (madeChange){
+> 							for (size_t nodeIt = 0 ; nodeIt<Nodes.size(); ++nodeIt){
+> 								if(Nodes[nodeIt]->slaveTo[i]==slaveNodeId){
+> 									Nodes[nodeIt]->slaveTo[i]=masterNodeId;
+> 								}
+> 							}
+> 						}
+> 						vector <int> fixDOF;
+> 						fixDOF.push_back(dofslave);
+> 						fixDOF.push_back(dofmaster);
+> 						NRSolver->slaveMasterList.push_back(fixDOF);
+> 						Nodes[slaveNodeId]->slaveTo[i] = masterNodeId;
+> 						Nodes[masterNodeId]->isMaster[i] = true;
+> 						thereIsBinding = true;
+> 					}
+1249c1249
+< //				NRSolver->checkMasterUpdate(dofmaster,masterNodeId);
+---
+> 				NRSolver->checkMasterUpdate(dofmaster,masterNodeId);
+1260,1285c1260,1285
+< //					bool continueAddition =  NRSolver->checkIfCombinationExists(dofslave,dofmaster);
+< //					if (continueAddition){
+< //						/**
+< //						 * If the couple is not implemented, then the check for the status of the slave is carried out, if the slave is already master of
+< //						 * other nodes, the coupling is checked and corrected in function NewtonRaphsonSolver#checkIfSlaveIsAlreadyMasterOfOthers. If the
+< //						 * function updates the node couple, then the potential slave was a master, and now is a slave to the potential master.
+< //						 * All slaves of the potential master are moved on to the potential master. \n
+< //						 */
+< //						bool madeChange = NRSolver->checkIfSlaveIsAlreadyMasterOfOthers(dofslave,dofmaster);
+< //						if (madeChange){
+< //							std::cout<<"slave "<<slaveNodeId<<" is already master of others"<<std::endl;
+< //							size_t nodesSize = Nodes.size();
+< //							for (size_t nodeIt = 0 ; nodeIt<nodesSize; ++nodeIt){
+< //								if(Nodes[nodeIt]->slaveTo[i]==slaveNodeId){
+< //									Nodes[nodeIt]->slaveTo[i]=masterNodeId;
+< //								}
+< //							}
+< //						}
+< //						vector <int> fixDOF;
+< //						fixDOF.push_back(dofslave);
+< //						fixDOF.push_back(dofmaster);
+< //						NRSolver->slaveMasterList.push_back(fixDOF);
+< //						Nodes[slaveNodeId]->slaveTo[i] = masterNodeId;
+< //						Nodes[masterNodeId]->isMaster[i] = true;
+< //						thereIsBinding = true;
+< //					}
+---
+> 					bool continueAddition =  NRSolver->checkIfCombinationExists(dofslave,dofmaster);
+> 					if (continueAddition){
+> 						/**
+> 						 * If the couple is not implemented, then the check for the status of the slave is carried out, if the slave is already master of
+> 						 * other nodes, the coupling is checked and corrected in function NewtonRaphsonSolver#checkIfSlaveIsAlreadyMasterOfOthers. If the
+> 						 * function updates the node couple, then the potential slave was a master, and now is a slave to the potential master.
+> 						 * All slaves of the potential master are moved on to the potential master. \n
+> 						 */
+> 						bool madeChange = NRSolver->checkIfSlaveIsAlreadyMasterOfOthers(dofslave,dofmaster);
+> 						if (madeChange){
+> 							std::cout<<"slave "<<slaveNodeId<<" is already master of others"<<std::endl;
+> 							size_t nodesSize = Nodes.size();
+> 							for (size_t nodeIt = 0 ; nodeIt<nodesSize; ++nodeIt){
+> 								if(Nodes[nodeIt]->slaveTo[i]==slaveNodeId){
+> 									Nodes[nodeIt]->slaveTo[i]=masterNodeId;
+> 								}
+> 							}
+> 						}
+> 						vector <int> fixDOF;
+> 						fixDOF.push_back(dofslave);
+> 						fixDOF.push_back(dofmaster);
+> 						NRSolver->slaveMasterList.push_back(fixDOF);
+> 						Nodes[slaveNodeId]->slaveTo[i] = masterNodeId;
+> 						Nodes[masterNodeId]->isMaster[i] = true;
+> 						thereIsBinding = true;
+> 					}
+1359c1359
+< //						NRSolver->slaveMasterList.push_back(fixX);
+---
+> 						NRSolver->slaveMasterList.push_back(fixX);
+1369c1369
+< //						NRSolver->slaveMasterList.push_back(fixY);
+---
+> 						NRSolver->slaveMasterList.push_back(fixY);
+6048c6048
+< //		NRSolver->boundNodesWithSlaveMasterDefinition = true;
+---
+> 		NRSolver->boundNodesWithSlaveMasterDefinition = true;
+6058c6058
+< //    	NRSolver->boundNodesWithSlaveMasterDefinition = true;
+---
+>     	NRSolver->boundNodesWithSlaveMasterDefinition = true;
+6063c6063
+< //    updateStepNR();
+---
+>     updateStepNR();
+6227,6228c6227,6228
+< //	gsl_matrix_set_zero(NRSolver->Knumerical);
+< //	NRSolver->calculateDisplacementMatrix(dt);
+---
+> 	gsl_matrix_set_zero(NRSolver->Knumerical);
+> 	NRSolver->calculateDisplacementMatrix(dt);
+6236,6239c6236,6239
+< //	NRSolver->calculateForcesAndJacobianMatrixNR(Nodes, Elements, dt);
+< //	NRSolver->writeForcesTogeAndgvInternal(Nodes, Elements, SystemForces);
+< //	gsl_matrix_memcpy(ge_noPerturb, NRSolver->ge);
+< //	gsl_matrix_memcpy(gvInternal_noPerturb, NRSolver->gvInternal);
+---
+> 	NRSolver->calculateForcesAndJacobianMatrixNR(Nodes, Elements, dt);
+> 	NRSolver->writeForcesTogeAndgvInternal(Nodes, Elements, SystemForces);
+> 	gsl_matrix_memcpy(ge_noPerturb, NRSolver->ge);
+> 	gsl_matrix_memcpy(gvInternal_noPerturb, NRSolver->gvInternal);
+6242c6242
+< //	gsl_matrix_memcpy(uk_original,NRSolver->uk);
+---
+> 	gsl_matrix_memcpy(uk_original,NRSolver->uk);
+6246,6247c6246,6247
+< //			gsl_matrix_set(NRSolver->uk,i*3+j,0,gsl_matrix_get(NRSolver->uk,i*3+j,0)+1E-6);
+< //			NRSolver->calculateDisplacementMatrix(dt);
+---
+> 			gsl_matrix_set(NRSolver->uk,i*3+j,0,gsl_matrix_get(NRSolver->uk,i*3+j,0)+1E-6);
+> 			NRSolver->calculateDisplacementMatrix(dt);
+6250c6250
+< //			NRSolver->calculateForcesAndJacobianMatrixNR(Nodes, Elements, dt);
+---
+> 			NRSolver->calculateForcesAndJacobianMatrixNR(Nodes, Elements, dt);
+6253,6255c6253,6255
+< //			NRSolver->writeForcesTogeAndgvInternal(Nodes, Elements, SystemForces);
+< //			gsl_matrix_memcpy(ge_withPerturb, NRSolver->ge);
+< //			gsl_matrix_memcpy(gvInternal_withPerturb, NRSolver->gvInternal);
+---
+> 			NRSolver->writeForcesTogeAndgvInternal(Nodes, Elements, SystemForces);
+> 			gsl_matrix_memcpy(ge_withPerturb, NRSolver->ge);
+> 			gsl_matrix_memcpy(gvInternal_withPerturb, NRSolver->gvInternal);
+6266c6266
+< //				gsl_matrix_set(NRSolver->K,i*3+j,k,value);
+---
+> 				gsl_matrix_set(NRSolver->K,i*3+j,k,value);
+6268c6268
+< //			gsl_matrix_memcpy(NRSolver->uk,uk_original);
+---
+> 			gsl_matrix_memcpy(NRSolver->uk,uk_original);
+6276c6276
+< //	NRSolver->calcutateFixedK(Nodes);
+---
+> 	NRSolver->calcutateFixedK(Nodes);
+6278c6278
+< //		Elements[0]->displayMatrix(NRSolver->K,"numericalK");
+---
+> 		Elements[0]->displayMatrix(NRSolver->K,"numericalK");
+6280,6281c6280,6281
+< //	gsl_matrix_memcpy(NRSolver->Knumerical,NRSolver->K);
+< //	NRSolver->setMatricesToZeroInsideIteration();
+---
+> 	gsl_matrix_memcpy(NRSolver->Knumerical,NRSolver->K);
+> 	NRSolver->setMatricesToZeroInsideIteration();
+6536,6677c6536,6677
+< //void Simulation::updateStepNR(){
+< //    /**
+< //     * The iteration will be carried out for 20 steps, if upon 20 trials the simulation have not converged, an error will be
+< //     * generated. The iteration starts by clearing all force, displacement and Jacobian matrices of the NR solver in
+< //     * NewtonRaphsonSolver#setMatricesToZeroAtTheBeginningOfIteration. Then the vector containing the positions of teh nodes at the
+< //     * end of the previous time step "n", \f$ \boldsymbol{u_n} \f$ is calculated in NewtonRaphsonSolver#constructUnMatrix. The positions
+< //     * of the current iteration "k", \f$ \boldsymbol{u_k} \f$ are initiated equal to \f$ \boldsymbol{u_n} \f$ via
+< //     * NewtonRaphsonSolver#initialteUkMatrix. \n
+< //     */
+< //    int iteratorK = 0;
+< //    int maxIteration =20;
+< //    bool converged = false;
+< 
+< 
+< //    cout<<" in update NR "<<endl;
+< //#ifdef DO_NOT_SOLVE_SYSTEM_OF_EQUATIONS
+< //    /** If DO_NOT_SOLVE_SYSTEM_OF_EQUATIONS is defined,I will
+< //     * not go into the Newton-Rapson iterations. This has two purposes:
+< //     * Either I am debugging, with a setup that is potentially crashing during calculations, or
+< //     * I am on a machine that can not utilise PARDISO.
+< //     * It is necessary on a Mac that does not have omp, as PARDISO demands omp.
+< //     * For mac, the sample line to add to the .pro file is
+< //     * CONFIG += -std=c++11 -D DO_NOT_USE_OMP -D DO_NOT_SOLVE_SYSTEM_OF_EQUATIONS
+< //     * For ubuntu & server, it is
+< //     * QMAKE_CXXFLAGS += -fopenmp -std=c++11 -D DO_NOT_USE_OMP -D DO_NOT_SOLVE_SYSTEM_OF_EQUATIONS
+< //     */
+< //    converged = true;
+< //	#endif
+< //    bool numericalCalculation = false;
+< //    bool displayMatricesDuringNumericalCalculation = false;
+< //    bool useNumericalKIncalculation = false;
+< 
+< ////    NRSolver->setMatricesToZeroAtTheBeginningOfIteration(numericalCalculation);
+< ////    NRSolver->constructUnMatrix(Nodes);
+< ////    NRSolver->initialteUkMatrix();
+< //    while (!converged){
+< //        /**
+< //          * While the system has not converged, all the forces are rest at the beginning of each iteration with Simulation#resetForces.
+< //          * Then the matrices to be cumulated from scratch in each iteration are reset in NewtonRaphsonSolver#setMatricesToZeroInsideIteration().
+< //          * The displacement matrix per time step Simulation#dt is calculated for use in external viscous forces in
+< //          * NewtonRaphsonSolver#calculateDisplacementMatrix. Then all the internal elemental and nodal forces are calculated in NewtonRaphsonSolver#calculateForcesAndJacobianMatrixNR.
+< //          * The forces are moved from the elements and nodes to the system vectors in NewtonRaphsonSolver#writeForcesTogeAndgvInternal, the elastic and viscous
+< //          * terms of the elemental Jacobians are mapped and added onto the system Jacobian in  NewtonRaphsonSolver#writeImplicitElementalKToJacobian.
+< //          * The external forces are calculated in NewtonRaphsonSolver#calculateExternalViscousForcesForNR and their derivatives are added to
+< //          * the system Jacobian in NewtonRaphsonSolver#addImplicitKViscousExternalToJacobian. \n
+< //          */
+< //        std::cout<<"iteration: "<<iteratorK<<std::endl;
+< //        resetForces(true);	// reset packing forces
+< ////        NRSolver->setMatricesToZeroInsideIteration();
+< //        if (numericalCalculation){
+< //        	calculateNumericalJacobian(displayMatricesDuringNumericalCalculation);
+< //        }
+< ////        NRSolver->calculateDisplacementMatrix(dt);
+< ////        NRSolver->calculateForcesAndJacobianMatrixNR(Nodes, Elements, dt);
+< ////		NRSolver->writeForcesTogeAndgvInternal(Nodes, Elements, SystemForces);
+< ////	    NRSolver->writeImplicitElementalKToJacobian(Elements);
+< //	    if (numericalCalculation){
+< ////			NRSolver->calculateDifferenceBetweenNumericalAndAnalyticalJacobian(Nodes, displayMatricesDuringNumericalCalculation);
+< //			if(useNumericalKIncalculation){
+< ////				NRSolver->useNumericalJacobianInIteration();
+< //			}
+< //		}
+< ////		NRSolver->calculateExternalViscousForcesForNR(Nodes);
+< ////	    NRSolver->addImplicitKViscousExternalToJacobian(Nodes,dt);
+< //        /**
+< //         * The packing forces calculated implicitely, they are updated via Simulation#calculatePackingForcesImplicit3D and
+< //         * the corresponding Jacobian update is carried out with Simulation#calculatePackingJacobian3D. The packing for enclosing surfaces and the pipette
+< //         * are also carried out here (Simulation#calculatePackingForcesToEnclosingSurfacesImplicit3D,
+< //         * Simulation#calculatePackingToEnclosingSurfacesJacobian3D, Simulation#calculatePackingToPipetteForcesImplicit3D
+< //         * and Simulation#calculatePackingToPipetteJacobian3D).
+< //         */
+< 
+< //		calculatePackingForcesImplicit3D();
+< //		calculatePackingJacobian3D(NRSolver->K);
+< //		//calculatePackingToAFMBeadJacobian3D(NRSolver->K);
+< //		if (encloseTissueBetweenSurfaces){
+< //			calculatePackingForcesToEnclosingSurfacesImplicit3D();
+< //			calculatePackingToEnclosingSurfacesJacobian3D(NRSolver->K);
+< //		}
+< 
+< //        /**
+< //         * All the internal forces and the external viscous resistance forces are collated in NewtonRaphsonSolver#gSum
+< //         * via NewtonRaphsonSolver#calculateSumOfInternalForces. The external forceas from the pipette suction if set up, all packing,
+< //         * and random forces if assigned are collated in NewtonRaphsonSolver#gExt, and these are added to system forces in
+< //         * NewtonRaphsonSolver#addExernalForces(). \n
+< //         */
+< ////        NRSolver->checkJacobianForAblatedNodes(AblatedNodes);
+< ////        NRSolver->calculateSumOfInternalForces();
+< //        if (PipetteSuction && timestep >= PipetteInitialStep){
+< //			packToPipetteWall();
+< //			calculateZProjectedAreas();
+< //			addPipetteForces(NRSolver->gExt);
+< //		}
+< //		//packing can come from both encapsulation and tissue-tissue packing. I ad the forces irrespective of adhesion.
+< //		addPackingForces(NRSolver->gExt);
+< 
+< //		if (addingRandomForces){
+< //			addRandomForces(NRSolver->gExt);
+< //		}
+< ////        NRSolver->addExernalForces();
+< //        checkForExperimentalSetupsWithinIteration();
+< //        /**
+< //         * Once all forces and their derivatives are collated in system forces and Jacobian, then degrees of freedom fixing is
+< //         * reflected on these matrices in  NewtonRaphsonSolver#calcutateFixedK and NewtonRaphsonSolver#calculateBoundKWithSlavesMasterDoF.
+< //         */
+< ////    	NRSolver->calcutateFixedK(Nodes);
+< ////       	NRSolver->calculateBoundKWithSlavesMasterDoF();
+< //        /** Then NewtonRaphsonSolver#solveForDeltaU function arranges the matrices and solves for the incremental displacements via
+< //         * PARDISO sparse matrix solver. The convergence is checked via the norm of incremental displacements in
+< //         * NewtonRaphsonSolver#checkConvergenceViaDeltaU, the position of the nodes in the iteration, \f $ \boldsymbol{u_k} \f $ are updated
+< //         * in NewtonRaphsonSolver#updateUkInIteration. The nodal and elemental positions are updated (Simulation#updateElementPositionsinNR,
+< //         * Simulation#updateNodePositionsNR) with the new node positions of the iteration.
+< //         */
+< ////        NRSolver->solveForDeltaU();
+< ////        converged = NRSolver->checkConvergenceViaDeltaU();
+< ////        NRSolver->updateUkInIteration();
+< ////        updateElementPositionsinNR(NRSolver->uk);
+< ////        updateNodePositionsNR(NRSolver->uk);
+< //        iteratorK ++;
+< ////        if (!converged && iteratorK > maxIteration){
+< ////            std::cerr<<"Error: did not converge!!!"<<std::endl;
+< ////            converged = true;
+< ////        }
+< //    }
+< //    checkForExperimentalSetupsAfterIteration();
+< //    //Now the calculation is converged, I update the node positions with the latest positions uk:
+< ////    updateNodePositionsNR(NRSolver->uk);
+< //     //Element positions are already up to date.
+< //    std::cout<<"finished run one step"<<std::endl;
+< //    if (PipetteSuction){
+< //    	//find the max z:
+< //    	double zMax = -10000;
+< //    	int idMax = -10;
+< //    	for (auto& itNode : Nodes){
+< //    		if (itNode->Position[2] > zMax){
+< //    			zMax = itNode->Position[2];
+< //    			idMax = itNode->Id;
+< //    		}
+< //    	}
+< //    	std::cout<<"Pipette suction: "<<SuctionPressure[2]<<" max suction: "<<zMax<<" from node "<<idMax<<std::endl;
+< //    }
+< //}
+---
+> void Simulation::updateStepNR(){
+>     /**
+>      * The iteration will be carried out for 20 steps, if upon 20 trials the simulation have not converged, an error will be
+>      * generated. The iteration starts by clearing all force, displacement and Jacobian matrices of the NR solver in
+>      * NewtonRaphsonSolver#setMatricesToZeroAtTheBeginningOfIteration. Then the vector containing the positions of teh nodes at the
+>      * end of the previous time step "n", \f$ \boldsymbol{u_n} \f$ is calculated in NewtonRaphsonSolver#constructUnMatrix. The positions
+>      * of the current iteration "k", \f$ \boldsymbol{u_k} \f$ are initiated equal to \f$ \boldsymbol{u_n} \f$ via
+>      * NewtonRaphsonSolver#initialteUkMatrix. \n
+>      */
+>     int iteratorK = 0;
+>     int maxIteration =20;
+>     bool converged = false;
+> 
+> 
+>     cout<<" in update NR "<<endl;
+> #ifdef DO_NOT_SOLVE_SYSTEM_OF_EQUATIONS
+>     /** If DO_NOT_SOLVE_SYSTEM_OF_EQUATIONS is defined,I will
+>      * not go into the Newton-Rapson iterations. This has two purposes:
+>      * Either I am debugging, with a setup that is potentially crashing during calculations, or
+>      * I am on a machine that can not utilise PARDISO.
+>      * It is necessary on a Mac that does not have omp, as PARDISO demands omp.
+>      * For mac, the sample line to add to the .pro file is
+>      * CONFIG += -std=c++11 -D DO_NOT_USE_OMP -D DO_NOT_SOLVE_SYSTEM_OF_EQUATIONS
+>      * For ubuntu & server, it is
+>      * QMAKE_CXXFLAGS += -fopenmp -std=c++11 -D DO_NOT_USE_OMP -D DO_NOT_SOLVE_SYSTEM_OF_EQUATIONS
+>      */
+>     converged = true;
+> 	#endif
+>     bool numericalCalculation = false;
+>     bool displayMatricesDuringNumericalCalculation = false;
+>     bool useNumericalKIncalculation = false;
+> 
+>     NRSolver->setMatricesToZeroAtTheBeginningOfIteration(numericalCalculation);
+>     NRSolver->constructUnMatrix(Nodes);
+>     NRSolver->initialteUkMatrix();
+>     while (!converged){
+>         /**
+>           * While the system has not converged, all the forces are rest at the beginning of each iteration with Simulation#resetForces.
+>           * Then the matrices to be cumulated from scratch in each iteration are reset in NewtonRaphsonSolver#setMatricesToZeroInsideIteration().
+>           * The displacement matrix per time step Simulation#dt is calculated for use in external viscous forces in
+>           * NewtonRaphsonSolver#calculateDisplacementMatrix. Then all the internal elemental and nodal forces are calculated in NewtonRaphsonSolver#calculateForcesAndJacobianMatrixNR.
+>           * The forces are moved from the elements and nodes to the system vectors in NewtonRaphsonSolver#writeForcesTogeAndgvInternal, the elastic and viscous
+>           * terms of the elemental Jacobians are mapped and added onto the system Jacobian in  NewtonRaphsonSolver#writeImplicitElementalKToJacobian.
+>           * The external forces are calculated in NewtonRaphsonSolver#calculateExternalViscousForcesForNR and their derivatives are added to
+>           * the system Jacobian in NewtonRaphsonSolver#addImplicitKViscousExternalToJacobian. \n
+>           */
+>         std::cout<<"iteration: "<<iteratorK<<std::endl;
+>         resetForces(true);	// reset packing forces
+>         NRSolver->setMatricesToZeroInsideIteration();
+>         if (numericalCalculation){
+>         	calculateNumericalJacobian(displayMatricesDuringNumericalCalculation);
+>         }
+>         NRSolver->calculateDisplacementMatrix(dt);
+>         NRSolver->calculateForcesAndJacobianMatrixNR(Nodes, Elements, dt);
+> 		NRSolver->writeForcesTogeAndgvInternal(Nodes, Elements, SystemForces);
+> 	    NRSolver->writeImplicitElementalKToJacobian(Elements);
+> 	    if (numericalCalculation){
+> 			NRSolver->calculateDifferenceBetweenNumericalAndAnalyticalJacobian(Nodes, displayMatricesDuringNumericalCalculation);
+> 			if(useNumericalKIncalculation){
+> 				NRSolver->useNumericalJacobianInIteration();
+> 			}
+> 		}
+> 		NRSolver->calculateExternalViscousForcesForNR(Nodes);
+> 	    NRSolver->addImplicitKViscousExternalToJacobian(Nodes,dt);
+>         /**
+>          * The packing forces calculated implicitely, they are updated via Simulation#calculatePackingForcesImplicit3D and
+>          * the corresponding Jacobian update is carried out with Simulation#calculatePackingJacobian3D. The packing for enclosing surfaces and the pipette
+>          * are also carried out here (Simulation#calculatePackingForcesToEnclosingSurfacesImplicit3D,
+>          * Simulation#calculatePackingToEnclosingSurfacesJacobian3D, Simulation#calculatePackingToPipetteForcesImplicit3D
+>          * and Simulation#calculatePackingToPipetteJacobian3D).
+>          */
+> 
+> 		calculatePackingForcesImplicit3D();
+> 		calculatePackingJacobian3D(NRSolver->K);
+> 		//calculatePackingToAFMBeadJacobian3D(NRSolver->K);
+> 		if (encloseTissueBetweenSurfaces){
+> 			calculatePackingForcesToEnclosingSurfacesImplicit3D();
+> 			calculatePackingToEnclosingSurfacesJacobian3D(NRSolver->K);
+> 		}
+> 
+>         /**
+>          * All the internal forces and the external viscous resistance forces are collated in NewtonRaphsonSolver#gSum
+>          * via NewtonRaphsonSolver#calculateSumOfInternalForces. The external forceas from the pipette suction if set up, all packing,
+>          * and random forces if assigned are collated in NewtonRaphsonSolver#gExt, and these are added to system forces in
+>          * NewtonRaphsonSolver#addExernalForces(). \n
+>          */
+>         NRSolver->checkJacobianForAblatedNodes(AblatedNodes);
+>         NRSolver->calculateSumOfInternalForces();
+>         if (PipetteSuction && timestep >= PipetteInitialStep){
+> 			packToPipetteWall();
+> 			calculateZProjectedAreas();
+> 			addPipetteForces(NRSolver->gExt);
+> 		}
+> 		//packing can come from both encapsulation and tissue-tissue packing. I ad the forces irrespective of adhesion.
+> 		addPackingForces(NRSolver->gExt);
+> 
+> 		if (addingRandomForces){
+> 			addRandomForces(NRSolver->gExt);
+> 		}
+>         NRSolver->addExernalForces();
+>         checkForExperimentalSetupsWithinIteration();
+>         /**
+>          * Once all forces and their derivatives are collated in system forces and Jacobian, then degrees of freedom fixing is
+>          * reflected on these matrices in  NewtonRaphsonSolver#calcutateFixedK and NewtonRaphsonSolver#calculateBoundKWithSlavesMasterDoF.
+>          */
+>     	NRSolver->calcutateFixedK(Nodes);
+>        	NRSolver->calculateBoundKWithSlavesMasterDoF();
+>         /** Then NewtonRaphsonSolver#solveForDeltaU function arranges the matrices and solves for the incremental displacements via
+>          * PARDISO sparse matrix solver. The convergence is checked via the norm of incremental displacements in
+>          * NewtonRaphsonSolver#checkConvergenceViaDeltaU, the position of the nodes in the iteration, \f $ \boldsymbol{u_k} \f $ are updated
+>          * in NewtonRaphsonSolver#updateUkInIteration. The nodal and elemental positions are updated (Simulation#updateElementPositionsinNR,
+>          * Simulation#updateNodePositionsNR) with the new node positions of the iteration.
+>          */
+>         NRSolver->solveForDeltaU();
+>         converged = NRSolver->checkConvergenceViaDeltaU();
+>         NRSolver->updateUkInIteration();
+>         updateElementPositionsinNR(NRSolver->uk);
+>         updateNodePositionsNR(NRSolver->uk);
+>         iteratorK ++;
+>         if (!converged && iteratorK > maxIteration){
+>             std::cerr<<"Error: did not converge!!!"<<std::endl;
+>             converged = true;
+>         }
+>     }
+>     checkForExperimentalSetupsAfterIteration();
+>     //Now the calculation is converged, I update the node positions with the latest positions uk:
+>     updateNodePositionsNR(NRSolver->uk);
+>      //Element positions are already up to date.
+>     std::cout<<"finished run one step"<<std::endl;
+>     if (PipetteSuction){
+>     	//find the max z:
+>     	double zMax = -10000;
+>     	int idMax = -10;
+>     	for (auto& itNode : Nodes){
+>     		if (itNode->Position[2] > zMax){
+>     			zMax = itNode->Position[2];
+>     			idMax = itNode->Id;
+>     		}
+>     	}
+>     	std::cout<<"Pipette suction: "<<SuctionPressure[2]<<" max suction: "<<zMax<<" from node "<<idMax<<std::endl;
+>     }
+> }
+7185c7185
+< //				NRSolver->checkMasterUpdate(dofmaster,masterNodeId);
+---
+> 				NRSolver->checkMasterUpdate(dofmaster,masterNodeId);
+7192,7225c7192,7225
+< //					bool continueAddition =  NRSolver->checkIfCombinationExists(dofslave,dofmaster);
+< //					if (continueAddition){
+< //                        /**
+< //                         * If the couple is not implemented, then the check for the status of the slave is carried out, if the slave is already master of
+< //                         * other nodes, the coupling is checked and corrected in function NewtonRaphsonSolver#checkIfSlaveIsAlreadyMasterOfOthers. If the
+< //                         * function updates the node couple, then the potential slave was a master, and now is a slave to the potential master.
+< //                         * All slaves of the potential master are moved on to the potential master. \n
+< //                         */
+< //						bool madeChange = NRSolver->checkIfSlaveIsAlreadyMasterOfOthers(dofslave,dofmaster);
+< //						if (madeChange){
+< //							size_t nodeSize = Nodes.size();
+< //							for (size_t nodeIt = 0 ; nodeIt<nodeSize; ++nodeIt){
+< //								if(Nodes[nodeIt]->slaveTo[i]==slaveNodeId){
+< //									Nodes[nodeIt]->slaveTo[i]=masterNodeId;
+< //								}
+< //							}
+< //						}
+< //						vector <int> fixDOF;
+< //						fixDOF.push_back(dofslave);
+< //						fixDOF.push_back(dofmaster);
+< //						NRSolver->slaveMasterList.push_back(fixDOF);
+< //						Nodes[slaveNodeId]->slaveTo[i] = masterNodeId;
+< //						Nodes[masterNodeId]->isMaster[i] = true;
+< //						//std::cout<<" adhereing nodes: "<<masterNodeId<<" "<<slaveNodeId<<" in dof "<<i<<std::endl;
+< //						thereIsBinding = true;
+< //						pacingNodeCouplesHaveAdhered[nodeCoupleIterator] = true;
+< //						if (adherePeripodialToColumnar && Nodes[masterNodeId]->attachedToPeripodial){
+< //							NRSolver->cleanPeripodialBindingFromMaster(dofmaster, Nodes);
+< //							if (i==2){
+< //								//freed z, not bound to peripodial anymore
+< //								Nodes[masterNodeId]->attachedToPeripodial=false;
+< //							}
+< //						}
+< //					}
+---
+> 					bool continueAddition =  NRSolver->checkIfCombinationExists(dofslave,dofmaster);
+> 					if (continueAddition){
+>                         /**
+>                          * If the couple is not implemented, then the check for the status of the slave is carried out, if the slave is already master of
+>                          * other nodes, the coupling is checked and corrected in function NewtonRaphsonSolver#checkIfSlaveIsAlreadyMasterOfOthers. If the
+>                          * function updates the node couple, then the potential slave was a master, and now is a slave to the potential master.
+>                          * All slaves of the potential master are moved on to the potential master. \n
+>                          */
+> 						bool madeChange = NRSolver->checkIfSlaveIsAlreadyMasterOfOthers(dofslave,dofmaster);
+> 						if (madeChange){
+> 							size_t nodeSize = Nodes.size();
+> 							for (size_t nodeIt = 0 ; nodeIt<nodeSize; ++nodeIt){
+> 								if(Nodes[nodeIt]->slaveTo[i]==slaveNodeId){
+> 									Nodes[nodeIt]->slaveTo[i]=masterNodeId;
+> 								}
+> 							}
+> 						}
+> 						vector <int> fixDOF;
+> 						fixDOF.push_back(dofslave);
+> 						fixDOF.push_back(dofmaster);
+> 						NRSolver->slaveMasterList.push_back(fixDOF);
+> 						Nodes[slaveNodeId]->slaveTo[i] = masterNodeId;
+> 						Nodes[masterNodeId]->isMaster[i] = true;
+> 						//std::cout<<" adhereing nodes: "<<masterNodeId<<" "<<slaveNodeId<<" in dof "<<i<<std::endl;
+> 						thereIsBinding = true;
+> 						pacingNodeCouplesHaveAdhered[nodeCoupleIterator] = true;
+> 						if (adherePeripodialToColumnar && Nodes[masterNodeId]->attachedToPeripodial){
+> 							NRSolver->cleanPeripodialBindingFromMaster(dofmaster, Nodes);
+> 							if (i==2){
+> 								//freed z, not bound to peripodial anymore
+> 								Nodes[masterNodeId]->attachedToPeripodial=false;
+> 							}
+> 						}
+> 					}
+7889c7889
+< //								NRSolver->cleanPeripodialBindingFromMaster(dof, Nodes);
+---
+> 								NRSolver->cleanPeripodialBindingFromMaster(dof, Nodes);
+7904c7904
+< //			NRSolver->cleanPeripodialBindingFromMaster(dof, Nodes);
+---
+> 			NRSolver->cleanPeripodialBindingFromMaster(dof, Nodes);
+7909c7909
+< //			NRSolver->cleanPeripodialBindingFromMaster(dof, Nodes);
+---
+> 			NRSolver->cleanPeripodialBindingFromMaster(dof, Nodes);
+
+=======! Comparison of: NewtonRaphsonSolver.cpp !=======
+477,481c477,481
+< //	int error = solveWithPardiso(a, b, ia, ja, nmult);
+< //	if (error != 0){std::cerr<<"Pardiso solver did not return success!!"<<std::endl;}
+< //	if (boundNodesWithSlaveMasterDefinition){
+< //		equateSlaveDisplacementsToMasters();
+< //	}
+---
+> 	int error = solveWithPardiso(a, b, ia, ja, nmult);
+> 	if (error != 0){std::cerr<<"Pardiso solver did not return success!!"<<std::endl;}
+> 	if (boundNodesWithSlaveMasterDefinition){
+> 		equateSlaveDisplacementsToMasters();
+> 	}
+496c496
+< //int NewtonRaphsonSolver::solveWithPardiso(double* a, double*b, int* ia, int* ja, const int n_variables){
+---
+> int NewtonRaphsonSolver::solveWithPardiso(double* a, double*b, int* ia, int* ja, const int n_variables){
+498,761c498,761
+< //    // I am copying my libraries to a different location for this to work:
+< //    // On MAC:
+< //    // cp /usr/local/lib/gcc/x86_64-apple-darwin14.4.0/4.7.4/libgfortran.3.dylib /usr/local/lib/
+< //    // cp /usr/local/lib/gcc/x86_64-apple-darwin14.4.0/4.7.4/libgomp.1.dylib /usr/local/lib/
+< //    // cp /usr/local/lib/gcc/x86_64-apple-darwin14.4.0/4.7.4/libquadmath.0.dylib /usr/local/lib/
+< //    // cp libpardiso500-MACOS-X86-64.dylib usr/local/lib
+< //    //
+< //    // compilation:
+< //    // g++ pardiso_sym.cpp -o pardiso_sym  -L./ -L/usr/local/lib -L/usr/lib/  -lpardiso500-MACOS-X86-64 -llapack
+< 
+< 
+< //    // On ubuntu,
+< //    // cp libpardiso500-GNU461-X86-64.so /usr/lib/
+< //    //
+< //    // sometimes linux cannot recognise liblapack.so.3gf or liblapack.so.3.0.1 or others like this, are essentially liblapack.so
+< //    // on ubuntu you can get this solved by installing liblapack-dev:
+< //    // sudo apt-get install liblapack-dev
+< //    //
+< //    // compilation:
+< //    // gcc test.cpp -o testexe  -L/usr/lib/  -lpardiso500-GNU461-X86-64  -fopenmp  -llapack
+< 
+< //    //
+< //    // also for each terminal run:
+< //    // export OMP_NUM_THREADS=1
+< //    // For mkl this is :
+< //    // export MKL_PARDISO_OOC_MAX_CORE_SIZE=10000
+< //    // export MKL_PARDISO_OOC_MAX_SWAP_SIZE=2000
+< //    // fo
+< //    // MSGLVL: the level of verbal output, 0 is no output.
+< 
+< //    int    n = n_variables;
+< //    int    nnz = ia[n];
+< //    int    mtype = 11;        /* Real unsymmetric matrix */
+< 
+< //    /* RHS and solution vectors. */
+< //    int      nrhs = 1;          /* Number of right hand sides. */
+< //    double   x[n_variables];//, diag[n_variables];
+< //    /* Internal solver memory pointer pt,                  */
+< //    /* 32-bit: int pt[64]; 64-bit: long int pt[64]         */
+< //    /* or void *pt[64] should be OK on both architectures  */
+< //    void    *pt[64];
+< 
+< //    /* Pardiso control parameters. */
+< //    int      iparm[64];
+< //    double   dparm[64];
+< //    int      maxfct, mnum, phase, error, msglvl, solver;
+< 
+< //    iparm[60] = 1; //use in-core version when there is enough memory, use out of core version when not.
+< 
+< //    /* Number of processors. */
+< //    int      num_procs;
+< 
+< //    /* Auxiliary variables. */
+< //    char    *var;
+< //    int      i;// k;
+< 
+< //    double   ddum;              /* Double dummy */
+< //    int      idum;              /* Integer dummy. */
+< 
+< 
+< ///* -------------------------------------------------------------------- */
+< ///* ..  Setup Pardiso control parameters.                                */
+< ///* -------------------------------------------------------------------- */
+< 
+< //    error = 0;
+< //    solver = 0; /* use sparse direct solver */
+< //    pardisoinit (pt,  &mtype, &solver, iparm, dparm, &error);
+< 
+< //    if (error != 0)
+< //    {
+< //        if (error == -10 )
+< //           printf("No license file found \n");
+< //        if (error == -11 )
+< //           printf("License is expired \n");
+< //        if (error == -12 )
+< //           printf("Wrong username or hostname \n");
+< //         return 1;
+< //    }
+< //    else
+< //        //printf("[PARDISO]: License check was successful ... \n");
+< 
+< //    /* Numbers of processors, value of OMP_NUM_THREADS */
+< //    var = getenv("OMP_NUM_THREADS");
+< //    if(var != NULL)
+< //        sscanf( var, "%d", &num_procs );
+< //    else {
+< //        printf("Set environment OMP_NUM_THREADS to 1");
+< //        exit(1);
+< //    }
+< //    iparm[2]  = num_procs;
+< 
+< //    maxfct = 1;		    /* Maximum number of numerical factorizations.  */
+< //    mnum   = 1;         /* Which factorization to use. */
+< 
+< //    iparm[10] = 0; /* no scaling  */
+< //    iparm[12] = 0; /* no matching */
+< 
+< //    msglvl = 0;         /* Print statistical information  */
+< //    error  = 0;         /* Initialize error flag */
+< 
+< ///* -------------------------------------------------------------------- */
+< ///* ..  Convert matrix from 0-based C-notation to Fortran 1-based        */
+< ///*     notation.                                                        */
+< ///* -------------------------------------------------------------------- */
+< //    for (i = 0; i < n+1; i++) {
+< //        ia[i] += 1;
+< //    }
+< //    for (i = 0; i < nnz; i++) {
+< //        ja[i] += 1;
+< //    }
+< 
+< ///* -------------------------------------------------------------------- */
+< ///*  .. pardiso_chk_matrix(...)                                          */
+< ///*     Checks the consistency of the given matrix.                      */
+< ///*     Use this functionality only for debugging purposes               */
+< ///* -------------------------------------------------------------------- */
+< //    bool carryOutDebuggingChecks = false;
+< //    if (carryOutDebuggingChecks){
+< //        pardiso_chkmatrix  (&mtype, &n, a, ia, ja, &error);
+< //        if (error != 0) {
+< //            printf("\nERROR in consistency of matrix: %d", error);
+< //            exit(1);
+< //        }
+< //    }
+< ///* -------------------------------------------------------------------- */
+< ///* ..  pardiso_chkvec(...)                                              */
+< ///*     Checks the given vectors for infinite and NaN values             */
+< ///*     Input parameters (see PARDISO user manual for a description):    */
+< ///*     Use this functionality only for debugging purposes               */
+< ///* -------------------------------------------------------------------- */
+< 
+< //    if (carryOutDebuggingChecks){
+< //        pardiso_chkvec (&n, &nrhs, b, &error);
+< //        if (error != 0) {
+< //            printf("\nERROR  in right hand side: %d", error);
+< //            exit(1);
+< //        }
+< //    }
+< ///* -------------------------------------------------------------------- */
+< ///* .. pardiso_printstats(...)                                           */
+< ///*    prints information on the matrix to STDOUT.                       */
+< ///*    Use this functionality only for debugging purposes                */
+< ///* -------------------------------------------------------------------- */
+< //    if (carryOutDebuggingChecks){
+< //        pardiso_printstats (&mtype, &n, a, ia, ja, &nrhs, b, &error);
+< //        if (error != 0) {
+< //            printf("\nERROR right hand side: %d", error);
+< //            exit(1);
+< //        }
+< //    }
+< ///* -------------------------------------------------------------------- */
+< ///* ..  Reordering and Symbolic Factorization.  This step also allocates */
+< ///*     all memory that is necessary for the factorization.              */
+< ///* -------------------------------------------------------------------- */
+< //    phase = 11;
+< //    pardiso (pt, &maxfct, &mnum, &mtype, &phase,
+< //             &n, a, ia, ja, &idum, &nrhs,
+< //             iparm, &msglvl, &ddum, &ddum, &error, dparm);
+< ////std::cout<<"symbolic factorisation"<<std::endl;
+< //    if (error != 0) {
+< //        printf("\nERROR during symbolic factorization: %d", error);
+< //        exit(1);
+< //    }
+< //    //printf("\nReordering completed ... ");
+< //    //printf("\nNumber of nonzeros in factors  = %d", iparm[17]);
+< //    //printf("\nNumber of factorization MFLOPS = %d", iparm[18]);
+< 
+< ///* -------------------------------------------------------------------- */
+< ///* ..  Numerical factorization.                                         */
+< ///* -------------------------------------------------------------------- */
+< //    phase = 22;
+< ////    iparm[32] = 1; /* compute determinant */
+< 
+< //    pardiso (pt, &maxfct, &mnum, &mtype, &phase,
+< //             &n, a, ia, ja, &idum, &nrhs,
+< //             iparm, &msglvl, &ddum, &ddum, &error,  dparm);
+< ////std::cout<<"numerical factorisation"<<std::endl;
+< //    if (error != 0) {
+< //        printf("\nERROR during numerical factorization: %d", error);
+< //        exit(2);
+< //    }
+< //    //printf("\nFactorization completed ...\n ");
+< 
+< ///* -------------------------------------------------------------------- */
+< ///* ..  Back substitution and iterative refinement.                      */
+< ///* -------------------------------------------------------------------- */
+< //   /* phase = 33;
+< 
+< //    iparm[7] = 1;       // Max numbers of iterative refinement steps.
+< 
+< //    pardiso (pt, &maxfct, &mnum, &mtype, &phase,
+< //             &n, a, ia, ja, &idum, &nrhs,
+< //             iparm, &msglvl, b, x, &error,  dparm);
+< 
+< //    if (error != 0) {
+< //        printf("\nERROR during solution: %d", error);
+< //        exit(3);
+< //    }
+< //    bool displayResult = false;
+< //    if (displayResult){
+< //        printf("\nSolve completed ... ");
+< //        printf("\nThe solution of the system is: ");
+< //        for (i = 0; i < n; i++) {
+< //            printf("\n x [%d] = % f", i, x[i] );
+< //        }
+< //        printf ("\n");
+< //    }
+< //    //Write x into deltaU:
+< //    for (int i=0; i<n_variables; ++i){
+< //        gsl_vector_set(deltaU,i,x[i]);
+< //    }
+< //    */
+< ///* -------------------------------------------------------------------- */
+< ///* ..  Back substitution with tranposed matrix A^t x=b                  */
+< ///* -------------------------------------------------------------------- */
+< 
+< //	phase = 33;
+< //	//iparm[4]  = 61;	 /*changing the precision of convergence with pre-conditioning, not sure what it does, I added as trial, but did not change anything */
+< //	iparm[7]  = 1;       /* Max numbers of iterative refinement steps. */
+< //	iparm[11] = 1;       /* Solving with transpose matrix. */
+< 
+< //	pardiso (pt, &maxfct, &mnum, &mtype, &phase,
+< //			 &n, a, ia, ja, &idum, &nrhs,
+< //			 iparm, &msglvl, b, x, &error,  dparm);
+< 
+< //	if (error != 0) {
+< //		printf("\nERROR during solution: %d", error);
+< //		exit(3);
+< //	}
+< 
+< //	bool displayResult = false;
+< //	if (displayResult){
+< //		printf("\nSolve completed ... ");
+< //		printf("\nThe solution of the system is: ");
+< //		for (i = 0; i < n; i++) {
+< //			printf("\n x [%d] = % f", i, x[i] );
+< //		}
+< //		printf ("\n");
+< //	}
+< //    //Write x into deltaU:
+< //    for (int i=0; i<n_variables; ++i){
+< //        gsl_vector_set(deltaU,i,x[i]);
+< //    }
+< 
+< ///* -------------------------------------------------------------------- */
+< ///* ..  Convert matrix back to 0-based C-notation.                       */
+< ///* -------------------------------------------------------------------- */
+< //    for (i = 0; i < n+1; i++) {
+< //        ia[i] -= 1;
+< //    }
+< //    for (i = 0; i < nnz; i++) {
+< //        ja[i] -= 1;
+< //    }
+< 
+< ///* -------------------------------------------------------------------- */
+< ///* ..  Termination and release of memory.                               */
+< ///* -------------------------------------------------------------------- */
+< //    phase = -1;                 /* Release internal memory. */
+< 
+< //    pardiso (pt, &maxfct, &mnum, &mtype, &phase,
+< //             &n, &ddum, ia, ja, &idum, &nrhs,
+< //             iparm, &msglvl, &ddum, &ddum, &error,  dparm);
+< //    return 0;
+< //}
+---
+>     // I am copying my libraries to a different location for this to work:
+>     // On MAC:
+>     // cp /usr/local/lib/gcc/x86_64-apple-darwin14.4.0/4.7.4/libgfortran.3.dylib /usr/local/lib/
+>     // cp /usr/local/lib/gcc/x86_64-apple-darwin14.4.0/4.7.4/libgomp.1.dylib /usr/local/lib/
+>     // cp /usr/local/lib/gcc/x86_64-apple-darwin14.4.0/4.7.4/libquadmath.0.dylib /usr/local/lib/
+>     // cp libpardiso500-MACOS-X86-64.dylib usr/local/lib
+>     //
+>     // compilation:
+>     // g++ pardiso_sym.cpp -o pardiso_sym  -L./ -L/usr/local/lib -L/usr/lib/  -lpardiso500-MACOS-X86-64 -llapack
+> 
+> 
+>     // On ubuntu,
+>     // cp libpardiso500-GNU461-X86-64.so /usr/lib/
+>     //
+>     // sometimes linux cannot recognise liblapack.so.3gf or liblapack.so.3.0.1 or others like this, are essentially liblapack.so
+>     // on ubuntu you can get this solved by installing liblapack-dev:
+>     // sudo apt-get install liblapack-dev
+>     //
+>     // compilation:
+>     // gcc test.cpp -o testexe  -L/usr/lib/  -lpardiso500-GNU461-X86-64  -fopenmp  -llapack
+> 
+>     //
+>     // also for each terminal run:
+>     // export OMP_NUM_THREADS=1
+>     // For mkl this is :
+>     // export MKL_PARDISO_OOC_MAX_CORE_SIZE=10000
+>     // export MKL_PARDISO_OOC_MAX_SWAP_SIZE=2000
+>     // fo
+>     // MSGLVL: the level of verbal output, 0 is no output.
+> 
+>     int    n = n_variables;
+>     int    nnz = ia[n];
+>     int    mtype = 11;        /* Real unsymmetric matrix */
+> 
+>     /* RHS and solution vectors. */
+>     int      nrhs = 1;          /* Number of right hand sides. */
+>     double   x[n_variables];//, diag[n_variables];
+>     /* Internal solver memory pointer pt,                  */
+>     /* 32-bit: int pt[64]; 64-bit: long int pt[64]         */
+>     /* or void *pt[64] should be OK on both architectures  */
+>     void    *pt[64];
+> 
+>     /* Pardiso control parameters. */
+>     int      iparm[64];
+>     double   dparm[64];
+>     int      maxfct, mnum, phase, error, msglvl, solver;
+> 
+>     iparm[60] = 1; //use in-core version when there is enough memory, use out of core version when not.
+> 
+>     /* Number of processors. */
+>     int      num_procs;
+> 
+>     /* Auxiliary variables. */
+>     char    *var;
+>     int      i;// k;
+> 
+>     double   ddum;              /* Double dummy */
+>     int      idum;              /* Integer dummy. */
+> 
+> 
+> /* -------------------------------------------------------------------- */
+> /* ..  Setup Pardiso control parameters.                                */
+> /* -------------------------------------------------------------------- */
+> 
+>     error = 0;
+>     solver = 0; /* use sparse direct solver */
+>     pardisoinit (pt,  &mtype, &solver, iparm, dparm, &error);
+> 
+>     if (error != 0)
+>     {
+>         if (error == -10 )
+>            printf("No license file found \n");
+>         if (error == -11 )
+>            printf("License is expired \n");
+>         if (error == -12 )
+>            printf("Wrong username or hostname \n");
+>          return 1;
+>     }
+>     else
+>         //printf("[PARDISO]: License check was successful ... \n");
+> 
+>     /* Numbers of processors, value of OMP_NUM_THREADS */
+>     var = getenv("OMP_NUM_THREADS");
+>     if(var != NULL)
+>         sscanf( var, "%d", &num_procs );
+>     else {
+>         printf("Set environment OMP_NUM_THREADS to 1");
+>         exit(1);
+>     }
+>     iparm[2]  = num_procs;
+> 
+>     maxfct = 1;		    /* Maximum number of numerical factorizations.  */
+>     mnum   = 1;         /* Which factorization to use. */
+> 
+>     iparm[10] = 0; /* no scaling  */
+>     iparm[12] = 0; /* no matching */
+> 
+>     msglvl = 0;         /* Print statistical information  */
+>     error  = 0;         /* Initialize error flag */
+> 
+> /* -------------------------------------------------------------------- */
+> /* ..  Convert matrix from 0-based C-notation to Fortran 1-based        */
+> /*     notation.                                                        */
+> /* -------------------------------------------------------------------- */
+>     for (i = 0; i < n+1; i++) {
+>         ia[i] += 1;
+>     }
+>     for (i = 0; i < nnz; i++) {
+>         ja[i] += 1;
+>     }
+> 
+> /* -------------------------------------------------------------------- */
+> /*  .. pardiso_chk_matrix(...)                                          */
+> /*     Checks the consistency of the given matrix.                      */
+> /*     Use this functionality only for debugging purposes               */
+> /* -------------------------------------------------------------------- */
+>     bool carryOutDebuggingChecks = false;
+>     if (carryOutDebuggingChecks){
+>         pardiso_chkmatrix  (&mtype, &n, a, ia, ja, &error);
+>         if (error != 0) {
+>             printf("\nERROR in consistency of matrix: %d", error);
+>             exit(1);
+>         }
+>     }
+> /* -------------------------------------------------------------------- */
+> /* ..  pardiso_chkvec(...)                                              */
+> /*     Checks the given vectors for infinite and NaN values             */
+> /*     Input parameters (see PARDISO user manual for a description):    */
+> /*     Use this functionality only for debugging purposes               */
+> /* -------------------------------------------------------------------- */
+> 
+>     if (carryOutDebuggingChecks){
+>         pardiso_chkvec (&n, &nrhs, b, &error);
+>         if (error != 0) {
+>             printf("\nERROR  in right hand side: %d", error);
+>             exit(1);
+>         }
+>     }
+> /* -------------------------------------------------------------------- */
+> /* .. pardiso_printstats(...)                                           */
+> /*    prints information on the matrix to STDOUT.                       */
+> /*    Use this functionality only for debugging purposes                */
+> /* -------------------------------------------------------------------- */
+>     if (carryOutDebuggingChecks){
+>         pardiso_printstats (&mtype, &n, a, ia, ja, &nrhs, b, &error);
+>         if (error != 0) {
+>             printf("\nERROR right hand side: %d", error);
+>             exit(1);
+>         }
+>     }
+> /* -------------------------------------------------------------------- */
+> /* ..  Reordering and Symbolic Factorization.  This step also allocates */
+> /*     all memory that is necessary for the factorization.              */
+> /* -------------------------------------------------------------------- */
+>     phase = 11;
+>     pardiso (pt, &maxfct, &mnum, &mtype, &phase,
+>              &n, a, ia, ja, &idum, &nrhs,
+>              iparm, &msglvl, &ddum, &ddum, &error, dparm);
+> //std::cout<<"symbolic factorisation"<<std::endl;
+>     if (error != 0) {
+>         printf("\nERROR during symbolic factorization: %d", error);
+>         exit(1);
+>     }
+>     //printf("\nReordering completed ... ");
+>     //printf("\nNumber of nonzeros in factors  = %d", iparm[17]);
+>     //printf("\nNumber of factorization MFLOPS = %d", iparm[18]);
+> 
+> /* -------------------------------------------------------------------- */
+> /* ..  Numerical factorization.                                         */
+> /* -------------------------------------------------------------------- */
+>     phase = 22;
+> //    iparm[32] = 1; /* compute determinant */
+> 
+>     pardiso (pt, &maxfct, &mnum, &mtype, &phase,
+>              &n, a, ia, ja, &idum, &nrhs,
+>              iparm, &msglvl, &ddum, &ddum, &error,  dparm);
+> //std::cout<<"numerical factorisation"<<std::endl;
+>     if (error != 0) {
+>         printf("\nERROR during numerical factorization: %d", error);
+>         exit(2);
+>     }
+>     //printf("\nFactorization completed ...\n ");
+> 
+> /* -------------------------------------------------------------------- */
+> /* ..  Back substitution and iterative refinement.                      */
+> /* -------------------------------------------------------------------- */
+>    /* phase = 33;
+> 
+>     iparm[7] = 1;       // Max numbers of iterative refinement steps.
+> 
+>     pardiso (pt, &maxfct, &mnum, &mtype, &phase,
+>              &n, a, ia, ja, &idum, &nrhs,
+>              iparm, &msglvl, b, x, &error,  dparm);
+> 
+>     if (error != 0) {
+>         printf("\nERROR during solution: %d", error);
+>         exit(3);
+>     }
+>     bool displayResult = false;
+>     if (displayResult){
+>         printf("\nSolve completed ... ");
+>         printf("\nThe solution of the system is: ");
+>         for (i = 0; i < n; i++) {
+>             printf("\n x [%d] = % f", i, x[i] );
+>         }
+>         printf ("\n");
+>     }
+>     //Write x into deltaU:
+>     for (int i=0; i<n_variables; ++i){
+>         gsl_vector_set(deltaU,i,x[i]);
+>     }
+>     */
+> /* -------------------------------------------------------------------- */
+> /* ..  Back substitution with tranposed matrix A^t x=b                  */
+> /* -------------------------------------------------------------------- */
+> 
+> 	phase = 33;
+> 	//iparm[4]  = 61;	 /*changing the precision of convergence with pre-conditioning, not sure what it does, I added as trial, but did not change anything */
+> 	iparm[7]  = 1;       /* Max numbers of iterative refinement steps. */
+> 	iparm[11] = 1;       /* Solving with transpose matrix. */
+> 
+> 	pardiso (pt, &maxfct, &mnum, &mtype, &phase,
+> 			 &n, a, ia, ja, &idum, &nrhs,
+> 			 iparm, &msglvl, b, x, &error,  dparm);
+> 
+> 	if (error != 0) {
+> 		printf("\nERROR during solution: %d", error);
+> 		exit(3);
+> 	}
+> 
+> 	bool displayResult = false;
+> 	if (displayResult){
+> 		printf("\nSolve completed ... ");
+> 		printf("\nThe solution of the system is: ");
+> 		for (i = 0; i < n; i++) {
+> 			printf("\n x [%d] = % f", i, x[i] );
+> 		}
+> 		printf ("\n");
+> 	}
+>     //Write x into deltaU:
+>     for (int i=0; i<n_variables; ++i){
+>         gsl_vector_set(deltaU,i,x[i]);
+>     }
+> 
+> /* -------------------------------------------------------------------- */
+> /* ..  Convert matrix back to 0-based C-notation.                       */
+> /* -------------------------------------------------------------------- */
+>     for (i = 0; i < n+1; i++) {
+>         ia[i] -= 1;
+>     }
+>     for (i = 0; i < nnz; i++) {
+>         ja[i] -= 1;
+>     }
+> 
+> /* -------------------------------------------------------------------- */
+> /* ..  Termination and release of memory.                               */
+> /* -------------------------------------------------------------------- */
+>     phase = -1;                 /* Release internal memory. */
+> 
+>     pardiso (pt, &maxfct, &mnum, &mtype, &phase,
+>              &n, &ddum, ia, ja, &idum, &nrhs,
+>              iparm, &msglvl, &ddum, &ddum, &error,  dparm);
+>     return 0;
+> }
+
+=======! Comparison of: Simulation.h !=======
+18c18
+< //#include "NewtonRaphsonSolver.h"
+---
+> #include "NewtonRaphsonSolver.h"
+561c561
+< //	std::unique_ptr<NewtonRaphsonSolver> NRSolver;  ///< The pointer to the newton raphson solver
+---
+> 	std::unique_ptr<NewtonRaphsonSolver> NRSolver;  ///< The pointer to the newton raphson solver
+604c604
+< //    void updateStepNR();									///< Update the positions with solving for the displacements with the N-R iterations.
+---
+>     void updateStepNR();									///< Update the positions with solving for the displacements with the N-R iterations.
+
+=======! Comparison of: NewtonRaphsonSolver.h !=======
+71c71
+< //	int  solveWithPardiso(double* a, double*b, int* ia, int* ja, const int n_variables);
+---
+> 	int  solveWithPardiso(double* a, double*b, int* ia, int* ja, const int n_variables);
