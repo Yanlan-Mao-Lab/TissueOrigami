@@ -2,10 +2,6 @@
 
 This executable conducts the simulation (add biological context - expertise required)
 
-### NOTE:
-
-It should not be necessary to `export LD_LIBRARY_PATH=path/to/pardiso.so` when running the compiled executable - more research incoming.
-
 ## Requirements
 
 `TissueFolding` has the following dependencies:
@@ -83,6 +79,12 @@ The arguments can be passed in any order, however the value of the argument must
     - `DisplaySave`         : Reads in the outputs of a finished simulation from the directory specified by `-dInput`, for the Qt-GUI visualisation. **NOTE:** Surely this should only be used when compiling with the GUI?!?!?!!?!
 - `od output_dir`           : The directory to write the outputs to. Will overwrite any previous outputs in this directory.
 - `dInput prev_save_dir`    : Specifies a directory containing the output of a finished simulation, which will be read in by the program. Note required if `SimulationOnTheGo` is set with `-mode`.
+
+#### NOTE:
+
+It should not be necessary to `export LD_LIBRARY_PATH=path/to/pardiso.so` when running the compiled executable - more research incoming.
+It is likely still necessary to export `OMP_NUM_THREADS` however before running.
+
 
 ### Input files to the simulation
 
