@@ -32,7 +32,7 @@ jobs:
           cd ${{ github.workspace }}/TissueFolding/SourceCode/
           mkdir build
           cd build
-          cmake ..
+          cmake .. -DPARDISO=OFF
           cmake --build .
       
       # Move TissueFolding to the expected directory for testing
