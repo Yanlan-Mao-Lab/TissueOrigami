@@ -37,7 +37,7 @@ class Test_SimulationNoPardiso():
 
     # variables that will store the information each test needs to run on
 
-    # the run numbers
+    # the value x in the test runs; run0700x. Tests iterate over these values
     run_numbers = [7, 8, 9]
 
     # files that the run needs to be able to see
