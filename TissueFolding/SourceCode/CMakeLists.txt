@@ -100,5 +100,3 @@ message(STATUS "Linking with the following libraries: ${TF_LINK_LIBS}")
 target_link_libraries(TissueFolding PUBLIC
                 ${TF_LINK_LIBS}
 )
-
-#g++ -std=c++14 -lgsl -lgslcblas -lgomp -llapack -fopenmp -l/home/ccaegra/Documents/libpardiso600-GNU720-X86-64.so -lpthread -fopenmp -DBUILD_WITH_PARDISO -o TissueFolding -I/home/caegra/Documents/TissueOrigami/TissueFolding/SourceCode/ main.cpp Prism.cpp ReferenceShapeBase.cpp ShapeBase.cpp Simulation.cpp Node.cpp ModelInputObject.cpp RandomGenerator.cpp NewtonRaphsonSolver.cpp Analysis.cpp Lumen.cpp TimeSeriesPhysicalProperties.cpp YoungsModulusModifier.cpp 

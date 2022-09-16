@@ -1,8 +1,101 @@
+from ast import Compare
 import os, filecmp, subprocess, re
 import numpy as np
 import pytest
 from pytest_check import check
 import warnings
+
+def CompareTxtElements(e1, e2, line_num, ele_num, f_name1, f_name2, tol=1e-8):
+    '''
+    Compares two strings to determine whether they are identical, under the following assumptions:
+    - If the strings are equal via string comparison, return True
+    - Otherwise, attempt to interpret the strings are doubles. Return True if these doubles are within tol of each other.
+    If the above conditions are not satisfied, the elements are deemed to be different and False is returned.
+    '''
+
+    if e1==e2:
+        # either these are the same text fields, or the same number has been written out
+        return True
+    else:
+        # more drastic measures - can be convert to doubles?
+        try:
+            double1 = np.double(e1)
+            double2 = np.double(e2)
+        except ValueError:
+            # could not convert strings to doubles, different files
+            print('String difference at line %d, element %d:' % (line_num, ele_num))
+            print('\t (%s) %s' % (f_name1, e1))
+            print('\t (%s) %s' % (f_name2, e2))
+            return False
+        except:
+            # unexpected error thrown, print error information
+            raise RuntimeError("Error: unexpected error whilst handling string -> double conversion")
+        # otherwise, these were actually numbers, is the difference less than tol?
+        double_diff = np.abs( double1 - double2 )
+        # are the elements different by a significant amount?
+        if double_diff >= tol:
+            print('Line %d, element %d, values [ %.8e , %.8e ] have difference greater than %.1e' % (line_num, ele_num, double1, double2), tol)
+            return False
+        else:
+            # upon conversion to doubles, elements match
+            return True
+    # we always return in the above if statement, no need for concluding return here
+
+def CompareLinesInRawTxt(line1, line2, line_num, f_name1, f_name2, tol=1e-8):
+    '''
+    Compare the contents of two lines from text files.
+    The lines are split into elements, which are separated by whitespace.
+    Elements are deemed equal if:
+        - They are both strings, and these strings are identical in length and content
+        - They are both doubles, and these doubles are within tol of each other
+    If all corresponding pairs of elements are equal, the lines are equal.
+
+    The lines passed in should be matching lines from a TEXT output of the simulation, and the corresponding reference file.
+    '''
+    values1 = list(filter(None, [x.strip() for x in line1.split()])); n_v1 = len(values1)
+    values2 = list(filter(None, [x.strip() for x in line2.split()])); n_v2 = len(values1)
+    if n_v1 != n_v2:
+        # different number of fields on this line, not the same file
+        return False
+    else:
+        # compare field-by-field
+        # compare as strings first (as these might be text characters)
+        # otherwise, try to convert to double and compare - catch errors if these really are strings that can't be converted to doubles, and are genuinely different
+        for ele_num in range(n_v1):
+            e1 = values1[ele_num]; e2 = values2[ele_num]
+            # compare the two elements; either as strings, or failing this as doubles saved as strings
+            # CompareTxtElements returns False if the elements are different
+            if not CompareTxtElements(e1, e2, line_num, ele_num, f_name1, f_name2, tol):
+                return False
+    # if we don't escape early, the lines are the same as all elements are equal
+    return True
+
+def CompareLinesInConvertedTxt(line1, line2, line_num, tol=1e-8):
+    '''
+    Compare the contents of two lines of (comma-separated) values.
+    Values are compared element-wise, and are deemed to be equal when they coincide to a difference of tol.
+
+    The lines passed in should be matching lines from a BINARY output of the simulation, converted to a text file via the converter executable, and the corresponding line from (the converted) reference file.
+    '''
+
+    values1 = list(filter(None, [x.strip() for x in line1.split(sep=',')])); n_v1 = len(values1)
+    values2 = list(filter(None, [x.strip() for x in line2.split(sep=',')])); n_v2 = len(values2)
+
+    if n_v1 != n_v2:
+        # different number of fields on this line, not the same file
+        return False
+    else:
+        # compare field-by-field, these are doubles so we should be able to cast
+        for ele_num in range(n_v1):
+            double1 = np.double(values1[ele_num])
+            double2 = np.double(values2[ele_num])
+            double_diff = np.abs( double1 - double2 )
+            # are the elements different by a significant amount?
+            if double_diff >= tol:
+                print('Line %d, element %d, values [ %.8e , %.8e ] have difference greater than %.1e' % (line_num, ele_num, np.double(values1[ele_num]), np.double(values2[ele_num]), tol))
+                return False
+    # if we didn't return early, all elements must have the same value, so the lines are equal
+    return True
 
 def CompareTxt(f_name1, f_name2, tol=1e-8, type='raw_txt'):
     '''
@@ -31,61 +124,20 @@ def CompareTxt(f_name1, f_name2, tol=1e-8, type='raw_txt'):
         # these might have odd formating patterns, so we need to be careful as we compare
         # compare line-by-line
         for line_num in range(n_lines_f1):
-            values1 = lines1[line_num].strip('\n').split(); n_v1 = len(values1)
-            values2 = lines2[line_num].strip('\n').split(); n_v2 = len(values2)
-            if n_v1 != n_v2:
-                # different number of fields on this line, not the same file
+            # CompareLinesInRawTxt will return True if the files are the same
+            # Thus, we return False if this function also returned False
+            line1 = lines1[line_num].strip('\n'); line2 = lines2[line_num].strip('\n')
+            if not CompareLinesInRawTxt(line1, line2, line_num, f_name1, f_name2, tol):
                 return False
-            else:
-                # compare field-by-field
-                # compare as strings first (as these might be text characters)
-                # otherwise, try to convert to double and compare - catch errors if these really are strings that can't be converted to doubles, and are genuinely different
-                for ele_num in range(n_v1):
-                    # compare as strings
-                    e1 = values1[ele_num]; e2 = values2[ele_num]
-                    if e1==e2:
-                        # either these are the same text fields, or the same number has been written out
-                        pass
-                    else:
-                        # more drastic measures - can be convert to doubles?
-                        try:
-                            double1 = np.double(values1[ele_num])
-                            double2 = np.double(values2[ele_num])
-                        except ValueError:
-                            # could not convert strings to doubles, different files
-                            print('String difference at line %d, element %d:' % (line_num, ele_num))
-                            print('\t (%s) %s' % (f_name1, e1))
-                            print('\t (%s) %s' % (f_name2, e2))
-                            return False
-                        except:
-                            # unexpected error thrown, print error information
-                            raise RuntimeError("Error: unexpected error whilst handling string -> double conversion")
-                        # otherwise, these were actually numbers, is the difference less than tol?
-                        double_diff = np.abs( double1 - double2 )
-                        # are the elements different by a significant amount?
-                        if double_diff >= tol:
-                            print('Line %d, element %d, values [ %.8e , %.8e ] have difference greater than %.1e' % (line_num, ele_num, double1, double2), tol)
-                            return False
     else:
         # comparing converted binaries, which are just .csv files
         # compare field-by-field
         for line_num in range(n_lines_f1):
-            values1 = list(filter(None, [x.strip() for x in lines1[line_num].split(sep=',')])); n_v1 = len(values1)
-            values2 = list(filter(None, [x.strip() for x in lines2[line_num].split(sep=',')])); n_v2 = len(values2)
-            print(values1, values2)
-            if n_v1 != n_v2:
-                # different number of fields on this line, not the same file
+            line1 = lines1[line_num]; line2 = lines2[line_num]
+            # CompareLinesInConvertedTxt will return True if the files are the same
+            # Thus, we return False if this function also returned False
+            if not CompareLinesInConvertedTxt(lines1[line_num], lines2[line_num], line_num, tol):
                 return False
-            else:
-                # compare field-by-field, these are doubles so we should be able to cast
-                for ele_num in range(n_v1):
-                    double1 = np.double(values1[ele_num])
-                    double2 = np.double(values2[ele_num])
-                    double_diff = np.abs( double1 - double2 )
-                    # are the elements different by a significant amount?
-                    if double_diff >= tol:
-                        print('Line %d, element %d, values [ %.8e , %.8e ] have difference greater than %.1e' % (line_num, ele_num, np.double(values1[ele_num]), np.double(values2[ele_num]), tol))
-                        return False
     # if we get to here, we did not exit in the above comparisons, so the files must be the same
     return True
 
@@ -111,7 +163,7 @@ class Test_SimulationPardiso():
 
     # variables that will store the information each test needs to run on
 
-    # the run numbers
+    # the value x in the test runs; run0700x. Tests iterate over these values
     run_numbers = [7, 8, 9]
 
     # output file names that the simulation produces
