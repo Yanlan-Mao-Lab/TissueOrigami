@@ -22,7 +22,7 @@ If you wish to build the executable with PARDISO, please follow the setup instru
 
 ### Building without PARDISO
 
-Building `TissueFolding` without PARDISO is the same proceedure across all platforms.
+Building `TissueFolding` without PARDISO is the same procedure across all platforms.
 Navigate to the `TissueFolding/SourceCode` directory and run the following commands:
 ```bash
 mkdir build; cd build
