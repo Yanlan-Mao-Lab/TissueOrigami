@@ -1,7 +1,93 @@
-import os, filecmp, subprocess
+import os, filecmp, subprocess, re
+import numpy as np
 import pytest
 from pytest_check import check
 import warnings
+
+def CompareTxt(f_name1, f_name2, tol=1e-8, type='raw_txt'):
+    '''
+    Compares the contents of the files f_name1 and f_name2, returning True if the contents match according to the following criteria:
+    - all non-numerical text must match exactly between files
+    - numerical values must agree to within tol
+
+    For converted binaries, we can just skip straight to comparing the numerical values, and this can be toggled on by passing type as anything EXCEPT its default value.
+    '''
+
+    # diagnostics
+    print('CompareTxt running on %s vs %s' % (f_name1, f_name2))
+    # open files, get the data, then close them
+    f1 = open(f_name1, 'r'); 
+    f2 = open(f_name2, 'r'); 
+    lines1 = f1.readlines(); f1.close()
+    lines2 = f2.readlines(); f2.close()
+
+    n_lines_f1 = len(lines1)
+    n_lines_f2 = len(lines2)
+    # immediately flag a difference if number of lines is different
+    if n_lines_f1!=n_lines_f2:
+        return False
+    elif type=='raw_txt':
+        # comparing raw text files spat out by the program
+        # these might have odd formating patterns, so we need to be careful as we compare
+        # compare line-by-line
+        for line_num in range(n_lines_f1):
+            values1 = lines1[line_num].strip('\n').split(); n_v1 = len(values1)
+            values2 = lines2[line_num].strip('\n').split(); n_v2 = len(values2)
+            if n_v1 != n_v2:
+                # different number of fields on this line, not the same file
+                return False
+            else:
+                # compare field-by-field
+                # compare as strings first (as these might be text characters)
+                # otherwise, try to convert to double and compare - catch errors if these really are strings that can't be converted to doubles, and are genuinely different
+                for ele_num in range(n_v1):
+                    # compare as strings
+                    e1 = values1[ele_num]; e2 = values2[ele_num]
+                    if e1==e2:
+                        # either these are the same text fields, or the same number has been written out
+                        pass
+                    else:
+                        # more drastic measures - can be convert to doubles?
+                        try:
+                            double1 = np.double(values1[ele_num])
+                            double2 = np.double(values2[ele_num])
+                        except ValueError:
+                            # could not convert strings to doubles, different files
+                            print('String difference at line %d, element %d:' % (line_num, ele_num))
+                            print('\t (%s) %s' % (f_name1, e1))
+                            print('\t (%s) %s' % (f_name2, e2))
+                            return False
+                        except:
+                            # unexpected error thrown, print error information
+                            raise RuntimeError("Error: unexpected error whilst handling string -> double conversion")
+                        # otherwise, these were actually numbers, is the difference less than tol?
+                        double_diff = np.abs( double1 - double2 )
+                        # are the elements different by a significant amount?
+                        if double_diff >= tol:
+                            print('Line %d, element %d, values [ %.8e , %.8e ] have difference greater than %.1e' % (line_num, ele_num, double1, double2), tol)
+                            return False
+    else:
+        # comparing converted binaries, which are just .csv files
+        # compare field-by-field
+        for line_num in range(n_lines_f1):
+            values1 = list(filter(None, [x.strip() for x in lines1[line_num].split(sep=',')])); n_v1 = len(values1)
+            values2 = list(filter(None, [x.strip() for x in lines2[line_num].split(sep=',')])); n_v2 = len(values2)
+            print(values1, values2)
+            if n_v1 != n_v2:
+                # different number of fields on this line, not the same file
+                return False
+            else:
+                # compare field-by-field, these are doubles so we should be able to cast
+                for ele_num in range(n_v1):
+                    double1 = np.double(values1[ele_num])
+                    double2 = np.double(values2[ele_num])
+                    double_diff = np.abs( double1 - double2 )
+                    # are the elements different by a significant amount?
+                    if double_diff >= tol:
+                        print('Line %d, element %d, values [ %.8e , %.8e ] have difference greater than %.1e' % (line_num, ele_num, np.double(values1[ele_num]), np.double(values2[ele_num]), tol))
+                        return False
+    # if we get to here, we did not exit in the above comparisons, so the files must be the same
+    return True
 
 class Test_SimulationPardiso():
     '''
@@ -48,17 +134,23 @@ class Test_SimulationPardiso():
     # these outputs should be ignored - they are logs, dependent on the machine, etc
     ign_outputs = [ "tmp" ]
 
+    # tolerance to accept differences in doubles to
+    tolerance = 1e-8
+
     @pytest.mark.parametrize('run_number', run_numbers)
     def test_run0700x(self, run_number):
         '''
         Compares outputs of the simulation run0700{run_number} (WITH Pardiso) to the reference outputs.
 
-        Output non-binary files are directly compared using filecmp.
+        Output non-binary files are directly compared using filecmp:
+            In the event that these differ from hte reference outputs, the two files are then read in by the CompareTxt funciton.
+            If all text strings in the file match, and all numerical data agrees to within a given tolerance, then the files are still considered identical.
         Output binary files are first compared using filecmp:
             In the event that these differ from the reference outputs, the two files are then _read in_ as they are done via the simulation, using the simOutputsToTxt.o executable.
             This produces two text files whose (comma-separated) entries are the values read in by the simulation from each file, with newlines placed at points where the behaviour in reading the file buffer changes.
             If the converted text files match, the test passes but a warning is thrown.
-            Otherwise, the test fails.
+                If this further fails, CompareTxt is called on the two files, to check if the numerical values agree to within an acceptable tolerance.
+                If this is not the case, the test fails.
 
         Parameters
         ----------
@@ -73,15 +165,24 @@ class Test_SimulationPardiso():
         # this is the reference output location
         ref_res_loc = run_folder + "/" + self.ref_res_subdir
 
-        # directly compare the outputs that do not require conversion
+        # directly compare the txt outputs
         for file in self.oth_outputs:
             ref_op = ref_res_loc + "/" + file
             gen_op = gen_res_loc + "/" + file
+            # comparison check holders
+            txt_compare = False
+            dif_compare = False
+            # attempt to compare as text files
+            txt_compare = filecmp.cmp(ref_op, gen_op, shallow=False)
+            if not txt_compare:
+                warnings.warn("Warning: having to examine via CompareTxt on: %s" % file)
+                # we will have to read in and compare line-by-line
+                dif_compare = CompareTxt(ref_op, gen_op, tol=self.tolerance)
             # use nonfatal assert so that we always compare every file
+            # make the errors (if printed) more readable by not passing in filecmp.cmp into assert
+            # (avoids contextual expansion, as this info is printed in the error anyway)
             with check:
-                # make the errors (if printed) more readable by not passing in filecmp.cmp into assert (
-                # (avoids contextual expansion, as this info is printed in the error anyway)
-                assert filecmp.cmp(ref_op, gen_op, shallow=False), "Output mismatch between: " + ref_op + " and " + gen_op
+                assert (txt_compare or dif_compare), "Output mismatch between: " + ref_op + " and " + gen_op
 
         # outputs that require conversion need to be converted, compared, and cleaned up
         # check that the converter exists!
@@ -95,16 +196,20 @@ class Test_SimulationPardiso():
             # attempt direct comparison of binaries - not recommended
             bin_compare = filecmp.cmp(ref_op, gen_op, shallow=False)
             txt_compare = False
+            dif_compare = False
             # if bin_compare is false, the binaries do not match,
             # but if we read them into the simulation, do they match now?
             if not bin_compare:
                 # raise a warning that we are having to binary convert!
-                warnings.warn("Warning: having to convert on output: %s" % f_type)
+                warnings.warn("Warning: having to examine via CompareTxt on: %s" % f_type)
                 # run the converter on these output files, the mode to pass to the converter is given by f_type
                 command = self.converter_exe + " " + f_type + " " + ref_op + " " + gen_op
                 subprocess.run(command.split(), cwd=self.dir_path)
                 # compare the converted outputs
                 txt_compare = filecmp.cmp(ref_op+"-read.txt", gen_op+"-read.txt", shallow=False)
+                if not txt_compare:
+                    # need to actually read in the values now
+                    dif_compare = CompareTxt(ref_op+"-read.txt", gen_op+"-read.txt", type="bin_compare", tol=self.tolerance)
                 # cleanup the converted files that we made
                 os.remove(ref_op+"-read.txt")
                 os.remove(gen_op+"-read.txt")
@@ -112,5 +217,5 @@ class Test_SimulationPardiso():
             # since we do not assign to txt_compare unless bin_compare is false, we can simply check
             # bin_compare || txt_compare
             with check:
-                assert (bin_compare or txt_compare), "Output mismatch between: " + ref_op + " and " + gen_op
+                assert (bin_compare or txt_compare or dif_compare), "Output mismatch between: " + ref_op + " and " + gen_op
         return
