@@ -38,10 +38,18 @@ SelectionBox::SelectionBox() : QLineEdit() {
     setPlaceholderText("-");
     // use our default font
     setFont(DEF_FONT);
+    // background colour is white
+    setStyleSheet("background-color: white");
+    // box should be of fixed width
+    setFixedWidth(def_fixed_box_width);
 }
 SelectionBox::SelectionBox(string placeholder_text) : QLineEdit() {
     // text that fills the box when nothing is provided
     setPlaceholderText(placeholder_text.c_str());
     // use our default font
     setFont(DEF_FONT);
+}
+void SelectionBox::initialseValidator(int n_max, QObject *parent) {
+    setPlaceholderText( QString("# 0-%1").arg(n_max));
+    setValidator( new QIntValidator(0, n_max, parent) );
 }

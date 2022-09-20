@@ -1,5 +1,5 @@
-# ifndef TISSUEFOLDING_UI_COMPONENTS.H
-# define TISSUEFOLDING_UI_COMPONENTS.H
+# ifndef TISSUEFOLDING_UI_COMPONENTS_H
+# define TISSUEFOLDING_UI_COMPONENTS_H
 
 # include <string>
 # include <QtWidgets>
@@ -9,6 +9,8 @@ const QFont DEF_HEADER_FONT("SaneSerif", 10, QFont::Bold, true);
 
 const Qt::AlignmentFlag AL_LEFT = Qt::AlignmentFlag::AlignLeft;
 const Qt::AlignmentFlag AL_CENTRE = Qt::AlignmentFlag::AlignCenter;
+
+const int def_fixed_box_width = 70;
 
 class Label : public QLabel
 {
@@ -72,6 +74,16 @@ public:
      * @param placeholder_text Text to display when no input has been provided to the box
      */
     SelectionBox(std::string placeholder_text);
+
+    /**
+     * @brief Setup the selection validator for this box.
+     * 
+     * Valid inputs to this box are integers between 0 and n_max (inclusive)
+     * 
+     * @param n_max The maximum permitted input value 
+     * @param parent The parent Qt object
+     */
+    void initialseValidator(int n_max, QObject *parent = nullptr);
 };
 
 # endif

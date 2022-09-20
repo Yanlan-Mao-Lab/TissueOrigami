@@ -1,5 +1,7 @@
-# ifndef ELEMENT_PROPERTIES_UI_BOX.H
-# define ELEMENT_PROPERTIES_UI_BOX.H
+# ifndef ELEMENT_PROPERTIES_UI_BOX_H
+# define ELEMENT_PROPERTIES_UI_BOX_H
+
+# include "TissueFolding_GUI_elements.h"
 
 enum NodeInfoHeader {
     ID = 0,
@@ -38,9 +40,6 @@ int infoBoxIndex(int node_number, NodeInfoHeader header);
  */
 class ElementPropertiesUI : public QGridLayout
 {
-private:
-    int coord_box_fixed_width = 70;
-
 public:
     /**
      * @brief Constructs the element-selection pannel.
@@ -51,7 +50,7 @@ public:
     // headers and labels
     Header selection_header = Header("Selected Item Properties");
     Header element_name_label = Header("Element name:");
-    Header node_info_labels_horz[n_node_info_headers] = {Header("ID"),
+    Header node_info_labels_horz[n_node_info_headers] = {Header("id"),
                                                          Header("x"),
                                                          Header("y"),
                                                          Header("z")};
@@ -70,6 +69,13 @@ public:
 
     // node_info_boxes displays nodal information about the selected element
     ReadOnlyBox node_coord_boxes[n_coord_boxes];
+
+    // input boxes, for manual (non-click) node and/or element selection
+    SelectionBox node_selection_box;
+    SelectionBox element_selection_box;
+
+    void createNodeSelectionValidator(int max_node_index, QObject *parent = nullptr);
+    void createElementSelectionValidator(int max_element_index, QObject *parent = nullptr);
 };
 
 #endif

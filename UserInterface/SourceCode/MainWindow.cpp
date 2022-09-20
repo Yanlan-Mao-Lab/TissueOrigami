@@ -16,6 +16,8 @@
 #include "GLWidget.h"
 #include <sstream>
 
+#include "ElementPropertiesUI.h"
+
 using namespace std;
 
 class MainWindow;
@@ -73,9 +75,21 @@ void MainWindow::generateControlPanel(){
 	ControlPanelMainHBox = new QVBoxLayout();
 	ControlPanelMainHBox->setSpacing(2);
 
-	//Generating Selection Display Panel:
-	QGridLayout *SelectionDisplayGrid = new QGridLayout;
-	setUpSelectionDisplayGrid(SelectionDisplayGrid);
+	// Generating Selection Display Panel:
+	// QGridLayout *SelectionDisplayGrid = new QGridLayout;
+	// setUpSelectionDisplayGrid(SelectionDisplayGrid);
+	// // connect to the main display
+	// ControlPanelMainHBox->addLayout(SelectionDisplayGrid,Qt::AlignTop);
+
+	// prepare the element and node selection section using the default constructor
+	ElementPropertiesUI *SelectionDisplayGrid = new ElementPropertiesUI;
+	// initialise the validators for the node and element selection boxes
+	SelectionDisplayGrid->createNodeSelectionValidator(Sim01->Nodes.size() - 1, this);
+	SelectionDisplayGrid->createElementSelectionValidator(Sim01->Elements.size() - 1, this);
+	// create the signal connections for the node and element selection boxes
+	connect(&SelectionDisplayGrid->node_selection_box, SIGNAL(textChanged(const QString &)), this, SLOT(manualNodeSelection(const QString &)));
+	connect(&SelectionDisplayGrid->element_selection_box, SIGNAL(textChanged(const QString &)), this, SLOT(manualElementSelection(const QString &)));
+	// connect to the main display
 	ControlPanelMainHBox->addLayout(SelectionDisplayGrid,Qt::AlignTop);
 
 	//Generating project display options panel:
@@ -83,12 +97,10 @@ void MainWindow::generateControlPanel(){
 	setUpProjectDisplayOptionGrid(ProjectDisplayOptionsGrid);
 	ControlPanelMainHBox->addLayout(ProjectDisplayOptionsGrid,Qt::AlignTop);
 
-
 	//Generating view options Panel:
 	QGridLayout *ViewOptionsGrid = new QGridLayout;
 	setUpViewOptionsGrid(ViewOptionsGrid);
 	ControlPanelMainHBox->addLayout(ViewOptionsGrid,Qt::AlignBottom);
-
 
 	//Generating the quit button:
 	QHBoxLayout *BottomLineBox = new QHBoxLayout; // the bottom line will include quit button only for now
@@ -102,7 +114,6 @@ void MainWindow::generateControlPanel(){
 	//Adding the control panel vertical box to the main grid of the main window.
 	MainGrid->addLayout(ControlPanelMainHBox,0,1,Qt::AlignLeft);
 	MainGrid->setColumnStretch(1,-2);
-
 }
 
 void MainWindow::setUpGLWidget(){
