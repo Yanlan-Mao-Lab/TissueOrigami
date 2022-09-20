@@ -15,7 +15,7 @@ ENV QT_DEBUG_PLUGINS=1
 COPY ./TissueFolding/SourceCode /TissueFolding/SourceCode
 COPY ./UserInterface/SourceCode /UserInterface/SourceCode
 COPY ./UserInterface/TissueFoldingUI-Docker.pro /UserInterface/TissueFoldingUI_Docker.pro
-COPY ./tests/sim_no_pardiso_reg/run07007 /UserInterface/sample07007
+COPY ./tests/sim_pardiso_reg/run07007 /UserInterface/sample07007
 RUN cd /UserInterface/ &&\
     qmake TissueFoldingUI_Docker.pro &&\
     make &&\
