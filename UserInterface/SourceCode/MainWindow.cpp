@@ -36,7 +36,7 @@ MainWindow::MainWindow(Simulation* Sim01)
 	double boundingBoxWidth  = Sim01->boundingBox[1][1] - Sim01->boundingBox[0][1];
     this->analyser01 = new Analysis(3, Sim01->saveDirectoryToDisplayString, Sim01->Nodes, boundingBoxWidth);
 
-    nCoordBox = 6;
+    nCoordBox = n_nodes_per_element;
     setWindowTitle(tr("Tissue Origami"));
     generateControlPanel();
     setUpGLWidget();
@@ -75,20 +75,14 @@ void MainWindow::generateControlPanel(){
 	ControlPanelMainHBox = new QVBoxLayout();
 	ControlPanelMainHBox->setSpacing(2);
 
-	// Generating Selection Display Panel:
-	// QGridLayout *SelectionDisplayGrid = new QGridLayout;
-	// setUpSelectionDisplayGrid(SelectionDisplayGrid);
-	// // connect to the main display
-	// ControlPanelMainHBox->addLayout(SelectionDisplayGrid,Qt::AlignTop);
-
-	// prepare the element and node selection section using the default constructor
+	// perpare the basic element info display using the default constructor
 	ElementPropertiesUI *SelectionDisplayGrid = new ElementPropertiesUI;
 	// initialise the validators for the node and element selection boxes
-	SelectionDisplayGrid->createNodeSelectionValidator(Sim01->Nodes.size() - 1, this);
-	SelectionDisplayGrid->createElementSelectionValidator(Sim01->Elements.size() - 1, this);
+	SelectionDisplayGrid->setNodeSelectionValidator(Sim01->Nodes.size() - 1, this);
+	SelectionDisplayGrid->setElementSelectionValidator(Sim01->Elements.size() - 1, this);
 	// create the signal connections for the node and element selection boxes
-	connect(&SelectionDisplayGrid->node_selection_box, SIGNAL(textChanged(const QString &)), this, SLOT(manualNodeSelection(const QString &)));
-	connect(&SelectionDisplayGrid->element_selection_box, SIGNAL(textChanged(const QString &)), this, SLOT(manualElementSelection(const QString &)));
+	connect(&(SelectionDisplayGrid->node_selection_box), SIGNAL(textChanged(const QString &)), this, SLOT(manualNodeSelection(const QString &)));
+	connect(&(SelectionDisplayGrid->element_selection_box), SIGNAL(textChanged(const QString &)), this, SLOT(manualElementSelection(const QString &)));
 	// connect to the main display
 	ControlPanelMainHBox->addLayout(SelectionDisplayGrid,Qt::AlignTop);
 
@@ -148,36 +142,6 @@ void MainWindow::setUpCentralWidget(){
     connect(MainGLWidget, SIGNAL(SelectedItemChanged()), this, SLOT(SelectedItemChange()));
     connect(MainGLWidget, SIGNAL(NeedToClearManualElementSelection()), this, SLOT(ManualElementSelectionReset()));
     connect(MainGLWidget, SIGNAL(NeedToClearManualNodeSelection()), this, SLOT(ManualNodeSelectionReset()));
-}
-
-void MainWindow::setSelectionByIdSection(QFont font1, QGridLayout *SelectionDisplayGrid){
-	//QFont boldFont("SansSerif", 9, QFont::Bold,true);
-	//QFont font("SansSerif", 9);
-	QLabel *NodeSelectTitle = new QLabel("Select <br> Node:");
-	NodeSelectTitle->setFont(font1);
-	//setWordWrap(true);
-	NodeSelectBox = new QLineEdit();
-	NodeSelectBox->setPlaceholderText ( QString("# 0-%1").arg(Sim01->Nodes.size()-1) );
-	NodeSelectBox->setFont(font1);
-	NodeSelectBox->setStyleSheet("background-color: white");
-	NodeSelectBox->setFixedWidth(70);
-	NodeSelectBox->setValidator( new QIntValidator(0, Sim01->Nodes.size()-1, this) );
-
-	QLabel *ElementSelectTitle = new QLabel("Select <br> Element:");
-	ElementSelectTitle->setFont(font1);
-	ElementSelectBox = new QLineEdit();
-	ElementSelectBox->setPlaceholderText ( QString("# 0-%1").arg(Sim01->Elements.size()-1) );
-	ElementSelectBox->setFont(font1);
-	ElementSelectBox->setStyleSheet("background-color: white");
-	ElementSelectBox->setFixedWidth(70);
-	ElementSelectBox->setValidator( new QIntValidator(0, Sim01->Elements.size()-1, this) );
-	connect(NodeSelectBox, SIGNAL(textChanged(const QString &)), this, SLOT(manualNodeSelection(const QString &)));
-
-	SelectionDisplayGrid->addWidget(NodeSelectTitle,0,3,1,1,Qt::AlignLeft);
-	SelectionDisplayGrid->addWidget(ElementSelectTitle,0,4,1,1,Qt::AlignLeft);
-	SelectionDisplayGrid->addWidget(NodeSelectBox,1,3,1,1,Qt::AlignLeft);
-	SelectionDisplayGrid->addWidget(ElementSelectBox,1,4,1,1,Qt::AlignLeft);
-	connect(ElementSelectBox, SIGNAL(textChanged(const QString &)), this, SLOT(manualElementSelection(const QString &)));
 }
 
 void MainWindow::setUpSelectionDisplayGrid(QGridLayout *SelectionDisplayGrid){
@@ -335,75 +299,6 @@ void MainWindow::setPysPropDisplayMenu(QGridLayout *ProjectDisplayOptionsGrid){
     ProjectDisplayOptionsGrid->addWidget(PysPropComboBox,1,2,1,2,Qt::AlignLeft);
     ProjectDisplayOptionsGrid->addWidget(PysPropSpinBoxes[0],2,2,1,1,Qt::AlignLeft);
     ProjectDisplayOptionsGrid->addWidget(PysPropSpinBoxes[1],2,3,1,1,Qt::AlignLeft);
-}
-
-void MainWindow::setItemSelectionTitles(QFont font, QFont boldFont, QGridLayout *SelectionDisplayGrid){
-	QLabel *PanelTitle = new QLabel("Selected Item Properties");
-	PanelTitle->setFont(boldFont);
-	QLabel *NameTitle = new QLabel("Name:");
-	NameTitle->setFont(boldFont);
-	NameBox = new QLineEdit();
-	NameBox->setPlaceholderText ( "No input" );
-	NameBox->setReadOnly(true);
-	NameBox->setFont(font);
-
-	//QLabel *CoordTitle = new QLabel("Coordinates");
-	//CoordTitle ->setFont(boldFont);
-	QLabel *NodeIdTitle = new QLabel("id");
-	NodeIdTitle ->setFont(boldFont);
-	QLabel *CoordTitlex = new QLabel("x");
-	CoordTitlex ->setFont(boldFont);
-	QLabel *CoordTitley = new QLabel("y");
-	CoordTitley ->setFont(boldFont);
-	QLabel *CoordTitlez = new QLabel("z");
-	CoordTitlez ->setFont(boldFont);
-
-	SelectionDisplayGrid->addWidget(PanelTitle,0,0,1,2,Qt::AlignLeft);
-	SelectionDisplayGrid->addWidget(NameTitle,1,0,1,1,Qt::AlignLeft);
-	SelectionDisplayGrid->addWidget(NameBox,1,1,1,2,Qt::AlignLeft);
-
-	//SelectionDisplayGrid->addWidget(CoordTitle,2,0,1,3,Qt::AlignHCenter);
-	SelectionDisplayGrid->addWidget(NodeIdTitle,2,1,1,1,Qt::AlignHCenter);
-	SelectionDisplayGrid->addWidget(CoordTitlex,2,2,1,1,Qt::AlignHCenter);
-	SelectionDisplayGrid->addWidget(CoordTitley,2,3,1,1,Qt::AlignHCenter);
-	SelectionDisplayGrid->addWidget(CoordTitlez,2,4,1,1,Qt::AlignHCenter);
-}
-
-void MainWindow::setCoordBoxes(QFont font, QFont boldFont, QGridLayout *SelectionDisplayGrid){
-	CoordLabel_n[0] = new QLabel("Node 1");
-	CoordLabel_n[1] = new QLabel("Node 2");
-	CoordLabel_n[2] = new QLabel("Node 3");
-	CoordLabel_n[3] = new QLabel("Node 4");
-	CoordLabel_n[4] = new QLabel("Node 5");
-	CoordLabel_n[5] = new QLabel("Node 6");
-	for (int i = 0 ;i<nCoordBox; ++i){
-		CoordLabel_n[i] ->setFont(boldFont);
-		CoordBox_id[i] = new QLineEdit();
-		CoordBox_x[i] = new QLineEdit();
-		CoordBox_y[i] = new QLineEdit();
-		CoordBox_z[i] = new QLineEdit();
-		CoordBox_id[i]->setPlaceholderText( "No input" );
-		CoordBox_x[i]->setPlaceholderText( "No input" );
-		CoordBox_y[i]->setPlaceholderText( "No input" );
-		CoordBox_z[i]->setPlaceholderText( "No input" );
-		CoordBox_id[i]->setReadOnly(true);
-		CoordBox_x[i]->setReadOnly(true);
-		CoordBox_y[i]->setReadOnly(true);
-		CoordBox_z[i]->setReadOnly(true);
-		CoordBox_id[i]->setFont(font);
-		CoordBox_x[i]->setFont(font);
-		CoordBox_y[i]->setFont(font);
-		CoordBox_z[i]->setFont(font);
-		CoordBox_id[i]->setFixedWidth(70);
-		CoordBox_x[i]->setFixedWidth(70);
-		CoordBox_y[i]->setFixedWidth(70);
-		CoordBox_z[i]->setFixedWidth(70);
-		SelectionDisplayGrid->addWidget(CoordLabel_n[i],i+3,0,1,1,Qt::AlignLeft);
-		SelectionDisplayGrid->addWidget(CoordBox_id[i],i+3,1,1,1,Qt::AlignLeft);
-		SelectionDisplayGrid->addWidget(CoordBox_x[i],i+3,2,1,1,Qt::AlignLeft);
-		SelectionDisplayGrid->addWidget(CoordBox_y[i],i+3,3,1,1,Qt::AlignLeft);
-		SelectionDisplayGrid->addWidget(CoordBox_z[i],i+3,4,1,1,Qt::AlignLeft);
-	}
 }
 
 void MainWindow::setDisplayPreferences(QGridLayout *ProjectDisplayOptionsGrid){
@@ -739,29 +634,31 @@ void MainWindow::updateTimeText(){
 }
 
 void MainWindow::SelectedItemChange(){
-	//cerr<<"Main window saw the selection change"<<endl;
+	// fetch the name of the selected element
     QString tmpstring = QString::fromStdString(MainGLWidget->SelectedItemName);
-    NameBox->setText(tmpstring);
-    for (int i = 0 ;i<nCoordBox; ++i){
-    	 CoordBox_id[i]->setText ( "" );
-    	 CoordBox_x[i]->setText ( "" );
-    	 CoordBox_y[i]->setText ( "" );
-    	 CoordBox_z[i]->setText ( "" );
-    	 CoordBox_id[i]->setEnabled(false);
-    	 CoordBox_x[i]->setEnabled(false);
-    	 CoordBox_y[i]->setEnabled(false);
-    	 CoordBox_z[i]->setEnabled(false);
-    	 if ((signed int)MainGLWidget->SelectedPos.size()>i*3){
-    		 CoordBox_id[i]->setText ( MainGLWidget->SelectedId[i] );
-			 CoordBox_x[i]->setText ( MainGLWidget->SelectedPos[i*3] );
-			 CoordBox_y[i]->setText ( MainGLWidget->SelectedPos[i*3+1] );
-			 CoordBox_z[i]->setText ( MainGLWidget->SelectedPos[i*3+2] );
-			 CoordBox_id[i]->setEnabled(true);
-			 CoordBox_x[i]->setEnabled(true);
-			 CoordBox_y[i]->setEnabled(true);
-			 CoordBox_z[i]->setEnabled(true);
+	// update the element_name_display box that prints this name
+	ElementProps->element_name_display.setText(tmpstring);
+	// update the element information in the infoboxes
+	for (int row=0; row<n_nodes_per_element; row++) {
+		// these are the box indices for this row
+		int box_id_ind = getInfoBoxIndex(row, NodeInfoHeader::ID);
+		int box_x_ind = getInfoBoxIndex(row, NodeInfoHeader::X);
+		int box_y_ind = getInfoBoxIndex(row, NodeInfoHeader::Y);
+		int box_z_ind = getInfoBoxIndex(row, NodeInfoHeader::Z);
+		// if we can, fill in the data
+		if ((signed int)MainGLWidget->SelectedPos.size() > row * 3) {
+			ElementProps->updateCoordBox(box_id_ind, MainGLWidget->SelectedId[row]);
+			ElementProps->updateCoordBox(box_x_ind, MainGLWidget->SelectedPos[3*row]);
+			ElementProps->updateCoordBox(box_y_ind, MainGLWidget->SelectedPos[3*row+1]);
+			ElementProps->updateCoordBox(box_z_ind, MainGLWidget->SelectedPos[3*row+2]);
 		}
-    }
+		else {
+			ElementProps->updateCoordBox(box_id_ind, "", false);
+			ElementProps->updateCoordBox(box_x_ind, "", false);
+			ElementProps->updateCoordBox(box_y_ind, "", false);
+			ElementProps->updateCoordBox(box_z_ind, "", false);
+		}
+	}
  };
 
 void MainWindow::manualNodeSelection(const QString &newValue){
@@ -777,19 +674,17 @@ void MainWindow::manualElementSelection(const QString &newValue){
 void MainWindow::ManualElementSelectionReset(){
 	MainGLWidget->ManualNodeSelection = false;
 	MainGLWidget->ManualSelectedNodeId = -100;
-	ElementSelectBox->blockSignals(true);
-	ElementSelectBox->setValidator( new QIntValidator(0, Sim01->Elements.size()-1, this) );
-	ElementSelectBox->setPlaceholderText ( QString("# 0 to %1").arg(Sim01->Elements.size()-1) );
-	ElementSelectBox->setText("");
-	ElementSelectBox->blockSignals(false);
+	ElementProps->element_selection_box.blockSignals(true);
+	ElementProps->setElementSelectionValidator(Sim01->Elements.size()-1, this);
+	ElementProps->element_selection_box.setText("");
+	ElementProps->element_selection_box.blockSignals(false);
 }
 
 void MainWindow::ManualNodeSelectionReset(){
-	NodeSelectBox->blockSignals(true);
-	NodeSelectBox->setValidator( new QIntValidator(0, Sim01->Nodes.size()-1, this) );
-	NodeSelectBox->setPlaceholderText ( QString("# 0 to %1").arg(Sim01->Nodes.size()-1) );
-	NodeSelectBox->setText("");
-	NodeSelectBox->blockSignals(false);
+	ElementProps->node_selection_box.blockSignals(true);
+	ElementProps->setNodeSelectionValidator(Sim01->Nodes.size()-1, this);
+	ElementProps->node_selection_box.setText("");
+	ElementProps->node_selection_box.blockSignals(false);
 }
 
 void MainWindow::testAdhesionsAndCurveConstruction(){

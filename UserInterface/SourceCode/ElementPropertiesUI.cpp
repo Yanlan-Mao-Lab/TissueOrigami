@@ -59,10 +59,20 @@ ElementPropertiesUI::ElementPropertiesUI() {
     addWidget(&element_selection_box, 1, 4, 1, 1, AL_LEFT);
 };
 
-void ElementPropertiesUI::createNodeSelectionValidator(int max_node_index, QObject *parent) {
+void ElementPropertiesUI::setNodeSelectionValidator(int max_node_index, QObject *parent) {
     node_selection_box.initialseValidator(max_node_index, parent);
 };
 
-void ElementPropertiesUI::createElementSelectionValidator(int max_element_index, QObject *parent) {
+void ElementPropertiesUI::setElementSelectionValidator(int max_element_index, QObject *parent) {
     element_selection_box.initialseValidator(max_element_index, parent);
 };
+
+void ElementPropertiesUI::updateCoordBox(int box_number, QString text = "", bool set_enabled = true) {
+    node_coord_boxes[box_number].setText(text);
+    node_coord_boxes[box_number].setEnabled(set_enabled);
+}
+void ElementPropertiesUI::updateCoordBox(int row, NodeInfoHeader col, QString text = "", bool set_enabled = true)
+{
+    int box_number = getInfoBoxIndex(col, row);
+    updateCoordBox(box_number, text, set_enabled);
+}

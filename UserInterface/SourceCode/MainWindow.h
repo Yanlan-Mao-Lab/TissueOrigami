@@ -23,6 +23,8 @@ class GLWidget;
 #include "../TissueFolding/SourceCode/Simulation.h"
 #include "../TissueFolding/SourceCode/Analysis.h"
 
+#include "ElementPropertiesUI.h"
+
 
 using namespace std;
 
@@ -98,16 +100,19 @@ public slots:
     void updateTimeText();
     void takeScreenshot();
     QWidget		*CentralWidget;
-    QLineEdit 	*NameBox;
-    QLineEdit 	*NodeSelectBox;
-    QLineEdit 	*ElementSelectBox;
-    QTimer 		*timer;
-    int 		nCoordBox;
-    QLineEdit 		*CoordBox_id[6];
-    QLineEdit 		*CoordBox_x[6];
-    QLineEdit 		*CoordBox_y[6];
-    QLineEdit 		*CoordBox_z[6];
-    QLabel  		*CoordLabel_n[6];
+
+    /**
+     * @brief ElementPropertiesUI handles the display of basic element information, and selection of nodes and elements by passing their ID
+     * 
+     * This panel renders:
+     * - The "selected item properties" header
+     * - The node selection and element selection boxes
+     * - The printout of node information associated to a given element
+     */
+    ElementPropertiesUI *ElementProps;
+
+    QTimer *timer;
+    int nCoordBox;
     QCheckBox		*DisplayCheckBoxes[2];
     QComboBox   	*StrainComboBox;
     QDoubleSpinBox	*StrainSpinBoxes[2];
