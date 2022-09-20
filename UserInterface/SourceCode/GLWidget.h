@@ -78,7 +78,7 @@ using namespace std;
      float 		obj_pos[3];
 
  signals:
- 	 void SelectedItemChanged();
+ 	 void SelectedItemChanged(bool found_element=true);
  	 void NeedToClearManualElementSelection();
  	 void NeedToClearManualNodeSelection();
 
@@ -92,7 +92,7 @@ using namespace std;
      void 	wheelEvent(QWheelEvent *event);
      void 	ObjectSelection(QPoint LastPos);
      void 	resetItemSelectionInfo(int source);
-     void 	findElement();
+     bool 	findElement();
      bool 	findElement(int i);
      bool 	findNode(int i);
      void 	getColourOfPoint(QPoint LastPos);

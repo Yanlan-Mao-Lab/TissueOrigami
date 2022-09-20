@@ -57,6 +57,11 @@ ElementPropertiesUI::ElementPropertiesUI() {
     // now add the corresponding boxes
     addWidget(&node_selection_box, 1, 3, 1, 1, AL_LEFT);
     addWidget(&element_selection_box, 1, 4, 1, 1, AL_LEFT);
+
+    // add the element_property_display objects to the grid
+    addWidget(&select_element_property_label, n_nodes_per_element+4, 0, 1, 1, AL_LEFT);
+    addWidget(&select_element_property_dropdown, n_nodes_per_element+4, 1, 1, 2, AL_CENTRE);
+    addWidget(&select_element_property_display, n_nodes_per_element+4, 3, 1, 2, AL_CENTRE);
 };
 
 void ElementPropertiesUI::setNodeSelectionValidator(int max_node_index, QObject *parent) {

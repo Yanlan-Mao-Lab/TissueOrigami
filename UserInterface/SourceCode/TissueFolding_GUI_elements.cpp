@@ -53,3 +53,28 @@ void SelectionBox::initialseValidator(int n_max, QObject *parent) {
     setPlaceholderText( QString("# 0-%1").arg(n_max));
     setValidator( new QIntValidator(0, n_max, parent) );
 }
+
+DropdownMenu::DropdownMenu() : QComboBox() {
+    // use our default font
+    setFont(DEF_FONT);
+    // start disabled (since an element needs to be selected before this option becomes available)
+    setEnabled(false);
+}
+DropdownMenu::DropdownMenu(string *options, int n_opts) : QComboBox() {
+    // use our default font
+    setFont(DEF_FONT);
+    // start disabled (since an element needs to be selected before this option becomes available)
+    setEnabled(false);
+    // add the options to the selection
+    for(int i=0; i<n_opts; i++) {
+        addItem(options[i].c_str());
+    }
+}
+DropdownMenu::DropdownMenu(QStringList options) : QComboBox() {
+    // use our default font
+    setFont(DEF_FONT);
+    // start disabled (since an element needs to be selected before this option becomes available)
+    setEnabled(false);
+    // add the options to the selection
+    addItems(options);
+}

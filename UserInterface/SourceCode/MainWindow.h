@@ -45,7 +45,7 @@ class MainWindow : public QMainWindow
 
 
 public slots:
-    void 	SelectedItemChange();
+    void 	SelectedItemChange(bool element_found);
     void	manualNodeSelection(const QString &);
     void 	manualElementSelection(const QString &);
     void 	ManualElementSelectionReset();
@@ -76,6 +76,7 @@ public slots:
     void  	updateToSideView();
     void  	updateToPerspectiveView();
     void  	updateDrawSymmetricityViewToggle();
+    void    updateSelectElementPropertyDisplay(int option);
     void 	xClipChange(int);
     void 	yClipChange(int);
     void 	zClipChange(int);

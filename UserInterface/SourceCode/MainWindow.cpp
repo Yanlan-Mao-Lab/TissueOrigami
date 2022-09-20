@@ -80,9 +80,14 @@ void MainWindow::generateControlPanel(){
 	// initialise the validators for the node and element selection boxes
 	ElementProps->setNodeSelectionValidator(Sim01->Nodes.size() - 1, this);
 	ElementProps->setElementSelectionValidator(Sim01->Elements.size() - 1, this);
+
 	// create the signal connections for the node and element selection boxes
 	connect(&(ElementProps->node_selection_box), SIGNAL(textChanged(const QString &)), this, SLOT(manualNodeSelection(const QString &)));
 	connect(&(ElementProps->element_selection_box), SIGNAL(textChanged(const QString &)), this, SLOT(manualElementSelection(const QString &)));
+
+	// create the connection between the dropdown selection and displayed value
+	connect(&(ElementProps->select_element_property_dropdown), SIGNAL(currentIndexChanged(int)), this, SLOT(updateSelectElementPropertyDisplay(int)));
+
 	// connect to the main display
 	ControlPanelMainHBox->addLayout(ElementProps,Qt::AlignTop);
 
@@ -139,7 +144,7 @@ void MainWindow::setUpCentralWidget(){
     //CentralWidget->setStyleSheet("QWidget { background-color: LightGrey; }");
     CentralWidget->setStyleSheet("QWidget { background-color: rgb(233,229,243) }");
     CentralWidget->setLayout(MainGrid);
-    connect(MainGLWidget, SIGNAL(SelectedItemChanged()), this, SLOT(SelectedItemChange()));
+    connect(MainGLWidget, SIGNAL(SelectedItemChanged(bool)), this, SLOT(SelectedItemChange(bool)));
     connect(MainGLWidget, SIGNAL(NeedToClearManualElementSelection()), this, SLOT(ManualElementSelectionReset()));
     connect(MainGLWidget, SIGNAL(NeedToClearManualNodeSelection()), this, SLOT(ManualNodeSelectionReset()));
 }
@@ -625,11 +630,11 @@ void MainWindow::updateTimeText(){
 	//cout<<"finalised updateTimeText"<<endl;
 }
 
-void MainWindow::SelectedItemChange(){
+void MainWindow::SelectedItemChange(bool element_found){
 	// fetch the name of the selected element
-    QString tmpstring = QString::fromStdString(MainGLWidget->SelectedItemName);
+    QString element_internal_name = QString::fromStdString(MainGLWidget->SelectedItemName);
 	// update the element_name_display box that prints this name
-	ElementProps->element_name_display.setText(tmpstring);
+	ElementProps->element_name_display.setText(element_internal_name);
 	// update the element information in the infoboxes
 	for (int row=0; row<n_nodes_per_element; row++) {
 		// these are the box indices for this row
@@ -651,6 +656,14 @@ void MainWindow::SelectedItemChange(){
 			ElementProps->updateCoordBox(box_z_ind, "", false);
 		}
 	}
+	if (element_found) {
+		// now that we have selected an element, we can enable the property box and update this too
+		ElementProps->select_element_property_dropdown.setEnabled(true);
+	}
+	else {
+		// a deselection was made, in which case we need to disable the dropdown menu
+		ElementProps->select_element_property_dropdown.setEnabled(false);
+	}
  };
 
 void MainWindow::manualNodeSelection(const QString &newValue){
@@ -666,16 +679,26 @@ void MainWindow::manualElementSelection(const QString &newValue){
 void MainWindow::ManualElementSelectionReset(){
 	MainGLWidget->ManualNodeSelection = false;
 	MainGLWidget->ManualSelectedNodeId = -100;
+	// block signals whilst resetting
 	ElementProps->element_selection_box.blockSignals(true);
+	// reset the text in the selection box
 	ElementProps->setElementSelectionValidator(Sim01->Elements.size()-1, this);
 	ElementProps->element_selection_box.setText("");
+	// disable the property selection dropdown since the element has been cleared
+	ElementProps->select_element_property_dropdown.setEnabled(false);
+	// reopen to user input
 	ElementProps->element_selection_box.blockSignals(false);
 }
 
 void MainWindow::ManualNodeSelectionReset(){
+	// block signals whilst resetting
 	ElementProps->node_selection_box.blockSignals(true);
+	// reset the text in the selection box
 	ElementProps->setNodeSelectionValidator(Sim01->Nodes.size()-1, this);
 	ElementProps->node_selection_box.setText("");
+	// disable the property selection dropdown since the element has been cleared
+	ElementProps->select_element_property_dropdown.setEnabled(false);
+	// reopen to user input
 	ElementProps->node_selection_box.blockSignals(false);
 }
 
@@ -883,4 +906,9 @@ void MainWindow::takeScreenshot(){
 	QString fileName = directory+"/ScreenShots/frame"+ timepoint +"-"+timeinsec+"sec.png";
 	cout<<fileName.toStdString()<<endl;
 	originalPixmap.save(fileName, "png");
+}
+
+void MainWindow::updateSelectElementPropertyDisplay(int option) {
+	// the option selection has changed
+	// update the value displayed in the property box
 }

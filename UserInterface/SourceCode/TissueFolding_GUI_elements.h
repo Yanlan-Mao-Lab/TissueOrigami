@@ -95,4 +95,27 @@ public:
     void initialseValidator(int n_max, QObject *parent = nullptr);
 };
 
+/**
+ * @brief Style for dropdown menu options in the Qt interface
+ * 
+ */
+class DropdownMenu : public QComboBox
+{
+public:
+    DropdownMenu();
+    /**
+     * @brief Construct a new Dropdown Menu object
+     * 
+     * @param options The dropdown options that will be automatically added to the selection
+     * @param n_opts The number of options provided
+     */
+    DropdownMenu(std::string *options, int n_opts);
+    /**
+     * @brief Construct a new Dropdown Menu object
+     *
+     * @param options The dropdown options that will be automatically added to the selection
+     */
+    DropdownMenu(QStringList options);
+};
+
 # endif
