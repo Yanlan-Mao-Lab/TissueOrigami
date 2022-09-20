@@ -76,7 +76,7 @@ public slots:
     void  	updateToSideView();
     void  	updateToPerspectiveView();
     void  	updateDrawSymmetricityViewToggle();
-    void    updateSelectElementPropertyDisplay(int option);
+    void    updateSelectedElementPropertyDisplay();
     void 	xClipChange(int);
     void 	yClipChange(int);
     void 	zClipChange(int);

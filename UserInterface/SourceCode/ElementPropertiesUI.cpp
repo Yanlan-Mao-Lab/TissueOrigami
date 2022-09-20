@@ -81,3 +81,18 @@ void ElementPropertiesUI::updateCoordBox(int row, NodeInfoHeader col, QString te
     int box_number = getInfoBoxIndex(row, col);
     updateCoordBox(box_number, text, set_enabled);
 }
+
+void ElementPropertiesUI::enableDropdownSelection(bool enabled) {
+    if (enabled) {
+        // if we enabled the dropdown menu, we should allow user selection again
+        select_element_property_display.setEnabled(true);
+        // we should also update the value that is saved in the dropdown box
+        emit updateSelectedElementProperty();
+    }
+    else {
+        // the dropdown menu should be disabled
+        select_element_property_display.setEnabled(false);
+        // remove any text in the property value box
+        select_element_property_display.setText("-");
+    }
+}

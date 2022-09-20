@@ -86,7 +86,7 @@ public:
     // uses the convention box_index = col*n_nodes_per_element + n_node_info_headers
     ReadOnlyBox node_coord_boxes[n_coord_boxes];
     // Box to display the value of the select_element_property
-    ReadOnlyBox select_element_property_display = ReadOnlyBox("No property selected");
+    ReadOnlyBox select_element_property_display = ReadOnlyBox("-");
 
     // input box for manual element selection by requesting a node that forms this element
     SelectionBox node_selection_box;
@@ -130,6 +130,12 @@ public:
      * @param set_enabled Whether to render the box as enabled or disabled
      */
     void updateCoordBox(int row, NodeInfoHeader col, QString text="", bool set_enabled=true);
+
+public slots:
+    void enableDropdownSelection(bool enabled);
+
+signals:
+    void updateSelectedElementProperty();
 };
 
 #endif

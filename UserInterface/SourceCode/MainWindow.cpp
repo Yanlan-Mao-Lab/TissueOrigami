@@ -81,9 +81,11 @@ void MainWindow::generateControlPanel(){
 	ElementProps->setNodeSelectionValidator(Sim01->Nodes.size() - 1, this);
 	ElementProps->setElementSelectionValidator(Sim01->Elements.size() - 1, this);
 
-	// create the signal connections for the node and element selection boxes
+	// create connections for the node and element selection boxes
 	connect(&(ElementProps->node_selection_box), SIGNAL(textChanged(const QString &)), this, SLOT(manualNodeSelection(const QString &)));
 	connect(&(ElementProps->element_selection_box), SIGNAL(textChanged(const QString &)), this, SLOT(manualElementSelection(const QString &)));
+	// connect element selection to displaying the element property in the dropdown menu
+	connect(ElementProps, SIGNAL(updateSelectedElementProperty()), this, SLOT(updateSelectedElementPropertyDisplay()));
 
 	// create the connection between the dropdown selection and displayed value
 	connect(&(ElementProps->select_element_property_dropdown), SIGNAL(currentIndexChanged(int)), this, SLOT(updateSelectElementPropertyDisplay(int)));
@@ -908,7 +910,14 @@ void MainWindow::takeScreenshot(){
 	originalPixmap.save(fileName, "png");
 }
 
-void MainWindow::updateSelectElementPropertyDisplay(int option) {
-	// the option selection has changed
-	// update the value displayed in the property box
+void MainWindow::updateSelectedElementPropertyDisplay() {
+	// first, determine which property we are interested in reading...
+	QString read_property = ElementProps->select_element_property_dropdown.currentText();
+
+	// now lookup the value of this property from the simulation
+	// for now, let's just have a placeholder for testing
+	QString value_to_display = read_property;
+
+	// insert the text into the display box
+	ElementProps->select_element_property_display.setText(value_to_display);
 }
