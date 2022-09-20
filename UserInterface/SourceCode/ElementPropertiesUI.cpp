@@ -13,7 +13,7 @@ void rowAndColOfBox(int box_index, int *node_num, NodeInfoHeader *col)
     *node_num = box_index % n_nodes_per_element;
     *col = NodeInfoHeader(box_index / n_nodes_per_element);
 }
-int getInfoBoxIndex(NodeInfoHeader header, int node_number)
+int getInfoBoxIndex(int node_number, NodeInfoHeader header)
 {
     // box_index = col*n_nodes_per_element + n_node_info_headers
     return ((int)header) * n_nodes_per_element + node_number;
@@ -73,6 +73,6 @@ void ElementPropertiesUI::updateCoordBox(int box_number, QString text, bool set_
 }
 void ElementPropertiesUI::updateCoordBox(int row, NodeInfoHeader col, QString text, bool set_enabled)
 {
-    int box_number = getInfoBoxIndex(col, row);
+    int box_number = getInfoBoxIndex(row, col);
     updateCoordBox(box_number, text, set_enabled);
 }
