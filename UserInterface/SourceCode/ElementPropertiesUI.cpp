@@ -67,11 +67,11 @@ void ElementPropertiesUI::setElementSelectionValidator(int max_element_index, QO
     element_selection_box.initialseValidator(max_element_index, parent);
 };
 
-void ElementPropertiesUI::updateCoordBox(int box_number, QString text = "", bool set_enabled = true) {
+void ElementPropertiesUI::updateCoordBox(int box_number, QString text, bool set_enabled) {
     node_coord_boxes[box_number].setText(text);
     node_coord_boxes[box_number].setEnabled(set_enabled);
 }
-void ElementPropertiesUI::updateCoordBox(int row, NodeInfoHeader col, QString text = "", bool set_enabled = true)
+void ElementPropertiesUI::updateCoordBox(int row, NodeInfoHeader col, QString text, bool set_enabled)
 {
     int box_number = getInfoBoxIndex(col, row);
     updateCoordBox(box_number, text, set_enabled);
