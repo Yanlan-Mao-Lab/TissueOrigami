@@ -36,7 +36,7 @@ ElementPropertiesUI::ElementPropertiesUI() {
 
     // add the node information node numbers (vert) to the grid
     for (int i=0; i<n_nodes_per_element; i++) {
-        addWidget(&node_info_numbers_vert[i], 2+(i+1), 1, 1, AL_LEFT);
+        addWidget(&node_info_numbers_vert[i], 2+(i+1), 0, 1, 1, AL_LEFT);
     }
 
     // add the node information ID and coordinate boxes
