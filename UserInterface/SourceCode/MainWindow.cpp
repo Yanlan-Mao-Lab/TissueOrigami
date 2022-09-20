@@ -76,15 +76,15 @@ void MainWindow::generateControlPanel(){
 	ControlPanelMainHBox->setSpacing(2);
 
 	// perpare the basic element info display using the default constructor
-	ElementPropertiesUI *SelectionDisplayGrid = new ElementPropertiesUI;
+	ElementProps = new ElementPropertiesUI;
 	// initialise the validators for the node and element selection boxes
-	SelectionDisplayGrid->setNodeSelectionValidator(Sim01->Nodes.size() - 1, this);
-	SelectionDisplayGrid->setElementSelectionValidator(Sim01->Elements.size() - 1, this);
+	ElementProps->setNodeSelectionValidator(Sim01->Nodes.size() - 1, this);
+	ElementProps->setElementSelectionValidator(Sim01->Elements.size() - 1, this);
 	// create the signal connections for the node and element selection boxes
-	connect(&(SelectionDisplayGrid->node_selection_box), SIGNAL(textChanged(const QString &)), this, SLOT(manualNodeSelection(const QString &)));
-	connect(&(SelectionDisplayGrid->element_selection_box), SIGNAL(textChanged(const QString &)), this, SLOT(manualElementSelection(const QString &)));
+	connect(&(ElementProps->node_selection_box), SIGNAL(textChanged(const QString &)), this, SLOT(manualNodeSelection(const QString &)));
+	connect(&(ElementProps->element_selection_box), SIGNAL(textChanged(const QString &)), this, SLOT(manualElementSelection(const QString &)));
 	// connect to the main display
-	ControlPanelMainHBox->addLayout(SelectionDisplayGrid,Qt::AlignTop);
+	ControlPanelMainHBox->addLayout(ElementProps,Qt::AlignTop);
 
 	//Generating project display options panel:
 	QGridLayout *ProjectDisplayOptionsGrid = new QGridLayout;
