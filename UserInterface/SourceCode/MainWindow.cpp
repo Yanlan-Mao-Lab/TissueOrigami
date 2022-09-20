@@ -144,14 +144,6 @@ void MainWindow::setUpCentralWidget(){
     connect(MainGLWidget, SIGNAL(NeedToClearManualNodeSelection()), this, SLOT(ManualNodeSelectionReset()));
 }
 
-void MainWindow::setUpSelectionDisplayGrid(QGridLayout *SelectionDisplayGrid){
-	QFont boldFont("SansSerif", 10, QFont::Bold,true);
-	QFont font("SansSerif", 10);
-	setItemSelectionTitles(font, boldFont, SelectionDisplayGrid);
-	setCoordBoxes(font, boldFont, SelectionDisplayGrid);
-	setSelectionByIdSection(font, SelectionDisplayGrid);
-}
-
 void MainWindow::setUpProjectDisplayOptionGrid(QGridLayout *ProjectDisplayOptionsGrid){
 	QFont boldFont("SansSerif", 10, QFont::Bold,true);
 	QFont font("SansSerif", 10);
