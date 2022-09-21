@@ -13,6 +13,8 @@ const QFont DEF_HEADER_FONT("SaneSerif", 10, QFont::Bold, true);
 const Qt::AlignmentFlag AL_LEFT = Qt::AlignmentFlag::AlignLeft;
 // convenient alias for centre-alignment
 const Qt::AlignmentFlag AL_CENTRE = Qt::AlignmentFlag::AlignCenter;
+// convenient alias for right-alignment
+const Qt::AlignmentFlag AL_RIGHT = Qt::AlignmentFlag::AlignRight;
 
 // default fixed size for infoboxes
 const int def_fixed_box_width = 70;

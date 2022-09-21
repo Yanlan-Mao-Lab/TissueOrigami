@@ -904,7 +904,7 @@ void MainWindow::takeScreenshot(){
 
 void MainWindow::updateElementDropdownDisplay() {
 	// determine which property we are interested in reading
-	QString read_property = PropertySelection->select_element_property_dropdown.currentText();
+	QString read_property = PropertySelection->selection_dropdown.currentText();
 	// now proceed as if we had been passed the new display option
 	updateElementDropdownDisplay(read_property);
 }
@@ -928,7 +928,4 @@ void MainWindow::updateElementDropdownDisplay(const QString &option) {
 		// return some filler text
 		value_to_display = "Error: could not fetch!";
 	}
-
-	// insert the text into the display box
-	PropertySelection->select_element_property_display.setText(value_to_display);
 }

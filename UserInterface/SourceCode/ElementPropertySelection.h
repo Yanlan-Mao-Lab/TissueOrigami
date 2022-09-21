@@ -2,12 +2,8 @@
 # define ELEMENT_PROPERTY_SELECTION_BOX_H
 
 # include "TissueFolding_GUI_elements.h"
+# include "PropertyDisplayLayout.h"
 # include <QtWidgets>
-
-// there is likely a better way of doing this using maps and enums, to save on several else-if blocks later
-// the possible element-properties that we can display to the user in the UI
-const QStringList element_property_options = {"Growth",
-                                              "Growth Rate"};
 
 class ElementPropertySelection : public QGridLayout 
 {
@@ -19,10 +15,11 @@ public:
     Header pannel_header = Header("Display element property:");
 
     // selection box for the element property to display
-    DropdownMenu select_element_property_dropdown = DropdownMenu(element_property_options);
+    DropdownMenu selection_dropdown = DropdownMenu(element_property_options);
 
-    // Box to display the value of the select_element_property (needs to change with the property though!!!!)
-    ReadOnlyBox select_element_property_display = ReadOnlyBox("-");
+    // the box that displays the currently selected element property
+    PropertyDisplayLayout element_property_display;
+    QGroupBox display_box;
 
     /**
      * @brief Enables the dropdown menu and signals that the property box should also be updated.
@@ -46,6 +43,8 @@ signals:
 private:
     // number of columns in the grid layout
     int n_cols = 5;
+    // max number of rows that the property display will ever use
+    int max_disp_rows = 5;
 };
 
 # endif
