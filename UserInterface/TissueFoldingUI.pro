@@ -51,25 +51,33 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 QT += opengl
  
 # Input
-HEADERS       +=  	$$CurrPath/SourceCode/MainWindow.h \
+HEADERS += 	$$CurrPath/SourceCode/MainWindow.h \
 			$$CurrPath/SourceCode/GLWidget.h \
+			$$CurrPath/SourceCode/ElementPropertiesUI.h \
+			$$CurrPath/SourceCode/ElementPropertySelection.h \
+			$$CurrPath/SourceCode/PropertyDisplayLayout.h \
+			$$CurrPath/SourceCode/TissueFolding_GUI_elements.h \
 			$$CurrPath/../TissueFolding/SourceCode/*.h
 
-SOURCES += $$CurrPath/SourceCode/main.cpp \
-	$$CurrPath/SourceCode/MainWindow.cpp \
-	$$CurrPath/SourceCode/GLWidget.cpp \
-	$$CurrPath/../TissueFolding/SourceCode/Prism.cpp \
-	$$CurrPath/../TissueFolding/SourceCode/ReferenceShapeBase.cpp \
- 	$$CurrPath/../TissueFolding/SourceCode/ShapeBase.cpp \
-        $$CurrPath/../TissueFolding/SourceCode/Simulation.cpp \
-        $$CurrPath/../TissueFolding/SourceCode/Node.cpp \
-        $$CurrPath/../TissueFolding/SourceCode/ModelInputObject.cpp \
-	$$CurrPath/../TissueFolding/SourceCode/RandomGenerator.cpp \
-#	$$CurrPath/../TissueFolding/SourceCode/NewtonRaphsonSolver.cpp \
-	$$CurrPath/../TissueFolding/SourceCode/Analysis.cpp \
-        $$CurrPath/../TissueFolding/SourceCode/Lumen.cpp \
-        $$CurrPath/../TissueFolding/SourceCode/TimeSeriesPhysicalProperties.cpp \
-        $$CurrPath/../TissueFolding/SourceCode/YoungsModulusModifier.cpp
+SOURCES +=	$$CurrPath/SourceCode/main.cpp \
+			$$CurrPath/SourceCode/MainWindow.cpp \
+			$$CurrPath/SourceCode/GLWidget.cpp \
+			$$CurrPath/SourceCode/ElementPropertiesUI.cpp \
+			$$CurrPath/SourceCode/ElementPropertySelection.cpp \
+			$$CurrPath/SourceCode/PropertyDisplayLayout.cpp \
+			$$CurrPath/SourceCode/TissueFolding_GUI_elements.cpp \
+			$$CurrPath/../TissueFolding/SourceCode/Prism.cpp \
+			$$CurrPath/../TissueFolding/SourceCode/ReferenceShapeBase.cpp \
+ 			$$CurrPath/../TissueFolding/SourceCode/ShapeBase.cpp \
+        	$$CurrPath/../TissueFolding/SourceCode/Simulation.cpp \
+        	$$CurrPath/../TissueFolding/SourceCode/Node.cpp \
+        	$$CurrPath/../TissueFolding/SourceCode/ModelInputObject.cpp \
+			$$CurrPath/../TissueFolding/SourceCode/RandomGenerator.cpp \
+			$$CurrPath/../TissueFolding/SourceCode/NewtonRaphsonSolver.cpp \
+			$$CurrPath/../TissueFolding/SourceCode/Analysis.cpp \
+        	$$CurrPath/../TissueFolding/SourceCode/Lumen.cpp \
+        	$$CurrPath/../TissueFolding/SourceCode/TimeSeriesPhysicalProperties.cpp \
+        	$$CurrPath/../TissueFolding/SourceCode/YoungsModulusModifier.cpp
 
 #=========================================================================================================================
 #MODIFY BASED ON USER'S SYSTEM
