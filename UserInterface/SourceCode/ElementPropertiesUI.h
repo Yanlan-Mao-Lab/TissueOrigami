@@ -2,6 +2,7 @@
 # define ELEMENT_PROPERTIES_UI_BOX_H
 
 # include "TissueFolding_GUI_elements.h"
+# include <QtWidgets>
 
 enum NodeInfoHeader {
     ID = 0,
@@ -50,6 +51,7 @@ int getInfoBoxIndex(int node_number, NodeInfoHeader header);
  */
 class ElementPropertiesUI : public QGridLayout
 {
+    Q_OBJECT
 public:
     /**
      * @brief Constructs the element-selection pannel.
@@ -131,11 +133,24 @@ public:
      */
     void updateCoordBox(int row, NodeInfoHeader col, QString text="", bool set_enabled=true);
 
-public slots:
+    /**
+     * @brief Enables the dropdown menu and signals that the property box should also be updated.
+     * 
+     * Emits dropdownUpdate() if enabled is true.
+     * 
+     * @param enabled Whether to enable (true) or disable (false) the dropdown options
+     */
     void enableDropdownSelection(bool enabled);
 
+public slots:
+    // emit the dropdownUpdate signal when the user changes the option in the element_property_dropdown menu
+    void emitDropdownUpdate(const QString &option);
+
 signals:
-    void updateSelectedElementProperty();
+    // emitted when the element property selection dropdown box has been enabled, so needs updating
+    void dropdownUpdate();
+    // emitted when the element property selection dropdown box has been changed, so needs updating
+    void dropdownUpdate(const QString &option);
 };
 
 #endif

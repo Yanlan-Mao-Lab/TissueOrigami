@@ -76,7 +76,10 @@ public slots:
     void  	updateToSideView();
     void  	updateToPerspectiveView();
     void  	updateDrawSymmetricityViewToggle();
-    void    updateSelectedElementPropertyDisplay();
+    // updates the value in the selected element property display box
+    void    updateElementDropdownDisplay();
+    // updates the value in the selected element property display box
+    void    updateElementDropdownDisplay(const QString &option);
     void 	xClipChange(int);
     void 	yClipChange(int);
     void 	zClipChange(int);
