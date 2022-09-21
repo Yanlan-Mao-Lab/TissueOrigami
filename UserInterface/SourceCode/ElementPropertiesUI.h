@@ -18,9 +18,10 @@ const int n_nodes_per_element = 6;
 // the number of information boxes that will be required to display all node information pertaining to a particular element
 const int n_coord_boxes = n_node_info_headers * n_nodes_per_element;
 
+// there is likely a better way of doing this using maps and enums, to save on several else-if blocks later
 // the possible element-properties that we can display to the user in the UI
 const QStringList element_property_options = {"Growth",
-                                              "Stiffness" };
+                                              "Growth Rate" };
 
 /**
  * @brief Get the node number and column header of an info box

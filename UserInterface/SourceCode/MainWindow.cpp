@@ -908,9 +908,25 @@ void MainWindow::updateElementDropdownDisplay() {
 	updateElementDropdownDisplay(read_property);
 }
 void MainWindow::updateElementDropdownDisplay(const QString &option) {
-	// now lookup the value of this property from the simulation
-	// for now, let's just have a placeholder for testing
+	// this will store the output (placeholder assignment for now)
 	QString value_to_display = option;
+	// this is the index of the element in Sim01->Elements we are currently looking at
+	int element_index = MainGLWidget->SelectedItemIndex;
+	// lookup the value of the property "option" from the simulation
+	if (option=="Growth") {
+		// growth is a 3x3 matrix (gsl matrix)
+		gsl_matrix* curr_growth = Sim01->Elements[element_index]->getFg();
+		// now we just write out the values in the matrix, the display needs to change though :(
+	}
+	else if (option=="Growth Rate") {
+		// growth rate is a 3-vector
+		std::array<double, 3> growth_rate = Sim01->Elements[element_index]->getGrowthRate();
+	}
+	else {
+		// unrecognised dropdown option, or not implimented yet
+		// return some filler text
+		value_to_display = "Error: could not fetch!";
+	}
 
 	// insert the text into the display box
 	ElementProps->select_element_property_display.setText(value_to_display);
