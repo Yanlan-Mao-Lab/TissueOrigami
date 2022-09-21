@@ -57,13 +57,6 @@ ElementPropertiesUI::ElementPropertiesUI() {
     // now add the corresponding boxes
     addWidget(&node_selection_box, 1, 3, 1, 1, AL_LEFT);
     addWidget(&element_selection_box, 1, 4, 1, 1, AL_LEFT);
-
-    // add the element_property_display objects to the grid
-    addWidget(&select_element_property_label, n_nodes_per_element+4, 0, 1, 1, AL_LEFT);
-    addWidget(&select_element_property_dropdown, n_nodes_per_element+4, 1, 1, 2, AL_CENTRE);
-    addWidget(&select_element_property_display, n_nodes_per_element+4, 3, 1, 2, AL_CENTRE);
-    // connect the "option changed" signal of the dropdown menu to the emitUpdateDropdown() slot
-    connect(&select_element_property_dropdown, SIGNAL(currentTextChanged(const QString &)), this, SLOT(emitDropdownUpdate(const QString &)));
 };
 
 void ElementPropertiesUI::setNodeSelectionValidator(int max_node_index, QObject *parent) {
@@ -82,23 +75,4 @@ void ElementPropertiesUI::updateCoordBox(int row, NodeInfoHeader col, QString te
 {
     int box_number = getInfoBoxIndex(row, col);
     updateCoordBox(box_number, text, set_enabled);
-}
-
-void ElementPropertiesUI::emitDropdownUpdate(const QString &option) {
-    emit dropdownUpdate(option);
-}
-
-void ElementPropertiesUI::enableDropdownSelection(bool enabled) {
-    if (enabled) {
-        // if we enabled the dropdown menu, we should allow user selection again
-        select_element_property_dropdown.setEnabled(true);
-        // we should also update the value that is saved in the dropdown box
-        emit dropdownUpdate();
-    }
-    else {
-        // the dropdown menu should be disabled
-        select_element_property_dropdown.setEnabled(false);
-        // remove any text in the property value box
-        select_element_property_display.setText("-");
-    }
 }

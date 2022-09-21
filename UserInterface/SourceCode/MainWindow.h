@@ -24,6 +24,7 @@ class GLWidget;
 #include "../TissueFolding/SourceCode/Analysis.h"
 
 #include "ElementPropertiesUI.h"
+#include "ElementPropertySelection.h"
 
 
 using namespace std;
@@ -114,6 +115,14 @@ public slots:
      * - The printout of node information associated to a given element
      */
     ElementPropertiesUI *ElementProps;
+
+    /**
+     * @brief ElementPropertySelection handles the display of user-requested information about certain properties of the current element.
+     *
+     * This pannel dynamically updates depending on the nature of the requested property.
+     * Properties that can be requested are listed in the const QString element_property_options.
+     */
+    ElementPropertySelection *PropertySelection;
 
     QTimer *timer;
     int nCoordBox;

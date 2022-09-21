@@ -17,6 +17,7 @@
 #include <sstream>
 
 #include "ElementPropertiesUI.h"
+#include "ElementPropertySelection.h"
 
 using namespace std;
 
@@ -80,19 +81,19 @@ void MainWindow::generateControlPanel(){
 	// initialise the validators for the node and element selection boxes
 	ElementProps->setNodeSelectionValidator(Sim01->Nodes.size() - 1, this);
 	ElementProps->setElementSelectionValidator(Sim01->Elements.size() - 1, this);
-
 	// create connections for the node and element selection boxes
 	connect(&(ElementProps->node_selection_box), SIGNAL(textChanged(const QString &)), this, SLOT(manualNodeSelection(const QString &)));
 	connect(&(ElementProps->element_selection_box), SIGNAL(textChanged(const QString &)), this, SLOT(manualElementSelection(const QString &)));
-	// connect element selection to displaying the element property in the dropdown menu
-	connect(ElementProps, SIGNAL(dropdownUpdate()), this, SLOT(updateElementDropdownDisplay()));
-	connect(ElementProps, SIGNAL(dropdownUpdate(const QString &)), this, SLOT(updateElementDropdownDisplay(const QString &)));
-
-	// create the connection between the dropdown selection and displayed value
-	//connect(&(ElementProps->select_element_property_dropdown), SIGNAL(currentIndexChanged(int)), this, SLOT(updateSelectElementPropertyDisplay(int)));
-
 	// connect to the main display
 	ControlPanelMainHBox->addLayout(ElementProps,Qt::AlignTop);
+
+	// prepare the user-specified element property information display
+	PropertySelection = new ElementPropertySelection;
+	// connect element property selection to updating the display
+	connect(PropertySelection, SIGNAL(dropdownUpdate()), this, SLOT(updateElementDropdownDisplay()));
+	connect(PropertySelection, SIGNAL(dropdownUpdate(const QString &)), this, SLOT(updateElementDropdownDisplay(const QString &)));
+	// connect to the main display
+	ControlPanelMainHBox->addLayout(PropertySelection,Qt::AlignCenter);
 
 	//Generating project display options panel:
 	QGridLayout *ProjectDisplayOptionsGrid = new QGridLayout;
@@ -660,7 +661,7 @@ void MainWindow::SelectedItemChange(bool element_found){
 		}
 	}
 	// either enable or disable the dropdown selection, depending on whether an element was selected or deselected
-	ElementProps->enableDropdownSelection(element_found);
+	PropertySelection->enableDropdownSelection(element_found);
  };
 
 void MainWindow::manualNodeSelection(const QString &newValue){
@@ -903,7 +904,7 @@ void MainWindow::takeScreenshot(){
 
 void MainWindow::updateElementDropdownDisplay() {
 	// determine which property we are interested in reading
-	QString read_property = ElementProps->select_element_property_dropdown.currentText();
+	QString read_property = PropertySelection->select_element_property_dropdown.currentText();
 	// now proceed as if we had been passed the new display option
 	updateElementDropdownDisplay(read_property);
 }
@@ -929,5 +930,5 @@ void MainWindow::updateElementDropdownDisplay(const QString &option) {
 	}
 
 	// insert the text into the display box
-	ElementProps->select_element_property_display.setText(value_to_display);
+	PropertySelection->select_element_property_display.setText(value_to_display);
 }

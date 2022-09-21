@@ -18,11 +18,6 @@ const int n_nodes_per_element = 6;
 // the number of information boxes that will be required to display all node information pertaining to a particular element
 const int n_coord_boxes = n_node_info_headers * n_nodes_per_element;
 
-// there is likely a better way of doing this using maps and enums, to save on several else-if blocks later
-// the possible element-properties that we can display to the user in the UI
-const QStringList element_property_options = {"Growth",
-                                              "Growth Rate" };
-
 /**
  * @brief Get the node number and column header of an info box
  * 
@@ -80,24 +75,17 @@ public:
     Label node_selection_label = Label("Select <br> node:");
     // The label for the element_selection box
     Label element_selection_label = Label("Select <br> element");
-    // The label for select_element_property
-    Label select_element_property_label = Label("Select element property:");
 
     // Box to display the internal name of the selected element
     ReadOnlyBox element_name_display = ReadOnlyBox("No element selected");
     // Boxes that will display the information about the nodes associated to the selected element;
     // uses the convention box_index = col*n_nodes_per_element + n_node_info_headers
     ReadOnlyBox node_coord_boxes[n_coord_boxes];
-    // Box to display the value of the select_element_property
-    ReadOnlyBox select_element_property_display = ReadOnlyBox("-");
 
     // input box for manual element selection by requesting a node that forms this element
     SelectionBox node_selection_box;
     // input box for manual element selection by element ID
     SelectionBox element_selection_box;
-
-    // selection box for the element property to display
-    DropdownMenu select_element_property_dropdown = DropdownMenu(element_property_options);
 
     /**
      * @brief Sets (or resets) the validator object for the node_selection_box
@@ -142,16 +130,6 @@ public:
      * @param enabled Whether to enable (true) or disable (false) the dropdown options
      */
     void enableDropdownSelection(bool enabled);
-
-public slots:
-    // emit the dropdownUpdate signal when the user changes the option in the element_property_dropdown menu
-    void emitDropdownUpdate(const QString &option);
-
-signals:
-    // emitted when the element property selection dropdown box has been enabled, so needs updating
-    void dropdownUpdate();
-    // emitted when the element property selection dropdown box has been changed, so needs updating
-    void dropdownUpdate(const QString &option);
 };
 
 #endif
