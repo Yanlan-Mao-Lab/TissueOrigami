@@ -2,6 +2,8 @@
 # define PROPERTY_DISPLAY_LAYOUT_H
 
 # include "TissueFolding_GUI_elements.h"
+# include "../TissueFolding/SourceCode/ShapeBase.h"
+
 # include <QtWidgets>
 
 // there is likely a better way of doing this using maps and enums, to save on several else-if blocks later
@@ -56,6 +58,12 @@ public:
      * 
      */
     void clearAllValues();
+    /**
+     * @brief When a new element is provided, update the displayed growth values
+     *
+     * @param element The new element
+     */
+    void newElement(std::unique_ptr<ShapeBase> *element);
 
     /**
      * @brief Retrieves the internal index for the component boxes, given a (row, col) index in the growth matrix.
@@ -93,6 +101,12 @@ public:
      * 
      */
     void clearAllComponents();
+    /**
+     * @brief When a new element is provided, update the displayed growth rate values
+     * 
+     * @param element The new element
+     */
+    void newElement(std::unique_ptr<ShapeBase> *element);
 private:
     ReadOnlyBox growthrate_components[n_growthrate_components];                                     // Boxes that display the values of the components
     Header component_labels[n_growthrate_components] = { Header("x"), Header("y"), Header("z") };   // Labels for the component boxes
@@ -107,6 +121,8 @@ class PropertyDisplayLayout : public QStackedLayout
     Q_OBJECT
 public:
     PropertyDisplayLayout();
+
+    void writeNewElementProperties(std::unique_ptr<ShapeBase> *element);
 
 public slots:
     /**

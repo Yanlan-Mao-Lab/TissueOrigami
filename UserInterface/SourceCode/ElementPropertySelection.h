@@ -1,13 +1,14 @@
 # ifndef ELEMENT_PROPERTY_SELECTION_BOX_H
 # define ELEMENT_PROPERTY_SELECTION_BOX_H
 
+# include "../TissueFolding/SourceCode/ShapeBase.h"
+
 # include "TissueFolding_GUI_elements.h"
 # include "PropertyDisplayLayout.h"
 # include <QtWidgets>
 
 class ElementPropertySelection : public QGridLayout 
 {
-    Q_OBJECT
 public:
     ElementPropertySelection();
 
@@ -22,23 +23,21 @@ public:
     QGroupBox display_box;
 
     /**
-     * @brief Enables the dropdown menu and signals that the property box should also be updated.
-     *
-     * Emits dropdownUpdate() if enabled is true.
-     *
-     * @param enabled Whether to enable (true) or disable (false) the dropdown options
+     * @brief Enables options to be selected from the property selection box
+     * 
      */
-    void enableDropdownSelection(bool enabled);
-
-public slots:
-    // emit the dropdownUpdate signal when the user changes the option in the element_property_dropdown menu
-    void emitDropdownUpdate(const QString &option);
-
-signals:
-    // emitted when the element property selection dropdown box has been enabled, so needs updating
-    void dropdownUpdate();
-    // emitted when the element property selection dropdown box has been changed, so needs updating
-    void dropdownUpdate(const QString &option);
+    void enableDropdownSelection();
+    /**
+     * @brief Disables the property selection box
+     * 
+     */
+    void disableDropdownSelection();
+    /**
+     * @brief Updates the values stored in the element_property_display to match those of the new element
+     *
+     * @param element The new element whose properties should be displayed
+     */
+    void updatePropertyValues(std::unique_ptr<ShapeBase> *element);
 
 private:
     // number of columns in the grid layout

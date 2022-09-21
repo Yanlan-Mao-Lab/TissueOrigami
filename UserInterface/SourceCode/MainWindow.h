@@ -22,6 +22,7 @@ class GLWidget;
 
 #include "../TissueFolding/SourceCode/Simulation.h"
 #include "../TissueFolding/SourceCode/Analysis.h"
+#include "../TissueFolding/SourceCode/ShapeBase.h"
 
 #include "ElementPropertiesUI.h"
 #include "ElementPropertySelection.h"
@@ -77,16 +78,14 @@ public slots:
     void  	updateToSideView();
     void  	updateToPerspectiveView();
     void  	updateDrawSymmetricityViewToggle();
-    // updates the value in the selected element property display box
-    void    updateElementDropdownDisplay();
-    // updates the value in the selected element property display box
-    void    updateElementDropdownDisplay(const QString &option);
     void 	xClipChange(int);
     void 	yClipChange(int);
     void 	zClipChange(int);
 
-//signals:
- //   void StrainComboBoxCanged();
+signals:
+   void deselectedElement();                                            // emitted when an element is deselected
+   void lookingAtNewElement(std::unique_ptr<ShapeBase> *element);       // emitted when the selected element changes
+
  private:
     void setViewBackgroundColour();
     void generateControlPanel();

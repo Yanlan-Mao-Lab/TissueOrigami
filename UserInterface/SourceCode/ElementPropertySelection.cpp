@@ -16,23 +16,22 @@ ElementPropertySelection::ElementPropertySelection() {
     connect(&selection_dropdown, SIGNAL(currentIndexChanged(int)), &element_property_display, SLOT(setCurrentIndex(int)));
 }
 
-void ElementPropertySelection::emitDropdownUpdate(const QString &option)
+void ElementPropertySelection::enableDropdownSelection()
 {
-    emit dropdownUpdate(option);
+    // the dropdown menu should be enabled
+    selection_dropdown.setEnabled(true);
 }
-
-void ElementPropertySelection::enableDropdownSelection(bool enabled)
+void ElementPropertySelection::disableDropdownSelection()
 {
-    if (enabled)
-    {
-        // if we enabled the dropdown menu, we should allow user selection again
-        selection_dropdown.setEnabled(true);
-        // we should also update the value that is saved in the dropdown box
-        emit dropdownUpdate();
-    }
-    else
-    {
-        // the dropdown menu should be disabled
-        selection_dropdown.setEnabled(false);
-    }
+    // the dropdown menu should be disabled
+    selection_dropdown.setEnabled(false);
+    // the values saved should be cleared
+    element_property_display.clearEntries();
+}
+void ElementPropertySelection::updatePropertyValues(std::unique_ptr<ShapeBase> *element)
+{
+    // the dropdown menu should be re-enabled
+    selection_dropdown.setEnabled(true);
+    // all properties in element_property_display now require a mass update
+    element_property_display.writeNewElementProperties(element);
 }

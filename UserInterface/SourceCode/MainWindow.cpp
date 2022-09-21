@@ -89,9 +89,6 @@ void MainWindow::generateControlPanel(){
 
 	// prepare the user-specified element property information display
 	PropertySelection = new ElementPropertySelection;
-	// connect element property selection to updating the display
-	connect(PropertySelection, SIGNAL(dropdownUpdate()), this, SLOT(updateElementDropdownDisplay()));
-	connect(PropertySelection, SIGNAL(dropdownUpdate(const QString &)), this, SLOT(updateElementDropdownDisplay(const QString &)));
 	// connect to the main display
 	ControlPanelMainHBox->addLayout(PropertySelection,Qt::AlignCenter);
 
@@ -661,7 +658,17 @@ void MainWindow::SelectedItemChange(bool element_found){
 		}
 	}
 	// either enable or disable the dropdown selection, depending on whether an element was selected or deselected
-	PropertySelection->enableDropdownSelection(element_found);
+	if (element_found) {
+		int new_element_index = MainGLWidget->SelectedItemIndex;			   			// the new element index
+		std::unique_ptr<ShapeBase> *new_element = &Sim01->Elements[new_element_index];	// pointer to the new element
+
+		// tell the element properties to be updated
+		//emit lookingAtNewElement(new_element);
+		PropertySelection->updatePropertyValues(new_element);
+	}
+	else {
+		PropertySelection->disableDropdownSelection();
+	}
  };
 
 void MainWindow::manualNodeSelection(const QString &newValue){
@@ -900,32 +907,4 @@ void MainWindow::takeScreenshot(){
 	QString fileName = directory+"/ScreenShots/frame"+ timepoint +"-"+timeinsec+"sec.png";
 	cout<<fileName.toStdString()<<endl;
 	originalPixmap.save(fileName, "png");
-}
-
-void MainWindow::updateElementDropdownDisplay() {
-	// determine which property we are interested in reading
-	QString read_property = PropertySelection->selection_dropdown.currentText();
-	// now proceed as if we had been passed the new display option
-	updateElementDropdownDisplay(read_property);
-}
-void MainWindow::updateElementDropdownDisplay(const QString &option) {
-	// this will store the output (placeholder assignment for now)
-	QString value_to_display = option;
-	// this is the index of the element in Sim01->Elements we are currently looking at
-	int element_index = MainGLWidget->SelectedItemIndex;
-	// lookup the value of the property "option" from the simulation
-	if (option=="Growth") {
-		// growth is a 3x3 matrix (gsl matrix)
-		gsl_matrix* curr_growth = Sim01->Elements[element_index]->getFg();
-		// now we just write out the values in the matrix, the display needs to change though :(
-	}
-	else if (option=="Growth Rate") {
-		// growth rate is a 3-vector
-		std::array<double, 3> growth_rate = Sim01->Elements[element_index]->getGrowthRate();
-	}
-	else {
-		// unrecognised dropdown option, or not implimented yet
-		// return some filler text
-		value_to_display = "Error: could not fetch!";
-	}
 }

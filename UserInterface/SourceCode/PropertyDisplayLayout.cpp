@@ -27,6 +27,16 @@ void GrowthLayout::clearAllValues() {
         growth_components[box_index].setText("-");
     }
 }
+void GrowthLayout::newElement(std::unique_ptr<ShapeBase> *element) {
+    // extract growth matrix
+    gsl_matrix *growth = (*element)->getFg();
+    for(int row=0; row<n_growth_rows; row++) {
+        for(int col=0; col<n_growth_cols; col++) {
+            double growth_component = gsl_matrix_get(growth, row, col);
+            setBoxValue(row, col, QString::number(growth_component));
+        }
+    }
+}
 
 int GrowthLayout::boxIndex(int row, int col) {
     if ((row<0) || (row>=n_growth_rows) || (col<0) || (col>=n_growth_cols)) {
@@ -53,6 +63,14 @@ void GrowthRateLayout::clearAllComponents() {
         growthrate_components[index].setText("-");
     }
 }
+void GrowthRateLayout::newElement(std::unique_ptr<ShapeBase> *element) {
+    // extract growth rate
+    std::array<double, 3> growth_rate = (*element)->getGrowthRate();
+    // write growth rates
+    for(int index=0; index<n_growthrate_components; index++) {
+        setComponentValue(index, QString::number(growth_rate[index]));
+    }
+}
 
 PropertyDisplayLayout::PropertyDisplayLayout() {
     // setup the default display
@@ -69,6 +87,11 @@ PropertyDisplayLayout::PropertyDisplayLayout() {
 
     // upon initalisation, set to display the default display
     setCurrentWidget(&defaultDisplay);
+}
+
+void PropertyDisplayLayout::writeNewElementProperties(std::unique_ptr<ShapeBase> *element) {
+    growthDisplayLayout.newElement(element);
+    growthRateDisplayLayout.newElement(element);
 }
 
 void PropertyDisplayLayout::clearEntries() {
