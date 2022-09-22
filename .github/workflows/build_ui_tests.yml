@@ -1,0 +1,63 @@
+# Workflow to build TissueFolding UI and check executable was created in the right place
+# Checks both Mac and Ubuntu builds
+
+name: Build UI
+on:
+  push:
+    branches: ["master", "ARCCollaboration"]
+  pull_request:
+    branches: ["master", "ARCCollaboration"]
+
+jobs:
+  TissueFolding_UI_build:
+    name: TissueFolding UI - Build test
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [ubuntu-latest, macos-latest]
+
+    runs-on: ${{matrix.platform}}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+      
+      - name: Install build dependencies (Ubuntu)
+        if: matrix.platform == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install qt5-default libboost-all-dev
+           
+      - name: Install numerical dependencies (Mac)
+        if: matrix.platform == 'macos-latest'
+        run: |
+          brew install boost gsl
+      
+      - name: Install Qt (Mac)
+        if: matrix.platform == 'macos-latest'
+        uses: jurplel/install-qt-action@v3
+        with:
+          aqtversion: '==2.1.*'
+          version: '5.15.2'
+          host: 'mac'
+          target: 'desktop'
+          arch: 'clang_64'
+          cache: true
+
+      - name: Build TissueFolding UI with CMake
+        run: |
+          cd ${{ github.workspace }}/UserInterface/SourceCode/
+          mkdir build
+          cd build
+          cmake ..
+          cmake --build .
+      
+      # This is here to be extra-explicit (and in the very unexpected case that cmake would fail silently)
+      - name: Check executable exists
+        run: |
+          if [[ -f ${{ github.workspace }}/UserInterface/SourceCode/build/VisualiseTissueFolding ]]; then 
+            echo "Successfully built executable."
+            exit 0
+          else
+            echo "Executable not found in expected place."
+            exit 1
+          fi
