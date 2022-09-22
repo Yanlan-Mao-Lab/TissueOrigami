@@ -17,8 +17,8 @@
 #include <array>
 using namespace std;
 
-#include "../TissueFolding/SourceCode/Simulation.h"
-#include "../TissueFolding/SourceCode/Analysis.h"
+#include "Simulation.h"
+#include "Analysis.h"
 
 /*! GLWidget class */
  class GLWidget : public QGLWidget
