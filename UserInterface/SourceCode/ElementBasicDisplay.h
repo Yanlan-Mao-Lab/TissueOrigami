@@ -1,9 +1,13 @@
-# ifndef ELEMENT_PROPERTIES_UI_BOX_H
-# define ELEMENT_PROPERTIES_UI_BOX_H
+# ifndef ELEMENT_BASIC_DISPLAY_H
+# define ELEMENT_BASIC_DISPLAY_H
 
-# include "TissueFolding_GUI_elements.h"
+# include "GUIBuildingBlocks.h"
 # include <QtWidgets>
 
+/**
+ * @brief Translates the headers of the node information into the column index they appear in.
+ * 
+ */
 enum NodeInfoHeader {
     ID = 0,
     X = 1,
@@ -38,14 +42,14 @@ void rowAndColOfBox(int box_index, int *node_num, NodeInfoHeader *col);
 int getInfoBoxIndex(int node_number, NodeInfoHeader header);
 
 /**
- * @brief ElementPropertiesUI handles the display of basic element information, and selection of nodes and elements by passing their ID
+ * @brief ElementBasicDisplay handles the display of basic element information, and selection of nodes and elements by passing their ID.
  *
  * This panel renders:
  * - The "selected item properties" header
  * - The node selection and element selection boxes
  * - The printout of node information associated to a given element
  */
-class ElementPropertiesUI : public QGridLayout
+class ElementBasicDisplay : public QGridLayout
 {
     Q_OBJECT
 public:
@@ -53,7 +57,7 @@ public:
      * @brief Constructs the element-selection pannel.
      *
      */
-    ElementPropertiesUI();
+    ElementBasicDisplay();
 
     // The "Selected Item Properties" header
     Header selection_header = Header("Selected Item Properties");

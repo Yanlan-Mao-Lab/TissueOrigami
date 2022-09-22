@@ -1,5 +1,5 @@
-# ifndef TISSUEFOLDING_UI_COMPONENTS_H
-# define TISSUEFOLDING_UI_COMPONENTS_H
+# ifndef GUI_BUILDING_BLOCKS_H
+# define GUI_BUILDING_BLOCKS_H
 
 # include <string>
 # include <QtWidgets>

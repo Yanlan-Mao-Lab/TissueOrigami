@@ -16,19 +16,19 @@ QT += opengl
 # Input
 HEADERS += 	$$CurrPath/SourceCode/MainWindow.h \
 			$$CurrPath/SourceCode/GLWidget.h \
-			$$CurrPath/SourceCode/ElementPropertiesUI.h \
+			$$CurrPath/SourceCode/ElementBasicDisplay.h \
 			$$CurrPath/SourceCode/ElementPropertySelection.h \
 			$$CurrPath/SourceCode/PropertyDisplayLayout.h \
-			$$CurrPath/SourceCode/TissueFolding_GUI_elements.h \
+			$$CurrPath/SourceCode/GUIBuildingBlocks.h \
 			$$CurrPath/../TissueFolding/SourceCode/*.h
 
 SOURCES +=	$$CurrPath/SourceCode/main.cpp \
 			$$CurrPath/SourceCode/MainWindow.cpp \
 			$$CurrPath/SourceCode/GLWidget.cpp \
-			$$CurrPath/SourceCode/ElementPropertiesUI.cpp \
+			$$CurrPath/SourceCode/ElementBasicDisplay.cpp \
 			$$CurrPath/SourceCode/ElementPropertySelection.cpp \
 			$$CurrPath/SourceCode/PropertyDisplayLayout.cpp \
-			$$CurrPath/SourceCode/TissueFolding_GUI_elements.cpp \
+			$$CurrPath/SourceCode/GUIBuildingBlocks.cpp \
 			$$CurrPath/../TissueFolding/SourceCode/Prism.cpp \
 			$$CurrPath/../TissueFolding/SourceCode/ReferenceShapeBase.cpp \
  			$$CurrPath/../TissueFolding/SourceCode/ShapeBase.cpp \

@@ -1,5 +1,5 @@
-# include "TissueFolding_GUI_elements.h"
-# include "ElementPropertiesUI.h"
+# include "GUIBuildingBlocks.h"
+# include "ElementBasicDisplay.h"
 
 using namespace std;
 
@@ -19,7 +19,8 @@ int getInfoBoxIndex(int node_number, NodeInfoHeader header)
     return ((int)header) * n_nodes_per_element + node_number;
 }
 
-ElementPropertiesUI::ElementPropertiesUI() {
+ElementBasicDisplay::ElementBasicDisplay()
+{
     // add the "selected item properties" label to the grid
     addWidget(&selection_header, 0, 0, 1, 2, AL_LEFT);
 
@@ -59,19 +60,22 @@ ElementPropertiesUI::ElementPropertiesUI() {
     addWidget(&element_selection_box, 1, 4, 1, 1, AL_LEFT);
 };
 
-void ElementPropertiesUI::setNodeSelectionValidator(int max_node_index, QObject *parent) {
+void ElementBasicDisplay::setNodeSelectionValidator(int max_node_index, QObject *parent)
+{
     node_selection_box.initialseValidator(max_node_index, parent);
 };
 
-void ElementPropertiesUI::setElementSelectionValidator(int max_element_index, QObject *parent) {
+void ElementBasicDisplay::setElementSelectionValidator(int max_element_index, QObject *parent)
+{
     element_selection_box.initialseValidator(max_element_index, parent);
 };
 
-void ElementPropertiesUI::updateCoordBox(int box_number, QString text, bool set_enabled) {
+void ElementBasicDisplay::updateCoordBox(int box_number, QString text, bool set_enabled)
+{
     node_coord_boxes[box_number].setText(text);
     node_coord_boxes[box_number].setEnabled(set_enabled);
 }
-void ElementPropertiesUI::updateCoordBox(int row, NodeInfoHeader col, QString text, bool set_enabled)
+void ElementBasicDisplay::updateCoordBox(int row, NodeInfoHeader col, QString text, bool set_enabled)
 {
     int box_number = getInfoBoxIndex(row, col);
     updateCoordBox(box_number, text, set_enabled);

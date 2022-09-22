@@ -16,7 +16,7 @@
 #include "GLWidget.h"
 #include <sstream>
 
-#include "ElementPropertiesUI.h"
+#include "ElementBasicDisplay.h"
 #include "ElementPropertySelection.h"
 
 using namespace std;
@@ -77,7 +77,7 @@ void MainWindow::generateControlPanel(){
 	ControlPanelMainHBox->setSpacing(2);
 
 	// perpare the basic element info display using the default constructor
-	ElementProps = new ElementPropertiesUI;
+	ElementProps = new ElementBasicDisplay;
 	// initialise the validators for the node and element selection boxes
 	ElementProps->setNodeSelectionValidator(Sim01->Nodes.size() - 1, this);
 	ElementProps->setElementSelectionValidator(Sim01->Elements.size() - 1, this);

@@ -24,7 +24,7 @@ class GLWidget;
 #include "../TissueFolding/SourceCode/Analysis.h"
 #include "../TissueFolding/SourceCode/ShapeBase.h"
 
-#include "ElementPropertiesUI.h"
+#include "ElementBasicDisplay.h"
 #include "ElementPropertySelection.h"
 
 
@@ -106,20 +106,14 @@ signals:
     QWidget		*CentralWidget;
 
     /**
-     * @brief ElementPropertiesUI handles the display of basic element information, and selection of nodes and elements by passing their ID
-     * 
-     * This panel renders:
-     * - The "selected item properties" header
-     * - The node selection and element selection boxes
-     * - The printout of node information associated to a given element
+     * @brief This layout contains the widgets that handle the display of basic element information (name, associated nodes, their positions, etc) and the selection of nodes/elements by providing a manual index.
      */
-    ElementPropertiesUI *ElementProps;
+    ElementBasicDisplay *ElementProps;
 
     /**
-     * @brief ElementPropertySelection handles the display of user-requested information about certain properties of the current element.
-     *
-     * This pannel dynamically updates depending on the nature of the requested property.
-     * Properties that can be requested are listed in the const QString element_property_options.
+     * @brief Allows the user to select a particular element property (growth, force, etc) and displays the value of this property for the currently selected element.
+     * 
+     * Auto-updates the display based on the property selected, and disables when an element is deselected.
      */
     ElementPropertySelection *PropertySelection;
 

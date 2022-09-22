@@ -3,7 +3,7 @@
 
 # include "../TissueFolding/SourceCode/ShapeBase.h"
 
-# include "TissueFolding_GUI_elements.h"
+# include "GUIBuildingBlocks.h"
 # include "PropertyDisplayLayout.h"
 # include <QtWidgets>
 

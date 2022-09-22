@@ -1,5 +1,4 @@
-# include "TissueFolding_GUI_elements.h"
-
+# include "GUIBuildingBlocks.h"
 using namespace std;
 
 Label::Label() : QLabel() {

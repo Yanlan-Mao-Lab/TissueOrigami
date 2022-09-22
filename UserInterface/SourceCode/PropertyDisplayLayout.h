@@ -1,7 +1,7 @@
 # ifndef PROPERTY_DISPLAY_LAYOUT_H
 # define PROPERTY_DISPLAY_LAYOUT_H
 
-# include "TissueFolding_GUI_elements.h"
+# include "GUIBuildingBlocks.h"
 # include "../TissueFolding/SourceCode/ShapeBase.h"
 
 # include <QtWidgets>
