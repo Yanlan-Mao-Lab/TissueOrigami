@@ -9,7 +9,8 @@ This executable visualises the simulation results (add biological context - expe
 - [OpenMP](https://www.openmp.org/)
 - [gsl](https://www.gnu.org/software/gsl/)
 - [boost](https://www.boost.org/)
-- [Qt with OpenGL]()
+- [Qt](https://www.qt.io/), in particular its [OpenGL and Widget components](https://doc.qt.io/qt-6/qtopengl-index.html#qt-opengl-and-qt-widgets). If installation difficulties are encountered, there is an alternative [command line installation tool](https://github.com/miurahr/aqtinstall) (which we use in the CI).
+- [OpenGL](https://github.com/miurahr/aqtinstall)
 
 These libraries must be included in your `C++` compiler's include path.
 
