@@ -134,6 +134,9 @@ public:
      * @param enabled Whether to enable (true) or disable (false) the dropdown options
      */
     void enableDropdownSelection(bool enabled);
+
+private:
+    const int node_coord_box_width = 70;    // node coord box width
 };
 
 #endif

@@ -77,3 +77,8 @@ DropdownMenu::DropdownMenu(QStringList options) : QComboBox() {
     // add the options to the selection
     addItems(options);
 }
+
+Button::Button(const QString &text, QWidget *parent) : QPushButton(text, parent) {
+    // start disabled
+    setEnabled(false);
+}

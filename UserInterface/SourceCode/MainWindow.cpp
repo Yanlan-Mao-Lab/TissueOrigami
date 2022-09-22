@@ -658,6 +658,7 @@ void MainWindow::SelectedItemChange(bool element_found){
 		}
 	}
 	// either enable or disable the dropdown selection, depending on whether an element was selected or deselected
+	PropertySelection->setDropdownEnabled(element_found);
 	if (element_found) {
 		int new_element_index = MainGLWidget->SelectedItemIndex;			   			// the new element index
 		std::unique_ptr<ShapeBase> *new_element = &Sim01->Elements[new_element_index];	// pointer to the new element
@@ -665,9 +666,6 @@ void MainWindow::SelectedItemChange(bool element_found){
 		// tell the element properties to be updated
 		//emit lookingAtNewElement(new_element);
 		PropertySelection->updatePropertyValues(new_element);
-	}
-	else {
-		PropertySelection->disableDropdownSelection();
 	}
  };
 

@@ -16,9 +16,6 @@ const Qt::AlignmentFlag AL_CENTRE = Qt::AlignmentFlag::AlignCenter;
 // convenient alias for right-alignment
 const Qt::AlignmentFlag AL_RIGHT = Qt::AlignmentFlag::AlignRight;
 
-// default fixed size for infoboxes
-const int def_fixed_box_width = 70;
-
 /**
  * @brief Standard style for labels in the Qt interface.
  *
@@ -26,6 +23,7 @@ const int def_fixed_box_width = 70;
  */
 class Label : public QLabel
 {
+    Q_OBJECT
 public:
     Label();
     /**
@@ -43,6 +41,7 @@ public:
  */
 class Header : public QLabel
 {
+    Q_OBJECT
 public:
     Header();
     /**
@@ -60,6 +59,7 @@ public:
  */
 class ReadOnlyBox : public QLineEdit
 {
+    Q_OBJECT
 public:
     ReadOnlyBox();
     /**
@@ -68,6 +68,10 @@ public:
      * @param placeholder_text Text to display when no input has been provided to the box
      */
     ReadOnlyBox(std::string placeholder_text);
+    
+private:
+    // default fixed size for infoboxes
+    const int def_fixed_box_width = 70;
 };
 
 /**
@@ -77,6 +81,7 @@ public:
  */
 class SelectionBox : public QLineEdit 
 {
+    Q_OBJECT
 public:
     SelectionBox();
     /**
@@ -95,6 +100,10 @@ public:
      * @param parent The parent Qt object
      */
     void initialseValidator(int n_max, QObject *parent = nullptr);
+
+private:
+    // default fixed size for infoboxes
+    const int def_fixed_box_width = 70;
 };
 
 /**
@@ -103,6 +112,7 @@ public:
  */
 class DropdownMenu : public QComboBox
 {
+    Q_OBJECT
 public:
     DropdownMenu();
     /**
@@ -118,6 +128,27 @@ public:
      * @param options The dropdown options that will be automatically added to the selection
      */
     DropdownMenu(QStringList options);
+};
+
+/**
+ * @brief Style for clickable buttons in the GUI interface
+ * 
+ */
+class Button : public QPushButton 
+{
+    Q_OBJECT
+public:
+    Button();
+    /**
+     * @brief Construct a new Button object
+     * 
+     * @param text The text to display on the button
+     * @param parent The parent widget
+     */
+    Button(const QString &text, QWidget *parent=nullptr);
+private:
+    const int default_button_width = 60;    // default width for clickable buttons
+    const int default_button_height = 10;   // default height for clickable buttons
 };
 
 # endif
