@@ -32,7 +32,15 @@ void ElementPropertySelection::updatePropertyValues(std::unique_ptr<ShapeBase> *
 }
 
 void ElementPropertySelection::clickedSaveElementProperties() {
-    std::cout << "I clicked the button!" << endl;
+    // let the user navigate to the directory to save the file to
+    QString home_dir = QDir::homePath();
+    QString saveFileName = QFileDialog::getSaveFileName(nullptr, save_dialogue_title, home_dir + "/" + default_name);
+
+    // if saveFileName is an empty string, the user has cancelled the operation
+    // otherwise, proceed with attempting the save...
+    if (!saveFileName.isEmpty()) {
+        element_property_display.writeToFile(saveFileName);
+    }
 }
 
 void ElementPropertySelection::setDropdownEnabled(bool enabled) {

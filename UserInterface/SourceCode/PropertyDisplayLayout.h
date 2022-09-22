@@ -64,7 +64,6 @@ public:
      * @param element The new element
      */
     void newElement(std::unique_ptr<ShapeBase> *element);
-
     /**
      * @brief Retrieves the internal index for the component boxes, given a (row, col) index in the growth matrix.
      * 
@@ -74,8 +73,31 @@ public:
      * @return int Internal index for the box that displays this components value
      */
     int boxIndex(int row, int col);
+    /**
+     * @brief Get the currently-saved value for the (row, col) component
+     * 
+     * @param row,col Indices of the component in the growth matrix 
+     * @return double The value of the component
+     */
+    double getGrowthComponent(int row, int col);
+    /**
+     * @brief Get the currently-saved value for the (box_index) component
+     *
+     * @param box_index Internal index of the component to fetch
+     * @return double The value of the component
+     */
+    double getGrowthComponent(int box_index);
+    /**
+     * @brief Write the growth matrix to the file provided
+     * 
+     * @param filename File to write to
+     * @param write_header If true, writes a header to the output file to indicate where the Growth is being written
+     */
+    void writeTo(string filename, bool write_header=true);
+
 private:
-    ReadOnlyBox growth_components[n_growth_components]; // The boxes that display the components of the growth matrix
+    ReadOnlyBox growth_components[n_growth_components];         // The boxes that display the components of the growth matrix
+    double growth_component_values[n_growth_components] = {0.}; // Storage for the values currently being displayed
 };
 
 const int n_growthrate_components = 3;                  // Number of elements in the growth rate vector
@@ -107,9 +129,27 @@ public:
      * @param element The new element
      */
     void newElement(std::unique_ptr<ShapeBase> *element);
+    /**
+     * @brief Get the Growth Rate Component object
+     * 
+     * @param index The component index to fetch
+     * @returns double The value of the component
+     */
+    double getGrowthRateComponent(int index);
+    /**
+     * @brief Write the growth rate vector to the file provided
+     *
+     * @param filename File to write to
+     * @param write_header If true, writes a header to the output file to indicate where the GrowthRate is being written
+     */
+    void writeTo(string filename, bool write_header = true);
+
 private:
-    ReadOnlyBox growthrate_components[n_growthrate_components];                                     // Boxes that display the values of the components
-    Header component_labels[n_growthrate_components] = { Header("x"), Header("y"), Header("z") };   // Labels for the component boxes
+    ReadOnlyBox growthrate_components[n_growthrate_components];     // Boxes that display the values of the components
+    double growthrate_component_values[n_growth_components] = {0.}; // Storage for the raw values of the properties
+
+    // Labels for the component boxes
+    Header component_labels[n_growthrate_components] = { Header("x"), Header("y"), Header("z") };   
 };
 
 /**
@@ -121,8 +161,18 @@ class PropertyDisplayLayout : public QStackedLayout
     Q_OBJECT
 public:
     PropertyDisplayLayout();
-
+    /**
+     * @brief Update the values displayed when a new element is selected
+     * 
+     * @param element The new element that was selected
+     */
     void writeNewElementProperties(std::unique_ptr<ShapeBase> *element);
+    /**
+     * @brief Write the values currently being displayed to an output file
+     * 
+     * @param filename File to write to
+     */
+    void writeToFile(const QString &filename);
 
 public slots:
     /**

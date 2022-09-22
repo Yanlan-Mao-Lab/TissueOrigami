@@ -1,5 +1,7 @@
 # include "PropertyDisplayLayout.h"
 
+# include <fstream>
+
 DefaultLayout::DefaultLayout() {
     // place the placeholder label in the centre of the display
     addWidget(&placeholder_label, 0, 0, n_rows, n_cols, AL_CENTRE);
@@ -25,24 +27,49 @@ void GrowthLayout::setBoxValue(int box_index, const QString &text) {
 void GrowthLayout::clearAllValues() {
     for(int box_index=0; box_index<n_growth_components; box_index++) {
         growth_components[box_index].setText("-");
+        growth_component_values[box_index] = 0.;
     }
 }
 void GrowthLayout::newElement(std::unique_ptr<ShapeBase> *element) {
     // extract growth matrix
-    gsl_matrix *growth = (*element)->getFg();
+    gsl_matrix *growth_matrix = (*element)->getFg();
+    // store the new values, and write them to the display
     for(int row=0; row<n_growth_rows; row++) {
         for(int col=0; col<n_growth_cols; col++) {
-            double growth_component = gsl_matrix_get(growth, row, col);
-            setBoxValue(row, col, QString::number(growth_component));
+            int box_index = boxIndex(row, col);
+            growth_component_values[box_index] = gsl_matrix_get(growth_matrix, row, col);
+            setBoxValue(row, col, QString::number(growth_component_values[box_index]));
         }
     }
 }
-
 int GrowthLayout::boxIndex(int row, int col) {
     if ((row<0) || (row>=n_growth_rows) || (col<0) || (col>=n_growth_cols)) {
         throw std::runtime_error("Growth matrix index out of bounds\n");
     }
     return row*n_growth_cols + col;
+}
+double GrowthLayout::getGrowthComponent(int row, int col) {
+    return getGrowthComponent(boxIndex(row, col));
+}
+double GrowthLayout::getGrowthComponent(int box_index) {
+    return growth_component_values[box_index];
+}
+void GrowthLayout::writeTo(string filename, bool write_header) {
+    // append to the file rather than overwriting, as we will be writing in sequence
+    ofstream file(filename, std::ios_base::app);
+    // write header if requested
+    if (write_header) {
+        file << "== Growth ==\n";
+    }
+    for(int row=0; row<n_growth_rows; row++) {
+        for(int col=0; col<n_growth_cols; col++) {
+            int box_index = boxIndex(row, col);
+            file << growth_component_values[box_index] << ",";
+        }
+        file << "\n";
+    }
+    // close after finishing
+    file.close();
 }
 
 GrowthRateLayout::GrowthRateLayout() {
@@ -54,13 +81,13 @@ GrowthRateLayout::GrowthRateLayout() {
         addWidget(&growthrate_components[index], index, 1, 1, 2, AL_CENTRE);
     }
 }
-
 void GrowthRateLayout::setComponentValue(int index, const QString &text) {
     growthrate_components[index].setText(text);
 }
 void GrowthRateLayout::clearAllComponents() {
     for(int index=0; index<n_growthrate_components; index++) {
         growthrate_components[index].setText("-");
+        growthrate_component_values[index] = 0.;
     }
 }
 void GrowthRateLayout::newElement(std::unique_ptr<ShapeBase> *element) {
@@ -68,8 +95,26 @@ void GrowthRateLayout::newElement(std::unique_ptr<ShapeBase> *element) {
     std::array<double, 3> growth_rate = (*element)->getGrowthRate();
     // write growth rates
     for(int index=0; index<n_growthrate_components; index++) {
-        setComponentValue(index, QString::number(growth_rate[index]));
+        growthrate_component_values[index] = growth_rate[index];
+        setComponentValue(index, QString::number(growthrate_component_values[index]));
     }
+}
+double GrowthRateLayout::getGrowthRateComponent(int index) {
+    return growthrate_component_values[index];
+}
+void GrowthRateLayout::writeTo(string filename, bool write_header) {
+    // append to the file rather than overwriting, as we will be writing in sequence
+    ofstream file(filename, std::ios_base::app);
+    // write header if requested
+    if (write_header) {
+        file << "== Growth Rate ==\n";
+    }
+    for(int index=0; index<n_growthrate_components; index++) {
+        file << growthrate_component_values[index] << ",";
+    }
+    file << "\n";
+    // close after finishing
+    file.close();
 }
 
 PropertyDisplayLayout::PropertyDisplayLayout() {
@@ -88,12 +133,18 @@ PropertyDisplayLayout::PropertyDisplayLayout() {
     // upon initalisation, set to display the default display
     setCurrentWidget(&defaultDisplay);
 }
-
 void PropertyDisplayLayout::writeNewElementProperties(std::unique_ptr<ShapeBase> *element) {
     growthDisplayLayout.newElement(element);
     growthRateDisplayLayout.newElement(element);
 }
-
+void PropertyDisplayLayout::writeToFile(const QString &filename) {
+    string f_name = filename.toStdString();
+    // write, in succession, the outputs
+    // Growth
+    growthDisplayLayout.writeTo(f_name);
+    // GrowthRate
+    growthRateDisplayLayout.writeTo(f_name);
+}
 void PropertyDisplayLayout::clearEntries() {
     // remove any values that may have been written to the displays
     growthDisplayLayout.clearAllValues();

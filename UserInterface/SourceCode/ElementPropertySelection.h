@@ -24,7 +24,7 @@ public:
     QGroupBox display_box;
 
     // the box that allows the user to request the element properties be saved
-    Button save_element_properties = Button("Export\n properties of\n selected\n element\n");
+    Button save_element_properties = Button("Export\n properties of\n selected\n element");
 
     /**
      * @brief Updates the values stored in the element_property_display to match those of the new element
@@ -61,6 +61,9 @@ signals:
 private:
     int n_cols = 5;         // number of columns in the grid layout
     int max_disp_rows = 5;  // max number of rows that the property display will ever use
+
+    QString default_name = "ElementExport.txt";                     // default name to export elements to
+    QString save_dialogue_title = "Export element properties";      // dialogue box title when exporting
 };
 
 # endif
