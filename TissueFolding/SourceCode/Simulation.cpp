@@ -494,8 +494,10 @@ void Simulation::updateMasterSlaveNodesInBinding(){
 				vector <int> fix;
 				fix.push_back(slaveDof);
 				fix.push_back(masterDof);
-//				NRSolver->slaveMasterList.push_back(fix);
-//				NRSolver->boundNodesWithSlaveMasterDefinition = true;
+				# ifdef BUILD_WITH_PARDISO
+					NRSolver->slaveMasterList.push_back(fix);
+					NRSolver->boundNodesWithSlaveMasterDefinition = true;
+				# endif
 			}
 		}
 	}
@@ -778,11 +780,13 @@ bool Simulation::initiateSystem(){
      */
 	nNodes = Nodes.size();
 	nElements = Elements.size();
-//	NRSolver = make_unique<NewtonRaphsonSolver>(Nodes[0]->nDim,nNodes);
-	if (thereIsExplicitLumen){
-//		NRSolver ->thereIsLumen = true;
-//		NRSolver ->tissueLumen = this->tissueLumen;
-	}
+	# ifdef BUILD_WITH_PARDISO
+		NRSolver = make_unique<NewtonRaphsonSolver>(Nodes[0]->nDim,nNodes);
+		if (thereIsExplicitLumen){
+			NRSolver ->thereIsLumen = true;
+			NRSolver ->tissueLumen = this->tissueLumen;
+		}
+	# endif
     if (ContinueFromSave){
     	updateMasterSlaveNodesInBinding();
     }
@@ -798,9 +802,11 @@ bool Simulation::initiateSystem(){
      */
     if (adherePeripodialToColumnar){
 		bool thereIsBinding = bindPeripodialToColumnar();
-		if (thereIsBinding){
-//			NRSolver->boundNodesWithSlaveMasterDefinition = true;
-		}
+		# ifdef BUILD_WITH_PARDISO
+			if (thereIsBinding){
+				NRSolver->boundNodesWithSlaveMasterDefinition = true;
+			}
+		# endif
     }
 	/**
 	 * If there is plastic deformation, the lateral elements will record their rotation matrices. to do: do I use this?
@@ -826,20 +832,24 @@ void Simulation::checkForNodeBinding(){
 	if (thereIsCircumferenceXYBinding){
 		std::cout<<"binding circumference"<<std::endl;
 		bool thereIsBinding = bindCircumferenceXY();
-		if (thereIsBinding){
-//			NRSolver->boundNodesWithSlaveMasterDefinition = true;
-		}
+		# ifdef BUILD_WITH_PARDISO
+			if (thereIsBinding){
+				NRSolver->boundNodesWithSlaveMasterDefinition = true;
+			}
+		# endif
 	}
 	if (ellipseIdsForBaseAxisBinding.size()>0){
 		std::cout<<"binding ellipses"<<std::endl;
 		bool thereIsBinding = bindEllipseAxes();
-		if (thereIsBinding){
-			//I will not equate the values, if the parameter of NRSolver
-			//has been modified to be true before, it should stay true.
-			//If my decision from above function is false (I have not bound any ellipses)
-			//then I should not alter this parameter;
-//			NRSolver->boundNodesWithSlaveMasterDefinition = true;
-		}
+		# ifdef BUILD_WITH_PARDISO
+			if (thereIsBinding){
+				//I will not equate the values, if the parameter of NRSolver
+				//has been modified to be true before, it should stay true.
+				//If my decision from above function is false (I have not bound any ellipses)
+				//then I should not alter this parameter;
+				NRSolver->boundNodesWithSlaveMasterDefinition = true;
+			}
+		# endif
 	}
 	std::cout<<"finished binding"<<std::endl;
 }
@@ -946,7 +956,9 @@ bool Simulation::bindEllipseAxes(){
 						vector <int> fixX;
 						fixX.push_back(dofXslave);
 						fixX.push_back(dofXmaster);
-//						NRSolver->slaveMasterList.push_back(fixX);
+						# ifdef BUILD_WITH_PARDISO
+							NRSolver->slaveMasterList.push_back(fixX);
+						# endif
 						Nodes[slaveNodeId]->slaveTo[0] = masterNodeId;
 						Nodes[masterNodeId]->isMaster[0] = true;
 						thereIsBinding = true;
@@ -958,7 +970,9 @@ bool Simulation::bindEllipseAxes(){
 						vector <int> fixY;
 						fixY.push_back(dofYslave);
 						fixY.push_back(dofYmaster);
-//						NRSolver->slaveMasterList.push_back(fixY);
+						# ifdef BUILD_WITH_PARDISO
+							NRSolver->slaveMasterList.push_back(fixY);
+						# endif
 						Nodes[slaveNodeId]->slaveTo[1] = masterNodeId;
 						Nodes[masterNodeId]->isMaster[1] = true;
 						thereIsBinding = true;
@@ -970,7 +984,9 @@ bool Simulation::bindEllipseAxes(){
 						vector <int> fixZ;
 						fixZ.push_back(dofZslave);
 						fixZ.push_back(dofZmaster);
-//						NRSolver->slaveMasterList.push_back(fixZ);
+						# ifdef BUILD_WITH_PARDISO
+							NRSolver->slaveMasterList.push_back(fixZ);
+						# endif
 						Nodes[slaveNodeId]->slaveTo[2] = masterNodeId;
 						Nodes[masterNodeId]->isMaster[2] = true;
 						thereIsBinding = true;
@@ -1052,32 +1068,34 @@ bool Simulation::bindPeripodialToColumnar(){
 				}
 				//std::cout<<"DOF not fixed,  initial              : "<<dofmaster<<" "<<dofslave<<std::endl;
 				//check if the master dof is already bound to something:
-//				NRSolver->checkMasterUpdate(dofmaster,masterNodeId);
-				//It may have been that the slave was the master of the master node.
-				//Now I have updated the master to the slave, and they are equal.
-				//I do not need to add anything, as the master-slave relation is already implemented.
-				//std::cout<<"DOF not fixed, after master update   : "<<dofmaster<<" "<<dofslave<<std::endl;
-				if (dofmaster != dofslave){
-//					bool continueAddition =  NRSolver->checkIfCombinationExists(dofslave,dofmaster);
-//					//std::cout<<"DOF not fixed, continueAddition? : "<<continueAddition<<std::endl;
-//					if (continueAddition){
-//						bool madeChange = NRSolver->checkIfSlaveIsAlreadyMasterOfOthers(dofslave,dofmaster);
-//						if (madeChange){
-//							for (size_t nodeIt = 0 ; nodeIt<Nodes.size(); ++nodeIt){
-//								if(Nodes[nodeIt]->slaveTo[i]==slaveNodeId){
-//									Nodes[nodeIt]->slaveTo[i]=masterNodeId;
-//								}
-//							}
-//						}
-//						vector <int> fixDOF;
-//						fixDOF.push_back(dofslave);
-//						fixDOF.push_back(dofmaster);
-//						NRSolver->slaveMasterList.push_back(fixDOF);
-//						Nodes[slaveNodeId]->slaveTo[i] = masterNodeId;
-//						Nodes[masterNodeId]->isMaster[i] = true;
-//						thereIsBinding = true;
-//					}
-				}
+				# ifdef BUILD_WITH_PARDISO
+					NRSolver->checkMasterUpdate(dofmaster,masterNodeId);
+					//It may have been that the slave was the master of the master node.
+					//Now I have updated the master to the slave, and they are equal.
+					//I do not need to add anything, as the master-slave relation is already implemented.
+					//std::cout<<"DOF not fixed, after master update   : "<<dofmaster<<" "<<dofslave<<std::endl;
+					if (dofmaster != dofslave){
+						bool continueAddition =  NRSolver->checkIfCombinationExists(dofslave,dofmaster);
+						//std::cout<<"DOF not fixed, continueAddition? : "<<continueAddition<<std::endl;
+						if (continueAddition){
+							bool madeChange = NRSolver->checkIfSlaveIsAlreadyMasterOfOthers(dofslave,dofmaster);
+							if (madeChange){
+								for (size_t nodeIt = 0 ; nodeIt<Nodes.size(); ++nodeIt){
+									if(Nodes[nodeIt]->slaveTo[i]==slaveNodeId){
+										Nodes[nodeIt]->slaveTo[i]=masterNodeId;
+									}
+								}
+							}
+							vector <int> fixDOF;
+							fixDOF.push_back(dofslave);
+							fixDOF.push_back(dofmaster);
+							NRSolver->slaveMasterList.push_back(fixDOF);
+							Nodes[slaveNodeId]->slaveTo[i] = masterNodeId;
+							Nodes[masterNodeId]->isMaster[i] = true;
+							thereIsBinding = true;
+						}
+					}
+				# endif
 			}
 		}
 	}
@@ -1246,44 +1264,48 @@ bool Simulation::checkEdgeLenghtsForBindingPotentiallyUnstableElements(){
                  * If the potential master node is already a slave to another node, then the potential master is moved to
                  * the original master of the potential master DoF in function NewtonRaphsonSolver#checkMasterUpdate.
                  */
-//				NRSolver->checkMasterUpdate(dofmaster,masterNodeId);
+				# ifdef BUILD_WITH_PARDISO
+					NRSolver->checkMasterUpdate(dofmaster,masterNodeId);
+				# endif
                 /**
                  * In this last check point, if the original couple was flipped such that the potential master vas the slave of the potential slave,
                  * then now both master and slave nodes are equal to the initial potential slave id ( as it has been the master prior to this step).
                  * Then again, nothing needs to be implemented, slave master coupling is already in place.
                  */
-				if (dofmaster != dofslave){
-                    /**
-                     * If this is not the case and the implementation shoulf continue, the next check point is for duplicate couples, to check
-                     * if this couple already exists, via  NewtonRaphsonSolver#checkIfCombinationExists.
-                     */
-//					bool continueAddition =  NRSolver->checkIfCombinationExists(dofslave,dofmaster);
-//					if (continueAddition){
-//						/**
-//						 * If the couple is not implemented, then the check for the status of the slave is carried out, if the slave is already master of
-//						 * other nodes, the coupling is checked and corrected in function NewtonRaphsonSolver#checkIfSlaveIsAlreadyMasterOfOthers. If the
-//						 * function updates the node couple, then the potential slave was a master, and now is a slave to the potential master.
-//						 * All slaves of the potential master are moved on to the potential master. \n
-//						 */
-//						bool madeChange = NRSolver->checkIfSlaveIsAlreadyMasterOfOthers(dofslave,dofmaster);
-//						if (madeChange){
-//							std::cout<<"slave "<<slaveNodeId<<" is already master of others"<<std::endl;
-//							size_t nodesSize = Nodes.size();
-//							for (size_t nodeIt = 0 ; nodeIt<nodesSize; ++nodeIt){
-//								if(Nodes[nodeIt]->slaveTo[i]==slaveNodeId){
-//									Nodes[nodeIt]->slaveTo[i]=masterNodeId;
-//								}
-//							}
-//						}
-//						vector <int> fixDOF;
-//						fixDOF.push_back(dofslave);
-//						fixDOF.push_back(dofmaster);
-//						NRSolver->slaveMasterList.push_back(fixDOF);
-//						Nodes[slaveNodeId]->slaveTo[i] = masterNodeId;
-//						Nodes[masterNodeId]->isMaster[i] = true;
-//						thereIsBinding = true;
-//					}
-				}
+				# ifdef BUILD_WITH_PARDISO
+					if (dofmaster != dofslave){
+						/**
+						 * If this is not the case and the implementation shoulf continue, the next check point is for duplicate couples, to check
+						 * if this couple already exists, via  NewtonRaphsonSolver#checkIfCombinationExists.
+						 */
+						bool continueAddition =  NRSolver->checkIfCombinationExists(dofslave,dofmaster);
+						if (continueAddition){
+							/**
+							 * If the couple is not implemented, then the check for the status of the slave is carried out, if the slave is already master of
+							 * other nodes, the coupling is checked and corrected in function NewtonRaphsonSolver#checkIfSlaveIsAlreadyMasterOfOthers. If the
+							 * function updates the node couple, then the potential slave was a master, and now is a slave to the potential master.
+							 * All slaves of the potential master are moved on to the potential master. \n
+							 */
+							bool madeChange = NRSolver->checkIfSlaveIsAlreadyMasterOfOthers(dofslave,dofmaster);
+							if (madeChange){
+								std::cout<<"slave "<<slaveNodeId<<" is already master of others"<<std::endl;
+								size_t nodesSize = Nodes.size();
+								for (size_t nodeIt = 0 ; nodeIt<nodesSize; ++nodeIt){
+									if(Nodes[nodeIt]->slaveTo[i]==slaveNodeId){
+										Nodes[nodeIt]->slaveTo[i]=masterNodeId;
+									}
+								}
+							}
+							vector <int> fixDOF;
+							fixDOF.push_back(dofslave);
+							fixDOF.push_back(dofmaster);
+							NRSolver->slaveMasterList.push_back(fixDOF);
+							Nodes[slaveNodeId]->slaveTo[i] = masterNodeId;
+							Nodes[masterNodeId]->isMaster[i] = true;
+							thereIsBinding = true;
+						}
+					}
+				# endif
 			}
 		}
 	}
@@ -1356,7 +1378,9 @@ bool Simulation::bindCircumferenceXY(){
 						vector <int> fixX;
 						fixX.push_back(dofXslave);
 						fixX.push_back(dofXmaster);
-//						NRSolver->slaveMasterList.push_back(fixX);
+						# ifdef BUILD_WITH_PARDISO
+							NRSolver->slaveMasterList.push_back(fixX);
+						# endif
 						Nodes[slaveNodeId]->slaveTo[0] = masterNodeId;
 						Nodes[masterNodeId]->isMaster[0] = true;
 						thereIsBinding = true;
@@ -1366,7 +1390,9 @@ bool Simulation::bindCircumferenceXY(){
 						vector <int> fixY;
 						fixY.push_back(dofYslave);
 						fixY.push_back(dofYmaster);
-//						NRSolver->slaveMasterList.push_back(fixY);
+						# ifdef BUILD_WITH_PARDISO
+							NRSolver->slaveMasterList.push_back(fixY);
+						# endif
 						Nodes[slaveNodeId]->slaveTo[1] = masterNodeId;
 						Nodes[masterNodeId]->isMaster[1] = true;
 						thereIsBinding = true;
@@ -6044,9 +6070,11 @@ bool Simulation::runOneStep(){
     if (thereNodeCollapsing){
     	thereIsBinding = checkEdgeLenghtsForBindingPotentiallyUnstableElements();
     }
-    if (thereIsBinding){
-//		NRSolver->boundNodesWithSlaveMasterDefinition = true;
-	}
+	# ifdef BUILD_WITH_PARDISO
+		if (thereIsBinding){
+			NRSolver->boundNodesWithSlaveMasterDefinition = true;
+		}
+	# endif
     /**
      * After the collapse check, the nodal adhesion is updated (Simulation#adhereNodes), makinguse of the detected packing, as any node couple close enough
      * to adhere must be close enough to activate self-contact. \n
@@ -6054,13 +6082,15 @@ bool Simulation::runOneStep(){
     if (thereIsAdhesion){
     	thereIsBinding = adhereNodes();
     }
-    if (thereIsBinding){
-//    	NRSolver->boundNodesWithSlaveMasterDefinition = true;
-    }
-    /**
-     * The actual positional updates are delegated to teh newton-Raphson solver object via function Simulation#updateStepNR. \n
-     */
-//    updateStepNR();
+	# ifdef BUILD_WITH_PARDISO
+		if (thereIsBinding){
+			NRSolver->boundNodesWithSlaveMasterDefinition = true;
+		}
+		/**
+		 * The actual positional updates are delegated to teh newton-Raphson solver object via function Simulation#updateStepNR. \n
+		 */
+		updateStepNR();
+	# endif
     /**
      * Once the positions are updated, the bounding box is calculated again, the elements are checked agains flipping (Simulation#checkFlip).
      */
@@ -6224,8 +6254,10 @@ void Simulation::updatePlasticDeformation(){
 
 void Simulation::calculateNumericalJacobian(bool displayMatricesDuringNumericalCalculation){
 	int dim = 3;
-//	gsl_matrix_set_zero(NRSolver->Knumerical);
-//	NRSolver->calculateDisplacementMatrix(dt);
+	# ifdef BUILD_WITH_PARDISO
+		gsl_matrix_set_zero(NRSolver->Knumerical);
+		NRSolver->calculateDisplacementMatrix(dt);
+	# endif
 	//PACKING SHOULD BE ADDED HERE If using this numerical calculation!!!
 
 	//Trying to see the manual values:
@@ -6233,26 +6265,36 @@ void Simulation::calculateNumericalJacobian(bool displayMatricesDuringNumericalC
 	//No perturbation:
 	gsl_matrix* ge_noPerturb = gsl_matrix_calloc(dim*nNodes,1);
 	gsl_matrix* gvInternal_noPerturb = gsl_matrix_calloc(dim*nNodes,1);
-//	NRSolver->calculateForcesAndJacobianMatrixNR(Nodes, Elements, dt);
-//	NRSolver->writeForcesTogeAndgvInternal(Nodes, Elements, SystemForces);
-//	gsl_matrix_memcpy(ge_noPerturb, NRSolver->ge);
-//	gsl_matrix_memcpy(gvInternal_noPerturb, NRSolver->gvInternal);
+	# ifdef BUILD_WITH_PARDISO
+		NRSolver->calculateForcesAndJacobianMatrixNR(Nodes, Elements, dt);
+		NRSolver->writeForcesTogeAndgvInternal(Nodes, Elements, SystemForces);
+		gsl_matrix_memcpy(ge_noPerturb, NRSolver->ge);
+		gsl_matrix_memcpy(gvInternal_noPerturb, NRSolver->gvInternal);
+	# endif
 	//perturbation loop:
 	gsl_matrix* uk_original = gsl_matrix_calloc(dim*nNodes,1);
-//	gsl_matrix_memcpy(uk_original,NRSolver->uk);
+	# ifdef BUILD_WITH_PARDISO
+		gsl_matrix_memcpy(uk_original,NRSolver->uk);
+	# endif
 	for (size_t i=0; i<nNodes; ++i){
 		for (int j=0; j<3; ++j){
 			resetForces(true);	// reset packing forces
-//			gsl_matrix_set(NRSolver->uk,i*3+j,0,gsl_matrix_get(NRSolver->uk,i*3+j,0)+1E-6);
-//			NRSolver->calculateDisplacementMatrix(dt);
+			# ifdef BUILD_WITH_PARDISO
+				gsl_matrix_set(NRSolver->uk,i*3+j,0,gsl_matrix_get(NRSolver->uk,i*3+j,0)+1E-6);
+				NRSolver->calculateDisplacementMatrix(dt);
+			# endif
 			Nodes[i]->Position[j] += 1E-6;
 			updateElementPositions();
-//			NRSolver->calculateForcesAndJacobianMatrixNR(Nodes, Elements, dt);
+			# ifdef BUILD_WITH_PARDISO
+				NRSolver->calculateForcesAndJacobianMatrixNR(Nodes, Elements, dt);
+			# endif
 			gsl_matrix* ge_withPerturb = gsl_matrix_calloc(dim*nNodes,1);
 			gsl_matrix* gvInternal_withPerturb = gsl_matrix_calloc(dim*nNodes,1);
-//			NRSolver->writeForcesTogeAndgvInternal(Nodes, Elements, SystemForces);
-//			gsl_matrix_memcpy(ge_withPerturb, NRSolver->ge);
-//			gsl_matrix_memcpy(gvInternal_withPerturb, NRSolver->gvInternal);
+			# ifdef BUILD_WITH_PARDISO
+				NRSolver->writeForcesTogeAndgvInternal(Nodes, Elements, SystemForces);
+				gsl_matrix_memcpy(ge_withPerturb, NRSolver->ge);
+				gsl_matrix_memcpy(gvInternal_withPerturb, NRSolver->gvInternal);
+			# endif
 			//Calculate dg/dx:
 			gsl_matrix_sub(ge_withPerturb,ge_noPerturb);
 			gsl_matrix_sub(gvInternal_withPerturb,gvInternal_noPerturb);
@@ -6263,9 +6305,13 @@ void Simulation::calculateNumericalJacobian(bool displayMatricesDuringNumericalC
 				double valueViscous = 	gsl_matrix_get(gvInternal_withPerturb,k,0);
 				double value = valueElastic + valueViscous;
 				value *= -1.0;
-//				gsl_matrix_set(NRSolver->K,i*3+j,k,value);
+				# ifdef BUILD_WITH_PARDISO
+					gsl_matrix_set(NRSolver->K,i*3+j,k,value);
+				# endif
 			}
-//			gsl_matrix_memcpy(NRSolver->uk,uk_original);
+			# ifdef BUILD_WITH_PARDISO
+				gsl_matrix_memcpy(NRSolver->uk,uk_original);
+			# endif
 			//gsl_matrix_set(uk,i*3+j,0,gsl_matrix_get(uk,i*3+j,0)-1E-6);
 			Nodes[i]->Position[j] -= 1E-6;
 			updateElementPositions();
@@ -6273,12 +6319,14 @@ void Simulation::calculateNumericalJacobian(bool displayMatricesDuringNumericalC
 			gsl_matrix_free(gvInternal_withPerturb);
 		}
 	}
-//	NRSolver->calcutateFixedK(Nodes);
-	if (displayMatricesDuringNumericalCalculation){
-//		Elements[0]->displayMatrix(NRSolver->K,"numericalK");
-	}
-//	gsl_matrix_memcpy(NRSolver->Knumerical,NRSolver->K);
-//	NRSolver->setMatricesToZeroInsideIteration();
+	# ifdef BUILD_WITH_PARDISO
+		NRSolver->calcutateFixedK(Nodes);
+		if (displayMatricesDuringNumericalCalculation){
+			Elements[0]->displayMatrix(NRSolver->K,"numericalK");
+		}
+		gsl_matrix_memcpy(NRSolver->Knumerical,NRSolver->K);
+		NRSolver->setMatricesToZeroInsideIteration();
+	# endif
 	gsl_matrix_free(ge_noPerturb);
 	gsl_matrix_free(gvInternal_noPerturb);
 	gsl_matrix_free(uk_original);
@@ -6533,148 +6581,150 @@ void Simulation::conserveColumnVolume(){
     }
 }
 
-//void Simulation::updateStepNR(){
-//    /**
-//     * The iteration will be carried out for 20 steps, if upon 20 trials the simulation have not converged, an error will be
-//     * generated. The iteration starts by clearing all force, displacement and Jacobian matrices of the NR solver in
-//     * NewtonRaphsonSolver#setMatricesToZeroAtTheBeginningOfIteration. Then the vector containing the positions of teh nodes at the
-//     * end of the previous time step "n", \f$ \boldsymbol{u_n} \f$ is calculated in NewtonRaphsonSolver#constructUnMatrix. The positions
-//     * of the current iteration "k", \f$ \boldsymbol{u_k} \f$ are initiated equal to \f$ \boldsymbol{u_n} \f$ via
-//     * NewtonRaphsonSolver#initialteUkMatrix. \n
-//     */
-//    int iteratorK = 0;
-//    int maxIteration =20;
-//    bool converged = false;
+# ifdef BUILD_WITH_PARDISO
+	void Simulation::updateStepNR(){
+		/**
+		 * The iteration will be carried out for 20 steps, if upon 20 trials the simulation have not converged, an error will be
+		 * generated. The iteration starts by clearing all force, displacement and Jacobian matrices of the NR solver in
+		 * NewtonRaphsonSolver#setMatricesToZeroAtTheBeginningOfIteration. Then the vector containing the positions of teh nodes at the
+		 * end of the previous time step "n", \f$ \boldsymbol{u_n} \f$ is calculated in NewtonRaphsonSolver#constructUnMatrix. The positions
+		 * of the current iteration "k", \f$ \boldsymbol{u_k} \f$ are initiated equal to \f$ \boldsymbol{u_n} \f$ via
+		 * NewtonRaphsonSolver#initialteUkMatrix. \n
+		 */
+		int iteratorK = 0;
+		int maxIteration =20;
+		bool converged = false;
 
 
-//    cout<<" in update NR "<<endl;
-//#ifdef DO_NOT_SOLVE_SYSTEM_OF_EQUATIONS
-//    /** If DO_NOT_SOLVE_SYSTEM_OF_EQUATIONS is defined,I will
-//     * not go into the Newton-Rapson iterations. This has two purposes:
-//     * Either I am debugging, with a setup that is potentially crashing during calculations, or
-//     * I am on a machine that can not utilise PARDISO.
-//     * It is necessary on a Mac that does not have omp, as PARDISO demands omp.
-//     * For mac, the sample line to add to the .pro file is
-//     * CONFIG += -std=c++11 -D DO_NOT_USE_OMP -D DO_NOT_SOLVE_SYSTEM_OF_EQUATIONS
-//     * For ubuntu & server, it is
-//     * QMAKE_CXXFLAGS += -fopenmp -std=c++11 -D DO_NOT_USE_OMP -D DO_NOT_SOLVE_SYSTEM_OF_EQUATIONS
-//     */
-//    converged = true;
-//	#endif
-//    bool numericalCalculation = false;
-//    bool displayMatricesDuringNumericalCalculation = false;
-//    bool useNumericalKIncalculation = false;
+		cout<<" in update NR "<<endl;
+	#ifdef DO_NOT_SOLVE_SYSTEM_OF_EQUATIONS
+		/** If DO_NOT_SOLVE_SYSTEM_OF_EQUATIONS is defined,I will
+		 * not go into the Newton-Rapson iterations. This has two purposes:
+		 * Either I am debugging, with a setup that is potentially crashing during calculations, or
+		 * I am on a machine that can not utilise PARDISO.
+		 * It is necessary on a Mac that does not have omp, as PARDISO demands omp.
+		 * For mac, the sample line to add to the .pro file is
+		 * CONFIG += -std=c++11 -D DO_NOT_USE_OMP -D DO_NOT_SOLVE_SYSTEM_OF_EQUATIONS
+		 * For ubuntu & server, it is
+		 * QMAKE_CXXFLAGS += -fopenmp -std=c++11 -D DO_NOT_USE_OMP -D DO_NOT_SOLVE_SYSTEM_OF_EQUATIONS
+		 */
+		converged = true;
+		#endif
+		bool numericalCalculation = false;
+		bool displayMatricesDuringNumericalCalculation = false;
+		bool useNumericalKIncalculation = false;
 
-////    NRSolver->setMatricesToZeroAtTheBeginningOfIteration(numericalCalculation);
-////    NRSolver->constructUnMatrix(Nodes);
-////    NRSolver->initialteUkMatrix();
-//    while (!converged){
-//        /**
-//          * While the system has not converged, all the forces are rest at the beginning of each iteration with Simulation#resetForces.
-//          * Then the matrices to be cumulated from scratch in each iteration are reset in NewtonRaphsonSolver#setMatricesToZeroInsideIteration().
-//          * The displacement matrix per time step Simulation#dt is calculated for use in external viscous forces in
-//          * NewtonRaphsonSolver#calculateDisplacementMatrix. Then all the internal elemental and nodal forces are calculated in NewtonRaphsonSolver#calculateForcesAndJacobianMatrixNR.
-//          * The forces are moved from the elements and nodes to the system vectors in NewtonRaphsonSolver#writeForcesTogeAndgvInternal, the elastic and viscous
-//          * terms of the elemental Jacobians are mapped and added onto the system Jacobian in  NewtonRaphsonSolver#writeImplicitElementalKToJacobian.
-//          * The external forces are calculated in NewtonRaphsonSolver#calculateExternalViscousForcesForNR and their derivatives are added to
-//          * the system Jacobian in NewtonRaphsonSolver#addImplicitKViscousExternalToJacobian. \n
-//          */
-//        std::cout<<"iteration: "<<iteratorK<<std::endl;
-//        resetForces(true);	// reset packing forces
-////        NRSolver->setMatricesToZeroInsideIteration();
-//        if (numericalCalculation){
-//        	calculateNumericalJacobian(displayMatricesDuringNumericalCalculation);
-//        }
-////        NRSolver->calculateDisplacementMatrix(dt);
-////        NRSolver->calculateForcesAndJacobianMatrixNR(Nodes, Elements, dt);
-////		NRSolver->writeForcesTogeAndgvInternal(Nodes, Elements, SystemForces);
-////	    NRSolver->writeImplicitElementalKToJacobian(Elements);
-//	    if (numericalCalculation){
-////			NRSolver->calculateDifferenceBetweenNumericalAndAnalyticalJacobian(Nodes, displayMatricesDuringNumericalCalculation);
-//			if(useNumericalKIncalculation){
-////				NRSolver->useNumericalJacobianInIteration();
-//			}
-//		}
-////		NRSolver->calculateExternalViscousForcesForNR(Nodes);
-////	    NRSolver->addImplicitKViscousExternalToJacobian(Nodes,dt);
-//        /**
-//         * The packing forces calculated implicitely, they are updated via Simulation#calculatePackingForcesImplicit3D and
-//         * the corresponding Jacobian update is carried out with Simulation#calculatePackingJacobian3D. The packing for enclosing surfaces and the pipette
-//         * are also carried out here (Simulation#calculatePackingForcesToEnclosingSurfacesImplicit3D,
-//         * Simulation#calculatePackingToEnclosingSurfacesJacobian3D, Simulation#calculatePackingToPipetteForcesImplicit3D
-//         * and Simulation#calculatePackingToPipetteJacobian3D).
-//         */
+		NRSolver->setMatricesToZeroAtTheBeginningOfIteration(numericalCalculation);
+		NRSolver->constructUnMatrix(Nodes);
+		NRSolver->initialteUkMatrix();
+		while (!converged){
+			/**
+			 * While the system has not converged, all the forces are rest at the beginning of each iteration with Simulation#resetForces.
+			 * Then the matrices to be cumulated from scratch in each iteration are reset in NewtonRaphsonSolver#setMatricesToZeroInsideIteration().
+			 * The displacement matrix per time step Simulation#dt is calculated for use in external viscous forces in
+			 * NewtonRaphsonSolver#calculateDisplacementMatrix. Then all the internal elemental and nodal forces are calculated in NewtonRaphsonSolver#calculateForcesAndJacobianMatrixNR.
+			 * The forces are moved from the elements and nodes to the system vectors in NewtonRaphsonSolver#writeForcesTogeAndgvInternal, the elastic and viscous
+			 * terms of the elemental Jacobians are mapped and added onto the system Jacobian in  NewtonRaphsonSolver#writeImplicitElementalKToJacobian.
+			 * The external forces are calculated in NewtonRaphsonSolver#calculateExternalViscousForcesForNR and their derivatives are added to
+			 * the system Jacobian in NewtonRaphsonSolver#addImplicitKViscousExternalToJacobian. \n
+			 */
+			std::cout<<"iteration: "<<iteratorK<<std::endl;
+			resetForces(true);	// reset packing forces
+			NRSolver->setMatricesToZeroInsideIteration();
+			if (numericalCalculation){
+				calculateNumericalJacobian(displayMatricesDuringNumericalCalculation);
+			}
+			NRSolver->calculateDisplacementMatrix(dt);
+			NRSolver->calculateForcesAndJacobianMatrixNR(Nodes, Elements, dt);
+			NRSolver->writeForcesTogeAndgvInternal(Nodes, Elements, SystemForces);
+			NRSolver->writeImplicitElementalKToJacobian(Elements);
+			if (numericalCalculation){
+				NRSolver->calculateDifferenceBetweenNumericalAndAnalyticalJacobian(Nodes, displayMatricesDuringNumericalCalculation);
+				if(useNumericalKIncalculation){
+					NRSolver->useNumericalJacobianInIteration();
+				}
+			}
+			NRSolver->calculateExternalViscousForcesForNR(Nodes);
+			NRSolver->addImplicitKViscousExternalToJacobian(Nodes,dt);
+			/**
+			 * The packing forces calculated implicitely, they are updated via Simulation#calculatePackingForcesImplicit3D and
+			 * the corresponding Jacobian update is carried out with Simulation#calculatePackingJacobian3D. The packing for enclosing surfaces and the pipette
+			 * are also carried out here (Simulation#calculatePackingForcesToEnclosingSurfacesImplicit3D,
+			 * Simulation#calculatePackingToEnclosingSurfacesJacobian3D, Simulation#calculatePackingToPipetteForcesImplicit3D
+			 * and Simulation#calculatePackingToPipetteJacobian3D).
+			 */
 
-//		calculatePackingForcesImplicit3D();
-//		calculatePackingJacobian3D(NRSolver->K);
-//		//calculatePackingToAFMBeadJacobian3D(NRSolver->K);
-//		if (encloseTissueBetweenSurfaces){
-//			calculatePackingForcesToEnclosingSurfacesImplicit3D();
-//			calculatePackingToEnclosingSurfacesJacobian3D(NRSolver->K);
-//		}
+			calculatePackingForcesImplicit3D();
+			calculatePackingJacobian3D(NRSolver->K);
+			//calculatePackingToAFMBeadJacobian3D(NRSolver->K);
+			if (encloseTissueBetweenSurfaces){
+				calculatePackingForcesToEnclosingSurfacesImplicit3D();
+				calculatePackingToEnclosingSurfacesJacobian3D(NRSolver->K);
+			}
 
-//        /**
-//         * All the internal forces and the external viscous resistance forces are collated in NewtonRaphsonSolver#gSum
-//         * via NewtonRaphsonSolver#calculateSumOfInternalForces. The external forceas from the pipette suction if set up, all packing,
-//         * and random forces if assigned are collated in NewtonRaphsonSolver#gExt, and these are added to system forces in
-//         * NewtonRaphsonSolver#addExernalForces(). \n
-//         */
-////        NRSolver->checkJacobianForAblatedNodes(AblatedNodes);
-////        NRSolver->calculateSumOfInternalForces();
-//        if (PipetteSuction && timestep >= PipetteInitialStep){
-//			packToPipetteWall();
-//			calculateZProjectedAreas();
-//			addPipetteForces(NRSolver->gExt);
-//		}
-//		//packing can come from both encapsulation and tissue-tissue packing. I ad the forces irrespective of adhesion.
-//		addPackingForces(NRSolver->gExt);
+			/**
+			 * All the internal forces and the external viscous resistance forces are collated in NewtonRaphsonSolver#gSum
+			 * via NewtonRaphsonSolver#calculateSumOfInternalForces. The external forceas from the pipette suction if set up, all packing,
+			 * and random forces if assigned are collated in NewtonRaphsonSolver#gExt, and these are added to system forces in
+			 * NewtonRaphsonSolver#addExernalForces(). \n
+			 */
+			NRSolver->checkJacobianForAblatedNodes(AblatedNodes);
+			NRSolver->calculateSumOfInternalForces();
+			if (PipetteSuction && timestep >= PipetteInitialStep){
+				packToPipetteWall();
+				calculateZProjectedAreas();
+				addPipetteForces(NRSolver->gExt);
+			}
+			//packing can come from both encapsulation and tissue-tissue packing. I ad the forces irrespective of adhesion.
+			addPackingForces(NRSolver->gExt);
 
-//		if (addingRandomForces){
-//			addRandomForces(NRSolver->gExt);
-//		}
-////        NRSolver->addExernalForces();
-//        checkForExperimentalSetupsWithinIteration();
-//        /**
-//         * Once all forces and their derivatives are collated in system forces and Jacobian, then degrees of freedom fixing is
-//         * reflected on these matrices in  NewtonRaphsonSolver#calcutateFixedK and NewtonRaphsonSolver#calculateBoundKWithSlavesMasterDoF.
-//         */
-////    	NRSolver->calcutateFixedK(Nodes);
-////       	NRSolver->calculateBoundKWithSlavesMasterDoF();
-//        /** Then NewtonRaphsonSolver#solveForDeltaU function arranges the matrices and solves for the incremental displacements via
-//         * PARDISO sparse matrix solver. The convergence is checked via the norm of incremental displacements in
-//         * NewtonRaphsonSolver#checkConvergenceViaDeltaU, the position of the nodes in the iteration, \f $ \boldsymbol{u_k} \f $ are updated
-//         * in NewtonRaphsonSolver#updateUkInIteration. The nodal and elemental positions are updated (Simulation#updateElementPositionsinNR,
-//         * Simulation#updateNodePositionsNR) with the new node positions of the iteration.
-//         */
-////        NRSolver->solveForDeltaU();
-////        converged = NRSolver->checkConvergenceViaDeltaU();
-////        NRSolver->updateUkInIteration();
-////        updateElementPositionsinNR(NRSolver->uk);
-////        updateNodePositionsNR(NRSolver->uk);
-//        iteratorK ++;
-////        if (!converged && iteratorK > maxIteration){
-////            std::cerr<<"Error: did not converge!!!"<<std::endl;
-////            converged = true;
-////        }
-//    }
-//    checkForExperimentalSetupsAfterIteration();
-//    //Now the calculation is converged, I update the node positions with the latest positions uk:
-////    updateNodePositionsNR(NRSolver->uk);
-//     //Element positions are already up to date.
-//    std::cout<<"finished run one step"<<std::endl;
-//    if (PipetteSuction){
-//    	//find the max z:
-//    	double zMax = -10000;
-//    	int idMax = -10;
-//    	for (auto& itNode : Nodes){
-//    		if (itNode->Position[2] > zMax){
-//    			zMax = itNode->Position[2];
-//    			idMax = itNode->Id;
-//    		}
-//    	}
-//    	std::cout<<"Pipette suction: "<<SuctionPressure[2]<<" max suction: "<<zMax<<" from node "<<idMax<<std::endl;
-//    }
-//}
+			if (addingRandomForces){
+				addRandomForces(NRSolver->gExt);
+			}
+			NRSolver->addExernalForces();
+			checkForExperimentalSetupsWithinIteration();
+			/**
+			 * Once all forces and their derivatives are collated in system forces and Jacobian, then degrees of freedom fixing is
+			 * reflected on these matrices in  NewtonRaphsonSolver#calcutateFixedK and NewtonRaphsonSolver#calculateBoundKWithSlavesMasterDoF.
+			 */
+			NRSolver->calcutateFixedK(Nodes);
+			NRSolver->calculateBoundKWithSlavesMasterDoF();
+			/** Then NewtonRaphsonSolver#solveForDeltaU function arranges the matrices and solves for the incremental displacements via
+			 * PARDISO sparse matrix solver. The convergence is checked via the norm of incremental displacements in
+			 * NewtonRaphsonSolver#checkConvergenceViaDeltaU, the position of the nodes in the iteration, \f $ \boldsymbol{u_k} \f $ are updated
+			 * in NewtonRaphsonSolver#updateUkInIteration. The nodal and elemental positions are updated (Simulation#updateElementPositionsinNR,
+			 * Simulation#updateNodePositionsNR) with the new node positions of the iteration.
+			 */
+			NRSolver->solveForDeltaU();
+			converged = NRSolver->checkConvergenceViaDeltaU();
+			NRSolver->updateUkInIteration();
+			updateElementPositionsinNR(NRSolver->uk);
+			updateNodePositionsNR(NRSolver->uk);
+			iteratorK ++;
+			if (!converged && iteratorK > maxIteration){
+				std::cerr<<"Error: did not converge!!!"<<std::endl;
+				converged = true;
+			}
+		}
+		checkForExperimentalSetupsAfterIteration();
+		//Now the calculation is converged, I update the node positions with the latest positions uk:
+		updateNodePositionsNR(NRSolver->uk);
+		//Element positions are already up to date.
+		std::cout<<"finished run one step"<<std::endl;
+		if (PipetteSuction){
+			//find the max z:
+			double zMax = -10000;
+			int idMax = -10;
+			for (auto& itNode : Nodes){
+				if (itNode->Position[2] > zMax){
+					zMax = itNode->Position[2];
+					idMax = itNode->Id;
+				}
+			}
+			std::cout<<"Pipette suction: "<<SuctionPressure[2]<<" max suction: "<<zMax<<" from node "<<idMax<<std::endl;
+		}
+	}
+# endif
 
 void Simulation::calculateRandomForces(){
 	randomForces.clear();
@@ -7182,48 +7232,52 @@ bool Simulation::adhereNodes(){
                  * If the potential master node is already a slave to another node, then the potential master is moved to
                  * the original master of the potential master DoF in function NewtonRaphsonSolver#checkMasterUpdate.
                  */
-//				NRSolver->checkMasterUpdate(dofmaster,masterNodeId);
+				# ifdef BUILD_WITH_PARDISO
+					NRSolver->checkMasterUpdate(dofmaster,masterNodeId);
+				# endif
 				/**
 				* In this last check point, if the original couple was flipped such that the potential master vas the slave of the potential slave,
 				* then now both master and slave nodes are equal to the initial potential slave id ( as it has been the master prior to this step).
 				* Then again, nothing needs to be implemented, slave master coupling is already in place.
 				*/
-				if (dofmaster != dofslave){
-//					bool continueAddition =  NRSolver->checkIfCombinationExists(dofslave,dofmaster);
-//					if (continueAddition){
-//                        /**
-//                         * If the couple is not implemented, then the check for the status of the slave is carried out, if the slave is already master of
-//                         * other nodes, the coupling is checked and corrected in function NewtonRaphsonSolver#checkIfSlaveIsAlreadyMasterOfOthers. If the
-//                         * function updates the node couple, then the potential slave was a master, and now is a slave to the potential master.
-//                         * All slaves of the potential master are moved on to the potential master. \n
-//                         */
-//						bool madeChange = NRSolver->checkIfSlaveIsAlreadyMasterOfOthers(dofslave,dofmaster);
-//						if (madeChange){
-//							size_t nodeSize = Nodes.size();
-//							for (size_t nodeIt = 0 ; nodeIt<nodeSize; ++nodeIt){
-//								if(Nodes[nodeIt]->slaveTo[i]==slaveNodeId){
-//									Nodes[nodeIt]->slaveTo[i]=masterNodeId;
-//								}
-//							}
-//						}
-//						vector <int> fixDOF;
-//						fixDOF.push_back(dofslave);
-//						fixDOF.push_back(dofmaster);
-//						NRSolver->slaveMasterList.push_back(fixDOF);
-//						Nodes[slaveNodeId]->slaveTo[i] = masterNodeId;
-//						Nodes[masterNodeId]->isMaster[i] = true;
-//						//std::cout<<" adhereing nodes: "<<masterNodeId<<" "<<slaveNodeId<<" in dof "<<i<<std::endl;
-//						thereIsBinding = true;
-//						pacingNodeCouplesHaveAdhered[nodeCoupleIterator] = true;
-//						if (adherePeripodialToColumnar && Nodes[masterNodeId]->attachedToPeripodial){
-//							NRSolver->cleanPeripodialBindingFromMaster(dofmaster, Nodes);
-//							if (i==2){
-//								//freed z, not bound to peripodial anymore
-//								Nodes[masterNodeId]->attachedToPeripodial=false;
-//							}
-//						}
-//					}
-				}
+				# ifdef BUILD_WITH_PARDISO
+					if (dofmaster != dofslave){
+						bool continueAddition =  NRSolver->checkIfCombinationExists(dofslave,dofmaster);
+						if (continueAddition){
+							/**
+							 * If the couple is not implemented, then the check for the status of the slave is carried out, if the slave is already master of
+							 * other nodes, the coupling is checked and corrected in function NewtonRaphsonSolver#checkIfSlaveIsAlreadyMasterOfOthers. If the
+							 * function updates the node couple, then the potential slave was a master, and now is a slave to the potential master.
+							 * All slaves of the potential master are moved on to the potential master. \n
+							 */
+							bool madeChange = NRSolver->checkIfSlaveIsAlreadyMasterOfOthers(dofslave,dofmaster);
+							if (madeChange){
+								size_t nodeSize = Nodes.size();
+								for (size_t nodeIt = 0 ; nodeIt<nodeSize; ++nodeIt){
+									if(Nodes[nodeIt]->slaveTo[i]==slaveNodeId){
+										Nodes[nodeIt]->slaveTo[i]=masterNodeId;
+									}
+								}
+							}
+							vector <int> fixDOF;
+							fixDOF.push_back(dofslave);
+							fixDOF.push_back(dofmaster);
+							NRSolver->slaveMasterList.push_back(fixDOF);
+							Nodes[slaveNodeId]->slaveTo[i] = masterNodeId;
+							Nodes[masterNodeId]->isMaster[i] = true;
+							//std::cout<<" adhereing nodes: "<<masterNodeId<<" "<<slaveNodeId<<" in dof "<<i<<std::endl;
+							thereIsBinding = true;
+							pacingNodeCouplesHaveAdhered[nodeCoupleIterator] = true;
+							if (adherePeripodialToColumnar && Nodes[masterNodeId]->attachedToPeripodial){
+								NRSolver->cleanPeripodialBindingFromMaster(dofmaster, Nodes);
+								if (i==2){
+									//freed z, not bound to peripodial anymore
+									Nodes[masterNodeId]->attachedToPeripodial=false;
+								}
+							}
+						}
+					}
+				# endif
 			}
 		}
 	}
@@ -7886,7 +7940,9 @@ void 	Simulation::assignFoldRegionAndReleasePeripodial(Node* NodeMaster, Node* N
 							for (int j=0;j<nDim;++j){
 								double dof =0;
 								dof = (*itNodeInBetween)->Id * nDim+j;
-//								NRSolver->cleanPeripodialBindingFromMaster(dof, Nodes);
+								# ifdef BUILD_WITH_PARDISO
+									NRSolver->cleanPeripodialBindingFromMaster(dof, Nodes);
+								# endif
 							}
 							(*itNodeInBetween)->attachedToPeripodial = false;
 						}
@@ -7901,12 +7957,16 @@ void 	Simulation::assignFoldRegionAndReleasePeripodial(Node* NodeMaster, Node* N
 		if (NodeMaster->attachedToPeripodial){
 			std::cout<<"Releasing peripodial from node "<< NodeMaster->Id<<" via "<<NodeSlave->Id <<std::endl;
 			dof = NodeMaster->Id * nDim+j;
-//			NRSolver->cleanPeripodialBindingFromMaster(dof, Nodes);
+			# ifdef BUILD_WITH_PARDISO
+				NRSolver->cleanPeripodialBindingFromMaster(dof, Nodes);
+			# endif
 		}
 		if (NodeSlave->attachedToPeripodial){
 			std::cout<<"Releasing peripodial from node "<< NodeSlave->Id<<" via "<<NodeMaster->Id <<std::endl;
 			dof = NodeSlave->Id * nDim+j;
-//			NRSolver->cleanPeripodialBindingFromMaster(dof, Nodes);
+			# ifdef BUILD_WITH_PARDISO
+				NRSolver->cleanPeripodialBindingFromMaster(dof, Nodes);
+			# endif
 		}
 	}
 	NodeMaster->attachedToPeripodial = false;

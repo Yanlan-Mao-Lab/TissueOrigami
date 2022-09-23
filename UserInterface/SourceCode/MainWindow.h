@@ -20,13 +20,10 @@
 #include <ctime>
 class GLWidget;
 
-#include "../TissueFolding/SourceCode/Simulation.h"
-#include "../TissueFolding/SourceCode/Analysis.h"
-#include "../TissueFolding/SourceCode/ShapeBase.h"
-
+#include "Simulation.h"
+#include "Analysis.h"
 #include "ElementBasicDisplay.h"
 #include "ElementPropertySelection.h"
-
 
 using namespace std;
 
@@ -83,8 +80,12 @@ public slots:
     void 	zClipChange(int);
 
 signals:
-   void deselectedElement();                                            // emitted when an element is deselected
-   void lookingAtNewElement(std::unique_ptr<ShapeBase> *element);       // emitted when the selected element changes
+    /**
+     * @brief Emitted when a new element is selected. The nullptr is passed when deselection occurs.
+     * 
+     * @param element The new element that has been selected
+     */
+   void lookingAtNewElement(std::unique_ptr<ShapeBase> *element);
 
  private:
     void setViewBackgroundColour();

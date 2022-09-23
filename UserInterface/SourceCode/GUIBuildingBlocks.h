@@ -48,6 +48,7 @@ public:
      * @brief Construct a new Header object
      *
      * @param text Text of this header
+     * @param parent Parent QWidget
      */
     Header(std::string text);
 };

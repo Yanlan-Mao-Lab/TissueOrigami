@@ -8,7 +8,7 @@
 #include <QWheelEvent>
 
 #include "GLWidget.h"
-#include "../TissueFolding/SourceCode/ShapeBase.h"
+#include "ShapeBase.h"
 
 //needed for MacOS version:
 //#include <OpenGL/OpenGL.h>

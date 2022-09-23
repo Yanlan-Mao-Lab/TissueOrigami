@@ -1,7 +1,7 @@
 # ifndef ELEMENT_PROPERTY_SELECTION_BOX_H
 # define ELEMENT_PROPERTY_SELECTION_BOX_H
 
-# include "../TissueFolding/SourceCode/ShapeBase.h"
+# include "ShapeBase.h"
 
 # include "GUIBuildingBlocks.h"
 # include "PropertyDisplayLayout.h"
@@ -14,10 +14,10 @@ public:
     ElementPropertySelection();
 
     // header for pannel
-    Header pannel_header = Header("Display element property:");
+    Header *pannel_header = new Header("Display element property:");
 
     // selection box for the element property to display
-    DropdownMenu selection_dropdown = DropdownMenu(element_property_options);
+    DropdownMenu *selection_dropdown = new DropdownMenu(element_property_options);
 
     // the box that displays the currently selected element property
     PropertyDisplayLayout element_property_display;
@@ -26,10 +26,11 @@ public:
     // the box that allows the user to request the element properties be saved
     Button save_element_properties = Button("Export\n properties of\n selected\n element");
 
+public slots:
     /**
      * @brief Updates the values stored in the element_property_display to match those of the new element
      *
-     * @param element The new element whose properties should be displayed
+     * @param element The new element whose properties should be displayed. nullptr is interpretted as deselection.
      */
     void updatePropertyValues(std::unique_ptr<ShapeBase> *element);
     /**

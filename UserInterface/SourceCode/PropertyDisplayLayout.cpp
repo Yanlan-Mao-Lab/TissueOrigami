@@ -4,7 +4,7 @@
 
 DefaultLayout::DefaultLayout() {
     // place the placeholder label in the centre of the display
-    addWidget(&placeholder_label, 0, 0, n_rows, n_cols, AL_CENTRE);
+    addWidget(placeholder_label, 0, 0, n_rows, n_cols, AL_CENTRE);
 }
 
 GrowthLayout::GrowthLayout() {
@@ -75,7 +75,7 @@ void GrowthLayout::writeTo(string filename, bool write_header) {
 GrowthRateLayout::GrowthRateLayout() {
     for(int index=0; index<n_growthrate_components; index++) {
         // add the box labels to the display
-        addWidget(&component_labels[index], index, 0, 1, 1, AL_RIGHT);
+        addWidget(component_labels[index], index, 0, 1, 1, AL_RIGHT);
         // add each box corresponding to a component to the display, as a column vector
         growthrate_components[index].setAlignment(AL_CENTRE);
         addWidget(&growthrate_components[index], index, 1, 1, 2, AL_CENTRE);
@@ -119,23 +119,23 @@ void GrowthRateLayout::writeTo(string filename, bool write_header) {
 
 PropertyDisplayLayout::PropertyDisplayLayout() {
     // setup the default display
-    defaultDisplay.setLayout(&defaultDisplayLayout);
+    defaultDisplay.setLayout(defaultDisplayLayout);
     addWidget(&defaultDisplay);
 
     // setup the growth display
-    growthDisplay.setLayout(&growthDisplayLayout);
+    growthDisplay.setLayout(growthDisplayLayout);
     addWidget(&growthDisplay);
 
     // setup the growth rate display
-    growthRateDisplay.setLayout(&growthRateDisplayLayout);
+    growthRateDisplay.setLayout(growthRateDisplayLayout);
     addWidget(&growthRateDisplay);
 
     // upon initalisation, set to display the default display
     setCurrentWidget(&defaultDisplay);
 }
 void PropertyDisplayLayout::writeNewElementProperties(std::unique_ptr<ShapeBase> *element) {
-    growthDisplayLayout.newElement(element);
-    growthRateDisplayLayout.newElement(element);
+    growthDisplayLayout->newElement(element);
+    growthRateDisplayLayout->newElement(element);
 }
 void PropertyDisplayLayout::writeToFile(const QString &filename) {
     string f_name = filename.toStdString();
@@ -147,6 +147,6 @@ void PropertyDisplayLayout::writeToFile(const QString &filename) {
 }
 void PropertyDisplayLayout::clearEntries() {
     // remove any values that may have been written to the displays
-    growthDisplayLayout.clearAllValues();
-    growthRateDisplayLayout.clearAllComponents();
+    growthDisplayLayout->clearAllValues();
+    growthRateDisplayLayout->clearAllComponents();
 }

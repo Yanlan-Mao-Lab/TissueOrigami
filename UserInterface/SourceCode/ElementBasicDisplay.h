@@ -1,6 +1,7 @@
 # ifndef ELEMENT_BASIC_DISPLAY_H
 # define ELEMENT_BASIC_DISPLAY_H
 
+# include "ShapeBase.h"
 # include "GUIBuildingBlocks.h"
 # include <QtWidgets>
 
@@ -60,28 +61,28 @@ public:
     ElementBasicDisplay();
 
     // The "Selected Item Properties" header
-    Header selection_header = Header("Selected Item Properties");
+    Header *selection_header = new Header("Selected Item Properties");
     // The label for the content of element_name_display
-    Header element_name_label = Header("Element name:");
+    Header *element_name_label = new Header("Element name:");
     // The (horizontal) headers of the information about each node that we wish to fetch and display
-    Header node_info_labels_horz[n_node_info_headers] = {Header("id"),
-                                                         Header("x"),
-                                                         Header("y"),
-                                                         Header("z")};
+    Header *node_info_labels_horz[n_node_info_headers] = {new Header("id"),
+                                                          new Header("x"),
+                                                          new Header("y"),
+                                                          new Header("z")};
     // The (vertical) naming convention for the nodes associated to an element
-    Header node_info_numbers_vert[n_nodes_per_element] = {Header("Node 0"),
-                                                          Header("Node 1"),
-                                                          Header("Node 2"),
-                                                          Header("Node 3"),
-                                                          Header("Node 4"),
-                                                          Header("Node 5")};
+    Header *node_info_numbers_vert[n_nodes_per_element] = {new Header("Node 0"),
+                                                           new Header("Node 1"),
+                                                           new Header("Node 2"),
+                                                           new Header("Node 3"),
+                                                           new Header("Node 4"),
+                                                           new Header("Node 5")};
     // The label for the node_selection_box
-    Label node_selection_label = Label("Select <br> node:");
+    Label *node_selection_label = new Label("Select <br> node:");
     // The label for the element_selection box
-    Label element_selection_label = Label("Select <br> element");
+    Label *element_selection_label = new Label("Select <br> element");
 
     // Box to display the internal name of the selected element
-    ReadOnlyBox element_name_display = ReadOnlyBox("No element selected");
+    ReadOnlyBox *element_name_display = new ReadOnlyBox("No element selected");
     // Boxes that will display the information about the nodes associated to the selected element;
     // uses the convention box_index = col*n_nodes_per_element + n_node_info_headers
     ReadOnlyBox node_coord_boxes[n_coord_boxes];
@@ -110,6 +111,12 @@ public:
      */
     void setElementSelectionValidator(int max_element_index, QObject *parent = nullptr);
     /**
+     * @brief Changes the text in the element_internal_name box (IE, the displayed name of the selected element)
+     * 
+     * @param text New text (name) to display
+     */
+    void setDisplayedElementName(const QString &text);
+    /**
      * @brief Updates the displayed content of a coordinate box; old content is overwritten.
      * 
      * @param box_number The box_index of the coordinate information box to update
@@ -126,17 +133,16 @@ public:
      */
     void updateCoordBox(int row, NodeInfoHeader col, QString text="", bool set_enabled=true);
 
+public slots:
     /**
-     * @brief Enables the dropdown menu and signals that the property box should also be updated.
+     * @brief Updates the display to show information about a new element
      * 
-     * Emits dropdownUpdate() if enabled is true.
-     * 
-     * @param enabled Whether to enable (true) or disable (false) the dropdown options
+     * @param element The new element, whose information should be displayed. nullptr is interpretted as deselection.
      */
-    void enableDropdownSelection(bool enabled);
+    void updateDisplayValues(std::unique_ptr<ShapeBase> *element);
 
 private:
-    const int node_coord_box_width = 70;    // node coord box width
+    int node_coord_box_width = 70;      // default width for infoboxes displaying node coords, etc
 };
 
 #endif
