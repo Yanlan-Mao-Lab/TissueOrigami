@@ -11,8 +11,6 @@ on:
 jobs:
   TissueFolding_UI_build:
     name: TissueFolding - MacOS build tests
-    strategy:
-      fail-fast: false
 
     runs-on: macos-latest
     steps:

@@ -11,9 +11,6 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-find_package(OpenGL REQUIRED) # find OpenGL library...
-find_package(Qt5 COMPONENTS Widgets OpenGL REQUIRED) # which is different to the Qt5 OpenGL component here!
-
 find_package(Boost REQUIRED)
 find_package(GSL REQUIRED)
 find_package(OpenMP REQUIRED)
