@@ -26,16 +26,18 @@ MacOS' default compiler, `clang`, does not support compiling with/against `OpenM
 ```bash
 brew install gcc
 ```
-Then pass the `CMAKE_CXX_COMPILER` flag to `cmake` when configuring the build - that is, add the flag
+Then set the environment variables
 ```bash
--DCMAKE_CXX_COMPILER=/path/to/g++
+CC=/path/to/gcc
+CXX=/path/to/g++
 ```
-to the call to `cmake ..` in the instructions below.
-You can execute the bash command `which g++` in a terminal to print the `/path/to/g++` that `HomeBrew` has installed `g++` to, or simply pass in
+before following the build instructions below. (Or at the least, before running `cmake` for the first time in the build directory).
+You can execute the bash command `which gcc` in a terminal to print the `/path/to/gcc` that `HomeBrew` has installed `gcc` to, or simply pass in
 ```bash
--DCMAKE_CXX_COMPILER=$(which g++)
+CC=$(which gcc)
+CXX=$(which g++)
 ```
-if you are certain that the version of `g++` you wish to use to compile is on your `${PATH}`.
+if you are certain that the versions of `gcc` and `g++` you wish to use to compile are on your `${PATH}`.
 
 ### Building without PARDISO
 

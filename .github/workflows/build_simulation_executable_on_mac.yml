@@ -30,7 +30,8 @@ jobs:
           cd ${{ github.workspace }}/TissueFolding/SourceCode/
           mkdir build
           cd build
-          cmake -DCMAKE_CXX_COMPILER=$(which g++)
+          CC=$(which gcc)
+          CXX=$(which g++)
           cmake ..
           cmake --build .
       
