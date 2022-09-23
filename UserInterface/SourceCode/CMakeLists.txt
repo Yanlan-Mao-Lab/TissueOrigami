@@ -24,6 +24,10 @@ set(UI_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/MainWindow.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/GLWidget.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ElementBasicDisplay.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ElementPropertySelection.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/GUIBuildingBlocks.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/PropertyDisplayLayout.cpp
 )
 
 set(SIMULATION_SOURCES

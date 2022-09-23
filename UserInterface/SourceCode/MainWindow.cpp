@@ -635,7 +635,7 @@ void MainWindow::SelectedItemChange(bool element_found){
 	// fetch the name of the selected element
     QString element_internal_name = QString::fromStdString(MainGLWidget->SelectedItemName);
 	// update the element_name_display box that prints this name
-	ElementProps->element_name_display.setText(element_internal_name);
+	ElementProps->setDisplayedElementName(element_internal_name);
 	// update the element information in the infoboxes
 	for (int row=0; row<n_nodes_per_element; row++) {
 		// these are the box indices for this row

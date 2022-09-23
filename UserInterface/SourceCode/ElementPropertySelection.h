@@ -13,10 +13,10 @@ public:
     ElementPropertySelection();
 
     // header for pannel
-    Header pannel_header = Header("Display element property:");
+    Header *pannel_header = new Header("Display element property:");
 
     // selection box for the element property to display
-    DropdownMenu selection_dropdown = DropdownMenu(element_property_options);
+    DropdownMenu *selection_dropdown = new DropdownMenu(element_property_options);
 
     // the box that displays the currently selected element property
     PropertyDisplayLayout element_property_display;

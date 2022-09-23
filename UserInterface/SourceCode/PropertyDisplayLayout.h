@@ -24,7 +24,7 @@ public:
 private:
     int n_rows = 1;     // Number of rows to occupy
     int n_cols = 1;     // Number of columns to occupy
-    Label placeholder_label = Label("No property selected");    // Placeholder text to display
+    Label *placeholder_label = new Label("No property selected");    // Placeholder text to display
 };
 
 const int n_growth_rows = 3, n_growth_cols = 3;                 // number of rows/columns in the Growth matrix
@@ -109,7 +109,7 @@ public:
     void newElement(std::unique_ptr<ShapeBase> *element);
 private:
     ReadOnlyBox growthrate_components[n_growthrate_components];                                     // Boxes that display the values of the components
-    Header component_labels[n_growthrate_components] = { Header("x"), Header("y"), Header("z") };   // Labels for the component boxes
+    Header *component_labels[n_growthrate_components] = { new Header("x"), new Header("y"), new Header("z") };   // Labels for the component boxes
 };
 
 /**
@@ -134,13 +134,13 @@ public slots:
 
 private:
     QGroupBox defaultDisplay;                                       // Box containing the default layout
-    DefaultLayout defaultDisplayLayout = DefaultLayout();           // Display for "<No property selected>"
+    DefaultLayout *defaultDisplayLayout = new DefaultLayout();      // Display for "<No property selected>"
 
     QGroupBox growthDisplay;                                        // Box containing the growth layout
-    GrowthLayout growthDisplayLayout = GrowthLayout();              // Display for "Growth"
+    GrowthLayout *growthDisplayLayout = new GrowthLayout();         // Display for "Growth"
 
-    QGroupBox growthRateDisplay;                                    // Box containing the growth rate layout
-    GrowthRateLayout growthRateDisplayLayout = GrowthRateLayout();  // Display for "Growth Rate"
+    QGroupBox growthRateDisplay;                                        // Box containing the growth rate layout
+    GrowthRateLayout *growthRateDisplayLayout = new GrowthRateLayout(); // Display for "Growth Rate"
 };
 
 # endif

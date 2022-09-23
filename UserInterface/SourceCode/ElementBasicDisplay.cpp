@@ -22,22 +22,22 @@ int getInfoBoxIndex(int node_number, NodeInfoHeader header)
 ElementBasicDisplay::ElementBasicDisplay()
 {
     // add the "selected item properties" label to the grid
-    addWidget(&selection_header, 0, 0, 1, 2, AL_LEFT);
+    addWidget(selection_header, 0, 0, 1, 2, AL_LEFT);
 
     // add the "element name" label to the grid
-    addWidget(&element_name_label, 1, 0, 1, 1, AL_LEFT);
+    addWidget(element_name_label, 1, 0, 1, 1, AL_LEFT);
 
     // add the "element name" box to the grid next to the label
-    addWidget(&element_name_display, 1, 1, 1, 2, AL_LEFT);
+    addWidget(element_name_display, 1, 1, 1, 2, AL_LEFT);
 
     // add the node information headers (horz) into the grid
     for (int i=0; i<n_node_info_headers; i++) {
-        addWidget(&node_info_labels_horz[i], 2, i+1, 1, 1, AL_CENTRE);
+        addWidget(node_info_labels_horz[i], 2, i+1, 1, 1, AL_CENTRE);
     }
 
     // add the node information node numbers (vert) to the grid
     for (int i=0; i<n_nodes_per_element; i++) {
-        addWidget(&node_info_numbers_vert[i], 2+(i+1), 0, 1, 1, AL_LEFT);
+        addWidget(node_info_numbers_vert[i], 2+(i+1), 0, 1, 1, AL_LEFT);
     }
 
     // add the node information ID and coordinate boxes
@@ -53,8 +53,8 @@ ElementBasicDisplay::ElementBasicDisplay()
     }
 
     // add node and element display labels to the grid
-    addWidget(&node_selection_label, 0, 3, 1, 1, AL_LEFT);
-    addWidget(&element_selection_label, 0, 4, 1, 1, AL_LEFT);
+    addWidget(node_selection_label, 0, 3, 1, 1, AL_LEFT);
+    addWidget(element_selection_label, 0, 4, 1, 1, AL_LEFT);
     // now add the corresponding boxes
     addWidget(&node_selection_box, 1, 3, 1, 1, AL_LEFT);
     addWidget(&element_selection_box, 1, 4, 1, 1, AL_LEFT);
@@ -64,11 +64,13 @@ void ElementBasicDisplay::setNodeSelectionValidator(int max_node_index, QObject 
 {
     node_selection_box.initialseValidator(max_node_index, parent);
 };
-
 void ElementBasicDisplay::setElementSelectionValidator(int max_element_index, QObject *parent)
 {
     element_selection_box.initialseValidator(max_element_index, parent);
 };
+void ElementBasicDisplay::setDisplayedElementName(const QString &text) {
+    element_name_display->setText(text);
+}
 
 void ElementBasicDisplay::updateCoordBox(int box_number, QString text, bool set_enabled)
 {

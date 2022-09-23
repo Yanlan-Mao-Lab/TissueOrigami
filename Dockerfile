@@ -15,7 +15,6 @@ ENV QT_DEBUG_PLUGINS=1
 # copy source files so that we can check if the build succeeds
 COPY ./TissueFolding/SourceCode /TissueFolding/SourceCode
 COPY ./UserInterface/SourceCode /UserInterface/SourceCode
-COPY ./tests/sim_no_pardiso_reg/run07007 /UserInterface/sample07007
 RUN cd /UserInterface/SourceCode &&\
     mkdir build &&\
     cd build &&\
