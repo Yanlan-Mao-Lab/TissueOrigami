@@ -7,9 +7,12 @@ project(TissueFolding VERSION 1.0)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-set(CMAKE_AUTOUIC ON)
+# Apple Clang does not support openmp, so cannot be used to compile. Check that we are not using it as the compiler
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    message(FATAL_ERROR "Error: Clang compilers do not support openmp. \n
+            Please use another compiler and pass its path to cmake via \n
+            -DCMAKE_CXX_COMPILER=/path/to/not/clang/compiler")
+endif()
 
 find_package(Boost REQUIRED)
 find_package(GSL REQUIRED)

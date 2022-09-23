@@ -20,6 +20,23 @@ Additionally, `TissueFolding` relies on [PARDISO](https://www.pardiso-project.or
 The `TissueFolding` executable is built via `cmake`; by default, it will assume you want to build the executable _without_ the PARDISO library.
 If you wish to build the executable with PARDISO, please follow the setup instructions in the relevent section.
 
+#### Building on Mac
+
+MacOS' default compiler, `clang`, does not support compiling with/against `OpenMP`, which is a dependency of `TissueFolding`. To install on MacOS, we recommend that you use `HomeBrew` to install `g++`:
+```bash
+brew install gcc
+```
+Then pass the `CMAKE_CXX_COMPILER` flag to `cmake` when configuring the build - that is, add the flag
+```bash
+-DCMAKE_CXX_COMPILER=/path/to/g++
+```
+to the call to `cmake ..` in the instructions below.
+You can execute the bash command `which g++` in a terminal to print the `/path/to/g++` that `HomeBrew` has installed `g++` to, or simply pass in
+```bash
+-DCMAKE_CXX_COMPILER=$(which g++)
+```
+if you are certain that the version of `g++` you wish to use to compile is on your `${PATH}`.
+
 ### Building without PARDISO
 
 Building `TissueFolding` without PARDISO is the same procedure across all platforms.
