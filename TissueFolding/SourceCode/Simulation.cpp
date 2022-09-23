@@ -298,6 +298,26 @@ bool Simulation::readExecutableInputs(int argc, char **argv){
 	return Success;
 }
 
+bool Simulation::readExectuableInputsGUI(string inputfile, string read_in_directory, string output_directory=".") {
+	// we are always in displaysave mode
+	DisplaySave = true;
+	// validate that we have been given a suitable input file
+	ModInp->Sim = this;
+	ModInp->parameterFileName = inputfile.c_str();
+	bool Success = ModInp->readParameters();
+	if (!Success)
+	{
+		return Success;
+	}
+	// validate the output directory we've been given
+	saveDirectory = output_directory;
+	// validate the directory that we should be reading data in from
+	saveDirectoryToDisplayString = read_in_directory;
+	// check that everything matches up and is consistent
+	Success = checkInputConsistency();
+	return Success;
+}
+
 bool Simulation::readModeOfSim(int& i, int argc, char **argv){
 	i++;
 	if (i >= argc){

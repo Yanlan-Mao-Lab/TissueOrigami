@@ -37,7 +37,7 @@ SimulationArgumentReader::SimulationArgumentReader(int argc, char **argv) {
         }
         else {
             // unrecognised argument
-            throw runtime_error("Invalid use of executable");
+            printHelp(true);
         }
         i += 2; // incriment 2, to the next "flag"
     }
@@ -49,11 +49,11 @@ void SimulationArgumentReader::printHelp(bool bad_input) {
     }
     fprintf(stdout, "Runs the TissueFolding simulation (without GUI) from the command line.\n"
                     "Usage:\n"
-                    "TissueFolding [-i inputFile] [-mode SimMode] [-od outputDirectory=.] [-dInput readInDirectory] \n"
+                    "TissueFolding [-i inputFile] [-mode SimMode] [-od outputDirectory] [-dInput readInDirectory] \n"
                     "Required:\n"
                     "\t inputFile:\t Input file to read from. See the readme for format specifications.\n"
                     "\t mode:\t Either SimulationOnTheGo or ContinueFromSave. See the readme for run mode specifications.\n"
-                    "\t outputDirectory:\t [Default .] Directory to write output files to.\n"
+                    "\t outputDirectory:\t Directory to write output files to.\n"
                     "Conditional Requirements:\n"
                     "\t readInDirectory:\t If ContinueFromSave is selected for the mode, this must be the path to the directory containing the output of the simulation from which to continue.\n");
     if (bad_input) {
