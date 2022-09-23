@@ -1,0 +1,43 @@
+# Workflow to build TissueFolding UI and check executable was created in the right place
+# Checks both Mac and Ubuntu builds
+
+name: Build TissueFolding on MacOS
+on:
+  push:
+    branches: ["master", "ARCCollaboration"]
+  pull_request:
+    branches: ["master", "ARCCollaboration"]
+
+jobs:
+  TissueFolding_UI_build:
+    name: TissueFolding - MacOS build tests
+    strategy:
+      fail-fast: false
+
+    runs-on: macos-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+           
+      - name: Install numerical dependencies (Mac)
+        run: |
+          brew install boost gsl
+
+      - name: Build TissueFolding with CMake
+        run: |
+          cd ${{ github.workspace }}/TissueFolding/SourceCode/
+          mkdir build
+          cd build
+          cmake ..
+          cmake --build .
+      
+      # This is here to be extra-explicit (and in the very unexpected case that cmake would fail silently)
+      - name: Check executable exists
+        run: |
+          if [[ -f ${{ github.workspace }}/TissueFolding/SourceCode/build/TissueFolding ]]; then 
+            echo "Successfully built executable."
+            exit 0
+          else
+            echo "Executable not found in expected place."
+            exit 1
+          fi

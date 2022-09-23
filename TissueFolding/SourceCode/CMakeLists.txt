@@ -7,6 +7,17 @@ project(TissueFolding VERSION 1.0)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOUIC ON)
+
+find_package(OpenGL REQUIRED) # find OpenGL library...
+find_package(Qt5 COMPONENTS Widgets OpenGL REQUIRED) # which is different to the Qt5 OpenGL component here!
+
+find_package(Boost REQUIRED)
+find_package(GSL REQUIRED)
+find_package(OpenMP REQUIRED)
+
 # populate the source files
 set(TF_SOURCES 
     main.cpp
