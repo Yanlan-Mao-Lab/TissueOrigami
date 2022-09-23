@@ -1,6 +1,7 @@
 # ifndef ELEMENT_BASIC_DISPLAY_H
 # define ELEMENT_BASIC_DISPLAY_H
 
+# include "ShapeBase.h"
 # include "GUIBuildingBlocks.h"
 # include <QtWidgets>
 
@@ -132,14 +133,13 @@ public:
      */
     void updateCoordBox(int row, NodeInfoHeader col, QString text="", bool set_enabled=true);
 
+public slots:
     /**
-     * @brief Enables the dropdown menu and signals that the property box should also be updated.
+     * @brief Updates the display to show information about a new element
      * 
-     * Emits dropdownUpdate() if enabled is true.
-     * 
-     * @param enabled Whether to enable (true) or disable (false) the dropdown options
+     * @param element The new element, whose information should be displayed. nullptr is interpretted as deselection.
      */
-    void enableDropdownSelection(bool enabled);
+    void updateDisplayValues(std::unique_ptr<ShapeBase> *element);
 };
 
 #endif

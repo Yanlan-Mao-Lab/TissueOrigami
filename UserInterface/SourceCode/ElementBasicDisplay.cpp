@@ -1,5 +1,6 @@
 # include "GUIBuildingBlocks.h"
 # include "ElementBasicDisplay.h"
+# include <string>
 
 using namespace std;
 
@@ -81,4 +82,39 @@ void ElementBasicDisplay::updateCoordBox(int row, NodeInfoHeader col, QString te
 {
     int box_number = getInfoBoxIndex(row, col);
     updateCoordBox(box_number, text, set_enabled);
+}
+
+void ElementBasicDisplay::updateDisplayValues(std::unique_ptr<ShapeBase> *element) {
+    // if we have not been passed a nullptr, we can safely update the information
+    if (element) {
+        // display the element's name
+        QString new_name = QString::fromStdString((*element)->getName());
+        setDisplayedElementName(new_name);
+        // write the information to the infoboxes
+        for(int row=0; row<n_nodes_per_element; row++) {
+            // these are the box indices for this row
+            int box_id_ind = getInfoBoxIndex(row, NodeInfoHeader::ID);
+            int box_x_ind = getInfoBoxIndex(row, NodeInfoHeader::X);
+            int box_y_ind = getInfoBoxIndex(row, NodeInfoHeader::Y);
+            int box_z_ind = getInfoBoxIndex(row, NodeInfoHeader::Z);
+            // extract ID of node
+            int new_id = (*element)->NodeIds[row];
+            // extract coordinates of node
+            double x_pos = (*element)->Positions[row][0];
+            double y_pos = (*element)->Positions[row][1];
+            double z_pos = (*element)->Positions[row][2];
+            // update information
+            updateCoordBox(box_id_ind, QString::number(new_id, 'f', 0));
+            updateCoordBox(box_x_ind, QString::number(x_pos, 'f', 2));
+            updateCoordBox(box_y_ind, QString::number(y_pos, 'f', 2));
+            updateCoordBox(box_z_ind, QString::number(z_pos, 'f', 2));
+        }
+    }
+    // otherwise, interpret this as deselection and revert to "no display" state
+    else {
+        setDisplayedElementName("No element selected");
+        for(int box_index=0; box_index<n_coord_boxes; box_index++) {
+            updateCoordBox(box_index, "", false);
+        }
+    }
 }

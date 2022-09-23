@@ -80,8 +80,12 @@ public slots:
     void 	zClipChange(int);
 
 signals:
-   void deselectedElement();                                            // emitted when an element is deselected
-   void lookingAtNewElement(std::unique_ptr<ShapeBase> *element);       // emitted when the selected element changes
+    /**
+     * @brief Emitted when a new element is selected. The nullptr is passed when deselection occurs.
+     * 
+     * @param element The new element that has been selected
+     */
+   void lookingAtNewElement(std::unique_ptr<ShapeBase> *element);
 
  private:
     void setViewBackgroundColour();

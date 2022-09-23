@@ -28,10 +28,19 @@ void ElementPropertySelection::disableDropdownSelection()
     // the values saved should be cleared
     element_property_display.clearEntries();
 }
+
 void ElementPropertySelection::updatePropertyValues(std::unique_ptr<ShapeBase> *element)
 {
-    // the dropdown menu should be re-enabled
-    selection_dropdown->setEnabled(true);
-    // all properties in element_property_display now require a mass update
-    element_property_display.writeNewElementProperties(element);
+    // if a new element has been selected, update the display values
+    if (element) {
+        // the dropdown menu should be re-enabled
+        selection_dropdown->setEnabled(true);
+        // all properties in element_property_display now require a mass update
+        element_property_display.writeNewElementProperties(element);
+    }
+    // interpret nullptr as deselection
+    else {
+        disableDropdownSelection();
+    }
+
 }

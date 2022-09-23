@@ -84,11 +84,15 @@ void MainWindow::generateControlPanel(){
 	// create connections for the node and element selection boxes
 	connect(&(ElementProps->node_selection_box), SIGNAL(textChanged(const QString &)), this, SLOT(manualNodeSelection(const QString &)));
 	connect(&(ElementProps->element_selection_box), SIGNAL(textChanged(const QString &)), this, SLOT(manualElementSelection(const QString &)));
+	// connect basic element display to update when lookingAtNewElement signal is sent out
+	connect(this, SIGNAL(lookingAtNewElement(std::unique_ptr<ShapeBase> *)), ElementProps, SLOT(updateDisplayValues(std::unique_ptr<ShapeBase> *)));
 	// connect to the main display
 	ControlPanelMainHBox->addLayout(ElementProps,Qt::AlignTop);
 
 	// prepare the user-specified element property information display
 	PropertySelection = new ElementPropertySelection;
+	// connect element property selection updates to lookingAtNewElement signal
+	connect(this, SIGNAL(lookingAtNewElement(std::unique_ptr<ShapeBase> *)), PropertySelection, SLOT(updatePropertyValues(std::unique_ptr<ShapeBase> *)));
 	// connect to the main display
 	ControlPanelMainHBox->addLayout(PropertySelection,Qt::AlignCenter);
 
@@ -632,43 +636,14 @@ void MainWindow::updateTimeText(){
 }
 
 void MainWindow::SelectedItemChange(bool element_found){
-	// fetch the name of the selected element
-    QString element_internal_name = QString::fromStdString(MainGLWidget->SelectedItemName);
-	// update the element_name_display box that prints this name
-	ElementProps->setDisplayedElementName(element_internal_name);
-	// update the element information in the infoboxes
-	for (int row=0; row<n_nodes_per_element; row++) {
-		// these are the box indices for this row
-		int box_id_ind = getInfoBoxIndex(row, NodeInfoHeader::ID);
-		int box_x_ind = getInfoBoxIndex(row, NodeInfoHeader::X);
-		int box_y_ind = getInfoBoxIndex(row, NodeInfoHeader::Y);
-		int box_z_ind = getInfoBoxIndex(row, NodeInfoHeader::Z);
-		// if we can, fill in the data
-		if ((signed int)MainGLWidget->SelectedPos.size() > row * 3) {
-			ElementProps->updateCoordBox(box_id_ind, MainGLWidget->SelectedId[row]);
-			ElementProps->updateCoordBox(box_x_ind, MainGLWidget->SelectedPos[3*row]);
-			ElementProps->updateCoordBox(box_y_ind, MainGLWidget->SelectedPos[3*row+1]);
-			ElementProps->updateCoordBox(box_z_ind, MainGLWidget->SelectedPos[3*row+2]);
-		}
-		else {
-			ElementProps->updateCoordBox(box_id_ind, "", false);
-			ElementProps->updateCoordBox(box_x_ind, "", false);
-			ElementProps->updateCoordBox(box_y_ind, "", false);
-			ElementProps->updateCoordBox(box_z_ind, "", false);
-		}
+	std::unique_ptr<ShapeBase> *new_element = nullptr;
+	// fetch the name of the selected element, if we selected an element
+	// otherwise, nullptr indicates that deselection has occurred
+    if (element_found) {
+		int new_element_index = MainGLWidget->SelectedItemIndex;	// the new element index
+		new_element = &Sim01->Elements[new_element_index]; 			// pointer to the new element
 	}
-	// either enable or disable the dropdown selection, depending on whether an element was selected or deselected
-	if (element_found) {
-		int new_element_index = MainGLWidget->SelectedItemIndex;			   			// the new element index
-		std::unique_ptr<ShapeBase> *new_element = &Sim01->Elements[new_element_index];	// pointer to the new element
-
-		// tell the element properties to be updated
-		//emit lookingAtNewElement(new_element);
-		PropertySelection->updatePropertyValues(new_element);
-	}
-	else {
-		PropertySelection->disableDropdownSelection();
-	}
+	emit lookingAtNewElement(new_element);
  };
 
 void MainWindow::manualNodeSelection(const QString &newValue){

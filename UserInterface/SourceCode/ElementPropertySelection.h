@@ -9,6 +9,7 @@
 
 class ElementPropertySelection : public QGridLayout 
 {
+    Q_OBJECT
 public:
     ElementPropertySelection();
 
@@ -32,10 +33,12 @@ public:
      * 
      */
     void disableDropdownSelection();
+
+public slots:
     /**
      * @brief Updates the values stored in the element_property_display to match those of the new element
      *
-     * @param element The new element whose properties should be displayed
+     * @param element The new element whose properties should be displayed. nullptr is interpretted as deselection.
      */
     void updatePropertyValues(std::unique_ptr<ShapeBase> *element);
 
