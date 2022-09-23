@@ -20,8 +20,8 @@
 #include <ctime>
 class GLWidget;
 
-#include "../TissueFolding/SourceCode/Simulation.h"
-#include "../TissueFolding/SourceCode/Analysis.h"
+#include "Simulation.h"
+#include "Analysis.h"
 
 
 using namespace std;

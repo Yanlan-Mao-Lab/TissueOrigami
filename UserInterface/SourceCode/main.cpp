@@ -11,7 +11,7 @@
 #include "MainWindow.h"
 #include "GLWidget.h"
 
-#include "../TissueFolding/SourceCode/Simulation.h"
+#include "Simulation.h"
 #include <vector>
 
 class MainWindow;
