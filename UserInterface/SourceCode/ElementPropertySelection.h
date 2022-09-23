@@ -24,7 +24,7 @@ public:
     QGroupBox display_box;
 
     // the box that allows the user to request the element properties be saved
-    Button save_element_properties = Button("Export\n properties of\n selected\n element");
+    Button *save_element_properties = new Button("Export\n properties of\n selected\n element");
 
 public slots:
     /**

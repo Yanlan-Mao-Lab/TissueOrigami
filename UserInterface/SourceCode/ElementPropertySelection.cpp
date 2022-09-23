@@ -13,13 +13,13 @@ ElementPropertySelection::ElementPropertySelection() {
     addWidget(&display_box, 1, 1, max_disp_rows-1, n_cols-1, AL_CENTRE);
 
     // add the save button
-    addWidget(&save_element_properties, 1, 0, max_disp_rows-1, 1, AL_CENTRE);
+    addWidget(save_element_properties, 1, 0, max_disp_rows-1, 1, AL_CENTRE);
 
     // connect: choosing a different property should change the property display
     connect(selection_dropdown, SIGNAL(currentIndexChanged(int)),
             &element_property_display, SLOT(setCurrentIndex(int)));
     // connect: clicking the save button triggers the save action
-    connect(&save_element_properties, SIGNAL(clicked()),
+    connect(save_element_properties, SIGNAL(clicked()),
             this, SLOT(clickedSaveElementProperties()));
 }
 
@@ -58,7 +58,7 @@ void ElementPropertySelection::setDropdownEnabled(bool enabled) {
         element_property_display.clearEntries();
     }
     // enable/disable widgets that depend on the dropdown menu
-    save_element_properties.setEnabled(enabled);
+    save_element_properties->setEnabled(enabled);
     // signal that enabling/disabling has happened
     emit dropdownIsNowEnabled(enabled);
 }

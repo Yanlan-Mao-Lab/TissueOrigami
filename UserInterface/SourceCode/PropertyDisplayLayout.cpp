@@ -141,9 +141,9 @@ void PropertyDisplayLayout::writeToFile(const QString &filename) {
     string f_name = filename.toStdString();
     // write, in succession, the outputs
     // Growth
-    growthDisplayLayout.writeTo(f_name);
+    growthDisplayLayout->writeTo(f_name);
     // GrowthRate
-    growthRateDisplayLayout.writeTo(f_name);
+    growthRateDisplayLayout->writeTo(f_name);
 }
 void PropertyDisplayLayout::clearEntries() {
     // remove any values that may have been written to the displays
