@@ -28,7 +28,6 @@
     #include <omp.h>
 #endif
 
-
 class ModelInputObject;
 //using namespace std;
 
