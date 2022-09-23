@@ -5,7 +5,8 @@ FROM ubuntu
 RUN apt-get update
 
 # Build requirements, and compiler dependencies for OpenBLAS
-RUN apt-get install -y build-essential gcc g++ gfortran
+RUN apt-get install -y build-essential gcc g++ gfortran 
+RUN apt-get install -y cmake
 RUN apt-get install -y python2
 RUN apt-get install -y libopenblas-dev libgsl-dev libboost-all-dev
 RUN apt-get install -y qtbase5-dev qtchooser qt5-qmake qtbase5-dev-tools
@@ -14,9 +15,10 @@ ENV QT_DEBUG_PLUGINS=1
 # copy source files so that we can check if the build succeeds
 COPY ./TissueFolding/SourceCode /TissueFolding/SourceCode
 COPY ./UserInterface/SourceCode /UserInterface/SourceCode
-COPY ./UserInterface/TissueFoldingUI-Docker.pro /UserInterface/TissueFoldingUI_Docker.pro
-COPY ./tests/sim_pardiso_reg/run07007 /UserInterface/sample07007
-RUN cd /UserInterface/ &&\
-    qmake TissueFoldingUI_Docker.pro &&\
-    make &&\
-    mv ./Debug/TissueFoldingUI ./TissueFoldingUI
+COPY ./tests/sim_no_pardiso_reg/run07007 /UserInterface/sample07007
+RUN cd /UserInterface/SourceCode &&\
+    mkdir build &&\
+    cd build &&\
+    cmake .. &&\
+    cmake --build . &&\
+    mv ./VisualiseTissueFolding ../../VisualiseTissueFolding

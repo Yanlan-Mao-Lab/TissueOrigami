@@ -1,7 +1,7 @@
 # ifndef ELEMENT_PROPERTY_SELECTION_BOX_H
 # define ELEMENT_PROPERTY_SELECTION_BOX_H
 
-# include "../TissueFolding/SourceCode/ShapeBase.h"
+# include "ShapeBase.h"
 
 # include "GUIBuildingBlocks.h"
 # include "PropertyDisplayLayout.h"

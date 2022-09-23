@@ -22,7 +22,8 @@ class GLWidget;
 
 #include "Simulation.h"
 #include "Analysis.h"
-
+#include "ElementBasicDisplay.h"
+#include "ElementPropertySelection.h"
 
 using namespace std;
 
