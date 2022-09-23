@@ -15,6 +15,16 @@ ENV QT_DEBUG_PLUGINS=1
 # copy source files so that we can check if the build succeeds
 COPY ./TissueFolding/SourceCode /TissueFolding/SourceCode
 COPY ./UserInterface/SourceCode /UserInterface/SourceCode
+
+# attempt to build the simulation executable (without PARDISO)
+RUN cd /TissueFolding/SourceCode &&\
+    mkdir build &&\
+    cd build &&\
+    cmake .. &&\
+    cmake --build . &&\
+    mv ./TissueFolding ../../TissueFolding
+
+# attempt to build the GUI executable
 RUN cd /UserInterface/SourceCode &&\
     mkdir build &&\
     cd build &&\
