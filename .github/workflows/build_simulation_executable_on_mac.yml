@@ -16,10 +16,6 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
-      
-      - name: Install non-Clang compilers
-        run: |
-          brew install gcc gfortran
 
       - name: Install numerical dependencies (Mac)
         run: |
@@ -30,9 +26,7 @@ jobs:
           cd ${{ github.workspace }}/TissueFolding/SourceCode/
           mkdir build
           cd build
-          CC=$(which gcc)
-          CXX=$(which g++)
-          cmake ..
+          cmake .. -DCMAKE_CXX_COMPILER=$(which g++-11)
           cmake --build .
       
       # This is here to be extra-explicit (and in the very unexpected case that cmake would fail silently)
