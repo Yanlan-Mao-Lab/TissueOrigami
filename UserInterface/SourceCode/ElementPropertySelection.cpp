@@ -46,21 +46,8 @@ void ElementPropertySelection::clickedSaveElementProperties() {
     // if saveFileName is an empty string, the user has cancelled the operation
     // otherwise, proceed with attempting the save...
     if (!saveFileName.isEmpty()) {
-        // if the file already exists, we have a problem (as we don't want to reappend!)
-        ifstream f(saveFileName.toStdString());
-        // check if file already exists
-        bool file_already_exists = f.good();
-        // close file so that subprograms can access it
-        f.close();
-        if (f.good()) {
-            // throw a warning to the user - this file already exists! Cancel save or overwrite contents?
-            fprintf(stdout, "Error - output file already exists!\n");
-            // std::remove can removed a closed file
-        }
-        else{
-            // write the element properties to the file
-            element_property_display.writeToFile(saveFileName);
-        }
+        // write the element properties to the file
+        element_property_display.writeToFile(saveFileName);
     }
 }
 
