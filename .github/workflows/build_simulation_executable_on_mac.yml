@@ -19,7 +19,11 @@ jobs:
 
       - name: Install numerical dependencies (Mac)
         run: |
-          brew install boost@1.60 gsl
+          brew install boost gsl
+
+      # run interactive session
+      - name: tmate session
+        uses: mxschmitt/action-tmate@v3
 
       - name: Build TissueFolding with CMake
         run: |
