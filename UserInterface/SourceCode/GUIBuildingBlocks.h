@@ -180,6 +180,8 @@ public:
      */
     void setComponentValue(int index, const QString &text);
 
+    const int n_comps = 3;
+
 public slots:
     /**
      * @brief Clears all values displayed in the component boxes
@@ -207,8 +209,6 @@ public slots:
     void fillValues(QStringList values);
 
 private:
-    const int n_comps = 3;                        // number of vector components
-
     ReadOnlyBox *vector_components[3]; // Boxes that display the values of the components
 
     Header *component_labels[3]; // Labels for the component boxes
@@ -248,6 +248,8 @@ public:
      */
     int boxIndex(int row, int col);
 
+    const int n_cols = 3, n_rows = 3, n_comps = 9;
+
 public slots:
     /**
      * @brief Clears all values in the display boxes
@@ -271,8 +273,6 @@ public slots:
     void fillValues(gsl_matrix *values);
 
 private:
-    const int n_cols = 3, n_rows = 3, n_comps = 9;
-
     ReadOnlyBox *matrix_components[9]; // The boxes that display the components of the growth matrix
 };
 

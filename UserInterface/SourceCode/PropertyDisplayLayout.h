@@ -54,6 +54,13 @@ public slots:
      * @param new_element Pointer to the new (selected) element. nullptr implies deselection has occurred.
      */
     void recieveNewElement(std::unique_ptr<ShapeBase> *new_element);
+    /**
+     * @brief Write the element properties to the file provided
+     * 
+     * @param filename Name of file to write to
+     * @param write_headers Whether to break data up by writing section headers
+     */
+    void writeToFile(const QString &filename, bool write_headers=true);
 
 signals:
     /**
@@ -108,6 +115,16 @@ private:
      * 
      */
     void readAndUpdateElementProperties();
+
+    // strings used to denote sections in any written output file
+    const QString section_header = "===== ";
+    /**
+     * @brief Creates the header of section_name to be written to an output file
+     *
+     * @param section_name The name of the section that is to be written next
+     * @return QString The section header to be written to the output file
+     */
+    QString makeHeader(const QString &section_name);
 };
 
 # endif
