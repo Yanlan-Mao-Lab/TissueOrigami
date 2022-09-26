@@ -46,6 +46,8 @@ void ElementPropertySelection::clickedSaveElementProperties() {
     // if saveFileName is an empty string, the user has cancelled the operation
     // otherwise, proceed with attempting the save...
     if (!saveFileName.isEmpty()) {
+        // delete the save file if it already exists. The user will have confirmed this choice when selecting the name of the file
+        std::remove(saveFileName.toStdString().c_str());
         // write the element properties to the file
         element_property_display.writeToFile(saveFileName);
     }
