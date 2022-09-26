@@ -19,7 +19,7 @@ jobs:
 
       - name: Install numerical dependencies (Mac)
         run: |
-          brew install boost gsl
+          brew install libboost-all-dev boost gsl
 
       - name: Build TissueFolding with CMake
         run: |
