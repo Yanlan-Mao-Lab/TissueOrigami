@@ -30,7 +30,7 @@ void ElementPropertySelection::updatePropertyValues(std::unique_ptr<ShapeBase> *
         // the dropdown menu should be re-enabled
         setDropdownEnabled(true);
         // all properties in element_property_display now require a mass update
-        element_property_display.writeNewElementProperties(element);
+        element_property_display.recieveNewElement(element);
     }
     // interpret nullptr as deselection
     else {

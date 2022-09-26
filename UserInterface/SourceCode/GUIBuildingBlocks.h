@@ -3,6 +3,8 @@
 
 # include <string>
 # include <QtWidgets>
+# include <gsl/gsl_matrix.h>
+# include <array>
 
 // default standard font for the GUI
 const QFont DEF_FONT("SansSerif", 10);
@@ -51,6 +53,7 @@ public:
      * @param parent Parent QWidget
      */
     Header(std::string text);
+    Header(QString &text);
 };
 
 /**
@@ -73,6 +76,8 @@ public:
 private:
     // default fixed size for infoboxes
     const int def_fixed_box_width = 70;
+    // default text when box is initalised
+    const QString default_text = "-";
 };
 
 /**
@@ -150,6 +155,155 @@ public:
 private:
     const int default_button_width = 60;    // default width for clickable buttons
     const int default_button_height = 10;   // default height for clickable buttons
+};
+
+/** @brief The layout of the space set aside for displaying element properties as a 3-vector with headers
+ *
+ */
+class VectorLayout3 : public QGridLayout
+{
+    Q_OBJECT
+public:
+    VectorLayout3();
+    /**
+     * @brief Construct a new Vector Layout 3 object, with component labels
+     * 
+     * @param comp_labels List of labels for the components
+     */
+    VectorLayout3(QStringList comp_labels);
+
+    /**
+     * @brief Sets the displayed text of the component with the given index
+     *
+     * @param index The index of the component to set text for
+     * @param text The text to set
+     */
+    void setComponentValue(int index, const QString &text);
+
+public slots:
+    /**
+     * @brief Clears all values displayed in the component boxes
+     *
+     */
+    void clearAllComponents();
+    /**
+     * @brief Set the values of each of the component boxes.
+     *
+     * @param values Values to set in the matrix display boxes
+     */
+    void fillValues(double *values);
+    void fillValues(float *values);
+    /**
+     * @brief Set the values of each of the component boxes.
+     *
+     * @param values Values to set in the matrix display boxes
+     */
+    void fillValues(std::array<double, 3> values);
+    /**
+     * @brief Set the values of each of the component boxes.
+     *
+     * @param values Values to set in the matrix display boxes
+     */
+    void fillValues(QStringList values);
+
+private:
+    const int n_comps = 3;                        // number of vector components
+
+    ReadOnlyBox *vector_components[3]; // Boxes that display the values of the components
+
+    Header *component_labels[3]; // Labels for the component boxes
+};
+
+/**
+ * @brief The layout of the space set aside for displaying element properties in a 3-by-3 matrix
+ *
+ */
+class MatrixLayout3by3 : public QGridLayout
+{
+    Q_OBJECT
+public:
+    MatrixLayout3by3();
+
+    /**
+     * @brief Set the displayed text of the component at position (row, col)
+     *
+     * @param row,col Position of component in the matrix to set
+     * @param text The text to display
+     */
+    void setBoxValue(int row, int col, const QString &text);
+    /**
+     * @brief Set the displayed text of the component whose internal index is box_index
+     *
+     * @param box_index Internal index of the component to set, box_index = MatrixLayout::BoxIndex(row, col)
+     * @param text The text to display
+     */
+    void setBoxValue(int box_index, const QString &text);
+    /**
+     * @brief Retrieves the internal index for the component boxes, given a (row, col) index in the matrix.
+     *
+     * box_index = row * n_cols + col.
+     *
+     * @param row,col Position of the component in the matrix
+     * @return int Internal index for the box that displays this components value
+     */
+    int boxIndex(int row, int col);
+
+public slots:
+    /**
+     * @brief Clears all values in the display boxes
+     *
+     */
+    void clearAllValues();
+    /**
+     * @brief Set the values of the component boxes.
+     * 
+     * Array should be 9 components long and values[index] will be the value set to matrix_components[index].
+     * 
+     * @param values Values to set in the matrix display boxes
+     */
+    void fillValues(double *values);
+    void fillValues(QStringList values);
+    /**
+     * @brief Set the values of the component boxes, by providing a new matrix of values
+     * 
+     * @param values Values to set in the matrix display boxes
+     */
+    void fillValues(gsl_matrix *values);
+
+private:
+    const int n_cols = 3, n_rows = 3, n_comps = 9;
+
+    ReadOnlyBox *matrix_components[9]; // The boxes that display the components of the growth matrix
+};
+
+/**
+ * @brief A layout containing a single, centred box
+ * 
+ */
+class SingleBoxLayout : public QGridLayout
+{
+    Q_OBJECT
+public:
+    SingleBoxLayout();
+
+public slots:
+    /**
+     * @brief Set the value displayed in the display box
+     * 
+     * @param value The value to display
+     */
+    void setDisplayValue(const QString &value);
+    void setDisplayValue(double value);
+    /**
+     * @brief Clear the value in the display box
+     * 
+     */
+    void clearValue();
+
+private:
+    QString default_text = "-"; // default displayed text
+
+    ReadOnlyBox *display_box; // box that displays the single value
 };
 
 # endif
