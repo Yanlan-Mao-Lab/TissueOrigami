@@ -26,7 +26,7 @@ jobs:
           cd ${{ github.workspace }}/TissueFolding/SourceCode/
           mkdir build
           cd build
-          cmake .. -DCMAKE_CXX_COMPILER=$(which g++-11)
+          cmake .. -DCMAKE_CXX_COMPILER=$(which g++-11) -DCMAKE_C_COMPILER=$(which gcc-11)
           cmake --build .
       
       # This is here to be extra-explicit (and in the very unexpected case that cmake would fail silently)
