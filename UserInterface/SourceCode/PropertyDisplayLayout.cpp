@@ -21,7 +21,6 @@ PropertyDisplayLayout::PropertyDisplayLayout() {
     growthBox->setLayout(growthDisplay);
     addWidget(growthBox);
     connect(this, SIGNAL(clearEntries()), growthDisplay, SLOT(clearAllValues()));
-    connect(this, SIGNAL(updateEntries()), growthDisplay, SLOT(fillValues((*current_element)->getFg())));
 
     // setup the growth rate display
     growthRateBox = new QGroupBox; 
@@ -29,7 +28,6 @@ PropertyDisplayLayout::PropertyDisplayLayout() {
     growthRateBox->setLayout(growthRateDisplay);
     addWidget(growthRateBox);
     connect(this, SIGNAL(clearEntries()), growthRateDisplay, SLOT(clearAllComponents()));
-    connect(this, SIGNAL(updateEntries()), growthRateDisplay, SLOT(fillValues((*current_element)->getGrowthRate())));
 
     // setup the internal viscosity display
     intViscBox = new QGroupBox;
@@ -81,18 +79,18 @@ PropertyDisplayLayout::PropertyDisplayLayout() {
     connect(this, SIGNAL(clearEntries()), volStrainFeDisplay, SLOT(clearValue()));
 
     // setup the strain (Dv, AP, AB) display
-    strainDV_AP_ABBox = new QGroupBox;
-    strainDV_AP_ABDisplay = new VectorLayout3(DV_AP_AB_Labels);
-    strainDV_AP_ABBox->setLayout(strainDV_AP_ABDisplay);
-    addWidget(strainDV_AP_ABBox);
-    connect(this, SIGNAL(clearEntries()), strainDV_AP_ABDisplay, SLOT(clearAllComponents()));
+    strainBox = new QGroupBox;
+    strainDisplay = new VectorLayout3(strainLabels);
+    strainBox->setLayout(strainDisplay);
+    addWidget(strainBox);
+    connect(this, SIGNAL(clearEntries()), strainDisplay, SLOT(clearAllComponents()));
 
     // setup the strain (xy, xz, yz) display
-    strainPlanarDirsBox = new QGroupBox;
-    strainPlanarDirsDisplay = new VectorLayout3(planarDirsLabels);
-    strainPlanarDirsBox->setLayout(strainPlanarDirsDisplay);
-    addWidget(strainPlanarDirsBox);
-    connect(this, SIGNAL(clearEntries()), strainPlanarDirsDisplay, SLOT(clearAllComponents()));
+    shearBox = new QGroupBox;
+    shearDisplay = new VectorLayout3(shearLabels);
+    shearBox->setLayout(shearDisplay);
+    addWidget(shearBox);
+    connect(this, SIGNAL(clearEntries()), shearDisplay, SLOT(clearAllComponents()));
 
     // upon initalisation, set to display the default display
     setCurrentWidget(defaultBox);
@@ -111,10 +109,46 @@ void PropertyDisplayLayout::readAndUpdateElementProperties()
 {
     // if we do not have the nullptr, we need to update all of our displays
     if (current_element) {
-        // update growth display
-        //growthDisplay->fillValues((*current_element)->getFg());
-        //growthRateDisplay->fillValues((*current_element)->getGrowthRate());
-        emit updateEntries();
+        // update all managed displays
+        growthDisplay->fillValues((*current_element)->getFg());
+
+        growthRateDisplay->fillValues((*current_element)->getGrowthRate());
+
+        intViscDisplay->setDisplayValue((*current_element)->getInternalViscosity());
+
+        youngModDisplay->setDisplayValue((*current_element)->getYoungModulus());
+
+        poissonDisplay->setDisplayValue((*current_element)->getPoissonRatio());
+
+        // the formula used by the source code for this value is
+        // GrownVolume / ReferenceShape->Volume
+        // see ShapeBase.cpp, line 1296 (type=5 for this field)
+        // NOTE: this is a ratio, not absolute by the looks of things!
+        double GrownVolume = (*current_element)->GrownVolume / (*current_element)->ReferenceShape->Volume;
+        volumeGrowthDisplay->setDisplayValue(GrownVolume);
+
+        shapeAndSizeDisplay->setDisplayValue((*current_element)->calculateEmergentShapeOrientation());
+
+        std::array<double, 6> shapeChangeRate = (*current_element)->getShapeChangeRate();
+        // change rate in z is stored at index 2
+        shapeChangeRateZDisplay->setDisplayValue((shapeChangeRate[2]));
+
+        /* Strains are computed by passing pointers;
+        getStrain(type, pointer_to_float) assigns the value of the type of strain to the address.
+        type takes the values:
+        0 - Fe strain
+        1/2/3 - DV/AP/AB strain
+        4/5/6(?) - xy/yz/xz strain
+        */
+        float strainFe, strainNonPlanarComps[3], strainPlanarComps[3];
+        (*current_element)->getStrain(0, strainFe);
+        for(int i=0; i<3; i++) {
+            (*current_element)->getStrain(i+1, strainNonPlanarComps[i]);
+            (*current_element)->getStrain(i+4, strainPlanarComps[i]);
+        }
+        volStrainFeDisplay->setDisplayValue(strainFe);
+        strainDisplay->fillValues(strainNonPlanarComps);
+        shearDisplay->fillValues(strainPlanarComps);
     }
     // otherwise, deselection has occurred and we should clear everything
     else {

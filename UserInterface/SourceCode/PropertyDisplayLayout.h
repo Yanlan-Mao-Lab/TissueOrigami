@@ -12,15 +12,15 @@
 const QStringList element_property_options = {"<Select property>",          // default, no selection
                                               "Growth",                     // 3-by-3 matrix
                                               "Volume Growth Rate (xyz)",   // 3-vector (x,y,z)
-                                              "Internal Viscosity",         // scalar, Element.getInternalViscosity
-                                              "Young Modulus",              // scalar, getYoungModulus
-                                              "Poisson Ratio",              // scalar, Element.getPoissonRatio
-                                              "Volume Growth",              // scalar, GrownVolume/ReferenceShape->Volume
-                                              "Emergent Shape & Size",      // scalar, element.calculateEmergentShapeOrientation
-                                              "ShapeChangeRate (z)",        // element.getShapeChangeRate(), then take index 2
+                                              "Internal Viscosity",         // getInternalViscosity()
+                                              "Young Modulus",              // getYoungModulus()
+                                              "Poisson Ratio",              // getPoissonRatio()
+                                              "Volume Growth",              // GrownVolume/ReferenceShape->Volume
+                                              "Emergent Shape & Size",      // calculateEmergentShapeOrientation
+                                              "ShapeChangeRate (z)",        // getShapeChangeRate(), index 2
                                               "Volumetric Strain (via Fe)", // scalar, element.getStrain(type=0)
-                                              "Strain (DV, AP, AB)",        // each a scalar, getStrain(type1,2,3 respectively). Alternatively can be obtained from gsl_matrix_get(element.Strain,0/1/2,0)
-                                              "Strian (xy, xz, yz)"};       // each a scalar, getStrain(type4,5,6 respectively). Alternatively can be obtained from gsl_matrix_get(element.Strain,3/4/5,0)
+                                              "Strain (DV, AP, AB)",        // display as 3-vector of scalars
+                                              "Shear (xy, xz, yz)"};        // display as 3-vector of scalars
 
 /**
  * @brief The layout of the space set aside for displaying element properties, when no particular property has been chosen.
@@ -61,7 +61,6 @@ signals:
      * 
      */
     void clearEntries();
-    void updateEntries();
 
 private:
     std::unique_ptr<ShapeBase> *current_element;    // Pointer to the element properties we are displaying
@@ -96,13 +95,13 @@ private:
     QGroupBox *volStrainFeBox;
     SingleBoxLayout *volStrainFeDisplay;
 
-    QGroupBox *strainDV_AP_ABBox;
-    VectorLayout3 *strainDV_AP_ABDisplay;
-    QStringList DV_AP_AB_Labels = {"DV", "AP", "AB"};
+    QGroupBox *strainBox;
+    VectorLayout3 *strainDisplay;
+    QStringList strainLabels = {"DV", "AP", "AB"};
 
-    QGroupBox *strainPlanarDirsBox;
-    VectorLayout3 *strainPlanarDirsDisplay;
-    QStringList planarDirsLabels = {"xy", "xz", "yz"};
+    QGroupBox *shearBox;
+    VectorLayout3 *shearDisplay;
+    QStringList shearLabels = {"xy", "yz", "xz"};
 
     void readAndUpdateElementProperties();
 };

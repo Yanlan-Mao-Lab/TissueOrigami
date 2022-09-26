@@ -162,6 +162,7 @@ public slots:
      * @param values Values to set in the matrix display boxes
      */
     void fillValues(double *values);
+    void fillValues(float *values);
     /**
      * @brief Set the values of each of the component boxes.
      *

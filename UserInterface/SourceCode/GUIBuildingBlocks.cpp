@@ -113,6 +113,11 @@ void VectorLayout3::fillValues(double *values) {
         setComponentValue(index, QString::number(values[index]));
     }
 }
+void VectorLayout3::fillValues(float *values) {
+    for(int index=0; index<n_comps; index++) {
+        setComponentValue(index, QString::number(values[index]));
+    }
+}
 void VectorLayout3::fillValues(std::array<double, 3> values) {
     for(int index=0; index<n_comps; index++) {
         setComponentValue(index, QString::number(values[index]));
@@ -176,6 +181,7 @@ int MatrixLayout3by3::boxIndex(int row, int col) {
 SingleBoxLayout::SingleBoxLayout() : QGridLayout() {
     display_box = new ReadOnlyBox;
     display_box->setText(default_text);
+    display_box->setAlignment(AL_CENTRE);
     addWidget(display_box);
 }
 void SingleBoxLayout::setDisplayValue(const QString &value) {
