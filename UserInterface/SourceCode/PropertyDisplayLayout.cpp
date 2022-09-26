@@ -155,4 +155,3 @@ void PropertyDisplayLayout::readAndUpdateElementProperties()
         emit clearEntries();
     }
 }
-

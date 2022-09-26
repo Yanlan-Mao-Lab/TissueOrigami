@@ -51,7 +51,7 @@ public slots:
     /**
      * @brief Changes the element whose properties are currently being displayed
      * 
-     * @param new_element Pointer to the new (selected) element
+     * @param new_element Pointer to the new (selected) element. nullptr implies deselection has occurred.
      */
     void recieveNewElement(std::unique_ptr<ShapeBase> *new_element);
 
@@ -83,26 +83,30 @@ private:
     QGroupBox *poissonBox;                          // Box containing the poisson ratio layout
     SingleBoxLayout *poissonDisplay;                // Display for "Poisson Ratio"
 
-    QGroupBox *volumeGrowthBox;
-    SingleBoxLayout *volumeGrowthDisplay;
+    QGroupBox *volumeGrowthBox;                     // Box containing the volume growth ratio layout
+    SingleBoxLayout *volumeGrowthDisplay;           // Display for "Volume Growth"
 
-    QGroupBox *shapeAndSizeBox;
-    SingleBoxLayout *shapeAndSizeDisplay;
+    QGroupBox *shapeAndSizeBox;                     // Box containing the shape and size display
+    SingleBoxLayout *shapeAndSizeDisplay;           // Display for "Emergant shape and size"
 
-    QGroupBox *shapeChangeRateZBox;
-    SingleBoxLayout *shapeChangeRateZDisplay;
+    QGroupBox *shapeChangeRateZBox;                 // Box containing the shape change rate (z) display
+    SingleBoxLayout *shapeChangeRateZDisplay;       // Display for "Shape change rate (z)"
 
-    QGroupBox *volStrainFeBox;
-    SingleBoxLayout *volStrainFeDisplay;
+    QGroupBox *volStrainFeBox;                      // Box containing the volumetric strain (Fe) display
+    SingleBoxLayout *volStrainFeDisplay;            // Display for volumetric strain (Fe)
 
-    QGroupBox *strainBox;
-    VectorLayout3 *strainDisplay;
-    QStringList strainLabels = {"DV", "AP", "AB"};
+    QGroupBox *strainBox;                           // Box containing the strain values display
+    VectorLayout3 *strainDisplay;                   // 3-vector display for the DV/AP/AB strain
+    QStringList strainLabels = {"DV", "AP", "AB"};  // component labels
 
-    QGroupBox *shearBox;
-    VectorLayout3 *shearDisplay;
-    QStringList shearLabels = {"xy", "yz", "xz"};
+    QGroupBox *shearBox;                            // Box containing the shear values display
+    VectorLayout3 *shearDisplay;                    // 3-vector display for the shear in xy/yz/xz
+    QStringList shearLabels = {"xy", "yz", "xz"};   // component labels
 
+    /**
+     * @brief Updates all displays in this panel by reading the properties of a new element
+     * 
+     */
     void readAndUpdateElementProperties();
 };
 
