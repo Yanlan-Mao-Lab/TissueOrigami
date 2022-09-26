@@ -4,6 +4,7 @@
 # include <string>
 # include <QtWidgets>
 # include <gsl/gsl_matrix.h>
+# include <array>
 
 // default standard font for the GUI
 const QFont DEF_FONT("SansSerif", 10);
