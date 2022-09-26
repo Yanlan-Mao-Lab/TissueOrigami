@@ -1222,45 +1222,23 @@ std::array<int,3>	ShapeBase::getIdentifierColour(){
 	return IdentifierColour;
 }
 
-void 	ShapeBase::getStrain(int type, float &StrainMag){
+void ShapeBase::getStrain(int type, float &StrainMag)
+{
 	StrainMag = 0.0;
-	if (type == 0){
-		//This is volumetric strain, the total volume change:
-		gsl_matrix* Fe = getFe();
-		StrainMag = determinant3by3Matrix(Fe)-1 ;
+	if (type == 0)
+	{
+		// This is volumetric strain, the total volume change:
+		gsl_matrix *Fe = getFe();
+		StrainMag = determinant3by3Matrix(Fe) - 1;
 		gsl_matrix_free(Fe);
-		//StrainMag = 1;
-		//for (int i=0; i<3; ++i){
-		//	StrainMag *= (1+gsl_matrix_get(Strain,i,0)) ;
-		//}
-		//StrainMag -= 1.0;
 	}
-	else if (type == 1){
-		//DV
-        StrainMag = gsl_matrix_get(Strain,0,0);
-	}
-	else if (type == 2){
-		//AP
-        StrainMag = gsl_matrix_get(Strain,1,0);
-	}
-	else if (type == 3){
-		//AB
-        StrainMag = gsl_matrix_get(Strain,2,0);
-	}
-	else if (type == 4){
-		//xy
-        StrainMag = gsl_matrix_get(Strain,3,0);
-	}
-	else if (type == 5){
-		//yz
-        StrainMag = gsl_matrix_get(Strain,4,0);
-	}
-	else if (type == 3){
-		//xz
-        StrainMag = gsl_matrix_get(Strain,5,0);
-	}
-	else{
-		return;
+	// If type>0, then accessing occurs in the same manner for each component.
+	// Listed are the type : component pairings
+	// DV : 1, AP : 2, AB : 3, xy : 4, yz : 5, xz : 6
+	else if (0 < type && type < 7)
+	{
+		// indexing induces -1 offset to type
+		StrainMag = gsl_matrix_get(Strain, type - 1, 0);
 	}
 }
 
