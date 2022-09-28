@@ -49,8 +49,6 @@ int getInfoBoxIndex(int node_number, NodeInfoHeader header);
  * - The "selected item properties" header
  * - The node selection and element selection boxes
  * - The printout of node information associated to a given element
- * 
- * Note: the ELEMENT SELECTION BOX (element_selection_box) will be the parent of all QWidgets in this panel
  */
 class ElementBasicDisplay : public QGridLayout
 {
@@ -59,29 +57,40 @@ public:
     /**
      * @brief Constructs the element-selection pannel.
      *
-     * @param parent Parent QWidget
      */
-    ElementBasicDisplay(QWidget *parent=nullptr);
+    ElementBasicDisplay();
 
-    Header *selection_header;  // The "Selected Item Properties" header
-    Header *element_name_label;  // The label for the content of element_name_display
+    // The "Selected Item Properties" header
+    Header *selection_header = new Header("Selected Item Properties");
+    // The label for the content of element_name_display
+    Header *element_name_label = new Header("Element name:");
     // The (horizontal) headers of the information about each node that we wish to fetch and display
-    Header *node_info_labels_horz[n_node_info_headers];
+    Header *node_info_labels_horz[n_node_info_headers] = {new Header("id"),
+                                                          new Header("x"),
+                                                          new Header("y"),
+                                                          new Header("z")};
     // The (vertical) naming convention for the nodes associated to an element
-    Header *node_info_numbers_vert[n_nodes_per_element];
+    Header *node_info_numbers_vert[n_nodes_per_element] = {new Header("Node 0"),
+                                                           new Header("Node 1"),
+                                                           new Header("Node 2"),
+                                                           new Header("Node 3"),
+                                                           new Header("Node 4"),
+                                                           new Header("Node 5")};
+    // The label for the node_selection_box
+    Label *node_selection_label = new Label("Select <br> node:");
+    // The label for the element_selection box
+    Label *element_selection_label = new Label("Select <br> element");
 
-    Label *node_selection_label; // The label for the node_selection_box
-    Label *element_selection_label; // The label for the element_selection box
-
-    ReadOnlyBox *element_name_display;  // Box to display the internal name of the selected element
+    // Box to display the internal name of the selected element
+    ReadOnlyBox *element_name_display = new ReadOnlyBox("No element selected");
     // Boxes that will display the information about the nodes associated to the selected element;
     // uses the convention box_index = col*n_nodes_per_element + n_node_info_headers
-    ReadOnlyBox *node_coord_boxes[n_coord_boxes];
+    ReadOnlyBox node_coord_boxes[n_coord_boxes];
 
     // input box for manual element selection by requesting a node that forms this element
-    SelectionBox *node_selection_box;
+    SelectionBox node_selection_box;
     // input box for manual element selection by element ID
-    SelectionBox *element_selection_box;
+    SelectionBox element_selection_box;
 
     /**
      * @brief Sets (or resets) the validator object for the node_selection_box
@@ -138,28 +147,9 @@ public slots:
      * @param element (Pointer to) the element whose node positions should be written
      */
     void writeNodePositions(QString filename, std::unique_ptr<ShapeBase> *element);
-    /**
-     * @brief Reset the validator attached to the element selection box
-     * 
-     * @param max_element_index Maximum element ID of the simulation
-     * @param parent Parent Widget
-     */
-    void resetElementSelection(int max_element_index, QWidget *parent=nullptr);
-    /**
-     * @brief Reset the validator attached to the node selection box
-     * 
-     * @param max_node_index Maximum node ID of the simulation
-     * @param parent Parent Widget
-     */
-    void resetNodeSelection(int max_node_index, QWidget *parent=nullptr);
 
 private:
-    int node_coord_box_width = 70; // default width for infoboxes displaying node coords, etc
-
-    const QString panel_header_text = "Selected Item Properties"; // header for the panel
-    const QString element_name_label_text = "Element Name:"; // label for element name display
-    const QStringList horz_info_label_text = {"ID, x, y, z"}; // header labels detailing the content of the information boxes
-    const QString vert_node_label_text = "Node "; // how to label the node rows
+    int node_coord_box_width = 70;      // default width for infoboxes displaying node coords, etc
 };
 
 #endif

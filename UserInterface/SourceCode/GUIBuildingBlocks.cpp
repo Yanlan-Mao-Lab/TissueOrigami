@@ -1,16 +1,10 @@
 # include "GUIBuildingBlocks.h"
 using namespace std;
 
-Label::Label(QWidget *parent) : QLabel(parent) {
+Label::Label() : QLabel() {
     setFont(DEF_FONT);
 }
-Label::Label(string text, QWidget *parent) : QLabel(text.c_str(), parent) {
-    setFont(DEF_FONT);
-}
-Label::Label(const QString &text, QWidget *parent) : QLabel(text, parent) {
-    setFont(DEF_FONT);
-}
-Label::Label(const char *text, QWidget *parent) : QLabel(text, parent) {
+Label::Label(string text) : QLabel(text.c_str()) {
     setFont(DEF_FONT);
 }
 
@@ -20,14 +14,11 @@ Header::Header(QWidget *parent) : QLabel(parent) {
 Header::Header(string text, QWidget *parent) : QLabel(text.c_str(), parent) {
     setFont(DEF_HEADER_FONT);
 }
-Header::Header(const QString &text, QWidget *parent) : QLabel(text, parent) {
-    setFont(DEF_HEADER_FONT);
-}
-Header::Header(const char *text, QWidget *parent) : QLabel(text, parent) {
+Header::Header(QString &text, QWidget *parent) : QLabel(text, parent) {
     setFont(DEF_HEADER_FONT);
 }
 
-ReadOnlyBox::ReadOnlyBox(QWidget *parent) : QLineEdit(parent) {
+ReadOnlyBox::ReadOnlyBox() : QLineEdit() {
     // text that fills the box when nothing is provided
     setPlaceholderText(default_text);
     // make read-only
@@ -35,7 +26,7 @@ ReadOnlyBox::ReadOnlyBox(QWidget *parent) : QLineEdit(parent) {
     // use our default font
     setFont(DEF_FONT);
 }
-ReadOnlyBox::ReadOnlyBox(string placeholder_text, QWidget *parent) : QLineEdit(parent) {
+ReadOnlyBox::ReadOnlyBox(string placeholder_text) : QLineEdit() {
     // text that fills the box when nothing is provided
     setPlaceholderText(placeholder_text.c_str());
     // make read-only
@@ -44,7 +35,7 @@ ReadOnlyBox::ReadOnlyBox(string placeholder_text, QWidget *parent) : QLineEdit(p
     setFont(DEF_FONT);
 }
 
-SelectionBox::SelectionBox(QWidget *parent) : QLineEdit(parent) {
+SelectionBox::SelectionBox() : QLineEdit() {
     // text that fills the box when nothing is provided
     setPlaceholderText("-");
     // use our default font
@@ -54,7 +45,7 @@ SelectionBox::SelectionBox(QWidget *parent) : QLineEdit(parent) {
     // box should be of fixed width
     setFixedWidth(def_fixed_box_width);
 }
-SelectionBox::SelectionBox(string placeholder_text, QWidget *parent) : QLineEdit(parent) {
+SelectionBox::SelectionBox(string placeholder_text) : QLineEdit() {
     // text that fills the box when nothing is provided
     setPlaceholderText(placeholder_text.c_str());
     // use our default font
