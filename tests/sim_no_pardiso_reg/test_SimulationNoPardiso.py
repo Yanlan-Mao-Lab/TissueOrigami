@@ -215,7 +215,8 @@ class Test_SimulationNoPardiso():
     ign_outputs = [ "tmp" ]
 
     # tolerance to accept differences in doubles to
-    tolerance = 1e-8
+    # since we are just copying, we want to be strict on possible precision errors
+    tolerance = 1e-16
 
     @pytest.mark.parametrize('run_number', run_numbers)
     def test_run0700x(self, run_number):
