@@ -27,13 +27,16 @@ class Label : public QLabel
 {
     Q_OBJECT
 public:
-    Label();
+    Label(QWidget *parent=nullptr);
     /**
      * @brief Construct a new Label object
      *
      * @param text Text of this label
+     * @param parent Parent QWidget object
      */
-    Label(std::string text);
+    Label(std::string text, QWidget *parent=nullptr);
+    Label(const QString &text, QWidget *parent=nullptr);
+    Label(const char *text, QWidget *parent=nullptr);
 };
 
 /**
@@ -53,7 +56,8 @@ public:
      * @param parent Parent QWidget
      */
     Header(std::string text, QWidget *parent=nullptr);
-    Header(QString &text, QWidget *parent=nullptr);
+    Header(const QString &text, QWidget *parent=nullptr);
+    Header(const char *text, QWidget *parent=nullptr);
 };
 
 /**
@@ -65,13 +69,14 @@ class ReadOnlyBox : public QLineEdit
 {
     Q_OBJECT
 public:
-    ReadOnlyBox();
+    ReadOnlyBox(QWidget *parent=nullptr);
     /**
      * @brief Construct a new Read Only Box object
      *
      * @param placeholder_text Text to display when no input has been provided to the box
+     * @param parent Parent QWidget
      */
-    ReadOnlyBox(std::string placeholder_text);
+    ReadOnlyBox(std::string placeholder_text, QWidget *parent=nullptr);
     
 private:
     // default fixed size for infoboxes
@@ -89,13 +94,13 @@ class SelectionBox : public QLineEdit
 {
     Q_OBJECT
 public:
-    SelectionBox();
+    SelectionBox(QWidget *parent=nullptr);
     /**
      * @brief Construct a new Selection Box object
      *
      * @param placeholder_text Text to display when no input has been provided to the box
      */
-    SelectionBox(std::string placeholder_text);
+    SelectionBox(std::string placeholder_text, QWidget *parent=nullptr);
 
     /**
      * @brief Setup the selection validator for this box.

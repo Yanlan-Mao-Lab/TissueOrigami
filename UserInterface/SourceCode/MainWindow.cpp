@@ -77,13 +77,13 @@ void MainWindow::generateControlPanel(){
 	ControlPanelMainHBox->setSpacing(2);
 
 	// perpare the basic element info display using the default constructor
-	ElementProps = new ElementBasicDisplay;
+	ElementProps = new ElementBasicDisplay();
 	// initialise the validators for the node and element selection boxes
 	ElementProps->setNodeSelectionValidator(Sim01->Nodes.size() - 1, this);
 	ElementProps->setElementSelectionValidator(Sim01->Elements.size() - 1, this);
 	// create connections for the node and element selection boxes
-	connect(&(ElementProps->node_selection_box), SIGNAL(textChanged(const QString &)), this, SLOT(manualNodeSelection(const QString &)));
-	connect(&(ElementProps->element_selection_box), SIGNAL(textChanged(const QString &)), this, SLOT(manualElementSelection(const QString &)));
+	connect(ElementProps->node_selection_box, SIGNAL(textChanged(const QString &)), this, SLOT(manualNodeSelection(const QString &)));
+	connect(ElementProps->element_selection_box, SIGNAL(textChanged(const QString &)), this, SLOT(manualElementSelection(const QString &)));
 	// connect basic element display to update when lookingAtNewElement signal is sent out
 	connect(this, SIGNAL(lookingAtNewElement(std::unique_ptr<ShapeBase> *)), ElementProps, SLOT(updateDisplayValues(std::unique_ptr<ShapeBase> *)));
 	// connect to the main display
@@ -662,23 +662,11 @@ void MainWindow::manualElementSelection(const QString &newValue){
 void MainWindow::ManualElementSelectionReset(){
 	MainGLWidget->ManualNodeSelection = false;
 	MainGLWidget->ManualSelectedNodeId = -100;
-	// block signals whilst resetting
-	ElementProps->element_selection_box.blockSignals(true);
-	// reset the text in the selection box
-	ElementProps->setElementSelectionValidator(Sim01->Elements.size()-1, this);
-	ElementProps->element_selection_box.setText("");
-	// reopen to user input
-	ElementProps->element_selection_box.blockSignals(false);
+	ElementProps->resetElementSelection(Sim01->Elements.size()-1);
 }
 
 void MainWindow::ManualNodeSelectionReset(){
-	// block signals whilst resetting
-	ElementProps->node_selection_box.blockSignals(true);
-	// reset the text in the selection box
-	ElementProps->setNodeSelectionValidator(Sim01->Nodes.size()-1, this);
-	ElementProps->node_selection_box.setText("");
-	// reopen to user input
-	ElementProps->node_selection_box.blockSignals(false);
+	ElementProps->resetNodeSelection(Sim01->Nodes.size()-1, this);
 }
 
 void MainWindow::testAdhesionsAndCurveConstruction(){
