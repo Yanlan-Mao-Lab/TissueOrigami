@@ -7,64 +7,51 @@ project(TissueFolding VERSION 1.0)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-# Apple Clang does not support openmp, so cannot be used to compile. Check that we are not using it as the compiler
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    message(FATAL_ERROR "Error: Clang compilers do not support openmp. \n
-            Please use another compiler and pass its path to cmake via \n
-            -DCMAKE_CXX_COMPILER=/path/to/not/clang/compiler")
-endif()
-
-find_package(Boost REQUIRED)
-find_package(GSL REQUIRED)
-find_package(OpenMP REQUIRED)
-
-# populate the source files
-set(TF_SOURCES 
-    main.cpp
-    Prism.cpp
-    ReferenceShapeBase.cpp
-    ShapeBase.cpp
-    Simulation.cpp
-    Node.cpp
-    ModelInputObject.cpp
-    RandomGenerator.cpp
-    NewtonRaphsonSolver.cpp
-    Analysis.cpp
-    Lumen.cpp
-    TimeSeriesPhysicalProperties.cpp
-    YoungsModulusModifier.cpp
-)
-
-# if building with PARDISO, we will need to append the PARDISO library name and pthread too
-set(TF_LINK_LIBS
-    gsl
-    gslcblas
-    gomp
-    lapack
-)
-
-# additional options to pass to the compiler
-# openmp is needed regardless, we will append the PARDISO macro if we are building with PARDISO
-set(TF_COMPILE_OPTS
-    -fopenmp
-)
-
-# the executable we want to compile
-add_executable(TissueFolding ${TF_SOURCES})
-
 # we need to know if we are trying to build with Pardiso or not
 # this command means the -DPARDISO option can be passed from the command line
-# the default behaviour is to build _without_ PARDISO however
+# the default behaviour is to build _without_ PARDISO
 option(PARDISO "If ON, TissueFolding will be built with PARDISO. Default is OFF." OFF)
-message(STATUS "Pardiso is: ${PARDISO}")
-
 # if we want to build with PARDISO, we also should allow the user to pass "hints" to cmake on where to find PARDISO
 # as such, we will allow the passing of the variables
 # PLOC : The /path/to/the/pardiso.so file
 # PNAME : The name of the .so file containing the PARDISO library
 # The command-line PARDISO=ON option can still be passed, however without these hints we expect it to fail to locate the library
+message(STATUS "Pardiso is: ${PARDISO}")
 
-# if building with pardiso, locate the library using the information we've been given
+# find libraries we always need
+find_package(Boost REQUIRED)
+find_package(GSL REQUIRED)
+find_package(OpenMP REQUIRED)
+find_package(BLAS REQUIRED)
+find_package(LAPACK REQUIRED)
+
+# populate the source files
+set(SIMULATION_SOURCES 
+    ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Prism.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ReferenceShapeBase.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ShapeBase.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Simulation.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Node.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ModelInputObject.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/RandomGenerator.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/NewtonRaphsonSolver.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Analysis.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Lumen.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/TimeSeriesPhysicalProperties.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/YoungsModulusModifier.cpp
+)
+
+# the executable we want to compile
+add_executable(TissueFolding ${SIMULATION_SOURCES})
+
+# include directories are the same for both PARDISO and non-PARDISO builds
+target_include_directories(TissueFolding PUBLIC
+                ${PROJECT_SOURCE_DIR}
+                ${Boost_INCLUDE_DIRS}
+)
+
+# building with PARDISO requires additional linked libraries
 if (PARDISO)
     message(STATUS "Pardiso location provided: ${PLOC}")
     message(STATUS "Pardiso library provided : ${PNAME}")
@@ -82,32 +69,39 @@ if (PARDISO)
         message(STATUS "Found PARDISO at ${PARDISO_LIBRARY}")
         # NOTE: GCC compilers require linking in the order in which libraries depend on each other
         # In the PARDISO docs, pardiso must be linked to before opnblas, gfortran, openmp, pthread, and m (math library)
-        # Ergo, we must prepend rather than append here. [See https://pardiso-project.org/manual/manual.pdf, PG35]
-        list(PREPEND TF_LINK_LIBS ${PARDISO_LIBRARY} gfortran pthread m)
+        # [See https://pardiso-project.org/manual/manual.pdf, PG35]
+
+        # find the additional libraries that we need
+        # (also need -pthread option)
+        set(THREADS_PREFER_PTHREAD_FLAG ON)
+        find_package(Threads REQUIRED)
     endif()
 
     # ensure the preprocessor macro for BUILD_WITH_PARDISO is defined,
     # by adding this to the compile options
-    list(APPEND TF_COMPILE_OPTS "-DBUILD_WITH_PARDISO")
+    target_compile_options(TissueFolding PUBLIC "-DBUILD_WITH_PARDISO")
 
+    # add the required libraries (including PARDISO)
+    target_link_libraries(TissueFolding PUBLIC
+                ${PARDISO_LIBRARY}          # PARDISO (must be 1st))
+                ${Boost_LIBRARIES}          # Boost
+                ${GSL_LIBRARIES}            # GSL
+                ${BLAS_LIBRARIES}           # BLAS
+                ${LAPACK_LIBRARIES}         # LAPACK (before gfortran)
+                ${OpenMP_CXX_LIBRARIES}     # OpenMP (after PARDISO)
+                gfortran                    # gfortran (after PARDISO)
+                Threads::Threads            # pthread (after PARDISO)
+                m                           # math.h (after PARDISO)
+                )
 else()
     message(STATUS "Building without PARDISO")
+
+    # add the required libraries (including PARDISO)
+    target_link_libraries(TissueFolding PUBLIC
+                ${Boost_LIBRARIES}          # Boost
+                ${GSL_LIBRARIES}            # GSL
+                ${BLAS_LIBRARIES}           # BLAS
+                ${LAPACK_LIBRARIES}         # LAPACK
+                ${OpenMP_CXX_LIBRARIES}     # OpenMP
+                )
 endif()
-
-# include directories are the same for both PARDISO and non-PARDISO builds
-# since we are planning to build in an empty directory, no need to inlude PROJECT_BINARY_DIR here
-target_include_directories(TissueFolding PUBLIC
-                ${PROJECT_SOURCE_DIR}
-)
-
-# pass in additional compile options
-message(STATUS "Passing in compiler options ${TF_COMPILE_OPTS}")
-target_compile_options(TissueFolding PUBLIC
-                ${TF_COMPILE_OPTS}
-)
-
-# tell the compiler to link libaries
-message(STATUS "Linking with the following libraries: ${TF_LINK_LIBS}")
-target_link_libraries(TissueFolding PUBLIC
-                ${TF_LINK_LIBS}
-)

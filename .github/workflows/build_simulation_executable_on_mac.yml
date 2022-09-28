@@ -22,15 +22,23 @@ jobs:
           brew install boost gsl
 
       # run interactive session
-      - name: tmate session
-        uses: mxschmitt/action-tmate@v3
+      #- name: tmate session
+      #  uses: mxschmitt/action-tmate@v3
+
+      # - name: Build TissueFolding with CMake
+      #   run: |
+      #     cd ${{ github.workspace }}/TissueFolding/SourceCode/
+      #     mkdir build
+      #     cd build
+      #     cmake .. -DCMAKE_CXX_COMPILER=$(which g++-11) -DCMAKE_C_COMPILER=$(which gcc-11)
+      #     cmake --build .
 
       - name: Build TissueFolding with CMake
         run: |
           cd ${{ github.workspace }}/TissueFolding/SourceCode/
           mkdir build
           cd build
-          cmake .. -DCMAKE_CXX_COMPILER=$(which g++-11) -DCMAKE_C_COMPILER=$(which gcc-11) -DBoost_NO_CMAKE=ON
+          cmake .. 
           cmake --build .
       
       # This is here to be extra-explicit (and in the very unexpected case that cmake would fail silently)
