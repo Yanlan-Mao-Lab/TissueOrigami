@@ -300,4 +300,10 @@ void PropertyDisplayLayout::writeToFile(const QString &filename, bool write_head
         }
         file << "\n";
     }
+    // we should close the file now that we're done with it
+    file.close();
+}
+
+std::unique_ptr<ShapeBase> *PropertyDisplayLayout::getCurrentElement() {
+    return current_element;
 }

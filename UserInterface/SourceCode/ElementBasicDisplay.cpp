@@ -118,3 +118,35 @@ void ElementBasicDisplay::updateDisplayValues(std::unique_ptr<ShapeBase> *elemen
         }
     }
 }
+void ElementBasicDisplay::writeNodePositions(QString filename, std::unique_ptr<ShapeBase> *element) {
+    // open the file, in append mode if necessary (might have asked for node positions to be written)
+    ofstream file(filename.toStdString(), std::ios_base::app);
+    file << "====== Node Information (id, x, y, z) =====\n";
+
+    // now we just need to write the positions of the elements to the currently selected node
+    // if we have not been passed a nullptr, we can safely update the information
+    if (element) {
+        // write the information to the infoboxes
+        for (int row = 0; row < n_nodes_per_element; row++) {
+            // these are the box indices for this row
+            int box_id_ind = getInfoBoxIndex(row, NodeInfoHeader::ID);
+            int box_x_ind = getInfoBoxIndex(row, NodeInfoHeader::X);
+            int box_y_ind = getInfoBoxIndex(row, NodeInfoHeader::Y);
+            int box_z_ind = getInfoBoxIndex(row, NodeInfoHeader::Z);
+            // extract this node's information
+            double node_id = (*element)->NodeIds[row];
+            double x_pos = (*element)->Positions[row][0];
+            double y_pos = (*element)->Positions[row][1];
+            double z_pos = (*element)->Positions[row][2];
+            // output information to file
+            file << node_id << "," << x_pos << "," << y_pos << "," << z_pos << ",";
+            file << "\n";
+        }
+    }
+    // throw error if we recieved a bad element
+    else {
+        throw runtime_error("Error: got nullptr when attempting to write node positions of current element");
+    }
+    // close file now that we're done with it
+    file.close();
+}

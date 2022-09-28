@@ -96,9 +96,12 @@ void MainWindow::generateControlPanel(){
 	// connect to the main display
 	ControlPanelMainHBox->addLayout(PropertySelection,Qt::AlignCenter);
 
-	//Generating project display options panel:
+	// connect the export selected element properties button to the node information display
+    connect(PropertySelection, SIGNAL(writeNodePositionsToFile(QString, std::unique_ptr<ShapeBase> *)), ElementProps, SLOT(writeNodePositions(QString, std::unique_ptr<ShapeBase> *)));
+
+	// Generating project display options panel:
 	QGridLayout *ProjectDisplayOptionsGrid = new QGridLayout;
-	setUpProjectDisplayOptionGrid(ProjectDisplayOptionsGrid);
+    setUpProjectDisplayOptionGrid(ProjectDisplayOptionsGrid);
 	ControlPanelMainHBox->addLayout(ProjectDisplayOptionsGrid,Qt::AlignTop);
 
 	//Generating view options Panel:

@@ -61,6 +61,11 @@ public slots:
      * @param write_headers Whether to break data up by writing section headers
      */
     void writeToFile(const QString &filename, bool write_headers=true);
+    /**
+     * @brief Get (the pointer to) the current element
+     * 
+     */
+    std::unique_ptr<ShapeBase> *getCurrentElement();
 
 signals:
     /**

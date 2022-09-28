@@ -45,15 +45,15 @@ class Header : public QLabel
 {
     Q_OBJECT
 public:
-    Header();
+    Header(QWidget *parent=nullptr);
     /**
      * @brief Construct a new Header object
      *
      * @param text Text of this header
      * @param parent Parent QWidget
      */
-    Header(std::string text);
-    Header(QString &text);
+    Header(std::string text, QWidget *parent=nullptr);
+    Header(QString &text, QWidget *parent=nullptr);
 };
 
 /**
@@ -304,6 +304,19 @@ private:
     QString default_text = "-"; // default displayed text
 
     ReadOnlyBox *display_box; // box that displays the single value
+};
+
+class CheckBox : public QCheckBox {
+    Q_OBJECT
+public:
+    CheckBox();
+    /**
+     * @brief Construct a new Check Box object, with the text provided
+     * 
+     * @param text Text to label the checkbox with
+     * @param start_enabled Whether to initalise the checkbox enabled (true) or disabled (false)
+     */
+    CheckBox(const QString &text, bool start_enabled=true);
 };
 
 # endif
