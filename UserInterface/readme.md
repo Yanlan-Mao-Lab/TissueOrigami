@@ -30,8 +30,10 @@ This will create the `VisualiseTissueFolding` executable and place it into the `
 ## Usage
 
 ```bash
-./VisualiseTissueFolding [-dInput input_folder] [-mode sim_mode]
+./VisualiseTissueFolding [-dInput input_folder]
 ```
+`input_folder` is a required argument, and must point to a directory in which the output of a completed simulation is saved.
+
 For example, you could
 - Open the terminal
 - cd to the git folder
