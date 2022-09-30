@@ -34,7 +34,7 @@ int main(int argc, char **argv)
 		Success = true;
 	}
 	else{
-		Success = Sim01->readExectuableInputsGUI(gui_args.input_file, gui_args.read_in_dir, gui_args.output_dir);
+		Success = Sim01->readExecutableInputsGUI(gui_args.input_file, gui_args.read_in_dir, gui_args.output_dir);
 	}
 	if (Success == 0 ){
 		cout<<"Error in input to executable"<<endl;

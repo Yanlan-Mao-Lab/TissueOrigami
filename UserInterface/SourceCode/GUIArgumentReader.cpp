@@ -30,7 +30,7 @@ GUIArgumentReader::GUIArgumentReader(int argc, char **argv) {
             // unrecognised argument
             printHelp(true);
         }
-        i += 2; // incriment 2, to the next "flag"
+        i += 2; // increment 2, to the next "flag"
     }
 }
 

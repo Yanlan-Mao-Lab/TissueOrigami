@@ -298,7 +298,7 @@ bool Simulation::readExecutableInputs(int argc, char **argv){
 	return Success;
 }
 
-bool Simulation::readExectuableInputsGUI(string inputfile, string read_in_directory, string output_directory) {
+bool Simulation::readExecutableInputsGUI(string inputfile, string read_in_directory, string output_directory) {
 	// we are always in displaysave mode
 	DisplaySave = true;
 	// validate that we have been given a suitable input file
