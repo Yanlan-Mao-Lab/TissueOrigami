@@ -10,8 +10,8 @@
 #include <QtWidgets>
 #include "MainWindow.h"
 #include "GLWidget.h"
-
 #include "Simulation.h"
+#include "GUIArgumentReader.h"
 #include <vector>
 
 class MainWindow;
@@ -21,6 +21,10 @@ class GLWidget;
 Simulation* Sim01;
 int main(int argc, char **argv)
 {
+	// having this here will throw errors if invalid input are provided to the executable
+	// again, there is scope to build on this functionality by editing how it interacts with the Simulation class
+	GUIArgumentReader gui_args(argc, argv);
+
 	bool Success = false;
 	Sim01 = new Simulation();
 	Sim01->displayIsOn = true;
@@ -30,7 +34,7 @@ int main(int argc, char **argv)
 		Success = true;
 	}
 	else{
-		Success = Sim01->readExecutableInputs(argc, argv);
+		Success = Sim01->readExecutableInputsGUI(gui_args.input_file, gui_args.read_in_dir, gui_args.output_dir);
 	}
 	if (Success == 0 ){
 		cout<<"Error in input to executable"<<endl;

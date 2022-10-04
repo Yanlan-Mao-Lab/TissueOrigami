@@ -125,7 +125,7 @@ Once the build completes, you should move the `TissueFolding` executable out of 
 ```
 The arguments can be passed in any order, however the value of the argument must be passed immediately after the corresponding flag, and separated by a single whitespace.
 - `-i input_file` : Path to the input file for this simulation. See "input files to the simulation", below.
-- `-mode sim_mode`: One of `SimulationOnTheGo`, `ContinueFromSave`, or `DisplaySave`
+- `-mode sim_mode`: One of `SimulationOnTheGo` or `ContinueFromSave`.
     - `SimulationOnTheGo`   : Starts a new simulation from scratch.
     - `ContinueFromSave`    : Reads in the outputs of a finished simulation from the directory specified by `-dInput`, and resumes the simulation from this endpoint.
 - `od output_dir`           : The directory to write the outputs to. Will overwrite any previous outputs in this directory.

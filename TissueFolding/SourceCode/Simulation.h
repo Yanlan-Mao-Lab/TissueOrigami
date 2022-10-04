@@ -28,7 +28,6 @@
     #include <omp.h>
 #endif
 
-
 class ModelInputObject;
 //using namespace std;
 
@@ -569,6 +568,7 @@ public:
 	~Simulation();                                      ///< Destructor
 	void assignTips();                                  ///< This function assigns the nodes marking the tips of the tissue in xy plane.
 	bool readExecutableInputs(int argc, char **argv);   ///< This function reads the input executables from user input.
+	bool readExecutableInputsGUI(string inputfile, string read_in_directory, string output_directory=".");
 	bool initiateSystem();                              ///< This function initiates the system with model inputs.
 	bool initiateSavedSystem();                         ///< This function initiates a saved system from save files.
 	void calculateSystemCentre();                       ///< This function calculates the tissue geometric centre.
