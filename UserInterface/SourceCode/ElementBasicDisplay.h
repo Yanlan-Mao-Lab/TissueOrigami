@@ -59,6 +59,7 @@ public:
      *
      */
     ElementBasicDisplay();
+    ~ElementBasicDisplay();
 
     // The "Selected Item Properties" header
     Header *selection_header = new Header("Selected Item Properties");

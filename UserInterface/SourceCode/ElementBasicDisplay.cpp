@@ -60,6 +60,15 @@ ElementBasicDisplay::ElementBasicDisplay()
     addWidget(&node_selection_box, 1, 3, 1, 1, AL_LEFT);
     addWidget(&element_selection_box, 1, 4, 1, 1, AL_LEFT);
 };
+ElementBasicDisplay::~ElementBasicDisplay() {
+    delete selection_header;
+    delete element_name_label;
+    delete node_info_labels_horz;
+    delete node_info_numbers_vert;
+    delete node_selection_label;
+    delete element_selection_label;
+    delete element_name_display;
+}
 
 void ElementBasicDisplay::setNodeSelectionValidator(int max_node_index, QObject *parent)
 {
