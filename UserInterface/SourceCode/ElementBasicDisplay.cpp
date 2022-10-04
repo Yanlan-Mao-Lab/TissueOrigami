@@ -63,8 +63,12 @@ ElementBasicDisplay::ElementBasicDisplay()
 ElementBasicDisplay::~ElementBasicDisplay() {
     delete selection_header;
     delete element_name_label;
-    delete node_info_labels_horz;
-    delete node_info_numbers_vert;
+    for(int i=0; i<n_node_info_headers; i++) {
+        delete node_info_labels_horz[i];
+    }
+    for(int i=0; i<n_nodes_per_element; i++) {
+        delete node_info_numbers_vert[i];
+    }
     delete node_selection_label;
     delete element_selection_label;
     delete element_name_display;
