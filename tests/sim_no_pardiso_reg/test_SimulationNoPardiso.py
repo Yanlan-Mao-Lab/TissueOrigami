@@ -1,7 +1,144 @@
 import os, filecmp, shutil, subprocess
+import numpy as np
 import pytest
 from pytest_check import check
 import warnings
+
+def CompareTxtElements(e1, e2, line_num, ele_num, f_name1, f_name2, tol=1e-8):
+    '''
+    Compares two strings to determine whether they are identical, under the following assumptions:
+    - If the strings are equal via string comparison, return True
+    - Otherwise, attempt to interpret the strings are doubles. Return True if these doubles are within tol of each other.
+    If the above conditions are not satisfied, the elements are deemed to be different and False is returned.
+    '''
+
+    if e1==e2:
+        # either these are the same text fields, or the same number has been written out
+        return True
+    else:
+        # more drastic measures - can be convert to doubles?
+        try:
+            double1 = np.double(e1)
+            double2 = np.double(e2)
+        except ValueError:
+            # could not convert strings to doubles, different files
+            print('String difference at line %d, element %d:' % (line_num, ele_num))
+            print('\t (%s) %s' % (f_name1, e1))
+            print('\t (%s) %s' % (f_name2, e2))
+            return False
+        except:
+            # unexpected error thrown, print error information
+            raise RuntimeError("Error: unexpected error whilst handling string -> double conversion")
+        # otherwise, these were actually numbers, is the difference less than tol?
+        double_diff = np.abs( double1 - double2 )
+        # are the elements different by a significant amount?
+        if double_diff >= tol:
+            print('Line %d, element %d, values [ %.8e , %.8e ] have difference greater than %.1e' % (line_num, ele_num, double1, double2), tol)
+            return False
+        else:
+            # upon conversion to doubles, elements match
+            return True
+    # we always return in the above if statement, no need for concluding return here
+
+def CompareLinesInRawTxt(line1, line2, line_num, f_name1, f_name2, tol=1e-8):
+    '''
+    Compare the contents of two lines from text files.
+    The lines are split into elements, which are separated by whitespace.
+    Elements are deemed equal if:
+        - They are both strings, and these strings are identical in length and content
+        - They are both doubles, and these doubles are within tol of each other
+    If all corresponding pairs of elements are equal, the lines are equal.
+
+    The lines passed in should be matching lines from a TEXT output of the simulation, and the corresponding reference file.
+    '''
+    values1 = list(filter(None, [x.strip() for x in line1.split()])); n_v1 = len(values1)
+    values2 = list(filter(None, [x.strip() for x in line2.split()])); n_v2 = len(values1)
+    if n_v1 != n_v2:
+        # different number of fields on this line, not the same file
+        return False
+    else:
+        # compare field-by-field
+        # compare as strings first (as these might be text characters)
+        # otherwise, try to convert to double and compare - catch errors if these really are strings that can't be converted to doubles, and are genuinely different
+        for ele_num in range(n_v1):
+            e1 = values1[ele_num]; e2 = values2[ele_num]
+            # compare the two elements; either as strings, or failing this as doubles saved as strings
+            # CompareTxtElements returns False if the elements are different
+            if not CompareTxtElements(e1, e2, line_num, ele_num, f_name1, f_name2, tol):
+                return False
+    # if we don't escape early, the lines are the same as all elements are equal
+    return True
+
+def CompareLinesInConvertedTxt(line1, line2, line_num, tol=1e-8):
+    '''
+    Compare the contents of two lines of (comma-separated) values.
+    Values are compared element-wise, and are deemed to be equal when they coincide to a difference of tol.
+
+    The lines passed in should be matching lines from a BINARY output of the simulation, converted to a text file via the converter executable, and the corresponding line from (the converted) reference file.
+    '''
+
+    values1 = list(filter(None, [x.strip() for x in line1.split(sep=',')])); n_v1 = len(values1)
+    values2 = list(filter(None, [x.strip() for x in line2.split(sep=',')])); n_v2 = len(values2)
+
+    if n_v1 != n_v2:
+        # different number of fields on this line, not the same file
+        return False
+    else:
+        # compare field-by-field, these are doubles so we should be able to cast
+        for ele_num in range(n_v1):
+            double1 = np.double(values1[ele_num])
+            double2 = np.double(values2[ele_num])
+            double_diff = np.abs( double1 - double2 )
+            # are the elements different by a significant amount?
+            if double_diff >= tol:
+                print('Line %d, element %d, values [ %.8e , %.8e ] have difference greater than %.1e' % (line_num, ele_num, np.double(values1[ele_num]), np.double(values2[ele_num]), tol))
+                return False
+    # if we didn't return early, all elements must have the same value, so the lines are equal
+    return True
+
+def CompareTxt(f_name1, f_name2, tol=1e-8, type='raw_txt'):
+    '''
+    Compares the contents of the files f_name1 and f_name2, returning True if the contents match according to the following criteria:
+    - all non-numerical text must match exactly between files
+    - numerical values must agree to within tol
+
+    For converted binaries, we can just skip straight to comparing the numerical values, and this can be toggled on by passing type as anything EXCEPT its default value.
+    '''
+
+    # diagnostics
+    print('CompareTxt running on %s vs %s' % (f_name1, f_name2))
+    # open files, get the data, then close them
+    f1 = open(f_name1, 'r'); 
+    f2 = open(f_name2, 'r'); 
+    lines1 = f1.readlines(); f1.close()
+    lines2 = f2.readlines(); f2.close()
+
+    n_lines_f1 = len(lines1)
+    n_lines_f2 = len(lines2)
+    # immediately flag a difference if number of lines is different
+    if n_lines_f1!=n_lines_f2:
+        return False
+    elif type=='raw_txt':
+        # comparing raw text files spat out by the program
+        # these might have odd formating patterns, so we need to be careful as we compare
+        # compare line-by-line
+        for line_num in range(n_lines_f1):
+            # CompareLinesInRawTxt will return True if the files are the same
+            # Thus, we return False if this function also returned False
+            line1 = lines1[line_num].strip('\n'); line2 = lines2[line_num].strip('\n')
+            if not CompareLinesInRawTxt(line1, line2, line_num, f_name1, f_name2, tol):
+                return False
+    else:
+        # comparing converted binaries, which are just .csv files
+        # compare field-by-field
+        for line_num in range(n_lines_f1):
+            line1 = lines1[line_num]; line2 = lines2[line_num]
+            # CompareLinesInConvertedTxt will return True if the files are the same
+            # Thus, we return False if this function also returned False
+            if not CompareLinesInConvertedTxt(lines1[line_num], lines2[line_num], line_num, tol):
+                return False
+    # if we get to here, we did not exit in the above comparisons, so the files must be the same
+    return True
 
 def cleanup(fnames):
     '''
@@ -76,6 +213,10 @@ class Test_SimulationNoPardiso():
                     ]
     # these outputs should be ignored - they are logs, dependent on the machine, etc
     ign_outputs = [ "tmp" ]
+
+    # tolerance to accept differences in doubles to
+    # since we are just copying, we want to be strict on possible precision errors
+    tolerance = 1e-16
 
     @pytest.mark.parametrize('run_number', run_numbers)
     def test_run0700x(self, run_number):
@@ -157,16 +298,20 @@ class Test_SimulationNoPardiso():
             # attempt direct comparison of binaries - not recommended
             bin_compare = filecmp.cmp(ref_op, gen_op, shallow=False)
             txt_compare = False
+            dif_compare = False
             # if bin_compare is false, the binaries do not match,
             # but if we read them into the simulation, do they match now?
             if not bin_compare:
                 # raise a warning that we are having to binary convert!
-                warnings.warn("Warning: having to convert on output: %s" % f_type)
+                warnings.warn("Warning: having to examine via CompareTxt on: %s" % f_type)
                 # run the converter on these output files, the mode to pass to the converter is given by f_type
                 command = self.converter_exe + " " + f_type + " " + ref_op + " " + gen_op
                 subprocess.run(command.split(), cwd=self.dir_path)
                 # compare the converted outputs
                 txt_compare = filecmp.cmp(ref_op+"-read.txt", gen_op+"-read.txt", shallow=False)
+                if not txt_compare:
+                    # need to actually read in the values now
+                    dif_compare = CompareTxt(ref_op+"-read.txt", gen_op+"-read.txt", type="bin_compare", tol=self.tolerance)
                 # cleanup the converted files that we made
                 os.remove(ref_op+"-read.txt")
                 os.remove(gen_op+"-read.txt")
@@ -174,5 +319,5 @@ class Test_SimulationNoPardiso():
             # since we do not assign to txt_compare unless bin_compare is false, we can simply check
             # bin_compare || txt_compare
             with check:
-                assert (bin_compare or txt_compare), "Output mismatch between: " + ref_op + " and " + gen_op
+                assert (bin_compare or txt_compare or dif_compare), "Output mismatch between: " + ref_op + " and " + gen_op
         return

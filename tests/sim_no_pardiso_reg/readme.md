@@ -24,15 +24,17 @@ The simulation outputs that are produced as binary files are:
  - PhysicalProp
  - SpecificElementAndNodeTypes
  - TensionCompression
-When comparing these generated outputs to their reference counterparts, we allow for subtle differences in the generated binary files.
+When comparing these generated outputs to their reference counterparts, we allow for subtle numerical differences in the generated binary files.
 In the event that the binary files _do not_ match (according to `filecmp.cmp`), the following is done:
 1. Reading the values stored in the binary back into the simulation (for example, if we were resuming a previously stopped simulation)
 1. Writing them to a `.txt` file
 1. Applying the same proceedure to the reference binary file
-Obtaining `True` from acting `filecmp.cmp` on the resulting text files will allow the test to pass.
+Obtaining `True` from acting `filecmp.cmp` on the resulting text files will allow the test to pass. 
+Otherwise, the (now possibly converted to text) files `out` and `ref` are compared using the `CompareTxt` function:
+- All strings within the files are directly compared against each other. If these differ, then the test _fails_.
+- All saved numerical values in the files are checked to be within a set tolerance ($10^{-16}$) of each other. If any pair of values differs, then the test _fails_.
 This event indicates that there is a difference between a binary file and its counterpart, but _not_ between the data that is read into the simulation. 
 `pytest` will throw a warning detailing the file which differed.
-
 
 ## Conducting the tests
 

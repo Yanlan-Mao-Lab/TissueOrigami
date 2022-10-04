@@ -1,5 +1,4 @@
-from ast import Compare
-import os, filecmp, subprocess, re
+import os, filecmp, subprocess
 import numpy as np
 import pytest
 from pytest_check import check
