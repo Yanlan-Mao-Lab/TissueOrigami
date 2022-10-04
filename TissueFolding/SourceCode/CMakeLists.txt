@@ -10,6 +10,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # populate the source files
 set(TF_SOURCES 
     main.cpp
+    SimulationArgumentReader.cpp
     Prism.cpp
     ReferenceShapeBase.cpp
     ShapeBase.cpp
