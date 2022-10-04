@@ -28,6 +28,7 @@ find_package(LAPACK REQUIRED)
 # populate the source files
 set(SIMULATION_SOURCES 
     ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/SimulationArgumentReader.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Prism.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ReferenceShapeBase.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ShapeBase.cpp
