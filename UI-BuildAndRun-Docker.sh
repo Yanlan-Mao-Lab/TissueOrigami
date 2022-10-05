@@ -6,4 +6,4 @@ clear
 docker image build -t willgraham01/tissueorigami .
 
 # just try running the UI
-docker container run -it --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix/:/tmp/.X11-unix willgraham01/tissueorigami /bin/sh -c "/UserInterface/VisualiseTissueFolding"
+docker container run -it --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix/:/tmp/.X11-unix willgraham01/tissueorigami /bin/sh -c "cd /Samples/VisualiseSmallRectangle/; /UserInterface/VisualiseTissueFolding -dInput /Samples/VisualiseSmallRectangle/SimulationOutputDirectory/ -i /Samples/VisualiseSmallRectangle/modelinput_SmallRectangle"
