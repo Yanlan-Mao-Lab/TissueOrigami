@@ -22,7 +22,8 @@ class GLWidget;
 
 #include "Simulation.h"
 #include "Analysis.h"
-
+#include "ElementBasicDisplay.h"
+#include "ElementPropertySelection.h"
 
 using namespace std;
 
@@ -43,7 +44,7 @@ class MainWindow : public QMainWindow
 
 
 public slots:
-    void 	SelectedItemChange();
+    void 	SelectedItemChange(bool element_found);
     void	manualNodeSelection(const QString &);
     void 	manualElementSelection(const QString &);
     void 	ManualElementSelectionReset();
@@ -78,8 +79,14 @@ public slots:
     void 	yClipChange(int);
     void 	zClipChange(int);
 
-//signals:
- //   void StrainComboBoxCanged();
+signals:
+    /**
+     * @brief Emitted when a new element is selected. The nullptr is passed when deselection occurs.
+     * 
+     * @param element The new element that has been selected
+     */
+   void lookingAtNewElement(std::unique_ptr<ShapeBase> *element);
+
  private:
     void setViewBackgroundColour();
     void generateControlPanel();
@@ -98,16 +105,21 @@ public slots:
     void updateTimeText();
     void takeScreenshot();
     QWidget		*CentralWidget;
-    QLineEdit 	*NameBox;
-    QLineEdit 	*NodeSelectBox;
-    QLineEdit 	*ElementSelectBox;
-    QTimer 		*timer;
-    int 		nCoordBox;
-    QLineEdit 		*CoordBox_id[6];
-    QLineEdit 		*CoordBox_x[6];
-    QLineEdit 		*CoordBox_y[6];
-    QLineEdit 		*CoordBox_z[6];
-    QLabel  		*CoordLabel_n[6];
+
+    /**
+     * @brief This layout contains the widgets that handle the display of basic element information (name, associated nodes, their positions, etc) and the selection of nodes/elements by providing a manual index.
+     */
+    ElementBasicDisplay *ElementProps;
+
+    /**
+     * @brief Allows the user to select a particular element property (growth, force, etc) and displays the value of this property for the currently selected element.
+     * 
+     * Auto-updates the display based on the property selected, and disables when an element is deselected.
+     */
+    ElementPropertySelection *PropertySelection;
+
+    QTimer *timer;
+    int nCoordBox;
     QCheckBox		*DisplayCheckBoxes[2];
     QComboBox   	*StrainComboBox;
     QDoubleSpinBox	*StrainSpinBoxes[2];
