@@ -30,9 +30,10 @@ This will create the `VisualiseTissueFolding` executable and place it into the `
 ## Usage
 
 ```bash
-./VisualiseTissueFolding [-dInput input_folder]
+./VisualiseTissueFolding [-dInput input_folder] [-i original_input_file]
 ```
-`input_folder` is a required argument, and must point to a directory in which the output of a completed simulation is saved.
+- `input_folder` is a required argument, and must point to a directory in which the output of a completed simulation is saved.
+- `original_input_file` is a required argument, and must point to the original input file that was passed to the simulation executable, `TissueFolding`. Note that this also requires the relative paths (to mesh files, growth profiles, etc) to be visible from the directory `VisualiseTissueFolding` is running in.
 
 For example, you could
 - Open the terminal
