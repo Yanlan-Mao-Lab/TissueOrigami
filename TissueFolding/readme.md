@@ -67,6 +67,12 @@ Once the build completes, you should move the `TissueFolding` executable out of 
 
 ## Usage
 
+Ensure that you have exported the variable `OMP_NUM_THREADS` in your shell environment before running the simulation with PARDISO - PARDISO requires this variable to be set in order to run its solving methods:
+```bash
+export OMP_NUM_THREADS=x
+```
+replacing `x` with the number of threads you wish to utilise.
+
 `TissueFolding` takes in a maximum of 4 command-line arguments, indicated by flags:
 ```bash
 ./TissueFolding [-i input_file] [REQUIRED -mode sim_mode] [-od output_dir] [-dInput prev_save_dir]
