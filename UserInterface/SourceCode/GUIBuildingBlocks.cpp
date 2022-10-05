@@ -14,10 +14,13 @@ Header::Header() : QLabel() {
 Header::Header(string text) : QLabel(text.c_str()) {
     setFont(DEF_HEADER_FONT);
 }
+Header::Header(QString &text) : QLabel(text) {
+    setFont(DEF_HEADER_FONT);
+}
 
 ReadOnlyBox::ReadOnlyBox() : QLineEdit() {
     // text that fills the box when nothing is provided
-    setPlaceholderText("-");
+    setPlaceholderText(default_text);
     // make read-only
     setReadOnly(true);
     // use our default font
@@ -76,4 +79,118 @@ DropdownMenu::DropdownMenu(QStringList options) : QComboBox() {
     setEnabled(false);
     // add the options to the selection
     addItems(options);
+}
+
+VectorLayout3::VectorLayout3() {
+    for(int index=0; index<n_comps; index++) {
+        vector_components[index] = new ReadOnlyBox("-");
+        // add each box corresponding to a component to the display, as a column vector
+        vector_components[index]->setAlignment(AL_CENTRE);
+        addWidget(vector_components[index], index, 0, 1, 3, AL_CENTRE);
+    }
+}
+VectorLayout3::VectorLayout3(QStringList comp_labels) {
+    for(int index=0; index<n_comps; index++) {
+        // create the label and add to display
+        component_labels[index] = new Header(comp_labels[index]);
+        addWidget(component_labels[index], index, 0, 1, 1, AL_RIGHT);
+        // add each box corresponding to a component to the display, as a column vector
+        vector_components[index] = new ReadOnlyBox("-");
+        vector_components[index]->setAlignment(AL_CENTRE);
+        addWidget(vector_components[index], index, 1, 1, 2, AL_CENTRE);
+    }
+}
+void VectorLayout3::setComponentValue(int index, const QString &text) {
+    vector_components[index]->setText(text);
+}
+void VectorLayout3::clearAllComponents() {
+    for(int index=0; index<n_comps; index++) {
+        vector_components[index]->setText("-");
+    }
+}
+void VectorLayout3::fillValues(double *values) {
+    for(int index=0; index<n_comps; index++) {
+        setComponentValue(index, QString::number(values[index]));
+    }
+}
+void VectorLayout3::fillValues(float *values) {
+    for(int index=0; index<n_comps; index++) {
+        setComponentValue(index, QString::number(values[index]));
+    }
+}
+void VectorLayout3::fillValues(std::array<double, 3> values) {
+    for(int index=0; index<n_comps; index++) {
+        setComponentValue(index, QString::number(values[index]));
+    }
+}
+void VectorLayout3::fillValues(QStringList values) {
+    for(int index=0; index<n_comps; index++) {
+        setComponentValue(index, values[index]);
+    }
+}
+
+MatrixLayout3by3::MatrixLayout3by3() {
+    // add each box corresponding to a component to the display, in a grid
+    for(int row=0; row<n_rows; row++) {
+        for(int col=0; col<n_cols; col++) {
+            int box_index = boxIndex(row, col);
+            matrix_components[box_index] = new ReadOnlyBox("-");
+            matrix_components[box_index]->setAlignment(AL_CENTRE);
+            addWidget(matrix_components[box_index], row, col, 1, 1, AL_CENTRE);
+        }
+    }
+}
+void MatrixLayout3by3::setBoxValue(int row, int col, const QString &text) {
+    setBoxValue(boxIndex(row, col), text);
+}
+void MatrixLayout3by3::setBoxValue(int box_index, const QString &text) {
+    matrix_components[box_index]->setText(text);
+}
+void MatrixLayout3by3::clearAllValues() {
+    for(int box_index=0; box_index<n_comps; box_index++) {
+        matrix_components[box_index]->setText("-");
+    }
+}
+void MatrixLayout3by3::fillValues(double *values) {
+    for(int index=0; index<n_comps; index++) {
+        QString value_as_string = QString::number(values[index]);
+        setBoxValue(index, value_as_string);
+    }
+}
+void MatrixLayout3by3::fillValues(QStringList values) {
+    for(int index=0; index<n_comps; index++) {
+        setBoxValue(index, values[index]);
+    }   
+}
+void MatrixLayout3by3::fillValues(gsl_matrix *values) {
+    for(int row=0; row<n_rows; row++) {
+        for(int col=0; col<n_cols; col++) {
+            int box_index = boxIndex(row, col);
+            double component_value = gsl_matrix_get(values, row, col);
+            setBoxValue(box_index, QString::number(component_value));
+        }
+    }
+}
+int MatrixLayout3by3::boxIndex(int row, int col) {
+    if ((row<0) || (row>=n_rows) || (col<0) || (col>=n_cols)) {
+        throw std::runtime_error("Growth matrix index out of bounds\n");
+    }
+    return row*n_cols + col;
+}
+
+SingleBoxLayout::SingleBoxLayout() : QGridLayout() {
+    display_box = new ReadOnlyBox;
+    display_box->setText(default_text);
+    display_box->setAlignment(AL_CENTRE);
+    addWidget(display_box);
+}
+void SingleBoxLayout::setDisplayValue(const QString &value) {
+    display_box->setText(value);
+}
+void SingleBoxLayout::setDisplayValue(double value) {
+    QString value_as_double = QString::number(value);
+    setDisplayValue(value_as_double);
+}
+void SingleBoxLayout::clearValue() {
+    display_box->setText(default_text);
 }
