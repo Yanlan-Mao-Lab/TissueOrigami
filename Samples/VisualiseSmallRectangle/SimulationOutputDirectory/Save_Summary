@@ -1,0 +1,22 @@
+TimeStep(sec):  60
+DataSaveInterval(sec):  60
+ModelinputName:  modelinput07007
+
+Mesh_Type:  4
+	Symmetricity-x: 0 Symmetricity-y: 0 Symmetricity-z: 0
+	MeshFileName: ./smallRectangle.mesh
+
+Growth Type:  growth From File (3)
+	Initial time(sec): 120	FinalTime time(sec): 300	Growth matrix mesh size: 11 4
+Growth Type:  growth From File (3)
+	Initial time(sec): 60	FinalTime time(sec): 300	Growth matrix mesh size: 11 4
+
+There is explicit ECM:	1
+	Columnar ECM Stiffness(Pa): 1600
+	Peripodial ECM Stiffness(Pa): 100
+	ECM remodelling half life (hour): 8
+	Is there perturbation to the ECM: 0
+
+There is explicit actin:  1
+
+There is pipette aspiration:  0

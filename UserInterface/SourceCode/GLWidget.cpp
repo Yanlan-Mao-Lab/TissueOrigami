@@ -1326,8 +1326,8 @@ void GLWidget::highlightNode(int i){
 	 drawForPicking();
 	 getColourOfPoint(LastPos);
 	 resetItemSelectionInfo(1);
-	 findElement();
-	 emit SelectedItemChanged();
+	 bool found_element = findElement();
+	 emit SelectedItemChanged(found_element);
  }
 
 
@@ -1383,7 +1383,7 @@ void GLWidget::highlightNode(int i){
 	 PickedColour[3] = (int)pixels[3];
  }
 
- void GLWidget::findElement(){
+ bool GLWidget::findElement(){
 	 int n = Sim01->Elements.size();
 	 for (int i =0; i<n;i++){
 		 std::array<int,3> ElementColour = Sim01->Elements[i]->getIdentifierColour();
@@ -1392,9 +1392,10 @@ void GLWidget::highlightNode(int i){
 			fillItemSelectionInfo(i);
 			SelectedItemIndex = i;
 		    update();
-			break;
+			return true;
 		}
 	}
+	return false;
  }
 
 bool GLWidget::findElement(int i){

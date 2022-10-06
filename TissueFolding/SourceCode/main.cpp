@@ -1,10 +1,15 @@
 using namespace std;
 
 #include "Simulation.h"
+#include "SimulationArgumentReader.h"
 #include <vector>
 
 int main(int argc, char * argv[])
 {
+	// Having this here will force an exit if we provide an invalid set of arguments for a simulation (without GUI) run
+	// there is scope for expanding on this functionality - notably by editing the subsequent call to Sim01->readExecutableInputs.
+	SimulationArgumentReader args_passed(argc, argv);
+
 	Simulation* Sim01 = new Simulation();
 	Sim01->displayIsOn = false;
 	if (argc<2){
