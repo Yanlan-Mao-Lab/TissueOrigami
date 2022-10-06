@@ -81,6 +81,11 @@ DropdownMenu::DropdownMenu(QStringList options) : QComboBox() {
     addItems(options);
 }
 
+Button::Button(const QString &text, QWidget *parent) : QPushButton(text, parent) {
+    // start disabled
+    setEnabled(false);
+}
+
 VectorLayout3::VectorLayout3() {
     for(int index=0; index<n_comps; index++) {
         vector_components[index] = new ReadOnlyBox("-");

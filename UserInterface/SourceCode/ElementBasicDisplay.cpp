@@ -43,7 +43,7 @@ ElementBasicDisplay::ElementBasicDisplay()
 
     // add the node information ID and coordinate boxes
     for (int i=0; i<n_coord_boxes; i++) {
-        node_coord_boxes[i].setFixedWidth(def_fixed_box_width);
+        node_coord_boxes[i].setFixedWidth(node_coord_box_width);
         // get the row and column indices in the grid for this box
         int row = 0; NodeInfoHeader col = NodeInfoHeader::ID;
         rowAndColOfBox(i, &row, &col);

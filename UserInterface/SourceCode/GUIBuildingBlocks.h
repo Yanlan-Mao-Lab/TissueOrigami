@@ -18,9 +18,6 @@ const Qt::AlignmentFlag AL_CENTRE = Qt::AlignmentFlag::AlignCenter;
 // convenient alias for right-alignment
 const Qt::AlignmentFlag AL_RIGHT = Qt::AlignmentFlag::AlignRight;
 
-// default fixed size for infoboxes
-const int def_fixed_box_width = 70;
-
 /**
  * @brief Standard style for labels in the Qt interface.
  *
@@ -28,6 +25,7 @@ const int def_fixed_box_width = 70;
  */
 class Label : public QLabel
 {
+    Q_OBJECT
 public:
     Label();
     /**
@@ -45,6 +43,7 @@ public:
  */
 class Header : public QLabel
 {
+    Q_OBJECT
 public:
     Header();
     /**
@@ -64,6 +63,7 @@ public:
  */
 class ReadOnlyBox : public QLineEdit
 {
+    Q_OBJECT
 public:
     ReadOnlyBox();
     /**
@@ -72,9 +72,12 @@ public:
      * @param placeholder_text Text to display when no input has been provided to the box
      */
     ReadOnlyBox(std::string placeholder_text);
-
+    
 private:
-    const QString default_text = "-";       // default text when box is initalised
+    // default fixed size for infoboxes
+    const int def_fixed_box_width = 70;
+    // default text when box is initalised
+    const QString default_text = "-";
 };
 
 /**
@@ -84,6 +87,7 @@ private:
  */
 class SelectionBox : public QLineEdit 
 {
+    Q_OBJECT
 public:
     SelectionBox();
     /**
@@ -102,6 +106,10 @@ public:
      * @param parent The parent Qt object
      */
     void initialseValidator(int n_max, QObject *parent = nullptr);
+
+private:
+    // default fixed size for infoboxes
+    const int def_fixed_box_width = 70;
 };
 
 /**
@@ -110,6 +118,7 @@ public:
  */
 class DropdownMenu : public QComboBox
 {
+    Q_OBJECT
 public:
     DropdownMenu();
     /**
@@ -128,7 +137,27 @@ public:
 };
 
 /**
- * @brief The layout of the space set aside for displaying element properties as a 3-vector with headers
+ * @brief Style for clickable buttons in the GUI interface
+ * 
+ */
+class Button : public QPushButton 
+{
+    Q_OBJECT
+public:
+    Button();
+    /**
+     * @brief Construct a new Button object
+     * 
+     * @param text The text to display on the button
+     * @param parent The parent widget
+     */
+    Button(const QString &text, QWidget *parent=nullptr);
+private:
+    const int default_button_width = 60;    // default width for clickable buttons
+    const int default_button_height = 10;   // default height for clickable buttons
+};
+
+/** @brief The layout of the space set aside for displaying element properties as a 3-vector with headers
  *
  */
 class VectorLayout3 : public QGridLayout
@@ -150,6 +179,8 @@ public:
      * @param text The text to set
      */
     void setComponentValue(int index, const QString &text);
+
+    const int n_comps = 3;
 
 public slots:
     /**
@@ -178,8 +209,6 @@ public slots:
     void fillValues(QStringList values);
 
 private:
-    const int n_comps = 3;                        // number of vector components
-
     ReadOnlyBox *vector_components[3]; // Boxes that display the values of the components
 
     Header *component_labels[3]; // Labels for the component boxes
@@ -219,6 +248,8 @@ public:
      */
     int boxIndex(int row, int col);
 
+    const int n_cols = 3, n_rows = 3, n_comps = 9;
+
 public slots:
     /**
      * @brief Clears all values in the display boxes
@@ -242,8 +273,6 @@ public slots:
     void fillValues(gsl_matrix *values);
 
 private:
-    const int n_cols = 3, n_rows = 3, n_comps = 9;
-
     ReadOnlyBox *matrix_components[9]; // The boxes that display the components of the growth matrix
 };
 

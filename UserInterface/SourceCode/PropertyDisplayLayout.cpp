@@ -1,5 +1,7 @@
 # include "PropertyDisplayLayout.h"
 
+# include <fstream>
+
 DefaultLayout::DefaultLayout() {
     // place the placeholder label in the centre of the display
     addWidget(placeholder_label, 0, 0, n_rows, n_cols, AL_CENTRE);
@@ -98,7 +100,6 @@ PropertyDisplayLayout::PropertyDisplayLayout() {
     // since we initilse the current element to nullptr, this just clears all the entries
     readAndUpdateElementProperties();
 }
-
 void PropertyDisplayLayout::recieveNewElement(std::unique_ptr<ShapeBase> *new_element) {
     current_element = new_element;
     // force an update
@@ -153,5 +154,150 @@ void PropertyDisplayLayout::readAndUpdateElementProperties()
     // otherwise, deselection has occurred and we should clear everything
     else {
         emit clearEntries();
+    }
+}
+
+QString PropertyDisplayLayout::makeHeader(const QString &section_name) {
+    QString section_header_rev = section_header;
+    std::reverse(section_header_rev.begin(), section_header_rev.end());
+    return section_header + section_name + section_header_rev + "\n";
+}
+void PropertyDisplayLayout::writeToFile(const QString &filename, bool write_headers) {
+    // write the values of the managed properties to an output file.
+    // we have to do this sequentially as we can't allow processes to write to the file simultaneously, as the data will be muddled
+
+    // open the file, in append mode if necessary (might have asked for node positions to be written)
+    ofstream file(filename.toStdString(), std::ios_base::app);
+
+    // if writing with headers...
+    if (write_headers) {
+        // write growth
+        file << makeHeader("Growth").toStdString();
+        gsl_matrix *growth = (*current_element)->getFg();
+        for (int row = 0; row < growthDisplay->n_rows; row++)
+        {
+            for (int col = 0; col < growthDisplay->n_cols; col++)
+            {
+                int box_index = growthDisplay->boxIndex(row, col);
+                file << gsl_matrix_get(growth, row, col) << ",";
+            }
+            file << "\n";
+        }
+
+        // write growth rate
+        file << makeHeader("Volume Growth Rate (xyz)").toStdString();
+        std::array<double, 3> growth_rate = (*current_element)->getGrowthRate();
+        for (int index = 0; index < growthRateDisplay->n_comps; index++)
+        {
+            file << growth_rate[index] << ",";
+        }
+        file << "\n";
+
+        // write scalar properties
+        file << makeHeader("Internal Viscosity").toStdString();
+        file << (*current_element)->getInternalViscosity() << "\n";
+        file << makeHeader("Young's modulus").toStdString();
+        file << (*current_element)->getYoungModulus() << "\n";
+        file << makeHeader("Poisson Ratio").toStdString();
+        file << (*current_element)->getPoissonRatio() << "\n";
+
+        // the formula used by the source code for this value is
+        // GrownVolume / ReferenceShape->Volume
+        // see ShapeBase.cpp, line 1296 (type=5 for this field)
+        // NOTE: this is a ratio, not absolute by the looks of things!
+        double GrownVolume = (*current_element)->GrownVolume / (*current_element)->ReferenceShape->Volume;
+        file << makeHeader("Volume Growth Ratio").toStdString();
+        file << GrownVolume << "\n";
+
+        file << makeHeader("Emergent Shape and Size").toStdString();
+
+        file << (*current_element)->calculateEmergentShapeOrientation() << "\n";
+
+        file << makeHeader("Shape Change Rate (z)").toStdString();
+        std::array<double, 6> shapeChangeRate = (*current_element)->getShapeChangeRate();
+        // change rate in z is stored at index 2
+        file << shapeChangeRate[2] << "\n";
+
+        // write the strain and the shear
+        float strainFe, strainComps[3], shearComps[3];
+        (*current_element)->getStrain(0, strainFe);
+        for (int i = 0; i < 3; i++)
+        {
+            (*current_element)->getStrain(i + 1, strainComps[i]);
+            (*current_element)->getStrain(i + 4, shearComps[i]);
+        }
+        file << makeHeader("Volumetric strain (via Fe)").toStdString();
+        file << strainFe << "\n";
+        file << makeHeader("Strain (DV, AP, AB)").toStdString();
+        for (int index = 0; index < strainDisplay->n_comps; index++)
+        {
+            file << strainComps[index] << ",";
+        }
+        file << "\n";
+        file << makeHeader("Shear (xy, yz, xz)").toStdString();
+        for (int index = 0; index < shearDisplay->n_comps; index++)
+        {
+            file << shearComps[index] << ",";
+        }
+        file << "\n";
+    }
+    else {
+        // write growth
+        gsl_matrix *growth = (*current_element)->getFg();
+        for (int row = 0; row < growthDisplay->n_rows; row++)
+        {
+            for (int col = 0; col < growthDisplay->n_cols; col++)
+            {
+                int box_index = growthDisplay->boxIndex(row, col);
+                file << gsl_matrix_get(growth, row, col) << ",";
+            }
+            file << "\n";
+        }
+
+        // write growth rate
+        std::array<double, 3> growth_rate = (*current_element)->getGrowthRate();
+        for (int index = 0; index < growthRateDisplay->n_comps; index++)
+        {
+            file << growth_rate[index] << ",";
+        }
+        file << "\n";
+
+        // write scalar properties
+        file << (*current_element)->getInternalViscosity() << "\n";
+        file << (*current_element)->getYoungModulus() << "\n";
+        file << (*current_element)->getPoissonRatio() << "\n";
+
+        // the formula used by the source code for this value is
+        // GrownVolume / ReferenceShape->Volume
+        // see ShapeBase.cpp, line 1296 (type=5 for this field)
+        // NOTE: this is a ratio, not absolute by the looks of things!
+        double GrownVolume = (*current_element)->GrownVolume / (*current_element)->ReferenceShape->Volume;
+        file << GrownVolume << "\n";
+
+        file << (*current_element)->calculateEmergentShapeOrientation() << "\n";
+
+        std::array<double, 6> shapeChangeRate = (*current_element)->getShapeChangeRate();
+        // change rate in z is stored at index 2
+        file << shapeChangeRate[2] << "\n";
+
+        // write the strain and the shear
+        float strainFe, strainComps[3], shearComps[3];
+        (*current_element)->getStrain(0, strainFe);
+        for (int i = 0; i < 3; i++)
+        {
+            (*current_element)->getStrain(i + 1, strainComps[i]);
+            (*current_element)->getStrain(i + 4, shearComps[i]);
+        }
+        file << strainFe << "\n";
+        for (int index = 0; index < strainDisplay->n_comps; index++)
+        {
+            file << strainComps[index] << ",";
+        }
+        file << "\n";
+        for (int index = 0; index < shearDisplay->n_comps; index++)
+        {
+            file << shearComps[index] << ",";
+        }
+        file << "\n";
     }
 }
