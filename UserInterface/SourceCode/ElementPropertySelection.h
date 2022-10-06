@@ -13,20 +13,14 @@ class ElementPropertySelection : public QGridLayout
 public:
     ElementPropertySelection();
 
-    // header for pannel
-    Header *pannel_header = new Header("Display element property:");
+    Header *pannel_header;  // header for pannel
+    DropdownMenu *selection_dropdown;  // selection box for the element property to display
+    PropertyDisplayLayout element_property_display;  // display for the currently selected element property
+    QGroupBox display_box; // box wrapping the property display
+    Button *save_element_properties; // box that allows the user to request the element properties be saved
+    CheckBox *node_positions_on_export;  // checkbox that toggles the export of node positions with the element properties
 
-    // selection box for the element property to display
-    DropdownMenu *selection_dropdown = new DropdownMenu(element_property_options);
-
-    // the box that displays the currently selected element property
-    PropertyDisplayLayout element_property_display;
-    QGroupBox display_box;
-
-    // the box that allows the user to request the element properties be saved
-    Button *save_element_properties = new Button("Export\n properties of\n selected\n element");
-
-public slots:
+   public slots:
     /**
      * @brief Updates the values stored in the element_property_display to match those of the new element
      *
@@ -58,6 +52,13 @@ signals:
      * @param enabled Whether the dropdown has been enabled (true) or disabled (false)
      */
     void dropdownIsNowEnabled(bool enabled);
+    /**
+     * @brief Emitted whenever element properties are exported, and the user has requested this include the associated node properties
+     * 
+     * @param filename File to append the node information to
+     * @param element (Pointer to) element whose node-information should be written
+     */
+    void writeNodePositionsToFile(QString filename, std::unique_ptr<ShapeBase> *element);
 
 private:
     int n_cols = 5;         // number of columns in the grid layout

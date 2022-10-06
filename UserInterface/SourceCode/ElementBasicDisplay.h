@@ -141,6 +141,13 @@ public slots:
      * @param element The new element, whose information should be displayed. nullptr is interpretted as deselection.
      */
     void updateDisplayValues(std::unique_ptr<ShapeBase> *element);
+    /**
+     * @brief Writes the currently-displayed node positions to the file provided
+     * 
+     * @param filename File to APPEND node positions to
+     * @param element (Pointer to) the element whose node positions should be written
+     */
+    void writeNodePositions(QString filename, std::unique_ptr<ShapeBase> *element);
 
 private:
     int node_coord_box_width = 70;      // default width for infoboxes displaying node coords, etc

@@ -8,13 +8,13 @@ Label::Label(string text) : QLabel(text.c_str()) {
     setFont(DEF_FONT);
 }
 
-Header::Header() : QLabel() {
+Header::Header(QWidget *parent) : QLabel(parent) {
     setFont(DEF_HEADER_FONT);
 }
-Header::Header(string text) : QLabel(text.c_str()) {
+Header::Header(string text, QWidget *parent) : QLabel(text.c_str(), parent) {
     setFont(DEF_HEADER_FONT);
 }
-Header::Header(QString &text) : QLabel(text) {
+Header::Header(QString &text, QWidget *parent) : QLabel(text, parent) {
     setFont(DEF_HEADER_FONT);
 }
 
@@ -198,4 +198,17 @@ void SingleBoxLayout::setDisplayValue(double value) {
 }
 void SingleBoxLayout::clearValue() {
     display_box->setText(default_text);
+}
+
+#include<iostream>
+CheckBox::CheckBox() : QCheckBox() {
+    setFont(DEF_FONT);
+    setCheckable(true);
+    setChecked(false);
+}
+CheckBox::CheckBox(const QString &text, bool start_enabled) : QCheckBox(text) {
+    setFont(DEF_FONT);
+    setCheckable(true);
+    setChecked(false);
+    setEnabled(start_enabled);
 }
