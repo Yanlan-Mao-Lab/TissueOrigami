@@ -10,8 +10,10 @@ RemoteSystemsTempFiles/
 TissueFolding/Debug/
 UserInterface/Debug/
 LegionBackup
+LegionMakeFile
 build*
 oldbuilds
+ToolBox/SampleModelInputs
 
 # Specific Files #
 ##################
@@ -40,3 +42,8 @@ tests/**/gen_outputs/
 **triangle
 **EllipseFromOutline
 /TissueFolding/**TissueFolding
+
+# excel spreadsheets used for run logging #
+###########################################
+**.xls
+**.xlsx
