@@ -127,6 +127,9 @@ def CompareTxt(f_name1, f_name2, tol=1e-8, type='raw_txt'):
             # Thus, we return False if this function also returned False
             line1 = lines1[line_num].strip('\n'); line2 = lines2[line_num].strip('\n')
             if not CompareLinesInRawTxt(line1, line2, line_num, f_name1, f_name2, tol):
+                # close files before exiting
+                f1.close()
+                f2.close()
                 return False
     else:
         # comparing converted binaries, which are just .csv files
@@ -136,8 +139,13 @@ def CompareTxt(f_name1, f_name2, tol=1e-8, type='raw_txt'):
             # CompareLinesInConvertedTxt will return True if the files are the same
             # Thus, we return False if this function also returned False
             if not CompareLinesInConvertedTxt(lines1[line_num], lines2[line_num], line_num, tol):
+                f1.close()
+                f2.close()
                 return False
     # if we get to here, we did not exit in the above comparisons, so the files must be the same
+    # close files before we exit
+    f1.close()
+    f2.close()
     return True
 
 def cleanup(fnames):
