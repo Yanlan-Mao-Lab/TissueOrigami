@@ -11,12 +11,22 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
+set(CMAKE_PREFIX_PATH "/Users/maolab/Qt5.12.12/5.12.12/clang_64/lib/cmake")
+
+
 find_package(OpenGL REQUIRED) # find OpenGL library...
 find_package(Qt5 COMPONENTS Widgets OpenGL REQUIRED) # which is different to the Qt5 OpenGL component here!
 
 find_package(Boost REQUIRED)
 find_package(GSL REQUIRED)
-find_package(OpenMP REQUIRED)
+if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+	set(OpenMP_C_FLAGS "-Xclang -fopenmp ")
+	set(OpenMP_C_LIB_NAMES "libomp")
+	set(OpenMP_libomp_LIBRARY "omp")
+	find_package(OpenMP REQUIRED)
+else()
+	find_package(OpenMP REQUIRED)
+endif()
 
 set(SIMULATION_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../TissueFolding/SourceCode/")
 

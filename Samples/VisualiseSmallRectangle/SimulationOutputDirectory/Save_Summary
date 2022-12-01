@@ -1,6 +1,6 @@
 TimeStep(sec):  60
 DataSaveInterval(sec):  60
-ModelinputName:  modelinput07007
+ModelinputName:  modelinput_SmallRectangle
 
 Mesh_Type:  4
 	Symmetricity-x: 0 Symmetricity-y: 0 Symmetricity-z: 0

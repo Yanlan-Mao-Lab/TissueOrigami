@@ -7,6 +7,7 @@ project(TissueFolding VERSION 1.0)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+
 # we need to know if we are trying to build with Pardiso or not
 # this command means the -DPARDISO option can be passed from the command line
 # the default behaviour is to build _without_ PARDISO
@@ -21,7 +22,14 @@ message(STATUS "Pardiso is: ${PARDISO}")
 # find libraries we always need
 find_package(Boost REQUIRED)
 find_package(GSL REQUIRED)
-find_package(OpenMP REQUIRED)
+if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+	set(OpenMP_C_FLAGS "-Xclang -fopenmp ")
+	set(OpenMP_C_LIB_NAMES "libomp")
+	set(OpenMP_libomp_LIBRARY "omp")
+	find_package(OpenMP REQUIRED)
+else()
+	find_package(OpenMP REQUIRED)
+endif()
 find_package(BLAS REQUIRED)
 find_package(LAPACK REQUIRED)
 

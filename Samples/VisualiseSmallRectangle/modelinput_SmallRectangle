@@ -44,7 +44,7 @@ YoungsModulusTimeseriesGrids:
   YoungsModulusRateChangeApplicationMethodInput(int): 0
   applyToColumnarLayer(bool): 1
   applyToPeripodialMembrane(bool): 0
-  applyToApicalLayer(bool): 0
+  applyToApicalLayer(bool): 1
   applyToMidLayer(bool): 0
   applyToBasalLayer(bool): 0
   applyToPeripodialECM(bool): 0
@@ -53,6 +53,7 @@ YoungsModulusTimeseriesGrids:
   WhenToApplyInput(sec): 0
   Filename(full-path): ./Stiffness96hrRectangleWing_Reduction_4
   WhenToApplyInput(sec): 600
+
 
 PysicalProperties:
   YoungsModulusApical: 100.0	YoungsModulusBasal: 25.0	YoungsModulusMid: 25.0	Noise(%-int): 0
