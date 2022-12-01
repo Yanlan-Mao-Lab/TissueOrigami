@@ -1,0 +1,21 @@
+module load qt/4.8.6/gnu-4.9.2
+module unload compilers mpi mkl
+module load compilers/gnu/4.9.2
+module load gsl/1.16/gnu-4.9.2
+module load openblas/0.2.14/gnu-4.9.2
+module load python/2.7.9
+module load boost/1_54_0/gnu-4.9.2
+export PATH=/home/ucbtntc/LocalLibs/:$PATH
+export LD_LIBRARY_PATH=/home/ucbtntc/LocalLibs/:$LD_LIBRARY_PATH
+export LIBRARY_PATH=/home/ucbtntc/LocalLibs/:$LIBRARY_PATH
+export OMP_NUM_THREADS=4
+export OPENBLAS_NUM_THREADS=1
+
+
+cmake .. -DPARDISO=ON -DPLOC=/home/ucbtntc/LocalLibs -DPNAME=libpardiso600-GNU720-X86-64.so
+cmake --build .
+
+ccd ../../../../bin
+rm -r TissuseFolding 
+       scp -r ../TissueOrigami/TissueFolding/SourceCode/build/TissueFolding ./
+
